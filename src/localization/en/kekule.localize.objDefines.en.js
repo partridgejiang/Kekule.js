@@ -284,7 +284,7 @@ Kekule.OBJDEF_TEXTS = {
 			TITLE_selectingMarkerFillColor: 'Selecting mark fill color',
 			DES_selectingMarkerFillColor: 'Fill color of selecting mark. Usually this value should be left blank (not filled)',
 			TITLE_selectingMarkerOpacity: 'Selecting mark opacity',
-			DES_selectingMarkerOpacity: 'Opacity of selecting mark, value from 0 to 1',
+			DES_selectingMarkerOpacity: 'Opacity of selecting mark, value from 0 to 1'
 		},
 		StructureConfigs: {
 			TITLE_defBondType: 'Default bond type',

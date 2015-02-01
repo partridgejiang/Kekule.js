@@ -807,6 +807,15 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var dim = Kekule.HtmlElementUtils.getElemClientDimension(this.getCoreElement());
 		return dim;
 	},
+	/**
+	 * Set dimension of drawn client, descendant may override this method.
+	 * @param {Int} width
+	 * @param {Int} height
+	 */
+	setDrawDimension: function(width, height)
+	{
+		this.setDimension(width, height);
+	},
 
 	/** @private */
 	calcDrawBaseCoord: function(drawOptions)
@@ -827,7 +836,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 this.setWidth(width + 'px');
 			 this.setHeight(height + 'px');
 			 */
-			this.setDimension(width, height);
+			this.setDrawDimension(width, height);
 			newDimension = {'width': width, 'height': height};
 			baseCoord = {'x': width / 2, 'y': height / 2};
 

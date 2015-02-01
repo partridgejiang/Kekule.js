@@ -187,11 +187,11 @@
 
 }
 
-.K-Chem-Viewer2D
+.K-Chem-Viewer2D .K-Chem-Displayer-DrawContext-Parent
 {
 
 }
-.K-Chem-Viewer3D
+.K-Chem-Viewer3D .K-Chem-Displayer-DrawContext-Parent
 {
     background-color: #000;
 }
@@ -210,6 +210,14 @@
 .K-Chem-Viewer .K-Chem-Viewer-Caption
 {
     display: block;
+    position: absolute;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    margin: 0;
+    padding: 0.5em 0;
+    width: 100%;
+    text-align: center;
 }
 
 .K-Chem-Viewer .K-Error-Report

@@ -53,6 +53,7 @@ Kekule.Widget.HtmlClassNames = {
 	NORMAL_BACKGROUND: 'K-Normal-Background',
 	/** Indicate text in widget can not be selected. */
 	NONSELECTABLE: 'K-NonSelectable',
+	SELECTABLE: 'K-Selectable',
 	// State classes
 	/** Class name for all widget elements in normal (enabled) state. */
 	STATE_NORMAL: 'K-State-Normal',
@@ -2361,20 +2362,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if ((evType === 'mousedown') || (evType === 'touchstart'))
 				{
-					/*
-					if (evType === 'touchstart')
-					{
-						this._touchJustStart = true;  // a flag to avoid "ghost mouse event" after touch
-						var self = this;
-						setTimeout(function(){ self._touchJustStart = false; }, 500);
-					}
-					if ((evType !== 'mousedown') || (!this._touchJustStart))
-					*/
-					{
-						console.log('active by', evType);
-						this.reactActiviting(e);
-						handled = true;
-					}
+					this.reactActiviting(e);
+					handled = true;
 				}
 				/*
 				else if (evType === 'mouseleave')
@@ -2388,12 +2377,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				*/
 				else if ((evType === 'mouseup') || (evType === 'touchend') || (evType === 'touchcancel') || (evType === 'touchleave'))
 				{
-					//if ((evType !== 'mouseup') || (!this._touchJustStart))
-					{
-						console.log('deactive by', evType);
-						this.reactDeactiviting(e);
-						handled = true;
-					}
+					this.reactDeactiviting(e);
+					handled = true;
 				}
 				else if (evType === 'keydown')
 				{

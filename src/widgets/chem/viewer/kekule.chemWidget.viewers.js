@@ -128,6 +128,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarPos', Kekule.Widget.Position.AUTO);
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
+		this.setPropStoreFieldValue('showCaption', true);
 		$super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs);
 		this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
 		/*
@@ -145,6 +146,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableEdit(true);
 		*/
 		this.setModalEdit(true);
+
+		this.useCornerDecorationChanged();
+		this.doResize()  // adjust caption and drawParent size
 
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
@@ -403,11 +407,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 
-		/*
 		this.defineProp('caption', {'dataType': DataType.STRING,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('caption', value);
+				Kekule.DomUtils.setElementText(this.getCaptionElem(), value || '');
 				this.captionChanged();
 			}
 		});
@@ -418,12 +422,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.captionChanged();
 			}
 		});
+		this.defineProp('captionPos', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.Position,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('captionPos', value);
+				this.captionChanged();
+			}
+		});
 		this.defineProp('captionElem', {'dataType': DataType.OBJECT, 'scope': PS.PRIVATE,
 			'setter': null,
-			'getter': function()
+			'getter': function(doNotAutoCreate)
 			{
 				var result = this.getPropStoreFieldValue('captionElem');
-				if (!result)  // create new
+				if (!result && !doNotAutoCreate)  // create new
 				{
 					result = this.doCreateCaptionElem();
 					this.setPropStoreFieldValue('captionElem', result);
@@ -431,7 +442,6 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return result;
 			}
 		});
-		*/
 
 		this.defineProp('actions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': null,
@@ -505,8 +515,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @ignore */
 	doResize: function($super)
 	{
-		$super();
+		//$super();
+		this.adjustDrawParentDim();
 		this.adjustToolbarPos();
+		$super();
 	},
 	/** @ignore */
 	doWidgetShowStateChanged: function(isShown)
@@ -532,17 +544,113 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.updateActions();
 	},
 
+	/** @private */
+	doSetUseCornerDecoration: function($super, value)
+	{
+		$super(value);
+		this.useCornerDecorationChanged();
+	},
+	/** @private */
+	useCornerDecorationChanged: function()
+	{
+		var v = this.getUseCornerDecoration();
+		var elem = this.getDrawContextParentElem();
+		if (v)
+			Kekule.HtmlElementUtils.addClass(elem, CNS.CORNER_ALL);
+		else
+			Kekule.HtmlElementUtils.removeClass(elem, CNS.CORNER_ALL);
+	},
+
+	/** @private */
+	adjustDrawParentDim: function()
+	{
+		var drawParentElem = this.getDrawContextParentElem();
+		var parentElem = drawParentElem.parentNode;
+		var captionElem = this.getCaptionElem(true);  // do not auto create
+		var dimParent = Kekule.HtmlElementUtils.getElemClientDimension(parentElem);
+		var t, h;
+		if (captionElem && this.captionIsShown() && captionElem.parentNode === parentElem)
+		{
+			var dimCaption = Kekule.HtmlElementUtils.getElemClientDimension(captionElem);
+			h = Math.max(dimParent.height - dimCaption.height, 0);  // avoid value < 0
+			t = (this.getCaptionPos() & Kekule.Widget.Position.TOP)? dimCaption.height: 0;
+		}
+		else
+		{
+			t = 0;
+			h = dimParent.height;
+		}
+		drawParentElem.style.top = t + 'px';
+		drawParentElem.style.height = h + 'px';
+		//this.refitDrawContext();
+	},
+
+	/** @private */
+	getInteractionReceiverElem: function()
+	{
+		return this.getDrawContextParentElem();
+	},
+
+	/** @ignore */
+	setDrawDimension: function($super, width, height)
+	{
+		var newHeight = height;
+		if (this.captionIsShown())  // height need add the height of caption
+		{
+			var dimCaption = Kekule.HtmlElementUtils.getElemClientDimension(this.getCaptionElem());
+			newHeight += dimCaption.height || 0;
+		}
+		$super(width, newHeight);
+	},
+
 	/// Methods about caption: currently not used ///////////
 	/* @private */
-	/*
 	doCreateCaptionElem: function()
 	{
 		var result = this.getDocument().createElement('span');
-		result.className = CCNS.DYN_CREATED + ' ' + CCNS.VIEWER_CAPTION;
+		result.className = CNS.DYN_CREATED + ' ' + ' ' + CNS.SELECTABLE + ' ' + CCNS.VIEWER_CAPTION;
 		this.getElement().appendChild(result);
 		return result;
 	},
-	*/
+	/**
+	 * Called when caption or showCaption or captionPos property changes.
+	 * @private
+	 */
+	captionChanged: function()
+	{
+		if (this.captionIsShown())
+		{
+			var elem = this.getCaptionElem();
+			var style = elem.style;
+			var pos = this.getCaptionPos();
+			if (pos & Kekule.Widget.Position.TOP)
+			{
+				style.top = 0;
+				style.bottom = 'auto';
+			}
+			else
+			{
+				style.bottom = 0;
+				style.top = 'auto';
+			}
+			style.display = 'block';
+		}
+		else  // caption need to be hidden
+		{
+			var elem = this.getCaptionElem(true);  // do not auto create
+			if (elem)
+				elem.style.display = 'none';
+		}
+		//this.adjustDrawParentDim();
+		this.doResize();
+	},
+	/**
+	 * Returns whether the caption is actually displayed.
+	 */
+	captionIsShown: function()
+	{
+		return this.getCaption() && this.getShowCaption();
+	},
 
 	/*
 	 * Called when caption or showCaption property has been changed.
@@ -829,7 +937,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (toolbar)
 		{
 			var WP = Kekule.Widget.Position;
-			var viewerClientRect = this.getBoundingClientRect();
+			var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
 			var toolbarClientRect = toolbar.getBoundingClientRect();
 			var pos = this.getToolbarPos();
 			var hMargin = this.getToolbarMarginHorizontal();
@@ -943,7 +1051,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		toolBar.addClassName(CCNS.INNER_TOOLBAR);
 		toolBar.setShowText(false);
 		toolBar.doSetShowGlyph(true);
-		toolBar.appendToElem(this.getElement());
+		toolBar.appendToElem(/*this.getElement()*/this.getDrawContextParentElem());
 			// IMPORTANT, must append to widget before setToolbar,
 			// otherwise in Chrome the tool bar may be hidden at first even if we set it to always show
 		//console.log('After append to widget: ', toolBar.getDisplayed());
@@ -1111,9 +1219,29 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
+	isEventFromInteractionArea: function(e)
+	{
+		var target = e.getTarget();
+		var interactionElem = this.getViewer().getInteractionReceiverElem();
+		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
+	},
+	/** @private */
+	needReactEvent: function(e)
+	{
+		return this.getEnableInteraction() && this.isEventFromInteractionArea(e);
+	},
+	/** @private */
+	react_dblclick: function(e)
+	{
+		if (this.needReactEvent(e))
+		{
+			this.getViewer().resetDisplay();
+		}
+	},
+	/** @private */
 	react_mousewheel: function(e)
 	{
-		if (this.getEnableInteraction())
+		if (this.needReactEvent(e))
 		{
 			var delta = e.wheelDeltaY || e.wheelDelta;
 			if (delta)
@@ -1126,7 +1254,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_mousedown: function(e)
 	{
-		if (!this.getEnableInteraction())
+		if (!this.needReactEvent(e))
 			return;
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
@@ -1163,7 +1291,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_mousemove: function(e)
 	{
-		if (!this.getEnableInteraction())
+		if (!this.needReactEvent(e))
 			return;
 		/*
 		var info = this._transformInfo;
@@ -1260,7 +1388,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_transformstart: function(e)
 	{
-		if (!this.getEnableTouchInteraction())
+		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
 			return;
 		var viewer = this.getViewer();
 		if (viewer)
@@ -1275,14 +1403,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_transformend: function(e)
 	{
-		if (!this.getEnableTouchInteraction())
+		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
 			return;
 		this._transformInfo.isTransforming = false;
 	},
 	/** @private */
 	react_transform: function(e)
 	{
-		if (!this.getEnableTouchInteraction())
+		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
 			return;
 		var viewer = this.getViewer();
 		var info = this._transformInfo;

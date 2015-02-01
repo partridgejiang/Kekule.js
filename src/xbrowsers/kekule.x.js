@@ -712,8 +712,9 @@ X.Event._IE = {
 		// register handler
 		X.Event.registerHandler(element, eventType, handler, wrapper);
 		// observe window's unload event to avoid memory leak
-		var doc = element.ownerDocument || element;  // element may be document directly
-		X.Event._linkUnloadEvent(doc.parentWindow);
+		var doc = element.ownerDocument || element;  // element may be document or window directly
+		var win = doc.parentWindow || doc;
+		X.Event._linkUnloadEvent(win);
 	},
 	removeListener: function(element, eventType, handler, useCapture)
 	{
@@ -738,7 +739,7 @@ X.Event._IE = {
 		var allHandlers = X.Event._handlers;
 		if (!allHandlers)
 			return;
-		for (propName in allHandlers)
+		for (var propName in allHandlers)
 		{
 			if (allHandlers.hasOwnProperty(propName))
 			{

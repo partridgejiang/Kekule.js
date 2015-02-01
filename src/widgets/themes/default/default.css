@@ -103,6 +103,15 @@
     -ms-user-select: none;
     user-select: none;
 }
+.K-Widget .K-Selectable
+{
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
 
 .K-Widget, input.K-Widget, button.K-Widget
 {
