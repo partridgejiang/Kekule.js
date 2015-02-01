@@ -26,6 +26,8 @@ function getKekuleIncludes()
 		'localization/en/kekule.localize.objDefines.en.js',
 		'localization/en/kekule.localize.extras.openbabel.en.js',
 
+		'localization/kekule.localizations.js',
+
 		'core/kekule.common.js',
 		'core/kekule.exceptions.js',
 		'core/kekule.configs.js',

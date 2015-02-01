@@ -8,7 +8,9 @@
 Kekule.LOCAL_RES = true;
 
 /** @ignore */
-Kekule.WidgetTexts = {
+Kekule.WidgetTexts = {};
+/** @ignore */
+Kekule.WidgetTexts.en = {
 	// Dialog
 	CAPTION_OK: 'OK',
 	CAPTION_CANCEL: 'Cancel',
@@ -48,8 +50,10 @@ Kekule.WidgetTexts = {
 };
 
 /** @ignore */
+Kekule.ChemWidgetTexts = {};
+/** @ignore */
 // Predefined strings for chem widgets.
-Kekule.ChemWidgetTexts = {
+Kekule.ChemWidgetTexts.en = {
 	// ChemDisplayer / ChemViewer
 	CAPTION_LOADFILE: 'Load...',
 	CAPTION_LOADDATA: 'Load...',
@@ -267,7 +271,7 @@ Kekule.ChemWidgetTexts = {
 };
 
 // error messages
-Object.extend(Kekule.ErrorMsg, {
+Object.extend(Kekule.ErrorMsg.en, {
 	WIDGET_CAN_NOT_BIND_TO_ELEM: 'Widget {0} can not be binded to element <{1}>',
 	LOAD_CHEMDATA_FAILED: 'Failed to load data',
 	FILE_API_NOT_SUPPORTED: 'File operations are not supported by your current web browser. Please update it.',

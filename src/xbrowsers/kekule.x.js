@@ -25,7 +25,8 @@ Kekule.Browser = {
   Opera:  !!window.opera,
   WebKit: navigator.userAgent.indexOf('AppleWebKit/') > -1,
   Gecko:  navigator.userAgent.indexOf('Gecko') > -1 && navigator.userAgent.indexOf('KHTML') == -1,
-  MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/)
+  MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
+	language: navigator.language || navigator.browserLanguage  // language of broweser
 };
 
 /**

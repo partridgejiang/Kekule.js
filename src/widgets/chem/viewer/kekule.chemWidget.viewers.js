@@ -1,6 +1,6 @@
 /**
  * @fileoverview
- * Base types and classes of chem viewer.
+ * Related types and classes of chem viewer.
  * Viewer is a widget to show chem objects on HTML page.
  * @author Partridge Jiang
  */

@@ -8,7 +8,10 @@
 Kekule.LOCAL_RES = true;
 
 /** @ignore */
-Kekule.OBJDEF_TEXTS = {
+Kekule.OBJDEF_TEXTS = {};
+
+/** @ignore */
+Kekule.OBJDEF_TEXTS.en = {
 	TITLE_PREFIX: 'TITLE_',
 	DESCRIPTION_PREFIX: 'DES_',
 	//---------------------- General ------------------------

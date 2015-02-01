@@ -7,9 +7,12 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+/** @ignore */
+Kekule.ErrorMsg = {};
+
 // Exception and error messages
 /** @ignore */
-Kekule.ErrorMsg = {
+Kekule.ErrorMsg.en = {
 	// utils/kekule.utils.js
 	NON_OWN_PROPERTY_CANNOT_BE_REPLACED: 'Only directly owned property of object can be replaced',
 	// utils/kekule.domHelper.js
