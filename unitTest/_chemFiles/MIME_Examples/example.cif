@@ -1,0 +1,543 @@
+# --------------------------------------------------------------------------
+#
+#  Example CIF for an A type DNA structure with a single strand
+#  in the asymmetric unit.  This example is compliant with 
+#  the Macromolecular CIF Dictionary (cif_mm.dic) version 0.9.01.
+#
+#               Prepared by: Anke Gelbin, John Westbrook, and Helen Berman
+#                            Nucleic Acid Database Project 
+#                            Rutgers University
+#                            e-mail: ndbadmin@ndbserver.rutgers.edu
+#                            www:    http://ndbserver.rutgers.edu 
+#
+#---------------------------------------------------------------------------
+
+data_ADH041
+
+###############
+## ENTRY ##
+###############
+
+_entry.id              ADH041
+
+###############
+## ATOM_SITE ##
+###############                        
+loop_
+_atom_site.id
+_atom_site.label_atom_id                  
+_atom_site.label_comp_id                  
+_atom_site.label_asym_id                  
+_atom_site.auth_seq_id                   
+_atom_site.cartn_x                        
+_atom_site.cartn_y                        
+_atom_site.cartn_z                        
+_atom_site.occupancy                      
+_atom_site.B_iso_or_equiv                 
+_atom_site.label_entity_id
+_atom_site.label_seq_id
+  1    O5*   G A   1       7.231  -2.196  -5.399  1.00 22.25   1 1         
+  2    C5*   G A   1       6.950  -3.464  -4.723  1.00 15.86   1 1         
+  3    C4*   G A   1       8.299  -4.018  -4.302  1.00 15.20   1 1         
+  4    O4*   G A   1       9.257  -3.779  -5.318  1.00 10.85   1 1         
+  5    C3*   G A   1       8.912  -3.354  -3.074  1.00 15.62   1 1        
+  6    O3*   G A   1       8.397  -3.826  -1.833  1.00 20.67   1 1        
+  7    C2*   G A   1      10.385  -3.707  -3.244  1.00 12.71   1 1       
+  8    C1*   G A   1      10.538  -3.558  -4.728  1.00  7.78   1 1        
+  9    N9    G A   1      11.032  -2.213  -5.038  1.00  5.96   1 1        
+ 10    C8    G A   1      10.432  -1.200  -5.709  1.00  5.64   1 1        
+ 11    N7    G A   1      11.206  -0.153  -5.904  1.00  6.81   1 1        
+ 12    C5    G A   1      12.419  -0.515  -5.331  1.00  8.61   1 1        
+ 13    C6    G A   1      13.658   0.170  -5.193  1.00  8.05   1 1        
+ 14    O6    G A   1      13.934   1.328  -5.562  1.00 11.41   1 1        
+ 15    N1    G A   1      14.628  -0.540  -4.543  1.00  7.19   1 1        
+ 16    C2    G A   1      14.419  -1.813  -4.100  1.00  5.46   1 1        
+ 17    N2    G A   1      15.466  -2.434  -3.532  1.00 10.14   1 1        
+ 18    N3    G A   1      13.296  -2.481  -4.196  1.00  5.15   1 1        
+ 19    C4    G A   1      12.330  -1.788  -4.809  1.00  8.28   1 1        
+ 20    P     T A   2       7.699  -2.741  -0.810  1.00 19.59   1 2        
+ 21    O1P   T A   2       7.159  -1.711  -1.757  1.00 18.85   1 2        
+ 22    O2P   T A   2       6.588  -3.545  -0.207  1.00 20.41   1 2        
+ 23    O5*   T A   2       8.933  -2.362   0.047  1.00 14.20   1 2        
+ 24    C5*   T A   2       9.636  -3.349   0.820  1.00 18.12   1 2        
+ 25    C4*   T A   2      11.049  -2.839   0.982  1.00 17.74   1 2        
+ 26    O4*   T A   2      11.615  -2.545  -0.283  1.00 17.74   1 2        
+ 27    C3*   T A   2      11.176  -1.528   1.745  1.00 19.12   1 2        
+ 28    O3*   T A   2      11.070  -1.673   3.152  1.00 22.36   1 2        
+ 29    C2*   T A   2      12.585  -1.081   1.307  1.00 17.85   1 2        
+ 30    C1*   T A   2      12.606  -1.507  -0.128  1.00 12.64   1 2        
+ 31    N1    T A   2      12.308  -0.353  -1.012  1.00  9.55   1 2        
+ 32    C2    T A   2      13.411   0.413  -1.363  1.00  7.45   1 2        
+ 33    O2    T A   2      14.530   0.162  -0.925  1.00  8.22   1 2        
+ 34    N3    T A   2      13.206   1.451  -2.217  1.00  8.01   1 2        
+ 35    C4    T A   2      11.985   1.728  -2.744  1.00  7.67   1 2        
+ 36    O4    T A   2      11.930   2.715  -3.546  1.00 10.46   1 2        
+ 37    C5    T A   2      10.878   0.902  -2.409  1.00  3.98   1 2        
+ 38    C5M   T A   2       9.516   1.217  -2.978  1.00  3.03   1 2        
+ 39    C6    T A   2      11.091  -0.102  -1.563  1.00  5.06   1 2        
+ 40    P     C A   3      10.321  -0.536   3.970  1.00 28.15   1 3        
+ 41    O1P   C A   3       9.682   0.255   2.867  1.00 27.97   1 3        
+ 42    O2P   C A   3       9.389  -1.196   4.922  1.00 29.35   1 3        
+ 43    O5*   C A   3      11.483   0.260   4.710  1.00 22.68   1 3        
+ 44    C5*   C A   3      12.402   0.758   3.726  1.00 24.92   1 3        
+ 45    C4*   C A   3      13.581   1.388   4.420  1.00 23.08   1 3        
+ 46    O4*   C A   3      14.560   1.558   3.404  1.00 27.27   1 3        
+ 47    C3*   C A   3      13.343   2.737   5.038  1.00 23.43   1 3        
+ 48    O3*   C A   3      13.572   2.758   6.463  1.00 25.54   1 3        
+ 49    C2*   C A   3      14.321   3.686   4.356  1.00 25.72   1 3        
+ 50    C1*   C A   3      14.696   2.945   3.098  1.00 22.89   1 3        
+ 51    N1    C A   3      13.785   3.345   2.018  1.00 20.44   1 3        
+ 52    C2    C A   3      14.211   4.401   1.228  1.00 19.82   1 3        
+ 53    O2    C A   3      15.296   4.924   1.457  1.00 19.34   1 3        
+ 54    N3    C A   3      13.381   4.797   0.226  1.00 20.88   1 3        
+ 55    C4    C A   3      12.159   4.218   0.015  1.00 22.27   1 3        
+ 56    N4    C A   3      11.380   4.652  -0.987  1.00 21.02   1 3        
+ 57    C5    C A   3      11.738   3.145   0.847  1.00 22.07   1 3        
+ 58    C6    C A   3      12.581   2.749   1.819  1.00 20.93   1 3        
+ 59    P     T A   4      13.249   4.145   7.228  1.00 26.13   1 4        
+ 60    O1P   T A   4      11.785   4.341   6.832  1.00 25.37   1 4        
+ 61    O2P   T A   4      13.504   3.907   8.673  1.00 32.53   1 4        
+ 62    O5*   T A   4      14.194   5.248   6.662  1.00 17.95   1 4        
+ 63    C5*   T A   4      15.607   5.380   6.834  1.00 15.14   1 4        
+ 64    C4*   T A   4      15.973   6.673   6.116  1.00 15.44   1 4        
+ 65    O4*   T A   4      15.700   6.524   4.745  1.00 16.75   1 4        
+ 66    C3*   T A   4      15.173   7.899   6.524  1.00 14.00   1 4        
+ 67    O3*   T A   4      15.645   8.491   7.720  1.00 18.73   1 4        
+ 68    C2*   T A   4      15.360   8.814   5.326  1.00 15.19   1 4        
+ 69    C1*   T A   4      15.428   7.848   4.189  1.00 15.15   1 4        
+ 70    N1    T A   4      14.160   7.776   3.450  1.00 13.97   1 4        
+ 71    C2    T A   4      13.990   8.644   2.390  1.00 13.15   1 4        
+ 72    O2    T A   4      14.858   9.470   2.156  1.00 13.53   1 4        
+ 73    N3    T A   4      12.832   8.538   1.666  1.00 11.60   1 4        
+ 74    C4    T A   4      11.870   7.622   1.959  1.00 11.54   1 4        
+ 75    O4    T A   4      10.840   7.610   1.211  1.00 13.43   1 4        
+ 76    C5    T A   4      12.061   6.725   3.049  1.00 12.09   1 4        
+ 77    C5M   T A   4      11.053   5.677   3.416  1.00  7.58   1 4        
+ 78    C6    T A   4      13.211   6.827   3.743  1.00 14.34   1 4        
+ 79    P     A A   5      14.790   9.516   8.579  1.00 27.61   1 5        
+ 80    O1P   A A   5      13.338   9.227   8.330  1.00 14.47   1 5        
+ 81    O2P   A A   5      15.309   9.627   9.977  1.00 22.02   1 5        
+ 82    O5*   A A   5      15.181  10.942   7.875  1.00 19.11   1 5        
+ 83    C5*   A A   5      13.921  11.619   7.555  1.00 12.04   1 5        
+ 84    C4*   A A   5      14.364  12.649   6.531  1.00 11.89   1 5        
+ 85    O4*   A A   5      14.560  12.019   5.296  1.00 12.02   1 5        
+ 86    C3*   A A   5      13.325  13.734   6.322  1.00 11.99   1 5        
+ 87    O3*   A A   5      13.606  14.841   7.166  1.00 18.44   1 5        
+ 88    C2*   A A   5      13.474  14.066   4.853  1.00 12.81   1 5        
+ 89    C1*   A A   5      13.879  12.725   4.267  1.00  8.63   1 5        
+ 90    N9    A A   5      12.670  12.040   3.802  1.00  6.64   1 5        
+ 91    C8    A A   5      12.040  10.955   4.317  1.00  4.88   1 5        
+ 92    N7    A A   5      10.964  10.606   3.647  1.00  7.15   1 5        
+ 93    C5    A A   5      10.912  11.517   2.589  1.00  5.96   1 5        
+ 94    C6    A A   5      10.002  11.653   1.511  1.00  6.23   1 5        
+ 95    N6    A A   5       8.980  10.832   1.294  1.00  5.89   1 5        
+ 96    N1    A A   5      10.274  12.674   0.657  1.00  3.00   1 5        
+ 97    C2    A A   5      11.359  13.474   0.844  1.00  7.72   1 5        
+ 98    N3    A A   5      12.262  13.402   1.824  1.00  4.19   1 5        
+ 99    C4    A A   5      11.968  12.394   2.660  1.00  5.64   1 5        
+100    P     G A   6      12.487  15.964   7.442  1.00 12.38   1 6        
+101    O1P   G A   6      11.321  15.168   7.816  1.00 19.23   1 6        
+102    O2P   G A   6      13.121  16.811   8.453  1.00 19.19   1 6        
+103    O5*   G A   6      12.381  16.573   5.970  1.00 17.14   1 6        
+104    C5*   G A   6      12.708  17.952   5.680  1.00 15.41   1 6        
+105    C4*   G A   6      12.142  18.250   4.314  1.00 13.87   1 6        
+106    O4*   G A   6      11.998  17.028   3.598  1.00 13.41   1 6        
+107    C3*   G A   6      10.746  18.846   4.258  1.00 14.92   1 6        
+108    O3*   G A   6      10.683  20.233   4.560  1.00 13.67   1 6        
+109    C2*   G A   6      10.355  18.586   2.793  1.00 10.87   1 6        
+110    C1*   G A   6      10.981  17.250   2.577  1.00 10.44   1 6        
+111    N9    G A   6      10.040  16.152   2.781  1.00  8.54   1 6        
+112    C8    G A   6      10.155  15.245   3.797  1.00  9.12   1 6        
+113    N7    G A   6       9.240  14.296   3.731  1.00 13.90   1 6        
+114    C5    G A   6       8.495  14.619   2.601  1.00  8.41   1 6        
+115    C6    G A   6       7.363  13.994   2.030  1.00  9.70   1 6        
+116    O6    G A   6       6.780  12.981   2.451  1.00 10.74   1 6        
+117    N1    G A   6       6.903  14.632   0.896  1.00  9.85   1 6        
+118    C2    G A   6       7.482  15.752   0.396  1.00  3.88   1 6        
+119    N2    G A   6       6.899  16.258  -0.684  1.00  7.71   1 6        
+120    N3    G A   6       8.546  16.369   0.898  1.00  6.92   1 6        
+121    C4    G A   6       8.989  15.760   2.013  1.00  8.28   1 6        
+122    P     A A   7       9.504  20.535   5.636  1.00 11.52   1 7        
+123    O1P   A A   7       9.529  19.437   6.534  1.00 11.92   1 7        
+124    O2P   A A   7       9.929  21.884   6.128  1.00 18.21   1 7        
+125    O5*   A A   7       8.201  20.586   4.673  1.00  8.91   1 7        
+126    C5*   A A   7       8.342  21.586   3.620  1.00  6.45   1 7        
+127    C4*   A A   7       7.248  21.318   2.626  1.00  3.39   1 7        
+128    O4*   A A   7       7.376  20.033   2.057  1.00  5.79   1 7        
+129    C3*   A A   7       5.844  21.323   3.231  1.00  3.85   1 7        
+130    O3*   A A   7       5.439  22.642   3.445  1.00  7.81   1 7        
+131    C2*   A A   7       5.069  20.565   2.156  1.00  5.70   1 7        
+132    C1*   A A   7       6.056  19.527   1.752  1.00  3.87   1 7        
+133    N9    A A   7       5.895  18.301   2.540  1.00  4.66   1 7        
+134    C8    A A   7       6.707  17.875   3.561  1.00  6.62   1 7        
+135    N7    A A   7       6.324  16.743   4.112  1.00  2.28   1 7        
+136    C5    A A   7       5.218  16.381   3.349  1.00  1.74   1 7        
+137    C6    A A   7       4.379  15.258   3.413  1.00  4.78   1 7        
+138    N6    A A   7       4.550  14.283   4.297  1.00  9.36   1 7        
+139    N1    A A   7       3.362  15.241   2.513  1.00  5.07   1 7        
+140    C2    A A   7       3.171  16.249   1.632  1.00  4.94   1 7        
+141    N3    A A   7       3.911  17.365   1.538  1.00  4.89   1 7        
+142    C4    A A   7       4.933  17.339   2.404  1.00  4.26   1 7        
+143    P     C A   8       4.209  23.208   4.243  1.00 14.05   1 8        
+144    O1P   C A   8       4.294  22.557   5.545  1.00 16.14   1 8        
+145    O2P   C A   8       4.494  24.749   4.243  1.00 18.27   1 8        
+146    O5*   C A   8       2.932  22.914   3.421  1.00 10.49   1 8        
+147    C5*   C A   8       2.749  21.642   2.712  1.00 14.57   1 8        
+148    C4*   C A   8       1.349  21.825   2.134  1.00 15.98   1 8        
+149    O4*   C A   8       0.689  20.633   1.831  1.00 17.74   1 8        
+150    C3*   C A   8       0.468  22.544   3.162  1.00 15.68   1 8        
+151    O3*   C A   8      -0.208  23.621   2.486  1.00 23.46   1 8        
+152    C2*   C A   8      -0.375  21.450   3.741  1.00 14.98   1 8        
+153    C1*   C A   8      -0.021  20.191   3.007  1.00 13.74   1 8        
+154    N1    C A   8       0.834  19.292   3.819  1.00 14.40   1 8        
+155    C2    C A   8       0.464  17.960   3.871  1.00 13.07   1 8        
+156    O2    C A   8      -0.540  17.539   3.305  1.00 14.67   1 8        
+157    N3    C A   8       1.243  17.096   4.580  1.00 12.98   1 8        
+158    C4    C A   8       2.332  17.535   5.274  1.00 13.43   1 8        
+159    N4    C A   8       3.000  16.637   5.997  1.00 12.91   1 8        
+160    C5    C A   8       2.707  18.909   5.212  1.00 12.96   1 8        
+161    C6    C A   8       1.945  19.735   4.489  1.00 10.13   1 8        
+163    O1  HOH S    9     14.585  15.313   1.617  1.00 14.98   2 .        
+164    O2  HOH S   10     14.594   0.902   9.098  1.00 22.76   2 .        
+165    O3  HOH S   11     16.943  10.508   6.253  1.00 57.46   2 .        
+
+################
+## ATOM_SITES ##
+################
+
+_atom_sites.entry_id                              ADH041
+_atom_sites.fract_transf_matrix[1][1]             0.023496
+_atom_sites.fract_transf_matrix[1][2]             0.0
+_atom_sites.fract_transf_matrix[1][3]             0.0
+_atom_sites.fract_transf_matrix[2][1]             0.0
+_atom_sites.fract_transf_matrix[2][2]             0.023496
+_atom_sites.fract_transf_matrix[2][3]             0.0
+_atom_sites.fract_transf_matrix[3][1]             0.0
+_atom_sites.fract_transf_matrix[3][2]             0.0
+_atom_sites.fract_transf_matrix[3][3]             0.040634
+
+            
+##########
+## CELL ##
+##########
+
+_cell.entry_id                ADH041
+_cell.length_a                42.560
+_cell.length_b                42.560
+_cell.length_c                24.610
+_cell.angle_alpha             90.00                 
+_cell.angle_beta              90.00                 
+_cell.angle_gamma             90.00                
+
+###############
+## CHEM_COMP ## 
+###############
+
+loop_
+_chem_comp.id              
+_chem_comp.name            
+A   ADENINE
+T   THYMINE
+C   CYTOSINE
+G   GUANINE
+HOH WATER
+
+
+##############
+## CITATION ##
+##############
+
+loop_
+_citation.id                          
+_citation.title                                
+_citation.country                              
+_citation.journal_abbrev                       
+_citation.journal_volume                       
+_citation.page_first                           
+_citation.year                                 
+_citation.page_last                            
+_citation.journal_id_ASTM                   
+_citation.journal_id_ISSN                   
+primary  
+;
+Crystal and Molecular Structure of d(GTCTAGAC)
+;
+DK 'Acta Crystallogr.,Sect.B' 48   714 1992  719   ASBSDK 0108-7681 
+
+#####################
+## CITATION_AUTHOR ##
+#####################
+
+loop_
+_citation_author.citation_id                   
+_citation_author.name                          
+primary 'Cervi, A.' 
+primary 'Langlois DEstaintot, B.'
+primary 'Hunter, W. N.'
+
+
+###############
+## COMPUTING ##
+###############
+
+_computing.entry_id                 ADH041
+_computing.structure_refinement    'NUCLSQ'
+               
+############
+## DIFFRN ##
+############
+
+_diffrn.id                                  ds1
+_diffrn.crystal_id                          1
+_diffrn.ambient_temp                        295.00 
+
+########################
+## DIFFRN_MEASUREMENT ##
+########################
+
+_diffrn_measurement.diffrn_id               ds1
+_diffrn_measurement.device                  DIFFRACTOMETER  
+_diffrn_measurement.device_type            'RIGAKU AFC-5'  
+
+###################
+## DIFFRN_SOURCE ##
+###################
+
+_diffrn_source.diffrn_id                     ds1
+_diffrn_source.type                         'ROTATING ANODE'
+
+######################
+## DIFFRN_RADIATION ##
+######################
+
+_diffrn_radiation.diffrn_id                 ds1
+_diffrn_radiation.wavelength_id             1
+
+#################################
+## DIFFRN_RADIATION_WAVELENGTH ##
+#################################
+
+_diffrn_radiation_wavelength.id             1
+_diffrn_radiation_wavelength.wavelength     1.54
+_diffrn_radiation_wavelength.wt             1.0
+
+############
+## ENTITY ## 
+############
+
+loop_
+_entity.id
+_entity.type
+_entity.src_method              
+1 polymer 'man'
+2 water   .
+
+#####################
+## ENTITY_KEYWORDS ## 
+#####################
+
+loop_
+_entity_keywords.entity_id
+_entity_keywords.text
+1 'NUCLEIC ACID'
+
+
+#################
+## ENTITY_POLY ## 
+#################
+
+loop_
+_entity_poly.entity_id
+_entity_poly.number_of_monomers
+_entity_poly.type
+1  8   'polydeoxyribonucleotide' 
+
+#####################
+## ENTITY_POLY_SEQ ## 
+##################### 
+
+loop_
+_entity_poly_seq.entity_id
+_entity_poly_seq.mon_id
+_entity_poly_seq.num
+1 G 1 
+1 T 2 
+1 C 3 
+1 T 4
+1 A 5
+1 G 6 
+1 A 7 
+1 C 8 
+
+
+########################
+## EXPTL_CRYSTAL_GROW ##
+########################
+
+_exptl_crystal_grow.crystal_id                 1
+_exptl_crystal_grow.method                    'vapor diffusion'
+_exptl_crystal_grow.pH                        6.8
+_exptl_crystal_grow.temp                      295.0
+
+#############################
+## EXPTL_CRYSTAL_GROW_COMP ## 
+#############################
+                              
+loop_
+_exptl_crystal_grow_comp.crystal_id
+_exptl_crystal_grow_comp.id
+_exptl_crystal_grow_comp.sol_id
+_exptl_crystal_grow_comp.name
+1 1 1 'MPD'
+1 2 1 'Na Cacodylate'
+1 3 1 'MgCl2'
+1 4 1 'Spermine HCL'
+1 5 2 'MPD'
+
+
+############
+## STRUCT ##
+############
+
+_struct.entry_id                ADH041
+_struct.title                  
+;
+5'-D(*GP*TP*CP*TP*AP*GP*AP*C)-3'
+;
+
+#####################
+## STRUCT_KEYWORDS ##
+#####################
+
+_struct_keywords.entry_id                ADH041
+_struct_keywords.text                   'DEOXYRIBONUCLEIC ACID'  
+
+#################
+## STRUCT_ASYM ##
+#################
+
+loop_
+_struct_asym.id                   
+_struct_asym.entity_id
+_struct_asym.details
+A 1  'NUCLEIC ACID'
+S 2  'H2O' 
+ 
+#################
+## STRUCT_BIOL ##
+#################
+
+_struct_biol.id              1
+_struct_biol.details         'FULL DUPLEX A DNA'
+
+#####################
+## STRUCT_BIOL_GEN ##
+#####################
+
+loop_
+_struct_biol_gen.biol_id                  
+_struct_biol_gen.asym_id              	
+_struct_biol_gen.symmetry 			
+1  A  1_555
+1  A  7_555
+1  S  1_555
+1  S  7_555
+
+##########################
+## STRUCT_BIOL_KEYWORDS ##
+##########################
+
+loop_
+_struct_biol_keywords.biol_id
+_struct_biol_keywords.text
+1  'DNA'
+1  'A DNA'
+1  'DNA DUPLEX'
+
+#################
+## STRUCT_CONF ##
+#################
+
+loop_
+_struct_conf.id                     
+_struct_conf.conf_type_id
+_struct_conf.beg_label_comp_id
+_struct_conf.beg_label_asym_id
+_struct_conf.beg_label_seq_id
+_struct_conf.end_label_comp_id
+_struct_conf.end_label_asym_id
+_struct_conf.end_label_seq_id
+CHAIN-A  HELX_RH_A_N  G  A  1   C  A  8
+
+######################
+## STRUCT_CONN_TYPE ##
+######################
+
+loop_
+_struct_conn_type.id
+_struct_conn_type.criteria
+hydrog 
+;
+N to O distance > 2.5 Angstroms and  < 3.5 Angstroms, 
+N - O - C  angle < 120 degrees
+;
+
+######################
+## STRUCT_CONF_TYPE ##
+######################
+
+loop_
+_struct_conf_type.id
+_struct_conf_type.criteria
+HELX_RH_A_N  'AUTHOR JUDGEMENT'
+
+#################
+## STRUCT_CONN ##
+#################
+
+loop_
+_struct_conn.id                              
+_struct_conn.conn_type_id
+_struct_conn.ptnr1_label_comp_id             
+_struct_conn.ptnr1_label_asym_id            
+_struct_conn.ptnr1_label_seq_id             
+_struct_conn.ptnr1_label_atom_id            
+_struct_conn.ptnr1_symmetry
+_struct_conn.ptnr2_label_comp_id            
+_struct_conn.ptnr2_label_asym_id           
+_struct_conn.ptnr2_label_seq_id              
+_struct_conn.ptnr2_label_atom_id           
+_struct_conn.ptnr2_symmetry               
+_struct_conn.details                      
+  1  hydrog   G A  1  N2  1_555  C A   8  O2  7_555  WATSON-CRICK 
+  2  hydrog   G A  1  N1  1_555  C A   8  N3  7_555  WATSON-CRICK
+  3  hydrog   G A  1  O6  1_555  C A   8  N4  7_555  WATSON-CRICK
+  4  hydrog   T A  2  N3  1_555  A A   7  N1  7_555  WATSON-CRICK
+  5  hydrog   T A  2  O4  1_555  A A   7  N6  7_555  WATSON-CRICK
+  6  hydrog   C A  3  O2  1_555  G A   6  N2  7_555  WATSON-CRICK
+  7  hydrog   C A  3  N3  1_555  G A   6  N1  7_555  WATSON-CRICK
+  8  hydrog   C A  3  N4  1_555  G A   6  O6  7_555  WATSON-CRICK
+  9  hydrog   T A  4  N3  1_555  A A   5  N1  7_555  WATSON-CRICK
+ 10  hydrog   T A  4  O4  1_555  A A   5  N6  7_555  WATSON-CRICK
+ 11  hydrog   A A  5  N1  1_555  T A   4  N3  7_555  WATSON-CRICK
+ 12  hydrog   A A  5  N6  1_555  T A   4  O4  7_555  WATSON-CRICK
+ 13  hydrog   G A  6  N2  1_555  C A   3  O2  7_555  WATSON-CRICK
+ 14  hydrog   G A  6  N1  1_555  C A   3  N3  7_555  WATSON-CRICK
+ 15  hydrog   G A  6  O6  1_555  C A   3  N4  7_555  WATSON-CRICK
+ 16  hydrog   A A  7  N1  1_555  T A   2  N3  7_555  WATSON-CRICK
+ 17  hydrog   A A  7  N6  1_555  T A   2  O4  7_555  WATSON-CRICK
+ 18  hydrog   C A  8  O2  1_555  G A   1  N2  7_555  WATSON-CRICK
+ 19  hydrog   C A  8  N3  1_555  G A   1  N1  7_555  WATSON-CRICK
+ 20  hydrog   C A  8  N4  1_555  G A   1  O6  7_555  WATSON-CRICK
+
+##############
+## SYMMETRY ##
+##############
+
+_symmetry.entry_id                           ADH041
+_symmetry.space_group_name_H-M              'P 43 21 2'           
+
+
+
+
+

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JSTest Test Runner</title>
+		
+		<link href="../themes/default/style.css" type="text/css" rel="stylesheet"
+			media="screen" />
+		
+		<!-- jstest -->
+		<script type="text/javascript" src="../jstest.js"></script>
+		
+		<!-- example tests -->
+		<script type="text/javascript" src="tests.js"></script>
+		
+		<!-- run the tests -->
+		<script type="text/javascript">
+		window.onload = function () {
+			var resultsDiv = document.getElementById('test-results');
+			JSTest.run(true, JSTest.handlers.HTMLHandler, resultsDiv); // verbose, html handler
+		};
+		</script>
+	</head>
+	<body>
+		<div id="header">
+			<h1>js-lisp Test Runner</h1>
+			<div id="counts-container">
+				<h3>assertions</h3>
+				<table id="assertion-counts">
+					<tr>
+						<td id="successful-assertions-count" class="passed-count count">0</td>
+						<td>successful</td>
+					</tr>
+					<tr>
+						<td id="failed-assertions-count" class="failed-count count">0</td>
+						<td>failed</td>
+					</tr>
+				</table>
+				<h3>tests</h3>
+				<table id="test-counts">
+					<tr>
+						<td id="passed-tests-count" class="passed-count count">0</td>
+						<td>passed</td>
+					</tr>
+					<tr>
+						<td id="failed-tests-count" class="failed-count count">0</td>
+						<td>failed</td>
+					</tr>
+				</table>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div id="test-results"></div>
+	</body>
+</html>

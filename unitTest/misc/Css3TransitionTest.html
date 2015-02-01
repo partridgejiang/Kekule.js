@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS3 Transition Test</title>
+  <style>
+    .UseTrans
+    {
+      /* transition: opacity 3s;*/
+      transition: height 3s;
+      -moz-transition: height 3s;
+      -webkit-transition: height 3s;
+    }
+    .NoTrans
+    {
+      transition-property: none;
+      -moz-transition-property: none;
+      -webkit-transition-property: none;
+
+      transition-duration: 0;
+      -moz-transition-duration: 0;
+      -webkit-transition-duration: 0;
+    }
+    .Initial
+    {
+      /*opacity: 0;*/
+      height: 150px;
+    }
+    .Final
+    {
+      /*opacity: 1;*/
+      height: 300px;
+    }
+
+    #target
+    {
+      width: 200px;
+      height: 150px;
+      background: red;
+    }
+    #target:hover
+    {
+      /*opacity:0.5;*/
+      height: 300px;
+    }
+  </style>
+  <script>
+    function start()
+    {
+      var elem = document.getElementById('target');
+
+      elem.classList.remove('NoTrans');
+      elem.classList.remove('UseTrans');
+      elem.classList.remove('Final');
+      elem.classList.add('Initial');
+
+      //alert('about to begin');
+
+      setTimeout(function()
+      {
+        console.log('here');
+        elem.classList.add('UseTrans');
+        //elem.classList.add('Final');
+        //elem.classList.remove('Initial');
+        elem.style.height = '300px';
+
+      }, 10);
+    }
+    function halt()
+    {
+      var elem = document.getElementById('target');
+      elem.classList.remove('UseTrans');
+      elem.classList.add('NoTrans');
+    }
+
+    function init()
+    {
+      var elem = document.getElementById('target');
+      elem.addEventListener('transitionend', function() {alert('transitionEnd');} );
+      //elem.addEventListener('webkittransitionend', function() {alert('transitionEnd');} );
+    }
+  </script>
+</head>
+<body onload="init()">
+
+    <button type="button" value="start" onclick="start()">Start</button>
+    <button type="button" value="halt" onclick="halt()">Halt</button>
+
+    <div id="target"></div>
+
+</body>
+</html>

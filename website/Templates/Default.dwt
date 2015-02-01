@@ -1,0 +1,52 @@
+<!doctype html>
+<html><!-- InstanceBegin template="/Templates/BaseTemplate.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta charset="utf-8">
+	<!-- InstanceBeginEditable name="doctitle" -->
+	<title>Kekule.js Lib</title>
+	<!-- InstanceEndEditable -->
+	<link href="../styles/base.css" rel="stylesheet" type="text/css">	
+	<!-- InstanceBeginEditable name="head" -->
+	<link href="../styles/default.css" rel="stylesheet" type="text/css">
+	<!-- TemplateBeginEditable name="head" -->
+	<!-- TemplateEndEditable -->
+	<!-- InstanceEndEditable -->
+</head>
+
+<body>
+	<header class="MainHeader" id="mainHeader">
+		<nav class="MainNav" id="mainNav">			
+			<!-- InstanceBeginEditable name="MainnNavItems" -->
+			<a id="kekuleLogo"  href="../index.html" title="Kekule Home"><span>Kekule.js</span></a>
+			<a href="../index.html">Overview</a>
+			<a>Features</a>
+			<a href="../demos/index.html" target="_blank">Demos</a>
+			<a>Document</a>
+			<!-- TemplateBeginEditable name="AdditionalMainNavItems" -->
+			<!-- TemplateEndEditable -->			
+			<!-- InstanceEndEditable -->			
+		</nav>
+	</header>	
+	<section class="MainContent" id="mainContent">    			
+		<!-- InstanceBeginEditable name="PossibleSideNav" -->
+			<nav class="SideNav">
+				<!-- TemplateBeginEditable name="SideNavContent" -->
+				<a>Overview</a>
+				<a>Features</a>
+				<a href="../demos/index.html" target="_blank">Demos</a>
+				<a>Document</a>
+				<!-- TemplateEndEditable -->						
+			</nav>
+			<!-- InstanceEndEditable -->			
+		<article id="mainArticle" class="MainArticle">			
+			<header>
+				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" -->ArticleHeadLine<!-- InstanceEndEditable --></h1>
+			</header>		
+			<!-- InstanceBeginEditable name="MainContent" -->MainContent<!-- InstanceEndEditable -->
+		</article>
+	</section>
+	<footer class="MainFooter" id="mainFooter">
+		<span>Copyright 2014 Kekule.js Lab</span>
+	</footer>
+</body>
+<!-- InstanceEnd --></html>

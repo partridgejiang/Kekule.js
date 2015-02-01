@@ -1,0 +1,232 @@
+{
+  "defAutoScaleRefLength": 0.8,
+  "root": {
+    "id": "o1",
+    "children": {
+      "id": "o2",
+      "items": [
+        {
+          "__type__": "Kekule.Molecule",
+          "id": "m1",
+          "renderOptions": {
+            "expanded": true,
+            "__type__": "object"
+          },
+          "coord2D": {
+            "x": -7.355047781808036,
+            "y": 13.931809430803572,
+            "__type__": "object"
+          },
+          "charge": 0,
+          "ctab": {
+            "nodes": [
+              {
+                "__type__": "Kekule.Atom",
+                "id": "a3",
+                "coord2D": {
+                  "x": -0.40000000000000036,
+                  "y": 0.23094010767585083,
+                  "__type__": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              },
+              {
+                "__type__": "Kekule.Atom",
+                "id": "a2",
+                "coord2D": {
+                  "x": 0.39999999999999947,
+                  "y": 0.23094010767585083,
+                  "__type__": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              },
+              {
+                "__type__": "Kekule.Atom",
+                "id": "a1",
+                "coord2D": {
+                  "x": 0,
+                  "y": -0.46188021535170165,
+                  "__type__": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "__type__": "Kekule.Bond",
+                "id": "b2",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "isInAromaticRing": false,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "__type__": "Kekule.Bond",
+                "id": "b3",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "isInAromaticRing": false,
+                "connectedNodes": [
+                  0,
+                  2
+                ]
+              },
+              {
+                "__type__": "Kekule.Bond",
+                "id": "b1",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "isInAromaticRing": false,
+                "connectedNodes": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "__type__": "Kekule.StructureConnectionTable"
+          }
+        },
+        {
+          "__type__": "Kekule.Molecule",
+          "id": "m2",
+          "renderOptions": {
+            "expanded": true,
+            "__type__": "object"
+          },
+          "charge": 0,
+          "ctab": {
+            "nodes": [
+              {
+                "__type__": "Kekule.Atom",
+                "id": "a5",
+                "coord2D": {
+                  "x": -2.525084601637628,
+                  "y": 11.886095145089286,
+                  "__type__": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              },
+              {
+                "__type__": "Kekule.Atom",
+                "id": "a4",
+                "coord2D": {
+                  "x": -3.217904924665179,
+                  "y": 11.486095145089285,
+                  "__type__": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "__type__": "Kekule.Bond",
+                "id": "b4",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "isInAromaticRing": false,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "__type__": "Kekule.StructureConnectionTable"
+          }
+        },
+        {
+          "__type__": "Kekule.Glyph.StraightLine",
+          "id": "p1",
+          "coord2D": {
+            "x": -1.2293334960937514,
+            "y": 13.817523716517856,
+            "__type__": "object"
+          },
+          "ctab": {
+            "nodes": [
+              {
+                "__type__": "Kekule.Glyph.PathGlyphNode",
+                "id": "n1",
+                "coord2D": {
+                  "x": 0,
+                  "y": 0,
+                  "__type__": "object"
+                },
+                "coord3D": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "__type__": "object"
+                },
+                "nodeType": "location"
+              },
+              {
+                "__type__": "Kekule.Glyph.PathGlyphNode",
+                "id": "n2",
+                "coord2D": {
+                  "x": 1.1999999999999993,
+                  "y": 0,
+                  "__type__": "object"
+                },
+                "coord3D": {
+                  "x": 1.2000000000000002,
+                  "y": 0,
+                  "z": 0,
+                  "__type__": "object"
+                },
+                "nodeType": "location"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "__type__": "Kekule.Glyph.PathGlyphConnector",
+                "id": "c1",
+                "pathType": "L",
+                "pathParams": {
+                  "endArrowType": "open",
+                  "endArrowWidth": 0.2,
+                  "endArrowLength": 0.2,
+                  "lineLength": 1.5,
+                  "__type__": "object"
+                },
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "__type__": "Kekule.StructureConnectionTable"
+          }
+        }
+      ],
+      "__type__": "Kekule.ChemObjList"
+    },
+    "__type__": "Kekule.ChemSpaceElement"
+  },
+  "enableAutoId": true,
+  "screenSize": {
+    "x": 900,
+    "y": 1500,
+    "__type__": "object"
+  },
+  "size2D": {
+    "x": 20.571428571428573,
+    "y": 34.285714285714285,
+    "__type__": "object"
+  },
+  "__type__": "Kekule.ChemDocument"
+}

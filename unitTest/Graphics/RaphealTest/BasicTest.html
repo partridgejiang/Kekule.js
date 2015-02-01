@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Raphael Test</title>
+<style>
+	.BigText {
+		font-size: 150px;
+		color: red;
+	}
+</style>
+<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+<script>
+	function draw()
+	{
+		var paper = Raphael('drawParent', 1000, 500);
+		
+		var st = paper.set();
+		//paper.setStart();
+		var line1 = paper.path("M0 0 L600 400");
+		line1.attr('stroke', 'rgba(100, 0, 0, 0.5)');
+		line1.attr('stroke-width', 10);
+		var line2 = paper.path("M600 0 L0 400");
+		line2.attr('stroke', 'rgba(0, 0, 100, 0.5)');
+		line2.attr('stroke-width', 10);
+		
+		var rect = paper.rect(100, 300, 200, 100);
+		rect.attr("fill", "#f00");
+		rect.attr("stroke", "#0f0");
+		rect.attr("stroke-width", 3);
+		//rect.translate(200, 100);
+		//rect.rotate(45, 200, 150);
+		
+		st.push(line1, line2, rect);
+		
+		paper.path('M200 300 L800 300').attr('stroke', '#f00');
+		
+		var innerSt = paper.set();
+		var txt = paper.text(200, 300, 'Hello world');
+		//var txt = paper.print(200, 300, 'Hello world');
+		//txt.attr({fill: "#f00"});
+		txt.attr('font-size', '1em');
+		//txt.node.setAttribute('class', 'BigText');
+		txt.node.style.fontSize = '150px';
+		txt.attr("stroke", "#333");
+		txt.attr("stroke-width", 5);
+		//txt.attr('font', 'bold normal 100px "times new roman"');
+		txt.attr('font-weight', 'bold');
+		txt.attr('text-anchor', 'start');
+		//txt.attr('text-anchor','top-left');
+		//txt.attr('clip-rect', '400,200,100,200');
+		
+		var bbox = txt.getBBox();
+		var brect = paper.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+		brect.attr('stroke-width', 3);
+		brect.attr('stroke', '#f00');
+		brect.attr('opacity', 0.5);
+		
+		var txt2 = paper.text(bbox.x + bbox.width, bbox.y, 'SubScript');
+		txt2.attr('font-size', '100px');
+		txt2.attr('text-anchor', 'start');
+		txt2.node.style.verticalAlign = 'sub';
+		
+		innerSt.push(txt, txt2);		
+
+		var bbox = innerSt.getBBox();
+		var brect = paper.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+		brect.attr('stroke-width', 3);
+		brect.attr('stroke', '#00f');
+		brect.attr('opacity', 0.5);
+		
+		st.push(innerSt);
+		//var st = paper.setFinish();
+		//st.attr("opacity", "0.6");
+		//st./*scale(0.5, 0.5).*/rotate(-45);
+		//st.glow();
+		
+		var bbox = st.getBBox();
+		var brect = paper.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+		brect.attr('stroke-width', 3);
+		brect.attr('stroke', '#0f0');
+		brect.attr('opacity', 0.5);
+		
+		console.log(st.items.length);
+		alert('remove one line');
+		line1.remove();
+		alert('remove again; ' + line1.removed);
+		line1.remove();
+		console.log(st.items.length);
+		alert('remove set');
+		st.remove();
+	}
+</script>
+</head>
+<body onload="draw()">
+	<div id="drawParent">dssd</div>
+</body>
+</html>

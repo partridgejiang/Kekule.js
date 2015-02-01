@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kekule 2D Molecule Renderer Test</title>
+<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+<script src="../../../src/kekule.js"></script>
+<style>
+  #drawStage div
+  {
+  	display: block;
+  	float: left;
+    /*
+  	width: 500px;
+  	height: 500px;
+  	*/
+  }
+	#drawParent svg
+	{
+		/*
+		background-color: red;
+		border: 2px solid black;
+		display: block;
+		*/
+    background-color: yellow;
+    float: left;
+	}
+  #drawParent canvas
+  {
+    background-color: green;
+    float: left;
+  }
+	#raphaelParent
+	{
+		background-color: yellow;
+	}
+	#canvasParent
+	{
+		background-color: green;
+	}
+</style>
+<script type="text/javascript">
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+	var contextType = 'raphael';  // 'canvas'
+	var raphaelPaper;
+
+  /*
+	function getRaphaelContext()
+	{
+		if (!raphaelPaper)
+			raphaelPaper = Raphael('raphaelParent', drawBoxWidth, drawBoxHeight);
+		return raphaelPaper;
+	}
+	function getCanvasContext()
+	{
+		return document.getElementById('canvasContext').getContext('2d');
+	}
+	function clearRaphaelContext()
+	{
+		getRaphaelContext().clear();
+	}
+	function clearCanvasContext()
+	{
+		document.getElementById('canvasContext').width = '500';
+	}
+	function getDrawContext(contextType)
+	{
+		if (contextType == 'raphael')
+			return getRaphaelContext();
+		else
+			return getCanvasContext();
+	}
+	function clearContext(contextType)
+	{
+		if (contextType == 'raphael')
+			return clearRaphaelContext();
+		else
+			return clearCanvasContext();
+	}
+	*/
+
+	function getCondensed()
+	{
+		return document.getElementById('checkBoxCondensed').checked;
+	}
+
+	var drawnMol;
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var isCml = document.getElementById('radioBtnCml').checked;
+		var reader = isCml? new Kekule.IO.CmlReader():  new Kekule.IO.MdlReader();
+		var multiple = parseInt(document.getElementById('editMultiple').value);
+    var mol1;
+    var result;
+
+		if (multiple > 1)
+		{
+
+			var c = new Kekule.CompositeMolecule();
+			var coord = {'x': 0, 'y': 0};
+			for (var i = 0; i < multiple; ++i)
+			{
+				var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+				r.setCoord2D(coord);
+        //console.log('coord setted: ' coord, r);
+				c.getSubMolecules().appendObj(r);
+        mol1 = r;
+				var box = r.getContainerBox2D(true);
+				coord.y -= Math.max((box.y2 - box.y1) * 1.5, 1.5);
+				coord.x += Math.max((box.x2 - box.x1) * 0.5, 0.5);
+			}
+			//console.log(c);
+			result = c;
+			/*
+      var s = new Kekule.ChemSpace('auto');
+      var coord = {'x': 0, 'y': 0};
+      for (var i = 0; i < multiple; ++i)
+      {
+        var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+        r.setCoord2D(coord);
+        //r.setOwner(s);
+        s.getRoot().appendChild(r);
+        var box = r.getContainerBox2D();
+        coord.y += (box.y2 - box.y1) * 1.5;
+      }
+      return s;
+      */
+		}
+		else
+		{
+			var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+			drawnMol = r;
+      mol1 = r;
+			//console.log(r);
+			result = r;
+		}
+
+    console.log(r.getClassName(), r);
+
+    var ops = mol1.getRenderOptions();
+    /*
+    ops.atomLabelColor = '#FF0000';
+    ops.opacity = 0.3;
+    */
+    mol1.setRenderOption('atomColor', '#FF0000');
+    mol1.setRenderOption('opacity', 1);
+    if (mol1.hasCtab && mol1.hasCtab())
+    {
+      var connector = mol1.getConnectorAt(0);
+      /*
+      var ops = connector.getRenderOptions();
+      ops.color = '#0000FF';
+      ops.opacity = 1;
+      */
+      connector.setRenderOption('color', '#0000FF');
+      connector.setRenderOption('opacity', 1);
+
+      var node = mol1.getNodeAt(0);
+      node.setRenderOption('atomColor', '#000000');
+      node.setRenderOption('opacity', 1);
+    }
+
+    return result;
+	}
+
+  function init()
+  {
+
+  }
+
+  function getDrawParent(contextType)
+  {
+    return document.getElementById('drawParent');
+  }
+  function getDrawBridge(contextType)
+  {
+    var c = (contextType == 'raphael')? Kekule.Render.RaphaelRendererBridge:
+      (contextType == 'raphael')? Kekule.Render.CanvasRendererBridge:
+        Kekule.Render.DrawBridge2DMananger.getPreferredBridgeClass();
+    return new c();
+  }
+
+  var contexts = {};
+  var bridges = {};
+  var painters = {};
+  var painter;
+  var context;
+
+	function drawMol(contextType, mol, condensed, withRedraw)
+	{
+    /*
+		//mol.setCoord2D({'x': -20, 'y': -20});  // debug
+		var context = getDrawContext(contextType);
+		//var ctab = mol.getCtab();
+
+
+		var bridge = (contextType == 'raphael')?
+			Kekule.Render.RaphaelRendererBridge.getInstance():
+      (contextType == 'canvas')?
+			  Kekule.Render.CanvasRendererBridge.getInstance():
+        Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+    */
+    var parentElem = getDrawParent();
+    var bridge = getDrawBridge(contextType);
+    bridges[contextType] = bridge;
+
+    //console.log(bridge.CLASS_NAME);
+
+    context = bridge.createContext(parentElem, drawBoxWidth, drawBoxHeight);
+    contexts[contextType] = context;
+
+    /*
+    appendLog('bridge: ');
+    appendLog(bridge.CLASS_NAME);
+    */
+
+		/*
+		var render = new Kekule.Render.Ctab2DRenderer(
+			ctab,
+			bridge,
+			condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL
+		);
+		*/
+		/*
+		var render = new Kekule.Render.StructFragment2DRenderer(
+			mol,
+			bridge
+			//condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL
+		);
+		*/
+		var rc = c = Kekule.Render.get2DRendererClass(mol);
+
+		var baseCoord = {'x': drawBoxWidth / 2, 'y': drawBoxHeight / 2};
+		var options = {
+			moleculeDisplayType: condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL,
+			/*'scale': scale*/
+      //autofit: true,
+      retainAspect: true,
+			autoScale: true,
+			zoom: 1
+			//baseOnRootCoord: true,
+			/*
+			'translateX': transX,
+			'translateY': transY,
+			*/
+			//'rotateAngle': Math.PI / 6
+			/* 'center': center*/};
+		//clearContext(contextType);
+    bridge.clearContext(context);
+
+		var start = (new Date()).getTime();
+    //var render = new c(mol, bridge);
+		//render.draw(context, baseCoord, options);
+    var p = new Kekule.Render.ChemObjPainter(Kekule.CoordMode.COORD2D, mol, bridge);
+    painter = p;
+    painters[contextType] = p;
+    p.draw(context, baseCoord, options);
+		var end = (new Date()).getTime();
+		var duration = end - start;
+
+		appendLog('Draw in ' + duration + 'ms. ');
+
+		if (withRedraw)
+		{
+			//clearContext(contextType);
+      bridge.clearContext(context);
+			var start = (new Date()).getTime();
+			//render.redraw(context);
+      p.redraw(context);
+			var end = (new Date()).getTime();
+			var duration = end - start;
+
+			appendLog('Redraw in ' + duration + 'ms. ');
+		}
+	}
+
+  var currMol;
+	function draw(condensed)
+	{
+		clearLog();
+
+    getDrawParent().innerHTML = '';
+
+		var mol = readMol();
+    currMol = mol;
+
+		//var sReport = '';
+		var condensed = getCondensed();
+
+    appendLog('RAPHAEL: ');
+		drawMol('raphael', mol, condensed, true);
+
+    appendLog('CANVAS: ');
+    drawMol('canvas', mol, condensed, true);
+
+		//sReport += 'Raphael draw in ' + duration + 'ms ';
+
+    /*
+    appendLog('Auto: ');
+    drawMol('', mol, condensed, true);
+    */
+	}
+
+  function redraw()
+  {
+    clearLog();
+
+    appendLog('[Redraw]: ');
+    appendLog('RAPHAEL: ');
+    var start = (new Date()).getTime();
+    painters['raphael'].clearContext(contexts['raphael']);
+    painters['raphael'].redraw(contexts['raphael']);
+    var end = (new Date()).getTime();
+    var duration = end - start;
+    appendLog('in ' + duration + 'ms. ');
+
+    appendLog('CANVAS: ');
+    var start = (new Date()).getTime();
+    painters['canvas'].clearContext(contexts['canvas']);
+    painters['canvas'].redraw(contexts['canvas']);
+    var end = (new Date()).getTime();
+    var duration = end - start;
+    appendLog('in ' + duration + 'ms. ');
+  }
+
+  function removeChildObj()
+  {
+    var obj = currMol;
+    var mol, bond;
+    if (obj instanceof Kekule.Molecule)
+    {
+      mol = obj;
+      bond = obj.getConnectorAt(0);
+    }
+    else if (obj instanceof Kekule.ChemSpace)
+    {
+      mol = obj.getRoot().getChildAt(0);
+      bond = mol.getConnectorAt(0);
+    }
+
+    if (bond)
+    {
+      var connectedObjs = bond.getConnectedExposedObjs();
+      //console.log(mol.getCtab(), mol.getConnectorCount());
+      mol.removeConnectorAt(0);
+      //console.log(mol.getCtab(), mol.getConnectorCount());
+      //painter.remove(context, bond);
+
+      clearLog();
+
+
+      appendLog('[Remove bond]: ');
+      appendLog('RAPHAEL: ');
+      var start = (new Date()).getTime();
+      painters['raphael'].beginUpdatePainter();
+      painters['raphael'].remove(contexts['raphael'], bond);
+      painters['raphael'].modify(contexts['raphael'], connectedObjs);
+      painters['raphael'].endUpdatePainter();
+      var end = (new Date()).getTime();
+      var duration = end - start;
+      appendLog('in ' + duration + 'ms. ');
+
+
+      appendLog('CANVAS: ');
+      var start = (new Date()).getTime();
+      painters['canvas'].beginUpdatePainter();
+      painters['canvas'].remove(contexts['canvas'], bond);
+      painters['canvas'].modify(contexts['canvas'], connectedObjs);
+      painters['canvas'].endUpdatePainter();
+      var end = (new Date()).getTime();
+      var duration = end - start;
+      appendLog('in ' + duration + 'ms. ');
+
+    }
+  }
+
+  function addChildObj()
+  {
+    var mol = currMol;
+    if (mol instanceof Kekule.Molecule)
+    {
+      var atom = new Kekule.Atom(null, 'C', 13, {'x': 0, 'y': 0});
+      if (atom)
+      {
+        //console.log(mol.getCtab(), mol.getConnectorCount());
+        mol.appendNode(atom);
+        //console.log(mol.getCtab(), mol.getConnectorCount());
+        //painter.remove(context, bond);
+
+        clearLog();
+        appendLog('[Add atom]: ');
+        appendLog('CANVAS: ');
+        var start = (new Date()).getTime();
+        painters['canvas'].addNew(contexts['canvas'], atom);
+        var end = (new Date()).getTime();
+        var duration = end - start;
+        appendLog('in ' + duration + 'ms. ');
+
+        appendLog('RAPHAEL: ');
+        var start = (new Date()).getTime();
+        painters['raphael'].addNew(contexts['raphael'], atom);
+        var end = (new Date()).getTime();
+        var duration = end - start;
+        appendLog('in ' + duration + 'ms. ');
+      }
+    }
+  }
+
+	function clearLog()
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML = '';
+	}
+	function appendLog(msg)
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML += msg;
+	}
+</script>
+</head>
+<body>
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+		<input type="radio" name="radioBtnMType" id="radioBtnMol" checked="checked">MOL</input>
+		<input type="radio" name="radioBtnMType" id="radioBtnCml">CML</input>
+	</form>
+	<button value="Draw Mol" onclick="draw()">Draw Molecule</button>
+  <button value="Draw Mol" onclick="redraw()">Redraw</button>
+  <button value="Draw Mol" onclick="removeChildObj()">Remove bond</button>
+  <button value="Draw Mol" onclick="addChildObj()">Add tom</button>
+	<label for="editMultiple">Multiple</label>
+	<input type="text" id="editMultiple" name="editMultiple" value="1"/>
+	<span id="labelRichText"></span>
+	<input type="checkbox" id="checkBoxCondensed" name="checkBoxCondensed" onclick="draw()">Condensed</input>
+	<div id="report"></div>
+	<div id="drawStage">
+    <!--
+		<div id="raphaelParent">RaphaelParent</div>
+		<div id="canvasParent">
+			<canvas id="canvasContext" width="500" height="500"></canvas>
+		</div>
+		-->
+    <div id="drawParent"></div>
+	</div>
+</body>
+</html>

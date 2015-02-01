@@ -1,0 +1,104 @@
+# example_cer chemdig rzepa  MSI CERIUS2 DataModel File Version 2 0
+(1 Model
+ (A I Id 1)
+ (A C Label "Sodium hydroxymethylsulfonate")
+ (1 Atom
+  (A C ACL "16 S")
+  (A D XYZ (-0.022524 1.80974 0.0119929))
+  (A I Id 1)
+  (A C Label S)
+ )
+ (2 Atom
+  (A C ACL "6 C")
+  (A D XYZ (0.00207539 -0.0040677 0.00201723))
+  (A I Id 2)
+  (A C Label C)
+ )
+ (3 Atom
+  (A C ACL "8 O")
+  (A D XYZ (1.3106 2.30159 0.00190548))
+  (A I Id 3)
+  (A C Label O)
+ )
+ (4 Atom
+  (A C ACL "8 O")
+  (A D XYZ (-0.709798 2.28047 -1.13923))
+  (A I Id 4)
+  (A C Label O)
+ )
+ (5 Atom
+  (A C ACL "8 O")
+  (A D XYZ (-0.734918 2.30058 1.26421))
+  (A I Id 5)
+  (A C Label O)
+ )
+ (6 Atom
+  (A C ACL "8 O")
+  (A D XYZ (0.670938 -0.464914 -1.17369))
+  (A I Id 6)
+  (A C Label O)
+ )
+ (7 Atom
+  (A C ACL "1 H")
+  (A D XYZ (0.529261 -0.365147 0.885079))
+  (A I Id 7)
+  (A C Label H)
+ )
+ (8 Atom
+  (A C ACL "1 H")
+  (A D XYZ (-1.02052 -0.381351 0.00975597))
+  (A I Id 8)
+  (A C Label H)
+ )
+ (9 Atom
+  (A C ACL "1 H")
+  (A D XYZ (-0.725859 3.26694 1.23029))
+  (A I Id 9)
+  (A C Label H)
+ )
+ (10 Atom
+  (A C ACL "1 H")
+  (A D XYZ (0.66188 -1.43128 -1.13976))
+  (A I Id 10)
+  (A C Label H)
+ )
+ (11 Bond
+  (A O Atom1 2)
+  (A O Atom2 1)
+ )
+ (12 Bond
+  (A I Type 2)
+  (A O Atom1 3)
+  (A O Atom2 1)
+ )
+ (13 Bond
+  (A I Type 2)
+  (A O Atom1 4)
+  (A O Atom2 1)
+ )
+ (14 Bond
+  (A O Atom1 5)
+  (A O Atom2 1)
+ )
+ (15 Bond
+  (A O Atom1 6)
+  (A O Atom2 2)
+ )
+ (16 Bond
+  (A O Atom1 2)
+  (A O Atom2 7)
+ )
+ (17 Bond
+  (A O Atom1 2)
+  (A O Atom2 8)
+ )
+ (18 Bond
+  (A O Atom1 5)
+  (A O Atom2 9)
+ )
+ (19 Bond
+  (A O Atom1 6)
+  (A O Atom2 10)
+ )
+)
+

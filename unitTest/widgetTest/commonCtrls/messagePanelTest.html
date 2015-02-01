@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Message Panel Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+	<script src="../../../src/kekule.js"></script>
+	<style>
+		#controller
+		{
+			border: 1px solid black;
+			float: right;
+			padding: 1em;
+		}
+		#controller label
+		{
+			display: inline-block;
+			width: 8em;
+		}
+		#controller input
+		{
+			width: 10em;
+		}
+	</style>
+	<script>
+		var msgGroup;
+		function $(id)
+		{
+			return document.getElementById(id);
+		}
+		function init()
+		{
+			//msgGroup = new Kekule.Widget.MsgGroup(document);
+			msgGroup = new Kekule.Widget.SysMsgGroup(document);
+			msgGroup.appendToElem($('stage'));
+		}
+		function addMsg()
+		{
+			var text = $('editMessage').value;
+			var msgType = $('editType').value;
+			var flashTime = parseInt($('editFlashTime').value);
+			var maxCount = parseInt($('editMaxCount').value);
+
+			msgGroup.setMsgFlashTime(flashTime || null);
+			msgGroup.setMaxMsgCount(maxCount || null);
+			msgGroup.addMessage(text, msgType);
+		}
+	</script>
+</head>
+<body onload="init()">
+	<div id="controller">
+		<form>
+			<label>Max Count: </label>
+			<input id="editMaxCount" type="text" value="3"/>
+			<br />
+			<label>Flash time: </label>
+			<input id="editFlashTime" type="text" value="3000"/>
+			<br />
+			<label>Message: </label>
+			<input id="editMessage" type="text" value="a message"/>
+			<br />
+			<label>Type:</label>
+			<input id="editType" type="text" value="info"/>
+			<br />
+			<button id="btnAdd" onclick="addMsg()" type="button">Add</button>
+		</form>
+	</div>
+	<div id="stage">
+
+	</div>
+</body>
+</html>

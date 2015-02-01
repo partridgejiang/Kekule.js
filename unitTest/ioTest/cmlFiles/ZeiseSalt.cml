@@ -1,0 +1,23 @@
+<molecule title="metal-bond example" xmlns="http://www.xml-cml.org/schema/cml2/core">
+<!-- Zeise's salt: [Cl3Pt(CH2=CH2)]- -->
+  <atomArray>
+    <atom id="pt1" elementType="Pt"/>
+    <atom id="cl1" elementType="Cl"/>
+    <atom id="cl2" elementType="Cl"/>
+    <atom id="cl3" elementType="Cl"/>
+    <atom id="c1" elementType="C" hydrogenCount="2"/>
+    <atom id="c2" elementType="C" hydrogenCount="2"/>
+  </atomArray>
+  <bondArray>
+    <bond id="b1" atomRefs2="c1 c2" order="D"/>
+    <bond id="b2" atomRefs2="pt1 cl1" order="S"/>
+    <bond id="b3" atomRefs2="pt1 cl2" order="S"/>
+    <bond id="b4" atomRefs2="pt1 cl3" order="S"/>
+    <bond id="b5" atomRefs="pt1" bondRefs="b1">
+    	<scalar title="dipole" dictRef="d:dip"
+				units="units:debye">0.2</scalar>
+			<scalar title="dipole2" dictRef="d:dip"
+				units="units:debye">0.2</scalar>
+    </bond>
+  </bondArray>
+</molecule>

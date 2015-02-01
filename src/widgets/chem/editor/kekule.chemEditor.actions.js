@@ -1,0 +1,1357 @@
+/**
+ * @fileoverview
+ * Implements of actions related with chem editor.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /utils/kekule.utils.js
+ * requires /io/kekule.io.js
+ * requires /xbrowsers/kekule.x.js
+ * requires /widgets/kekule.widget.base.js
+ * requires /widgets/kekule.widget.clipboards.js
+ * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
+ * requires /widgets/chem/editor/kekule.chemEditor.baseEditors.js
+ * requires /widgets/chem/editor/kekule.chemEditor.composers.js
+ * requires /widgets/operation/kekule.actions.js
+ *
+ * requires /localization/kekule.localize.widget.js
+ */
+
+(function(){
+"use strict"
+
+var AU = Kekule.ArrayUtils;
+var CCNS = Kekule.ChemWidget.HtmlClassNames;
+var CWT = Kekule.ChemWidgetTexts;
+
+/** @ignore */
+Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
+	// predefined actions
+	ACTION_UNDO: 'K-Chem-Undo',
+	ACTION_REDO: 'K-Chem-Redo',
+	ACTION_NEWDOC: 'K-Chem-NewDoc',
+	ACTION_CLONE_SELECTION: 'K-Chem-Clone-Selection',
+	ACTION_COPY: 'K-Chem-Copy',
+	ACTION_CUT: 'K-Chem-Cut',
+	ACTION_PASTE: 'K-Chem-Paste',
+	ACTION_TOGGLE_INSPECTOR: 'K-Chem-Toggle-Inspector'
+});
+
+/**
+ * A helper class for editor actions.
+ * @class
+ */
+Kekule.Editor.ActionOperUtils = {
+	/**
+	 * Add standalone objects to a chem space editor, with operation support.
+	 * @param {Kekule.Editor.ChemSpaceEditor} editor
+	 * @param {Array} objs
+	 * @param {Hash} coordOffset Coords of new added objects will be added with this value.
+	 */
+	addObjectsToChemSpaceEditor: function(editor, objs, coordOffset)
+	{
+		var chemSpace = editor.getChemSpace && editor.getChemSpace();
+		if (editor && chemSpace && editor.canAddNewStandaloneObject && editor.canAddNewStandaloneObject())
+		{
+			editor.beginUpdateObject();
+			try
+			{
+				var marcoOper = new Kekule.MacroOperation();
+				for (var i = 0, l = objs.length; i < l; ++i)
+				{
+					var obj = objs[i];
+					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace);
+					marcoOper.add(oper);
+				}
+				marcoOper.execute();
+
+				if (coordOffset)
+				{
+					for (var i = 0, l = objs.length; i < l; ++i)
+					{
+						var obj = objs[i];
+						var coord = editor.getObjectScreenCoord(obj);
+						var newCoord = Kekule.CoordUtils.add(coord, coordOffset);
+						editor.setObjectScreenCoord(obj, newCoord);
+					}
+				}
+
+				editor.pushOperation(marcoOper);
+				editor.select(objs);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
+		}
+	}
+};
+
+/**
+ * Base class for actions for chem editor only.
+ * @class
+ * @augments Kekule.ChemWidget.ActionOnDisplayer
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ * @param {String} caption
+ * @param {String} hint
+ */
+Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
+/** @lends Kekule.Editor.ActionOnEditor# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOnEditor',
+	/** @constructs */
+	initialize: function($super, editor, caption, hint)
+	{
+		$super(editor, caption, hint);
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		var displayer = this.getDisplayer();
+		this.setEnabled(displayer && displayer.getChemObj() && displayer.getChemObjLoaded() && displayer.getEnabled());
+	},
+	/**
+	 * Returns target chem editor object.
+	 * @returns {Kekule.Editor.BaseEditor}
+	 */
+	getEditor: function()
+	{
+		var result = this.getDisplayer();
+		return (result instanceof Kekule.Editor.BaseEditor)? result: null;
+	}
+});
+
+/**
+ * An undo action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionEditorUndo = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionEditorUndo# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionEditorUndo',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_UNDO,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_UNDO, CWT.HINT_UNDO);
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().canUndo());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor)
+			editor.undo();
+	}
+});
+/**
+ * A redo action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionEditorRedo = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionEditorRedo# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionEditorRedo',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_REDO,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_REDO, CWT.HINT_REDO);
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().canRedo());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor)
+			editor.redo();
+	}
+});
+
+/**
+ * A new document action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionEditorNewDoc = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionEditorNewDoc# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionEditorNewDoc',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_NEWDOC,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC);
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		var editor = this.getDisplayer();
+		this.setEnabled(editor && editor.getEnabled() && editor.getEnableCreateNewDoc());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor)
+			editor.newDoc();
+	}
+});
+
+/**
+ * A clone selection action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionCloneSelection# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionCloneSelection',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_CLONE_SELECTION,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION);
+	},
+	/** @private */
+	_hasCloneMethod: function()
+	{
+		var editor = this.getEditor();
+		return editor && editor.cloneSelection;
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(this._hasCloneMethod() && this.getEditor().hasSelection());
+
+		this.setDisplayed(this._hasCloneMethod() && this.getEditor().canCloneObjects());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor && editor.getChemSpace)
+		{
+			var coordOffset = editor.getDefaultCloneScreenCoordOffset && editor.getDefaultCloneScreenCoordOffset();
+			var objs = editor.cloneSelection();
+			Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, objs, coordOffset);
+		}
+		/*
+		var chemSpace = editor.getChemSpace && editor.getChemSpace();
+		if (editor && chemSpace)
+		{
+			var coordOffset = editor.getDefaultCloneScreenCoordOffset();
+			editor.beginUpdateObject();
+			try
+			{
+				var objs = editor.cloneSelection();
+				var marcoOper = new Kekule.MacroOperation();
+				for (var i = 0, l = objs.length; i < l; ++i)
+				{
+					var obj = objs[i];
+					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace);
+					marcoOper.add(oper);
+				}
+				marcoOper.execute();
+
+				if (coordOffset)
+				{
+					for (var i = 0, l = objs.length; i < l; ++i)
+					{
+						var obj = objs[i];
+						var coord = editor.getObjectScreenCoord(obj);
+						var newCoord = Kekule.CoordUtils.add(coord, coordOffset);
+						editor.setObjectScreenCoord(obj, newCoord);
+					}
+				}
+
+				editor.pushOperation(marcoOper);
+				editor.select(objs);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
+		}
+		*/
+	}
+});
+
+/**
+ * A copying selection action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionCopySelection = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionCopySelection# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionCopySelection',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_COPY,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_COPY, CWT.HINT_COPY);
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().hasSelection());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var chemSpace = editor.getChemSpace && editor.getChemSpace();
+		if (editor && chemSpace)
+		{
+			var objs = editor.cloneSelection();
+			Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, objs);
+			//console.log(Kekule.Widget.Clipboard.getData('text/json'));
+		}
+	}
+});
+/**
+ * A cutting selection action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionCutSelection = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionCutSelection# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionCutSelection',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_CUT,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_CUT, CWT.HINT_CUT);
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().hasSelection());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var chemSpace = editor.getChemSpace && editor.getChemSpace();
+		if (editor && chemSpace)
+		{
+			var objs = editor.cloneSelection();
+			Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, objs);
+
+			// TODO: this is not a good approach
+			var controller = editor.getIaController('BasicMolEraserIaController');
+			if (controller)
+				controller.removeSelection();
+		}
+	}
+});
+/**
+ * A copying selection action on editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionPaste# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionPaste',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_PASTE,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, CWT.CAPTION_PASTE, CWT.HINT_PASTE);
+		Kekule.Widget.clipboard.addEventListener('setData', this._reactClipboardChange, this);
+	},
+	/** @ignore */
+	finalize: function($super)
+	{
+		Kekule.Widget.clipboard.removeEventListener('setData', this._reactClipboardChange, this);
+		$super();
+	},
+	/** @private */
+	_reactClipboardChange: function()
+	{
+		this.update();
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		if (this.getEnabled())
+			this.setEnabled(Kekule.Widget.clipboard.hasData(Kekule.IO.MimeType.JSON) && this.getEditor().canAddNewStandaloneObject());
+	},
+	/** @private */
+	getObjsCenterScreenCoord: function(editor, objects)
+	{
+		var BU = Kekule.BoxUtils;
+		var CU = Kekule.CoordUtils;
+		var containerBox = null;
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var box = Kekule.Render.ObjUtils.getContainerBox(objects[i], editor.getCoordMode(), editor.getAllowCoordBorrow());
+			if (!containerBox)
+				containerBox = box;
+			else
+				containerBox = BU.getContainerBox(box, containerBox);
+		}
+		//var centerCoord = BU.getCenterCoord(containerBox);
+		var coords = BU.getMinMaxCoords(containerBox);
+		var screenCoords = {
+			'min': editor.objCoordToScreen(coords.min),
+			'max': editor.objCoordToScreen(coords.max)
+		};
+		var result = CU.add(screenCoords.min, screenCoords.max);
+		var result = CU.divide(result, 2);
+		//return editor.objCoordToScreen(centerCoord);
+		return result;
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor && editor.getChemSpace)
+		{
+			var objs = Kekule.Widget.clipboard.getObjects(Kekule.IO.MimeType.JSON);
+
+			// calc coord offset
+			var coordOffset = null;
+			var selObjs = editor.getSelection();
+			if (selObjs && selObjs.length)
+			{
+				coordOffset = editor.getDefaultCloneScreenCoordOffset? editor.getDefaultCloneScreenCoordOffset(): null;
+				var originalSelectedObjs = AU.clone(selObjs);
+				if (originalSelectedObjs && originalSelectedObjs.length && coordOffset)
+				{
+					var originCenterCoord = this.getObjsCenterScreenCoord(editor, originalSelectedObjs);
+					var targetCenterCoord = this.getObjsCenterScreenCoord(editor, objs);
+					var deltaCoord = Kekule.CoordUtils.substract(originCenterCoord, targetCenterCoord);
+					coordOffset = Kekule.CoordUtils.add(coordOffset, deltaCoord);
+				}
+			}
+
+			Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, objs, coordOffset);
+		}
+		/*
+		var chemSpace = editor.getChemSpace && editor.getChemSpace();
+		if (editor && chemSpace)
+		{
+			var objs = Kekule.Widget.Clipboard.getObjects('text/json');
+			editor.beginUpdateObject();
+			try
+			{
+				var marcoOper = new Kekule.MacroOperation();
+				for (var i = 0, l = objs.length; i < l; ++i)
+				{
+					var obj = objs[i];
+					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace);
+					marcoOper.add(oper);
+				}
+				marcoOper.execute();
+
+				var coordOffset = editor.getDefaultCloneScreenCoordOffset();
+				if (coordOffset)
+				{
+					for (var i = 0, l = objs.length; i < l; ++i)
+					{
+						var obj = objs[i];
+						var coord = editor.getObjectScreenCoord(obj);
+						var newCoord = Kekule.CoordUtils.add(coord, coordOffset);
+						editor.setObjectScreenCoord(obj, newCoord);
+					}
+				}
+
+				editor.pushOperation(marcoOper);
+				editor.select(objs);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
+		}
+		*/
+	}
+});
+
+/**
+ * Base class for actions for chem composer.
+ * @class
+ * @augments Kekule.Action
+ *
+ * @param {Kekule.Editor.Composer} composer Target composer widget.
+ * @param {String} caption
+ * @param {String} hint
+ */
+Kekule.Editor.ActionOnComposer = Class.create(Kekule.Action,
+/** @lends Kekule.Editor.ActionOnComposer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOnComposer',
+	/** @constructs */
+	initialize: function($super, composer, caption, hint)
+	{
+		$super();
+		this.setText(caption);
+		this.setHint(hint);
+		this.setComposer(composer);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false});
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		var composer = this.getComposer();
+		var editor = this.getEditor();
+		this.setEnabled(composer && composer.getEnabled() && editor && editor.getChemObj() && editor.getChemObjLoaded() && editor.getEnabled());
+	},
+	/**
+	 * Returns chem editor object inside composer.
+	 * @returns {Kekule.Editor.BaseEditor}
+	 */
+	getEditor: function()
+	{
+		var composer = this.getComposer();
+		return composer? composer.getEditor(): null;
+	}
+});
+
+/**
+ * Actions that has a series of child attached actions on composer (such as bond action
+ * may has single, double, triple bond variations).
+ * @class
+ * @augments Kekule.Editor.ActionOnComposer
+ *
+ * @property {Kekule.ActionList} attachedActions
+ * @property {Kekule.Action} defaultAttachedAction If this property is set, when check on the parent action,
+ *   if no attached action is checked, default one will be checked on automatically.
+ */
+Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
+/** @lends Kekule.Editor.ActionOnComposerAdv# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOnComposerAdv',
+	/** @constructs */
+	initialize: function($super, composer, caption, hint)
+	{
+		var actions = new Kekule.ActionList();
+		actions.setOwnActions(true);
+		this.setPropStoreFieldValue('attachedActions', actions);
+		$super(composer, caption, hint);
+	},
+	finalize: function($super)
+	{
+		this.getAttachedActions().finalize();
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('attachedActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null});
+		this.defineProp('defaultAttachedAction', {'dataType': 'Kekule.Action', 'serializable': false});
+	},
+
+	/** @private */
+	checkedChanged: function($super)
+	{
+		$super();
+		var checked = this.getChecked();
+		if (this.hasAttachedActions())
+		{
+			var composer = this.getComposer();
+			if (composer)
+			{
+				if (checked)
+				{
+					composer.bindAssocActions(this.getAttachedActions());
+					composer.showAssocToolbar();
+					var defAction = this.getDefaultAttachedAction();
+					if (defAction)
+					{
+						if (defAction.getCheckGroup() && !this.getAttachedActions().hasActionChecked(defAction.getCheckGroup()))
+							defAction.execute();
+					}
+				}
+				else
+				{
+					composer.hideAssocToolbar();
+				}
+			}
+		}
+	},
+
+	/**
+	 * Check if there are attached actions to this one.
+	 * @returns {Bool}
+	 */
+	hasAttachedActions: function()
+	{
+		return !!this.getAttachedActions().getActionCount();
+	},
+	/**
+	 * Add an attached actions.
+	 */
+	addAttachedActions: function(action, asDefault)
+	{
+		this.getAttachedActions().add(action);
+		if (asDefault)
+			this.setDefaultAttachedAction(action);
+		return this;
+	},
+	/**
+	 * Remove attached actions.
+	 */
+	removeAttachedActions: function(action)
+	{
+		if (this.getDefaultAttachedAction() === action)
+			this.setDefaultAttachedAction(null);
+		this.getAttachedActions().remove(action);
+		return this;
+	},
+	/**
+	 * Clear all attached actions.
+	 */
+	clearAttachedActions: function()
+	{
+		this.setDefaultAttachedAction(null);
+		var actions = this.getAttachedActions();
+		actions.clear();
+	},
+
+	/** @private */
+	doExecute: function()
+	{
+		// when execute a adv action, a attached panel should be shown in composer to display all attached actions
+		// TODO
+	},
+	/** @ignore */
+	update: function($super)
+	{
+		$super();
+		this.getAttachedActions().updateAll();
+	}
+});
+
+/**
+ * Action to show or hide adv panel (object inspector and tree view) of composer.
+ * @class
+ * @augments Kekule.Editor.ActionOnComposer
+ *
+ * @param {Kekule.Editor.Composer} composer Target composer widget.
+ */
+Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionOnComposer,
+/** @lends Kekule.Editor.ActionComposerToggleInspector# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionComposerToggleInspector',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_INSPECTOR,
+	/** @constructs */
+	initialize: function($super, composer)
+	{
+		$super(composer, CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR);
+		//this.setCheckGroup(this.getClassName());
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		var composer = this.getComposer();
+		if (composer)
+		{
+			this.setChecked(composer.getShowInspector());
+		}
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var composer = this.getComposer();
+		if (composer)
+		{
+			this.setChecked(!this.getChecked());
+			composer.setShowInspector(this.getChecked());
+		}
+	}
+});
+
+/**
+ * Action to change IA controller of editor/composer.
+ * @class
+ * @augments Kekule.Editor.ActionOnComposerAdv
+ *
+ * @param {Kekule.Editor.Composer} composer Target composer widget.
+ * @param {String} caption
+ * @param {String} hint
+ * @param {String} controllerId
+ */
+Kekule.Editor.ActionComposerSetIaController = Class.create(Kekule.Editor.ActionOnComposerAdv,
+/** @lends Kekule.Editor.ActionComposerSetIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionComposerSetIaController',
+	/** @constructs */
+	initialize: function($super, composer, caption, hint, controllerId)
+	{
+		$super(composer, caption, hint);
+		this.setPropStoreFieldValue('iaControllerId', controllerId);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		//this.defineProp('editorConfigs', {'dataType': 'Kekule.Editor.BaseEditorConfigs', 'serializable': false});
+		//this.defineProp('iaController', {'dataType': 'Kekule.Editor.BaseEditorIaController', 'serializable': false, 'setter': null});
+		this.defineProp('iaControllerId', {'dataType': DataType.STRING, 'serializable': false, 'setter': null});
+	},
+	/** @private */
+	doExecute: function()
+	{
+		//console.log('set active id', this.getIaControllerId());
+		this.getEditor().setActiveIaControllerId(this.getIaControllerId());
+	}
+});
+
+/** @ignore */
+Kekule.Editor.createComposerIaControllerActionClass = function(className,
+	caption, hint, iaControllerId, htmlClassName,
+	specifiedProps, attachedActionClasses, methods)
+{
+	if (!htmlClassName)
+		htmlClassName = iaControllerId;
+	if (!htmlClassName.startsWith(Kekule.ChemWidget.HtmlClassNames.PREFIX))
+		htmlClassName = Kekule.ChemWidget.HtmlClassNames.PREFIX + htmlClassName;
+	var data = {
+		CLASS_NAME: className,
+		HTML_CLASSNAME: htmlClassName,
+		initialize: function($super, composer)
+		{
+			$super(composer, caption, hint, iaControllerId);
+			if (this.initAttachedActions)
+				this.initAttachedActions();
+		}
+	};
+	if (specifiedProps)
+	{
+		data.doExecute = function($super)
+		{
+			var editor = this.getEditor();
+			var controller = editor.getIaController(iaControllerId);
+			if (controller)
+			{
+				controller.setPropValues(specifiedProps);
+			}
+		}
+	}
+	if (attachedActionClasses)
+	{
+		data.initAttachedActions = function()
+		{
+			var composer = this.getComposer();
+			var checkGroup = this.getClassName();
+			for (var i = 0, l = attachedActionClasses.length; i < l; ++i)
+			{
+				var action = new attachedActionClasses[i](composer);
+				action.setCheckGroup(checkGroup);
+				this.addAttachedActions(action, i === 0);  // the first one is the default action
+			}
+		}
+	}
+	if (methods)
+	{
+		data = Object.extend(data, methods);
+	}
+	return Class.create(Kekule.Editor.ActionComposerSetIaController, data);
+};
+
+////////////// create ia controller actions ///////////////////////////
+
+// Select
+Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateController',
+	Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
+	Kekule.ChemWidgetTexts.HINT_MANIPULATE,
+	'BasicMolManipulationIaController',
+	null,
+	null
+);
+
+// Erase
+Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetEraserController',
+	Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.ChemWidgetTexts.HINT_ERASE,
+	'BasicMolEraserIaController',
+	null,
+	null,
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			if (editor.hasSelection())
+				editor.getActiveIaController().removeSelection();
+		}
+	}
+);
+
+// Bond and its variations
+Kekule.Editor.ActionComposerSetBondControllerSingle = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerSingle',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_SINGLE,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_SINGLE,
+	'MolBondIaController',
+	'MolBondIaController-Single',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.SINGLE,
+		'bondStereo': Kekule.BondStereo.NONE
+	}
+);
+Kekule.Editor.ActionComposerSetBondControllerDouble = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerDouble',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_DOUBLE,
+	'MolBondIaController',
+	'MolBondIaController-Double',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.DOUBLE,
+		'bondStereo': Kekule.BondStereo.NONE
+	}
+);
+Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerTriple',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_TRIPLE,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_TRIPLE,
+	'MolBondIaController',
+	'MolBondIaController-Triple',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.TRIPLE,
+		'bondStereo': Kekule.BondStereo.NONE
+	}
+);
+Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerWedgeUp',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP,
+	'MolBondIaController',
+	'MolBondIaController-WedgeUp',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.SINGLE,
+		'bondStereo': Kekule.BondStereo.UP
+	}
+);
+Kekule.Editor.ActionComposerSetBondControllerWedgeDown = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerWedgeDown',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN,
+	'MolBondIaController',
+	'MolBondIaController-WedgeDown',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.SINGLE,
+		'bondStereo': Kekule.BondStereo.DOWN
+	}
+);
+Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WAVY,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WAVY,
+	'MolBondIaController',
+	'MolBondIaController-WedgeUpOrDown',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.SINGLE,
+		'bondStereo': Kekule.BondStereo.UP_OR_DOWN
+	}
+);
+
+Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondController',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND,
+	Kekule.ChemWidgetTexts.HINT_MOL_BOND,
+	'MolBondIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetBondControllerSingle,
+		Kekule.Editor.ActionComposerSetBondControllerDouble,
+		Kekule.Editor.ActionComposerSetBondControllerTriple,
+		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
+		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
+		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown
+	]
+	/*
+	 {
+	 initAttachedActions: function()
+	 {
+	 var composer = this.getComposer();
+	 var checkGroup = this.getClassName();
+	 //console.log(this, this.addAttachedActions);
+	 var classes = [
+	 Kekule.Editor.ActionComposerSetBondControllerSingle,
+	 Kekule.Editor.ActionComposerSetBondControllerDouble,
+	 Kekule.Editor.ActionComposerSetBondControllerTriple,
+	 Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
+	 Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
+	 Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown
+	 ];
+	 for (var i = 0, l = classes.length; i < l; ++i)
+	 {
+	 var action = new classes[i](composer);
+	 action.setCheckGroup(checkGroup);
+	 this.addAttachedActions(action);
+	 }
+	 }
+	 }
+	 */
+);
+
+// Atom
+Kekule.Editor.ActionComposerSetAtomController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetAtomController',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_ATOM,
+	Kekule.ChemWidgetTexts.HINT_MOL_ATOM,
+	'MolAtomIaController',
+	null,
+	null
+);
+
+// Charge and its variations
+Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerClear',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_CLEAR,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_CLEAR,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Clear',
+	{
+		'charge': 0,
+		'chargeInc': 0,
+		'radical': Kekule.RadicalOrder.NONE
+	}
+);
+Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerPositive',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_POSITIVE,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_POSITIVE,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Positive',
+	{
+		'charge': null,
+		'chargeInc': 1
+	}
+);
+Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerNegative',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_NEGATIVE,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_NEGATIVE,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Negative',
+	{
+		'charge': null,
+		'chargeInc': -1
+	}
+);
+Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_SINGLET,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_SINGLET,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Singlet',
+	{
+		'charge': null,
+		'chargeInc': 0,
+		'radical': Kekule.RadicalOrder.SINGLET
+	}
+);
+Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_TRIPLET,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_TRIPLET,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Triplet',
+	{
+		'charge': null,
+		'chargeInc': 0,
+		'radical': Kekule.RadicalOrder.TRIPLET
+	}
+);
+Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-Doublet',
+	{
+		'charge': null,
+		'chargeInc': 0,
+		'radical': Kekule.RadicalOrder.DOUBLET
+	}
+);
+
+Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeChargeController',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE,
+	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE,
+	'MolNodeChargeIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetNodeChargeControllerClear,
+		Kekule.Editor.ActionComposerSetNodeChargeControllerPositive,
+		Kekule.Editor.ActionComposerSetNodeChargeControllerNegative,
+		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet,
+		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet,
+		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet
+	]
+);
+
+
+// Text block
+Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetTextBlockController',
+	Kekule.ChemWidgetTexts.CAPTION_TEXT_BLOCK,
+	Kekule.ChemWidgetTexts.HINT_TEXT_BLOCK,
+	'TextBlockIaController',
+	null,
+	null
+);
+
+//////////////////// repository and its variations //////////////////////////
+// MolRing
+Kekule.Editor.ActionComposerSetRepositoryRing3Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing3Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_3,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_3,
+	'MolRingIaController',
+	'MolRingIaController-3',
+	{
+		'ringAtomCount': 3,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRing4Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing4Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_4,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_4,
+	'MolRingIaController',
+	'MolRingIaController-4',
+	{
+		'ringAtomCount': 4,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRing5Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing5Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_5,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_5,
+	'MolRingIaController',
+	'MolRingIaController-5',
+	{
+		'ringAtomCount': 5,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRing6Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing6Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_6,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_6,
+	'MolRingIaController',
+	'MolRingIaController-6',
+	{
+		'ringAtomCount': 6,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRing7Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing7Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_7,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_7,
+	'MolRingIaController',
+	'MolRingIaController-7',
+	{
+		'ringAtomCount': 7,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRing8Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRing8Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_8,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_8,
+	'MolRingIaController',
+	'MolRingIaController-8',
+	{
+		'ringAtomCount': 8,
+		'isAromatic': false
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_6,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_6,
+	'MolRingIaController',
+	'MolRingIaController-Ar-6',
+	{
+		'ringAtomCount': 6,
+		'isAromatic': true
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
+	'MolRingIaController',
+	'MolRingIaController-Ar-5',
+	{
+		'ringAtomCount': 5,
+		'isAromatic': true
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRingController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING,
+	'MolRingIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetRepositoryRing3Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRing4Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRing5Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRing6Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
+		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller
+	]
+);
+
+
+// PathGlyph
+Kekule.Editor.ActionComposerSetRepositoryPathLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathGlyphLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-Line',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': null,
+		'lineLength': 1.5
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-OpenArrowLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-TriangleArrowLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.TRIANGLE,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-DiOpenArrowLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'startArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-DiTriangleArrowLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'startArrowType': Kekule.Glyph.ArrowType.TRIANGLE,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowType': Kekule.Glyph.ArrowType.TRIANGLE,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_REV_ARROW_LINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReversibleArrowLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'startArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'startArrowSide': Kekule.Glyph.ArrowSide.REVERSED,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowSide': Kekule.Glyph.ArrowSide.SINGLE,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+			'lineCount': 2
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-OpenArrowDiLine',
+	{
+		'glyphClass': Kekule.Glyph.StraightLine,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+			'lineCount': 2
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_HEAT_SYMBOL,
+	'ArrowLineIaController',
+	'ArrowLineIaController-HeatSymbol',
+	{
+		'glyphClass': Kekule.Glyph.HeatSymbol,
+		'glyphInitialParams': {
+			'lineLength': 1
+		}
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryAddSymbolController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ADD_SYMBOL,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_ADD_SYMBOL,
+	'ArrowLineIaController',
+	'ArrowLineIaController-AddSymbol',
+	{
+		'glyphClass': Kekule.Glyph.AddSymbol,
+		'glyphInitialParams': {
+			'lineLength': 1
+		}
+	}
+);
+
+Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
+	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE,
+	Kekule.ChemWidgetTexts.HINT_REPOSITORY_ARROWLINE,
+	'ArrowLineIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
+		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
+		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
+	]
+);
+
+
+})();

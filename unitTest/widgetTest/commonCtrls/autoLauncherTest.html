@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Widget Auto Launcher Test</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+	<style>
+		#inspector
+		{
+			float: right;
+			/*width: 20em;*/
+		}
+		#objInspector
+		{
+			width: 90%;
+		}
+	</style>
+  <script src="../../../src/kekule.js"></script>
+  <script>
+		function refreshWidgetList()
+		{
+			var selector = Kekule.Widget.getWidgetById('selectboxWidgets');
+			var widgets = Kekule.Widget.globalManager.getWidgets();
+			var selectorItems = [];
+			for (var i = 0, l = widgets.length; i < l; ++i)
+			{
+				var w = widgets[i];
+				var id = w.getId();
+				if (id)  // by pass dynamicly created child widgets
+				{
+					var text = id + ': '+ w.getClassName();
+					var value = w;
+					selectorItems.push({'text': text, 'value': value});
+				}
+			}
+			selector.setItems(selectorItems);
+		};
+		function refreshInspector(widget)
+		{
+			var inspector = Kekule.Widget.getWidgetById('objInspector');
+			inspector.setObjects(widget);
+		};
+    function insertContent()
+    {
+      var s = '<div><button data-widget="Kekule.Widget.Button" data-text="Button 1"></button></div>';
+      document.getElementById('dynInsertRegion').innerHTML += s;
+    };
+    Kekule.X.domReady(function()
+      {
+        Kekule.Widget.globalManager.addEventListener('valueChange', function(e)
+          {
+            //console.log('change on', e.widget.getId());
+          }
+        );
+				Kekule.Widget.getWidgetById('btnRefresh').addEventListener('execute', function(e){
+					refreshWidgetList();
+				});
+				Kekule.Widget.getWidgetById('selectboxWidgets').addEventListener('valueChange', function(e){
+					var widget = Kekule.Widget.getWidgetById('selectboxWidgets').getValue();
+					refreshInspector(widget);
+				});
+      }
+    )
+  </script>
+</head>
+<body>
+	<div id="inspector">
+		<select id="selectboxWidgets" data-widget="Kekule.Widget.SelectBox"></select>
+		<br />
+		<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+		<br />
+		<button id="btnRefresh" data-widget="Kekule.Widget.Button" data-text="Refresh"></button>
+	</div>
+
+  <div id="individualButtons">
+		A line of text.
+    <button id="btn11" data-widget="Kekule.Widget.Button" data-text="Button 1"></button>
+    <button id="btn12" data-widget="Kekule.Widget.Button" data-text="Button 2"></button>
+    <a id="btn13" data-widget="Kekule.Widget.Button" data-text="Button 3 On A"></a>
+    <!--<div id="btn14" data-widget="Kekule.Widget.Button" data-text="Button 3 On div"></div>-->
+  </div>
+
+  <div id="dropDownGroupButtons" data-widget="Kekule.Widget.ButtonGroup" data-layout="2">
+    <button id="btn31" data-widget="Kekule.Widget.RadioButton" data-text="Compact 1"></button>
+    <button id="btn32" data-widget="Kekule.Widget.RadioButton" data-text="Compact 2"></button>
+    <a id="btn33" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A"></a>
+  </div>
+
+  <div id="groupedButtons" data-widget="Kekule.Widget.ButtonGroup"  data-layout="2">
+    <button id="btn21" data-widget="Kekule.Widget.RadioButton" data-text="Radio 1"></button>
+    <button id="btn22" data-widget="Kekule.Widget.RadioButton" data-text="Radio 2" data-checked="true"></button>
+    <a id="btn23" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On A"></a>
+    <a id="btn24" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithPrevWidget" data-drop-down-widget="#dropDownGroupButtons"></a>
+    <a id="btn25" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithNextWidget" data-drop-down-widget="#dropDownGroupButtons2"></a>
+  </div>
+
+  <div id="dropDownGroupButtons2" data-widget="Kekule.Widget.ButtonGroup">
+    <button id="btn41" data-widget="Kekule.Widget.RadioButton" data-text="Compact 1"></button>
+    <button id="btn42" data-widget="Kekule.Widget.RadioButton" data-text="Compact 2"></button>
+    <a id="btn43" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A"></a>
+  </div>
+
+	<div id="msgPanels">
+		<div id="msgPanel1" data-widget="Kekule.Widget.MsgPanel" data-msg-type="normal" data-text="Msg Panel: Normal"></div>
+		<div id="msgPanel2" data-widget="Kekule.Widget.MsgPanel" data-msg-type="info" data-text="Msg Panel: Info"></div>
+		<div id="msgPanel3" data-widget="Kekule.Widget.MsgPanel" data-msg-type="warning" data-text="Msg Panel: Warning"></div>
+		<div id="msgPanel4" data-widget="Kekule.Widget.MsgPanel" data-msg-type="error" data-text="Msg Panel: Error"></div>
+		<div id="msgPanel5" data-widget="Kekule.Widget.MsgPanel" data-text="Msg Panel 2" data-show-leading-glyph="true"></div>
+	</div>
+
+  <br />
+  <br />
+  <div id="textboxes">
+    <input id="textbox0" />
+    <input id="textbox11" data-widget="Kekule.Widget.TextBox" data-placeholder="A Placeholder" data-text1="A Text"/>
+  </div>
+
+  <div id="textboxExes">
+    <span id="textboxEx11" data-widget="Kekule.Widget.TextBoxEx" data-placeholder="A Placeholder" data-text="A Text"/>
+    <span id="buttonTextBox1" data-widget="Kekule.Widget.ButtonTextBox" data-placeholder="A Placeholder" data-text="A Button Text" data-button-kind="K-Kind-Popup"/>
+  </div>
+
+  <div id="textAreas">
+    <textarea id="textArea1" data-widget="Kekule.Widget.TextArea" data-auto-size-x="true" data-auto-size-y="true" data-text="A Text Area." ></textarea>
+  </div>
+
+  <div id="selectboxes">
+    <select id="selectbox1" data-widget="Kekule.Widget.SelectBox"
+       data-items='[{"text": "item0", "value": 0}, {"text": "item1", "value": 1}, {"text": "item2", "value": 2}]'></select>
+  </div>
+
+  <div id="comboBoxes">
+    <div id="comboBox1" style="width: 250px" data-widget="Kekule.Widget.ComboBox" data-text="ComboBox1"
+       data-items='[{"text": "item0"}, {"text": "item1"}, {"text": "item2"}]'
+     ></div>
+  </div>
+
+  <div id="checkboxes">
+    <div id="checkdiv" data-widget="Kekule.Widget.CheckBox"
+         data-checked="true" data-text="Checkbox in div"></div>
+    <!-- bug in firefox
+    <label id="checklabel" data-widget="Kekule.Widget.CheckBox"
+         data-checked="false" data-text="Checkbox in label"></label>
+    -->
+    <span id="checkspan" data-widget="Kekule.Widget.CheckBox"
+         data-checked="false" data-text="Checkbox in span"></span>
+  </div>
+
+	<div id="tabButtons" data-widget="Kekule.Widget.TabButtonGroup"  data-layout="1">
+		<button data-widget="Kekule.Widget.RadioButton" data-text="Radio 1"></button>
+		<button data-widget="Kekule.Widget.RadioButton" data-text="Radio 2" data-checked="true"></button>
+		<button data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On Button"></button>
+	</div>
+
+	<div id="tabViews">
+		<div id="tabView1" data-widget="Kekule.Widget.TabView">
+			<div id="tabPage1" data-widget="Kekule.Widget.TabPage" data-text="tab1">
+				<fieldset>
+					<legend>A normal button</legend>
+					<a data-widget="Kekule.Widget.Button" data-text="Normal Button" data-Hint="Button Hint"></a>
+					<button data-widget="Kekule.Widget.Button" data-text="Normal Button" data-Hint="Button Hint"></button>
+				</fieldset>
+			</div>
+			<div id="tabPage2" data-widget="Kekule.Widget.TabPage" data-text="tab2">Tab 2 dsaaaaaaaaaaaaaaaaaaaaaads sdasddddddddddddddddddddddddddddddddddddddddddddasd dsasdsddddddddddddddddd</div>
+			<div id="tabPage3" data-widget="Kekule.Widget.TabPage" data-text="tab3">Tab 3 dsaaaaaaaaaaaaaaaaaaaaaads sdasddddddddddddddddddddddddddddddddddddddddddddasd dsasdsddddddddddddddddd</div>
+		</div>
+	</div>
+
+  <div id="colorPickers">
+		Color Picker
+		<div id="colorPicker1" data-widget="Kekule.Widget.ColorPicker" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
+		<div id="colorTextBox1" data-widget="Kekule.Widget.ColorDropTextBox" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
+		<button id="colorButton1" data-widget="Kekule.Widget.ColorDropButton" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></button>
+	</div>
+
+	<div id="textEditors">
+		Text Editor
+		<div id="textEditor1" data-widget="Kekule.Widget.TextEditor"></div>
+	</div>
+
+	<div id="menus" style="height: 300px">
+		<ul id="menu1" data-widget="Kekule.Widget.Menu" data-layout="1">
+			<li>Item1</li>
+			<li>Item2
+				<ul>
+					<li>Item2-1</li>
+					<li>Item2-2</li>
+					<li>Item2-3
+						<ul>
+							<li>item2-3-1</li>
+							<li>item2-3-2</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li>Item3
+				<ul>
+					<li>Item3-1</li>
+					<li>Item3-2</li>
+					<li>Item3-3</li>
+				</ul>
+			</li>
+			<li>Item4</li>
+		</ul>
+
+		<ul id="menu2" data-widget="Kekule.Widget.Menu" data-layout="2">
+			<li>Item1</li>
+			<li>Item2
+				<ul>
+					<li>Item2-1</li>
+					<li>Item2-2</li>
+					<li>Item2-3
+						<ul>
+							<li>item2-3-1</li>
+							<li>item2-3-2</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li>Item3
+				<ul>
+					<li>Item3-1</li>
+					<li>Item3-2</li>
+					<li>Item3-3</li>
+				</ul>
+			</li>
+			<li>Item4</li>
+		</ul>
+	</div>
+
+  <fieldset data-widget="Kekule.Widget.DumbWidget" data-use-corner-decoration="true">
+    <legend>Simple Bind widgets</legend>
+    <div>
+      <label data-widget="Kekule.Widget.BaseWidget" data-is-dumb="true">A Edit:</label>
+      <input type="text" data-widget="Kekule.Widget.BaseWidget" data-is-dumb="false" value="A Edit" data-use-corner-decoration="true" />
+    </div>
+  </fieldset>
+
+  <fieldset id="dynInsertRegion" data-widget="Kekule.Widget.DumbWidget" data-use-corner-decoration="true">
+
+  </fieldset>
+	<div>
+		<button id="btnDynIns" data-widget="Kekule.Widget.Button" data-text="Dynamic Insert Content" onclick="insertContent()"></button>
+	</div>
+
+	<div id="chemComposers">
+		<div id="chemComposer1" data-widget="Kekule.Editor.Composer"></div>
+	</div>
+
+</body>
+</html>

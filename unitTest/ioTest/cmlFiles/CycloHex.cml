@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<list convention="cdk:model" id="&#x672A;&#x547D;&#x540D; 1" xmlns="http://www.xml-cml.org/schema">
+  <moleculeList convention="cdk:moleculeSet" id="molSet1">
+    <molecule id="m1">
+      <atomArray>
+        <atom id="a2" elementType="C" x2="8.0018" y2="-7.34847" formalCharge="0" hydrogenCount="2"/>
+        <atom id="a4" elementType="C" x2="8.0018" y2="-8.87148" formalCharge="0" hydrogenCount="2"/>
+        <atom id="a6" elementType="C" x2="9.32076" y2="-9.63298" formalCharge="0" hydrogenCount="2"/>
+        <atom id="a8" elementType="C" x2="10.6397" y2="-8.87148" formalCharge="0" hydrogenCount="2"/>
+        <atom id="a10" elementType="C" x2="10.6397" y2="-7.34847" formalCharge="0" hydrogenCount="2"/>
+        <atom id="a12" elementType="C" x2="9.32076" y2="-6.58697" formalCharge="0" hydrogenCount="2"/>
+      </atomArray>
+      <bondArray>
+        <bond id="b14" atomRefs2="a2 a4" order="S"/>
+        <bond id="b15" atomRefs2="a4 a6" order="S"/>
+        <bond id="b16" atomRefs2="a6 a8" order="S"/>
+        <bond id="b17" atomRefs2="a8 a10" order="S"/>
+        <bond id="b18" atomRefs2="a10 a12" order="S"/>
+        <bond id="b19" atomRefs2="a12 a2" order="S"/>
+      </bondArray>
+    </molecule>
+  </moleculeList>
+</list>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Canvas test</title>
+<script>
+	function draw()
+	{
+		var canvas = document.getElementById('drawPanel');
+		var c = canvas.getContext('2d');
+		c.beginPath();
+		c.translate(150,150);
+		c.rotate(20*Math.PI/180);
+		c.strokeWidth = 3;
+		c.strokeStyle = '#ff0000';
+		c.fillStyle = 'rgba(100,0,0,0.5)'
+		c.rect(-100,-100,200,100);
+		c.closePath();
+		c.stroke();
+		c.fill();
+		
+		c.beginPath();
+		c.strokeStyle = '#00ff00';
+		c.fillStyle = 'rgba(0,100,0,0.5)'
+		c.rotate(20*Math.PI/180);
+		c.rect(0,0,200,100);
+		c.closePath();
+		c.stroke();
+		c.fill();
+		
+	}
+</script>
+</head>
+<body onload="draw()">
+	<canvas id="drawPanel" width="500" height="300" />
+</body>
+</html>

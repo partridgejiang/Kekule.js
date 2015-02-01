@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<molecule xmlns="http://www.xml-cml.org/schema">
+<atomArray>
+<atom elementType="C" id="a48" x2="43.9846" y2="-34.7435"/>
+<atom elementType="C" id="a50" x2="42.4616" y2="-34.7435"/>
+<atom elementType="C" id="a52" x2="41.9909" y2="-36.1919"/>
+<atom elementType="N" hydrogenCount="1" id="a54" x2="43.2231" y2="-37.0871"/>
+<atom elementType="C" id="a56" x2="44.4552" y2="-36.1919"/>
+</atomArray>
+<bondArray>
+<bond atomRefs2="a48 a50" id="b58" order="1"/>
+<bond atomRefs2="a50 a52" id="b59" order="2"/>
+<bond atomRefs2="a52 a54" id="b60" order="1"/>
+<bond atomRefs2="a54 a56" id="b61" order="1"/>
+<bond atomRefs2="a56 a48" id="b62" order="2"/>
+</bondArray>
+</molecule>

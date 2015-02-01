@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<!-- remote URL: http://127.0.0.1:8080/project/unitTest/widgetTest/chemWidgets/chemViewTestBasic.html -->
+<head>
+<meta charset="UTF-8">
+<!--
+<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+-->
+
+<title>Kekule ChemEditor Widget Basic Test</title>
+<script src="../../../../libs/three.js-r49/build/Three.js"></script>
+<script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+<script src="../../../src/kekule.js"></script>
+<script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" type="chemical/x-mdl-molfile">
+Untitled Document-1
+  ChemDraw10021112262D
+
+ 10  9  0  0  0  0  0  0  0  0999 V2000
+   -3.2151    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5006   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.7862    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0717   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3572    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3572   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0717    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7862   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5006    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2151   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  2  0
+  5  6  1  0
+  6  7  2  0
+  7  8  1  0
+  8  9  2  0
+  9 10  1  0
+M  END
+</script>
+<script name="mol2" id="mol2" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  SMMXDraw12291123312D
+
+  8  8  0  0  0  0  0  0  0  0999 V2000
+   12.0355   -8.6707    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.0355   -9.4958    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.7500   -9.9083    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   13.4645   -9.4958    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   13.4645   -8.6707    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.7500   -8.2583    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   13.4645   -7.0207    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.7500   -7.4332    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  2  3  1  0  0  0  0
+  3  4  2  0  0  0  0
+  4  5  1  0  0  0  0
+  5  6  2  0  0  0  0
+  6  1  1  0  0  0  0
+  6  8  1  0  0  0  0
+  7  8  1  0  0  0  0
+G    8  6
+Et
+M  STY  1   1 SUP
+M  SLB  1   1   1
+M  SAL   1  2   7   8
+M  SBL   1  1   7
+M  SMT   1 Et
+M  SBV   1   7    0.0000   -0.8251
+M  END
+</script>
+<link id="externalRes" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/cyclohextone.mol" />
+<link id="externalResFake" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/Radicals.cdx.mol" />
+<style>
+    canvas
+    {
+        /*background-color: yellow;*/
+    }
+  body, #treeParent
+  {
+    /*cursor: url("rotateCursor.cur"), pointer;*/
+  }
+</style>
+<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+<script>
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+  var aspect = drawBoxWidth / drawBoxHeight;
+  var viewAngle = 45;
+  var NEAR = 0.1;
+  var FAR = 1000;
+  var threeContext;
+
+  var currDrawObj;
+
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var isCml = document.getElementById('radioBtnCml').checked;
+		var reader = isCml? new Kekule.IO.CmlReader():  new Kekule.IO.MdlReader();
+		var multiple = parseInt(document.getElementById('editMultiple').value);
+    var mol;
+    var result;
+
+		if (multiple > 1)
+		{
+			/*
+			var c = new Kekule.CompositeMolecule();
+			var coord = {'x': 0, 'y': 0, 'z': 0};
+			for (var i = 0; i < multiple; ++i)
+			{
+				var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+				r.setCoord3D(coord);
+				c.getSubMolecules().appendObj(r);
+				var box = r.getContainerBox3D();
+
+				//console.log(box);
+
+				coord.y -= Math.max((box.y2 - box.y1), 1) * 1.5;
+				//coord.x += (box.x2 - box.x1) * 1.5;
+				coord.z += Math.max((box.z2 - box.z1) * 1.5, 1);
+			}
+			return c;
+			*/
+
+      var s = new Kekule.ChemSpace('auto');
+      var coord = {'x': 0, 'y': 0, 'z': 0};
+      for (var i = 0; i < multiple; ++i)
+      {
+        var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+        r.setCoord3D(coord);
+        //r.setOwner(s);
+        s.getRoot().appendChild(r);
+        mol = r;
+        var box = r.getContainerBox3D();
+        coord.y -= Math.max((box.y2 - box.y1), 1) * 1.5;
+				//coord.x += (box.x2 - box.x1) * 1.5;
+				coord.z += Math.max((box.z2 - box.z1) * 1.5, 1);
+      }
+      result = s;
+
+		}
+		else
+		{
+			var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+      mol = r;
+			result = r;
+		}
+    currDrawObj = result;
+
+    mol.setRender3DOption('atomColor', '#FF0000');
+    mol.setRender3DOption('useAtomSpecifiedColor', true);
+
+    /*
+    mol.setRender3DOption('opacity', 0.5);
+
+    if (mol.hasCtab())
+    {
+      mol.getNodeAt(0).setRender3DOption('color', '#00FF00');
+      mol.getNodeAt(0).setRender3DOption('opacity', 1);
+    }
+    */
+
+    return result;
+	}
+
+	function getQualityLevel()
+	{
+		var s = document.getElementById('editLevel').value;
+		return parseInt(s);
+	}
+
+	function getDrawParent(contextType)
+  {
+    return document.getElementById('drawParent');
+  }
+
+	function drawMol(mol, withRedraw, drawOptions, noLog)
+	{
+		//getDrawParent().innerHTML = '';
+		//mol.setCoord2D({'x': -20, 'y': -20});  // debug
+		/*
+		var context = getDrawContext();
+		var ctab = mol.getCtab();
+		*/
+
+    //var bridge = getDrawBridge(); //Kekule.Render.DrawBridge3DMananger.getPreferredBridgeInstance();
+    //drawBridge = bridge;
+		var bridge = drawBridge;
+    //var context = initContext(bridge);
+		//var context = getDrawContext();
+		//drawContext = context;
+		var context = drawContext;
+
+		/*
+		var rc = c = Kekule.Render.get3DRendererClass(mol);
+		var render = new c(mol, bridge);
+		*/
+		var painter = new Kekule.Render.ChemObjPainter3D(mol, bridge);
+
+		var baseCoord = {'x': 0, 'y': 0, 'z': 0}; // {'x': drawBoxWidth / 2, 'y': drawBoxHeight / 2};
+		var options = drawOptions || {
+			/*moleculeDisplayType: condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL,*/
+			moleculeDisplayType: Kekule.Render.Molecule3DDisplayType.BALL_SYICK,
+			/*'scale': scale*/
+			autoScale: true,
+			zoom: 0.7,
+			//baseOnRootCoord: true,
+			/*
+			'translateX': transX,
+			'translateY': transY,
+			*/
+			//'rotateAngle': Math.PI / 4,
+			//'rotateY': -Math.PI / 2,
+			/* 'center': center*/
+			graphicQuality: getQualityLevel()
+		};
+		clearContext();
+
+		var start = (new Date()).getTime();
+		//render.draw(context, baseCoord, options);
+		painter.draw(context, baseCoord, options);
+		var end = (new Date()).getTime();
+		var duration = end - start;
+
+    //var c = getDrawContext();
+    //drawContext.getRenderer().render(drawContext.getScene(), drawContext.getCamera());
+
+    if (!noLog)
+		  appendLog('Draw in ' + duration + 'ms. ');
+
+		if (withRedraw)
+		{
+			clearContext();
+			var start = (new Date()).getTime();
+			//render.redraw(context);
+			painter.redraw(context);
+
+      //c.getRenderer().render(c.getScene(), c.getCamera());
+
+			var end = (new Date()).getTime();
+			var duration = end - start;
+
+      if (!noLog)
+			  appendLog('Redraw in ' + duration + 'ms. ');
+		}
+	}
+
+	function draw(condensed)
+	{
+    /*
+		var mol = readMol();
+    //chemViewer.getDrawOptions().rotateAngle = Math.PI * 45 / 180;
+    //chemViewer.getDrawOptions().moleculeDisplayType = 2;
+    chemViewer.setChemObj(mol);
+    */
+    // debug
+    //chemViewer.createToolbar();
+    var text = document.getElementById('memoMolInput').value;
+    var isCml = document.getElementById('radioBtnCml').checked;
+    chemViewer.loadFromData(text, null, isCml? '.cml': '.mol');
+	}
+
+	function clearLog()
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML = '';
+	}
+	function appendLog(msg)
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML += msg;
+	}
+
+  var chemEditor;
+  var treeView;
+  var objInspector;
+  var nexus;
+	function init()
+	{
+    var elem = document.getElementById('chemEditor');
+    //chemEditor = new Kekule.Editor.BaseEditor(elem, null, Kekule.Render.RendererType.R2D);
+    chemEditor = new Kekule.Editor.ChemSpaceEditor(elem, null, Kekule.Render.RendererType.R2D);
+    //chemEditor.setRenderType(Kekule.Render.RendererType.R3D);
+    chemEditor/*.appendToElem(document.getElementById('drawParent'))*/.setDimension(600, 400)/*.setWidth('600px').setHeight('400px')*/.setAutoSize(false).setPadding(20);
+    //chemEditor.addIaController('select', new Kekule.Editor.BasicManipulationIaController(chemEditor), true)
+    //chemEditor.addIaController('select', new Kekule.Editor.BasicMolManipulationIaController(chemEditor), true)
+    //chemEditor.addIaController('bond', new Kekule.Editor.MolBondIaController(chemEditor), true)
+    //chemEditor.addIaController('atom', new Kekule.Editor.MolAtomIaController(chemEditor), true)
+    chemEditor.addIaController('text', new Kekule.Editor.TextBlockIaController(chemEditor), true)
+
+    treeView = new Kekule.ChemWidget.StructureTreeView(treeParent);
+    treeView.setItemInitialExpanded(true);
+    treeView.setRootObj(chemEditor.getChemObj());
+
+    objInspector = new Kekule.Widget.ObjectInspector(objInspectorParent);
+
+    nexus = new Kekule.Editor.EditorNexus({'editor': chemEditor, 'structureTreeView': treeView, 'objectInspector': objInspector});
+	}
+</script>
+</head>
+<body onload="init()">
+	<div id="report"></div>
+  <div id="treeParent" style="float: right"></div>
+  <div id="objInspectorParent" style="float: right; width1: 400px"></div>
+    <div id="drawParent">
+
+      <div id="chemEditor" data-chem-obj="url('#(2E,4E,6E,8E)-deca-2,4,6,8-tetraene')"></div>
+
+      <!--
+      <div id="chemEditor" data-chem-obj="url('#mol2')"></div>
+      -->
+      <!--
+      <div id="chemViewer" data-chem-obj="url(./../../_chemFiles/Mols2D/Radicals.cml)" data-toolbar-evoke-modes="[0]" style="width:40em;height:30em"></div>
+      -->
+      <!--
+      <span id="chemViewer" data-chem-obj="url('http://127.0.0.1)"></span>
+      -->
+    </div>
+
+    <!--
+	<div id="drawStage">
+		<div id="raphaelParent">RaphaelParent</div>
+		<div id="canvasParent">
+			<canvas id="canvasContext" width="500" height="500"></canvas>
+		</div>
+	</div>
+	-->
+</body>
+</html>

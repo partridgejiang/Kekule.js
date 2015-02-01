@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>VML Test</title>
+<style>
+	.DrawStage
+	{
+		display: block;
+		width: 500px;
+		height: 200px;
+		border: 1px solid red;
+		position: relative;
+		/*overflow: auto;*/
+	}
+</style>
+<!-- VML requires VML namespace and behavior. -->
+<!--
+<style type="text/css">
+	v\: * { behavior:url(#default#VML); display: inline-block; }
+</style>
+-->
+<script>
+	
+	document.namespaces.add("v","urn:schemas-microsoft-com:vml","#default#VML");
+	
+	var style = document.createStyleSheet();
+	var shapes = ['shape','rect', 'oval', 'circ', 'line', 'fill', 'stroke', 'imagedata', 'group','textbox'];
+	for (var i = 0, l = shapes.length; i < l; ++i)
+  {
+    style.addRule('v\\:' + shapes[i], "behavior: url(#default#VML); antialias:true; display:inline-block");
+  }
+  
+</script>
+<!--
+<style> v\:line,v\:rect,v\:imagedata,v:\group,v:\stroke,v:\fill {  behavior:url(#default#VML); display:inline-block } </style>
+-->
+<script>
+	function createRoot()
+	{
+		var parent = document.getElementById('div1');
+		//var elem = document.createElement('v:rect');
+		//var elem = document.createElement('<v:group coordsize="1000 1000" coordorigin="0 0">');
+		var elem = document.createElement('v:group');
+		/*
+		elem.coordsize = '500 200';
+		elem.coordorigin = '0 0';
+		*/
+		
+		parent.appendChild(elem);
+		
+		elem.style.position = 'relative';
+		
+		elem.id = 'root';
+		
+		elem.fillcolor = '#666666';
+		elem.filled = 't';
+		elem.strokecolor = '#333333';
+		elem.strokeweight = 10;
+		
+		
+		//elem.style.position = 'relative';
+		//elem.style.position = 'absolute';
+		elem.style.zIndex = 2;
+		elem.style.top = '0px';
+		elem.style.left = '0px';
+		
+		elem.style.width = '500px';
+		elem.style.height = '200px';
+		
+	}
+	function createRect()
+	{
+		var parent = document.getElementById('root');
+		
+		var elem = document.createElement('v:rect');
+		
+		parent.appendChild(elem);
+		
+		elem.style.position = 'absolute';
+		
+		elem.fillcolor = '#660000';
+		elem.strokecolor = 'yellow';
+		elem.strokeweight = 10;
+		
+		
+		//elem.style.position = 'absolute';
+		elem.style.zIndex = 2;
+		elem.style.top = '50px';
+		elem.style.left = '50px';
+		
+		elem.style.width = '200px';
+		elem.style.height = '200px';
+		
+		
+		
+		//elem.style.display = 'inline-block';
+		
+		/*
+		alert('hi');
+		parent.removeChild(elem);
+		alert('hi2');
+		
+		parent.appendChild(elem);
+		*/
+		
+		//var elem2 = document.createElement('v:rect');
+		//parent.appendChild(elem2);
+		//elem2.outerHTML = elem.outerHTML;
+	}
+	
+	function createGroup()
+	{
+		var parent = document.getElementById('vmlPanel3');
+		//var group = document.createElement('<v:group coordsize="1000,400"></v:group>');
+		var group = document.createElement('v:group');
+		group.id='g3';
+		group.style.position = 'relative';
+		
+		
+		group.style.width = '100%';
+		group.style.height = '100%';
+		group.style.top = 0;
+		group.style.left = 0;
+		group.style.zIndex = 2;
+		
+		//group.coordsize = '1000,400';
+
+		parent.appendChild(group);
+		
+		
+		//var line = document.createElement('<v:line style="z-index: 2;" from="0,0" to="500,200"><v:stroke color="red" weight="5" opacity="0.5"></v:stroke></v:line>');
+		var line = document.createElement('v:line');
+		line.style.zIndex = 2;
+		line.from = '0,0';
+		line.to = '500,200';
+		line.strokeweight = 5;
+		line.strokecolor = '#ff0000';
+		group.appendChild(line);
+		//line.style.position = 'absolute';
+		
+		line = document.createElement('v:line');
+		line.style.zIndex = 2;
+		line.from = '500,0';
+		line.to = '0,200';
+		line.strokeweight = 2;
+		line.strokecolor = '#00ff00';
+		group.appendChild(line);
+		//line.style.position = 'absolute';
+		
+		//var rect = document.createElement('<v:rect style="z-index: 2; left: 100px; top: 50px; width: 300px; height: 100px;"><v:stroke color="rgb(0, 0, 100)" weight="10" opacity="0.5" dashstyle="1 1"></v:stroke><v:fill color="rgb(0, 0, 100)" opacity="0.8"></v:fill></v:rect>');
+		var rect = document.createElement('v:rect');
+		rect.id = 'r1';
+		
+		rect.style.zIndex = 2;
+		
+		group.appendChild(rect);
+		rect.style.position = 'absolute';
+		
+		rect.style.left = '100px';
+		//alert('left');
+		rect.style.top = '50px';
+		//alert('top');
+		rect.style.width = '300px';
+		//alert('width');
+		rect.style.height = '100px';
+		//alert('height');
+		
+		rect.strokecolor = '#0000ff';
+		rect.strokeweight = 10;
+		
+		
+		//rect.coordsize = '500,200';
+		//rect.style.position = 'absolute';
+	}
+	
+	function zoomTest()
+	{
+		/*
+		var elem = document.getElementById('root')
+		var parent = document.getElementById('div1');
+		elem.coordSize = '200 300';
+		parent.removeChild(elem);
+		//alert('removed');
+		parent.appendChild(elem);
+		document.getElementById('dummy').coordSize = '2000 3000';
+		*/
+		var elem = document.getElementById('g1');
+		elem.coordsize = '1000 400';
+		var elem = document.getElementById('g2');
+		elem.coordsize = '500 200';
+		
+		var elem = document.getElementById('g3');
+		elem.coordsize = '250 100';
+	}
+	function zoomTestBack()
+	{
+		var elem = document.getElementById('g1');
+		elem.coordsize = '500 200';
+		var elem = document.getElementById('g2');
+		elem.coordsize = '1000 400';
+		
+		var elem = document.getElementById('g3');
+		elem.coordsize = '500 200';
+	}
+	function translateTest()
+	{
+		/*
+		document.getElementById('root').CoordOrigin = '-200 -200';
+		document.getElementById('dummy').CoordOrigin = '-500 -800';
+		*/
+		/*
+		var elem = document.getElementById('g1');
+		elem.coordOrigin = '-100 -50';
+		var elem = document.getElementById('g2');
+		elem.coordOrigin = '-200 -100';
+		*/
+		var elem = document.getElementById('r1');
+		elem.style.width = '200px';
+		elem.style.left = '50px';
+	}
+</script>
+</head>
+<body>
+	<h1>VML Test</h1>
+	<a href="javascript:createRoot()">Create root</a>
+	<a href="javascript:createRect()">Create rect</a>
+	<a href="javascript:createGroup()">Create group</a>
+	<a href="javascript:zoomTest()">Zoom test</a>
+	<a href="javascript:zoomTestBack()">Zoom test back</a>
+	<a href="javascript:translateTest()">Translate test</a>
+	<!--
+	<div id="div1" style="position:relative;width:400px;height:200px;">
+	</div>
+	-->
+	<hr />
+	
+	<div style="position:relative;width:500px;height:200px;" class="DrawStage" id="vmlPanel3">
+	</div>
+	
+	<div style="position:relative;width:500px;height:200px;" class="DrawStage" id="vmlPanel">
+		<v:group id="g1" style="z-index: 2; position: absolute; width: 100%; height: 100%; left: 0px; top: 0px;" coordsize="500 200" coordorigin="0 0">
+			<v:line style="z-index: 2;" from="0,0" to="500,200">
+				<v:stroke color="red" weight="5" opacity="0.5"></v:stroke>
+			</v:line>
+			<v:line style="z-index: 2;" from="500,0" to="0,200">
+				<v:stroke color="rgba(0,0,100,0.5)" weight="2" dashstyle="8 1 4 1"></v:stroke>
+			</v:line>
+			<v:rect style="z-index: 2; left: 100px; top: 50px; width: 300px; height: 100px;">
+				<v:stroke color="rgb(0, 0, 100)" weight="10" opacity="0.5" dashstyle="1 1"></v:stroke>
+				<v:fill color="rgb(0, 0, 100)" opacity="0.8"></v:fill>
+			</v:rect>
+		</v:group>
+	</div>
+	
+	<div style="position:relative;width:500px;height:200px;" class="DrawStage" id="vmlPanel2">
+		<v:group id="g2" style="z-index: 2; position: absolute; width: 100%; height: 100%; left: 0px; top: 0px;" coordsize="1000 400" coordorigin="0 0">
+			<v:line style="z-index: 2;" from="0,0" to="500,200">
+				<v:stroke color="red" weight="5" opacity="0.5"></v:stroke>
+			</v:line>
+			<v:line style="z-index: 2;" from="500,0" to="0,200">
+				<v:stroke color="rgba(0,0,100,0.5)" weight="2" dashstyle="8 1 4 1"></v:stroke>
+			</v:line>
+			<v:rect style="z-index: 2; left: 100px; top: 50px; width: 300px; height: 100px;">
+				<v:stroke color="rgb(0, 0, 100)" weight="10" opacity="0.5" dashstyle="1 1"></v:stroke>
+				<v:fill color="rgb(0, 0, 100)" opacity="0.8"></v:fill>
+			</v:rect>
+		</v:group>
+	</div>
+	
+	
+	
+	<hr />
+	
+	<!--
+	<div id="" style="position:relative;width:400px;height:200px;">
+		<v:rect id="tttt" style="position:relative;width:100%;height:100%">
+			<v:stroke color="red" weight="5px" opacity="0.5" />
+			<v:fill color="green" opacity="0.8" />
+		</v:rect>
+	<v:group id="dummy" style="position:absolute; top:0;left:0;width:100%;height:100%;" coordsize=" 400 200"  >
+		
+		<v:group style="POSITION: absolute; WIDTH: 600px; HEIGHT: 200px" coordsize="600 200">
+			<v:line from="10,10" to="300,200" >
+				<v:stroke color="red" opacity="0.5" dashstyle="4 2">
+				</v:stroke>
+			</v:line>
+			<v:line from="500,20" to="200,200">
+				<v:stroke color="rgba(0,0,100,0.5)" weight="10" dashStyle="8 2 1 2">
+				</v:stroke>
+			</v:line>
+		</v:group>
+		<v:group style="POSITION: relative; WIDTH: 600px; HEIGHT: 200px; rotation: 20">
+			<v:rect fillcolor="red" style="position: absolute; left: 150px; top: 150px; width: 200px; height: 200px; rotation: 20"></v:rect>
+		</v:group>
+	</div>
+	-->
+</body>
+</html>

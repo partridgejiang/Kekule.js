@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Displayer Test 1</title>
+<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+<script src="../../../libs/three.js-r49/build/Three.js"></script>
+<script src="../../src/kekule.js"></script>
+<link type="text/css" rel="stylesheet" href="../../src/CSS_DEPRECATED/ctabEditor2D.css" />
+<style>
+	/*
+	html, body
+	{
+		margin: 0;
+		padding: 0;
+	}
+	*/
+	#drawParent canvas
+	{
+		background-color: black;
+		/*border: 2px solid black;*/
+		display: block;
+		margin: 0;
+		padding: 0;
+	}
+	#drawParent
+	{
+		background-color: yellow;
+		padding: 0;
+	}
+</style>
+<script>
+	var paper, paper2;
+	var displayer, displayer2;
+
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+	var aspect = drawBoxWidth / drawBoxHeight;
+	var viewAngle = 45;
+	var NEAR = 0.1;
+	var FAR = 1000;
+
+	function getPaper()
+	{
+		if (!paper)
+		{
+			var drawParent = document.getElementById('drawParent');
+			var renderer = new THREE.WebGLRenderer({
+				clearColor: 0x000000,
+				clearAlpha: 0
+			});
+			renderer.setSize(drawBoxWidth, drawBoxHeight);
+			var camera =
+			  new THREE.PerspectiveCamera(
+			    viewAngle,
+			    aspect,
+			    NEAR,
+			    FAR);
+
+			var scene = new THREE.Scene();
+			scene.add(camera);
+			alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+			alight.position.set(5, 5, 10);
+			scene.add(alight);
+
+			paper = new Kekule.Render.ThreeContext(scene, camera, renderer);
+
+			drawParent.appendChild(renderer.domElement);
+		}
+		return paper;
+	}
+
+	function getPaper2()
+	{
+		if (!paper2)
+		{
+			var drawParent = document.getElementById('drawParent2');
+			var renderer = new THREE.WebGLRenderer({
+				clearColor: 0x000000,
+				clearAlpha: 0
+			});
+			renderer.setSize(drawBoxWidth, drawBoxHeight);
+			var camera =
+			  new THREE.PerspectiveCamera(
+			    viewAngle,
+			    aspect,
+			    NEAR,
+			    FAR);
+
+			var scene = new THREE.Scene();
+			scene.add(camera);
+			alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+			alight.position.set(5, 5, 10);
+			scene.add(alight);
+
+			paper2 = new Kekule.Render.ThreeContext(scene, camera, renderer);
+
+			drawParent.appendChild(renderer.domElement);
+		}
+		return paper2;
+	}
+
+	function getDisplayer()
+	{
+		var paper = getPaper();
+		if (!displayer)
+			displayer = new Kekule.Viewer.Viewer3D(document.getElementById('drawParent'), {
+				'contextElement': paper.getRenderer().domElement,
+				'context': paper,
+				'contextRect': {x1: 0, y1: 0, x2: drawBoxWidth, y2: drawBoxHeight},
+				'renderBridge': Kekule.Render.ThreeRendererBridge.getInstance(),
+				'drawOptions': {autoStretch: true, moleculeDisplayType: 1}
+			});
+		controller = new Kekule.Viewer.BasicInteractionController(displayer);
+		displayer.linkIaController('default', controller, true);
+		return displayer;
+	}
+	function getDisplayer2()
+	{
+		var paper = getPaper2();
+		if (!displayer2)
+			displayer2 = new Kekule.Viewer.Viewer3D(document.getElementById('drawParent'), {
+				'contextElement': paper.getRenderer().domElement,
+				'context': paper,
+				'contextRect': {x1: 0, y1: 0, x2: drawBoxWidth, y2: drawBoxHeight},
+				'renderBridge': Kekule.Render.ThreeRendererBridge.getInstance(),
+				'drawOptions': {autoStretch: true, moleculeDisplayType: Kekule.Render.Molecule3DDisplayType.STICKS}
+			});
+		return displayer2;
+	}
+
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var reader = new Kekule.IO.MdlMoleculeReader();
+		var r = reader.readBlock(text, null);
+		return r;
+	}
+
+	var mol;
+	function loadMol()
+	{
+		mol = readMol();
+		var displayer = getDisplayer();
+		displayer.loadObj(mol);
+		var displayer2 = getDisplayer2();
+		displayer2.loadObj(mol);
+	}
+
+	function redraw()
+	{
+		/*
+		var getDisplayer2 = this.getDisplayer2();
+		getDisplayer2.redraw();
+		var getDisplayer = this.getDisplayer();
+		getDisplayer.redraw();
+		*/
+		mol = readMol();
+		var displayer2 = getDisplayer2();
+		displayer2.loadObj(mol);
+		var displayer = getDisplayer();
+		displayer.loadObj(mol);
+	}
+
+	function toggleAutoSize()
+	{
+		var flag = document.getElementById('checkBoxAutoSize').checked;
+		var displayer = getDisplayer();
+		displayer.setAutoSize(flag);
+		if (flag)
+			loadMol();
+	}
+
+	function toggleAutoStretch()
+	{
+		var flag = document.getElementById('checkBoxAutoStretch').checked;
+		var displayer = getDisplayer();
+		displayer.setAutoStretch(flag);
+		if (flag)
+		{
+			var elem = getPaper().canvas;
+			elem.style.width = drawBoxWidth + 'px';
+			elem.style.height = drawBoxHeight + 'px';
+			loadMol();
+		}
+	}
+
+	var zoomRatios = [0.1, 0.3, 0.5, 0.75, 0.8, 1, 2, 3, 5, 10, 20];
+	var zoomIndex = zoomRatios.indexOf(1);
+	function zoomIn()
+	{
+		/*
+		if (zoomIndex < zoomRatios.length - 1)
+		{
+			++zoomIndex;
+			var displayer = getDisplayer();
+			displayer.setDrawOptions({autoScale: true, zoom: zoomRatios[zoomIndex]});
+		}
+		*/
+		getDisplayer().zoomIn();
+	}
+	function zoomOut()
+	{
+		/*
+		if (zoomIndex > 0)
+		{
+			--zoomIndex;
+			var displayer = getDisplayer();
+			displayer.setDrawOptions({autoScale: true, zoom: zoomRatios[zoomIndex]});
+			//editor.redraw();
+		}
+		*/
+		getDisplayer().zoomOut();
+	}
+
+</script>
+</head>
+<body>
+	<ul id="operPanel">
+
+	</ul>
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+	</form>
+	<button value="Load Mol" onclick="loadMol()">Load Molecule</button>
+	<button value="Redraw" onclick="redraw()">Redraw</button>
+	<button value="ZoomIn" onclick="zoomIn()">Zoom In</button>
+	<button value="ZoomOut" onclick="zoomOut()">Zoom Out</button>
+	<input type="checkbox" value="AutoSize" id="checkBoxAutoSize" onclick="toggleAutoSize()">Auto Size</input>
+	<input type="checkbox" value="AutoSize" id="checkBoxAutoStretch" onclick="toggleAutoStretch()">Auto Stretch</input>
+	<div id="drawParent">DrawParent</div>
+	<div id="drawParent2">DrawParent</div>
+</body>
+</html>

@@ -1,0 +1,405 @@
+$Version: 4 
+$Name: "rzepa" 
+$Comments: example_tgf chemdig rzepa
+$Totobjs: 1 
+$Pen_RGB2Color: 0 0 0 
+$Fill_RGB2Color: 0 0 0 
+$Font: "Geneva" 120 0 
+
+$Obj: mol 
+$RxnAtch: -1 -1 
+$Begsketch: 
+$Totobjs: 60 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 3524.00000 3039.00000 
+$Atom_symbol: "C" 
+$Atom_number: 29 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 3842.00000 3225.00000 
+$Atom_symbol: "C" 
+$Atom_number: 30 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 3525.00000 2666.00000 
+$Atom_symbol: "C" 
+$Atom_number: 31 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 4162.00000 3046.00000 
+$Atom_symbol: "C" 
+$Atom_number: 32 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 3851.00000 2490.00000 
+$Atom_symbol: "C" 
+$Atom_number: 33 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Atom_coords: 4169.00000 2679.00000 
+$Atom_symbol: "C" 
+$Atom_number: 34 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 3200.00000 3219.00000 
+$Atom_type: 8 
+$Atom_symbol: "O" 
+$Atom_number: 35 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 3833.00000 3592.00000 
+$Atom_type: 8 
+$Atom_symbol: "O" 
+$Atom_number: 36 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 3199.00000 3584.00000 
+$Atom_symbol: "C" 
+$Atom_number: 37 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2236.00000 3758.00000 
+$Atom_symbol: "C" 
+$Atom_number: 38 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2876.00000 3765.00000 
+$Atom_symbol: "C" 
+$Atom_number: 39 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2558.00000 3574.00000 
+$Atom_symbol: "C" 
+$Atom_number: 40 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2232.00000 4129.00000 
+$Atom_symbol: "C" 
+$Atom_number: 41 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1918.00000 3572.00000 
+$Atom_symbol: "C" 
+$Atom_number: 42 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1914.00000 4310.00000 
+$Atom_symbol: "C" 
+$Atom_number: 43 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 3513.00000 3770.00000 
+$Atom_symbol: "C" 
+$Atom_number: 44 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1594.00000 3758.00000 
+$Atom_symbol: "C" 
+$Atom_number: 45 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1594.00000 4125.00000 
+$Atom_symbol: "C" 
+$Atom_number: 46 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2873.00000 4136.00000 
+$Atom_symbol: "C" 
+$Atom_number: 47 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 3207.00000 2481.00000 
+$Atom_type: 17 
+$Atom_symbol: "Cl" 
+$Atom_number: 48 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 4475.00000 3237.00000 
+$Atom_type: 17 
+$Atom_symbol: "Cl" 
+$Atom_number: 49 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 3856.00000 2120.00000 
+$Atom_type: 17 
+$Atom_symbol: "Cl" 
+$Atom_number: 50 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Pen_RGB2Color: 0 0 255 
+$Font: "Helvetica" 120 0 
+$Atom_coords: 4492.00000 2495.00000 
+$Atom_type: 17 
+$Atom_symbol: "Cl" 
+$Atom_number: 51 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 2551.00000 4316.00000 
+$Atom_symbol: "C" 
+$Atom_number: 52 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1277.00000 3572.00000 
+$Atom_symbol: "C" 
+$Atom_number: 53 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 1277.00000 4310.00000 
+$Atom_symbol: "C" 
+$Atom_number: 54 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 958.00000 3758.00000 
+$Atom_symbol: "C" 
+$Atom_number: 55 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: atom 
+$Atom_coords: 958.00000 4125.00000 
+$Atom_symbol: "C" 
+$Atom_number: 56 
+$Atom_dispflags: 0004 
+$Atom_MarginWidth: 15 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 1 0 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 2 0 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 3 1 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 4 2 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 5 4 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 6 0 
+$Bond_topo: ring 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 7 1 
+$Bond_topo: ring 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 8 6 
+$Bond_topo: ring 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 9 11 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 10 8 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 11 10 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 12 23 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 13 9 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 14 12 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 15 8 
+$Bond_topo: ring 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 16 13 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 17 14 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 18 10 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 19 2 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 20 3 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 21 4 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 22 5 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 23 18 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 24 16 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 25 17 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 26 24 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 27 25 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Pen_RGB2Color: 0 0 255 
+$Bond_atoms: 5 3 
+$Bond_type: double 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 15 7 
+$Bond_topo: ring 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 12 9 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 17 16 
+$Bond_topo: arom 
+
+$Obj: bond 
+$Pen_width: 7 
+$Bond_atoms: 27 26 
+$Bond_type: double 
+$Bond_topo: arom 
+$Endsketch: 
+
+$Endsketch: 
+

@@ -1,0 +1,13 @@
+<molecule id="CuprammoniumSulfate">
+    <formula title="[Cu(NH3)4]2+ SO42-]">
+      <formula formalCharge="+2">
+        <atomArray elementType="Cu"/>
+        <formula count="4">
+          <atomArray elementType="N H" count="1 3"/>
+        </formula>
+      </formula>
+      <formula formalCharge="-2">
+        <atomArray elementType="S O" count="1 4"/>
+      </formula>
+    </formula>    
+  </molecule>

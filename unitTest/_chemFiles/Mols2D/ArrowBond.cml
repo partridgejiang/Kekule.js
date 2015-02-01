@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<molecule xmlns="http://www.xml-cml.org/schema">
+<atomArray>
+<atom elementType="C" id="a2" x2="11.9617" y2="-14.4218"/>
+<atom elementType="C" formalCharge="1" hydrogenCount="0" id="a3" x2="13.2806" y2="-15.1834"/>
+<atom elementType="C" id="a4" x2="14.5995" y2="-14.4218"/>
+<atom elementType="O" formalCharge="-1" hydrogenCount="0" id="a5" x2="13.2806" y2="-16.7062"/>
+</atomArray>
+<bondArray>
+<bond atomRefs2="a2 a3" id="b6" order="1"/>
+<bond atomRefs2="a3 a4" id="b7" order="1"/>
+<bond atomRefs2="a3 a5" id="b8" order="1"/>
+</bondArray>
+</molecule>

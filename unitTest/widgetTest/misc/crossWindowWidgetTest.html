@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Cross Window Widget Test</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css"/>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css"/>
+	<script src="../../../src/kekule.js"></script>
+	<script name="ethane" id="ethane" type="chemical/x-mdl-molfile">
+		Untitled Document-1
+		ChemDraw11231215572D
+
+		6  5  0  0  0  0  0  0  0  0999 V2000
+		-0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+		0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+		-0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+		-0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+		0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+		0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+		1  2  2  0
+		1  3  1  0
+		1  4  1  0
+		2  5  1  0
+		2  6  1  0
+		M  END
+	</script>
+	<script>
+		function createCrossWinWidget()
+		{
+			var globalManager = Kekule.Widget.globalManager;
+			var thisUrl = window.location;
+			var win = window.open('crossWindowWidgetTestNewWin.html'/*thisUrl*/, 'crossWindow', null);
+			win.onload = function()
+			{
+				var doc = win.document;
+				/*
+				var btn = new Kekule.Widget.Button(doc);
+				btn.appendToElem(doc.body);
+				btn.setText('Click me');
+				btn.addEventListener('execute', function(e)
+						{
+							alert('Cross window button clicked!');
+						}
+				);
+				*/
+				var viewer = new Kekule.ChemWidget.Viewer(doc);
+				viewer.appendToElem(doc.body);
+				viewer.setPredefinedSetting('basic');
+				viewer.setChemObj('url(#ethane)');
+			}
+		}
+
+		Kekule.X.domReady(function () {
+			var btn1 = Kekule.Widget.getWidgetById('btn1');
+			btn1.addEventListener('execute', function () {
+						createCrossWinWidget();
+					}
+			);
+		});
+	</script>
+</head>
+<body>
+<button id="btn1" data-widget="Kekule.Widget.Button" data-text="Button 1"></button>
+</body>
+</html>

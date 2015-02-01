@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Insert title here</title>
+<script src="../../src/kekule.js"></script>
+<!--
+<script src="../../src/kekule.compressed.js"></script>
+-->
+<script>
+	var doc, jsonObj;
+	function readCml(readDoc)
+	{
+		var text = document.getElementById('memoCmlInput').value;
+		doc = XmlUtility.parse(text);
+		//var reader = new Kekule.CmlMoleculeReader();
+		/*
+		var reader = Kekule.CmlElementReaderFactory.getReader(doc.documentElement);
+		reader.getDomHelper().setRootElement(doc.documentElement);
+		*/
+		/*
+		var reader = new Kekule.CmlRootReader();
+		var mol = reader.readElement(doc.documentElement);
+		*/
+		var reader = new Kekule.IO.CmlReader();
+		var result;
+		if (readDoc)
+			result = reader.readDocument(text);
+		else
+			result = reader.readData(text);
+
+		console.log(result);
+		jsonObj = result.length? []: {};
+		var serializer = new JsonObjSerializer();
+		serializer.save(result, jsonObj);
+		//mol.saveObj(jsonObj);
+		var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
+		console.log(jsonObj);
+		//console.log(str);
+		//console.log(mol.calcFormula());
+		return result;
+	}
+	function rewriteCml()
+	{
+		var r = readCml();
+		//var writer = new Kekule.IO.CmlScalarWriter();
+		/*
+		var writer = Kekule.IO.CmlElementWriterFactory.getWriter(r);
+		if (writer) 
+		{
+			writer.setCoreNamespaceURI('');
+			var doc = XmlUtility.newDocument('cml');
+			writer.writeObject(r, null, doc);
+			var s = XmlUtility.serializeNodePretty(doc.documentElement);
+			document.getElementById('memoOutput').value = s;
+		}
+		*/
+		var writer = new Kekule.IO.CmlWriter();
+		var s = writer.writeData(r, Kekule.IO.ChemDataType.TEXT);
+		document.getElementById('memoOutput').value = s;
+	}
+	
+	function testRichTextFormula()
+	{
+		var r = readCml();
+		var f = r.docObj;
+		var richText = r.getDisplayRichText();
+		var tidied = Kekule.Render.RichTextUtils.tidy(richText);
+		console.log(richText, Kekule.Render.RichTextUtils._toDebugHtml(richText));
+		console.log(tidied, Kekule.Render.RichTextUtils._toDebugHtml(tidied));
+	}
+</script>
+</head>
+<body>
+	<form>
+		<textarea id="memoCmlInput" name="memoCmlInput" cols="80" rows="10"></textarea>
+	</form>
+		<button value="Read" onclick="readCml()">Read Obj</button>
+		<button value="Read" onclick="readCml(true)">Read Doc</button>
+		<button value="Read" onclick="rewriteCml()">rewrite Obj</button>
+	<form>
+		<textarea id="memoOutput" name="memoOutput" cols="80" rows="10"></textarea>
+	</form>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Data Manipulate Test</title>
+		<script src="../JSTest/src/jstest.js"></script>
+		<script src="../../src/lan/classes.js"></script>
+		<script src="../../src/core/kekule.common.js"></script>
+		<script src="../../src/utils/kekule.utils.js"></script>
+		<script src="../../src/data/kekule.chemicalElementsData.js"></script>
+		<script src="../../src/data/kekule.isotopesData.organSet.js"></script>
+		<script src="../../src/data/kekule.structGenAtomTypesData.js"></script>
+		<script src="../../src/data/kekule.dataUtils.js"></script>
+		<script>
+			var DataManipulateTestCase = JSTest.TestCase({
+					name: 'Data Manipulate Test',
+					init: function () {
+			      // this is called only once, before any tests are run
+			    },
+					setup: function()
+					{
+					},
+					cleanup: function()
+					{
+					},
+					teardown: function () {
+        		// this is called only once, after all tests have been run
+    			},
+    			testChemElementData: function()
+    			{
+    				var symbols = ['H', 'C', 'O', 'Nd', 'Gd', 'Lu'];
+    				var atomicNumbers = [1, 6, 8, 60, 64, 71];
+    				for (var i = 0, l = symbols.length; i < l; ++i)
+    				{
+    					var symbol = symbols[i];
+							var num = Kekule.ChemicalElementsDataUtil.getAtomicNumber(symbol);
+    					this.assertEqual(atomicNumbers[i], num);
+    				}
+    				for (var i = 0, l = atomicNumbers.length; i < l; ++i)
+    				{
+    					var atomicNumber = atomicNumbers[i];
+							var s = Kekule.ChemicalElementsDataUtil.getElementSymbol(atomicNumber);
+							//console.log(s + ': ' + atomicNumber);
+    					this.assertEqual(symbols[i], s);
+    				}
+    			},
+					testIsotopeData: function()
+					{
+						var info = Kekule.IsotopesDataUtil.getIsotopeInfo('H', 1);
+						this.assertEqual(info.exactMass, 1.007825032);
+						var info = Kekule.IsotopesDataUtil.getIsotopeInfo('H', 3);
+						this.assertEqual(info.exactMass, 3.016049278);
+						var info = Kekule.IsotopesDataUtil.getIsotopeInfo('F', 30);
+						this.assertEqual(info.exactMass, 30.0525);
+					},
+					testAtomTypeData: function()
+					{
+						var atomTypes = Kekule.AtomTypeDataUtil.getAllAtomTypes('C');
+						var atomType = atomTypes[0];
+						this.assertEqual(atomType.maxBondOrder, 3);
+						this.assertEqual(atomType.bondOrderSum, 4);
+						
+						var atomTypes = Kekule.AtomTypeDataUtil.getAllAtomTypes('N');
+						var atomType = atomTypes[1];
+						this.assertEqual(atomType.maxBondOrder, 2);
+						this.assertEqual(atomType.bondOrderSum, 5);
+					}
+				});
+			
+			//JSTest.run(true);
+			function init()
+			{
+				var myDiv = document.getElementById('output');
+				//JSTest.run(false, JSTest.handlers.HTMLHandler, myDiv);
+				JSTest.run(true, JSTest.handlers.FirebugHandler);
+				//JSTest.run();
+			}
+		</script>
+	</head>
+	<body onload="init()">
+		<div id="output"></div>
+	</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Open Babel IO Format Importer</title>
+  <script src="../../../kekule.js"></script>
+  <script>
+    var converter;
+    function listFormatInfo(ioType)
+    {
+      var result = [];
+      var delimiter = '\n';
+      var itemSep = '--';
+      var formatListStr;
+      if (ioType = 'in')
+        formatListStr = converter.getSupportedInputFormatsStr(delimiter);
+      else
+        formatListStr = converter.getSupportedOutputFormatsStr(delimiter);
+
+      var basicStrArray = formatListStr.split(delimiter);
+      for (var i = 0, l = basicStrArray.length; i < l; ++i)
+      {
+        var s = basicStrArray[i];
+        // get str before '--', only the id
+        var pos = s.indexOf(itemSep);
+        if (pos > 0)
+        {
+          var id = s.substring(0, pos).trim();
+          // then get more details from id
+          var info = converter.getFormatInfoById(id);
+          result.push(info);
+        }
+      }
+      return result;
+    }
+
+    function generateFormatRegisterCode()
+    {
+      var result = '';
+      var formatManager = Kekule.IO.DataFormatsManager;
+      var infos = listFormatInfo('in');
+      infos = infos.concat(listFormatInfo('out'));
+      var regIds = [];
+      for (var i = 0, l = infos.length; i < l; ++i)
+      {
+        var info = infos[i];
+        var id = info.id;
+
+        if (regIds.indexOf(id) >= 0)  // already handled
+          continue;
+
+        var mimeType = info.mimeType;
+        // check if fileExts or mimeType already exists
+        //if (!formatManager.findFormat(mimeType, id))  // not exists, register
+        {
+          //formatManager.register(id, mimeType, id, Kekule.IO.ChemDataType.TEXT, info.description, info.description, {'specificationUrl': info.specificationURL});
+          // TODO: dataType is unknown from info
+          var code = "Kekule.IO.DataFormatsManager.register('{0}', '{1}', '{2}', Kekule.IO.ChemDataType.BINARY, '{3}', '{4}', '{5}');\n"
+              .format(id, mimeType || '', id, info.description || '', info.description || '', "{'specificationUrl': '" + info.specificationURL || '' +"'}");
+          result += code;
+          regIds.push(id);
+        }
+      }
+      return result;
+    }
+
+    function outputFmtRegCode()
+    {
+      var code = generateFormatRegisterCode('in');
+      code += generateFormatRegisterCode('out');
+      document.getElementById('output').value = code;
+    }
+
+    function init()
+    {
+      converter = new Module.ObConversionWrapper();
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <textarea id="output" name="output" style="width:90%;height:20em"></textarea>
+  <br />
+  <button onclick="outputFmtRegCode()" type="button">Output Format Register Code</button>
+</body>
+</html>

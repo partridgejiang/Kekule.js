@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Glyph Render Test</title>
+<style>
+	#drawParent svg
+	{
+		background-color: red;
+		border: 2px solid black;
+	}
+	#drawParent
+	{
+		background-color: yellow;
+	}
+</style>
+<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+<script src="../../src/kekule.js"></script>
+<script>
+	var paper;
+
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+
+	var glyphs = [];
+
+	function fillGlyphs()
+	{
+		var g = new Kekule.Glyph(null, 'arrow');
+		g.setCoord2D({'x': 10, 'y': 10});
+		g.setSize2D({'x': 70, 'y': 100});
+		glyphs.push(g);
+	}
+
+	function getPaper()
+	{
+		if (!paper)
+			paper = Raphael('drawParent', drawBoxWidth, drawBoxHeight);
+		return paper;
+	}
+
+	function getRotate()
+	{
+		var r = document.getElementById('selectRotate').value;
+		return r * Math.PI / 180;
+	}
+
+	function draw()
+	{
+		//var renderer = new Kekule.Render.Def2DGlyphRenderer(null, Kekule.Render.RaphaelRendererBridge.getInstance());
+        var drawBridge = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+		var paper = getPaper();
+		paper.clear();
+		for (var i = 0, l = glyphs.length; i < l; ++i)
+		{
+			var options = {'rotateAngle': getRotate()};
+			var g = glyphs[i];
+			//var box = g.get2DBoundBox();
+			//options.center = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
+            var renderer = new Kekule.Render.Glyph2DRenderer(g, drawBridge);
+			renderer.draw(paper, options);
+		}
+	}
+
+	function init()
+	{
+		fillGlyphs();
+	}
+</script>
+</head>
+<body onload="init()">
+	<select id="selectRotate" name="selectRotate" onchange="draw()">
+			<option value="0">0</option>
+			<option value="30">30</option>
+			<option value="45">45</option>
+			<option value="60">60</option>
+			<option value="90">90</option>
+			<option value="180">180</option>
+		</select>
+	<button value="Draw" onclick="draw()">Draw</button>
+	<div id="drawParent">DrawParent</div>
+</body>
+</html>

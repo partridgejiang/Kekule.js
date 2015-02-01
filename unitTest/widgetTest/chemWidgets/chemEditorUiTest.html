@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chem Editor UI Test</title>
+  <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../src/kekule.js"></script>
+  <!--
+	<script src="../../../src/_compressed/kekule.compressed.js"></script>
+	-->
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <script>
+    var chemEditor;
+    var chemEditorUi;
+    var operHistoryView;
+    function init()
+    {
+      var elem = document.getElementById('chemEditorUi');
+      chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+      chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
+
+      // debug
+			/*
+			chemEditorUi.setEnableCreateNewDoc(false);
+			chemEditorUi.setEnableLoadNewFile(false);
+			chemEditorUi.setAllowCreateNewChild(false);
+
+			chemEditorUi.setChemObj(new Kekule.Molecule(null, null, true));
+			*/
+
+
+      /*
+      Kekule.X.Event.addListener(document.body, 'mousedown', function(e) {
+        console.log('-----------------');
+        console.log(e.getTarget().tagName);
+        console.log(e.getCurrentTarget().tagName);
+        console.log('-----------------');
+      });
+      */
+
+      var elem = document.getElementById('operHis');
+      operHistoryView = new Kekule.Widget.OperHistoryTreeView(elem, chemEditor.getOperHistory());
+      operHistoryView.setItemInitialExpanded(true);
+
+    }
+  </script>
+</head>
+<body onload="init()">
+  <div id="chemEditorUi" style="width:800px;height:600px"></div>
+  <div id="operHis" style="width:400px;height:600px;float:right"></div>
+</body>
+</html>

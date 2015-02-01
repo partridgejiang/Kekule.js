@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Untitled Document</title>
+		<script src="../../src/lan/classes.js"></script>
+		<script src="../../src/core/kekule.common.js"></script>
+		<script src="../../src/core/kekule.exceptions.js"></script>
+		<script>
+			function log(msg)
+			{
+				var list = document.getElementById('logList');
+				var item = document.createElement('li');
+				item.innerHTML = msg;
+				list.appendChild(item);
+			}
+			function exceptionListener(e)
+			{
+				if (e.exception instanceof Kekule.Error)
+					;
+				else
+					e.stop = true;
+				var ex = e.exception;
+				var msg = ex.getMessage();
+				msg += '<br />' + ex.fileName + ' ' + ex.lineNumber;
+				msg += '<br />Raiser: ' + ex.raiserName;
+				log(msg);
+				log(ex.stack);
+			}
+			function raise1()
+			{
+				var e = new Kekule.Exception('This is an exception');
+				Kekule.raise(e);
+			}
+			function raise2()
+			{
+				var e = new Kekule.Error('This is an error');
+				Kekule.raise(e);
+			}
+			function raise3()
+			{
+				Kekule.raise('implicit exception');
+			}
+			Kekule.exceptionHandler.addEventListener('exceptionThrown', exceptionListener);
+		</script>
+	</head>
+	<body>
+		<div>
+			<a href="javascript: raise1()">Raise Exception</a>
+			<a href="javascript: raise2()">Raise Error</a>
+			<a href="javascript: raise3()">Implicit Exception</a>
+		</div>
+		<ul id="logList"></ul>
+	</body>
+</html>

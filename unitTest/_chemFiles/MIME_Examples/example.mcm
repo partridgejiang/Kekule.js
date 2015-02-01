@@ -1,0 +1,102 @@
+- = 0.18 (0.499992,0.499992,0.499992)
+O = 1.4, 0.58 (1,0,0) ;O
+H = 0.9, 0.36 (1,1,1) ;H
+C = 1.5, 0.6 (0.5,0.5,0.5) ;C
+H45:-0.979 -1.176 3.684 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H44:-4.71 0.189 2.707 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H43:-4.159 -0.104 -0.041 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H42:-1.138 2.578 -2.959 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H41:-2.964 1.864 -1.657 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H40:-1.962 3.102 -0.851 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H39:-0.685 -2.836 0.06 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H38:2.511 -0.188 3.097 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H37:4.441 -0.641 -0.92 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H36:5.879 -2.443 2.375 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H35:3.807 -1.926 3.611 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H34:3.321 -3.626 3.486 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+O33:-1.096 -0.19 4.027 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O32:-3.816 0.466 3.183 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O31:-4.207 0.882 0.314 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O30:-0.904 1.923 -2.173 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+C29:-1.998 2.07 -1.194 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+O28:0.242 -3.076 -0.372 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O27:2.579 0.469 2.282 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O26:4.102 -1.521 -0.458 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+O25:5.311 -3.228 2.781 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+C24:3.862 -2.819 2.989 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+H23:4.532 -0.796 1.5 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H22:3.374 -3.389 0.958 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H21:2.456 0.4 0.146 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H20:2.039 -2.099 -0.902 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H19:0.58 -1.102 -1.086 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H18:-1.452 1.757 3.255 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H17:-2.619 -0.69 1.87 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H16:-3.033 2.285 1.347 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+H15:-1.668 0.153 -0.335 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+C14:3.694 -1.234 0.957 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C13:3.195 -2.544 1.624 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+O12:1.716 -2.382 1.846 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+C11:2.471 -0.289 0.991 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C  TASOS	
+C10:1.08 -1.839 -0.458 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C9:1.268 -1.259 0.961 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+O8:-0.07 -0.757 1.449 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+H7:0.663 1.023 2.398 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=H	aloc=H	
+O6:-0.485 1.553 0.704 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=O	aloc=O	
+C5:-0.218 0.668 1.879 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C4:-1.373 0.737 2.882 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C3:-2.689 0.344 2.205 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C2:-2.934 1.259 0.995 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+C1:-1.757 1.179 0.017 ;type=UNK	name= 	num=1	chain= 	ss=	ssid=	elem=C	aloc=C	
+O33-H45
+O32-H44
+O31-H43
+O30-H42
+C29-H40
+C29-O30
+C29-H41
+O28-H39
+O27-H38
+O26-H37
+O25-H36
+C24-H35
+C24-H34
+C24-O25
+C14-H23
+C14-O26
+C13-C24
+C13-C14
+C13-H22
+O12-C13
+C11-O27
+C11-H21
+C11-C14
+C10-O28
+C10-H19
+C10-H20
+C9-O12
+C9-C11
+C9-C10
+O8-C9
+C5-H7
+C5-O6
+C5-O8
+C4-O33
+C4-H18
+C4-C5
+C3-O32
+C3-C4
+C3-H17
+C2-C3
+C2-H16
+C2-O31
+C1-C2
+C1-O6
+C1-C29
+C1-H15
+;;start instance definitions here;;
+;instancetext:SUCROSE example_mcm chemdig rzepa \
+\
+This file contains\
+	45 atoms
+	46 bonds 
+

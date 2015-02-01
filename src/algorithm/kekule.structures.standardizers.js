@@ -1,0 +1,129 @@
+/**
+ * @fileoverview
+ * Standardization routines for chemical structures, especially for ctab based ones.
+ * Standardization may include canonicalization, aromatic perception and so on.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /core/kekule.common.js
+ * requires /core/kekule.structures.js
+ * requires /core/kekule.chemUtils.js
+ * requires /utils/kekule.utils.js
+ * requires /algorithm/kekule.structure.canonicalizers.js
+ * requires /algorithm/kekule.structure.aromatics.js
+ */
+
+(function(){
+"use strict";
+
+Kekule.MolStandardizer = {
+	/**
+	 * Standardize a structure fragment (molecule).
+	 * Standardization may include canonicalization, aromatic perception and so on.
+	 * @param {Kekule.StructureFragment} structureFragment
+	 * @param {Hash} options Standardization options, including the following fields:
+	 *   {
+	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
+	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
+	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
+	 *       value is not set, default one will be used instead.
+	 *     doAromaticPerception: bool, whether do aromatic ring perception to molecule, default is true.
+	 *   }.
+	 */
+	standardize: function(structureFragment, options)
+	{
+		var defOptions = {
+			unmarshalSubFragments: true,
+			doCanonicalization: true,
+			doAromaticPerception: true
+		};
+		var mol = structureFragment;
+		var op = Object.extend(defOptions, options);
+		if (op.unmarshalSubFragments)
+			mol.unmarshalAllSubFragments(true);
+		if (op.doCanonicalization)
+			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+		if (op.doAromaticPerception)
+			mol.perceiveAromaticRings();
+
+		return mol;
+	}
+};
+
+Object.extend(Kekule.ChemStructureUtils, {
+	/**
+	 * Check if two structure fragment (molecule) is same in chem level (same
+	 * atoms, bonds and structures).
+	 * @param {Kekule.StructureFragment} mol1
+	 * @param {Kekule.StructureFragment} mol2
+	 * @returns {Bool}
+	 */
+	isSameStructure: function(mol1, mol2)
+	{
+		// clone the structure to avoid change original molecule objects
+		var m1 = mol1.clone(false);
+		var m2 = mol2.clone(false);
+		// standardize each
+		m1 = Kekule.MolStandardizer.standardize(m1);
+		m2 = Kekule.MolStandardizer.standardize(m2);
+		// compare
+		return Kekule.UnivChemStructObjComparer.compare(m1, m2) === 0;
+	}
+});
+
+ClassEx.extend(Kekule.ChemObject, {
+	/**
+	 * Standardize this structure fragment (molecule).
+	 * Standardization may include canonicalization, aromatic perception and so on.
+	 * @param {Hash} options Standardization options, including the following fields:
+	 *   {
+	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
+	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
+	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
+	 *       value is not set, default one will be used instead.
+	 *     doAromaticPerception: bool, whether do aromatic ring perception to molecule, default is true.
+	 *   }.
+	 */
+	standardize: function(options)
+	{
+		// find out all molecule
+		var mols = Kekule.ChemStructureUtils.getAllStructFragments(this, true);
+		for (var i = 0, l = mols.length; i < l; ++i)
+		{
+			mols[i].standardize(options);
+		}
+		return this;
+	}
+});
+ClassEx.extend(Kekule.StructureFragment, {
+	/**
+	 * Standardize this structure fragment (molecule).
+	 * Standardization may include canonicalization, aromatic perception and so on.
+	 * @param {Hash} options Standardization options, including the following fields:
+	 *   {
+	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
+	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
+	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
+	 *       value is not set, default one will be used instead.
+	 *     doAromaticPerception: bool, whether do aromatic ring perception to molecule, default is true.
+	 *   }.
+	 */
+	standardize: function(options)
+	{
+		return Kekule.MolStandardizer.standardize(this, options);
+	},
+	/**
+	 * Check if two structure fragment (molecule) is same in chem level (same
+	 * atoms, bonds and structures).
+	 * @param {Kekule.StructureFragment} target
+	 * @returns {Bool}
+	 */
+	isSameStructureWith: function(target)
+	{
+		return Kekule.ChemStructureUtils.isSameStructure(this, target);
+	}
+});
+
+})();

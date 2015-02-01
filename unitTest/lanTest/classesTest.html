@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Class inherit test</title>
+		<script src="../../src/lan/classes.js"></script>
+		<script>
+			var C1 = Class.create(ObjectEx,
+				{
+					CLASS_NAME: 'C1',
+					initialize: function($super)
+					{
+						//alert('class C1 instance');
+						$super();
+					},
+					initProperties: function()
+					{
+						//alert('initProperties C1');
+						this.defineProp('prop1', { });
+						this.defineProp('prop2', {setter: null});
+						this.defineEvent('change');
+					}
+				});
+			var C2 = Class.create(C1, 
+				{
+					CLASS_NAME: 'C2',
+					initialize: function($super)
+					{
+						$super();
+						//alert('class C2 instance');
+					},
+					initProperties: function()
+					{
+						this.defineProp('prop3',
+							{
+								getter: function() { return this.fprop3; },
+								setter: function(value) { this.fprop3 = value; alert('prop3 set'); }
+							 });
+						this.defineEvent('restore');
+					}
+				});
+			var I1 = new C1();
+			I1.setProp1('originProp1');
+
+			var I2 = new C2();
+			I2.setEnablePropValueSetEvent(true);
+			I2.addEventListener('propValueSet', function(event)
+			  {
+			  	console.log('PropSet: ', event);
+			  }
+			);
+			I2.setProp1('value');
+			//alert(I2.getProp1());
+			I2.setProp3('hey');
+			
+			var eventListener = function(event)
+				{
+					alert('event <' + event.name + '> invoked on ' + event.target + ' with thisArg: ' + this);
+				};
+			var eventListener2 = function(event)
+				{
+					alert('[2] event <' + event.name + '> invoked on ' + event.target + ' with thisArg: ' + this);
+				};
+			I2.addEventListener('change', eventListener, document);
+			I2.addEventListener('change', eventListener2);
+			I2.addEventListener('restore', eventListener);
+			I2.invokeEvent('change');
+			I2.invokeEvent('restore');
+			
+			I2.removeEventListener('change', eventListener);
+			alert('one listener removed');
+			I2.invokeEvent('change');
+			I2.invokeEvent('restore');
+			
+			//alert(I2.getProp3());
+			//console.log(I2.getPropInfo('prop1'));
+			
+			ClassEx.defineProp(C1, 'newProp1');
+			ClassEx.defineProp(C1, 'newProp2');
+			ClassEx.defineProp(C2, 'newProp3');
+			I1.setNewProp1('Value1');
+			I2.setNewProp2('Value2');
+			I2.setNewProp3('Value3');
+			I2.setNewProp1('NewValue1');
+			console.log(I1.getNewProp1(), I1.getNewProp2());
+			console.log(I2.getNewProp1(), I2.getNewProp2(), I2.getNewProp3());
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

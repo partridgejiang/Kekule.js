@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Raphael Text Draw Test</title>
+	<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+	<script>
+		function drawString(paper, s, x, y, styles)
+		{
+			var r = paper.text(x, y, s);
+			r.attr(styles);
+			r.attr('font-family', 'arial');
+			var box = r.getBBox();
+			r.attr('x', x + box.width / 2);
+			r.attr('y', y + box.height / 2);
+			return r;
+		};
+		
+		function drawText()
+		{
+			// draw a C2H4 formula
+			var richText = [
+				{
+					'str': 'C', 
+					style: {'font-size': '20px'}
+				},
+				{
+					'str': '2', 
+					style: {'font-size': '20px', 'vertical-align': 'subscript'}
+				},
+				{
+					'str': 'H', 
+					style: {'font-size': '20px'}
+				},
+				{
+					'str': '4', 
+					style: {'font-size': '12px', 'vertical-align': 'subscript'}
+				},
+			];
+			var paper = Raphael('stage', 1000, 600);
+			
+			var x = 10;
+			var y = 10;
+			
+			for (var i = 0, l = richText.length; i < l; ++i)
+			{
+				var item = richText[i];
+				var c = drawString(paper, item.str, x, y, item.style);
+				var box = c.getBBox();
+				x += box.width;
+			}
+		};
+		
+		function init()
+		{
+			drawText();
+		}
+	</script>
+	<style>
+		#stage
+		{
+			width: 1000px;
+			height: 600px;
+			background-color: #eee;
+		}
+	</style>
+</head>
+<body onload="init()">
+	<div id="stage"></div>
+</body>
+</html>

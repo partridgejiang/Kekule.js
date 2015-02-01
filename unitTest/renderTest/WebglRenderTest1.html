@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Webgl Render Test</title>
+<style>
+	canvas
+	{
+		background-color: black;
+	}
+</style>
+<script src="../../../libs/three.js-r49/build/Three.js"></script>
+<script src="../../src/kekule.js"></script>
+<script>
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+	var aspect = drawBoxWidth / drawBoxHeight;
+	var viewAngle = 45;
+	var NEAR = 0.1;
+	var FAR = 1000;
+	
+	var threeScene;
+	var threeRenderer;
+	var threeCamera;
+	var threeContext;
+	
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var reader = new Kekule.IO.MdlMoleculeReader();
+		var r = reader.readBlock(text, null);
+		return r;
+	}
+	
+	function drawMol()
+	{
+		var viewBoxWidth = 300;
+		var viewBoxHeight = 300;
+		
+		var render = new Kekule.Render.Def3DStructFragmentRenderer(null, 
+			Kekule.Render.ThreeRendererBridge.getInstance(),
+			Kekule.Render.Molecule3DDisplayType.STICKS);
+		
+		var mol = readMol();
+		//mol.setExpanded(true);
+		var ctab = mol.getCtab();
+		//var ctabBox = ctab.get3DExposedContainerBox();
+		var ctabBox = render.estimateRenderBox(threeScene, mol);
+		console.log(ctabBox);
+		var center = {'x': (ctabBox.x1 + ctabBox.x2) / 2,
+			'y': (ctabBox.y1 + ctabBox.y2) / 2,
+			'z': (ctabBox.z1 + ctabBox.z2) / 2};
+		var scale = 1;  // Math.min(viewBoxWidth / ctabBox.deltaX, viewBoxHeight / ctabBox.deltaY);
+		/*
+		var transX = (center.x - ctabBox.x1) * scale + ctabBox.deltaX / 2 + 100;
+		var transY = (center.y - ctabBox.y1) * scale + ctabBox.deltaY / 2 + 100;
+		var transZ = (center.y - ctabBox.z1) * scale + ctabBox.deltaZ / 2 + 100;
+		*/
+		/*
+		var transX = -center.x;
+		var transY = -center.y;
+		var transZ = -center.z;
+		*/
+		var transX = 0;
+		var transY = 0;
+		var transZ = 0;
+		/*
+		var render = new Kekule.Render.Def3DCtabRenderer(null, null, 
+			Kekule.Render.ThreeRendererBridge.getInstance(),
+			Kekule.Render.Molecule3DDisplayType.SPACE_FILL);
+		*/
+		
+		var options = {'scale': scale, 'translateX': transX, 'translateY': transY, 'translateZ': transZ,
+			'center': center, 'rotateZ':  Math.PI / 2};
+			
+		//console.log(options);
+		
+		/*
+		// set up camera
+		var l = Math.sqrt(Math.sqr(ctabBox.deltaX) + Math.sqr(ctabBox.deltaY));
+		//var l = Math.max(ctabBox.deltaX, ctabBox.deltaY);
+		var a = viewAngle / 2;
+		var distance = l / Math.tan(a * Math.PI / 180);
+		threeCamera.position.z = distance;
+		//threeCamera.update();
+		*/
+		threeScene.clearMesh();	
+		
+		console.log('draw', options);
+		
+		//render.draw(threeScene, mol, {'x': 0, 'y': 0, 'z': 0}, options);
+		render.draw(threeContext, mol, {'x': 0, 'y': 0, 'z': 0}, options);
+		//console.log(options);
+		//draw2DContent1();
+		//threeRenderer.render(threeScene, threeCamera);
+	}
+	/*
+	function draw2DContent1()
+	{
+		console.log(threeRenderer.domElement);
+		var ctx = threeRenderer.domElement.getContext('2d');
+		ctx.font = 'Arial, 20px';
+		ctx.fillStyle = '#EEEEEE';
+		ctx.fillText('This is a line of text that draw directly on 2D context', 30, 150);
+	}
+	*/
+	
+	function init()
+	{
+		var drawParent = document.getElementById('drawParent');
+		var renderer = new THREE.WebGLRenderer({
+			clearColor: 0x000000,
+			clearAlpha: 0
+		});
+		var camera =
+		  new THREE.PerspectiveCamera(
+		    viewAngle,
+		    aspect,
+		    NEAR,
+		    FAR);
+	
+		var scene = new THREE.Scene();
+		//console.log(scene);
+		scene.add(camera);
+		/*
+		camera.position.x = 300;
+		camera.position.y = 300;
+		*/
+		camera.position.z = 200;
+		renderer.setSize(drawBoxWidth, drawBoxHeight);
+		
+		/*
+		var pointLight =
+		  new THREE.PointLight(0xFFFFFF);
+		
+		// set its position
+		pointLight.position.x = 10;
+		pointLight.position.y = 50;
+		pointLight.position.z = 130;
+		
+		// add to the scene
+		scene.add(pointLight);
+		*/
+		/*
+		var alight = new THREE.AmbientLight(0x777777);
+		scene.add(alight);
+		*/
+		alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+		alight.position.set(5, 5, 10);
+		scene.add(alight);
+		
+		drawParent.appendChild(renderer.domElement);
+		threeScene = scene;
+		threeRenderer = renderer;
+		threeCamera = camera;
+		threeContext = new Kekule.Render.ThreeContext(threeScene, threeCamera, threeRenderer);
+		
+		
+	}
+</script>
+
+</head>
+<body onload="init()">
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+	</form>
+	<button value="Draw Mol" onclick="drawMol()">Draw Molecule</button>
+	<span id="labelRichText"></span>
+	<input type="checkbox" id="checkBoxCondensed" name="checkBoxCondensed" onclick="toggleCondensed()">Condensed</input>
+	<div id="drawParent">DrawParent</div>
+</body>
+</html>

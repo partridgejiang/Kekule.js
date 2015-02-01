@@ -1,0 +1,100 @@
+{
+  "defAutoScaleRefLength": 0.8,
+  "root": {
+    "id": "o1",
+    "children": {
+      "id": "o2",
+      "items": [
+        {
+          "_type": "Kekule.Glyph.StraightLine",
+          "id": "p1",
+          "coord2D": {
+            "x": 2.0648716853215143,
+            "y": 10.961794809194712,
+            "_type": "object"
+          },
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Glyph.PathGlyphNode",
+                "id": "n1",
+                "coord2D": {
+                  "x": 0.2461538461538435,
+                  "y": -0.7230769230769241,
+                  "_type": "object"
+                },
+                "coord3D": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "_type": "object"
+                },
+                "nodeType": "location"
+              },
+              {
+                "_type": "Kekule.Glyph.PathGlyphNode",
+                "id": "n2",
+                "coord2D": {
+                  "x": 1.6769230769230705,
+                  "y": 0.29999999999999893,
+                  "_type": "object"
+                },
+                "coord3D": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0,
+                  "_type": "object"
+                },
+                "nodeType": "location"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Glyph.PathGlyphConnector",
+                "id": "c1",
+                "renderOptions": {
+                  "fillColor": "#0000CC",
+                  "_type": "object"
+                },
+                "pathType": "L",
+                "pathParams": {
+                  "endArrowSide": 0,
+                  "endArrowLength": 0.3,
+                  "endArrowWidth": 0.3,
+                  "lineCount": 2,
+                  "lineGap": 0.1,
+                  "startArrowLength": 0.3,
+                  "startArrowWidth": 0.3,
+                  "startArrowSide": -1,
+                  "startArrowType": "open",
+                  "endArrowType": "triangle",
+                  "_type": "object"
+                },
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          }
+        }
+      ],
+      "_type": "Kekule.ChemObjList"
+    },
+    "_type": "Kekule.ChemSpaceElement"
+  },
+  "enableAutoId": true,
+  "screenSize": {
+    "x": 600,
+    "y": 900,
+    "_type": "object"
+  },
+  "size2D": {
+    "x": 9.230769230769232,
+    "y": 13.846153846153847,
+    "_type": "object"
+  },
+  "_type": "Kekule.ChemDocument"
+}

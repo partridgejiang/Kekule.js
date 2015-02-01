@@ -1,0 +1,705 @@
+/**
+ * @fileoverview
+ * The implementation of Action class.
+ * Action is a type of class that can be associated with widget to do a specified job (like the corresponding
+ * part in Delphi).
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /utils/kekule.utils.js
+ * requires /xbrowsers/kekule.x.js
+ * requires /localization/
+ */
+
+
+(function(){
+
+/**
+ * Base class for actions.
+ * @class
+ * @augments ObjectEx
+ *
+ * @property {Bool} visible Change the property to set widgets' visibility style linked to this action.
+ * @property {Bool} displayed Change the property to set widgets' display style linked to this action.
+ * @property {Bool} enabled Whether widget linked to this action can reflect to user input. Default is true.
+ * @property {Bool} checked Change the checked property of widgets linked to this action.
+ * @property {String} checkGroup If this value is set, checked will be automatically set to true when action is executed.
+ *   What's more, when a action's checked is set to true, all other actions with the same checkGroup in action list will
+ *   be automatically set to false.
+ * @property {String} hint Hint of action. If this value is set, all widgets' hint properties will be updated.
+ * @property {Text} text Caption/text of action. If this value is set, all widgets' hint properties will be updated.
+ * @property {String} htmlClassName This value will be added to widget when action is linked and will be removed when action is unlinked.
+ * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
+ */
+/**
+ * Invoked when an action is executed.
+ * @name Kekule.Action#execute
+ * @event
+ */
+Kekule.Action = Class.create(ObjectEx,
+/** @lends Kekule.Action# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Action',
+	/** @private */
+	HTML_CLASSNAME: null,
+	/** @constructs */
+	initialize: function($super)
+	{
+		$super();
+		this.setPropStoreFieldValue('enabled', true);
+		this.setPropStoreFieldValue('linkedWidgets', []);
+
+		this.setPropStoreFieldValue('enabled', true);
+		this.setPropStoreFieldValue('visible', true);
+		this.setPropStoreFieldValue('displayed', true);
+
+		this.setPropStoreFieldValue('htmlClassName', this.getInitialHtmlClassName());
+
+		this.setBubbleEvent(true);
+
+		this.reactWidgetExecuteBind = this.reactWidgetExecute.bind(this);
+	},
+	/** @private */
+	finalize: function($super)
+	{
+		var owner = this.getOwner();
+		if (owner && owner.actionRemoved)
+		{
+			owner.actionRemoved(this);
+		}
+		this.unlinkAllWidgets();
+		this.setPropStoreFieldValue('linkedWidgets', []);
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('enabled', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getEnabled())
+				{
+					this.setPropStoreFieldValue('enabled', value);
+					this.updateAllWidgetsProp('enabled', value);
+				}
+			}
+		});
+		this.defineProp('visible', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getVisible())
+				{
+					this.setPropStoreFieldValue('visible', value);
+					this.updateAllWidgetsProp('visible', value);
+				}
+			}
+		});
+		this.defineProp('displayed', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getDisplayed())
+				{
+					this.setPropStoreFieldValue('displayed', value);
+					this.updateAllWidgetsProp('displayed', value);
+				}
+			}
+		});
+		this.defineProp('checked', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getChecked())
+				{
+					this.setPropStoreFieldValue('checked', value);
+					this.updateAllWidgetsProp('checked', value);
+					this.checkedChanged();
+				}
+			}
+		});
+		this.defineProp('checkGroup', {'dataType': DataType.STRING});
+		this.defineProp('hint', {'dataType': DataType.STRING,
+			'setter': function(value)
+			{
+				if (value && (value !== this.getHint()))
+				{
+					this.setPropStoreFieldValue('hint', value);
+					this.updateAllWidgetsProp('hint', value);
+				}
+			}
+		});
+		this.defineProp('text', {'dataType': DataType.STRING,
+			'setter': function(value)
+			{
+				if (value && (value !== this.getText()))
+				{
+					this.setPropStoreFieldValue('text', value);
+					this.updateAllWidgetsProp('text', value);
+				}
+			}
+		});
+
+		this.defineProp('htmlClassName', {'dataType': DataType.STRING,
+			'setter': function(value)
+			{
+				var old = this.getHtmlClassName();
+				this.setPropStoreFieldValue('htmlClassName', value);
+				this.updateAllWidgetClassName(value, old);
+			}
+		});
+
+		this.defineProp('owner', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+
+		// widgets that associated with this action. Private property.
+		this.defineProp('linkedWidgets', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null})
+	},
+
+	/** @private */
+	getHigherLevelObj: function()
+	{
+		return this.getOwner();
+	},
+
+	/** @private */
+	getInitialHtmlClassName: function()
+	{
+		return this.HTML_CLASSNAME || null;
+	},
+	/**
+	 * Returns belonged action list.
+	 * @returns {Kekule.ActionList}
+	 */
+	getActionList: function()
+	{
+		var result = this.getOwner();
+		return (result instanceof Kekule.ActionList)? result: null;
+	},
+
+	/** @private */
+	checkedChanged: function()
+	{
+		//var group = this.getCheckGroup();
+		var list = this.getActionList();
+		if (list)
+			list.actionCheckedChanged(this);
+	},
+
+	/**
+	 * Link a widget to this action.
+	 * This method should not be called directly. Instead, user should use the action property of widget.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @ignore
+	 */
+	linkWidget: function(widget)
+	{
+		var widgets = this.getLinkedWidgets();
+		if (widgets.indexOf(widget) < 0)
+		{
+			// update widget properties
+			var text = this.getText();
+			if (text)
+				this.updateWidgetProp(widget, 'text', text);
+			var hint = this.getHint();
+			if (hint)
+				this.updateWidgetProp(widget, 'hint', hint);
+			this.updateWidgetProp(widget, 'enabled', this.getEnabled());
+			this.updateWidgetProp(widget, 'displayed', this.getDisplayed());
+			this.updateWidgetProp(widget, 'visible', this.getVisible());
+			this.updateWidgetProp(widget, 'checked', this.getChecked());
+			this.updateWidgetClassName(widget, this.getHtmlClassName(), null);
+
+			// install event handler
+			widget.addEventListener('execute', this.reactWidgetExecuteBind);
+			// add to array
+			widgets.push(widget);
+
+			return this;
+		}
+	},
+	/**
+	 * Unlink a widget from this action,
+	 * This method should not be called directly. Instead, user should use widget.setAction(null).
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @ignore
+	 */
+	unlinkWidget: function(widget)
+	{
+		var widgets = this.getLinkedWidgets();
+		var index = widgets.indexOf(widget);
+		if (index >= 0)
+		{
+			// remove class names
+			this.updateWidgetClassName(widget, null, this.getHtmlClassName());
+			// uninstall event handler
+			widget.removeEventListener('execute', this.reactWidgetExecuteBind);
+			// remove from array
+			widgets.splice(index, 1);
+		}
+	},
+	/** @private */
+	unlinkAllWidgets: function()
+	{
+		var widgets = this.getLinkedWidgets();
+		for (var i = widgets.length - 1; i >= 0; --i)
+		{
+			this.unlinkWidget(widgets[i]);
+		}
+	},
+
+	/** @private */
+	reactWidgetExecute: function(e)
+	{
+		return this.execute(e.target);
+	},
+
+	/**
+	 * Execute the action.
+	 * @param {Object} target Object that invokes this action.
+	 */
+	execute: function(target)
+	{
+		var oldChecked = this.getChecked();
+		if (!this.getCheckGroup() || !oldChecked)
+		{
+			this.doExecute(target);
+			if (this.getCheckGroup())
+			{
+				this.setChecked(true);
+			}
+		}
+		this.invokeEvent('execute');
+		return this;
+	},
+	/**
+	 * Do the actual action job. Descendants should override this method.
+	 * @private
+	 */
+	doExecute: function(target)
+	{
+		// do nothing here
+	},
+
+	/**
+	 * Update the state (enabled, visible and so on) of action.
+	 */
+	update: function()
+	{
+		this.doUpdate();
+		return this;
+	},
+	/**
+	 * Do the actual state updating job. Descendants should override this method.
+	 * @private
+	 */
+	doUpdate: function()
+	{
+		// do nothing here
+	},
+
+	/** @private */
+	updateAllWidgetsProp: function(propName, propValue)
+	{
+		var widgets = this.getLinkedWidgets();
+		for (var i = 0, l = widgets.length; i < l; ++i)
+		{
+			var w = widgets[i];
+			this.updateWidgetProp(w, propName, propValue);
+		}
+	},
+	/** @private */
+	updateWidgetProp: function(widget, propName, propValue)
+	{
+		if (widget.hasProperty(propName))
+		{
+			widget.setPropValue(propName, propValue);
+		}
+	},
+	/** @private */
+	updateWidgetClassName: function(widget, addClasses, removeClasses)
+	{
+		if (removeClasses)
+			widget.removeClassName(removeClasses, true);
+		if (addClasses)
+			widget.addClassName(addClasses, true);
+	},
+	/** @private */
+	updateAllWidgetClassName: function(addClasses, removeClasses)
+	{
+		var widgets = this.getLinkedWidgets();
+		for (var i = 0, l = widgets.length; i < l; ++i)
+		{
+			var w = widgets[i];
+			this.updateWidgetClassName(w, addClasses, removeClasses);
+		}
+	}
+});
+
+/**
+ * Container of a series of related actions.
+ * @class
+ * @augments ObjectEx
+ *
+ * @property {Array} actions Actions in this list.
+ * @property {Bool} ownActions If this property is true, action will be finalized if removed from this list.
+ *   Default is true.
+ * @property {Bool} autoUpdate If set to true, all actions in list will update their state after one action is executed.
+ */
+/**
+ * Invoked when a child action is executed. Event param of it has field: {action}
+ * @name Kekule.ActionList#execute
+ * @event
+ */
+Kekule.ActionList = Class.create(ObjectEx,
+/** @lends Kekule.ActionList# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ActionList',
+	/** @constructs */
+	initialize: function($super)
+	{
+		$super();
+		this.setPropStoreFieldValue('actions', []);
+		this.setPropStoreFieldValue('ownActions', true);
+		this.setPropStoreFieldValue('autoUpdate', true);
+		this.reactActionExecutedBind = this.reactActionExecuted.bind(this);
+		this.addEventListener('execute', this.reactActionExecutedBind);
+	},
+	/** @private */
+	finalize: function($super)
+	{
+		this.removeEventListener('execute', this.reactActionExecutedBind);
+		this.clear();
+		this.setPropStoreFieldValue('actions', null);
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('actions', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		this.defineProp('ownActions', {'dataType': DataType.BOOL});
+		this.defineProp('autoUpdate', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('autoUpdate', value);
+				if (value)
+					this.updateAll();
+			}
+		});
+	},
+
+	/**
+	 * Returns if one action of group is already checked.
+	 * @param {String} group
+	 * @returns {Bool}
+	 */
+	hasActionChecked: function(group)
+	{
+		var actions = this.getActions();
+		for (var i = 0, l = actions.length; i < l; ++i)
+		{
+			var a = actions[i];
+			if ((a.getCheckGroup() === group) && (a.getChecked()))
+				return true;
+		}
+		return false;
+	},
+
+	/**
+	 * Called after an action is added to list.
+	 * @private
+	 */
+	actionAdded: function(action)
+	{
+		Kekule.ArrayUtils.pushUnique(this.getActions(), action);
+		action.setPropStoreFieldValue('owner', this);
+		action.update();
+		// install event listener
+		//action.addEventListener('execute', this.reactActionExecutedBinded);
+	},
+	/**
+	 * Called after an action is removed from list.
+	 * @private
+	 */
+	actionRemoved: function(action)
+	{
+		Kekule.ArrayUtils.remove(this.getActions(), action);
+		action.setPropStoreFieldValue('owner', null);
+		// remove event listener
+		//action.removeEventListener('execute', this.reactActionExecutedBinded);
+	},
+
+	/**
+	 * Notify a child action item's checked property checked.
+	 * @private
+	 */
+	actionCheckedChanged: function(action)
+	{
+		if (action && action.getChecked())
+		{
+			var group = action.getCheckGroup();
+			if (group)
+			{
+				var actions = this.getActions();
+				for (var i = 0, l = actions.length; i < l; ++i)
+				{
+					var a = actions[i];
+					if ((a !== action) && (a.getCheckGroup() === group) && (a.getChecked()))
+						a.setChecked(false);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Event listener to react to execute event of child actions.
+	 * @private
+	 */
+	reactActionExecuted: function(e)
+	{
+		// this method will receives execute event from child actions
+		if (e.target instanceof Kekule.Action)
+		{
+			this.invokeEvent('execute', {'action': e.target});
+			if (this.getAutoUpdate())
+				this.updateAll();
+		}
+	},
+
+	/**
+	 * Returns count of actions inside.
+	 */
+	getActionCount: function()
+	{
+		return this.getActions().length;
+	},
+	/**
+	 * Returns action object at index.
+	 * @param {Int} index
+	 * @returns {Kekule.Action}
+	 */
+	getActionAt: function(index)
+	{
+		return this.getActions()[index];
+	},
+
+	/**
+	 * Add a new action to list.
+	 * @param {Kekule.Action} action
+	 */
+	add: function(action)
+	{
+		this.actionAdded(action);
+		return this;
+	},
+	/**
+	 * Remove an action from list.
+	 * @param {Kekule.Action} action
+	 */
+	remove: function(action)
+	{
+		this.actionRemoved(action);
+		if (this.getOwnActions())
+			action.finalize();
+		return this;
+	},
+	/**
+	 * Remove action at index.
+	 * @param {Int} index
+	 */
+	removeAt: function(index)
+	{
+		var actions = this.getActions();
+		var action = actions[index];
+		if (action)
+		{
+			Kekule.ArrayUtils.removeAt(actions, index);
+			this.actionRemoved(action);
+		}
+		return this;
+	},
+	/**
+	 * Clear all actions in list.
+	 */
+	clear: function()
+	{
+		var actions = this.getActions();
+		for (var i = actions.length - 1; i >=0; --i)
+		{
+			this.actionRemoved(actions[i]);
+		}
+		this.setPropStoreFieldValue('actions', []);
+		return this;
+	},
+
+	/**
+	 * Update state of all actions in list.
+	 */
+	updateAll: function()
+	{
+		var actions = this.getActions();
+		for (var i = 0, l = actions.length; i < l; ++i)
+		{
+			actions[i].update();
+		}
+		return this;
+	}
+});
+
+
+// Some useful and common actions
+/**
+ * Action to open a file dialog and load file(s).
+ * This action relies on JavaScript FileReader API.
+ * @class
+ * @augments Kekule.Action
+ */
+/**
+ * Invoked when file(s) is loaded from dialog. Has one additional fields: {files}
+ * @name Kekule.ActionFileOpen#open
+ * @event
+ */
+Kekule.ActionFileOpen = Class.create(Kekule.Action,
+/** @lends Kekule.ChemWidget.ActionFileOpen# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionFileOpen',
+	/** @constructs */
+	initialize: function($super)
+	{
+		$super();
+		this._inputElem = null;  // internal
+		this.reactInputChangeBind = this.reactInputChange.bind(this);
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		this.setEnabled(this.getEnabled() && Kekule.BrowserFeature.fileapi);
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		var elem = target.getElement();
+		var doc = elem.ownerDocument;
+		var input = this.createInputElem(doc);
+		input.click();  // open file dialog
+		//this._inputElem = input;
+	},
+	/** @private */
+	createInputElem: function(doc)
+	{
+		var self = this;
+		var result = document.createElement('input');
+		result.setAttribute('type', 'file');
+		// IMPORTANT: some browser need this input file element visible to raise the open dialog
+		// so we append it to document and "hidden" it
+		var style = result.style;
+		style.position = 'absolute';
+		style.left = '-10000px';
+		style.opacity = 0;
+
+		document.body.appendChild(result);
+		//result.onchange = this.reactInputChangeBind;
+		Kekule.X.Event.addListener(result, 'change', this.reactInputChangeBind);
+		return result;
+	},
+	/** @private */
+	reactInputChange: function(e)
+	{
+		var target = e.getTarget();
+		this.fileOpened(target.files);
+		// dismiss input element
+		//this._inputElem = null;
+		Kekule.X.Event.removeListener(target, 'change', this.reactInputChangeBind);
+		target.ownerDocument.body.focus();
+		if (target.parentNode)
+		{
+			target.parentNode.removeChild(target);
+		}
+	},
+	/**
+	 * Called when file is opened from input element.
+	 * @param {Object} files
+	 */
+	fileOpened: function(files)
+	{
+		this.doFileOpened(files);
+		this.invokeEvent('open', {'files': files});
+	},
+	/**
+	 * Do actual work of fileOpened. Descendants can override this method.
+	 * @param {Object} files
+	 */
+	doFileOpened: function(files)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * Action to open a file save dialog and save file(s).
+ * This action relies on Data URL.
+ * @class
+ * @augments Kekule.Action
+ *
+ * @param {String} data Data to save.
+ * @param {String} fileName Prefered file name to save.
+ *
+ * @property {String} data Data to save.
+ * @property {String} fileName Prefered file name to save.
+ */
+Kekule.ActionFileSave = Class.create(Kekule.Action,
+/** @lends Kekule.ChemWidget.ActionFileSave# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionFileSave',
+	/** @constructs */
+	initialize: function($super, data, fileName)
+	{
+		$super();
+		if (data)
+			this.setData(data);
+		if (fileName)
+			this.setFileName(fileName);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('data', {'dataType': DataType.STRING, 'serializable': false});
+		this.defineProp('fileName', {'dataType': DataType.STRING, 'serializable': false});
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		this.setEnabled(this.getEnabled() && this.getData());
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		var doc;
+		if (!target)
+			doc = document;
+		else
+		{
+			var elem = target.getElement();
+			doc = elem.ownerDocument;
+		}
+		var dataElem = this.createDataElem(doc, this.getData(), this.getFileName());
+		dataElem.click();  // save file dialog
+		dataElem.parentNode.removeChild(dataElem);
+	},
+
+	/** @private */
+	createDataElem: function(doc, data, fileName)
+	{
+		var elem = doc.createElement('a');
+		elem.setAttribute('href', 'data:application/octet-stream,' + encodeURIComponent(data));
+		elem.setAttribute('download', fileName);
+		doc.body.appendChild(elem);
+		return elem;
+	}
+});
+
+})();

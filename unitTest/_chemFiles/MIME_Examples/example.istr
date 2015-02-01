@@ -1,0 +1,242 @@
+# Isostar Scatter Plot  example_istr chemdig rzepa
+# Number_Of_Central_Group_Atoms:   13
+# Number_Of_Contact_Group_Atoms:    1
+# Number_Of_Flexible_Atoms:    0
+# Central_Group_Name: Cytosine
+# Contact_Group_Name: Any atom
+# Target_Atoms: 7  14
+# Data_Source: CSD
+# Slider :    50  -26  14  14  14  14  14  14  14  14
+# Slider :    14  14  14  14  14  14  14  14  14  14
+# Slider :    14  14  15  15  16  17  17  18  18  18
+# Slider :    18  18  18  19  21  21  22  22  24  25
+# Slider :    25  25  27  27  31  32  34  34  35  36
+# Slider :    39  42  44  44  48  50  50  55  56  59
+# Slider :    60  61  64  66  71  72  73  73  75  76
+# Slider :    77  78  79  80  81  82  85  86  87
+# Contour_Probes: Probe TY14 -centroid 1
+# Average_Density: unknown
+# Contact_Bonds: No 
+@<TRIPOS>MOLECULE
+test9.cor
+   87    13
+SMALL
+NO_CHARGES
+
+
+@<TRIPOS>ATOM
+      1 N   -0.072   -1.361    0.000 N.2   
+      2 C    1.263   -1.125    0.000 C.2   
+      3 N    1.724    0.191    0.000 N.3   
+      4 C    0.842    1.231    0.000 C.2   
+      5 C   -0.482    1.013    0.000 C.2   
+      6 C   -0.925   -0.337    0.000 C.2   
+      7 N   -2.233   -0.611    0.000 N.3   
+      8 H   -2.545   -1.561    0.000 H     
+      9 H   -2.905    0.123    0.000 H     
+     10 O    2.089   -2.048    0.000 O.2   
+     11 C    3.175    0.435    0.000 C.3   
+     12 H   -1.189    1.825    0.000 H     
+     13 H    1.257    2.224    0.000 H     
+     14 H35   -2.035   -0.108    2.383 H     
+     15 H102   -1.604   -0.883    2.639 H     
+     16 C6   -2.154   -0.557    3.052 C.3   
+     17 C2   -2.652   -0.009    3.121 C.3   
+     18 H5   -1.792   -0.344    2.699 H     
+     19 H82   -2.192   -0.828    2.771 H     
+     20 C13   -2.315    0.146    3.207 C.3   
+     21 H7   -2.843   -0.138    2.620 H     
+     22 C8   -3.330   -1.532    2.920 C.3   
+     23 H11   -2.258   -0.280    2.791 H     
+     24 H1'   -1.874   -0.813    2.784 H     
+     25 C23   -2.742   -1.163    3.288 C.3   
+     26 H1222   -2.945   -1.459    2.645 H     
+     27 C12   -2.221   -1.027    3.318 C.3   
+     28 C18   -1.660   -0.244    3.247 C.3   
+     29 C4   -2.069   -1.165    3.374 C.3   
+     30 H9   -1.368   -0.871    2.718 H     
+     31 C1   -2.224    0.405    3.296 C.3   
+     32 C6   -1.745   -0.915    3.379 C.3   
+     33 H91   -1.584   -0.844    2.794 H     
+     34 H14   -2.792   -0.263    2.806 H     
+     35 C6   -1.556   -1.109    3.334 C.3   
+     36 N12   -1.037   -1.212    3.008 N.3   
+     37 C2   -1.793    0.299    3.333 C.3   
+     38 H15   -1.646    0.231    2.832 H     
+     39 N1   -2.901   -0.494    3.266 N.3   
+     40 C7   -2.219   -0.973    3.470 C.3   
+     41 N6   -2.325   -0.026    3.271 N.3   
+     42 C1   -2.127    0.665    3.251 C.3   
+     43 C5   -1.978   -1.112    3.530 C.3   
+     44 C9   -2.028   -1.104    3.473 C.3   
+     45 C6   -1.648   -0.151    3.595 C.3   
+     46 C6   -1.179   -0.680    3.310 C.3   
+     47 C17   -1.599   -0.110    3.347 C.3   
+     48 C5   -2.465   -0.762    3.421 C.3   
+     49 C28   -2.360    0.056    3.404 C.3   
+     50 C8   -2.510   -0.043    3.445 C.3   
+     51 H17   -2.660   -0.933    2.982 H     
+     52 C6   -1.263   -0.817    3.423 C.3   
+     53 N33   -1.413   -0.921    3.292 N.3   
+     54 C9   -2.421   -0.898    3.479 C.3   
+     55 H11   -1.140   -1.525    2.571 H     
+     56 H10   -1.491   -0.478    2.874 H     
+     57 O1   -1.401   -0.526    3.312 O.3   
+     58 N1   -2.633    0.129    3.320 N.3   
+     59 N54   -1.941   -2.383    2.867 N.3   
+     60 H22   -1.493    0.237    2.909 H     
+     61 N1   -2.067    0.344    3.252 N.3   
+     62 C2   -1.432    0.212    3.346 C.3   
+     63 C5   -1.571   -0.935    3.502 C.3   
+     64 C9   -2.374   -0.504    3.500 C.3   
+     65 C111   -2.266   -1.043    3.592 C.3   
+     66 C12   -1.764   -0.239    3.503 C.3   
+     67 N1   -2.445   -0.065    3.394 N.3   
+     68 C1   -2.395   -2.056    3.373 C.3   
+     69 O2   -1.434   -0.212    3.295 O.3   
+     70 C16   -1.807   -0.212    3.513 C.3   
+     71 C24   -3.061   -0.476    3.481 C.3   
+     72 H8   -1.341   -0.426    3.028 H     
+     73 N1   -1.325   -1.035    3.407 N.3   
+     74 C9   -3.035    0.089    3.449 C.3   
+     75 N1   -3.342    1.525    2.645 N.3   
+     76 H7   -3.139   -0.302    2.946 H     
+     77 C4   -1.768    0.170    3.623 C.3   
+     78 H8   -1.455   -0.494    3.106 H     
+     79 N3   -3.147    0.028    3.385 N.3   
+     80 H6   -2.878   -0.173    3.152 H     
+     81 C7   -3.661   -0.074    3.438 C.3   
+     82 H21   -2.735   -0.851    3.162 H     
+     83 H6   -2.879   -0.497    3.268 H     
+     84 H2'   -2.879   -0.497    3.268 H     
+     85 H3   -2.718   -0.645    3.226 H     
+     86 C10   -1.055   -0.967    3.569 C.3   
+     87 H7   -1.770   -0.995    3.145 H     
+@<TRIPOS>BOND
+    1     1     2  1
+    2     2     3  1
+    3     3     4  1
+    4     4     5  2
+    5     5     6  1
+    6     1     6  2
+    7     6     7  1
+    8     7     8  1
+    9     7     9  1
+   10     2    10  2
+   11     3    11  1
+   12     5    12  1
+   13     4    13  1
+@<TRIPOS>SET
+CENTRAL STATIC ATOMS <user> **** central group
+ 13     1    2    3    4    5    6    7    8    9   10   11   12   13                                                                   
+Set1  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},1.80)}                                                                                                                                                                                                                        
+Set2  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},2.10)}                                                                                                                                                                                                                        
+Set3  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},2.40)}                                                                                                                                                                                                                        
+Set4  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},2.70)}                                                                                                                                                                                                                        
+Set5  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},3.00)}                                                                                                                                                                                                                        
+Set6  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},3.30)}                                                                                                                                                                                                                        
+Set7  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},3.60)}                                                                                                                                                                                                                        
+Set8  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},3.90)}                                                                                                                                                                                                                        
+Set9  DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},4.20)}                                                                                                                                                                                                                        
+Set10 DYNAMIC ATOMS <user> **** Distance based atom shell
+{sphere({Central},4.50)}                                                                                                                                                                                                                        
+#ISOSTAR_SYMM
+#EL  1.0000  0.0000  0.0000  0.0000  1.0000  0.0000  0.0000  0.0000 -1.0000
+#ISOSTAR_ENDSYM
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# Mean:0
+# KUBHEU: 1 0 0 0 0 1 0 0 0 0 1 0:N2 C13 N1 C16 C15 C14 N3 H2 H3 O2 C11 H1 H4 : H35:-26
+# BUDWAY10: -1 0 0 12 0 -1 0 12 0 0 -1 12:N3' C2' N1' C6' C5' C4' N4' H41 H42 O2' C1' H5' H6' : H102:-6
+# BOFWOI: -1 0 0 -6 0 -1 0 0 0 0 1 6:N3 C2 N1 C6 C5 C4 N4 H2 H1 O2 C1' H3 H4 : C6:-4
+# ARBCYT10: 1 0 0 -6 0 -1 0 18 0 0 -1 0:N2 C2 N1 C9 C7 C5 N3 H7 H8 O2 C1 H6 H1 : C2:-3
+# JIKHOA: 1 0 0 12 0 1 0 12 0 0 1 0:N2 C1 N1 C4 C3 C2 N3 H12 H11 O1 C5 H10 H9 : H5:-1
+# CIMJEN: -1 0 0 0 0 -1 0 0 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H42 H41 O2 C7 H5 H6 : H82:5
+# JIKHOA: 1 0 0 12 0 1 0 12 0 0 1 -12:N2 C1 N1 C4 C3 C2 N3 H12 H11 O1 C5 H10 H9 : C13:6
+# WIPWIB: -1 0 0 6 0 1 0 -6 0 0 -1 12:N2 C6 N1 C9 C8 C7 N3 H8 H9 O3 C1 H10 H11 : H7:6
+# FIKHOW: -1 0 0 12 0 1 0 -6 0 0 -1 12:N2 C1 N1 C4 C3 C2 N3 H2 H1 O1 C5 H3 H4 : C8:8
+# FIKHOW: -1 0 0 12 0 1 0 -6 0 0 -1 0:N5 C10 N4 C13 C12 C11 N6 H13 H12 O5 C14 H14 H15 : H11:10
+# CUPYUH: -1 0 0 12 0 1 0 6 0 0 -1 -12:N3 C2 N1 C6 C5 C4 N4 H14 H24 O2 C1' H5 H6 : H1':10
+# BARZOJ: -1 0 0 0 0 -1 0 12 0 0 -1 0:N33 C23 N13 C63 C53 C43 N43 H432 H431 O23 C13 H53 H63 : C23:11
+# BAGXIQ01: -1 0 0 0 0 1 0 -6 0 0 -1 6:N3 C2 N1 C6 C5 C4 N4 H41 H42 O2 C1' H5 H6 : H1222:14
+# WIPWIB: -1 0 0 18 0 1 0 6 0 0 -1 0:N5 C15 N4 C18 C17 C16 N6 H20 H19 O6 C10 H21 H22 : C12:14
+# CYTCYP20: -1 0 0 0 0 1 0 6 0 0 -1 0:N3 C3 N1 C17 C13 C9 N5 H3 H2 O4 C1 H21 H22 : C18:16
+# CYTIDI02: 1 0 0 0 0 1 0 0 0 0 1 -12:N2 C1 N1 C4 C3 C2 N3 H4 H3 O1 C5 H1 H2 : C4:16
+# KUBHEU: 1 0 0 0 0 1 0 0 0 0 1 0:N5 C29 N4 C32 C31 C30 N6 H11 H12 O4 C27 H27 H14 : H9:16
+# JUHLAZ: 1 0 0 0 0 1 0 0 0 0 1 -12:N2 C1 N1 C4 C3 C2 N3 H3 H2 O1 C5 H4 H5 : C1:16
+# BOXGIE: 1 0 0 -6 0 -1 0 6 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H24 H14 O2 C1' H5 H6 : C6:17
+# EGMCYT10: 1 0 0 0 0 1 0 0 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H4 H41 O2 C1 H5 H6 : H91:18
+# WIPWIB: -1 0 0 18 0 1 0 6 0 0 -1 0:N5 C15 N4 C18 C17 C16 N6 H20 H19 O6 C10 H21 H22 : H14:18
+# BOXGIE: 1 0 0 6 0 -1 0 6 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H24 H14 O2 C1' H5 H6 : C6:20
+# VUYZUK: 1 0 0 0 0 1 0 -12 0 0 1 0:N2 C1 N1 C4 C3 C2 N3 H2 H1 O1 C5 H3 H4 : N12:21
+# BESGOV: 1 0 0 0 0 1 0 0 0 0 1 -12:N3 C2 N1 C6 C5 C4 N4 H1 H2 O2 C1' H3 H4 : C2:22
+# KUBHEU: 1 0 0 0 0 1 0 -12 0 0 1 0:N5 C29 N4 C32 C31 C30 N6 H11 H12 O4 C27 H27 H14 : H15:22
+# KOSNOV: 1 0 0 6 0 -1 0 18 0 0 -1 0:N2 C1 N1 C4 C3 C2 N3 H12 H13 O1 C5 H14 H15 : N1:22
+# JIKHOA: 1 0 0 12 0 1 0 12 0 0 1 0:N2 C1 N1 C4 C3 C2 N3 H12 H11 O1 C5 H10 H9 : C7:23
+# SIVZUS: -1 0 0 12 0 1 0 -6 0 0 -1 6:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : N6:23
+# KOSNOV: 1 0 0 6 0 -1 0 18 0 0 -1 0:N2 C1 N1 C4 C3 C2 N3 H12 H13 O1 C5 H14 H15 : C1:23
+# CYTIDI10: 1 0 0 0 0 1 0 0 0 0 1 -12:N1 C2 N2 C5 C7 C9 N3 H8 H7 O2 C1 H1 H6 : C5:24
+# CYTIDI01: 1 0 0 0 0 1 0 0 0 0 1 -12:N2 C2 N1 C9 C7 C5 N3 H6 H7 O2 C1 H9 H13 : C9:24
+# BOFWOI: -1 0 0 -6 0 -1 0 0 0 0 1 -6:N3 C2 N1 C6 C5 C4 N4 H2 H1 O2 C1' H3 H4 : C6:26
+# METCYT01: -1 0 0 -12 0 -1 0 12 0 0 -1 -12:N3 C2 N1 C6 C5 C4 N4 H41 H4 O2 C1 H5 H6 : C6:26
+# CYTCYP20: -1 0 0 -12 0 1 0 -6 0 0 -1 0:N4 C6 N2 C18 C16 C12 N6 H14 H15 O8 C2 H11 H13 : C17:26
+# WIPWIB: -1 0 0 6 0 1 0 -6 0 0 -1 12:N2 C6 N1 C9 C8 C7 N3 H8 H9 O3 C1 H10 H11 : C5:26
+# KUBHEU: 1 0 0 0 0 1 0 0 0 0 1 0:N2 C13 N1 C16 C15 C14 N3 H2 H3 O2 C11 H1 H4 : C28:27
+# CIMJEN: -1 0 0 0 0 -1 0 0 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H42 H41 O2 C7 H5 H6 : C8:27
+# SIVZUS: -1 0 0 12 0 1 0 -6 0 0 -1 6:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H17:29
+# ARBCYT10: 1 0 0 -6 0 -1 0 6 0 0 -1 0:N2 C2 N1 C9 C7 C5 N3 H7 H8 O2 C1 H6 H1 : C6:29
+# BARZOJ: -1 0 0 0 0 -1 0 12 0 0 -1 0:N33 C23 N13 C63 C53 C43 N43 H432 H431 O23 C13 H53 H63 : N33:29
+# EGMCYT10: 1 0 0 0 0 1 0 0 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H4 H41 O2 C1 H5 H6 : C9:29
+# FOVXET: 1 0 0 -6 0 1 0 -6 0 0 1 0:N2 C1 N1 C3 C2 C4 N3 H5 H4 O1 C6 H1 H3 : H11:29
+# FIKHOW: -1 0 0 12 0 1 0 -6 0 0 -1 12:N2 C1 N1 C4 C3 C2 N3 H2 H1 O1 C5 H3 H4 : H10:30
+# JUHLAZ: 1 0 0 0 0 1 0 0 0 0 1 -12:N2 C1 N1 C4 C3 C2 N3 H3 H2 O1 C5 H4 H5 : O1:31
+# BOXGIE: 1 0 0 -6 0 -1 0 6 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H24 H14 O2 C1' H5 H6 : N1:31
+# OMCYTD20: -1 0 0 0 0 1 0 -6 0 0 -1 6:N3 C2 N1 C6 C5 C4 N4 H41 H42 O2 C11 H51 H61 : N54:31
+# KUBHEU: 1 0 0 0 0 1 0 12 0 0 1 0:N2 C13 N1 C16 C15 C14 N3 H2 H3 O2 C11 H1 H4 : H22:32
+# METCYT01: -1 0 0 -12 0 -1 0 12 0 0 -1 -12:N3 C2 N1 C6 C5 C4 N4 H41 H4 O2 C1 H5 H6 : N1:33
+# SIVZUS: -1 0 0 12 0 1 0 6 0 0 -1 6:N5 C10 N4 C13 C12 C11 N6 H16 H17 O6 C14 H18 H19 : C2:34
+# XYFCYT10: -1 0 0 12 0 -1 0 24 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H2 H1 O2 C1' H5 H6 : C5:34
+# FIKHOW: -1 0 0 12 0 1 0 -6 0 0 -1 12:N2 C1 N1 C4 C3 C2 N3 H2 H1 O1 C5 H3 H4 : C9:34
+# BAGXIQ01: 1 0 0 12 0 1 0 -12 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H41 H42 O2 C1' H5 H6 : C111:35
+# KUBHEU: 1 0 0 0 0 1 0 0 0 0 1 0:N5 C29 N4 C32 C31 C30 N6 H11 H12 O4 C27 H27 H14 : C12:35
+# BOXGIE: 1 0 0 6 0 -1 0 6 0 0 -1 0:N3 C2 N1 C6 C5 C4 N4 H24 H14 O2 C1' H5 H6 : N1:36
+# CYTCYP20: -1 0 0 0 0 1 0 -6 0 0 -1 0:N4 C6 N2 C18 C16 C12 N6 H14 H15 O8 C2 H11 H13 : C1:36
+# ARBCYT10: 1 0 0 -6 0 -1 0 18 0 0 -1 0:N2 C2 N1 C9 C7 C5 N3 H7 H8 O2 C1 H6 H1 : O2:36
+# DXCYTD: 1 0 0 0 0 1 0 0 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H1 H2 O2 C1' H3 H4 : C16:36
+# MCYTIM10: 1 0 0 0 0 1 0 0 0 0 1 -12:N3 C2 N1 C6 C5 C4 N4 H41 H42 O2 C1 H5 H6 : C24:36
+# GAHHOM: 0 1 0 6 -1 0 0 6 0 0 1 -3:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H8:37
+# CYTCYP20: -1 0 0 0 0 1 0 -6 0 0 -1 0:N4 C6 N2 C18 C16 C12 N6 H14 H15 O8 C2 H11 H13 : N1:38
+# FIKHOW: -1 0 0 12 0 1 0 -6 0 0 -1 0:N5 C10 N4 C13 C12 C11 N6 H13 H12 O5 C14 H14 H15 : C9:40
+# DXCYTD: 1 0 0 0 0 1 0 0 0 0 1 0:N13 C12 N11 C16 C15 C14 N14 H2' H1' O12 C21' H3' H4' : N1:40
+# NAGLIQ: -1 0 0 12 0 1 0 -6 0 0 -1 12:N2 C6 N1 C9 C8 C7 N3 H11 H10 O4 C10 H12 H13 : H7:41
+# JIKHOA: 1 0 0 -12 0 1 0 -12 0 0 1 12:N5 C10 N4 C13 C12 C11 N6 H23 H24 O4 C14 H22 H21 : C4:42
+# GAHHOM01: 0 -1 0 6 1 0 0 6 0 0 1 3:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H8:43
+# BESGOV: 1 0 0 0 0 1 0 0 0 0 1 -12:N3 C2 N1 C6 C5 C4 N4 H1 H2 O2 C1' H3 H4 : N3:44
+# BOMTAY: 1 0 0 0 0 1 0 -12 0 0 1 0:N3 C2 N1 C6 C5 C4 N4 H42 H41 O2 C1 H5 H6 : H6:45
+# KUPVUM: 1 0 0 -12 0 1 0 -12 0 0 1 0:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : C7:46
+# JIKHOA: 1 0 0 12 0 1 0 12 0 0 1 -12:N2 C1 N1 C4 C3 C2 N3 H12 H11 O1 C5 H10 H9 : H21:47
+# BOTSIM10: 1 0 0 6 0 -1 0 6 0 0 -1 12:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H6:48
+# BOTSIM: 1 0 0 6 0 -1 0 6 0 0 -1 12:N3 C2 N1 C6 C5 C4 N4 H41 H42 O2 C1' H5 H6 : H2':48
+# WAXLUC: -1 0 0 12 0 -1 0 24 0 0 1 0:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H3:48
+# BUDWAY10: -1 0 0 12 0 -1 0 12 0 0 -1 12:N3' C2' N1' C6' C5' C4' N4' H41 H42 O2' C1' H5' H6' : C10:49
+# GAHHOM: 1 0 0 -6 0 -1 0 6 0 0 -1 21:N2 C1 N1 C4 C3 C2 N3 H1 H2 O1 C5 H3 H4 : H7:50
+

@@ -1,0 +1,1728 @@
+# chemdig rzepa example_cascii Cactvs NMDSAscii by wdi 10/22/1999 11:57 wtewael >>>>
+Ensemble 1 {
+	Molecule 42 {
+		Bonds 41 {
+		<1,2>
+		<1,4>
+		<1,5>
+		<1,6>
+		<2,3>
+		<2,19>
+		<3,20>
+		<3,21>
+		<4,8>
+		<5,7>
+		<6,9>
+		<7,15>
+		<7,22>
+		<7,23>
+		<8,13>
+		<8,24>
+		<8,25>
+		<9,14>
+		<9,26>
+		<9,27>
+		<10,13>
+		<10,16>
+		<11,15>
+		<11,17>
+		<12,14>
+		<12,18>
+		<13,28>
+		<13,29>
+		<14,30>
+		<14,31>
+		<15,32>
+		<15,33>
+		<16,34>
+		<16,35>
+		<16,36>
+		<17,37>
+		<17,38>
+		<17,39>
+		<18,40>
+		<18,41>
+		<18,42>
+		} Bonds
+		A_TYPE#23 42 {
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		} A_TYPE#23
+		A_LABEL#46 42 {
+		1
+		2
+		3
+		4
+		5
+		6
+		7
+		8
+		9
+		10
+		11
+		12
+		13
+		14
+		15
+		16
+		17
+		18
+		19
+		20
+		21
+		22
+		23
+		24
+		25
+		26
+		27
+		28
+		29
+		30
+		31
+		32
+		33
+		34
+		35
+		36
+		37
+		38
+		39
+		40
+		41
+		42
+		} A_LABEL#46
+		A_ELEMENT#44 42 {
+		14
+		6
+		6
+		8
+		8
+		8
+		6
+		6
+		6
+		8
+		8
+		8
+		6
+		6
+		6
+		6
+		6
+		6
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		} A_ELEMENT#44
+		A_FREE_ELECTRONS#48 42 {
+		0
+		0
+		0
+		4
+		4
+		4
+		0
+		0
+		0
+		4
+		4
+		4
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FREE_ELECTRONS#48
+		A_XY#50 42 {
+		{ -1.49 -0.01 }
+		{ -2.67 -0.01 }
+		{ -3.27  1.04 }
+		{ -1.49 -1.16 }
+		{ -0.32 -0.01 }
+		{ -1.49  1.2 }
+		{  0.29 -0.98 }
+		{ -0.47 -1.77 }
+		{ -0.5  1.8 }
+		{  0.54 -3.56 }
+		{  2.06  0.01 }
+		{  0.53  3.56 }
+		{ -0.48 -2.97 }
+		{ -0.5  2.97 }
+		{  1.52 -0.98 }
+		{  1.57 -2.96 }
+		{  3.25  0.01 }
+		{  1.52  2.93 }
+		{ -3.0372 -0.6428 }
+		{ -2.9014  1.6719 }
+		{ -4.0016  1.0433 }
+		{ -0.391 -1.2475 }
+		{  0.4261 -1.6988 }
+		{  0.2491 -1.9047 }
+		{ -0.2108 -1.0858 }
+		{ -0.2401  1.1161 }
+		{  0.2196  1.9321 }
+		{ -1.1997 -2.8388 }
+		{ -0.7325 -3.6566 }
+		{ -0.7487  3.658 }
+		{ -1.2206  2.8438 }
+		{  1.3988 -1.7015 }
+		{  2.2114 -1.2191 }
+		{  1.9383 -3.5922 }
+		{  2.2022 -2.5917 }
+		{  1.2017 -2.3278 }
+		{  3.25 -0.7216 }
+		{  3.9816  0.01 }
+		{  3.25  0.7416 }
+		{  1.1272  2.3128 }
+		{  2.1372  2.5372 }
+		{  1.9128  3.5472 }
+		} A_XY#50
+		A_FORMAL_CHARGE#47 42 {
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FORMAL_CHARGE#47
+		A_HCOUNT#24 42 {
+		0
+		1
+		2
+		0
+		0
+		0
+		2
+		2
+		2
+		0
+		0
+		0
+		2
+		2
+		2
+		3
+		3
+		3
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_HCOUNT#24
+		A_RADICAL#32 42 {
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		} A_RADICAL#32
+		A_COLOR 42 is {
+			NAME A_COLOR
+			AUTHOR "Frank Oellien"
+			EMAIL franko@ccc.chemie.uni-erlangen.de
+			VERSION 2.0
+			DATE "Oct  1 12:37:29 1998"
+			PUBKEY mQBNAi9rEjcAAAECAMCXF6OHzoWvnOPBzxYV/UOLcouhPBVr+U8h3DQ60Uq1IBjNQzxevkiHIrhhf7irNwX7309VY/eXAW4feQ7+z4EABRG0MVdvbGYtRC4gSWhsZW5mZWxkdCA8d2RpQGVyb3MuY2NjLnVuaS1lcmxhbmdlbi5kZT4==nRyu
+			DESCRIPTION "X color data base format atom color description"
+			OUTMODE P_OUT_STD
+			KEYTYPE P_INT
+			OUTLEVEL 2
+			KEY AXCOLOR
+			MAGIC ???
+			DEFAULT black
+			VALTYPE P_STRING
+			INVALIDATION INVAL_NEVER
+			DEPENDS "A_ELEMENT A_TYPE"
+			ATTACHMENT P_ATOM
+			PRECISION 4
+			FLAGS TRUSTED|PORTABLE|EXPORT|IMAGEUPDATE
+			TIMEOUT 0
+			PORT 16520
+			ACCESS PA_NONE
+			FUNCTYPE PF_TCLSCRIPT
+			FUNCNAME CSgetA_COLOR 1
+			proc CSgetA_COLOR { ehandle } {
+			 
+			#default settings
+				set mode default
+				set l {}
+				set allgroupslist 1
+				set allatomslist 1
+				set defaultcolor gray20
+				set allcolorslist green
+				global colortab
+			
+			# settings potentially overridden
+				array set params [prop get A_COLOR parameters]
+				switch $params(mode) {
+					group {
+						foreach a [ens atoms $ehandle] {
+							set acolor($a) $defaultcolor
+						}
+						foreach glist $params(allgroupslist) color $params(allcolorslist) {
+							foreach m $glist {
+								foreach a [mol atoms $ehandle $m] {
+									set acolor($a) $color
+								}
+							}
+						}
+						foreach a [ens atoms $ehandle] {
+							lappend l $acolor($a)
+						}
+					}
+					special {
+						foreach a [ens atoms $ehandle] {
+							set acolor($a) $defaultcolor
+						}
+						foreach alist $params(allatomslist) color $params(allcolorslist) {
+							foreach a $alist {
+								set acolor($a) $color
+							}
+						}
+						foreach a [ens atoms $ehandle] {
+							lappend l $acolor($a)
+						}
+					}
+					default {
+						if {![info exists colortab]} {
+							set oz 0
+							foreach color {white paleturquoise1 pink sienna1 thistle green slategrey deepskyblue red maroon1 violet dodgerblue3 forestgreen azure2 goldenrod orange yellow green violet deeppink azure2 azure2 azure2 azure2 azure2 azure2 orange azure2 azure2 azure2 azure2 khaki khaki sienna1 khaki peru violet magenta red azure2 azure2 azure2 azure2 azure2 gold gold gold azure2 azure2 azure2 azure2 azure2 khaki violet violet plum2 chartreuse turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise azure2 azure2 gold azure2 gold gold gold gainsboro pink azure2 pink pink pink violet plum2 chatreuse turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise} {
+								set colortab($oz) $color
+								incr oz
+							}
+						}	
+						foreach oz [ens get $ehandle A_ELEMENT] type [ens get $ehandle A_TYPE] {
+							switch $type {
+								normal {
+									if {[info exists colortab($oz)]} {
+										lappend l $colortab($oz)
+									} else {
+										lappend l ultraviolet
+									}
+								} 
+								search {
+									lappend l red
+								}
+								default {
+									lappend l green
+								}
+							}
+						}
+					}
+				}
+			
+			
+				ens set $ehandle A_COLOR $l
+			}
+			CFUNCNAME CSconfigA_COLOR 1
+			proc CSconfigA_COLOR { {prop A_COLOR} } {
+			 	global $prop
+				set win .[string tolower $prop]
+				if {![winfo exists $win]} {
+					package require Tix
+					std_window $win "Configure $prop Computation" property
+					catch {unset $prop}
+					array set $prop [prop get $prop parameters]
+					Choice $win.mode -label " Atom Color:" -labelwidth 16 \
+						-variable ${prop}(mode) \
+						-choicetexts {Default Groups Atoms} \
+						-choicevals {default group special} \
+						-choicewidth 16 -choiceanchor w
+					Choice $win.defaultcolor -label " Default Color:" -labelwidth 16 \
+						-variable ${prop}(defaultcolor) \
+						-choicetexts {Red Orange Yellow Green Cyan Blue Purple Magenta White Gray80 Gray60 Gray40 Gray20 Black} \
+						-choicewidth 16 -choiceanchor w
+					tixLabelFrame $win.p -label "Coloring Groups/Atoms"
+					set t [$win.p subwidget label]
+					$t configure -fg black
+					set f [$win.p subwidget frame]
+					LabelledEntry $f.atoms -label " Label Number(s):" -labelwidth 16 -entrywidth 35\
+						-variable ${prop}(allatomslist)
+					LabelledEntry $f.colors -label " Color(s):" -labelwidth 16 -entrywidth 35\
+						-variable ${prop}(allcolorslist)
+					eval pack [winfo children $f] -anchor w -fill x -expand 1
+					frame $win.buttons
+					button $win.buttons.cancel -text Dismiss -width 10 \
+						-command "wm withdraw $win"
+					button $win.buttons.reset -text Reset -width 10 \
+						-command "
+							prop set $prop parameters \[prop get $prop defaultparams\]
+							array set $prop \[prop get $prop parameters\]
+							"
+					button $win.buttons.set -text Configure -width 10 \
+						-command "
+							prop set $prop parameters \[array get $prop\]
+							wm withdraw $win
+						"
+					eval pack [winfo children $win.buttons] -side left -fill x -expand 1
+					eval pack [winfo children $win] -anchor w -fill x
+				}
+				array set $prop [prop get $prop parameters]
+				wm deiconify $win
+			}
+			LOGMODE CONSOLE
+			PARAMETERS "mode default allgroupslist 1 allatomslist 1 allcolorslist green defaultcolor gray20"
+			DEFAULTPARAMS "mode default allgroupslist 1 allatomslist 1 allcolorslist green defaultcolor gray20"
+		}  {
+		"goldenrod"
+		"slategrey"
+		"slategrey"
+		"red"
+		"red"
+		"red"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"red"
+		"red"
+		"red"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		} A_COLOR
+		A_FLAGS#34 42 {
+		402653184
+		134217728
+		134217728
+		402653184
+		402653184
+		402653184
+		134217728
+		134217728
+		134217728
+		402653184
+		402653184
+		402653184
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FLAGS#34
+		B_TYPE#55 41 {
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		} B_TYPE#55
+		B_ORDER#57 41 {
+		1
+		1
+		1
+		1
+		2
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		} B_ORDER#57
+		B_LABEL#64 41 {
+		1
+		2
+		3
+		4
+		5
+		6
+		7
+		8
+		9
+		10
+		11
+		12
+		13
+		14
+		15
+		16
+		17
+		18
+		19
+		20
+		21
+		22
+		23
+		24
+		25
+		26
+		27
+		28
+		29
+		30
+		31
+		32
+		33
+		34
+		35
+		36
+		37
+		38
+		39
+		40
+		41
+		} B_LABEL#64
+		B_FLAGS#59 41 {
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		0
+		0
+		0
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		0
+		0
+		1073741824
+		0
+		0
+		1073741824
+		0
+		0
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} B_FLAGS#59
+		M_LABEL#72 1 {
+		1
+		} M_LABEL#72
+		M_MOLNAME#18 1 {
+		"A 172"
+		} M_MOLNAME#18
+	} Molecule
+	E_IDENT#1 1 {
+	"0003"
+	} E_IDENT#1
+	E_NAME#2 1 {
+	"A 172"
+	} E_NAME#2
+	E_HISTORY#3 1 {
+	{ <<PROGRAM>>	{
+		NULL
+	"cnvmdl.x"
+	"tclserver"
+	}
+	<<VERSION>>	{
+		NULL
+	"1.4"
+	"2.00"
+	}
+	<<PATCHLEVEL>>	{
+		NULL
+	"002"
+	"000"
+	}
+	<<PGMDATE>>	{
+		-3600 -3600 800229600
+	}
+	<<USER>>	{
+		NULL
+	"ralf"
+	"wdi"
+	}
+	<<DATE>>	{
+		0 0 801349022
+	}
+	<<MACHINE>>	{
+		NULL
+	"sun4"
+	"IP22-schiele"
+	} }
+	} E_HISTORY#3
+	E_STDBLE#5 1 {
+	 1.18
+	} E_STDBLE#5
+	E_GRAPHICS_TEXT#158 1 {
+	{
+		"#0003"
+	"A 172"
+	}
+	} E_GRAPHICS_TEXT#158
+	E_CAS#138 1 {
+	"1067-53-4"
+	} E_CAS#138
+	E_FILE#12 1 {
+	{ <<NAME>>	"/usr/people/wdi/CACTVS/TESTFILES/VCH100.ctx"
+	<<FREC>>	3
+	<<LREC>>	3
+	<<LINE>>	433
+	<<FORMAT>>	"CTX" }
+	} E_FILE#12
+} Ensemble
+Ensemble 1 {
+	Molecule 41 {
+		Bonds 40 {
+		<1,4>
+		<1,6>
+		<1,7>
+		<1,8>
+		<2,3>
+		<2,5>
+		<2,9>
+		<3,4>
+		<3,18>
+		<3,19>
+		<4,20>
+		<4,21>
+		<6,11>
+		<7,10>
+		<8,12>
+		<9,13>
+		<10,15>
+		<10,22>
+		<10,23>
+		<11,16>
+		<11,24>
+		<11,25>
+		<12,14>
+		<12,26>
+		<12,27>
+		<13,17>
+		<13,28>
+		<13,29>
+		<14,30>
+		<14,31>
+		<14,32>
+		<15,33>
+		<15,34>
+		<15,35>
+		<16,36>
+		<16,37>
+		<16,38>
+		<17,39>
+		<17,40>
+		<17,41>
+		} Bonds
+		A_TYPE#23 41 {
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		} A_TYPE#23
+		A_LABEL#46 41 {
+		1
+		2
+		3
+		4
+		5
+		6
+		7
+		8
+		9
+		10
+		11
+		12
+		13
+		14
+		15
+		16
+		17
+		18
+		19
+		20
+		21
+		22
+		23
+		24
+		25
+		26
+		27
+		28
+		29
+		30
+		31
+		32
+		33
+		34
+		35
+		36
+		37
+		38
+		39
+		40
+		41
+		} A_LABEL#46
+		A_ELEMENT#44 41 {
+		14
+		6
+		6
+		6
+		8
+		8
+		8
+		8
+		8
+		6
+		6
+		6
+		6
+		6
+		6
+		6
+		6
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		} A_ELEMENT#44
+		A_FREE_ELECTRONS#48 41 {
+		0
+		0
+		0
+		0
+		4
+		4
+		4
+		4
+		4
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FREE_ELECTRONS#48
+		A_XY#50 41 {
+		{  1.52  0.14 }
+		{ -1.59 -0.36 }
+		{ -0.52  0.23 }
+		{  0.48 -0.4 }
+		{ -1.59 -1.53 }
+		{  0.98  1.2 }
+		{  2.58  0.7 }
+		{  2.1 -0.92 }
+		{ -2.6  0.25 }
+		{  3.6  0.05 }
+		{  1.59  2.21 }
+		{  3.27 -0.92 }
+		{ -3.64 -0.33 }
+		{  3.8 -2.03 }
+		{  4.65  0.62 }
+		{  2.79  2.21 }
+		{ -4.67  0.3 }
+		{ -0.0261  0.7814 }
+		{ -0.9809  0.8093 }
+		{ -0.0185 -0.9473 }
+		{  0.9312 -0.9869 }
+		{  3.103 -0.4986 }
+		{  4.0574 -0.5321 }
+		{  1.7233  2.9382 }
+		{  0.8978  2.4723 }
+		{  3.9779 -0.7034 }
+		{  3.1605 -0.1879 }
+		{ -4.1281 -0.8866 }
+		{ -3.1746 -0.9057 }
+		{  3.132 -2.349 }
+		{  4.119 -2.698 }
+		{  4.468 -1.711 }
+		{  5.0032 -0.0306 }
+		{  5.3006  0.9732 }
+		{  4.2968  1.2706 }
+		{  2.79  1.4697 }
+		{  3.5303  2.21 }
+		{  2.79  2.9503 }
+		{ -4.2837  0.9315 }
+		{ -5.3015  0.6863 }
+		{ -5.0563 -0.3315 }
+		} A_XY#50
+		A_FORMAL_CHARGE#47 41 {
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FORMAL_CHARGE#47
+		A_HCOUNT#24 41 {
+		0
+		0
+		2
+		2
+		0
+		0
+		0
+		0
+		0
+		2
+		2
+		2
+		2
+		3
+		3
+		3
+		3
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_HCOUNT#24
+		A_RADICAL#32 41 {
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		no
+		} A_RADICAL#32
+		A_COLOR 41 is {
+			NAME A_COLOR
+			AUTHOR "Frank Oellien"
+			EMAIL franko@ccc.chemie.uni-erlangen.de
+			VERSION 2.0
+			DATE "Oct  1 12:37:29 1998"
+			PUBKEY mQBNAi9rEjcAAAECAMCXF6OHzoWvnOPBzxYV/UOLcouhPBVr+U8h3DQ60Uq1IBjNQzxevkiHIrhhf7irNwX7309VY/eXAW4feQ7+z4EABRG0MVdvbGYtRC4gSWhsZW5mZWxkdCA8d2RpQGVyb3MuY2NjLnVuaS1lcmxhbmdlbi5kZT4==nRyu
+			DESCRIPTION "X color data base format atom color description"
+			OUTMODE P_OUT_STD
+			KEYTYPE P_INT
+			OUTLEVEL 2
+			KEY AXCOLOR
+			MAGIC ???
+			DEFAULT black
+			VALTYPE P_STRING
+			INVALIDATION INVAL_NEVER
+			DEPENDS "A_ELEMENT A_TYPE"
+			ATTACHMENT P_ATOM
+			PRECISION 4
+			FLAGS TRUSTED|PORTABLE|EXPORT|IMAGEUPDATE
+			TIMEOUT 0
+			PORT 16520
+			ACCESS PA_NONE
+			FUNCTYPE PF_TCLSCRIPT
+			FUNCNAME CSgetA_COLOR 1
+			proc CSgetA_COLOR { ehandle } {
+			 
+			#default settings
+				set mode default
+				set l {}
+				set allgroupslist 1
+				set allatomslist 1
+				set defaultcolor gray20
+				set allcolorslist green
+				global colortab
+			
+			# settings potentially overridden
+				array set params [prop get A_COLOR parameters]
+				switch $params(mode) {
+					group {
+						foreach a [ens atoms $ehandle] {
+							set acolor($a) $defaultcolor
+						}
+						foreach glist $params(allgroupslist) color $params(allcolorslist) {
+							foreach m $glist {
+								foreach a [mol atoms $ehandle $m] {
+									set acolor($a) $color
+								}
+							}
+						}
+						foreach a [ens atoms $ehandle] {
+							lappend l $acolor($a)
+						}
+					}
+					special {
+						foreach a [ens atoms $ehandle] {
+							set acolor($a) $defaultcolor
+						}
+						foreach alist $params(allatomslist) color $params(allcolorslist) {
+							foreach a $alist {
+								set acolor($a) $color
+							}
+						}
+						foreach a [ens atoms $ehandle] {
+							lappend l $acolor($a)
+						}
+					}
+					default {
+						if {![info exists colortab]} {
+							set oz 0
+							foreach color {white paleturquoise1 pink sienna1 thistle green slategrey deepskyblue red maroon1 violet dodgerblue3 forestgreen azure2 goldenrod orange yellow green violet deeppink azure2 azure2 azure2 azure2 azure2 azure2 orange azure2 azure2 azure2 azure2 khaki khaki sienna1 khaki peru violet magenta red azure2 azure2 azure2 azure2 azure2 gold gold gold azure2 azure2 azure2 azure2 azure2 khaki violet violet plum2 chartreuse turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise azure2 azure2 gold azure2 gold gold gold gainsboro pink azure2 pink pink pink violet plum2 chatreuse turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise turquoise} {
+								set colortab($oz) $color
+								incr oz
+							}
+						}	
+						foreach oz [ens get $ehandle A_ELEMENT] type [ens get $ehandle A_TYPE] {
+							switch $type {
+								normal {
+									if {[info exists colortab($oz)]} {
+										lappend l $colortab($oz)
+									} else {
+										lappend l ultraviolet
+									}
+								} 
+								search {
+									lappend l red
+								}
+								default {
+									lappend l green
+								}
+							}
+						}
+					}
+				}
+			
+			
+				ens set $ehandle A_COLOR $l
+			}
+			CFUNCNAME CSconfigA_COLOR 1
+			proc CSconfigA_COLOR { {prop A_COLOR} } {
+			 	global $prop
+				set win .[string tolower $prop]
+				if {![winfo exists $win]} {
+					package require Tix
+					std_window $win "Configure $prop Computation" property
+					catch {unset $prop}
+					array set $prop [prop get $prop parameters]
+					Choice $win.mode -label " Atom Color:" -labelwidth 16 \
+						-variable ${prop}(mode) \
+						-choicetexts {Default Groups Atoms} \
+						-choicevals {default group special} \
+						-choicewidth 16 -choiceanchor w
+					Choice $win.defaultcolor -label " Default Color:" -labelwidth 16 \
+						-variable ${prop}(defaultcolor) \
+						-choicetexts {Red Orange Yellow Green Cyan Blue Purple Magenta White Gray80 Gray60 Gray40 Gray20 Black} \
+						-choicewidth 16 -choiceanchor w
+					tixLabelFrame $win.p -label "Coloring Groups/Atoms"
+					set t [$win.p subwidget label]
+					$t configure -fg black
+					set f [$win.p subwidget frame]
+					LabelledEntry $f.atoms -label " Label Number(s):" -labelwidth 16 -entrywidth 35\
+						-variable ${prop}(allatomslist)
+					LabelledEntry $f.colors -label " Color(s):" -labelwidth 16 -entrywidth 35\
+						-variable ${prop}(allcolorslist)
+					eval pack [winfo children $f] -anchor w -fill x -expand 1
+					frame $win.buttons
+					button $win.buttons.cancel -text Dismiss -width 10 \
+						-command "wm withdraw $win"
+					button $win.buttons.reset -text Reset -width 10 \
+						-command "
+							prop set $prop parameters \[prop get $prop defaultparams\]
+							array set $prop \[prop get $prop parameters\]
+							"
+					button $win.buttons.set -text Configure -width 10 \
+						-command "
+							prop set $prop parameters \[array get $prop\]
+							wm withdraw $win
+						"
+					eval pack [winfo children $win.buttons] -side left -fill x -expand 1
+					eval pack [winfo children $win] -anchor w -fill x
+				}
+				array set $prop [prop get $prop parameters]
+				wm deiconify $win
+			}
+			LOGMODE CONSOLE
+			PARAMETERS "mode default allgroupslist 1 allatomslist 1 allcolorslist green defaultcolor gray20"
+			DEFAULTPARAMS "mode default allgroupslist 1 allatomslist 1 allcolorslist green defaultcolor gray20"
+		}  {
+		"goldenrod"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"red"
+		"red"
+		"red"
+		"red"
+		"red"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"slategrey"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		"paleturquoise1"
+		} A_COLOR
+		A_FLAGS#34 41 {
+		402653184
+		134217728
+		134217728
+		134217728
+		402653184
+		402653184
+		402653184
+		402653184
+		402653184
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		134217728
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} A_FLAGS#34
+		B_TYPE#55 40 {
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		normal
+		} B_TYPE#55
+		B_ORDER#57 40 {
+		1
+		1
+		1
+		1
+		1
+		2
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		1
+		} B_ORDER#57
+		B_LABEL#64 40 {
+		1
+		2
+		3
+		4
+		5
+		6
+		7
+		8
+		9
+		10
+		11
+		12
+		13
+		14
+		15
+		16
+		17
+		18
+		19
+		20
+		21
+		22
+		23
+		24
+		25
+		26
+		27
+		28
+		29
+		30
+		31
+		32
+		33
+		34
+		35
+		36
+		37
+		38
+		39
+		40
+		} B_LABEL#64
+		B_FLAGS#59 40 {
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		0
+		0
+		0
+		0
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		1073741824
+		0
+		0
+		1073741824
+		0
+		0
+		1073741824
+		0
+		0
+		1073741824
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		0
+		} B_FLAGS#59
+		M_LABEL#72 1 {
+		1
+		} M_LABEL#72
+		M_MOLNAME#18 1 {
+		"A 1911"
+		} M_MOLNAME#18
+	} Molecule
+	E_IDENT#1 1 {
+	"0004"
+	} E_IDENT#1
+	E_NAME#2 1 {
+	"A 1911"
+	} E_NAME#2
+	E_HISTORY#3 1 {
+	{ <<PROGRAM>>	{
+		NULL
+	"cnvmdl.x"
+	"tclserver"
+	}
+	<<VERSION>>	{
+		NULL
+	"1.4"
+	"2.00"
+	}
+	<<PATCHLEVEL>>	{
+		NULL
+	"002"
+	"000"
+	}
+	<<PGMDATE>>	{
+		-3600 -3600 800229600
+	}
+	<<USER>>	{
+		NULL
+	"ralf"
+	"wdi"
+	}
+	<<DATE>>	{
+		0 0 801349022
+	}
+	<<MACHINE>>	{
+		NULL
+	"sun4"
+	"IP22-schiele"
+	} }
+	} E_HISTORY#3
+	E_STDBLE#5 1 {
+	 1.194
+	} E_STDBLE#5
+	E_GRAPHICS_TEXT#158 1 {
+	{
+		"#0004"
+	"A 1911"
+	}
+	} E_GRAPHICS_TEXT#158
+	E_CAS#138 1 {
+	"6439-39-0"
+	} E_CAS#138
+	E_FILE#12 1 {
+	{ <<NAME>>	"/usr/people/wdi/CACTVS/TESTFILES/VCH100.ctx"
+	<<FREC>>	4
+	<<LREC>>	4
+	<<LINE>>	687
+	<<FORMAT>>	"CTX" }
+	} E_FILE#12
+} Ensemble
+
+

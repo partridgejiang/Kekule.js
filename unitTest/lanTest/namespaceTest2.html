@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Insert title here</title>
+	<!--
+	<script src="../../src/lan/xmlJsons.js"></script>
+	-->
+	<script src="../../src/kekule.js"></script>
+	<script>
+		var preText = '<molecule xmlns="http://www.xml-cml.org/schema" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:conventions="http://www.xml-cml.org/convention/" convention="conventions:molecular" id="m1"><dc:title>test file for http://www.xml-cml.org/conventions/molecular convention</dc:title><dc:description>valid molecular</dc:description><dc:author>J A Townsend</dc:author><dc:rights>Copyright J A Townsend jat45@cantab.net 2009.</dc:rights><dc:date>2009-01-21</dc:date></molecule>';
+		var xmlDoc;
+		var nsCml = 'http://www.xml-cml.org/schema';
+		var nsDc = 'http://purl.org/dc/elements/1.1/';
+		function preFill()
+		{
+			document.getElementById('memoXml').value = preText;
+		}
+		function parse()
+		{
+			var text = document.getElementById('memoXml').value;
+			xmlDoc = XmlUtility.parse(text);
+			return xmlDoc;
+		}
+		function fix()
+		{
+			if (xmlDoc && xmlDoc.prototype)
+			{
+				if (!xmlDoc.getElementsByTagNameNS)
+				{
+					xmlDoc.prototype.getElementsByTagNameNS = function(ns, tagName)
+					{
+						return this.getElementsByTagName(tagName);
+					}
+					alert('fixed');
+				}
+			}
+			else
+				alert(xmlDoc.prototype);
+		}
+		function test()
+		{
+			parse();
+			//fix();
+			if (!xmlDoc.getElementsByTagNameNS) 
+			{
+				var elems = xmlDoc.getElementsByTagName('dc:title');
+				if (elems.length > 0) 
+					alert(elems[0].tagName);
+				else 
+					alert('Find DC element failed');
+			}
+			else 
+			{
+				var elems = xmlDoc.getElementsByTagNameNS(nsCml, 'molecule');
+				if (elems.length > 0) 
+					alert(elems[0].tagName);
+				else 
+					alert('Find CML element failed');
+				
+				var elems = xmlDoc.getElementsByTagNameNS(nsDc, 'title');
+				if (elems.length > 0) 
+					alert(elems[0].tagName);
+				else 
+					alert('Find DC element failed');
+			}
+		}
+		
+		function testHelper()
+		{
+			parse();
+			var helper = new Kekule.DomHelper(xmlDoc);
+			//helper.setRootElement(xmlDoc.documentElement);
+			{
+				var elems = helper.getElementsByTagNameNS(nsCml, 'molecule');
+				if (elems.length > 0) 
+					alert(elems[0].namespaceURI + ' / ' + elems[0].tagName + ' / ' + elems[0].localName);
+				else 
+					alert('Find CML element failed');
+				
+				var elems = helper.getElementsByTagNameNS(nsDc, 'title');
+				if (elems.length > 0) 
+					alert(elems[0].namespaceURI + ' / ' + elems[0].tagName + ' / ' + elems[0].localName);
+				else 
+					alert('Find DC element failed');
+			}
+		}
+	</script>
+</head>
+<body>
+	<form>
+		<textarea id="memoXml" name="memoXml" cols="80" rows="10"></textarea>
+	</form>
+	<button value="Fill" onclick="preFill()">Fill</button>
+	<button value="Parse" onclick="parse()">Parse</button>
+	<button value="Test" onclick="test()">Test</button>
+	<button value="Test Helper" onclick="testHelper()">Test Helper</button>
+</body>
+</html>

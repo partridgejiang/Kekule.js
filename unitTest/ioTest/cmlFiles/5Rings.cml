@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<list convention="cdk:model" id="5Rings.cml" xmlns="http://www.xml-cml.org/schema">
+  <reactionList id="rset1">
+    <reaction id="reaction-1324564067474">
+      <reactantList>
+        <reactant>
+          <molecule id="ac1324564067477">
+            <atomArray>
+              <atom id="a1" elementType="C" x2="0.6333333333333334" y2="1.37597621252806" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a2" elementType="C" x2="1.846858824895754" y2="0.4942983340893503" formalCharge="0" hydrogenCount="1"/>
+              <atom id="a3" elementType="C" x2="1.3833333333333329" y2="-0.9322864403533803" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a4" elementType="C" x2="-0.11666666666666681" y2="-0.93228644035338" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a5" elementType="C" x2="-0.5801921582290877" y2="0.4942983340893503" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a6" elementType="C" x2="3.2957475643293566" y2="0.8825269017431314" formalCharge="0" hydrogenCount="3"/>
+            </atomArray>
+            <bondArray>
+              <bond id="b1" atomRefs2="a1 a2" order="S"/>
+              <bond id="b2" atomRefs2="a2 a3" order="S"/>
+              <bond id="b3" atomRefs2="a3 a4" order="S"/>
+              <bond id="b4" atomRefs2="a4 a5" order="S"/>
+              <bond id="b5" atomRefs2="a5 a1" order="S"/>
+              <bond id="b6" atomRefs2="a2 a6" order="S"/>
+            </bondArray>
+          </molecule>
+        </reactant>
+        <reactant>
+          <molecule id="ac1324564067485">
+            <atomArray>
+              <atom id="a7" elementType="C" x2="-6.366666666666666" y2="1.3093095458613933" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a8" elementType="C" x2="-5.1531411751042455" y2="0.4276316674226835" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a9" elementType="C" x2="-5.616666666666666" y2="-0.9989531070200469" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a10" elementType="C" x2="-7.116666666666666" y2="-0.9989531070200467" formalCharge="0" hydrogenCount="2"/>
+              <atom id="a11" elementType="C" x2="-7.580192158229087" y2="0.4276316674226836" formalCharge="0" hydrogenCount="2"/>
+            </atomArray>
+            <bondArray>
+              <bond id="b7" atomRefs2="a7 a8" order="S"/>
+              <bond id="b8" atomRefs2="a8 a9" order="S"/>
+              <bond id="b9" atomRefs2="a9 a10" order="S"/>
+              <bond id="b10" atomRefs2="a10 a11" order="S"/>
+              <bond id="b11" atomRefs2="a11 a7" order="S"/>
+            </bondArray>
+          </molecule>
+        </reactant>
+      </reactantList>
+      <productList/>
+      <substanceList/>
+    </reaction>
+    <reaction id="reaction-1324564143477">
+      <reactantList/>
+      <productList>
+        <product>
+          <molecule id="m1"/>
+        </product>
+      </productList>
+      <substanceList/>
+    </reaction>
+  </reactionList>
+  <moleculeList convention="cdk:moleculeSet" id="molSet1">
+    <molecule id="m2"/>
+  </moleculeList>
+</list>

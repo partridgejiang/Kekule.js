@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hammer.js Test</title>
+  <script src="../../src/kekule.js"></script>
+</head>
+<body>
+
+<div id="div1" style="width:1000px;height:1000px;background-color:green;border:1px solid red">DIV</div>
+
+<script>
+  var elem = document.getElementById('div1');
+  var hammertime = Hammer(elem);
+  hammertime.on('touch', function(e)
+    {
+      console.log('touch', e);
+    }
+  );
+  hammertime.on('pinch', function(e)
+    {
+      console.log('pinch', e);
+      e.gesture.preventDefault();
+    }
+  );
+  hammertime.on('drag', function(e)
+    {
+      console.log('drag', e);
+      e.gesture.preventDefault();
+    }
+  );
+  hammertime.on('tap swipe', function(e)
+    {
+      console.log('swipe or tap on', e);
+      e.gesture.preventDefault();
+    }
+  );
+</script>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UI Marker Render Test</title>
+  <meta charset="UTF-8">
+  <style>
+    canvas
+    {
+      background-color: yellow;
+    }
+  </style>
+  <script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    var drawBoxWidth = 500;
+    var drawBoxHeight = 500;
+    var drawBridge;
+    var drawContext;
+
+    var T = Kekule.Render.MetaShapeType;
+    var markerInfos = [
+      {
+        'shapeType': T.POINT,
+        'coords': [{'x': 100, 'y': 100}]
+      },
+      {
+        'shapeType': T.CIRCLE,
+        'coords': [{'x': 200, 'y': 100}],
+        'radius': 30
+      },
+      {
+        'shapeType': T.LINE,
+        'coords': [{'x': 300, 'y': 100}, {'x': 400, 'y': 200}],
+        'width': 5,
+        'drawStyles': {'strokeDash': [10, 2, 5, 2]}
+      },
+      {
+        'shapeType': T.RECT,
+        'coords': [{'x': 100, 'y': 200}, {'x': 200, 'y': 300}],
+        'drawStyles': {'strokeDash': [10, 2, 5, 2]}
+      },
+      {
+        'shapeType': T.POLYGON,
+        'coords': [{'x': 100, 'y': 350}, {'x': 200, 'y': 400}, {'x': 150, 'y': 450}],
+        'drawStyles': {'strokeDash': [10, 2, 5, 2]}
+      }
+    ];
+    function createMarkers()
+    {
+      var result = new Kekule.ChemWidget.UiMarkerCollection();
+      for (var i = 0, l = markerInfos.length; i < l; ++i)
+      {
+        var info = markerInfos[i];
+        var marker = new Kekule.ChemWidget.MetaShapeUIMarker(info);
+        if (info.drawStyles)
+        {
+          marker.setDrawStyles(info.drawStyles);
+        }
+        result.addMarker(marker);
+      }
+      return result;
+    }
+
+    function getDrawStage()
+    {
+      return document.getElementById('drawStage');
+    }
+    function getDrawBridge()
+    {
+      if (!drawBridge)
+        drawBridge = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+      return drawBridge;
+    }
+    function getContext()
+    {
+      if (!drawContext)
+        drawContext = getDrawBridge().createContext(getDrawStage(), drawBoxWidth, drawBoxHeight);
+      return drawContext;
+    }
+    function drawMarkers()
+    {
+      var markers = createMarkers();
+      var renderer = new Kekule.ChemWidget.UiMarkersRenderer(markers, getDrawBridge());
+      renderer.draw(getContext(), null, {'strokeColor': '#000000'});
+    }
+
+    function init()
+    {
+      drawMarkers();
+    }
+  </script>
+</head>
+<body onload="init()">
+  <div id="drawStage">
+  </div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Editor Test 1</title>
+<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+<script src="../../src/kekule.js"></script>
+<link type="text/css" rel="stylesheet" href="../../src/CSS_DEPRECATED/ctabEditor2D.css" />
+<style>
+	/*
+	html, body
+	{
+		margin: 0;
+		padding: 0;
+	}
+	*/
+	#drawParent svg
+	{
+		background-color: red;
+		/*border: 2px solid black;*/
+		display: block;
+		margin: 0;
+		padding: 0;
+	}
+	#drawParent
+	{
+		background-color: yellow;
+		padding: 0;
+	}
+	#operPanel
+	{
+		width: 250px;
+		float: right;
+		border: 1px dashed black;
+		color: black;
+	}
+	#operPanel .Active
+	{
+		color: red;
+	}
+</style>
+<script>
+	var paper;
+	var editor;
+
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+
+	var lastActiveOperIndex = -1;
+	function getOperPanel()
+	{
+		return document.getElementById('operPanel');
+	}
+	function addOperItem(text)
+	{
+		var elem = document.createElement('li');
+		elem.innerHTML = text;
+		getOperPanel().appendChild(elem);
+	}
+	function setActiveOperIndex(index)
+	{
+		var elems = getOperPanel().getElementsByTagName('li');
+		if (lastActiveOperIndex >= 0)
+		{
+			if (elems[lastActiveOperIndex])
+				elems[lastActiveOperIndex].className = '';
+		}
+		lastActiveOperIndex = index;
+		if (lastActiveOperIndex >= 0)
+		{
+			if (elems[lastActiveOperIndex])
+				elems[lastActiveOperIndex].className = 'Active';
+		}
+	}
+	function refreshOperPanel(history, activeIndex)
+	{
+		var panel = getOperPanel();
+		panel.innerHTML = '';
+		var operations = history.getOperations();
+		for (var i = 0, l = operations.length; i < l; ++i)
+		{
+			addOperItem(operations[i].getClassName());
+		}
+		setActiveOperIndex(activeIndex);
+	}
+
+	function getPaper()
+	{
+		if (!paper)
+			paper = Raphael('drawParent', drawBoxWidth, drawBoxHeight);
+		return paper;
+	}
+	function getEditor()
+	{
+		var paper = getPaper();
+		if (!editor)
+		{
+			editor = new Kekule.Editor.CtabBased2DEditor(document.getElementById('drawParent'), {
+				'mainContextElem': /*paper.canvas, //*/ document.getElementById('drawParent'),
+				'context': paper,
+				'contextRect': {x1: 0, y1: 0, x2: drawBoxWidth, y2: drawBoxHeight},
+				'renderBridge': Kekule.Render.RaphaelRendererBridge.getInstance(),
+				'drawOptions': {autoScale: true}
+			});
+			editor.linkIaController('select', new Kekule.Editor.CtabBasedBasicManipulationIaController(editor), true);
+			editor.linkIaController('bond', new Kekule.Editor.CtabBasedBondIaController(editor));
+			editor.linkIaController('atom', new Kekule.Editor.CtabBasedAtomIaController(editor));
+			editor.setDefIaControllerId('select');
+
+			editor.addEventListener('operHistoryClear', function(e)
+				{
+					refreshOperPanel(editor.getOperHistory(), e.currOperIndex);
+				}
+			);
+			editor.addEventListener('operPush', function(e)
+				{
+					refreshOperPanel(editor.getOperHistory(), e.currOperIndex);
+				}
+			);
+			editor.addEventListener('operUndo', function(e)
+				{
+					setActiveOperIndex(e.currOperIndex);
+				}
+			);
+			editor.addEventListener('operRedo', function(e)
+				{
+					setActiveOperIndex(e.currOperIndex);
+				}
+			);
+		}
+		return editor;
+	}
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var reader = new Kekule.IO.MdlMoleculeReader();
+		var r = reader.readBlock(text, null);
+		return r;
+	}
+
+	var mol;
+	var editor;
+	function loadMol()
+	{
+		var paper = getPaper();
+		mol = readMol();
+		var editor = getEditor();
+		editor.loadObj(mol);
+	}
+
+	function redraw()
+	{
+		var editor = this.getEditor();
+		editor.redraw();
+	}
+
+	var zoomRatios = [0.1, 0.3, 0.5, 0.75, 0.8, 1, 2, 3, 5, 10, 20];
+	var zoomIndex = zoomRatios.indexOf(1);
+	function zoomIn()
+	{
+		/*
+		if (zoomIndex < zoomRatios.length - 1)
+		{
+			++zoomIndex;
+			var editor = getEditor();
+			editor.setDrawOptions({autoScale: true, zoom: zoomRatios[zoomIndex]});
+			//editor.redraw();
+		}
+		*/
+		getEditor().zoomIn();
+	}
+	function zoomOut()
+	{
+		/*
+		if (zoomIndex > 0)
+		{
+			--zoomIndex;
+			var editor = getEditor();
+			editor.setDrawOptions({autoScale: true, zoom: zoomRatios[zoomIndex]});
+			//editor.redraw();
+		}
+		*/
+		getEditor().zoomOut();
+	}
+	function removeSelection()
+	{
+		var controller = getEditor().getDefIaController();
+		controller.removeSelection();
+	}
+
+</script>
+</head>
+<body>
+	<ul id="operPanel">
+
+	</ul>
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+	</form>
+	<button value="Load Mol" onclick="loadMol()">Load Molecule</button>
+	<button value="Redraw" onclick="redraw()">Redraw</button>
+	<button value="Undo" onclick="getEditor().undo()">Undo</button>
+	<button value="Redo" onclick="getEditor().redo()">Redo</button>
+	<button value="ZoomIn" onclick="zoomIn()">Zoom In</button>
+	<button value="ZoomOut" onclick="zoomOut()">Zoom Out</button>
+	<button value="Delete" onclick="removeSelection()">Delete</button>
+	<br />
+	<button value="Select" onclick="getEditor().setActiveIaControllerId('select')">Select Tool</button>
+	<button value="Atom" onclick="getEditor().setActiveIaControllerId('atom')">Atom Tool</button>
+	<button value="Bond" onclick="getEditor().setActiveIaControllerId('bond'); getEditor().getActiveIaController().setBondOrder(1); getEditor().getActiveIaController().setAutoSwitchBondOrder(true);">Bond Tool</button>
+	<button value="Bond" onclick="getEditor().setActiveIaControllerId('bond'); getEditor().getActiveIaController().setBondOrder(2); getEditor().getActiveIaController().setAutoSwitchBondOrder(false);">Double Bond Tool</button>
+	<button value="Bond" onclick="getEditor().setActiveIaControllerId('bond'); getEditor().getActiveIaController().setBondOrder(3); getEditor().getActiveIaController().setAutoSwitchBondOrder(false);">Triple Bond Tool</button>
+	<div id="drawParent">DrawParent</div>
+</body>
+</html>

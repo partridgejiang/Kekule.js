@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mouse Enter/Leave Event Test</title>
+
+</head>
+<body>
+  <div id="div1">
+    <p id="p1">
+      <span id="span1">span1</span>adsadsadsamdsadsadsamdsa,dasdasdsa,dasdsa,dasd,dsadsa
+      dasdsad,dasdasdsa,dsadsadsa
+    </p>
+    <hr/>
+    <p id="p2">
+      bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,<span id="span2">span2</span>bbbbbbbbbbbbbbbbbbbbbbbbbbbbb,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,bbbbbbbbbbbb.
+    </p>
+  </div>
+  <script>
+    var elem = document.body;
+    elem.addEventListener('mouseenter', function(e)
+      {
+        console.log('mouse enter: ', e.currentTarget);
+      }
+    );
+    elem.addEventListener('mouseleave', function(e)
+      {
+        console.log('mouse leave: ', e.currentTarget);
+      }
+    );
+  </script>
+</body>
+</html>

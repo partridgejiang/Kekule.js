@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Button Widget Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    var btn1, btn2, btn3, btn4, btn5, btn6;
+    var count = 0;
+
+    function createButtons()
+    {
+      var div1 = $('div1');
+      btn1 = new Kekule.Widget.Button($('button1'));
+      //btn1.setHint('this is button1');
+      btn1.setWidth('20em');
+      btn1.addEventListener('execute', function(e) {
+           alert('button1 clicked!');
+        });
+
+      btn2 = new Kekule.Widget.Button(document);
+      btn2.setText('Button Created');
+      btn2.setHint('this is button2');
+      btn2.addEventListener('execute', function(e) {
+        alert('button2 clicked!');
+      });
+      btn2.setEnabled(false);
+      //div1.appendChild(btn2.getElement());
+      btn2.appendToElem(div1);
+
+      btn3 = new Kekule.Widget.Button(btn1);
+      btn3.setText('Child Button');
+      btn3.setHint('this is button3');
+      btn3.addEventListener('execute', function(e) {
+        alert('button3 clicked!');
+      });
+      //div1.appendChild(btn3.getElement());
+      btn3.appendToElem(div1);
+
+      btn4 = new Kekule.Widget.Button($('buttonOnA'));
+      btn4.setHint('this is button4');  //.setEnabled(true);
+      btn4.addEventListener('execute', function(e) {
+        alert('button4 clicked!');
+      });
+
+      btn4.setShowGlyph(true).getLeadingGlyph(true)
+        .setNormalInfo({'src': '../images/testIcons.png'})
+        .setFocusedInfo({'src': '../images/testIcons.png', 'position': '-32px -32px'})
+        .setActiveInfo({'src': '../images/calendar.gif'});
+
+      btn1.setShowGlyph(true).getLeadingGlyph(true)
+        .setNormalInfo({'src': '../images/testIcons.png'})
+        .setFocusedInfo({'src': '../images/testIcons.png', 'position': '-16px -16px'})
+        .setActiveInfo({'src': '../images/calendar.gif'});
+      btn1.getTailingGlyph(true)
+        .setNormalInfo({'src': '../images/testIcons.png'})
+        .setFocusedInfo({'src': '../images/testIcons.png', 'position': '-16px -16px'})
+        .setActiveInfo({'src': '../images/calendar.gif'});
+
+      var divCount = $('divCount');
+
+      btn5 = new Kekule.Widget.Button(document);
+      btn5.setText('Periodical Inc Button');
+      btn5.setHint('this is a periodical button');
+      btn5.setEnablePeriodicalExec(true).setPeriodicalExecDelay(500).setPeriodicalExecInterval(100);
+      btn5.addEventListener('execute', function(e) {
+        divCount.innerHTML = ++count;
+      });
+      btn5.appendToElem(div1);
+
+      btn6 = new Kekule.Widget.Button(document);
+      btn6.setText('Periodical Dec Button');
+      btn6.setHint('this is a periodical button');
+      btn6.setEnablePeriodicalExec(true);
+      btn6.addEventListener('execute', function(e) {
+        divCount.innerHTML = --count;
+      });
+      btn6.appendToElem(div1);
+
+      /*
+      var img1 = new Kekule.Widget.Glyph(document, {'src': '../images/testIcons.png'});
+      img1.setActiveInfo({'src': '../images/calendar.gif'}).setWidth('32px').setHeight('32px').appendToElem(div1);
+
+      var img2 = new Kekule.Widget.Glyph(btn4);
+      img2.setNormalInfo({'src': '../images/testIcons.png'}).setWidth('32px').setHeight('32px').appendToElem(btn4.getElement());
+      */
+    }
+
+		function createCheckButtons()
+		{
+			var div2 = $('div2');
+			var btn = new Kekule.Widget.CheckButton(document, 'CheckButton1');
+      btn.setHint('this is check button 1').appendToElem(div2);
+			btn = new Kekule.Widget.CheckButton(document, 'CheckButton2');
+      btn.setHint('this is check button 2').appendToElem(div2);
+		}
+
+    var btnGroup
+		function createRadioButtons()
+		{
+			var div3 = $('div3');
+			btnGroup = new Kekule.Widget.ButtonGroup(document);
+      btnGroup.appendToElem($('div3')); //.setWidth('600px');
+
+			var btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio1');
+      btn.setGroup('group1').setHint('this is radio button 1');
+			btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio2');
+      btn.setGroup('group1').setHint('this is radio button 2');
+			btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio3');
+      btn.setGroup('group1').setHint('this is radio button 3');
+			btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio4');
+      btn.setGroup('group1').setHint('this is radio button 4');
+
+			btn = new Kekule.Widget.CheckButton(btnGroup, 'Check1');
+      btn = new Kekule.Widget.CheckButton(btnGroup, 'Check2');
+
+
+      var bb = createCompactButtonSets();
+      btnGroup.appendWidget(bb);
+
+      btnGroup.setLayout(2);
+		}
+
+    var dropBtn1, dropBtn2;
+    function createDropDownButtons()
+    {
+      var div4 = $('div4');
+      var btnGroup = new Kekule.Widget.ButtonGroup(document);
+      //btnGroup.appendToElem(div4);
+
+      var btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio1');
+      btn.setGroup('group1').setHint('this is radio button 1');
+      btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio2');
+      btn.setGroup('group1').setHint('this is radio button 2');
+      btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio3');
+      btn.setGroup('group1').setHint('this is radio button 3');
+      btn = new Kekule.Widget.RadioButton(btnGroup, 'Radio4');
+      btn.setGroup('group1').setHint('this is radio button 4');
+
+      dropBtn1 = new Kekule.Widget.DropDownButton(document, 'drop button 1');
+      dropBtn1.appendToElem(div4).setWidth('150px').setHeight('80px');
+      dropBtn1.setDropDownWidget(btnGroup);
+
+      dropBtn1 = new Kekule.Widget.DropDownButton(document, 'drop button 2');
+      dropBtn1.appendToElem(div4).setWidth('150px').setHeight('80px');
+      dropBtn1.setDropDownWidget(btnGroup).setDropPosition(Kekule.Widget.Position.TOP_RIGHT);
+    }
+
+    var btnSet1, btnSet2;
+    function createCompactButtonSets()
+    {
+      var div5 = $('div5');
+      btnSet1 = new Kekule.Widget.CompactButtonSet(document, 'CompactSet');
+      var btn0 = new Kekule.Widget.RadioButton(document, '');
+      btn0.setGroup('check1').setShowGlyph(true).getLeadingGlyph(true)
+        .setNormalInfo({'src': '../images/testIcons.png'})
+        .setFocusedInfo({'src': '../images/testIcons.png', 'position': '-32px -32px'})
+        .setActiveInfo({'src': '../images/calendar.gif'}).setWidth('15px').setHeight('15px');
+      btnSet1
+        .append(btn0)
+        .append((new Kekule.Widget.RadioButton(document, 'btn1')).setGroup('check1'))
+        .append((new Kekule.Widget.RadioButton(document, 'btn2')).setGroup('check1'), true)
+        .append((new Kekule.Widget.RadioButton(document, 'btn3')).setGroup('check1'))
+        .append((new Kekule.Widget.RadioButton(document, 'btn4')).setGroup('check1'));
+
+      btnSet1.appendToElem(div5); //.setDropPosition(Kekule.Widget.Direction.TOP);
+
+      return btnSet1;
+    }
+
+		function init()
+		{
+			createButtons();
+			createCheckButtons();
+			createRadioButtons();
+      createDropDownButtons();
+      createCompactButtonSets();
+		}
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+
+  <div id="div1">
+    <button id="button1" data-text="dataChangedBtn1" data-hint="data set hint">Button Binded</button>
+    <a id="buttonOnA" href="#" disabled="disabled">Button On A</A>
+  </div>
+
+  <div id="divCount"></div>
+
+	<div id="div2"></div>
+	<div id="div3"></div>
+  <div id="div4"></div>
+  <div id="div5"></div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 400 400">
+	<!--
+  <g fill="none" stroke="black" stroke-width="6">
+    <path stroke-linecap="butt" d="M5 20 l215 0" />
+    <path stroke-linecap="round" d="M5 40 l215 0" />
+    <path stroke-linecap="square" d="M5 60 l215 0" />
+  </g>
+  -->
+  <g fill="none" stroke="black" stroke-width="10">
+    <path stroke-dasharray="5,5" d="M5 20 l215 0" />
+    <path stroke-dasharray="10,10" d="M5 40 l215 0" />
+    <path stroke-dasharray="20,10,5,5,5,10" d="M5 60 l215 0" />
+    <path stroke-dasharray="10,10" d="M5 80 l215 0" style="stroke: red" />
+  </g>
+  <g transform="rotate(20)">
+  	<g transform="rotate(-20)">
+  		<rect x="10" y="100" width="200" height="100" style="stroke:red;stroke-width:3" transform="rotate(20)" />
+  	</g>
+  </g>
+</svg> 

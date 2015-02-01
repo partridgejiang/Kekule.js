@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Untitled Document</title>
+		<script src="../../src/lan/classes.js"></script>
+		<script src="../../src/core/kekule.common.js"></script>
+		<script src="../../src/utils/kekule.utils.js"></script>
+		<script src="../../src/data/kekule.chemicalElementsData.js"></script>
+		<script src="../../src/data/kekule.isotopesData.organSet.js"></script>
+		<script src="../../src/data/kekule.structGenAtomTypesData.js"></script>
+		<script src="../../src/data/kekule.dataUtils.js"></script>
+		<script src="../../src/core/kekule.elements.js"></script>
+		<script src="../../src/core/kekule.electrons.js"></script>
+		<script src="../../src/core/kekule.structures.js"></script>
+		<script src="../../src/core/kekule.exceptions.js"></script>
+		<script src="../../src/localization/en/kekule.localize.en.js"></script>
+		<script>
+			function log(msg)
+			{
+				var list = document.getElementById('logList');
+				var item = document.createElement('li');
+				item.innerHTML = msg;
+				list.appendChild(item);
+			}
+			function exceptionListener(e)
+			{
+				if (e.exception instanceof Kekule.Error)
+					e.stop = false;
+				else
+					e.stop = true;
+				var ex = e.exception;
+				var msg = ex.message;
+				msg += '<br />' + ex.fileName + ' ' + ex.lineNumber;
+				msg += '<br />Raiser: ' + ex.raiserName;
+				log(msg);
+				log(ex.stack);
+			}
+			function testElemError()
+			{
+				var a = new Kekule.Element('Vb');
+			}
+			function testIsotopeError()
+			{
+				var a = new Kekule.Isotope('O', 222);
+			}
+			
+			Kekule.exceptionHandler.addEventListener('exceptionThrown', exceptionListener);
+		</script>
+	</head>
+	<body>
+		<div>
+			<a href="javascript: testElemError()">Create element error</a>
+			<a href="javascript: testIsotopeError()">Create isotope error</a>
+		</div>
+		<ul id="logList"></ul>
+	</body>
+</html>

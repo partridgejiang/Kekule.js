@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+-->
+<title>Basic Element Test</title>
+<!--
+<script type="text/javascript" src="https://getfirebug.com/firebug-lite.js"></script>
+-->
+<script>
+	
+	if (document.namespaces)
+		document.namespaces.add("v","urn:schemas-microsoft-com:vml","#default#VML");
+	
+	if (document.createStyleSheet)
+	{
+		var style = document.createStyleSheet();
+		var shapes = ['shape', 'rect', 'oval', 'circ', 'line', 'fill', 'stroke', 'imagedata', 'group', 'textbox'];
+		for (var i = 0, l = shapes.length; i < l; ++i) 
+		{
+			style.addRule('v\\:' + shapes[i], "behavior: url(#default#VML); antialias:true; display:block;");
+		}
+	}
+  
+</script>
+<style>
+	.DrawStage
+	{
+		display: block;
+		width: 500px;
+		height: 200px;
+		border: 1px solid red;
+		position: relative;
+		/*overflow: auto;*/
+	}
+</style>
+<script type="text/javascript" src="../../../src/lib/Wohler/wohler.js"></script>
+<script>
+	/*
+	var svgRoot;
+	var canvasRoot;
+	*/
+	var roots = [];
+	function init()
+	{
+		if (!document.namespaces) // non IE
+		{
+			var svgRoot = new Wohler.SVG.RenderDoc();
+			svgRoot.bindToElem(document.getElementById('svgPanel'));
+			svgRoot.getDocObj().getStyle().getStroke().setColor('red').setWidth(10); //.setDashStyle('3 1');
+			roots.push(svgRoot);
+			
+			var canvasRoot = new Wohler.Canvas.RenderDoc();
+			canvasRoot.bindToElem(document.getElementById('canvasPanel'));
+			canvasRoot.getDocObj().getStyle().getStroke().setColor('red').setWidth(10); //.setDashStyle('3 1');
+			roots.push(canvasRoot);
+		}
+		//else 
+		{
+			var vmlRoot = new Wohler.VML.RenderDoc();
+			vmlRoot.bindToElem(document.getElementById('vmlPanel'));
+			vmlRoot.getDocObj().getStyle().getStroke().setColor('red').setWidth(10); //.setDashStyle('3 1');
+			roots.push(vmlRoot);
+		}
+	}
+	function drawLine()
+	{
+		for (var i = 0, l = roots.length; i < l; ++i) 
+		{
+			//roots[i].setViewBox({'x': 0, 'y': 0, 'width': 500, 'height': 200});
+			//roots[i].clear();
+			roots[i].beginUpdate();
+			var line = roots[i].createGlyph('line');
+			//console.log('============================================');
+			line.beginUpdate();
+			line.setStartPoint({
+				x: 0,
+				y: 0
+			}).setEndPoint({
+				x: 500,
+				y: 200
+			});
+			var stroke = line.getStyle().getStroke();
+			stroke.setWidth('5')./*setColor('rgba(0,0,100,0.5)').*/setOpacity(0.5);
+			//console.log('********************************************');
+			line.endUpdate();
+			
+			line = roots[i].createGlyph('line');
+			//console.log('============================================');
+			line.beginUpdate();
+			line.setStartPoint({
+				x: 500,
+				y: 0
+			}).setEndPoint({
+				x: 0,
+				y: 200
+			});
+			var stroke = line.getStyle().getStroke();
+			stroke.setWidth(2).setDashStyle('8 1 4 1').setColor('rgba(0,0,100,0.5)');
+			line.setStartPoint({'x': 500, 'y': 20});			
+			//console.log('********************************************');
+			line.endUpdate();
+			/*
+			var rect = roots[i].createGlyph('rect');
+			rect.beginUpdate();
+			rect.setX(50).setY(50).setWidth(200).setHeight(100);
+			rect.getStyle().getStroke().setColor('rgb(0, 0, 100)').setDashStyle('1 1').setOpacity(0.5);
+			rect.getStyle().getFill().setColor('rgb(0, 0, 100)').setOpacity(0.8);
+			rect.endUpdate();
+			*/
+			roots[i].endUpdate();
+		}
+	}
+	function drawRect()
+	{
+		for (var i = 0, l = roots.length; i < l; ++i) 
+		{
+			//roots[i].setViewBox({'x': 0, 'y': 0, 'width': 500, 'height': 200});
+			//roots[i].clear();
+			roots[i].beginUpdate();
+			
+			var rect = roots[i].createGlyph('rect');
+			rect.beginUpdate();
+			rect.setX(100).setY(50).setWidth(300).setHeight(100);
+			rect.getStyle().getStroke().setColor('rgb(0, 0, 100)').setDashStyle('1 1').setOpacity(0.5);
+			rect.getStyle().getFill().setColor('rgb(0, 0, 100)').setOpacity(0.8);
+			rect.endUpdate();
+			
+			roots[i].endUpdate();
+		}
+	}
+	
+	function setViewBox()
+	{
+		for (var i = 0, l = roots.length; i < l; ++i)
+		{
+			roots[i].setViewBox({'x': -20, 'y': -40, 'width': 1000, height: 400});
+		}
+	}
+	function resetViewBox()
+	{
+		for (var i = 0, l = roots.length; i < l; ++i)
+		{
+			roots[i].setViewBox(null);
+		}
+	}
+</script>
+</head>
+<body onload="init()">
+	<input type="Button" value="Draw Line" onclick="drawLine()"></input>
+	<input type="Button" value="Draw Rect" onclick="drawRect()"></input>
+	<input type="Button" value="Set ViewBox" onclick="setViewBox()"></input>
+	<input type="Button" value="Reset ViewBox" onclick="resetViewBox()"></input>
+	<svg id="svgPanel" width="500" height="200" class="DrawStage">
+		<!--
+		<circle cx="100" cy="100" r="50px" fill="lime" stroke="maroon" stroke-width="5"/>
+		-->
+	</svg>
+	<canvas id="canvasPanel" width="500" height="200" class="DrawStage">
+		Your browser does not support canvas.
+	</canvas>
+	<div id="vmlPanel" class="DrawStage" style="position:relative;width:500px;height:200px;">
+		
+	</div>
+</body>
+</html>

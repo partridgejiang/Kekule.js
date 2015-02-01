@@ -1,0 +1,17 @@
+<cml:molecule xmlns:cml="http://www.xml-cml.org/schema/cml2/core"
+>
+<cml:metadataList title="generated automatically from Openbabel">
+<cml:metadata name="dc:creator" content="OpenBabel version 1-100.1"/>
+<cml:metadata name="dc:description" content="Conversion of legacy filetype to CML"/>
+<cml:metadata name="dc:identifier" content="Unknown"/>
+<cml:metadata name="dc:content"/>
+<cml:metadata name="dc:rights" content="unknown"/>
+<cml:metadata name="dc:type" content="chemistry"/>
+<cml:metadata name="dc:contributor" content="unknown"/>
+<cml:metadata name="dc:creator" content="Openbabel V1-100.1"/>
+<cml:metadata name="dc:date" content="Sun Jun 20 14:50:11 BST 2004"/>
+<cml:metadata name="cmlm:structure" content="yes"/>
+</cml:metadataList>
+<cml:atomArray atomID="a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20" elementType="C C C C C C C C C Ti C O C O F F F F F F" formalCharge="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" x3="0.000000 0.000000 1.243100 0.744800 -0.530100 -0.569200 -1.198700 -1.061800 -1.494400 0.632300 2.378100 3.230300 1.235800 1.432700 2.303400 0.741000 -0.367300 -2.027700 -1.367400 1.149700" y3="0.000000 0.000000 0.000000 0.910400 0.969700 1.017100 2.189000 2.164100 2.706700 1.937100 1.696800 1.470100 3.785400 4.759900 -0.745500 -0.910400 0.894100 3.924100 2.939900 1.363300" z3="0.000000 1.403000 2.151700 3.061400 2.371100 -0.756100 2.187100 -0.230800 0.932300 0.923600 -0.281100 -0.969100 1.805600 2.318300 2.101200 -0.593300 -2.064300 0.963400 3.253300 4.207500"/>
+<cml:bondArray atomRef1="a1 a1 a1 a1 a2 a2 a2 a3 a3 a3 a4 a4 a4 a5 a5 a6 a6 a6 a7 a7 a7 a8 a8 a9 a9 a10 a10 a11 a13" atomRef2="a2 a6 a10 a16 a3 a5 a10 a4 a10 a15 a5 a10 a20 a7 a10 a8 a10 a17 a9 a10 a19 a9 a10 a10 a18 a11 a13 a12 a14" order="1 1 1 1 1 1 1 1 1 2 1 1 2 1 1 2 1 1 1 1 1 2 1 1 1 1 1 3 3"/>
+</cml:molecule>

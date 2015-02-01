@@ -1,0 +1,472 @@
+<title>REARRANGING THE DOMAINS OF PEPSINOGEN</title>
+@text  example_kin  kinemage chemdig rzepa    Protein Science 1995 - Vol. 4, Issue 2
+"REARRANGING THE DOMAINS OF PEPSINOGEN"
+X. Lin, G. Koelsch, J.A. Loy, and J. Tang
+ 
+		Contents of file 2LIN.KIN:
+Kin.1 - Animation of native pepsinogen & the modeled rearranged structure
+ 
+	Kinemage 1 is an animation of native porcine pepsinogen and a corresponding modeled structure that shows the expected atomic positions following rearrangement of the domains.  The native protein contains a pro peptide (pro), cleaved during activation, that is linked to the N-terminal domain (pep).  The C-terminal domain (sin) is structurally similar to the N-terminal domain.  Recombinant studies have demonstrated that the two domains are able to independently fold.  The accompanying manuscript describes the synthesis and activity profile of a rearranged pepsinogen (sin-pro-pep), containing a 10-residue linker peptide connecting the sin and pro domains.
+	The data show that the rearranged pepsinogen exhibits activity, but its rate of activation upon cleavage is diminished due to a requisite third cleavage to completely remove the pro peptide.  The relative positions of the domains in the native and rearranged proteins are expected to be nearly identical, with the exception of the added connecting peptide, and are depicted as such in this graphic.  The N-terminal residue in the native protein is labeled Leu1P, the C-terminal residue is Ala326, and Ser172 & Ser173 are the residues between which the pep and sin domains are effectively cut and sin is joined to pro-pep between residues 326 and 1P to subsequently form sin-pro-pep.  Repeatedly select 'ANIMATE' to compare the two structures; the start-up view is similar to that presented in Figures 2A and 2B of the manuscript.
+ 
+	Coordinates from Brookhaven Data Bank file:  3PSG
+ 
+	Kinemage prepared by Gerald Koelsch and Beth Cader Villafranca
+ 
+	Copyright (c) 1995 The Protein Society.  This kinemage is published as part of Protein Science Vol. 4, Issue 2.  All rights  reserved.  This and other kinemages published in Protein Science may be reproduced without permission by teachers and students for research and educational purposes providing that this notice remains a part of the kinemage file.  In case of doubt or for any other use, contact Cambridge University Press.
+
+@kinemage 1 
+@caption
+Animation of native pepsinogen (pro-pep-sin; Fig. 2A) and a model of the rearranged protein (sin-pro-pep; Fig. 2B).  Repeatedly click on 'ANIMATE' to compare the two structures. The pro domain is displayed in yellow, the pep domain in green, & the sin domain in skyblue. In pepsinogen, the native random coil that connects pep & sin is shown in magenta; termini are labeled 'Leu1P' (N) & 'Ala326' (C). Ser172 & Ser173 in the connecting strand are also labeled. In the rearranged protein sin-pro-pep, the modeled 7-residue connecting strand between the C-terminus of sin and the N-terminus of pro-pep is highlighted in red. Ser172 & Ser173 form the new C- & N-terminus, respectively.
+@thinline
+@viewid {Figs. 2A/2B}
+@zslab 180
+@center 46.838 -0.811 21.688 
+@matrix 
+ 0.84646 -0.15899 -0.50817 -0.50396  0.06882 -0.86098  0.17186  0.98488 -0.02187
+@2viewid {other}
+@2zoom 1.00 
+@2zslab 180 
+@2center 46.838 -0.811 21.688 
+@2matrix 
+ 0.82110 -0.16127  0.54753  0.56350  0.07620 -0.82260  0.09094  0.98396  0.15345
+@group {Pepsinogen}
+@subgroup {pro domain} dominant
+@vectorlist {pro ca} color= yellow 
+{ca leu p 1}P 56.698 -8.583 3.368
+{ca leu p 1}56.698 -8.583 3.368
+{ca val p 2}57.451 -7.826 7.029
+{ca lys p 3}54.752 -9.743 8.918
+{ca val p 4}54.374 -10.08 12.706
+{ca pro p 5}51.959 -12.969 13.453
+{ca leu p 6}49.389 -12.388 16.245
+{ca val p 7}47.829 -15.082 18.413
+{ca arg p 8}44.316 -14.696 19.96
+{ca lys p 9}44.414 -15.748 23.685
+{ca lys p 10}42.028 -15.445 26.677
+{ca ser p 11}42.133 -12.06 28.242
+{ca leu p 12}43.497 -10.844 31.543
+{ca arg p 13}39.824 -10.345 32.662
+{ca gln p 14}38.935 -13.872 31.738
+{ca asn p 15}41.913 -15.078 33.779
+{ca leu p 16}40.841 -12.999 36.708
+{ca ile p 17}37.353 -14.413 36.457
+{ca lys p 18}38.608 -17.952 36.26
+{ca asp p 19}40.542 -17.43 39.467
+{ca gly p 20}37.672 -15.636 40.999
+{ca lys p 21}39.45 -12.358 41.578
+{ca leu p 22}37.6 -9.847 39.616
+{ca ser p 23}34.695 -9.373 42.077
+{ca asp p 24}36.681 -8.129 44.977
+{ca phe p 25}38.674 -5.78 42.683
+{ca leu p 26}35.577 -4.186 41.202
+{ca ala p 27}33.972 -3.795 44.531
+{ca thr p 28}36.848 -1.603 45.781
+{ca his p 29}37.796 0.152 42.522
+{ca ser p 30}35.947 2.18 39.872
+{ca his p 31}37.177 1.241 36.449
+{ca asn p 32}37.122 3.907 33.787
+{ca pro p 33}38.822 3.14 30.502
+{ca ala p 34}38.83 6.815 29.865
+{ca ser p 35}41.81 6.999 32.101
+{ca lys p 36}44.163 5.604 29.39
+{ca tyr p 37}43.492 8.51 27.145
+{ca phe p 38}43.241 11.473 29.495
+{ca pro p 39}45.696 12.666 32.174
+{ca ala p 40}42.639 13.908 34.008
+{ca ala p 41}40.527 10.725 34.097
+{ca gly p 42}43.029 8.892 36.37
+{ca gly p 43}42.019 6.901 39.495
+{ca gly p 44}42.926 8.608 42.768
+{ca gly 1}44.117 5.484 44.254
+@subgroup {pep domain} dominant
+@vectorlist {pep ca} color= green 
+{ca gly 1}P 44.117 5.484 44.254
+{ca gly 1}44.117 5.484 44.254
+{ca gly 2}45.787 3.377 41.607
+{ca asp 3}47.495 0.148 42.697
+{ca glu 4}46.866 -1.676 39.371
+{ca pro 5}48.942 -0.062 36.619
+{ca leu 6}47.72 -2.54 33.992
+{ca glu 7}43.93 -2.259 34.71
+{ca asn 8}43.376 -0.812 31.228
+{ca tyr 9}44.55 -4.059 29.62
+{ca leu 10}41.786 -6.233 31.113
+{ca asp 11}40.29 -6.699 27.703
+{ca thr 12}43.247 -7.196 25.319
+{ca glu 13}43.008 -10.429 23.222
+{ca tyr 14}45.855 -10.436 20.556
+{ca phe 15}49.513 -10.878 21.293
+{ca gly 16}52.77 -11.064 19.354
+{ca thr 17}56.353 -12.063 20.142
+{ca ile 18}59.583 -10.031 19.969
+{ca gly 19}63.241 -10.795 20.759
+{ca ile 20}65.557 -8.519 22.666
+{ca gly 21}69.372 -8.691 22.975
+{ca thr 22}72.261 -10.835 21.651
+{ca pro 23}71.554 -13.619 21.575
+{ca ala 24}67.73 -12.879 21.587
+{ca gln 25}65.591 -13.225 24.759
+{ca asp 26}61.865 -13.649 23.838
+{ca phe 27}58.809 -11.9 25.14
+{ca thr 28}55.068 -11.886 24.506
+{ca val 29}53.9 -8.341 24.045
+{ca ile 30}50.845 -6.336 23.175
+{ca phe 31}51.066 -4.396 19.943
+{ca asp 32}49.199 -1.323 21.207
+{ca thr 33}48.13 1.558 18.92
+{ca gly 34}46.894 3.33 22.049
+{ca ser 35}50.394 3.767 23.533
+{ca ser 36}53.925 4.627 22.393
+{ca asn 37}56.436 3.037 24.786
+{ca leu 38}58.201 -0.364 24.643
+{ca trp 39}58.847 -2.011 28.046
+{ca val 40}59.357 -5.491 29.469
+{ca pro 41}59.976 -6.73 32.939
+{ca ser 42}63.577 -6.744 34.27
+{ca val 43}65.109 -9.783 35.973
+{ca tyr 44}65.401 -7.521 38.99
+{ca cys 45}61.606 -7.308 39.229
+{ca ser 46}61.256 -9.188 42.557
+{ca ser 47}57.512 -8.781 42.869
+{ca leu 48}55.281 -11.881 43.043
+{ca ala 49}53.55 -10.703 39.888
+{ca cys 50}56.798 -10.949 37.86
+{ca ser 51}57.153 -14.581 38.686
+{ca asp 52}55.934 -16.488 35.847
+{ca his 53}56.829 -14.19 33.025
+{ca asn 54}59.807 -13.842 30.747
+{ca gln 55}62.173 -11.191 32.162
+{ca phe 56}65.085 -9.5 30.556
+{ca asn 57}68.586 -10.191 31.871
+{ca pro 58}70.912 -7.491 30.569
+{ca asp 59}73.946 -9.495 31.636
+{ca asp 60}73.086 -12.149 29.15
+{ca ser 61}73.108 -9.656 26.227
+{ca ser 62}76.289 -8.654 24.542
+{ca thr 63}74.623 -5.665 22.748
+{ca phe 64}72.904 -4.088 25.742
+{ca glu 65}73.756 -0.6 26.852
+{ca ala 66}72.577 0.854 30.113
+{ca thr 67}71.588 4.391 30.802
+{ca ala 68}70.925 6.156 34.046
+{ca gln 69}67.567 7.538 32.885
+{ca ala 70}64.466 6.542 34.78
+{ca leu 71}61.326 5.33 33.16
+{ca ser 72}58.007 6.198 34.671
+{ca ile 73}55.198 4.505 32.911
+{ca thr 74}51.528 5.108 33.495
+{ca tyr 75}48.401 4.211 31.53
+{ca gly 76}46.192 6.275 33.895
+{ca thr 77}45.79 3.798 36.765
+{ca gly 78}49.015 3.846 38.827
+{ca ser 79}52.669 3.898 37.743
+{ca met 80}55.417 1.478 37.041
+{ca thr 81}59.027 2.31 37.761
+{ca gly 82}62.053 1.273 35.759
+{ca ile 83}65.146 2.006 33.835
+{ca leu 84}65.764 2.881 30.15
+{ca gly 85}68.35 0.839 28.171
+{ca tyr 86}69.303 0.193 24.485
+{ca asp 87}69.524 -3.071 22.652
+{ca thr 88}68.65 -4.77 19.421
+{ca val 89}64.988 -5.721 19.115
+{ca gln 90}64.05 -8.547 16.784
+{ca val 91}60.581 -7.78 15.288
+{ca gly 92}59.069 -9.53 12.29
+{ca gly 93}62.428 -10.868 11.287
+{ca ile 94}64.004 -7.401 11.229
+{ca ser 95}66.865 -6.427 13.497
+{ca asp 96}65.88 -3.044 15.019
+{ca thr 97}69.237 -1.823 16.36
+{ca asn 98}69.868 0.882 18.953
+{ca gln 99}66.304 0.597 20.216
+{ca ile 100}65.666 2.448 23.507
+{ca phe 101}63.167 0.528 25.718
+{ca gly 102}62.175 0.28 29.317
+{ca leu 103}62.938 -2.354 31.933
+{ca ser 104}60.333 -2.359 34.704
+{ca glu 105}61.478 -3.034 38.181
+{ca thr 106}58.809 -2.029 40.718
+{ca glu 107}55.426 -3.547 41.73
+{ca pro 108}53.341 -3.9 38.51
+{ca gly 109}50.192 -4.964 40.463
+{ca ser 110}48.704 -8.408 40.971
+{ca phe 111}47.15 -8.24 37.496
+{ca leu 112}50.448 -9.052 35.802
+{ca tyr 113}50.485 -12.495 37.332
+{ca tyr 114}47.372 -13.378 35.384
+{ca ala 115}48.19 -11.482 32.189
+{ca pro 116}48.941 -13.471 29.01
+{ca phe 117}51.562 -10.765 28.014
+{ca asp 118}55.025 -9.857 29.411
+{ca gly 119}55.055 -6.259 28.238
+{ca ile 120}53.776 -3.691 25.723
+{ca leu 121}54.964 -2.329 22.36
+{ca gly 122}53.321 1.024 21.709
+{ca leu 123}52.402 1.977 18.104
+{ca ala 124}51.126 5.497 18.632
+{ca tyr 125}52.736 8.926 18.073
+{ca pro 126}55.916 9.996 19.736
+{ca ser 127}54.227 13.038 21.247
+{ca ile 128}52.678 10.69 23.843
+{ca ser 129}55.77 8.637 24.721
+{ca ala 130}56.787 8.723 28.347
+{ca ser 131}60.258 10.302 28.799
+{ca gly 132}60.108 11.042 25.106
+{ca ala 133}61.633 7.585 24.637
+{ca thr 134}61.7 6.823 20.891
+{ca pro 135}59.007 4.452 19.814
+{ca val 136}59.826 1.243 17.936
+{ca phe 137}58.153 2.181 14.606
+{ca asp 138}59.814 5.564 14.509
+{ca asn 139}63.247 3.906 15.038
+{ca leu 140}62.548 1.406 12.24
+{ca trp 141}61.678 4.3 9.96
+{ca asp 142}64.569 6.519 11.029
+{ca gln 143}66.993 3.7 10.273
+{ca gly 144}65.492 2.86 6.857
+{ca leu 145}64.422 -0.67 7.984
+{ca val 146}60.907 -0.585 6.563
+{ca ser 147}59.677 0.034 3.007
+{ca gln 148}57.311 2.918 3.843
+{ca asp 149}56.325 5.051 6.762
+{ca leu 150}53.119 3.09 7.491
+{ca phe 151}51.738 -0.145 8.968
+{ca ser 152}48.574 -2.266 8.724
+{ca val 153}46.659 -4.665 10.912
+{ca tyr 154}44.729 -7.715 9.839
+{ca leu 155}42.818 -9.42 12.891
+{ca ser 156}41.202 -12.801 12.331
+{ca ser 157}37.876 -14.103 13.539
+{ca asn 158}36.778 -17.441 14.96
+{ca asp 159}39.999 -18.155 16.821
+{ca asp 160}41.735 -18.886 13.509
+{ca ser 161}45.485 -18.338 12.986
+{ca gly 162}46.304 -15.609 10.48
+{ca ser 163}46.187 -12.195 12.154
+{ca val 164}49.313 -10.114 11.505
+{ca val 165}50.728 -6.719 11.986
+{ca leu 166}52.32 -5.765 8.577
+{ca leu 167}55.22 -3.432 9.044
+@subgroup {sin domain} dominant
+@vectorlist {sin ca} color= sky 
+{ca ser 178}P 38.948 0.227 -2.197
+{ca ser 178}38.948 0.227 -2.197
+{ca leu 179}40.545 1.671 0.794
+{ca asn 180}38.962 4.728 2.244
+{ca trp 181}41.368 7.38 3.654
+{ca val 182}40.581 9.387 6.741
+{ca pro 183}42.831 12.19 8.084
+{ca val 184}44.04 11.934 11.601
+{ca ser 185}42.306 14.758 13.484
+{ca val 186}44.61 15.163 16.499
+{ca glu 187}48.148 13.726 16.383
+{ca gly 188}49.03 11.627 19.44
+{ca tyr 189}46.609 8.718 19.377
+{ca trp 190}45.296 7.467 16.015
+{ca gln 191}42.308 9.792 16.369
+{ca ile 192}39.672 10.387 13.64
+{ca thr 193}36.296 12.265 13.252
+{ca leu 194}33.249 10.125 13.417
+{ca asp 195}30.114 11.427 11.62
+{ca ser 196}27.367 9.551 13.39
+{ca ile 197}26.31 6.307 14.924
+{ca thr 198}22.991 4.673 13.98
+{ca met 199}21.21 1.557 15.173
+{ca asp 200}17.917 1.062 13.581
+{ca gly 201}17.94 3.907 11.149
+{ca glu 202}17.936 5.932 14.318
+{ca thr 203}20.774 8.118 15.545
+{ca ile 204}21.85 6.719 18.841
+{ca ala 205}24.962 8.755 19.586
+{ca cys 206}27.615 11.005 18.077
+{ca ser 207}24.952 13.405 16.877
+{ca gly 208}26.432 15.966 14.562
+{ca gly 209}29.866 14.22 14.759
+{ca cys 210}32.357 13.214 17.438
+{ca gln 211}35.932 11.886 17.921
+{ca ala 212}37.061 8.145 17.73
+{ca ile 213}40.432 6.512 18.725
+{ca val 214}41.602 3.347 16.851
+{ca asp 215}42.925 1.104 19.611
+{ca thr 216}44.413 -2.376 19.195
+{ca gly 217}45.064 -2.685 22.933
+{ca thr 218}41.35 -3.272 23.672
+{ca ser 219}38.861 -5.674 22.303
+{ca leu 220}35.733 -3.652 23.01
+{ca leu 221}33.774 -0.764 21.548
+{ca thr 222}33.861 1.846 24.321
+{ca gly 223}31.791 4.984 24.555
+{ca pro 224}29.978 7.365 26.874
+{ca thr 225}28.2 5.603 29.68
+{ca ser 226}24.712 6.722 28.671
+{ca ala 227}24.84 5.824 25.034
+{ca ile 228}26.218 2.539 26.206
+{ca ala 229}23.579 1.829 28.89
+{ca asn 230}20.976 2.391 26.204
+{ca ile 231}22.652 0.016 23.738
+{ca gln 232}23.033 -2.711 26.358
+{ca ser 233}19.37 -2.498 27.249
+{ca asp 234}18.289 -2.795 23.665
+{ca ile 235}20.457 -5.85 22.905
+{ca gly 236}19.243 -7.735 25.928
+{ca ala 237}22.357 -7.791 28.019
+{ca ser 238}22.587 -8.107 31.708
+{ca ala 239}25.513 -7.83 34.164
+{ca asn 240}26.59 -10.991 36.217
+{ca ala 241}28.716 -11.247 39.53
+{ca ala 242}32.075 -11.293 37.85
+{ca gly 243}30.745 -8.07 36.339
+{ca glu 244}30.191 -9.003 32.674
+{ca met 245}27.367 -8.143 30.33
+{ca val 246}26.173 -11.526 29.176
+{ca ile 247}23.653 -12.008 26.421
+{ca ser 248}22.054 -15.308 25.332
+{ca cys 249}23.937 -16.716 22.33
+{ca ser 250}20.666 -17.988 20.97
+{ca ser 251}19.317 -14.519 20.653
+{ca ile 252}21.998 -13.295 18.101
+{ca ser 253}19.999 -13.627 14.956
+{ca ser 254}17.386 -11.196 16.131
+{ca leu 255}19.679 -8.257 16.749
+{ca pro 256}20.086 -5.26 14.553
+{ca asp 257}23.324 -3.923 13.17
+{ca ile 258}25.046 -0.775 14.409
+{ca val 259}26.56 1.557 11.872
+{ca phe 260}29.415 4.037 12.145
+{ca thr 261}29.672 6.628 9.483
+{ca ile 262}33.211 7.88 8.8
+{ca asp 263}33.962 10.526 6.241
+{ca gly 264}30.552 9.791 4.667
+{ca val 265}31.127 6.071 4.428
+{ca gln 266}29.1 3.418 6.247
+{ca tyr 267}30.786 0.789 8.388
+{ca pro 268}28.17 -1.62 9.728
+{ca leu 269}28.834 -4.088 12.486
+{ca ser 270}26.577 -7.103 12.571
+{ca pro 271}25.6 -8.8 15.869
+{ca ser 272}27.935 -11.542 15.114
+{ca ala 273}30.72 -8.962 15.22
+{ca tyr 274}29.721 -7.031 18.341
+{ca ile 275}29.055 -9.994 20.447
+{ca leu 276}31.862 -12.134 21.678
+{ca gln 277}31.435 -15.849 21.76
+{ca gly 278}33.619 -17.928 24.035
+{ca ala 279}33.347 -21.041 26.223
+{ca gly 280}30.391 -21.219 28.44
+{ca gly 281}29.255 -17.811 27.006
+{ca cys 282}28.244 -14.875 24.797
+{ca thr 283}29.215 -11.455 25.949
+{ca ser 284}28.525 -7.879 24.879
+{ca gly 285}31.325 -6.233 22.878
+{ca phe 286}30.401 -2.795 24.35
+{ca glu 287}31.731 -0.98 27.391
+{ca gly 288}31.219 2.466 28.953
+{ca met 289}33.617 5.202 30.147
+{ca asp 290}33.274 8.654 31.706
+{ca val 291}35.198 11.206 29.613
+{ca pro 292}36.224 14.49 31.173
+{ca ala 293}33.919 17.504 31.312
+{ca ser 294}35.242 19.596 28.549
+{ca ser 295}36.194 16.696 26.657
+{ca gly 296}33.774 16.209 23.749
+{ca glu 297}32.071 12.897 22.927
+{ca leu 298}34.669 10.121 22.283
+{ca trp 299}34.376 6.525 21.118
+{ca ile 300}37.074 3.848 21.245
+{ca leu 301}37.18 1.543 18.191
+{ca gly 302}38.825 -1.739 19.412
+{ca asp 303}39.164 -5.276 17.988
+{ca val 304}35.487 -5.74 17.443
+{ca phe 305}35.762 -3.092 14.733
+{ca ile 306}39.215 -3.993 13.33
+{ca arg 307}38.266 -7.635 12.959
+{ca gln 308}35.803 -6.395 10.267
+{ca tyr 309}37.66 -3.545 8.666
+{ca tyr 310}41.347 -4.037 7.615
+{ca thr 311}43.118 -0.929 8.995
+{ca val 312}46.123 0.979 7.588
+{ca phe 313}48.055 3.432 9.776
+{ca asp 314}49.9 5.976 7.633
+{ca arg 315}52.512 8.116 9.31
+{ca ala 316}53.774 9.733 6.166
+{ca asn 317}50.498 11.362 5.446
+{ca asn 318}48.797 11.236 8.904
+{ca lys 319}45.711 9.307 7.69
+{ca val 320}43.942 6.08 8.541
+{ca gly 321}42.711 3.832 5.75
+{ca leu 322}39.895 1.279 6.024
+{ca ala 323}38.339 -1.426 3.999
+{ca pro 324}36.127 -4.362 4.592
+{ca val 325}37.978 -7.571 5.281
+{ca ala 326}38.352 -10.391 2.881
+@group {Native} animate
+@subgroup {pep coil} dominant
+@vectorlist {pep coil} color= magenta 
+{ca leu 167}P 55.22 -3.432 9.044
+{ca leu 167}55.22 -3.432 9.044
+{ca gly 168}55.929 -0.985 6.13
+{ca gly 169}53.306 -2.436 3.797
+{ca ile 170}49.72 -2.788 2.578
+{ca asp 171}48.434 -6.143 1.303
+{ca ser 172}45.406 -6.176 -0.986
+{ca ser 173}44.802 -9.783 -0.034
+@subgroup {sin coil} dominant
+@vectorlist {sin coil} color= magenta 
+{ca ser 173}P 44.802 -9.783 -0.034
+{ca ser 173}44.802 -9.783 -0.034
+{ca tyr 174}43.434 -8.691 3.197
+{ca tyr 175}40.538 -6.547 1.956
+{ca thr 176}37.87 -6.089 -0.738
+{ca gly 177}36.861 -2.957 -2.405
+{ca ser 178}38.948 0.227 -2.197
+@subgroup {labels} dominant
+@labellist {N-terminus} color= white 
+{ leu 1p}56.698 -8.583 3.368
+@labellist {C-terminus} color= white 
+{ ala 326}38.352 -10.391 2.881
+@labellist {interior} color= white 
+{ ser 172}45.406 -6.176 -1.786
+{ ser 173}44.802 -9.783 -0.034
+@group {sin-pro-pep} animate
+@subgroup {sin term} dominant
+@vectorlist {sin terminus} color= magenta 
+{ca ser 173}P 26.51 -6.344 -3.031
+{ca ser 173}26.51 -6.344 -3.031
+{ca ser 174}28.399 -7.267 0.139
+{ca val 175}31.991 -6.189 -0.027
+{ca val 176}34.358 -3.345 0.592
+{ca leu 177}36.14 -2.406 -2.657
+{ca ser 178}38.948 0.227 -2.197
+@subgroup {connector} dominant
+@vectorlist {ca} color= red 
+{ca ala 326}P 38.352 -10.391 2.881
+{ca ala 326}38.352 -10.391 2.881
+{ca gly 327}41.187 -10.953 2.482
+{ca gly 328}44.94 -11.071 3.089
+{ca gly 329}47.362 -9.692 0.488
+{ca gly 330}50.957 -10.91 0.526
+{ca gly 331}51.967 -7.8 -1.367
+{ca gly 332}51.685 -5.836 1.727
+{ca gly 333}54.249 -7.671 3.866
+{ca leu p 1}56.698 -8.583 3.368
+@subgroup {pep term} dominant
+@vectorlist {pep terminus} color= magenta 
+{ca leu 167}P 55.22 -3.432 9.044
+{ca leu 167}55.22 -3.432 9.044
+{ca phe 168}58.297 -2.595 6.863
+{ca ser 169}61.192 -4.792 5.595
+{ca val 170}61.51 -7.162 2.638
+{ca tyr 171}64.525 -8.798 1.086
+{ca ser 172}67.784 -6.817 1.456
+@subgroup {labels} dominant
+@labellist {N-terminus} color= white 
+{ ser 173}22.51 -6.344 -6.031
+@labellist {C-terminus} color= white 
+{ ser 172}67.784 -6.817 0.456
+@labellist {interior} color= white 
+{ leu 1p}56.698 -8.583 3.368
+{ ala 326}38.352 -10.391 2.881
+<end of file>
+

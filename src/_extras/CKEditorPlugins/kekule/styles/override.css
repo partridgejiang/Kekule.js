@@ -1,0 +1,11 @@
+/* CSS file to override some conflications between CKEditor and Kekule.js */
+.cke_reset_all button
+{
+    box-sizing: border-box;
+}
+
+label.K-CKEditor-Label
+{
+    margin-bottom: 0.5em;
+    display: block;
+}

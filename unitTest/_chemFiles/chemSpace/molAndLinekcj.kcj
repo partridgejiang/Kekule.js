@@ -1,0 +1,178 @@
+{
+  "defAutoScaleRefLength": 0.8,
+  "root": {
+    "id": "o1",
+    "children": {
+      "id": "o2",
+      "items": [
+        {
+          "_type": "Kekule.Glyph.StraightLine",
+          "id": "p2",
+          "coord2D": {
+            "x": 2.2187178391676685,
+            "y": 11.207948655348558,
+            "_type": "object"
+          },
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Glyph.PathGlyphNode",
+                "id": "n3",
+                "coord2D": {
+                  "x": -8.881784197001252e-16,
+                  "y": 0,
+                  "_type": "object"
+                },
+                "coord3D": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "_type": "object"
+                },
+                "nodeType": "location"
+              },
+              {
+                "_type": "Kekule.Glyph.PathGlyphNode",
+                "id": "n4",
+                "overrideRenderOptionItems": [],
+                "coord2D": {
+                  "x": 0.8307692307692283,
+                  "y": -2.184615384615384,
+                  "_type": "object"
+                },
+                "coord3D": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0,
+                  "_type": "object"
+                },
+                "nodeType": "location"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Glyph.PathGlyphConnector",
+                "id": "c2",
+                "pathType": "L",
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          }
+        },
+        {
+          "_type": "Kekule.Molecule",
+          "id": "m1",
+          "renderOptions": {
+            "expanded": true,
+            "_type": "object"
+          },
+          "coord2D": {
+            "x": 3.8956409160907453,
+            "y": 12.084871732271635,
+            "_type": "object"
+          },
+          "charge": 0,
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Atom",
+                "id": "a1",
+                "overrideRenderOptionItems": [],
+                "coord2D": {
+                  "x": 0.03076923076922844,
+                  "y": -2.646495599967084,
+                  "_type": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "id": "a2",
+                "overrideRenderOptionItems": [],
+                "coord2D": {
+                  "x": 0.4307692307692288,
+                  "y": -1.9536752769395331,
+                  "_type": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "id": "a3",
+                "overrideRenderOptionItems": [],
+                "coord2D": {
+                  "x": -0.3692307692307719,
+                  "y": -1.9536752769395331,
+                  "_type": "object"
+                },
+                "charge": 0,
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Bond",
+                "id": "b1",
+                "overrideRenderOptionItems": [],
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "_type": "Kekule.Bond",
+                "id": "b2",
+                "overrideRenderOptionItems": [],
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "_type": "Kekule.Bond",
+                "id": "b3",
+                "overrideRenderOptionItems": [],
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  2,
+                  0
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          }
+        }
+      ],
+      "_type": "Kekule.ChemObjList"
+    },
+    "_type": "Kekule.ChemSpaceElement"
+  },
+  "enableAutoId": true,
+  "screenSize": {
+    "x": 600,
+    "y": 900,
+    "_type": "object"
+  },
+  "size2D": {
+    "x": 9.230769230769232,
+    "y": 13.846153846153847,
+    "_type": "object"
+  },
+  "_type": "Kekule.ChemDocument"
+}

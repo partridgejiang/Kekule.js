@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>CDK Data Importer</title>
+<style>
+	textarea
+  {
+    width: 100%;
+    height: 15em;
+  }
+</style>
+<script src="../../lan/classes.js"></script>
+<script src="../../lan/xmlJsons.js"></script>
+<script src="../../utils/kekule.utils.js"></script>
+<script src="../kekule.dataUtils.js"></script>
+<script src="../kekule.chemicalElementsData.js"></script>
+<script src="kekule.chemElemImporter.js"></script>
+<script src="kekule.isotopeImporter.js"></script>
+<script src="kekule.atomTypeImporter.js"></script>
+<script>
+	function convertChemElem()
+	{
+		var data = document.getElementById('memoSrc').value;
+		var dest = Kekule.ChemElemImporter.import(data);
+		document.getElementById('memoResult').value = dest;
+		return dest;
+	};
+	function convertIsotope(includeElems)
+	{
+		var data = document.getElementById('memoSrc').value;
+		var dest = Kekule.IsotopesImporter.import(data, {'includeElems': includeElems});
+		document.getElementById('memoResult').value = dest;
+		return dest;
+	}
+	function convertIsotopeAll()
+	{
+		return convertIsotope();
+	}
+	function convertIsotopeSmallSet()
+	{
+		return convertIsotope(['H', 'He', 'C', 'N', 'O', 'F', 'Si', 'P', 'S', 'Cl', 'Br', 'I']);
+	}
+	function convertAtomType()
+	{
+		var data = document.getElementById('memoSrc').value;
+		var dest = Kekule.AtomTypeImporter.import(data);
+		document.getElementById('memoResult').value = dest;
+		return dest; 
+	}
+</script>
+</head>
+
+<body>
+<form id="formMain" name="formMain" method="post" action="">
+  <fieldset>
+    <legend>Source Data</legend>
+    <label for="memoSrc"></label>
+    <textarea name="memoSrc" id="memoSrc"></textarea>
+  </fieldset>
+  <fieldset>
+    <legend>Converted</legend>
+    <label for="memoResult"></label>
+    <textarea name="memoResult" id="memoResult"></textarea>
+    <div>
+    	<input type="button" name="btnConvertElem" id="btnConvertElem" value="Convert Element" onclick="convertChemElem()" />
+    	<input type="button" name="btnConvertIsotopeAll" id="btnConvertIsotopeAll" value="Convert Isotope All" onclick="convertIsotopeAll()" />
+			<input type="button" name="btnConvertIsotopeSmallSet" id="btnConvertIsotopeSmallSet" value="Convert Isotope Small Set" onclick="convertIsotopeSmallSet()" />
+			<input type="button" name="btnConvertAtomType" id="btnConvertAtomType" value="Convert Atom Type" onclick="convertAtomType()" />
+    </div>
+  </fieldset>
+</form>
+</body>
+</html>

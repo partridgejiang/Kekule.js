@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Class Extend Test</title>
+	<script src="../JSTest/src/jstest.js"></script>
+	<script src="../../src/kekule.js"></script>
+	<script>
+		var ClassA = Class.create(ObjectEx, {
+			CLASS_NAME: 'ClassA',
+			initialize: function($super, value)
+			{
+				$super();
+				console.log('Original create', $super);
+				this.fA = value;
+			},
+			initProperties: function()
+			{
+				console.log('initproperties A');
+				this.defineProp('A', {'dataType': DataType.STRING});
+			},
+			getValue: function()
+			{
+				return 'A: ' + this.getA();
+			},
+			doSomthing: function()
+			{
+				alert('do Somthing');
+			},
+			show: function()
+			{
+				alert(this.getValue());
+			}
+		});
+		var ClassB = Class.create(ClassA, {
+			CLASS_NAME: 'ClassB',
+
+			initialize: function($super, value)
+			{
+				console.log('B create');
+				$super(value);
+			},
+
+			initProperties: function()
+			{
+				console.log('initproperties B');
+				this.defineProp('B', {'dataType': DataType.STRING});
+			},
+			getValue: function($super)
+			{
+				console.log('Origin B', this);
+				return $super() + ' - B: ' + this.getB();
+			},
+			getValue2: function()
+			{
+				console.log('Origin B getValue2', this);
+				return ' - B: ' + this.getB();
+			}
+		});
+
+		ClassEx.extend(ClassA, {
+
+			initialize: function($origin, value1, value2)
+			{
+				console.log('Extend 1 create');
+				//console.log($origin, $super);
+				//$origin.bind(this, $super)(value1);
+				//$origin(value1);
+				$origin(value1);
+				//$super(value1);
+
+				this.fA2 = value2 || 'defaultA2';
+			},
+
+
+
+			initProperties: function($origin)
+			{
+				$origin();
+				console.log('initproperties A-extend');
+				this.defineProp('A2', {'dataType': DataType.STRING});
+			},
+
+			getValue: function($origin)
+			{
+				return $origin() + ' - A2: ' + this.getA2();
+			},
+			doSomething: function()
+			{
+				alert('do another thing');
+			}
+		});
+
+
+		ClassEx.extend(ClassB, {
+			initProperties: function($origin)
+			{
+				$origin();
+				console.log('initproperties B2');
+				this.defineProp('B2', {'dataType': DataType.STRING});
+			},
+			getValue: function($origin, $super)
+			{
+				//console.log('extend B', this);
+				return $origin() + '\n B2: ' + this.getB2();
+				//return $super() + '\n Overrided B getValue: ' + this.getB();
+			}
+		});
+
+		ClassEx.extend(ClassB, {
+			getValue: function($origin, $super)
+			{
+				//console.log('extend B', this);
+				//return $origin() + '\n' + this.getB();
+				return $super() + '\n Overrided B getValue: ' + this.getB();
+			}
+		});
+		ClassEx.extendMethod(ClassB, 'getValue2', function($origin, param){
+			console.log('extended getValue2 with param', param);
+			return $origin();
+		});
+
+
+		function testExtend()
+		{
+			var obj = new ClassB('a','b');
+			//console.log(obj.setB, obj);
+			obj.setB('newB');
+			obj.setB2('newB2');
+			console.log(obj);
+			//obj.doSomething();
+			obj.show();
+			//obj.getValue2('param here');
+		}
+	</script>
+</head>
+<body>
+	<div>
+		<a href="javascript:testExtend()">Extend Test</a>
+	</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<molecule id="m1" xmlns="http://www.xml-cml.org/schema/cml2/core">
+  <atomArray atomID="a1 a2 a3 a4 a5 a6"/>
+  <bondArray 
+    order="A A A A A A"
+    bondID="b1 b2 b3 b4 b5 b6"
+    atomRef1="a1 a2 a3 a4 a5 a6"
+    atomRef2="a6 a1 a2 a3 a4 a5"/>
+  <electron count="6" 
+    bondRefs="b1 b2 b3 b4 b5 b6"
+    atomRefs="a1 a2 a3 a4 a5 a6"/>
+</molecule>

@@ -1,0 +1,45 @@
+{
+  "defAutoScaleRefLength": 0.8,
+  "root": {
+    "id": "o1",
+    "children": {
+      "id": "o2",
+      "items": [
+        {
+          "__type__": "Kekule.TextBlock",
+          "id": "t1",
+          "renderOptions": {
+            "fontFamily": "Courier New, Courier, monospace",
+            "fontSize": 48,
+            "__type__": "object"
+          },
+          "text": "sdsa\ndsadsa",
+          "coord2D": {
+            "x": 3.067809361049107,
+            "y": 30.411809430803572,
+            "__type__": "object"
+          },
+          "size2D": {
+            "x": 3.9497143554687497,
+            "y": 2.1942857142857157,
+            "__type__": "object"
+          }
+        }
+      ],
+      "__type__": "Kekule.ChemObjList"
+    },
+    "__type__": "Kekule.ChemSpaceElement"
+  },
+  "enableAutoId": true,
+  "screenSize": {
+    "x": 900,
+    "y": 1500,
+    "__type__": "object"
+  },
+  "size2D": {
+    "x": 20.571428571428573,
+    "y": 34.285714285714285,
+    "__type__": "object"
+  },
+  "__type__": "Kekule.ChemDocument"
+}

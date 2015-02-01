@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Raphael Text Draw Test</title>
+	<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+	<script>
+		function drawChar(paper, c, x, y)
+		{
+			var result = paper.text(x, y, c);
+			result.attr('font-family', 'arial');
+			result.attr('font-size', '40px');
+			result.attr('text-anchor', 'start');
+			// draw center
+			var center = paper.circle(x, y, 2);
+			center.attr('fill', 'red');
+			// draw border
+			var bbox = result.getBBox();
+			var border = paper.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+			border.attr('stroke', 'red');
+			return result;
+		}
+		
+		function drawText()
+		{
+			var paper = Raphael('stage', 1000, 600);
+			
+			var x = 20;
+			var y = 50;
+			var deltaX;
+			var bbox = {'width': 0, 'height': 0};
+			for (var i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); ++i)
+			{
+				x += bbox.width; // 2;
+				//y += bbox.height;
+				var c = String.fromCharCode(i);
+				var glyph = drawChar(paper, c, x, y);
+				var bbox = glyph.getBBox();
+				//deltaX = (bbox.width + newBbox.width) / 2;
+				//x += deltaX;
+				//glyph.attr('x', x);
+				//bbox = newBbox;
+			}
+			
+			var x = 20;
+			var y = 120;
+			var bbox = {'width': 0, 'height': 0};
+			for (var i = 'A'.charCodeAt(0); i <= 'Z'.charCodeAt(0); ++i)
+			{
+				x += bbox.width / 2;
+				//y += bbox.height;
+				var c = String.fromCharCode(i);
+				var glyph = drawChar(paper, c, x, y);
+				var bbox = glyph.getBBox();
+				x += bbox.width / 2;
+				//glyph.attr('x', x);
+			}
+		}
+		
+		function init()
+		{
+			drawText();
+		}
+	</script>
+	<style>
+		#stage
+		{
+			width: 1000px;
+			height: 600px;
+			background-color: #eee;
+		}
+	</style>
+</head>
+<body onload="init()">
+	<div id="stage"></div>
+</body>
+</html>

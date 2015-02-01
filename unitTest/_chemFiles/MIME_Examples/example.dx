@@ -1,0 +1,41 @@
+##TITLE= example_dx chemdig rzepa RECORD_START=     1
+##JCAMP-DX= 4.24
+##BLOCKS= 1
+##TITLE= STRUCTURE
+##JCAMP-CS= 3.7
+##BLOCK_ID= 1
+##DATE= 99/10/28
+##TIME= 11:33:07
+##OWNER= Nobody
+##ORIGIN = /usr/local/www/cgi/nci.tcl
+##NAMES= Sodium hydroxymethylsulfonate
+##AUTHOR= National Cancer Institute
+##MOLFORM= CH4 O4 S
+##CAS REGISTRY NO= 870-72-4
+##$MW= 112.10
+##ATOMLIST=
+$$ AN AS NH
+   1 S
+   2 C
+   3 O
+   4 O
+   5 O
+   6 O
+   7 H
+   8 H
+   9 H
+  10 H
+##BONDLIST=
+$$ AN1 AN2 BT
+   1    2 S
+   1    3 D
+   1    4 D
+   1    5 S
+   2    6 S
+   2    7 S
+   2    8 S
+   5    9 S
+   6   10 S
+##END= $$ STRUCTURE
+##END=RECORD_END=     1
+

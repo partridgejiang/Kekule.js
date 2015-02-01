@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Canonicalizer Test</title>
+	<script src="../../../libs/raphael/raphael-min.2.0.1.js"></script>
+	<script src="../../src/kekule.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+	<script>
+		var chemEditor;
+		var chemEditorUi;
+
+		function getCurrMol()
+		{
+			return chemEditor.getChemSpace().getChildAt(0);
+		}
+
+		function canonicalize()
+		{
+			var mol = getCurrMol();
+			/*
+			var c = new Kekule.MorganCanonicalizationExecutor();
+			c.execute(mol.getCtab());
+			*/
+			Kekule.canonicalizer.canonicalize(mol);
+			// set mark
+			for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+			{
+				var n = mol.getNodeAt(i);
+				var label = '' + (i + 1);
+				if (n.getSymbol)
+					label += n.getSymbol();
+				n.setRenderOption('customLabel', label);
+			}
+		}
+
+		function init()
+		{
+			var elem = document.getElementById('chemEditorUi');
+			chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+			chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
+		}
+	</script>
+</head>
+<body onload="init()">
+	<div id="calcPanel">
+		<button type="button" onclick="canonicalize()">Canonicalize</button>
+	</div>
+	<div id="chemEditorUi" style="width:900px;height:500px"></div>
+
+</body>
+</html>

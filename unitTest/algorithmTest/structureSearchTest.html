@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Molecule Structure Search Test</title>
+	<!--
+	<script src="../_libs/kekule.compressed.js"></script>
+	-->
+
+	<script src="../../src/kekule.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+	<script>
+		var chemEditors = [];
+		var chemComposers = [];
+		function init()
+		{
+			for (var i = 0; i < 2; ++i)
+			{
+				var elem = document.getElementById('chemComposer' + i);
+				var chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+				chemEditor.setAllowCreateNewChild(false);
+				var chemComposer = new Kekule.Editor.Composer(elem, chemEditor);
+				chemEditors[i] = chemEditor;
+				chemComposers[i] = chemComposer;
+			}
+
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+			Kekule.X.Event.addListener(document.getElementById('btnSearch'), 'click', function(e)
+					{
+						search();
+					}
+			);
+		}
+		function markObjects(objs, color)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				obj.setRenderOption('color', color);
+			}
+		}
+		function search()
+		{
+			var mol1 = chemEditors[0].exportObj(Kekule.StructureFragment);
+			var mol2 = chemEditors[1].exportObj(Kekule.StructureFragment);
+			//var searchResult = Kekule.ChemStructureSearcher.findSubStructure(mol1, mol2, {doStandardize: true});
+			var searchResult = mol2.search(mol1);
+			var sResult = searchResult? 'Found sub structure': 'Can not find sub structure';
+			var sClass = searchResult? 'Found': 'Unfound';
+			var elem = document.getElementById('labelResult');
+			elem.className = sClass;
+			elem.innerHTML = sResult;
+
+			if (searchResult)
+			{
+				//console.log(searchResult.length);
+				markObjects(searchResult, 'red');
+			}
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var w = (dim.width - 50) / chemComposers.length;
+			var h = dim.height - 100;
+			for (var i = 0, l = chemComposers.length; i < l; ++i)
+			{
+				chemComposers[i].setWidth(w + 'px').setHeight(h + 'px');
+			}
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+	<style>
+		.Found { color: green; }
+		.Unfound { color: red; }
+	</style>
+</head>
+<body>
+<div>
+	<button id="btnSearch">Search Molecules</button>
+	<span id="labelResult"></span>
+</div>
+<div id="chemComposer0" style="width:800px;height:600px"></div>
+<div id="chemComposer1" style="width:800px;height:600px"></div>
+</body>
+</html>

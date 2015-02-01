@@ -1,0 +1,374 @@
+/**
+ * @fileoverview
+ * Methods about basic chem structures searching and matching.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /core/kekule.common.js
+ * requires /core/kekule.structures.js
+ * requires /utils/kekule.utils.js
+ * requires /algorithm/kekule.canonicalizers.js
+ */
+
+(function(){
+"use strict";
+
+var AU = Kekule.ArrayUtils;
+var SC = Kekule.UnivChemStructObjComparer;
+
+/**
+ * A util class to search sub structures in ctab based molecule.
+ * @class
+ */
+Kekule.ChemStructureSearcher = {
+	/**
+	 * Search sub structure in molecule.
+	 * @param {Kekule.StructureFragment} subStructure Structure to find.
+	 * @param {Kekule.StructureFragment} sourceMol
+	 * @param {Hash} options Search options, can include the following fields:
+	 *   {
+	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
+	 *       default is true.
+	 *     ignoreCharge: Bool
+	 *     ignoreBondOrder: Bool
+	 *   }
+	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
+	 *   Otherwise false will be returned.
+	 */
+	findSubStructure: function(subStructure, sourceMol, options)
+	{
+		var op = Object.extend({doStandardize: true}, options);
+
+		// standardize structures first, perceive aromatic rings
+		if (op.doStandardize)
+		{
+			var standardizeOps = {
+				unmarshalSubFragments: true,
+				doCanonicalization: false,
+				doAromaticPerception: true
+			};
+			subStructure.standardize(standardizeOps);
+			sourceMol.standardize(standardizeOps);
+		}
+
+		var targetStartingNode = subStructure.getNodeAt(0);
+		var srcNodes = sourceMol.getNodes();
+		var srcNodeCount = srcNodes.length;
+		var srcIndex = 0;
+
+		var initComparedTargetObjs = [];
+		var initComparedSrcObjs = [];
+
+		var objCompareOptions = {
+			compareLinkedConnectorCount: false,
+			compareCharge: !op.ignoreCharge,
+			compareHydrogenCount: false,
+			compareConnectedObjCount: false,
+			compareBondOrder: !op.ignoreBondOrder
+		};
+
+		var compareResult = false;
+		while (!compareResult && (srcIndex < srcNodeCount))
+		{
+			compareResult = SM._compareNode(targetStartingNode, srcNodes[srcIndex], initComparedTargetObjs, initComparedSrcObjs, objCompareOptions);
+			++srcIndex;
+		}
+
+		//if (srcIndex >= srcNodeCount)  // can not find
+		if (!compareResult)
+			return false;
+		else
+		{
+			return AU.toUnique(compareResult);
+		}
+	},
+
+	/*
+	__reportComparedObjsChange: function(objs, tag)
+	{
+		var nodeIds = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var o = objs[i];
+			if (o.getId)
+				nodeIds.push(o.getId());
+		}
+		var s = '[' + nodeIds.join(', ') + ']';
+		if (tag)
+			s = '(' + tag + ') ' + s;
+		console.log(s);
+	},
+	*/
+
+	/** @private */
+	_addToComparedObjs: function(obj, comparedObjs, tag)
+	{
+		/*
+		if (comparedObjs.indexOf(obj) >= 0)
+			console.log('dup', tag, obj.getId());
+		*/
+		//AU.pushUnique(comparedObjs, obj);
+		comparedObjs.push(obj);
+		//obj.setRenderOption('color', 'red');
+
+		//SM.__reportComparedObjsChange(comparedObjs, tag);
+	},
+	/** @private */
+	_removeFromComparedObjs: function(obj, comparedObjs, tag)
+	{
+		//AU.remove(comparedObjs, obj);
+		var index = comparedObjs.indexOf(obj);
+		comparedObjs.length = index;
+		//obj.setRenderOption('color', null);
+
+		//SM.__reportComparedObjsChange(comparedObjs, tag);
+	},
+	/** @private */
+	_isSameMappedObj: function(targetObj, srcObj, comparedTargetObjs, comparedSrcObjs)
+	{
+		var srcIndex = comparedSrcObjs.indexOf(srcObj);
+		var targetIndex = comparedTargetObjs.indexOf(targetObj);
+		return (srcIndex >= 0) && (srcIndex === targetIndex);
+	},
+	/** @private */
+	_compareComparedNeighbors: function(targetObjs, srcObjs, allComparedTargetObjs, allComparedSrcObjs)
+	{
+		if (targetObjs.length > srcObjs.length)
+			return false;
+
+		var targetIndexes = [];
+		for (var i = 0, l = targetObjs.length; i < l; ++i)
+		{
+			targetIndexes.push(allComparedTargetObjs.indexOf(targetObjs[i]));
+		}
+		//targetIndexes.sort();
+		var srcIndexes = [];
+		for (var i = 0, l = srcObjs.length; i < l; ++i)
+		{
+			srcIndexes.push(allComparedSrcObjs.indexOf(srcObjs[i]));
+		}
+		//srcIndexes.sort();
+
+		for (var i = 0, l = targetIndexes.length; i < l; ++i)
+		{
+			if (srcIndexes.indexOf(targetIndexes[i]) < 0)
+				return false;
+		}
+		return true;
+	},
+
+	/** @private */
+	_compareNode: function(targetNode, srcNode, comparedTargetObjs, comparedSrcObjs, compareOptions)
+	{
+		/*
+		if (SM._isSameMappedObj(targetNode, srcNode, comparedTargetObjs, comparedSrcObjs))
+			return true;
+
+		var compareOptions = {
+			compareLinkedConnectorCount: false,
+			compareCharge: false,
+			compareHydrogenCount: false
+		};
+		*/
+
+		if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+			return false;
+		else
+		{
+			var targetConnectorCount = targetNode.getLinkedConnectorCount();
+			var srcConnectorCount = srcNode.getLinkedConnectorCount();
+			if (targetConnectorCount > srcConnectorCount)
+				return false;
+
+			var dupComparedTargetObjs = AU.clone(comparedTargetObjs);
+			var dupComparedSrcObjs = AU.clone(comparedSrcObjs);
+			SM._addToComparedObjs(targetNode, dupComparedTargetObjs, 'target');
+			SM._addToComparedObjs(srcNode, dupComparedSrcObjs, 'src');
+			/*
+			SM._addToComparedObjs(targetNode, comparedTargetObjs, 'target');
+			SM._addToComparedObjs(srcNode, comparedSrcObjs, 'src');
+			*/
+
+			/*
+			var targetConnectors = AU.exclude(AU.clone(targetNode.getLinkedConnectors()), comparedTargetObjs);
+			var srcConnectors = AU.exclude(AU.clone(srcNode.getLinkedConnectors()), comparedSrcObjs);
+			*/
+			var targetConnectors = AU.clone(targetNode.getLinkedConnectors());
+			var srcConnectors = AU.clone(srcNode.getLinkedConnectors());
+
+			var targetComparedConnectors = AU.intersect(targetConnectors, dupComparedTargetObjs);
+			var srcComparedConnectors = AU.intersect(srcConnectors, dupComparedSrcObjs);
+
+			var result = true;
+			if (!SM._compareComparedNeighbors(targetComparedConnectors, srcComparedConnectors, dupComparedTargetObjs, dupComparedSrcObjs))
+				result = false;
+			else
+			{
+				targetConnectors = AU.exclude(targetConnectors, targetComparedConnectors);
+				srcConnectors = AU.exclude(srcConnectors, srcComparedConnectors);
+				if (targetConnectors.length > srcConnectors.length)
+					result = false;
+			}
+
+			var nextComparedObjs = [];
+			while (result && targetConnectors.length)
+			{
+				var compareResult = false;
+				var targetConn = targetConnectors.shift();
+				var srcIndex = 0;
+				var srcConn;
+				while (srcConnectors.length && !compareResult && (srcIndex < srcConnectors.length))
+				{
+					srcConn = srcConnectors[srcIndex];
+					compareResult = SM._compareConnector(targetConn, srcConn, dupComparedTargetObjs, dupComparedSrcObjs, compareOptions);
+					if (compareResult)
+						nextComparedObjs = nextComparedObjs.concat(compareResult);
+					++srcIndex;
+				}
+				if (!compareResult)  // can not find match connector
+				{
+					result = false;
+					break;
+				}
+				else
+					AU.remove(srcConnectors, srcConn);
+			}
+
+			/*
+			if (!result)  // remove targetConn and srcConn from compared
+			{
+				SM._removeFromComparedObjs(targetNode, comparedTargetObjs, 'target');
+				SM._removeFromComparedObjs(srcNode, comparedSrcObjs, 'src');
+			}
+			*/
+
+			if (result)  // compare success, returns all compared objects
+				result = [srcNode].concat(nextComparedObjs) //dupComparedSrcObjs;
+			return result;
+		}
+	},
+
+	/** @private */
+	_compareConnector: function(targetConn, srcConn, comparedTargetObjs, comparedSrcObjs, compareOptions)
+	{
+		/*
+		if (SM._isSameMappedObj(targetConn, srcConn, comparedTargetObjs, comparedSrcObjs))
+			return true;
+
+		var compareOptions = {
+			compareConnectedObjCount: false
+		};
+		*/
+
+		if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+			return false;
+		else
+		{
+			var targetConnectedObjCount = targetConn.getConnectedObjCount();
+			var srcConnectedObjCount = srcConn.getConnectedObjCount();
+			if (targetConnectedObjCount > srcConnectedObjCount)
+				return false;
+
+			var dupComparedTargetObjs = AU.clone(comparedTargetObjs);
+			var dupComparedSrcObjs = AU.clone(comparedSrcObjs);
+			SM._addToComparedObjs(targetConn, dupComparedTargetObjs, 'target');
+			SM._addToComparedObjs(srcConn, dupComparedSrcObjs, 'src');
+			/*
+			SM._addToComparedObjs(targetConn, comparedTargetObjs, 'target');
+			SM._addToComparedObjs(srcConn, comparedSrcObjs, 'src');
+			*/
+
+			/*
+			var targetConnectedObjs = AU.exclude(AU.clone(targetConn.getConnectedObjs()), comparedTargetObjs);
+			var srcConnectedObjs = AU.exclude(AU.clone(srcConn.getConnectedObjs()), comparedSrcObjs);
+			*/
+			var targetConnectedObjs = AU.clone(targetConn.getConnectedObjs());
+			var srcConnectedObjs = AU.clone(srcConn.getConnectedObjs());
+
+			var targetComparedObjs = AU.intersect(targetConnectedObjs, dupComparedTargetObjs);
+			var srcComparedObjs = AU.intersect(srcConnectedObjs, dupComparedSrcObjs);
+
+			var result = true;
+			if (!SM._compareComparedNeighbors(targetComparedObjs, srcComparedObjs, dupComparedTargetObjs, dupComparedSrcObjs))
+				result = false;
+			else
+			{
+				targetConnectedObjs = AU.exclude(targetConnectedObjs, targetComparedObjs);
+				srcConnectedObjs = AU.exclude(srcConnectedObjs, srcComparedObjs);
+				if (targetConnectedObjs.length > srcConnectedObjs.length)
+					result = false;
+			}
+
+			var nextComparedObjs = [];
+			while (result && targetConnectedObjs.length)
+			{
+				var compareResult = false;
+				var targetObj = targetConnectedObjs.shift();
+				var srcIndex = 0;
+				var srcObj;
+				while (srcConnectedObjs.length && !compareResult && (srcIndex < srcConnectedObjs.length))
+				{
+					srcObj = srcConnectedObjs[srcIndex];
+					if (srcObj.getClass() !== targetObj.getClass())
+						compareResult = false;
+					else if (srcObj instanceof Kekule.ChemStructureNode)
+						compareResult = SM._compareNode(targetObj, srcObj, dupComparedTargetObjs, dupComparedSrcObjs, compareOptions);
+					else if (srcObj instanceof Kekule.ChemStructureConnector)
+						compareResult = SM._compareConnector(targetObj, srcObj, dupComparedTargetObjs, dupComparedSrcObjs, compareOptions);
+					else
+						compareResult = false;
+
+					if (compareResult)
+						nextComparedObjs = nextComparedObjs.concat(compareResult);
+
+					++srcIndex;
+				}
+				if (!compareResult)  // can not find match connector
+				{
+					result = false;
+					break;
+				}
+				else
+					AU.remove(srcConnectedObjs, srcObj);
+			}
+
+			/*
+			if (!result)  // remove targetConn and srcConn from compared
+			{
+				SM._removeFromComparedObjs(targetConn, comparedTargetObjs, 'target');
+				SM._removeFromComparedObjs(srcConn, comparedSrcObjs, 'src');
+			}
+			*/
+
+			if (result)  // compare success, returns all compared objects
+				result = [srcConn].concat(nextComparedObjs);  //dupComparedSrcObjs;
+
+			return result;
+		}
+	}
+};
+
+var SM = Kekule.ChemStructureSearcher;
+
+ClassEx.extend(Kekule.StructureFragment, {
+	/**
+	 * Search sub structure in this fragment.
+	 * @param {Kekule.StructureFragment} subStructure Structure to find.
+	 * @param {Hash} options Search options, can include the following fields:
+	 *   {
+	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching.
+	 *     ignoreCharge: Bool
+	 *     ignoreBondOrder: Bool
+	 *   }
+	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
+	 *   Otherwise false will be returned.
+	 */
+	search: function(subStructure, options)
+	{
+		return SM.findSubStructure(subStructure, this, options);
+	}
+});
+
+})();

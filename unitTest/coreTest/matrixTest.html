@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Matrix Calculation Test</title>
+<script src="../JSTest/src/jstest.js"></script>
+<script src="../../src/kekule.js"></script>
+<script>
+	var M = Kekule.MatrixUtils;
+	var MatrixTestCase = JSTest.TestCase({
+		name: 'Matrix Calculation Test',
+		init: function () {
+			//console.log('create');
+	    // this is called only once, before any tests are run
+			this.m1 = M.create(3, 3, [
+				1, 0, 0,
+				0, 1, 0,
+				0, 0, 1
+			]);
+			this.m2 = M.create(3, 3, [
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]);
+			this.m3 = M.create(3, 2, [
+				2, 4,
+				1, 5,
+				3, 2
+			]);
+	  },
+		setup: function()
+		{
+		},
+		cleanup: function()
+		{
+		},
+		testMatrixAdd: function()
+		{
+			var r = M.add(this.m1, this.m2);
+			//console.log(this.m1, this.m2, r);
+			this.assertEqual(M.getValue(r, 1, 1), 2);
+			
+			this.assertEqual(M.getValue(r, 1, 2), 1);
+			this.assertEqual(M.getValue(r, 2, 1), 1);
+			this.assertEqual(M.getValue(r, 3, 3), 2);
+		},
+		testMatrixMultiply: function()
+		{
+			var r = M.multiply(this.m2, this.m3);
+			//console.log(r);
+			this.assertEqual(M.getValue(r, 1, 1), 6);
+			this.assertEqual(M.getValue(r, 3, 2), 11);
+		}
+	});
+	
+	function init()
+	{
+		var myDiv = document.getElementById('output');
+		//JSTest.run(false, JSTest.handlers.HTMLHandler, myDiv);
+		JSTest.run(true, JSTest.handlers.FirebugHandler);
+		//JSTest.run();
+	}
+</script>
+</head>
+<body onload="init()">
+	<div id="output"></div>
+</body>
+</html>

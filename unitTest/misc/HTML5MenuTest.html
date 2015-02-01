@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML5 Menu Test</title>
+</head>
+<body contextmenu="supermenu">
+
+<menu type="toolbar">
+  <li>
+    <menu label="File">
+      <button type="button" onclick="newa()">New...</button>
+      <button type="button" onclick="save()">Save...</button>
+    </menu>
+  </li>
+  <li>
+    <menu label="Edit">
+      <button type="button" onclick="cut()">Cut...</button>
+      <button type="button" onclick="copy()">Copy...</button>
+      <button type="button" onclick="paste()">Paste...</button>
+    </menu>
+  </li>
+</menu>
+
+<menu type="context" id="supermenu">
+  <menuitem label="rotate" onclick="rotate()" icon="http://cdn1.iconfinder.com/data/icons/silk2/arrow_rotate_clockwise.png"></menuitem>
+  <menuitem label="resize" onclick="resize()" icon="http://cdn3.iconfinder.com/data/icons/fugue/icon/image-resize.png"></menuitem>
+  <menu label="share">
+    <menuitem label="twitter" onclick="alert('foo')"></menuitem>
+    <menuitem label="facebook" onclick="alert('bar')"></menuitem>
+  </menu>
+</menu>
+
+</body>
+</html>

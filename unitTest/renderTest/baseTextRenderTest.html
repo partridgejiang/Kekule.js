@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Rich Text Draw Test</title>
+<style>
+	#raphaelParent1 svg
+	{
+		background-color: #fff;
+		border: 2px solid black;
+	}
+</style>
+<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+<script src="../../src/kekule.js"></script>
+
+<script>
+
+	var rt0 = {
+		"role": "group",
+		"items": [{
+			"role": "group",
+			"items": [
+				{
+					"role": "section",
+					"text": "13",
+					"textType": "superscript",
+					"_noAlignRect": true
+				},
+				{
+				"role": "group",
+				"items": [{
+					"text": "C"
+				}]
+			}, {
+				"text": "2+",
+				"textType": "superscript"
+			}]
+		}, {
+			"role": "group",
+			"items": [{
+				"text": "H"
+			}, {
+				"text": "3",
+				"textType": "subscript"
+			}]
+		}]
+	};
+	var anchor = {"text":"C","charDirection":1, 'color': '#d00', 'fontSize1': 30, 'fontWeight': 'bolder', 'fontStyle': 'italic'};
+	var rt1 = {
+		"role": "group",
+		"items": [{
+			"role": "group",
+			"items": [
+			{
+				"role": "group",
+				"items": [
+					{
+						"role": "section",
+						"text": "13",
+						"textType": "superscript",
+						"_noAlignRect": true
+					},
+					anchor
+				],
+				"anchorItem": anchor
+			}, {
+				"text": "2+",
+				"textType": "superscript",
+				"charDirection": 1
+			}],
+			"charDirection": 1
+		}, {
+			"role": "group",
+			"items": [{
+				"text": "H"
+			}, {
+				"text": "3",
+				"textType": "subscript"
+			}],
+			"charDirection": 1
+		}]
+	};
+	rt1.anchorItem = rt1.items[0];
+	rt1.items[0].anchorItem = rt1.items[0].items[0];
+
+	var anchor2 = {
+				"text": "O"
+			};
+	var rt2 = {
+		"role": "group",
+		"items": [{
+			"role": "group",
+			"items": [{
+				"text": "["
+			}, anchor2, {
+				"text": ","
+			}, {
+				"text": "S"
+			}, {
+				"text": ","
+			}, {
+				"text": "F"
+			}, {
+				"text": ","
+			}, {
+				"text": "Cl"
+			}, {
+				"text": ","
+			}, {
+				"text": "Br"
+			}, {
+				"text": ","
+			}, {
+				"text": "I"
+			}, {
+				"text": ","
+			}, {
+				"text": "Se"
+			}, {
+				"text": ","
+			}, {
+				"text": "Te"
+			}, {
+				"text": "]"
+			}],
+			"anchorItem": anchor2,
+			"charDirection": 1
+		}, {
+			"text": "H"
+		}],
+		"anchorItem": anchor2
+	};
+	var rt3 = {"role": "group", "charDirection": 2,
+    items: [
+      {"role": "section", "text": 'abcdefghijk', "charDirection": 1},
+      {"role": "section", "text": 'line2', "charDirection": 1}
+    ]};
+	var rts = [rt0, rt1, rt2, rt3];
+
+	/*
+	rt0 = {
+		'role': 'seq',
+		'items': [
+			{'role': 'section', 'text': 'text1'},
+			{'role': 'section', 'text': 'text2',  'fontSize': 30}
+		]
+	};
+	var rts = [rt0];
+	*/
+
+
+
+	var paper;
+	var drawBoxWidth = 1000;
+	var drawBoxHeight = 1000;
+	function getPaper()
+	{
+		if (!paper)
+			paper = Raphael('raphaelParent', drawBoxWidth, drawBoxHeight);
+		return paper;
+	}
+	function getContext()
+	{
+		var elem = document.getElementById('canvasContext');
+		return elem.getContext('2d');
+	}
+
+	function getFontSize()
+	{
+		return parseInt(document.getElementById('selectFontSize').value);
+	}
+	function getTextAlign()
+	{
+		var r = {};
+		//console.log(typeof(document.getElementById('selectHorizontalAlign').value));
+		r.horizontalAlign = parseInt(document.getElementById('selectHorizontalAlign').value);
+		r.verticalAlign = parseInt(document.getElementById('selectVerticalAlign').value);
+		return r;
+	};
+	function getAnchorAlign()
+	{
+		var r = {};
+		r.x = parseInt(document.getElementById('selectAnchorXAlign').value);
+		r.y = parseInt(document.getElementById('selectAnchorYAlign').value);
+		//console.log(r);
+		return r;
+	};
+	function getBridgeId()
+	{
+		return document.getElementById('selectBridge').value
+	}
+
+	function drawRichText()
+	{
+    var startTime = (new Date()).getTime();
+		var useRaphael = getBridgeId() == 'raphael';
+
+		document.getElementById('raphaelParent').style.display = useRaphael? 'block': 'none';
+		document.getElementById('canvasContext').style.display = useRaphael? 'none': 'block';
+
+		if (!useRaphael)
+		{
+			var bridge = new Kekule.Render.CanvasRendererBridge();
+			var ctx = getContext();
+			ctx.clearRect(0, 0, drawBoxWidth, drawBoxHeight);
+		}
+		else
+		{
+			var bridge = new Kekule.Render.RaphaelRendererBridge();
+			var ctx = getPaper();
+			ctx.clear();
+		}
+
+		var textAlign = getTextAlign();
+		var anchorAlign = getAnchorAlign();
+		var x, y;
+		var partWidth = 220;
+		var partHeight = 220;
+		//var drawer = new Kekule.Render.RaphaelRichTextDrawer();
+		var config = Kekule.Render.getRender2DConfigs();
+
+		var drawer = new Kekule.Render.BaseRichTextDrawer(bridge);
+		//drawer.fillOptions(config);
+		//console.log(drawer.options);
+		for (var i = 0, l = rts.length; i < l; ++i)
+		{
+			var rt = rts[i];
+			for (var j = Kekule.Render.TextDirection.LTR; j <= Kekule.Render.TextDirection.BTT; ++j)
+			{
+				/*
+				if (j !== Kekule.Render.TextDirection.TTB)
+					continue;
+				*/
+				var x = (j - Kekule.Render.TextDirection.LTR) * partWidth + partWidth / 2;
+				var y = i * partHeight + partHeight / 2;
+
+				if (useRaphael)
+				{
+					var lineSet = ctx.set();
+					lineSet.push(ctx.line(x - partWidth / 2, y, x + partWidth / 2, y));
+					lineSet.push(ctx.line(x, y - partHeight / 2, x, y + partHeight / 2));
+					lineSet.attr({'stroke': '#f00'});
+				}
+				else
+				{
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = '#f00';
+					ctx.beginPath();
+					ctx.moveTo(x - partWidth / 2, y);
+					ctx.lineTo(x + partWidth / 2, y)
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(x, y - partHeight / 2);
+					ctx.lineTo(x, y + partHeight / 2)
+					ctx.stroke();
+				}
+				/*
+				drawer.drawRichText(p, x, y, rt, {
+					'fontSize': getFontSize(),
+					'fontFamily': 'Times new Roman',
+					'charDirection': j,
+					'horizontalAlign': textAlign.horizontalAlign,
+					'verticalAlign': textAlign.verticalAlign,
+					'textBoxXAlignment': anchorAlign.x,
+					'textBoxYAlignment': anchorAlign.y
+				});
+				*/
+				drawer.draw(ctx, {'x': x, 'y': y}, rt, {
+					'fontSize': getFontSize(),
+					'fontFamily': 'Times new Roman',
+					'charDirection': j,
+					'horizontalAlign': textAlign.horizontalAlign,
+					'verticalAlign': textAlign.verticalAlign,
+					'textBoxXAlignment': anchorAlign.x,
+					'textBoxYAlignment': anchorAlign.y,
+          'color': '#000000',
+          'supFontSizeRatio': 0.66,
+          'subFontSizeRatio': 0.66
+					//'textBoxAlignmentMode': Kekule.Render.TextBoxAlignmentMode.ANCHOR
+				});
+			}
+		}
+    var endTime = (new Date()).getTime();
+    var duration = endTime - startTime;
+    document.getElementById('report').innerHTML = 'Draw in: ' + duration + 'ms';
+	}
+
+	function init()
+	{
+		drawRichText();
+	}
+
+</script>
+
+</head>
+<body  onload = "init()">
+  <div id="report"></div>
+	<form>
+		<label for="selectBridge">Bridge</label>
+		<select id="selectBridge" name="selectBridge" onchange="drawRichText()">
+			<option value="canvas">Canvas</option>
+			<option value="raphael">Raphael</option>
+		</select>
+		<label for="selectFontSize">Font Size</label>
+		<select id="selectFontSize" name="selectFontSize" onchange="drawRichText()">
+			<option value="10">10</option>
+			<option value="15">15</option>
+			<option value="20">20</option>
+			<option value="25">25</option>
+			<option value="30">30</option>
+			<option value="35">35</option>
+			<option value="40">40</option>
+			<option value="45">45</option>
+			<option value="50">50</option>
+			<option value="55">55</option>
+			<option value="60">60</option>
+		</select>
+		<label for="selectHorizontalAlign">Horizontal Align</label>
+		<select id="selectHorizontalAlign" name="selectHorizontalAlign" onchange="drawRichText()">
+			<option value="1">LEFT</option>
+			<option value="2">RIGHT</option>
+			<option value="3">TOP</option>
+			<option value="4">BOTTOM</option>
+			<option value="5">CENTER</option>
+		</select>
+		<label for="selectVerticalAlign">Vertical Align</label>
+		<select id="selectVerticalAlign" name="selectVerticalAlign" onchange="drawRichText()">
+			<option value="1">LEFT</option>
+			<option value="2">RIGHT</option>
+			<option value="3">TOP</option>
+			<option value="4">BOTTOM</option>
+			<option value="5">CENTER</option>
+		</select>
+		<label for="selectAnchorXAlign">Anchor X Align</label>
+		<select id="selectAnchorXAlign" name="selectAnchorXAlign" onchange="drawRichText()">
+			<option value="0">LEFT</option>
+			<option value="1">RIGHT</option>
+			<option value="2">CENTER</option>
+		</select>
+		<label for="selectAnchorYAlign">Anchor Y Align</label>
+		<select id="selectAnchorYAlign" name="selectAnchorYAlign" onchange="drawRichText()">
+			<option value="0">TOP</option>
+			<option value="1">BOTTOM</option>
+			<option value="2">CENTER</option>
+		</select>
+	</form>
+	<div id="raphaelParent">
+	</div>
+	<canvas id="canvasContext" width="1000" height="1000"></canvas>
+
+</body>
+</html>

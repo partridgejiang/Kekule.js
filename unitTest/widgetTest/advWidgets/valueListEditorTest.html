@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Value List Editor Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    var editor;
+    function testValueListEditor()
+    {
+      editor = new Kekule.Widget.ValueListEditor(document);
+      editor.appendToElem($('stage'));
+      var hash = {
+        'keyStr': 'ValString',
+        'keyInt': 22,
+        'keyFloat': 3.124556,
+        'keySci': 3.12323e32,
+        'keyBool': true,
+        'keyObj': {
+          'f1': 12,
+          'f2': 'v2'
+        }
+      };
+      editor.setHash(hash);
+      var row = editor.appendRow({'key': 'special', 'value': 'v2'});
+      editor.setRowEditInfo(row, {
+        'widgetClass': Kekule.Widget.SelectBox,
+        'propValues': {
+          'items': [
+            {'value': '"v1"'},
+            {'value': '"v2"'},
+            {'value': '"v3"'}
+          ]
+        }
+      });
+    };
+
+    var objInspector;
+    var rootObj1, rootObj2;
+    function testObjInspector()
+    {
+      objInspector = new Kekule.Widget.ObjPropListEditor(document);
+      objInspector.setDisplayedPropScopes([Class.PropertyScope.PUBLIC, Class.PropertyScope.PUBLISHED]);
+      objInspector.appendToElem($('stage2'));
+      rootObj1 = new Kekule.Atom('atom1', 'C', 13);
+      rootObj2 = new Kekule.Bond('bond1');
+      objInspector.setObjects([rootObj2]); //, rootObj2]);
+    }
+
+    function init()
+    {
+      testValueListEditor();
+      testObjInspector();
+    };
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="stage" style="float:left"></div>
+  <div id="stage2" style="float:left"></div>
+</body>
+</html>

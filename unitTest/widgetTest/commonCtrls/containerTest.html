@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Widget Container Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    var cntr1;
+    function testBaseContainer()
+    {
+      cntr1 = new Kekule.Widget.Container(document);
+      cntr1.appendToElem($('container1'));
+      cntr1.setChildWidth('250px');
+
+      var b = new Kekule.Widget.Button(cntr1, 'button1');
+      var b = new Kekule.Widget.Button(cntr1, 'button2');
+      var b = new Kekule.Widget.Button(cntr1, 'button3');
+      var bIns = new Kekule.Widget.Button(document, 'buttonIns');
+      cntr1.insertWidgetBefore(bIns, b);
+    }
+
+    var btnGroup;
+    function testButtonGroup()
+    {
+      btnGroup = new Kekule.Widget.ButtonGroup(document);
+      btnGroup.appendToElem($('container2'));
+      var b = new Kekule.Widget.Button(btnGroup, 'button1');
+      var b = new Kekule.Widget.Button(btnGroup, 'button2');
+      var b = new Kekule.Widget.Button(btnGroup, 'button3');
+    }
+
+    function init()
+    {
+      testBaseContainer();
+      testButtonGroup();
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="container1"></div>
+  <div id="container2"></div>
+</body>
+</html>

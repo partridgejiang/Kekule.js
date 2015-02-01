@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Widget Tree View Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    var treeView;
+    function testTreeView()
+    {
+      treeView = new Kekule.Widget.TreeView($('tree1'));
+      treeView.setItemInitialExpanded(true);
+      treeView.appendChildItem(null, {
+        'text': 'root',
+        children: [
+          {
+            'text': 'child1',
+            'children': [
+              {'text': 'more1'},
+              {'text': 'more2'}
+            ]
+          },
+          {'text': 'child2'}
+        ]
+      });
+    };
+
+    function init()
+    {
+      testTreeView();
+    };
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="tree1"></div>
+</body>
+</html>

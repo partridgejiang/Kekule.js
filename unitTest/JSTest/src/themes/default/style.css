@@ -1,0 +1,221 @@
+body {
+	font-family: verdana, arial, helvetica, sans-serif;
+	margin: 0px;
+	padding: 0px;
+	}
+
+.clear {
+	clear: both;
+	}
+
+#header {
+	background: #000;
+	margin: 0px 0px 10px;
+	padding: 10px;
+	}
+
+h1 {
+	color: #fff;
+	float: left;
+	font-size: 16pt;
+	font-weight: normal;
+	margin: 0px;
+	}
+
+#counts-container {
+	float: right;
+	}
+
+#counts-container h3 {
+	color: #555;
+	display: inline;
+	float: left;
+	font-size: 13pt;
+	font-weight: bold;
+	margin: 0px;
+	padding: 6px 10px;
+	}
+
+#test-counts {
+	color: #ccc !important;
+	float: left;
+	font-size: 10px;
+	font-weight: normal;
+	}
+
+#assertion-counts {
+	color: #ccc !important;
+	float: left;
+	font-size: 10px;
+	font-weight: normal;
+	margin-right: 40px;
+	}
+
+.passed-count {
+	color: #00ed06;
+	}
+
+.failed-count {
+	color: #f00;
+	}
+
+.count {
+	text-align: right;
+	}
+
+#test-results {
+	margin: 0px;
+	}
+
+#jstest-shortcuts-container {
+	background: #e5e5e5;
+	font-size: small;
+	margin: -10px 0px 10px;
+	padding: 10px;
+	}
+
+#jstest-shortcuts-header {
+	font-weight: bold;
+	}
+
+#jstest-shortcuts {
+	line-height: 1.4em;
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	}
+
+li.jstest-shortcut {
+	
+	}
+
+a.jstest-shortcut {
+	color: #000;
+	}
+
+a.jstest-shortcut:hover {
+	text-decoration: none;
+	}
+
+a.jstest-shortcut.divider {
+	font-size: 1.2em;
+	}
+
+a.jstest-shortcut.error {
+	color: #a00;
+	font-size: 0.9em;
+	}
+
+.jstest-test-container {
+	margin: 0px 10px;
+	}
+
+.jstest-test-case {
+	border-collapse: collapse;
+	margin: 0px 0px 16px;
+	width: 100%;
+	text-align: left;
+	}
+
+.jstest-test-case caption {
+	border-bottom: 1px solid #aaa;
+	font-size: 14pt;
+	line-height: 1.6em;
+	padding: 6px 0px;
+	text-align: left;
+	}
+
+.jstest-test-case caption .test-case-result-label {
+	color: #fff;
+	float: right;
+	font-size: 9pt;
+	line-height: 14pt;
+	margin: 0px 8px;
+	padding: 4px 8px;
+	}
+
+.jstest-test-case caption .test-case-result-label.pass {
+	background: #545E4D;
+	}
+
+.jstest-test-case caption .test-case-result-label.fail {
+	background: #5B1215;
+	}
+
+.jstest-test-case thead tr th {
+	border: 0px;
+	border-top: 1px solid #000;
+	border-bottom: 1px solid #000;
+	color: #000;
+	font-weight: normal;
+	}
+
+.jstest-test-case tr {
+	
+	}
+
+.jstest-test-case tr.pass {
+	background: #D7F0C4;
+	color: #545E4D;
+	}
+
+.jstest-test-case tr.fail {
+	background: #FAB8C0;
+	color: #5B1215;
+	}
+
+.jstest-test-case th,
+.jstest-test-case td {
+	border: 1px solid #fff;
+	font-size: 10pt;
+	padding: 3px 6px;
+	}
+
+.jstest-test-case td {
+	
+	}
+
+.jstest-test-case .test {
+	width: 36%;
+	}
+
+.jstest-test-case .status {
+	width: 60px;
+	}
+
+.jstest-test-case .message .jstest-test-message {
+	display: block;
+	line-height: 1.4em;
+	}
+
+.jstest-test-case .message .jstest-test-message img {
+	margin: 2px 6px -2px 0px;
+	}
+
+.jstest-test-case .message .jstest-test-message.fail img {
+	margin: 2px 6px -3px 0px;
+	}
+
+.jstest-test-case .testerror {
+	background: url("cancel.png");
+	float: left;
+	height: 16px;
+	margin: 2px 6px 0px 0px;
+	width: 16px;
+	}
+
+.jstest-test-case .testmessage {
+	background-image: url("tick.png");
+	float: left;
+	height: 16px;
+	margin: 2px 6px 0px 0px;
+	width: 16px;
+	}
+
+.jstest-divider {
+	background: #555;
+	border-bottom: 6px solid #aaa;
+	color: #fff;
+	margin: 20px 0px;
+	padding: 10px;
+	}

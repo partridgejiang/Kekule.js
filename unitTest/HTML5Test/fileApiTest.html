@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>File API Test</title>
+<script>
+	function reactFileChange()
+	{
+		var files = document.getElementById('fileInput').files;
+		// handle first only
+		var file = files[0];
+		var info = '';
+		info += 'Name: ' + file.name + '\nSize: ' + file.size + '\nMIME type: ' + file.type;
+		document.getElementById('info').innerHTML = info;
+		var reader = new FileReader();
+		reader.onload = function(e)
+			{
+				document.getElementById('content').innerHTML = e.target.result;
+			}
+		reader.readAsText(file);
+		
+	}
+	function init()
+	{
+		document.getElementById('fileInput').onchange = reactFileChange;
+	}
+</script>
+</head>
+<body onload="init()">
+	<form>
+		<input type="file" id="fileInput" />
+	</form>
+	<pre id="info"></pre>
+	<hr />
+	<pre id="content">
+		[File Content]
+	</pre>
+</body>
+</html>

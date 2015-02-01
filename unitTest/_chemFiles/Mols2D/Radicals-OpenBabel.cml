@@ -1,0 +1,18 @@
+<molecule id="Radicals.cdx">
+ <atomArray>
+  <atom id="a1" elementType="C" formalCharge="-1" x2="-0.714500" y2="0.412500"/>
+  <atom id="a2" elementType="C" formalCharge="1" x2="-0.714500" y2="-0.412500"/>
+  <atom id="a3" elementType="C" formalCharge="-1" spinMultiplicity="2" x2="0.000000" y2="-0.825000"/>
+  <atom id="a4" elementType="C" formalCharge="1" spinMultiplicity="2" x2="0.714500" y2="-0.412500"/>
+  <atom id="a5" elementType="C" spinMultiplicity="1" x2="0.714500" y2="0.412500"/>
+  <atom id="a6" elementType="C" spinMultiplicity="2" x2="0.000000" y2="0.825000"/>
+ </atomArray>
+ <bondArray>
+  <bond atomRefs2="a1 a2" order="1"/>
+  <bond atomRefs2="a2 a3" order="1"/>
+  <bond atomRefs2="a3 a4" order="1"/>
+  <bond atomRefs2="a4 a5" order="1"/>
+  <bond atomRefs2="a5 a6" order="1"/>
+  <bond atomRefs2="a6 a1" order="1"/>
+ </bondArray>
+</molecule>

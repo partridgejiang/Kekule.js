@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>MDL Read test</title>
+<script src="../../src/kekule.js"></script>
+<!--
+<script src="../../src/_compressed/kekule.compressed.js"></script>
+-->
+</head>
+<script>
+	function readCtab()
+	{
+		var text = document.getElementById('memoInput').value;
+		var reader = new Kekule.IO.Mdl2kCTabReader();
+		var r = reader.readBlock(text, null);
+		console.log(r);
+	}
+	function readMol()
+	{
+		var text = document.getElementById('memoInput').value;
+		//var reader = new Kekule.IO.Mdl2kMoleculeReader();
+		var reader = new Kekule.IO.MdlMoleculeReader();
+		var r = reader.readBlock(text, null);
+		var jsonObj = {};
+		r.saveObj(jsonObj);
+		console.log(r);
+		console.log(jsonObj);
+		return r;
+	}
+	function readRxn()
+	{
+		var text = document.getElementById('memoInput').value;
+		//var reader = new Kekule.IO.Mdl2kReactionReader();
+		var reader = new Kekule.IO.MdlReactionReader();
+		var r = reader.readBlock(text, null);
+		var jsonObj = {};
+		r.saveObj(jsonObj);
+		console.log(r);
+		console.log(jsonObj);
+		return r;
+	}
+	function readRxn3k()
+	{
+		var text = document.getElementById('memoInput').value;
+		var reader = new Kekule.IO.Mdl3kReactionReader();
+		var r = reader.readBlock(text, null);
+		var jsonObj = {};
+		r.saveObj(jsonObj);
+		console.log(r);
+		console.log(jsonObj);
+	}
+	function readGen(readDoc)
+	{
+		var text = document.getElementById('memoInput').value;
+		var reader = new Kekule.IO.MdlReader();
+		var r;
+		if (readDoc)
+			r = reader.readDocument(text);
+		else
+			r = reader.readData(text);
+		var jsonObj = {};
+		r.saveObj(jsonObj);
+		console.log(r);
+		console.log(jsonObj);
+		return r;
+	}
+	function readCtab3k()
+	{
+		var text = document.getElementById('memoInput').value;
+		var reader = new Kekule.IO.Mdl3kCTabReader();
+		var r = reader.readBlock(text, null);
+		console.log(r);
+	}
+	function rewriteMol3k()
+	{
+		var mol = readMol();
+		var writer = new Kekule.IO.MdlMoleculeWriter(Kekule.IO.MdlVersion.V3000);
+		var s = writer.writeBlock(mol);
+		document.getElementById('memoOutput').value = s;
+	}
+	function rewriteMol2k()
+	{
+		var mol = readMol();
+		var writer = new Kekule.IO.MdlMoleculeWriter(Kekule.IO.MdlVersion.V2000);
+		var s = writer.writeBlock(mol);
+		document.getElementById('memoOutput').value = s;
+	}
+	function rewriteRxn(is3kMode)
+	{
+		var r = readRxn();
+		var writer = new Kekule.IO.MdlReactionWriter(is3kMode? Kekule.IO.MdlVersion.V3000: Kekule.IO.MdlVersion.V2000);
+		var s = writer.writeBlock(r);
+		document.getElementById('memoOutput').value = s;
+	}
+	function rewriteGen(is3kMode)
+	{
+		var obj = readGen();
+		var writer = new Kekule.IO.MdlWriter(is3kMode? Kekule.IO.MdlVersion.V3000: Kekule.IO.MdlVersion.V2000);
+		var s = writer.writeData(obj);
+		document.getElementById('memoOutput').value = s;
+	}
+</script>
+<body>
+	<form>
+		<textarea id="memoInput" name="memoInput" cols="80" rows="10"></textarea>
+	</form>
+		<button value="Read Ctab" onclick="readCtab()">Read Ctab</button>
+		<button value="Read Ctab 3k" onclick="readCtab3k()">Read Ctab 3k</button>
+		<button value="Read MOL" onclick="readMol()">Read Mol Gen</button>
+		<button value="Read RXN" onclick="readRxn()">Read RXN Gen</button>
+		<button value="Read Gen" onclick="readGen()">Read Gen</button>
+		<button value="Read Gen Doc" onclick="readGen(true)">Read Gen Doc</button>
+		<br />
+		<button value="Read MOL" onclick="rewriteMol2k()">Rewrite Mol 2K</button>
+		<button value="Read MOL" onclick="rewriteMol3k()">Rewrite Mol 3K</button>
+		<button value="Read MOL" onclick="rewriteRxn()">Rewrite Rxn 2K</button>
+		<button value="Read MOL" onclick="rewriteRxn(true)">Rewrite Rxn 3K</button>
+		
+		<button value="Rewrite Gen" onclick="rewriteGen()">Rewrite Gen 2k</button>
+		<button value="Rewrite Gen" onclick="rewriteGen(true)">Rewrite Gen 3k</button>
+	<form>
+		<textarea id="memoOutput" name="memoOutput" cols="80" rows="10"></textarea>
+	</form>
+</body>
+</html>

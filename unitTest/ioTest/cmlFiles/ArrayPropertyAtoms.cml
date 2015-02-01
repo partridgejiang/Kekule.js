@@ -1,0 +1,6 @@
+<molecule xmlns="http://www.xml-cml.org/schema/cml2/core">
+  <atomArray
+    atomID="a1 a2 a3"
+    elementType="O N C"
+    hydrogenCount="1 1 3"/>
+</molecule>

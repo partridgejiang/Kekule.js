@@ -1,0 +1,245 @@
+{
+  "defAutoScaleRefLength": 0.825,
+  "root": {
+    "id": "o1",
+    "children": {
+      "id": "o2",
+      "items": [
+        {
+          "_type": "Kekule.Molecule",
+          "id": "m1",
+          "info": {
+            "generator": "ChemDraw",
+            "date": {
+              "_type": "date",
+              "date": "Sun, 01 Jul 2012 15:34:32 GMT"
+            },
+            "_type": "object"
+          },
+          "renderOptions": {
+            "expanded": true,
+            "_type": "object"
+          },
+          "charge": 0,
+          "coord2D": {
+            "x": 4.600961538461538,
+            "y": 4.291357692307692,
+            "_type": "object"
+          },
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Atom",
+                "id": "a1",
+                "charge": 0,
+                "coord2D": {
+                  "x": -0.4125,
+                  "y": -0.3572,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "id": "a2",
+                "charge": 0,
+                "coord2D": {
+                  "x": 0.4125,
+                  "y": -0.3572,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "id": "a3",
+                "charge": 0,
+                "coord2D": {
+                  "x": 0.825,
+                  "y": 0.3572,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "id": "a4",
+                "charge": 0,
+                "coord2D": {
+                  "x": -0.825,
+                  "y": 0.3572,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Bond",
+                "id": "b1",
+                "bondType": "covalent",
+                "bondOrder": 2,
+                "electronCount": 4,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "_type": "Kekule.Bond",
+                "id": "b2",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "_type": "Kekule.Bond",
+                "id": "b3",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  0,
+                  3
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          },
+          "name": "2-3-dimethylbut-2-ene.mol"
+        },
+        {
+          "_type": "Kekule.Molecule",
+          "renderOptions": {
+            "expanded": true,
+            "_type": "object"
+          },
+          "charge": 0,
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Atom",
+                "charge": 0,
+                "coord2D": {
+                  "x": 5.980192323831411,
+                  "y": 2.7061055110051075,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "charge": 0,
+                "coord2D": {
+                  "x": 6.694663281953573,
+                  "y": 3.118605511005107,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Bond",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          }
+        },
+        {
+          "_type": "Kekule.Molecule",
+          "renderOptions": {
+            "expanded": true,
+            "_type": "object"
+          },
+          "charge": 0,
+          "ctab": {
+            "nodes": [
+              {
+                "_type": "Kekule.Atom",
+                "charge": 0,
+                "coord2D": {
+                  "x": 3.552788477677565,
+                  "y": 9.559951906937819,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "charge": 0,
+                "coord2D": {
+                  "x": 4.267259435799726,
+                  "y": 9.972451906937819,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              },
+              {
+                "_type": "Kekule.Atom",
+                "charge": 0,
+                "coord2D": {
+                  "x": 4.981730393921887,
+                  "y": 9.559951906937819,
+                  "_type": "object"
+                },
+                "isotopeId": "C"
+              }
+            ],
+            "anchorNodes": [],
+            "connectors": [
+              {
+                "_type": "Kekule.Bond",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "_type": "Kekule.Bond",
+                "bondType": "covalent",
+                "bondOrder": 1,
+                "electronCount": 2,
+                "connectedNodes": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "_type": "Kekule.StructureConnectionTable"
+          }
+        }
+      ],
+      "_type": "Kekule.ChemObjList"
+    },
+    "_type": "Kekule.ChemSpaceElement"
+  },
+  "enableAutoId": true,
+  "screenSize": {
+    "x": 600,
+    "y": 900,
+    "_type": "object"
+  },
+  "size2D": {
+    "x": 9.519230769230768,
+    "y": 14.278846153846153,
+    "_type": "object"
+  },
+  "_type": "Kekule.ChemSpace"
+}

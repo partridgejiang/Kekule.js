@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kekule 3D Molecule Renderer Test</title>
+    <script src="../../../../libs/three.js-r49/build/Three.js"></script>
+<script src="../../../src/kekule.js"></script>
+<style>
+    canvas
+    {
+        background-color: black;
+    }
+</style>
+<script>
+	var drawBoxWidth = 800; //500;
+	var drawBoxHeight = 300; //500;
+  var aspect = drawBoxWidth / drawBoxHeight;
+  var viewAngle = 45;
+  var NEAR = 0.1;
+  var FAR = 1000;
+  var threeContext;
+
+
+	function getDrawContext()
+  {
+    if (threeContext)
+      return threeContext;
+
+    var drawParent = document.getElementById('drawParent');
+
+    var renderer = new THREE.WebGLRenderer({
+      clearColor: 0x000000,
+      clearAlpha: 0
+    });
+
+    /*
+    var renderer = new THREE.CanvasRenderer({
+      clearColor: 0x000000,
+      clearAlpha: 0
+    });
+    */
+
+
+    /*
+    var renderer = new THREE.SVGRenderer({
+      clearColor: 0x000000,
+      clearAlpha: 0
+    });
+    */
+
+    var camera =
+      new THREE.PerspectiveCamera(
+        viewAngle,
+        aspect,
+        NEAR,
+        FAR);
+
+    var scene = new THREE.Scene();
+    //console.log(scene);
+    scene.add(camera);
+
+
+    camera.position.x = drawBoxWidth / 2;
+    camera.position.y = drawBoxHeight / 2;
+
+    camera.position.z = 10;
+
+    renderer.setSize(drawBoxWidth, drawBoxHeight);
+
+    /*
+     var pointLight =
+     new THREE.PointLight(0xFFFFFF);
+
+     // set its position
+     pointLight.position.x = 10;
+     pointLight.position.y = 50;
+     pointLight.position.z = 130;
+
+     // add to the scene
+     scene.add(pointLight);
+     */
+    /*
+     var alight = new THREE.AmbientLight(0x777777);
+     scene.add(alight);
+     */
+    alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+    alight.position.set(5, 5, 10);
+    scene.add(alight);
+
+    drawParent.appendChild(renderer.domElement);
+    /*
+    threeScene = scene;
+    threeRenderer = renderer;
+    threeCamera = camera;
+    */
+    threeContext = new Kekule.Render.ThreeContext(scene, camera, renderer);
+    return threeContext;
+  }
+
+	var drawContext;
+	var drawBridge;
+
+
+  function clearContext()
+  {
+		/*
+    var context = drawContext;  //getDrawContext();
+    var scene = context.getScene();
+    scene.clearMesh();
+    */
+		drawBridge.clearContext(drawContext);
+  }
+
+
+  var currDrawObj;
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var isCml = document.getElementById('radioBtnCml').checked;
+		var reader = isCml? new Kekule.IO.CmlReader():  new Kekule.IO.MdlReader();
+		var multiple = parseInt(document.getElementById('editMultiple').value);
+    var mol;
+    var result;
+
+		if (multiple > 1)
+		{
+			/*
+			var c = new Kekule.CompositeMolecule();
+			var coord = {'x': 0, 'y': 0, 'z': 0};
+			for (var i = 0; i < multiple; ++i)
+			{
+				var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+				r.setCoord3D(coord);
+				c.getSubMolecules().appendObj(r);
+				var box = r.getContainerBox3D();
+
+				//console.log(box);
+
+				coord.y -= Math.max((box.y2 - box.y1), 1) * 1.5;
+				//coord.x += (box.x2 - box.x1) * 1.5;
+				coord.z += Math.max((box.z2 - box.z1) * 1.5, 1);
+			}
+			return c;
+			*/
+
+      var s = new Kekule.ChemSpace('auto');
+      var coord = {'x': 0, 'y': 0, 'z': 0};
+      for (var i = 0; i < multiple; ++i)
+      {
+        var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+        r.setCoord3D(coord);
+        //r.setOwner(s);
+        s.getRoot().appendChild(r);
+        mol = r;
+        var box = r.getContainerBox3D();
+        coord.y -= Math.max((box.y2 - box.y1), 1) * 1.5;
+				//coord.x += (box.x2 - box.x1) * 1.5;
+				coord.z += Math.max((box.z2 - box.z1) * 1.5, 1);
+      }
+      result = s;
+
+		}
+		else
+		{
+			var r = reader.readData(text, Kekule.IO.ChemDataType.TEXT);
+      mol = r;
+			result = r;
+		}
+    currDrawObj = result;
+
+    mol.setRender3DOption('atomColor', '#FF0000');
+    mol.setRender3DOption('useAtomSpecifiedColor', true);
+    mol.setRender3DOption('opacity', 0.5);
+
+    if (mol.hasCtab())
+    {
+      mol.getNodeAt(0).setRender3DOption('color', '#00FF00');
+      mol.getNodeAt(0).setRender3DOption('opacity', 1);
+    }
+
+    return result;
+	}
+
+	function getQualityLevel()
+	{
+		var s = document.getElementById('editLevel').value;
+		return parseInt(s);
+	}
+
+	function getDrawParent(contextType)
+  {
+    return document.getElementById('drawParent');
+  }
+	function getDrawBridge()
+	{
+		return Kekule.Render.DrawBridge3DMananger.getPreferredBridgeInstance();
+	}
+	function initContext(bridge)
+	{
+		var context = bridge.createContext(getDrawParent(), drawBoxWidth, drawBoxHeight);
+
+		/*
+		var camera = context.getCamera();
+		camera.position.x = drawBoxWidth / 2;
+    camera.position.y = drawBoxHeight / 2;
+    camera.position.z = 10;
+
+		var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+    alight.position.set(5, 5, 10);
+    context.getScene().add(alight);
+    */
+		return context;
+
+	}
+
+	function drawMol(mol, withRedraw, drawOptions, noLog)
+	{
+		//getDrawParent().innerHTML = '';
+		//mol.setCoord2D({'x': -20, 'y': -20});  // debug
+		/*
+		var context = getDrawContext();
+		var ctab = mol.getCtab();
+		*/
+
+    //var bridge = getDrawBridge(); //Kekule.Render.DrawBridge3DMananger.getPreferredBridgeInstance();
+    //drawBridge = bridge;
+		var bridge = drawBridge;
+    //var context = initContext(bridge);
+		//var context = getDrawContext();
+		//drawContext = context;
+		var context = drawContext;
+
+		/*
+		var rc = c = Kekule.Render.get3DRendererClass(mol);
+		var render = new c(mol, bridge);
+		*/
+		var painter = new Kekule.Render.ChemObjPainter3D(mol, bridge);
+
+		var baseCoord = {'x': 0, 'y': 0, 'z': 0}; // {'x': drawBoxWidth / 2, 'y': drawBoxHeight / 2};
+		var options = drawOptions || {
+			/*moleculeDisplayType: condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL,*/
+			//moleculeDisplayType: Kekule.Render.Molecule3DDisplayType.BALL_SYICK,
+			/*'scale': scale*/
+			autoScale: true,
+			zoom: 0.7,
+			//baseOnRootCoord: true,
+			/*
+			'translateX': transX,
+			'translateY': transY,
+			*/
+			//'rotateAngle': Math.PI / 4
+      'rotateX': -Math.PI / 2,
+			'rotateY': -Math.PI / 2,
+			/* 'center': center*/
+			graphicQuality: getQualityLevel()
+		};
+		clearContext();
+
+		var start = (new Date()).getTime();
+		//render.draw(context, baseCoord, options);
+		painter.draw(context, baseCoord, options);
+		var end = (new Date()).getTime();
+		var duration = end - start;
+
+    //var c = getDrawContext();
+    //drawContext.getRenderer().render(drawContext.getScene(), drawContext.getCamera());
+
+    if (!noLog)
+		  appendLog('Draw in ' + duration + 'ms. ');
+
+		if (withRedraw)
+		{
+			clearContext();
+			var start = (new Date()).getTime();
+			//render.redraw(context);
+			painter.redraw(context);
+
+      //c.getRenderer().render(c.getScene(), c.getCamera());
+
+			var end = (new Date()).getTime();
+			var duration = end - start;
+
+      if (!noLog)
+			  appendLog('Redraw in ' + duration + 'ms. ');
+		}
+	}
+
+	function draw(condensed)
+	{
+		clearLog();
+		var mol = readMol();
+
+		//var sReport = '';
+
+		drawMol(mol, true);
+	}
+
+  var globalMol;
+  var angleCount;
+  var angleStep = 3;
+  function animate()
+  {
+    clearLog();
+    globalMol = readMol();
+    angleCount = 0;
+    //setTimeout(animateSeed, 100);
+    animateSeed();
+  }
+  function animateSeed()
+  {
+    drawMol(globalMol, false, {
+      zoom: 1 + 1/360 * angleStep * angleCount,
+      rotateZ: angleCount * angleStep * Math.PI / 180
+    }, true);
+    angleCount++;
+
+    if (angleCount < 360 / angleStep)
+      setTimeout(animateSeed, 20);
+  }
+
+	function clearLog()
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML = '';
+	}
+	function appendLog(msg)
+	{
+		var reportElem = document.getElementById('report');
+		reportElem.innerHTML += msg;
+	}
+
+	function init()
+	{
+		drawBridge = getDrawBridge();
+		drawContext = initContext(drawBridge);
+	}
+</script>
+</head>
+<body onload="init()">
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+		<input type="radio" name="radioBtnMType" id="radioBtnMol" checked="checked">MOL</input>
+		<input type="radio" name="radioBtnMType" id="radioBtnCml">CML</input>
+	</form>
+	<button value="Draw Mol" onclick="draw()">Draw Molecule</button>
+  <button value="Animate Mol" onclick="animate()">Animate Molecule</button>
+	<label for="editMultiple">Multiple</label>
+	<input type="text" id="editMultiple" name="editMultiple" value="1"/>
+	<label for="editLevel">Level</label>
+	<input type="text" id="editLevel" name="editLevel" value="2"/>
+	<span id="labelRichText"></span>
+	<input type="checkbox" id="checkBoxCondensed" name="checkBoxCondensed" onclick="draw()">Condensed</input>
+	<div id="report"></div>
+    <div id="drawParent">DrawParent</div>
+    <!--
+	<div id="drawStage">
+		<div id="raphaelParent">RaphaelParent</div>
+		<div id="canvasParent">
+			<canvas id="canvasContext" width="500" height="500"></canvas>
+		</div>
+	</div>
+	-->
+</body>
+</html>

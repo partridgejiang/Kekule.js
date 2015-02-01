@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Graph Algorithm Test</title>
+	<script src="../../../libs/raphael/raphael-min.2.0.1.js"></script>
+	<script src="../../src/kekule.js"></script>
+	<!--
+	<script src="../../../src/_compressed/kekule.compressed.js"></script>
+	-->
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+	<style>
+		#listPanel
+		{
+			float: right;
+		}
+	</style>
+
+	<script>
+		var chemEditor;
+		var chemEditorUi;
+		//var operHistoryView;
+
+		function getCurrMol()
+		{
+			return chemEditor.getChemSpace().getChildAt(0);
+		}
+		function getCurrGraph()
+		{
+			return Kekule.GraphAdaptUtils.molToGraph(getCurrMol());
+		}
+		function getCurrSelectedObject()
+		{
+			return chemEditor.getSelection()[0];
+		}
+
+		function markObjects(objs, color)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				obj.setRenderOption('color', color);
+			}
+		}
+		function markMolPart(nodes, connectors)
+		{
+			var mol = getCurrMol();
+			chemEditor.beginUpdateObject();
+			mol.beginUpdate();
+			try
+			{
+				var objs = nodes.concat(connectors);
+				markObjects(mol.getNodes(), null);
+				markObjects(mol.getConnectors(), null);
+				markObjects(objs, 'red');
+			}
+			finally
+			{
+				mol.endUpdate();
+				chemEditor.endUpdateObject();
+			}
+		}
+		function markGraphElements(elems, color)
+		{
+			for (var i = 0, l = elems.length; i < l; ++i)
+			{
+				var elem = elems[i];
+				var obj = elem.getData('object');
+				markObjects([obj], color);
+			}
+		}
+		function markGraphSpecialPart(graph, vertexes, edges, color)
+		{
+			var mol = getCurrMol();
+			chemEditor.beginUpdateObject();
+			mol.beginUpdate();
+			try
+			{
+				markGraphElements(graph.getVertexes(), null);
+				markGraphElements(graph.getEdges(), null);
+				markGraphElements(vertexes, color || 'red');
+				markGraphElements(edges, color || 'red');
+			}
+			finally
+			{
+				mol.endUpdate();
+				chemEditor.endUpdateObject();
+			}
+		}
+		function markGraphSpecialPartEx(graph, markDetails)
+		{
+			var mol = getCurrMol();
+			chemEditor.beginUpdateObject();
+			mol.beginUpdate();
+			try
+			{
+				markGraphElements(graph.getVertexes(), null);
+				markGraphElements(graph.getEdges(), null);
+				for (var i = 0, l = markDetails.length; i < l; ++i)
+				{
+					var d = markDetails[i]
+					markGraphElements(d.vertexes, d.color || 'red');
+					markGraphElements(d.edges, d.color || 'red');
+				}
+			}
+			finally
+			{
+				mol.endUpdate();
+				chemEditor.endUpdateObject();
+			}
+		}
+		function clearListPanel()
+		{
+			document.getElementById('listPanel').innerHTML = '';
+		}
+		function addListItem(caption, data, listener)
+		{
+			var parentElem = document.getElementById('listPanel');
+			var liElem = document.createElement('li');
+			var aElem = document.createElement('a');
+			aElem.href = 'javascript:void(0)';
+			aElem.innerHTML = caption;
+			aElem._data_ = data;
+			if (listener)
+				Kekule.X.Event.addListener(aElem, 'click', listener);
+			liElem.appendChild(aElem);
+			parentElem.appendChild(liElem);
+		}
+		function getListElemData(elem)
+		{
+			return elem._data_;
+		}
+
+		function getSpanningTree(breadthFirst)
+		{
+			var graph = getCurrGraph();
+			//var part = Kekule.GraphAlgorithmUtils.createSpanningTree(graph, broadFirst);
+			var mode = breadthFirst? Kekule.GraphTraverseMode.BREADTH_FIRST: Kekule.GraphTraverseMode.DEPTH_FIRST;
+			var parts = graph.traverse(function(obj, isEdge)
+					{
+						if (!isEdge)
+							console.log(obj.getData('object').getId());
+					}
+				, mode);
+			console.log(parts);
+			var vertexes = [];
+			var edges = [];
+			for (var i = 0, l = parts.length; i < l; ++i)
+			{
+				vertexes = vertexes.concat(parts[i].vertexes);
+				edges = edges.concat(parts[i].edges);
+			}
+			markGraphSpecialPart(graph, parts[0].vertexes, parts[0].edges);
+		}
+
+		function getSpanningTreeEx()
+		{
+			var graph = getCurrGraph();
+			var startingVertex;
+			var obj = getCurrSelectedObject();
+			var vertexes = graph.getVertexes();
+			for (var i = 0, l = vertexes.length; i < l; ++i)
+			{
+				var v = vertexes[i];
+				if (v.getData('object') === obj)
+				{
+					startingVertex = v;
+					break;
+				}
+			}
+
+			var result = Kekule.IO.SmilesUtils.createGraphDepthSpanningTreesEx(graph, startingVertex);
+			console.log(result);
+			result = result[0];
+			markGraphSpecialPartEx(graph,
+					[
+						{'vertexes': result.vertexes, 'edges': result.edges},
+						{'vertexes': result.longestPath.vertexes, 'edges': result.longestPath.edges, 'color': 'green'}
+					]
+			);
+		}
+
+		function findEndChain()
+		{
+			//var mol = this.getCurrMol();
+			var graph = getCurrGraph();
+			var part = Kekule.GraphAlgorithmUtils.findEndChains(graph);
+			console.log(part);
+			markGraphSpecialPart(graph, part.vertexes, part.edges);
+		}
+		function findBridgeChain()
+		{
+			var graph = getCurrGraph();
+			Kekule.GraphAlgorithmUtils.removeEndChains(graph);
+			var part = Kekule.GraphAlgorithmUtils.findBridgeChains(graph);
+			console.log(part);
+			markGraphSpecialPart(graph, part.vertexes, part.edges);
+		}
+		function findCyclePart()
+		{
+			var graph = getCurrGraph();
+			var parts = Kekule.GraphAlgorithmUtils.findCycleBlocks(graph);
+			console.log('cycle part count', parts.length, parts);
+
+			var vertexes = [];
+			var edges = [];
+			for (var i = 0, l = parts.length; i < l; ++i)
+			{
+				vertexes = vertexes.concat(parts[i].vertexes);
+				edges = edges.concat(parts[i].edges);
+			}
+			markGraphSpecialPart(graph, vertexes, edges);
+		}
+
+		function listRings(graph, rings)
+		{
+			var ringItemClick = function(e)
+			{
+				var elem = e.getTarget();
+				var ring = getListElemData(elem);
+				if (ring)
+				{
+					markGraphSpecialPart(graph, ring.vertexes, ring.edges);
+				}
+			}
+
+			clearListPanel();
+			for (var i = 0, l = rings.length; i < l; ++i)
+			{
+				var ring = rings[i];
+				var caption = ring.vertexes.length + ' member ring';
+				addListItem(caption, ring, ringItemClick);
+			}
+		}
+		function listMolRings(mol, rings)
+		{
+			var ringItemClick = function(e)
+			{
+				var elem = e.getTarget();
+				var ring = getListElemData(elem);
+				if (ring)
+				{
+					markMolPart(ring.nodes, ring.connectors);
+					var mol = getCurrMol();
+					var arType = mol.getRingAromaticType(ring);
+					console.log('aromatic type', arType);
+				}
+			}
+
+			clearListPanel();
+			for (var i = 0, l = rings.length; i < l; ++i)
+			{
+				var ring = rings[i];
+				var caption = ring.nodes.length + ' member ring';
+				addListItem(caption, ring, ringItemClick);
+			}
+		}
+
+		function findAllRings()
+		{
+			var graph = getCurrGraph();
+			var rings = Kekule.GraphAlgorithmUtils.findAllRings(graph);
+			console.log(rings.length, rings);
+
+			listRings(graph, rings);
+		}
+		function findSSSR()
+		{
+			var graph = getCurrGraph();
+			var rings = Kekule.GraphAlgorithmUtils.findSSSR(graph);
+			console.log(rings.length, rings);
+
+			listRings(graph, rings);
+		}
+
+		function findMolCycleBlock()
+		{
+			var mol = getCurrMol();
+			var result = mol.findCycleBlocks();
+			var nodes = [];
+			var connectors = [];
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				nodes = nodes.concat(result[i].nodes);
+				connectors = connectors.concat(result[i].connectors);
+			}
+			markMolPart(nodes, connectors);
+		}
+		function findMolAllRings()
+		{
+			var mol = getCurrMol();
+			var rings = mol.findAllRings();
+			console.log(rings.length, rings);
+
+			listMolRings(mol, rings);
+		}
+		function findMolSSSR()
+		{
+			var mol = getCurrMol();
+			var rings = mol.findSSSR();
+			console.log(rings.length, rings);
+
+			listMolRings(mol, rings);
+		}
+
+		function analysisMolRings()
+		{
+			var mol = getCurrMol();
+			var result = mol.getRingInfo();
+			console.log(result);
+		}
+
+		function findMolAromaticRings()
+		{
+			var mol = getCurrMol();
+			var rings = mol.perceiveAromaticRings(true);
+			console.log(rings.length, rings);
+
+			listMolRings(mol, rings);
+		}
+
+		function canonicalize()
+		{
+			var mol = getCurrMol();
+			/*
+			 var c = new Kekule.MorganCanonicalizationExecutor();
+			 c.execute(mol.getCtab());
+			 */
+			Kekule.canonicalizer.canonicalize(mol);
+			// set mark
+			for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+			{
+				var n = mol.getNodeAt(i);
+				var label = '' + (i + 1);
+				if (n.getSymbol)
+					label += n.getSymbol();
+				n.setRenderOption('customLabel', label);
+			}
+		}
+
+		function init()
+		{
+			var elem = document.getElementById('chemEditorUi');
+			chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+			chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
+
+			// debug
+			/*
+			 Kekule.X.Event.addListener(document.body, 'mousedown', function(e) {
+			 console.log('-----------------');
+			 console.log(e.getTarget().tagName);
+			 console.log(e.getCurrentTarget().tagName);
+			 console.log('-----------------');
+			 });
+			 */
+
+			var elem = document.getElementById('operHis');
+
+			/*
+			operHistoryView = new Kekule.Widget.OperHistoryTreeView(elem, chemEditor.getOperHistory());
+			operHistoryView.setItemInitialExpanded(true);
+			*/
+		}
+	</script>
+</head>
+<body onload="init()">
+<ul id="listPanel">
+
+</ul>
+<div id="calcPanel">
+	<button type="button" onclick="getSpanningTree()">Depth spanning tree</button>
+	<button type="button" onclick="getSpanningTree(true)">Breadth spanning tree</button>
+	<button type="button" onclick="getSpanningTreeEx()">Depth spanning tree Ex</button>
+	<button type="button" onclick="findEndChain()">End edges</button>
+	<button type="button" onclick="findBridgeChain()">Bridge edges</button>
+	<button type="button" onclick="findCyclePart()">Cycle parts</button>
+	<button type="button" onclick="findAllRings()">All rings</button>
+	<button type="button" onclick="findSSSR()">SSSR rings</button>
+	<br />
+	<button type="button" onclick="analysisMolRings()">Analysis mol rings</button>
+	<button type="button" onclick="findMolCycleBlock()">Mol Cycle parts</button>
+	<button type="button" onclick="findMolAllRings()">Mol All rings</button>
+	<button type="button" onclick="findMolSSSR()">Mol SSSR rings</button>
+	<button type="button" onclick="findMolAromaticRings()">Mol Aromatic rings</button>
+
+	<button type="button" onclick="canonicalize()">Canonicalize</button>
+</div>
+<div id="chemEditorUi" style="width:900px;height:500px"></div>
+<!--
+<div id="operHis" style="width:400px;height:600px;float:right"></div>
+-->
+</body>
+</html>

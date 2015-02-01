@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mouse Event Test</title>
+    <style>
+        #stage
+        {
+            width: 600px;
+            height: 400px;
+            background: red;
+        }
+    </style>
+    <script>
+        function init()
+        {
+            var elem = document.getElementById('stage');
+            elem.addEventListener('mousedown', function(e)
+                    {
+                        console.log('mousedown', e.shiftKey, e.ctrlKey, e.altKey);
+                    }
+            );
+            elem.addEventListener('mouseup', function(e)
+                    {
+                        console.log('mouseup', e.shiftKey, e.ctrlKey, e.altKey);
+                    }
+            );
+        }
+    </script>
+</head>
+<body onload="init()">
+    <div id="stage"></div>
+</body>
+</html>

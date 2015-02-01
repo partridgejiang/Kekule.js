@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Rapheal Renderer Test1</title>
+<style>
+	#drawParent svg
+	{
+		background-color: red;
+		border: 2px solid black;
+		display: block;
+	}
+	#drawParent
+	{
+		background-color: yellow;
+	}
+</style>
+<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+<script src="../../src/kekule.js"></script>
+<script>
+	var paper;
+	
+	var drawBoxWidth = 500;
+	var drawBoxHeight = 500;
+	
+	function getPaper()
+	{
+		if (!paper)
+			paper = Raphael('drawParent', drawBoxWidth, drawBoxHeight);
+		return paper;
+	}
+	function readMol()
+	{
+		var text = document.getElementById('memoMolInput').value;
+		var reader = new Kekule.IO.MdlMoleculeReader();
+		var r = reader.readBlock(text, null);
+		return r;
+	}
+	var condensed = false;
+	function toggleCondensed()
+	{
+		condensed = !condensed;
+		drawMol();
+	}
+	var render;
+	var mol;
+	var bounds;
+	var currBoundElem;
+	function drawMol()
+	{
+		var paper = getPaper();
+		mol = readMol();
+		//render = new Kekule.Render.Def2DStructFragmentRenderer(null, Kekule.Render.RaphaelRendererBridge.getInstance());
+		var renderClass = Kekule.Render.get2DRendererClass(mol);
+		//console.log('class', renderClass);
+		//render = new renderClass(null, Kekule.Render.RaphaelRendererBridge.getInstance());
+		/*
+		render = new Kekule.Render.Ctab2DRenderer(
+			mol.getCtab(),
+			Kekule.Render.RaphaelRendererBridge.getInstance()
+		);
+		*/
+		render = new Kekule.Render.Mol2DRenderer(
+			mol,
+			Kekule.Render.RaphaelRendererBridge.getInstance()
+		);
+		bounds = [];
+		var canvasOffset = {'x': paper.canvas.parentNode.offsetLeft, 'y': paper.canvas.parentNode.offsetTop};
+		//console.log('offset', canvasOffset, paper.canvas);
+		//paper.canvas.addEventListener('mousemove', function(e)
+		//if (false)		
+		Kekule.X.Event.addListener(paper.canvas, 'mousemove', function(e)
+			{
+				
+				var x = e.clientX + window.pageXOffset - canvasOffset.x;
+				var y = e.clientY + window.pageYOffset - canvasOffset.y;
+				
+				/*
+				var x = e.getOffsetX();
+				var y = e.getOffsetY();
+				*/
+				
+				//console.log(x, y);
+				var currBound = null;
+				for (var i = bounds.length - 1; i >= 0; --i)
+				{
+					var bound = bounds[i];
+					if (Kekule.Render.MetaShapeUtils.isCoordInside({'x': x, 'y': y}, bound, 10))
+					{
+						currBound = bound;
+						break;
+					}
+				}
+				if (currBound)  // draw bound
+				{
+					//console.log('found', currBound);
+					if (currBoundElem)
+						currBoundElem.remove();
+					var BT = Kekule.Render.BoundShapeType;
+					var coords = currBound.coords;
+					var inflate = 5;
+					var shape;
+					switch (currBound.shapeType)
+					{
+						case BT.POINT: shape = paper.circle(coords[0].x, coords[0].y, inflate); break;
+						case BT.LINE: 
+							shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y); 
+							shape.attr('stroke-width', currBound.width + inflate * 2);
+							break;
+						case BT.RECT: shape = paper.rect(coords[0].x, coords[0].y, coords[1].x - coords[0].x, coords[1].y - coords[0].y); break;
+						default:
+						  console.log('abnormal shape', currBound.shapeType);
+					}
+					shape.attr({'stroke': '#0000ff', 'stroke-opacity': 0.3, 'fill': '#0000ff', 'fill-opacity': 0.3});
+					currBoundElem = shape;
+				}
+				else
+				{
+					if (currBoundElem)
+						currBoundElem.remove();
+					currBoundElem = null;
+				}
+			});
+		//if (false)
+		render.addEventListener('updateBasicDrawObject', function(e)
+			{
+				var obj = e.obj;
+				var boundInfo = (e.boundInfo && e.boundInfo.length)? e.boundInfo[0]: e.boundInfo;
+				var coords = boundInfo.coords;
+				//console.log('drawBasicObject', obj.getClassName(), boundInfo);
+				/*
+				var BT = Kekule.Render.BoundShapeType;
+				var inflate = 5;
+				var shape;
+				switch (boundInfo.boundType)
+				{
+					case BT.POINT: shape = paper.circle(coords[0].x, coords[0].y, inflate); break;
+					case BT.LINE: 
+						shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y); 
+						shape.attr('stroke-width', boundInfo.width + inflate * 2);
+						break;
+					case BT.RECT: shape = paper.rect(coords[0].x, coords[0].y, coords[1].x - coords[0].x, coords[1].y - coords[0].y); break;
+				}
+				shape.attr({'stroke': '#0000ff', 'stroke-opacity': 0.3, 'fill': '#0000ff', 'fill-opacity': 0.3});
+				*/
+				bounds.push(boundInfo);
+			}, this
+		);
+		var parent = document.getElementById('drawParent');
+		//parent.style.visibility = 'hidden';
+		
+		//mol.setExpanded(true);
+		var ctab = mol.getCtab();
+		//console.log(ctab);
+		//var ctabBox = ctab.get2DExposedContainerBox();
+		var ctabBox = render.estimateRenderBox(paper, mol, null);
+		//console.log(ctabBox);
+		//console.log('hhh');
+		var viewBoxWidth = 300;
+		var viewBoxHeight = 300;
+		//console.log(ctabBox);
+		//var ctabCenter = {'x': (ctabBox.x1 + ctabBox.x2) / 2, 'y': (ctabBox.y1 + ctabBox.y2) / 2};
+		//var center = {'x': ctabBox.x1 + ctabBox.width / 2, 'y': ctabBox.y1 + ctabBox.height / 2};
+		console.log(ctabBox);
+		var center = {'x': (ctabBox.x1 + ctabBox.x2) / 2 + 10, 'y': (ctabBox.y1 + ctabBox.y2) / 2 + 10};
+		//var scale = Math.min(viewBoxWidth / ctabBox.width, viewBoxHeight / ctabBox.height);
+		/*
+		var defConfigs = Kekule.Render.Render2DConfigs.getInstance();
+		var bondLengthMedian = ctab.getConnectorLengthMedian();
+		var defBondLength = defConfigs.getLengthConfigs().getActualLength('defBondLength');
+		var scale = defBondLength / bondLengthMedian;
+		*/
+		/*
+		var transX = -ctabBox.x1 * scale;
+		var transY = -ctabBox.y1 * scale;
+		*/ 
+		/*
+		var transX = (center.x - ctabBox.x1) * scale + ctabBox.width / 2 + 100;
+		var transY = (center.y - ctabBox.y1) * scale + ctabBox.height / 2 + 100;
+		*/
+		
+		var transX = 0;
+		var transY = 0;
+		
+		/*
+		var transX = 20;
+		var transY = 20;
+		*/
+		var paper = getPaper();
+		//var render = new Kekule.Render.RaphaelCtabRenderer();
+		//var render = Kekule.Render.RaphaelStructFragmentRenderer.getInstance();
+
+		render.setMoleculeDisplayType(condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL);
+		
+		var options = {/*'scale': scale*/autoScale: 'true', 'translateX': transX, 'translateY': transY /*'rotateAngle': Math.PI / 2,*//* 'center': center*/};
+		//options.center = {x: 100, y: 100};
+		//options.scale = 30;
+		console.log('options', options);
+		
+		/*
+		var m1 = Kekule.CoordUtils.calcTransform2DMatrix(options);
+		var m2 = Kekule.CoordUtils.calcInverseTransform2DMatrix(options);
+		var m3 = Kekule.MatrixUtils.multiply(m1, m2);
+		console.log('m3', m3);
+		*/
+		
+		
+		//console.log(options);
+		paper.clear();
+		//render.draw(paper, ctab, options);
+		render.draw(paper, {'x': drawBoxWidth / 2, 'y': drawBoxHeight / 2}, options);
+		//console.log('ddd');
+		paper.rect(0, 0, 10, 10);
+		//parent.style.visibility = 'inherit';
+		//parent.style.zoom = '1';
+	}
+	function getRichTextInfo()
+	{
+		var mol = readMol();
+		var index = document.getElementById('editNodeIndex').value;
+		var node = mol.getNodeAt(index);
+		if (node)
+		{
+			var rt = node.getDisplayRichText();
+			console.log(rt);
+			var s = Kekule.Render.RichTextUtils._toDebugHtml(rt);
+			console.log(s);
+			document.getElementById('labelRichText').innerHTML = s;
+			
+			console.log(JSON.stringify(rt));
+			
+			return rt;
+		}
+	}
+	function testDrawRichText()
+	{
+		var rt = getRichTextInfo();
+		var p = getPaper();
+		p.line(250, 150, 350, 150);
+		var drawer = new Kekule.Render.RaphaelRichTextDrawer(p);		
+		drawer.drawRichText(250, 150, rt, {
+			'fontSize': 20,
+			'charDirection': Kekule.Render.TextDirection.LTR
+		});
+	}
+	
+</script>
+</head>
+<body>
+	<form>
+		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
+	</form>
+	<button value="Draw Mol" onclick="drawMol()">Draw Molecule</button>
+	<button value="Get Rich Text On" onclick="getRichTextInfo()">Get Rich Text On</button>
+	<button value="Draw Rich Text" onclick="testDrawRichText()">Draw Rich Text On</button>
+	<input type="text" id="editNodeIndex" name="editNodeIndex"></input>
+	<span id="labelRichText"></span>
+	<input type="checkbox" id="checkBoxCondensed" name="checkBoxCondensed" onclick="toggleCondensed()">Condensed</input>
+	<div id="drawParent">DrawParent</div>
+</body>
+</html>
