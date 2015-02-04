@@ -39,7 +39,7 @@
 			if (lanNameSpace[lanName])  // found suitable language
 			{
 				rootObj[s] = lanNameSpace[lanName];  // override parent, import all language consts
-				console.log('use language', lanName, 'for', s);
+				//console.log('use language', lanName, 'for', s);
 				break;
 			}
 		}

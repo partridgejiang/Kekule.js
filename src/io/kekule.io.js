@@ -1137,6 +1137,8 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 			{
 				var content = reader.result;
 				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id);
+				var info = chemObj.getSrcInfo();
+				info.fileName = fileName;
 				var success = !!chemObj;
 				callback(chemObj, success);
 			};

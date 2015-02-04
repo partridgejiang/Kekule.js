@@ -1634,6 +1634,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 		if (doResize && (!suppressResize))
 			this.resized();
+		this.objectChange(['width', 'height']);
 		return this;
 	},
 
@@ -1908,7 +1909,16 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/**
-	 * Add class name(s) to element. If affectCustomProp is true, this method will change customHtmlClassName property.
+	 * Check if a class is associate with element of this widget.
+	 * @param {String} className
+	 * @return {Bool}
+	 */
+	hasClassName: function(className)
+	{
+		return EU.hasClass(this.getElement(), className);
+	},
+	/**
+	 * Add class name(s) to widget element. If affectCustomProp is true, this method will change customHtmlClassName property.
 	 * @param {Variant} classNames Can be a simple name, or a series of name separated by space ('name1 name2')
 	 * 	or an array of strings.
 	 * @param {Bool} affectCustomProp Whether change customHtmlClassName property of widget.
@@ -1933,7 +1943,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		return this;
 	},
 	/**
-	 * remove class(es) from element. This method not also change customHtmlClassName property.
+	 * remove class(es) from widget element. This method not also change customHtmlClassName property.
 	 * @param {Variant} classNames Can be a simple name, or a series of name separated by space ('name1 name2')
 	 * 	or an array of strings.
 	 * @param {Bool} affectCustomProp Whether change customHtmlClassName property of widget.

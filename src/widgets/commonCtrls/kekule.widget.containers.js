@@ -253,7 +253,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		var w = this.getChildWidth();
 		if (w)
 			widget.setWidth(w);
-		var h = this.getChildHeight()
+		var h = this.getChildHeight();
 		if (h)
 			widget.setHeight(h);
 		var margin = this.getChildMargin();

@@ -3,7 +3,7 @@
 <head>
   <title>Table Width Test</title>
   <style>
-    table
+    table.Table2
     {
       table-layout: fixed;
       width: 30em;
@@ -27,11 +27,34 @@
     {
       width: 3em;
     }
+
+    div
+    {
+      display: inline-block;
+    }
+    div.Wrapper
+    {
+      background-color: green;
+      border: 1px solid red;
+      vertical-align: middle;
+    }
+    div.Content
+    {
+      background-color: yellow;
+    }
   </style>
 </head>
 <body>
 
 <table>
+  <td style="vertical-align: middle">
+    <div class="Wrapper" style="width:200px;height:200px;overflow: hidden">
+      <div class="Content" style="width:400px;height:400px;transform:scale(0.5);transform-origin:0 0;">Content here</div>
+    </div>
+  </td>
+</table>
+
+<table class="Table2">
   <tr>
     <td class="Cell1">Cell11</td>
     <td class="Cell2">Cell12</td>

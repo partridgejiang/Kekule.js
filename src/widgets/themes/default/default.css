@@ -589,6 +589,84 @@ table.K-Widget
     margin-left: 0.5em;
 }
 
+/** Widget Grid */
+.K-Widget-Grid
+{
+    display: table;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell
+{
+    float: left;
+    /*
+    vertical-align: middle;
+    text-align: center;
+    */
+    position: relative;
+    margin: 3px;
+    padding: 5px;
+    border: 2px solid;
+    width: 10em;
+    height: 5em;
+    /*overflow: hidden;*/
+}
+.K-Widget-Grid .K-Widget-Grid-Cell.K-Widget-Grid-Cell.K-Widget-Grid-Add-Cell
+{
+    border: 2px dashed;
+    font-size: 5em;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    cursor: pointer;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell:hover,
+.K-Widget-Grid .K-Widget-Grid-Cell:focus,
+.K-Widget-Grid .K-Widget-Grid-Cell:active
+{
+    overflow: visible;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area
+{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+    display: none;
+}
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:hover .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:focus .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:active .K-Widget-Grid-Interaction-Area
+{
+    display: block;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button
+{
+    padding: 0.2em;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button K-Assoc-Glyph-Content
+{
+    display: none;
+}
+
+.K-Widget-Grid-Widget-Parent
+{   /*
+    vertical-align: middle;
+    */
+    position: absolute;
+    display: block;
+    /*
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    */
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+
 /* Dialog */
 .K-Dialog
 {
@@ -1105,7 +1183,8 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Left,
 .K-Layout-H > .K-Corner-Leading,
 .K-Layout-V > .K-Corner-Leading,
-.K-Corner-TL {
+.K-Corner-TL
+{
     /*border-top-left-radius: 0.4em;*/
     border-top-left-radius: 4px;
 }

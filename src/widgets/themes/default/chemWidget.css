@@ -182,6 +182,13 @@
     height: 100%;
 }
 
+.K-Chem-Viewer
+{
+    /* default size of viewer */
+    width: 20em;
+    height: 15em;
+}
+
 .K-Chem-Viewer.K-State-Hover
 {
 

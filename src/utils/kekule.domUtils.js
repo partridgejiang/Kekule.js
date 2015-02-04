@@ -797,6 +797,24 @@ Kekule.HtmlElementUtils = {
 		return {'width': elem.scrollWidth, 'height': elem.scrollHeight};
 	},
 	/**
+	 * Returns computed width/height in px.
+	 * @param {HTMLElement} elem
+	 * @returns {Hash} A combination of {width, height}, in px.
+	 */
+	getElemComputedDimension: function(elem)
+	{
+		var SU = Kekule.StyleUtils;
+		var dim = {'width': SU.getComputedStyle(elem, 'width'), 'height': SU.getComputedStyle(elem, 'height')};
+		var wInfo = SU.analysisUnitsValue(dim.width);
+		var hInfo = SU.analysisUnitsValue(dim.height);
+		var result = {};
+		if (wInfo.units === 'px')
+			result.width = wInfo.value;
+		if (hInfo.units === 'px')
+			result.height = wInfo.value;
+		return result;
+	},
+	/**
 	 * Get element offset width and height.
 	 * @param {HTMLElement} elem
 	 * @returns {Hash} A combination of {width, height}, in px.

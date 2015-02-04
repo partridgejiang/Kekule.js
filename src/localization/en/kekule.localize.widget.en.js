@@ -45,6 +45,13 @@ Kekule.WidgetTexts.en = {
 	HINT_DEC_TEXT_SIZE: 'Decrease text size',
 	HINT_CHOOSE_FONT_FAMILY: 'Choose font family',
 
+	// widget grid
+	CAPTION_ADD_CELL: '+',
+	HINT_ADD_CELL: 'Add new cell',
+	CAPTION_REMOVE_CELL: 'Remove',
+	HINT_REMOVE_CELL: 'Remove cell',
+
+	// configurator
 	CAPTION_CONFIG: 'Settings...',
 	HINT_CONFIG: 'Change settings'
 };

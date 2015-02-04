@@ -73,6 +73,11 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * //@property {Bool} autoSize Whether the widget change its size to fit the dimension of chem object.
  * //@property {Int} padding Padding between chem object and edge of widget, in px. Only works when autoSize is true.
  *
+ * @property {String} caption Caption of viewer.
+ * @property {Bool} showCaption Whether show caption below or above viewer.
+ * @property {Int} captionPos Value from {@link Kekule.Widget.Position}, now only TOP and BOTTOM are usable.
+ * @property {Bool} autoCaption Set caption automatically by chemObj info.
+ *
  * @property {Bool} enableDirectInteraction Whether interact without tool button is allowed (e.g., zoom/rotate by mouse).
  * @property {Bool} enableTouchInteraction Whether touch interaction is allowed. Note if enableDirectInteraction is false, touch interaction will also be disabled.
  * @property {Bool} enableEdit Whether a edit button is shown in toolbar to edit object in viewer. Works only in 2D mode.
@@ -429,6 +434,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.captionChanged();
 			}
 		});
+		this.defineProp('autoCaption', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('autoCaption', value);
+				if (value)
+					this.autoDetectCaption();
+			}
+		});
 		this.defineProp('captionElem', {'dataType': DataType.OBJECT, 'scope': PS.PRIVATE,
 			'setter': null,
 			'getter': function(doNotAutoCreate)
@@ -542,6 +555,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	doLoadEnd: function(chemObj)
 	{
 		this.updateActions();
+		this.autoDetectCaption();
 	},
 
 	/** @private */
@@ -1131,6 +1145,23 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			result.append(btn, displayType === this.getCurrMoleculeDisplayType());
 		}
 		return result;
+	},
+
+	/** @private */
+	autoDetectCaption: function()
+	{
+		if (this.getAutoCaption())
+		{
+			var obj = this.getChemObj();
+			var info = obj && obj.getInfo();
+			var srcInfo = obj && obj.getSrcInfo();
+			if (info && srcInfo)
+			{
+				var caption = info.title || info.caption || obj.getName() || srcInfo.fileName;
+				if (caption)
+					this.setCaption(caption);
+			}
+		}
 	}
 });
 

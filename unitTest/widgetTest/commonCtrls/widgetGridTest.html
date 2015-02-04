@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Widget Grid Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+  <script src="../../../../libs/three.js-r49/build/Three.js"></script>
+  <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../../libs/Raphael.Export/raphael.export.js"></script>
+  <script src="../../../src/kekule.js"></script>
+  <script>
+    var grid;
+    function init()
+    {
+      grid = Kekule.Widget.getWidgetById('grid1');
+
+      Kekule.Widget.getWidgetById('objInspector').setObjects(grid);
+
+      var btnAdd1 = Kekule.Widget.getWidgetById('btnAdd1');
+      btnAdd1.addEventListener('execute', addWidget1);
+      var btnAdd2 = Kekule.Widget.getWidgetById('btnAdd2');
+      btnAdd2.addEventListener('execute', addWidget2);
+      var btnAdd3 = Kekule.Widget.getWidgetById('btnAdd3');
+      btnAdd3.addEventListener('execute', addWidget3);
+    };
+    function addWidget1()
+    {
+      var newWidget = new Kekule.Widget.Button(grid, 'New Button');
+    };
+    function addWidget2()
+    {
+      var newWidget = new Kekule.Widget.TextEditor(grid);
+    };
+    function addWidget3()
+    {
+      var newWidget = new Kekule.ChemWidget.Viewer2D(grid);
+      newWidget.setDimension(500, 300);
+      newWidget.getElement().style.border = '1px solid red';
+    };
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="objInspector" style="float:right" data-widget="Kekule.Widget.ObjectInspector"></div>
+  <div>
+    <button id="btnAdd1" data-widget="Kekule.Widget.Button">Add 1</button>
+    <button id="btnAdd2" data-widget="Kekule.Widget.Button">Add 2</button>
+    <button id="btnAdd3" data-widget="Kekule.Widget.Button">Add 3</button>
+  </div>
+  <div id="grid1" data-widget="Kekule.ChemWidget.ViewerGrid2D" data-auto-caption="true" data-show-caption="true" data-auto-size="true" data-cell-width="200px" data-cell-height="200px"></div>
+</body>
+</html>

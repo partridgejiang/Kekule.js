@@ -511,7 +511,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	doInsertedToDom: function()
 	{
-		this.refitDrawContext();
+		this.doResize();
 	},
 	/** @private */
 	doResize: function()

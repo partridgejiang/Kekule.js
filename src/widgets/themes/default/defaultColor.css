@@ -114,9 +114,14 @@
 .K-Button,
 .K-Toolbar,
 .K-Panel,
-.K-TreeView
+.K-TreeView,
+.K-Widget-Grid .K-Widget-Grid-Cell
 {
     border-color: #d3d3d3;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell
+{
+    color: #d3d3d3;
 }
 .K-Button,
 .K-Toolbar
@@ -130,17 +135,24 @@
     filter:Alpha(Opacity=70);
 }
 
-.K-Button.K-State-Focused, .K-Button.K-State-Hover
+.K-Button.K-State-Focused, .K-Button.K-State-Hover,
+.K-Widget-Grid .K-Widget-Grid-Cell.K-State-Hover
 {
     color: #212121;
     border-color: #999999;
+}
+.K-Button.K-State-Focused, .K-Button.K-State-Hover
+{
     background-color: #dadada;
 }
 
-
-.K-Button.K-State-Active
+.K-Button.K-State-Active,
+.K-Widget-Grid .K-Widget-Grid-Cell:active
 {
     border-color: #aaaaaa;
+}
+.K-Button.K-State-Active
+{
     background-color: #ffffff;
 }
 
@@ -309,6 +321,19 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark
 {
     background-position: -32px -16px;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Pri-Glyph-Content
+{
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content
+{
+    background-image: url("icons/generalUiIcons.png");
+    background-position: -80px -128px;
 }
 
 .K-ColorPicker .K-ColorPicker-Palette,

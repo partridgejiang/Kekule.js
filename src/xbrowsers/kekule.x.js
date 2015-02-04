@@ -46,6 +46,9 @@ Kekule.BrowserFeature = {
 	cssTransition: (function(s) {
 		return 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
 	})(document.createElement('div').style),
+	cssTranform: (function(s) {
+		return 'transform' in s || 'WebkitTransform' in s || 'MozTransform' in s || 'msTransform' in s || 'OTransform' in s;
+	})(document.createElement('div').style),
 	html5Form: {
 		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
 		supportType: function(typeName)
