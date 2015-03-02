@@ -445,6 +445,17 @@ ClassEx.extend(Kekule.StructureConnectionTable, {
 			piECountMap.finalize();
 		}
 	},
+	/**
+	 * Perceive and all aromatic rings in ctab, same as method perceiveAromaticRings.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} candidateRings Rings in ctab that the detection will be performed.
+	 *   If this param is not set, all memebers of SSSR of ctab will be checked.
+	 * @return {Array} Found aromatic rings.
+	 */
+	findAromaticRings: function(allowUncertainRings, candidateRings)
+	{
+		return this.perceiveAromaticRings(allowUncertainRings, candidateRings);
+	},
 
 	/**
 	 * Returns aromatic type of a ring.
@@ -484,6 +495,17 @@ ClassEx.extend(Kekule.StructureFragment, {
 		var result = this.hasCtab()? this.getCtab().perceiveAromaticRings(candidateRings): [];
 		this.setAromaticRings(result || []);
 		return result;
+	},
+	/**
+	 * Perceive and all aromatic rings in molecule, same as method perceiveAromaticRings.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} candidateRings Rings in ctab that the detection will be performed.
+	 *   If this param is not set, all memebers of SSSR of ctab will be checked.
+	 * @return {Array} Found aromatic rings.
+	 */
+	findAromaticRings: function(allowUncertainRings, candidateRings)
+	{
+		return this.perceiveAromaticRings(allowUncertainRings, candidateRings);
 	},
 	/**
 	 * Returns aromatic type of a ring.

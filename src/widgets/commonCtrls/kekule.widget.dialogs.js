@@ -39,7 +39,28 @@ Kekule.Widget.DialogButtons = {
 	OK: 'ok',
 	CANCEL: 'cancel',
 	YES: 'yes',
-	NO: 'no'
+	NO: 'no',
+
+	/**
+	 * Whether button is a positive one (e.g. Ok, Yes).
+	 * @param {String} btn
+	 * @returns {Bool}
+	 */
+	isPositive: function(btn)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		return ([DB.OK, DB.YES].indexOf(btn) >= 0);
+	},
+	/**
+	 * Whether button is a negative one (e.g. Cancel, No).
+	 * @param {String} btn
+	 * @returns {Bool}
+	 */
+	isNegative: function(btn)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		return ([DB.CANCEL, DB.NO].indexOf(btn) >= 0);
+	}
 };
 
 /**
@@ -115,7 +136,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('buttons', value);
-				SU.setDisplay(this.getBtnPanelElem(), value && value.length);
+				if (this.getBtnPanelElem())
+					SU.setDisplay(this.getBtnPanelElem(), value && value.length);
 				this.buttonsChanged();
 			}
 		});
@@ -161,6 +183,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		elem.className = CNS.DIALOG_CLIENT;
 		rootElem.appendChild(elem);
 		this.setPropStoreFieldValue('clientElem', elem);
+		this.doCreateClientContents(elem);
 		result.push(elem);
 
 		// button panel element
@@ -171,6 +194,17 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		result.push(elem);
 
 		return result;
+	},
+
+	/**
+	 * Create essential child widgets (and other elements) in client area.
+	 * Descendants may override this method.
+	 * @param {HTMLElement} clientElem
+	 * @private
+	 */
+	doCreateClientContents: function(clientElem)
+	{
+		// do nothing here
 	},
 
 	/**
@@ -513,8 +547,28 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	close: function(result)
 	{
-		var self = this;
+		//var self = this;
+		this.setResult(result);
 		this.hide();
+	},
+
+	/**
+	 * Returns whether the dialog result is a positive one (like Ok, Yes).
+	 * @param {String} result Dialog result, if not set, current dialog result will be used.
+	 * @returns {Bool}
+	 */
+	isPositiveResult: function(result)
+	{
+		return Kekule.Widget.DialogButtons.isPositive(result || this.getResult());
+	},
+	/**
+	 * Returns whether the dialog result is a negative one (like Cancel, No).
+	 * @param {String} result Dialog result, if not set, current dialog result will be used.
+	 * @returns {Bool}
+	 */
+	isNegativeResult: function(result)
+	{
+		return Kekule.Widget.DialogButtons.isNegative(result || this.getResult());
 	},
 
 	/** @ignore */

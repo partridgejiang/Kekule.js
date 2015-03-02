@@ -267,7 +267,7 @@ table.K-Widget
     left: 0;
     right: 0;
     bottom: 3em;
-    z-index: 1000;
+    z-index: 30000;
     text-align: center;
 }
 .K-SysMsgGroup .K-MsgPanel

@@ -18,6 +18,7 @@
  * requires /widgets/commonCtrls/kekule.widget.dialogs.js
  * requires /widgets/commonCtrls/kekule.widget.formControls.js
  * requires /widgets/chem/kekule.chemWidget.base.js
+ * requires /widgets/chem/kekule.chemWidget.dialogs.js
  */
 
 (function(){
@@ -53,10 +54,6 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_SAVEFILE: 'K-Chem-SaveFile',
 	ACTION_CONFIG: 'K-Chem-Config',
 
-	DIALOG_LOADDATA: 'K-Chem-Dialog-LoadData',
-	DIALOG_LOADDATA_FORMATBOX: 'K-Chem-Dialog-LoadData-FormatBox',
-	DIALOG_LOADDATA_SRCEDITOR: 'K-Chem-Dialog-LoadData-SrcEditor',
-	DIALOG_LOADDATA_BTN_LOADFROMFILE: 'K-Chem-Dialog-LoadData-Btn-LoadFromFile',
 	DIALOG_CHOOSE_FILE_FORAMT: 'K-Chem-Dialog-Choose-File-Format',
 	DIALOG_CHOOSE_FILE_FORAMT_FORMATBOX: 'K-Chem-Dialog-Choose-File-Format-FormatBox',
 	DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER: 'K-Chem-Dialog-Choose-File-Format-Previewer'
@@ -184,8 +181,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': function(value)
 			{
 				var oldObj = this.getPropStoreFieldValue('chemObj');
-				this.setPropStoreFieldValue('chemObj', value);
-				this.chemObjChanged(value, oldObj);
+				if (value !== oldObj)
+				{
+					this.setPropStoreFieldValue('chemObj', value);
+					this.chemObjChanged(value, oldObj);
+				}
 			}
 		});
 		this.defineProp('chemObjLoaded', {'dataType': DataType.BOOL, 'serializable': false, 'scope': PS.PUBLIC,
@@ -364,7 +364,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return p? p.getRenderer(): null;
 			}
 		});
-
 	},
 
 	/**
@@ -506,6 +505,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		// TODO: Currently autosize is not enabled in 3D mode
 		return this.getRenderType() === Kekule.Render.RendererType.R2D;
+	},
+
+
+	/**
+	 * Whether context and draw bridge can modify existing graphic content.
+	 * @returns {Bool}
+	 */
+	canModifyPartialGraphic: function(context)
+	{
+		var b = this.getDrawBridge();
+		return b.canModifyGraphic? b.canModifyGraphic(context || this.getDrawContext()): false;
 	},
 
 	/** @private */
@@ -1339,21 +1349,24 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		//this.setDisplayer(displayer);
 		//this.setText(CWT.CAPTION_LOADDATA);
 		//this.setHint(CWT.HINT_LOADDATA);
+		/*
 		this._openFileAction = new Kekule.ActionFileOpen();
 		this._openFileAction.update();
 		this._openFileAction.addEventListener('open', this.reactFileLoad, this);
 		this._sBtnLoadFromFile = CWT.CAPTION_LOADDATA_FROM_FILE;
+		*/
 	},
 	/** @ignore */
 	finalize: function($super)
 	{
-		this._openFileAction.finalize();
+		//this._openFileAction.finalize();
 		$super();
 	},
 	/** @private */
 	initProperties: function()
 	{
 		// private
+		/*
 		this.defineProp('dataDialog', {'dataType': 'Kekule.Widget.Dialog', 'serializable': false, 'setter': null,
 			'getter': function()
 			{
@@ -1366,12 +1379,26 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 				return result;
 			}
 		});
-		this.defineProp('lastFormat', {'dataType': DataType.STRING, 'serializable': false});
+		*/
+		this.defineProp('dataDialog', {'dataType': 'Kekule.ChemWidget.LoadDataDialog', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('dataDialog');
+				if (!result)
+				{
+					result = this.createDataDialog();
+					this.setPropStoreFieldValue('dataDialog', result);
+				}
+				return result;
+			}
+		});
+		//this.defineProp('lastFormat', {'dataType': DataType.STRING, 'serializable': false});
 	},
 	/** @private */
 	createDataDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
+		/*
 		var result = new Kekule.Widget.Dialog(doc, CWT.CAPTION_LOADDATA,
 			[this._sBtnLoadFromFile, Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		result.addClassName(CCNS.DIALOG_LOADDATA);
@@ -1409,8 +1436,11 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		dataEditor.appendToElem(elem);
 		result._dataEditor = dataEditor;
 		return result;
+		*/
+		return new Kekule.ChemWidget.LoadDataDialog(doc);
 	},
-	/** @private */
+	/* @private */
+	/*
 	reactFileLoad: function(e)
 	{
 		var files = e.files;
@@ -1421,12 +1451,16 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 			this.getDataDialog().close();
 		}
 	},
-	/** @private */
+	*/
+	/* @private */
+	/*
 	getAvailableReaderInfos: function()
 	{
 		return Kekule.IO.ChemDataReaderManager.getAvailableReaderInfos();
 	},
-	/** @private */
+	*/
+	/* @private */
+	/*
 	getFormatSelectorItems: function(readerInfos)
 	{
 		var result = [];
@@ -1450,17 +1484,10 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 				}
 				var sFileExt = fileExts.join(', ');
 				var text = idInfo.title;
-				/*
-				 if (idInfo.mimeType)
-				 text += ' | ' + idInfo.mimeType;
-				 */
+
 				if (sFileExt)
 					text += ' (' + sFileExt + ')';
-				/*
-				var selected = srcFormat? (formatIds[i] === srcFormat):
-					this.getLastFormat()? (this.getLastFormat() === formatIds[i]):
-						i === 0;
-				*/
+
 				result.push({
 					'value': idInfo.mimeType, //idInfo.id,
 					'text': text,
@@ -1479,6 +1506,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		);
 		return result;
 	},
+	*/
 
 	/** @private */
 	doUpdate: function($super)
@@ -1502,14 +1530,18 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		dialog.openModal(
 			function(result)
 			{
-				if (result === Kekule.Widget.DialogButtons.OK)  // load
+				if (dialog.isPositiveResult(result))  // load
 				{
+					/*
 					var data = dialog._dataEditor.getValue();
 					var mimeType = dialog._formatSelector.getValue();
 
 					//self.setLastFormat(formatId);
 					var displayer = self.getDisplayer();
 					displayer.loadFromData(data, mimeType);
+					*/
+					var displayer = self.getDisplayer();
+					displayer.load(dialog.getChemObj());
 				}
 			}, target);
 	}

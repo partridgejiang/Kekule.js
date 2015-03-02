@@ -62,7 +62,9 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_TEXTALIGN_BUTTON_LEFT: 'K-Chem-Composer-TextAlign-Button-Left',
 	COMPOSER_TEXTALIGN_BUTTON_RIGHT: 'K-Chem-Composer-TextAlign-Right',
 	COMPOSER_TEXTALIGN_BUTTON_TOP: 'K-Chem-Composer-TextAlign-Top',
-	COMPOSER_TEXTALIGN_BUTTON_BOTTOM: 'K-Chem-Composer-TextAlign-Bottom'
+	COMPOSER_TEXTALIGN_BUTTON_BOTTOM: 'K-Chem-Composer-TextAlign-Bottom',
+
+	COMPOSER_DIALOG: 'K-Chem-ComposerDialog'  //'K-Chem-Viewer-Assoc-Editor'
 });
 
 /**
@@ -730,6 +732,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, editor)
 	{
+		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
+
+		this.setPropStoreFieldValue('enableStyleToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
 		$super(parentOrElementOrDocument);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
@@ -742,14 +747,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.createCommonToolbar();
 		this.createChemToolbar();
 
-		this.setEnableStyleToolbar(true);
 		// debug
-		//this.createStyleToolbar();
 		//this.setShowInspector(true);
 		this.uiLayoutChanged();
-
-		// private
-		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -840,7 +840,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.defineProp('enableStyleToolbar', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
+				console.log('set to', value);
 				this.setPropStoreFieldValue('enableStyleToolbar', value);
+				this.updateStyleToolbarState();
 			}
 		});
 
@@ -1072,6 +1074,31 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	isDirty: function()
 	{
 		return this.getEditor().isDirty();
+	},
+	/**
+	 * Load chem object in composer.
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	load: function(chemObj)
+	{
+		return this.getEditor().load(chemObj);
+	},
+	/**
+	 * Returns array of classes that can be exported (saved) from composer.
+	 * @returns {Array}
+	 */
+	getExportableClasses: function()
+	{
+		return this.getEditor().getExportableClasses();
+	},
+	/**
+	 * Returns exportable object for specified class.
+	 * @param {Class} objClass Set null to export default object.
+	 * @returns {Object}
+	 */
+	exportObj: function(objClass)
+	{
+		return this.getEditor().exportObj(objClass);
 	},
 
 	/**
@@ -1614,6 +1641,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			toolbar.setComponentNames(this.getStyleBarComponents());
 			this.setStyleToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
+			this.updateStyleToolbarState();
 			return toolbar;
 		}
 		else
@@ -1847,6 +1875,95 @@ SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit 
 		BNS.molCharge
 	],   // create only chem tool buttons related with molecule
 	styleToolComponentNames: null  // create all default style components
+});
+SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
+	enableStyleToolbar: false,
+	commonToolButtons: [
+		BNS.newDoc,
+		BNS.loadData,
+		BNS.saveFile,
+		BNS.undo,
+		BNS.redo
+	]
+});
+SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
+	allowCreateNewChild: false
+});
+
+/**
+ * A dialog with a composer, executed to edit or create new chem object.
+ * @class
+ * @augments Kekule.Widget.Dialog
+ *
+ * @property {Kekule.Editor.Composer} composer Composer widget in dialog.
+ * @property {Kekule.ChemObject} chemObj Get or set chem object in composer.
+ */
+Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
+/** @lends Kekule.Editor.ComposerDialog# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ComposerDialog',
+	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	{
+		$super(parentOrElementOrDocument, caption,
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false, 'setter': null});
+		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false,
+			'getter': function()
+			{
+				var c = this.getComposer();
+				return c && c.getChemObj();
+			},
+			'setter': function(value)
+			{
+				var c = this.getComposer();
+				if (c)
+					c.setChemObj(value);
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.COMPOSER_DIALOG;
+	},
+	/** @ignore */
+	doCreateClientContents: function($super, clientElem)
+	{
+		$super();
+		var composer = this.doCreateComposerWidget();
+		this.setPropStoreFieldValue('composer', composer);
+		composer.appendToElem(clientElem);
+	},
+
+	/**
+	 * @private
+	 */
+	doCreateComposerWidget: function()
+	{
+		// TODO: currently fixed to composer
+		var result = new Kekule.Editor.Composer(this);
+		result.addClassName(CNS.DYN_CREATED);
+		var editor = result.getEditor();
+		/*
+		editor.setEnableCreateNewDoc(false);
+		editor.setEnableLoadNewFile(false);
+		editor.setAllowCreateNewChild(false);
+		*/
+		editor.addClassName(CNS.DYN_CREATED);
+		return result;
+	}
 });
 
 })();

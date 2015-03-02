@@ -126,6 +126,7 @@ function getKekuleIncludes()
 
 		// chem widgets
 		'widgets/chem/kekule.chemWidget.base.js',
+		'widgets/chem/kekule.chemWidget.dialogs.js',
 		'widgets/chem/periodicTable/kekule.chemWidget.periodicTables.js',
 		'widgets/chem/kekule.chemWidget.chemObjDisplayers.js',
 		'widgets/chem/structureTreeView/kekule.chemWidget.structureTreeViews.js',

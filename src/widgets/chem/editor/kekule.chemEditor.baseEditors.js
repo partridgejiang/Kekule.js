@@ -984,16 +984,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 
-	/**
-	 * Whether context and draw bridge can modify existing graphic content.
-	 * @returns {Bool}
-	 */
-	canModifyPartialGraphic: function(context)
-	{
-		var b = this.getDrawBridge();
-		return b.canModifyGraphic? b.canModifyGraphic(context || this.getObjContext()): false;
-	},
-
 	/* @private */
 	/*
 	refitDrawContext: function($super, doNotRepaint)
@@ -1193,7 +1183,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return (this._objectUpdateFlag < 0);
 	},
 	/**
-	 * Notify the object(s) property has been changed and need to be updated. Same as {@link Kekule.Editor.AbstractEditor.objectsChanged}
+	 * Notify the object(s) property has been changed and need to be updated.
 	 * @param {Variant} obj An object or a object array.
 	 * @param {Array} changedPropNames
 	 * @private

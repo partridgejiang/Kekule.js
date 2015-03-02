@@ -31,6 +31,7 @@ Kekule.ChemStructureSearcher = {
 	 *   {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
 	 *       default is true.
+	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
 	 *     ignoreCharge: Bool
 	 *     ignoreBondOrder: Bool
 	 *   }
@@ -40,6 +41,15 @@ Kekule.ChemStructureSearcher = {
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
 		var op = Object.extend({doStandardize: true}, options);
+
+		if (op.exactMatch)
+		{
+			var matched = sourceMol.isSameStructureWith(subStructure);
+			if (matched)
+				return [].concat(sourceMol.getNodes()).concat(sourceMol.getConnectors());
+			else
+				return false;
+		}
 
 		// standardize structures first, perceive aromatic rings
 		if (op.doStandardize)
@@ -359,6 +369,7 @@ ClassEx.extend(Kekule.StructureFragment, {
 	 * @param {Hash} options Search options, can include the following fields:
 	 *   {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching.
+	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
 	 *     ignoreCharge: Bool
 	 *     ignoreBondOrder: Bool
 	 *   }

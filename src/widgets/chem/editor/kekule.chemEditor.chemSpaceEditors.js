@@ -332,7 +332,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
 				//coord.y = spaceSize.y - /*(objBox.y2 - objBox.y1) / 2*/objBox.y2 - padding * ratio;
 				//coord.y = spaceSize.y - Math.abs(objBox.y2 - objBox.y1) / 2 - padding * ratio;
-				coord.y = spaceSize.y - padding * ratio - objBox.y2;
+				coord.y = (oldObjCoord.y || 0) + spaceSize.y - padding * ratio - objBox.y2;
 				//coord.x -= (objBox.x2 + objBox.x1) / 2;
 				coord.x += (oldObjCoord.x || 0) - (objBox.x2 + objBox.x1) / 2;
 

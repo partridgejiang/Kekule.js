@@ -38,7 +38,6 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER: 'K-Chem-Viewer',
 	VIEWER2D: 'K-Chem-Viewer2D',
 	VIEWER3D: 'K-Chem-Viewer3D',
-	VIEWER_ASSOC_EDITOR: 'K-Chem-Viewer-Assoc-Editor',
 	VIEWER_CAPTION: 'K-Chem-Viewer-Caption',
 
 	// predefined actions
@@ -77,6 +76,8 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Bool} showCaption Whether show caption below or above viewer.
  * @property {Int} captionPos Value from {@link Kekule.Widget.Position}, now only TOP and BOTTOM are usable.
  * @property {Bool} autoCaption Set caption automatically by chemObj info.
+ *
+ * //@property {Bool} liveUpdate Whether viewer repaint itself automatically when containing chem object changed.
  *
  * @property {Bool} enableDirectInteraction Whether interact without tool button is allowed (e.g., zoom/rotate by mouse).
  * @property {Bool} enableTouchInteraction Whether touch interaction is allowed. Note if enableDirectInteraction is false, touch interaction will also be disabled.
@@ -133,7 +134,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarPos', Kekule.Widget.Position.AUTO);
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
-		this.setPropStoreFieldValue('showCaption', true);
+		this.setPropStoreFieldValue('showCaption', false);
 		$super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs);
 		this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
 		/*
@@ -278,6 +279,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 		});
 		*/
+		//this.defineProp('liveUpdate', {'dataType': DataType.BOOL});
+
 		this.defineProp('enableEdit', {'dataType': DataType.BOOL,
 			'getter': function()
 			{
@@ -681,6 +684,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	*/
 
 	/// Methods about popup editing ////////////////
+	/** @private */
+	getComposerDialog: function()
+	{
+		if (!this._composerDialog)
+			this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), CWT.CAPTION_EDIT_OBJ,
+				[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		return this._composerDialog;
+	},
 	/**
 	 * Open a popup editor to modify displayed object.
 	 * @param {Kekule.Widget.BaseWidget} callerWidget Who invokes edit action, default is the viewer itself.
@@ -689,6 +700,34 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		if (this.getEnableEdit() && this.getChemObj())
 		{
+			var dialog = this.getComposerDialog();
+			var composer = dialog.getComposer();
+			composer.setEnableCreateNewDoc(false);
+			composer.setEnableLoadNewFile(false);
+			composer.setAllowCreateNewChild(false);
+			// load object in editor
+			var chemObj = this.getChemObj();
+			var cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+			dialog.setChemObj(cloneObj);
+
+			var self = this;
+			var callback = function(dialogResult)
+			{
+				if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
+				{
+					chemObj.assign(cloneObj);
+					// clear src info data
+					chemObj.setSrcInfo(null);
+					//self.repaint();
+					self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+				}
+				//dialog.finalize();
+			}
+			if (this.getModalEdit())
+				dialog.openModal(callback, callerWidget || this);
+			else
+				dialog.openPopup(callback, callerWidget || this);
+			/*
 			var editor = this.createEditorWidget();
 			if (editor)
 			{
@@ -724,12 +763,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 				//editor.setChemObj(cloneObj);  // load obj in editor at last, as editor can not decide obj position when its not shown
 			}
+			*/
 		}
 	},
-	/**
+	/*
 	 * Returns a new widget to edit object in viewer.
 	 * @private
 	 */
+	/*
 	createEditorWidget: function()
 	{
 		// TODO: currently fixed to composer
@@ -741,6 +782,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		editor.addClassName(CNS.DYN_CREATED);
 		return result;
 	},
+	*/
 
 
 	////////////////////////////////////////////////
@@ -893,7 +935,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			BNS.saveFile,
 			BNS.molDisplayType,
 			BNS.molHideHydrogens,
-			BNS.zoomIn, BNS.zoomOut,
+			BNS.zoomIn, BNS.zoomOut
 		];
 		// rotate
 		if (this.getRenderType() === Kekule.Render.RendererType.R3D)

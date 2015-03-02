@@ -513,7 +513,7 @@ Kekule.StyleUtils = {
 		r.total = value;
 		r.value = parseFloat(value);
 		var sunit;
-		if ((r.value !== undefined) && (r.value !== NaN))
+		if (value && value.length && (r.value !== undefined) && (r.value !== NaN))
 		{
 			sunit = '';
 			for (var i = value.length - 1; i >= 0; --i)
@@ -524,7 +524,7 @@ Kekule.StyleUtils = {
 					sunit = c + sunit;
 			}
 		}
-		r.units = sunit;
+		r.units = sunit || '';
 		return r;
 	},
 	/**

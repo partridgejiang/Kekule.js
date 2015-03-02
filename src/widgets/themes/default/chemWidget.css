@@ -237,12 +237,6 @@
     padding: 0.3em 0.6em;
 }
 
-.K-Chem-Viewer-Assoc-Editor
-{
-    width: 700px;
-    height: 500px;
-}
-
 .K-Chem-Editor
 {
     overflow: auto;
@@ -283,6 +277,9 @@
 .K-Chem-Composer
 {
     position: relative;
+    /* default width/height */
+    width: 600px;
+    height: 400px;
 }
 
 .K-Chem-Composer .K-Chem-Editor
@@ -339,10 +336,16 @@
 }
 */
 
+. K-Chem-Composer-Toolbar
+{
+    white-space: nowrap;
+}
+
 .K-Chem-Composer-Style-Toolbar .K-Button
 {
     text-align: left;
     padding: 0.2em 0.4em;
+    white-space: nowrap;
 }
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content
 {
@@ -407,6 +410,12 @@
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
 {
     width: 10em;
+}
+
+.K-Chem-ComposerDialog .K-Chem-Composer
+{
+    width: 700px;
+    height: 500px;
 }
 
 .K-Chem-Dialog-Choose-File-Format,

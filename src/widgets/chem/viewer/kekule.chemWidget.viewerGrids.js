@@ -16,6 +16,7 @@
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
  * requires /widgets/chem/kekule.chemWidget.viewers.js
  * requires /widgets/advCtrls/kekule.widget.widgetGrids.js
+ * requires /widgets/chem/kekule.chemWidget.dialogs.js
  *
  * requires /localization/kekule.localize.widget.js
  */
@@ -71,6 +72,7 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 			'toolButtons', 'enableToolbar', 'toolbarPos',	'toolbarMarginVertical', 'toolbarMarginHorizontal', 'toolbarEvokeModes', 'toolbarRevokeModes', 'toolbarRevokeTimeout',
 			'caption', 'showCaption', 'autoCaption', 'captionPos', 'enableDirectInteraction', 'enableTouchInteraction'
 		]);
+		this.defineViewerShadowProps(['viewerPredefinedSetting'], ['predefinedSetting']);
 		// private
 		this.defineProp('actionLoadData', {'dataType': 'Kekule.ChemWidget.ActionDisplayerLoadData', 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': null,
@@ -133,6 +135,36 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 	},
 
 	/** @ignore */
+	createWidget: function($super)
+	{
+		var doc = this.getDocument();
+		// react to click on add cell, show a dialog to load or edit chem object
+		var dialog = new Kekule.ChemWidget.LoadDataDialog(doc); //new Kekule.Editor.ComposerDialog(doc);
+		var self = this;
+		dialog.openModal(function(result){
+			if (dialog.isPositiveResult(result))
+			{
+				var chemObj = dialog.getChemObj();
+				if (chemObj)
+				{
+					var w = self.doCreateNewChildWidget(doc, chemObj);
+					w.setParent(self);
+				}
+			}
+		}, this.getAddingCell());
+		/*
+		var result = this.doCreateNewChildWidget(this.getDocument());
+		if (result)
+		{
+			result.setParent(this);
+			return result;
+		}
+
+		return $super();
+		*/
+	},
+
+	/** @ignore */
 	doCreateNewChildWidget: function(doc, chemObj)
 	{
 		var result = new Kekule.ChemWidget.Viewer(doc, null, this.getRenderType(), this.getViewerConfigs());
@@ -140,9 +172,11 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 		this.doSetShadowedPropValuesToViewer(result);
 		if (!chemObj)
 		{
+			/*
 			var action = this.getActionLoadData();
 			action.setDisplayer(result);
 			action.execute();
+			*/
 		}
 		else
 		{
@@ -163,11 +197,25 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 
 	/**
 	 * Create a new viewer and load chem object
-	 * @param chemObj
+	 * @param {Kekule.ChemObject} chemObj
 	 */
 	addChemObj: function(chemObj)
 	{
-		this.doCreateNewChildWidget(this.getDocument(), chemObj);
+		this.doCreateNewChildWidget(this.getDocument(), chemObj).setParent(this);
+		return this;
+	},
+	/**
+	 * Removes viewer displaying chemObj.
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	removeChemObj: function(chemObj)
+	{
+		var self = this;
+		this.each(function(viewer){
+			if (viewer.getChemObj() === chemObj)
+				self.removeWidget(viewer, true);  // do finalize
+		});
+		return this;
 	}
 });
 

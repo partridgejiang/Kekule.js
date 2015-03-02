@@ -84,26 +84,33 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	initProperties: function()
 	{
 		this.defineProp('childWidgetClass', {'dataType': DataType.CLASS, 'serializable': false});
-		this.defineProp('cellWidth', {'dataType': DataType.STRING,
+		this.defineProp('cellWidth', {'dataType': DataType.STRING
+			/*
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('cellWidth', value);
 				this.updateAllCells();
 			}
+			*/
 		});
-		this.defineProp('cellHeight', {'dataType': DataType.STRING,
+		this.defineProp('cellHeight', {'dataType': DataType.STRING
+			/*
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('cellHeight', value);
 				this.updateAllCells();
 			}
+			*/
 		});
 		this.defineProp('widgetPos', {'dataType': DataType.INT,
+			'enumSource': Kekule.Widget.Position
+			/*
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('widgetPos', value);
 				this.updateAllCells();
 			}
+			*/
 		});
 		this.defineProp('autoShrinkWidgets', {'dataType': DataType.BOOL});
 		this.defineProp('keepWidgetAspectRatio', {'dataType': DataType.BOOL});
@@ -181,9 +188,17 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	doObjectChange: function($super, modifiedPropNames)
 	{
 		$super(modifiedPropNames);
-		var inter = AU.intersect(modifiedPropNames, ['autoShrinkWidgets', 'keepWidgetAspectRatio']);
+		var inter = AU.intersect(modifiedPropNames, ['autoShrinkWidgets', 'keepWidgetAspectRatio', 'cellWidth', 'cellHeight', 'widgetPos']);
 		if (inter.length > 0)
 			this.updateAllCells();
+	},
+
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		if (isShown)
+			this.updateAllCells();
+		return $super(isShown);
 	},
 
 	/**
@@ -192,7 +207,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	 */
 	each: function(callFunc)
 	{
-		var ws = this.getChildWidgets();
+		var ws = Kekule.ArrayUtils.clone(this.getChildWidgets());
 		for (var i = 0, l = ws.length; i < l; ++i)
 		{
 			callFunc(ws[i]);
@@ -423,6 +438,11 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		{
 			result.push(this.getWidgetCell(widgets[i]));
 		}
+		// check if there is an add cell
+		if (this.getAddingCell())
+		{
+			result.push(this.getAddingCell());
+		}
 		return result;
 	},
 	/**
@@ -473,6 +493,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		var containerElem = this.getWidgetParentElemOfCell(cellElem);
 		var widgetBound = EU.getElemOffsetDimension(containerElem);
 		var cellBound = EU.getElemClientDimension(cellElem);  // without margin and border, but with padding
+		//console.log('cellSize', this.getCellWidth(), this.getCellHeight());
 		var paddingNames = ['top', 'right', 'bottom', 'left'];
 		var paddings = {};
 		for (var i = 0, l = paddingNames.length; i < l; ++i)
@@ -493,6 +514,8 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		var top = (pos & WP.TOP)? paddings.top:
 			(pos & WP.BOTTOM)? cellBound.height - widgetBound.height - paddings.bottom:
 			(cellClientBound.height - widgetBound.height) / 2 + paddings.top;  // default, middle
+
+		//console.log('cellBound', cellBound, paddings, left, top);
 
 		containerElem.style.left = left + 'px';
 		containerElem.style.top = top + 'px';
@@ -573,7 +596,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		var cells = this.getAllCells();
 		for (var i = 0, l = cells.length; i < l; ++i)
 		{
-			this.updateCell(cells[i]);
+			this.updateCell(cells[i], cells[i] === this.getHotCell());
 		}
 	},
 	/** @private */

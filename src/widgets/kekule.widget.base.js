@@ -2372,8 +2372,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if ((evType === 'mousedown') || (evType === 'touchstart'))
 				{
-					this.reactActiviting(e);
-					handled = true;
+					if (!e.ghostMouseEvent)
+					{
+						this.reactActiviting(e);
+						handled = true;
+					}
 				}
 				/*
 				else if (evType === 'mouseleave')
@@ -2387,8 +2390,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				*/
 				else if ((evType === 'mouseup') || (evType === 'touchend') || (evType === 'touchcancel') || (evType === 'touchleave'))
 				{
-					this.reactDeactiviting(e);
-					handled = true;
+					if (!e.ghostMouseEvent)
+					{
+						this.reactDeactiviting(e);
+						handled = true;
+					}
 				}
 				else if (evType === 'keydown')
 				{
@@ -3336,8 +3342,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 		else if (['mousedown', 'mouseup', 'click'].indexOf(evType) >= 0)
 		{
-			if (this._touchJustStart)  // avoid ghost mouse event
-				return;
+			if (this._touchJustStart)  // mark ghost mouse event
+				e.ghostMouseEvent = true;
+				//return;
 		}
 
 		// check first if the component has event handler itself

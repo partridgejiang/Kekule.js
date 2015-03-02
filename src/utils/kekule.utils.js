@@ -725,7 +725,10 @@ Kekule.StrUtils = {
 		if (DataType.isArrayValue(str))
 			return str;
 		else  // assume is string
-			return str.replace(separator || /\s+/g,' ').split(' ');
+		{
+			var reg = separator? new RegExp(separator, 'g'): /\s+/g;
+			return str.replace(reg, ' ').split(' ');
+		}
 	},
 	/**
 	 * Check if token already inside str.

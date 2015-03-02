@@ -379,7 +379,7 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		}
 		else
 			Kekule.error(Kekule.ErrorMsg.INAVAILABLE_AUTOSCALE_REF_LENGTH);
-		//return 1;  // TODO: need to calculate this
+			//return 1;  // TODO: need to calculate this
 	},
 
 	/**

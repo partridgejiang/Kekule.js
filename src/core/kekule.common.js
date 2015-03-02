@@ -1545,29 +1545,40 @@ Kekule.ObjPropSettingManager = {
 	}
 };
 
+// predefinedSetting string can be split by ',', each setting will be applied to object one by one
 ClassEx.defineProp(ObjectEx, 'predefinedSetting', {'dataType': DataType.STRING,
 	'scope': Class.PropertyScope.PUBLIC,
 	'setter': function(value)
 	{
-		var currClass = this.getClass();
-		var setting = null;
-		var sname = '';
-		while (currClass && !setting)
-		{
-			var cname = ClassEx.getClassName(currClass);
-			var sname = cname + '.' + value;
-			var setting = Kekule.ObjPropSettingManager.getSetting(sname);
-			currClass = ClassEx.getSuperClass(currClass);
-		}
+		var vs = Kekule.StrUtils.splitTokens(value || '', ',');
+		//console.log('predefine', this.getClassName(), vs);
 
-		if (!setting)
+		if (vs.length)
 		{
-			setting = Kekule.ObjPropSettingManager.getSetting(value);
-			sname = value;
-		}
-		if (setting)
-		{
-			this.setPropValues(setting);
+			for (var i = 0, l = vs.length; i < l; ++i)
+			{
+				var currClass = this.getClass();
+				var v = vs[i];
+				var setting = null;
+				var sname = '';
+				while (currClass && !setting)
+				{
+					var cname = ClassEx.getClassName(currClass);
+					var sname = cname + '.' + v;
+					var setting = Kekule.ObjPropSettingManager.getSetting(sname);
+					currClass = ClassEx.getSuperClass(currClass);
+				}
+
+				if (!setting)
+				{
+					setting = Kekule.ObjPropSettingManager.getSetting(v);
+					//sname = v;
+				}
+				if (setting)
+				{
+					this.setPropValues(setting);
+				}
+			}
 			this.setPropStoreFieldValue('predefinedSetting', sname);
 		}
 	}
