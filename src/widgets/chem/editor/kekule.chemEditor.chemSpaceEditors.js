@@ -221,8 +221,10 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			//console.log('decide size', space, space.getScreenSize);
 			var screenSize = space.getScreenSize();
 			this.changeClientSize(screenSize.x, screenSize.y, this.getCurrZoom());
-			// scroll to top
-			this.scrollClientToTop();
+			// scroll to top center
+			var elem = this.getEditClientElem().parentNode;
+			var visibleClientSize = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+			this.scrollClientTo(0, (screenSize.x - visibleClientSize.width) / 2);
 		}
 
 		return result;

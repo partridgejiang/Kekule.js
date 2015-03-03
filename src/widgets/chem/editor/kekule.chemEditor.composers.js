@@ -840,7 +840,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.defineProp('enableStyleToolbar', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
-				console.log('set to', value);
 				this.setPropStoreFieldValue('enableStyleToolbar', value);
 				this.updateStyleToolbarState();
 			}

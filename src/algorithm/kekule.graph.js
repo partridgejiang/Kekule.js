@@ -8,6 +8,7 @@
  * requires /lan/classes.js
  * requires /core/kekule.common.js
  * requires /core/kekule.structures.js
+ * requires /core/kekule.chemUtils.js
  * requires /utils/kekule.utils.js
  */
 
@@ -601,6 +602,28 @@ Kekule.GraphAdaptUtils = {
 			}
 			vertexMap.finalize();
 			*/
+		}
+		return result;
+	},
+	/**
+	 * Create corresponding graph from any chem object.
+	 * @param {Kekule.ChemObject} obj
+	 * @param {Kekule.Graph} graph If not set, a new graph will be created.
+	 * @param {Hash} options Options to convert to graph. Can include fields:
+	 *   {
+	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
+	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
+	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
+	 *   }
+	 * @returns {Kekule.Graph}
+	 */
+	chemObjToGraph: function(obj, graph, options)
+	{
+		var mols = Kekule.ChemStructureUtils.getAllStructFragments(obj, true);
+		var result = graph || new Kekule.Graph();
+		for (var i = 0, l = mols.length; i < l; ++i)
+		{
+			Kekule.GraphAdaptUtils.molToGraph(mols[i], result, options);
 		}
 		return result;
 	}

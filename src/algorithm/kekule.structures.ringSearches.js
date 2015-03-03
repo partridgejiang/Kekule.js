@@ -15,6 +15,7 @@
 (function(){
 "use strict";
 
+var AU = Kekule.ArrayUtils;
 var GU = Kekule.GraphAlgorithmUtils;
 
 var BT = Kekule.BondType;
@@ -312,5 +313,95 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 		'setter': null
 	}
 ]);
+
+var CU = Kekule.ChemStructureUtils;
+
+ClassEx.extend(Kekule.ChemObject, {
+	/**
+	 * Returns all connectors and nodes in cylce block.
+	 * @param {Kekule.Graph} graph
+	 * @returns {Array} An array containing a series of hash with fields:
+	 *   {
+	 *     connectors: Array of all found connectors.
+	 *     nodes: Array of all found nodes.
+	 *   }
+	 *   Each array item marks a cycle block.
+	 */
+	findCycleBlocks: function()
+	{
+		var ss = CU.getAllStructFragments(this);
+		var result = [];
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			var blocks = ss[i].findCycleBlocks();
+			if (blocks)
+				result = result.concat(blocks);
+		}
+		return result.length? result: null;
+	},
+	/**
+	 * Returns all structure rings in a chem object.
+	 * @returns {Array} An array containing a series of hash with fields:
+	 *   {
+ *     connectors: Array of all found connectors.
+ *     nodes: Array of all found nodes.
+ *   }
+	 *   Each array item marks a ring.
+	 */
+	findAllRings: function()
+	{
+		var ss = CU.getAllStructFragments(this);
+		var result = [];
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			var rings = ss[i].findAllRings();
+			if (rings)
+				result = result.concat(rings);
+		}
+		return result.length? result: null;
+	},
+	/**
+	 * Returns Smallest set of smallest rings of chem object.
+	 * @returns {Array} An array containing a series of hash with fields:
+	 *   {
+ *     nodes: Array of all found nodes.
+ *     connectors: Array of all found connectors.
+ *   }
+	 *   Each array item marks a SSSR ring.
+	 */
+	findSSSR: function()
+	{
+		var ss = CU.getAllStructFragments(this);
+		var result = [];
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			var rings = ss[i].findSSSR();
+			if (rings)
+				result = result.concat(rings);
+		}
+		return result.length? result: null;
+	},
+	/**
+	 * Returns ring system details of chem object.
+	 * @returns {Array} An array, each items is a cycle block detail. Item containing a series of hash with fields:
+	 *   {
+ *     connectors: Array of all vertexes in cycle block.
+ *     nodes: Array of all edges in cycle block.
+ *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
+ *   }
+	 */
+	analysisRings: function()
+	{
+		var ss = CU.getAllStructFragments(this);
+		var result = [];
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			var blocks = ss[i].analysisRings();
+			if (blocks)
+				result = result.concat(blocks);
+		}
+		return result.length? result: null;
+	}
+});
 
 })();
