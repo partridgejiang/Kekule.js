@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Insert title here</title>
-<script src="../../src/kekule.js"></script>
+<script src="../../src/kekule.js?min=false"></script>
 <!--
 <script src="../../src/kekule.compressed.js"></script>
 -->
@@ -47,7 +47,7 @@
 		//var writer = new Kekule.IO.CmlScalarWriter();
 		/*
 		var writer = Kekule.IO.CmlElementWriterFactory.getWriter(r);
-		if (writer) 
+		if (writer)
 		{
 			writer.setCoreNamespaceURI('');
 			var doc = XmlUtility.newDocument('cml');
@@ -60,7 +60,7 @@
 		var s = writer.writeData(r, Kekule.IO.ChemDataType.TEXT);
 		document.getElementById('memoOutput').value = s;
 	}
-	
+
 	function testRichTextFormula()
 	{
 		var r = readCml();

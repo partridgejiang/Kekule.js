@@ -883,7 +883,7 @@ Kekule.HtmlElementUtils = {
 		}
 
 		//var result = {'left': r.left, 'top': r.top, 'width': r.width, 'height': r.height};
-		result = r;
+		var result = r;
 		result.x = result.left;
 		result.y = result.top;
 		return result;

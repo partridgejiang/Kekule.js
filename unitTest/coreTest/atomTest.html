@@ -17,7 +17,7 @@
 		<script src="../../src/core/kekule.exceptions.js"></script>
 		<script src="../../src/localization/en/kekule.localize.en.js"></script>
 		-->
-		<script src="../../src/kekule.js"></script>
+		<script src="../../src/kekule.js?min=false"></script>
 		<script>
 			var AtomCreateTestCase = JSTest.TestCase({
 					name: 'Atom Create Test',
@@ -60,7 +60,7 @@
 						this.assertEqual(atoms[6].getMassNumber(), null);
 					}
 				});
-			
+
 			//JSTest.run(true);
 			function init()
 			{

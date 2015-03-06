@@ -16,6 +16,7 @@ Kekule.CmdLineUtils = {
 	/** @private */
 	COMPRESS_LV2_CMD: 'java -jar yuicompressor.jar',
 	/** @private */
+	/*
 	FILE_CATEGORY_PATH_MAP: {
 		core: ['lan/', 'core/', 'utils/', 'xbrowsers/', 'chemdoc/', 'html/', 'algorithm/'],
 		io: ['io/'],
@@ -25,6 +26,7 @@ Kekule.CmdLineUtils = {
 		data: ['data/'],
 		extra: ['_extras']
 	},
+	*/
 	/** @private */
 	COMMON_FILES: ['core/kekule.common.js'],  // file need to be put in every doc group
 	/** @private */
@@ -32,20 +34,44 @@ Kekule.CmdLineUtils = {
 	/** @private */
 	DOC_EXCLUDE_SRC_FILES: ['lan/json2.js', 'lan/sizzle.js', 'xbrowsers/kekule.x.js'],
 
+	getModuleStructures: function()
+	{
+		return Kekule.scriptSrcInfo.allModuleStructures;
+	},
+
 	/**
-	 * Get all files need to be compressed.
+	 * Get all files need to be compressed in a module.
 	 * @returns {Array}
 	 */
-	getSrcFiles: function()
+	getSrcFiles: function(moduleName)
 	{
-		return getKekuleIncludes();
+		//return getKekuleIncludes();
+		var structs = CU.getModuleStructures();
+		var m = structs[moduleName];
+		return m? m.files: [];
 	},
 	/**
 	 * Returns all categories of src file.
 	 */
 	getSrcFileCategories: function()
 	{
-		return Kekule.ObjUtils.getOwnedFieldNames(CU.FILE_CATEGORY_PATH_MAP);
+		//return Kekule.ObjUtils.getOwnedFieldNames(CU.FILE_CATEGORY_PATH_MAP);
+		var structs = CU.getModuleStructures();
+		return Kekule.ObjUtils.getOwnedFieldNames(structs);
+	},
+	getSrcFileModuleInfos: function()
+	{
+		var moduleNames = CU.getSrcFileCategories();
+		var result = [];
+		var structs = CU.getModuleStructures();
+		for (var i = 0, l = moduleNames.length; i < l; ++i)
+		{
+			var mname = moduleNames[i];
+			var m = structs[mname];
+			if (m)
+				result.push(Object.extend({'name': mname}, m));
+		}
+		return result;
 	},
 
 	/**
@@ -56,12 +82,53 @@ Kekule.CmdLineUtils = {
 	 */
 	generateCompressCmdLine: function(targetFileName, srcFiles)
 	{
-		var result;
+		var result = '';
 		if (!targetFileName)
-			targetFileName = '_compressed/kekule.compressed.js';
+			targetFileName = 'kekule.min.js'; //'_compressed/kekule.compressed.js';
+		/*
 		if (!srcFiles)
 			srcFiles = Kekule.CmdLineUtils.getSrcFiles();
+		*/
+		var moduleInfos = CU.getSrcFileModuleInfos();
+		var targetMinFileNames = [];
+		var compressFileMap = {};
+		var allSrcFiles = [];
+		for (var i = 0, l = moduleInfos.length; i < l; ++i)
+		{
+			var m = moduleInfos[i];
+			var targetMinFileName = m.minFile || (m.name + '.min.js');
+			var srcFiles = m.files;
+			Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetMinFileName);
+			if (!compressFileMap[targetMinFileName])
+			{
+				compressFileMap[targetMinFileName] = [];
+			}
+			compressFileMap[targetMinFileName] = compressFileMap[targetMinFileName].concat(srcFiles);
+			allSrcFiles = allSrcFiles.concat(srcFiles);
+		}
+		// add a total compression file
+		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
+		compressFileMap[targetFileName] = allSrcFiles;
+		//console.log(compressFileMap);
 
+		for (var i = 0, l = targetMinFileNames.length; i < l; ++i)
+		{
+			var targetMinFileName = targetMinFileNames[i];
+			var intFileName = '_int_' + targetMinFileName;
+			var srcFiles = compressFileMap[targetMinFileName];
+			var stemplate = '{0} -l 2 -ow {1} {2}';
+			var srcList = srcFiles.join(' ');
+			var lv1OutFile = '_compressed/' + intFileName;
+			result += stemplate.format(Kekule.CmdLineUtils.COMPRESS_LV1_CMD, lv1OutFile, srcList);
+			result += '\n';
+
+			// level2 compress
+			var stemplate = '{0} {1} -o {2}';
+			result += stemplate.format(Kekule.CmdLineUtils.COMPRESS_LV2_CMD, lv1OutFile, '_compressed/' + targetMinFileName);
+			result += '\n\n';
+		}
+
+		/*
 		// level1 compress
 		var stemplate = '{0} -l 2 -ow {1} {2}';
 		var srcList = srcFiles.join(' ');
@@ -72,7 +139,7 @@ Kekule.CmdLineUtils = {
 		// level2 compress
 		var stemplate = '{0} {1} -o {2}';
 		result += stemplate.format(Kekule.CmdLineUtils.COMPRESS_LV2_CMD, lv1OutFile, targetFileName);
-
+    */
 		return result;
 	},
 

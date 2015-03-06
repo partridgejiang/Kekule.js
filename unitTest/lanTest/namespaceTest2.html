@@ -7,7 +7,7 @@
 	<!--
 	<script src="../../src/lan/xmlJsons.js"></script>
 	-->
-	<script src="../../src/kekule.js"></script>
+	<script src="../../src/kekule.js?min=false"></script>
 	<script>
 		var preText = '<molecule xmlns="http://www.xml-cml.org/schema" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:conventions="http://www.xml-cml.org/convention/" convention="conventions:molecular" id="m1"><dc:title>test file for http://www.xml-cml.org/conventions/molecular convention</dc:title><dc:description>valid molecular</dc:description><dc:author>J A Townsend</dc:author><dc:rights>Copyright J A Townsend jat45@cantab.net 2009.</dc:rights><dc:date>2009-01-21</dc:date></molecule>';
 		var xmlDoc;
@@ -43,30 +43,30 @@
 		{
 			parse();
 			//fix();
-			if (!xmlDoc.getElementsByTagNameNS) 
+			if (!xmlDoc.getElementsByTagNameNS)
 			{
 				var elems = xmlDoc.getElementsByTagName('dc:title');
-				if (elems.length > 0) 
+				if (elems.length > 0)
 					alert(elems[0].tagName);
-				else 
+				else
 					alert('Find DC element failed');
 			}
-			else 
+			else
 			{
 				var elems = xmlDoc.getElementsByTagNameNS(nsCml, 'molecule');
-				if (elems.length > 0) 
+				if (elems.length > 0)
 					alert(elems[0].tagName);
-				else 
+				else
 					alert('Find CML element failed');
-				
+
 				var elems = xmlDoc.getElementsByTagNameNS(nsDc, 'title');
-				if (elems.length > 0) 
+				if (elems.length > 0)
 					alert(elems[0].tagName);
-				else 
+				else
 					alert('Find DC element failed');
 			}
 		}
-		
+
 		function testHelper()
 		{
 			parse();
@@ -74,15 +74,15 @@
 			//helper.setRootElement(xmlDoc.documentElement);
 			{
 				var elems = helper.getElementsByTagNameNS(nsCml, 'molecule');
-				if (elems.length > 0) 
+				if (elems.length > 0)
 					alert(elems[0].namespaceURI + ' / ' + elems[0].tagName + ' / ' + elems[0].localName);
-				else 
+				else
 					alert('Find CML element failed');
-				
+
 				var elems = helper.getElementsByTagNameNS(nsDc, 'title');
-				if (elems.length > 0) 
+				if (elems.length > 0)
 					alert(elems[0].namespaceURI + ' / ' + elems[0].tagName + ' / ' + elems[0].localName);
-				else 
+				else
 					alert('Find DC element failed');
 			}
 		}

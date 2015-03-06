@@ -17,6 +17,7 @@
 
 var AU = Kekule.ArrayUtils;
 var GU = Kekule.GraphAlgorithmUtils;
+var CU = Kekule.ChemStructureUtils;
 
 var BT = Kekule.BondType;
 /**
@@ -313,8 +314,6 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 		'setter': null
 	}
 ]);
-
-var CU = Kekule.ChemStructureUtils;
 
 ClassEx.extend(Kekule.ChemObject, {
 	/**

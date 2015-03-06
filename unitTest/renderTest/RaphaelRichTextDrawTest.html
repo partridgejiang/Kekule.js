@@ -12,9 +12,9 @@
 	}
 </style>
 <script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
-<script src="../../src/kekule.js"></script>
-<script>	
-	
+<script src="../../src/kekule.js?min=false"></script>
+<script>
+
 	var rt0 = {
 		"role": "group",
 		"items": [{
@@ -74,7 +74,7 @@
 	};
 	rt1.anchorItem = rt1.items[0];
 	rt1.items[0].anchorItem = rt1.items[0].items[0];
-	
+
 	var anchor2 = {
 				"text": "O"
 			};
@@ -124,7 +124,7 @@
 	rt2.anchorItem = rt2.items[0];
 	var rt3 = {"role": "group", items: [{"role": "section", "text": 'abcdefghijk'}]};
 	var rts = [rt0, rt1, rt2, rt3];
-	
+
 	/*
 	var rt0 = {
 		'role': 'seq',
@@ -136,7 +136,7 @@
 	var rts = [rt0];
 	*/
 
-	
+
 	var paper;
 	var drawBoxWidth = 1000;
 	var drawBoxHeight = 1000;
@@ -146,7 +146,7 @@
 			paper = Raphael('drawParent', drawBoxWidth, drawBoxHeight);
 		return paper;
 	}
-	
+
 	function getFontSize()
 	{
 		return parseInt(document.getElementById('selectFontSize').value);
@@ -167,12 +167,12 @@
 		//console.log(r);
 		return r;
 	};
-	
+
 	function drawRichText()
 	{
 		var p = getPaper();
 		p.clear();
-		var textAlign = getTextAlign(); 
+		var textAlign = getTextAlign();
 		var anchorAlign = getAnchorAlign();
 		var x, y;
 		var partWidth = 220;
@@ -184,7 +184,7 @@
 		for (var i = 0, l = rts.length; i < l; ++i)
 		{
 			var rt = rts[i];
-			for (var j = Kekule.Render.TextDirection.LTR; j <= Kekule.Render.TextDirection.BTT; ++j) 
+			for (var j = Kekule.Render.TextDirection.LTR; j <= Kekule.Render.TextDirection.BTT; ++j)
 			{
 				var x = (j - Kekule.Render.TextDirection.LTR) * partWidth + partWidth / 2;
 				var y = i * partHeight + partHeight / 2;
@@ -204,12 +204,12 @@
 			}
 		}
 	}
-	
+
 	function init()
 	{
 		drawRichText();
 	}
-	
+
 </script>
 </head>
 <body onload = "init()">

@@ -18,6 +18,7 @@
 var AU = Kekule.ArrayUtils;
 var BT = Kekule.BondType;
 var BO = Kekule.BondOrder;
+var CU = Kekule.ChemStructureUtils;
 
 /**
  * Special markers of electron count of p orbit.
@@ -284,7 +285,7 @@ ClassEx.extend(Kekule.StructureConnectionTable, {
 			{
 				++tryCount;
 				var eSum = 0;
-				var currResult = Kekule.AromaticTypes.NONAROMATIC;
+				var currResult = null;  // Kekule.AromaticTypes.NONAROMATIC;
 				for (var i = 0; i < totalCount; ++i)
 				{
 					var eCount = nodeECounts[i][currIndexes[i]];
@@ -297,14 +298,17 @@ ClassEx.extend(Kekule.StructureConnectionTable, {
 					}
 				}
 
-				var times = parseInt(eSum / 4);
-				var mod = eSum % 4;
-				if ((times <= 5) && (times !== 2))  // times = 2, 10 carbon ring, not aromatic
+				if (currResult === null)  // not determinated
 				{
-					if (mod === 2)
-						currResult = Kekule.AromaticTypes.EXPLICIT_AROMATIC;
-					else if (!mod)
-						currResult = Kekule.AromaticTypes.ANTIAROMATIC;
+					var times = parseInt(eSum / 4);
+					var mod = eSum % 4;
+					if ((times <= 5) && (times !== 2))  // times = 2, 10 carbon ring, not aromatic
+					{
+						if (mod === 2)
+							currResult = Kekule.AromaticTypes.EXPLICIT_AROMATIC;
+						else if (!mod)
+							currResult = Kekule.AromaticTypes.ANTIAROMATIC;
+					}
 				}
 
 				if (lastResult !== null)  // check previous and curr result value
@@ -486,13 +490,14 @@ ClassEx.extend(Kekule.StructureFragment, {
 	/**
 	 * Perceive and mark all aromatic rings in molecule. Found rings will be stored in aromaticRings
 	 * property of structure fragment object.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
 	 * @param {Array} candidateRings Rings in molecule that the detection will be performed.
 	 *   If this param is not set, all memebers of SSSR of molecule will be checked.
 	 * @return {Array} Found aromatic rings.
 	 */
-	perceiveAromaticRings: function(candidateRings)
+	perceiveAromaticRings: function(allowUncertainRings, candidateRings)
 	{
-		var result = this.hasCtab()? this.getCtab().perceiveAromaticRings(candidateRings): [];
+		var result = this.hasCtab()? this.getCtab().perceiveAromaticRings(allowUncertainRings, candidateRings): [];
 		this.setAromaticRings(result || []);
 		return result;
 	},
@@ -516,6 +521,40 @@ ClassEx.extend(Kekule.StructureFragment, {
 	getRingAromaticType: function(ring, refRings)
 	{
 		return this.hasCtab()? this.getCtab().getRingAromaticType(ring, refRings): null;
+	}
+});
+
+ClassEx.extend(Kekule.ChemObject, {
+	/**
+	 * Perceive and mark all aromatic rings in chem object. Found rings will be stored in aromaticRings
+	 * property of structure fragment object.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} candidateRings Rings in molecule that the detection will be performed.
+	 *   If this param is not set, all memebers of SSSR of molecule will be checked.
+	 * @return {Array} Found aromatic rings.
+	 */
+	perceiveAromaticRings: function(allowUncertainRings, candidateRings)
+	{
+		var ss = CU.getAllStructFragments(this);
+		var result = [];
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			var rings = ss[i].perceiveAromaticRings(allowUncertainRings, candidateRings);
+			if (rings)
+				result = result.concat(rings);
+		}
+		return result.length? result: null;
+	},
+	/**
+	 * Perceive and all aromatic rings in chem object, same as method perceiveAromaticRings.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} candidateRings Rings in ctab that the detection will be performed.
+	 *   If this param is not set, all memebers of SSSR of ctab will be checked.
+	 * @return {Array} Found aromatic rings.
+	 */
+	findAromaticRings: function(allowUncertainRings, candidateRings)
+	{
+		return this.perceiveAromaticRings(allowUncertainRings, candidateRings);
 	}
 });
 

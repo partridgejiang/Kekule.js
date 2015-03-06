@@ -19,3 +19,5 @@ var Kekule = {
  * Root object of JavaScript environment, usually window.
  */
 var $jsRoot = this;
+
+Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];

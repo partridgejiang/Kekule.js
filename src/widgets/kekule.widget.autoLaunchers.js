@@ -11,7 +11,6 @@
  */
 
 /*
- * //requires /lan/sizzle.js
  * requires /lan/classes.js
  * requires /core/kekule.common.js
  * requires /utils/kekule.utils.js

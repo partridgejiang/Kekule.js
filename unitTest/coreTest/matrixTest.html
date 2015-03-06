@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Matrix Calculation Test</title>
 <script src="../JSTest/src/jstest.js"></script>
-<script src="../../src/kekule.js"></script>
+<script src="../../src/kekule.js?min=false"></script>
 <script>
 	var M = Kekule.MatrixUtils;
 	var MatrixTestCase = JSTest.TestCase({
@@ -40,7 +40,7 @@
 			var r = M.add(this.m1, this.m2);
 			//console.log(this.m1, this.m2, r);
 			this.assertEqual(M.getValue(r, 1, 1), 2);
-			
+
 			this.assertEqual(M.getValue(r, 1, 2), 1);
 			this.assertEqual(M.getValue(r, 2, 1), 1);
 			this.assertEqual(M.getValue(r, 3, 3), 2);
@@ -53,7 +53,7 @@
 			this.assertEqual(M.getValue(r, 3, 2), 11);
 		}
 	});
-	
+
 	function init()
 	{
 		var myDiv = document.getElementById('output');

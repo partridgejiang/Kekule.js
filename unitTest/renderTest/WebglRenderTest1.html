@@ -11,7 +11,7 @@
 	}
 </style>
 <script src="../../../libs/three.js-r49/build/Three.js"></script>
-<script src="../../src/kekule.js"></script>
+<script src="../../src/kekule.js?min=false"></script>
 <script>
 	var drawBoxWidth = 500;
 	var drawBoxHeight = 500;
@@ -19,12 +19,12 @@
 	var viewAngle = 45;
 	var NEAR = 0.1;
 	var FAR = 1000;
-	
+
 	var threeScene;
 	var threeRenderer;
 	var threeCamera;
 	var threeContext;
-	
+
 	function readMol()
 	{
 		var text = document.getElementById('memoMolInput').value;
@@ -32,16 +32,16 @@
 		var r = reader.readBlock(text, null);
 		return r;
 	}
-	
+
 	function drawMol()
 	{
 		var viewBoxWidth = 300;
 		var viewBoxHeight = 300;
-		
-		var render = new Kekule.Render.Def3DStructFragmentRenderer(null, 
+
+		var render = new Kekule.Render.Def3DStructFragmentRenderer(null,
 			Kekule.Render.ThreeRendererBridge.getInstance(),
 			Kekule.Render.Molecule3DDisplayType.STICKS);
-		
+
 		var mol = readMol();
 		//mol.setExpanded(true);
 		var ctab = mol.getCtab();
@@ -66,16 +66,16 @@
 		var transY = 0;
 		var transZ = 0;
 		/*
-		var render = new Kekule.Render.Def3DCtabRenderer(null, null, 
+		var render = new Kekule.Render.Def3DCtabRenderer(null, null,
 			Kekule.Render.ThreeRendererBridge.getInstance(),
 			Kekule.Render.Molecule3DDisplayType.SPACE_FILL);
 		*/
-		
+
 		var options = {'scale': scale, 'translateX': transX, 'translateY': transY, 'translateZ': transZ,
 			'center': center, 'rotateZ':  Math.PI / 2};
-			
+
 		//console.log(options);
-		
+
 		/*
 		// set up camera
 		var l = Math.sqrt(Math.sqr(ctabBox.deltaX) + Math.sqr(ctabBox.deltaY));
@@ -85,10 +85,10 @@
 		threeCamera.position.z = distance;
 		//threeCamera.update();
 		*/
-		threeScene.clearMesh();	
-		
+		threeScene.clearMesh();
+
 		console.log('draw', options);
-		
+
 		//render.draw(threeScene, mol, {'x': 0, 'y': 0, 'z': 0}, options);
 		render.draw(threeContext, mol, {'x': 0, 'y': 0, 'z': 0}, options);
 		//console.log(options);
@@ -105,7 +105,7 @@
 		ctx.fillText('This is a line of text that draw directly on 2D context', 30, 150);
 	}
 	*/
-	
+
 	function init()
 	{
 		var drawParent = document.getElementById('drawParent');
@@ -119,7 +119,7 @@
 		    aspect,
 		    NEAR,
 		    FAR);
-	
+
 		var scene = new THREE.Scene();
 		//console.log(scene);
 		scene.add(camera);
@@ -129,16 +129,16 @@
 		*/
 		camera.position.z = 200;
 		renderer.setSize(drawBoxWidth, drawBoxHeight);
-		
+
 		/*
 		var pointLight =
 		  new THREE.PointLight(0xFFFFFF);
-		
+
 		// set its position
 		pointLight.position.x = 10;
 		pointLight.position.y = 50;
 		pointLight.position.z = 130;
-		
+
 		// add to the scene
 		scene.add(pointLight);
 		*/
@@ -149,14 +149,14 @@
 		alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
 		alight.position.set(5, 5, 10);
 		scene.add(alight);
-		
+
 		drawParent.appendChild(renderer.domElement);
 		threeScene = scene;
 		threeRenderer = renderer;
 		threeCamera = camera;
 		threeContext = new Kekule.Render.ThreeContext(threeScene, threeCamera, threeRenderer);
-		
-		
+
+
 	}
 </script>
 

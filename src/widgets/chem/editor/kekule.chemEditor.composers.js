@@ -1016,6 +1016,30 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this.defineProp(propName, propOptions);
 	},
 
+	/** @private */
+	loadPredefinedResDataToProp: function(propName, resData, success)
+	{
+		if (propName === 'chemObj')  // only this property can be set by predefined resource
+		{
+			if (success)
+			{
+				try
+				{
+					var chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
+					this.setChemObj(chemObj);
+				}
+				catch(e)
+				{
+					this.reportException(e);
+				}
+			}
+			else  // else, failed
+			{
+				Kekule.throwException(Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI + resData.resUri || '');
+			}
+		}
+	},
+
 	/** @ignore */
 	doCreateRootElement: function(doc)
 	{

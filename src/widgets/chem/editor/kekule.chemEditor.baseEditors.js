@@ -188,7 +188,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		$super(parentOrElementOrDocument, chemObj, renderType);
 		//this.initEventHandlers();
 
-		if (!chemObj && this.getInitOnNewDoc() && this.getEnableCreateNewDoc())
+		if (!this.getChemObj() && this.getInitOnNewDoc() && this.getEnableCreateNewDoc())
 			this.newDoc();
 
 		this.setPropStoreFieldValue('editorConfigs', editorConfigs || this.createDefaultConfigs());

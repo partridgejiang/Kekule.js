@@ -18,13 +18,7 @@ var kekuleFiles = {
 	},
 	'root': {
 		'files': [
-			'core/kekule.root.js',
-			'core/kekule.common.js',
-			'core/kekule.exceptions.js',
-			'utils/kekule.utils.js',
-			'utils/kekule.domUtils.js',
-			'utils/kekule.domHelper.js',
-			'utils/kekule.textHelper.js'
+			'core/kekule.root.js'
 		],
 		'minFile': 'root.min.js'
 	},
@@ -43,6 +37,8 @@ var kekuleFiles = {
 	'core': {
 		'requires': ['lan', 'root', 'data'],
 		'files': [
+			'core/kekule.common.js',
+			'core/kekule.exceptions.js',
 			'core/kekule.configs.js',
 			'core/kekule.elements.js',
 			'core/kekule.electrons.js',
@@ -51,6 +47,11 @@ var kekuleFiles = {
 			'core/kekule.structureBuilder.js',
 			'core/kekule.reactions.js',
 			'core/kekule.chemUtils.js',
+
+			'utils/kekule.utils.js',
+			'utils/kekule.domUtils.js',
+			'utils/kekule.domHelper.js',
+			'utils/kekule.textHelper.js',
 
 			'chemdoc/kekule.glyph.base.js',
 			'chemdoc/kekule.textBlocks.js',
@@ -301,7 +302,6 @@ function analysisEntranceScriptSrc()
 						{
 							var pvalue = minFileMatch[1].toLowerCase();
 							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
-							//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
 							result.useMinFile = value;
 						}
 						// check module param

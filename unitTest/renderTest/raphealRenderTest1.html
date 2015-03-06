@@ -17,13 +17,13 @@
 	}
 </style>
 <script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
-<script src="../../src/kekule.js"></script>
+<script src="../../src/kekule.js?min=false"></script>
 <script>
 	var paper;
-	
+
 	var drawBoxWidth = 500;
 	var drawBoxHeight = 500;
-	
+
 	function getPaper()
 	{
 		if (!paper)
@@ -69,18 +69,18 @@
 		var canvasOffset = {'x': paper.canvas.parentNode.offsetLeft, 'y': paper.canvas.parentNode.offsetTop};
 		//console.log('offset', canvasOffset, paper.canvas);
 		//paper.canvas.addEventListener('mousemove', function(e)
-		//if (false)		
+		//if (false)
 		Kekule.X.Event.addListener(paper.canvas, 'mousemove', function(e)
 			{
-				
+
 				var x = e.clientX + window.pageXOffset - canvasOffset.x;
 				var y = e.clientY + window.pageYOffset - canvasOffset.y;
-				
+
 				/*
 				var x = e.getOffsetX();
 				var y = e.getOffsetY();
 				*/
-				
+
 				//console.log(x, y);
 				var currBound = null;
 				for (var i = bounds.length - 1; i >= 0; --i)
@@ -104,8 +104,8 @@
 					switch (currBound.shapeType)
 					{
 						case BT.POINT: shape = paper.circle(coords[0].x, coords[0].y, inflate); break;
-						case BT.LINE: 
-							shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y); 
+						case BT.LINE:
+							shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y);
 							shape.attr('stroke-width', currBound.width + inflate * 2);
 							break;
 						case BT.RECT: shape = paper.rect(coords[0].x, coords[0].y, coords[1].x - coords[0].x, coords[1].y - coords[0].y); break;
@@ -136,8 +136,8 @@
 				switch (boundInfo.boundType)
 				{
 					case BT.POINT: shape = paper.circle(coords[0].x, coords[0].y, inflate); break;
-					case BT.LINE: 
-						shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y); 
+					case BT.LINE:
+						shape = paper.line(coords[0].x, coords[0].y, coords[1].x, coords[1].y);
 						shape.attr('stroke-width', boundInfo.width + inflate * 2);
 						break;
 					case BT.RECT: shape = paper.rect(coords[0].x, coords[0].y, coords[1].x - coords[0].x, coords[1].y - coords[0].y); break;
@@ -149,7 +149,7 @@
 		);
 		var parent = document.getElementById('drawParent');
 		//parent.style.visibility = 'hidden';
-		
+
 		//mol.setExpanded(true);
 		var ctab = mol.getCtab();
 		//console.log(ctab);
@@ -174,15 +174,15 @@
 		/*
 		var transX = -ctabBox.x1 * scale;
 		var transY = -ctabBox.y1 * scale;
-		*/ 
+		*/
 		/*
 		var transX = (center.x - ctabBox.x1) * scale + ctabBox.width / 2 + 100;
 		var transY = (center.y - ctabBox.y1) * scale + ctabBox.height / 2 + 100;
 		*/
-		
+
 		var transX = 0;
 		var transY = 0;
-		
+
 		/*
 		var transX = 20;
 		var transY = 20;
@@ -192,20 +192,20 @@
 		//var render = Kekule.Render.RaphaelStructFragmentRenderer.getInstance();
 
 		render.setMoleculeDisplayType(condensed? Kekule.Render.MoleculeDisplayType.CONDENSED: Kekule.Render.MoleculeDisplayType.SKELETAL);
-		
+
 		var options = {/*'scale': scale*/autoScale: 'true', 'translateX': transX, 'translateY': transY /*'rotateAngle': Math.PI / 2,*//* 'center': center*/};
 		//options.center = {x: 100, y: 100};
 		//options.scale = 30;
 		console.log('options', options);
-		
+
 		/*
 		var m1 = Kekule.CoordUtils.calcTransform2DMatrix(options);
 		var m2 = Kekule.CoordUtils.calcInverseTransform2DMatrix(options);
 		var m3 = Kekule.MatrixUtils.multiply(m1, m2);
 		console.log('m3', m3);
 		*/
-		
-		
+
+
 		//console.log(options);
 		paper.clear();
 		//render.draw(paper, ctab, options);
@@ -227,9 +227,9 @@
 			var s = Kekule.Render.RichTextUtils._toDebugHtml(rt);
 			console.log(s);
 			document.getElementById('labelRichText').innerHTML = s;
-			
+
 			console.log(JSON.stringify(rt));
-			
+
 			return rt;
 		}
 	}
@@ -238,13 +238,13 @@
 		var rt = getRichTextInfo();
 		var p = getPaper();
 		p.line(250, 150, 350, 150);
-		var drawer = new Kekule.Render.RaphaelRichTextDrawer(p);		
+		var drawer = new Kekule.Render.RaphaelRichTextDrawer(p);
 		drawer.drawRichText(250, 150, rt, {
 			'fontSize': 20,
 			'charDirection': Kekule.Render.TextDirection.LTR
 		});
 	}
-	
+
 </script>
 </head>
 <body>

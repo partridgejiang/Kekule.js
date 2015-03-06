@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<title>Data Manipulate Test</title>
 		<script src="../JSTest/src/jstest.js"></script>
-		<script src="../../src/kekule.js"></script>
+		<script src="../../src/kekule.js?min=false"></script>
 		<script>
 			var AtomCreateTestCase = JSTest.TestCase({
 					name: 'Atom Create Test',
@@ -36,7 +36,7 @@
 								compareValues[i] = Kekule.UnivChemStructObjComparer.getNodeCompareValue(atoms[i]);
 							};
 						}
-						
+
 						for (var i = 0, l = compareValues.length; i < l; ++i)
 							console.log(compareValues[i].toString(16));
 						/**
@@ -54,7 +54,7 @@
 						**/
 					}
 				});
-			
+
 			//JSTest.run(true);
 			function init()
 			{

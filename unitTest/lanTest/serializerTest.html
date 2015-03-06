@@ -5,7 +5,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>Serializer Test</title>
 	<script src="../JSTest/src/jstest.js"></script>
-	<script src="../../src/kekule.js"></script>
+	<script src="../../src/kekule.js?min=false"></script>
 	<script>
 		function manualTest(){
 			var srcObj = new Kekule.ChemObject('testId1');
@@ -15,9 +15,9 @@
 			srcObj.setInfoValue('keyInt', 10);
 			srcObj.setInfoValue('keyStr', 'string');
 			srcObj.setInfoValue('keyBool', false);
-			
+
 			srcObj.setInfoValue('keyDate', new Date('1999-10-22'));
-			
+
 			srcObj.setInfoValue('keyArray', ['S1', 2, 3, {
 				'name': 'ObjNested',
 				'intV': 2
@@ -29,23 +29,23 @@
 					'name': 'nested'
 				}
 			});
-			
+
 			//var embeddedObj = new ObjectEx();
 			var embeddedObj = new Kekule.ChemObject('embeddedId');
 			embeddedObj.setInfoValue('anotherNested', 'value');
 			embeddedObj.setEnablePropValueSetEvent(true);
 			srcObj.setInfoValue('keyObjEx', embeddedObj);
-			
+
 			/*
 			srcObj.setInfoValue('keyRoleMapSimple',
 				new Kekule.RoleMap(60, 'simpleValue'));
 
-			srcObj.setInfoValue('keyRoleMapObject', 
+			srcObj.setInfoValue('keyRoleMapObject',
 				new Kekule.RoleMap({'x': 10, 'y': 20}, 'ObjectValue'));
-			srcObj.setInfoValue('keyRoleMapObjectEx', 
+			srcObj.setInfoValue('keyRoleMapObjectEx',
 				new Kekule.RoleMap(embeddedObj, 'ObjectExValue'));
 			*/
-			
+
 			var jsonObj = {};
 			/*
 			var serializerJson = new JsonObjSerializer();
@@ -54,7 +54,7 @@
 			srcObj.saveObj(jsonObj, 'json');
 			if (window.console)
 				console.log(jsonObj);
-			
+
 			var xmlDoc = XmlUtility.newDocument('root');
 			/*
 			var serializerXml = new XmlObjSerializer();
@@ -63,7 +63,7 @@
 			srcObj.saveObj(xmlDoc.documentElement, 'xml');
 			if (window.console)
 				console.log(xmlDoc.documentElement);
-		
+
 			var destObj = new Kekule.ChemObject();
 			//serializerJson.load(destObj, jsonObj);
 			destObj.loadObj(jsonObj, 'json');
@@ -81,7 +81,7 @@
 				console.log(str == str2);
 			else
 				alert(str == str2);
-			
+
 			var destObj2 = new Kekule.ChemObject();
 			//serializerXml.load(destObj2, xmlDoc.documentElement);
 			destObj2.loadObj(xmlDoc.documentElement, 'xml');
@@ -97,16 +97,16 @@
 			else
 				alert(str == str2);
 		}
-		
+
 		function manualCustomPropSerializationTest()
 		{
 			var builder = new Kekule.ChemStructureBuilder();
-			
+
 			var subGroup2 = new Kekule.SubGroup('sub2');
 			builder.setTarget(subGroup2);
 			var sub2A1 = builder.createAtom('sub2-a1', 'N');
 			subGroup2.appendAnchorNode(sub2A1);
-			
+
 			var subGroup1 = new Kekule.SubGroup('sub1');
 			builder.setTarget(subGroup1);
 			var subA1 = builder.createAtom('sub-a1', 'H', 1);
@@ -116,54 +116,54 @@
 			var subB2 = builder.createBond('sub-b2', [subA1, sub2A1], 1);
 			subGroup1.appendAnchorNode(subA1);
 			subGroup1.appendAnchorNode(subA2);
-			
-			
+
+
 			var mol = new Kekule.Molecule('mol');
 			builder.setTarget(mol);
 			var a1 = builder.createAtom('a1', 'H', 1);
 			var a2 = builder.createAtom('a2', 'C', 13);
 			var a3 = builder.createAtom('a3', 'C');
-			
+
 			var b1 = builder.createBond('b1', [a1, a2], 1);
 			var b2 = builder.createBond('b2', [b1, a2, a3], 2);
-			
+
 			builder.appendNode(subGroup1);
 			var b3 = builder.createBond('b3', [a2, subA1], 1);
 			var b4 = builder.createBond('b4', [a3, sub2A1], 1);
-			
+
 			mol.appendAnchorNode(a1);
 			mol.appendAnchorNode(a3);
 			console.log(mol);
-			
+
 			var jsonObj = {};
-			
+
 			var serializerJson = new JsonObjSerializer();
 			/*
 			serializerJson.save(mol, jsonObj);
 			*/
 			mol.saveObj(jsonObj);
 			console.log(jsonObj);
-			
+
 			var xmlDoc = XmlUtility.newDocument('root');
-			
+
 			var serializerXml = new XmlObjSerializer();
 			/*
 			serializerXml.save(mol, xmlDoc.documentElement);
 			*/
 			mol.saveObj(xmlDoc.documentElement, 'xml');
 			console.log(xmlDoc.documentElement);
-			
+
 			//var mol2 = new Kekule.Molecule('mol2');
 			var mol2;
 			//mol2 = serializerJson.load(mol2, jsonObj);
 			mol2 = serializerXml.load(mol2, xmlDoc.documentElement);
 			//mol2.loadObj(xmlDoc.documentElement, 'xml');
 			console.log(mol, mol2);
-			
+
 			var jsonObj2 = {};
 			//serializerJson.save(mol2, jsonObj2);
 			mol2.saveObj(jsonObj2);
-			
+
 			var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
 			var str2 = JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
 			/*
