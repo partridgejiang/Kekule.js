@@ -1030,7 +1030,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				}
 				catch(e)
 				{
-					Kekule.raise(e, Kekule.ExceptionLevel.ERROR);
+					this.reportException(e);
 				}
 			}
 			else  // else, failed

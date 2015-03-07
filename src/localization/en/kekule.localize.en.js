@@ -8,15 +8,6 @@
 Kekule.LOCAL_RES = true;
 
 /** @ignore */
-Kekule.Texts = {};
-
-// String constants
-/** @ignore */
-Kekule.Texts.en = {
-	UNNAMED: 'unnamed'
-};
-
-/** @ignore */
 Kekule.ErrorMsg = {};
 
 // Exception and error messages
