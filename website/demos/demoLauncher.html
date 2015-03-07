@@ -1,0 +1,104 @@
+<!doctype html>
+<html><!-- InstanceBegin template="/Templates/DemoPage.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta charset="utf-8">
+	<!-- InstanceBeginEditable name="doctitle" -->
+	<title>Kekule.js Demo</title>
+	<!-- InstanceEndEditable -->
+	<link href="../styles/base.css" rel="stylesheet" type="text/css">
+
+	<link href="../styles/demos.css" rel="stylesheet" type="text/css">
+	<script src="../libs/kekule.compressed.js"></script>
+	<script src="scripts/demoLaunch.js"></script>
+	<!-- InstanceBeginEditable name="head" -->
+	<script>
+		function adjustElemSizes()
+		{
+			var headerElem = document.getElementById('mainHeader');
+			var headerRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(headerElem);
+			var footerElem = document.getElementById('mainFooter');
+			var footerRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(footerElem);
+			var contentElem = document.getElementById('sectionDemoIntro');
+			var contentRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(contentElem);
+			var topMargin = contentRect.top - headerRect.bottom;
+			var bottomMargin = footerRect.top - contentRect.bottom;
+			var viewPortDim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var h = viewPortDim.height - headerRect.height - footerRect.height - topMargin - bottomMargin;
+
+			contentElem.style.height = h + 'px';
+		}
+
+		var explainVisible = false;
+		function toggleExplainVisible()
+		{
+			var elem = document.getElementById('sectionDemoExplaination');
+			if (explainVisible)  // hide
+				elem.style.width = '0';
+			else
+				elem.style.width = '50em';
+			explainVisible = !explainVisible;
+		}
+
+		Kekule.X.domReady(function(){
+			var demoId = Kekule.Demos.LaunchUtils.getDemoPageId(document);
+
+			var navElem = document.getElementById('mainNav');
+			var titleElem = document.getElementById('demoTitle');
+			var introElem = document.getElementById('divDemoDescription');
+			Kekule.Demos.LaunchUtils.fillConcreteDemoHtml(demoId, navElem, titleElem, introElem);
+			var demoFrameElem = document.getElementById('frameDemo');
+			var introFrameElem = document.getElementById('frameExplaination');
+			Kekule.Demos.LaunchUtils.loadDemoPage(demoId, demoFrameElem, introFrameElem);
+
+			var introSection = document.getElementById('sectionDemoExplaination');
+			introSection.style.display = introFrameElem.src? 'block': 'none'; // no intro loaded, hide intro area
+
+			adjustElemSizes();
+
+			//Kekule.X.Event.addListener(window, 'resize', adjustElemSizes);
+			window.onresize = adjustElemSizes;
+			var elem = document.getElementById('demoExplainationToggler');
+			Kekule.X.Event.addListener(elem, 'click', toggleExplainVisible);
+		});
+	</script>
+	<!-- InstanceEndEditable -->
+
+</head>
+
+<body>
+	<header class="MainHeader" id="mainHeader">
+		<nav class="MainNav" id="mainNav">
+
+			<a id="kekuleLogo"  href="index.html" title="Kekule Demos Home"><span>Kekule.js Demos</span></a>
+			<!-- InstanceBeginEditable name="AdditionalMainNavItems" -->
+			<!-- InstanceEndEditable -->
+
+		</nav>
+	</header>
+	<section class="MainContent" id="mainContent">
+		<!-- InstanceBeginEditable name="PossibleSideNav" -->
+			<!-- InstanceEndEditable -->
+		<article id="mainArticle" class="MainArticle">
+			<header>
+				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" --><!-- InstanceEndEditable --></h1>
+			</header>
+			<!-- InstanceBeginEditable name="MainContent" -->
+			<section class="DemoIntro" id="sectionDemoIntro">
+				<h1 class="DemoTitle" id="demoTitle">Demo Title</h1>
+				<div id="divDemoDescription"></div>
+			</section>
+			<section class="DemoStage" id="sectionDemoStage">
+				<iframe id="frameDemo" src=""></iframe>
+			</section>
+			<section id="sectionDemoExplaination">
+				<iframe id="frameExplaination"></iframe>
+				<a href="javascript:void(0)" id="demoExplainationToggler"><span>How</span></a>
+			</section>
+			<!-- InstanceEndEditable -->
+		</article>
+	</section>
+	<footer class="MainFooter" id="mainFooter">
+		<span>Copyright 2014 Kekule.js Lab</span>
+	</footer>
+</body>
+<!-- InstanceEnd --></html>

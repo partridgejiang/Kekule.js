@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Splitted Chem Viewer Demo</title>
+
+	<script src="../_libs/Three.js"></script>
+	<script src="../_libs/raphael-min.2.0.1.js"></script>
+	<script src="../_libs/kekule.compressed.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidgetColor.css" />
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		#chemViewer1, #chemViewer2
+		{
+			border: none;
+			margin: 0;
+			float: left;
+		}
+	</style>
+
+	<script>
+		var viewerElemIds = ['chemViewer1', 'chemViewer2'];
+		var chemViewers = [];
+		function init()
+		{
+			var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+			for (var i = 0, l = viewerElemIds.length; i < l; ++i)
+			{
+				var elem = document.getElementById(viewerElemIds[i]);
+				chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+				chemViewer.setEnableToolbar(true)
+					.setToolButtons([
+							BNS.loadFile, BNS.molDisplayType, BNS.molHideHydrogens,
+							BNS.zoomIn, BNS.zoomOut,
+							BNS.rotateX, BNS.rotateY, BNS.rotateZ, BNS.reset
+						]);
+				chemViewer.setAutoSize(false).setPadding(20);
+				chemViewers.push(chemViewer);
+			}
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var width = (dim.width - 10) / chemViewers.length;
+			for (var i = 0, l = chemViewers.length; i < l; ++i)
+			{
+				chemViewers[i].setWidth(width + 'px').setHeight(dim.height + 'px');
+			}
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div id="chemViewer1" style="width:100%;height:650px"></div>
+	<div id="chemViewer2" style="width:100%;height:650px"></div>
+</body>
+</html>

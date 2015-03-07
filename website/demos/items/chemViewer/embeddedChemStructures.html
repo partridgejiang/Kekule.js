@@ -1,0 +1,342 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Embedded Molecules</title>
+
+<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
+<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
+<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
+<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidgetColor.css" />
+<style>
+	.Div3D
+	{
+		display: inline-block;
+		width: 300px;
+		height: 200px;
+	}
+</style>
+
+<script src="../_libs/Three.js"></script>
+<script src="../_libs/raphael-min.2.0.1.js"></script>
+<script src="../_libs/kekule.compressed.js"></script>
+<!--
+<script src="../../src/kekule.js"></script>
+-->
+
+<script name="ethane" id="ethane" type="chemical/x-mdl-molfile">
+Untitled Document-1
+  ChemDraw11231215572D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  1  3  1  0
+  1  4  1  0
+  2  5  1  0
+  2  6  1  0
+M  END
+</script>
+<script name="ethyne" id="ethyne" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  ChemDraw11231215592D
+
+  4  3  0  0  0  0  0  0  0  0999 V2000
+   -0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2375    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2375    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  3  0
+  1  3  1  0
+  2  4  1  0
+M  END
+</script>
+<script name="2-phenylpropane" id="2-phenylpropane" type="chemical/x-mdl-molfile">
+Untitled Document-3
+  ChemDraw11231216002D
+
+  9  9  0  0  0  0  0  0  0  0999 V2000
+   -0.7145   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145    1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  2  3  1  0
+  3  4  2  0
+  4  5  1  0
+  5  6  2  0
+  6  1  1  0
+  6  7  1  0
+  7  8  1  0
+  7  9  1  0
+M  END
+</script>
+<script name="benzyl bromide" id="benzylBromide" type="chemical/x-mdl-molfile">
+Untitled Document-4
+  ChemDraw11231216022D
+
+  8  8  0  0  0  0  0  0  0  0999 V2000
+   -1.0313   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2062   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2062    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2062    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0313    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4438    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0313    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4438    0.7145    0.0000 Br  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  2  3  1  0
+  3  4  2  0
+  4  5  1  0
+  5  6  2  0
+  6  1  1  0
+  3  7  1  0
+  7  8  1  0
+M  END
+</script>
+
+<script name="cyclohexane" id="cyclohexane" type="chemical/x-mdl-molfile">
+Untitled Document-5
+  ChemDraw11231216312D
+
+  6  6  0  0  0  0  0  0  0  0999 V2000
+   -0.7145    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+M  END
+</script>
+<script name="CycloHex-Boat" id="CycloHex-Boat" type="chemical/x-mdl-molfile">
+Untitled
+  Chem3D  09120808303D
+
+ 18 18  0  0  0  0  0  0  0  0999 V2000
+    4.4350    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9570    0.0340   -0.4210 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0660    0.5100    0.7370 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2630   -0.3710    1.9810 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7400   -0.4060    2.4020 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5610    0.5730    1.4590 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.8070   -1.0490   -0.0240 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.0380    0.6220   -0.6990 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8400    0.7310   -1.2820 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.6420   -0.9880   -0.7280 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3280    1.5620    0.9910 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0000    0.4610    0.4210 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6540    0.0380    2.8180 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9250   -1.4070    1.7500 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8360   -0.0750    3.4600 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1350   -1.4420    2.3010 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1340    1.6000    1.5070 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6290    0.6010    1.7710 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  6  1  0
+  1  7  1  0
+  1  8  1  0
+  2  3  1  0
+  2  9  1  0
+  2 10  1  0
+  3  4  1  0
+  3 11  1  0
+  3 12  1  0
+  4  5  1  0
+  4 13  1  0
+  4 14  1  0
+  5  6  1  0
+  5 15  1  0
+  5 16  1  0
+  6 17  1  0
+  6 18  1  0
+M  END
+</script>
+<script name="CycloHex-Chair" id="CycloHex-Chair" type="chemical/x-mdl-molfile">
+
+  Chem3D  12.011231217083D
+
+ 18 18  0  0  0  0  0  0  0  0999 V2000
+    0.7368   -0.1051    1.2731 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7093   -0.5794    1.1576 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4630    0.1738    0.0648 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7367    0.0965   -1.2754 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7095    0.5709   -1.1599 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4632   -0.1823   -0.0672 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2695   -0.7476    2.0094 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7291    0.9576    1.6037 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7142   -1.6658    0.9159 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2177   -0.3847    2.1284 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4763   -0.2728   -0.0479 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5302    1.2440    0.3629 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7429   -0.9588   -1.6287 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2643    0.7610   -1.9959 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2229    0.4034   -2.1332 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7010    1.6519   -0.8949 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5578   -1.2505   -0.3650 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.4647    0.2883    0.0523 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  6  1  0
+  1  7  1  0
+  1  8  1  0
+  2  3  1  0
+  2  9  1  0
+  2 10  1  0
+  3  4  1  0
+  3 11  1  0
+  3 12  1  0
+  4  5  1  0
+  4 13  1  0
+  4 14  1  0
+  5  6  1  0
+  5 15  1  0
+  5 16  1  0
+  6 17  1  0
+  6 18  1  0
+M  END
+</script>
+
+<script>
+function $(id)
+{
+	return document.getElementById(id);
+}
+function showExplain()
+{
+	$('explain').style.display = "block";
+	$('explain').style.visibility = 'visible';
+	return false;
+}
+function hideExplain()
+{
+	$('explain').style.display = "none";
+	return false;
+}
+function init()
+{
+	hideExplain();
+	$('showHow').onclick = showExplain;
+	$('closeExplain').onclick = hideExplain;
+}
+</script>
+
+
+<link href="res/autoLauncherDemo.css" rel="stylesheet" type="text/css">
+</head>
+
+<body onload="init()">
+<h1>A Example of Embedding Chemical Structures inside Normal HTML Content</h1>
+<p><a href="#" id="showHow">Show How</a></p>
+<h3><span id="Hydrocarbons">Hydrocarbons</span> Function Groups</h3>
+<p>Functional groups, called <a href="http://en.wiktionary.org/wiki/hydrocarbyl" title="wikt:hydrocarbyl">hydrocarbyls</a>,   that contain only carbon and hydrogen, but vary in the number and order   of π bonds. Each one differs in type (and scope) of reactivity.</p>
+<table>
+	<tbody>
+		<tr>
+			<th><a href="http://en.wikipedia.org/wiki/Chemical_class" title="Chemical class">Chemical class</a></th>
+			<th>Group</th>
+			<th>Prefix</th>
+			<th>Suffix</th>
+			<th>Example</th>
+		</tr>
+		<tr>
+			<td><a href="http://en.wikipedia.org/wiki/Alkene" title="Alkene">Alkene</a></td>
+			<td><a href="http://en.wikipedia.org/wiki/Alkene" title="Alkene">Alkenyl</a></td>
+			<td>alkenyl-</td>
+			<td>-ene</td>
+			<td>
+				<img id="div11" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj='{"info":{"generator":"ChemDraw","date":{"_type":"date","date":"Sat, 15 Sep 2012 11:57:17 GMT"},"_type":"object"},"renderOptions":{"expanded":true,"_type":"object"},"charge":0,"ctab":{"nodes":[{"_type":"Kekule.Atom","coord2D":{"x":0.4125,"y":0,"_type":"object"},"charge":0,"isotopeId":"C"},{"_type":"Kekule.Atom","coord2D":{"x":-0.4125,"y":0,"_type":"object"},"charge":0,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"_type":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]}],"_type":"Kekule.StructureConnectionTable"},"name":"Untitled Document-1","_type":"Kekule.Molecule"}'
+				  data-predefined-setting="basic" data-auto-size="true"></img>
+				<div id="div1" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#ethane)" data-predefined-setting="basic" data-auto-size="true"></div>				<a href="http://en.wikipedia.org/wiki/Ethylene" title="Ethylene">Ethylene</a><br>
+				<em>(Ethene)</em></td>
+		</tr>
+		<tr>
+			<td><a href="http://en.wikipedia.org/wiki/Alkyne" title="Alkyne">Alkyne</a></td>
+			<td><a href="http://en.wikipedia.org/wiki/Alkyne" title="Alkyne">Alkynyl</a></td>
+			<td>alkynyl-</td>
+			<td>-yne</td>
+			<td><div id="div2" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#ethyne)" data-predefined-setting="basic" data-auto-size="true"></div>				</a><a href="http://en.wikipedia.org/wiki/Acetylene" title="Acetylene">Acetylene</a><br>
+				<em>(Ethyne)</em></td>
+		</tr>
+		<tr>
+			<td><a href="http://en.wikipedia.org/wiki/Benzene" title="Benzene">Benzene derivative</a></td>
+			<td><a href="http://en.wikipedia.org/wiki/Phenyl" title="Phenyl">Phenyl</a></td>
+			<td>phenyl-</td>
+			<td>-benzene</td>
+			<td><div id="div3" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#2-phenylpropane)"  data-predefined-setting="basic" data-auto-size="true"></div>				<a href="http://en.wikipedia.org/wiki/Cumene" title="Cumene">Cumene</a><br>
+				<em>(2-phenylpropane)</em></td>
+		</tr>
+		<tr>
+			<td><a href="http://en.wikipedia.org/wiki/Toluene" title="Toluene">Toluene derivative</a></td>
+			<td><a href="http://en.wikipedia.org/wiki/Benzyl" title="Benzyl">Benzyl</a></td>
+			<td>benzyl-</td>
+			<td>1-(<em>substituent</em>)toluene</td>
+			<td><div id="div4" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#benzylBromide)"  data-predefined-setting="basic" data-auto-size="true"></div>				<a href="http://en.wikipedia.org/wiki/Benzyl_bromide" title="Benzyl bromide">Benzyl bromide</a><br>
+				<em>(α-Bromotoluene)</em></td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>Conformation of cyclohexane</h3>
+<p>In 1890, Hermann Sachse, a 28-year-old assistant in Berlin, published instructions for folding a piece of paper to represent two forms of cyclohexane (<span style="vertical-align: middle" style1="width: 40px;height:40px" class="InlineStructure" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#cyclohexane)" data-predefined-setting="static" data-zoom="0.4" data-auto-size="true"></span>) he called symmetrical and unsymmetrical (what we would now call chair and boat).</p>
+<p style="text-align: center">
+	<span class="Div3D" data-widget="Kekule.ChemWidget.Viewer3D" data-chem-obj="url(#CycloHex-Boat)" data-molecule-display-type="2" data-predefined-setting="basic"> </span>
+	<span class="Div3D" data-widget="Kekule.ChemWidget.Viewer3D" data-chem-obj="url(#CycloHex-Chair)" data-molecule-display-type="2" data-predefined-setting="basic"> </span>
+</p>
+
+
+<div id="explain">
+<p>To embed a chemical structure in HTML, you have to prepare chemical data first. Now the simplest way is to insert chemical format file data into HTML &lt;script&gt; tag, e.g.:</p>
+<pre>
+&lt;script name="ethane" id="ethane" type="chemical/x-mdl-molfile"&gt;
+Untitled Document-1
+  ChemDraw11231215572D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  1  3  1  0
+  1  4  1  0
+  2  5  1  0
+  2  6  1  0
+M  END
+&lt;/script&gt;
+</pre>
+<p>Then you can refer to that resource by ID in your HTML code. For example, to display its 2D structure, just use the following tag:</p>
+<pre>
+&lt;div id=&quot;div1&quot; data-kekule-role=&quot;viewer2D&quot; data-chem-obj=&quot;url(#ethane)&quot;&gt;&lt;/div&gt;</pre>
+<p>Result:</p>
+<div id="div1" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#ethane)"></div>
+<p>And you can also set special display params inside the tag by data-params attribute:</p>
+<pre>
+&lt;div data-kekule-role=&quot;viewer2D&quot; data-chem-obj=&quot;url(#ethane)&quot; data-params='{&quot;drawOptions&quot;: {&quot;zoom&quot;: 2, &quot;fontSize&quot;: 30, &quot;fontFamily&quot;: &quot;Times New Roman&quot;}}'&gt;&lt;/div&gt;</pre>
+<div data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#ethane)" data-params='{"drawOptions": {"zoom": 2, "fontSize": 30, "fontFamily": "Times New Roman"}}'></div>
+<p>Similar to draw a 3D structure:</p>
+<pre>&lt;div class=&quot;Div3D&quot; data-kekule-role=&quot;viewer3D&quot; data-chem-obj=&quot;url(#CycloHex-Chair)&quot; data-params='{&quot;drawOptions&quot;: {&quot;moleculeDisplayType&quot;: 4}}'&gt; &lt;/div&gt;
+</pre>
+<div class="Div3D" data-kekule-role="viewer3D" data-chem-obj="url(#CycloHex-Chair)" data-params='{"drawOptions": {"moleculeDisplayType": 4}}'> </div>
+<p>
+<a style="float: right" href="#" id="closeExplain">Close</a>
+</p>
+</div>
+</body>
+</html>

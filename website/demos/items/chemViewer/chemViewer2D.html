@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chem Viewer 2D Demo</title>
+
+	<script src="../../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../../libs/kekule.compressed.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidgetColor.css" />
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		#chemViewer
+		{
+			border: none;
+		}
+	</style>
+
+	<script name="pyrrole" id="pyrrole" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  Kekule  11201418212D
+
+  5  5  0  0  0  0  0  0  0  0999 V2000
+    0.4125    0.6348    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4125    0.6348    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6674   -0.1498    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.6348    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6674   -0.1498    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  1  0
+  5  1  2  0
+M  END
+	</script>
+
+	<script>
+		var chemViewer;
+		function init()
+		{
+			/*
+			var elem = document.getElementById('chemViewer');
+			chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
+			chemViewer.setEnableToolbar(true);
+			chemViewer.setAutoSize(false).setPadding(20);
+			*/
+			chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+			// adjust size
+			adjustSize();
+			window.onresize = adjustSize;
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 + 'px');
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+<div id="chemViewer" style="width:100%;height:650px"
+		 data-widget="Kekule.ChemWidget.Viewer2D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+		 data-chem-obj="url(#pyrrole)"></div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Editor Demo</title>
+	<script src="../../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../../libs/kekule.compressed.js"></script>
+	<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidgetColor.css" />
+
+	<script>
+		var chemEditor;
+		var chemComposer
+		function init()
+		{
+			var elem = document.getElementById('chemComposer');
+			var chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+			chemComposer = new Kekule.Editor.Composer(elem, chemEditor);
+
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			chemComposer.setWidth(dim.width - 50 + 'px').setHeight(dim.height - 30 + 'px');
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body onload="init()">
+	<div id="chemComposer" style="width:800px;height:600px"></div>
+</body>
+</html>

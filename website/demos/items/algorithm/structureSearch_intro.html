@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sub Structure Search Introduction</title>
+  <link rel="stylesheet" type="text/css" href="../_styles/demoPages.css" />
+</head>
+
+<body>
+
+<p>Kekule includes a easy-to-use method to search sub structure of molecules. For instance, if you have sub structure A (structA)and now want to check if A exists in molecule B (molB), the following JavaScript code can be used (note: both A and B should be instance of Kekule.StructureFragment):</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA);</pre>
+<p>If molB does not have sub structure of A, searchResult will be false. Otherwise, an array of matched nodes and connectors (usually atoms and bonds) will be returned.</p>
+<p>The search method accept a second parameter, options, which is a plain object and specifies the searching option. It may include the following fields:</p>
+<pre class="CodeBlock">exactMatch:&#32;Bool,&#32;if&#32;true,&#32;only&#32;the&#32;same&#32;structure&#32;with&#32;subStructure&#32;will&#32;be&#32;matched.
+ignoreCharge:&#32;Bool, whether charge of structures need to be checked.
+ignoreBondOrder:&#32;Bool, whether bond order need to be checked.</pre>	
+<p>For example, if structure A is cyclohexane and molecule B is methylbenzene，the direct search will returns false:</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA);  // searchResult is false</pre>
+<p>but if ignoreBondOrder option is set to true, the result will be different:</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA, {ignoreBondOrder: true});
+  // searchResult will be an array of all atoms and connectors in benzene ring.</pre>
+<p>&nbsp;</p>
+</body>
+</html>
