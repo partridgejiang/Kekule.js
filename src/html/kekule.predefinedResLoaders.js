@@ -207,14 +207,16 @@ Kekule.PredefinedResLoader = Class.create(ObjectEx,
 			var content = resElem.innerHTML;
 			// innerHTML often start with a blank lines, erase it
 			// eliminate the first blank line
-			/*
-			 var p = content.indexOf('\r\n');
-			 if (p < 0)
-			 p = content.indexOf('\n');
-			 if (p === 0)
-			 content = content.substring(1);
-			 */
-			content = content.ltrim();
+			var lbreak = 2;
+			var p = content.indexOf('\r\n');
+			if (p < 0)
+			{
+				p = content.indexOf('\n');
+				lbreak = 1;
+			}
+			if (p === 0)
+			 	content = content.substring(lbreak);
+			//content = content.ltrim();
 			resInfo = Object.extend(resInfo, {'data': content, 'text': content, 'resType': resInfo.resType || 'text/plain', 'success': true});
 			callback(resInfo, true);  // success
 		}

@@ -353,7 +353,7 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 	writeHeaderInfo: function(mol, textBuffer)
 	{
 		// line 1: molecule name
-		textBuffer.writeLine(mol.getName() || '');
+		textBuffer.writeLine(mol.getName() || Kekule.Texts.UNNAMED || '');
 		// line 2: MOL file information
 		var infoLine = this.generateInfoLine(mol);
 		textBuffer.writeLine(infoLine);

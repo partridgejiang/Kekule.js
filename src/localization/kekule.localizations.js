@@ -23,7 +23,7 @@
 	rootObj.language = language;  // save language info
 	var lanInfo = analysisLanguage(language);
 	var defLanInfo = analysisLanguage(DEF_LANGUAGE);
-	var languageNameSpaces = ['ErrorMsg', 'WidgetTexts', 'ChemWidgetTexts', 'OBJDEF_TEXTS'];
+	var languageNameSpaces = ['Texts', 'ErrorMsg', 'WidgetTexts', 'ChemWidgetTexts', 'OBJDEF_TEXTS'];
 
 	var candicateLanNames = [lanInfo.language + '_' + lanInfo.local, lanInfo.language,
 		defLanInfo.language + defLanInfo.local, defLanInfo.language];
