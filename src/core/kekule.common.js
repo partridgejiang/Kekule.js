@@ -2379,6 +2379,32 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	toArray: function()
 	{
 		return this.getItems();
+	},
+
+	/**
+	 * Calculate the box to contain the objects in list.
+	 * Descendants may override this method.
+	 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
+	 * @param {Bool} allowCoordBorrow
+	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+	 */
+	getContainerBox: function(coordMode, allowCoordBorrow)
+	{
+		var result;
+		var childObjs = this.toArray();
+		for (var i = 0, l = childObjs.length; i < l; ++i)
+		{
+			var obj = childObjs[i];
+			var box = obj.getContainerBox? obj.getContainerBox(coordMode, allowCoordBorrow): null;
+			if (box)
+			{
+				if (!result)
+					result = Object.extend({}, box);
+				else
+					result = Kekule.BoxUtils.getContainerBox(result, box);
+			}
+		}
+		return result;
 	}
 });
 

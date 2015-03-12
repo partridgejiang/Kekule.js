@@ -117,8 +117,19 @@ M  END
 			var minWidth = 650;
 			var minHeight = 300;
 			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var w = (dim.width - 50) / chemComposers.length;
+			var h = dim.height - 100;
+			if (w < minWidth)
+			{
+				w = minWidth;
+				h = h / 2;
+			}
+			if (h < minHeight)
+				h = minHeight;
+			/*
 			var w = Math.max((dim.width - 50) / chemComposers.length, minWidth);
 			var h = Math.max(dim.height - 100, minHeight);
+			*/
 			for (var i = 0, l = chemComposers.length; i < l; ++i)
 			{
 				chemComposers[i].setWidth(w + 'px').setHeight(h + 'px');

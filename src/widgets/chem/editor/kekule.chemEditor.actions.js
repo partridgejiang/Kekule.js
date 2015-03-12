@@ -972,6 +972,16 @@ Kekule.Editor.ActionComposerSetAtomController = Kekule.Editor.createComposerIaCo
 	null
 );
 
+// formula
+Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetFormulaController',
+	Kekule.ChemWidgetTexts.CAPTION_MOL_FORMULA,
+	Kekule.ChemWidgetTexts.HINT_MOL_FORMULA,
+	'FormulaIaController',
+	null,
+	null
+);
+
 // Charge and its variations
 Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerClear',

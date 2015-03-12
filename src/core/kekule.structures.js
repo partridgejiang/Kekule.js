@@ -390,6 +390,15 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		this.defineProp('radical', {'dataType': DataType.INT});
 	},
 	/**
+	 * Returns a label that represents current node.
+	 * Desendants should override this method.
+	 * @returns {String}
+	 */
+	getLabel: function()
+	{
+		return null;
+	},
+	/**
 	 * Returns the most possible isotope of node.
 	 * To {@link Kekule.Atom}, this should be simplely the isotope of atom
 	 * while variable atom or pseudoatom may has its own implementation.
@@ -485,9 +494,9 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, coord2D, coord3D)
+	initialize: function($super, id, coord2D, coord3D)
 	{
-		$super(coord2D, coord3D);
+		$super(id, coord2D, coord3D);
 	},
 	/** @private */
 	initProperties: function()
@@ -653,6 +662,11 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	getPrimaryIsotope: function()
 	{
 		return this.getIsotope();
+	},
+	/** @ignore */
+	getLabel: function()
+	{
+		return '' + (this.getMassNumber() || '') + this.getSymbol();
 	},
 
 	/**
@@ -885,12 +899,42 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 	initProperties: function()
 	{
 		this.defineProp('atomType', {'dataType': DataType.STRING, 'enumSource': Kekule.PseudoatomType});
-		this.defineProp('symbol', {'dataType': DataType.STRING});
+		this.defineProp('symbol', {'dataType': DataType.STRING,
+			'getter': function()
+			{
+				var t = this.getAtomType();
+				var PT = Kekule.PseudoatomType;
+				var NL = Kekule.ChemStructureNodeLabels;
+				return (t === PT.DUMMY)? NL.DUMMY_ATOM:
+					(t === PT.ANY)? NL.ANY_ATOM:
+					(t === PT.HETERO)? NL.HETERO_ATOM:
+					this.getPropStoreFieldValue('symbol') || NL.CUSTOM_ATOM;
+			},
+			'setter': function(value)
+			{
+				var PT = Kekule.PseudoatomType;
+				var NL = Kekule.ChemStructureNodeLabels;
+				if (value)
+				{
+					var t = (value === NL.DUMMY_ATOM) ? PT.DUMMY :
+						(value === NL.ANY_ATOM) ? PT.ANY :
+						(value === NL.HETERO_ATOM) ? PT.HETERO :
+						PT.CUSTOM;
+					this.setAtomType(t);
+				}
+				this.setPropStoreFieldValue('symbol', value);
+			}
+		});
 	},
 	/** @ignore */
 	getPrimaryIsotope: function()
 	{
 		return null;
+	},
+	/** @ignore */
+	getLabel: function()
+	{
+		return this.getSymbol();
 	}
 });
 
@@ -956,6 +1000,11 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 			return id? Kekule.IsotopeFactory.getIsotopeById(id): null;
 		}
 	},
+	/** @ignore */
+	getLabel: function()
+	{
+		return Kekule.ChemStructureNodeLabels.VARIABLE_ATOM;
+	},
 
 	/**
 	 * Check whether this list has disallowedIsotopeIds instead of allowedIsotopeIds.
@@ -1011,6 +1060,7 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
  *   Seldom used in formula.
  * @property {Array} sections Array of atom or sub formula maps in this formula.
  *   [{'obj': atom, 'count': count}, {'obj': subFormula, 'count': count}, ...]
+ *   (charge is stored in atom or subFormula).
  *   where atom is a {@link Kekule.AbstractAtom} and subFormula is an instance of {@link Kekule.MolecularFormula}.
  *   For instance, [Cu(NH3)4]2+ SO42-] can be divided into two sub formulas: [Cu(NH3)4]2+ and SO42-,
  *   and [Cu(NH3)4]2+ can be further divided into two sub ones: Cu2+ and NH3
@@ -1029,6 +1079,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('sections', []);
 		if (parent)
 			this.setPropStoreFieldValue('parent', parent);
+		this.setBubbleEvent(true);  // allow event bubble
 	},
 	/** @private */
 	initProperties: function()
@@ -1041,6 +1092,11 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 		this.defineProp('charge', {'dataType': DataType.FLOAT, 'getter': function() { return this.getPropStoreFieldValue('charge') || 0; } });
 		this.defineProp('radical', {'dataType': DataType.INT, 'getter': function() { return this.getPropStoreFieldValue('radical') || 0; } });
 	},
+	/** @private */
+	getHigherLevelObj: function()
+	{
+		return this.getParent();
+	},
 
 	/** @private */
 	notifySectionsChanged: function()
@@ -1051,10 +1107,12 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	/** @private */
 	createSectionItem: function(atomOrSubFormula, count, charge)
 	{
-		var result = {'obj': atomOrSubFormula, 'count': count || 1};
+		var result = {'obj': atomOrSubFormula, 'count': count || 1/*, 'charge': charge || 0*/};
 		if (charge)
 			//result.charge = charge;
 			atomOrSubFormula.setCharge(charge);
+		if (atomOrSubFormula.setParent)
+			atomOrSubFormula.setParent(this.getParent());
 		return result;
 	},
 
@@ -1074,6 +1132,10 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 			else*/
 			if (sections[i].obj.getCharge)
 				result += sections[i].obj.getCharge() * (section.count || 1);
+			/*
+			if (sections[i].charge)
+				result += sections[i].charge;
+			*/
 		}
 		if (this.getCharge())
 			result += this.getCharge();
@@ -1118,16 +1180,19 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	 */
 	getSectionCharge: function(itemOrIndex)
 	{
+		var result = 0;
 		var sec;
 		if (typeof(itemOrIndex) != 'object')
 			sec = this.getSectionAt(itemOrIndex);
 		else
 			sec = itemOrIndex;
+		/*
+		if (sec.charge)
+			result += sec.charge;
+		*/
 		if (sec.obj.getCharge)
-			return sec.obj.getCharge();
-		else
-			//return sec.charge || 0;
-			return 0;
+			result += (sec.obj.getCharge() || 0);
+		return result;
 	},
 	/**
 	 * Append a new section.
@@ -1138,6 +1203,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	 */
 	appendSection: function(atomOrSubFormula, count, charge)
 	{
+		//console.log('append', atomOrSubFormula.getClassName(), atomOrSubFormula.getSymbol && atomOrSubFormula.getSymbol(), count, charge);
 		var result = this.createSectionItem(atomOrSubFormula, count, charge);
 		this.getSections().push(result);
 		this.notifySectionsChanged();
@@ -1171,6 +1237,24 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 		return r;
 	},
 	/**
+	 * Clear all sections and empty the whole formula object.
+	 */
+	clear: function()
+	{
+		this.beginUpdate();
+		try
+		{
+			this.setCharge(null);
+			this.setRadical(null)
+			this.setPropStoreFieldValue('sections', []);
+			this.notifySectionsChanged();
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+	},
+	/**
 	 * Remove a section with atomOrSubFormula.
 	 * @param {Variant} atomOrSubFormula Instance of {@link Kekule.AbstractAtom} or {@link Kekule.MolecularFormula}
 	 */
@@ -1187,12 +1271,38 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns max nested level of current formula object.
+	 * For example, [Cu(NH3)2]2+SO42-, level of [Cu(NH3)2] is 1 and (NH3) is 0.
+	 * @returns {Int}
+	 */
+	getMaxNestedLevel: function()
+	{
+		var result = 0;
+		for (var i = 0, l = this.getSectionCount(); i < l; ++i)
+		{
+			var section = this.getSectionAt(i);
+			if (section.obj instanceof Kekule.MolecularFormula)
+			{
+				var nestLevel = section.obj.getMaxNestedLevel() + 1;
+				if (nestLevel > result)
+					result = nestLevel;
+			}
+		}
+		return result;
+	},
+
+	/**
 	 * Returns a pure array of {isotope, count, charge}.
-	 * For example, [Cu(NH3)4]2+ SO42-] will be regarded as CuN4H12SO4
+	 * For example, [Cu(NH3)4]2+ SO4 2-] will be regarded as CuN4H12SO4
 	 */
 	getSimpleIsotopeMaps: function()
 	{
 		//TODO: not finished
+	},
+
+	setFromText: function(formulaText)
+	{
+
 	}
 });
 
@@ -1225,6 +1335,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			this.setOwner(owner);
 		if (parent)
 			this.setPropStoreFieldValue('parent', parent);
+		//this.setBubbleEvent(true);  // allow event bubble
 	},
 	/** @private */
 	initProperties: function()
@@ -1270,6 +1381,12 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('anchorNodes', []);
 		this.setPropStoreFieldValue('connectors', []);
 	},
+	/** @private */
+	getHigherLevelObj: function()
+	{
+		return this.getParent() || this.getOwner();
+	},
+
 	// custom save / load method
 	/** @private */
 	doSaveProp: function(obj, prop, storageNode, serializer)
@@ -2609,7 +2726,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					{
 						if (allowCreate)
 						{
-							this.setPropStoreFieldValue('formula', new Kekule.MolecularFormula(this));
+							this.createFormula();
 						}
 					}
 					return this.getPropStoreFieldValue('formula');
@@ -2624,7 +2741,12 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					}
 
 					if (value)
+					{
 						value.setPropValue('parent', this, true);
+						value.addEventListener('change', function(e){
+							this.notifyPropSet('formula', this.getFormula());
+						}, this);
+					}
 
 					this.setPropStoreFieldValue('formula', value);
 				}
@@ -2653,6 +2775,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				{
 					value.setPropValue('parent', this, true);
 					value.setOwner(this.getOwner());
+					// install event listeners to ctab
+					value.addEventListener('propValueSet',
+						function(e)
+						{
+							if ((e.propName == 'nodes') || (e.propName == 'anchorNodes') || (e.propName == 'connectors'))
+							{
+								//console.log('mol prop set', e.propName, e.propValue);
+								this.notifyPropSet(e.propName, e.propValue);
+							}
+						}, this);
+					value.setEnablePropValueSetEvent(true); // to enable propValueSet event
 				}
 
 				this.setPropStoreFieldValue('ctab', value);
@@ -2798,18 +2931,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	createCtab: function()
 	{
 		var ctab = new Kekule.StructureConnectionTable(this.getOwner(), this);
-		this.setPropStoreFieldValue('ctab', ctab);
-		// install event listeners to ctab
-		ctab.addEventListener('propValueSet',
-			function(e)
-			{
-				if ((e.propName == 'nodes') || (e.propName == 'anchorNodes') || (e.propName == 'connectors'))
-				{
-					//console.log('mol prop set', e.propName, e.propValue);
-					this.notifyPropSet(e.propName, e.propValue);
-				}
-			}, this);
-		ctab.setEnablePropValueSetEvent(true); // to enable propValueSet event
+		this.setCtab(ctab);
+	},
+	/** @private */
+	createFormula: function()
+	{
+		var formula = new Kekule.MolecularFormula(this);
+		this.setFormula(formula);
 	},
 	/*
 	// Notify {@link Kekule.StructureFragment#nodes} property has been changed
@@ -3916,6 +4044,11 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 			this.recalcCoords();
 		}
 		return $super(propName, newValue);
+	},
+	/** @ignore */
+	getLabel: function()
+	{
+		return Kekule.ChemStructureNodeLabels.SUBGROUP;
 	}
 });
 // RGroup is often used in organic chemistry, here we define it as an alias of SubGroup
@@ -5278,3 +5411,83 @@ Kekule.MoleculeList = Class.create(Kekule.ChemObjList,
 		$super(id, Kekule.Molecule);
 	}
 });
+
+/**
+ * Class to store label strings of different structure node (e.g., atom list, RGroup...).
+ * @class
+ */
+Kekule.ChemStructureNodeLabels = {
+	/** Label for unset element. */
+	UNSET_ELEMENT: '?',
+
+	// for Pseudoatom
+	/** Label for dummy atom. */
+	DUMMY_ATOM: 'Du',
+	/** Label for Non C/H atom. */
+	HETERO_ATOM: 'Q',
+	/** Label for Unspecific atom */
+	ANY_ATOM: 'A',
+	/** Label for Custom atom */
+	CUSTOM_ATOM: '@',
+
+	// for VariableAtom
+	/** Label for Unspecific atom */
+	VARIABLE_ATOM: 'L',
+
+	/** Default label for sub group */
+	SUBGROUP: 'R',
+
+	// for VariableAtom
+	/** Display isotope list in bracket, such as [H, 13C, O, P]. */
+	ISO_LIST_LEADING_BRACKET: '[',
+	/** Display isotope list in bracket, such as [H, 13C, O, P]. */
+	ISO_LIST_TAILING_BRACKET: ']',
+	/** Default delimiter for each isotope in list */
+	ISO_LIST_DELIMITER: ',',
+	/** Default prefix to indicate it is a disallow list. */
+	ISO_LIST_DISALLOW_PREFIX: 'NOT'
+}
+
+/**
+ * A factory class to create suitable structure node by node symbol (atomic symbol, R, L and so on).
+ * @class
+ */
+Kekule.ChemStructureNodeFactory = {
+	/** @private */
+	CANDIDATE_CLASSES: [Kekule.SubGroup, Kekule.VariableAtom, Kekule.Pseudoatom /*, Kekule.Atom*/],
+
+	createByLabel: function(label)
+	{
+		var NL = Kekule.ChemStructureNodeLabels;
+		var candidateLabels = [
+			[NL.SUBGROUP],
+			[NL.VARIABLE_ATOM],
+			[NL.DUMMY_ATOM, NL.HETERO_ATOM, NL.ANY_ATOM, NL.CUSTOM_ATOM]
+			]
+		var classes = Kekule.ChemStructureNodeFactory.CANDIDATE_CLASSES;
+		var cclass;
+		for (var i = 0, l = classes.length; i < l; ++i)
+		{
+			var c = classes[i];
+			var suitLabels = candidateLabels[i];
+			if (suitLabels.indexOf(label) >= 0)  // class found
+			{
+				cclass = c;
+				break;
+			}
+		}
+		if (!cclass)  // class not found, use default one, atom or custom pseudoatom
+		{
+			if (Kekule.IsotopesDataUtil.isIsotopeIdAvailable(label))
+				cclass = Kekule.Atom;
+			else
+				cclass = Kekule.Pseudoatom;
+		}
+		var result = new cclass();
+		if (result instanceof Kekule.Pseudoatom)
+			result.setSymbol(label);
+		else if (result instanceof Kekule.Atom)
+			result.setIsotopeId(label);
+		return result;
+	}
+}

@@ -15,6 +15,7 @@
 (function()
 {
 	var K = Kekule;
+	var NL = Kekule.ChemStructureNodeLabels;
 	//var C = Kekule.Render.getRenderConfigs();
 
 	/** @ignore */
@@ -499,6 +500,36 @@
 					result = result.concat(o.getAllAutoScaleRefLengths(coordMode, allowCoordBorrow));
 			}
 			return result;
+		},
+
+		/**
+		 * Calculate the box to contain the exposed objects in list.
+		 * Descendants may override this method.
+		 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
+		 * @param {Bool} allowCoordBorrow
+		 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+		 */
+		getExposedContainerBox: function(coordMode, allowCoordBorrow)
+		{
+			var result;
+			var childObjs = this.toArray();
+			for (var i = 0, l = childObjs.length; i < l; ++i)
+			{
+				var obj = childObjs[i];
+				if (!obj.isExposed())
+					continue;
+				var box = obj.getExposedContainerBox? obj.getExposedContainerBox(coordMode, allowCoordBorrow):
+					obj.getContainerBox? obj.getContainerBox(coordMode, allowCoordBorrow):
+					null;
+				if (box)
+				{
+					if (!result)
+						result = Object.extend({}, box);
+					else
+						result = Kekule.BoxUtils.getContainerBox(result, box);
+				}
+			}
+			return result;
 		}
 	});
 
@@ -918,7 +949,7 @@
 				}
 			}
 			else // no element assigned
- 				result = R.RichTextUtils.appendText(result, displayLabelConfig.getUnsetElement());
+ 				result = R.RichTextUtils.appendText(result, (displayLabelConfig && displayLabelConfig.getUnsetElement()) || NL.UNSET_ELEMENT);
 			return result;
 		}
 	});
@@ -929,16 +960,19 @@
 			var R = Kekule.Render;
 			var s;
 			var D = displayLabelConfig;
+			/*
 			switch (this.getAtomType())
 			{
-				case Kekule.PseudoatomType.DUMMY: s = D.getDummyAtom(); break;
-				case Kekule.PseudoatomType.ANY: s = D.getAnyAtom(); break;
-				case Kekule.PseudoatomType.HETERO: s = D.getHeteroAtom(); break;
+				case Kekule.PseudoatomType.DUMMY: s = (D && D.getDummyAtom()) || NL.DUMMY_ATOM; break;
+				case Kekule.PseudoatomType.ANY: s = (D && D.getAnyAtom()) || NL.ANY_ATOM; break;
+				case Kekule.PseudoatomType.HETERO: s = (D && D.getHeteroAtom()) || NL.HETERO_ATOM; break;
 				default:   // user custom
 					s = this.getSymbol();
 			}
+			*/
+			s = this.getLabel();
 			if (!s)
-				s = D.getUnsetElement();
+				s = (D && D.getUnsetElement()) || NL.UNSET_ELEMENT;
 			//return R.RichTextUtils.strToRichText(s);
 			/*
 			var result = R.RichTextUtils.createGroup();
@@ -972,7 +1006,7 @@
 			var D = displayLabelConfig;
 			if (this.isListEmpty())
 			{
-				return R.RichTextUtils.strToRichText(D.getVariableAtom());
+				return R.RichTextUtils.strToRichText((D && D.getVariableAtom()) || NL.VARIABLE_ATOM);
 			}
 
 			var isotopeIds = this.getAllowedIsotopeIds() || this.getDisallowedIsotopeIds();
@@ -1248,7 +1282,7 @@
 			*/
 			var caption = this.getAbbr();
 			if (!caption)
-				caption = displayLabelConfig.getRgroup();
+				caption = (displayLabelConfig && displayLabelConfig.getRgroup()) || NL.SUBGROUP;
 			var result;
 			if (caption.length <= 1)
 				result = R.RichTextUtils.createSection(caption);
@@ -1360,28 +1394,12 @@
 	});
 
 	ClassEx.extend(Kekule.MolecularFormula, {
-		// return max sub formula level of this formula
-		getMaxNestLevel: function()
-		{
-			var result = 0;
-			for (var i = 0, l = this.getSectionCount(); i < l; ++i)
-			{
-				var section = this.getSectionAt(i);
-				if (section.obj instanceof Kekule.MolecularFormula)
-				{
-					var nestLevel = section.obj.getMaxNestLevel() + 1;
-					if (nestLevel > result)
-						result = nestLevel;
-				}
-			}
-			return result;
-		},
-		getDisplayRichText: function(showCharge, partialChargeDecimalsLength)
+		getDisplayRichText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
 			if (Kekule.ObjUtils.isUnset(showCharge))
 				showCharge = true;
-			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength);
+			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength, displayLabelConfigs);
 		}
 	});
 

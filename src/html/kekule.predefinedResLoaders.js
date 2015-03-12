@@ -193,7 +193,22 @@ Kekule.PredefinedResLoader = Class.create(ObjectEx,
 			{
 				if (success)
 				{
-					resInfo = Object.extend(resInfo, {'data': data, 'text': req.responseText, 'resType': resInfo.resType || Kekule.X.Ajax.getResponseMimeType(req), 'success': true});
+					resInfo = Object.extend(resInfo, {'data': data, 'text': req.responseText, 'success': true});
+					if (!resInfo.resType)
+					{
+						resInfo.resType = Kekule.X.Ajax.getResponseMimeType(req);
+						if (resInfo.resType === Kekule.IO.MimeType.OCTSTREAM)  // returns oct stream mimetype, server may can not reconganize a chem format file
+						{
+							// determine proper mime type by file extension
+							var fileExt = Kekule.UrlUtils.extractFileExt(url);
+							if (fileExt)
+							{
+								var chemFormat = Kekule.IO.DataFormatsManager.findFormat(null, fileExt);
+								if (chemFormat)
+									resInfo.resType = chemFormat.mimeType;
+							}
+						}
+					}
 					callback(resInfo, success);
 				}
 				else  // failed

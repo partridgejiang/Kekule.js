@@ -773,9 +773,10 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				}
 				else // vertical line, adjust left pos
 				{
-					alignRect.left = refRect.left + refRect.width - boundRect.left;
+					alignRect.left = refRect.left;  // + refRect.width - boundRect.left;
 					alignRect.width = refRect.width;
-					boundRect.left = alignRect.left + refRect.width * overhang;
+					//boundRect.left = alignRect.left + refRect.width * overhang;
+					boundRect.left = refRect.lefy + refRect.width - boundRect.left + refRect.width * overhang;
 				}
 			}
 			else /* if (fontInfo.isSub) */
@@ -783,9 +784,10 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				var oversink = fontInfo.oversink;
 				if (isHorizontalLine)  // adjust top pos
 				{
-					alignRect.top = refRect.top + refRect.height - boundRect.height;
+					alignRect.top = refRect.top; // alignRect will not consider oversink + refRect.height - boundRect.height;
 					alignRect.height = refRect.height;
-					boundRect.top = alignRect.top + refRect.height * oversink;
+					//boundRect.top = alignRect.top + refRect.height * oversink;
+					boundRect.top = refRect.top + refRect.height - boundRect.height + refRect.height * oversink;
 				}
 				else  // vertical line, adjust left pos
 				{

@@ -208,6 +208,8 @@ Kekule.IsotopesDataUtil = {
 	getIsotopeId: function(symbolOrAtomicNumber, massNumber)
 	{
 		var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(symbolOrAtomicNumber);
+		if (!elemInfo)
+			return null;
 		var symbol = elemInfo.symbol;
 		if (massNumber)
 			return symbol + massNumber.toString();
@@ -238,6 +240,22 @@ Kekule.IsotopesDataUtil = {
 		if (massNum)
 			r.massNumber = massNum;
 		return r;
+	},
+	/**
+	 * Check if an id is legal. For example, 13Cuu is not legal (no element Cuu).
+	 * @param {String} id
+	 * @returns {Bool}
+	 */
+	isIsotopeIdAvailable: function(id)
+	{
+		var d = Kekule.IsotopesDataUtil.getIsotopeIdDetail(id);
+		var result = Kekule.ChemicalElementsDataUtil.isElementSymbolAvailable(d.symbol);
+		if (result && d.massNum)
+		{
+			var info = Kekule.IsotopesDataUtil.getIsotopeInfo(d.symbol, d.massNum);
+			result = !!info;
+		}
+		return result;
 	}
 };
 

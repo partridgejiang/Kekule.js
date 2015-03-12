@@ -19,6 +19,11 @@ var kekuleFiles = {
 	'root': {
 		'files': [
 			'core/kekule.root.js',
+		],
+		'minFile': 'root.min.js'
+	},
+	'common': {
+		files: [
 			'core/kekule.common.js',
 			'core/kekule.exceptions.js',
 			'utils/kekule.utils.js',
@@ -41,7 +46,7 @@ var kekuleFiles = {
 	},
 
 	'core': {
-		'requires': ['lan', 'root', 'data'],
+		'requires': ['lan', 'root', 'common', 'data'],
 		'files': [
 			'core/kekule.configs.js',
 			'core/kekule.elements.js',
@@ -61,7 +66,7 @@ var kekuleFiles = {
 	},
 
 	'html': {
-		'requires': ['lan', 'root'],
+		'requires': ['lan', 'root', 'common'],
 		'files': [
 			'xbrowsers/kekule.x.js',
 			'html/kekule.predefinedResLoaders.js'
@@ -69,7 +74,7 @@ var kekuleFiles = {
 	},
 
 	'io': {
-		'requires': ['lan', 'root', 'core'],
+		'requires': ['lan', 'root', 'common', 'core'],
 		'files': [
 			'io/kekule.io.js',
 			'io/cml/kekule.io.cml.js',
@@ -83,7 +88,7 @@ var kekuleFiles = {
 	},
 
 	'render': {
-		'requires': ['lan', 'root', 'core'],
+		'requires': ['lan', 'root', 'common', 'core'],
 		'files': [
 			'render/kekule.render.extensions.js',
 			'render/kekule.render.base.js',
@@ -103,7 +108,7 @@ var kekuleFiles = {
 	},
 
 	'widget': {
-		'requires': ['lan', 'root', 'html'],
+		'requires': ['lan', 'root', 'common', 'html'],
 		'files': [
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
@@ -142,7 +147,7 @@ var kekuleFiles = {
 	},
 
 	'chemWidget': {
-		'requires': ['lan', 'root', 'core', 'html', 'io', 'render', 'widget'],
+		'requires': ['lan', 'root', 'common', 'core', 'html', 'io', 'render', 'widget'],
 		'files': [
 			'widgets/chem/kekule.chemWidget.base.js',
 			'widgets/chem/kekule.chemWidget.dialogs.js',
@@ -168,7 +173,7 @@ var kekuleFiles = {
 	},
 
 	'algorithm': {
-		'requires': ['lan', 'root', 'core'],
+		'requires': ['lan', 'root', 'common', 'core'],
 		'files': [
 			'algorithm/kekule.graph.js',
 			'algorithm/kekule.structures.helpers.js',
@@ -191,7 +196,7 @@ var kekuleFiles = {
 	},
 
 	'emscripten': {
-		'requires': ['root'],
+		'requires': ['root', 'common'],
 		'files': [
 			'_extras/kekule.emscriptenUtils.js'
 		]
@@ -207,7 +212,7 @@ var kekuleFiles = {
 	}
 };
 
-var prequestModules = ['lan', 'root', 'localization'];
+var prequestModules = ['lan', 'root', 'localization', 'common'];
 var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'data']);
 var allModules = usualModules.concat(['emscripten', 'openbabel']);
 

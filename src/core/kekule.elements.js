@@ -322,7 +322,7 @@ Kekule.Isotope = Class.create(Kekule.Element,
 			&& (massNumber != Kekule.Isotope.UNSET_MASSNUMBER))
 		*/
 		if (Kekule.Element.isNormalElement(symbolOrAtomicNumber)
-			&& (massNumber != Kekule.Isotope.UNSET_MASSNUMBER))
+			&& (massNumber !== Kekule.Isotope.UNSET_MASSNUMBER))
 		{
 			// get rest of properties' value from isotope data
 			var isotopeInfo = Kekule.IsotopesDataUtil.getIsotopeInfo(this.getAtomicNumber(), massNumber);
@@ -332,9 +332,11 @@ Kekule.Isotope = Class.create(Kekule.Element,
 				this.setPropStoreFieldValue('naturalAbundance', isotopeInfo.naturalAbundance);
 			}
 			else
+			{
 				Kekule.chemError(
-					(Kekule.hasLocalRes()?	Kekule.ErrorMsg.INVALID_ISOTOPE: 'Invalid isotope')
-						+ ': ' + this.getSymbol() + '/' + massNumber);
+					(Kekule.hasLocalRes() ? Kekule.ErrorMsg.INVALID_ISOTOPE : 'Invalid isotope')
+					+ ': ' + this.getSymbol() + '/' + massNumber);
+			}
 		}
 	},
 	/** @private */

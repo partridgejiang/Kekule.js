@@ -6,10 +6,11 @@
 
 	<script src="../../../libs/Three.js"></script>
 	<script src="../../../libs/raphael-min.2.0.1.js"></script>
-	<script src="../../../libs/kekule.compressed.js"></script>
-	<!--
-	<script src="../../../../src/kekule.js"></script>
+  <!--
+	<script src="../../../libs/kekule/kekule.js?module=chemWidget"></script>
 	-->
+  <script src="../../../../src/kekule.js?modules=chemWidget,io&min=false"></script>
+
 	<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
 	<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
 	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
@@ -73,7 +74,7 @@ M  END
 <pre class="CodeBlock">&lt;span&#32;id="viewer2D1"&#32;style=&quot;display:block&quot; data-widget="Kekule.ChemWidget.Viewer2D"
  &#32;data-chem-obj="url(../../chemFiles/benzene.mol)"&#32;data-predefined-setting="basic"&#32;data-auto-size="true"&gt;&lt;/span&gt;
 </pre>
-<p>Note the &quot;data-chem-obj&quot; attribute, url refers to a external chem file. The result:</p>
+<p>Note the &quot;data-chem-obj&quot; attribute, url refers to a external chem file. If the web server is properly configurated and a proper MIME type (&quot;chemical/x-mdl-molfile&quot; for MOL format file) is returned for .mol file, the molecule will be displayed in browser. The result:</p>
 <span class="BlockViewer" id="viewer2D1" style="display:block" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true"></span>
 <p>You can even add a caption to it:</p>
 <pre class="CodeBlock">&lt;span&#32;style=&quot;display:block&quot; data-widget="Kekule.ChemWidget.Viewer2D"

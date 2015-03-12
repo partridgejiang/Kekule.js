@@ -1354,7 +1354,6 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 	{
 		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
 		var result = {'key': jsonObj.name, 'value': StringUtils.deserializeValue(jsonObj.content)};
-		console.log(result);
 		return result;
 	}
 });
@@ -1616,11 +1615,10 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			{
 				//var isotope = Kekule.IsotopeFactory.getIsotope(symbol, atomAttribs[i].isotope || null);
 				var atom = Kekule.IO.CmlUtils.createNodeByCmdElementType(null, symbol);
-				if (atomAttribs[i].formalCharge)
-					atom.setCharge(atomAttribs[i].formalCharge);
+				var charge = (atomAttribs[i].formalCharge) || 0;
 				var count = atomAttribs[i].count;
 				//var charge = atomAttribs[i].formalCharge;
-				formula.appendSection(atom, count/*, charge*/);
+				formula.appendSection(atom, count, charge);
 			}
 		}
 	},
@@ -1636,7 +1634,8 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 		var formula = this.readElement(elem, domHelper);
 		// check sub formula count
 		var count = Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'count', Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, domHelper);
-		parentFormula.appendSection(formula, parseFloat(count) || 1);
+		parentFormula.appendSection(formula, parseFloat(count) || 1, formula.getCharge() || 0);
+		//formula.setCharge(0);
 	}
 });
 
@@ -1684,7 +1683,8 @@ Kekule.IO.CmlFormulaWriter = Class.create(Kekule.IO.CmlElementWriter,
 			{
 				atomSymbols.push(Kekule.IO.CmlUtils.getNodeElementType(section.obj));
 				counts.push(section.count || 1);
-				charges.push(section.obj.getCharge? (section.obj.getCharge() || 0): 0);
+				//charges.push(section.obj.getCharge? (section.obj.getCharge() || 0): 0);
+				charges.push(obj.getSectionCharge(section) || 0);
 				if (i == l - 1)  // last item, write to element
 				{
 					this.createAtomArrayElem(atomSymbols, counts, charges, targetElem);

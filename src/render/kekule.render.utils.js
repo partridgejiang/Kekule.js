@@ -537,13 +537,6 @@ Kekule.Render.ChemDisplayTextUtils = {
 	},
 
 	/**
-	 * Nestable brackets used to display formula.
-	 * @private
-	 */
-	FORMULA_BRACKETS: [['(', ')'], ['[', ']'], ['{', '}']],
-	/** @private */
-	FORMULA_BRACKET_TYPE_COUNT: 3,
-	/**
 	 * Convert a chemistry formula to a displayable rich format text label.
 	 * @param {Kekule.MolecularFormula} formula
 	 * @param {Bool} showCharge Whether display formula charge.
@@ -551,42 +544,56 @@ Kekule.Render.ChemDisplayTextUtils = {
 	 * @param {Int} partialChargeDecimalsLength
 	 * @returns {Object}
 	 */
-	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength)
+	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs)
 	{
 		//var result = Kekule.Render.RichTextUtils.create();
-		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength);
+		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs);
 		return result;
 	},
 
-	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength)
+	/** @private */
+	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs)
 	{
 		var result = Kekule.Render.RichTextUtils.createGroup();
 		var sections = formula.getSections();
 		if (showBracket)
 		{
-			var bracketIndex = formula.getMaxNestLevel() % Kekule.Render.ChemDisplayTextUtils.FORMULA_BRACKET_TYPE_COUNT;
-			var bracketStart = Kekule.Render.ChemDisplayTextUtils.FORMULA_BRACKETS[bracketIndex][0];
-			var bracketEnd = Kekule.Render.ChemDisplayTextUtils.FORMULA_BRACKETS[bracketIndex][1];
+			var bracketIndex = formula.getMaxNestedLevel() % Kekule.FormulaUtils.FORMULA_BRACKET_TYPE_COUNT;
+			var bracketStart = Kekule.FormulaUtils.FORMULA_BRACKETS[bracketIndex][0];
+			var bracketEnd = Kekule.FormulaUtils.FORMULA_BRACKETS[bracketIndex][1];
 			result = Kekule.Render.RichTextUtils.appendText(result, bracketStart);
 		}
 		for (var i = 0, l = sections.length; i < l; ++i)
 		{
 			var obj = sections[i].obj;
+			var charge = formula.getSectionCharge(sections[i]);
 			var subgroup = null;
 			if (obj instanceof Kekule.MolecularFormula)  // a sub-formula
 			{
 				// TODO: sometimes bracket is unessential, such as SO42- and so on, need more judge here
-				subgroup = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(obj, true, showCharge);
+				subgroup = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(obj, true, false, false, partialChargeDecimalsLength, displayConfigs); // do not show charge right after, we will add it later
 			}
-			else if (obj.getDisplayRichText) // an atom
+			else if (obj.getDisplayRichText) // an atom/isotope
 			{
-				var subgroup = obj.getDisplayRichText(Kekule.Render.HydrogenDisplayLevel.NONE, showCharge);
+				var subgroup = obj.getDisplayRichText(Kekule.Render.HydrogenDisplayLevel.NONE, false, null, displayConfigs, partialChargeDecimalsLength);  // do not show charge right after symbol
 			}
+
 			if (subgroup)
 			{
 				// count
 				if (sections[i].count != 1)
 					subgroup = Kekule.Render.RichTextUtils.appendText(subgroup, sections[i].count.toString(), {'textType': Kekule.Render.RichText.SUB});
+
+				// charge is draw after count
+				if (showCharge && charge)
+				{
+					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength);
+					if (chargeSection)
+					{
+						Kekule.Render.RichTextUtils.append(subgroup, chargeSection);
+					}
+				}
+
 				result = Kekule.Render.RichTextUtils.append(result, subgroup);
 			}
 		}
@@ -603,6 +610,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 				Kekule.Render.RichTextUtils.append(result, chargeSection);
 			}
 		}
+
 		return result;
 	}
 };

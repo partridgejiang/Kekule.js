@@ -1381,6 +1381,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		result[BNS.manipulate] = CE.ActionComposerSetManipulateController;
 		result[BNS.erase] = CE.ActionComposerSetEraserController;
 		result[BNS.molAtom] = CE.ActionComposerSetAtomController;
+		result[BNS.molFormula] = CE.ActionComposerSetFormulaController;
 		result[BNS.molBond] = CE.ActionComposerSetBondController;
 		result[BNS.molCharge] = CE.ActionComposerSetNodeChargeController;
 		result[BNS.textBlock] = CE.ActionComposerSetTextBlockController;
@@ -1421,6 +1422,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.erase,
 			BNS.molBond,
 			BNS.molAtom,
+			BNS.molFormula,
 			BNS.molRing,
 			BNS.molCharge,
 			BNS.glyph,
@@ -1894,6 +1896,7 @@ SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit 
 		BNS.erase,
 		BNS.molBond,
 		BNS.molAtom,
+		BNS.molFormula,
 		BNS.molRing,
 		BNS.molCharge
 	],   // create only chem tool buttons related with molecule

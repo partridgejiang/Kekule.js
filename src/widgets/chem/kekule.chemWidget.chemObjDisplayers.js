@@ -144,6 +144,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @construct */
 	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, displayerConfigs)
 	{
+		this._paintFlag = 0;  // used internally
 		//this._errorReportElem = null;  // use internally
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		$super(parentOrElementOrDocument);
@@ -154,7 +155,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//this.setUseCornerDecoration(true);
 		this.setEnableLoadNewFile(true);
 		this.setPropStoreFieldValue('displayerConfigs', displayerConfigs || this.createDefaultConfigs());
-		this._paintFlag = 0;  // used internally
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -770,6 +770,18 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Returns object in displayer that tp be saved.
+	 * Usually this should be the chemObj itself.
+	 * Descendants may override this method.
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	getSavingTargetObj: function()
+	{
+		return this.getChemObj();
+	},
+
+	/**
 	 * Save loaded chem object to data.
 	 * @param {String} formatId
 	 * @param {Int} dataType Text or binary. Set null to use default type.
@@ -778,7 +790,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	saveData: function(formatId, dataType, obj)
 	{
-	  var obj = obj || this.getChemObj();
+	  var obj = obj || this.getSavingTargetObj(); /* this.getChemObj()*/
 		this.prepareSaveData(obj);
 		var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, obj);
 		if (writer)
@@ -841,7 +853,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			var renderBox = painter.estimateScreenBox(context, baseCoord, drawOptions, this.getAllowCoordBorrow());
 			var width = renderBox.x2 - renderBox.x1 + padding * 2;
 			var height = renderBox.y2 - renderBox.y1 + padding * 2;
-			this.getDrawBridge().setContextDimension(context, width, height);
+			//this.getDrawBridge().setContextDimension(context, width, height);
+			this.changeContextDimension({'width': width, 'height': height});
 			/*
 			 this.setWidth(width + 'px');
 			 this.setHeight(height + 'px');
@@ -955,6 +968,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	beginPaint: function()
 	{
+		if (!this._paintFlag)
+			this._paintFlag = 0;
 		++this._paintFlag;
 	},
 	/** @private */
@@ -962,6 +977,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		if (this._paintFlag > 0)
 			--this._paintFlag;
+		if (this._paintFlag < 0)
+			this._paintFlag = 0;
 	},
 	/**
 	 * Returns whether in the painting process.
@@ -1754,7 +1771,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	/** @private */
 	getTargetObj: function(formatId)
 	{
-		return this.getDisplayer().getChemObj();
+		return this.getDisplayer().getSavingTargetObj();
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -1768,7 +1785,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	{
 		var self = this;
 		var dialog = this.getFormatDialog();
-		var chemObj = this.getDisplayer().getChemObj();
+		var chemObj = this.getTargetObj(); //this.getDisplayer().getChemObj();
 
 		var formatSelector = dialog._formatSelector;
 		var writerInfos = this.getAvailableWriterInfos(chemObj);

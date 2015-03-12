@@ -1975,6 +1975,8 @@ ObjectEx = Class.create(
 		{
 			this.doFinalize();
 			this.invokeEvent('finalize', {'obj': this});
+      // free all event objects
+      this.setPropStoreFieldValue('eventHandlers', null);
 			this._finalized = true;
 		}
 	},

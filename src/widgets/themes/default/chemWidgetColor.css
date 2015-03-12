@@ -281,6 +281,10 @@
 {
     background-image: url("icons/atom.png");
 }
+.K-Chem-FormulaIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("icons/formula.png");
+}
 .K-Chem-MolBondIaController > .K-Pri-Glyph-Content
 {
     background-image: url("icons/bondSingle.png");

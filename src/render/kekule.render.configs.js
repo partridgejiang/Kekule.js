@@ -190,20 +190,51 @@ Kekule.Render.DisplayLabelConfigs = Class.create(Kekule.AbstractConfigs,
 	/** @private */
 	initProperties: function()
 	{
-		this.addStrConfigProp('unsetElement', this.DEF_UNSET_ELEMENT);
+		var NL = Kekule.ChemStructureNodeLabels;
+		this.addStrConfigProp('unsetElement', NL.UNSET_ELEMENT, {
+			'getter': function() { return NL.UNSET_ELEMENT; },
+			'setter': function(value) { if (value) NL.UNSET_ELEMENT = value; }
+		});
 		// for Pseudoatom
-		this.addStrConfigProp('dummyAtom', this.DEF_DUMMY_ATOM);
-		this.addStrConfigProp('heteroAtom', this.DEF_HETERO_ATOM);
-		this.addStrConfigProp('anyAtom', this.DEF_ANY_ATOM);
+		this.addStrConfigProp('dummyAtom', NL.DUMMY_ATOM, {
+			'getter': function() { return NL.DUMMY_ATOM; },
+			'setter': function(value) { if (value) NL.DUMMY_ATOM = value; }
+		});
+		this.addStrConfigProp('heteroAtom', NL.HETERO_ATOM, {
+			'getter': function() { return NL.HETERO_ATOM; },
+			'setter': function(value) { if (value) NL.HETERO_ATOM = value; }
+		});
+		this.addStrConfigProp('anyAtom', NL.ANY_ATOM, {
+			'getter': function() { return NL.ANY_ATOM; },
+			'setter': function(value) { if (value) NL.ANY_ATOM = value; }
+		});
 		// for VariableAtom
-		this.addStrConfigProp('variableAtom', this.DEF_VARIABLE_ATOM);
+		this.addStrConfigProp('variableAtom', NL.VARIABLE_ATOM, {
+			'getter': function() { return NL.VARIABLE_ATOM; },
+			'setter': function(value) { if (value) NL.VARIABLE_ATOM = value; }
+		});
 		// for RGroup
-		this.addStrConfigProp('rgroup', this.DEF_RGROUP);
+		this.addStrConfigProp('rgroup', NL.SUBGROUP, {
+			'getter': function() { return NL.SUBGROUP; },
+			'setter': function(value) { if (value) NL.SUBGROUP = value; }
+		});
 		// for VariableAtom
-		this.addStrConfigProp('isoListLeadingBracket', this.DEF_ISO_LIST_LEADING_BRACKET);
-		this.addStrConfigProp('isoListTailingBracket', this.DEF_ISO_LIST_TAILING_BRACKET);
-		this.addStrConfigProp('isoListDelimiter', this.DEF_ISO_LIST_DELIMITER);
-		this.addStrConfigProp('isoListDisallowPrefix', this.DEF_ISO_LIST_DISALLOW_PREFIX);
+		this.addStrConfigProp('isoListLeadingBracket', NL.ISO_LIST_LEADING_BRACKET, {
+			'getter': function() { return NL.ISO_LIST_LEADING_BRACKET; },
+			'setter': function(value) { if (value) NL.ISO_LIST_LEADING_BRACKET = value; }
+		});
+		this.addStrConfigProp('isoListTailingBracket', NL.ISO_LIST_TAILING_BRACKET, {
+			'getter': function() { return NL.ISO_LIST_TAILING_BRACKET; },
+			'setter': function(value) { if (value) NL.ISO_LIST_TAILING_BRACKET = value; }
+		});
+		this.addStrConfigProp('isoListDelimiter', NL.ISO_LIST_DELIMITER, {
+			'getter': function() { return NL.ISO_LIST_DELIMITER; },
+			'setter': function(value) { if (value) NL.ISO_LIST_DELIMITER = value; }
+		});
+		this.addStrConfigProp('isoListDisallowPrefix', NL.ISO_LIST_DISALLOW_PREFIX, {
+			'getter': function() { return NL.ISO_LIST_DISALLOW_PREFIX; },
+			'setter': function(value) { if (value) NL.ISO_LIST_DISALLOW_PREFIX = value; }
+		});
 	}
 });
 

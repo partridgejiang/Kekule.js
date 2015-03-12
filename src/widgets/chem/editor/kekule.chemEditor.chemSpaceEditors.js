@@ -36,7 +36,8 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMSPACE_EDITOR2D: 'K-Chem-Space-Editor2D',
 	CHEMSPACE_EDITOR3D: 'K-Chem-Space-Editor3D',
 
-	CHEMEDITOR_TEXT_SETTER: 'K-ChemEditor-Text-Setter'
+	CHEMEDITOR_TEXT_SETTER: 'K-ChemEditor-Text-Setter',
+	CHEMEDITOR_FORMULA_SETTER: 'K-ChemEditor-Formula-Setter'
 });
 
 /**
@@ -182,6 +183,19 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		}
 		return result;
+	},
+	/** @ignore */
+	getSavingTargetObj: function($super)
+	{
+		// if only one child in chemspace, save this obj alone (rather than the space).
+		var space = this.getChemSpace();
+		var childCount = space.getChildCount();
+		if (childCount === 1)
+		{
+			return space.getChildAt(0);
+		}
+		else
+			return $super();
 	},
 
 	/** @ignore */
@@ -330,7 +344,9 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 			if (ratio && objBox)  // 2D and calc padding
 			{
-				var oldObjCoord = containingChemObj.getCoordOfMode(this.getCoordMode()) || {};
+				var oldObjCoord = containingChemObj.getCoordOfMode?
+					containingChemObj.getCoordOfMode(this.getCoordMode()) || {}:
+					{};
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
 				//coord.y = spaceSize.y - /*(objBox.y2 - objBox.y1) / 2*/objBox.y2 - padding * ratio;
 				//coord.y = spaceSize.y - Math.abs(objBox.y2 - objBox.y1) / 2 - padding * ratio;
@@ -351,7 +367,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 
 				coord = Kekule.CoordUtils.add(coord, oldObjCoord);
 			}
-			containingChemObj.setCoordOfMode(coord, this.getCoordMode());
+			if (containingChemObj.setCoordOfMode)
+				containingChemObj.setCoordOfMode(coord, this.getCoordMode());
 		}
 
 		return result;
@@ -3271,17 +3288,297 @@ Kekule.Editor.ArrowLineIaController = Class.create(Kekule.Editor.RepositoryIaCon
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.ArrowLineIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
+ * Controller to add or edit formula based molecule in document.
+ * @class
+ * @augments Kekule.Editor.BaseEditorIaController
+ */
+Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.FormulaIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.FormulaIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._operAddMol = null;  // private
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('currMol', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+		this.defineProp('textSetter', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+	},
+	/** @private */
+	canInteractWithObj: function($super, obj)
+	{
+		if (obj && this.isValidMol(obj))
+			return true;
+		else
+			return false;
+	},
+
+	/**
+	 * Check if obj is a valid formula based molecule and can be edited.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	isValidMol: function(obj)
+	{
+		return (obj instanceof Kekule.StructureFragment) && obj.hasFormula() && !obj.hasCtab();
+	},
+
+	/**
+	 * Returns plain text of formula that shows in text setter.
+	 * @param {Kekule.StructureFragment} mol
+	 * @returns {String}
+	 * @private
+	 */
+	getFormulaText: function(mol)
+	{
+		return mol.hasFormula()? mol.getFormula().getText(): '';
+	},
+
+	/** @private */
+	createNewMol: function(chemSpace, coord)
+	{
+		var editor = this.getEditor();
+		if (!editor.canCreateNewChild())
+			return null;
+
+		editor.beginUpdateObject();
+		try
+		{
+			var mol = new Kekule.Molecule();
+			mol.getFormula(true);  // create a forumla
+			chemSpace.appendChild(mol);
+			editor.setObjectScreenCoord(mol, coord);
+			var addOperation = new Kekule.ChemObjOperation.Add(mol, chemSpace, null);
+			this._operAddBlock = addOperation;
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+		return mol;
+	},
+
+	/** @private */
+	getTextSetterWidget: function(canCreate)
+	{
+		var result = this.getTextSetter();
+		if (!result && canCreate)  // create new one
+		{
+			var parentElem = this.getEditor().getCoreElement();
+			var doc = parentElem.ownerDocument;
+			result = this._createTextSetterWidget(doc, parentElem);
+			this.setTextSetter(result);
+		}
+		return result;
+	},
+	/** @private */
+	_createTextSetterWidget: function(doc, parentElem)
+	{
+		var result = new Kekule.Widget.TextBox(doc);
+		/*
+		result.setAutoSizeX(true);
+		result.setAutoSizeY(true);
+		*/
+		result.addClassName(CCNS.CHEMEDITOR_FORMULA_SETTER);
+		result.appendToElem(parentElem);
+
+		// event handler
+		var self = this;
+		result.addEventListener('keyup', function(e)
+			{
+				var ev = e.htmlEvent;
+				var keyCode = ev.getKeyCode();
+				if (keyCode === Kekule.X.Event.KeyCode.ENTER)  // ctrl+enter
+				{
+					self.applySetter(result);
+					result.dismiss();  // avoid call apply setter twice
+				}
+				else if (keyCode === Kekule.X.Event.KeyCode.ESC)  // ESC, cancel editor
+				{
+					result.dismiss();
+					self.cancelSetter();
+				}
+			}
+		);
+		result.addEventListener('showStateChange', function(e)
+			{
+				//console.log('show state change', e.isShown, e.isDismissed);
+				if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+				{
+					self.applySetter(result);
+				}
+			}
+		);
+		return result;
+	},
+	/** @private */
+	cancelSetter: function()
+	{
+		if (this._operAddBlock)  // already created new formula, remove it
+		{
+			this._operAddBlock.reverse();
+			this._operAddBlock = null;
+		}
+	},
+	/** @private */
+	applySetter: function(setter, mol)
+	{
+		if (setter._applied)   // avoid call twice
+			return;
+
+		if (!mol)
+			mol = this.getCurrMol();
+
+		var oper;
+		var text = setter.getText();
+		if (!text)  // no input, delete
+		{
+			if (this._operAddBlock)  // new forumla just added to space
+				this.cancelSetter();
+			else  // old one, delete it
+			{
+				oper = new Kekule.ChemObjOperation.Remove(mol, mol.getParent());
+			}
+		}
+		else
+		{
+			var oper = new Kekule.ChemObjOperation.Modify(mol.getFormula(), {'text': text});
+		}
+		if (oper)
+		{
+			oper.execute();
+
+			var editor = this.getEditor();
+			if (editor && editor.getEnableOperHistory())
+			{
+				if (this._operAddBlock)
+				{
+					var group = new Kekule.MacroOperation();
+					group.add(this._operAddBlock);
+					group.add(oper);
+					editor.pushOperation(group);
+					this._operAddBlock = null;
+				}
+				else
+					editor.pushOperation(oper);
+			}
+		}
+
+		setter._applied = true;
+	},
+	/**
+	 * Open formula edit box in coord.
+	 * @param {Hash} coord
+	 * @param {Object} mol
+	 */
+	openSetterUi: function(coord, mol)
+	{
+		var oldSetter = this.getTextSetter();
+		if (oldSetter && oldSetter.isShown())  // has a old setter
+		{
+			this.applySetter(oldSetter, this.getCurrMol());
+		}
+
+		if (!mol)  // need create new
+			mol = this.createNewMol(this.getEditor().getChemObj(), coord);
+
+		if (!this.isValidMol(mol))
+			return;
+		this.setCurrMol(mol);
+
+		this.getEditor().setSelection([mol]);
+
+		//console.log(block.getCascadedRenderOption('fontSize'));
+
+		var fontSize = mol.getCascadedRenderOption('fontSize') || this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize();
+		var fontName = mol.getCascadedRenderOption('fontFamily') || '';
+		//var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
+		var text = this.getFormulaText(mol);
+		var setter = this.getTextSetterWidget(true);
+		setter._applied = false;
+		var slabel = text || '';
+		//console.log(block, text, slabel);
+		setter.setValue(slabel);
+		//setter.setValue('hehr');
+		//setter.setIsPopup(true);
+		var style = setter.getElement().style;
+		style.position = 'absolute';
+		style.fontSize = fontSize + 'px';
+		style.left = coord.x + 'px';
+		style.top = coord.y + 'px';
+		style.fontFamily = fontName;
+		/*
+		 style.marginTop = -posAdjust + 'px';
+		 style.marginLeft = -posAdjust + 'px';
+		 */
+		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
+		setter.selectAll();
+		setter.focus();
+	},
+
+	/** @private */
+	react_mouseup: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		{
+			this.getEditor().setSelection(null);
+			var coord = this._getEventMouseCoord(e);
+			{
+				var mol;
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				if (boundItem)
+				{
+					var obj = boundItem.obj;
+
+					if (this.isValidMol(obj))  // can modify atom of this object
+					{
+						mol = obj;
+					}
+				}
+
+				/*
+				 if (!block)  // create new
+				 {
+				 block = this.createNewBlock(this.getEditor().getChemObj(), coord);
+				 //console.log(coord, this.getEditor().getObjectScreenCoord(block));
+				 }
+
+				 if (block)
+				 */
+				{
+					//var baseCoord = mol? this.getEditor().getObjectScreenCoord(mol): coord;
+					var baseCoord;
+					if (boundItem && boundItem.boundInfo)
+					{
+						baseCoord = boundItem.boundInfo.coords[0];
+					}
+					else
+						baseCoord = coord;
+					e.preventDefault();
+					e.stopPropagation();
+					// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
+					//  and the setter will be closed immediately.
+					this.openSetterUi(baseCoord, mol);
+					//this.getEditor().setSelection([block]);
+					return true;  // important
+				}
+			}
+		}
+	}
+});
+// register
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.FormulaIaController, Kekule.Editor.ChemSpaceEditor);
+
+/**
  * Controller to add or edit text block in document.
  * @class
- * @augments Kekule.Editor.BasicMolManipulationIaController
- *
- * @property {Bool} allowBondingToBond Whether bond-bond connection (e.g., in Zeise salt) is allowed.
- * @property {Bool} enableBondModification Whether modification existing bond is enabled.
- * @property {Bool} autoSwitchBondOrder If true, click on bond will switch bond order between single, double and triple.
- * @property {Kekule.ChemStructureObject} startingObj
- * @property {Kekule.ChemStructureObject} endingObj
- * @property {Int} bondOrder
- * @property {Bool} autoCreateNewStructFragment Whether a new molecule is created when a bond appointed to a blank space in editor.
+ * @augments Kekule.Editor.BaseEditorIaController
  */
 Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaController,
 /** @lends Kekule.Editor.TextBlockIaController# */
@@ -3390,11 +3687,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 				else if (keyCode === Kekule.X.Event.KeyCode.ESC)  // ESC, cancel editor
 				{
 					result.dismiss();
-					if (self._operAddBlock)  // already created new textblock, remove it
-					{
-						self._operAddBlock.reverse();
-						self._operAddBlock = null;
-					}
+					self.cancelSetter();
 				}
 			}
 		);
@@ -3410,6 +3703,15 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		return result;
 	},
 	/** @private */
+	cancelSetter: function()
+	{
+		if (this._operAddBlock)  // already created new textblock, remove it
+		{
+			this._operAddBlock.reverse();
+			this._operAddBlock = null;
+		}
+	},
+	/** @private */
 	applySetter: function(setter, block)
 	{
 		if (setter._applied)   // avoid call twice
@@ -3419,28 +3721,42 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 			block = this.getCurrBlock();
 
 		var text = setter.getText();
-		var oper = new Kekule.ChemObjOperation.Modify(block, {'text': text});
-		oper.execute();
+		var oper;
 
-		var editor = this.getEditor();
-		if (editor && editor.getEnableOperHistory())
+		if (!text)
 		{
-			if (this._operAddBlock)
-			{
-				var group = new Kekule.MacroOperation();
-				group.add(this._operAddBlock);
-				group.add(oper);
-				editor.pushOperation(group);
-				this._operAddBlock = null;
-			}
+			if (this._operAddBlock)  // just added text block
+				this.cancelSetter();
 			else
-				editor.pushOperation(oper);
+				oper = new Kekule.ChemObjOperation.Remove(block, block.getParent());
+		}
+		else
+			oper = new Kekule.ChemObjOperation.Modify(block, {'text': text});
+
+		if (oper)
+		{
+			oper.execute();
+
+			var editor = this.getEditor();
+			if (editor && editor.getEnableOperHistory())
+			{
+				if (this._operAddBlock)
+				{
+					var group = new Kekule.MacroOperation();
+					group.add(this._operAddBlock);
+					group.add(oper);
+					editor.pushOperation(group);
+					this._operAddBlock = null;
+				}
+				else
+					editor.pushOperation(oper);
+			}
 		}
 
 		setter._applied = true;
 	},
 	/**
-	 * Open atom edit box for text block in coord.
+	 * Open edit box for text block in coord.
 	 * @param {Hash} coord
 	 * @param {Object} block
 	 */
@@ -3464,6 +3780,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		//console.log(block.getCascadedRenderOption('fontSize'));
 
 		var fontSize = block.getCascadedRenderOption('fontSize') || this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize();
+		var fontName = block.getCascadedRenderOption('fontFamily') || '';
 		//var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
 		var text = this.getBlockText(block);
 		var setter = this.getTextSetterWidget(true);
@@ -3478,6 +3795,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		style.fontSize = fontSize + 'px';
 		style.left = coord.x + 'px';
 		style.top = coord.y + 'px';
+		style.fontFamily = fontName;
 		/*
 		style.marginTop = -posAdjust + 'px';
 		style.marginLeft = -posAdjust + 'px';
@@ -3530,7 +3848,6 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		}
 	}
 });
-
 // register
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.TextBlockIaController, Kekule.Editor.ChemSpaceEditor);
 

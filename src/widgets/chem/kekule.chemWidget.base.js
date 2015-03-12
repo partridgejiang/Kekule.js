@@ -54,6 +54,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	manipulate: 'manipulate',
 	molBond: 'bond',
 	molAtom: 'atom',
+	molFormula: 'formula',
 	molCharge: 'charge',
 	textBlock: 'textBlock',
 	molRing: 'ring',

@@ -62,7 +62,8 @@ Kekule.IO.MimeType = {
 	GIF: 'image/gif',
 	JPEG: 'image/jpeg',
 	PNG: 'image/png',
-	XPNG: 'image/x-png'
+	XPNG: 'image/x-png',
+	OCTSTREAM: 'application/octet-stream'
 };
 
 /**

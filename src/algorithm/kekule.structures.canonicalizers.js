@@ -452,7 +452,8 @@ Kekule.CanonicalizationExecutor = Class.create(
 	{
 		var newCtab = this.doExecute(ctab);
 		// handle connected objects of each connector
-		this.doCanonicalizeConnectedObjs(newCtab);
+		if (newCtab)
+			this.doCanonicalizeConnectedObjs(newCtab);
 		return newCtab;
 	},
 	/**
@@ -469,6 +470,8 @@ Kekule.CanonicalizationExecutor = Class.create(
 	/** @private */
 	doCanonicalizeConnectedObjs: function(ctab)
 	{
+		if (!ctab)
+			return;
 		var sortFunc = function(a, b)
 			{
 				var indexA = ctab.indexOfChild(a);
@@ -501,6 +504,8 @@ Kekule.MorganCanonicalizationExecutor = Class.create(Kekule.CanonicalizationExec
 	{
 		// turn ctab into pure graph first (with sub structure degrouped)
 		var graph = Kekule.GraphAdaptUtils.ctabToGraph(ctab, null, {'expandSubStructures': true});
+		if (!graph)
+			return null;
 		//console.log('graph size', graph.getVertexes().length);
 		// calc EC values of graph
 		var ecMapping = this._calcGraphFinalECs(graph);
