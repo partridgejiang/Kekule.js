@@ -123,26 +123,31 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	doSetChemObj: function($super, value)
 	{
 		var old = this.getChemObj();
-		if (old && this._containerChemSpace)
+		if (old !== value)
 		{
-			old.finalize();
-			this._containerChemSpace = null;
-		}
-		if (value)
-		{
-			if (value instanceof Kekule.ChemSpace)
+			if (old && this._containerChemSpace)
 			{
-				this._initChemSpaceDefProps(value);
-				return $super(value);
+				old.finalize();
+				this._containerChemSpace = null;
+			}
+			if (value)
+			{
+				if (value instanceof Kekule.ChemSpace)
+				{
+					this._initChemSpaceDefProps(value);
+					return $super(value);
+				}
+				else
+				{
+					var space = this.createContainerChemSpace(null, value);
+					//this._initChemSpaceDefProps(space, value);
+					//space.appendChild(value);
+					this._containerChemSpace = space;
+					$super(space);
+				}
 			}
 			else
-			{
-				var space = this.createContainerChemSpace(null, value);
-				//this._initChemSpaceDefProps(space, value);
-				//space.appendChild(value);
-				this._containerChemSpace = space;
-				$super(space);
-			}
+				$super(value);
 		}
 		else
 			$super(value);
@@ -3343,14 +3348,20 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	/** @private */
 	createNewMol: function(chemSpace, coord)
 	{
+		var mol;
 		var editor = this.getEditor();
 		if (!editor.canCreateNewChild())
-			return null;
+		{
+			mol = editor.getOnlyOneBlankStructFragment();
+			if (!mol)
+				return null;
+		}
 
 		editor.beginUpdateObject();
 		try
 		{
-			var mol = new Kekule.Molecule();
+			if (!mol)
+				var mol = new Kekule.Molecule();
 			mol.getFormula(true);  // create a forumla
 			chemSpace.appendChild(mol);
 			editor.setObjectScreenCoord(mol, coord);

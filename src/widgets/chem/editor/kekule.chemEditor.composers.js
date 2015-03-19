@@ -1026,6 +1026,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				try
 				{
 					var chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
+					//console.log('set predefined chemObj', chemObj);
 					this.setChemObj(chemObj);
 				}
 				catch(e)

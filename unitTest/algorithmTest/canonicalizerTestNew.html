@@ -32,9 +32,11 @@
 			{
 				var n = mol.getNodeAt(i);
 				var label = '' + (i + 1);
+				//var label = '' + n.getCanonicalizationIndex();
 				if (n.getSymbol)
 					label += n.getSymbol();
 				n.setRenderOption('customLabel', label);
+				//n.setCharge(n.getCanonicalizationIndex());
 			}
 		}
 

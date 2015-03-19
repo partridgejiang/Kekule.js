@@ -181,7 +181,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': function(value)
 			{
 				var oldObj = this.getPropStoreFieldValue('chemObj');
-				if (value !== oldObj)
+				//if (value !== oldObj)  // some times oldObj itself may change and may need to repaint
 				{
 					this.setPropStoreFieldValue('chemObj', value);
 					this.chemObjChanged(value, oldObj);
@@ -851,17 +851,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		{
 			var padding = this.getPadding() || 0;
 			var renderBox = painter.estimateScreenBox(context, baseCoord, drawOptions, this.getAllowCoordBorrow());
-			var width = renderBox.x2 - renderBox.x1 + padding * 2;
-			var height = renderBox.y2 - renderBox.y1 + padding * 2;
-			//this.getDrawBridge().setContextDimension(context, width, height);
-			this.changeContextDimension({'width': width, 'height': height});
-			/*
-			 this.setWidth(width + 'px');
-			 this.setHeight(height + 'px');
-			 */
-			this.setDrawDimension(width, height);
-			newDimension = {'width': width, 'height': height};
-			baseCoord = {'x': width / 2, 'y': height / 2};
+			if (renderBox)
+			{
+				var width = renderBox.x2 - renderBox.x1 + padding * 2;
+				var height = renderBox.y2 - renderBox.y1 + padding * 2;
+				//this.getDrawBridge().setContextDimension(context, width, height);
+				this.changeContextDimension({'width': width, 'height': height});
+				/*
+				 this.setWidth(width + 'px');
+				 this.setHeight(height + 'px');
+				 */
+				this.setDrawDimension(width, height);
+				newDimension = {'width': width, 'height': height};
+				baseCoord = {'x': width / 2, 'y': height / 2};
+			}
 
 			// debug
 			/*

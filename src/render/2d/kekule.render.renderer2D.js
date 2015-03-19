@@ -378,8 +378,8 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 				return Kekule.ArrayUtils.getMedian(lengths);
 		}
 		else
-			Kekule.error(Kekule.ErrorMsg.INAVAILABLE_AUTOSCALE_REF_LENGTH);
-			//return 1;  // TODO: need to calculate this
+			//Kekule.error(Kekule.ErrorMsg.INAVAILABLE_AUTOSCALE_REF_LENGTH);
+			return 1;  // TODO: need to calculate this
 	},
 
 	/**
@@ -1053,9 +1053,14 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 	/** @private */
 	doEstimateObjBox: function(context, options, allowCoordBorrow)
 	{
-		var parent = this.getChemObj().getParent();
-		var coord = (parent)? parent.getAbsBaseCoord2D(allowCoordBorrow): {'x': 0, 'y': 0};
-		return BU.createBox(coord, coord);  // formula has no box in chem object scope, only a point
+		var parent = this.getChemObj()? this.getChemObj().getParent(): null;
+		if (parent)
+		{
+			var coord = (parent) ? parent.getAbsBaseCoord2D(allowCoordBorrow) : {'x': 0, 'y': 0};
+			return BU.createBox(coord, coord);  // formula has no box in chem object scope, only a point
+		}
+		else
+			return null;
 	},
 
 	/** private */
@@ -3225,17 +3230,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		$super(chemObj, drawBridge, /*renderConfigs,*/ parent);
 
 		this._concreteRenderer = null;
-		if (chemObj.hasCtab())
-		{
-			this._concreteChemObj = chemObj.getCtab();
-			this._concreteRenderer = new Kekule.Render.ChemCtab2DRenderer(chemObj.getCtab(), drawBridge, /*renderConfigs,*/ this);
-		}
-		else  // if (chemObj.hasFormula())
-		{
-			this._concreteChemObj = chemObj.getFormula();
-			this._concreteRenderer = new Kekule.Render.Formula2DRenderer(chemObj.getFormula(), drawBridge, /*renderConfigs,*/ this);
-		}
+		this._concreteChemObj = null;
 
+		this.initConcreteRenderer();
 		//this.setMoleculeDisplayType(moleculeDisplayType || Kekule.Render.MoleculeDisplayType.BOND_LINE);
 	},
 	finalize: function($super)
@@ -3246,6 +3243,45 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			this._concreteRenderer.finalize();
 			this._concreteRenderer = null;
 		}
+	},
+	/** @private */
+	initConcreteRenderer: function()
+	{
+		var chemObj = this.getChemObj();
+		var drawBridge = this.getDrawBridge();
+		if (this._isRendererMismatch(this._concreteRenderer, chemObj) && this._concreteRenderer)
+		{
+			this._concreteRenderer.finalize();
+			this._concreteRenderer = null;
+			this._concreteChemObj = null;
+		}
+		if (chemObj)
+		{
+			if (chemObj.hasCtab())
+			{
+				this._concreteChemObj = chemObj.getCtab();
+				this._concreteRenderer = new Kekule.Render.ChemCtab2DRenderer(chemObj.getCtab(), drawBridge, /*renderConfigs,*/ this);
+			}
+			else if (chemObj.hasFormula())
+			{
+				this._concreteChemObj = chemObj.getFormula();
+				this._concreteRenderer = new Kekule.Render.Formula2DRenderer(chemObj.getFormula(), drawBridge, /*renderConfigs,*/ this);
+			}
+		}
+		return this._concreteRenderer;
+	},
+	/** @private */
+	_isRendererMismatch: function(renderer, chemObj)
+	{
+		return (renderer && !chemObj) ||
+			((renderer instanceof Kekule.Render.ChemCtab2DRenderer) && !chemObj.hasCtab()) ||
+			((renderer instanceof Kekule.Render.Formula2DRenderer) && !chemObj.hasFormula());
+	},
+	/** @private */
+	getConcreteRenderer: function()
+	{
+		this.initConcreteRenderer();
+		return this._concreteRenderer;
 	},
 	/** @private */
 	/*
@@ -3299,7 +3335,8 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	/** @ignore */
 	getRenderCache: function(context)
 	{
-		return this._concreteRenderer.getRenderCache(context);
+		var r = this.getConcreteRenderer();
+		return r? r.getRenderCache(context): {};
 	},
 
 	/** @private */
@@ -3320,7 +3357,8 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	/** @ignore */
 	isChemObjRenderedBySelf: function($super, context, obj)
 	{
-		var result = $super(context, obj) || (obj === this.getChemObj()) || this._concreteRenderer.isChemObjRenderedBySelf(context, obj);
+		var r = this.getConcreteRenderer();
+		var result = $super(context, obj) || (obj === this.getChemObj()) || (r && r.isChemObjRenderedBySelf(context, obj));
 		return result;
 	},
 	/** @ignore */
@@ -3333,7 +3371,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	doSetRedirectContext: function($super, value)
 	{
 		$super(value);
-		this._concreteRenderer.setRedirectContext(value);
+		var r = this.getConcreteRenderer();
+		if (r)
+			r.setRedirectContext(value);
 	},
 
 	/** @ignore */
@@ -3352,8 +3392,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 
 		var chemObj = this.getChemObj();
 		var actualBaseCoord = baseCoord;
+		var r = this.getConcreteRenderer();
 		//console.log('actualBaseCoord before', actualBaseCoord, options.transformParams);
-		if ((!actualBaseCoord) && (this._concreteRenderer instanceof Kekule.Render.Formula2DRenderer))  // need calc center coord for formula manually
+		if ((!actualBaseCoord) && (r instanceof Kekule.Render.Formula2DRenderer))  // need calc center coord for formula manually
 		{
 			if (chemObj.getAbsBaseCoord2D)
 			{
@@ -3366,15 +3407,17 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 
 		if (!chemObj.hasFormula() && !chemObj.hasCtab())  // no context, need not to draw
 			return null
-		else
+		else if (r)
 		{
-			return this._concreteRenderer.draw(context, actualBaseCoord, this._getConcreteRendererDrawOptions(options));
+			return r.draw(context, actualBaseCoord, this._getConcreteRendererDrawOptions(options));
 		}
 	},
 	/** @ignore */
 	doRedraw: function(context)
 	{
-		return this._concreteRenderer.redraw(context);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.redraw(context);
 	},
 	/** @ignore */
 	doUpdate: function(context, updatedObjDetails, updateType)
@@ -3388,31 +3431,47 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			return this.draw(context, p.baseCoord, p.options);
 		}
 
-		return this._concreteRenderer.doUpdate(context, updatedObjDetails, updateType);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.doUpdate(context, updatedObjDetails, updateType);
 	},
 	/** @ignore */
 	doClear: function(context)
 	{
-		return this._concreteRenderer.clear(context);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.clear(context);
 	},
 	/** @ignore */
 	estimateRenderBox: function(context, baseCoord, options, allowCoordBorrow)
 	{
-		return this._concreteRenderer.estimateRenderBox(context, baseCoord, this._getConcreteRendererDrawOptions(options), allowCoordBorrow);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.estimateRenderBox(context, baseCoord, this._getConcreteRendererDrawOptions(options), allowCoordBorrow);
+		else
+			return null;
 	},
 	/** @ignore */
 	transformCoordToObj: function(context, chemObj, coord)
 	{
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
-		return this._concreteRenderer.transformCoordToObj(context, obj, coord);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.transformCoordToObj(context, obj, coord);
+		else
+			return coord;
 	},
 	/** @ignore */
 	transformCoordToContext: function(context, chemObj, coord)
 	{
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
-		return this._concreteRenderer.transformCoordToContext(context, obj, coord);
+		var r = this.getConcreteRenderer();
+		if (r)
+			return r.transformCoordToContext(context, obj, coord);
+		else
+			return coord;
 	}
 });
 

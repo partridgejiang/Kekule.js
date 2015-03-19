@@ -139,6 +139,8 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 	/** @private */
 	_convertContextBoxToScreen: function(context, box)
 	{
+		if (!box)
+			return {};
 		var bridge = this.getDrawBridge();
 		var coord1 = bridge.transformContextCoordToScreen(context, {'x': box.x1, 'y': box.y1});
 		var coord2 = bridge.transformContextCoordToScreen(context, {'x': box.x2, 'y': box.y2});
@@ -184,7 +186,7 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 	estimateScreenBox: function(context, baseCoord, options, allowCoordBorrow)
 	{
 		var box = this.estimateRenderBox(context, baseCoord, options, allowCoordBorrow);
-		return this._convertContextBoxToScreen(context, box);
+		return box? this._convertContextBoxToScreen(context, box): null;
 	},
 
 	/*

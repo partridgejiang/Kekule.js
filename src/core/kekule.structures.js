@@ -4368,7 +4368,14 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	{
 		return this.hasConnectedObj(obj);
 	},
-
+	/**
+	 * Sort the array of connected objs.
+	 * @param {Function} compareFunc
+	 */
+	sortConnectedObjs: function(compareFunc)
+	{
+		this.getConnectedObjs().sort(compareFunc);
+	},
 	/**
 	 * Reverse the order of connected object.
 	 */

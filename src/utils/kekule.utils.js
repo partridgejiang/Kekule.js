@@ -529,6 +529,39 @@ Kekule.ArrayUtils = {
 		return result;
 	},
 	/**
+	 * Compare two arrays, from first to last items. If two items in each array is different,
+	 * the one with the smaller item will be regarded as smaller array.
+	 * @param {Array} a1
+	 * @param {Array} a2
+	 * @param {Function} itemCompareFunc
+	 */
+	compare: function(a1, a2, itemCompareFunc)
+	{
+		if (!itemCompareFunc)
+			itemCompareFunc = function(i1, i2)
+			{
+				return (i1 > i2)? 1:
+					(i1 < i2)? -1:
+						0;
+			}
+		var l = Math.min(a1.length, a2.length)
+		for (var i = 0; i < l; ++i)
+		{
+			var item1 = a1[i];
+			var item2 = a2[i];
+			var compareResult = itemCompareFunc(item1, item2);
+			if (compareResult !== 0)
+				return compareResult;
+		}
+		// all same in previous items
+		if (a1.length > l)
+			return 1;
+		else if (a2.length > l)
+			return -1;
+		else
+			return 0;
+	},
+	/**
 	 * Compare two arrays. The array can be nested one and the nested children will also be compared.
 	 * For instance:
 	 * [3,2,1] > [2,3,1]
@@ -572,6 +605,48 @@ Kekule.ArrayUtils = {
 			return 0;
 	},
 	/**
+	 * Compare all items in array and sort them into a new array.
+	 * If compare result is 0 (equal), those items will be "grouped up" in a nested array.
+	 * For example, var a = [1, 0, 1, 2, 3], the result of this method on a will be
+	 * [0, [1, 1], 2, 3].
+	 * @param {Array} arr
+	 * @param {Func} compareFunc
+	 * @returns {Array}
+	 */
+	group: function(arr, compareFunc)
+	{
+		if (!compareFunc)
+			compareFunc = function(a, b)
+			{
+				return (a < b)? -1:
+					(a > b)? 1:
+						0;
+			};
+		var sortedArray = Kekule.ArrayUtils.clone(arr);
+		sortedArray.sort(compareFunc);
+		var result = [];
+		var lastCompareItem;
+		for (var i = 0, l = sortedArray.length; i < l; ++i)
+		{
+			var item = sortedArray[i];
+			if (lastCompareItem && compareFunc(item, lastCompareItem) === 0)
+			{
+				var lastResultItem = result.length? result[result.length - 1]: null;
+				if (!Kekule.ArrayUtils.isArray(lastResultItem))
+				{
+					result.pop();
+					lastResultItem = [lastCompareItem];
+					result.push(lastResultItem);
+				}
+				lastResultItem.push(item);
+			}
+			else
+				result.push(item);
+			lastCompareItem = item;
+		}
+		return result;
+	},
+	/**
 	 * Returns median number of a numberic array.
 	 * @param {Array} arr
 	 * @returns {Number}
@@ -587,7 +662,7 @@ Kekule.ArrayUtils = {
 		else
 		{
 			// sort lengths to find the median one
-			a.sort();
+			a.sort(function(a, b) { return a - b;} );
 			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) + 1]) / 2;
 		}
 	}

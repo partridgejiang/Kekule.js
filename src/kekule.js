@@ -1,5 +1,19 @@
 (function($root){
 
+// IE8 does not support array.indexOf
+if (!Array.prototype.indexOf)
+{
+	/** @ignore */
+	Array.prototype.indexOf = function(item, i) {
+		i || (i = 0);
+		var length = this.length;
+		if (i < 0) i = length + i;
+		for (; i < length; i++)
+			if (this[i] === item) return i;
+		return -1;
+	};
+}
+
 function kekuleRequire(libName)
 {
 	// inserting via DOM fails in Safari 2.0, so brute force approach
@@ -306,6 +320,7 @@ function analysisEntranceScriptSrc()
 						{
 							var pvalue = minFileMatch[1].toLowerCase();
 							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+							//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
 							//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
 							result.useMinFile = value;
 						}

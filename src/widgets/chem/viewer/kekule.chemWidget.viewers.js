@@ -213,72 +213,6 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 
-		/*
-		this.defineProp('autoSize', {'dataType': DataType.BOOL, 'serializable': false,
-			'setter': function(value)
-			{
-				if (value != this.getAutoSize())
-				{
-					this.setPropStoreFieldValue('autoSize', value);
-					if (value && this.allowAutoSize())
-						this.drawOptionChanged(); // force repaint
-				}
-			}
-		});
-
-		this.defineProp('padding', {'dataType': DataType.INT, 'serializable': false});
-
-		// private properties
-		this.defineProp('drawBridge', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
-			'getter': function()
-				{
-					var result = this.getPropStoreFieldValue('drawBridge');
-					if (!result)
-					{
-						result = this.createDrawBridge();
-						this.setPropStoreFieldValue('drawBridge', result);
-					}
-					return result;
-				}
-		});
-		this.defineProp('drawContext', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
-			'getter': function()
-				{
-					var result = this.getPropStoreFieldValue('drawContext');
-					if (!result)
-					{
-						var bridge = this.getDrawBridge();
-						if (bridge)
-						{
-							var elem = this.getElement();
-							if (!elem)
-								return null;
-							else
-							{
-								var dim = Kekule.HtmlElementUtils.getElemScrollDimension(elem);
-								//var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
-								//var dim = Kekule.HtmlElementUtils.getElemOffsetDimension(elem);
-								result = bridge.createContext(elem, dim.width, dim.height);
-								  // a little smaller than current element, avoid scroll bars in when setting CSS3's resize: both property
-								this.setPropStoreFieldValue('drawContext', result);
-							}
-						}
-					}
-					return result;
-				}
-		});
-		this.defineProp('painter', {'dataType': 'Kekule.Render.ChemObjPainter', 'serializable': false, 'setter': null,
-			'getter': function()
-				{
-					var result = this.getPropStoreFieldValue('painter');
-					if (!result)
-					{
-						result = this.createNewPainter();
-					}
-					return result;
-				}
-		});
-		*/
 		//this.defineProp('liveUpdate', {'dataType': DataType.BOOL});
 
 		this.defineProp('enableEdit', {'dataType': DataType.BOOL,
@@ -1195,13 +1129,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (this.getAutoCaption())
 		{
 			var obj = this.getChemObj();
-			var info = obj && obj.getInfo();
-			var srcInfo = obj && obj.getSrcInfo();
-			if (info && srcInfo)
+			if (obj)
 			{
-				var caption = info.title || info.caption || obj.getName() || srcInfo.fileName;
-				if (caption)
-					this.setCaption(caption);
+				var info = obj && obj.getInfo();
+				var srcInfo = obj && obj.getSrcInfo();
+				if (info && srcInfo)
+				{
+					var caption = info.title || info.caption || obj.getName() || srcInfo.fileName;
+					if (caption)
+						this.setCaption(caption);
+				}
 			}
 		}
 	}
@@ -1612,6 +1549,11 @@ SM.register('Kekule.ChemWidget.Viewer.static', {  // viewer with no interaction 
 	enableDirectInteraction: false,
 	enableTouchInteraction: false,
 	toolButtons: []
+});
+SM.register('Kekule.ChemWidget.Viewer.editOnly', {  // viewer can be editted
+	enableToolbar: true,
+	enableEdit: true,
+	toolButtons: [BNS.openEditor]
 });
 
 /**
