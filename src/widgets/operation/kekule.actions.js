@@ -34,7 +34,7 @@
  * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
  */
 /**
- * Invoked when an action is executed.
+ * Invoked when an action is executed. Has one field: {htmlEvent: html event to raise the action}.
  * @name Kekule.Action#execute
  * @event
  */
@@ -250,32 +250,33 @@ Kekule.Action = Class.create(ObjectEx,
 	/** @private */
 	reactWidgetExecute: function(e)
 	{
-		return this.execute(e.target);
+		return this.execute(e.target, e.htmlEvent);
 	},
 
 	/**
 	 * Execute the action.
 	 * @param {Object} target Object that invokes this action.
+	 * @param {Object} htmlEvent HTML event that causes the executing process, can be null.
 	 */
-	execute: function(target)
+	execute: function(target, htmlEvent)
 	{
 		var oldChecked = this.getChecked();
 		if (!this.getCheckGroup() || !oldChecked)
 		{
-			this.doExecute(target);
+			this.doExecute(target, htmlEvent);
 			if (this.getCheckGroup())
 			{
 				this.setChecked(true);
 			}
 		}
-		this.invokeEvent('execute');
+		this.invokeEvent('execute', {'htmlEvent': htmlEvent});
 		return this;
 	},
 	/**
 	 * Do the actual action job. Descendants should override this method.
 	 * @private
 	 */
-	doExecute: function(target)
+	doExecute: function(target, htmlEvent)
 	{
 		// do nothing here
 	},

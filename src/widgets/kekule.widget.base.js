@@ -2536,7 +2536,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		//console.log('deactive on', this.getIsActive(), e);
 		if (this.getIsActive())
 		{
-			this.doReactDeactiviting();
+			this.doReactDeactiviting(e);
 			this.invokeEvent('deactivate', {'widget': this});
 			this.setIsActive(false);
 		}
@@ -2653,14 +2653,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/**
 	 * This method should be called when the primary action is taken on widge
 	 * (such as click on button, select on menu and so on).
+	 * @param {Object} invokerHtmlEvent HTML event object that invokes executing process.
 	 */
-	execute: function()
+	execute: function(invokerHtmlEvent)
 	{
-		this.doExecute();
-		this.invokeEvent('execute', {'widget': this});
+		this.doExecute(invokerHtmlEvent);
+		this.invokeEvent('execute', {'widget': this, 'htmlEvent': invokerHtmlEvent});
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(invokerHtmlEvent)
 	{
 		// do nothing here
 	},
@@ -2676,11 +2677,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 	/**
 	 * Begin periodical execution.
+	 * @param {Object} htmlEvent HTML event that starts periodical execution.
 	 */
-	startPeriodicalExec: function()
+	startPeriodicalExec: function(htmlEvent)
 	{
 		var delay = this.getPeriodicalExecDelay() || 0;
 		this._periodicalExecuting = true;
+		this._periodicalExecHtmlEvent = htmlEvent;
 		setTimeout(this._periodicalExecBind, delay);
 	},
 	/**
@@ -2689,6 +2692,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	stopPeriodicalExec: function()
 	{
 		this._periodicalExecuting = false;
+		this._periodicalExecHtmlEvent = null;
 	},
 	/** @private */
 	_periodicalExec: function(interval)
@@ -2698,7 +2702,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (!this._waitPeriodicalProcess)
 			{
 				this._waitPeriodicalProcess = true;  // flag
-				this.execute();
+				this.execute(this._periodicalExecHtmlEvent);
 				this._waitPeriodicalProcess = false;
 			}
 			/*

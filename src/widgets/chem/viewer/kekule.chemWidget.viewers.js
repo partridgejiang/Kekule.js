@@ -1642,6 +1642,11 @@ Kekule.ChemWidget.ActionViewerRotateBase = Class.create(Kekule.ChemWidget.Action
 	initProperties: function()
 	{
 		this.defineProp('delta', {'dataType': DataType.FLOAT});
+	},
+	/** @private */
+	isShiftModified: function(htmlEvent)
+	{
+		return htmlEvent && htmlEvent.getShiftKey();
 	}
 });
 /**
@@ -1705,9 +1710,10 @@ Kekule.ChemWidget.ActionViewerRotateLeft = Class.create(Kekule.ChemWidget.Action
 		$super(viewer, CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT);
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(target, htmlEvent)
 	{
-		this.getViewer().rotate2DBy(this.getDelta());
+		var delta = this.getDelta();
+		this.getViewer().rotate2DBy(delta);
 	}
 });
 /**
@@ -1728,9 +1734,10 @@ Kekule.ChemWidget.ActionViewerRotateRight = Class.create(Kekule.ChemWidget.Actio
 		$super(viewer, CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT);
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(target, htmlEvent)
 	{
-		this.getViewer().rotate2DBy(-this.getDelta());
+		var delta = -this.getDelta();
+		this.getViewer().rotate2DBy(delta);
 	}
 });
 /**
@@ -1751,9 +1758,13 @@ Kekule.ChemWidget.ActionViewerRotateX = Class.create(Kekule.ChemWidget.ActionVie
 		$super(viewer, CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX);
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(target, htmlEvent)
 	{
-		this.getViewer().rotate3DBy(-this.getDelta(), 0, 0);
+		var rev = this.isShiftModified(htmlEvent);
+		var delta = -this.getDelta();
+		if (rev)
+			delta = -delta;
+		this.getViewer().rotate3DBy(delta, 0, 0);
 	}
 });
 /**
@@ -1774,9 +1785,13 @@ Kekule.ChemWidget.ActionViewerRotateY = Class.create(Kekule.ChemWidget.ActionVie
 		$super(viewer, CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY);
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(target, htmlEvent)
 	{
-		this.getViewer().rotate3DBy(0, -this.getDelta(), 0);
+		var rev = this.isShiftModified(htmlEvent);
+		var delta = -this.getDelta();
+		if (rev)
+			delta = -delta;
+		this.getViewer().rotate3DBy(0, delta, 0);
 	}
 });
 /**
@@ -1797,9 +1812,13 @@ Kekule.ChemWidget.ActionViewerRotateZ = Class.create(Kekule.ChemWidget.ActionVie
 		$super(viewer, CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ);
 	},
 	/** @private */
-	doExecute: function()
+	doExecute: function(target, htmlEvent)
 	{
-		this.getViewer().rotate3DBy(0, 0, -this.getDelta());
+		var rev = this.isShiftModified(htmlEvent);
+		var delta = -this.getDelta();
+		if (rev)
+			delta = -delta;
+		this.getViewer().rotate3DBy(0, 0, delta);
 	}
 });
 

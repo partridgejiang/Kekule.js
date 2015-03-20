@@ -706,12 +706,12 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	},
 
 	/** @private */
-	execBtn: function()
+	execBtn: function(e)
 	{
 		var btn = this.getButton();
 		if (btn)
 		{
-			btn.execute();
+			btn.execute(e);
 			return true;
 		}
 	},
@@ -722,7 +722,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	{
 		if (e.getKeyCode() === 13)  // enter
 		{
-			this.execBtn();
+			this.execBtn(e);
 		}
 	},
 	/** @ignore */
@@ -733,7 +733,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 			var KC = Kekule.X.Event.KeyCode;
 			if (e.getKeyCode() === KC.DOWN)
 			{
-				this.execBtn();
+				this.execBtn(e);
 			}
 		}
 	}
