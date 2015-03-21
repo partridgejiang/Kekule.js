@@ -27,6 +27,13 @@
  *   Note: if there are sub structures (subgroups) in connection table, and a object is linked with a inside object inside subgroup,
  *   linkedSiblings will returns the subgroup rather than the inside object.
  */
+/**
+ * Invoked when object is changed and the change is related with structure
+ * (e.g. modify a bond, change a atomic number...).
+ * Event has field: {origin: the change source object (may be a child of event.target}.
+ * @name Kekule.ChemStructureObject#structureChange
+ * @event
+ */
 Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 /** @lends Kekule.ChemStructureObject# */
 {
@@ -267,6 +274,44 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 				Kekule.ArrayUtils.pushUnique(result, objs[j]);
 		}
 		return result;
+	},
+
+	/**
+	 * Returns property names that affects chem structure.
+	 * Descendants should override this method.
+	 * @private
+	 */
+	getStructureRelatedPropNames: function()
+	{
+		return ['linkedConnectors'];
+	},
+	/**
+	 * Notify the structure of object has been changed.
+	 * @param {Kekule.ChemStructureObject} originObj
+	 * @private
+	 */
+	structureChange: function(originObj)
+	{
+		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
+		this.invokeEvent('structureChange', {'origin': originObj || this});
+	},
+
+	/** @ignore */
+	relayEvent: function($super, eventName, event)
+	{
+		// if structureChange event is received from child object, means the whole structure of self is also changed
+		// invoke a new structureChange on self and "eat" the original one
+		if (eventName === 'structureChange')
+			this.structureChange(event.origin);
+		else
+			$super(eventName, event);
+	},
+
+	/** @ignore */
+	doObjectChange: function($super, modifiedPropNames)
+	{
+		if (Kekule.ArrayUtils.intersect(modifiedPropNames || [], this.getStructureRelatedPropNames()).length)
+			this.structureChange();
 	}
 });
 
@@ -315,6 +360,11 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 			this.setCoord2D(coord2D);
 		if (coord3D)
 			this.setCoord3D(coord3D);
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['coord2D', 'coord3D']);
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -388,6 +438,11 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 			'getter': function() { return this.getPropStoreFieldValue('charge') || 0; }
 		});
 		this.defineProp('radical', {'dataType': DataType.INT});
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['charge', 'radical']);
 	},
 	/**
 	 * Returns a label that represents current node.
@@ -507,6 +562,11 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	getAutoIdPrefix: function()
 	{
 		return 'a';
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['explicitHydrogenCount']);
 	},
 
 	/**
@@ -657,6 +717,11 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	{
 		return 'a';
 	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['isotope', 'atomType']);
+	},
 
 	/** @ignore */
 	getPrimaryIsotope: function()
@@ -689,7 +754,8 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			this.setAtomType(Kekule.AtomType.UNSET_ATOMTYPE);
 
 		var isotope = Kekule.IsotopeFactory.getIsotope(symbolOrAtomicNumber, massNumber);
-		this.setPropStoreFieldValue('isotope', isotope);
+		//this.setPropStoreFieldValue('isotope', isotope);
+		this.setIsotope(isotope);
 	},
 	/**
 	 * Change atom isotope to new symbol / atmoic number
@@ -927,6 +993,11 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 		});
 	},
 	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['atomType', 'symbol']);
+	},
+	/** @ignore */
 	getPrimaryIsotope: function()
 	{
 		return null;
@@ -986,6 +1057,11 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 					return r;
 				}
 		});
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['allowedIsotopeIds', 'disallowedIsotopeIds']);
 	},
 
 	/** @ignore */
@@ -2706,6 +2782,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			this.getCtab().finalize();
 		$super();
 
+		/*
 		this.addEventListener('change', function(e){
 			var target = e.target;
 			if (target instanceof Kekule.ChemStructureObject)
@@ -2714,6 +2791,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				this.setPropStoreFieldValue('aromaticRings', []);
 			}
 		});
+		*/
 	},
 	/** @private */
 	initProperties: function()
@@ -2838,6 +2916,11 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					return result;
 				}
 		});
+		this.defineProp('canonicalizationInfo', {
+			'dataType': DataType.OBJECT,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC
+		});
 		this.defineProp('aromaticRings', {
 			'dataType': DataType.ARRAY,
 			'serializable': false,
@@ -2858,6 +2941,18 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	getAutoIdPrefix: function()
 	{
 		return 'f';
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
+	},
+	/** @ignore */
+	structureChange: function($super, originObj)
+	{
+		this.setPropStoreFieldValue('canonicalizationInfo', null);
+		this.setPropStoreFieldValue('aromaticRings', []);
+		$super(originObj);
 	},
 	/** @private */
 	ownerChanged: function($super, newOwner)
@@ -4166,6 +4261,11 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	{
 		return 'c';
 	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['connectedObjs']);
+	},
 
 	/**
 	 * Notify {@link Kekule.ChemStructureConnector#connectedObjs} property has been changed
@@ -4659,6 +4759,11 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	{
 		return 'b';
 	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['bondForm', 'stereo']);
+	},
 
 	/**
 	 * Change bond form to new order or electron number.
@@ -4774,6 +4879,11 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	getAutoIdPrefix: function()
 	{
 		return 'sg';
+	},
+	/** @ignore */
+	getStructureRelatedPropNames: function($super)
+	{
+		return $super().concat(['items']);
 	},
 
 	/** @private */

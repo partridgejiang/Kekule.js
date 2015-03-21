@@ -959,13 +959,20 @@ Kekule.Canonicalizer = Class.create(
 	 */
 	canonicalize: function(structFragmentOrCtab, executorId)
 	{
-		var executor = this.getExecutor(executorId || this._defExecutorId);
+		var id = executorId || this._defExecutorId;
+		var executor = this.getExecutor(id);
 		if (!executor)
 		{
 			Kekule.error(Kekule.ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND);
 		}
 		else
 		{
+			var struct = (structFragmentOrCtab instanceof Kekule.StructureFragment)? structFragmentOrCtab: null;
+			var canoInfo = struct.getCanonicalizationInfo();
+			if (canoInfo && canoInfo.id === id)   // already do a cano job, no need to run again
+			{
+				return structFragmentOrCtab;
+			}
 			var ctab = structFragmentOrCtab.getCtab? structFragmentOrCtab.getCtab(): structFragmentOrCtab;
 			if (executor.customExecutor)
 				executor.customExecutor.execute(ctab);
@@ -975,7 +982,8 @@ Kekule.Canonicalizer = Class.create(
 				executor.nodeSorter.execute(ctab);
 				executor.connectorSorter.execute(ctab);
 			}
-			return ctab;
+			struct.setCanonicalizationInfo({'id': id});  // save cano info
+			return structFragmentOrCtab;
 		}
 	}
 });
