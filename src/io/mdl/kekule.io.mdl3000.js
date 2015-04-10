@@ -876,7 +876,9 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 				}
 				case 'CFG': // Stereo configuration
 				{
-					// TODO: parity ignored when read
+					var c = parseInt(value, 10);
+					if (c)
+						result.parity = c;
 					break;
 				}
 				case 'MASS': // isotope mass
@@ -1246,6 +1248,8 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 			values.push({'key': 'CHG', 'value': atom.getCharge()});
 		if (atom.getRadical && atom.getRadical())
 			values.push({'key': 'RAD', 'value': atom.getRadical()});
+		if (atom.getParity && atom.getParity())
+			values.push({'key': 'CFG', 'value': atom.getParity()});
 		if (atom.getMassNumber && atom.getMassNumber())
 			values.push({'key': 'MASS', 'value': atom.getMassNumber()});
 		if (atom.getExplicitHydrogenCount && (!Kekule.ObjUtils.isUnset(atom.getExplicitHydrogenCount())))

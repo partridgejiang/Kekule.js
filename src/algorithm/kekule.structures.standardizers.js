@@ -13,11 +13,16 @@
  * requires /utils/kekule.utils.js
  * requires /algorithm/kekule.structure.canonicalizers.js
  * requires /algorithm/kekule.structure.aromatics.js
+ * requires /algorithm/kekule.structure.stereos.js
  */
 
 (function(){
 "use strict";
 
+/**
+ * A helper class to standardize molecule.
+ * @class
+ */
 Kekule.MolStandardizer = {
 	/**
 	 * Standardize a structure fragment (molecule).
@@ -30,6 +35,7 @@ Kekule.MolStandardizer = {
 	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
 	 *       value is not set, default one will be used instead.
 	 *     doAromaticPerception: bool, whether do aromatic ring perception to molecule, default is true.
+	 *     doStereoPerception: bool, whether detect and mark all stereo factors of nodes and connectors, default is true.
 	 *   }.
 	 */
 	standardize: function(structureFragment, options)
@@ -37,7 +43,8 @@ Kekule.MolStandardizer = {
 		var defOptions = {
 			unmarshalSubFragments: true,
 			doCanonicalization: true,
-			doAromaticPerception: true
+			doAromaticPerception: true,
+			doStereoPerception: true
 		};
 		var mol = structureFragment;
 		var op = Object.extend(defOptions, options);
@@ -47,6 +54,8 @@ Kekule.MolStandardizer = {
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
 		if (op.doAromaticPerception)
 			mol.perceiveAromaticRings();
+		if (op.doStereoPerception)
+			mol.perceiveStereos();
 
 		return mol;
 	}

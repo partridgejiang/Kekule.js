@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Stereo Test</title>
+  <script src="../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../src/kekule.js?min=false"></script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <script>
+    var chemEditor;
+    var chemEditorUi;
+
+    function getCurrMol()
+    {
+      return chemEditor.getChemSpace().getChildAt(0);
+      //return Kekule.ChemStructureUtils.getTotalStructFragment(chemEditor.getChemSpace());
+    }
+
+    function findChiralCenters()
+    {
+      var mol = getCurrMol();
+      /*
+       var c = new Kekule.MorganCanonicalizationExecutor();
+       c.execute(mol.getCtab());
+       */
+      //mol = mol.clone();
+      //chemEditor.beginUpdateObject();
+
+      //var chiralNodes = Kekule.MolStereoUtils.findChiralNodes(mol);
+      //console.log(chiralNodes.length);
+      var chiralNodes = mol.perceiveChiralNodes();
+
+      // set mark
+      mol.beginUpdate();
+      for (var i = 0, l = chiralNodes.length; i < l; ++i)
+      {
+        var n = chiralNodes[i];
+        var label = '' + (n.getParity() || '*');
+        if (n.getSymbol)
+          label += n.getSymbol();
+        n.setRenderOption('customLabel', label);
+      }
+      mol.endUpdate();
+      //chemEditor.endUpdateObject();
+    }
+
+    function findStereoBonds()
+    {
+      var mol = getCurrMol();
+      var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(mol);
+      mol.beginUpdate();
+
+      var SP = Kekule.StereoParity;
+      for (var i = 0, l = stereoBonds.length; i < l; ++i)
+      {
+        var n = stereoBonds[i];
+        var parity = n.getParity();  //Kekule.MolStereoUtils.calcStereoBondParity(n);
+
+        var color = (parity === SP.ODD)? 'green':
+          (parity === SP.EVEN)? 'red':
+            'blue';
+        n.setRenderOption('color', color);
+
+      }
+
+      console.log(stereoBonds.length);
+      mol.endUpdate();
+    }
+
+    function init()
+    {
+      var elem = document.getElementById('chemEditorUi');
+      chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+      chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
+    }
+  </script>
+</head>
+<body onload="init()">
+<div id="calcPanel">
+  <button type="button" onclick="findChiralCenters()">Find Chiral Centers</button>
+  <button type="button" onclick="findStereoBonds()">Find Stereo Bonds</button>
+</div>
+<div id="chemEditorUi" style="width:900px;height:500px"></div>
+
+</body>
+</html>

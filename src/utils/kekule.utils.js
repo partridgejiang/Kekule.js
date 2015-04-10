@@ -1385,6 +1385,19 @@ Kekule.CoordUtils = {
 		return r;
 	},
 	/**
+	 * Check if a coord is a zero one (x/y/z all equals to 0).
+	 * @param {Hash} coord
+	 * @param {Float} allowedError
+	 * @returns {Bool}
+	 */
+	isZero: function(coord, allowedError)
+	{
+		// TODO: now calculation error is fixed
+		var error = Kekule.ObjUtils.notUnset(allowedError)? allowedError: 0; /*1e-5;*/
+		return (Math.abs(coord.x || 0) <= error)
+			&& (Math.abs(coord.y || 0) <= error) && (Math.abs(coord.z || 0) <= error);
+	},
+	/**
 	 * Add value of two coordinates.
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2
@@ -2233,6 +2246,158 @@ Kekule.CoordUtils = {
 		}
 
 		return Kekule.BoxUtils.createBox(minCoord, maxCoord);
+	}
+};
+
+/**
+ * Utility methods of some 2D or 3D geometry tasks.
+ * @class
+ */
+Kekule.GeometryUtils = {
+	/**
+	 * Returns the cross product (v1.v2) of two vectors represented by coord1 and coord2.
+	 * @param {Hash} coord1
+	 * @param {Hash} coord2
+	 * @returns {Float}
+	 */
+	getVectorScalarProduct: function(coord1, coord2)
+	{
+		var result = (coord1.x || 0) * (coord2.x || 0) + (coord1.y || 0) * (coord2.y || 0)
+			+ (coord1.z || 0) * (coord2.z || 0);
+		return result;
+	},
+	/**
+	 * Returns the cross product (v1Xv2) of two vectors represented by coord1 and coord2.
+	 * @param {Hash} coord1
+	 * @param {Hash} coord2
+	 * @returns {Hash}
+	 */
+	getVectorCrossProduct: function(coord1, coord2)
+	{
+		var result = {
+			'x': (coord1.y || 0) * (coord2.z || 0) - (coord1.z || 0) * (coord2.y || 0),
+			'y': (coord1.z || 0) * (coord2.x || 0) - (coord1.x || 0) * (coord2.z || 0),
+			'z': (coord1.x || 0) * (coord2.y || 0) - (coord1.y || 0) * (coord2.x || 0)
+		};
+		return result;
+	},
+	/**
+	 * Returns included angle of two vectors represented by coord1 and coord2.
+	 * @param {Hash} coord1
+	 * @param {Hash} coord2
+	 * @returns {Number}
+	 */
+	getVectorIncludedAngle: function(coord1, coord2)
+	{
+		var CU = Kekule.CoordUtils;
+		var cross = Kekule.GeometryUtils.getVectorCrossProduct(coord1, coord2);
+		var zeroCoord = {'x': 0, 'y': 0, 'z': 0};
+		var divV = (CU.getDistance(coord1, zeroCoord) * CU.getDistance(coord2, zeroCoord));
+		var sinAngleV = CU.getDistance(cross, zeroCoord) / divV;
+		//var cosAngleV = Kekule.GeometryUtils.getVectorScalarProduct(coord1, coord2) / divV;
+		var result = Math.asin(sinAngleV);  // asin always returns value between -Pi/2 ~ Pi / 2
+		//var result = Math.acos(cosAngleV);
+		/*
+		if (cross.z < 0)
+			result = Math.PI - result;
+		*/
+		return result;
+	},
+
+	/*
+	 * Returns sin and cos value of dihedral angle of plane (c1, c2, c3) and (c2, c3, c4) while c1-4 are coords of 3D.
+	 * This method is based on formula (when A1, A2, A3 and B1, B2, B3 are three points in each plane):
+	 *   alpha = arcsin(|Ua × Ub| / |Ua||Ub|)
+	 *   alpha = arccos(Ua.Ub) / |Ua||Ub|)
+	 * where Ua = (A2−A1) × (A3−A1) and Ub = (B2−B1) × (B3−B1).
+	 * Here we appoint A1(B1) / A2(B2) to c2 / c3, A3 to c1 and B3 to c4.
+	 * @param {Hash} c1
+	 * @param {Hash} c2
+	 * @param {Hash} c3
+	 * @param {Hash} c4
+	 * @returns {Hash} A hash contains {'sinValue': sinValue, 'cosValue': cosValue}.
+	 */
+	/*
+	getSinCosValueOfDihedralAngleOfCoords: function(c1, c2, c3, c4)
+	{
+		var CU = Kekule.CoordUtils;
+		var GU = Kekule.GeometryUtils;
+		var v = CU.substract(c3, c2);
+		var ua = GU.getVectorCrossProduct(v, CU.substract(c1, c2));
+		var ub = GU.getVectorCrossProduct(v, CU.substract(c4, c2));
+		var zero = {'x': 0, 'y': 0, 'z': 0};
+		var divV = (CU.getDistance(ua, zero) * CU.getDistance(ub, zero));
+		var sinValue = CU.getDistance(GU.getVectorCrossProduct(ua, ub), zero) / divV;
+		var cosValue = GU.getVectorScalarProduct(ua, ub) / divV;
+		return {
+			'sinValue': sinValue, 'cosValue': cosValue
+		};
+	},
+	*/
+
+	/*
+	 * Returns dihedral angle of plane (c1, c2, c3) and (c2, c3, c4) while c1-4 are coords of 3D.
+	 * This method is based on formula (when A1, A2, A3 and B1, B2, B3 are three points in each plane):
+	 *   alpha = arcsin(|Ua × Ub| / |Ua||Ub|)
+	 * where Ua = (A2−A1) × (A3−A1) and Ub = (B2−B1) × (B3−B1).
+	 * @param {Hash} c1
+	 * @param {Hash} c2
+	 * @param {Hash} c3
+	 * @param {Hash} c4
+	 * @returns {Float}
+	 */
+	/*
+	getDihedralAngleOfCoords: function(c1, c2, c3, c4)
+	{
+		var sinCosValue = Kekule.GeometryUtils.getSinValueOfDihedralAngleOfCoords(c1, c2, c3, c4);
+		return Math.asin(sinCosValue.sinValue);
+	},
+	*/
+
+	/**
+	 * Returns dihedral angle defined by three vectors (e.g., three bonds in molecule).
+	 * v1-3 is formed by {x, y, z} coords. The calculation is based on formula:
+	 *   alpha = atan2([v1×v2]×[v2×v3].[v2/|v2|], [v1×v2].[v2×v3])
+	 * (http://en.wikipedia.org/wiki/Dihedral_angle)
+	 * @param {Hash} v1
+	 * @param {Hash} v2
+	 * @param {Hash} v3
+	 * @returns {Float} An angle of 0-2Pi is returned.
+	 *   If angle can not be calculated (e.g., v1/v2 or v2/v3 on same line, not forms a plane),
+	 *   a negtive value will be returned instead.
+	 */
+	getDihedralAngleOfVectors: function(v1, v2, v3)
+	{
+		var CU = Kekule.CoordUtils;
+		var GU = Kekule.GeometryUtils;
+		var v1Xv2 = GU.getVectorCrossProduct(v1, v2);
+		var v2Xv3 = GU.getVectorCrossProduct(v2, v3);
+		var error = CU.getDistance(v2) / 1e5;  // TODO: currently error is fixed
+		if (CU.isZero(v1Xv2, error) || CU.isZero(v2Xv3, error))  // can not calculate
+			return -1;
+		var d = CU.standardize(v2);
+		var y = GU.getVectorScalarProduct(GU.getVectorCrossProduct(v1Xv2, v2Xv3), d);
+		var x = GU.getVectorScalarProduct(v1Xv2, v2Xv3);
+		var result = Math.atan2(y, x);
+		if (result < 0)
+			result += Math.PI * 2;
+		return result;
+	},
+	/**
+	 * Returns dihedral angle of plane (c1, c2, c3) and (c2, c3, c4) while c1-4 are coords of 3D.
+	 * @param {Hash} c1
+	 * @param {Hash} c2
+	 * @param {Hash} c3
+	 * @param {Hash} c4
+	 * @returns {Float}
+	 */
+	getDihedralAngleOfPoints: function(c1, c2, c3, c4)
+	{
+		var CU = Kekule.CoordUtils;
+		var v1 = CU.substract(c2, c1);
+		var v2 = CU.substract(c3, c2);
+		var v3 = CU.substract(c4, c3);
+		return Kekule.GeometryUtils.getDihedralAngleOfVectors(v1, v2, v3);
 	}
 };
 

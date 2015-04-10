@@ -112,6 +112,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	initPropValues: function()
 	{
 		this.setPropStoreFieldValue('linkedConnectors', []);
+		this.setSuppressChildChangeEventInUpdating(true);
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -293,7 +294,16 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	structureChange: function(originObj)
 	{
 		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
+		this.clearStructureFlags();
 		this.invokeEvent('structureChange', {'origin': originObj || this});
+	},
+	/**
+	 * Clear all flags of structure object that should be changed when structure is changed.
+	 * Descendants may override this method.
+	 */
+	clearStructureFlags: function()
+	{
+		// do nothing here
 	},
 
 	/** @ignore */
@@ -311,7 +321,10 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	doObjectChange: function($super, modifiedPropNames)
 	{
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames || [], this.getStructureRelatedPropNames()).length)
+		{
+			//console.log('change struct by',  Kekule.ArrayUtils.intersect(modifiedPropNames || [], this.getStructureRelatedPropNames()));
 			this.structureChange();
+		}
 	}
 });
 
@@ -405,6 +418,17 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.BaseStructureNode);
 
 /**
+ * Enumeration of stereo parity of node or connector.
+ * @enum
+ */
+Kekule.StereoParity = {
+	NONE: null,
+	ODD: 1,
+	EVEN: 2,
+	UNKNOWN: 0
+};
+
+/**
  * Represent an abstract structure node (atom, atom group, etc.).
  * @class
  * @augments Kekule.BaseStructureNode
@@ -414,6 +438,8 @@ Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.BaseStructureNode);
  *
  * @property {Float} charge Charge of atom. As there may be partial charge on atom, so a float value is used.
  * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalType}.
+ * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
+ * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
  */
 Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.ChemStructureNode# */
@@ -434,10 +460,29 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('linkedChemNodes', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var linkedObjs = this.getLinkedObjs();
+				var result = [];
+				for (var i = 0, l = linkedObjs.length; i < l; ++i)
+				{
+					var obj = linkedObjs[i];
+					if (obj instanceof Kekule.ChemStructureNode)
+						result.push(obj);
+				}
+				return result;
+			}
+		});
 		this.defineProp('charge', {'dataType': DataType.FLOAT,
 			'getter': function() { return this.getPropStoreFieldValue('charge') || 0; }
 		});
 		this.defineProp('radical', {'dataType': DataType.INT});
+		this.defineProp('parity', {'dataType': DataType.INT});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)
@@ -520,6 +565,12 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 			}
 		}
 		return result;
+	},
+
+	/** @ignore */
+	clearStructureFlags: function()
+	{
+		this.setParity(Kekule.StereoParity.NONE);
 	}
 });
 
@@ -592,6 +643,31 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	isSaturated: function()
 	{
 		return !this.getLinkedMultipleBonds().length;
+	},
+
+	/**
+	 * Returns when this node is an atom of certain element or
+	 * maybe or may include element (peusdo atom or atom list).
+	 * @param {Variant} atomicNumberOrSymbol
+	 * @returns {Bool}
+	 */
+	mayContainElement: function(atomicNumberOrSymbol)
+	{
+		var num;
+		if (typeof(atomicNumberOrSymbol) === 'string')  // symbol
+			num = Kekule.ChemicalElementsDataUtil.getAtomicNumber(atomicNumberOrSymbol);
+		else
+			num = atomicNumberOrSymbol;
+		return this.doMayContainElement(num);
+	},
+	/**
+	 * Do actual judge of method mayContainElement. Descendants need to override this method.
+	 * @param {Int} atomicNum
+	 * @returns {Bool}
+	 */
+	doMayContainElement: function(atomicNum)
+	{
+		return false;
 	}
 });
 
@@ -732,6 +808,11 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	getLabel: function()
 	{
 		return '' + (this.getMassNumber() || '') + this.getSymbol();
+	},
+	/** @ignore */
+	doMayContainElement: function(atomicNum)
+	{
+		return this.getAtomicNumber() === atomicNum;
 	},
 
 	/**
@@ -1006,6 +1087,26 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 	getLabel: function()
 	{
 		return this.getSymbol();
+	},
+	/** @ignore */
+	doMayContainElement: function(atomicNum)
+	{
+		var PT = Kekule.PseudoatomType;
+		var t = this.getAtomType();
+		if (t === PT.ANY)
+			return true;
+		else if (t === PT.HETERO)
+		{
+			if ([1, 6].indexOf(atomicNum) >= 0)  // C/H not hetero
+				return false;
+			else
+			{
+				var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(atomicNum);
+				return (eleminfo.chemicalSerie === "Nonmetals");
+			}
+		}
+		else // dummy or custom
+			return false;
 	}
 });
 
@@ -1057,6 +1158,22 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 					return r;
 				}
 		});
+		this.defineProp('allowedIsotopes', {
+			'dataType': DataType.ARRAY,
+			'setter': null,
+			'getter': function()
+			{
+				return this._getIsotopesFromIds(this.getAllowedIsotopeIds());
+			}
+		});
+		this.defineProp('disallowedIsotopes', {
+			'dataType': DataType.ARRAY,
+			'setter': null,
+			'getter': function()
+			{
+				return this._getIsotopesFromIds(this.getDisallowedIsotopeIds());
+			}
+		});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)
@@ -1080,6 +1197,36 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 	getLabel: function()
 	{
 		return Kekule.ChemStructureNodeLabels.VARIABLE_ATOM;
+	},
+	/** @ignore */
+	doMayContainElement: function(atomicNum)
+	{
+		var atomicNumInIds = function(atomicNum, ids)
+		{
+			if (!ids)
+				return false;
+			for (var i = 0, l = ids.length; i < l; ++i)
+			{
+				var id = ids[i];
+				var d = Kekule.IsotopesDataUtil.getIsotopeIdDetail(id);
+				var symbol = d.symbol;
+				var num = Kekule.ChemicalElementsDataUtil.getAtomicNumber(symbol);
+				if (num === atomicNum)
+					return true;
+			}
+			return false;
+		};
+		var isotopeIds = this.getAllowedIsotopeIds();
+		if (isotopeIds)
+		{
+			return atomicNumInIds(atomicNum, isotopeIds);
+		}
+		else
+		{
+			isotopeIds = this.getDisallowedIsotopeIds();
+			if (isotopeIds)
+				return !atomicNumInIds(atomicNum, isotopeIds);
+		}
 	},
 
 	/**
@@ -1120,6 +1267,22 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 	fetchDisallowedIsotopeIds: function()
 	{
 		return this.doGetDisallowedIsotopeIds(true);
+	},
+
+	/** @private */
+	_getIsotopesFromIds: function(ids)
+	{
+		if (!ids)
+			return null;
+		var result = [];
+		for (var i = 0, l = ids.length; i < l; ++i)
+		{
+			var id = ids[i];
+			var isotope = Kekule.IsotopeFactory.getIsotopeById(id);
+			if (isotope)
+				result.push(isotope);
+		}
+		return result;
 	}
 });
 
@@ -2948,11 +3111,19 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return $super().concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
 	},
 	/** @ignore */
-	structureChange: function($super, originObj)
+	clearStructureFlags: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('canonicalizationInfo', null);
 		this.setPropStoreFieldValue('aromaticRings', []);
-		$super(originObj);
+
+		// also clear flags of children (e.g., parity of atoms and bonds)
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var c = this.getChildAt(i);
+			if (c.clearStructureFlags)
+				c.clearStructureFlags();
+		}
 	},
 	/** @private */
 	ownerChanged: function($super, newOwner)
@@ -3571,6 +3742,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		if (this.hasCtab())
 			return this.getCtab().sortConnectors(sortFunc);
 	},
+
 
 	/**
 	 * Check if a connector is in aromatic ring stored in aromaticRings property.
@@ -4560,12 +4732,42 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
  * Implements the concept of a connections between two or more structure nodes.
  * @class
  * @augments Kekule.BaseStructureConnector
+ *
+ * @property {Array} connectedChemNodes Nodes connected with this connector.
+ * @property {Int} parity Stereo parity of connector.
  */
 Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 /** @lends Kekule.ChemStructureConnector# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemStructureConnector'
+	CLASS_NAME: 'Kekule.ChemStructureConnector',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('parity', {'dataType': DataType.INT});
+		this.defineProp('connectedChemNodes', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var result = [];
+				for (var i = 0, l = this.getConnectedObjCount(); i < l; ++i)
+				{
+					var obj = this.getConnectedObjAt(i);
+					if (obj instanceof Kekule.ChemStructureNode)
+						result.push(obj);
+				}
+				return result;
+			}
+		});
+	},
+	/** @ignore */
+	clearStructureFlags: function()
+	{
+		this.setParity(Kekule.StereoParity.NONE);
+	}
 });
 
 /**
@@ -4764,6 +4966,19 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	{
 		return $super().concat(['bondForm', 'stereo']);
 	},
+	/** @ignore */
+	clearStructureFlags: function()
+	{
+		this.setPropStoreFieldValue('isInAromaticRing', null);
+	},
+	/** @ignore */
+	doGetParity: function($super)  // override parity getter, only double bond can have parity value
+	{
+		if (this.isDoubleBond())
+			return $super();
+		else
+			return null;
+	},
 
 	/**
 	 * Change bond form to new order or electron number.
@@ -4779,7 +4994,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	 */
 	invertBondDirection: function()
 	{
-		this.setStereo(Kekule.BondStereo.getInvertedStereo(this.getStereo()));
+		this.setStereo(Kekule.BondStereo.getInvertedDirection(this.getStereo()));
 	},
 
 	/** @ignore */
@@ -4800,6 +5015,33 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		var d = this.getBondStereo();
 		if (inverted.indexOf(d) >= 0)
 			this.reverseConnectedObjOrder();
+	},
+
+	/**
+	 * Returns if bond is a single covalence bond.
+	 * @returns {Bool}
+	 */
+	isSingleBond: function()
+	{
+		return (this.getBondType() === Kekule.BondType.COVALENT) && (this.getBondOrder() === Kekule.BondOrder.SINGLE)
+			&& (!this.getIsInAromaticRing());
+	},
+	/**
+	 * Returns if bond is a double covalence bond.
+	 * @returns {Bool}
+	 */
+	isDoubleBond: function()
+	{
+		return (this.getBondType() === Kekule.BondType.COVALENT) && (this.getBondOrder() === Kekule.BondOrder.DOUBLE)
+			&& (!this.getIsInAromaticRing());
+	},
+	/**
+	 * Returns if bond is a triple covalence bond.
+	 * @returns {Bool}
+	 */
+	isTripleBond: function()
+	{
+		return (this.getBondType() === Kekule.BondType.COVALENT) && (this.getBondOrder() === Kekule.BondOrder.TRIPLE);
 	},
 
 	/**

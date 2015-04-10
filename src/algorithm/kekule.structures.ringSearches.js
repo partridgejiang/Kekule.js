@@ -315,6 +315,60 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 	}
 ]);
 
+ClassEx.extend(Kekule.ChemStructureObject, {
+	/**
+	 * Returns SSSR ring that this object belonged.
+	 * @returns {Array}
+	 */
+	getBelongedSssrRings: function()
+	{
+		var result = [];
+		var parent = this.getParent();
+		if (parent && parent.getRingInfo)
+		{
+			var ringInfo = parent.getRingInfo();
+			var sssrRings = ringInfo.sssrRings || [];
+			for (var i = 0, l = sssrRings.length; i < l; ++i)
+			{
+				var ring = sssrRings[i];
+				if (this instanceof Kekule.BaseStructureConnector)
+				{
+					if (ring.connectors.indexOf(this) >= 0)
+						result.push(ring);
+				}
+				else
+				{
+					if (ring.nodes.indexOf(this) >= 0)
+						result.push(ring);
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns the min size of all belonged rings.
+	 * @returns {Int} Min ring node count. If the object is not belonged to any ring, null will be returned.
+	 */
+	getBelongedRingMinSize: function()
+	{
+		var result = null;
+		var rings = this.getBelongedSssrRings();
+		if (rings && rings.length)
+		{
+			for (var i = 0, l = rings.length; i < l; ++i)
+			{
+				var ring = rings[i];
+				var nodeCount = ring.nodes.length;
+				if (!result)
+					result = nodeCount;
+				else
+					result = Math.min(result, nodeCount);
+			}
+		}
+		return result;
+	}
+});
+
 ClassEx.extend(Kekule.ChemObject, {
 	/**
 	 * Returns all connectors and nodes in cylce block.

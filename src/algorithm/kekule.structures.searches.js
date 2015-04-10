@@ -23,6 +23,12 @@ var SC = Kekule.UnivChemStructObjComparer;
  * @class
  */
 Kekule.ChemStructureSearcher = {
+	/** @private */
+	OPS_SKELETAL: {'ignoreAtom': true, 'ignoreCharge': true, 'ignoreBondOrder': true, 'ignoreStereo': true, 'ignoreHydrogenCount': true},
+	/** @private */
+	OPS_CONSTITUTION: {'ignoreStereo': true},
+	/** @private */
+	OPS_CONFIGRATION: {},
 	/**
 	 * Search sub structure in molecule.
 	 * @param {Kekule.StructureFragment} subStructure Structure to find.
@@ -32,15 +38,22 @@ Kekule.ChemStructureSearcher = {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
 	 *       default is true.
 	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
+	 *     compareSkeletal: Bool, only compare graph (ignore difference of nodes and connectors).
+	 *     compareConstitution: Bool, compare only constitution (ignore stereo)
+	 *     compareConfiguration: Bool, compare constitution and stereo
+	 *     ignoreAtom: Bool, if true, all node will be regarded as same
+	 *     ignoreMass: Bool, whether mass number is compared. Default is true.
+	 *     ignoreHydrogenCount: Bool,
 	 *     ignoreCharge: Bool
 	 *     ignoreBondOrder: Bool
+	 *     ignoreStereo: Bool
 	 *   }
 	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
 	 *   Otherwise false will be returned.
 	 */
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
-		var op = Object.extend({doStandardize: true}, options);
+		var op = Object.extend({doStandardize: true, ignoreMass: true}, options);
 
 		if (op.exactMatch)
 		{
@@ -56,9 +69,11 @@ Kekule.ChemStructureSearcher = {
 		{
 			var standardizeOps = {
 				unmarshalSubFragments: true,
-				doCanonicalization: false,
+				doCanonicalization: true,
 				doAromaticPerception: true
 			};
+			if (op.ignoreStereo)  // do not need perceive stereo
+				op.doCanonicalization = false;
 			subStructure.standardize(standardizeOps);
 			sourceMol.standardize(standardizeOps);
 		}
@@ -71,13 +86,26 @@ Kekule.ChemStructureSearcher = {
 		var initComparedTargetObjs = [];
 		var initComparedSrcObjs = [];
 
-		var objCompareOptions = {
+		var KS = Kekule.ChemStructureSearcher;
+		var initialCompareOptions = op.compareConfiguration? KS.OPS_CONFIGRATION:
+			op.compareConstitution? KS.OPS_CONSTITUTION:
+			op.compareSkeletal? KS.OPS_SKELETAL:
+			{};
+
+		op = Object.extend(initialCompareOptions, op);
+
+		var objCompareOptions = Object.create({
+			compareAtom: !op.ignoreAtom,
+			compareMass: !op.ignoreMass,
+			compareStereo: !op.ignoreStereo,
 			compareLinkedConnectorCount: false,
 			compareCharge: !op.ignoreCharge,
 			compareHydrogenCount: false,
 			compareConnectedObjCount: false,
 			compareBondOrder: !op.ignoreBondOrder
-		};
+		});
+
+		//console.log(objCompareOptions);
 
 		var compareResult = false;
 		while (!compareResult && (srcIndex < srcNodeCount))

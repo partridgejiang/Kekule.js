@@ -141,6 +141,7 @@ Kekule.IsotopesDataUtil = {
 	 */
 	getAllIsotopeInfos: function(symbolOrAtomicNumber)
 	{
+		var atomicNumber;
 		if (typeof(symbolOrAtomicNumber) == 'number')
 			atomicNumber = symbolOrAtomicNumber;
 		else
@@ -187,6 +188,16 @@ Kekule.IsotopesDataUtil = {
 			}
 		}
 		return null;
+	},
+	/**
+	 *  Get isotope information object by isotope id.
+	 *  @param {String} isotopeId.
+	 *  @returns {Hash} A hash object containing isotope properties.
+	 */
+	getIsotopeInfoById: function(isotopeId)
+	{
+		var detail = Kekule.IsotopeDataUtil.getIsotopeIdDetail(isotopeId);
+		return Kekule.IsotopeDataUtil.getIsotopeInfo(detail.symbol, detail.massNumber);
 	},
 	/**
 	 * Check if mass number is legal for an element

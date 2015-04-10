@@ -427,7 +427,10 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 		else  // ccc is charge
 			result.charge = Kekule.IO.Mdl2kUtils.atomLineChargeToKekule(i);
 		// sss: atom stereo parity
-		// TODO: parity ignored when read
+		s = line.substr(39, 3);
+		var i = parseInt(s, 10);
+		if (i)
+			result.parity = i;
 		//s = line.substr(39, 3);
 		// hhh: hydrogen count + 1, used for query. Need to be handled here????
 		s = line.substr(42, 3);
@@ -943,8 +946,8 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 			atomPropLines.push(propLine);
 		}
 		// sss: atom stereo parity
-		// TODO: parity ignored when write
-		s += '0'.lpad(3);
+		var parity = atom.getParity? (atom.getParity() || 0): 0;
+		s += parity.toString().lpad(3);
 		// hhh: hydrogen count + 1, used for query. Need to be handled here????
 		var hcount = atom.getExplicitHydrogenCount? atom.getExplicitHydrogenCount(): null;
 		var shcount = Kekule.ObjUtils.isUnset(hcount)? '0': (hcount + 1).toString();

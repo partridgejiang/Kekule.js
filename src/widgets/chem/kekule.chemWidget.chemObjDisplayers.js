@@ -796,10 +796,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		if (writer)
 		{
 			var doCanonicalize = this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
-			if (doCanonicalize && obj.canonicalize)  // canonicalize first
+			if (doCanonicalize && obj.standardize)  // canonicalize first
 			{
 				var obj = obj.clone? obj.clone(true): obj;  // clone with id
-				obj.canonicalize();
+				obj.standardize();
 			}
 			if (!dataType)
 			{

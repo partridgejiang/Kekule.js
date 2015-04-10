@@ -40,7 +40,10 @@ Kekule.IO.SMILES = {
 	BOND_FAKE: '.',
 	RING_BOND_TWO_DIGIT_NO_PREFIX: '%',
 	BRANCH_BRACKET_LEFT: '(',
-	BRANCH_BRACKET_RIGHT: ')'
+	BRANCH_BRACKET_RIGHT: ')',
+	ROTATION_DIR_CLOCKWISE: '@@',
+	ROTATION_DIR_ANTICLOCKWISE: '@',
+	DIRECTION_BOND_SYMBOLS: ['/', '\\']
 };
 
 /** @private */
@@ -210,10 +213,11 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		{
 			// standardize molecule and mark the aromatic rings
 			var dupMol = mol.clone();
-			dupMol.canonicalize();
+			//var aromaticRings = dupMol.perceiveAromaticRings();
+			dupMol.standardize();
 			var aromaticNodes = [];
 			var aromaticConnectors = [];
-			var aromaticRings = dupMol.perceiveAromaticRings();
+			var aromaticRings = dupMol.getAromaticRings();
 			for (var i = 0, l = aromaticRings.length; i < l; ++i)
 			{
 				var ring = aromaticRings[i];
@@ -259,39 +263,56 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors)
 	{
-		// TODO: currently aromatic is not considered
 		var node = vertex.getData('object');
-		var result = this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0);
-		if (prevEdge)
-		{
-			var connector = prevEdge.getData('object');
-			result = this._outputConnectorStr(connector,
-				prevEdge.getVertexes()[0].getData('object'), prevEdge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors) + result;
-		}
 		var edges = vertex.getEdges();
 		//var edges = AU.intersect(vertex.getEdges(), spanningTreeEdges);
 		var mainChainStr;
 		var branchStrs = [];
+		var mainChainVertex;
+		var branchVertexes = [];
 		var ringStrs = [];
+		var ringedVertexes = [];
+		var connectorParity;
+		var nextBondStereoStr = '';
 		for (var i = edges.length - 1; i >= 0; --i)
 		{
 			var edge = edges[i];
 			if (edge === prevEdge)
 				continue;
+
+			var connector = edge.getData('object');
+			if (connector.getParity && connector.getParity())  // next is stereo double bond
+			{
+				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
+				if (keyNodes)
+				{
+					var nextVertex = vertex.getNeighborOnEdge(edge);
+					var nextNode = nextVertex.getData('object');
+					var initDirSymbols = this._getStereoDoubleBondInitialDirectionSymbols(connector);
+					var dirSymbol = initDirSymbols[0];
+					if (keyNodes.indexOf(nextNode) < 0)
+						dirSymbol = this._getInvertBondDirectionSymbol(dirSymbol);
+				}
+				nextBondStereoStr = dirSymbol;
+			}
+
 			if (spanningTreeEdges.indexOf(edge) >= 0)  // edge on spanning tree, not ring edge
 			{
 				var nextVertex = vertex.getNeighborOnEdge(edge);
 				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors);
 				if (mainChainEdges.indexOf(edge) >= 0)  // edge on main chain
 				{
+					mainChainVertex = nextVertex;
 					mainChainStr = str;
 				}
 				else
+				{
+					branchVertexes.push(nextVertex);
 					branchStrs.push(str);
+				}
 			}
 			else  // ring edge
 			{
-				connector = edge.getData('object');
 				// TODO: currently more than 99 ring edges and ring number reuse are not considered
 				var ringEdgeIndex = ringEdgeRepo.indexOf(edge);
 				if (ringEdgeIndex < 0)  // not registered
@@ -299,6 +320,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 					ringEdgeIndex = ringEdgeRepo.length;
 					ringEdgeRepo.push(edge);
 				}
+				ringedVertexes.push(vertex.getNeighborOnEdge(edge));
 				var ringStr = this._outputConnectorStr(connector,
 					edge.getVertexes()[0].getData('object'), edge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors);
 				ringEdgeIndex = ringEdgeIndex + 1;  // avoid index 0
@@ -306,6 +328,49 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				ringStrs.push(ringStr);
 			}
 		}
+
+		// form result string
+		var result = '';
+		var prevNode;
+		var prevBondStereoStr = '';
+		if (prevEdge)
+		{
+			if (nextBondStereoStr)
+				result += nextBondStereoStr;
+
+			var prevVertex = vertex.getNeighborOnEdge(prevEdge);
+			prevNode = prevVertex.getData('object');
+			var prevConnector = prevEdge.getData('object');
+
+			if (prevConnector.getParity && prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
+			{
+				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(prevConnector);
+				if (keyNodes)
+				{
+					var initDirSymbols = this._getStereoDoubleBondInitialDirectionSymbols(prevConnector);
+					var dirSymbol = initDirSymbols[1];
+					if (keyNodes.indexOf(prevNode) < 0)
+						dirSymbol = this._getInvertBondDirectionSymbol(dirSymbol);
+				}
+				prevBondStereoStr += dirSymbol;
+			}
+
+			result += this._outputConnectorStr(prevConnector,
+				prevEdge.getVertexes()[0].getData('object'), prevEdge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors); // + result;
+		}
+		var nextNodes = [];
+		for (var i = 0, l = ringedVertexes.length; i < l; ++i)
+		{
+			nextNodes.push(ringedVertexes[i].getData('object'));
+		}
+		for (var i = 0, l = branchVertexes.length; i < l; ++i)
+		{
+			nextNodes.push(branchVertexes[i].getData('object'));
+		}
+		if (mainChainVertex)
+			nextNodes.push(mainChainVertex.getData('object'));
+		result += this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0, prevNode, nextNodes);
+
 		for (var i = 0, l = ringStrs.length; i < l; ++i)
 		{
 			result += ringStrs[i];
@@ -316,12 +381,13 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		{
 			result += SMI.BRANCH_BRACKET_LEFT + branchStrs[i] + SMI.BRANCH_BRACKET_RIGHT;
 		}
+		result += prevBondStereoStr;
 		if (mainChainStr)
 			result += mainChainStr;
 		return result;
 	},
 	/** @private */
-	_outputNodeStr: function(node, isAromatic)
+	_outputNodeStr: function(node, isAromatic, prevNode, nextNodes)
 	{
 		var result;
 		var symbol;
@@ -337,14 +403,47 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		{
 			result = SMI.ATOM_WILDCARD;
 		}
-		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
-		var explicitHCount = node.getExplicitHydrogenCount? node.getExplicitHydrogenCount(): 0;
-		if (!explicitHCount && isAromatic && (symbol !== 'C') && node.getImplicitHydrogenCount)
+
+		// chiral?
+		var schiralRot;
+		if (node.getParity && node.getParity())
 		{
-			explicitHCount = node.getImplicitHydrogenCount();
+			// calc rotation direction
+			if (nextNodes && nextNodes.length)
+			{
+				var hcount = node.getHydrogenCount? (node.getHydrogenCount() || 0): 0;
+				// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
+				var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false);
+				var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE)? SMI.ROTATION_DIR_CLOCKWISE:
+					(dir === Kekule.RotationDir.ANTICLOCKWISE)? SMI.ROTATION_DIR_ANTICLOCKWISE:
+						'';
+				if (schiralRot)
+				{
+					result += schiralRot;
+				}
+			}
 		}
+
+		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
+		var explicitHCount;
+		if (schiralRot)  // if chiral center, H is always be listed
+			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount() || 0): 0;
+		else
+		{
+			explicitHCount = node.getExplicitHydrogenCount ? node.getExplicitHydrogenCount() : 0;
+			if (!explicitHCount && isAromatic && (symbol !== 'C') && node.getImplicitHydrogenCount)
+			{
+				explicitHCount = node.getImplicitHydrogenCount();
+			}
+		}
+		// write explicit H count after chiral
 		if (explicitHCount)
-			result += SMI.ATOM_H + Math.round(explicitHCount);
+		{
+			result += SMI.ATOM_H;
+			var hcount = Math.round(explicitHCount);
+			if (hcount > 1)
+				result += hcount;
+		}
 
 		// charge
 		var charge = Math.round(node.getCharge());
@@ -360,9 +459,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var massNum = node.getMassNumber? node.getMassNumber(): null;
 		if (massNum)
 			result = Math.abs(massNum) + result;
-		// TODO: chiral
+
 		var simpleOrgAtom = false;
-		if (!explicitHCount && !charge && !massNum)  // no special property is set
+		if (!explicitHCount && !charge && !massNum && !schiralRot)  // no special property is set
 		{
 			if ((!isAromatic &&SMI.ORGAN_SUBSET_ATOMS.indexOf(symbol) >= 0)
 				|| (isAromatic && SMI.AROMATIC_SUBSET_ATOMS.indexOf(symbol) >= 0))
@@ -398,6 +497,23 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		// default
 		return SMI.BOND_FAKE;
+	},
+	/** @private */
+	_getStereoDoubleBondInitialDirectionSymbols: function(bond)
+	{
+		var parity = bond.getParity();
+		if (parity === Kekule.StereoParity.EVEN)
+			return [SMI.DIRECTION_BOND_SYMBOLS[0], SMI.DIRECTION_BOND_SYMBOLS[0]];
+		else
+			return [SMI.DIRECTION_BOND_SYMBOLS[0], SMI.DIRECTION_BOND_SYMBOLS[1]];
+	},
+	/** @private */
+	_getInvertBondDirectionSymbol: function(dirSymbol)
+	{
+		if (dirSymbol === SMI.DIRECTION_BOND_SYMBOLS[1])
+			return SMI.DIRECTION_BOND_SYMBOLS[0];
+		else
+			return SMI.DIRECTION_BOND_SYMBOLS[1];
 	}
 });
 

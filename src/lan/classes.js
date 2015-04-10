@@ -1908,6 +1908,9 @@ var
  * @property {Bool} enablePropValueSetEvent Whether propValueSet event should
  *   be fired when a property value is written.
  * @property {Bool} bubbleEvent Whether event evoked can be relayed to higher level object.
+ * @property {Bool} suppressChildChangeEventInUpdating If this property is true, when object is updating
+ *   (calling obj.beginUpdate()), received "change" event will always not be bubbled. Instead, when updating
+ *   finished (calling obj.endUpdate()), a "change" event of self (not child object) will be triggered.
  */
 /*
  * Invoked when a property value is gotten by its getter.
@@ -1955,6 +1958,7 @@ ObjectEx = Class.create(
 		this._initPropertySystem();
 		this.initPropValues();
 		this._updateStatus = 0;  // used internal in begin/endUpdate methods
+    this._childChangeEventSuppressed = false;
 		this._modifiedProps = [];  // used internal in begin/endUpdate methods
 		this._finalized = false;  // used internally, mark if the object has been freed
 		this.afterInitialization();
@@ -1999,6 +2003,7 @@ ObjectEx = Class.create(
 		this.defineProp('enablePropValueGetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('bubbleEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+    this.defineProp('suppressChildChangeEventInUpdating', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		// private, event storer
 		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE,
 			'getter': function()
@@ -2722,7 +2727,10 @@ ObjectEx = Class.create(
   relayEvent: function(eventName, event)
   {
   	event.currentTarget = this;
-  	this.dispatchEvent(eventName, event);
+    if (eventName === 'change' && this.getSuppressChildChangeEventInUpdating() && this.isUpdating())  // suppress child change event
+      this._childChangeEventSuppressed = true;
+    else
+  	  this.dispatchEvent(eventName, event);
   },
   /** @private */
   dispatchEvent: function(eventName, event)
@@ -2804,6 +2812,9 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps;
 			this._modifiedProps = [];
 			this.doEndUpdate(modifiedProps);
+      if (this._childChangeEventSuppressed)
+        this.invokeEvent('change');
+      this._childChangeEventSuppressed = false;
 		}
 	},
 	/**

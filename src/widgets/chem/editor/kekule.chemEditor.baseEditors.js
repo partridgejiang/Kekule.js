@@ -1112,7 +1112,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	reactChemObjChange: function(e)
 	{
 		var target = e.target;
-		var propNames = e.changedPropNames;
+		var propNames = e.changedPropNames || [];
 		var bypassPropNames = ['owner', 'ownedObjs'];  // these properties do not affect rendering
 		propNames = Kekule.ArrayUtils.exclude(propNames, bypassPropNames);
 		if (propNames.length)
@@ -3346,8 +3346,17 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	{
 		if (objs && objs.length)
 		{
-			var actualObjs = this.doGetActualRemovedObjs(objs);
-			this.doRemoveObjs(actualObjs);
+			var editor = this.getEditor();
+			editor.beginUpdateObject();
+			try
+			{
+				var actualObjs = this.doGetActualRemovedObjs(objs);
+				this.doRemoveObjs(actualObjs);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
 		}
 	},
 	/** @private */

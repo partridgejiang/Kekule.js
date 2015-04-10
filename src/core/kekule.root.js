@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.5.0',
+	VERSION: '0.6.0',
 	// Whether auto find title and description text for object property
 	/** @ignore */
 	PROP_AUTO_TITLE: true

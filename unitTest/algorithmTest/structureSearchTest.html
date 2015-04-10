@@ -17,6 +17,10 @@
 	<script>
 		var chemEditors = [];
 		var chemComposers = [];
+		function $(id)
+		{
+			return document.getElementById(id);
+		}
 		function init()
 		{
 			for (var i = 0; i < 2; ++i)
@@ -52,7 +56,14 @@
 			var mol1 = chemEditors[0].exportObj(Kekule.StructureFragment);
 			var mol2 = chemEditors[1].exportObj(Kekule.StructureFragment);
 			//var searchResult = Kekule.ChemStructureSearcher.findSubStructure(mol1, mol2, {doStandardize: true});
-			var searchResult = mol2.search(mol1);
+			var ops = {};
+			if ($('radioCompareSkeletal').checked)
+				ops.compareSkeletal = true;
+			else if ($('radioCompareConstitution').checked)
+				ops.compareConstitution = true;
+			else
+				ops.compareConfiguration = true;
+			var searchResult = mol2.search(mol1, ops);
 			var sResult = searchResult? 'Found sub structure': 'Can not find sub structure';
 			var sClass = searchResult? 'Found': 'Unfound';
 			var elem = document.getElementById('labelResult');
@@ -87,6 +98,9 @@
 <div>
 	<button id="btnSearch">Search Molecules</button>
 	<span id="labelResult"></span>
+	<input type="radio" name="radioCompareOptions" id="radioCompareSkeletal" /><label for="radioCompareSkeletal">Skeletal</label>
+	<input type="radio" name="radioCompareOptions" id="radioCompareConstitution" /><label for="radioCompareConstitution">Constitution</label>
+	<input type="radio" name="radioCompareOptions" id="radioCompareConfiguration" /><label for="radioCompareConfiguration">Configuration</label>
 </div>
 <div id="chemComposer0" style="width:800px;height:600px"></div>
 <div id="chemComposer1" style="width:800px;height:600px"></div>

@@ -388,6 +388,8 @@ Kekule.IO.MdlStructureUtils = {
 			result.setCharge(atomInfo.charge);
 		if (atomInfo.radical)
 			result.setRadical(atomInfo.radical);
+		if (atomInfo.parity && result.setParity)
+			result.setParity(atomInfo.parity);
 		if (typeof(atomInfo.hydrongenCount) != 'undefined')
 		{
 			if (result.setExplicitHydrogenCount)
