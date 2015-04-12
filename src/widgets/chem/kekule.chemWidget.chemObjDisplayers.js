@@ -943,7 +943,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 drawOptions = Object.extend(drawOptions, overrideOptions);
 			 var baseCoord = this.calcDrawBaseCoord(drawOptions);
 			 */
-			var drawParams = this.calcDrawParams();
+			var drawParams = this.calcDrawParams(overrideOptions);
 
 			var context = this.getDrawContext();
 

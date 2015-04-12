@@ -305,19 +305,21 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	doReactActiviting: function(e)
+	doReactActiviting: function($super, e)
 	{
+		$super(e);
 		if (this.getEnablePeriodicalExec())
 			this.startPeriodicalExec(e);
 	},
 	/** @private */
-	doReactDeactiviting: function(e)
+	doReactDeactiviting: function($super, e)
 	{
 		//if (this.getEnablePeriodicalExec())
 		this.stopPeriodicalExec();  // stop it anyway
 		if (this.getIsActive())  // meet a active-deactive event, clicked or key pressed on button
 		{
 			this.execute(e);
+			//console.log('execute', e);
 		}
 	},
 
@@ -644,6 +646,7 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	{
 		if (this.getDropDownWidget())
 		{
+			//console.log('drop', this.isDropDownWidgetShown());
 			if (this.isDropDownWidgetShown())
 			{
 				this.hideDropDownWidget();

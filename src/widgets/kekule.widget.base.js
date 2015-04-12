@@ -2365,18 +2365,21 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if (evType === 'mouseout')
 				{
-					//console.log('OUT');
-					this.setIsHover(false);
-					this.reactDeactiviting(e);
-					handled = true;
+					if (!e.ghostMouseEvent)
+					{
+						//console.log('OUT');
+						this.setIsHover(false);
+						this.reactDeactiviting(e);
+						handled = true;
+					}
 				}
 				else if ((evType === 'mousedown') || (evType === 'touchstart'))
 				{
 					if (!e.ghostMouseEvent)
 					{
 						this.reactActiviting(e);
-						handled = true;
 					}
+					handled = true;
 				}
 				/*
 				else if (evType === 'mouseleave')
@@ -2393,8 +2396,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					if (!e.ghostMouseEvent)
 					{
 						this.reactDeactiviting(e);
-						handled = true;
 					}
+					handled = true;
 				}
 				else if (evType === 'keydown')
 				{
@@ -2465,16 +2468,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					parent.reactUiEvent(e);
 			}
 		}
-
-		/*
-		// anyway, notify the glbal manager
-		var m = Kekule.Widget.globalManager;
-		m.reactUiEvent(e);
-		*/
-		/*
-		if (m[funcName])
-			m[funcName](e);
-		*/
 	},
 	/**
 	 * For descendants override.
@@ -2524,6 +2517,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doReactActiviting: function(e)
 	{
 		// do nothing here
+		//console.log('active on', this.getIsActive(), e.getType());
 	},
 
 	/**
@@ -2533,9 +2527,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	reactDeactiviting: function(e)
 	{
-		//console.log('deactive on', this.getIsActive(), e);
 		if (this.getIsActive())
 		{
+			//console.log('deactive on', this.getIsActive(), e.getType());
 			this.doReactDeactiviting(e);
 			this.invokeEvent('deactivate', {'widget': this});
 			this.setIsActive(false);
@@ -3103,7 +3097,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	domReadyInit: function()
 	{
 		this.installGlobalEventHandlers(this._document.body);
-		this._hammertime = this.installGlobalTouchHandlers(this._document.body);
+		//this._hammertime = this.installGlobalTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.body);
 	},
 
@@ -3176,10 +3170,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	installGlobalEventHandlers: function(target)
 	{
-		var events = Kekule.Widget.UiEvents;
-		for (var i = 0, l = events.length; i < l; ++i)
+		if (!this._globalEventInstalled)
 		{
-			Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
+			var events = Kekule.Widget.UiEvents;
+			for (var i = 0, l = events.length; i < l; ++i)
+			{
+				Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
+			}
+			this._globalEventInstalled = true;
 		}
 	},
 	/**
@@ -3338,13 +3336,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	reactUiEvent: function(e)
 	{
 		var evType = e.getType();
-		if (evType === 'touchstart')
+		if (evType === 'touchstart' || evType === 'touchend')
 		{
+			//console.log('[Global touch event]', evType, e.getTarget());
 			this._touchJustStart = true;  // a flag to avoid "ghost mouse event" after touch
 			var self = this;
 			setTimeout(function(){ self._touchJustStart = false; }, 500);
 		}
-		else if (['mousedown', 'mouseup', 'click'].indexOf(evType) >= 0)
+		else if (['mousedown', 'mouseup', 'mouseout', 'click'].indexOf(evType) >= 0)
 		{
 			if (this._touchJustStart)  // mark ghost mouse event
 				e.ghostMouseEvent = true;
@@ -3391,7 +3390,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	react_mousedown: function(e)
 	{
-		if (this.hasPopupWidgets())
+		if (this.hasPopupWidgets() && !e.ghostMouseEvent)
 		{
 			var elem = e.getTarget();
 			this.hidePopupWidgets(elem);
@@ -3652,6 +3651,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	hidePopupWidgets: function(activateElement, isDismissed)
 	{
+		//console.log('hidePopup', activateElement);
 		var widgets = this.getPopupWidgets();
 		var activateWidget = Kekule.Widget.getBelongedWidget(activateElement);
 		var activateWidgetCaller = activateWidget? activateWidget.getPopupCaller(): null;

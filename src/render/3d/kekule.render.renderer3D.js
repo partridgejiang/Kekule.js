@@ -815,7 +815,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		}
 		this.setCameraProps(context, options);
 
-		//console.log(this.getCameraProps(context));
+		//console.log(transformParams.cameraPos);
 	}
 });
 

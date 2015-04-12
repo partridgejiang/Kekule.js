@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Touch event test</title>
+  <style>
+    #stage
+    {
+      width: 400px;
+      height: 400px;
+      background-color: red;
+    }
+    body
+    {
+      width: 100%;
+      height: 600px;
+      background-color: yellow;
+    }
+  </style>
+  <script>
+    function init()
+    {
+      var div = document.getElementById('stage');
+      div.addEventListener('touchstart', function(e){
+        console.log('touchstart', e.type, e.target);
+      });
+      div.addEventListener('touchend', function(e){
+        console.log('touchend', e.type, e.target);
+      });
+      var body = document.body;
+      body.addEventListener('body touchstart', function(e){
+        console.log('touchstart', e.type, e.target);
+      });
+      body.addEventListener('body touchend', function(e){
+        console.log('touchend', e.type, e.target);
+      });
+    }
+  </script>
+</head>
+<body onload="init()">
+  <div id="stage"></div>
+</body>
+</html>
