@@ -931,7 +931,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		try
 		{
 			//var start = (new Date()).getTime();
-			this.clearContext();
+			if (!overrideOptions || !overrideOptions.doNotClear)
+				this.clearContext();
 
 			if (!this.getChemObj())
 				return;

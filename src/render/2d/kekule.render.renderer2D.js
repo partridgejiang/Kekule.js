@@ -404,10 +404,11 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	drawLine: function(context, coord1, coord2, options)
 	{
 		/*
+		var op = Object.create(options);
 		// debug
 		if (this.getRedirectContext())
 		{
-			options.color = options.strokeColor = '#ff0000';
+			op.color = op.strokeColor = '#ff0000';
 		}
 		*/
 		return this.getDrawBridge().drawLine(this.getActualTargetContext(context), coord1, coord2, options);
@@ -473,20 +474,31 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	{
 		var drawer = this.getRichTextDrawer();
 		var rt = Kekule.Render.RichTextUtils.strToRichText(text, options);
-		return drawer.drawEx(this.getActualTargetContext(context), coord, rt, options  /*, this.getRenderConfigs()*/);
+		// debug
+		/*
+		var op = Object.create(options || {});
+
+		if (this.getRedirectContext())
+		{
+			op.color = op.strokeColor = '#ff0000';
+		}
+		*/
+		return drawer.drawEx(this.getActualTargetContext(context), coord, rt, options/*op*/  /*, this.getRenderConfigs()*/);
 	},
 	drawRichText: function(context, coord, richText, options)  // note: return {drawnObj, boundRect}
 	{
 		var drawer = this.getRichTextDrawer();
-		/*
 		// debug
+		//console.log('draw richText', richText, options);
+		/*
+		var op = Object.create(options || {});
 		if (this.getRedirectContext())
 		{
-			options.color = options.strokeColor = options.fillColor = '#ff0000';
+			op.color = op.strokeColor = '#ff0000';
 		}
 		*/
-		//console.log('draw richText', richText, options);
-		return drawer.drawEx(this.getActualTargetContext(context), coord, richText, options /*, this.getRenderConfigs()*/);
+
+		return drawer.drawEx(this.getActualTargetContext(context), coord, richText, /*op*/ options /*, this.getRenderConfigs()*/);
 	},
 	createDrawGroup: function(context)
 	{
@@ -1195,7 +1207,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	handleConnectorSpecifiedRenderOptions: function($super, currObj, parentOptions)
 	{
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
-		var result = Object.create(parentOptions);
+		var result = Object.create(parentOptions || null);
 		result = Object.extend(result, localOptions);
 		return result;
 	},
@@ -1211,8 +1223,13 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @ignore */
 	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
 	{
+		/*
+		var chemObj = this.getChemObj();
+		var parentMol = chemObj.getParent && chemObj.getParent();
+		console.log(parentMol && parentMol.getId());
+		*/
 		var renderedObjs = this.getRenderedObjs(context);
-		return $super(context, obj) || (renderedObjs && (renderedObjs.indexOf(obj) >= 0));
+		return $super(context, obj) || (renderedObjs && (renderedObjs.indexOf(obj) >= 0));  // || (obj === parentMol);
 	},
 
 	/** @private */
@@ -1329,6 +1346,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var chemObj = this.getChemObj();
 			var group = this.getObjDrawElem(context, chemObj);
 			var cache = this.getRenderCache(context);
+			//console.log(this.getClassName(), context.canvas.parentNode, cache);
 			var options = cache.appliedOptions;  //cache.options;
 			if (objs.indexOf(chemObj) >= 0)  // update whole ctab
 			{
@@ -1351,7 +1369,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 						//console.log('modify', obj.getClassName(), chemObj.hasChildObj(obj));
 						if (chemObj.hasConnector(obj)) // is connector
 						{
-							this.doDrawConnector(context, group, obj, this.getChemObj(), options, cache.transformParams);
+							this.doDrawConnector(context, group, obj, this.getChemObj(), options, cache.transformParams || {});
 							//console.log('draw connector', obj);
 						}
 						else if (chemObj.hasNode(obj)) // is node
@@ -1492,7 +1510,9 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	getTransformedCoord2D: function(context, obj, allowCoordBorrow)
 	{
 		if (Kekule.ObjUtils.isUnset(allowCoordBorrow))
+		{
 			allowCoordBorrow = this.getRenderCache(context).options.transformParams.allowCoordBorrow;
+		}
 		//if (!obj[this.TRANSFORM_COORD_FIELD])  // not transformed yet
 		var result = this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
 		if (!result)
@@ -3255,7 +3275,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			this._concreteRenderer = null;
 			this._concreteChemObj = null;
 		}
-		if (chemObj)
+		if (!this._concreteRenderer && chemObj)
 		{
 			if (chemObj.hasCtab())
 			{
@@ -3333,10 +3353,13 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	*/
 
 	/** @ignore */
-	getRenderCache: function(context)
+	getRenderCache: function($super, context)
 	{
+		return $super(context);
+		/*
 		var r = this.getConcreteRenderer();
 		return r? r.getRenderCache(context): {};
+		*/
 	},
 
 	/** @private */
@@ -3364,7 +3387,8 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	/** @ignore */
 	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
 	{
-		return $super(context, obj) || (obj === this.getChemObj());
+		var r = this.getConcreteRenderer();
+		return $super(context, obj) || (obj === this.getChemObj()) || (obj === this._concreteChemObj); // || (r && r.isChemObjRenderedDirectlyBySelf(context, obj));
 	},
 
 	/** @private */
@@ -3404,20 +3428,31 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			}
 			//console.log('actualBaseCoord', actualBaseCoord);
 		}
+		/*
+		else
+			console.log('baseCoord set', baseCoord);
+		*/
 
 		if (!chemObj.hasFormula() && !chemObj.hasCtab())  // no context, need not to draw
 			return null
 		else if (r)
 		{
-			return r.draw(context, actualBaseCoord, this._getConcreteRendererDrawOptions(options));
+			//console.log('concrete draw', r.getClassName(), options.partialDrawObjs, !!r.getRedirectContext());
+			var op = Object.create(options);
+			if (op.partialDrawObjs)  // molecule is a whole and can not be partial drawn
+				op.partialDrawObjs = null;
+			return r.draw(context, actualBaseCoord, this._getConcreteRendererDrawOptions(op));
 		}
 	},
 	/** @ignore */
-	doRedraw: function(context)
+	doRedraw: function($super, context)
 	{
+		return $super(context);
+		/*
 		var r = this.getConcreteRenderer();
 		if (r)
 			return r.redraw(context);
+		*/
 	},
 	/** @ignore */
 	doUpdate: function(context, updatedObjDetails, updateType)

@@ -116,8 +116,16 @@ Kekule.Editor.BoxRegion = {
  */
 /**
  * Invoked when multiple chem objects inside editor is changed.
- *   event param of it has one fields: {objChangeDetails}
+ *   event param of it has one fields: {objChangeDetails}.
  * @name Kekule.Editor.BaseEditor#editObjsChanged
+ * @event
+ */
+/**
+ * Invoked when chem objects inside editor is changed and the changes has been updated by editor.
+ *   event param of it has one fields: {objChangeDetails}.
+ * Note: this event is not the same as editObjsChanged. When beginUpdateObj is called, editObjsChanged
+ * event still will be invoked but editObjsUpdated event will be suppressed.
+ * @name Kekule.Editor.BaseEditor#editObjsUpdated
  * @event
  */
 /**
@@ -689,6 +697,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	repaint: function($super, overrideOptions)
 	{
 		var ops = overrideOptions;
+		//console.log('repaint called');
 		//console.log('repaint', this._initialRenderTransformParams);
 		/*
 		if (this._initialRenderTransformParams)
@@ -1026,6 +1035,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	clearObjContext: function()
 	{
+		//console.log('clear obj context');
 		this._clearSpecContext(this.getObjContext(), this.getDrawBridge());
 		if (this.getBoundInfoRecorder())
 			this.getBoundInfoRecorder().clear(this.getObjContext());
@@ -1059,12 +1069,28 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Repaint the operating context only (not the whole obj context).
 	 * @private
 	 */
-	repaintOperContext: function()
+	repaintOperContext: function(ignoreUiMarker)
 	{
 		if (this._operatingRenderers && this._operatingObjs)
 		{
-			var options = {'partialDrawObjs': this._operatingObjs};
+			this.clearOperContext();
+
+			var options = {'partialDrawObjs': this._operatingObjs, 'doNotClear': true};
 			this.repaint(options);
+
+			/*
+			var context = this.getObjContext();
+			//console.log(this._operatingRenderers.length);
+			for (var i = 0, l = this._operatingRenderers.length; i < l; ++i)
+			{
+				var renderer = this._operatingRenderers[i];
+				console.log('repaint oper', renderer.getClassName(), renderer.getChemObj().getId(), !!renderer.getRedirectContext(), this._operatingRenderers.length);
+				renderer.redraw(context);
+			}
+
+			if (!ignoreUiMarker)
+				this.recalcUiMarkers();
+			*/
 		}
 	},
 
@@ -1213,6 +1239,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			//console.log('do change job');
 			this.doObjectsChanged(a);
+			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
 		}
 
 		this._objChanged = true;  // mark object changed
@@ -1265,7 +1292,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 			else  // need to update whole context
 			{
-				//console.log('repaint whole');
+				//console.log('[repaint whole]');
 				this.repaint();
 			}
 		}
@@ -1326,6 +1353,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			// prepare operating renderers
 			this._prepareRenderObjsInOperContext(objs);
 			this._operatingObjs = objs;
+			//console.log('oper renderers', this._operatingRenderers);
 		}
 		// finally force repaint the whole client area, both objContext and operContext
 		this.repaint();
@@ -1344,6 +1372,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this._operatingObjs = null;
 			if (!noRepaint)
 			{
+				//console.log('end operation objs');
 				this.repaint();
 			}
 		}
@@ -1357,9 +1386,26 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var map = this.getObjRendererMap();
 		var rs = map.getValues();
 		var context = this.getObjContext();
+		var standAloneObjs = [];
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
+			if (obj.getStandaloneAncestor)
+				obj = obj.getStandaloneAncestor();
+			Kekule.ArrayUtils.pushUnique(standAloneObjs, obj);
+		}
+		/*
+		if (standAloneObjs.length)
+			console.log(standAloneObjs[0].getId(), standAloneObjs);
+		else
+			console.log('(no standalone)');
+		*/
+		//for (var i = 0, l = objs.length; i < l; ++i)
+		for (var i = 0, l = standAloneObjs.length; i < l; ++i)
+		{
+			//var obj = objs[i];
+			var obj = standAloneObjs[i];
+
 			for (var j = 0, k = rs.length; j < k; ++j)
 			{
 				var renderer = rs[j];
@@ -1369,6 +1415,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					//console.log('direct rendered by', obj.getClassName(), renderer.getClassName());
 					Kekule.ArrayUtils.pushUnique(renderers, renderer);
 				}
+				/*
+				if (parentFragment && renderer.isChemObjRenderedDirectlyBySelf(context, parentFragment))
+					Kekule.ArrayUtils.pushUnique(renderers, renderer);  // when modify node or connector, mol will also be changed
+				*/
 			}
 			/*
 			var renderer = map.get(objs[i]);
@@ -1390,6 +1440,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		else
 			this._operatingRenderers = null;
+
+		//console.log('<total renderer count>', rs.length, '<redirected>', renderers.length);
+		/*
+		if (renderers.length)
+			console.log('redirected obj 0: ', renderers[0].getChemObj().getId());
+		*/
 	},
 	/** @private */
 	_endRenderObjsInOperContext: function()
@@ -2279,6 +2335,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		finally
 		{
+			//console.log(this.getPainter().getRenderer().getClassName(), this.getPainter().getRenderer().getRenderCache(this.getDrawContext()));
 			this.endUpdateSelection();
 		}
 		return this;
@@ -3888,7 +3945,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (newInfo.screenCoord)
 				this.doMoveManipulatedObj(objIndex, obj, newInfo.screenCoord, endScreenCoord);
 			if (newInfo.size)
-				this.doResizeManipulatedObj(objIndex, obj, newInfo.Size);
+				this.doResizeManipulatedObj(objIndex, obj, newInfo.size);
 		}
 	},
 
@@ -3982,21 +4039,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//console.log('rotate', this.getRotateCenter(), endScreenCoord);
 		this._calcManipulateObjsRotationInfo(objs, endScreenCoord);
 
-		/*
-		var box = this.getStartBox();
-		var rotateCenter = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
-
-		var vector = C.substract(endScreenCoord, rotateCenter);
-		var endAngle = Math.atan2(vector.y, vector.x);
-		var startCoord = this.getStartCoord();
-		vector = C.substract(startCoord, rotateCenter);
-		var startAngle = Math.atan2(vector.y, vector.x);
-		var angle = endAngle - startAngle;
-		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({
-			'center': rotateCenter,
-			'rotateAngle': angle
-		});
-		*/
 		var objNewInfo = this.getManipulateObjCurrInfoMap();
 
 		editor.beginUpdateObject();
@@ -4032,6 +4074,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		finally
 		{
 			editor.endUpdateObject();
+			this.manipulateStepDone();
 		}
 	},
 
@@ -4229,6 +4272,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		finally
 		{
 			editor.endUpdateObject();
+			this.manipulateStepDone();
 		}
 	},
 
@@ -4273,31 +4317,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
 		try
 		{
-			/*
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-				/ *
-				var info = this.getManipulateObjInfoMap().get(obj);
-				if (info.hasNoCoord)  // this object has no coord property and can not be moved
-				{
-					continue;
-				}
-				var newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
-				newScreenCoord = this._calcActualMovedScreenCoord(obj, info, newScreenCoord);
-				//newContextCoord = this.calcActualMovedContextCoord(obj, info, newContextCoord);
-				* /
-				/ *
-				 this.updateChildMoveOperation(i, editor.contextCoordToObj(newContextCoord));
-				 editor.setObjectContextCoord(obj, newContextCoord);
-				 * /
-				var newInfo = newInfoMap.get(obj);
-				if (newInfo && newInfo.coord)
-					this.doMoveManipulatedObj(i, obj, newInfo.coord, endScreenCoord);
-			}
-			*/
-			//this.getActiveOperation().execute();
-			//this.getManipulateOperation().execute();
 			this.applyManipulatingObjsInfo(endScreenCoord);
 			this._maniplateObjsFrameEnd(objs);
 			// notify
@@ -4306,6 +4325,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		finally
 		{
 			editor.endUpdateObject();
+			this.manipulateStepDone();
 		}
 	},
 	/**
@@ -4354,6 +4374,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.prepareManipulating(manipulateType || Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE, objs, startCoord, startBox, rotateCenter);
 	},
 	/**
+	 * Called when a manipulation is applied and the changes has been reflected in editor (editor redrawn done).
+	 * Descendants may override this method.
+	 * @private
+	 */
+	manipulateStepDone: function()
+	{
+		// do nothing here
+	},
+	/**
 	 * Stop manipulate of objects.
 	 * @private
 	 */
@@ -4362,6 +4391,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setManipulateObjs(null);
 		this.getManipulateObjInfoMap().clear();
 		this.getObjOperationMap().clear();
+	},
+	/** @private */
+	refreshManipulateObjs: function()
+	{
+		this.setManipulateObjs(this.getManipulateObjs());
 	},
 	/** @private */
 	createManipulateObjInfo: function(obj, startScreenCoord)
@@ -4578,7 +4612,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 			}
 		}
-		else if (e.getButton() === Kekule.X.Event.MOUSE_BTN_RIGHT)
+		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
 		{
 			//if (this.getEnableMove())
 			{
@@ -4595,7 +4629,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	react_mouseup: function(e)
 	{
-		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.setEndCoord(coord);

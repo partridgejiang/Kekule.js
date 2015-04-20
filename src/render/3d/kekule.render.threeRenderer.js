@@ -359,10 +359,8 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		alight.position.set(-5, -5, -10);
 		scene.add(alight);
 
-		/*
-		var alight = new THREE.AmbientLight( 0x404040 ); // soft white light
+		var alight = new THREE.AmbientLight( 0x202020 ); // soft white light
 		scene.add(alight);
-		*/
 
 		parentElem.appendChild(renderer.domElement);
 

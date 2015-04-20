@@ -484,7 +484,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.AbstractRenderer',
 	/** @private */
-	RENDER_CACHE_FIELD: '__$renderCache__',
+	RENDER_CACHE_FIELD: '__$renderCache$__',
 	/** @constructs */
 	initialize: function($super, chemObj, drawBridge, /*renderConfigs,*/ parent)
 	{
@@ -505,6 +505,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	},
 	finalize: function($super)
 	{
+		//console.log('release renderer', this.getClassName());
 		this.setPropValue('chemObj', null, true);
 		this.setDrawBridge(null);
 		$super();
@@ -584,6 +585,16 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			this.setExtraProp(context, this.RENDER_CACHE_FIELD, result);
 		}
 		return result;
+		/*
+		var result = this._cache; //[this.RENDER_CACHE_FIELD];
+		if (!result)
+		{
+			this._cache = {'field': 'value'};
+			result = this._cache;
+			console.log('initial render cache', this.getClassName());
+		}
+		return result;
+		*/
 	},
 
 	/**
@@ -628,7 +639,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	_isCurrChemObjNeedToBeDrawn: function(partialDrawObjs)
+	_isCurrChemObjNeedToBeDrawn: function(partialDrawObjs, context)
 	{
 		var selfObj = this.getChemObj();
 		for (var i = 0, l = partialDrawObjs.length; i < l; ++i)
@@ -720,8 +731,14 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		var chemObj = this.getChemObj();
 
 		var partialDrawObjs = ops.partialDrawObjs;
-		if (partialDrawObjs && (!this._isCurrChemObjNeedToBeDrawn(partialDrawObjs)))
+
+		if (partialDrawObjs && (!this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context)))
 			return null;
+		/*
+		else if (partialDrawObjs)
+			console.log('partial draw objects', this.getClassName(), partialDrawObjs && partialDrawObjs.length);
+		*/
+
 
 		//p.options = ops;
 
@@ -739,6 +756,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		//console.log('DRAW', isRoot);
 		if (isRoot)
 			this.beginDraw(context, baseCoord, ops);
+		//console.log(this.getClassName(), this.getRenderCache(context));
 		var result = this.doDraw(context, baseCoord, ops);
 		this.getRenderCache(context).drawnElem = result;
 		if (isRoot)
@@ -769,7 +787,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	{
 		var isRoot = this.isRootRenderer();
 
-		//console.log('REDRAW', isRoot);
+		//console.log('REDRAW', this.getClassName(), isRoot);
 		if (isRoot)
 		{
 			var cache = this.getRenderCache(context) || {};
@@ -879,6 +897,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 				var isRoot = this.isRootRenderer();
 				if (isRoot)
 				{
+					//console.log('update root', this.getClassName());
 					var contexts = [];
 					for (var i = 0, l = updateInfos.length; i < l; ++i)
 					{
@@ -890,7 +909,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 					{
 						this.getDrawBridge().clearContext(context);
 						var cache = this.getRenderCache(context);
-						//console.log('draw once');
+						//console.log('draw root once', this.getClassName());
 						this.draw(context, cache.baseCoord, cache.options);
 					}
 					return true;
