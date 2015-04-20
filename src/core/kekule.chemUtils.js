@@ -474,12 +474,12 @@ Kekule.TokenAnalyzer = Class.create(ObjectEx,
 		var lastCharInfo = this.nextCharInfo();
 		if (lastCharInfo)
 		{
-			var token = lastCharInfo.char;
+			var token = lastCharInfo['char'];  // .char will cause problem in YUI compressor
 			var tokenType = lastCharInfo.charType;
 			var currCharInfo = this.nextCharInfo();
 			while (currCharInfo && this.isCharTypeMatched(currCharInfo.charType, lastCharInfo.charType))
 			{
-				token += currCharInfo.char;
+				token += currCharInfo['char'];
 				lastCharInfo = currCharInfo;
 				currCharInfo = this.nextCharInfo();
 			}

@@ -21,6 +21,23 @@ var AU = Kekule.ArrayUtils;
 var BT = Kekule.BondType;
 
 /**
+ * Enumeration of comparation of chem structure.
+ * @enum
+ */
+Kekule.StructureComparationLevel = {
+	/** Compare only topological graph, atom/bond details are ignored. */
+	SKELETAL: 1,
+	/** Compare only constitution, ignore stereo factors and charge. */
+	CONSTITUTION: 2,
+	/** Compare with stereo factors but ignore atom mass number and charge. */
+	CONFIGURATION: 3,
+	/** Compare with stereo factors and mass number / charge. */
+	EXACT: 4,
+	/** Default comparation level. */
+	DEFAULT: 4
+};
+
+/**
  * A comparer to decide which chem structure object is "bigger" or "superior" than another one.
  * In the comparer, each structure object is turned to a int value with the fixed format.
  *
@@ -64,6 +81,57 @@ Kekule.UnivChemStructObjComparer = {
 	_P44: Math.pow(2, 44),
 	/** @private */
 	_P20: Math.pow(2, 20),
+
+	/**
+	 * Analysis input options and forms a detail option object for other comparation methods.
+	 * @param {Hash} options May include the following fields:
+	 *   {
+	 *     level: comparation level, value from {@link Kekule.StructureComparationLevel}.
+	 *     (for node)
+	 *     compareAtom: Bool,
+	 *     compareMass: Bool,
+	 *     compareLinkedConnectorCount: Bool,
+	 *     compareCharge: Bool,
+	 *     compareStereo: Bool,
+	 *     compareHydrogenCount: Bool,
+	 *     (for connector)
+	 *     compareConnectedObjCount: Bool,
+	 *     compareBondType: Bool,
+	 *     compareBondOrder: Bool
+	 *     compareStereo: Bool
+	 *   }
+	 *   The detailed bool values will override settings in level.
+	 * @returns {Hash}
+	 */
+	prepareCompareOptions: function(options)
+	{
+		var CL = Kekule.StructureComparationLevel;
+		var level = (options && options.level) || CL.DEFAULT;
+		var result;
+		if (level === CL.SKELETAL)
+			result = {
+				compareAtom: false, compareMass: false, compareLinkedConnectorCount: true, compareCharge: false,
+				compareStereo: false, compareHydrogenCount: false,
+				compareConnectedObjCount: true, compareBondType: false, compareBondOrder: false};
+		else if (level === CL.CONSTITUTION)
+			result = {
+				compareAtom: true, compareMass: false, compareLinkedConnectorCount: true, compareCharge: false,
+				compareStereo: false, compareHydrogenCount: true,
+				compareConnectedObjCount: true, compareBondType: true, compareBondOrder: true};
+		else if (level === CL.CONFIGURATION)
+			result = {
+				compareAtom: true, compareMass: false, compareLinkedConnectorCount: true, compareCharge: false,
+				compareStereo: true, compareHydrogenCount: true,
+				compareConnectedObjCount: true, compareBondType: true, compareBondOrder: true};
+		else if (level === CL.EXACT)
+			result = {
+				compareAtom: true, compareMass: true, compareLinkedConnectorCount: true, compareCharge: true,
+				compareStereo: true, compareHydrogenCount: true,
+				compareConnectedObjCount: true, compareBondType: true, compareBondOrder: true};
+		// override bool values
+		result = Object.extend(result, options || {});
+		return result;
+	},
 	/**
 	 * Get a digital value for comparing object.
 	 * @param {Kekule.ChemStructureObject} chemObj
@@ -87,7 +155,7 @@ Kekule.UnivChemStructObjComparer = {
 	 */
 	getCompareValue: function(chemObj, options)
 	{
-		/** @ignore */
+		/*
 		var ops = Object.extend({
 			compareAtom: true,
 			compareMass: true,
@@ -99,6 +167,8 @@ Kekule.UnivChemStructObjComparer = {
 			compareBondType: true,
 			compareBondOrder: true
 		}, options);
+		*/
+		var ops = Kekule.UnivChemStructObjComparer.prepareCompareOptions(options);
 		if (!chemObj)
 			return 0;
 		else if (chemObj instanceof K.ChemStructureNode)

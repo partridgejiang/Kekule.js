@@ -57,12 +57,13 @@
 			var mol2 = chemEditors[1].exportObj(Kekule.StructureFragment);
 			//var searchResult = Kekule.ChemStructureSearcher.findSubStructure(mol1, mol2, {doStandardize: true});
 			var ops = {};
+			var CL = Kekule.StructureComparationLevel;
 			if ($('radioCompareSkeletal').checked)
-				ops.compareSkeletal = true;
+				ops.level = CL.SKELETAL;
 			else if ($('radioCompareConstitution').checked)
-				ops.compareConstitution = true;
+				ops.level = CL.CONSTITUTION;
 			else
-				ops.compareConfiguration = true;
+				ops.level = CL.CONFIGURATION;
 			var searchResult = mol2.search(mol1, ops);
 			var sResult = searchResult? 'Found sub structure': 'Can not find sub structure';
 			var sClass = searchResult? 'Found': 'Unfound';

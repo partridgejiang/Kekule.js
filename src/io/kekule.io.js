@@ -1211,7 +1211,7 @@ Kekule.IO.saveMimeData = function(chemObj, mimeType)
  * @param {Kekule.ChemObj} chemObj
  * @param {String} mimeType
  * @param {String} urlOrFileExt URL or file ext.
- * @returns {Kekule.ChemObject}
+ * @returns {Variant}
  */
 Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 {

@@ -67,9 +67,10 @@ Object.extend(Kekule.ChemStructureUtils, {
 	 * atoms, bonds and structures).
 	 * @param {Kekule.StructureFragment} mol1
 	 * @param {Kekule.StructureFragment} mol2
+	 * @param {Hash} compareOptions
 	 * @returns {Bool}
 	 */
-	isSameStructure: function(mol1, mol2)
+	isSameStructure: function(mol1, mol2, compareOptions)
 	{
 		// clone the structure to avoid change original molecule objects
 		var m1 = mol1.clone(false);
@@ -77,8 +78,10 @@ Object.extend(Kekule.ChemStructureUtils, {
 		// standardize each
 		m1 = Kekule.MolStandardizer.standardize(m1);
 		m2 = Kekule.MolStandardizer.standardize(m2);
+		// compare options
+		var op = compareOptions || {}; //Object.extend(compareOptions || {});
 		// compare
-		return Kekule.UnivChemStructObjComparer.compare(m1, m2) === 0;
+		return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
 	}
 });
 
@@ -127,11 +130,12 @@ ClassEx.extend(Kekule.StructureFragment, {
 	 * Check if two structure fragment (molecule) is same in chem level (same
 	 * atoms, bonds and structures).
 	 * @param {Kekule.StructureFragment} target
+	 * @param {Hash} compareOptions
 	 * @returns {Bool}
 	 */
-	isSameStructureWith: function(target)
+	isSameStructureWith: function(target, compareOptions)
 	{
-		return Kekule.ChemStructureUtils.isSameStructure(this, target);
+		return Kekule.ChemStructureUtils.isSameStructure(this, target, compareOptions);
 	}
 });
 
