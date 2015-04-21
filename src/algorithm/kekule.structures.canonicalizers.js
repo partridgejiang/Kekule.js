@@ -699,33 +699,41 @@ Kekule.Canonicalizer = Class.create(
 	 */
 	canonicalize: function(structFragmentOrCtab, executorId)
 	{
-		var id = executorId || this._defExecutorId;
-		var executor = this.getExecutor(id);
-		if (!executor)
+		structFragmentOrCtab.beginUpdate();
+		try
 		{
-			Kekule.error(Kekule.ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND);
-		}
-		else
-		{
-			var struct = (structFragmentOrCtab instanceof Kekule.StructureFragment)? structFragmentOrCtab: null;
-			var canoInfo = struct.getCanonicalizationInfo();
-			if (canoInfo && canoInfo.id === id)   // already do a cano job, no need to run again
+			var id = executorId || this._defExecutorId;
+			var executor = this.getExecutor(id);
+			if (!executor)
 			{
-				return structFragmentOrCtab;
+				Kekule.error(Kekule.ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND);
 			}
-			var ctab = structFragmentOrCtab.getCtab? structFragmentOrCtab.getCtab(): structFragmentOrCtab;
-			if (executor.customExecutor)
-				executor.customExecutor.execute(ctab);
 			else
 			{
-				executor.indexer.execute(ctab);
-				//if ()
-				executor.nodeSorter.execute(ctab);
-				executor.connectorSorter.execute(ctab);
+				var struct = (structFragmentOrCtab instanceof Kekule.StructureFragment)? structFragmentOrCtab: null;
+				var canoInfo = struct.getCanonicalizationInfo();
+				if (canoInfo && canoInfo.id === id)   // already do a cano job, no need to run again
+				{
+					return structFragmentOrCtab;
+				}
+				var ctab = structFragmentOrCtab.getCtab? structFragmentOrCtab.getCtab(): structFragmentOrCtab;
+				if (executor.customExecutor)
+					executor.customExecutor.execute(ctab);
+				else
+				{
+					executor.indexer.execute(ctab);
+					//if ()
+					executor.nodeSorter.execute(ctab);
+					executor.connectorSorter.execute(ctab);
+				}
+				struct.setCanonicalizationInfo({'id': id});  // save cano info
 			}
-			struct.setCanonicalizationInfo({'id': id});  // save cano info
-			return structFragmentOrCtab;
 		}
+		finally
+		{
+			structFragmentOrCtab.endUpdate();
+		}
+		return structFragmentOrCtab;
 	}
 });
 Kekule.ClassUtils.makeSingleton(Kekule.Canonicalizer);

@@ -33,6 +33,7 @@
       //var chiralNodes = Kekule.MolStereoUtils.findChiralNodes(mol);
       //console.log(chiralNodes.length);
       var chiralNodes = mol.perceiveChiralNodes();
+      console.log(chiralNodes.length);
 
       // set mark
       mol.beginUpdate();

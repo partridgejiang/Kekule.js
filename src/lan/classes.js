@@ -1910,7 +1910,8 @@ var
  * @property {Bool} bubbleEvent Whether event evoked can be relayed to higher level object.
  * @property {Bool} suppressChildChangeEventInUpdating If this property is true, when object is updating
  *   (calling obj.beginUpdate()), received "change" event will always not be bubbled. Instead, when updating
- *   finished (calling obj.endUpdate()), a "change" event of self (not child object) will be triggered.
+ *   finished (calling obj.endUpdate()), a "change" event of self (not child object) will be triggered with special
+ *   property name '[chilren]'.
  */
 /*
  * Invoked when a property value is gotten by its getter.
@@ -2728,7 +2729,10 @@ ObjectEx = Class.create(
   {
   	event.currentTarget = this;
     if (eventName === 'change' && this.getSuppressChildChangeEventInUpdating() && this.isUpdating())  // suppress child change event
+		{
+			//console.log('suppress child change event', this.getClassName(), event.target.getClassName());
       this._childChangeEventSuppressed = true;
+		}
     else
   	  this.dispatchEvent(eventName, event);
   },
@@ -2809,11 +2813,11 @@ ObjectEx = Class.create(
 		this.checkUpdateStatus();
 		if (!this.isUpdating())  // update end, notify changed properties
 		{
-			var modifiedProps = this._modifiedProps;
+			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
-			this.doEndUpdate(modifiedProps);
       if (this._childChangeEventSuppressed)
-        this.invokeEvent('change');
+        modifiedProps.push('[children]');
+      this.doEndUpdate(modifiedProps);
       this._childChangeEventSuppressed = false;
 		}
 	},
@@ -2833,7 +2837,7 @@ ObjectEx = Class.create(
 					this.notifyPropSet(propName, propValue, true);
 				}
 			}
-			//this.invokeEvent('change', {});
+			/*this.invokeEvent('change after update', modifiedPropNames);*/
 			this.objectChange(modifiedPropNames);
 		}
 	},

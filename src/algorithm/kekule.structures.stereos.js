@@ -307,15 +307,23 @@ Kekule.MolStereoUtils = {
 	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
 	{
 		var result = Kekule.MolStereoUtils.findStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
-		if (result && result.length)
+		structFragmentOrCtab.beginUpdate();
+		try
 		{
-			for (var i = 0, l = result.length; i < l; ++i)
+			if (result && result.length)
 			{
-				var c = result[i];
-				var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true);
-				if (c.setParity)
-					c.setParity(parity);
+				for (var i = 0, l = result.length; i < l; ++i)
+				{
+					var c = result[i];
+					var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true);
+					if (c.setParity)
+						c.setParity(parity);
+				}
 			}
+		}
+		finally
+		{
+			structFragmentOrCtab.endUpdate();
 		}
 		return result;
 	},
@@ -670,19 +678,27 @@ Kekule.MolStereoUtils = {
 	 */
 	perceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
 	{
-		var result = Kekule.MolStereoUtils.findChiralNodes(structFragmentOrCtab, ignoreCanonicalization);
-		if (result && result.length)
+		var result = Kekule.MolStereoUtils.findChiralNodes(structFragmentOrCtab, ignoreCanonicalization);;
+		structFragmentOrCtab.beginUpdate();
+		try
 		{
-			for (var i = 0, l = result.length; i < l; ++i)
+			if (result && result.length)
 			{
-				var n = result[i];
-				var parity = Kekule.MolStereoUtils.calcTetrahedronChiralNodeParity(n, coordMode, true);
-				if (n.setParity)
+				for (var i = 0, l = result.length; i < l; ++i)
 				{
-					//console.log('set parity', n.getId(), parity);
-					n.setParity(parity);
+					var n = result[i];
+					var parity = Kekule.MolStereoUtils.calcTetrahedronChiralNodeParity(n, coordMode, true);
+					if (n.setParity)
+					{
+						//console.log('set parity', n.getId(), parity);
+						n.setParity(parity);
+					}
 				}
 			}
+		}
+		finally
+		{
+			structFragmentOrCtab.endUpdate();
 		}
 		return result;
 	},

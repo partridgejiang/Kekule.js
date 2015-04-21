@@ -570,7 +570,8 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	/** @ignore */
 	clearStructureFlags: function()
 	{
-		this.setParity(Kekule.StereoParity.NONE);
+		//this.setParity(Kekule.StereoParity.NONE);
+		this.setPropStoreFieldValue('parity', Kekule.StereoParity.NONE);  // avoid invoke change event
 	}
 });
 
