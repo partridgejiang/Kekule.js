@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Splitted Chem Viewer Demo</title>
+
+  <script src="../../../../libs/three.js-r49/build/Three.js"></script>
+  <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../../libs/Raphael.Export/raphael.export.js"></script>
+  <script src="../../../src/kekule.js?min=false"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <script id="mol1" type="chemical/x-mdl-molfile">
+
+  Chem3D  09090817303D
+
+  8  7  0  0  0  0  0  0  0  0999 V2000
+   -0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.0090   -1.0458 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.0000   -1.0459 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422   -0.9095    0.5163 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.9005    0.5319 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422   -0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  4  1  0
+  1  6  1  0
+  1  8  1  0
+  2  3  1  0
+  2  5  1  0
+  2  7  1  0
+M  END
+	</script>
+  <script id="mol2" type="chemical/x-mdl-molfile">
+
+  Chem3D Core 12.004161521183D
+
+  8  7  0  0  0  0  0  0  0  0999 V2000
+   -0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.0000   -1.0459 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422   -0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.0000    1.0459 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.9050   -0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422   -0.9050   -0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0      
+  1  3  1  0      
+  1  4  1  0      
+  1  5  1  0      
+  2  6  1  0      
+  2  7  1  0      
+  2  8  1  0      
+M  END
+	</script>
+
+  <style>
+    html, body
+    {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #chemViewer1, #chemViewer2
+    {
+      border: none;
+      margin: 0;
+      float: left;
+    }
+  </style>
+
+  <script>
+    var viewerElemIds = ['chemViewer1', 'chemViewer2'];
+    var chemViewers = [];
+    function init()
+    {
+      var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+      for (var i = 0, l = viewerElemIds.length; i < l; ++i)
+      {
+        var elem = document.getElementById(viewerElemIds[i]);
+        chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+        chemViewer.setEnableToolbar(true)
+          .setToolButtons([
+            BNS.loadFile, BNS.molDisplayType, BNS.molHideHydrogens,
+            BNS.zoomIn, BNS.zoomOut,
+            BNS.rotateX, BNS.rotateY, BNS.rotateZ, BNS.reset
+          ]);
+        chemViewer.setAutoSize(false).setPadding(20);
+        chemViewers.push(chemViewer);
+      }
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+    }
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      var width = (dim.width - 10) / chemViewers.length;
+      for (var i = 0, l = chemViewers.length; i < l; ++i)
+      {
+        chemViewers[i].setWidth(width + 'px').setHeight(dim.height + 'px');
+      }
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<div id="chemViewer1" style="width:100%;height:650px" data-chem-obj="url(#mol1)"></div>
+<div id="chemViewer2" style="width:100%;height:650px" data-chem-obj="url(#mol2)"></div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SMILES Generator</title>
+  <script src="../../../../libs/three.js-r49/build/Three.js"></script>
+  <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../../libs/Raphael.Export/raphael.export.js"></script>
+  <script src="../../../src/kekule.js?min=false"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <style>
+    body
+    {
+      font-family: 'Microsoft Sans Serif' , Arial, Helvetica, Verdana;
+    }
+    #pSmiles
+    {
+      font-size: 1.5em;
+    }
+    #labelSmiles
+    {
+      font-weight: bold;
+      color: #000066;
+    }
+  </style>
+
+  <script name="mol1" id="mol1" type="chemical/x-kekule-json">
+    {"id":"m1","renderOptions":{"expanded":true,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":6.805264577584842,"y":35.93377766927083,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":7.498084900612393,"y":35.53377766927083,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":6.805264577584842,"y":36.73377766927083,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":6.112444254557292,"y":35.53377766927083,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":8.190905223639943,"y":35.93377766927083,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b2","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,4]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+	</script>
+
+  <script>
+    var chemEditor;
+    var chemComposer
+    function init()
+    {
+      var elem = document.getElementById('chemComposer');
+      var chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+      chemComposer = new Kekule.Editor.Composer(elem, chemEditor);
+      chemEditor.addEventListener('editObjsUpdated', editObjChanged);
+      chemEditor.addEventListener('load', editObjChanged);
+
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+    }
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      chemComposer.setWidth(dim.width - 50 + 'px').setHeight(dim.height - 100 + 'px');
+    }
+    function editObjChanged(e)
+    {
+      var mol = Kekule.ChemStructureUtils.getTotalStructFragment(chemComposer.getChemObj());
+      var s;
+      if (mol)
+        s = Kekule.IO.saveMimeData(mol, 'chemical/x-daylight-smiles');
+      Kekule.DomUtils.setElementText(document.getElementById('labelSmiles'), s || '(Empty)');
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body onload="init()">
+  <div>
+    <p id="pSmiles">SMILES: <span id="labelSmiles"></span></p>
+  </div>
+  <div id="chemComposer" style="width:800px;height:600px" data-chem-obj="url(#mol1)" data-predefined-setting="molOnly"></div>
+</body>
+</html>

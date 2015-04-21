@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Conformation of Ethane</title>
+
+  <script src="../../../../libs/three.js-r49/build/Three.js"></script>
+  <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../../libs/Raphael.Export/raphael.export.js"></script>
+  <script src="../../../src/kekule.js?min=false"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <style>
+    html, body
+    {
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+    #chemViewer
+    {
+      border: none;
+      margin: 0;
+    }
+    #btnRotate
+    {
+      position: absolute;
+      left: 1em;
+      bottom: 1em;
+      z-index: 10;
+    }
+  </style>
+
+  <script name="mol1" id="mol1" type="chemical/x-mdl-molfile">
+
+  Chem3D  09090817303D
+
+  8  7  0  0  0  0  0  0  0  0999 V2000
+   -0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7615    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.0090   -1.0458 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.0000   -1.0459 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422   -0.9095    0.5163 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422    0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1422    0.9005    0.5319 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1422   -0.9050    0.5242 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  4  1  0
+  1  6  1  0
+  1  8  1  0
+  2  3  1  0
+  2  5  1  0
+  2  7  1  0
+M  END
+	</script>
+
+  <script>
+    var chemViewer;
+    var btnRotate;
+    function init()
+    {
+      chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+      btnRotate = Kekule.Widget.getWidgetById('btnRotate');
+      btnRotate.setPeriodicalExecInterval(30);
+      btnRotate.setEnablePeriodicalExec(true);
+      btnRotate.addEventListener('activate', prepareRotation);
+      btnRotate.addEventListener('deactivate', doneRotation);
+      btnRotate.addEventListener('execute', rotateStep);
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+    }
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 + 'px');
+    }
+
+    function getCurrMol()
+    {
+      return chemViewer.getChemObj();
+    }
+    function getRotationAxisNodes()
+    {
+      var result = [];
+      var mol = getCurrMol();
+      for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+      {
+        var node = mol.getNodeAt(i);
+        if (node.getAtomicNumber && node.getAtomicNumber() === 6)  // C
+          result.push(node);
+        if (result.length >= 2)
+          break;
+      }
+      return result;
+    }
+
+    var rotationParams = {};
+    function prepareRotation()
+    {
+      var AU = Kekule.ArrayUtils;
+      var CU = Kekule.CoordUtils;
+      var axisNodes = getRotationAxisNodes();
+      var axisVector = CU.substract(axisNodes[1].getAbsCoord3D(), axisNodes[0].getAbsCoord3D());
+      rotationParams.axisVector = axisVector;
+      var centerNode = axisNodes[0];
+      var rotationNodes = AU.exclude(centerNode.getLinkedChemNodes(), axisNodes);
+      rotationParams.rotationNodes = rotationNodes;
+      var initCoords = [];
+      for (var i = 0, l = rotationNodes.length; i < l; ++i)
+        initCoords.push(rotationNodes[i].getAbsCoord3D());
+      rotationParams.initCoords = initCoords;
+      rotationParams.rotationAngle = 0;
+
+      rotationParams.objBaseCoord = chemViewer.getActualDrawOptions().baseCoord;
+
+      rotationParams.initialTransformOptions = chemViewer.getPainter().getActualInitialRenderTransformOptions(chemViewer.getDrawContext());
+      //console.log(rotationParams);
+
+      chemViewer.beginContinuousRepainting();
+    }
+    function rotateStep(e, delta)
+    {
+      var CU = Kekule.CoordUtils;
+      if (!delta)
+      {
+        delta = e.htmlEvent.getShiftKey()? -1: 1;
+      }
+
+      var mol = getCurrMol();
+
+      var angle = (rotationParams.rotationAngle + delta) % 360;
+      rotationParams.rotationAngle = angle;
+
+      var matrix = CU.calcRotate3DMatrix({
+        'rotateAxisVector': rotationParams.axisVector,
+        'rotateAngle': angle * Math.PI / 180
+      });
+      var coords = rotationParams.initCoords;
+      var nodes = rotationParams.rotationNodes;
+
+      mol.beginUpdate();
+      for (var i = 0, l = coords.length; i < l; ++i)
+      {
+        var newCoord = CU.transform3DByMatrix(coords[i], matrix);
+        nodes[i].setAbsCoord3D(newCoord);
+      }
+      mol.endUpdate();
+      //console.log('rotate', angle, coords.length);
+      chemViewer.repaint(rotationParams.initialTransformOptions);
+    }
+    function doneRotation()
+    {
+      chemViewer.endContinuousRepainting();
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<div>
+  <button id="btnRotate" data-widget="Kekule.Widget.Button" data-text="Rotate"></button>
+</div>
+<div id="chemViewer" style="width:1000px;height:650px"
+     data-widget="Kekule.ChemWidget.Viewer3D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+     data-chem-obj="url(#mol1)">
+
+</div>
+</body>
+</html>
