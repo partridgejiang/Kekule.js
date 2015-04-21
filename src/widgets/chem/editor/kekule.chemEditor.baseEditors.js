@@ -21,6 +21,7 @@
 
 "use strict";
 
+var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
@@ -1094,6 +1095,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 
+	/** @private */
+	getOperatingRenderers: function()
+	{
+		if (!this._operatingRenderers)
+			this._operatingRenderers = [];
+		return this._operatingRenderers;
+	},
+	/** @private */
+	setOperatingRenderers: function(value)
+	{
+		this._operatingRenderers = value;
+	},
+
 	//////////////////////////////////////////////////////////////////////
 
 	/////////////////// methods about painter ////////////////////////////
@@ -1101,11 +1115,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	installPainterEventHandlers: function(painter)
 	{
-		painter.addEventListener('draw', this.reactChemObjDraw, this);
+		painter.addEventListener('prepareDrawing', this.reactChemObjPrepareDrawing, this);
 		painter.addEventListener('clear', this.reactChemObjClear, this);
 	},
 	/** @private */
-	reactChemObjDraw: function(e)
+	reactChemObjPrepareDrawing: function(e)
 	{
 		var ctx = e.context;
 		var obj = e.obj;
@@ -1114,6 +1128,34 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var renderer = e.target;
 			this.getObjRendererMap().set(obj, renderer);
 			//console.log('object drawn', obj, obj.getClassName(), renderer, renderer.getClassName());
+
+			// check if renderer should be redirected to oper context
+			if (this.getEnableOperContext())
+			{
+				var operObjs = this._operatingObjs || [];
+				var needRedirect = false;
+				for (var i = 0, l = operObjs.length; i < l; ++i)
+				{
+					if (this._isChemObjDirectlyRenderedByRenderer(this.getObjContext(), operObjs[i], renderer))
+					{
+						needRedirect = true;
+						break;
+					}
+				}
+				if (needRedirect)
+				{
+					this._setRendererToOperContext(renderer);
+					//console.log('do redirect', renderer.getClassName(), obj && obj.getId && obj.getId());
+					AU.pushUnique(this.getOperatingRenderers(), renderer);
+				}
+				/*
+				else
+				{
+					this._unsetRendererToOperContext(renderer);
+					console.log('unset redirect', renderer.getClassName(), obj && obj.getId && obj.getId());
+				}
+				*/
+			}
 		}
 	},
 	/** @private */
@@ -1125,6 +1167,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			var renderer = e.target;
 			this.getObjRendererMap().remove(obj);
+			AU.remove(this.getOperatingRenderers(), renderer);
 		}
 	},
 
@@ -1141,7 +1184,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var propNames = e.changedPropNames || [];
 		var bypassPropNames = ['owner', 'ownedObjs'];  // these properties do not affect rendering
 		propNames = Kekule.ArrayUtils.exclude(propNames, bypassPropNames);
-		if (propNames.length)
+		if (propNames.length || !e.changedPropNames)  // when changedPropNames is not set, may be change event invoked by parent when suppressing child objects
 		{
 			//console.log('chem obj change', target.getClassName(), propNames, e);
 			this.objectChanged(target, propNames);
@@ -1379,13 +1422,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @private */
-	_prepareRenderObjsInOperContext: function(objs)
+	_isChemObjDirectlyRenderedByRenderer: function(context, obj, renderer)
 	{
-		//console.log('redirect objs', objs);
-		var renderers = [];
-		var map = this.getObjRendererMap();
-		var rs = map.getValues();
-		var context = this.getObjContext();
+		var standaloneObj = obj.getStandaloneAncestor? obj.getStandaloneAncestor(): obj;
+		return renderer.isChemObjRenderedDirectlyBySelf(context, standaloneObj);
+	},
+	/** @private */
+	_getStandaloneRenderObjsInOperContext: function(objs)
+	{
 		var standAloneObjs = [];
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
@@ -1394,6 +1438,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				obj = obj.getStandaloneAncestor();
 			Kekule.ArrayUtils.pushUnique(standAloneObjs, obj);
 		}
+		return standAloneObjs;
+	},
+
+	/** @private */
+	_prepareRenderObjsInOperContext: function(objs)
+	{
+		//console.log('redirect objs', objs);
+		var renderers = [];
+		var map = this.getObjRendererMap();
+		var rs = map.getValues();
+		var context = this.getObjContext();
+		var standAloneObjs = this._getStandaloneRenderObjsInOperContext(objs);
 		/*
 		if (standAloneObjs.length)
 			console.log(standAloneObjs[0].getId(), standAloneObjs);
@@ -1432,7 +1488,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = renderers.length; i < l; ++i)
 			{
 				var renderer = renderers[i];
-				renderer.setRedirectContext(this.getOperContext());
+				this._setRendererToOperContext(renderer);
 				//console.log('begin context redirect', renderer.getClassName());
 				//console.log(renderer.getRedirectContext());
 			}
@@ -1456,12 +1512,24 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = renderers.length; i < l; ++i)
 			{
 				var renderer = renderers[i];
-				renderer.setRedirectContext(null);
+				//renderer.setRedirectContext(null);
+				this._unsetRendererToOperContext(renderer);
 				//console.log('end context redirect', renderer.getClassName());
 			}
 			this.clearOperContext();
 		}
 		this._operatingRenderers = null;
+	},
+
+	/** @private */
+	_setRendererToOperContext: function(renderer)
+	{
+		renderer.setRedirectContext(this.getOperContext());
+	},
+	/** @private */
+	_unsetRendererToOperContext: function(renderer)
+	{
+		renderer.setRedirectContext(null);
 	},
 
 	/////////////////////////////////////////////////////////////////////////////

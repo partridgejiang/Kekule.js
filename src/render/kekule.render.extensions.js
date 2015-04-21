@@ -229,6 +229,7 @@
 			if (o[prop] !== value)
 			{
 				o[prop] = value;
+				//console.log('render option set', prop);
 				// notify change
 				this.notifyPropSet('renderOptions', o);
 			}

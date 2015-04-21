@@ -854,9 +854,9 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.BasicMolManipulationIaController',
 	/** @constructs */
-	initialize: function($super, widget)
+	initialize: function($super, editor)
 	{
-		$super(widget);
+		$super(editor);
 		this.setEnableMagneticMerge(true);
 		this.setEnableNodeMerge(true);
 		this.setEnableNeighborNodeMerge(true);
@@ -1696,11 +1696,13 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	manipulateStepDone: function($super)
 	{
 		$super();
+		/*
 		if (this.getMergeOperations() || this._mergeJustReversed)  // merge operation just been applied or reversed
 		{
 			this.refreshManipulateObjs();
 			this._mergeJustReversed = false;
 		}
+		*/
 	},
 
 	/** @ignore */
@@ -1843,6 +1845,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.setMergingDests(mergingDests.length? mergingDests: null);
 
 		//console.log('[merge!!!!!]');
+		this.refreshManipulateObjs();
 		this._mergeJustReversed = false;
 	},
 	/** @private */
@@ -1872,6 +1875,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			this.getMergeOperations().length = utilIndex;
 			this._mergeJustReversed = true;   // a special flag
 			//console.log('reverse', this.getManipulateObjs());
+			this.refreshManipulateObjs();
 		}
 	},
 

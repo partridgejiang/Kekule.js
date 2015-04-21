@@ -1240,6 +1240,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		if (!editor)
 			editor = this.getEditor();
+		else
+			editor.setParent(this);
 		var self = this;
 		var commonActions = this.getCommonActions();
 		var chemActions = this.getChemActions();

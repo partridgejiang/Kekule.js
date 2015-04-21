@@ -410,7 +410,7 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		{
 			op.color = op.strokeColor = '#ff0000';
 		}
-		*/
+    */
 		return this.getDrawBridge().drawLine(this.getActualTargetContext(context), coord1, coord2, options);
 	},
 	drawArrowLine: function(context, coord1, coord2, arrowParams, options)

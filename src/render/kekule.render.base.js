@@ -466,6 +466,12 @@ Kekule.Render.ObjectUpdateType = {
  * @event
  */
 /**
+ * Invoked when whole chem object (molecule, reaction...) is prepared to be drawn in context.
+ *   event param of it has two fields: {context, obj}
+ * @name Kekule.Render.AbstractRenderer#prepareDrawing
+ * @event
+ */
+/**
  * Invoked when whole chem object (molecule, reaction...) is drawn in context.
  *   event param of it has two fields: {context, obj}
  * @name Kekule.Render.AbstractRenderer#draw
@@ -752,6 +758,8 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		this.updateDrawInfoInCache(this.getChemObj(), context, baseCoord, options, ops);
 
 		var isRoot = this.isRootRenderer();
+
+		this.invokeEvent('prepareDrawing', {'context': context, 'obj': this.getChemObj()});
 
 		//console.log('DRAW', isRoot);
 		if (isRoot)
