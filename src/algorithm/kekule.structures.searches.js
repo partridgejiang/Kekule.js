@@ -41,9 +41,9 @@ Kekule.ChemStructureSearcher = {
 	 *     level: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
 	 *     compareAtom: Bool, if false, all node will be regarded as same. Default is true.
 	 *     compareMass: Bool, whether mass number is compared. Default is false.
-	 *     compareCharge: Bool, default is false.
-	 *     compareBondOrder: Bool, default is true.
-	 *     compareStereo: Bool, default is false.
+	 *     compareCharge: Bool, whether charge of node is compared. Default is false.
+	 *     compareBondOrder: Bool, whether order of bond is compared. Default is true.
+	 *     compareStereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
 	 *   }
 	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
 	 *   Otherwise false will be returned.

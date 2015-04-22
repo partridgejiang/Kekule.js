@@ -814,27 +814,27 @@ ClassEx.extend(Kekule.StructureFragment, {
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @returns {Array} Array of all chiral nodes.
 	 */
-	perceiveChiralNodes: function(coordMode)
+	perceiveChiralNodes: function(coordMode, ignoreCanonicalization)
 	{
-		return Kekule.MolStereoUtils.perceiveChiralNodes(this, coordMode);
+		return Kekule.MolStereoUtils.perceiveChiralNodes(this, coordMode, ignoreCanonicalization);
 	},
 	/**
 	 * Detect and mark parity of all stereo connectors in structure fragment.
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @returns {Array} Array of all chiral nodes.
 	 */
-	perceiveStereoConnectors: function(coordMode)
+	perceiveStereoConnectors: function(coordMode, ignoreCanonicalization)
 	{
-		return Kekule.MolStereoUtils.perceiveStereoConnectors(this, coordMode);
+		return Kekule.MolStereoUtils.perceiveStereoConnectors(this, coordMode, ignoreCanonicalization);
 	},
 	/**
 	 * Detect and mark parity of all chiral nodes/connectors in structure fragment.
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @returns {Array} Array of all nodes and connectors with special stereo parities.
 	 */
-	perceiveStereos: function(coordMode)
+	perceiveStereos: function(coordMode, ignoreCanonicalization)
 	{
-		return Kekule.MolStereoUtils.perceiveStereos(this, coordMode);
+		return Kekule.MolStereoUtils.perceiveStereos(this, coordMode, ignoreCanonicalization);
 	}
 });
 

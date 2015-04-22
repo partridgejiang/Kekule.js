@@ -736,16 +736,20 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		this.setPropStoreFieldValue('enableStyleToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
-		$super(parentOrElementOrDocument);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
+		$super(parentOrElementOrDocument);
 
 		/*
 		if (!editor)
 			editor = this.createDefaultEditor();
 		*/
 		this.bindEditor();
-		this.createCommonToolbar();
-		this.createChemToolbar();
+
+		// tool bars may already be created by setting buttons property
+		if (!this.getCommonBtnGroup())
+			this.createCommonToolbar();
+		if (!this.getChemBtnGroup())
+			this.createChemToolbar();
 
 		// debug
 		//this.setShowInspector(true);
@@ -1042,6 +1046,12 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+	},
+
+	/** @ignore */
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('div');
@@ -1151,6 +1161,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			var commonRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem);
 		if (chemToolbarElem)
 			var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
+
+		if (!commonRect.width || !chemRect.width)  // rect is zero, the widget may not be displayed
+			return;
 
 		var style = commonToolbarElem.style;
 		style.top = '0px';

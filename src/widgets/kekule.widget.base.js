@@ -3064,7 +3064,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
 		this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
+		/*
+		this.reactPageShowBind = this.reactPageShow.bind(this);
 
+		if (window)
+			this.installWindowEventHandlers(window);
+		*/
 		Kekule.X.domReady(this.domReadyInit.bind(this));
 	},
 	/** @ignore */
@@ -3163,9 +3168,42 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	// global event handlers
+	/*
+	 * Install event handlers binding to current window.
+	 * @param {Window} target
+	 * @private
+	 */
+	/*
+	installWindowEventHandlers: function(target)
+	{
+		console.log('install window event');
+		if (!this._windowEventInstalled)
+		{
+			Kekule.X.Event.addListener(target, 'pageshow', this.reactPageShowBind);
+			this._windowEventInstalled = true;
+		}
+	},
+	*/
+	/*
+	 * Called when current window is shown. Notifies widgets in page that their show state may be changed.
+	 * @param {Object} e
+	 * @private
+	 */
+	/*
+	reactPageShow: function(e)
+	{
+		//console.log('widget page show');
+		var widgets = this.getWidgets();
+		for (var i = 0, l = widgets.length; i < l; ++i)
+		{
+			var w = widgets[i];
+			w.widgetShowStateChanged();
+		}
+	},
+	*/
 	/**
 	 * Install UI event (mousemove, click...) handlers to element.
-	 * @param {HTMLElement} element
+	 * @param {HTMLElement} target
 	 * @private
 	 */
 	installGlobalEventHandlers: function(target)

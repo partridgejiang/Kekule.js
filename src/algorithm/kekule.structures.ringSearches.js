@@ -324,10 +324,9 @@ ClassEx.extend(Kekule.ChemStructureObject, {
 	{
 		var result = [];
 		var parent = this.getParent();
-		if (parent && parent.getRingInfo)
+		if (parent && parent.findSSSR)
 		{
-			var ringInfo = parent.getRingInfo();
-			var sssrRings = ringInfo.sssrRings || [];
+			var sssrRings = parent.findSSSR();
 			for (var i = 0, l = sssrRings.length; i < l; ++i)
 			{
 				var ring = sssrRings[i];

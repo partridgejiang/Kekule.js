@@ -2794,7 +2794,13 @@ Kekule.IO.CmlMoleculeWriter = Class.create(Kekule.IO.CmlElementWriter,
 		if (charge)
 			Kekule.IO.CmlDomUtils.setCmlElemAttribute(result, 'formalCharge', charge, this.getDomHelper());
 		// TODO: radical was ignored, as CML do not have corresponding attribute
-
+		// parity
+		var parity = node.getParity? node.getParity(): null;
+		if (parity)  // stereo center, and if stereo center is perceived, the whole molecule should be standardized
+		{
+			//var neighbors = node.linkedChemNodes();
+			// TODO: how to handle atomRef4 attribute when there is a implicit H?
+		}
 		// title
 		var title = node.getInfoValue? node.getInfoValue('title'): null;
 		if (title)

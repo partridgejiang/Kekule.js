@@ -53,9 +53,12 @@ Kekule.MolStandardizer = {
 		if (op.doCanonicalization)
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
 		if (op.doAromaticPerception)
+		{
 			mol.perceiveAromaticRings();
+			//console.log('perceive aromatics');
+		}
 		if (op.doStereoPerception)
-			mol.perceiveStereos();
+			mol.perceiveStereos(null, true);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
 
 		return mol;
 	}

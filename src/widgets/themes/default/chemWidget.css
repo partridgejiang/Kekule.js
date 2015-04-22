@@ -319,14 +319,21 @@
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar
 {
     position: absolute;
-    /*top: 36px;*/
+    top: 37px;
     left: 0;
+}
+.K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,
+.K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button
+{
+    /* a default size for easy layout */
+    width: 48px;
+    height: 37px;
 }
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar,
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar
 {
     position: absolute;
-    /*left: 47px;*/
+    left: 48px;
     bottom: 0px;
 }
 /*
@@ -336,7 +343,7 @@
 }
 */
 
-. K-Chem-Composer-Toolbar
+.K-Chem-Composer-Toolbar
 {
     white-space: nowrap;
 }
