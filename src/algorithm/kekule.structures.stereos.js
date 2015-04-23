@@ -366,7 +366,8 @@ Kekule.MolStereoUtils = {
 				var neighbors = node.getLinkedChemNodes();
 				var multibonds = node.getLinkedMultipleBonds();
 				var hydroCount = node.getHydrogenCount ? node.getHydrogenCount() : 0;
-				if (multibonds.length > maxMultiBondCount || hydroCount >= 2 || neighbors.length + hydroCount < diffNeighborCount)
+				var allHydroCount = node.getHydrogenCount ? node.getHydrogenCount(true) : 0;
+				if (multibonds.length > maxMultiBondCount || allHydroCount >= 2 || neighbors.length + hydroCount < diffNeighborCount)
 					result = false;
 				else  // check cano index of neighbors, see whether they are different
 				{
@@ -375,7 +376,7 @@ Kekule.MolStereoUtils = {
 					for (var i = 0, l = neighbors.length; i < l; ++i)
 					{
 						var n = neighbors[i];
-						var canoIndex = n.getCanonicalizationIndex();
+						var canoIndex = n.getCanonicalizationIndex() || 0;
 						if (!canoIndexCounts[canoIndex])
 							canoIndexCounts[canoIndex] = 1;
 						else  // duplicate canoIndex
@@ -761,7 +762,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	_groupNodesByCanoIndex: function(nodes)
 	{
 		return AU.group(nodes, function(a, b) {
-			return a.getCanonicalizationIndex() - b.getCanonicalizationIndex();
+			return (a.getCanonicalizationIndex() || -1) - (b.getCanonicalizationIndex() || -1);
 		});
 	},
 	/** @private */

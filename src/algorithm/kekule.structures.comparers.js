@@ -47,15 +47,15 @@ Kekule.StructureComparationLevel = {
  *   N: object class, 1: Atom, 2: Pseudoatom, 3: VariableAtom, E: unspecified atom (atom not the in the previous three types), 0: other node.
  *   AAA: atom major property. Atomic number for usual atom, FFE for pseudoatom, FFF for variable atom, 000 for other types of node.
  *   BBB: atom mass number, if mass number is not specified, 000 will be used. For other node, this value is always 000.
- *   LL: Linked conector count.
+ *   LL: Linked conector count. Connector to hydrogen will not be considered.
  *   C: charge. 7 for a neutral node, 8 for +1, 9 for +2, 6 for -1, 5 for -2 and so on.
  *   P: parity. Stereo parity, 0 for no stereo, 1 for odd and 2 for even.
  *   H: Hydrogen count.
  *   [Fragment]:
  *   T: 0-F, object major type, always be 1 to a node.
  *   N: object class, 1: subgroup, 5: molecule, 0: other fragment.
- *   AAA: atom count in fragment. 000 for unknown.
- *   BBB: bond count in fragment, 000 for unknown.
+ *   AAA: atom count in fragment. 000 for unknown. Hydrogen atoms are ignored.
+ *   BBB: bond count in fragment, 000 for unknown. Bond to hydrogens are ignored.
  *   LL: Linked conector count.
  *   C: charge. 7 for a neutral node, 8 for +1, 9 for +2, 6 for -1, 5 for -2 and so on.
  *   P: parity. Stereo parity, 0 for no stereo, 1 for odd and 2 for even.
@@ -207,8 +207,8 @@ Kekule.UnivChemStructObjComparer = {
 		var result =  v1 - v2;
 		if ((result === 0) && (obj1.getNodes && obj2.getNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
 		{
-			var nodes1 = obj1.getNodes();
-			var nodes2 = obj2.getNodes();
+			var nodes1 = obj1.getNonHydrogenNodes(); // obj1.getNodes();
+			var nodes2 = obj2.getNonHydrogenNodes(); // obj2.getNodes();
 			result = nodes1.length - nodes2.length;
 			if (result === 0)
 			{
@@ -222,8 +222,8 @@ Kekule.UnivChemStructObjComparer = {
 		}
 		if ((result === 0) && (obj1.getConnectors && obj2.getConnectors))
 		{
-			var connectors1 = obj1.getConnectors();
-			var connectors2 = obj2.getConnectors();
+			var connectors1 = obj1.getNonHydrogenConnectors(); //obj1.getConnectors();
+			var connectors2 = obj2.getNonHydrogenConnectors(); //obj2.getConnectors();
 			result = connectors1.length - connectors2.length;
 			if (result === 0)
 			{
@@ -320,7 +320,7 @@ Kekule.UnivChemStructObjComparer = {
 		// Linked conector count
 		if (options.compareLinkedConnectorCount)
 		{
-			var vlinkedConnector = node.getLinkedConnectorCount();
+			var vlinkedConnector = node.getLinkedNonHydrogenConnectors().length; //node.getLinkedConnectorCount();
 			result += (vlinkedConnector << (4 * 4));
 		}
 
@@ -339,7 +339,7 @@ Kekule.UnivChemStructObjComparer = {
 		// hydrogen count
 		if (options.compareHydrogenCount)
 		{
-			var vhydrogen = node.getHydrogenCount? node.getHydrogenCount() || 0: 0;
+			var vhydrogen = node.getHydrogenCount? node.getHydrogenCount(true) || 0: 0;
 			result += vhydrogen;
 		}
 
@@ -372,7 +372,7 @@ Kekule.UnivChemStructObjComparer = {
 		return result;
 	},
 	/** @private */
-	getFragmentDetailCompareValue: function(fragment)
+	getFragmentDetailCompareValue: function(fragment, options)
 	{
 		var result = 0;
 		result += (fragment.getNodeCount() || 0) * U._P32 + (fragment.getConnectorCount() || 0) * U._P20;

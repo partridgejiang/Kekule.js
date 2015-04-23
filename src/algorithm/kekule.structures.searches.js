@@ -101,8 +101,8 @@ Kekule.ChemStructureSearcher = {
 			sourceMol.standardize(standardizeOps);
 		}
 
-		var targetStartingNode = subStructure.getNodeAt(0);
-		var srcNodes = sourceMol.getNodes();
+		var targetStartingNode = subStructure.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
+		var srcNodes = sourceMol.getNonHydrogenNodes(); //sourceMol.getNodes();
 		var srcNodeCount = srcNodes.length;
 		var srcIndex = 0;
 
@@ -219,8 +219,11 @@ Kekule.ChemStructureSearcher = {
 			return false;
 		else
 		{
-			var targetConnectorCount = targetNode.getLinkedConnectorCount();
-			var srcConnectorCount = srcNode.getLinkedConnectorCount();
+			var targetConnectors = targetNode.getLinkedNonHydrogenConnectors(); // AU.clone(targetNode.getLinkedConnectors());
+			var srcConnectors = srcNode.getLinkedNonHydrogenConnectors(); //AU.clone(srcNode.getLinkedConnectors());
+
+			var targetConnectorCount = targetConnectors.length;  //targetNode.getLinkedConnectorCount();
+			var srcConnectorCount = srcConnectors.length; //srcNode.getLinkedConnectorCount();
 			if (targetConnectorCount > srcConnectorCount)
 				return false;
 
@@ -237,8 +240,6 @@ Kekule.ChemStructureSearcher = {
 			var targetConnectors = AU.exclude(AU.clone(targetNode.getLinkedConnectors()), comparedTargetObjs);
 			var srcConnectors = AU.exclude(AU.clone(srcNode.getLinkedConnectors()), comparedSrcObjs);
 			*/
-			var targetConnectors = AU.clone(targetNode.getLinkedConnectors());
-			var srcConnectors = AU.clone(srcNode.getLinkedConnectors());
 
 			var targetComparedConnectors = AU.intersect(targetConnectors, dupComparedTargetObjs);
 			var srcComparedConnectors = AU.intersect(srcConnectors, dupComparedSrcObjs);
@@ -295,6 +296,7 @@ Kekule.ChemStructureSearcher = {
 	/** @private */
 	_compareConnector: function(targetConn, srcConn, comparedTargetObjs, comparedSrcObjs, compareOptions)
 	{
+		// targetConn and srcConn are surely not connected to hydrogen atom
 		/*
 		if (SM._isSameMappedObj(targetConn, srcConn, comparedTargetObjs, comparedSrcObjs))
 			return true;

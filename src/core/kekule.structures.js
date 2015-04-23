@@ -242,10 +242,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		}
 	},
 
-	/**
+	/*
 	 * Returns other objects connected to this one through all connectors.
 	 * @returns {Array}
 	 */
+	/*
 	getLinkedObjs: function()
 	{
 		var result = [];
@@ -261,6 +262,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		}
 		return result;
 	},
+	*/
 	/**
 	 * Returns other objects connected to this one through connector.
 	 * @returns {Array}
@@ -273,6 +275,63 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		{
 			if (objs[j] !== this)
 				Kekule.ArrayUtils.pushUnique(result, objs[j]);
+		}
+		return result;
+	},
+	/**
+	 * Returns connectors that connected to a non hydrogen node.
+	 * @returns {Array}
+	 */
+	getLinkedNonHydrogenConnectors: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			if (!connector.isNormalConnectorToHydrogen || !connector.isNormalConnectorToHydrogen())
+				Kekule.ArrayUtils.pushUnique(result, connector);
+		}
+		return result;
+	},
+	/**
+	 * Returns linked objects except hydrogen atoms.
+	 * @returns {Array}
+	 */
+	getLinkedNonHydrogenObjs: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			var objs = connector.getConnectedObjs();
+			for (var j = 0, k = objs.length; j < k; ++j)
+			{
+				if (objs[j] !== this && (!objs[j].isHydrogenAtom || !objs[j].isHydrogenAtom()))
+				{
+					Kekule.ArrayUtils.pushUnique(result, objs[j]);
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns linked hydrogen atoms.
+	 * @returns {Array}
+	 */
+	getLinkedHydrogenAtoms: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			var objs = connector.getConnectedObjs();
+			for (var j = 0, k = objs.length; j < k; ++j)
+			{
+				if (objs[j] !== this && (objs[j].isHydrogenAtom && objs[j].isHydrogenAtom()))
+				{
+					Kekule.ArrayUtils.pushUnique(result, objs[j]);
+				}
+			}
 		}
 		return result;
 	},
@@ -460,24 +519,6 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('linkedChemNodes', {
-			'dataType': DataType.ARRAY,
-			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC,
-			'setter': null,
-			'getter': function()
-			{
-				var linkedObjs = this.getLinkedObjs();
-				var result = [];
-				for (var i = 0, l = linkedObjs.length; i < l; ++i)
-				{
-					var obj = linkedObjs[i];
-					if (obj instanceof Kekule.ChemStructureNode)
-						result.push(obj);
-				}
-				return result;
-			}
-		});
 		this.defineProp('charge', {'dataType': DataType.FLOAT,
 			'getter': function() { return this.getPropStoreFieldValue('charge') || 0; }
 		});
@@ -509,6 +550,23 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	getPrimaryIsotope: function()
 	{
 		return null;
+	},
+	/**
+	 * Returns neighbor nodes linked to this node through proper connectors.
+	 * @param {Bool} ignoreHydrogenAtoms Whether explicit hydrogen atoms are returned. Default is false.
+	 * @return {Array}
+	 */
+	getLinkedChemNodes: function(ignoreHydrogenAtoms)
+	{
+		var linkedObjs = this.getLinkedObjs();
+		var result = [];
+		for (var i = 0, l = linkedObjs.length; i < l; ++i)
+		{
+			var obj = linkedObjs[i];
+			if (obj instanceof Kekule.ChemStructureNode && (!ignoreHydrogenAtoms || !obj.isHydrogenAtom || !obj.isHydrogenAtom()))
+				result.push(obj);
+		}
+		return result;
 	},
 	/**
 	 * Returns linked instances of {@link Kekule.Bond} to this node.
@@ -572,6 +630,15 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	{
 		//this.setParity(Kekule.StereoParity.NONE);
 		this.setPropStoreFieldValue('parity', Kekule.StereoParity.NONE);  // avoid invoke change event
+	},
+
+	/**
+	 * Returns whether this node is a H atom (but not D or T).
+	 * @returns {Bool}
+	 */
+	isHydrogenAtom: function()
+	{
+		return false;
 	}
 });
 
@@ -622,11 +689,19 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
-	 * Same as getExplicitHydrogenCount.
+	 * Returns hydrogen count linked to this atom.
+	 * Same as getExplicitHydrogenCount if includingBondedHydrogen is false.
+	 * @param {Bool} includingBondedHydrogen If true, hydrogen siblings will also be take into consideration.
 	 */
-	getHydrogenCount: function()
+	getHydrogenCount: function(includingBondedHydrogen)
 	{
-		return this.getExplicitHydrogenCount();
+		var result = this.getExplicitHydrogenCount() || 0;
+		if (includingBondedHydrogen)
+		{
+			var hatoms = this.getLinkedHydrogenAtoms();
+			result += hatoms.length || 0;
+		}
+		return result;
 	},
 	/**
 	 * Same as setExplicitHydrogenCount.
@@ -874,6 +949,12 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		return isotope? isotope.isNormalElement(): false;
 	},
 
+	/** @ignore */
+	isHydrogenAtom: function()
+	{
+		return this.isElement(1) && (!this.getMassNumber() || this.getMassNumber() <= 1);
+	},
+
 	/** @private */
 	_getCurrCovalentBondsInfo: function()
 	{
@@ -991,13 +1072,18 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 
 	/**
 	 * If explicitHydrogenCount is set, returns it, else returns implicit hydrogen count.
+	 * @param {Bool} includingBondedHydrogen
 	 */
-	getHydrogenCount: function()
+	getHydrogenCount: function(includingBondedHydrogen)
 	{
+		var result;
 		if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
-			return this.getImplicitHydrogenCount();
+			result = this.getImplicitHydrogenCount() || 0;
 		else
-			return this.getExplicitHydrogenCount();
+			result = this.getExplicitHydrogenCount() || 0;
+		if (includingBondedHydrogen)
+			result += this.getLinkedHydrogenAtoms().length || 0;
+		return result;
 	}
 });
 
@@ -1559,6 +1645,8 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
  * @property {Array} nodes All structure nodes in this connection table.
  * @property {Array} anchorNodes Nodes that can have bond connected to other structure nodes.
  * @property {Array} connectors Connectors (usually bonds) in this connection table.
+ * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this connection table.
+ * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this connection table.
  */
 Kekule.StructureConnectionTable = Class.create(ObjectEx,
 /** @lends Kekule.StructureConnectionTable# */
@@ -1613,6 +1701,41 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 
 		// Usually you are not to set connectors property directly. But some canonicalizers may need to replace the while connector field.
 		this.defineProp('connectors', {'dataType': DataType.ARRAY});
+
+		this.defineProp('nonHydrogenNodes', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC,
+			'serializable': false,
+			'setter': null,
+			'getter': function()
+			{
+				var result = [];
+				for (var i = 0, l = this.getNodeCount(); i < l; ++i)
+				{
+					var node = this.getNodeAt(i);
+					if (!node.isHydrogenAtom || !node.isHydrogenAtom())
+						result.push(node);
+				}
+				return result;
+			}
+		});
+		this.defineProp('nonHydrogenConnectors', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC,
+			'serializable': false,
+			'setter': null,
+			'getter': function()
+			{
+				var result = [];
+				for (var i = 0, l = this.getConnectorCount(); i < l; ++i)
+				{
+					var conn = this.getConnectorAt(i);
+					if (!conn.isNormalConnectorToHydrogen || !conn.isNormalConnectorToHydrogen())
+						result.push(conn);
+				}
+				return result;
+			}
+		});
 	},
 	/** @private */
 	initPropValues: function()
@@ -2925,6 +3048,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
  * @property {Array} anchorNodes Nodes that can have bond connected to other structure nodes.
  * @property {Array} connectors Connectors (usually bonds) in this container.
  * @property {Array} crossConnectors Connectors outside the fragment connected to nodes inside fragment. Read only.
+ * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this fragment.
+ * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this fragment.
  */
 Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 /** @lends Kekule.StructureFragment# */
@@ -3079,6 +3204,26 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					}
 					return result;
 				}
+		});
+		this.defineProp('nonHydrogenNodes', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC,
+			'serializable': false,
+			'setter': null,
+			'getter': function()
+			{
+				return this.hasCtab()? this.getCtab().getNonHydrogenNodes(): [];
+			}
+		});
+		this.defineProp('nonHydrogenConnectors', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC,
+			'serializable': false,
+			'setter': null,
+			'getter': function()
+			{
+				return this.hasCtab()? this.getCtab().getNonHydrogenConnectors(): [];
+			}
 		});
 		this.defineProp('canonicalizationInfo', {
 			'dataType': DataType.OBJECT,
@@ -4768,6 +4913,30 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 	clearStructureFlags: function()
 	{
 		this.setParity(Kekule.StereoParity.NONE);
+	},
+	/**
+	 * Returns connected objects except hydrogen atoms.
+	 * @returns {Array}
+	 */
+	getConnectedNonHydrogenObjs: function()
+	{
+		var result = [];
+		var objs = this.getConnectedObjs();
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (!obj.isHydrogenAtom || !obj.isHydrogenAtom())
+				result.push(obj);
+		}
+		return result;
+	},
+	/**
+	 * Whether this connector connect hydrogen atom to another node.
+	 * @returns {Bool}
+	 */
+	isNormalConnectorToHydrogen: function()
+	{
+		return this.getConnectedNonHydrogenObjs().length <= 1;
 	}
 });
 

@@ -454,12 +454,13 @@ Kekule.GraphAdaptUtils = {
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
 	 *   }
 	 * @returns {Kekule.Graph} Original node and connector can be retrieved by vertexOrEdge.getData('object').
 	 */
 	ctabToGraph: function(connTab, graph, options)
 	{
-		var op = Object.extend({expandSubStructures: true}, options || {});
+		var op = Object.extend({expandSubStructures: true, ignoreBondedHydrogen: true}, options || {});
 		var ctab = connTab;
 		var AU = Kekule.ArrayUtils;
 		var result = null;
@@ -498,6 +499,8 @@ Kekule.GraphAdaptUtils = {
 					if (op.bondTypes.indexOf(connector.getBondType()) < 0)
 						continue;
 				}
+				if (op.ignoreBondedHydrogen && connector.isNormalConnectorToHydrogen && connector.isNormalConnectorToHydrogen())
+					continue;
 
 				var connNodes = [];
 				var connectedObjs = expandSub? connector.getConnectedObjs(): connector.getConnectedSiblings();
@@ -539,6 +542,7 @@ Kekule.GraphAdaptUtils = {
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
 	 *   }
 	 * @returns {Kekule.Graph}
 	 */
