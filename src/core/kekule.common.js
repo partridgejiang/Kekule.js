@@ -14,7 +14,7 @@
 
 (function(){
 
-var OT = Kekule.OBJDEF_TEXTS;
+//var OT = Kekule.OBJDEF_TEXTS;
 
 // modify defineProp method of ObjectEx, add auto title/description supports
 if (Kekule.PROP_AUTO_TITLE)
@@ -29,11 +29,11 @@ if (Kekule.PROP_AUTO_TITLE)
 			{
 				className = className.substr(7);
 			}
-			var textObj = Object.getCascadeFieldValue(className, OT);
+			var textObj = Object.getCascadeFieldValue(className, Kekule.OBJDEF_TEXTS);
 			if (textObj)
 			{
-				var titleField = OT.TITLE_PREFIX + propName;
-				var desField = OT.DESCRIPTION_PREFIX + propName;
+				var titleField = Kekule.OBJDEF_TEXTS.TITLE_PREFIX + propName;
+				var desField = Kekule.OBJDEF_TEXTS.DESCRIPTION_PREFIX + propName;
 				options.title = textObj[titleField];
 				options.description = textObj[desField];
 			}

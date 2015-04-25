@@ -44,8 +44,8 @@ var kekuleFiles = {
 			'utils/kekule.domUtils.js',
 			'utils/kekule.domHelper.js',
 			'utils/kekule.textHelper.js'
-		],
-		'minFile': 'root.min.js'
+		]
+		//'minFile': 'root.min.js'
 	},
 
 	'localization': {
