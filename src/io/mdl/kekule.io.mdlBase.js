@@ -379,8 +379,14 @@ Kekule.IO.MdlStructureUtils = {
 				}
 				result = new Kekule.Atom(null, atomInfo.symbol, massNumber);
 			}
-			else // has no element info, create a pseudo atom
-				result = new Kekule.Pseudoatom(null, Kekule.PseudoatomType.ANY);
+			else  // may be an isotope alias
+			{
+				var isoInfo = Kekule.IsotopesDataUtil.getIsotopeInfo(atomInfo.symbol);
+				if (isoInfo)
+					result = new Kekule.Atom(null, isoInfo.atomicNumber, isoInfo.massNumber);
+				else // has no element info, create a pseudo atom
+					result = new Kekule.Pseudoatom(null, Kekule.PseudoatomType.ANY);
+			}
 		}
 
 		// then node detail, coordinate, hydrongenCount and charge

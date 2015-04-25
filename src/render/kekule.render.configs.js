@@ -191,6 +191,10 @@ Kekule.Render.DisplayLabelConfigs = Class.create(Kekule.AbstractConfigs,
 	initProperties: function()
 	{
 		var NL = Kekule.ChemStructureNodeLabels;
+		this.addBoolConfigProp('enableIsotopeAlias', NL.ENABLE_ISOTOPE_ALIAS, {
+			'getter': function() { return NL.ENABLE_ISOTOPE_ALIAS; },
+			'setter': function(value) { NL.ENABLE_ISOTOPE_ALIAS = value; }
+		});
 		this.addStrConfigProp('unsetElement', NL.UNSET_ELEMENT, {
 			'getter': function() { return NL.UNSET_ELEMENT; },
 			'setter': function(value) { if (value) NL.UNSET_ELEMENT = value; }

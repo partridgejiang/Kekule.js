@@ -129,6 +129,40 @@ Kekule.ChemicalElementsDataUtil = {
 	}
 };
 
+/** @ignore */
+Kekule.IsotopeAliasUtil = {
+	enableAlias: true,
+	ALIAS: [
+		{'alias': 'D', 'atomicNumber': 1, 'massNumber': 2}
+	],
+	getAllAlias: function()
+	{
+		return Kekule.IsotopeAliasUtil.enableAlias? Kekule.IsotopeAliasUtil.ALIAS: [];
+	},
+	getAliasInfo: function(alias)
+	{
+		var as = Kekule.IsotopeAliasUtil.getAllAlias();
+		for (var i = 0, l = as.length; i < l; ++i)
+		{
+			var a = as[i];
+			if (a.alias === alias)
+				return Object.extend(Kekule.IsotopesDataUtil.getIsotopeInfo(a.atomicNumber, a.massNumber), {'isotopeAlias': alias});
+		}
+		return null;
+	},
+	getAlias: function(atomicNumber, massNumber)
+	{
+		var as = Kekule.IsotopeAliasUtil.getAllAlias();
+		for (var i = 0, l = as.length; i < l; ++i)
+		{
+			var a = as[i];
+			if (a.atomicNumber === atomicNumber && a.massNumber === massNumber)
+				return a.alias;
+		}
+		return null;
+	}
+};
+
 /**
  *  A class with static methods to get information from kekule.isotopesData.js JSON data.
  *  @class Kekule.IsotopeDataUtil
@@ -175,17 +209,31 @@ Kekule.IsotopesDataUtil = {
 	{
 		var result = null;
 		var atomicNumber;
+		if (!massNumber && typeof(symbolOrAtomicNumber) === 'string')  // check alias first
+		{
+			result = Kekule.IsotopeAliasUtil.getAliasInfo(symbolOrAtomicNumber);
+			if (result)
+				return result;
+		}
+
 		var isotopes = Kekule.IsotopesDataUtil.getAllIsotopeInfos(symbolOrAtomicNumber);
 		if (isotopes)
 		{
-			for (var j = 0, k = isotopes.length; j < k; ++j)
+			if (massNumber)
 			{
-				result = isotopes[j];
-				if (result && (result.massNumber == massNumber))
+				for (var j = 0, k = isotopes.length; j < k; ++j)
 				{
-					return result;
+					result = isotopes[j];
+					if (result && (result.massNumber == massNumber))
+					{
+						break;
+					}
 				}
 			}
+			else if (isotopes.length === 1)
+				result = isotopes[0];
+			if (result)
+				return result;
 		}
 		return null;
 	},
@@ -196,8 +244,8 @@ Kekule.IsotopesDataUtil = {
 	 */
 	getIsotopeInfoById: function(isotopeId)
 	{
-		var detail = Kekule.IsotopeDataUtil.getIsotopeIdDetail(isotopeId);
-		return Kekule.IsotopeDataUtil.getIsotopeInfo(detail.symbol, detail.massNumber);
+		var detail = Kekule.IsotopesDataUtil.getIsotopeIdDetail(isotopeId);
+		return Kekule.IsotopesDataUtil.getIsotopeInfo(detail.symbol, detail.massNumber);
 	},
 	/**
 	 * Check if mass number is legal for an element
@@ -218,9 +266,26 @@ Kekule.IsotopesDataUtil = {
 	 */
 	getIsotopeId: function(symbolOrAtomicNumber, massNumber)
 	{
+		// check if symbol is isotope alias
+		{
+			if (typeof(symbolOrAtomicNumber) === 'string' && !massNumber)
+			{
+				var isoInfo = Kekule.IsotopeAliasUtil.getAliasInfo(symbolOrAtomicNumber);
+				if (isoInfo)
+					return symbolOrAtomicNumber;  // return alias directly
+			}
+			else
+			{
+				var alias = Kekule.IsotopeAliasUtil.getAlias(symbolOrAtomicNumber, massNumber);
+				if (alias)
+					return alias;
+			}
+		}
 		var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(symbolOrAtomicNumber);
 		if (!elemInfo)
+		{
 			return null;
+		}
 		var symbol = elemInfo.symbol;
 		if (massNumber)
 			return symbol + massNumber.toString();
@@ -260,6 +325,9 @@ Kekule.IsotopesDataUtil = {
 	isIsotopeIdAvailable: function(id)
 	{
 		var d = Kekule.IsotopesDataUtil.getIsotopeIdDetail(id);
+		// check alias first
+		if (!!Kekule.IsotopeAliasUtil.getAliasInfo(id))
+			return true;
 		var result = Kekule.ChemicalElementsDataUtil.isElementSymbolAvailable(d.symbol);
 		if (result && d.massNum)
 		{

@@ -2606,7 +2606,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			result = this._createPeriodicTableDialogWidget(doc, parentElem);
 			this.setPeriodicTableDialog(result);
 		}
-		console.log(result);
+		//console.log(result);
 		return result;
 	},
 	/** @private */
@@ -2732,8 +2732,11 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		}
 		else
 		{
-			nodeClass = Kekule.Atom;
-			modifiedProps = {'isotopeId': text};
+			nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(text); //Kekule.Atom;
+			modifiedProps = (nodeClass === Kekule.Atom)? {'isotopeId': text}:
+				(nodeClass === Kekule.Pseudoatom)? {'symbol': text}:
+				{};
+
 		}
 		this.applyModification(atom, nodeClass, modifiedProps);
 	},

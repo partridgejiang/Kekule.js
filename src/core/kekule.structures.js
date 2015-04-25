@@ -805,7 +805,8 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			'getter': function()
 				{
 					var i = this.getIsotope();
-					return i? i.getSymbol(): Kekule.Element.UNSET_ELEMENT;
+					var result = i? i.getSymbol(): Kekule.Element.UNSET_ELEMENT;
+					return result;
 				},
 			'setter': function(value) { this.changeElement(value); }
 		});
@@ -833,6 +834,18 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				{
 					this.changeMassNumber(value);
 				}
+		});
+		this.defineProp('isotopeAlias', {
+			'dataType': DataType.STRING,
+			'getter': function()
+			{
+				var i = this.getIsotope();
+				return i? i.getIsotopeAlias(): undefined;
+			},
+			'setter': function(value)
+			{
+				this.changeElement(value);
+			}
 		});
 		this.defineProp('atomType', {
 			'dataType': DataType.OBJECT,
@@ -5946,8 +5959,14 @@ Kekule.MoleculeList = Class.create(Kekule.ChemObjList,
  * @class
  */
 Kekule.ChemStructureNodeLabels = {
+	/** Whether display isotope alias (e.g., D instead of 2H). */
+	ENABLE_ISOTOPE_ALIAS: true,
+
 	/** Label for unset element. */
 	UNSET_ELEMENT: '?',
+
+	/* Label for deuterium */
+	//DEUTERIUM: 'D',
 
 	// for Pseudoatom
 	/** Label for dummy atom. */
@@ -5985,14 +6004,14 @@ Kekule.ChemStructureNodeFactory = {
 	/** @private */
 	CANDIDATE_CLASSES: [Kekule.SubGroup, Kekule.VariableAtom, Kekule.Pseudoatom /*, Kekule.Atom*/],
 
-	createByLabel: function(label)
+	getClassByLabel: function(label)
 	{
 		var NL = Kekule.ChemStructureNodeLabels;
 		var candidateLabels = [
 			[NL.SUBGROUP],
 			[NL.VARIABLE_ATOM],
 			[NL.DUMMY_ATOM, NL.HETERO_ATOM, NL.ANY_ATOM, NL.CUSTOM_ATOM]
-			]
+		]
 		var classes = Kekule.ChemStructureNodeFactory.CANDIDATE_CLASSES;
 		var cclass;
 		for (var i = 0, l = classes.length; i < l; ++i)
@@ -6007,16 +6026,29 @@ Kekule.ChemStructureNodeFactory = {
 		}
 		if (!cclass)  // class not found, use default one, atom or custom pseudoatom
 		{
+			/*
+			if (label === Kekule.ChemStructureNodeLabels.DEUTERIUM)
+				cclass = Kekule.Atom;
+			else
+			*/
 			if (Kekule.IsotopesDataUtil.isIsotopeIdAvailable(label))
 				cclass = Kekule.Atom;
 			else
 				cclass = Kekule.Pseudoatom;
 		}
+		return cclass;
+	},
+
+	createByLabel: function(label)
+	{
+		var cclass = Kekule.ChemStructureNodeFactory.getClassByLabel(label);
 		var result = new cclass();
 		if (result instanceof Kekule.Pseudoatom)
 			result.setSymbol(label);
 		else if (result instanceof Kekule.Atom)
+		{
 			result.setIsotopeId(label);
+		}
 		return result;
 	}
 }

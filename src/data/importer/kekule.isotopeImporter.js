@@ -14,19 +14,19 @@ if (!window.Kekule)
 	Kekule = {};
 
 /**
- *  An class with static methods to load content of isotopes.xml from CDK 
+ *  An class with static methods to load content of isotopes.xml from CDK
  *  and save data into a JSON text.
  *  @class Kekule.IsotopesImporter
  */
 Kekule.IsotopesImporter = {
-	/** 
+	/**
 	 *  Load isotopes.xml string.
 	 *  @param {String} data The source xml string.
 	 *  @param {Object} options A hash object to set options of importing. Can include the following fields:
 	 *  	{
 	 *  		includeElems: {Array} an array to hold element symbols, only isotopes of those elements need to be imported
 	 *  	}
-	 *  @returns {Object} A JavaScript object to hold all data. 
+	 *  @returns {Object} A JavaScript object to hold all data.
 	 */
 	loadXmlData: function(data, options)
 	{
@@ -88,6 +88,8 @@ Kekule.IsotopesImporter = {
 							obj.halfLife = parseFloat(propValue);  // in second
 						else
 							obj[propName] = propValue;
+						// append atomic number in each isotope entry
+						obj.atomicNumber = elementObj.atomicNumber;
 					}
 				}
 				elementObj.isotopes.push(obj);
@@ -98,17 +100,17 @@ Kekule.IsotopesImporter = {
 		//console.log(result);
 		return result;
 	},
-	
+
 	/**
 	 *  Save imported JS object to a JSON string.
 	 *  @param {Object} obj Imported JavaScript object.
-	 *  @returns {String} JSON string. 
+	 *  @returns {String} JSON string.
 	 */
 	saveObjToStr: function(obj)
 	{
 		return JsonUtility.serializeToStr(obj);
 	},
-	
+
 	import: function(src, options)
 	{
 		var obj = Kekule.IsotopesImporter.loadXmlData(src, options);

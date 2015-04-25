@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<molecule xmlns="http://www.xml-cml.org/schema">
+<atomArray>
+<atom elementType="C" id="a2" x2="11.4425" y2="-14.1357"/>
+<atom elementType="C" id="a3" x2="11.4425" y2="-15.6586"/>
+<atom elementType="C" hydrogenCount="2" id="a4" isotope="13" x2="12.7615" y2="-16.4201"/>
+<atom elementType="C" id="a5" x2="14.0803" y2="-15.6586"/>
+<atom elementType="C" id="a6" x2="14.0803" y2="-14.1357"/>
+<atom elementType="C" id="a7" x2="12.7615" y2="-13.3742"/>
+<atom elementType="H" hydrogenCount="0" id="a8" isotope="2" x2="15.3992" y2="-13.3742"/>
+<atom elementType="H" hydrogenCount="0" id="a9" isotope="2" x2="9.55423" y2="-13.0456"/>
+</atomArray>
+<bondArray>
+<bond atomRefs2="a2 a3" id="b10" order="1"/>
+<bond atomRefs2="a3 a4" id="b11" order="1"/>
+<bond atomRefs2="a4 a5" id="b12" order="1"/>
+<bond atomRefs2="a5 a6" id="b13" order="1"/>
+<bond atomRefs2="a6 a7" id="b14" order="1"/>
+<bond atomRefs2="a7 a2" id="b15" order="1"/>
+<bond atomRefs2="a6 a8" id="b16" order="1"/>
+<bond atomRefs2="a2 a9" bondStereo="W" id="b17" order="1"/>
+</bondArray>
+</molecule>

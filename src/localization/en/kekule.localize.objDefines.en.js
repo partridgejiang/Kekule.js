@@ -52,6 +52,8 @@ Kekule.OBJDEF_TEXTS.en = {
 			DES_partialChargeDecimalsLength: 'If an atom has a partical charge (e.g., +1.5), how many digits after decimal point should be displayed'
 		},
 		DisplayLabelConfigs: {
+			TITLE_enableIsotopeAlias: 'Enable isotope alias',
+			DES_enableIsotopeAlias: 'Whether isotope alias (e.g. D for 2H) is used to display atom label.',
 			TITLE_unsetElement: 'Unset element',
 			DES_unsetElement: 'Label for unset or unknown element',
 			TITLE_dummyAtom: 'Dummy atom',

@@ -932,21 +932,34 @@
 		{
 			var R = Kekule.Render;
 			var result = R.RichTextUtils.createGroup();
-			// if isotope is assigned, use <sup>13</sup>C form, otherwise, use atom symbol only.
-			if (this.getSymbol() !== K.Element.UNSET_ELEMENT)
+			// if isotope is assigned, use <sup>13</sup>C form or isotope alias (such as D), otherwise, use atom symbol only.
+			var isotopeAlias = this.getIsotopeAlias();
+			var symbol = this.getSymbol();
+
+			if (isotopeAlias || this.getSymbol() !== K.Element.UNSET_ELEMENT)
 			{
-				var section = R.RichTextUtils.createSection(this.getSymbol(), {'charDirection': Kekule.Render.TextDirection.LTR});
-				result = R.RichTextUtils.append(result, section);
-				result.anchorItem = section;
-				if (this.getMassNumber() !== Kekule.Isotope.UNSET_MASSNUMBER)
+				var section;
+				if (isotopeAlias && Kekule.ChemStructureNodeLabels.ENABLE_ISOTOPE_ALIAS)
 				{
-					// mass number as superscript
-					result = R.RichTextUtils.insertText(result, 0, this.getMassNumber().toString(), {
-						'textType': R.RichText.SUP,
-						'charDirection': Kekule.Render.TextDirection.LTR,
-						'refItem': result.anchorItem
-					});
-					result.charDirection = Kekule.Render.TextDirection.LTR;
+					section = R.RichTextUtils.createSection(this.getIsotopeAlias(), {'charDirection': Kekule.Render.TextDirection.LTR});
+					result = R.RichTextUtils.append(result, section);
+					result.anchorItem = section;
+				}
+				else
+				{
+					section = R.RichTextUtils.createSection(this.getSymbol(), {'charDirection': Kekule.Render.TextDirection.LTR});
+					result = R.RichTextUtils.append(result, section);
+					result.anchorItem = section;
+					if (this.getMassNumber() !== Kekule.Isotope.UNSET_MASSNUMBER)
+					{
+						// mass number as superscript
+						result = R.RichTextUtils.insertText(result, 0, this.getMassNumber().toString(), {
+							'textType': R.RichText.SUP,
+							'charDirection': Kekule.Render.TextDirection.LTR,
+							'refItem': result.anchorItem
+						});
+						result.charDirection = Kekule.Render.TextDirection.LTR;
+					}
 				}
 			}
 			else // no element assigned

@@ -173,6 +173,9 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 			&& (this.getAtomicNumber() !== 6) && (this.getAtomicNumber() !== 1); // not C/H
 	}
 });
+// Copy all methods of Kekule.ChemicalElementsDataUtil to Element as shortcut
+Object.extend(Kekule.Element, Kekule.ChemicalElementsDataUtil);
+
 
 /**
  * Indicate the atomic number is unset and this is a unknown element.
@@ -191,6 +194,11 @@ Kekule.Element.DUMMY_ELEMENT_ATOMICNUM = -1;
  */
 Kekule.Element.RGROUP_ELEMENT = 'R';
 Kekule.Element.RGROUP_ELEMENT_ATOMICNUM = -2;
+/**
+ * Label for deuterium.
+ * @constant
+ */
+Kekule.Element.DEUTERIUM = 'D';
 /**
  * Check if symbolOrAtomicNumber is a normal element (not pseudo one, not unset one).
  * @function
@@ -301,6 +309,7 @@ Object.extend(Kekule.Element,
  * @property {Int} massNumber The mass number of isotope. Read only. Setting to null means a genenral element.
  * @property {Float} exactMass Read only.
  * @property {Float} naturalAbundance Read only.
+ * @property {String} isotopeAlias Alias of isotope (such as D for H2). Read only.
  */
 Kekule.Isotope = Class.create(Kekule.Element,
 /** @lends Kekule.Isotope# */
@@ -314,18 +323,32 @@ Kekule.Isotope = Class.create(Kekule.Element,
 	 */
 	initialize: function($super, symbolOrAtomicNumber, massNumber)
 	{
-		$super(symbolOrAtomicNumber);
-		this.setPropStoreFieldValue('massNumber', massNumber);
+		var atomicNum = symbolOrAtomicNumber;
+		var massNum = massNumber;
+		// check if symbol is isotope alias
+		var isoInfo = Kekule.IsotopesDataUtil.getIsotopeInfo(symbolOrAtomicNumber, massNumber);
+		if (isoInfo)
+		{
+			//console.log(isoInfo);
+			if (isoInfo.atomicNumber)
+				atomicNum = isoInfo.atomicNumber;
+			massNum = isoInfo.massNumber;
+		}
+
+		$super(atomicNum);
+		this.setPropStoreFieldValue('massNumber', massNum);
+		if (isoInfo && isoInfo.isotopeAlias)
+			this.setPropStoreFieldValue('isotopeAlias', isoInfo.isotopeAlias);
 		/*
 		if ((symbolOrAtomicNumber != Kekule.Element.UNSET_ELEMENT)
 			&& (!Kekule.Element.isPseudoElement(symbolOrAtomicNumber))
 			&& (massNumber != Kekule.Isotope.UNSET_MASSNUMBER))
 		*/
-		if (Kekule.Element.isNormalElement(symbolOrAtomicNumber)
-			&& (massNumber !== Kekule.Isotope.UNSET_MASSNUMBER))
+		if (Kekule.Element.isNormalElement(atomicNum)
+			&& (massNum !== Kekule.Isotope.UNSET_MASSNUMBER))
 		{
 			// get rest of properties' value from isotope data
-			var isotopeInfo = Kekule.IsotopesDataUtil.getIsotopeInfo(this.getAtomicNumber(), massNumber);
+			var isotopeInfo = Kekule.IsotopesDataUtil.getIsotopeInfo(this.getAtomicNumber(), massNum);
 			if (isotopeInfo)
 			{
 				this.setPropStoreFieldValue('exactMass', isotopeInfo.exactMass);
@@ -345,7 +368,18 @@ Kekule.Isotope = Class.create(Kekule.Element,
 		this.defineProp('massNumber', {'dataType': DataType.INTEGER, 'serializable': false, 'setter': null});
 		this.defineProp('exactMass', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null});
 		this.defineProp('naturalAbundance', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null});
+		this.defineProp('isotopeAlias', {'dataType': DataType.STRING, 'serializable': false, 'setter': null});
 	},
+	/* @ignore */
+	/*
+	doGetSymbol: function($super)
+	{
+		if (this.getAtomicNumber() === 1 && this.getMassNumber() === 2)  // DEUTERIUM
+			return Kekule.Element.DEUTERIUM;
+		else
+			return $super();
+	},
+	*/
 	/**
 	 * Check if obj is the same isotope with this one.
 	 * @param {Object} obj
@@ -370,6 +404,9 @@ Kekule.Isotope = Class.create(Kekule.Element,
 		return Kekule.IsotopesDataUtil.getIsotopeId(this.getAtomicNumber(), this.getMassNumber());
 	}
 });
+
+// Copy all methods of Kekule.IsotopesDataUtil to Isotope as shortcut
+Object.extend(Kekule.Isotope, Kekule.IsotopesDataUtil);
 
 
 /**
