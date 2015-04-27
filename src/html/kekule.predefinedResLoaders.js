@@ -85,7 +85,7 @@ Kekule.PredefinedResLoader = Class.create(ObjectEx,
 		}
 		*/
 		if (!resUri)
-			Kekule.Error(Kekule.ErrorMsg.EMPTY_RESURI);
+			Kekule.Error(/*Kekule.ErrorMsg.EMPTY_RESURI*/Kekule.$L('ErrorMsg.EMPTY_RESURI'));
 		else
 		{
 			this.setPropStoreFieldValue('resUri', resUri);

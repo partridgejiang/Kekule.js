@@ -288,9 +288,15 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	_getPredefinedButtonInfo: function(btnName)
 	{
 		var DB = Kekule.Widget.DialogButtons;
-		var WT = Kekule.WidgetTexts;
+		//var WT = Kekule.WidgetTexts;
 		var btnNames = [DB.OK, DB.CANCEL, DB.YES, DB.NO];
-		var btnTexts = [WT.CAPTION_OK, WT.CAPTION_CANCEL, WT.CAPTION_YES, WT.CAPTION_NO];
+		var btnTexts = [
+			//WT.CAPTION_OK, WT.CAPTION_CANCEL, WT.CAPTION_YES, WT.CAPTION_NO
+			Kekule.$L('WidgetTexts.CAPTION_OK'),
+			Kekule.$L('WidgetTexts.CAPTION_CANCEL'),
+			Kekule.$L('WidgetTexts.CAPTION_YES'),
+			Kekule.$L('WidgetTexts.CAPTION_NO')
+		];
 		var index = btnNames.indexOf(btnName);
 		return (index >= 0)? {'text': btnTexts[index]}: null;
 	},

@@ -375,7 +375,7 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 		var s = line.substr(33, 6).trim();
 		if (s != Kekule.IO.MDL.VER2000) // wrong version flag, it may be not a CTAB 2000, raise exception
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_MDL2000_FORMAT_DATA);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL2000_FORMAT_DATA*/Kekule.$L('ErrorMsg.NOT_MDL2000_FORMAT_DATA'));
 			return null;
 		}
 		// aaa: number of atoms

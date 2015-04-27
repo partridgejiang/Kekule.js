@@ -18,16 +18,6 @@ function kekuleRequire(libName)
 {
 	// inserting via DOM fails in Safari 2.0, so brute force approach
   document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
-	/*
-	var elem = document.createElement('script');
-	elem.setAttribute('type', 'text/javascript');
-	elem.src = libName;
-	//document.body.appendChild(elem);
-	var headElem = document.getElementsByTagName('head')[0];
-	var parentElem = headElem || document.body;
-	console.log('insert to ', parentElem.tagName, libName);
-	parentElem.appendChild(elem);
-	*/
 }
 
 var kekuleFiles = {
@@ -61,10 +51,11 @@ var kekuleFiles = {
 	'localization': {
 		'requires': ['lan', 'root'],
 		'files': [
-			'localization/kekule.localizations.js',
 			'localization/en/kekule.localize.en.js',
 			'localization/en/kekule.localize.widget.en.js',
-			'localization/en/kekule.localize.objDefines.en.js'
+			'localization/en/kekule.localize.objDefines.en.js',
+
+			'localization/kekule.localizations.js'
 		]
 	},
 
@@ -180,7 +171,6 @@ var kekuleFiles = {
 			'widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewerGrids.js',
-
 			'widgets/chem/editor/kekule.chemEditor.extensions.js',
 			'widgets/chem/editor/kekule.chemEditor.baseEditors.js',
 			'widgets/chem/editor/kekule.chemEditor.operations.js',

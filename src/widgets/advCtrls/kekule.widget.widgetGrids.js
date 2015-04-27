@@ -306,8 +306,8 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		//interElem.appendChild(p);
 		if (isAddCell)
 		{
-			p.innerHTML = Kekule.WidgetTexts.CAPTION_ADD_CELL;
-			p.title = Kekule.WidgetTexts.HINT_ADD_CELL;
+			p.innerHTML = Kekule.$L('WidgetTexts.CAPTION_ADD_CELL'); //Kekule.WidgetTexts.CAPTION_ADD_CELL;
+			p.title = Kekule.$L('WidgetTexts.HINT_ADD_CELL'); //Kekule.WidgetTexts.HINT_ADD_CELL;
 		}
 
 		cell.appendChild(p);
@@ -344,8 +344,8 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	createCellInteractionWidgets: function(parentElem, cellElem)
 	{
 		var btn = new Kekule.Widget.Button(parentElem.ownerDocument);
-		btn.setText(Kekule.WidgetTexts.CAPTION_REMOVE_CELL);
-		btn.setHint(Kekule.WidgetTexts.HINT_REMOVE_CELL);
+		btn.setText(/*Kekule.WidgetTexts.CAPTION_REMOVE_CELL*/Kekule.$L('WidgetTexts.CAPTION_REMOVE_CELL'));
+		btn.setHint(/*Kekule.WidgetTexts.HINT_REMOVE_CELL*/Kekule.$L('WidgetTexts.HINT_REMOVE_CELL'));
 		btn.addClassName(CNS.WIDGET_GRID_BUTTON_REMOVE);
 		btn[this.BTN_REMOVE_CELL_FIELD] = true;
 		var widget = this.getContainingWidget(cellElem);

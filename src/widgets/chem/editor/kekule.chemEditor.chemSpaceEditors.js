@@ -28,7 +28,7 @@
 
 var AU = Kekule.ArrayUtils;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
@@ -2478,32 +2478,32 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		// R group
 		result.push({
 			'nodeLabel': labelConfigs.getRgroup(), 'nodeClass': Kekule.RGroup,
-			'description': Kekule.ChemWidgetTexts.CAPTION_RGROUP
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_RGROUP') //Kekule.ChemWidgetTexts.CAPTION_RGROUP
 		});
 		// Kekule.Pseudoatom
 		result.push({
 			'nodeLabel': labelConfigs.getDummyAtom(), 'nodeClass': Kekule.Pseudoatom,
 			'props': {'atomType': Kekule.PseudoatomType.DUMMY},
-			'description': Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_DUMMY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
 		});
 		result.push({
 			'nodeLabel': labelConfigs.getHeteroAtom(), 'nodeClass': Kekule.Pseudoatom,
 			'props': {'atomType': Kekule.PseudoatomType.HETERO},
-			'description': Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_HETERO_ATOM') //Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
 		});
 		result.push({
 			'nodeLabel': labelConfigs.getAnyAtom(), 'nodeClass': Kekule.Pseudoatom,
 			'props': {'atomType': Kekule.PseudoatomType.ANY},
-			'description': Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_ANY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
 		});
 		// Kekule.VariableAtom List and Not List
 		result.push({
 			'nodeLabel': this._getVarAtomListLabel(), 'nodeClass': Kekule.VariableAtom,
-			'description': Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
 		});
 		result.push({
 			'nodeLabel': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom,
-			'description': Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
 		});
 		this.setNonAtomLabelInfos(result);
 		return result;
@@ -2552,7 +2552,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			listItems.push({'value': listAtoms[i], 'data': {'props': {'isotopeId': listAtoms[i]}}});
 		}
 		// add "open periodic table" option
-		listItems.push({'value': CWT.CAPTION_ATOMLIST_PERIODIC_TABLE});
+		listItems.push({'value': Kekule.$L('ChemWidgetTexts.CAPTION_ATOMLIST_PERIODIC_TABLE') /*CWT.CAPTION_ATOMLIST_PERIODIC_TABLE*/});
 		// non-atom nodes
 		var nonAtomLabelInfos = this.getNonAtomLabelInfos();
 		for (var i = 0, l = nonAtomLabelInfos.length; i < l; ++i)
@@ -2612,7 +2612,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	/** @private */
 	_createPeriodicTableDialogWidget: function(doc, parentElem)
 	{
-		var dialog = new Kekule.Widget.Dialog(doc, CWT.CAPTION_PERIODIC_TABLE_DIALOG,
+		var dialog = new Kekule.Widget.Dialog(doc, Kekule.$L('ChemWidgetTexts.CAPTION_PERIODIC_TABLE_DIALOG') /*CWT.CAPTION_PERIODIC_TABLE_DIALOG*/,
 			[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]
 		);
 		var table = new Kekule.ChemWidget.PeriodicTable(doc);
@@ -2672,10 +2672,10 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 
 		// check if setter list need to raise other widget
 		var periodicTableDialog;
-		if (text === CWT.CAPTION_ATOMLIST_PERIODIC_TABLE)  // open periodic table to select atom
+		if (text === Kekule.$L('ChemWidgetTexts.CAPTION_ATOMLIST_PERIODIC_TABLE')/*CWT.CAPTION_ATOMLIST_PERIODIC_TABLE*/)  // open periodic table to select atom
 		{
 			var periodicTableDialog = this.getPeriodicTableDialogWidget(true);
-			periodicTableDialog.setCaption(CWT.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM);
+			periodicTableDialog.setCaption(/*CWT.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM*/Kekule.$L('ChemWidgetTexts.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM'));
 			var currSymbol = atom.getSymbol? atom.getSymbol(): null;
 			this.getPeriodicTable().setEnableSelect(true).setEnableMultiSelect(false).setSelectedSymbol(currSymbol);
 		}
@@ -2683,7 +2683,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		{
 			var notList = text === this._getVarAtomNotListLabel();
 			var periodicTableDialog = this.getPeriodicTableDialogWidget(true);
-			periodicTableDialog.setCaption(CWT.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEMS);
+			periodicTableDialog.setCaption(/*CWT.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEMS*/Kekule.$L('ChemWidgetTexts.CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM'));
 			var allowedSymbols = atom.getAllowedIsotopeIds? atom.getAllowedIsotopeIds(): null;
 			var disallowedSymbols = atom.getDisallowedIsotopeIds? atom.getDisallowedIsotopeIds(): null;
 			this.getPeriodicTable().setEnableSelect(true).setEnableMultiSelect(true)
@@ -2698,7 +2698,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 					{
 						var nodeClass;
 						var modifiedProps;
-						if (text === CWT.CAPTION_ATOMLIST_PERIODIC_TABLE)  // select single atom
+						if (text === Kekule.$L('ChemWidgetTexts.CAPTION_ATOMLIST_PERIODIC_TABLE')/*CWT.CAPTION_ATOMLIST_PERIODIC_TABLE*/)  // select single atom
 						{
 							var symbol = self.getPeriodicTable().getSelectedSymbol();
 							nodeClass = Kekule.Atom;
@@ -2780,7 +2780,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		}
 		catch(e)
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_A_VALID_ATOM);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_A_VALID_ATOM*/Kekule.$L('ErrorMsg.NOT_A_VALID_ATOM'));
 			throw(e);
 		}
 		finally
@@ -3867,7 +3867,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		var text = this.getBlockText(block);
 		var setter = this.getTextSetterWidget(true);
 		setter._applied = false;
-		var slabel = text || Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
+		var slabel = text || Kekule.$L('ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT'); //Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
 		//console.log(block, text, slabel);
 		setter.setValue(slabel);
 		//setter.setValue('hehr');

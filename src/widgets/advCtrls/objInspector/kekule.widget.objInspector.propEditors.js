@@ -882,7 +882,7 @@ Kekule.PropertyEditor.BoolEditor = Class.create(Kekule.PropertyEditor.BaseEditor
 	{
 		var v = this.getValue();
 		if (Kekule.ObjUtils.isUnset(v))  // not true or false, value is undefined or null
-			return Kekule.WidgetTexts.S_VALUE_UNSET;
+			return Kekule.$L('WidgetTexts.S_VALUE_UNSET'); //Kekule.WidgetTexts.S_VALUE_UNSET;
 		else
 			return $super();
 	},
@@ -1016,7 +1016,7 @@ Kekule.PropertyEditor.EnumEditor = Class.create(Kekule.PropertyEditor.SelectEdit
 		if (Kekule.ObjUtils.isUnset(v))  // has unset value
 		{
 			var result = Kekule.ArrayUtils.clone(this.enumInfos);
-			result.unshift({'text': Kekule.WidgetTexts.S_VALUE_UNSET, 'value': v});
+			result.unshift({'text': /*Kekule.WidgetTexts.S_VALUE_UNSET*/Kekule.$L('WidgetTexts.S_VALUE_UNSET'), 'value': v});
 			return result;
 		}
 		return this.enumInfos;
@@ -1100,7 +1100,7 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 				return $super();
 		}
 		else
-			return Kekule.WidgetTexts.S_OBJECT_UNSET;
+			return Kekule.$L('WidgetTexts.S_OBJECT_UNSET'); //Kekule.WidgetTexts.S_OBJECT_UNSET;
 	}
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.ObjectExEditor, 'ObjectEx');
@@ -1303,7 +1303,7 @@ Kekule.PropertyEditor.ObjectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 		var value = this.getValue();
 		if (value)
 		{
-			return '[' + Kekule.WidgetTexts.S_OBJECT + ']';
+			return '[' + /*Kekule.WidgetTexts.S_OBJECT*/Kekule.$L('WidgetTexts.S_OBJECT') + ']';
 		}
 		else
 			return '';
@@ -1398,7 +1398,7 @@ Kekule.PropertyEditor.ArrayEditor = Class.create(Kekule.PropertyEditor.BaseEdito
 	{
 		var v = this.getValue();
 		if (DataType.isArrayValue(v))
-			return '[' + v.length + ' ' + Kekule.WidgetTexts.S_ITEMS + ']';
+			return '[' + v.length + ' ' + /*Kekule.WidgetTexts.S_ITEMS*/Kekule.$L('WidgetTexts.S_ITEMS') + ']';
 		else
 			return $super();
 	}

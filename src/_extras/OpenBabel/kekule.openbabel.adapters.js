@@ -231,7 +231,7 @@ Kekule.OpenBabel.AdaptUtils = {
 		// TODO: How babel represent group exactly? Only knows that atom list is not supported by babel.
 		var preferredClass = atomicNum? Kekule.Atom: Kekule.SubGroup;
 		if (kNode && (!(kNode instanceof preferredClass)))  // provide kAtom not suitable
-			Kekule.Error(Kekule.ErrorMsg.OpenBabel.CHEM_NODE_TYPE_NOT_SUITABLE);
+			Kekule.Error(/*Kekule.ErrorMsg.OpenBabel.CHEM_NODE_TYPE_NOT_SUITABLE*/Kekule.$L('ErrorMsg.OpenBabel.CHEM_NODE_TYPE_NOT_SUITABLE'));
 		var result = kNode || new preferredClass();
 		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obAtom, result);
 

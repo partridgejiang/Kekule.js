@@ -76,7 +76,7 @@ Kekule.Operation = Class.create(ObjectEx,
 	reverse: function()
 	{
 		if (!this.isReversible())  // can not reverse
-			Kekule.raise(Kekule.ErrorMsg.COMMAND_NOT_REVERSIBLE);
+			Kekule.raise(/*Kekule.ErrorMsg.COMMAND_NOT_REVERSIBLE*/Kekule.$L('ErrorMsg.COMMAND_NOT_REVERSIBLE'));
 
 		//var state = this.getState();
 		//if (state === Kekule.Operation.State.EXECUTED)

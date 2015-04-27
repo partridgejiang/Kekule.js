@@ -204,8 +204,8 @@ Kekule.Widget.ActionOpenConfigWidget = Class.create(Kekule.Action,
 	{
 		$super();
 		this.setWidget(widget);
-		this.setText(Kekule.WidgetTexts.CAPTION_CONFIG);
-		this.setHint(Kekule.WidgetTexts.HINT_CONFIG);
+		this.setText(/*Kekule.WidgetTexts.CAPTION_CONFIG*/Kekule.$L('WidgetTexts.CAPTION_CONFIG'));
+		this.setHint(/*Kekule.WidgetTexts.HINT_CONFIG*/Kekule.$L('WidgetTexts.HINT_CONFIG'));
 	},
 	/** @private */
 	initProperties: function()

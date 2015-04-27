@@ -734,7 +734,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 			atomInfo = this.analysisAtomBlock(atomBuffer, atomIndexMap);
 		else // atom block not found, illegal
  		{
-			Kekule.raise(Kekule.ErrorMsg.MDL3000_ATOMBLOCK_NOT_FOUND);
+			Kekule.raise(/*Kekule.ErrorMsg.MDL3000_ATOMBLOCK_NOT_FOUND*/Kekule.$L('ErrorMsg.MDL3000_ATOMBLOCK_NOT_FOUND'));
 			return null;
 		}
 
@@ -774,7 +774,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		// COUNTS tag, assert the count line format is correct
 		if (tag != 'COUNTS')
 		{
-			Kekule.raise(Kekule.ErrorMsg.MALFORMED_MDL3000_COUNTLINE);
+			Kekule.raise(/*Kekule.ErrorMsg.MALFORMED_MDL3000_COUNTLINE*/Kekule.$L('ErrorMsg.MALFORMED_MDL3000_COUNTLINE'));
 			return;
 		}
 		// na: number of atoms

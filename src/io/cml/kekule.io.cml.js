@@ -965,7 +965,7 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 	{
 		if (!(parentElem) && (!doc))
 		{
-			Kekule.error(Kekule.ErrorMsg.CML_CAN_NOT_OUTPUT_TO_EMPTY_ELEMENT);
+			Kekule.error(/*Kekule.ErrorMsg.CML_CAN_NOT_OUTPUT_TO_EMPTY_ELEMENT*/Kekule.$L('ErrorMsg.CML_CAN_NOT_OUTPUT_TO_EMPTY_ELEMENT'));
 			return null;
 		}
 		if ((!parentElem) && doc)
@@ -1105,7 +1105,8 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 	 */
 	reportTypeMismatchError: function(obj)
 	{
-		Kekule.error(Kekule.ErrorMsg.CML_ELEM_WRITER_TYPE_INPROPER.format(this.getClassName(), DataType.getType(obj)));
+		Kekule.error(/*Kekule.ErrorMsg.CML_ELEM_WRITER_TYPE_INPROPER*/
+			Kekule.$L('ErrorMsg.CML_ELEM_WRITER_TYPE_INPROPER').format(this.getClassName(), DataType.getType(obj)));
 	}
 });
 
@@ -2068,7 +2069,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					else
 					{
 						Kekule.raise(
-							(Kekule.hasLocalRes()?	Kekule.ErrorMsg.ATOMID_NOT_EXISTS: 'Atom id not exists: ')
+							(Kekule.hasLocalRes()?	/*Kekule.ErrorMsg.ATOMID_NOT_EXISTS*/Kekule.$L('ErrorMsg.ATOMID_NOT_EXISTS'): 'Atom id not exists: ')
 								+ atomIds[j]
 						);
 					}
@@ -2087,7 +2088,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					else
 					{
 						Kekule.raise(
-							(Kekule.hasLocalRes()?	Kekule.ErrorMsg.BONDID_NOT_EXISTS: 'Bond id not exists: ')
+							(Kekule.hasLocalRes()?	/*Kekule.ErrorMsg.BONDID_NOT_EXISTS*/Kekule.$L('ErrorMsg.BONDID_NOT_EXISTS'): 'Bond id not exists: ')
 								+ bondIds[j]
 						);
 					}
@@ -3612,7 +3613,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		else
 		{
-			Kekule.error(Kekule.ErrorMsg.UNABLE_TO_OUTPUT_AS_CML.format(DataType.getType(obj)));
+			Kekule.error(/*Kekule.ErrorMsg.UNABLE_TO_OUTPUT_AS_CML*/Kekule.$L('ErrorMsg.UNABLE_TO_OUTPUT_AS_CML').format(DataType.getType(obj)));
 			return null;
 		}
 	}

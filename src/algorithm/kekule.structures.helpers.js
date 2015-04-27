@@ -66,7 +66,7 @@ Kekule.ChemStructObjContainer = Class.create(ObjectEx,
 			a = this.getNodes();
 
 		if (!a)  // not connector or node, report error
-			Kekule.error(Kekule.ErrorMsg.CANNOT_ADD_NON_NODE_NOR_CONNECTOR_TO_STRUCT_CONTAINER);
+			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_ADD_NON_NODE_NOR_CONNECTOR_TO_STRUCT_CONTAINER')/*Kekule.ErrorMsg.CANNOT_ADD_NON_NODE_NOR_CONNECTOR_TO_STRUCT_CONTAINER*/);
 		else
 			Kekule.ArrayUtils.pushUnique(a, obj);
 		return this;

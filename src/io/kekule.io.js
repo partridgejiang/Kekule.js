@@ -418,7 +418,7 @@ Kekule.IO.ChemDataReaderManager = {
 	{
 		if (Kekule.IO.ChemDataReaderManager.getReaderInfoById(id)) // id can not be duplicate
 		{
-			Kekule.raise(Kekule.ErrorMsg.READER_ID_ALREADY_EXISTS);
+			Kekule.raise(/*Kekule.ErrorMsg.READER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.READER_ID_ALREADY_EXISTS'));
 			return null;
 		}
 		var item = {
@@ -674,7 +674,7 @@ Kekule.IO.ChemDataWriterManager = {
 	{
 		if (Kekule.IO.ChemDataWriterManager.getWriterInfoById(id)) // id can not be duplicate
 		{
-			Kekule.raise(Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS);
+			Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));
 			return null;
 		}
 		var item = {
@@ -996,7 +996,7 @@ Kekule.IO.loadFormatData = function(content, formatId)
 	}
 	else
 	{
-		var msg = Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FORMAT + formatId;
+		var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FORMAT') + formatId;
 		Kekule.raise(msg);
 		return null;
 	}
@@ -1094,8 +1094,8 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 	else
 	{
 		var msg = mimeType?
-			(Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE + mimeType):
-			(Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT + fileExt);
+			(/*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE') + mimeType):
+			(/*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + fileExt);
 		Kekule.raise(msg);
 		return null;
 	}
@@ -1125,7 +1125,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 
 			if (!formatInfo)
 			{
-				var msg = Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT + ext;
+				var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
 				Kekule.raise(msg);
 			}
 
@@ -1160,7 +1160,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 	}
 	else
 	{
-		Kekule.error(Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED);
+		Kekule.error(/*Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.FILE_API_NOT_SUPPORTED'));
 	}
 };
 
@@ -1181,7 +1181,7 @@ Kekule.IO.saveFormatData = function(chemObj, formatId)
 	}
 	else
 	{
-		var msg = Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT + formatId;
+		var msg = /*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT') + formatId;
 		Kekule.raise(msg);
 		return null;
 	}
@@ -1234,8 +1234,8 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 	if (Kekule.ObjUtils.isUnset(result))
 	{
 		var msg = mimeType?
-			(Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE + mimeType):
-			(Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FILEEXT + fileExt);
+			(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE') + mimeType):
+			(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FILEEXT') + fileExt);
 		Kekule.raise(msg);
 		return null;
 	}

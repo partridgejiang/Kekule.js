@@ -2033,7 +2033,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		{
 			if (!this.isElementBindable(element))
 			{
-				Kekule.error(Kekule.ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM.format(this.getClassName(), element.tagName));
+				Kekule.error(/*Kekule.ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM*/
+					Kekule.$L('ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM').format(this.getClassName(), element.tagName));
 				return;
 			}
 

@@ -192,11 +192,15 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	_getPredefinedSpecialColorInfo: function(color)
 	{
 		var SC = Kekule.Widget.ColorPicker.SpecialColors;
-		var WT = Kekule.WidgetTexts;
+		//var WT = Kekule.WidgetTexts;
 		var predefines = [SC.UNSET, SC.DEFAULT, SC.MIXED];
 		//var values = ['(unset)', '(default)', '(mixed)'];
 		var classNames = [CNS.COLORPICKER_SPEC_COLOR_UNSET, CNS.COLORPICKER_SPEC_COLOR_DEFAULT, CNS.COLORPICKER_SPEC_COLOR_MIXED];
-		var texts = [WT.S_COLOR_UNSET, WT.S_COLOR_DEFAULT, WT.S_COLOR_MIXED];
+		var texts = [
+			Kekule.$L('WidgetTexts.S_COLOR_UNSET'),
+			Kekule.$L('WidgetTexts.S_COLOR_DEFAULT'),
+			Kekule.$L('WidgetTexts.S_COLOR_MIXED')
+		]//[WT.S_COLOR_UNSET, WT.S_COLOR_DEFAULT, WT.S_COLOR_MIXED];
 		var result = {'value': color};
 		var index = predefines.indexOf(color);
 		if (index >= 0)
@@ -285,8 +289,8 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		if (Kekule.BrowserFeature.html5Form.supportType('color'))
 		{
 			var btn = new Kekule.Widget.Button(doc);
-			btn.setText(Kekule.WidgetTexts.CAPTION_BROWSE_COLOR);
-			btn.setHint(Kekule.WidgetTexts.HINT_BROWSE_COLOR);
+			btn.setText(/*Kekule.WidgetTexts.CAPTION_BROWSE_COLOR*/Kekule.$L('WidgetTexts.CAPTION_BROWSE_COLOR'));
+			btn.setHint(/*Kekule.WidgetTexts.HINT_BROWSE_COLOR*/Kekule.$L('WidgetTexts.HINT_BROWSE_COLOR'));
 			btn.setShowText(false);
 			btn.doSetShowGlyph(true);
 			btn.linkStyleResource(Kekule.Widget.StyleResourceNames.ICON_COLOR_PICK);

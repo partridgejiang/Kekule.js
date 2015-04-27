@@ -353,7 +353,7 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 	writeHeaderInfo: function(mol, textBuffer)
 	{
 		// line 1: molecule name
-		textBuffer.writeLine(mol.getName() || Kekule.Texts.UNNAMED || '');
+		textBuffer.writeLine(mol.getName() || /*Kekule.Texts.UNNAMED*/Kekule.$L('Texts.UNNAMED') || '');
 		// line 2: MOL file information
 		var infoLine = this.generateInfoLine(mol);
 		textBuffer.writeLine(infoLine);
@@ -694,7 +694,7 @@ Kekule.IO.MdlBaseReactionReader = Class.create(Kekule.IO.MdlBlockReader,
 		s = line.substr(0, 4);
 		if (s != '$RXN') // identifier wrong
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_MDL_RXN_DATA);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL_RXN_DATA*/Kekule.$L('ErrorMsg.NOT_MDL_RXN_DATA'));
 			return null;
 		}
 		else  // get file version
@@ -812,7 +812,7 @@ Kekule.IO.Mdl2kReactionReader = Class.create(Kekule.IO.MdlBaseReactionReader,
 		var result = $super(textBuffer, parentObj);
 		if (result.version != Kekule.IO.MdlVersion.V2000)
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_MDL2000_RXN_DATA);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL2000_RXN_DATA*/Kekule.$L('ErrorMsg.NOT_MDL2000_RXN_DATA'));
 			return null;
 		}
 		else
@@ -878,7 +878,7 @@ Kekule.IO.Mdl3kReactionReader = Class.create(Kekule.IO.MdlBaseReactionReader,
 		var result = $super(textBuffer, parentObj);
 		if (result.version != Kekule.IO.MdlVersion.V3000)
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_MDL3000_RXN_DATA);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL3000_RXN_DATA*/Kekule.$L('ErrorMsg.NOT_MDL3000_RXN_DATA'));
 			return null;
 		}
 		else
@@ -893,7 +893,7 @@ Kekule.IO.Mdl3kReactionReader = Class.create(Kekule.IO.MdlBaseReactionReader,
 		var values = Kekule.IO.Mdl3kValueUtils.splitValues(line);
 		if (values.shift().value.trim() != 'COUNTS') // not a count line
 		{
-			Kekule.error(Kekule.ErrorMsg.NOT_MDL3000_RXN_COUNTLINE);
+			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL3000_RXN_COUNTLINE*/Kekule.$L('ErrorMsg.NOT_MDL3000_RXN_COUNTLINE'));
 			return null;
 		}
 		result.reactantCount = parseInt(values.shift().value, 10) || 0;
@@ -1083,7 +1083,7 @@ Kekule.IO.BaseMdlReader = Class.create(Kekule.IO.ChemDataReader,
 	{
 		if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
 		{
-			Kekule.error(Kekule.ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT*/Kekule.$L('ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT'));
 			return null;
 		}
 		else
@@ -1139,7 +1139,7 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if (dtype != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
 		{
-			Kekule.error(Kekule.ErrorMsg.MDL_OUTPUT_DATATYPE_NOT_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.MDL_OUTPUT_DATATYPE_NOT_TEXT*/Kekule.$L('ErrorMsg.MDL_OUTPUT_DATATYPE_NOT_TEXT'));
 			return null;
 		}
 		else
@@ -1301,7 +1301,7 @@ Kekule.IO.MdlReader = Class.create(Kekule.IO.ChemDataReader,
 	{
 		if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
 		{
-			Kekule.error(Kekule.ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT*/Kekule.$L('ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT'));
 			return null;
 		}
 		else
@@ -1354,7 +1354,7 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		else
 		{
 			var className = (obj && obj.getClassName)? obj.getClassName(): typeof(obj);
-			Kekule.error(Kekule.ErrorMsg.UNABLE_TO_OUTPUT_AS_MDL.format(className));
+			Kekule.error(/*Kekule.ErrorMsg.UNABLE_TO_OUTPUT_AS_MDL*/Kekule.$L('ErrorMsg.UNABLE_TO_OUTPUT_AS_MDL').format(className));
 			return null;
 		}
 		if (writer)

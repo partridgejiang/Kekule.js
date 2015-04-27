@@ -2288,7 +2288,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			this.notifyNodesChanged();
 		}
 		else
-			Kekule.error(Kekule.ErrorMsg.SORT_FUNC_UNSET);
+			Kekule.error(/*Kekule.ErrorMsg.SORT_FUNC_UNSET*/Kekule.$L('ErrorMsg.SORT_FUNC_UNSET'));
 	},
 
 	/**
@@ -2558,7 +2558,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			this.notifyConnectorsChanged();
 		}
 		else
-			Kekule.error(Kekule.ErrorMsg.SORT_FUNC_UNSET);
+			Kekule.error(/*Kekule.ErrorMsg.SORT_FUNC_UNSET*/Kekule.$L('ErrorMsg.SORT_FUNC_UNSET'));
 	},
 
 	/**
@@ -4620,7 +4620,7 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 		{
 			Kekule.chemError(
 				Kekule.hasLocalRes()?
-					Kekule.ErrorMsg.UNABLE_ADD_MISTYPED_NODE :
+					/*Kekule.ErrorMsg.UNABLE_ADD_MISTYPED_NODE*/Kekule.$L('ErrorMsg.UNABLE_ADD_MISTYPED_NODE') :
 					'Unable to link mistyped node to connector'
 			);
 		}
@@ -4628,7 +4628,7 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 		{
 			Kekule.chemError(
 				Kekule.hasLocalRes()?
-					Kekule.ErrorMsg.UNABLE_ADD_DIFF_OWNER_OBJ :
+					/*Kekule.ErrorMsg.UNABLE_ADD_DIFF_OWNER_OBJ*/Kekule.$L('ErrorMsg.UNABLE_ADD_DIFF_OWNER_OBJ') :
 					'Object with different owner can not be linked to connector'
 			);
 			return false;
@@ -5360,7 +5360,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			{
 				var msg =
 					Kekule.hasLocalRes()?
-						Kekule.ErrorMsg.CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH :
+						/*Kekule.ErrorMsg.CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH*/Kekule.$L('ErrorMsg.CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH') :
 						'Mismatched group item class';
 				Kekule.raise(msg);
 			}

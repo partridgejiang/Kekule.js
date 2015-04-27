@@ -24,7 +24,7 @@
 
 var AU = Kekule.ArrayUtils;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
@@ -142,7 +142,7 @@ Kekule.Editor.ActionEditorUndo = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_UNDO, CWT.HINT_UNDO);
+		$super(editor, /*CWT.CAPTION_UNDO, CWT.HINT_UNDO*/Kekule.$L('ChemWidgetTexts.CAPTION_UNDO'), Kekule.$L('ChemWidgetTexts.HINT_UNDO'));
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -176,7 +176,7 @@ Kekule.Editor.ActionEditorRedo = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_REDO, CWT.HINT_REDO);
+		$super(editor, /*CWT.CAPTION_REDO, CWT.HINT_REDO*/Kekule.$L('ChemWidgetTexts.CAPTION_REDO'), Kekule.$L('ChemWidgetTexts.HINT_REDO'));
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -211,7 +211,7 @@ Kekule.Editor.ActionEditorNewDoc = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC);
+		$super(editor, /*CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC*/Kekule.$L('ChemWidgetTexts.CAPTION_NEWDOC'), Kekule.$L('ChemWidgetTexts.HINT_NEWDOC'));
 	},
 	/** @private */
 	doUpdate: function()
@@ -245,7 +245,7 @@ Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION);
+		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONESELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
 	},
 	/** @private */
 	_hasCloneMethod: function()
@@ -330,7 +330,7 @@ Kekule.Editor.ActionCopySelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_COPY, CWT.HINT_COPY);
+		$super(editor, /*CWT.CAPTION_COPY, CWT.HINT_COPY*/Kekule.$L('ChemWidgetTexts.CAPTION_COPY'), Kekule.$L('ChemWidgetTexts.HINT_COPY'));
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -369,7 +369,7 @@ Kekule.Editor.ActionCutSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_CUT, CWT.HINT_CUT);
+		$super(editor, /*CWT.CAPTION_CUT, CWT.HINT_CUT*/Kekule.$L('ChemWidgetTexts.CAPTION_CUT'), Kekule.$L('ChemWidgetTexts.HINT_CUT'));
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -412,7 +412,7 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, CWT.CAPTION_PASTE, CWT.HINT_PASTE);
+		$super(editor, /*CWT.CAPTION_PASTE, CWT.HINT_PASTE*/Kekule.$L('ChemWidgetTexts.CAPTION_PASTE'), Kekule.$L('ChemWidgetTexts.HINT_PASTE'));
 		Kekule.Widget.clipboard.addEventListener('setData', this._reactClipboardChange, this);
 	},
 	/** @ignore */
@@ -703,7 +703,7 @@ Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionO
 	/** @constructs */
 	initialize: function($super, composer)
 	{
-		$super(composer, CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR);
+		$super(composer, /*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*/Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR'));
 		//this.setCheckGroup(this.getClassName());
 	},
 	/** @private */
@@ -820,8 +820,8 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 // Select
 Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetManipulateController',
-	Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
-	Kekule.ChemWidgetTexts.HINT_MANIPULATE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE'), //Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE'), //Kekule.ChemWidgetTexts.HINT_MANIPULATE,
 	'BasicMolManipulationIaController',
 	null,
 	null
@@ -830,8 +830,8 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 // Erase
 Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetEraserController',
-	Kekule.ChemWidgetTexts.CAPTION_ERASE,
-	Kekule.ChemWidgetTexts.HINT_ERASE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_ERASE'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.$L('ChemWidgetTexts.HINT_ERASE'), //Kekule.ChemWidgetTexts.HINT_ERASE,
 	'BasicMolEraserIaController',
 	null,
 	null,
@@ -850,8 +850,8 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 // Bond and its variations
 Kekule.Editor.ActionComposerSetBondControllerSingle = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerSingle',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_SINGLE,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_SINGLE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_SINGLE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_SINGLE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_SINGLE'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_SINGLE,
 	'MolBondIaController',
 	'MolBondIaController-Single',
 	{
@@ -862,8 +862,8 @@ Kekule.Editor.ActionComposerSetBondControllerSingle = Kekule.Editor.createCompos
 );
 Kekule.Editor.ActionComposerSetBondControllerDouble = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerDouble',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_DOUBLE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_DOUBLE,
 	'MolBondIaController',
 	'MolBondIaController-Double',
 	{
@@ -874,8 +874,8 @@ Kekule.Editor.ActionComposerSetBondControllerDouble = Kekule.Editor.createCompos
 );
 Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerTriple',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_TRIPLE,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_TRIPLE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_TRIPLE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_TRIPLE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_TRIPLE'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_TRIPLE,
 	'MolBondIaController',
 	'MolBondIaController-Triple',
 	{
@@ -886,8 +886,8 @@ Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createCompos
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeUp',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP,
 	'MolBondIaController',
 	'MolBondIaController-WedgeUp',
 	{
@@ -898,8 +898,8 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createCompo
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeDown = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeDown',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN,
 	'MolBondIaController',
 	'MolBondIaController-WedgeDown',
 	{
@@ -910,8 +910,8 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeDown = Kekule.Editor.createCom
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WAVY,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND_WAVY,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_WAVY'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WAVY,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_WAVY'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_WAVY,
 	'MolBondIaController',
 	'MolBondIaController-WedgeUpOrDown',
 	{
@@ -923,8 +923,8 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.creat
 
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondController',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_BOND,
-	Kekule.ChemWidgetTexts.HINT_MOL_BOND,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND,
 	'MolBondIaController',
 	null,
 	null,
@@ -965,8 +965,8 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 // Atom
 Kekule.Editor.ActionComposerSetAtomController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetAtomController',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_ATOM,
-	Kekule.ChemWidgetTexts.HINT_MOL_ATOM,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ATOM'), //Kekule.ChemWidgetTexts.CAPTION_MOL_ATOM,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ATOM'), //Kekule.ChemWidgetTexts.HINT_MOL_ATOM,
 	'MolAtomIaController',
 	null,
 	null
@@ -975,8 +975,8 @@ Kekule.Editor.ActionComposerSetAtomController = Kekule.Editor.createComposerIaCo
 // formula
 Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetFormulaController',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_FORMULA,
-	Kekule.ChemWidgetTexts.HINT_MOL_FORMULA,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_FORMULA'), //Kekule.ChemWidgetTexts.CAPTION_MOL_FORMULA,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_FORMULA'), //Kekule.ChemWidgetTexts.HINT_MOL_FORMULA,
 	'FormulaIaController',
 	null,
 	null
@@ -985,8 +985,8 @@ Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerI
 // Charge and its variations
 Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerClear',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_CLEAR,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_CLEAR,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_CLEAR'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_CLEAR,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_CLEAR'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_CLEAR,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Clear',
 	{
@@ -997,8 +997,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerPositive',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_POSITIVE,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_POSITIVE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_POSITIVE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_POSITIVE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_POSITIVE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_POSITIVE,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Positive',
 	{
@@ -1008,8 +1008,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.crea
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerNegative',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_NEGATIVE,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_NEGATIVE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_NEGATIVE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_NEGATIVE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_NEGATIVE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_NEGATIVE,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Negative',
 	{
@@ -1019,8 +1019,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.crea
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_SINGLET,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_SINGLET,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_SINGLET'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_SINGLET,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_SINGLET'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_SINGLET,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Singlet',
 	{
@@ -1031,8 +1031,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Edito
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_TRIPLET,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_TRIPLET,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_TRIPLET'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_TRIPLET,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_TRIPLET'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_TRIPLET,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Triplet',
 	{
@@ -1043,8 +1043,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet = Kekule.Edito
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET,
 	'MolNodeChargeIaController',
 	'MolNodeChargeIaController-Doublet',
 	{
@@ -1056,8 +1056,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet = Kekule.Edito
 
 Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeController',
-	Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE,
-	Kekule.ChemWidgetTexts.HINT_MOL_CHARGE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_CHARGE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_CHARGE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE,
 	'MolNodeChargeIaController',
 	null,
 	null,
@@ -1075,8 +1075,8 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 // Text block
 Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetTextBlockController',
-	Kekule.ChemWidgetTexts.CAPTION_TEXT_BLOCK,
-	Kekule.ChemWidgetTexts.HINT_TEXT_BLOCK,
+	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.CAPTION_TEXT_BLOCK,
+	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.HINT_TEXT_BLOCK,
 	'TextBlockIaController',
 	null,
 	null
@@ -1086,8 +1086,8 @@ Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createCompose
 // MolRing
 Kekule.Editor.ActionComposerSetRepositoryRing3Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing3Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_3,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_3,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_3'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_3,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_3'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_3,
 	'MolRingIaController',
 	'MolRingIaController-3',
 	{
@@ -1097,8 +1097,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing3Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRing4Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing4Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_4,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_4,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_4'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_4,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_4'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_4,
 	'MolRingIaController',
 	'MolRingIaController-4',
 	{
@@ -1108,8 +1108,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing4Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRing5Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing5Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_5,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_5,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_5'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_5'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_5,
 	'MolRingIaController',
 	'MolRingIaController-5',
 	{
@@ -1119,8 +1119,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing5Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRing6Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing6Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_6,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_6,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_6'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_6,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_6'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_6,
 	'MolRingIaController',
 	'MolRingIaController-6',
 	{
@@ -1130,8 +1130,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing6Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRing7Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing7Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_7,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_7,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_7'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_7,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_7'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_7,
 	'MolRingIaController',
 	'MolRingIaController-7',
 	{
@@ -1141,8 +1141,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing7Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRing8Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing8Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_8,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_8,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_8'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_8,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_8'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_8,
 	'MolRingIaController',
 	'MolRingIaController-8',
 	{
@@ -1152,8 +1152,8 @@ Kekule.Editor.ActionComposerSetRepositoryRing8Controller = Kekule.Editor.createC
 );
 Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_6,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_6,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_6'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_6,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_AR_6'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_6,
 	'MolRingIaController',
 	'MolRingIaController-Ar-6',
 	{
@@ -1163,8 +1163,8 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller = Kekule.Editor.creat
 );
 Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
 	'MolRingIaController',
 	'MolRingIaController-Ar-5',
 	{
@@ -1174,8 +1174,8 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.creat
 );
 Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_RING'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING,
 	'MolRingIaController',
 	null,
 	null,
@@ -1195,8 +1195,8 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 // PathGlyph
 Kekule.Editor.ActionComposerSetRepositoryPathLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathGlyphLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-Line',
 	{
@@ -1207,8 +1207,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathLineController = Kekule.Editor.crea
 );
 Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-OpenArrowLine',
 	{
@@ -1223,8 +1223,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController = Kekule.Ed
 );
 Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-TriangleArrowLine',
 	{
@@ -1239,8 +1239,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController = Kekul
 );
 Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-DiOpenArrowLine',
 	{
@@ -1258,8 +1258,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController = Kekule.
 );
 Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-DiTriangleArrowLine',
 	{
@@ -1277,8 +1277,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController = Kek
 );
 Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_REV_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_REV_ARROW_LINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_REV_ARROW_LINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-ReversibleArrowLine',
 	{
@@ -1300,8 +1300,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController = Kek
 );
 Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
 	'ArrowLineIaController',
 	'ArrowLineIaController-OpenArrowDiLine',
 	{
@@ -1318,8 +1318,8 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule
 );
 Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_HEAT_SYMBOL,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_HEAT_SYMBOL'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_HEAT_SYMBOL,
 	'ArrowLineIaController',
 	'ArrowLineIaController-HeatSymbol',
 	{
@@ -1331,8 +1331,8 @@ Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.cr
 );
 Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryAddSymbolController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ADD_SYMBOL,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_ADD_SYMBOL,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ADD_SYMBOL'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ADD_SYMBOL,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ADD_SYMBOL'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_ADD_SYMBOL,
 	'ArrowLineIaController',
 	'ArrowLineIaController-AddSymbol',
 	{
@@ -1345,8 +1345,8 @@ Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.cre
 
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
-	Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE,
-	Kekule.ChemWidgetTexts.HINT_REPOSITORY_ARROWLINE,
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ARROWLINE'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_ARROWLINE,
 	'ArrowLineIaController',
 	null,
 	null,

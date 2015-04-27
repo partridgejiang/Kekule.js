@@ -220,12 +220,12 @@ Kekule.IO.MdlUtils = {
 		// assert obj is a Kekule.StructureFragment and has Ctab
 		if (!(obj instanceof Kekule.StructureFragment))
 		{
-			Kekule.error(Kekule.ErrorMsg.CAN_NOT_WRITE_NON_MOLECULE_TO_MOL);
+			Kekule.error(/*Kekule.ErrorMsg.CAN_NOT_WRITE_NON_MOLECULE_TO_MOL*/Kekule.$L('ErrorMsg.CAN_NOT_WRITE_NON_MOLECULE_TO_MOL'));
 			return false;
 		}
 		else if (!obj.hasCtab())  // no ctab, can not output either
 		{
-			Kekule.error(Kekule.ErrorMsg.MOLECULE_HAS_NO_CTAB_TO_OUTPUT);
+			Kekule.error(/*Kekule.ErrorMsg.MOLECULE_HAS_NO_CTAB_TO_OUTPUT*/Kekule.$L('ErrorMsg.MOLECULE_HAS_NO_CTAB_TO_OUTPUT'));
 			return false;
 		}
 		else
@@ -267,7 +267,7 @@ Kekule.IO.MdlStructureUtils = {
 					if (atom)
 						fragment.appendNode(atom);
 					else
-						Kekule.raise(Kekule.ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE);
+						Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE'));
 				}
 			}
 			// bonds
@@ -280,7 +280,7 @@ Kekule.IO.MdlStructureUtils = {
 					if (bond)
 						fragment.appendConnector(bond);
 					else
-						Kekule.raise(Kekule.ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE);
+						Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE'));
 				}
 			}
 			// sgroup

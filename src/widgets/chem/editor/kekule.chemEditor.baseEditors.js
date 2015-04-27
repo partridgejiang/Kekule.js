@@ -989,7 +989,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
 		if (!result)   // can not find suitable draw bridge
 		{
-			Kekule.error(Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED);
+			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
 		return result;
 	},

@@ -118,7 +118,7 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 		}
 		else  // can not find suitable renderer
 		{
-			Kekule.error(Kekule.ErrorMsg.CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ);
+			Kekule.error(/*Kekule.ErrorMsg.CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ*/Kekule.$L('ErrorMsg.CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ'));
 			return null;
 		}
 	},

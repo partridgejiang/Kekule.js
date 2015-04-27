@@ -20,6 +20,8 @@
 if (Kekule.PROP_AUTO_TITLE)
 {
 	var originMethod = ClassEx.getPrototype(ObjectEx).defineProp;
+	var OBJ_PROP_TITLE_TEXT_PREFIX = 'TITLE_';
+	var OBJ_PROP_DESCRIPTION_TEXT_PREFIX = 'DES_';
 	var newMethod = function(propName, options)
 	{
 		if (!options.title && !options.description)  // all not set, auto decide
@@ -29,13 +31,19 @@ if (Kekule.PROP_AUTO_TITLE)
 			{
 				className = className.substr(7);
 			}
-			var textObj = Object.getCascadeFieldValue(className, Kekule.OBJDEF_TEXTS);
-			if (textObj)
+			//var textObj = Object.getCascadeFieldValue(className, Kekule.OBJDEF_TEXTS);
+			//if (textObj)
 			{
-				var titleField = Kekule.OBJDEF_TEXTS.TITLE_PREFIX + propName;
-				var desField = Kekule.OBJDEF_TEXTS.DESCRIPTION_PREFIX + propName;
-				options.title = textObj[titleField];
-				options.description = textObj[desField];
+				//var titleField = Kekule.OBJDEF_TEXTS.TITLE_PREFIX + propName;
+				//var desField = Kekule.OBJDEF_TEXTS.DESCRIPTION_PREFIX + propName;
+				var titlePrefix = OBJ_PROP_TITLE_TEXT_PREFIX;
+				var destPrefix = OBJ_PROP_DESCRIPTION_TEXT_PREFIX;
+				var titleField = titlePrefix + propName;
+				var desField = destPrefix + propName;
+				var title = Kekule.Localization.findValue('OBJDEF_TEXTS.' + className + '.' + titleField);
+				var description = Kekule.Localization.findValue('OBJDEF_TEXTS.' + className + '.' + desField);
+				options.title = title; //textObj[titleField];
+				options.description = description; //textObj[desField];
 			}
 		}
 		return originMethod.apply(this, [propName, options]);
@@ -386,7 +394,7 @@ Kekule.MapEx = Class.create(
 		}
 		else
 		{
-			Kekule.error(Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP);
+			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_CLEAR_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP*/);
 		}
 		return this;
 	},
@@ -400,7 +408,7 @@ Kekule.MapEx = Class.create(
 			return [].concat(this.keys);  // clone the array, avoid modification
 		else  // weak map, can not return keys
 		{
-			Kekule.error(Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP);
+			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP*/);
 			return [];
 		}
 	},
@@ -414,7 +422,7 @@ Kekule.MapEx = Class.create(
 			return this.values;
 		else  // weak map, can not return keys
 		{
-			Kekule.error(Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP);
+			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP*/);
 			return [];
 		}
 	}
@@ -2166,7 +2174,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		var c = this.getItemBaseClass();
 		var r = c? item instanceof c: true;
 		if (!r)
-			Kekule.raise(Kekule.ErrorMsg.LIST_ITEM_CLASS_MISMATCH);
+			Kekule.raise(Kekule.$L('ErrorMsg.LIST_ITEM_CLASS_MISMATCH')/*Kekule.ErrorMsg.LIST_ITEM_CLASS_MISMATCH*/);
 		return r;
 	},
 

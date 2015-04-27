@@ -172,7 +172,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	{
 		if (!(obj instanceof Kekule.Molecule))
 		{
-			Kekule.chemError(Kekule.ErrorMsg.UNABLE_ADD_NONMOLECULE_MAP);
+			Kekule.chemError(/*Kekule.ErrorMsg.UNABLE_ADD_NONMOLECULE_MAP*/Kekule.$L('ErrorMsg.UNABLE_ADD_NONMOLECULE_MAP'));
 		}
 	},
 	/** @private */

@@ -171,7 +171,7 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 			if (!success)
 			{
 				var className = obj.getClassName? obj.getClassName(): (typeof obj);
-				Kekule.warn(Kekule.ErrorMsg.CAN_NOT_SET_COORD_OF_CLASS.format(className));
+				Kekule.warn(/*Kekule.ErrorMsg.CAN_NOT_SET_COORD_OF_CLASS*/Kekule.$L('ErrorMsg.CAN_NOT_SET_COORD_OF_CLASS').format(className));
 			}
 		}
 	},
@@ -252,7 +252,7 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 			else
 			{
 				var className = obj.getClassName? obj.getClassName(): (typeof obj);
-				Kekule.warn(Kekule.ErrorMsg.CAN_NOT_SET_DIMENSION_OF_CLASS.format(className));
+				Kekule.warn(/*Kekule.ErrorMsg.CAN_NOT_SET_DIMENSION_OF_CLASS*/Kekule.$L('ErrorMsg.CAN_NOT_SET_DIMENSION_OF_CLASS').format(className));
 			}
 		}
 	},
@@ -874,7 +874,7 @@ Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemObjOperatio
 		}
 		*/
 		if (!canMerge)
-			Kekule.error(Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTORS);
+			Kekule.error(/*Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTORS*/Kekule.$L('ErrorMsg.CAN_NOT_MERGE_CONNECTORS'));
 
 
 		// sort targetNodes and destNodes via coord

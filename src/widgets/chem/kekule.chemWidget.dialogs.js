@@ -27,7 +27,7 @@ var PS = Class.PropertyScope;
 var CW = Kekule.ChemWidget;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	DIALOG_LOADDATA: 'K-Chem-Dialog-LoadData',
@@ -48,17 +48,15 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.LoadDataDialog',
-	/** @private */
-	_sBtnLoadFromFile: CWT.CAPTION_LOADDATA_FROM_FILE,
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, caption, buttons)
 	{
 		this._openFileAction = new Kekule.ActionFileOpen();
 		this._openFileAction.update();
 		this._openFileAction.addEventListener('open', this.reactFileLoad, this);
-		//this._sBtnLoadFromFile = CWT.CAPTION_LOADDATA_FROM_FILE;
+		this._sBtnLoadFromFile = Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_FROM_FILE'); //CWT.CAPTION_LOADDATA_FROM_FILE
 
-		$super(parentOrElementOrDocument, caption || CWT.CAPTION_LOADDATA,
+		$super(parentOrElementOrDocument, caption || /*CWT.CAPTION_LOADDATA*/ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA'),
 			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 	/** @ignore */
@@ -91,7 +89,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		var doc = this.getDocument();
 		// label
 		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_DATA_FORMAT;
+		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_DATA_FORMAT'); //CWT.CAPTION_DATA_FORMAT;
 		clientElem.appendChild(elem);
 		// format selector
 		elem = doc.createElement('div');
@@ -106,7 +104,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		formatSelector.setItems(formatItems);
 		// label
 		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_DATA_SRC;
+		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_DATA_SRC'); //CWT.CAPTION_DATA_SRC;
 		clientElem.appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
@@ -241,7 +239,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 					if (chemObj)
 						this.setPropStoreFieldValue('chemObj', chemObj);
 					else
-						Kekule.error(Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED);
+						Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
 				}
 				catch(e)
 				{

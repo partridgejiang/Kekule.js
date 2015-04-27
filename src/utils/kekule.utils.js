@@ -182,7 +182,7 @@ Kekule.ObjUtils = {
 				delete obj[oldName];
 			}
 			else
-				Kekule.raise(Kekule.ErrorMsg.NON_OWN_PROPERTY_CANNOT_BE_REPLACED);
+				Kekule.raise(/*Kekule.ErrorMsg.NON_OWN_PROPERTY_CANNOT_BE_REPLACED*/Kekule.$L('ErrorMsg.NON_OWN_PROPERTY_CANNOT_BE_REPLACED'));
 		}
 		return obj;
 	},

@@ -164,7 +164,11 @@ Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyStrin
 Object.getCascadeFieldValue = function(fieldName, root)
 {
   var result;
-  var cascadeNames = fieldName.split('.');
+  var cascadeNames;
+  if (fieldName.length && fieldName.splice)  // is an array
+    cascadeNames = fieldName;
+  else
+    cascadeNames = fieldName.split('.');
   if (!root)
     var root = this;
   for (var i = 0, l = cascadeNames.length; i < l; ++i)
@@ -176,7 +180,39 @@ Object.getCascadeFieldValue = function(fieldName, root)
       root = result;
   }
   return result;
-}
+};
+/** @ignore */
+Object.setCascadeFieldValue = function(fieldName, value, root, forceCreateEssentialObjs)
+{
+  var cascadeNames;
+  if (fieldName.length && fieldName.splice)  // is an array
+    cascadeNames = fieldName;
+  else
+    cascadeNames = fieldName.split('.');
+  var parent = root;
+  for (var i = 0, l = cascadeNames.length; i < l; ++i)
+  {
+    var name = cascadeNames[i];
+    if (i === l - 1)  // success
+    {
+      parent[name] = value;
+      return true;
+    }
+    else
+    {
+      var obj = parent[name];
+      if (!obj && forceCreateEssentialObjs)  // create new obj
+      {
+        obj = {};
+        parent[name] = obj;
+      }
+      if (!obj)
+        return false;
+      else
+        parent = obj;
+    }
+  }
+};
 
 /**
  * Create a "heir" object of proto.

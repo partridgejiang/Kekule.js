@@ -11,7 +11,9 @@ Kekule.LOCAL_RES = true;
 Kekule.OBJDEF_TEXTS = {};
 
 /** @ignore */
-Kekule.OBJDEF_TEXTS.en = {
+//Kekule.OBJDEF_TEXTS.en =
+Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
+{
 	TITLE_PREFIX: 'TITLE_',
 	DESCRIPTION_PREFIX: 'DES_',
 	//---------------------- General ------------------------
@@ -323,4 +325,4 @@ Kekule.OBJDEF_TEXTS.en = {
 			DES_allowCreateNewChild: 'Whether new direct child of document can be created'
 		}
 	}
-};
+});

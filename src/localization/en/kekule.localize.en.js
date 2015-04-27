@@ -7,21 +7,23 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
-/** @ignore */
-Kekule.Texts = {};
+/* @ignore */
+//Kekule.Texts = {};
 
 // String constants
 /** @ignore */
-Kekule.Texts.en = {
+//Kekule.Texts.en = {
+Kekule.Localization.addResource('en', 'Texts', {
 	UNNAMED: 'unnamed'
-};
+});
 
-/** @ignore */
-Kekule.ErrorMsg = {};
+/* @ignore */
+//Kekule.ErrorMsg = {};
 
 // Exception and error messages
 /** @ignore */
-Kekule.ErrorMsg.en = {
+//Kekule.ErrorMsg.en = {
+Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// utils/kekule.utils.js
 	NON_OWN_PROPERTY_CANNOT_BE_REPLACED: 'Only directly owned property of object can be replaced',
 	// utils/kekule.domHelper.js
@@ -120,4 +122,4 @@ Kekule.ErrorMsg.en = {
 
 	// html/kekule.autoLaunchers.js
 	//MIMETYPE_NOT_SET: 'MIME type not set for resource'
-};
+});

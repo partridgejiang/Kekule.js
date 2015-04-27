@@ -7,10 +7,11 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+/* @ignore */
+//Kekule.WidgetTexts = {};
 /** @ignore */
-Kekule.WidgetTexts = {};
-/** @ignore */
-Kekule.WidgetTexts.en = {
+//Kekule.WidgetTexts.en = {
+Kekule.Localization.addResource('en', 'WidgetTexts', {
 	// Dialog
 	CAPTION_OK: 'OK',
 	CAPTION_CANCEL: 'Cancel',
@@ -54,13 +55,14 @@ Kekule.WidgetTexts.en = {
 	// configurator
 	CAPTION_CONFIG: 'Settings...',
 	HINT_CONFIG: 'Change settings'
-};
+});
 
-/** @ignore */
-Kekule.ChemWidgetTexts = {};
+/* @ignore */
+//Kekule.ChemWidgetTexts = {};
 /** @ignore */
 // Predefined strings for chem widgets.
-Kekule.ChemWidgetTexts.en = {
+//Kekule.ChemWidgetTexts.en = {
+Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	// ChemDisplayer / ChemViewer
 	CAPTION_LOADFILE: 'Load...',
 	CAPTION_LOADDATA: 'Load...',
@@ -277,10 +279,11 @@ Kekule.ChemWidgetTexts.en = {
 
 	// misc
 	S_VALUE_DEFAULT: '(Default)'
-};
+});
 
 // error messages
-Object.extend(Kekule.ErrorMsg.en, {
+//Object.extend(Kekule.ErrorMsg.en, {
+Kekule.Localization.addResource('en', 'ErrorMsg', {
 	WIDGET_CAN_NOT_BIND_TO_ELEM: 'Widget {0} can not be binded to element <{1}>',
 	LOAD_CHEMDATA_FAILED: 'Failed to load data',
 	FILE_API_NOT_SUPPORTED: 'File operations are not supported by your current web browser. Please update it.',

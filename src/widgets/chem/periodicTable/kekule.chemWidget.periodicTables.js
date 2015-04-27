@@ -18,7 +18,7 @@
 
 var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
@@ -397,16 +397,16 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 			var legendElem = doc.createElement('a');
 			legendElem.href="javascript:void(0)";
 			legendElem.className = CCNS.PERIODIC_TABLE_LEGEND + ' ' + CNS.CORNER_ALL;
-			DU.setElementText(legendElem, CWT.LEGEND_CAPTION);
+			DU.setElementText(legendElem, /*CWT.LEGEND_CAPTION*/ Kekule.$L('ChemWidgetTexts.LEGEND_CAPTION'));
 
 			var legendContentElem = doc.createElement('div');
 			legendContentElem.className = CCNS.PERIODIC_TABLE_LEGEND_CONTENT + ' ' + CNS.CORNER_ALL;
 			// symbol legend
 			var fakeInfo = {
-				'symbol': CWT.LEGEND_ELEM_SYMBOL,
-				'atomicNumber': CWT.LEGEND_ATOMIC_NUM,
-				'naturalMass': CWT.LEGEND_ATOMIC_WEIGHT,
-				'name': CWT.LEGEND_ELEM_NAME
+				'symbol': Kekule.$L('ChemWidgetTexts.LEGEND_ELEM_SYMBOL'), //CWT.LEGEND_ELEM_SYMBOL,
+				'atomicNumber': Kekule.$L('ChemWidgetTexts.LEGEND_ATOMIC_NUM'), //CWT.LEGEND_ATOMIC_NUM,
+				'naturalMass': Kekule.$L('ChemWidgetTexts.LEGEND_ATOMIC_WEIGHT'), //CWT.LEGEND_ATOMIC_WEIGHT,
+				'name': Kekule.$L('ChemWidgetTexts.LEGEND_ELEM_NAME') //CWT.LEGEND_ELEM_NAME
 			}
 			var symLegendElem = this.createElemCellContent(doc, fakeInfo, CCNS.PERIODIC_TABLE_LEGEND_ELEM_CELL_CONTENT);
 			legendContentElem.appendChild(symLegendElem);

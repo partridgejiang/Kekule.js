@@ -21,7 +21,7 @@
 var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
-var CWT = Kekule.WidgetTexts;
+//var CWT = Kekule.WidgetTexts;
 
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
@@ -283,7 +283,7 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		{
 			boxItems.push({'text': fontFamilies[i], 'value': fontFamilies[i]});
 		}
-		result.setHint(CWT.HINT_CHOOSE_FONT_FAMILY);
+		result.setHint(/*CWT.HINT_CHOOSE_FONT_FAMILY*/Kekule.$L('WidgetTexts.HINT_CHOOSE_FONT_FAMILY'));
 		result.addClassName(CNS.TEXTEDITOR_FONTBOX);
 		result.setItems(boxItems);
 		result.appendToWidget(toolbar);
@@ -302,8 +302,8 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		result.appendToWidget(toolbar);
 		if (btnName === 'textWrap')
 		{
-			caption = CWT.CAPTION_TOGGLE_TEXTWRAP;
-			hint = CWT.HINT_TOGGLE_TEXTWRAP;
+			caption = Kekule.$L('WidgetTexts.CAPTION_TOGGLE_TEXTWRAP'); // CWT.CAPTION_TOGGLE_TEXTWRAP;
+			hint = Kekule.$L('WidgetTexts.HINT_TOGGLE_TEXTWRAP'); // CWT.HINT_TOGGLE_TEXTWRAP;
 			cssClassName = CNS.TEXTEDITOR_BTN_TEXTWRAP;
 			result.setChecked(this.getWrap() !== 'off');
 			result.addEventListener('execute', function(e){
@@ -313,15 +313,15 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		}
 		else if (btnName === 'fontSizeInc')
 		{
-			caption = CWT.CAPTION_INC_TEXT_SIZE;
-			hint = CWT.HINT_INC_TEXT_SIZE;
+			caption = Kekule.$L('WidgetTexts.CAPTION_INC_TEXT_SIZE'); // CWT.CAPTION_INC_TEXT_SIZE;
+			hint = Kekule.$L('WidgetTexts.HINT_INC_TEXT_SIZE'); // CWT.HINT_INC_TEXT_SIZE;
 			cssClassName = CNS.TEXTEDITOR_BTN_FONTSIZEINC;
 			result.addEventListener('execute', this.increaseTextSize, this);
 		}
 		else if (btnName === 'fontSizeDec')
 		{
-			caption = CWT.CAPTION_DEC_TEXT_SIZE;
-			hint = CWT.HINT_DEC_TEXT_SIZE;
+			caption = Kekule.$L('WidgetTexts.CAPTION_DEC_TEXT_SIZE'); //CWT.CAPTION_DEC_TEXT_SIZE;
+			hint = Kekule.$L('WidgetTexts.HINT_DEC_TEXT_SIZE'); //CWT.HINT_DEC_TEXT_SIZE;
 			cssClassName = CNS.TEXTEDITOR_BTN_FONTSIZEDEC;
 			result.addEventListener('execute', this.decreaseTextSize, this);
 		}

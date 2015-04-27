@@ -29,7 +29,7 @@ var PS = Class.PropertyScope;
 var DU = Kekule.DomUtils;
 var ZU = Kekule.ZoomUtils;
 var CW = Kekule.ChemWidget;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
@@ -421,7 +421,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			{
 				// NOTE: just report a text msg rather than an exception object.
 				// In IE and Chrome, it seems that error object can not cross context, so that may cause Illegal invocation error in Kekule.ExceptionHandler
-				this.reportException(Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI + resData.resUri || '');
+				this.reportException(/*Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI*/Kekule.$L('ErrorMsg.CANNOT_LOAD_RES_OF_URI') + resData.resUri || '');
 				//Kekule.throwException(Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI + resData.resUri || '');
 			}
 		}
@@ -462,7 +462,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var result = M.getPreferredBridgeInstance();
 		if (!result)   // can not find suitable draw bridge
 		{
-			Kekule.error(Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED);
+			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
 		return result;
 	},
@@ -712,7 +712,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			if (chemObj)
 				this.setChemObj(chemObj);
 			else
-				Kekule.error(Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED);
+				Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
 			return chemObj;
 		}
 		catch(e)
@@ -811,7 +811,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		else
 		{
-			Kekule.error(Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT);
+			Kekule.error(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT'));
 			return null;
 		}
 	},
@@ -1276,8 +1276,8 @@ Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(Kekule.ActionFileOpen,
 	{
 		$super();
 		this.setDisplayer(displayer);
-		this.setText(CWT.CAPTION_LOADFILE);
-		this.setHint(CWT.HINT_LOADFILE);
+		this.setText(/*CWT.CAPTION_LOADFILE*/Kekule.$L('ChemWidgetTexts.CAPTION_LOADFILE'));
+		this.setHint(/*CWT.HINT_LOADFILE*/Kekule.$L('ChemWidgetTexts.HINT_LOADFILE'));
 	},
 	/** @private */
 	initProperties: function()
@@ -1366,7 +1366,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_LOADDATA, CWT.HINT_LOADDATA);
+		$super(displayer, /*CWT.CAPTION_LOADDATA, CWT.HINT_LOADDATA*/Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA'), Kekule.$L('ChemWidgetTexts.HINT_LOADDATA'));
 		//this.setDisplayer(displayer);
 		//this.setText(CWT.CAPTION_LOADDATA);
 		//this.setHint(CWT.HINT_LOADDATA);
@@ -1583,7 +1583,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_SAVEFILE, CWT.HINT_SAVEFILE);
+		$super(displayer, /*CWT.CAPTION_SAVEFILE, CWT.HINT_SAVEFILE*/Kekule.$L('ChemWidgetTexts.CAPTION_SAVEFILE'), Kekule.$L('ChemWidgetTexts.HINT_SAVEFILE'));
 		//this.setDisplayer(displayer);
 		//this.setText(CWT.CAPTION_SAVEFILE);
 		//this.setHint(CWT.HINT_SAVEFILE);
@@ -1634,11 +1634,11 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	createFormatDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		var result = new Kekule.Widget.Dialog(doc, CWT.CAPTION_CHOOSEFILEFORMAT, [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_CHOOSEFILEFORMAT'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		result.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT);
 		// label
 		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_SELECT_FORMAT;
+		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_FORMAT'); //CWT.CAPTION_SELECT_FORMAT;
 		result.getClientElem().appendChild(elem);
 		// format selector
 		elem = doc.createElement('div');
@@ -1650,7 +1650,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		result._formatSelector = formatSelector;
 		// label
 		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_PREVIEW_FILE_CONTENT;
+		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_PREVIEW_FILE_CONTENT'); //CWT.CAPTION_PREVIEW_FILE_CONTENT;
 		result.getClientElem().appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
@@ -1810,7 +1810,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 					self.setLastFormat(formatId);
 					var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
 					var ext = fileExts[0] || fileExts;
-					var fileName = CWT.S_DEF_SAVE_FILENAME + '.' + ext;
+					var fileName = /*CWT.S_DEF_SAVE_FILENAME*/Kekule.$L('ChemWidgetTexts.S_DEF_SAVE_FILENAME') + '.' + ext;
 					self._saveAction.setFileName(fileName);
 					//console.log(fileName);
 					self._saveAction.execute(target);
@@ -1834,7 +1834,7 @@ Kekule.ChemWidget.ActionDisplayerReset = Class.create(Kekule.ChemWidget.ActionOn
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_RESETVIEW, CWT.HINT_RESETVIEW);
+		$super(displayer, /*CWT.CAPTION_RESETVIEW, CWT.HINT_RESETVIEW*/Kekule.$L('ChemWidgetTexts.CAPTION_RESETVIEW'), Kekule.$L('ChemWidgetTexts.HINT_RESETVIEW'));
 	},
 	/** @private */
 	doExecute: function()
@@ -1858,7 +1858,7 @@ Kekule.ChemWidget.ActionDisplayerZoomIn = Class.create(Kekule.ChemWidget.ActionO
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_ZOOMIN, CWT.HINT_ZOOMIN);
+		$super(displayer, /*CWT.CAPTION_ZOOMIN, CWT.HINT_ZOOMIN*/Kekule.$L('ChemWidgetTexts.CAPTION_ZOOMIN'), Kekule.$L('ChemWidgetTexts.HINT_ZOOMIN'));
 	},
 	/** @private */
 	doExecute: function()
@@ -1881,7 +1881,7 @@ Kekule.ChemWidget.ActionDisplayerZoomOut = Class.create(Kekule.ChemWidget.Action
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_ZOOMOUT, CWT.HINT_ZOOMOUT);
+		$super(displayer, /*CWT.CAPTION_ZOOMOUT, CWT.HINT_ZOOMOUT*/Kekule.$L('ChemWidgetTexts.CAPTION_ZOOMOUT'), Kekule.$L('ChemWidgetTexts.HINT_ZOOMOUT'));
 	},
 	/** @private */
 	doExecute: function()
@@ -1904,7 +1904,7 @@ Kekule.ChemWidget.ActionDisplayerResetZoom = Class.create(Kekule.ChemWidget.Acti
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_RESETZOOM, CWT.HINT_RESETZOOM);
+		$super(displayer, /*CWT.CAPTION_RESETZOOM, CWT.HINT_RESETZOOM*/Kekule.$L('ChemWidgetTexts.CAPTION_RESETZOOM'), Kekule.$L('ChemWidgetTexts.HINT_RESETZOOM'));
 	},
 	/** @private */
 	doExecute: function()
@@ -1928,7 +1928,7 @@ Kekule.ChemWidget.ActionDisplayerHideHydrogens = Class.create(Kekule.ChemWidget.
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
-		$super(displayer, CWT.CAPTION_HIDEHYDROGENS, CWT.HINT_HIDEHYDROGENS);
+		$super(displayer, /*CWT.CAPTION_HIDEHYDROGENS, CWT.HINT_HIDEHYDROGENS*/Kekule.$L('ChemWidgetTexts.CAPTION_HIDEHYDROGENS'), Kekule.$L('ChemWidgetTexts.HINT_HIDEHYDROGENS'));
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -2030,7 +2030,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal = Class.create(Kek
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_SKELETAL, CWT.HINT_SKELETAL, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.TYPE);
+		$super(viewer, /*CWT.CAPTION_SKELETAL, CWT.HINT_SKELETAL,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_SKELETAL'), Kekule.$L('ChemWidgetTexts.HINT_SKELETAL'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.TYPE);
 	}
 });
 /** @Ignore */
@@ -2050,7 +2052,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed = Class.create(Ke
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_CONDENSED, CWT.HINT_CONDENSED, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.TYPE);
+		$super(viewer, /*CWT.CAPTION_CONDENSED, CWT.HINT_CONDENSED,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_CONDENSED'), Kekule.$L('ChemWidgetTexts.HINT_CONDENSED'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.TYPE);
 	}
 });
 /** @Ignore */
@@ -2070,7 +2074,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire = Class.create(Kekule.
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_WIRE, CWT.HINT_WIRE, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.TYPE);
+		$super(viewer, /*CWT.CAPTION_WIRE, CWT.HINT_WIRE,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_WIRE'), Kekule.$L('ChemWidgetTexts.HINT_WIRE'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.TYPE);
 	}
 });
 /** @Ignore */
@@ -2090,7 +2096,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks = Class.create(Kekul
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_STICKS, CWT.HINT_STICKS, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.TYPE);
+		$super(viewer, /*CWT.CAPTION_STICKS, CWT.HINT_STICKS,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_STICKS'), Kekule.$L('ChemWidgetTexts.HINT_STICKS'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.TYPE);
 	}
 });
 /** @Ignore */
@@ -2110,7 +2118,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick = Class.create(Ke
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_BALLSTICK, CWT.HINT_BALLSTICK, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.TYPE);
+		$super(viewer, /*CWT.CAPTION_BALLSTICK, CWT.HINT_BALLSTICK,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_BALLSTICK'), Kekule.$L('ChemWidgetTexts.HINT_BALLSTICK'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.TYPE);
 	}
 });
 /** @Ignore */
@@ -2130,7 +2140,9 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill = Class.create(Ke
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_SPACEFILL, CWT.HINT_SPACEFILL, Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.TYPE);
+		$super(viewer, /*CWT.CAPTION_SPACEFILL, CWT.HINT_SPACEFILL,*/
+			Kekule.$L('ChemWidgetTexts.CAPTION_SPACEFILL'), Kekule.$L('ChemWidgetTexts.HINT_SPACEFILL'),
+			Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.TYPE);
 	}
 });
 /** @Ignore */

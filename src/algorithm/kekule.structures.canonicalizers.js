@@ -714,7 +714,7 @@ Kekule.Canonicalizer = Class.create(
 			var executor = this.getExecutor(id);
 			if (!executor)
 			{
-				Kekule.error(Kekule.ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND);
+				Kekule.error(Kekule.$L('ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND')/*Kekule.ErrorMsg.REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND*/);
 			}
 			else
 			{

@@ -30,7 +30,7 @@ var PS = Class.PropertyScope;
 var ZU = Kekule.ZoomUtils;
 var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 var CW = Kekule.ChemWidget;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 var EM = Kekule.Widget.EvokeMode;
 
 /** @ignore */
@@ -622,7 +622,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	getComposerDialog: function()
 	{
 		if (!this._composerDialog)
-			this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), CWT.CAPTION_EDIT_OBJ,
+			this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
 				[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		return this._composerDialog;
 	},
@@ -1707,7 +1707,7 @@ Kekule.ChemWidget.ActionViewerRotateLeft = Class.create(Kekule.ChemWidget.Action
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT);
+		$super(viewer, /*CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATELEFT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATELEFT'));
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -1731,7 +1731,7 @@ Kekule.ChemWidget.ActionViewerRotateRight = Class.create(Kekule.ChemWidget.Actio
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT);
+		$super(viewer, /*CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATERIGHT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATERIGHT'));
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -1755,7 +1755,7 @@ Kekule.ChemWidget.ActionViewerRotateX = Class.create(Kekule.ChemWidget.ActionVie
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX);
+		$super(viewer, /*CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEX'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEX'));
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -1782,7 +1782,7 @@ Kekule.ChemWidget.ActionViewerRotateY = Class.create(Kekule.ChemWidget.ActionVie
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY);
+		$super(viewer, /*CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEY'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEY'));
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -1809,7 +1809,7 @@ Kekule.ChemWidget.ActionViewerRotateZ = Class.create(Kekule.ChemWidget.ActionVie
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ);
+		$super(viewer, /*CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEZ'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEZ'));
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -1835,7 +1835,7 @@ Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub = Class.create(Kekule.Che
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_MOL_DISPLAY_TYPE, CWT.HINT_MOL_DISPLAY_TYPE);
+		$super(viewer, /*CWT.CAPTION_MOL_DISPLAY_TYPE, CWT.HINT_MOL_DISPLAY_TYPE*/Kekule.$L('ChemWidgetTexts.CAPTION_MOL_DISPLAY_TYPE'), Kekule.$L('ChemWidgetTexts.HINT_MOL_DISPLAY_TYPE'));
 	},
 	/** @private */
 	doExecute: function(target)
@@ -1861,7 +1861,7 @@ Kekule.ChemWidget.ActionViewerEdit = Class.create(Kekule.ChemWidget.ActionOnView
 	/** @constructs */
 	initialize: function($super, viewer)
 	{
-		$super(viewer, CWT.CAPTION_OPENEDITOR, CWT.HINT_OPENEDITOR);
+		$super(viewer, /*CWT.CAPTION_OPENEDITOR, CWT.HINT_OPENEDITOR*/Kekule.$L('ChemWidgetTexts.CAPTION_OPENEDITOR'), Kekule.$L('ChemWidgetTexts.HINT_OPENEDITOR'));
 	},
 	/** @private */
 	doUpdate: function($super)

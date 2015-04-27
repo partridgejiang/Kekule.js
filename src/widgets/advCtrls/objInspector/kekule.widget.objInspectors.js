@@ -1223,19 +1223,19 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 			var text;
 			if (objs.length <= 0)
 			{
-				text = Kekule.WidgetTexts.S_INSPECT_NONE;
+				text = Kekule.$L('WidgetTexts.S_INSPECT_NONE'); //Kekule.WidgetTexts.S_INSPECT_NONE;
 			}
 			else if (objs.length === 1)
 			{
 				var obj = objs[0];
 				var id = obj.getId? obj.getId(): null;
 				var stype = DataType.getType(obj);
-				text = id? Kekule.WidgetTexts.S_INSPECT_ID_OBJECT.format(id, stype):
-					Kekule.WidgetTexts.S_INSPECT_ANONYMOUS_OBJECT.format(stype);
+				text = id? /*Kekule.WidgetTexts.S_INSPECT_ID_OBJECT*/Kekule.$L('WidgetTexts.S_INSPECT_ID_OBJECT').format(id, stype):
+					/*Kekule.WidgetTexts.S_INSPECT_ANONYMOUS_OBJECT*/Kekule.$L('WidgetTexts.S_INSPECT_ANONYMOUS_OBJECT').format(stype);
 			}
 			else
 			{
-				text = Kekule.WidgetTexts.S_INSPECT_OBJECTS.format(objs.length);
+				text = /*Kekule.WidgetTexts.S_INSPECT_OBJECTS*/Kekule.$L('WidgetTexts.S_INSPECT_OBJECTS').format(objs.length);
 			}
 			DU.setElementText(this._objsInfoElem, text);
 		}

@@ -70,7 +70,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 			{
 				Kekule.chemError(
 					Kekule.hasLocalRes()?
-						Kekule.ErrorMsg.INVALID_CHEMELEMENT + ': ' + symbolOrAtomicNumber :
+						/*Kekule.ErrorMsg.INVALID_CHEMELEMENT*/Kekule.$L('ErrorMsg.INVALID_CHEMELEMENT') + ': ' + symbolOrAtomicNumber :
 						'Invalid chemical element: ' + symbolOrAtomicNumber
 				);
 			}
@@ -357,7 +357,7 @@ Kekule.Isotope = Class.create(Kekule.Element,
 			else
 			{
 				Kekule.chemError(
-					(Kekule.hasLocalRes() ? Kekule.ErrorMsg.INVALID_ISOTOPE : 'Invalid isotope')
+					(Kekule.hasLocalRes() ? /*Kekule.ErrorMsg.INVALID_ISOTOPE*/Kekule.$L('ErrorMsg.INVALID_ISOTOPE') : 'Invalid isotope')
 					+ ': ' + this.getSymbol() + '/' + massNumber);
 			}
 		}

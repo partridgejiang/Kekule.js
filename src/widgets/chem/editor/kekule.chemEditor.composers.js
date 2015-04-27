@@ -29,7 +29,7 @@ var CE = Kekule.Editor;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 var BNS = Kekule.ChemWidget.ComponentWidgetNames;
-var CWT = Kekule.ChemWidgetTexts;
+//var CWT = Kekule.ChemWidgetTexts;
 
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
@@ -90,8 +90,8 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	 * @ignore
 	 */
 	ATOM_COLOR_SPECIAL_VALUE_INFO: {
-		value: '(use atom custom color)',
-		text: 'Atom',
+		text: '(use atom custom color)',
+		value: 'Atom',
 		className: CNS.COLORPICKER_SPEC_COLOR_MIXED
 	},
 	/** @private */
@@ -249,7 +249,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 				var comboBox = new Kekule.Widget.ComboBox(this);
 				this.fillFontNameBox(comboBox);
 				comboBox.addClassName(CCNS.COMPOSER_FONTNAME_BOX);
-				comboBox.setHint(CWT.HINT_FONTNAME);
+				comboBox.setHint(/*CWT.HINT_FONTNAME*/Kekule.$L('ChemWidgetTexts.HINT_FONTNAME'));
 				comboBox.addEventListener('valueChange', function(e)
 				{
 					this.applyFontName();
@@ -262,7 +262,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 				comboBox = new Kekule.Widget.ComboBox(this);
 				this.fillFontSizeBox(comboBox);
 				comboBox.addClassName(CCNS.COMPOSER_FONTSIZE_BOX);
-				comboBox.setHint(CWT.HINT_FONTSIZE);
+				comboBox.setHint(/*CWT.HINT_FONTSIZE*/Kekule.$L('ChemWidgetTexts.HINT_FONTSIZE'));
 				comboBox.addEventListener('valueChange', function(e)
 				{
 					this.applyFontSize();
@@ -273,7 +273,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			{
 				// color box
 				var colorBox = new Kekule.Widget.ColorDropButton(this);
-				colorBox.setHint(CWT.HINT_PICK_COLOR);
+				colorBox.setHint(/*CWT.HINT_PICK_COLOR*/Kekule.$L('ChemWidgetTexts.HINT_PICK_COLOR'));
 				colorBox.setShowText(false);
 				colorBox.setSpecialColors([Kekule.Widget.ColorPicker.SpecialColors.UNSET, this.ATOM_COLOR_SPECIAL_VALUE_INFO]);
 				colorBox.addClassName(CCNS.COMPOSER_COLOR_BOX);
@@ -289,13 +289,16 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 				// its drop downs
 				var TD = Kekule.Render.TextDirection;
 				var childInfos = [
-					{'value': TD.DEFAULT, 'text': CWT.CAPTION_TEXT_DIRECTION_DEFAULT, className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_DEFAULT},
-					{'value': TD.LTR, 'text': CWT.CAPTION_TEXT_DIRECTION_LTR, className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_LTR},
-					{'value': TD.RTL, 'text': CWT.CAPTION_TEXT_DIRECTION_RTL, className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_RTL},
-					{'value': TD.TTB, 'text': CWT.CAPTION_TEXT_DIRECTION_TTB, className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_TTB},
-					{'value': TD.BTT, 'text': CWT.CAPTION_TEXT_DIRECTION_BTT, className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_BTT}
+					{'value': TD.DEFAULT, 'text': /*CWT.CAPTION_TEXT_DIRECTION_DEFAULT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION_DEFAULT'), className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_DEFAULT},
+					{'value': TD.LTR, 'text': /*CWT.CAPTION_TEXT_DIRECTION_LTR*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION_LTR'), className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_LTR},
+					{'value': TD.RTL, 'text': /*CWT.CAPTION_TEXT_DIRECTION_RTL*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION_RTL'), className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_RTL},
+					{'value': TD.TTB, 'text': /*CWT.CAPTION_TEXT_DIRECTION_TTB*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION_TTB'), className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_TTB},
+					{'value': TD.BTT, 'text': /*CWT.CAPTION_TEXT_DIRECTION_BTT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION_BTT'), className: CCNS.COMPOSER_TEXTDIRECTION_BUTTON_BTT}
 				];
-				var btnSet = this._createStyleButtonSet(CWT.CAPTION_TEXT_DIRECTION, CWT.HINT_TEXT_DIRECTION, CCNS.COMPOSER_TEXTDIRECTION_BUTTON, childInfos);
+				var btnSet = this._createStyleButtonSet(
+					/*CWT.CAPTION_TEXT_DIRECTION, CWT.HINT_TEXT_DIRECTION,*/
+					Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_DIRECTION'), Kekule.$L('ChemWidgetTexts.HINT_TEXT_DIRECTION'),
+					CCNS.COMPOSER_TEXTDIRECTION_BUTTON, childInfos);
 				btnSet.addEventListener('select', function(e)
 				{
 					this.applyTextDirection();
@@ -307,14 +310,17 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 				// horizontal text align button
 				var TA = Kekule.Render.TextAlign;
 				var childInfos = [
-					{'value': TA.DEFAULT, 'text': CWT.CAPTION_TEXT_ALIGN_DEFAULT, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_DEFAULT},
-					{'value': TA.LEADING, 'text': CWT.CAPTION_TEXT_ALIGN_LEADING, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEADING},
-					{'value': TA.TRAILING, 'text': CWT.CAPTION_TEXT_ALIGN_TRAILING, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TRAILING},
-					{'value': TA.CENTER, 'text': CWT.CAPTION_TEXT_ALIGN_CENTER, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_CENTER},
-					{'value': TA.LEFT, 'text': CWT.CAPTION_TEXT_ALIGN_LEFT, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEFT},
-					{'value': TA.RIGHT, 'text': CWT.CAPTION_TEXT_ALIGN_RIGHT, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_RIGHT}
+					{'value': TA.DEFAULT, 'text': /*CWT.CAPTION_TEXT_ALIGN_DEFAULT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_DEFAULT'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_DEFAULT},
+					{'value': TA.LEADING, 'text': /*CWT.CAPTION_TEXT_ALIGN_LEADING*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_LEADING'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEADING},
+					{'value': TA.TRAILING, 'text': /*CWT.CAPTION_TEXT_ALIGN_TRAILING*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_TRAILING'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TRAILING},
+					{'value': TA.CENTER, 'text': /*CWT.CAPTION_TEXT_ALIGN_CENTER*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_CENTER'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_CENTER},
+					{'value': TA.LEFT, 'text': /*CWT.CAPTION_TEXT_ALIGN_LEFT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_LEFT'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEFT},
+					{'value': TA.RIGHT, 'text': /*CWT.CAPTION_TEXT_ALIGN_RIGHT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_RIGHT'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_RIGHT}
 				];
-				var btnSet = this._createStyleButtonSet(CWT.CAPTION_TEXT_HORIZONTAL_ALIGN, CWT.HINT_TEXT_HORIZONTAL_ALIGN, CCNS.COMPOSER_TEXTALIGN_BUTTON_HORIZONTAL, childInfos);
+				var btnSet = this._createStyleButtonSet(
+					/*CWT.CAPTION_TEXT_HORIZONTAL_ALIGN, CWT.HINT_TEXT_HORIZONTAL_ALIGN,*/
+					Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_HORIZONTAL_ALIGN'), Kekule.$L('ChemWidgetTexts.HINT_TEXT_HORIZONTAL_ALIGN'),
+					CCNS.COMPOSER_TEXTALIGN_BUTTON_HORIZONTAL, childInfos);
 				btnSet.addEventListener('select', function(e)
 				{
 					this.applyTextHorizontalAlign();
@@ -324,14 +330,17 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 				// vertical text align button
 				var TA = Kekule.Render.TextAlign;
 				var childInfos = [
-					{'value': TA.DEFAULT, 'text': CWT.CAPTION_TEXT_ALIGN_DEFAULT, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_DEFAULT},
-					{'value': TA.LEADING, 'text': CWT.CAPTION_TEXT_ALIGN_LEADING, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEADING},
-					{'value': TA.TRAILING, 'text': CWT.CAPTION_TEXT_ALIGN_TRAILING, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TRAILING},
-					{'value': TA.CENTER, 'text': CWT.CAPTION_TEXT_ALIGN_CENTER, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_CENTER},
-					{'value': TA.TOP, 'text': CWT.CAPTION_TEXT_ALIGN_TOP, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TOP},
-					{'value': TA.BOTTOM, 'text': CWT.CAPTION_TEXT_ALIGN_BOTTOM, className: CCNS.COMPOSER_TEXTALIGN_BUTTON_BOTTOM}
+					{'value': TA.DEFAULT, 'text': /*CWT.CAPTION_TEXT_ALIGN_DEFAULT*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_DEFAULT'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_DEFAULT},
+					{'value': TA.LEADING, 'text': /*CWT.CAPTION_TEXT_ALIGN_LEADING*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_LEADING'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_LEADING},
+					{'value': TA.TRAILING, 'text': /*CWT.CAPTION_TEXT_ALIGN_TRAILING*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_TRAILING'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TRAILING},
+					{'value': TA.CENTER, 'text': /*CWT.CAPTION_TEXT_ALIGN_CENTER*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_CENTER'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_CENTER},
+					{'value': TA.TOP, 'text': /*CWT.CAPTION_TEXT_ALIGN_TOP*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_TOP'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_TOP},
+					{'value': TA.BOTTOM, 'text': /*CWT.CAPTION_TEXT_ALIGN_BOTTOM*/Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_ALIGN_BOTTOM'), className: CCNS.COMPOSER_TEXTALIGN_BUTTON_BOTTOM}
 				];
-				var btnSet = this._createStyleButtonSet(CWT.CAPTION_TEXT_ALIGN, CWT.HINT_TEXT_VERTICAL_ALIGN, CCNS.COMPOSER_TEXTALIGN_BUTTON_VERTICAL, childInfos);
+				var btnSet = this._createStyleButtonSet(
+					/*CWT.CAPTION_TEXT_VERTICAL_ALIGN, CWT.HINT_TEXT_VERTICAL_ALIGN,*/
+					Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_VERTICAL_ALIGN'), Kekule.$L('ChemWidgetTexts.HINT_TEXT_VERTICAL_ALIGN'),
+					CCNS.COMPOSER_TEXTALIGN_BUTTON_VERTICAL, childInfos);
 				btnSet.addEventListener('select', function(e)
 				{
 					this.applyTextVerticalAlign();
@@ -424,7 +433,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	fillFontSizeBox: function(sizeComboBox)
 	{
 		var listedSizes = this.getEditorConfigs().getStyleSetterConfigs().getListedFontSizes();
-		var boxItems = [{'text': Kekule.ChemWidgetTexts.S_VALUE_DEFAULT, 'value': undefined}];
+		var boxItems = [{'text': /*Kekule.ChemWidgetTexts.S_VALUE_DEFAULT*/Kekule.$L('ChemWidgetTexts.S_VALUE_DEFAULT'), 'value': undefined}];
 		for (var i = 0, l = listedSizes.length; i < l; ++i)
 		{
 			boxItems.push({'text': listedSizes[i] + ' px', 'value': listedSizes[i]});
@@ -435,7 +444,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	fillFontNameBox: function(fontComboBox)
 	{
 		var listedNames = this.getEditorConfigs().getStyleSetterConfigs().getListedFontNames();
-		var boxItems = [{'text': Kekule.ChemWidgetTexts.S_VALUE_DEFAULT, 'value': ''}];
+		var boxItems = [{'text': /*Kekule.ChemWidgetTexts.S_VALUE_DEFAULT*/Kekule.$L('ChemWidgetTexts.S_VALUE_DEFAULT'), 'value': ''}];
 		for (var i = 0, l = listedNames.length; i < l; ++i)
 		{
 			boxItems.push({'text': listedNames[i], 'value': listedNames[i]});
@@ -1040,7 +1049,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			}
 			else  // else, failed
 			{
-				Kekule.throwException(Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI + resData.resUri || '');
+				Kekule.throwException(/*Kekule.ErrorMsg.CANNOT_LOAD_RES_OF_URI*/Kekule.$L('ErrorMsg.CANNOT_LOAD_RES_OF_URI') + resData.resUri || '');
 			}
 		}
 	},

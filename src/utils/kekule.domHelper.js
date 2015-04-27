@@ -154,12 +154,12 @@ Kekule.DomHelper = Class.create(ObjectEx,
 	/** @private */
 	_getEmptyDocErrorMsg: function()
 	{
-		return Kekule.hasLocalRes()? this.ERR_EMPTY_DOC: Kekule.ErrorMsg.EMPTY_DOC;
+		return !Kekule.hasLocalRes()? this.ERR_EMPTY_DOC: Kekule.$L('ErrorMsg.EMPTY_DOC'); //Kekule.ErrorMsg.EMPTY_DOC;
 	},
 	/** @private */
 	_getElementNotSetErrorMsg: function()
 	{
-		return Kekule.hasLocalRes()? this.ELEMENT_NOTSET: Kekule.ErrorMsg.ELEMENT_NOTSET;
+		return !Kekule.hasLocalRes()? this.ELEMENT_NOTSET: Kekule.$L('ErrorMsg.ELEMENT_NOTSET'); //Kekule.ErrorMsg.ELEMENT_NOTSET;
 	},
 
 	/** @private */

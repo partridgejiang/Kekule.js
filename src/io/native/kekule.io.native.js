@@ -35,7 +35,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 			jsonObj = JsonUtility.parse(data);
 		else // can not understand data other than text or JSON
 		{
-			Kekule.error(Kekule.ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT*/Kekule.$L('ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT'));
 			return null;
 		}
 		return $super(jsonObj, Kekule.IO.ChemDataType.JSON);
@@ -46,7 +46,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
 		{
-			Kekule.error(Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS);
+			Kekule.error(/*Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.JSON_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
 		return serializer.load(null, data);  // create new object
@@ -83,7 +83,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		if ((dtype != Kekule.IO.ChemDataType.JSON) && (dtype != Kekule.IO.ChemDataType.TEXT))
 			// can not output data other than text or JSON
 		{
-			Kekule.error(Kekule.ErrorMsg.KCJ_OUTPUT_DATATYPE_NOT_JSON_OR_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.KCJ_OUTPUT_DATATYPE_NOT_JSON_OR_TEXT*/Kekule.$L('ErrorMsg.KCJ_OUTPUT_DATATYPE_NOT_JSON_OR_TEXT'));
 			return null;
 		}
 
@@ -102,7 +102,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
 		{
-			Kekule.error(Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS);
+			Kekule.error(/*Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.JSON_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
 		var jsonObj = {};
@@ -137,7 +137,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 		}
 		else // can not understand data other than text or DOM
  		{
-			Kekule.error(Kekule.ErrorMsg.KCX_INPUT_DATATYPE_NOT_DOM_OR_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.KCX_INPUT_DATATYPE_NOT_DOM_OR_TEXT*/Kekule.$L('ErrorMsg.KCX_INPUT_DATATYPE_NOT_DOM_OR_TEXT'));
 			return null;
 		}
 		return $super(srcElem, Kekule.IO.ChemDataType.DOM);
@@ -148,7 +148,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 		var serializer = ObjSerializerFactory.getSerializer('xml');
 		if (!serializer)
 		{
-			Kekule.error(Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS);
+			Kekule.error(/*Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.XML_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
 		return serializer.load(null, data);  // create new object
@@ -187,7 +187,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		if ((dtype != Kekule.IO.ChemDataType.DOM) && (dtype != Kekule.IO.ChemDataType.TEXT))
 			// can not output data other than DOM or text
 		{
-			Kekule.error(Kekule.ErrorMsg.KCX_OUTPUT_DATATYPE_NOT_DOM_OR_TEXT);
+			Kekule.error(/*Kekule.ErrorMsg.KCX_OUTPUT_DATATYPE_NOT_DOM_OR_TEXT*/Kekule.$L('ErrorMsg.KCX_OUTPUT_DATATYPE_NOT_DOM_OR_TEXT'));
 			return null;
 		}
 
@@ -206,7 +206,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var serializer = ObjSerializerFactory.getSerializer('xml');
 		if (!serializer)
 		{
-			Kekule.error(Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS);
+			Kekule.error(/*Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.XML_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
 		var doc = XmlUtility.newDocument(this.getRootTag());

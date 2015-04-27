@@ -1641,7 +1641,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 		{
 			//this._concreteRenderer = new Kekule.Render.Formula3DRenderer(chemObj.getFormula(), drawBridge, renderConfigs);
 			this._concreteRenderer = null;
-			Kekule.raise(Kekule.ErrorMsg.FORMULA_RENDERER_3D_NOT_AVAILABLE);
+			Kekule.raise(/*Kekule.ErrorMsg.FORMULA_RENDERER_3D_NOT_AVAILABLE*/Kekule.$L('ErrorMsg.FORMULA_RENDERER_3D_NOT_AVAILABLE'));
 		}
 		this._concreteRenderer.setParentRenderer(this);
 		//this.setMoleculeDisplayType(moleculeDisplayType || Kekule.Render.MoleculeDisplayType.BOND_LINE);
