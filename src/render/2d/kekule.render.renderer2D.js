@@ -2683,6 +2683,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			result = this.doDrawTriangleHashBasedConnector(context, renderType, node1, node2,
 				coord1, coord2, lineLength, renderOptions);
 		}
+		else if (this.isRectangleBasedConnector(renderType))
+		{
+			result = this.doDrawRectangleBasedConnector(context, renderType, node1, node2,
+				coord1, coord2, lineLength, renderOptions);
+		}
 		else if (this.isWavyBasedConnector(renderType))
 		{
 			result = this.doDrawWavyBasedConnector(context, renderType, node1, node2,
@@ -2693,13 +2698,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	},
 
 	/** @private */
-	_lineBasedConnectorTypes: [RT.SINGLE, RT.DOUBLE, RT.TRIPLE,
+	_lineBasedConnectorTypes: [RT.SINGLE, RT.DOUBLE, RT.TRIPLE, RT.QUAD,
 			RT.BOLD, RT.BOLD_DOUBLE, RT.BOLD_TRIPLE,
 			RT.DASHED, RT.DASHED_DOUBLE, RT.DASHED_TRIPLE, RT.SOLID_DASH, RT.BOLD_DASH,
 			RT.ARROWED],
 	_triangleBasedConnectorTypes: [RT.WEDGED_SOLID, RT.WEDGED_SOLID_INV,
 			RT.WEDGED_HOLLOW, RT.WEDGED_HOLLOW_INV],
 	_triangleHashBasedConnectorTypes: [RT.WEDGED_HASHED, RT.WEDGED_HASHED_INV, RT.HASHED],
+	_rectangleBasedConnectorTypes: [RT.WEDGED_SOLID_BOTH, RT.WEDGED_HOLLOW_BOTH],
 	/**
 	 * Check if a connector's render type is based on line and can be drawn by doDrawLineBasedConnector.
 	 * @param {Int} renderType
@@ -2729,6 +2735,16 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	isTriangleHashBasedConnector: function(renderType)
 	{
 		return (this._triangleHashBasedConnectorTypes.indexOf(renderType) >= 0);
+	},
+	/**
+	 * Check if a connector's render type is based on rectangle and can be drawn by doDrawRectangleBasedConnector.
+	 * @param {Int} renderType
+	 * @returns {Bool}
+	 * @private
+	 */
+	isRectangleBasedConnector: function(renderType)
+	{
+		return (this._rectangleBasedConnectorTypes.indexOf(renderType) >= 0);
 	},
 	/**
 	 * Check if a connector's render type is based on wavy line and can be drawn by doDrawWavyBasedConnector.
@@ -2763,9 +2779,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		{
 			case RT.DOUBLE: for (var i = 0; i < 2; ++i, lineParams.push(param)); break;
 			case RT.TRIPLE: for (var i = 0; i < 3; ++i, lineParams.push(param)); break;
+			case RT.QUAD: for (var i = 0; i < 4; ++i, lineParams.push(param)); break;
 			case RT.BOLD: lineParams.push(boldParam); break;
 			case RT.BOLD_DOUBLE: lineParams.push(boldParam); lineParams.push(param); break;
 			case RT.BOLD_TRIPLE: lineParams.push(boldParam); for (var i = 0; i < 2; ++i, lineParams.push(param)); break;
+			case RT.BOLD_QUAD: lineParams.push(boldParam); for (var i = 0; i < 3; ++i, lineParams.push(param)); break;
 			case RT.DASHED: lineParams.push(dashParam); break;
 			case RT.DASHED_DOUBLE: for (var i = 0; i < 2; ++i, lineParams.push(dashParam)); break;
 			case RT.DASHED_TRIPLE: for (var i = 0; i < 3; ++i, lineParams.push(dashParam)); break;
@@ -3154,6 +3172,59 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var result = [];
 		result.push({'x': midPointCoord.x + w * angleSin, 'y': midPointCoord.y - w * angleCos});
 		result.push({'x': midPointCoord.x - w * angleSin, 'y': midPointCoord.y + w * angleCos});
+		return result;
+	},
+
+	/**
+	 * Draw rectangle shape connectors.
+	 * @param {Object} context
+	 * @param {Object} node1
+	 * @param {Object} node2
+	 * @param {Object} coord1
+	 * @param {Object} coord2
+	 * @param {Float} lineLength
+	 * @param {Object} options
+	 * @returns {Object}
+	 * @private
+	 */
+	doDrawRectangleBasedConnector: function(context, renderType, node1, node2, coord1, coord2, lineLength, options)
+	{
+		//console.log('draw rectangle connector');
+		var isFilled = (renderType === RT.WEDGED_SOLID_BOTH);
+		var w = options.bondWedgeWidth * options.unitLength;
+
+		var coords = this._calcRectangleCornerCoords(coord1, coord2, w);
+
+		var localOptions = Object.create(options);
+		localOptions.strokeColor = options.color;
+		localOptions.fillColor = isFilled? options.color: null;
+
+		var path = Kekule.Render.DrawPathUtils.makePath(
+			'M', [coords[0].x, coords[0].y],
+			'L', [coords[1].x, coords[1].y],
+			'L', [coords[2].x, coords[2].y],
+			'L', [coords[3].x, coords[3].y],
+			'Z'
+		);
+		var elem = this.drawPath(context, path, localOptions);
+		var result = {'element': elem};
+		result.boundInfo = this.createLineBoundInfo(coord1, coord2, w);
+		return result;
+	},
+	/** @private */
+	_calcRectangleCornerCoords: function(end1Coord, end2Coord, baseLineWidth)
+	{
+		var box = Kekule.CoordUtils.substract(end2Coord, end1Coord);
+		var len = Math.sqrt(Math.sqr(box.x) + Math.sqr(box.y));
+		var angleSin = box.y / len;
+		var angleCos = box.x / len;
+		var w = baseLineWidth / 2;
+		var result = [];
+		var delta = {'x': w * angleSin, 'y': w * angleCos};
+		result.push({'x': end1Coord.x + delta.x, 'y': end1Coord.y - delta.y});
+		result.push({'x': end1Coord.x - delta.x, 'y': end1Coord.y + delta.y});
+		result.push({'x': end2Coord.x - delta.x, 'y': end2Coord.y + delta.y});
+		result.push({'x': end2Coord.x + delta.x, 'y': end2Coord.y - delta.y});
 		return result;
 	},
 

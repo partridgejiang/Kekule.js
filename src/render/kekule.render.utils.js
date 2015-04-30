@@ -874,6 +874,7 @@ Kekule.Render.ConnectorDrawUtils = {
 						case BS.DOWN: result.unshift(RT.WEDGED_HASHED, RT.DASHED); break;
 						case BS.DOWN_INVERTED: result.unshift(RT.WEDGED_HASHED_INV, RT.DASHED); break;
 						case BS.UP_OR_DOWN: case BS.UP_OR_DOWN_INVERTED: result = [RT.WAVY, RT.SINGLE]; break;
+						case BS.CLOSER: result = [RT.WEDGED_SOLID_BOTH, RT.WEDGED_HOLLOW_BOTH]; break;
 						default:  // NONE
 							;// do nothing
 					}

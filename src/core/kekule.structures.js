@@ -4984,6 +4984,8 @@ Kekule.BondStereo = {
    *  if it is UP or DOWN. The end atom is the stereocenter.
    */
   UP_OR_DOWN_INVERTED: 9,
+	/** A bond is closer to observer than papaer, often used in ring structures. */
+	CLOSER: 10,
 	/** Indication that this double bond has a fixed, but unknown E/Z
 	 * configuration.
 	 */

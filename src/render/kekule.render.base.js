@@ -212,7 +212,7 @@ Kekule.Render.BondRenderType = {
 	/** Usual triple bond, draw in thin triple line */
 	TRIPLE: 2,
 	/* Usual quad bond, draw in thin quad line */
-	/*QUAD: 3,*/
+	QUAD: 3,
 	/** Dashed bond line */
 	DASHED: 4,
 	/** Dashed double line */
@@ -234,7 +234,7 @@ Kekule.Render.BondRenderType = {
 	/** A bold and two normal line, usually for triple bond above paper */
 	BOLD_TRIPLE: 13,
 	/* A bold and three normal line, usually for quad bond above paper */
-	/* BOLD_QUAD: 14, */
+	BOLD_QUAD: 14,
 	/** A bold and a dash line, usually for aromatic bond above paper */
 	BOLD_DASH: 16,
 	/** A solid wedge triangle from atom 1 to atom 2, usually for wedge up bond */
@@ -249,6 +249,10 @@ Kekule.Render.BondRenderType = {
 	WEDGED_HASHED: 24,
 	/** A hased wedge triangle from atom 2 to atom 1, usually for wedge down bond */
 	WEDGED_HASHED_INV: 25,
+	/** A bold rectangle, indicating a bond near the observer. Usually connected with wedged bonds. */
+	WEDGED_SOLID_BOTH: 26,
+	/** A bold hollow rectangle, indicating a bond near the observer. Usually connected with wedged bonds. */
+	WEDGED_HOLLOW_BOTH: 27,
 	/** A wavy line, usually used for bond with uncertain stereo */
 	WAVY: 30
 };

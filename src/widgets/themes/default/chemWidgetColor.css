@@ -321,6 +321,10 @@
 {
     background-image: url("iconsSmall/bondTriple.gif");
 }
+.K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/bondOuter.gif");
+}
 .K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/bondWedge.gif");

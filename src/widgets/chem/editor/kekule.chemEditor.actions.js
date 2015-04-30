@@ -884,6 +884,18 @@ Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createCompos
 		'bondStereo': Kekule.BondStereo.NONE
 	}
 );
+Kekule.Editor.ActionComposerSetBondControllerCloser = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerCloser',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_CLOSER'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_CLOSER'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP,
+	'MolBondIaController',
+	'MolBondIaController-Closer',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.SINGLE,
+		'bondStereo': Kekule.BondStereo.CLOSER
+	}
+);
 Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeUp',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP,
@@ -932,6 +944,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerSingle,
 		Kekule.Editor.ActionComposerSetBondControllerDouble,
 		Kekule.Editor.ActionComposerSetBondControllerTriple,
+		Kekule.Editor.ActionComposerSetBondControllerCloser,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown
