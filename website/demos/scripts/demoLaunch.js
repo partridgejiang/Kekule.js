@@ -44,18 +44,22 @@ var DU = Kekule.DemoUtils;
 DU.newRootCategory('algorithm', 'Algorithm', 'Demos about molecule algorithm', [
 	DU.newConcreteDemo('ringPerception', 'Ring Perception', 'Detects all rings, SSSR and aromatic rings in molecule.', 'algorithm/ringSearch.html', 'algorithm/ringSearch_intro.html'),
 	DU.newConcreteDemo('structCompare', 'Structure Compare', 'Compare two user input molecule.', 'algorithm/structureCompare.html', 'algorithm/structureCompare_intro.html'),
-	DU.newConcreteDemo('structSearch', 'Sub Structure Search', 'Search sub structure in molecules.', 'algorithm/structureSearch.html', 'algorithm/structureSearch_intro.html')
+	DU.newConcreteDemo('structSearch', 'Sub Structure Search', 'Search sub structure in molecules.', 'algorithm/structureSearch.html', 'algorithm/structureSearch_intro.html'),
+	DU.newConcreteDemo('reactionExercise', 'Reaction Exercise', 'An online organic chemistry reaction exam, fill in keys and check the score on pure client code.', 'algorithm/reactionExercise.html')
 ]);
 DU.newRootCategory('widget', 'Common Widget', 'Demos about common widgets such as button, textbox, etc.', [
 	DU.newConcreteDemo('autoLaunch', 'Widget Auto-Launching', 'Demonstrates of embeddeding widgets in HTML page and launching them automatically.', 'widget/autoLaunch.html'),
 	DU.newConcreteDemo('commonWidgets', 'Common Widgets', 'Demonstrates general-use widgets like button, check box, tab view and so on.', 'widget/commonWidgets.html')
 ]);
-DU.newRootCategory('ChemWidget', 'Chem Widget', 'Demos about widgets of chemistry', [
+DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistry', [
 	DU.newConcreteDemo('periodicRTable', 'Periodic Table', 'Demonstrates the use of periodic table widget.', 'periodicTable/periodicTable.html'),
 	DU.newConcreteDemo('chemViewer2D', 'Chem Viewer 2D', 'Demonstrates function of 2D chem viewer widget.', 'chemViewer/chemViewer2D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('chemViewer3D', 'Chem Viewer 3D', 'Demonstrates function of 3D chem viewer widget.', 'chemViewer/chemViewer3D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('embeddedViewer', 'Embedded Chem Object', 'Demonstrates display molecules using embedded chem viewer and pure HTML code (without JavaScript).', 'chemViewer/embeddedChemViewer.html'),
 	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html')
+]);
+DU.newRootCategory('extra', 'Extra', 'Demos some extra functions of Kekule.js', [
+	DU.newConcreteDemo('ckEditorPlugins', 'Plugins for CKEditor', 'Demonstrates the integration of Kekule.js with web rich text editor.', 'CKEditor/ckeditorDemo.html', 'CKEditor/ckeditorDemo_intro.html'),
 ]);
 
 

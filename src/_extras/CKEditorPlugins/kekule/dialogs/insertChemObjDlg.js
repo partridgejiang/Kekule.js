@@ -42,7 +42,7 @@
 				'data-toolbar-evoke-modes="[0]"' +
 				'></div>';
 			*/
-			'<div id="' + id + '" style="width:600px;height:400px;position:relative" ' +
+			'<div id="' + id + '" style="width:680px;height:400px;position:relative" ' +
 				'data-kekule-widget="Kekule.Editor.Composer" ' +
 				'></div>';
 		var sLabelText = is3D? editor.lang.kekule.label_load_mol3D: editor.lang.kekule.label_load_or_edit_mol2D;
@@ -61,7 +61,7 @@
 		return  {
 			title: sTitle, //'Insert Molecule',
 			resizable: CKEDITOR.DIALOG_RESIZE_NONE,
-			minWidth: 400,
+			minWidth: 500,
 			minHeight: 300,
 			contents: [
 				{
@@ -151,6 +151,10 @@
 						viewerDomElem.src = dataUrl;
 						viewerDomElem.style.width = dimension.width + 'px';
 						viewerDomElem.style.height = dimension.height + 'px';
+						/*
+						if (is3D)
+							viewerDomElem.style.backgroundColor = '#000';
+						*/
 						//viewerElem.setAttribute('data-widget', viewer.getClassName());
 						viewerElem.addClass(exportViewer.getWidgetClassName());
 						viewerElem.setAttribute('data-kekule-widget', widgetClassName);  // avoid 'widget' name confict with ckeditor
@@ -158,6 +162,7 @@
 						viewerElem.setAttribute('data-auto-size', 'false');
 						viewerElem.setAttribute('data-autofit', 'true');
 						viewerElem.setAttribute('data-chem-obj', jsonStr);
+
 						editor.insertElement(viewerElem);
 					}, 50
 				);

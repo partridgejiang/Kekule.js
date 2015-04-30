@@ -8,7 +8,7 @@
 Kekule.LOCAL_RES = true;
 
 // error messages
-//Object.extend(Kekule.ErrorMsg.en, {
+// Object.extend(Kekule.ErrorMsg.en, {
 Kekule.Localization.addResource('en', 'ErrorMsg', {
 	'OpenBabel': {
 		CHEM_NODE_TYPE_NOT_SUITABLE: 'Unsuitable node type',

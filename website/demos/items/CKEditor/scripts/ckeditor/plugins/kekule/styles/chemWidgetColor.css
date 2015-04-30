@@ -133,6 +133,12 @@
 }
 
 /* TODO: Note now these settings are for debug proper. In release CSS sprite should be used. */
+
+.K-Action-Open-Configurator > .K-Pri-Glyph-Content
+{
+    background-image: url("icons/settings.png");
+}
+
 .K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content
 {
     background-image: url("icons/molSkeletal.png");
@@ -275,6 +281,10 @@
 {
     background-image: url("icons/atom.png");
 }
+.K-Chem-FormulaIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("icons/formula.png");
+}
 .K-Chem-MolBondIaController > .K-Pri-Glyph-Content
 {
     background-image: url("icons/bondSingle.png");
@@ -335,10 +345,13 @@
 {
     background-image: url("iconsSmall/charge2.gif");
 }
-.K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content,
-.K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content
+.K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/radical1.gif");
+}
+.K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/radical3.gif");
 }
 .K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content
 {
@@ -408,4 +421,8 @@
 .K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/heatSymbol.gif");
+}
+.K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/addSymbol.gif");
 }

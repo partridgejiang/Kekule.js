@@ -32,7 +32,7 @@ Kekule.OpenBabel = {
 		TRIPLE: 3,
 		EXPLICIT_AROMATIC: 5
 	}
-}
+};
 
 /**
  * Util class to convert object between OpenBabel and Kekule.
@@ -653,6 +653,6 @@ Kekule.OpenBabel.AdaptUtils = {
 			}
 		}
 	}
-}
+};
 
 })();

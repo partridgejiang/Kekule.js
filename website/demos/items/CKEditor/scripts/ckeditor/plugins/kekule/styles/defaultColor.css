@@ -37,7 +37,8 @@
     /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
 }
 .K-Normal-Background,
-.K-ComboBox .K-TextBox
+.K-ComboBox .K-TextBox,
+.K-Container.K-Panel
 {
     background-color: #fff;
 }
@@ -111,9 +112,20 @@
 
 
 .K-Button,
-.K-Toolbar
+.K-Toolbar,
+.K-Panel,
+.K-TreeView,
+.K-Widget-Grid .K-Widget-Grid-Cell
 {
     border-color: #d3d3d3;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell
+{
+    color: #d3d3d3;
+}
+.K-Button,
+.K-Toolbar
+{
     background-color: #e6e6e6;
 }
 
@@ -123,17 +135,24 @@
     filter:Alpha(Opacity=70);
 }
 
-.K-Button.K-State-Focused, .K-Button.K-State-Hover
+.K-Button.K-State-Focused, .K-Button.K-State-Hover,
+.K-Widget-Grid .K-Widget-Grid-Cell.K-State-Hover
 {
     color: #212121;
     border-color: #999999;
+}
+.K-Button.K-State-Focused, .K-Button.K-State-Hover
+{
     background-color: #dadada;
 }
 
-
-.K-Button.K-State-Active
+.K-Button.K-State-Active,
+.K-Widget-Grid .K-Widget-Grid-Cell:active
 {
     border-color: #aaaaaa;
+}
+.K-Button.K-State-Active
+{
     background-color: #ffffff;
 }
 
@@ -221,10 +240,76 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 }
 
 .K-TreeView,
-.K-ColorPicker
+.K-ColorPicker,
+.K-TabView
+{
+    /*border-color: #d3d3d3;*/
+    /*background-color: #fff;*/
+}
+.K-TabView .K-TabView-TabButton-Container
+{
+    /*background-color: #e6e6e6;*/
+}
+
+.K-TabButtonGroup .K-Button,
+.K-TabView .K-TabView-Page-Container
+{
+    background-color: #fff;
+    color: #d3d3d3;
+    border-color: #dddddd;
+}
+.K-TabButtonGroup .K-Button.K-State-Hover,
+.K-TabButtonGroup .K-Button.K-State-Focused,
+.K-TabButtonGroup .K-Button.K-State-Active
+{
+    border-color: #999999;
+    color: #000;
+}
+.K-TabButtonGroup.K-Layout-H>.K-Button,
+.K-TabButtonGroup.K-TabAtTop>.K-Button,
+.K-TabButtonGroup.K-TabAtBottom>.K-Button
+{
+    border-bottom-color: transparent;
+    border-top-color: transparent;
+}
+.K-TabButtonGroup.K-Layout-V>.K-Button,
+.K-TabButtonGroup.K-TabAtLeft>.K-Button,
+.K-TabButtonGroup.K-TabAtRight>.K-Button
+{
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+.K-TabButtonGroup.K-TabAtTop>.K-Button .K-Button.K-State-Hover,
+.K-TabButtonGroup.K-TabAtTop.K-Button.K-State-Focused
+.K-TabButtonGroup.K-TabAtBottom>.K-Button.K-State-Hover,
+.K-TabButtonGroup.K-TabAtBottom>.K-Button.K-State-Focused
+{
+    border-bottom-color: transparent;
+    border-top-color: transparent;
+}
+.K-TabButtonGroup.K-TabAtLeft>.K-Button.K-State-Hover,
+.K-TabButtonGroup.K-TabAtLeft>.K-Button.K-State-Focused,
+.K-TabButtonGroup.K-TabAtRight>.K-Button.K-State-Hover,
+.K-TabButtonGroup.K-TabAtRight>.K-Button.K-State-Focused
+{
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+.K-TabButtonGroup.K-TabAtTop>.K-Button.K-State-Active,
+.K-TabButtonGroup.K-TabAtBottom>.K-Button.K-State-Active
+{
+    border-bottom-color: #F39814;
+    border-top-color: #F39814;
+}
+.K-TabButtonGroup.K-TabAtLeft>.K-Button.K-State-Active,
+.K-TabButtonGroup.K-TabAtRight>.K-Button.K-State-Active
+{
+    border-left-color: #F39814;
+    border-right-color: #F39814;
+}
+.K-TabView .K-TabView-Page-Container
 {
     border-color: #d3d3d3;
-    /*background-color: #fff;*/
 }
 
 .K-TreeView .K-TreeView-ExpandMark
@@ -236,6 +321,19 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark
 {
     background-position: -32px -16px;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Pri-Glyph-Content
+{
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content
+{
+    background-image: url("icons/generalUiIcons.png");
+    background-position: -80px -128px;
 }
 
 .K-ColorPicker .K-ColorPicker-Palette,
@@ -316,6 +414,12 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-ObjInspector /*.K-ObjInspector-PropInfoPanel, .K-ObjInspector .K-ObjInspector-ObjsInfoPanel*/
 {
     background-color: #f6f6f6;
+}
+
+
+.K-Widget-Configurator .K-ObjInspector
+{
+    background-color: #fff;
 }
 
 .K-Dialog, .K-Dialog .K-Dialog-Caption

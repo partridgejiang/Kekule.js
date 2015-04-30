@@ -48,7 +48,9 @@
 
 .K-Layout-V>.K-Widget
 {
-    width: 100%;
+    /*width: 100%;*/
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .K-Layout-V>.K-Content
@@ -56,15 +58,16 @@
     margin: 0.2em 0;
 }
 
-.K-Text-Hide .K-Text-Content, .K-Glyph-Hide .K-Glyph-Content
+.K-Text-Hide>.K-Text-Content, .K-Glyph-Hide>.K-Glyph-Content
 {
     display: none;
 }
-.K-Text-Show .K-Text-Content, .K-Glyph-Show .K-Glyph-Content
+.K-Text-Show>.K-Text-Content, .K-Glyph-Show>.K-Glyph-Content
 {
     display: inline-block;
 }
-.K-Text-Show .K-Text-Hide .K-Text-Content, K-Glyph-Show .K-Glyph-Hide .K-Glyph-Content
+/*
+.K-Text-Show .K-Text-Hide .K-Text-Content, .K-Glyph-Show .K-Glyph-Hide .K-Glyph-Content
 {
     display: none;
 }
@@ -72,6 +75,7 @@
 {
     display: inline-block;
 }
+*/
 
 
 /* General widgets */
@@ -84,6 +88,10 @@
     text-decoration: none;
     margin: .1em;
     z-index: 1;
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .K-Widget.K-NonSelectable
@@ -94,6 +102,15 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+.K-Widget .K-Selectable
+{
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .K-Widget, input.K-Widget, button.K-Widget
@@ -118,34 +135,54 @@ table.K-Widget
 /* Container */
 .K-Container .K-Widget
 {
-    margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
+    /*margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
 }
 
+/* Panel */
+.K-Panel
+{
+    padding: 0.7em;
+}
 /* Toolbar */
-.K-Toolbar
+.K-Panel, .K-Toolbar
 {
     border: 1px solid;
 }
 
 /* ButtonGroup */
-.K-ButtonGroup.K-Layout-H>.K-Widget
+.K-Toolbar.K-Button-Group
+{
+    border: none;
+}
+.K-Button-Group .K-Widget
+{
+    margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
+}
+.K-Button-Group.K-Layout-H>.K-Widget
 {
     margin-left: -1px;
     height: 100%;
 }
-.K-ButtonGroup.K-Layout-H>.K-Widget.K-First-Child
+.K-Button-Group.K-Layout-H>.K-Widget.K-First-Child
 {
     margin-left: 0em;
 }
 
-.K-ButtonGroup.K-Layout-V>.K-Widget
+.K-Button-Group.K-Layout-V>.K-Widget
 {
     margin-top: -1px;
     width: 100%;
 }
-.K-ButtonGroup.K-Layout-V>.K-Widget.K-First-Child
+.K-Button-Group.K-Layout-V>.K-Widget.K-First-Child
 {
     margin-top: 0em;
+}
+
+.K-Button-Group .K-Button.K-State-Focused,
+.K-Button-Group .K-Button.K-State-Hover,
+.K-Button-Group .K-Button.K-State-Active
+{
+    z-index: 2;   /* put focused button to front */
 }
 
 
@@ -230,7 +267,7 @@ table.K-Widget
     left: 0;
     right: 0;
     bottom: 3em;
-    z-index: 1000;
+    z-index: 30000;
     text-align: center;
 }
 .K-SysMsgGroup .K-MsgPanel
@@ -393,6 +430,117 @@ table.K-Widget
     z-index: 1;
 }
 
+/* TextArea */
+.K-TextArea
+{
+    min-width: 5em;
+    min-height: 1em;
+}
+
+/* Tab Button Group */
+.K-TabButtonGroup
+{
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+.K-TabButtonGroup .K-Button
+{
+    /*
+    border-radius: 7px 7px 0 0;
+    */
+    margin: 0;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+.K-TabButtonGroup .K-Button.K-State-Hover,
+.K-TabButtonGroup .K-Button.K-State-Focused,
+.K-TabButtonGroup .K-Button.K-State-Active
+{
+    z-index: 2;
+}
+
+.K-TabButtonGroup.K-Layout-H>.K-Button,
+.K-TabButtonGroup.K-TabAtTop>.K-Button,
+.K-TabButtonGroup.K-TabAtBottom>.K-Button
+{
+    margin-right: -1px;
+}
+.K-TabButtonGroup.K-Layout-V>.K-Button,
+.K-TabButtonGroup.K-TabAtLeft>.K-Button,
+.K-TabButtonGroup.K-TabAtRight>.K-Button
+{
+    margin-bottom: -1px;
+}
+.K-TabButtonGroup.K-TabAtBottom>.K-Button
+{
+    border-bottom: 3px solid transparent;
+}
+.K-TabButtonGroup.K-TabAtTop>.K-Button
+{
+    border-top: 3px solid transparent;
+}
+.K-TabButtonGroup.K-TabAtRight>.K-Button
+{
+    border-right: 3px solid transparent;
+    text-align: left;
+}
+.K-TabButtonGroup.K-TabAtLeft>.K-Button
+{
+    border-left: 3px solid transparent;
+    text-align: right;
+}
+
+/* Tab View */
+.K-TabView
+{
+    /*border: 1px solid;*/
+    position: relative;
+}
+.K-TabView-TabAtTop .K-TabView-TabButton-Container,
+.K-TabView-TabAtBottom .K-TabView-TabButton-Container,
+.K-TabView-TabAtTop .K-TabView-Page-Container,
+.K-TabView-TabAtBottom .K-TabView-Page-Container
+{
+    display: block;
+}
+.K-TabView-TabAtLeft .K-TabView-TabButton-Container,
+.K-TabView-TabAtRight .K-TabView-TabButton-Container,
+.K-TabView-TabAtLeft .K-TabView-Page-Container,
+.K-TabView-TabAtRight .K-TabView-Page-Container
+{
+    display: inline-block;
+    vertical-align: top;
+}
+.K-TabView .K-TabView-TabButton-Container
+{
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.K-TabView .K-TabView-Page-Container
+{
+    position: relative;
+    border: 1px solid;
+    margin: 0;
+    padding: 0;
+}
+.K-TabView .K-TabView-Page-Container .K-TabView-Page
+{
+    display: none;
+    left: 0;
+    top: 0;
+    border: none;
+    margin: 0;
+    padding: 0.5em;
+    overflow: hidden;
+}
+.K-TabView .K-TabView-Page-Container .K-TabView-Active-Page
+{
+    display: block;
+}
+
 /* Tree View */
 .K-TreeView
 {
@@ -436,9 +584,87 @@ table.K-Widget
     visibility: hidden;
 }
 
-.K-TreeView li K-Text-Content
+.K-TreeView li .K-Text-Content
 {
     margin-left: 0.5em;
+}
+
+/** Widget Grid */
+.K-Widget-Grid
+{
+    display: table;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell
+{
+    float: left;
+    /*
+    vertical-align: middle;
+    text-align: center;
+    */
+    position: relative;
+    margin: 3px;
+    padding: 5px;
+    border: 2px solid;
+    width: 10em;
+    height: 5em;
+    /*overflow: hidden;*/
+}
+.K-Widget-Grid .K-Widget-Grid-Cell.K-Widget-Grid-Cell.K-Widget-Grid-Add-Cell
+{
+    border: 2px dashed;
+    font-size: 5em;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    cursor: pointer;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell:hover,
+.K-Widget-Grid .K-Widget-Grid-Cell:focus,
+.K-Widget-Grid .K-Widget-Grid-Cell:active
+{
+    overflow: visible;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area
+{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+    display: none;
+}
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:hover .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:focus .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:active .K-Widget-Grid-Interaction-Area
+{
+    display: block;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button
+{
+    padding: 0.2em;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button K-Assoc-Glyph-Content
+{
+    display: none;
+}
+
+.K-Widget-Grid-Widget-Parent
+{   /*
+    vertical-align: middle;
+    */
+    position: absolute;
+    display: block;
+    /*
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    */
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget
+{
+    display: inline-block;
+    vertical-align: middle;
 }
 
 /* Dialog */
@@ -499,7 +725,7 @@ table.K-Widget
 {
     display: block;
     margin: 0;
-    width: 99%;
+    width: 100%;
 }
 .K-TextEditor .K-TextEditor-Toolbar
 {
@@ -800,7 +1026,7 @@ table.K-Widget
 
 .K-ObjInspector
 {
-    /*width: 25em;*/
+    width: 25em;
     height: 40em;
     border: 1px solid;
     padding: 0;
@@ -829,6 +1055,13 @@ table.K-Widget
     margin: 0;
     /*border: none;*/
 }
+/*
+.K-ObjInspector .K-PropListEditor .K-ValueListEditor-KeyCell,
+.K-ObjInspector .K-PropListEditor .K-ValueListEditor-ValueCell
+{
+    width: 8em;
+}
+*/
 
 .K-ObjInspector .K-ObjInspector-ObjsInfoPanel, .K-ObjInspector .K-ObjInspector-PropInfoPanel
 {
@@ -867,8 +1100,33 @@ table.K-Widget
 {
     line-height: 1.2em;
     margin-left: 0.5em;
+    white-space: normal;
 }
 
+.K-Widget-Configurator .K-Widget-Configurator-Client
+{
+    white-space: nowrap;
+}
+.K-Widget-Configurator .K-ObjInspector,
+.K-Widget-Configurator .K-TabButtonGroup
+{
+    vertical-align: top;
+    margin: 0;
+}
+.K-Widget-Configurator .K-ObjInspector
+{
+    width: 30em;
+    height: 30em;
+}
+.K-Widget-Configurator .K-ObjInspector .K-ObjInspector-PropListEditorContainer
+{
+
+}
+
+.K-Widget-Configurator .K-ObjInspector .K-ValueListEditor-KeyCell
+{
+    width: 18em;
+}
 
 
 /*
@@ -890,7 +1148,8 @@ button.K-Button::-moz-focus-inner {
 /* States */
 .K-State-Focused, .K-State-Hover, .K-State-Active
 {
-    /*z-index: 2;*/  /* put current widget to front */
+    /* Note: should not do this, otherwise focused control may overlap some controls (e.g., in colorPicker) */
+    /* z-index: 2;  /* put current widget to front */
 }
 
 .K-State-Focused
@@ -912,6 +1171,7 @@ button.K-Button::-moz-focus-inner {
 
 .K-Popup
 {
+    position: absolute;
     z-index: 21000;
 }
 
@@ -923,7 +1183,8 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Left,
 .K-Layout-H > .K-Corner-Leading,
 .K-Layout-V > .K-Corner-Leading,
-.K-Corner-TL {
+.K-Corner-TL
+{
     /*border-top-left-radius: 0.4em;*/
     border-top-left-radius: 4px;
 }

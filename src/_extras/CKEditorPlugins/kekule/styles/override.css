@@ -9,3 +9,8 @@ label.K-CKEditor-Label
     margin-bottom: 0.5em;
     display: block;
 }
+
+img.K-Chem-Viewer3D
+{
+    background-color: #000;
+}

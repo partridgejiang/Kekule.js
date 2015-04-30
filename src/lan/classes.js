@@ -1119,6 +1119,7 @@ Class.PropList.prototype.constructor = Class.PropList;
 Class.EventHandlerList = function()
 {
 	this.handlers = [];
+  this._$flag_ = 'KekuleEventList';
 };
 Class.EventHandlerList.prototype = {
 	/**
@@ -2656,7 +2657,7 @@ ObjectEx = Class.create(
    */
   isEventHandlerList: function(value)
   {
-  	return (value && (typeof(value) == 'object') && (value instanceof Class.EventHandlerList));
+  	return (value && (typeof(value) == 'object') && (value instanceof Class.EventHandlerList) /*value.add && value.clear*/);
   },
   /**
    * Get the handler list of a event.
@@ -2782,9 +2783,15 @@ ObjectEx = Class.create(
 	  	{
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
 	  		if (handlerInfo.handler)
-	  			handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+        {
+          handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+        }
 	  	}
   	}
+    else
+    {
+      console.log(eventName, this.getClassName(), handlerList._$flag_);
+    }
   	var higherObj = this.getHigherLevelObj();
   	if (!event.cancelBubble && this.getBubbleEvent() && higherObj)
   	{

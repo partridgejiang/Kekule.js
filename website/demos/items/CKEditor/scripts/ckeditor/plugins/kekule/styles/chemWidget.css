@@ -143,6 +143,7 @@
 .K-Chem-Periodic-Table-Elem-Cell-Content .K-Chem-Elem-Name
 {
     display: block;
+    clear: both;
 }
 .K-Chem-Periodic-Table-Elem-Cell-Content .K-Chem-Atomic-Num,
 .K-Chem-Periodic-Table-Elem-Cell-Content .K-Chem-Atomic-Weight,
@@ -175,8 +176,17 @@
 {
     display: block;
     position: relative;
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
+}
+
+.K-Chem-Viewer
+{
+    /* default size of viewer */
+    width: 20em;
+    height: 15em;
 }
 
 .K-Chem-Viewer.K-State-Hover
@@ -184,11 +194,11 @@
 
 }
 
-.K-Chem-Viewer2D
+.K-Chem-Viewer2D .K-Chem-Displayer-DrawContext-Parent
 {
 
 }
-.K-Chem-Viewer3D
+.K-Chem-Viewer3D .K-Chem-Displayer-DrawContext-Parent
 {
     background-color: #000;
 }
@@ -204,6 +214,19 @@
     z-index: 10;
 }
 
+.K-Chem-Viewer .K-Chem-Viewer-Caption
+{
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    margin: 0;
+    padding: 0.5em 0;
+    width: 100%;
+    text-align: center;
+}
+
 .K-Chem-Viewer .K-Error-Report
 {
     display: block;
@@ -212,12 +235,6 @@
     right: 0;
     top: 0;
     padding: 0.3em 0.6em;
-}
-
-.K-Chem-Viewer-Assoc-Editor
-{
-    width: 600px;
-    height: 400px;
 }
 
 .K-Chem-Editor
@@ -260,6 +277,9 @@
 .K-Chem-Composer
 {
     position: relative;
+    /* default width/height */
+    width: 600px;
+    height: 400px;
 }
 
 .K-Chem-Composer .K-Chem-Editor
@@ -299,14 +319,21 @@
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar
 {
     position: absolute;
-    /*top: 36px;*/
+    top: 37px;
     left: 0;
+}
+.K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,
+.K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button
+{
+    /* a default size for easy layout */
+    width: 48px;
+    height: 37px;
 }
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar,
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar
 {
     position: absolute;
-    /*left: 47px;*/
+    left: 48px;
     bottom: 0px;
 }
 /*
@@ -316,10 +343,16 @@
 }
 */
 
+.K-Chem-Composer-Toolbar
+{
+    white-space: nowrap;
+}
+
 .K-Chem-Composer-Style-Toolbar .K-Button
 {
     text-align: left;
     padding: 0.2em 0.4em;
+    white-space: nowrap;
 }
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content
 {
@@ -370,6 +403,8 @@
 {
     /*width: 100%;
     height: 64%;*/
+    width: auto;  /* override default size */
+    height: auto;
     display: block;
     margin: 0;
     position: absolute;
@@ -377,7 +412,6 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: auto;
 }
 
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
@@ -385,10 +419,16 @@
     width: 10em;
 }
 
+.K-Chem-ComposerDialog .K-Chem-Composer
+{
+    width: 700px;
+    height: 500px;
+}
+
 .K-Chem-Dialog-Choose-File-Format,
 .K-Chem-Dialog-LoadData
 {
-    width: 40em;
+    min-width: 30em;
 }
 
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-FormatBox,

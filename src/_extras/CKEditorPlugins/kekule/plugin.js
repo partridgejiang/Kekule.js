@@ -48,7 +48,7 @@
 		var doc = document;
 		// script files
 		var scriptPath = pluginPath + 'libs/';
-		var scriptFiles = ['raphael.js', 'raphael.export.js', 'Three.js', 'kekule.compressed.js'];
+		var scriptFiles = ['raphael.js', 'raphael.export.js', 'Three.js', /*'kekule/kekule.js'*/'kekule/kekule.min.js'];
 		var scriptUrls = [];
 		for (var i = 0, l = scriptFiles.length; i < l; ++i)
 		{
