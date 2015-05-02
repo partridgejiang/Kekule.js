@@ -460,6 +460,15 @@ X.Event.Methods = {
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);
 		return Math.round(clientY - elem.getBoundingClientRect().top);
+	},
+	/**
+	 * Returns touches array of event in touch.
+	 * @param {Object} event
+	 * @returns {Array}
+	 */
+	getTouches: function(event)
+	{
+		return event.touches;
 	}
 };
 

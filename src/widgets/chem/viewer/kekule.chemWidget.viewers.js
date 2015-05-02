@@ -130,7 +130,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarEvokeModes', this.DEF_TOOLBAR_EVOKE_MODES);
 		this.setPropStoreFieldValue('toolbarRevokeModes', this.DEF_TOOLBAR_REVOKE_MODES);
 		this.setPropStoreFieldValue('enableDirectInteraction', true);
-		this.setPropStoreFieldValue('enableTouchInteraction', false);
+		this.setPropStoreFieldValue('enableTouchInteraction', true);
 		this.setPropStoreFieldValue('toolbarPos', Kekule.Widget.Position.AUTO);
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
@@ -1236,9 +1236,43 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
 	},
 	/** @private */
+	_beginInteractTransformAtCoord: function(screenX, screenY)
+	{
+		var viewer = this.getViewer();
+		if (viewer && viewer.getChemObj())
+		{
+			//if (viewer.getRenderType() === Kekule.Render.RendererType.R3D)
+			{
+				var info = this._transformInfo;
+				info.isTransforming = true;
+				info.lastCoord = {'x': screenX, 'y': screenY};
+
+				/*
+				 var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
+				 info.angleRatio = 1 / minLength * Math.PI;
+				 */
+				this._initTransform();
+			}
+		}
+	},
+	/** @private */
+	_interactTransformAtCoord: function(screenX, screenY)
+	{
+		if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
+			this.rotateByXYDistance(screenX, screenY);
+		else
+			this.moveByXYDistance(screenX, screenY);
+	},
+	/** @private */
 	needReactEvent: function(e)
 	{
 		return this.getEnableInteraction() && this.isEventFromInteractionArea(e);
+	},
+	/** @private */
+	needReactToTouchEvent: function(e)
+	{
+		var touches = e.getTouches();
+		return this.getEnableTouchInteraction() && touches && touches.length > 1;
 	},
 	/** @private */
 	react_dblclick: function(e)
@@ -1269,26 +1303,35 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
 			// start mouse drag rotation in 3D render mode
-			var viewer = this.getViewer();
-			if (viewer && viewer.getChemObj())
-			{
-				//if (viewer.getRenderType() === Kekule.Render.RendererType.R3D)
-				{
-					var info = this._transformInfo;
-					info.isTransforming = true;
-					info.lastCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
-
-					/*
-					var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
-					info.angleRatio = 1 / minLength * Math.PI;
-					*/
-					this._initTransform();
-				}
-			}
+			this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY());
+		}
+	},
+	/** @private */
+	react_touchstart: function(e)
+	{
+		if (!this.needReactEvent(e) || !this.needReactToTouchEvent(e))
+			return;
+		var touchInfo = e.getTouches()[0];
+		var notUnset = Kekule.ObjUtils.notUnset;
+		if (touchInfo && notUnset(touchInfo.screenX) && notUnset(touchInfo.screenY))
+		{
+			this._beginInteractTransformAtCoord(touchInfo.screenX, touchInfo.screenY);
+			e.stopPropagation();
+			e.preventDefault();
 		}
 	},
 	/** @private */
 	react_mouseleave: function(e)
+	{
+		this._transformInfo.isTransforming = false;
+	},
+	/** @private */
+	react_touchleave: function(e)
+	{
+		this._transformInfo.isTransforming = false;
+	},
+	/** @private */
+	react_touchcancel: function(e)
 	{
 		this._transformInfo.isTransforming = false;
 	},
@@ -1299,44 +1342,38 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			this._transformInfo.isTransforming = false;
 	},
 	/** @private */
+	react_touchend: function(e)
+	{
+		this._transformInfo.isTransforming = false;
+	},
+	/** @private */
 	react_mousemove: function(e)
 	{
 		if (!this.needReactEvent(e))
 			return;
+
 		/*
-		var info = this._transformInfo;
-		if (info && info.isRotating && (!info.calculating))
-		{
-			info.calculating = true;
-			try
-			{
-				var viewer = this.getViewer();
-				var currCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				delta.y = -delta.y;
-				var dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta); // * Math.sign(delta.x * delta.y);
-				var rotateAngle = dis * info.angleRatio;
-				var axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
-
-				viewer.rotate3DByAxis(rotateAngle, axisVector);
-
-				//console.log('distance: ', dis);
-				//console.log('rotate: ', rotateAngle / Math.PI * 180);
-
-				info.lastCoord = currCoord;
-				info.calculating = false;
-			}
-			catch(e) {}   // fix IE finally bug
-			finally
-			{
-				info.calculating = false;
-			}
-		}
-		*/
 		if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
 			this.rotateByXYDistance(e.getScreenX(), e.getScreenY());
 		else
 			this.moveByXYDistance(e.getScreenX(), e.getScreenY());
+		*/
+		this._interactTransformAtCoord(e.getScreenX(), e.getScreenY());
+	},
+	/** @private */
+	react_touchmove: function(e)
+	{
+		if (!this.needReactEvent(e) || !this.needReactToTouchEvent(e))
+			return;
+		//console.log(e.touches);
+		var touchInfo = e.getTouches()[0];
+		var notUnset = Kekule.ObjUtils.notUnset;
+		if (touchInfo && notUnset(touchInfo.screenX) && notUnset(touchInfo.screenY))
+		{
+			this._interactTransformAtCoord(touchInfo.screenX, touchInfo.screenY);
+			e.stopPropagation();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	moveByXYDistance: function(currX, currY)
@@ -1395,7 +1432,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 
-	/** @private */
+	/* @private */
+	/*
 	react_transformstart: function(e)
 	{
 		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
@@ -1410,14 +1448,18 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			this._initTransform();
 		}
 	},
-	/** @private */
+	*/
+	/* @private */
+	/*
 	react_transformend: function(e)
 	{
 		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
 			return;
 		this._transformInfo.isTransforming = false;
 	},
-	/** @private */
+	*/
+	/* @private */
+	/*
 	react_transform: function(e)
 	{
 		if (!this.getEnableTouchInteraction() || !this.needReactEvent(e))
@@ -1441,25 +1483,6 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 
 
 					// rotate
-					/*
-					var rx = gesture.deltaY * info.angleRatio;
-					var ry = gesture.deltaX * info.angleRatio;
-					//var rz = gesture.angle * Math.PI / 180;
-					var delta = {
-						'x': rx - info.lastRotateXYZ.x,
-						'y': ry - info.lastRotateXYZ.y,
-						//'z': rz - info.lastRotateXYZ.z
-						'z': 0
-					};
-					info.lastRotateXYZ.x = rx;
-					info.lastRotateXYZ.y = ry;
-					//info.lastRotateXYZ.z = rz;
-
-					//console.log('new rotate', delta.x, delta.y, delta.z);
-
-					viewer.rotate3DBy(delta.x, delta.y, delta.z);
-					*/
-
 					var dx = gesture.deltaX;
 					var dy = gesture.deltaY;
 
@@ -1477,6 +1500,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 		//console.log(e, e.gesture);
 	},
+  */
 
 	/** @private */
 	doTestMouseCursor: function(coord, e)
