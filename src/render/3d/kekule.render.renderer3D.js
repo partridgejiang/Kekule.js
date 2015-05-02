@@ -261,6 +261,41 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		return this.getDrawBridge().setCameraProps(context, props);
 	},
 
+	/** @private */
+	getInitialLightPositions: function(context)
+	{
+		return this.getDrawBridge().getInitialLightPositions && this.getDrawBridge().getInitialLightPositions(context);
+	},
+	/**
+	 * Returns count of lights in context.
+	 * @param {Object} context
+	 * @returns {Int}
+	 */
+	getLightCount: function(context)
+	{
+		return this.getDrawBridge().getLightCount && this.getDrawBridge().getLightCount(context);
+	},
+	/**
+	 * Get properties of light at index.
+	 * @param {Object} context
+	 * @param {Int} lightIndex
+	 * @returns {Hash}
+	 */
+	getLightProps: function(context, lightIndex)
+	{
+		return this.getDrawBridge().getLightProps && this.getDrawBridge().getLightProps(context, lightIndex);
+	},
+	/**
+	 * Get properties of light at index.
+	 * @param {Object} context
+	 * @param {Int} lightIndex
+	 * @param {Hash} props
+	 */
+	setLightProps: function(context, lightIndex, props)
+	{
+		return this.getDrawBridge().setLightProps(context, lightIndex, props);
+	},
+
 
 	drawSphere: function(context, coord, radius, options)
 	{
@@ -661,7 +696,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 
 				//var doCameraRotation = false;
 				// rotation and zoom can be done by the proper camera position adjustment
-				if (doCameraTransform)
+				if (doCameraTransform)   // adjust camera and lights
 				{
 
 					//console.log(dis, dis / result.zoom);
@@ -708,9 +743,35 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 					// clear zoom/scale, translate and rotate info in transformParams
 					//result.zoom = 1;
 					result.scaleX = result.scaleY = result.scaleZ = 1;
-					//console.log(result.translateX, result.translateY, result.translateZ);
-					//console.log(result.drawBaseCoord);
-					//result.translateX = result.translateY = result.translateZ = 0;
+
+					// lights
+					// TODO: now just change light direction but not distance
+					var initialLightPositions = this.getInitialLightPositions(context);
+					if (cameraRotateMatrix)  // Ambient light only need to rotate with camera
+					{
+						var lightCount = this.getLightCount(context);
+						//console.log('need adjust light', lightCount, initialLightPositions);
+						if (initialLightPositions && initialLightPositions.length && lightCount)
+						{
+							var count = Math.min(initialLightPositions.length, lightCount);
+							var newLightPositions = [];
+							for (var i = 0; i < count; ++i)
+							{
+								var pos = initialLightPositions[i];
+								if (pos)
+								{
+									var vOldPos = Kekule.MatrixUtils.create(4, 1, [pos.x, pos.y, pos.z, 1]);
+									var vNewPos = Kekule.MatrixUtils.multiply(cameraRotateMatrix, vOldPos);
+									var newPos = {'x': vNewPos[0], 'y': vNewPos[1], 'z': vNewPos[2]};
+									//this.setLightProps(context, i, {'position': newPos});
+									newLightPositions.push(newPos);
+								}
+							}
+						}
+					}
+					result.lightPositions = newLightPositions || initialLightPositions;
+
+					// do not transform objects, but just camera and lights
 					result.rotateMatrix = null;
 				}
 				else
@@ -815,7 +876,22 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		}
 		this.setCameraProps(context, options);
 
+		this.adjustLights(context, transformParams);
 		//console.log(transformParams.cameraPos);
+	},
+	/** @private */
+	adjustLights: function(context, transformParams)
+	{
+		var positions = transformParams.lightPositions || [];
+		for (var i = 0, l = positions.length; i < l; ++i)
+		{
+			var pos = positions[i];
+			if (pos)
+			{
+				//console.log('set light new pos', i, pos);
+				this.setLightProps(context, i, {'position': pos});
+			}
+		}
 	}
 });
 

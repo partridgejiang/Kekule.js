@@ -189,11 +189,12 @@ Kekule.Render.ThreeContext = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ThreeContext',
 	/** @constructs */
-	initialize: function($super, scene, camera, renderer)
+	initialize: function($super, scene, camera, lights, renderer)
 	{
 		$super();
 		this.setScene(scene);
 		this.setCamera(camera);
+		this.setLights(lights);
 		this.setRenderer(renderer);
 	},
 	/** @private */
@@ -201,6 +202,7 @@ Kekule.Render.ThreeContext = Class.create(ObjectEx,
 	{
 		this.defineProp('scene', {'dataType': DataType.OBJECT, 'serializable': false});
 		this.defineProp('camera', {'dataType': DataType.OBJECT, 'serializable': false});
+		this.defineProp('lights', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('renderer', {'dataType': DataType.OBJECT, 'serializable': false});
 		this.defineProp('width', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
 		this.defineProp('height', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
@@ -317,6 +319,12 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		return result;
 	},
 
+	/** @private */
+	getInitialLightPositions: function(context)
+	{
+		return [{'x': 5, 'y': 5, 'z': 10}];
+	},
+
 	/**
 	 * Create a context element for drawing.
 	 * @param {Element} parentElem
@@ -350,21 +358,29 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		renderer.setSize(width, height);
 
 		// TODO: now light is fixed
+		var lightPositions = this.getInitialLightPositions();
+		var lights = [];
+		for (var i = 0, l = lightPositions.length; i < l; ++i)
+		{
+			var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+			var lightCoord = lightPositions[i];
+			alight.position.set(lightCoord.x, lightCoord.y, lightCoord.z);
+			scene.add(alight);
+			lights.push(alight);
+		}
 
-		var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
-		alight.position.set(5, 5, 10);
-		scene.add(alight);
-
+		/*
 		var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
 		alight.position.set(-5, -5, -10);
 		scene.add(alight);
+		*/
 
 		var alight = new THREE.AmbientLight( 0x202020 ); // soft white light
 		scene.add(alight);
 
 		parentElem.appendChild(renderer.domElement);
 
-		var result = new Kekule.Render.ThreeContext(scene, camera, renderer);
+		var result = new Kekule.Render.ThreeContext(scene, camera, lights, renderer);
 		/*
 		result.setWidth(width);
 		result.setHeight(height);
@@ -665,6 +681,47 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		}
 		else
 			return null;
+	},
+
+	// methods about light
+	/**
+	 * Returns count of lights in context.
+	 * @param {Object} context
+	 * @returns {Int}
+	 */
+	getLightCount: function(context)
+	{
+		var ls = context.getLights();
+		return ls? (ls.length || 0): 0;
+	},
+	/**
+	 * Get properties of light at index.
+	 * @param {Object} context
+	 * @param {Int} lightIndex
+	 * @returns {Hash}
+	 */
+	getLightProps: function(context, lightIndex)
+	{
+		var light = context.getLights()[lightIndex];
+		return {'position': light.position};
+	},
+	/**
+	 * Get properties of light at index.
+	 * @param {Object} context
+	 * @param {Int} lightIndex
+	 * @param {Hash} props
+	 */
+	setLightProps: function(context, lightIndex, props)
+	{
+		var light = context.getLights()[lightIndex];
+		var p = props.position;
+		if (p)
+		{
+			light.position.x = p.x;
+			light.position.y = p.y;
+			light.position.z = p.z;
+		}
+		light.updateMatrix();
 	},
 
 	// methods about camera
