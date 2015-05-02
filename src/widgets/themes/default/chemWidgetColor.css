@@ -337,6 +337,10 @@
 {
     background-image: url("iconsSmall/bondWavy.gif");
 }
+.K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/bondDoubleEither.gif");
+}
 .K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/chargeClear.gif");

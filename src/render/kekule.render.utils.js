@@ -849,7 +849,7 @@ Kekule.Render.ConnectorDrawUtils = {
 			case BT.HYDROGEN: return [RT.DASHED, RT.ARROWED, RT.WAVY]; break;
 			// TODO: Arrow direction of coordinate bond should be calculated
 			case BT.COORDINATE: return [RT.ARROWED, RT.SINGLE, RT.DASHED, RT.WAVY]; break;
-			case BT.IONIC: case BT.COORDINATE: case BT.METALLIC: case BT.UNKNOWN:
+			case BT.IONIC: /*case BT.COORDINATE:*/ case BT.METALLIC: case BT.UNKNOWN:
 				return [RT.SINGLE, RT.DASHED, RT.WAVY]; break;
 			case BT.COVALENT: break;  // need further check in the following code
 			default:
@@ -859,7 +859,14 @@ Kekule.Render.ConnectorDrawUtils = {
 		var BO = Kekule.BondOrder;
 		switch (bond.getBondOrder())
 		{
-			case BO.DOUBLE: return [RT.DOUBLE, RT.DASHED_DOUBLE, RT.BOLD_DOUBLE, RT.WAVY]; break;
+			case BO.DOUBLE:
+			{
+				var dresult = [RT.DOUBLE, RT.DASHED_DOUBLE, RT.BOLD_DOUBLE, RT.WAVY];
+				if (bond.getStereo && [Kekule.BondStereo.E_OR_Z, Kekule.BondStereo.CIS_OR_TRANS].indexOf(bond.getStereo()) >= 0)
+					dresult.unshift(RT.SCISSORS_DOUBLE);
+				return dresult;
+				break;
+			}
 			case BO.TRIPLE: return [RT.TRIPLE, RT.BOLD_TRIPLE, RT.WAVY]; break;
 			case BO.QUAD: return [RT.QUAD, RT.BOLD_QUAD, RT.WAVY]; break;
 			case BO.EXPLICIT_AROMATIC: return [RT.SOLID_DASH, RT.WAVY]; break;

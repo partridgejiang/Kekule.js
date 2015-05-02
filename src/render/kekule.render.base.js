@@ -254,7 +254,9 @@ Kekule.Render.BondRenderType = {
 	/** A bold hollow rectangle, indicating a bond near the observer. Usually connected with wedged bonds. */
 	WEDGED_HOLLOW_BOTH: 27,
 	/** A wavy line, usually used for bond with uncertain stereo */
-	WAVY: 30
+	WAVY: 30,
+	/** A cross double bond, means an uncertain E or Z stereo */
+	SCISSORS_DOUBLE: 40
 };
 
 

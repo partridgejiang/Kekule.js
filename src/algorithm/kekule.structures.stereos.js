@@ -260,6 +260,8 @@ Kekule.MolStereoUtils = {
 		var SP = Kekule.StereoParity;
 		if (!ignoreStereoCheck && !Kekule.MolStereoUtils.isStereoBond(connector))
 			return SP.NONE;
+		if (connector.getStereo && [Kekule.BondStereo.E_OR_Z, Kekule.BondStereo.CIS_OR_TRANS].indexOf(connector.getStereo()) >= 0)
+			return SP.NONE;
 
 		var result = SP.UNKNOWN;
 		/*

@@ -932,6 +932,18 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.creat
 		'bondStereo': Kekule.BondStereo.UP_OR_DOWN
 	}
 );
+Kekule.Editor.ActionComposerSetBondControllerDoubleEither = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetBondControllerDoubleEither',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE_EITHER'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE_EITHER'), //Kekule.ChemWidgetTexts.HINT_MOL_BOND_DOUBLE,
+	'MolBondIaController',
+	'MolBondIaController-Double-Either',
+	{
+		'bondType': Kekule.BondType.COVALENT,
+		'bondOrder': Kekule.BondOrder.DOUBLE,
+		'bondStereo': Kekule.BondStereo.E_OR_Z
+	}
+);
 
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondController',
@@ -947,7 +959,8 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerCloser,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
-		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown
+		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
+		Kekule.Editor.ActionComposerSetBondControllerDoubleEither
 	]
 	/*
 	 {

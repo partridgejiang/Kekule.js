@@ -431,11 +431,13 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 				var dy = coord2.y - coord1.y;
 				var alpha = Math.atan(dy / dx);
 
+				var sign = Math.sign(dx) || 1;
+
 				// with some default values
 				var width = (arrowParams.width || 6) / 2;
 				var length = arrowParams.length || 3;
 				var beta = Math.atan(width / length);
-				var l = Math.sqrt(Math.sqr(width) + Math.sqr(length));
+				var l = Math.sqrt(Math.sqr(width) + Math.sqr(length)) * sign;
 
 				var lcos1 = Math.cos(alpha - beta) * l;
 				var lsin1 = Math.sin(alpha - beta) * l;
@@ -2699,6 +2701,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 	/** @private */
 	_lineBasedConnectorTypes: [RT.SINGLE, RT.DOUBLE, RT.TRIPLE, RT.QUAD,
+			RT.SCISSORS_DOUBLE,
 			RT.BOLD, RT.BOLD_DOUBLE, RT.BOLD_TRIPLE,
 			RT.DASHED, RT.DASHED_DOUBLE, RT.DASHED_TRIPLE, RT.SOLID_DASH, RT.BOLD_DASH,
 			RT.ARROWED],
@@ -2777,7 +2780,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var dashParam = {'isBold': false, 'isDash': true};
 		switch (renderType)
 		{
-			case RT.DOUBLE: for (var i = 0; i < 2; ++i, lineParams.push(param)); break;
+			case RT.DOUBLE:
+			case RT.SCISSORS_DOUBLE: for (var i = 0; i < 2; ++i, lineParams.push(param)); break;
 			case RT.TRIPLE: for (var i = 0; i < 3; ++i, lineParams.push(param)); break;
 			case RT.QUAD: for (var i = 0; i < 4; ++i, lineParams.push(param)); break;
 			case RT.BOLD: lineParams.push(boldParam); break;
@@ -2790,15 +2794,16 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// TODO: which side is dash need to be further calculated for aromatic bond
 			case RT.SOLID_DASH: lineParams.push(param); lineParams.push(dashParam); break;
 			case RT.BOLD_DASH: lineParams.push(boldParam); lineParams.push(dashParam); break;
-			case RT.ARROWED: param.isArrow = true; lineParams.push(param);
+			case RT.ARROWED: param.isArrow = true; lineParams.push(param); break;
 			case RT.SINGLE:
 			default:
 				lineParams.push(param);
 		}
-		return this.doDrawSymmetryLineConnector(context, node1, node2, coord1, coord2, lineLength, lineParams, options);
+		var isCross = renderType === RT.SCISSORS_DOUBLE;
+		return this.doDrawSymmetryLineConnector(context, node1, node2, coord1, coord2, lineLength, lineParams, isCross, options);
 	},
 	/** @private */
-	doDrawSymmetryLineConnector: function(context, node1, node2, coord1, coord2, lineLength, lineParams, /*isBold, isDash,*/ options)
+	doDrawSymmetryLineConnector: function(context, node1, node2, coord1, coord2, lineLength, lineParams, isCross, options)
 	{
 		var lineCount = lineParams.length;
 
@@ -2820,9 +2825,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var ops = {
 				'strokeWidth': strokeWidth,
 				'strokeColor': Kekule.Render.RenderOptionUtils.getColor(options),
-				'isDash': lineParams[0].isDash,
+				'strokeDash': lineParams[0].isDash,
 				'opacity': options.opacity
 			};
+			//console.log('draw line options', ops);
 
 			var line = this.drawArrowLine(context, coord1, coord2, arrowParams, ops);
 			var boundInfo = this.createLineBoundInfo(coord1, coord2, strokeWidth);
@@ -2851,9 +2857,12 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var initialBondAlign = 1;
 			if (!(lineCount & 1))  // line count is even, must decide which direction should put one more lines
 			{
-				initialBondAlign = Kekule.ObjUtils.isUnset(lineParams.bondAlign)?
-					this._decideEvenBondAlign(context, node1, node2):
-					lineParams.bondAlign;
+				if (isCross)  // cross multiple bonds, always align to center
+					initialBondAlign = 0;
+				else
+					initialBondAlign = Kekule.ObjUtils.isUnset(lineParams.bondAlign)?
+						this._decideEvenBondAlign(context, node1, node2):
+						lineParams.bondAlign;
 				//console.log(initialBondAlign);
 			}
 			for (var i = 0; i < lineCount; ++i)
@@ -2892,10 +2901,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var averCoord2 = {'x': 0, 'y': 0};
 			var maxGap = 0, minGap = 0;
 
-			var localOptions = Object.create(options);
-
+			var realDrawParams = [];
 			for (var i = 0; i < lineCount; ++i)
 			{
+				var localOptions = Object.create(options);
 				var deltaX = currGap * angleSin;
 				var deltaY = currGap * angleCos;
 				var newCoord1 = {
@@ -2912,7 +2921,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				var arrowParams = null;
 				if (lineParams[i].isArrow)
 				{
-					arrowParams = {'width': options.bondArrowWidth * options.unitLength, 'length': options.bondArrowLength * options.unitLength};
+					arrowParams = {
+						'width': options.bondArrowWidth * options.unitLength,
+						'length': options.bondArrowLength * options.unitLength
+					};
 				}
 				var strokeWidth = options.strokeWidth;
 				if (lineParams[i].isBold)
@@ -2921,20 +2933,44 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				localOptions.strokeColor = options.color;
 				localOptions.strokeDash = lineParams[i].isDash;
 
-				var line = this.drawArrowLine(context, newCoord1, newCoord2, arrowParams,
-					/*
-					{
-						'strokeWidth': strokeWidth,
-						'strokeColor': Kekule.Render.RenderOptionUtils.getColor(options),
-						'strokeDash': lineParams[i].isDash,
-						'opacity': options.opacity
-					}*/localOptions);
+				/*
+				var line = this.drawArrowLine(context, newCoord1, newCoord2, arrowParams, localOptions);
 				this.addToDrawGroup(line, group);
+				*/
+				realDrawParams.push({
+					'coord1': newCoord1,
+					'coord2': newCoord2,
+					'arrowParams': arrowParams,
+					'drawOptions': localOptions
+				});
 				if (lineParams[i].isBold)
 					currGap = lineGap + Math.floor(strokeWidth / 2);
 				else
 					currGap = lineGap;
 			}
+
+			// do real draw
+			if (isCross)
+			{
+				//var middleLineIndex = (lineCount % 1)? (lineCount >> 1) + 1: null;
+				for (var i = 0; i < lineCount; ++i)
+				{
+					var currPartParam = realDrawParams[i];
+					var counterPartParam = realDrawParams[lineCount - i - 1];
+					var line = this.drawArrowLine(context, currPartParam.coord1, counterPartParam.coord2, currPartParam.arrowParams, currPartParam.drawOptions);
+					this.addToDrawGroup(line, group);
+				}
+			}
+			else
+			{
+				for (var i = 0; i < lineCount; ++i)
+				{
+					var realParam = realDrawParams[i];
+					var line = this.drawArrowLine(context, realParam.coord1, realParam.coord2, realParam.arrowParams, realParam.drawOptions);
+					this.addToDrawGroup(line, group);
+				}
+			}
+
 			averCoord1 = Kekule.CoordUtils.divide(averCoord1, lineCount);
 			averCoord2 = Kekule.CoordUtils.divide(averCoord2, lineCount);
 			var boundInfo = this.createLineBoundInfo(averCoord1, averCoord2, maxGap - minGap);
