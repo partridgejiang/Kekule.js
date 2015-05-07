@@ -2210,7 +2210,7 @@ Kekule.CoordUtils = {
 		var result = (Math.sign(coord.x - b.x1) * Math.sign(coord.x - b.x2) <= 0)
 			&& (Math.sign(coord.y - b.y1) * Math.sign(coord.y - b.y2) <= 0);
 		if (Kekule.ObjUtils.notUnset(coord.z))
-			result &= (Math.sign(coord.z - b.z1) * Math.sign(coord.z - b.z2) <= 0);
+			result = result && (Math.sign(coord.z - b.z1) * Math.sign(coord.z - b.z2) <= 0);
 		return result;
 	},
 

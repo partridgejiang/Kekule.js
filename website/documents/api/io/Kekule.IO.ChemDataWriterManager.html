@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: ChemDataWriterManager</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: ChemDataWriterManager</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="Kekule.html">Kekule</a><a href="Kekule.IO.html">.IO</a>.</span>
+        
+        ChemDataWriterManager
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+<dt>
+    
+        <h4 class="name" id="ChemDataWriterManager"><span class="type-signature"></span>new ChemDataWriterManager<span class="signature">()</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A manager to create suitable data writer.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line646">line 646</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<dt>
+    
+        <h4 class="name" id="createWriter"><span class="type-signature">(static) </span>createWriter<span class="signature">(condition, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create a new writer instance by condition and suitable for srcObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>condition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line861">line 861</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="createWriterByFileExt"><span class="type-signature">(static) </span>createWriterByFileExt<span class="signature">(fileExt, otherConditions, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create writer instance by file ext.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fileExt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line932">line 932</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="createWriterByFormat"><span class="type-signature">(static) </span>createWriterByFormat<span class="signature">(formatId, otherConditions)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create new writer instance by formatId.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>formatId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line909">line 909</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="createWriterById"><span class="type-signature">(static) </span>createWriterById<span class="signature">(id, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create a new writer instance by id and meet srcObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line889">line 889</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="createWriterByMimeType"><span class="type-signature">(static) </span>createWriterByMimeType<span class="signature">(mimeType, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create a new reader instance by MIME type.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line955">line 955</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getAvailableWriterInfos"><span class="type-signature">(static) </span>getAvailableWriterInfos<span class="signature">(condition, srcObjOrClass)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get all available writer infos by condition provided and suitble for srcObj.For example: Kekule.IO.ChemDataWriterManager.getWriterInfo({'id': 'mol'});
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>condition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObjOrClass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Variant</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line697">line 697</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriter"><span class="type-signature">(static) </span>getWriter<span class="signature">(condition, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get a reusable writer instance by condition and suitable for srcObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>condition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line875">line 875</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterByFileExt"><span class="type-signature">(static) </span>getWriterByFileExt<span class="signature">(fileExt, otherConditions, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get a reusbale writer instance by file ext.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fileExt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line944">line 944</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterByFormat"><span class="type-signature">(static) </span>getWriterByFormat<span class="signature">(formatId, otherConditions)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get new writer instance by formatId.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>formatId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line920">line 920</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterById"><span class="type-signature">(static) </span>getWriterById<span class="signature">(id, srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get a reusable writer instance by id and meet srcObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line899">line 899</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterByMimeType"><span class="type-signature">(static) </span>getWriterByMimeType<span class="signature">(mimeType)</span><span class="type-signature"> &rarr; {<a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get a reusable new reader instance by MIME type.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line966">line 966</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.IO.ChemDataWriter.html">Kekule.IO.ChemDataWriter</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterInfo"><span class="type-signature">(static) </span>getWriterInfo<span class="signature">(condition, srcObj)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get writer info by condition provided and suitble for srcObj.For example: Kekule.IO.ChemDataWriterManager.getWriterInfo({'id': 'mol'});
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>condition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line733">line 733</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterInfoByFileExt"><span class="type-signature">(static) </span>getWriterInfoByFileExt<span class="signature">(fileExt, otherConditions, srcObj)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get writer information by file ext.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fileExt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line808">line 808</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterInfoByFormat"><span class="type-signature">(static) </span>getWriterInfoByFormat<span class="signature">(formatId, otherConditions)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get writer information by data format id.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>formatId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>otherConditions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line771">line 771</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getWriterInfoById"><span class="type-signature">(static) </span>getWriterInfoById<span class="signature">(id, srcObj)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get writer information by Id.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemObject</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line761">line 761</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="register"><span class="type-signature">(static) </span>register<span class="signature">(id, writerClass, srcClasses, formatId, additionalInfo)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Register a data writer.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A UID string for writer.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>writerClass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Class</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Class of writer.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srcClasses</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Instance of which classes can be written by this writer.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>formatId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Variant</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Data format, string or array.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>additionalInfo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">More information on this reader class. Can include the following fields:  {    {Hash} createOptions: hash passed into writer's constructor.    (String) title: Writer title,    (String) mimeType    (String) fileExt: if write to a file, the file ext.  }</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="io_kekule.io.js.html">io/kekule.io.js</a>, <a href="io_kekule.io.js.html#line673">line 673</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

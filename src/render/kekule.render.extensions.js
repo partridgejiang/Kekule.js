@@ -19,8 +19,9 @@
 	//var C = Kekule.Render.getRenderConfigs();
 
 	/** @ignore */
-	ClassEx.extend(Kekule.ChemObject, {
-		/** @lends Kekule.ChemObject */
+	ClassEx.extend(Kekule.ChemObject,
+		/** @lends Kekule.ChemObject# */
+		{
 		/**
 		 * @property {Hash} renderOptions Options to render this chem object in 2D.
 		 * This property may has the following fields:
@@ -477,7 +478,9 @@
 		//{'name': 'interactState', 'dataType': DataType.STRING}
 	]);
 
-	ClassEx.extend(Kekule.ChemObjList, {
+	ClassEx.extend(Kekule.ChemObjList,
+	/** @lends Kekule.ChemObjList# */
+	{
 		/** @ignore */
 		getAllContainingConnectors: function()
 		{
@@ -534,7 +537,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.ChemSpaceElement, {
+	ClassEx.extend(Kekule.ChemSpaceElement,
+	/** @lends Kekule.ChemSpaceElement# */
+	{
 		/** @ignore */
 		getAllContainingConnectors: function()
 		{
@@ -547,7 +552,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.ChemSpace, {
+	ClassEx.extend(Kekule.ChemSpace,
+	/** @lends Kekule.ChemSpace# */
+	{
 		/** @ignore */
 		getAllContainingConnectors: function()
 		{
@@ -575,7 +582,9 @@
 		{'name': 'defAutoScaleRefLength', 'dataType': DataType.NUMBER}
 	]);
 
-	ClassEx.extend(Kekule.BaseStructureConnector, {
+	ClassEx.extend(Kekule.BaseStructureConnector,
+	/** @lends Kekule.BaseStructureConnector# */
+	{
 		/**
 		 * Get center coord of object. Param coordMode determinate which coord (2D or 3D) will be returned.
 		 * @param {Int} coordMode
@@ -688,7 +697,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.ChemStructureConnector, {
+	ClassEx.extend(Kekule.ChemStructureConnector,
+	/** @lends Kekule.ChemStructureConnector# */
+	{
 		/**
 		 * Returns all length factors in object to help the scale ratio in autoscale mode.
 		 * To molecule, typically this is the all of bond lengths.
@@ -703,7 +714,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.BaseStructureNode, {
+	ClassEx.extend(Kekule.BaseStructureNode,
+	/** @lends Kekule.BaseStructureNode# */
+	{
 		/**
 		 * Get center coord of object.
 		 * @param {Int} coordMode
@@ -765,7 +778,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.ChemStructureNode, {
+	ClassEx.extend(Kekule.ChemStructureNode,
+	/** @lends Kekule.ChemStructureNode# */
+	{
 		/**
 		 * Get label to display the atom.
 		 * @param {Int} hydrogenDisplayLevel Value from {@link Kekule.Render.HydrogenDisplayLevel}.
@@ -850,7 +865,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.AbstractAtom, {
+	ClassEx.extend(Kekule.AbstractAtom,
+	/** @lends Kekule.AbstractAtom# */
+	{
 		/**
 		 * Get label to display the atom.
 		 * @param {Int} hydrogenDisplayLevel Value from {@link Kekule.Render.HydrogenDisplayLevel}.
@@ -927,7 +944,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.Atom, {
+	ClassEx.extend(Kekule.Atom,
+	/** @lends Kekule.Atom# */
+	{
 		getCoreDisplayRichTextItem: function(displayLabelConfig)
 		{
 			var R = Kekule.Render;
@@ -968,7 +987,10 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.Pseudoatom, {
+	ClassEx.extend(Kekule.Pseudoatom,
+	/** @lends Kekule.Pseudoatom# */
+	{
+		/** @ignore */
 		getCoreDisplayRichTextItem: function(displayLabelConfig)
 		{
 			var R = Kekule.Render;
@@ -1013,7 +1035,10 @@
 			return richText;
 		};
 
-	ClassEx.extend(Kekule.VariableAtom, {
+	ClassEx.extend(Kekule.VariableAtom,
+	/** @lends Kekule.VariableAtom# */
+	{
+		/** @ignore */
 		getCoreDisplayRichTextItem: function(displayLabelConfig)
 		{
 			var R = Kekule.Render;
@@ -1048,7 +1073,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.StructureConnectionTable, {
+	ClassEx.extend(Kekule.StructureConnectionTable,
+	/** @lends Kekule.StructureConnectionTable# */
+	{
 		// check if nodes inside has 2D coords
 		exposedNodesHasCoord2D: function(allowCoordBorrow)
 		{
@@ -1187,7 +1214,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.StructureFragment, {
+	ClassEx.extend(Kekule.StructureFragment,
+	/** @lends Kekule.StructureFragment# */
+	{
 		// StructureFragment may has child nodes and can be expanded
 		isExpanded: function()
 		{
@@ -1285,7 +1314,10 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.SubGroup, {
+	ClassEx.extend(Kekule.SubGroup,
+	/** @lends Kekule.SubGroup# */
+	{
+		/** @ignore */
 		getCoreDisplayRichTextItem: function(displayLabelConfig)
 		{
 			var R = Kekule.Render;
@@ -1407,7 +1439,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.MolecularFormula, {
+	ClassEx.extend(Kekule.MolecularFormula,
+	/** @lends Kekule.MolecularFormula# */
+	{
 		getDisplayRichText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
@@ -1417,7 +1451,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.Molecule, {
+	ClassEx.extend(Kekule.Molecule,
+	/** @lends Kekule.MolecularFormula# */
+	{
 		/*
 		 * IMPORTANT: YUI Compressor will change $origin to a dump var name, so ClassEx.extend is unable to find
 		 * suitable original function!!!!!
@@ -1436,7 +1472,9 @@
 		}
 	});
 
-	ClassEx.extend(Kekule.CompositeMolecule, {
+	ClassEx.extend(Kekule.CompositeMolecule,
+	/** @lends Kekule.CompositeMolecule# */
+	{
 		// Calculate the box to fit all exposed nodes in CTable.
 		getExposedContainerBox: function(coordMode, allowCoordBorrow)
 		{

@@ -280,6 +280,8 @@
     /* default width/height */
     width: 600px;
     height: 400px;
+    min-width: 300px;
+    min-height: 200px;
 }
 
 .K-Chem-Composer .K-Chem-Editor

@@ -22,8 +22,8 @@
 var AU = Kekule.ArrayUtils;
 
 /**
- * Namespace and some constants for SMILES supporting.
- * @namespace
+ * Some constants for SMILES supporting.
+ * @class
  */
 Kekule.IO.SMILES = {
 	ATOM_BRACKET_LEFT: '[',

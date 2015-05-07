@@ -1,0 +1,6342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: ChemStructureNode</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: ChemStructureNode</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
+        
+        ChemStructureNode
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+<dt>
+    
+        <h4 class="name" id="ChemStructureNode"><span class="type-signature"></span>new ChemStructureNode<span class="signature">(id, coord2D, coord3D)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Represent an abstract structure node (atom, atom group, etc.).
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Id of this node.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>coord2D</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The 2D coordinates of node, {x, y}, can be null.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>coord3D</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The 3D coordinates of node, {x, y, z}, can be null.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>charge</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Float</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Charge of atom. As there may be partial charge on atom, so a float value is used.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>radical</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Radical state of node, value should from Kekule.RadicalType.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Stereo parity of node if the node is a chiral one, following the MDL convention.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>linkedChemNodes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Neighbor nodes linked to this node through proper connectors.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line503">line 503</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        <ul>
+            <li><a href="Kekule.BaseStructureNode.html">Kekule.BaseStructureNode</a></li>
+        </ul>
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<dt>
+    
+        <h4 class="name" id="appendLinkedConnector"><span class="type-signature"></span>appendLinkedConnector<span class="signature">(connector)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Link a connector to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#appendLinkedConnector">Kekule.ChemStructureObject#appendLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getConnectorTo"><span class="type-signature"></span>getConnectorTo<span class="signature">(obj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get connector between this object and another object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getConnectorTo">Kekule.ChemStructureObject#getConnectorTo</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox"><span class="type-signature"></span>getContainerBox<span class="signature">(coordMode, allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the box to contain the object.Descendants may override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>coordMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox">Kekule.BaseStructureNode#getContainerBox</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line453">line 453</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox2D"><span class="type-signature"></span>getContainerBox2D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the 2D box to contain the object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox2D">Kekule.BaseStructureNode#getContainerBox2D</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox3D"><span class="type-signature"></span>getContainerBox3D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the 3D box to contain the object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox3D">Kekule.BaseStructureNode#getContainerBox3D</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLabel"><span class="type-signature"></span>getLabel<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns a label that represents current node.Desendants should override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line538">line 538</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedBonds"><span class="type-signature"></span>getLinkedBonds<span class="signature">(bondType)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked instances of <a href="Kekule.Bond.html">Kekule.Bond</a> to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>bondType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line576">line 576</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedChemNodes"><span class="type-signature"></span>getLinkedChemNodes<span class="signature">(ignoreHydrogenAtoms)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns neighbor nodes linked to this node through proper connectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreHydrogenAtoms</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Whether explicit hydrogen atoms are returned. Default is false.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line559">line 559</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedConnectorAt"><span class="type-signature"></span>getLinkedConnectorAt<span class="signature">(index)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get linked connector object at index.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedConnectorAt">Kekule.ChemStructureObject#getLinkedConnectorAt</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedConnectorCount"><span class="type-signature"></span>getLinkedConnectorCount<span class="signature">()</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Return count of linkedConnectors.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedConnectorCount">Kekule.ChemStructureObject#getLinkedConnectorCount</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedDoubleBonds"><span class="type-signature"></span>getLinkedDoubleBonds<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked double covalent bond to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line611">line 611</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedHydrogenAtoms"><span class="type-signature"></span>getLinkedHydrogenAtoms<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked hydrogen atoms.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedHydrogenAtoms">Kekule.ChemStructureObject#getLinkedHydrogenAtoms</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedMultipleBonds"><span class="type-signature"></span>getLinkedMultipleBonds<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked multiple covalent bond to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line591">line 591</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedNonHydrogenConnectors"><span class="type-signature"></span>getLinkedNonHydrogenConnectors<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns connectors that connected to a non hydrogen node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedNonHydrogenConnectors">Kekule.ChemStructureObject#getLinkedNonHydrogenConnectors</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedNonHydrogenObjs"><span class="type-signature"></span>getLinkedNonHydrogenObjs<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked objects except hydrogen atoms.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedNonHydrogenObjs">Kekule.ChemStructureObject#getLinkedNonHydrogenObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedObjsOnConnector"><span class="type-signature"></span>getLinkedObjsOnConnector<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns other objects connected to this one through connector.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedObjsOnConnector">Kekule.ChemStructureObject#getLinkedObjsOnConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getParentFragment"><span class="type-signature"></span>getParentFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        If Kekule.ChemStructureObject#parent is a {@link Kekule.StructureFragment}, returns this fragment.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getParentFragment">Kekule.ChemStructureObject#getParentFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getPrimaryIsotope"><span class="type-signature"></span>getPrimaryIsotope<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.Isotope.html">Kekule.Isotope</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the most possible isotope of node.To <a href="Kekule.Atom.html">Kekule.Atom</a>, this should be simplely the isotope of atomwhile variable atom or pseudoatom may has its own implementation.This method returns null if isotope is uncertain to this node.Descendants need to override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.Isotope.html">Kekule.Isotope</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="indexOfLinkedConnector"><span class="type-signature"></span>indexOfLinkedConnector<span class="signature">(connector)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns index of connector connected to node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#indexOfLinkedConnector">Kekule.ChemStructureObject#indexOfLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="isHydrogenAtom"><span class="type-signature"></span>isHydrogenAtom<span class="signature">()</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns whether this node is a H atom (but not D or T).
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line639">line 639</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeLinkedConnector"><span class="type-signature"></span>removeLinkedConnector<span class="signature">(connector)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove a connector in linkedContainer.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeLinkedConnector">Kekule.ChemStructureObject#removeLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeLinkedConnectorAt"><span class="type-signature"></span>removeLinkedConnectorAt<span class="signature">(index)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove connector at index of linkedConnectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeLinkedConnectorAt">Kekule.ChemStructureObject#removeLinkedConnectorAt</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeThisFromLinkedConnector"><span class="type-signature"></span>removeThisFromLinkedConnector<span class="signature">()</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove this node from all linked connectors.Ths method should be called before a object is removed from a structure.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeThisFromLinkedConnector">Kekule.ChemStructureObject#removeThisFromLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+        <h3 class="subsection-title">Events</h3>
+
+        <dl>
+            
+<dt>
+    
+        <h4 class="name" id="event:structureChange">structureChange</h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Invoked when object is changed and the change is related with structure(e.g. modify a bond, change a atomic number...).Event has field: {origin: the change source object (may be a child of event.target}.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#event:structureChange">Kekule.ChemStructureObject#event:structureChange</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
+        
+        ChemStructureNode
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+<dt>
+    
+        <h4 class="name" id="ChemStructureNode"><span class="type-signature"></span>new ChemStructureNode<span class="signature">()</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line511">line 511</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<dt>
+    
+        <h4 class="name" id="appendLinkedConnector"><span class="type-signature"></span>appendLinkedConnector<span class="signature">(connector)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Link a connector to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#appendLinkedConnector">Kekule.ChemStructureObject#appendLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getConnectorTo"><span class="type-signature"></span>getConnectorTo<span class="signature">(obj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get connector between this object and another object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getConnectorTo">Kekule.ChemStructureObject#getConnectorTo</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox"><span class="type-signature"></span>getContainerBox<span class="signature">(coordMode, allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the box to contain the object.Descendants may override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>coordMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox">Kekule.BaseStructureNode#getContainerBox</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line453">line 453</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox2D"><span class="type-signature"></span>getContainerBox2D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the 2D box to contain the object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox2D">Kekule.BaseStructureNode#getContainerBox2D</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getContainerBox3D"><span class="type-signature"></span>getContainerBox3D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Calculate the 3D box to contain the object.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>allowCoordBorrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.BaseStructureNode.html#getContainerBox3D">Kekule.BaseStructureNode#getContainerBox3D</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLabel"><span class="type-signature"></span>getLabel<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns a label that represents current node.Desendants should override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line538">line 538</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedBonds"><span class="type-signature"></span>getLinkedBonds<span class="signature">(bondType)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked instances of <a href="Kekule.Bond.html">Kekule.Bond</a> to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>bondType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line576">line 576</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedChemNodes"><span class="type-signature"></span>getLinkedChemNodes<span class="signature">(ignoreHydrogenAtoms)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns neighbor nodes linked to this node through proper connectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreHydrogenAtoms</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Whether explicit hydrogen atoms are returned. Default is false.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line559">line 559</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedConnectorAt"><span class="type-signature"></span>getLinkedConnectorAt<span class="signature">(index)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get linked connector object at index.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedConnectorAt">Kekule.ChemStructureObject#getLinkedConnectorAt</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedConnectorCount"><span class="type-signature"></span>getLinkedConnectorCount<span class="signature">()</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Return count of linkedConnectors.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedConnectorCount">Kekule.ChemStructureObject#getLinkedConnectorCount</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedDoubleBonds"><span class="type-signature"></span>getLinkedDoubleBonds<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked double covalent bond to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line611">line 611</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedHydrogenAtoms"><span class="type-signature"></span>getLinkedHydrogenAtoms<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked hydrogen atoms.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedHydrogenAtoms">Kekule.ChemStructureObject#getLinkedHydrogenAtoms</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedMultipleBonds"><span class="type-signature"></span>getLinkedMultipleBonds<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked multiple covalent bond to this node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line591">line 591</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedNonHydrogenConnectors"><span class="type-signature"></span>getLinkedNonHydrogenConnectors<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns connectors that connected to a non hydrogen node.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedNonHydrogenConnectors">Kekule.ChemStructureObject#getLinkedNonHydrogenConnectors</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedNonHydrogenObjs"><span class="type-signature"></span>getLinkedNonHydrogenObjs<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns linked objects except hydrogen atoms.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedNonHydrogenObjs">Kekule.ChemStructureObject#getLinkedNonHydrogenObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getLinkedObjsOnConnector"><span class="type-signature"></span>getLinkedObjsOnConnector<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns other objects connected to this one through connector.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getLinkedObjsOnConnector">Kekule.ChemStructureObject#getLinkedObjsOnConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getParentFragment"><span class="type-signature"></span>getParentFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        If Kekule.ChemStructureObject#parent is a {@link Kekule.StructureFragment}, returns this fragment.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getParentFragment">Kekule.ChemStructureObject#getParentFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getPrimaryIsotope"><span class="type-signature"></span>getPrimaryIsotope<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.Isotope.html">Kekule.Isotope</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the most possible isotope of node.To <a href="Kekule.Atom.html">Kekule.Atom</a>, this should be simplely the isotope of atomwhile variable atom or pseudoatom may has its own implementation.This method returns null if isotope is uncertain to this node.Descendants need to override this method.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.Isotope.html">Kekule.Isotope</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="indexOfLinkedConnector"><span class="type-signature"></span>indexOfLinkedConnector<span class="signature">(connector)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns index of connector connected to node.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#indexOfLinkedConnector">Kekule.ChemStructureObject#indexOfLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="isHydrogenAtom"><span class="type-signature"></span>isHydrogenAtom<span class="signature">()</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns whether this node is a H atom (but not D or T).
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line639">line 639</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeLinkedConnector"><span class="type-signature"></span>removeLinkedConnector<span class="signature">(connector)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove a connector in linkedContainer.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureConnector.html">Kekule.ChemStructureConnector</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeLinkedConnector">Kekule.ChemStructureObject#removeLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeLinkedConnectorAt"><span class="type-signature"></span>removeLinkedConnectorAt<span class="signature">(index)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove connector at index of linkedConnectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeLinkedConnectorAt">Kekule.ChemStructureObject#removeLinkedConnectorAt</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="removeThisFromLinkedConnector"><span class="type-signature"></span>removeThisFromLinkedConnector<span class="signature">()</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove this node from all linked connectors.Ths method should be called before a object is removed from a structure.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#removeThisFromLinkedConnector">Kekule.ChemStructureObject#removeThisFromLinkedConnector</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+        <h3 class="subsection-title">Events</h3>
+
+        <dl>
+            
+<dt>
+    
+        <h4 class="name" id="event:structureChange">structureChange</h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Invoked when object is changed and the change is related with structure(e.g. modify a bond, change a atomic number...).Event has field: {origin: the change source object (may be a child of event.target}.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#event:structureChange">Kekule.ChemStructureObject#event:structureChange</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:38 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

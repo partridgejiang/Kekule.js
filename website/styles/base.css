@@ -131,6 +131,7 @@ a#kekuleLogo span
 	padding: 0.5em 1em;
 	border-bottom: 1px solid #ccc;
 	text-align: center;
+	text-decoration: none;
 }
 .SideNav a:last-child
 {

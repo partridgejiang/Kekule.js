@@ -21,7 +21,7 @@
 			<a href="../index.html">Overview</a>
 			<a>Features</a>
 			<a href="../demos/index.html" target="_blank">Demos</a>
-			<a>Document</a>
+			<a href="../documents/index.html">Documents</a>
 			<!-- TemplateBeginEditable name="AdditionalMainNavItems" -->
 			<!-- TemplateEndEditable -->			
 			<!-- InstanceEndEditable -->			
@@ -29,12 +29,12 @@
 	</header>	
 	<section class="MainContent" id="mainContent">    			
 		<!-- InstanceBeginEditable name="PossibleSideNav" -->
-			<nav class="SideNav">
-				<!-- TemplateBeginEditable name="SideNavContent" -->
-				<a>Overview</a>
+			<nav class="SideNav">				
+				<a href="../index.html">Overview</a>
 				<a>Features</a>
 				<a href="../demos/index.html" target="_blank">Demos</a>
-				<a>Document</a>
+				<a href="../documents/index.html">Document</a>
+				<!-- TemplateBeginEditable name="SideNavContent" -->
 				<!-- TemplateEndEditable -->						
 			</nav>
 			<!-- InstanceEndEditable -->			
@@ -46,7 +46,7 @@
 		</article>
 	</section>
 	<footer class="MainFooter" id="mainFooter">
-		<span>Copyright 2014 Kekule.js Lab</span>
+		<span>Copyright 2014-2015 Kekule.js Lab</span>
 	</footer>
 </body>
 <!-- InstanceEnd --></html>

@@ -190,8 +190,9 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
  *   Can use comma to separate multiple properties, e.g. 'width, height'.
  * @property {String} timingFunc CSS3 transition-timing-function.
  */
-Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition, {
-	/** @lends Kekule.Widget.Css3Transition# */
+Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
+/** @lends Kekule.Widget.Css3Transition# */
+{
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3Transition',
 	/** @constructs */

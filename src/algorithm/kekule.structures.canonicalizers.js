@@ -753,7 +753,9 @@ Kekule.canonicalizer = Kekule.Canonicalizer.getInstance();
 // extend ctab and molecule class for a easy way to do canonicalization
 // even add method to ChemObject, make it easy to canonicalize all children
 /** @ignore */
-ClassEx.extend(Kekule.ChemObject, {
+ClassEx.extend(Kekule.ChemObject,
+	/** @lends Kekule.ChemObject# */
+	{
 	/**
 	 * Canonicalize object and all possible children by canonicalizer. If canonicalizerId is not set,
 	 * the default one will be used.
@@ -772,7 +774,9 @@ ClassEx.extend(Kekule.ChemObject, {
 });
 
 /** @ignore */
-ClassEx.extend(Kekule.StructureConnectionTable, {
+ClassEx.extend(Kekule.StructureConnectionTable,
+/** @lends Kekule.StructureConnectionTable# */
+{
 	/**
 	 * Canonicalize a structure fragment by canonicalizer. If canonicalizerId is not set,
 	 * the default one will be used.
@@ -785,7 +789,9 @@ ClassEx.extend(Kekule.StructureConnectionTable, {
 	}
 });
 /** @ignore */
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/**
 	 * Canonicalize a structure fragment by canonicalizer. If canonicalizerId is not set,
 	 * the default one will be used.

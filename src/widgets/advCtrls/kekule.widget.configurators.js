@@ -225,7 +225,9 @@ Kekule.Widget.ActionOpenConfigWidget = Class.create(Kekule.Action,
 	}
 });
 
-ClassEx.extend(Kekule.Widget.BaseWidget, {
+ClassEx.extend(Kekule.Widget.BaseWidget,
+/** @lends Kekule.Widget.BaseWidget# */
+{
 	/** @private */
 	getSettingFacadeClass: function()
 	{

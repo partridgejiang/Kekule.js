@@ -80,7 +80,7 @@ Kekule.DataBingItem = Class.create(ObjectEx,
 });
 
 ClassEx.extend(ObjectEx,
-/** @lends Kekule.Widget.BaseWidget */
+/** @lends Kekule.ObjectEx# */
 {
 	/**
 	 * Retrieve data by a binding name.

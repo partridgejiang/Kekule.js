@@ -64,7 +64,9 @@ Kekule.MolStandardizer = {
 	}
 };
 
-Object.extend(Kekule.ChemStructureUtils, {
+Object.extend(Kekule.ChemStructureUtils,
+/** @lends Kekule.ChemStructureUtils */
+{
 	/**
 	 * Check if two structure fragment (molecule) is same in chem level (same
 	 * atoms, bonds and structures).
@@ -88,7 +90,9 @@ Object.extend(Kekule.ChemStructureUtils, {
 	}
 });
 
-ClassEx.extend(Kekule.ChemObject, {
+ClassEx.extend(Kekule.ChemObject,
+/** @lends Kekule.ChemObject# */
+{
 	/**
 	 * Standardize this structure fragment (molecule).
 	 * Standardization may include canonicalization, aromatic perception and so on.
@@ -112,7 +116,9 @@ ClassEx.extend(Kekule.ChemObject, {
 		return this;
 	}
 });
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/**
 	 * Standardize this structure fragment (molecule).
 	 * Standardization may include canonicalization, aromatic perception and so on.

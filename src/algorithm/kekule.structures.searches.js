@@ -396,7 +396,9 @@ Kekule.ChemStructureSearcher = {
 
 var SM = Kekule.ChemStructureSearcher;
 
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/**
 	 * Search sub structure in this fragment.
 	 * @param {Kekule.StructureFragment} subStructure Structure to find.

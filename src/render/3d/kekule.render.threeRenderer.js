@@ -43,10 +43,14 @@ if ($jsRoot.THREE)
 }
 
 /** @ignore */
-Kekule.Render.ThreeObjectCache = Class.create({
+Kekule.Render.ThreeObjectCache = Class.create(
+/** @lends Kekule.Render.ThreeObjectCache# */
+{
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ThreeObjectCache',
-	/** @constructs */
+	/**
+	 * @ignore
+	 */
 	initialize: function()
 	{
 		this.cache = new Kekule.MapEx(true);  // non-weak, to keep objects
@@ -90,6 +94,7 @@ Kekule.Render.ThreeObjectCache = Class.create({
 	},
 	/**
 	 * add(geometryClass, scene, param1, param2...)
+	 * @ignore
 	 */
 	add: function()
 	{
@@ -108,6 +113,7 @@ Kekule.Render.ThreeObjectCache = Class.create({
 	},
 	/**
 	 * get(geometryClass, scene, param1, param2...)
+	 * @ignore
 	 */
 	get: function()
 	{

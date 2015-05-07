@@ -49,7 +49,9 @@ Kekule.AromaticTypes = {
 	UNCERTAIN: 64
 };
 
-ClassEx.extend(Kekule.Atom, {
+ClassEx.extend(Kekule.Atom,
+	/** @lends Kekule.Atom# */
+	{
 	/** @private */
 	isSulfoneOrSulfoxideSulphur: function()
 	{
@@ -97,7 +99,9 @@ ClassEx.extend(Kekule.Atom, {
 	}
 });
 
-ClassEx.extend(Kekule.StructureConnectionTable, {
+ClassEx.extend(Kekule.StructureConnectionTable,
+	/** @lends Kekule.StructureConnectionTable# */
+	{
 	/**
 	 * Returns Possible PI electron numbers of atom.
 	 * @param node
@@ -486,7 +490,9 @@ ClassEx.extend(Kekule.StructureConnectionTable, {
 	}
 });
 
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+	/** @lends Kekule.StructureFragment# */
+	{
 	/**
 	 * Perceive and mark all aromatic rings in molecule. Found rings will be stored in aromaticRings
 	 * property of structure fragment object.
@@ -524,7 +530,9 @@ ClassEx.extend(Kekule.StructureFragment, {
 	}
 });
 
-ClassEx.extend(Kekule.ChemObject, {
+ClassEx.extend(Kekule.ChemObject,
+	/** @lends Kekule.ChemObject# */
+	{
 	/**
 	 * Perceive and mark all aromatic rings in chem object. Found rings will be stored in aromaticRings
 	 * property of structure fragment object.

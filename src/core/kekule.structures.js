@@ -1637,11 +1637,6 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	getSimpleIsotopeMaps: function()
 	{
 		//TODO: not finished
-	},
-
-	setFromText: function(formulaText)
-	{
-
 	}
 });
 

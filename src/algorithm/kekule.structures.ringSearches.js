@@ -32,7 +32,9 @@ Kekule.StructureRingSearchDefOptions = {
 	bondTypes: [BT.COVALENT]
 };
 
-ClassEx.extend(Kekule.StructureConnectionTable, {
+ClassEx.extend(Kekule.StructureConnectionTable,
+/** @lends Kekule.StructureConnectionTable# */
+{
 	/**
 	 * Get a graph that represent the structure in connection table.
 	 * @private
@@ -248,7 +250,9 @@ ClassEx.extendMethod(Kekule.StructureConnectionTable, 'objectChange', function($
 	}
 );
 
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/**
 	 * Returns all connectors and nodes in cylce block.
 	 * @param {Kekule.Graph} graph
@@ -315,7 +319,9 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 	}
 ]);
 
-ClassEx.extend(Kekule.ChemStructureObject, {
+ClassEx.extend(Kekule.ChemStructureObject,
+/** @lends Kekule.ChemStructureObject# */
+{
 	/**
 	 * Returns SSSR ring that this object belonged.
 	 * @returns {Array}
@@ -368,7 +374,9 @@ ClassEx.extend(Kekule.ChemStructureObject, {
 	}
 });
 
-ClassEx.extend(Kekule.ChemObject, {
+ClassEx.extend(Kekule.ChemObject,
+/** @lends Kekule.ChemObject# */
+{
 	/**
 	 * Returns all connectors and nodes in cylce block.
 	 * @param {Kekule.Graph} graph

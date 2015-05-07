@@ -28,11 +28,15 @@ Kekule.CmdLineUtils = {
 	},
 	*/
 	/** @private */
-	COMMON_FILES: ['core/kekule.common.js'],  // file need to be put in every doc group
+	DOC_COMMON_FILES: ['core/kekule.root.js'],  // file need to be put in every doc group
+	/** @private */
+	DIC_EXTENSION_FILE: '.extension',
 	/** @private */
 	DEF_DOC_PATH: './_jsdoc/output/',
 	/** @private */
 	DOC_EXCLUDE_SRC_FILES: ['lan/json2.js', 'lan/sizzle.js', 'xbrowsers/kekule.x.js'],
+	/** @private */
+	DOC_EXCLUDE_CATEGORIES: ['localization', 'data', 'extra'],
 
 	getModuleStructures: function()
 	{
@@ -166,7 +170,8 @@ Kekule.CmdLineUtils = {
 		}
 		return false;
 	},
-	/** @private */
+	/* @private */
+	/*
 	getFilesOfCategory: function(category, srcFiles)
 	{
 		if (category)
@@ -184,6 +189,7 @@ Kekule.CmdLineUtils = {
 		else  // category not set, returns all files
 			return srcFiles;
 	},
+	*/
 	/**
 	 * Generate command line for compression.
 	 * @param {String} category
@@ -192,15 +198,73 @@ Kekule.CmdLineUtils = {
 	 * @param {String} outDir
 	 * @returns {String}
 	 */
-	generateDocConfigJson: function(category, srcRootDir, srcFiles, outDir)
+	generateDocConfigJsons: function(category, srcRootDir, srcFiles, outDir)
 	{
+		/*
 		if (!srcFiles)
 			srcFiles = CU.getSrcFiles();
+		*/
 		if (!outDir)
 		  outDir = CU.DEF_DOC_PATH;
+
+		var moduleInfos = CU.getSrcFileModuleInfos();
+		var targetCategories = [];
+		var categoryFileMap = {};
+		var allSrcFiles = [];
+		for (var i = 0, l = moduleInfos.length; i < l; ++i)
+		{
+			var m = moduleInfos[i];
+			var targetCategoryName = m.category || m.name;
+			var srcFiles = Kekule.ArrayUtils.clone(m.files);
+			srcFiles = Kekule.ArrayUtils.exclude(srcFiles, CU.DOC_EXCLUDE_SRC_FILES);
+			if (targetCategoryName && CU.DOC_EXCLUDE_CATEGORIES.indexOf(targetCategoryName) < 0)
+			{
+				Kekule.ArrayUtils.pushUnique(targetCategories, targetCategoryName);
+				if (!categoryFileMap[targetCategoryName])
+				{
+					categoryFileMap[targetCategoryName] = [];
+				}
+				categoryFileMap[targetCategoryName] = categoryFileMap[targetCategoryName].concat(srcFiles);
+				allSrcFiles = allSrcFiles.concat(srcFiles);
+			}
+		}
+		targetCategories.push('ALL');
+		categoryFileMap['ALL'] = allSrcFiles;
+
+		var result = [];
+		for (var i = 0, l = targetCategories.length; i < l; ++i)
+		{
+			var category = targetCategories[i];
+			var files = [].concat(categoryFileMap[category]);
+			Kekule.ArrayUtils.pushUnique(files, CU.DOC_COMMON_FILES);
+			if (srcRootDir)
+			{
+				for (var i = 0, l = files.length; i < l; ++i)
+				{
+					files[i] = srcRootDir + files[i];
+				}
+			}
+			var item = {
+				'name': category,
+				'source': {
+					'include': files
+				},
+				'opts': {
+					'encoding': 'utf-8',
+					'destination': outDir + category + '/'
+				}
+			};
+			result.push(item);
+		}
+
+		return result;
+
+		/*
 		var actualfiles = Kekule.ArrayUtils.exclude(srcFiles, CU.DOC_EXCLUDE_SRC_FILES);
 		var files = CU.getFilesOfCategory(category, actualfiles);
 		Kekule.ArrayUtils.pushUnique(files, CU.COMMON_FILES);
+		*/
+		/*
 		if (srcRootDir)
 		{
 			for (var i = 0, l = files.length; i < l; ++i)
@@ -217,7 +281,9 @@ Kekule.CmdLineUtils = {
 				'destination': outDir + category + '/'
 			}
 		};
+
 		return result;
+		*/
 	}
 };
 

@@ -21,7 +21,10 @@
  * @namespace
  */
 Kekule.Widget.PropertyEditor = {};
-/** Shortcur for {@link Kekule.Widget.PropertyEditor.} */
+/**
+ * Shortcur for {@link Kekule.Widget.PropertyEditor.}
+ * @namespace
+ */
 Kekule.PropertyEditor = Kekule.Widget.PropertyEditor;
 
 
@@ -452,7 +455,9 @@ var PEA = Kekule.PropertyEditor.EditorAttributes;
  * in object inspector.
  * @class
  */
-Kekule.PropertyEditor.EditorMananger = Class.create({
+Kekule.PropertyEditor.EditorMananger = Class.create(
+/** @lends Kekule.PropertyEditor.EditorMananger# */
+{
 	/** @constructs */
 	initialize: function()
 	{

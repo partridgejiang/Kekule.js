@@ -13,7 +13,7 @@
 "use strict";
 
 /**
- * Name space for glyphs.
+ * Name space for glyph classes.
  * @namespace
  */
 Kekule.Glyph = {};

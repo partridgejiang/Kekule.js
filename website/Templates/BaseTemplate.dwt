@@ -18,7 +18,7 @@
 			<a href="../index.html">Overview</a>
 			<a>Features</a>
 			<a>Demos</a>
-			<a>Document</a>
+			<a href="../documents/index.html">Document</a>
 			<!-- TemplateEndEditable -->			
 		</nav>
 	</header>	
@@ -33,7 +33,7 @@
 		</article>
 	</section>
 	<footer class="MainFooter" id="mainFooter">
-		<span>Copyright 2014 Kekule.js Lab</span>
+		<span>Copyright 2014-2015 Kekule.js Lab</span>
 	</footer>
 </body>
 </html>

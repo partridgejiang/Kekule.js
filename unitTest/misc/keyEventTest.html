@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Key Event Test</title>
+  <style>
+    #stage
+    {
+      width: 600px;
+      height: 400px;
+      background: red;
+    }
+  </style>
+  <script>
+    function init()
+    {
+      /*
+      document.body.addEventListener('keydown', function(e){
+        console.log('key down', e.keyCode, e.charCode);
+      });
+      */
+      document.body.addEventListener('keypress', function(e){
+        console.log('key press', e.keyCode, e.charCode);
+      });
+    }
+  </script>
+</head>
+<body onload="init()">
+<div id="stage"></div>
+</body>
+</html>

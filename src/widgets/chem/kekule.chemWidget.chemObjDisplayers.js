@@ -1383,24 +1383,15 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		//this._openFileAction.finalize();
 		$super();
 	},
+	initPropValues: function($super)
+	{
+		$super();
+		this.setDialogShowType(Kekule.Widget.ShowHideType.DROPDOWN);
+	},
 	/** @private */
 	initProperties: function()
 	{
 		// private
-		/*
-		this.defineProp('dataDialog', {'dataType': 'Kekule.Widget.Dialog', 'serializable': false, 'setter': null,
-			'getter': function()
-			{
-				var result = this.getPropStoreFieldValue('dataDialog');
-				if (!result)
-				{
-					result = this.createDataDialog();
-					this.setPropStoreFieldValue('dataDialog', result);
-				}
-				return result;
-			}
-		});
-		*/
 		this.defineProp('dataDialog', {'dataType': 'Kekule.ChemWidget.LoadDataDialog', 'serializable': false, 'setter': null,
 			'getter': function()
 			{
@@ -1413,121 +1404,14 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 				return result;
 			}
 		});
-		//this.defineProp('lastFormat', {'dataType': DataType.STRING, 'serializable': false});
+		this.defineProp('dialogShowType', {'dataType': DataType.INT});
 	},
 	/** @private */
 	createDataDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		/*
-		var result = new Kekule.Widget.Dialog(doc, CWT.CAPTION_LOADDATA,
-			[this._sBtnLoadFromFile, Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
-		result.addClassName(CCNS.DIALOG_LOADDATA);
-		var btnOpenFile = result.getDialogButton(this._sBtnLoadFromFile);
-		btnOpenFile.setAction(this._openFileAction);
-		btnOpenFile.linkStyleResource(Kekule.Widget.StyleResourceNames.BUTTON_LOAD_FILE);
-		btnOpenFile.addClassName(CCNS.DIALOG_LOADDATA_BTN_LOADFROMFILE);
-		btnOpenFile.setEnabled(this._openFileAction.getEnabled());
-		// label
-		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_DATA_FORMAT;
-		result.getClientElem().appendChild(elem);
-		// format selector
-		elem = doc.createElement('div');
-		result.getClientElem().appendChild(elem);
-		var formatSelector = new Kekule.Widget.SelectBox(result);
-		formatSelector.addClassName(CCNS.DIALOG_LOADDATA_FORMATBOX);
-		formatSelector.appendToElem(elem);
-		result._formatSelector = formatSelector;
-		// fill format selector
-		var readerInfos = this.getAvailableReaderInfos();
-		var formatItems = this.getFormatSelectorItems(readerInfos);
-		formatSelector.setItems(formatItems);
-		// label
-		var elem = doc.createElement('div');
-		elem.innerHTML = CWT.CAPTION_DATA_SRC;
-		result.getClientElem().appendChild(elem);
-		// preview textarea
-		elem = doc.createElement('div');
-		result.getClientElem().appendChild(elem);
-		var dataEditor = new Kekule.Widget.TextEditor(result); //new Kekule.Widget.TextArea(result);
-		dataEditor.setWrap('off');
-		dataEditor.setToolbarPos(Kekule.Widget.Position.BOTTOM);
-		dataEditor.addClassName(CCNS.DIALOG_LOADDATA_SRCEDITOR);
-		dataEditor.appendToElem(elem);
-		result._dataEditor = dataEditor;
-		return result;
-		*/
 		return new Kekule.ChemWidget.LoadDataDialog(doc);
 	},
-	/* @private */
-	/*
-	reactFileLoad: function(e)
-	{
-		var files = e.files;
-		if (files && files.length)
-		{
-			var file = files[0];
-			this.getDisplayer().loadFromFile(file);
-			this.getDataDialog().close();
-		}
-	},
-	*/
-	/* @private */
-	/*
-	getAvailableReaderInfos: function()
-	{
-		return Kekule.IO.ChemDataReaderManager.getAvailableReaderInfos();
-	},
-	*/
-	/* @private */
-	/*
-	getFormatSelectorItems: function(readerInfos)
-	{
-		var result = [];
-		var formatIds = [];
-
-		for (var i = 0, l = readerInfos.length; i < l; ++i)
-		{
-			var info = readerInfos[i];
-			Kekule.ArrayUtils.pushUnique(formatIds, info.formatId);
-		}
-
-		for (var i = 0, l = formatIds.length; i < l; ++i)
-		{
-			var idInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatIds[i]);
-			if (idInfo)
-			{
-				var fileExts = Kekule.ArrayUtils.clone(Kekule.ArrayUtils.toArray(idInfo.fileExts));
-				for (var j = 0, k = fileExts.length; j < k; ++j)
-				{
-					fileExts[j] = '*.' + fileExts[j];
-				}
-				var sFileExt = fileExts.join(', ');
-				var text = idInfo.title;
-
-				if (sFileExt)
-					text += ' (' + sFileExt + ')';
-
-				result.push({
-					'value': idInfo.mimeType, //idInfo.id,
-					'text': text,
-					'title': idInfo.mimeType,
-					'data': idInfo
-					//'selected': selected
-				});
-			}
-		}
-		result.sort(function(a, b)
-			{
-				return (a.text < b.text)? -1:
-					(a.text > b.text)? 1:
-						0;
-			}
-		);
-		return result;
-	},
-	*/
 
 	/** @private */
 	doUpdate: function($super)
@@ -1548,7 +1432,9 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		//formatSelector.setItems(formatItems);
 
 		// open a dialog to choose format first, then save to file
-		dialog.openModal(
+		var showType = this.getDialogShowType();
+		var openMethod = (showType === Kekule.Widget.ShowHideType.DIALOG)? dialog.openModal: dialog.open;
+		openMethod.apply(dialog, [
 			function(result)
 			{
 				if (dialog.isPositiveResult(result))  // load
@@ -1564,7 +1450,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					var displayer = self.getDisplayer();
 					displayer.load(dialog.getChemObj());
 				}
-			}, target);
+			}, target, showType]);
 	}
 });
 
@@ -1572,6 +1458,8 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
  * Action for saving chem object to file in chem displayer.
  * @class
  * @augments Kekule.ActionOnDisplayer
+ *
+ * @property {Int} dialogShowType Value from {@link Kekule.Widget.ShowHideType}, diplay type of save dialog.
  */
 Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 /** @lends Kekule.ChemWidget.ActionDisplayerSaveFile# */
@@ -1595,6 +1483,12 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		this._saveAction.finalize();
 		$super();
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setDialogShowType(Kekule.Widget.ShowHideType.DROPDOWN);
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -1613,6 +1507,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		});
 		this.defineProp('lastFormat', {'dataType': DataType.STRING, 'serializable': false});
 		this.defineProp('currSaveData', {'dataType': DataType.VARIANT, 'serializable': false});
+		this.defineProp('dialogShowType', {'dataType': DataType.INT});
 	},
 
 	/** @private */
@@ -1798,7 +1693,9 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		this.reactFormatSelectorChange();
 
 		// open a dialog to choose format first, then save to file
-		dialog.openModal(
+		var showType = this.getDialogShowType();
+		var openMethod = (showType === Kekule.Widget.ShowHideType.DIALOG)? dialog.openModal: dialog.open;
+		openMethod.apply(dialog, [
 			function(result)
 			{
 				if (result === Kekule.Widget.DialogButtons.OK)  // save
@@ -1815,7 +1712,8 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 					//console.log(fileName);
 					self._saveAction.execute(target);
 				}
-			}, target);
+			}, target, showType]
+		);
 	}
 });
 

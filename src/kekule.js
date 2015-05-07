@@ -38,24 +38,15 @@ var kekuleFiles = {
 			'lan/xmlJsons.js',
 			'lan/serializations.js'
 		],
+		'category': 'core',
 		'minFile': 'root.min.js'
 	},
 	'root': {
 		'files': [
-			'core/kekule.root.js',
+			'core/kekule.root.js'
 		],
+		'category': 'core',
 		'minFile': 'root.min.js'
-	},
-	'common': {
-		files: [
-			'core/kekule.common.js',
-			'core/kekule.exceptions.js',
-			'utils/kekule.utils.js',
-			'utils/kekule.domUtils.js',
-			'utils/kekule.domHelper.js',
-			'utils/kekule.textHelper.js'
-		]
-		//'minFile': 'root.min.js'
 	},
 
 	'localization': {
@@ -64,8 +55,25 @@ var kekuleFiles = {
 			'localization/kekule.localizations.js',
 			'localization/en/kekule.localize.en.js',
 			'localization/en/kekule.localize.widget.en.js',
-			'localization/en/kekule.localize.objDefines.en.js'
-		]
+			'localization/en/kekule.localize.objDefines.en.js',
+
+			'localization/zh/kekule.localize.widget.zh.js'
+		],
+		'category': 'localization'
+	},
+
+	'common': {
+		'requires': ['lan', 'root', 'localization'],
+		'files': [
+			'core/kekule.common.js',
+			'core/kekule.exceptions.js',
+			'utils/kekule.utils.js',
+			'utils/kekule.domUtils.js',
+			'utils/kekule.domHelper.js',
+			'utils/kekule.textHelper.js'
+		],
+		'category': 'core'
+		//'minFile': 'root.min.js'
 	},
 
 	'core': {
@@ -85,7 +93,8 @@ var kekuleFiles = {
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js'
-		]
+		],
+		'category': 'core'
 	},
 
 	'html': {
@@ -93,7 +102,8 @@ var kekuleFiles = {
 		'files': [
 			'xbrowsers/kekule.x.js',
 			'html/kekule.predefinedResLoaders.js'
-		]
+		],
+		'category': 'core'
 	},
 
 	'io': {
@@ -107,7 +117,8 @@ var kekuleFiles = {
 			'io/mdl/kekule.io.mdlIO.js',
 			'io/smiles/kekule.io.smiles.js',
 			'io/native/kekule.io.native.js'
-		]
+		],
+		'category': 'io'
 	},
 
 	'render': {
@@ -127,7 +138,8 @@ var kekuleFiles = {
 			'render/3d/kekule.render.renderer3D.js',
 			'render/3d/kekule.render.threeRenderer.js',
 			'render/kekule.render.painter.js'
-		]
+		],
+		'category': 'render'
 	},
 
 	'widget': {
@@ -166,7 +178,8 @@ var kekuleFiles = {
 			'widgets/sys/kekule.widget.sysMsgs.js',
 
 			'widgets/operation/kekule.operHistoryTreeViews.js'  // debug
-		]
+		],
+		'category': 'widget'
 	},
 
 	'chemWidget': {
@@ -192,8 +205,9 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 
-			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
-		]
+			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
+		],
+		'category': 'chemWidget'
 	},
 
 	'algorithm': {
@@ -208,7 +222,8 @@ var kekuleFiles = {
 			'algorithm/kekule.structures.standardizers.js',
 			'algorithm/kekule.structures.searches.js',
 			'algorithm/kekule.structures.stereos.js'
-		]
+		],
+		'category': 'algorithm'
 	},
 
 	'data': {
@@ -225,7 +240,8 @@ var kekuleFiles = {
 		'requires': ['root', 'common'],
 		'files': [
 			'_extras/kekule.emscriptenUtils.js'
-		]
+		],
+		'category': 'extra'
 	},
 
 	'openbabel': {
@@ -234,7 +250,8 @@ var kekuleFiles = {
 			'localization/en/kekule.localize.extras.openbabel.en.js',
 			'_extras/OpenBabel/kekule.openbabel.adapters.js',
 			'_extras/OpenBabel/kekule.openbabel.io.js'
-		]
+		],
+		'category': 'extra'
 	}
 };
 

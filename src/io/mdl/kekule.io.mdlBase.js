@@ -16,7 +16,7 @@
 
 /**
  * Enumeration of MDL MOL/RXN file versions.
- * @class
+ * @enum
  */
 Kekule.IO.MdlVersion = {
 	V2000: 2,

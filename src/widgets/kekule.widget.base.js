@@ -68,6 +68,7 @@ Kekule.Widget.HtmlClassNames = {
 
 	// show type
 	POPUP: 'K-Popup',
+	DIALOG: 'K-Dialog',
 
 	// parts
 	PART_CONTENT: 'K-Content',
@@ -178,6 +179,7 @@ Kekule.Widget.Direction = {
 
 /**
  * Enumeration of state of widget.
+ * @enum
  */
 Kekule.Widget.State = {
 	NORMAL: 0,
@@ -187,9 +189,13 @@ Kekule.Widget.State = {
 	DISABLED: -1
 };
 
+/** @ignore */
 var WS = Kekule.Widget.State;
 
-/** ignore */
+/**
+ * Enumeration of mode of showing widget.
+ * @enum
+ */
 Kekule.Widget.ShowHideType = {
 	DROPDOWN: 1,
 	POPUP: 2,
@@ -291,6 +297,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Int} periodicalExecInterval Milliseconds between two execution in periodical mode.
  *   Available only when enablePeriodicalExec property is true.
  * @property {Bool} isPopup Whether this is a "popup" widget, when click elsewhere on window, the widget will automatically hide itself.
+ * @property {Bool} isDialog Whether this is a "dialog" widget, when press ESC key, the widget will automatically hide itself.
  * @property {Kekule.HashEx} iaControllerMap Interaction controller map (id= > controller) linked to this component. Read only.
  * @property {String} defIaControllerId Id of default interaction controller in map.
  * @property {Kekule.Widget.InteractionController} defIaController Default interaction controller object.
@@ -789,6 +796,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('isDialog', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('popupCaller', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE}); // private, record who calls this popup
 
@@ -1304,7 +1312,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * Make widget visible.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.
 	 * @param {Func} callback This callback function will be called when the widget is totally shown.
-	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType).
+	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType}.
 	 */
 	show: function(caller, callback, showType)
 	{
@@ -1337,7 +1345,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				|| (showType === Kekule.Widget.ShowHideType.POPUP));
 
 			if (showType === Kekule.Widget.ShowHideType.DIALOG)
+			{
+				this.setIsDialog(true);
 				showType = Kekule.Widget.ShowHideType.POPUP;
+			}
+			else
+				this.setIsDialog(false);
 
 			if (showType === Kekule.Widget.ShowHideType.DROPDOWN)  // prepare
 			{
@@ -1380,7 +1393,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * @param {Int} time In milliseconds.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.
 	 * @param {Func} callback This callback function will be called when the widget is totally shown.
-	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType).
+	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType}.
 	 */
 	flash: function(time, caller, callback, showType)
 	{
@@ -1390,7 +1403,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (callback)
 				callback();
 			setTimeout(self.hide.bind(self), time);
-		}
+		};
 		this.show(caller, done, showType);
 		return this;
 	},
@@ -1398,7 +1411,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * Hide widget.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the hide method and make this widget invisible.
 	 * @param {Func} callback This callback function will be called when the widget is totally hidden.
-	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType).
+	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType}.
 	 * @param {Bool} useVisible If true, set visible property to false, else set displayed property to false.
 	 */
 	hide: function(caller, callback, hideType, useVisible)
@@ -1480,7 +1493,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * Here we simply hide the widget.Descendant may override this method to do more complex job.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the hide method and make this widget invisible.
 	 * @param {Func} callback This callback function will be called when the widget is totally hidden.
-	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType).
+	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType}.
 	 * @param useVisible If true, set visible property to false, else set displayed property to false.
 	 */
 	dismiss: function(caller, callback, hideType, useVisible)
@@ -1532,6 +1545,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			{
 				Kekule.Widget.globalManager.unregisterPopupWidget(this);
 			}
+		}
+		if (this.getIsDialog())
+		{
+			if (isShown)
+				Kekule.Widget.globalManager.registerDialogWidget(this);
+			else
+				Kekule.Widget.globalManager.unregisterDialogWidget(this);
 		}
 		this.doWidgetShowStateChanged(isShown);
 		this.invokeEvent('showStateChange', {'widget': this, 'isShown': isShown, 'isDismissed': this._isDismissed});
@@ -3024,6 +3044,7 @@ Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
  * @param {HTMLDocument} doc
  *
  * @property {Array} popupWidgets Current popup widgets.
+ * @property {Array} dialogWidgets Current opened dialogs.
  * @property {Bool} preserveWidgetList Whether the manager keep a list of all widgets on document.
  * @property {Array} widgets An array of all widgets on document.
  *   This property is only available when property preserveWidgetList is true.
@@ -3055,6 +3076,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this._document = doc || document;
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);
+		this.setPropStoreFieldValue('dialogWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 
@@ -3088,6 +3110,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		this.defineProp('popupWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('dialogWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('preserveWidgetList', {'dataType': DataType.BOOL, 'serializable': false,
 			'setter': function(value)
 			{
@@ -3135,6 +3158,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	hasPopupWidgets: function()
 	{
 		return !!this.getPopupWidgets().length;
+	},
+	/**
+	 * Return if there is dialog widget in current document.
+	 */
+	hasDialogWidgets: function()
+	{
+		return !!this.getDialogWidgets().length;
 	},
 
 	/**
@@ -3446,6 +3476,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				//var elem = e.getTarget();
 				this.hidePopupWidgets(null, true);  // dismiss even if focus on popup widget
 			}
+			else if (this.hasDialogWidgets())
+			{
+				this.hideTopmostDialogWidget(null, true);  // dismiss dialog
+			}
 		}
 	},
 	/** @private */
@@ -3721,6 +3755,29 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			}
 		}
 	},
+	/**
+	 * When press ESC key, topmost dialog widget should be hidden.
+	 * @param {HTMLElement} activateElement
+	 * @private
+	 */
+	hideTopmostDialogWidget: function(activateElement, isDismissed)
+	{
+		var widgets = this.getDialogWidgets() || [];
+		var w = widgets[widgets.length - 1];
+		if (w)
+		{
+			var elem = w.getElement();
+			if (elem)
+			{
+				if (isDismissed)
+					w.dismiss();
+				else
+					w.hide();
+			}
+			else  // element of widgets is missing, may be removed or finalized already
+				Kekule.ArrayUtils.remove(this.geDialogWidgets(), w);
+		}
+	},
 
 	/**
 	 * Notify the manager that an popup widget is shown.
@@ -3749,6 +3806,26 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
     widget.removeClassName(CNS.POPUP);
 		Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
+	},
+	/**
+	 * Notify the manager that an dialog widget is shown.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * //@param {HTMLElement} element Base element of widget. If not set, widget.getElement() will be used.
+	 */
+	registerDialogWidget: function(widget /*, element*/)
+	{
+		widget.addClassName(CNS.DIALOG);
+		Kekule.ArrayUtils.pushUnique(this.getDialogWidgets(), widget);
+	},
+	/**
+	 * Notify the manager that an dialog widget is hidden.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * //@param {HTMLElement} element Base element of widget. If not set, widget.getElement() will be used.
+	 */
+	unregisterDialogWidget: function(widget/*, element*/)
+	{
+		widget.removeClassName(CNS.DIALOG);
+		Kekule.ArrayUtils.remove(this.getDialogWidgets(), widget);
 	},
 
 	/**

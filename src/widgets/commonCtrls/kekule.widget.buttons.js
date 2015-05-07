@@ -527,11 +527,14 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	},
 
 	/** @ignore */
-	doCreateRootElement: function(doc)
+	doCreateRootElement: function($super, doc)
 	{
+		/*
 		var result = doc.createElement('a');
 		result.setAttribute('href', 'javascript:void(0)');
 		return result;  // NOTE: use <button> will cause problem in Firefox
+		*/
+		return $super(doc);
 	},
 
 	/** @private */

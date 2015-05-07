@@ -811,7 +811,9 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 Kekule.canonicalizer.registerExecutor('morganEx', [Kekule.CanonicalizationMorganExIndexer, Kekule.CanonicalizationMorganNodeSorter], true);
 
 /** @ignore */
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/**
 	 * Detect and mark parity of all chiral nodes in structure fragment.
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.

@@ -831,7 +831,12 @@ Object.extend(Date.prototype, {
 /** @ignore */
 Math.sqr = function(x) { return x * x; };
 /** @ignore */
-Math.sign = function(x) { return (x >= 0)? 1: -1};
+if (!Math.sign)
+  Math.sign = function(x) {
+    return (x > 0)? 1:
+      (x < 0)? -1:
+        0;
+  };
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };

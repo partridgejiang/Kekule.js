@@ -59,7 +59,8 @@ Kekule.Editor.CoordSys = Kekule.Render.CoordSystem;
 
 /**
  * Enumeration of regions in/out box.
- * @class
+ * @enum
+ * @ignore
  */
 Kekule.Editor.BoxRegion = {
 	OUTSIDE: 0,
@@ -4183,9 +4184,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				var widthHeightRatio = (box.x2 - box.x1) / (box.y2 - box.y1);
 				var currRatio = coordDelta.x / coordDelta.y;
 				if (Math.abs(currRatio) > widthHeightRatio)
-					coordDelta.x = coordDelta.y * widthHeightRatio * Math.sign(currRatio);
+					coordDelta.x = coordDelta.y * widthHeightRatio * (Math.sign(currRatio) || 1);
 				else
-					coordDelta.y = coordDelta.x / widthHeightRatio * Math.sign(currRatio);
+					coordDelta.y = coordDelta.x / widthHeightRatio * (Math.sign(currRatio) || 1);
 			}
 
 			scaleCenter = (startingRegion === R.CORNER_TL)? {'x': box.x2, 'y': box.y2}:

@@ -47,7 +47,7 @@ Kekule.Render.CoordSystem = {
 
 /**
  * Enumeration of renderer types: 2D or 3D.
- * @class
+ * @enum
  */
 Kekule.Render.RendererType = {
 	/** 2D renderer. */
@@ -64,7 +64,7 @@ Kekule.Render.DEF_ATOM_ATOMIC_NUM = 6;
 
 /**
  * Enumeration of molecule display type, condensed formula or bond-line formula.
- * @class
+ * @enum
  */
 Kekule.Render.MoleculeDisplayType = {
 	/** bond-line formula */
@@ -77,7 +77,7 @@ Kekule.Render.Molecule2DDisplayType = Kekule.Render.MoleculeDisplayType;
 
 /**
  * Enumeration of node label (usually atom label) display mode (especially in 2D renderer).
- * @class
+ * @enum
  */
 Kekule.Render.NodeLabelDisplayMode = {
 	/** Label is hidden */
@@ -92,7 +92,7 @@ Kekule.Render.NodeLabelDisplayMode = {
 
 /**
  * Enumeration of hydrongen display strategy (espcially in 2D renderer).
- * @class
+ * @enum
  */
 Kekule.Render.HydrogenDisplayLevel = {
 	/** No hydrongen is displayed */
@@ -110,7 +110,7 @@ Kekule.Render.HydrogenDisplayLevel = {
 
 /**
  * Enumeration of direction of text (especially rich text label).
- * @class
+ * @enum
  */
 Kekule.Render.TextDirection = {
 	/** @ignore */
@@ -130,7 +130,7 @@ Kekule.Render.TextDirection = {
 
 /**
  * Enumeration of horizontal / vertical alignment of text.
- * @class
+ * @enum
  */
 Kekule.Render.TextAlign = {
 	/*BASELINE: 0,  //??????*/
@@ -172,7 +172,7 @@ Kekule.Render.TextAlign = {
 
 /**
  * Enumeration of alignment types of box in horizontal direction.
- * @class
+ * @enum
  */
 Kekule.Render.BoxXAlignment = {
 	LEFT: 0,
@@ -181,7 +181,7 @@ Kekule.Render.BoxXAlignment = {
 };
 /**
  * Enumeration of alignment types of box in vertical direction.
- * @class
+ * @enum
  */
 Kekule.Render.BoxYAlignment = {
 	TOP: 0,
@@ -191,7 +191,7 @@ Kekule.Render.BoxYAlignment = {
 
 /**
  * Enumeration of alignment mode of a rich text box.
- * @class
+ * @enum
  */
 Kekule.Render.TextBoxAlignmentMode = {
 	/** Alignment based on the whole text box */
@@ -202,7 +202,7 @@ Kekule.Render.TextBoxAlignmentMode = {
 
 /**
  * Enumeration of types of rendering a bond line.
- * @class
+ * @enum
  */
 Kekule.Render.BondRenderType = {
 	/** Usual single bond, draw in a thin line */
@@ -262,7 +262,7 @@ Kekule.Render.BondRenderType = {
 
 /**
  * Enumeration of types to render a charge on atom.
- * @class
+ * @enum
  */
 Kekule.Render.ChargeMarkRenderType = {
 	/** Number + symbol, such as 2+, 3- */
@@ -276,7 +276,7 @@ Kekule.Render.ChargeMarkRenderType = {
 
 /**
  * Enumeration of graphic quality levels to render objects in 3D.
- * @class
+ * @enum
  */
 Kekule.Render.Render3DGraphicQuality = {
 	LOW: 1,
@@ -287,7 +287,7 @@ Kekule.Render.Render3DGraphicQuality = {
 
 /**
  * Enumeration of types to render a molecule in 3D.
- * @class
+ * @enum
  */
 Kekule.Render.Molecule3DDisplayType = {
 	/** Wire frame */
@@ -304,7 +304,7 @@ Kekule.Render.Molecule3DDisplayType = {
 
 /**
  * Enumeration of types to render a bond in 3D.
- * @class
+ * @enum
  */
 Kekule.Render.Bond3DRenderMode = {
 	/** do not render bond. */
@@ -341,7 +341,7 @@ Kekule.Render.Bond3DRenderMode = {
 
 /**
  * Enumeration of types to decide how a bond is splitted in 3D render.
- * @class
+ * @enum
  */
 Kekule.Render.Bond3DSpliceMode = {
 	/** Bond draw as a whole, not split. */
@@ -354,7 +354,7 @@ Kekule.Render.Bond3DSpliceMode = {
 
 /**
  * Enumeration of types to draw a connector (bond) in 3D render.
- * @class
+ * @enum
  */
 Kekule.Render.Bond3DRenderType = {
 	/** Just one line or cylinder, used for most bonds. */
@@ -372,7 +372,7 @@ Kekule.Render.Bond3DRenderType = {
 
 /**
  * Enumeration of types to draw a node (atom) in 3D render.
- * @class
+ * @enum
  */
 Kekule.Render.Node3DRenderMode = {
 	/** Do not render explicit atom, used in WIRE display mode. */
@@ -387,7 +387,7 @@ Kekule.Render.Node3DRenderMode = {
 
 /**
  * Enumeration of shape types to describle meta shape info.
- * @class
+ * @enum
  */
 Kekule.Render.MetaShapeType = {
 	// 2D shapes
@@ -417,7 +417,7 @@ Kekule.Render.BoundShapeType = Kekule.Render.MetaShapeType;
 
 /**
  * Enumeration of types of updating a object.
- * @class
+ * @enum
  */
 Kekule.Render.ObjectUpdateType = {
 	/** Modify a existing object. */
@@ -428,7 +428,7 @@ Kekule.Render.ObjectUpdateType = {
 	REMOVE: 2,
 	/** Clear whole object. */
 	CLEAR: 3
-}
+};
 
 /**
  * Base class for different types of concrete renderers.
@@ -1472,7 +1472,7 @@ Kekule.Render.get3DRendererClass = function(chemObj)
 Kekule.Render.DrawBridgeManager = Class.create({
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.DrawBridgeManager',
-	/** @construct */
+	/** @ignore */
 	initialize: function()
 	{
 		this._items = [];
@@ -1521,6 +1521,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	 * @param {Class} bridgeClass
 	 * @param {Int} priorityLevel
 	 * @returns {Object}
+	 * @ignore
 	 */
 	register: function(bridgeClass, priorityLevel)
 	{
@@ -1554,6 +1555,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	 * Unregister a bridge.
 	 * @param {Class} bridgeClass
 	 * @returns {Object}
+	 * @ignore
 	 */
 	unregister: function(bridgeClass)
 	{
@@ -1572,6 +1574,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	/**
 	 * Gets most suitable bridge class in current environment.
 	 * @returns {Class}
+	 * @ignore
 	 */
 	getPreferredBridgeClass: function()
 	{
@@ -1580,6 +1583,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	/**
 	 * Returns instance of preferred bridge in current environment.
 	 * @returns {Object}
+	 * @ignore
 	 */
 	getPreferredBridgeInstance: function()
 	{

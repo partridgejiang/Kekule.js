@@ -16,7 +16,9 @@
 var K = Kekule;
 var C = Kekule.CoordMode;
 
-ClassEx.extend(Kekule.ChemObject, {
+ClassEx.extend(Kekule.ChemObject,
+/** @lends Kekule.ChemObject# */
+{
 	/**
 	 * Check if this chem object is independent and can be cloned in editor.
 	 * @returns {Bool}
@@ -169,7 +171,9 @@ ClassEx.defineProps(Kekule.ChemObject, [
 	{'name': 'keepEmptyEvenOnCascadeRemove', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC}
 ]);
 
-ClassEx.extend(Kekule.ChemStructureObject, {
+ClassEx.extend(Kekule.ChemStructureObject,
+/** @lends Kekule.ChemStructureObject# */
+{
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)
 	{
@@ -219,7 +223,9 @@ ClassEx.extend(Kekule.ChemStructureObject, {
 	}
 });
 
-ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode, {
+ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode,
+/** @lends Kekule.BaseStructureNode# */
+{
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)
 	{
@@ -266,7 +272,9 @@ ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode, {
 	}
 });
 
-ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector, {
+ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector,
+/** @lends Kekule.BaseStructureConnector# */
+{
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)
 	{
@@ -369,7 +377,9 @@ ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector, {
 	}
 });
 
-ClassEx.extend(Kekule.Glyph.PathGlyphNode, {
+ClassEx.extend(Kekule.Glyph.PathGlyphNode,
+/** @lends Kekule.Glyph.PathGlyphNode# */
+{
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)  // to glyph element, delte one means delete the whole glyph
 	{
@@ -381,7 +391,9 @@ ClassEx.extend(Kekule.Glyph.PathGlyphNode, {
 		return result;
 	}
 });
-ClassEx.extend(Kekule.Glyph.PathGlyphConnector, {
+ClassEx.extend(Kekule.Glyph.PathGlyphConnector,
+/** @lends Kekule.Glyph.PathGlyphConnector# */
+{
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)  // to glyph element, delte one means delete the whole glyph
 	{
@@ -394,7 +406,9 @@ ClassEx.extend(Kekule.Glyph.PathGlyphConnector, {
 	}
 });
 
-ClassEx.extend(Kekule.StructureFragment, {
+ClassEx.extend(Kekule.StructureFragment,
+/** @lends Kekule.StructureFragment# */
+{
 	/** @ignore */
 	isStandalone: function()
 	{
@@ -471,7 +485,9 @@ ClassEx.extend(Kekule.CompositeMolecule, {
 });
 */
 
-ClassEx.extend(Kekule.Glyph.Base, {
+ClassEx.extend(Kekule.Glyph.Base,
+/** @lends Kekule.Glyph.Base# */
+{
 	/** @ignore */
 	isStandalone: function()
 	{
@@ -479,7 +495,9 @@ ClassEx.extend(Kekule.Glyph.Base, {
 	}
 });
 
-ClassEx.extend(Kekule.Glyph.PathGlyph, {
+ClassEx.extend(Kekule.Glyph.PathGlyph,
+/** @lends Kekule.Glyph.PathGlyph# */
+{
 	/** @private */
 	getCoordDependentObjects: function()
 	{

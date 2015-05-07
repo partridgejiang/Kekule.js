@@ -15,8 +15,9 @@
 (function(){
 "use strict";
 
+/** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
-	/** Indicate that all children of current item is hidden. */
+	/* Indicate that all children of current item is hidden. */
 	STATE_COLLAPSED: 'K-State-Collapsed',
 	STATE_EMPTY: 'K-State-Empty',
 	NESTED_CONTAINER: 'K-NestedContainer',
