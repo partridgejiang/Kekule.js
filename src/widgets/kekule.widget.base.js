@@ -763,7 +763,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			{
 				this.setPropStoreFieldValue('isHover', value);
 				// if not hover, the active state should also be turned off
-				if (!this.isCaptureMouse())
+				if (!value && !this.isCaptureMouse())
 					this.setPropStoreFieldValue('isActive', false);
 				this.stateChanged();
 			}
@@ -2353,6 +2353,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				var keyCode;
 				if (evType === 'mousemove')  // test mouse cursor
 				{
+					this.reactPointerMoving(e);
 					var coord = this.getEventMouseRelCoord(e);
 					var cursor = this.testMouseCursor(coord, e);
 					if (Kekule.ObjUtils.notUnset(cursor) && this.getElement())
@@ -2361,6 +2362,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						this.setCursor(cursor);
 						handled = true;
 					}
+				}
+				else if (evType === 'touchmove')
+				{
+					this.reactPointerMoving(e);
+					handled = true;
 				}
 				else if (evType === 'focus')
 				{
@@ -2397,12 +2403,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					if (!e.ghostMouseEvent)
 					{
-						//console.log('OUT');
-						this.setIsHover(false);
-						if (!this.isCaptureMouse())
+						var relatedTarget = e.getRelatedTarget();
+						if (relatedTarget && Kekule.DomUtils.isOrIsDescendantOf(relatedTarget, this.getCoreElement()))  // still move inside widget
 						{
-							this.reactDeactiviting(e);
-							handled = true;
+							// do nothing
+						}
+						else
+						{
+							//console.log('OUT');
+							this.setIsHover(false);
+							if (!this.isCaptureMouse())
+							{
+								this.reactDeactiviting(e);
+								handled = true;
+							}
 						}
 					}
 				}
@@ -2574,6 +2588,25 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * @ignore
 	 */
 	doReactDeactiviting: function(e)
+	{
+		// do nothing here
+	},
+
+	/**
+	 * React to mousemove or touchmove event.
+	 * @param {Event} e
+	 * @ignore
+	 */
+	reactPointerMoving: function(e)
+	{
+		this.doReactPointerMoving(e);
+	},
+	/**
+	 * Do concrete job of reactPointerMoving method. Descendants may override this method.
+	 * @param {Event} e
+	 * @ignore
+	 */
+	doReactPointerMoving: function(e)
 	{
 		// do nothing here
 	},

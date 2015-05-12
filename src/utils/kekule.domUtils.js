@@ -217,6 +217,16 @@ Kekule.DomUtils = {
 		}
 	},
 	/**
+	 * Check if childElem is inside parentElem or is parentElem itself.
+	 * @param {Object} childElem
+	 * @param {Object} parentElem
+	 * @returns {Bool}
+	 */
+	isOrIsDescendantOf: function(childElem, parentElem)
+	{
+		return (childElem === parentElem) || Kekule.DomUtils.isDescendantOf(childElem, parentElem);
+	},
+	/**
 	 * Get nearest ancestor element with specified tag name.
 	 * @param {Object} elem
 	 * @param {String} tagName

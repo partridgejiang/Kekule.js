@@ -399,14 +399,14 @@ X.Event.Methods = {
 	 */
 	getPageX: function(event)
 	{
-		if (notUnset(event.pageX))
-			return event.pageX;
-		else if (event.touches)
+		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageX))
 				return touch.pageX;
 		}
+		else if (notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
+			return event.pageX;
 		//else  // fallback
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
@@ -421,14 +421,14 @@ X.Event.Methods = {
 	 */
 	getPageY: function(event)
 	{
-		if (notUnset(event.pageY))
-			return event.pageY;
-		else if (event.touches)
+		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageY))
 				return touch.pageY;
 		}
+		else if (notUnset(event.pageY))
+			return event.pageY;
 		//else  // fallback
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
@@ -485,6 +485,32 @@ X.Event.Methods = {
 				return Math.round(clientY - elem.getBoundingClientRect().top);
 			}
 		}
+	},
+	/**
+	 * Returns the mouse X coordinates relative to the top-left of window.
+	 * @param {Object} event
+	 * @returns {Int}
+	 */
+	getWindowX: function(event)
+	{
+		var x = X.Event.getPageX(event);
+		var doc = event.target.ownerDocument || event.target;
+		var win = doc && doc.defaultView;
+		var delta = (win && win.scrollX) || 0;
+		return x - delta;
+	},
+	/**
+	 * Returns the mouse Y coordinates relative to the top-left of window.
+	 * @param {Object} event
+	 * @returns {Int}
+	 */
+	getWindowY: function(event)
+	{
+		var y = X.Event.getPageY(event);
+		var doc = event.target.ownerDocument || event.target;
+		var win = doc && doc.defaultView;
+		var delta = (win && win.scrollY) || 0;
+		return y - delta;
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the event's currTarget.

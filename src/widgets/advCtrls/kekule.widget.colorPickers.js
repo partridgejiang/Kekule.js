@@ -433,9 +433,11 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	react_mousedown: function($super, e)
+	//react_mousedown: function($super, e)
+	doReactActiviting: function($super, e)
 	{
-		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		$super(e);
+		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var target = e.getTarget();
 			if (this._isPaletteCellElem(target))
@@ -445,12 +447,13 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 				return true;
 			}
 		}
-		return $super(e);
+		//return $super(e);
 	},
 	/** @private */
-	react_mouseup: function($super, e)
+	//react_mouseup: function($super, e)
+	doReactDeactiviting: function($super, e)
 	{
-		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			if (this.getIsPicking())
 			{
@@ -462,19 +465,32 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 				return true;
 			}
 		}
-		return $super(e);
+		$super(e);
+		//return $super(e);
 	},
 	/** @private */
-	react_mousemove: function($super, e)
+	//react_mousemove: function($super, e)
+	reactPointerMoving: function($super, e)
 	{
+		$super(e);
 		if (this.getIsPicking())
 		{
-			var target = e.getTarget();
-			if (this._isPaletteCellElem(target))
+			var target = e.getTarget();;
+			if (e.getTouches())  // is touch, touch target always equal to the target invoke touchstart event, so need extra code
+			{
+				var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
+				var doc = this.getDocument();
+				target = (doc.elementFromPoint && doc.elementFromPoint(coord.x, coord.y)) || target;
+				//console.log('moving', this.getIsPicking(), coord, e.getPageY(), target, e);
+				e.preventDefault();
+			}
+			if (target && this._isPaletteCellElem(target))
+			{
 				this.applyColor(target);
+			}
 			return true;
 		}
-		return $super(e);
+		//return $super(e);
 	}
 });
 /**
