@@ -296,6 +296,12 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// widget/operations/kekule.operations.js
 	COMMAND_NOT_REVERSIBLE: 'Command can not be undone',
 
+	// displayer
+	RENDER_TYPE_CHANGE_NOT_ALLOWED: 'It is not allowed to change render type',
+
+	// viewer
+	CAN_NOT_CREATE_EDITOR: 'Creating editor failed',
+
 	// editor operations
 	CAN_NOT_SET_COORD_OF_CLASS: 'Can not set coordinate of instance of {0}.',
 	CAN_NOT_SET_DIMENSION_OF_CLASS: 'Can not set dimension of instance of {0}.',

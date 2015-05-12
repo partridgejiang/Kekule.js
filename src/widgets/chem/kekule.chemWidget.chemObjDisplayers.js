@@ -192,7 +192,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': null,
 			'getter': function() { return this.getChemObj() && this.getPropStoreFieldValue('chemObjLoaded'); }
 		});
-		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'setter': null, 'scope': PS.PUBLIC});
+		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLIC,
+			'setter': function(value)
+			{
+				if (!this.getAllowRenderTypeChange())
+				{
+					Kekule.error(Kekule.$L('ErrorMsg.RENDER_TYPE_CHANGE_NOT_ALLOWED'));
+					return;
+				}
+				var oldValue = this.getRenderType();
+				if (value !== oldValue)
+				{
+					this.setPropStoreFieldValue('renderType', value);
+					this.resetRenderType(oldValue, value);
+				}
+			}
+		});
 
 		this.defineProp('renderConfigs', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
@@ -366,6 +381,48 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		});
 	},
 
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		$super(isShown);
+		/*
+		 As position/size calculation may be wrong when displayed = false,
+		 during the show phase, whole context should be force repainted.
+		 */
+		if (isShown)
+			this.setChemObj(this.getChemObj());
+	},
+
+	/**
+	 * Whether changing render type is allowed in current type of displayer.
+	 * Default is false, descendants may override this method.
+	 * @returns {Bool}
+	 */
+	getAllowRenderTypeChange: function()
+	{
+		return false;
+	},
+	/**
+	 * Notify the render type has been changed.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	resetRenderType: function(oldType, newType)
+	{
+		var chemObj = this.getChemObj();
+		var bridge = this.getPropStoreFieldValue('drawBridge');
+		var context = this.getPropStoreFieldValue('drawContext');
+		if (bridge)
+		{
+			if (context)
+				bridge.releaseContext(context);
+		}
+		this.setPropStoreFieldValue('drawContext', null);
+		this.setPropStoreFieldValue('drawBridge', null);
+		if (chemObj)  // repaint
+			this.setChemObj(chemObj);
+	},
+
 	/**
 	 * Create a default editor config object.
 	 * Descendants may override this method.
@@ -377,18 +434,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return new Kekule.ChemWidget.ChemObjDisplayerConfigs();
 	},
 
-	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
-	{
-		$super(isShown);
-		/*
-		  As position/size calculation may be wrong when displayed = false,
-		  during the show phase, whole context should be force repainted.
-		 */
-		if (isShown)
-			this.setChemObj(this.getChemObj());
-	},
-
 	/**
 	 * Returns coord mode according to current renderType.
 	 * @returns {Int}
@@ -397,6 +442,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		return (this.getRenderType() === Kekule.Render.RendererType.R3D)?
 			Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
+	},
+	/**
+	 * Set renderType according to coord mode.
+	 * @param {Int} coordMode
+	 */
+	setCoordMode: function(coordMode)
+	{
+		var rType = (coordMode === Kekule.CoordMode.COORD3D)?
+			Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D;
+		this.setRenderType(rType);
 	},
 
 	/** @private */
@@ -770,7 +825,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
-	 * Returns object in displayer that tp be saved.
+	 * Returns object in displayer that to be saved.
 	 * Usually this should be the chemObj itself.
 	 * Descendants may override this method.
 	 * @returns {Kekule.ChemObject}

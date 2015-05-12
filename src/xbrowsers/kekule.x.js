@@ -450,7 +450,7 @@ X.Event.Methods = {
 			var elem = X.Event.getTarget(event);
 			if (elem.defaultView && elem.body)  // is document
 				elem = elem.body;
-			if (notUnset(event.layerX) && isElemPositioned(elem)) // check if target is a relative or absolute element, if so layerX ~= offsetX
+			if (notUnset(event.layerX) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
 				return event.layerX;
 			}
@@ -475,7 +475,7 @@ X.Event.Methods = {
 			var elem = X.Event.getTarget(event);
 			if (elem.defaultView && elem.body)  // is document
 				elem = elem.body;
-			if (notUnset(event.layerY) && isElemPositioned(elem)) // check if target is a relative or absolute element, if so layerX ~= offsetX
+			if (notUnset(event.layerY) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
 				return event.layerY;
 			}

@@ -83,6 +83,7 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Bool} enableTouchInteraction Whether touch interaction is allowed. Note if enableDirectInteraction is false, touch interaction will also be disabled.
  * @property {Bool} enableEdit Whether a edit button is shown in toolbar to edit object in viewer. Works only in 2D mode.
  * @property {Bool} modalEdit Whether opens a modal dialog when editting object in viewer.
+ * @property {Bool} enableEditFromVoid Whether editor can be launched even if viewer is empty.
  *
  * @property {Array} toolButtons buttons in interaction tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
  *   If not set, default buttons will be used.
@@ -222,17 +223,20 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return this.getPropStoreFieldValue('enableEdit') && (this.getCoordMode() !== Kekule.CoordMode.COORD3D);
 			}
 		});
+		this.defineProp('enableEditFromVoid', {'dataType': DataType.BOOL});
 		this.defineProp('modalEdit', {'dataType': DataType.BOOL});
 
 		this.defineProp('toolButtons', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
 				var result = this.getPropStoreFieldValue('toolButtons');
+				/*
 				if (!result)  // create default one
 				{
 					result = this.getDefaultToolBarButtons();
 					this.setPropStoreFieldValue('toolButtons', result);
 				}
+				*/
 				return result;
 			},
 			'setter': function(value)
@@ -456,10 +460,15 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	doGetWidgetClassName: function($super)
 	{
 		var result = $super() + ' ' + CCNS.VIEWER;
-		var additional = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
-			CCNS.VIEWER3D: CCNS.VIEWER2D;
+		var additional = this._getRenderTypeSpecifiedHtmlClassName(this.getRenderType());
 		result += ' ' + additional;
 		return result;
+	},
+	/** @private */
+	_getRenderTypeSpecifiedHtmlClassName: function(renderType)
+	{
+		return (renderType === Kekule.Render.RendererType.R3D)?
+			CCNS.VIEWER3D: CCNS.VIEWER2D;
 	},
 
 	/** @ignore */
@@ -486,6 +495,24 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// resize context, means client size changed, so toolbar should also be adjusted.
 		$super(doNotRepaint);
 		this.adjustToolbarPos();
+	},
+
+	/** @ignore */
+	getAllowRenderTypeChange: function()
+	{
+		return true;
+	},
+	/** @ignore */
+	resetRenderType: function($super, oldType, newType)
+	{
+		$super(oldType, newType);
+		// classname
+		var oldHtmlClassName = this._getRenderTypeSpecifiedHtmlClassName(oldType);
+		var newHtmlClassName = this._getRenderTypeSpecifiedHtmlClassName(newType);
+		this.removeClassName(oldHtmlClassName);
+		this.addClassName(newHtmlClassName);
+		// toolbar
+		this.updateToolbar();
 	},
 
 	/** @private */
@@ -618,12 +645,23 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	*/
 
 	/// Methods about popup editing ////////////////
+	/**
+	 * Returns whether editor can be lauched in current viewer.
+	 */
+	getAllowEditing: function()
+	{
+		return (this.getCoordMode() !== Kekule.CoordMode.COORD3D) &&
+			this.getEnableEdit() && (this.getChemObj() || this.getEnableEditFromVoid());
+	},
 	/** @private */
 	getComposerDialog: function()
 	{
 		if (!this._composerDialog)
-			this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
-				[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+			if (Kekule.Editor.ComposerDialog)
+			{
+				this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
+					[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+			}
 		return this._composerDialog;
 	},
 	/**
@@ -632,28 +670,50 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	openEditor: function(callerWidget)
 	{
-		if (this.getEnableEdit() && this.getChemObj())
+		//if (this.getEnableEdit() && this.getChemObj())
+		if (this.getAllowEditing())
 		{
-			var dialog = this.getComposerDialog();
-			var composer = dialog.getComposer();
-			composer.setEnableCreateNewDoc(false);
-			composer.setEnableLoadNewFile(false);
-			composer.setAllowCreateNewChild(false);
 			// load object in editor
 			var chemObj = this.getChemObj();
-			var cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
-			dialog.setChemObj(cloneObj);
+			var cloneObj;
+			var editFromVoid = !chemObj;
+
+			var dialog = this.getComposerDialog();
+			if (!dialog)  // can not invoke composer dialog
+			{
+				Kekule.error(Kekule.$L('ErrorMsg.CAN_NOT_CREATE_EDITOR'));
+				return;
+			}
+
+			var composer = dialog.getComposer();
+			composer.setEnableCreateNewDoc(editFromVoid);
+			composer.setEnableLoadNewFile(editFromVoid);
+			composer.setAllowCreateNewChild(editFromVoid);
+
+			if (!editFromVoid)
+			{
+				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+				dialog.setChemObj(cloneObj);
+			}
 
 			var self = this;
 			var callback = function(dialogResult)
 			{
 				if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
 				{
-					chemObj.assign(cloneObj);
-					// clear src info data
-					chemObj.setSrcInfo(null);
-					//self.repaint();
-					self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+					if (editFromVoid)
+					{
+						var newObj = dialog.getSavingTargetObj();
+						self.setChemObj(newObj.clone());
+					}
+					else
+					{
+						chemObj.assign(cloneObj);
+						// clear src info data
+						chemObj.setSrcInfo(null);
+						//self.repaint();
+						self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+					}
 				}
 				//dialog.finalize();
 			}
@@ -707,7 +767,6 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/*
 	createEditorWidget: function()
 	{
-		// TODO: currently fixed to composer
 		var result = new Kekule.Editor.Composer(this.getDocument());
 		var editor = result.getEditor();
 		editor.setEnableCreateNewDoc(false);
@@ -1032,7 +1091,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//toolBar.show();
 		// add buttons
 		//var settings = this.getToolButtonSettings();
-		var btns = this.getToolButtons(); //settings.buttons;
+		var btns = this.getToolButtons() || this.getDefaultToolBarButtons(); //settings.buttons;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
 			var name = btns[i];
@@ -1530,6 +1589,11 @@ Kekule.ChemWidget.Viewer2D = Class.create(Kekule.ChemWidget.Viewer,
 	initialize: function($super, parentOrElementOrDocument, chemObj)
 	{
 		$super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R2D);
+	},
+	/** @ignore */
+	getAllowRenderTypeChange: function()
+	{
+		return false;
 	}
 });
 
@@ -1550,6 +1614,11 @@ Kekule.ChemWidget.Viewer3D = Class.create(Kekule.ChemWidget.Viewer,
 	initialize: function($super, parentOrElementOrDocument, chemObj)
 	{
 		$super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R3D);
+	},
+	/** @ignore */
+	getAllowRenderTypeChange: function()
+	{
+		return false;
 	}
 });
 
@@ -1892,7 +1961,9 @@ Kekule.ChemWidget.ActionViewerEdit = Class.create(Kekule.ChemWidget.ActionOnView
 	{
 		$super();
 		var viewer = this.getViewer();
-		this.setEnabled(this.getEnabled() && viewer.getChemObj() && viewer.getEnableEdit());
+		//this.setEnabled(this.getEnabled() && viewer.getChemObj() && viewer.getEnableEdit());
+		//this.setEnabled(this.getEnabled() && viewer.getAllowEditing());
+		this.setEnabled(viewer && viewer.getAllowEditing() && viewer.getEnabled());
 		this.setDisplayed(viewer.getEnableEdit());
 	},
 	/** @private */

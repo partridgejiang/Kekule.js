@@ -1127,6 +1127,19 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this.getEditor().load(chemObj);
 	},
 	/**
+	 * Returns object in dialog that to be saved.
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	getSavingTargetObj: function()
+	{
+		var c = this.getEditor();
+		if (c)
+			return c.getSavingTargetObj();
+		else
+			return null;
+	},
+	/**
 	 * Returns array of classes that can be exported (saved) from composer.
 	 * @returns {Array}
 	 */
@@ -1996,6 +2009,20 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		var composer = this.doCreateComposerWidget();
 		this.setPropStoreFieldValue('composer', composer);
 		composer.appendToElem(clientElem);
+	},
+
+	/**
+	 * Returns object in dialog that to be saved.
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	getSavingTargetObj: function()
+	{
+		var c = this.getComposer();
+		if (c)
+			return c.getSavingTargetObj();
+		else
+			return null;
 	},
 
 	/**
