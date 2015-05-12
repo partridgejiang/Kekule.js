@@ -491,6 +491,25 @@ table.K-Widget
     text-align: right;
 }
 
+/* Resize gripper */
+.K-Resize-Gripper
+{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+}
+.K-Resize-Gripper.K-State-Disabled
+{
+    cursor: default;
+}
+.K-Resize-Gripper.K-Normal-Background
+{
+    background-color: transparent;
+}
+
 /* Tab View */
 .K-TabView
 {

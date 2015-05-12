@@ -763,7 +763,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			{
 				this.setPropStoreFieldValue('isHover', value);
 				// if not hover, the active state should also be turned off
-				this.setPropStoreFieldValue('isActive', false);
+				if (!this.isCaptureMouse())
+					this.setPropStoreFieldValue('isActive', false);
 				this.stateChanged();
 			}
 		});
@@ -980,8 +981,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var ops = Object.extend({
 			'dataType': DataType.STRING,
 			'serializable': false,
-			'getter': function() { return this.getElement().getAttribute(elemAttribName); },
-			'setter': function(value) { this.getElement().setAttribute(elemAttribName, value); }
+			'getter': function() { return this.getElement() && this.getElement().getAttribute(elemAttribName); },
+			'setter': function(value) { this.getElement() && this.getElement().setAttribute(elemAttribName, value); }
 		}, options || {});
 		return this.defineProp(propName, ops);
 	},
@@ -1630,6 +1631,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 		else
 			return Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement(), includeScroll);
+	},
+	/**
+	 * Returns dimension in px of this widget.
+	 * @returns {Hash} {width, height}.
+	 */
+	getDimension: function()
+	{
+		return this.getBoundingClientRect(false);
 	},
 	/**
 	 * Set width and height of current widget. Width and height value can be number (how many pixels)
@@ -2384,17 +2393,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					this.setIsHover(true);
 					handled = true;
 				}
-				else if (evType === 'mouseout')
+				else if (evType === 'mouseout' || evType === 'touchleave')
 				{
 					if (!e.ghostMouseEvent)
 					{
 						//console.log('OUT');
 						this.setIsHover(false);
-						this.reactDeactiviting(e);
-						handled = true;
+						if (!this.isCaptureMouse())
+						{
+							this.reactDeactiviting(e);
+							handled = true;
+						}
 					}
 				}
-				else if ((evType === 'mousedown') || (evType === 'touchstart'))
+				else if ((evType === 'mousedown' && e.getButton() === Kekule.X.Event.MouseButton.LEFT) || (evType === 'touchstart'))
 				{
 					if (!e.ghostMouseEvent)
 					{
@@ -2412,8 +2424,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					//console.log('MOUSE ENTER');
 				}
 				*/
-				else if ((evType === 'mouseup') || (evType === 'touchend') || (evType === 'touchcancel') || (evType === 'touchleave'))
-				{
+				else if ((evType === 'mouseup' && e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+					|| (evType === 'touchend') || (evType === 'touchcancel'))
+					{
 					if (!e.ghostMouseEvent)
 					{
 						this.reactDeactiviting(e);
@@ -2425,7 +2438,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					keyCode = e.getKeyCode();
 					if ((keyCode === KC.ENTER) || (keyCode === KC.SPACE))
 					{
-						//this.setIsActive(true);
 						if (!this.getIsActive())
 						{
 							this.reactActiviting(e);
@@ -2522,13 +2534,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	reactActiviting: function(e)
 	{
-		//console.log('active on', this.getIsActive(), e);
 		if (!this.getIsActive())
 		{
 			this.setIsActive(true);
 			this.doReactActiviting(e);
 			this.invokeEvent('activate', {'widget': this});
 		}
+		//console.log('active on', this.getIsActive(), e.getType());
 	},
 	/**
 	 * Do concrete job of reactActiviting method. Descendants may override this method.
@@ -2548,9 +2560,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	reactDeactiviting: function(e)
 	{
+		//console.log('deactive on', this.getIsActive(), e.getType());
 		if (this.getIsActive())
 		{
-			//console.log('deactive on', this.getIsActive(), e.getType());
 			this.doReactDeactiviting(e);
 			this.invokeEvent('deactivate', {'widget': this});
 			this.setIsActive(false);
@@ -2622,6 +2634,26 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doTestMouseCursor: function(coord, e)
 	{
 		return null;
+	},
+
+	/**
+	 * Set or unset mouse capture feature of current widget.
+	 * @param {Bool} capture
+	 */
+	setMouseCapture: function(capture)
+	{
+		if (capture)
+			Kekule.Widget.globalManager.setMouseCaptureWidget(this);
+		else if (this.isCaptureMouse())
+			Kekule.Widget.globalManager.setMouseCaptureWidget(null);
+	},
+	/**
+	 * Returns whether this widget is currently capturing mouse/touch event.
+	 * @returns {Bool}
+	 */
+	isCaptureMouse: function()
+	{
+		return Kekule.Widget.globalManager.getMouseCaptureWidget() === this;
 	},
 
 	/**
@@ -3043,6 +3075,7 @@ Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
  *
  * @param {HTMLDocument} doc
  *
+ * @property {Kekule.Widget.BaseWidget} mouseCaptureWidget Widget to capture all mouse/touch events.
  * @property {Array} popupWidgets Current popup widgets.
  * @property {Array} dialogWidgets Current opened dialogs.
  * @property {Bool} preserveWidgetList Whether the manager keep a list of all widgets on document.
@@ -3098,9 +3131,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @ignore */
 	finalize: function($super)
 	{
-		this.uninstallGlobalDomMutationHandlers(this._document.body);
-		this.uninstallGlobalTouchHandlers(this._document.body);
-		this.uninstallGlobalEventHandlers(this._document.body);
+		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalTouchHandlers(this._document.documentElement/*.body*/);
+		this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
@@ -3109,6 +3142,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('mouseCaptureWidget', {'dataType': DataType.OBJECT, 'serializable': false});
 		this.defineProp('popupWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('dialogWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('preserveWidgetList', {'dataType': DataType.BOOL, 'serializable': false,
@@ -3125,9 +3159,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	domReadyInit: function()
 	{
-		this.installGlobalEventHandlers(this._document.body);
+		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
 		//this._hammertime = this.installGlobalTouchHandlers(this._document.body);
-		this.installGlobalDomMutationHandlers(this._document.body);
+		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 	},
 
 	/**
@@ -3402,6 +3436,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
+	isMouseEvent: function(eventName)
+	{
+		return eventName.startsWith('mouse') || (eventName === 'click');
+	},
+	/** @private */
+	isTouchEvent: function(eventName)
+	{
+		return eventName.startsWith('touch');
+	},
+
+	/** @private */
 	reactUiEvent: function(e)
 	{
 		var evType = e.getType();
@@ -3426,8 +3471,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this[funcName](e);
 
 		// dispatch to widget
-		var elem = e.getTarget();
-		var widget = this.getBelongedResponsiveWidget(elem);
+		var widget;
+		if (this.getMouseCaptureWidget() && (this.isMouseEvent(evType) || this.isTouchEvent(evType)))  // may be captured
+			widget = this.getMouseCaptureWidget();
+		else
+		{
+			var elem = e.getTarget();
+			widget = this.getBelongedResponsiveWidget(elem);
+		}
 		if (widget)
 		{
 			//console.log(e.getType(), widget.getElement());

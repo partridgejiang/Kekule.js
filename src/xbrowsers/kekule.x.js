@@ -331,7 +331,15 @@ X.Event.Methods = {
 	 */
 	getClientX: function(event)
 	{
-		return event.clientX;
+		var result;
+		if (event.touches)  // touch event
+		{
+			var touch = event.touches[0];
+			result = touch && touch.clientX;
+		}
+		else
+			result = event.clientX;
+		return result;
 	},
 	/**
 	 * Get event.clientY.
@@ -340,7 +348,15 @@ X.Event.Methods = {
 	 */
 	getClientY: function(event)
 	{
-		return event.clientY;
+		var result;
+		if (event.touches)  // touch event
+		{
+			var touch = event.touches[0];
+			result = touch && touch.clientY;
+		}
+		else
+			result = event.clientY;
+		return result;
 	},
 	/**
 	 * Get event.screenX.
@@ -349,7 +365,15 @@ X.Event.Methods = {
 	 */
 	getScreenX: function(event)
 	{
-		return event.screenX;
+		var result;
+		if (event.touches)  // touch event
+		{
+			var touch = event.touches[0];
+			result = touch && touch.screenX;
+		}
+		else
+			result = event.screenX;
+		return result;
 	},
 	/**
 	 * Get event.screenY.
@@ -358,7 +382,15 @@ X.Event.Methods = {
 	 */
 	getScreenY: function(event)
 	{
-		return event.screenY;
+		var result;
+		if (event.touches)  // touch event
+		{
+			var touch = event.touches[0];
+			result = touch && touch.screenY;
+		}
+		else
+			result = event.screenY;
+		return result;
 	},
 	/**
 	 * Get X coordinate related to document page.
@@ -369,11 +401,17 @@ X.Event.Methods = {
 	{
 		if (notUnset(event.pageX))
 			return event.pageX;
-		else
+		else if (event.touches)
 		{
-			var doc = X.Event.getTarget(event).ownerDocument;
+			var touch = event.touches[0];
+			if (touch && notUnset(touch.pageX))
+				return touch.pageX;
+		}
+		//else  // fallback
+		{
+			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return event.clientX +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
+			return X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
 		}
 	},
 	/**
@@ -385,11 +423,17 @@ X.Event.Methods = {
 	{
 		if (notUnset(event.pageY))
 			return event.pageY;
-		else
+		else if (event.touches)
 		{
-			var doc = X.Event.getTarget(event).ownerDocument;
+			var touch = event.touches[0];
+			if (touch && notUnset(touch.pageY))
+				return touch.pageY;
+		}
+		//else  // fallback
+		{
+			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return event.clientY +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+			return X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
 		}
 	},
 	/**
@@ -404,6 +448,8 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
+			if (elem.defaultView && elem.body)  // is document
+				elem = elem.body;
 			if (notUnset(event.layerX) && isElemPositioned(elem)) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
 				return event.layerX;
@@ -427,6 +473,8 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
+			if (elem.defaultView && elem.body)  // is document
+				elem = elem.body;
 			if (notUnset(event.layerY) && isElemPositioned(elem)) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
 				return event.layerY;
@@ -446,6 +494,8 @@ X.Event.Methods = {
 	getRelXToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
+		if (elem.defaultView && elem.body)  // is document
+			elem = elem.body;
 		var clientX = X.Event.getClientX(event);
 		return Math.round(clientX - elem.getBoundingClientRect().left);
 	},
@@ -457,6 +507,8 @@ X.Event.Methods = {
 	getRelYToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
+		if (elem.defaultView && elem.body)  // is document
+			elem = elem.body;
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);
 		return Math.round(clientY - elem.getBoundingClientRect().top);
