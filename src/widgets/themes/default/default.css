@@ -500,6 +500,7 @@ table.K-Widget
     width: 16px;
     height: 16px;
     cursor: se-resize;
+    z-index: 1000;
 }
 .K-Resize-Gripper.K-State-Disabled
 {

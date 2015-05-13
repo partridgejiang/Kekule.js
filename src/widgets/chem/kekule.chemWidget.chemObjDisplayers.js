@@ -230,6 +230,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 					this.setPropStoreFieldValue('drawOptions', result);
 				}
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('drawOptions', value);
+				this.drawOptionChanged();
 			}
 		});
 		this.defineProp('zoom', {'dataType': DataType.FLOAT, 'serializable': false,

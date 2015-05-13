@@ -38,6 +38,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
 	COMPOSER_TOOLBAR: 'K-Chem-Composer-Toolbar',
 	COMPOSER_COMMON_TOOLBAR: 'K-Chem-Composer-Common-Toolbar',
+	COMPOSER_ZOOM_TOOLBAR: 'K-Chem-Composer-Zoom-Toolbar',
 	COMPOSER_CHEM_TOOLBAR: 'K-Chem-Composer-Chem-Toolbar',
 	COMPOSER_ASSOC_TOOLBAR: 'K-Chem-Composer-Assoc-Toolbar',
 	COMPOSER_STYLE_TOOLBAR: 'K-Chem-Composer-Style-Toolbar',
@@ -759,6 +760,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			this.createCommonToolbar();
 		if (!this.getChemBtnGroup())
 			this.createChemToolbar();
+		if (!this.getZoomBtnGroup())
+			this.createZoomToolbar();
 
 		// debug
 		//this.setShowInspector(true);
@@ -815,6 +818,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		// a private property, toolbar of common tasks (such as save/load)
 		this.defineProp('commonBtnGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false});
+		// a private property, toolbar of zoom tasks (such as zoomin/out)
+		this.defineProp('zoomBtnGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false});
 		// a private property, toolbar of chem tools (such as atom/bond)
 		this.defineProp('chemBtnGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false});
 		// a private property, toolbar of association chem tools (such as single, double bound form for bond tool)
@@ -874,6 +879,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			{
 				this.setPropStoreFieldValue('commonToolButtons', value);
 				this.updateCommonToolbar();
+				this.updateZoomToolbar();
 			}
 		});
 		this.defineProp('chemToolButtons', {'dataType': DataType.HASH, 'serializable': false,
@@ -1102,6 +1108,12 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 	*/
 
+	/** @ignore */
+	getResizerElement: function()
+	{
+		return this.getEditorStageElem();
+	},
+
 	/**
 	 * Returns coord mode of editor.
 	 * @returns {Int}
@@ -1174,6 +1186,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		// toolbar
 		var commonToolbarElem = this.getCommonBtnGroup()? this.getCommonBtnGroup().getElement(): null;
+		var zoomToolbarElem = this.getZoomBtnGroup()? this.getZoomBtnGroup().getElement(): null;
 		var chemToolbarElem = this.getChemBtnGroup()? this.getChemBtnGroup().getElement(): null;
 
 		if (!commonToolbarElem || !chemToolbarElem)  // not all toolbars created, widget may in its initial stage, no need to update
@@ -1181,6 +1194,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		if (commonToolbarElem)
 			var commonRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem);
+		if (zoomToolbarElem)
+			var zoomRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(zoomToolbarElem);
 		if (chemToolbarElem)
 			var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
 
@@ -1197,15 +1212,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		// editor
 		var top, left, right, bottom;
 		// calc top
-		var elem = this.getCommonBtnGroup().getElement();
-		var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		//var elem = this.getCommonBtnGroup().getElement();
+		var rect = commonRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
 		top = rect.height;
 		// calc left
-		var elem = this.getChemBtnGroup().getElement();
-		var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		//var elem = this.getChemBtnGroup().getElement();
+		var rect = chemRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
 		left = rect.width;
 		// calc bottom
-		var bottom = 0;
+		var bottom = zoomRect? zoomRect.height: 0;
 
 		/*
 		if (this.isAssocToolbarShown())
@@ -1445,12 +1460,21 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.paste,
 			//BNS.cloneSelection,
 			BNS.zoomIn,
-			BNS.zoomOut,
 			BNS.reset,
+			BNS.zoomOut,
 			BNS.config,
 			BNS.objInspector
 		];
 		return buttons;
+	},
+	/** @private */
+	getZoomButtonNames: function()
+	{
+		return [
+			BNS.zoomIn,
+			BNS.zoomOut,
+			BNS.reset
+		];
 	},
 	/** @private */
 	getDefaultChemToolBarButtons: function()
@@ -1540,6 +1564,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		toolbar.addClassName(CCNS.COMPOSER_COMMON_TOOLBAR);
 		// add buttons
 		var btns = this.getCommonToolButtons();
+		btns = Kekule.ArrayUtils.exclude(btns, this.getZoomButtonNames());
 		var actions = this.getCommonActions();
 		var editor = this.getEditor();
 		actions.clear();
@@ -1554,6 +1579,38 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return toolbar;
 	},
 	/**
+	 * Create zoom tool bar.
+	 * @returns {Kekule.Widget.ButtonGroup}
+	 * @private
+	 */
+	createZoomToolbar: function()
+	{
+		// add buttons
+		var btns = Kekule.ArrayUtils.intersect(this.getCommonToolButtons(), this.getZoomButtonNames());
+		if (btns.length)
+		{
+			var toolbar = this.createInnerToolbar();
+			toolbar.addClassName(CCNS.COMPOSER_ZOOM_TOOLBAR);
+			var actions = this.getCommonActions();
+			var editor = this.getEditor();
+			actions.clear();
+			for (var i = 0, l = btns.length; i < l; ++i)
+			{
+				var name = btns[i];
+				var btn = this.createToolButton(name, toolbar, actions);
+			}
+			this.setZoomBtnGroup(toolbar);
+			toolbar.addClassName(CNS.DYN_CREATED);
+			this.adjustComponentPositions();
+			return toolbar;
+		}
+		else
+		{
+			this.setZoomBtnGroup(null);
+			return null;
+		}
+	},
+	/**
 	 * Update common toolbar, actually free the old one and create a new one.
 	 * @private
 	 */
@@ -1563,6 +1620,17 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (old)
 			old.finalize();
 		this.createCommonToolbar();
+	},
+	/**
+	 * Update zoom toolbar, actually free the old one and create a new one.
+	 * @private
+	 */
+	updateZoomToolbar: function()
+	{
+		var old = this.getZoomBtnGroup();
+		if (old)
+			old.finalize();
+		this.createZoomToolbar();
 	},
 	/**
 	 * Create chem tool bar.
@@ -2033,6 +2101,8 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		// TODO: currently fixed to composer
 		var result = new Kekule.Editor.Composer(this);
 		result.addClassName(CNS.DYN_CREATED);
+		if (result.setResizable)
+			result.setResizable(true);
 		var editor = result.getEditor();
 		/*
 		editor.setEnableCreateNewDoc(false);
