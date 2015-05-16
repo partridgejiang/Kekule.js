@@ -796,7 +796,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	},
 
 	/** @ignore */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 		var renderer = context.getRenderer();
 		if (renderer instanceof THREE.SVGRenderer)

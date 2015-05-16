@@ -438,7 +438,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 
 	// export
 	/** @ignore */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 		if (context.toSVG)  // if Rapheal.Export lib used
 		{

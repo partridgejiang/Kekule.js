@@ -274,7 +274,7 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	 *   indicating image quality if the requested type is image/jpeg or image/webp.
 	 * @returns {String}
 	 */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 
 	}

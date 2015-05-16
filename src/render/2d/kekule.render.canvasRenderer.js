@@ -558,7 +558,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 
 	// export
 	/** @ignore */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 		var elem = this.getContextElem(context);
 		return elem? elem.toDataURL(dataType, options): null;
