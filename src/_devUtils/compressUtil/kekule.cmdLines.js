@@ -132,6 +132,8 @@ Kekule.CmdLineUtils = {
 			result += '\n\n';
 		}
 
+		result += '\ncopy kekule.js _compressed\\kekule.js /Y';
+
 		/*
 		// level1 compress
 		var stemplate = '{0} -l 2 -ow {1} {2}';

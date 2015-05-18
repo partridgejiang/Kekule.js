@@ -55,9 +55,9 @@ var kekuleFiles = {
 			'localization/kekule.localizations.js',
 			'localization/en/kekule.localize.en.js',
 			'localization/en/kekule.localize.widget.en.js',
-			'localization/en/kekule.localize.objDefines.en.js',
+			'localization/en/kekule.localize.objDefines.en.js'
 
-			'localization/zh/kekule.localize.widget.zh.js'
+			//'localization/zh/kekule.localize.widget.zh.js'
 		],
 		'category': 'localization'
 	},
@@ -101,6 +101,7 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'common'],
 		'files': [
 			'xbrowsers/kekule.x.js',
+			'html/kekule.nativeServices.js',
 			'html/kekule.predefinedResLoaders.js'
 		],
 		'category': 'core'
@@ -194,6 +195,7 @@ var kekuleFiles = {
 			'widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewerGrids.js',
+			'widgets/chem/viewer/kekule.chemWidget.chemObjSetters.js',
 
 			'widgets/chem/editor/kekule.chemEditor.extensions.js',
 			'widgets/chem/editor/kekule.chemEditor.baseEditors.js',

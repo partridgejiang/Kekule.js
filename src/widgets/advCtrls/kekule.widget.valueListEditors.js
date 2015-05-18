@@ -873,7 +873,6 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-
 	react_blur: function(e)
 	{
 		return;

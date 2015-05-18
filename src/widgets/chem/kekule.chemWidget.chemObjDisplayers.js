@@ -118,6 +118,7 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}. Read only.
  * @property {Kekule.ChemObject} chemObj Object to be drawn. Set this property will repaint the client.
  * @property {Bool} chemObjLoaded Whether the chemObj is successful loaded and drawn in viewer.
+ * @property {Bool} resetAfterLoad Whether reset display (remove rotate, zoom and so on) after set a new chem obj.
  * @property {Object} renderConfigs Configuration for rendering.
  * @property {Int} moleculeDisplayType Display type of molecule in displayer. Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
  * @property {Hash} drawOptions
@@ -128,7 +129,8 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  *   the drawing center moved from widget center.
  *   Note: this property is useless when autoSize == true.
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
- *
+ * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
+ * @property {Array} allowedOutputFormatIds Formats that shown in output file dialog. Default is null, means accept all available formats.
  */
 /**
  * Invoked when the an chem object (or null) is loaded into the displayer.
@@ -146,6 +148,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		this._paintFlag = 0;  // used internally
 		//this._errorReportElem = null;  // use internally
+		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		$super(parentOrElementOrDocument);
 		if (chemObj)
@@ -176,7 +179,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		this.defineProp('displayerConfigs', {'dataType': 'Kekule.ChemWidget.ChemObjDisplayerConfigs', 'serializable': false, 'scope': PS.PUBLIC});
 
-		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL});
+		this.defineProp('allowedInputFormatIds', {'dataType': DataType.ARRAY});
+		this.defineProp('allowedOutputFormatIds', {'dataType': DataType.ARRAY});
+
+		this.defineProp('resetAfterLoad', {'dataType': DataType.BOOL});
 		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': function(value)
 			{
@@ -424,6 +431,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		this.setPropStoreFieldValue('drawContext', null);
 		this.setPropStoreFieldValue('drawBridge', null);
+		this.getDrawOptions().moleculeDisplayType = this.getDefaultMoleculeDisplayType(newType);  // reset display type
 		if (chemObj)  // repaint
 			this.setChemObj(chemObj);
 	},
@@ -604,6 +612,18 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				this.repaint();
 		}
 	},
+
+	/**
+	 * Returns dimension of context.
+	 * @returns {Hash}
+	 */
+	getContextDimension: function()
+	{
+		if (this.getDrawBridge() && this.getDrawContext())
+			return this.getDrawBridge().getContextDimension(this.getDrawContext());
+		else
+			return null;
+	},
 	/**
 	 * Change the dimension of context.
 	 * @param {Hash} newDimension
@@ -742,6 +762,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		finally
 		{
+			if (this.getResetAfterLoad() && this.getChemObj())
+				this.resetDisplay();
 			this.doLoadEnd(this.getChemObj());
 		}
 	},
@@ -767,13 +789,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		try
 		{
-			//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
-			var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
-			if (chemObj)
-				this.setChemObj(chemObj);
+			if (!data)
+			{
+				this.setChemObj(null);
+				return null;
+			}
 			else
-				Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
-			return chemObj;
+			{
+				//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
+				var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
+				if (chemObj)
+					this.setChemObj(chemObj);
+				else
+					Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+				return chemObj;
+			}
 		}
 		catch(e)
 		{
@@ -787,45 +817,24 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	loadFromFile: function(file)
 	{
-		/*
-		 if (Kekule.BrowserFeature.fileapi)
-		 {
-		 try
-		 {
-		 var fileName = file.name;
-		 // try open it in browser
-		 var reader = new FileReader();
-		 var self = this;
-		 reader.onload = function(e)
-		 {
-		 var content = reader.result;
-		 self.loadFromData(content, null, fileName);
-		 };
-		 reader.readAsText(file);
-		 }
-		 catch(e)
-		 {
-		 this.reportException(e);
-		 }
-		 }
-		 else
-		 {
-		 this.reportException(Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED);
-		 }
-		 */
-		var self = this;
-		try
+		if (!file)
+			this.setChemObj(null);
+		else
 		{
-			Kekule.IO.loadFileData(file, function(chemObj, success)
-				{
-					if (success)
-						self.setChemObj(chemObj);
-				}
-			);
-		}
-		catch(e)
-		{
-			this.reportException(e);
+			var self = this;
+			try
+			{
+				Kekule.IO.loadFileData(file, function(chemObj, success)
+					{
+						if (success)
+							self.setChemObj(chemObj);
+					}
+				);
+			}
+			catch (e)
+			{
+				this.reportException(e);
+			}
 		}
 	},
 
@@ -1166,6 +1175,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Returns default mol display type in special render mode.
+	 * @param {Int} renderType
+	 * @return {Int}
+	 * @private
+	 */
+	getDefaultMoleculeDisplayType: function(renderType)
+	{
+		return (renderType === Kekule.Render.RendererType.R3D)?
+			Kekule.Render.Molecule3DDisplayType.DEFAULT: Kekule.Render.Molecule2DDisplayType.DEFAULT;
+	},
+	/**
 	 * Returns current molecule display type.
 	 * @returns {Int}
 	 */
@@ -1173,8 +1193,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		var result = this.getDrawOptions().moleculeDisplayType;
 		if (!result) // not set, use default
-			result = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
-				Kekule.Render.Molecule3DDisplayType.DEFAULT: Kekule.Render.Molecule2DDisplayType.DEFAULT;
+			result = this.getDefaultMoleculeDisplayType(this.getRenderType());
 		return result;
 	},
 	/*
@@ -1207,9 +1226,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 *   indicating image quality if the requested type is image/jpeg or image/webp.
 	 * @returns {String}
 	 */
-	exportToDataUrl: function(dataType, options)
+	exportToDataUri: function(dataType, options)
 	{
-		return this.getDrawBridge().exportToDataUrl(this.getDrawContext(), dataType, options);
+		//console.log(this.getDrawBridge(), this.getDrawContext());
+		return this.getDrawBridge().exportToDataUri(this.getDrawContext(), dataType, options);
 	},
 
 	////// about configurator
@@ -1322,9 +1342,9 @@ Kekule.ChemWidget.ChemObjDisplayer.Configurator = Class.create(Kekule.Widget.Con
 /**
  * Action for loading a file in chem displayer.
  * @class
- * @augments Kekule.ActionFileOpen
+ * @augments Kekule.ActionLoadFileData
  */
-Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(Kekule.ActionFileOpen,
+Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(/*Kekule.ActionFileOpen*/Kekule.ActionLoadFileData,
 /** @lends Kekule.ChemWidget.ActionDisplayerLoadFile# */
 {
 	/** @private */
@@ -1351,28 +1371,23 @@ Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(Kekule.ActionFileOpen,
 		var displayer = this.getDisplayer();
 		this.setEnabled(this.getEnabled() && displayer && displayer.getEnabled() && displayer.getEnableLoadNewFile());
 	},
-	/** @private */
+	/* @private */
+	/*
 	doFileOpened: function(files)
 	{
 		if (files && files.length)
 		{
 			var file = files[0];
-			/*
-			 var fileName = file.name;
-			 // try open it in browser
-			 var reader = new FileReader();
-			 var self = this;
-			 reader.onload = function(e)
-			 {
-			 var content = reader.result;
-			 var ext = fileName? Kekule.UrlUtils.extractFileExt(fileName): null;
-			 var chemObj = Kekule.IO.loadTypedData(content, null, ext);
-			 self.getViewer().setChemObj(chemObj);
-			 };
-			 reader.readAsText(file);
-			 */
 			this.getDisplayer().loadFromFile(file);
 		}
+	}
+	*/
+	/** @private */
+	doDataLoaded: function(data, fileName, loaded)
+	{
+		//console.log('do data loaded', fileName);
+		if (loaded)
+			this.getDisplayer().loadFromData(data, null, fileName);
 	}
 });
 
@@ -1470,7 +1485,8 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	createDataDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		return new Kekule.ChemWidget.LoadDataDialog(doc);
+		var result = new Kekule.ChemWidget.LoadDataDialog(doc);
+		return result;
 	},
 
 	/** @private */
@@ -1485,6 +1501,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	{
 		var self = this;
 		var dialog = this.getDataDialog();
+		dialog.setAllowedFormatIds(this.getDisplayer().getAllowedInputFormatIds() || Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds());
 
 		var formatSelector = dialog._formatSelector;
 
@@ -1620,6 +1637,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		return result;
 	},
 	/** @private */
+
 	getAvailableWriterInfos: function(chemObj)
 	{
 		//var obj = this.getDisplayer().getChemObj();
@@ -1627,9 +1645,11 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			return [];
 		else
 		{
-			return Kekule.IO.ChemDataWriterManager.getAvailableWriterInfos(null, chemObj);
+			var result = Kekule.IO.ChemDataWriterManager.getAvailableWriterInfos(null, chemObj);
+			return result;
 		}
 	},
+
 	/** @private */
 	getFormatSelectorItems: function(chemObj, writerInfos)
 	{
@@ -1645,6 +1665,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var info = writerInfos[i];
 			Kekule.ArrayUtils.pushUnique(formatIds, info.formatId);
 		}
+		formatIds = Kekule.ArrayUtils.intersect(this.getAllowedFormatIds(), formatIds);
 
 		for (var i = 0, l = formatIds.length; i < l; ++i)
 		{
@@ -1686,6 +1707,36 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		return result;
 	},
 	/** @private */
+	getAllowedFormatIds: function()
+	{
+		return this.getDisplayer().getAllowedOutputFormatIds() || Kekule.IO.ChemDataWriterManager.getAllWritableFormatIds();
+	},
+	/** @private */
+	getFileFilters: function(formatItems)
+	{
+		var result = [];
+		for (var i = 0, l = formatItems.length; i < l; ++i)
+		{
+			var format = formatItems[i];
+			var info = format.data;
+			var title = format.text || format.title || format.value;
+			var exts = info.fileExts;
+			for (var j = 0, k = exts.length; j < k; ++j)
+			{
+				result.push({'title': title, 'filter': '.' + exts[j]});
+			}
+		}
+		return result;
+	},
+	/** @private */
+	updateFormatItems: function(chemObj)
+	{
+		this._formatItems = this.getFormatSelectorItems(chemObj, this.getAvailableWriterInfos());
+		this._formatSelector.setItems(this._formatItems);
+		var filters = this.getFileFilters(this._formatItems);
+		this._saveAction.setFilters(filters);
+	},
+	/** @private */
 	reactFormatSelectorChange: function()
 	{
 		var formatId = this.getFormatDialog()._formatSelector.getValue();
@@ -1702,7 +1753,10 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var obj = this.getTargetObj();
 			var srcInfo = this.getChemObjSrcInfo(obj);
 			if (srcInfo && srcInfo.format === formatId)  // can use src data
+			{
 				textArea.setValue(srcInfo.data);
+				this.setCurrSaveData(srcInfo.data);
+			}
 			else
 			{
 				// get suitable writer

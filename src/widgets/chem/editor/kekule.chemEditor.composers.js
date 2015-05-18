@@ -944,6 +944,18 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return result;
 			}
 		});
+		this.defineProp('zoomActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('zoomActions');
+				if (!result)
+				{
+					result = new Kekule.ActionList();
+					this.setPropStoreFieldValue('zoomActions', result);
+				}
+				return result;
+			}
+		});
 		this.defineProp('chemActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null,
 			'getter': function()
 			{
@@ -1575,6 +1587,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		this.setCommonBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
+
+		this.createZoomToolbar();
+
 		this.adjustComponentPositions();
 		return toolbar;
 	},
@@ -1591,7 +1606,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var toolbar = this.createInnerToolbar();
 			toolbar.addClassName(CCNS.COMPOSER_ZOOM_TOOLBAR);
-			var actions = this.getCommonActions();
+			var actions = this.getZoomActions();
 			var editor = this.getEditor();
 			actions.clear();
 			for (var i = 0, l = btns.length; i < l; ++i)
@@ -1862,6 +1877,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	updateAllActions: function()
 	{
 		this.getCommonActions().updateAll();
+		this.getZoomActions().updateAll();
 		this.getChemActions().updateAll();
 	},
 	/**

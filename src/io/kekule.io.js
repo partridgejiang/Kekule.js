@@ -431,6 +431,53 @@ Kekule.IO.ChemDataReaderManager = {
 		return item;
 	},
 	/**
+	 * Returns all file format IDs that has corresponding reader.
+	 * @returns {Array} Array of format id.
+	 */
+	getAllReadableFormatIds: function()
+	{
+		var result = [];
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i < l; ++i)
+		{
+			var item = readers[i];
+			var fids = item.formatId;
+			result = result.concat(fids || []);
+		}
+		return result;
+	},
+	/**
+	 * Returns all file formats that has corresponding reader.
+	 * @returns {Array} Array of format object.
+	 */
+	getAllReadableFormats: function()
+	{
+		var result = [];
+		/*
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i < l; ++i)
+		{
+			var item = readers[i];
+			var fids = item.formatId;
+			for (var j = 0, k = fids.length; j < k; ++j)
+			{
+				var fid = fids[j];
+				var info = FM.getFormatInfo(fid);
+				if (info)
+					result.push(info);
+			}
+		}
+		*/
+		var ids = Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds();
+		for (var i = 0, l = ids.length; i < l; ++i)
+		{
+			var info = FM.getFormatInfo(ids[i]);
+			if (info)
+				result.push(info);
+		}
+		return result;
+	},
+	/**
 	 * Get all available reader infos by condition provided and be suitable for targetClass.
 	 * For example: Kekule.IO.ChemDataReaderManager.getAvailableReaderInfos({'id': 'mol'});
 	 * @param {Hash} condition
@@ -686,6 +733,38 @@ Kekule.IO.ChemDataWriterManager = {
 		item = Object.extend(item, additionalInfo);
 		Kekule.IO.ChemDataWriterManager._writers.push(item);
 		return item;
+	},
+	/**
+	 * Returns all file format IDs that has corresponding writer.
+	 * @returns {Array} Array of format id.
+	 */
+	getAllWritableFormatIds: function()
+	{
+		var result = [];
+		var writers = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = 0, l = writers.length; i < l; ++i)
+		{
+			var item = writers[i];
+			var fids = item.formatId;
+			result = result.concat(fids || []);
+		}
+		return result;
+	},
+	/**
+	 * Returns all file formats that has corresponding writer.
+	 * @returns {Array} Array of format object.
+	 */
+	getAllWritableFormats: function()
+	{
+		var result = [];
+		var ids = Kekule.IO.ChemDataWriterManager.getAllWritableFormatIds();
+		for (var i = 0, l = ids.length; i < l; ++i)
+		{
+			var info = FM.getFormatInfo(ids[i]);
+			if (info)
+				result.push(info);
+		}
+		return result;
 	},
 	/**
 	 * Get all available writer infos by condition provided and suitble for srcObj.
@@ -1087,7 +1166,10 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 			if (fileExt)
 				info.fileExt = fileExt;
 			if (url)
+			{
 				info.url = url;
+				info.fileName = url;
+			}
 		}
 		return result;
 	}
@@ -1100,6 +1182,7 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 		return null;
 	}
 };
+
 /**
  * Load chem object from a File object.
  * Note this function relies on FileApi support.

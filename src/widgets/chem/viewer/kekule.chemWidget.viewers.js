@@ -39,6 +39,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER2D: 'K-Chem-Viewer2D',
 	VIEWER3D: 'K-Chem-Viewer3D',
 	VIEWER_CAPTION: 'K-Chem-Viewer-Caption',
+	VIEWER_EMBEDDED_TOOLBAR: 'K-Chem-Viewer-Embedded-Toolbar',
 
 	// predefined actions
 	ACTION_ROTATE_LEFT: 'K-Chem-RotateLeft',
@@ -85,8 +86,15 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Bool} modalEdit Whether opens a modal dialog when editting object in viewer.
  * @property {Bool} enableEditFromVoid Whether editor can be launched even if viewer is empty.
  *
- * @property {Array} toolButtons buttons in interaction tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
- *   If not set, default buttons will be used.
+ * @property {Array} toolButtons buttons in interaction tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...]. <br />
+ *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
+ *     [ <br />
+ *       'zoomIn', 'zoomOut',<br />
+ *       {'name': 'myCustomButton1', 'widgetClass': 'Kekule.Widget.Button', 'action': actionClass},<br />
+ *       {'name': 'myCustomButton2', 'htmlClass': 'MyClass' 'caption': 'My Button', 'hint': 'My Hint', '#execute': function(){ ... }},<br />
+ *     ]<br />
+ *   most hash fields are similar to the param of {@link Kekule.Widget.Utils.createFromHash}.<br />
+ *   If this property is not set, default buttons will be used.
  * @property {Bool} enableToolbar Whether show tool bar in viewer.
  * @property {Int} toolbarPos Value from {@link Kekule.Widget.Position}, position of toolbar in viewer.
  *   For example, set this property to TOP will make toolbar shows in the center below the top edge of viewer,
@@ -350,6 +358,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.setPropStoreFieldValue('toolbarRevokeTimeout', value);
 				if (this.getToolbarEvokeHelper())
 					this.getToolbarEvokeHelper().setTimeout(value);
+			}
+		});
+
+		this.defineProp('toolbarParentElem', {'dataType': DataType.OBJECT, 'serializable': false,
+			'setter': function(value)
+			{
+				if (this.getToolbarParentElem() !== value)
+				{
+					this.setPropStoreFieldValue('toolbarParentElem', value);
+					this.updateToolbar();
+				}
 			}
 		});
 
@@ -659,7 +678,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!this._composerDialog)
 			if (Kekule.Editor.ComposerDialog)
 			{
-				this._composerDialog = new Kekule.Editor.ComposerDialog(this.getDocument(), Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
+				this._composerDialog = new Kekule.Editor.ComposerDialog(this, Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
 					[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 			}
 		return this._composerDialog;
@@ -689,12 +708,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			composer.setEnableCreateNewDoc(editFromVoid);
 			composer.setEnableLoadNewFile(editFromVoid);
 			composer.setAllowCreateNewChild(editFromVoid);
+			composer.setEnableLoadNewFile(editFromVoid);
+			//composer.updateAllActions();
+			//console.log(composer.getEnableLoadNewFile(), editFromVoid);
 
 			if (!editFromVoid)
 			{
 				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
 				dialog.setChemObj(cloneObj);
 			}
+			else
+				dialog.setChemObj(null);
 
 			var self = this;
 			var callback = function(dialogResult)
@@ -931,11 +955,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			BNS.zoomIn, BNS.zoomOut
 		];
 		// rotate
-		if (this.getRenderType() === Kekule.Render.RendererType.R3D)
+		//if (this.getRenderType() === Kekule.Render.RendererType.R3D)
 		{
 			buttons = buttons.concat([BNS.rotateX, BNS.rotateY, BNS.rotateZ]);
 		}
-		else
+		//else
 		{
 			buttons = buttons.concat([BNS.rotateLeft, BNS.rotateRight]);
 		}
@@ -977,77 +1001,98 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Return whether toolbarParentElem is not set the the toolbar is directly embedded in viewer itself.
+	 * @returns {Bool}
+	 */
+	isToolbarEmbedded: function()
+	{
+		return !this.getToolbarParentElem();
+	},
+
+	/**
 	 * Recalc and set toolbar position.
 	 * @private
 	 */
 	adjustToolbarPos: function()
 	{
 		var toolbar = this.getToolbar();
-		if (toolbar)
+		if (!toolbar)
+			return;
+		if (this.isToolbarEmbedded())
 		{
-			var WP = Kekule.Widget.Position;
-			var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
-			var toolbarClientRect = toolbar.getBoundingClientRect();
-			var pos = this.getToolbarPos();
-			var hMargin = this.getToolbarMarginHorizontal();
-			var vMargin = this.getToolbarMarginVertical();
-
-			// default
-			var hPosProp = 'left', vPosProp = 'top';
-			var hPosPropUnused = 'right', vPosPropUnused = 'bottom';
-			var hPosValue = (viewerClientRect.width - toolbarClientRect.width) / 2;
-			var vPosValue = (viewerClientRect.height - toolbarClientRect.height) / 2;
-
-			if (pos === WP.AUTO || !pos)  // auto decide position, including margin
+			//if (toolbar)
 			{
-				var toolbarTotalW = ((hMargin > 0)? hMargin: 0) * 2 + toolbarClientRect.width;
-				var toolbarTotalH = ((vMargin > 0)? vMargin: 0) * 2 + toolbarClientRect.height;
-				if (toolbarTotalW > viewerClientRect.width)  // can not fit in viewer
+				var WP = Kekule.Widget.Position;
+				var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
+				var toolbarClientRect = toolbar.getBoundingClientRect();
+				var pos = this.getToolbarPos();
+				var hMargin = this.getToolbarMarginHorizontal();
+				var vMargin = this.getToolbarMarginVertical();
+
+				// default
+				var hPosProp = 'left', vPosProp = 'top';
+				var hPosPropUnused = 'right', vPosPropUnused = 'bottom';
+				var hPosValue = (viewerClientRect.width - toolbarClientRect.width) / 2;
+				var vPosValue = (viewerClientRect.height - toolbarClientRect.height) / 2;
+
+				if (pos === WP.AUTO || !pos)  // auto decide position, including margin
 				{
-					pos |= WP.LEFT;
-					hMargin = 0;
+					var toolbarTotalW = ((hMargin > 0) ? hMargin : 0) * 2 + toolbarClientRect.width;
+					var toolbarTotalH = ((vMargin > 0) ? vMargin : 0) * 2 + toolbarClientRect.height;
+					if (toolbarTotalW > viewerClientRect.width)  // can not fit in viewer
+					{
+						pos |= WP.LEFT;
+						hMargin = 0;
+					}
+					else
+						pos |= WP.RIGHT;
+					if (toolbarTotalH > viewerClientRect.height)  // can not fit in viewer
+					{
+						pos |= WP.BOTTOM;
+						vMargin = -1;
+					}
+					else
+						pos |= WP.BOTTOM;
 				}
-				else
-					pos |= WP.RIGHT;
-				if (toolbarTotalH > viewerClientRect.height)  // can not fit in viewer
-				{
-					pos |= WP.BOTTOM;
-					vMargin = -1;
-				}
-				else
-					pos |= WP.BOTTOM;
-			}
 
-			// horizontal direction
-			if (pos & WP.LEFT)
-			{
-				hPosProp = 'left';
-				hPosPropUnused = 'right';
-				hPosValue = (hMargin >= 0)? hMargin: hMargin - toolbarClientRect.width;
+				// horizontal direction
+				if (pos & WP.LEFT)
+				{
+					hPosProp = 'left';
+					hPosPropUnused = 'right';
+					hPosValue = (hMargin >= 0) ? hMargin : hMargin - toolbarClientRect.width;
+				}
+				else if (pos & WP.RIGHT)
+				{
+					hPosProp = 'right';
+					hPosPropUnused = 'left';
+					hPosValue = (hMargin >= 0) ? hMargin : hMargin - toolbarClientRect.width;
+				}
+				// vertical direction
+				if (pos & WP.TOP)
+				{
+					vPosProp = 'top';
+					vPosPropUnused = 'bottom';
+					vPosValue = (vMargin >= 0) ? vMargin : vMargin - toolbarClientRect.height;
+				}
+				else if (pos & WP.BOTTOM)
+				{
+					vPosProp = 'bottom';
+					vPosPropUnused = 'top';
+					vPosValue = (vMargin >= 0) ? vMargin : vMargin - toolbarClientRect.height;
+				}
+				toolbar.removeStyleProperty(hPosPropUnused);
+				toolbar.removeStyleProperty(vPosPropUnused);
+				toolbar.setStyleProperty(hPosProp, hPosValue + 'px');
+				toolbar.setStyleProperty(vPosProp, vPosValue + 'px');
 			}
-			else if (pos & WP.RIGHT)
-			{
-				hPosProp = 'right';
-				hPosPropUnused = 'left';
-				hPosValue = (hMargin >= 0)? hMargin: hMargin - toolbarClientRect.width;
-			}
-			// vertical direction
-			if (pos & WP.TOP)
-			{
-				vPosProp = 'top';
-				vPosPropUnused = 'bottom';
-				vPosValue = (vMargin >= 0)? vMargin: vMargin - toolbarClientRect.height;
-			}
-			else if (pos & WP.BOTTOM)
-			{
-				vPosProp = 'bottom';
-				vPosPropUnused = 'top';
-				vPosValue = (vMargin >= 0)? vMargin: vMargin - toolbarClientRect.height;
-			}
-			toolbar.removeStyleProperty(hPosPropUnused);
-			toolbar.removeStyleProperty(vPosPropUnused);
-			toolbar.setStyleProperty(hPosProp, hPosValue + 'px');
-			toolbar.setStyleProperty(vPosProp, vPosValue + 'px');
+		}
+		else  // toolbar parent appointed
+		{
+			toolbar.removeStyleProperty('left');
+			toolbar.removeStyleProperty('top');
+			toolbar.removeStyleProperty('width');
+			toolbar.removeStyleProperty('height');
 		}
 	},
 	/**
@@ -1098,9 +1143,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var btn = this.createToolButton(name, toolBar);
 		}
 		toolBar.addClassName(CCNS.INNER_TOOLBAR);
+		if (this.isToolbarEmbedded())
+			toolBar.addClassName(CCNS.VIEWER_EMBEDDED_TOOLBAR);
 		toolBar.setShowText(false);
 		toolBar.doSetShowGlyph(true);
-		toolBar.appendToElem(/*this.getElement()*/this.getDrawContextParentElem());
+		toolBar.appendToElem(/*this.getElement()*/this.getToolbarParentElem() || this.getDrawContextParentElem());
 			// IMPORTANT, must append to widget before setToolbar,
 			// otherwise in Chrome the tool bar may be hidden at first even if we set it to always show
 		//console.log('After append to widget: ', toolBar.getDisplayed());
@@ -1119,28 +1166,48 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		var rotateBtnNames = [BNS.rotateX, BNS.rotateY, BNS.rotateZ, BNS.rotateLeft, BNS.rotateRight];
 
-		if (btnName === BNS.molDisplayType)  // in 2D or 3D mode, type differs a lot, need handle separately
+		if (DataType.isObjectValue(btnName))  // custom button
 		{
-			this.createMolDisplayTypeButton(parentGroup);
-		}
-
-		var actionClass = this.getToolButtonActionClass(btnName);
-		var btnClass = Kekule.Widget.Button;
-		if (btnName === BNS.molHideHydrogens)
-			btnClass = Kekule.Widget.CheckButton;
-		if (actionClass)
-		{
-			result = new btnClass(parentGroup);
-			//result.addClassName(CCNS.PREFIX + btnName);
-			var action = new actionClass(this);
-			this.getActions().add(action);
-			result.setAction(action);
-			if (rotateBtnNames.indexOf(btnName) >= 0)
+			var objDefHash = Object.extend({'widgetClass': Kekule.Widget.Button}, btnName);
+			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
+			var actionClass = objDefHash.actionClass;
+			if (actionClass)  // create action
 			{
-				result.setPeriodicalExecInterval(20);
-				result.setEnablePeriodicalExec(true);
-				result.addEventListener('activate', beginContinuousRepaintingBind);
-				result.addEventListener('deactivate', endContinuousRepaintingBind);
+				if (typeof(actionClass) === 'string')
+					actionClass = ClassEx.findClass(objDefHash.actionClass);
+				if (actionClass)
+				{
+					var action = new actionClass(this);
+					this.getActions().add(action);
+					result.setAction(action);
+				}
+			}
+		}
+		else
+		{
+			if (btnName === BNS.molDisplayType)  // in 2D or 3D mode, type differs a lot, need handle separately
+			{
+				this.createMolDisplayTypeButton(parentGroup);
+			}
+
+			var actionClass = this.getToolButtonActionClass(btnName);
+			var btnClass = Kekule.Widget.Button;
+			if (btnName === BNS.molHideHydrogens)
+				btnClass = Kekule.Widget.CheckButton;
+			if (actionClass)
+			{
+				result = new btnClass(parentGroup);
+				//result.addClassName(CCNS.PREFIX + btnName);
+				var action = new actionClass(this);
+				this.getActions().add(action);
+				result.setAction(action);
+				if (rotateBtnNames.indexOf(btnName) >= 0)
+				{
+					result.setPeriodicalExecInterval(20);
+					result.setEnablePeriodicalExec(true);
+					result.addEventListener('activate', beginContinuousRepaintingBind);
+					result.addEventListener('deactivate', endContinuousRepaintingBind);
+				}
 			}
 		}
 		return result;

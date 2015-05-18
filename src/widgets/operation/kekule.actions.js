@@ -10,6 +10,7 @@
  * requires /lan/classes.js
  * requires /utils/kekule.utils.js
  * requires /xbrowsers/kekule.x.js
+ * requires /html/kekule.nativeServices.js
  * requires /localization/
  */
 
@@ -554,9 +555,11 @@ Kekule.ActionList = Class.create(ObjectEx,
  * This action relies on JavaScript FileReader API.
  * @class
  * @augments Kekule.Action
+ *
+ * @property filters {Array} Filters of open file dialog.
  */
 /**
- * Invoked when file(s) is loaded from dialog. Has one additional fields: {files}
+ * Invoked when file(s) is loaded from dialog. Has one additional fields: {files, file}
  * @name Kekule.ActionFileOpen#open
  * @event
  */
@@ -569,46 +572,56 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 	initialize: function($super)
 	{
 		$super();
-		this._inputElem = null;  // internal
-		this.reactInputChangeBind = this.reactInputChange.bind(this);
+		this.reactFileOpenBind = this.reactFileOpen.bind(this);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('filters', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
 	doUpdate: function($super)
 	{
 		$super();
-		this.setEnabled(this.getEnabled() && Kekule.BrowserFeature.fileapi);
+		this.setEnabled(this.getEnabled() && Kekule.NativeServices.showFilePickerDialog/*Kekule.BrowserFeature.fileapi*/);
 	},
 	/** @private */
 	doExecute: function(target)
 	{
 		var elem = target.getElement();
 		var doc = elem.ownerDocument;
+		/*
 		var input = this.createInputElem(doc);
 		input.click();  // open file dialog
 		//this._inputElem = input;
+		*/
+		this.openFilePicker(doc, this.reactFileOpenBind);
 	},
-	/** @private */
-	createInputElem: function(doc)
+	/**
+	 * Open a file open dialog, when it is closed, callback will be evoked.
+	 * @param {HTMLDocument} doc
+	 * @param {Function} callback Callback function, with params (result(true on OK), files, firstFile)
+	 */
+	openFilePicker: function(doc, callback)
 	{
-		var self = this;
-		var result = document.createElement('input');
-		result.setAttribute('type', 'file');
-		// IMPORTANT: some browser need this input file element visible to raise the open dialog
-		// so we append it to document and "hidden" it
-		var style = result.style;
-		style.position = 'absolute';
-		style.left = '-10000px';
-		style.opacity = 0;
-
-		document.body.appendChild(result);
-		//result.onchange = this.reactInputChangeBind;
-		Kekule.X.Event.addListener(result, 'change', this.reactInputChangeBind);
-		return result;
+		/*
+		if (Kekule.ActionFileOpen.openFilePicker)
+			return Kekule.ActionFileOpen.openFilePicker(doc, callback);
+		else
+			return null;
+		*/
+		return Kekule.NativeServices.showFilePickerDialog(doc, callback, {
+			'mode': 'open',
+			'filters': this.getFilters()
+		});
 	},
-	/** @private */
+
+	/* @private */
+	/*
 	reactInputChange: function(e)
 	{
 		var target = e.getTarget();
+		console.log('file input change', target.files);
 		this.fileOpened(target.files);
 		// dismiss input element
 		//this._inputElem = null;
@@ -619,24 +632,113 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 			target.parentNode.removeChild(target);
 		}
 	},
+	*/
+	/** @private */
+	reactFileOpen: function(result, firstFile, files)
+	{
+		if (result)
+			this.fileOpened(files);
+	},
 	/**
 	 * Called when file is opened from input element.
 	 * @param {Object} files
+	 * @private
 	 */
 	fileOpened: function(files)
 	{
 		this.doFileOpened(files);
-		this.invokeEvent('open', {'files': files});
+		this.invokeEvent('open', {'files': files, 'file': files[0]});
 	},
 	/**
 	 * Do actual work of fileOpened. Descendants can override this method.
 	 * @param {Object} files
+	 * @private
 	 */
 	doFileOpened: function(files)
 	{
 		// do nothing here
 	}
 });
+
+/**
+ * Action to open a file dialog and load file data.
+ * This action relies on JavaScript FileReader API.
+ * @class
+ * @augments Kekule.Action
+ *
+ * @property filters {Array} Filters of open file dialog.
+ */
+/**
+ * Invoked when file(s) is loaded from dialog and data is loaded. Has one additional fields: {data, fileName, success}
+ * @name Kekule.ActionLoadFileData#load
+ * @event
+ */
+Kekule.ActionLoadFileData = Class.create(Kekule.Action,
+/** @lends Kekule.ChemWidget.ActionLoadFileData# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionLoadFileData',
+	/** @constructs */
+	initialize: function($super)
+	{
+		$super();
+		this.reactFileLoadBind = this.reactFileLoad.bind(this);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('filters', {'dataType': DataType.ARRAY});
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		this.setEnabled(this.getEnabled() && Kekule.NativeServices.canLoadFileData());
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		var elem = target.getElement();
+		var doc = elem.ownerDocument;
+		this.loadFileData(doc, this.reactFileLoadBind);
+	},
+	/**
+	 * Open a file open dialog, when it is closed, callback will be evoked.
+	 * @param {HTMLDocument} doc
+	 * @param {Function} callback Callback function, with params (result(true on OK), files, firstFile)
+	 */
+	loadFileData: function(doc, callback)
+	{
+		//console.log('load file data', this.getFilters());
+		return Kekule.NativeServices.loadFileData(doc, callback, {
+			'filters': this.getFilters()
+		});
+	},
+
+	/** @private */
+	reactFileLoad: function(result, data, fileName)
+	{
+		this.dataLoaded(data, fileName, !!result);
+	},
+	/**
+	 * Called when file is opened and data is loaded.
+	 * @private
+	 */
+	dataLoaded: function(data, fileName, loaded)
+	{
+		this.doDataLoaded(data, fileName, loaded);
+		this.invokeEvent('load', {'fileName': fileName, 'data': data, 'success': loaded});
+	},
+	/**
+	 * Do actual work of fileOpened. Descendants can override this method.
+	 * @private
+	 */
+	doDataLoaded: function(data, fileName)
+	{
+		// do nothing here
+	}
+});
+
 
 /**
  * Action to open a file save dialog and save file(s).
@@ -674,7 +776,7 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 	doUpdate: function($super)
 	{
 		$super();
-		this.setEnabled(this.getEnabled() && this.getData());
+		this.setEnabled(this.getEnabled() && this.getData() && Kekule.NativeServices.canLoadFileData());
 	},
 	/** @private */
 	doExecute: function(target)
@@ -687,20 +789,26 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 			var elem = target.getElement();
 			doc = elem.ownerDocument;
 		}
+		Kekule.NativeServices.saveFileData(doc, this.getData(), null, {'initialFileName': this.getFileName()});
+		/*
 		var dataElem = this.createDataElem(doc, this.getData(), this.getFileName());
 		dataElem.click();  // save file dialog
 		dataElem.parentNode.removeChild(dataElem);
-	},
+		*/
+	}
 
 	/** @private */
+	/*
 	createDataElem: function(doc, data, fileName)
 	{
 		var elem = doc.createElement('a');
 		elem.setAttribute('href', 'data:application/octet-stream,' + encodeURIComponent(data));
 		elem.setAttribute('download', fileName);
+		elem.innerHTML = 'download here!';
 		doc.body.appendChild(elem);
 		return elem;
 	}
+  */
 });
 
 })();

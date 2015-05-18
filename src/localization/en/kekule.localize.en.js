@@ -58,6 +58,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// algorithm/kekule.structures.canonicalizers.js
 	REGISTERED_CANONICALIZATION_EXECUTOR_NOT_FOUND: 'Can not find registered canonicalization executor',
 
+	// html/kekule.nativeServices.js
+	ERROR_LOADING_FILE: 'Error loading file: ',
+
 	// io/kekule.io.js
 	READER_ID_ALREADY_EXISTS: 'Can not register reader: id already exists',
 	WRITER_ID_ALREADY_EXISTS: 'Can not register writer: id already exists',
