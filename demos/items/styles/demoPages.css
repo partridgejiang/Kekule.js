@@ -1,0 +1,36 @@
+html, body
+{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1, h2
+{
+    text-shadow: 1px 1px 2px #999;
+}
+
+pre
+{
+	font-family: "Courier New", Courier, monospace;
+}
+
+.CodeBlock
+{
+    font-family: "Courier New", Courier, monospace;
+    display: block;
+		margin: 0 2em;
+    padding: 0.5em 1em;
+    border: 1px dotted #ccc;
+    border-radius: 0.2em;
+    background-color: #eee;
+}
+
+table.ExplanationTable
+{
+	border-collapse: collapse;
+}
+table.ExplanationTable td,
+table.ExplanationTable th
+{
+	border: 1px solid #555;
+	padding: 0.2em 0.5em;
+}
