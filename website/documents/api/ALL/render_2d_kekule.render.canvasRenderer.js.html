@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: render/2d/kekule.render.canvasRenderer.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
@@ -586,7 +586,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 
 	// export
 	/** @ignore */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 		var elem = this.getContextElem(context);
 		return elem? elem.toDataURL(dataType, options): null;

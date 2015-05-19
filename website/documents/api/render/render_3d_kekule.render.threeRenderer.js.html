@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: render/3d/kekule.render.threeRenderer.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
@@ -824,7 +824,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	},
 
 	/** @ignore */
-	exportToDataUrl: function(context, dataType, options)
+	exportToDataUri: function(context, dataType, options)
 	{
 		var renderer = context.getRenderer();
 		if (renderer instanceof THREE.SVGRenderer)

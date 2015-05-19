@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: widgets/chem/kekule.chemWidget.chemObjDisplayers.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
@@ -1175,9 +1175,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 *   indicating image quality if the requested type is image/jpeg or image/webp.
 	 * @returns {String}
 	 */
-	exportToDataUrl: function(dataType, options)
+	exportToDataUri: function(dataType, options)
 	{
-		return this.getDrawBridge().exportToDataUrl(this.getDrawContext(), dataType, options);
+		return this.getDrawBridge().exportToDataUri(this.getDrawContext(), dataType, options);
 	},
 
 	////// about configurator
