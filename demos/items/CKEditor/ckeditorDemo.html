@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Kekule CKEditor Plugin Demo</title>
+
+	<style>
+		html, body
+		{
+			font-family: 'Microsoft Sans Serif' , Arial, Helvetica, Verdana;
+		}
+		h1
+		{
+
+		}
+		#toolbarMain
+		{
+			margin: 0.2em 1em;
+		}
+		#header
+		{
+			overflow: hidden;
+		}
+		.PublishItem
+		{
+			padding: 0.5em 1em;
+			margin: 0.5em 0;
+			border: 2px dotted #ccc;
+		}
+	</style>
+	<script src="./scripts/ckeditor/ckeditor.js"></script>
+	<script>
+		function publish()
+		{
+			var content = CKEDITOR.instances.editor1.getData();
+			var targetElem = document.getElementById('publishStage');
+			// create a published item
+			var elem = document.createElement('div');
+			elem.className = 'PublishItem';
+			elem.innerHTML = content;
+			var currItems = targetElem.getElementsByTagName('div');
+			var firstChild = currItems? currItems[0]: null;
+			targetElem.insertBefore(elem, firstChild);
+		}
+		function clear()
+		{
+			var targetElem = document.getElementById('publishStage');
+			targetElem.innerHTML = '';
+		}
+		function init()
+		{
+			document.getElementById('btnPublish').onclick = publish;
+			document.getElementById('btnClear').onclick = clear;
+		}
+	</script>
+</head>
+<body onload="init()">
+	<div id="header">
+		<h1>
+			Kekule CKEditor Plugin Demo
+		</h1>
+	</div>
+
+	<div id="introStage">
+		<p>
+			This page demonstrates the Kekule plugins for CKEditor -- a wide used WYSIWYG web editor component.
+			You can insert or modify molecule in the editing area by click on "Insert Molecule"
+			button ( <img src="scripts/ckeditor/plugins/kekule/icons/insertChemObj2D.png"> ). Click Publish button will send the content in editing area out to current page. Though this
+			demo runs on pure client side, it can be easily extended to web forum or web chat with server.
+		</p>
+	</div>
+
+	<div id="editorStage">
+		<textarea cols="80" id="editor1" name="editor1" rows="10">
+			With Kekule.js plugins, an extra buttons are added to CKEditor to insert or edit molecule.
+		</textarea>
+	</div>
+	<div id="toolbarMain" data-widget="Kekule.Widget.ButtonGroup">
+		<button id="btnPublish" data-widget="Kekule.Widget.Button" data-text="Publish">Publish</button>
+		<button id="btnClear" data-widget="Kekule.Widget.Button" data-text="Clear">Clear</button>
+	</div>
+	<div id="publishStage">
+	</div>
+	<script>
+		CKEDITOR.replace('editor1');
+	</script>
+</body>
+</html>

@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: io/kekule.io.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: io/kekule.io.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * Abstract root classes for concrete strcuture reader/writers of different structure formats.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /core/kekule.common.js
+ * requires /utils/kekule.utils.js
+ * requires /xbrowsers/kekule.x.js
+ */
+
+(function(){
+
+/**
+ * Name space for IO package of Kekule.
+ * @namespace
+ */
+Kekule.IO = {};
+
+/**
+ * Enumeration of possible type of input data.
+ * @class
+ */
+Kekule.IO.ChemDataType = {
+	/** Plain Text, e.g. MOL data. */
+	TEXT: 'text',
+	/** DOM Structure, e.g. CML data */
+	DOM: 'dom',
+	/** JSON Object */
+	JSON: 'json',
+	/** Binary data */
+	BINARY: 'bin',
+	/** Other, not used now */
+	OTHER: 'other',
+	/** Unknown type, usually treat as binary. */
+	UNKNOWN: 'unknown',
+	/**
+	 * Check if type is in binary format.
+	 * @param {Int} dataType
+	 * @returns {Bool}
+	 */
+	isBinaryType: function(dataType)
+	{
+		var T = Kekule.IO.ChemDataType;
+		return (!dataType) || (dataType === T.BINARY)
+			|| (dataType === T.OTHER) || (dataType === T.UNKNOWN);
+	}
+};
+
+/**
+ * Enumeration of common MIME types.
+ * @class
+ */
+Kekule.IO.MimeType = {
+	TEXT: 'text/plain',
+	HTML: 'text/html',
+	XML: 'text/xml',
+	JSON: 'application/json',
+	JAVASCRIPT: 'application/javascript',
+	GIF: 'image/gif',
+	JPEG: 'image/jpeg',
+	PNG: 'image/png',
+	XPNG: 'image/x-png',
+	OCTSTREAM: 'application/octet-stream'
+};
+
+/**
+ * Manager class of data formats.
+ * Generally data format item is a hash containing the following fields:
+ *   {
+ *     id: String, unique ID of format.
+ *     dataType: type of data, text, binary or other.
+ *     fileExts: Array, possible file extension associated with this format.
+ *     mimeType: String, MIME type associated with this format.
+ *   }
+ * @class
+ */
+Kekule.IO.DataFormatsManager = {
+	/** @private */
+	_formats: {},
+
+	/**
+	 * Register a new data format. If the mimeType already exists, settings will be merged.
+	 * @param {String} id
+	 * @param {String} mimeType
+	 * @param {Array} fileExts
+	 * @param {String} title
+	 * @param {String} description
+	 * @param {Hash} additionalInfo
+	 */
+	register: function(id, mimeType, fileExts, dataType, title, description, additionalInfo)
+	{
+		//var result = Kekule.IO.DataFormatsManager.findFormat(mimeType);
+		var result = null;  // MDL 3000/2000 share the same mimeType, so can not use it to make unique
+		/*
+		if (result)
+			console.log('merge', result.fileExts, result.fileExts.length, fileExts, mimeType);
+		*/
+		if (!result)
+			result = FM._formats[id];
+		if (!result)
+		{
+			result = {'id': id};
+			FM._formats[id] = result;
+		}
+		result.mimeType = mimeType;
+		var exts = DataType.isArrayValue(fileExts)? fileExts: [fileExts];
+		if (!result.fileExts)
+			result.fileExts = exts;
+		else  // merge
+			Kekule.ArrayUtils.pushUnique(result.fileExts, exts);
+		if (dataType &amp;&amp; (dataType !== Kekule.IO.ChemDataType.UNKNOWN))
+			result.dataType = dataType;
+		result.title = title;
+		result.description = description;
+		if (additionalInfo)
+			result = Object.extend(result, additionalInfo);
+
+		return result;
+	},
+	/**
+	 * Unregister a data format.
+	 * @param {String} id
+	 */
+	unregister: function(id)
+	{
+		if (FM._formats[id])
+			delete FM._formats[id];
+	},
+
+	/**
+	 * Returns all registered
+	 */
+	getAllIds: function()
+	{
+		return Kekule.ObjUtils.getOwnedFieldNames(FM._formats);
+	},
+
+	/**
+	 * Returns format detail information. If id not found, null will be returned.
+	 * @param {String} id
+	 * @returns {Hash}
+	 */
+	getFormatInfo: function(id)
+	{
+		return FM._formats[id] || null;
+	},
+
+	/**
+	 * Returns MIME type of format id.
+	 * @param {String} id
+	 * @returns {String}
+	 */
+	getMimeType: function(id)
+	{
+		var info = FM.getFormatInfo(id);
+		return info? info.mimeType: null;
+	},
+	/**
+	 * Returns file extensions of format id.
+	 * @param {String} id
+	 * @returns {Array}
+	 */
+	getFileExts: function(id)
+	{
+		var info = FM.getFormatInfo(id);
+		return info? info.fileExts: null;
+	},
+
+	/**
+	 * Find format detail item by mimeType or fileExt.
+	 * @param {String} mimeType
+	 * @param {String} fileExt
+	 * @returns {Hash}
+	 */
+	findFormat: function(mimeType, fileExt)
+	{
+		if (!mimeType &amp;&amp; !fileExt)
+			return null;
+		var ids = FM.getAllIds();
+		var matched = false;
+		for (var i = 0, l = ids.length; i &lt; l; ++i)
+		{
+			var info = FM.getFormatInfo(ids[i]);
+			/*
+			matched = (!mimeType || (mimeType === info.mimeType))
+				&amp;&amp; (!fileExt || (info.fileExts.indexOf(fileExt) >= 0));
+			*/
+			matched = (mimeType &amp;&amp; (mimeType === info.mimeType));
+			if (!matched)
+				matched = (fileExt &amp;&amp; (info.fileExts.indexOf(fileExt) >= 0));
+			if (matched)
+				return info;
+		}
+		return null;
+	},
+	/**
+	 * Find format ID by mimeType or fileExt.
+	 * @param {String} mimeType
+	 * @param {String} fileExt
+	 * @returns {String}
+	 */
+	findFormatId: function(mimeType, fileExt)
+	{
+		var info = Kekule.IO.DataFormatsManager.findFormat(mimeType, fileExt);
+		return info? info.id: null;
+	}
+};
+
+/** @ignore */
+var FM = Kekule.IO.DataFormatsManager;
+/** @ignore */
+Kekule.IO.dataFormatsManager = Kekule.IO.DataFormatsManager;
+
+
+/**
+ * Abstract root class for all chemistry data readers.
+ * @class
+ * @augments ObjectEx
+ * @param {Hash} options Some additional params passed to reader.
+ */
+Kekule.IO.ChemDataReader = Class.create(ObjectEx,
+/** @lends Kekule.IO.ChemDataReader# */
+{
+	/** @constructs */
+	initialize: function($super, options)
+	{
+		$super();
+	},
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.ChemDataReader',
+	/*
+	 * Read from data, create related instance and encapsulation the instance inside a {@link Kekule.ChemDocument}.
+	 * @param {Variant} data
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Kekule.ChemDocument} Instance created by data.
+	 */
+	/*
+	readDocument: function(data, dataType, format)
+	{
+		return this.doReadDocument(data, dataType, format);
+	},
+	*/
+	/*
+	 * Do actual work for {@link Kekule.IO.ChemDataReader#readDocument}. Descendants should override this method.
+	 * @param {Variant} data
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Kekule.ChemDocument} Instance created by data.
+	 */
+	/*
+	doReadDocument: function(data, dataType, format)
+	{
+		var doc;
+		var r = this.readData(data, dataType, format);
+		if (r &amp;&amp; r.setOwner)
+		{
+			doc = new Kekule.ChemDocument();
+			doc.setDocObj(r);
+		}
+		return doc;
+	},
+	*/
+	/**
+	 * Read from data and return a related instance.
+	 * @param {Variant} data
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.ChemStructureDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Instance created by data.
+	 */
+	readData: function(data, dataType, format)
+	{
+		if (!dataType)  // auto detect
+		{
+			var finfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
+			dataType = finfo? finfo.dataType: null;
+			if (!dataType)
+				dataType = (typeof(data) === 'string')?
+					Kekule.IO.ChemDataType.TEXT:
+					(data.getElementsByTagName? Kekule.IO.ChemDataType.DOM: Kekule.IO.ChemDataType.BINARY );
+		}
+		var result = this.doReadData(data, dataType, format);
+		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
+		{
+			var info = result.getSrcInfo();
+			info.data = data;
+			info.dataType = dataType;
+			var formatDetail = Kekule.IO.DataFormatsManager.getFormatInfo(format);
+			if (formatDetail)
+			{
+				info.format = format;
+				info.mimeType = formatDetail.mimeType;
+				info.possibleFileExts = formatDetail.fileExts;
+			}
+			//console.log('set src info', info);
+		}
+		return result;
+	},
+	/**
+	 * Do actual work for {@link Kekule.IO.ChemDataReader#readData}. Descendants should override this method.
+	 * @param {Variant} data
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Instance created by data.
+	 */
+	doReadData: function(data, dataType, format)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * Abstract root class for all chemistry data writers.
+ * @class
+ * @augments ObjectEx
+ * @param {Hash} options Some additional params passed to reader.
+ */
+Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
+/** @lends Kekule.IO.ChemDataWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.ChemDataWriter',
+	/** @constructs */
+	initialize: function($super, options)
+	{
+		$super();
+	},
+	/*
+	 * Read document object of {@link Kekule.ChemDocument} and write it to proper data form.
+	 * @param {@link Kekule.ChemDocument} doc Document to write.
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 */
+	/*
+	writeDocument: function(doc, dataType, format)
+	{
+		return this.doWriteDocument(doc, dataType, format);
+	},
+	*/
+	/*
+	 * Do actual work for {@link Kekule.IO.ChemDataReader#writeDocument}. Descendants should override this method.
+	 * @param {@link Kekule.ChemDocument} doc Document to write.
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 */
+	/*
+	doWriteDocument: function(doc, dataType, format)
+	{
+		return this.writeData(doc.docObj, dataType, format);
+	},
+	*/
+	/**
+	 * Write Kekule object to data.
+	 * @param {Kekule.ChemObject} obj Object to write
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 */
+	writeData: function(obj, dataType, format)
+	{
+		//var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
+		if (!dataType)  // auto detect
+		{
+			var finfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
+			dataType = finfo? finfo.dataType: null;
+		}
+		return this.doWriteData(obj, dataType, format);
+	},
+	/**
+	 * Do actual work for {@link Kekule.IO.ChemDataReader#writeData}. Descendants should override this method.
+	 * @param {Kekule.ChemObject} obj Object to write
+	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
+	 * @param {String} format Format ID.
+	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 */
+	doWriteData: function(obj, dataType, format)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * A manager to create suitable data reader.
+ * @class
+ */
+Kekule.IO.ChemDataReaderManager = {
+	/**
+	 * Stores registered reader information. Each item including the following fields:
+	 *   {
+	 *     id: String,
+	 *     readerClass: Class,
+	 *     instances: Object  // reader instance, null at first
+	 *     additionalInfos...
+	 *   }
+	 * @private
+	 */
+	_readers: [],
+	/**
+	 * Register a data reader.
+	 * @param {String} id A UID string for reader.
+	 * @param {Class} readerClass Class of reader.
+	 * @param {Variant} formatId String or Array, associated format IDs.
+	 * @param {Hash} additionalInfo More information on this reader class. Can include the following fields:
+	 *   {
+	 *     {Hash} createOptions: hash passed into reader's constructor.
+	 *     (String) title: Reader title,
+	 *     {String} formatId: id of data format
+	 *     //(String) mimeType
+	 *     //(Variant) fileExt: if load from a file, the file ext. Can be a string or Array of string.
+	 *   }
+	 */
+	register: function(id, readerClass, formatId, additionalInfo)
+	{
+		if (Kekule.IO.ChemDataReaderManager.getReaderInfoById(id)) // id can not be duplicate
+		{
+			Kekule.raise(/*Kekule.ErrorMsg.READER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.READER_ID_ALREADY_EXISTS'));
+			return null;
+		}
+		var item = {
+			'id': id,
+			'readerClass': readerClass,
+			'formatId': DataType.isArrayValue(formatId)? formatId: [formatId]
+		};
+		item = Object.extend(item, additionalInfo);
+		Kekule.IO.ChemDataReaderManager._readers.push(item);
+		return item;
+	},
+	/**
+	 * Get all available reader infos by condition provided and be suitable for targetClass.
+	 * For example: Kekule.IO.ChemDataReaderManager.getAvailableReaderInfos({'id': 'mol'});
+	 * @param {Hash} condition
+	 * @returns {Array}
+	 */
+	getAvailableReaderInfos: function(condition)
+	{
+		var result = [];
+		var rs = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = rs.length - 1; i >=0; --i)
+		{
+			if (Kekule.ObjUtils.match(rs[i], condition))
+			{
+				result.push(rs[i]);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Get reader information by condition provided.
+	 * For example: Kekule.IO.ChemDataWriterManager.getReaderInfo({'formatId': 'cml'});
+	 * @param {Hash} condition
+	 * @returns {Hash}
+	 */
+	getReaderInfo: function(condition)
+	{
+		var rs = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = rs.length - 1; i >=0; --i)
+		{
+			if (Kekule.ObjUtils.match(rs[i], condition))
+				return rs[i];
+		}
+		return null;
+	},
+	/**
+	 * Get reader information by Id.
+	 * @param {String} id
+	 * @returns {Hash}
+	 */
+	getReaderInfoById: function(id)
+	{
+		return Kekule.IO.ChemDataReaderManager.getReaderInfo({'id': id});
+	},
+	/**
+	 * Get reader information by data format id.
+	 * @param {String} formatId
+	 * @param {Hash} otherConditions
+	 * @returns {Hash}
+	 */
+	getReaderInfoByFormat: function(formatId, otherConditions)
+	{
+		var rs = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = rs.length - 1; i >=0; --i)
+		{
+			if ((!otherConditions) || Kekule.ObjUtils.match(rs[i], otherConditions))
+			{
+				if (rs[i].formatId.indexOf(formatId) >= 0)
+					return rs[i];
+			}
+		}
+		return null;
+	},
+	/**
+	 * Get reader information by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @returns {Hash}
+	 */
+	getReaderInfoByFileExt: function(fileExt, otherConditions)
+	{
+		/*
+		var rs = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = rs.length - 1; i >=0; --i)
+		{
+			if ((!otherConditions) || Kekule.ObjUtils.match(rs[i], otherConditions))
+			{
+				if (rs[i].fileExt == fileExt)
+					return rs[i];
+				else if (rs[i].fileExt.indexOf &amp;&amp; (rs[i].fileExt.indexOf(fileExt) >= 0))
+					return rs[i];
+			}
+		}
+		return null;
+		*/
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(null, fileExt);
+		return fid? Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(fid, otherConditions): null;
+	},
+	/** @private */
+	createReaderOfInfo: function(info)
+	{
+		return new info.readerClass(info.createOptions);
+	},
+	/** @private */
+	getReaderOfInfo: function(info)
+	{
+		if (!info.instance)
+			info.instance = Kekule.IO.ChemDataReaderManager.createReaderOfInfo(info);
+		return info.instance;
+	},
+	/**
+	 * Create a new reader instance by condition.
+	 * @param {Hash} condition
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	createReader: function(condition)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfo(condition);
+		if (info)
+			return Kekule.IO.ChemDataReaderManager.createReaderOfInfo(info);
+	},
+	/**
+	 * Get a reusable reader instance by condition.
+	 * @param {Hash} condition
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	getReader: function(condition)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfo(condition);
+		if (info)
+			return Kekule.IO.ChemDataReaderManager.getReaderOfInfo(info);
+	},
+	/**
+	 * Create a new reader instance by id.
+	 * @param {String} id
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	createReaderById: function(id)
+	{
+		return Kekule.IO.ChemDataReaderManager.createReader({'id': id});
+	},
+	/**
+	 * Get a reusable reader instance by id.
+	 * @param {String} id
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	getReaderById: function(id)
+	{
+		return Kekule.IO.ChemDataReaderManager.getReader({'id': id});
+	},
+	/**
+	 * Create new reader instance by formatId.
+	 * @param {String} formatId
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	createReaderByFormat: function(formatId, otherConditions)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(formatId, otherConditions);
+		return info? IO.ChemDataReaderManager.createReaderOfInfo(info): null;
+	},
+	/**
+	 * Get reader instance by format Id.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	getReaderByFormat: function(formatId, otherConditions)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(formatId, otherConditions);
+		return info? Kekule.IO.ChemDataReaderManager.getReaderOfInfo(info): null;
+	},
+	/**
+	 * Create reader instance by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	createReaderByFileExt: function(fileExt, otherConditions)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFileExt(fileExt, otherConditions);
+		return info? Kekule.IO.ChemDataReaderManager.createReaderOfInfo(info): null;
+	},
+	/**
+	 * Get reader instance by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	getReaderByFileExt: function(fileExt, otherConditions)
+	{
+		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFileExt(fileExt, otherConditions);
+		return info? Kekule.IO.ChemDataReaderManager.getReaderOfInfo(info): null;
+	},
+
+	/**
+	 * Create a new reader instance by MIME type.
+	 * @param {String} mimeType
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	createReaderByMimeType: function(mimeType)
+	{
+		//return Kekule.IO.ChemDataReaderManager.createReader({'mimeType': mimeType});
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
+		return fid? Kekule.IO.ChemDataReaderManager.createReaderByFormat(fid): null;
+	},
+	/**
+	 * Get a reusable reader instance by MIME type.
+	 * @param {String} mimeType
+	 * @returns {Kekule.IO.ChemDataReader}
+	 */
+	getReaderByMimeType: function(mimeType)
+	{
+		//return Kekule.IO.ChemDataReaderManager.getReader({'mimeType': mimeType});
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
+		return fid? Kekule.IO.ChemDataReaderManager.getReaderByFormat(fid): null;
+	}
+};
+
+/**
+ * A manager to create suitable data writer.
+ * @class
+ */
+Kekule.IO.ChemDataWriterManager = {
+	/**
+	 * Stores registered writer information. Each item including the following fields:
+	 *   {
+	 *     id: String,
+	 *     srcClass: Class,
+	 *     writerClass: Class,
+	 *     instances: Object  // reader instance, null at first
+	 *     additionalInfos...
+	 *   }
+	 * @private
+	 */
+	_writers: [],
+	/**
+	 * Register a data writer.
+	 * @param {String} id A UID string for writer.
+	 * @param {Class} writerClass Class of writer.
+	 * @param {Array} srcClasses Instance of which classes can be written by this writer.
+	 * @param {Variant} formatId Data format, string or array.
+	 * @param {Hash} additionalInfo More information on this reader class. Can include the following fields:
+	 *   {
+	 *     {Hash} createOptions: hash passed into writer's constructor.
+	 *     (String) title: Writer title,
+	 *     (String) mimeType
+	 *     (String) fileExt: if write to a file, the file ext.
+	 *   }
+	 */
+	register: function(id, writerClass, srcClasses, formatId, additionalInfo)
+	{
+		if (Kekule.IO.ChemDataWriterManager.getWriterInfoById(id)) // id can not be duplicate
+		{
+			Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));
+			return null;
+		}
+		var item = {
+			'id': id,
+			'writerClass': writerClass,
+			'srcClasses': srcClasses,
+			'formatId': DataType.isArrayValue(formatId)? formatId: [formatId]
+		};
+		item = Object.extend(item, additionalInfo);
+		Kekule.IO.ChemDataWriterManager._writers.push(item);
+		return item;
+	},
+	/**
+	 * Get all available writer infos by condition provided and suitble for srcObj.
+	 * For example: Kekule.IO.ChemDataWriterManager.getWriterInfo({'id': 'mol'});
+	 * @param {Hash} condition
+	 * @param {Variant} srcObjOrClass
+	 * @returns {Array}
+	 */
+	getAvailableWriterInfos: function(condition, srcObjOrClass)
+	{
+		var result = [];
+		var srcClass = ClassEx.isClass(srcObjOrClass)? srcObjOrClass:
+			srcObjOrClass.getClass? srcObjOrClass.getClass():
+			srcObjOrClass? null:  // null, src set but no class found, special marked
+			undefined;
+		var ws = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = ws.length - 1; i >=0; --i)
+		{
+			if (Kekule.ObjUtils.match(ws[i], condition))
+			{
+				if (srcClass !== undefined)
+				{
+					if (srcClass)
+					{
+						for (var j = 0, k = ws[i].srcClasses.length; j &lt; k; ++j)
+						{
+							if (ClassEx.isOrIsDescendantOf(srcClass, ws[i].srcClasses[j]))
+								result.push(ws[i]);
+						}
+					}
+				}
+				else
+					result.push(ws[i]);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Get writer info by condition provided and suitble for srcObj.
+	 * For example: Kekule.IO.ChemDataWriterManager.getWriterInfo({'id': 'mol'});
+	 * @param {Hash} condition
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Hash}
+	 */
+	getWriterInfo: function(condition, srcObj)
+	{
+		var ws = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = ws.length - 1; i >=0; --i)
+		{
+			if (Kekule.ObjUtils.match(ws[i], condition))
+			{
+				if (srcObj)
+				{
+					for (var j = 0, k = ws[i].srcClasses.length; j &lt; k; ++j)
+					{
+						if (srcObj instanceof ws[i].srcClasses[j])
+							return ws[i];
+					}
+					return null;
+				}
+				else
+					return ws[i];
+			}
+		}
+		return null;
+	},
+	/**
+	 * Get writer information by Id.
+	 * @param {String} id
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Hash}
+	 */
+	getWriterInfoById: function(id, srcObj)
+	{
+		return Kekule.IO.ChemDataWriterManager.getWriterInfo({'id': id}, srcObj);
+	},
+	/**
+	 * Get writer information by data format id.
+	 * @param {String} formatId
+	 * @param {Hash} otherConditions
+	 * @returns {Hash}
+	 */
+	getWriterInfoByFormat: function(formatId, otherConditions, srcObj)
+	{
+		/*
+		var condition = otherConditions || {};
+		condition.formatId = formatId;
+		return Kekule.IO.ChemDataWriterManager.getWriterInfo(condition, srcObj);
+		*/
+
+		var ws = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = ws.length - 1; i >=0; --i)
+		{
+			if ((!otherConditions) || Kekule.ObjUtils.match(ws[i], otherConditions))
+			{
+				if (ws[i].formatId.indexOf(formatId) >= 0)
+				{
+					if (srcObj)
+					{
+						for (var j = 0, k = ws[i].srcClasses.length; j &lt; k; ++j)
+						{
+							if (srcObj instanceof ws[i].srcClasses[j])
+								return ws[i];
+						}
+						return null;
+					}
+					return ws[i];
+				}
+			}
+		}
+		return null;
+	},
+	/**
+	 * Get writer information by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Hash}
+	 */
+	getWriterInfoByFileExt: function(fileExt, otherConditions, srcObj)
+	{
+		/*
+		var ws = Kekule.IO.ChemDataWriterManager._writers;
+		var result;
+		for (var i = ws.length - 1; i >=0; --i)
+		{
+			result = null;
+			if ((!otherConditions) || Kekule.ObjUtils.match(ws[i], otherConditions))
+			{
+				if (ws[i].fileExt == fileExt)
+					result = ws[i];
+				else if (ws[i].fileExt.indexOf &amp;&amp; (ws[i].fileExt.indexOf(fileExt) >= 0))
+					result = ws[i];
+			}
+			if (result)  // check srcObj
+			{
+				if (srcObj)
+				{
+					for (var j = 0, k = result.srcClasses; j &lt; k; ++j)
+					{
+						if (srcObj instanceof result.srcClasses[j])
+							return result;
+					}
+					result = null;
+				}
+				else
+					return result;
+			}
+		}
+		return null;
+		*/
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(null, fileExt);
+		return fid? Kekule.IO.ChemDataWriterManager.getWriterInfoByFormat(fid, otherConditions, srcObj): null;
+	},
+	/** @private */
+	createWriterOfInfo: function(info)
+	{
+		return new info.writerClass(info.createOptions);
+	},
+	/** @private */
+	getWriterOfInfo: function(info)
+	{
+		if (!info.instance)
+			info.instance = Kekule.IO.ChemDataWriterManager.createWriterOfInfo(info);
+		return info.instance;
+	},
+	/**
+	 * Create a new writer instance by condition and suitable for srcObj.
+	 * @param {Hash} condition
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	createWriter: function(condition, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfo(condition, srcObj);
+		if (info)
+			return Kekule.IO.ChemDataWriterManager.createWriterOfInfo(info);
+		else
+			return null;
+	},
+	/**
+	 * Get a reusable writer instance by condition and suitable for srcObj.
+	 * @param {Hash} condition
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	getWriter: function(condition, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfo(condition, srcObj);
+		if (info)
+			return Kekule.IO.ChemDataWriterManager.getWriterOfInfo(info);
+		else
+			return null;
+	},
+	/**
+	 * Create a new writer instance by id and meet srcObj.
+	 * @param {String} id
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	createWriterById: function(id, srcObj)
+	{
+		return Kekule.IO.ChemDataWriterManager.createWriter({'id': id}, srcObj);
+	},
+	/**
+	 * Get a reusable writer instance by id and meet srcObj.
+	 * @param {String} id
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	getWriterById: function(id, srcObj)
+	{
+		return Kekule.IO.ChemDataWriterManager.getWriter({'id': id}, srcObj);
+	},
+	/**
+	 * Create new writer instance by formatId.
+	 * @param {String} formatId
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	createWriterByFormat: function(formatId, otherConditions, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfoByFormat(formatId, otherConditions, srcObj);
+		return info? Kekule.IO.ChemDataWriterManager.createWriterOfInfo(info): null;
+	},
+	/**
+	 * Get new writer instance by formatId.
+	 * @param {String} formatId
+	 * @param {Hash} otherConditions
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	getWriterByFormat: function(formatId, otherConditions, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfoByFormat(formatId, otherConditions, srcObj);
+		return info? Kekule.IO.ChemDataWriterManager.getWriterOfInfo(info): null;
+	},
+	/**
+	 * Create writer instance by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	createWriterByFileExt: function(fileExt, otherConditions, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfoByFileExt(fileExt, otherConditions, srcObj);
+		return info? Kekule.IO.ChemDataWriterManager.createWriterOfInfo(info): null;
+	},
+	/**
+	 * Get a reusbale writer instance by file ext.
+	 * @param {String} fileExt
+	 * @param {Hash} otherConditions
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	getWriterByFileExt: function(fileExt, otherConditions, srcObj)
+	{
+		var info = Kekule.IO.ChemDataWriterManager.getWriterInfoByFileExt(fileExt, otherConditions, srcObj);
+		return info? Kekule.IO.ChemDataWriterManager.getWriterOfInfo(info): null;
+	},
+	/**
+	 * Create a new reader instance by MIME type.
+	 * @param {String} mimeType
+	 * @param {Kekule.ChemObject} srcObj
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	createWriterByMimeType: function(mimeType, srcObj)
+	{
+		//return Kekule.IO.ChemDataWriterManager.createWriter({'mimeType': mimeType});
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
+		return fid? Kekule.IO.ChemDataWriterManager.createWriterByFormat(fid, null, srcObj): null;
+	},
+	/**
+	 * Get a reusable new reader instance by MIME type.
+	 * @param {String} mimeType
+	 * @returns {Kekule.IO.ChemDataWriter}
+	 */
+	getWriterByMimeType: function(mimeType)
+	{
+		//return Kekule.IO.ChemDataWriterManager.getWriter({'mimeType': mimeType});
+		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
+		return fid? Kekule.IO.ChemDataWriterManager.getWriterByFormat(fid, null, srcObj): null;
+	}
+};
+
+/**
+ * Load from content with certain format.
+ * @param {String} content
+ * @param {String} formatId
+ * @returns {Kekule.ChemObject}
+ */
+Kekule.IO.loadFormatData = function(content, formatId)
+{
+	var reader = Kekule.IO.ChemDataReaderManager.getReaderByFormat(formatId);
+	if (reader)
+	{
+		var result = reader.readData(content, null, formatId);
+		/*
+		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
+		{
+			var info = result.getSrcInfo();
+			info.mimeType = mimeType;
+			info.fileExt = fileExt;
+			info.url = url;
+		}
+		*/
+		return result;
+	}
+	else
+	{
+		var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FORMAT') + formatId;
+		Kekule.raise(msg);
+		return null;
+	}
+};
+/**
+ * Load from content with mimeType and create a new chem object.
+ * @param {String} content
+ * @param {String} mimeType
+ * @returns {Kekule.ChemObject}
+ */
+Kekule.IO.loadMimeData = function(content, mimeType)
+{
+	/*
+	var reader = Kekule.IO.ChemDataReaderManager.getReaderByMimeType(mimeType);
+	if (reader)
+	{
+		var result = reader.readData(content);
+		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
+		{
+			result.getSrcInfo().mimeType = mimeType;
+		}
+	}
+	else
+	{
+		Kekule.raise(Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE + mimeType);
+		return null;
+	}
+	*/
+	return Kekule.IO.loadTypedData(content, mimeType, null);
+};
+/**
+ * Load a typed content  and create a new chem object, the type is recognized by mimeType or the file extension.
+ * @param {String} content
+ * @param {String} mimeType
+ * @param {String} url
+ * @returns {Kekule.ChemObject}
+ */
+Kekule.IO.loadTypedData = function(content, mimeType, url)
+{
+	//var reader;
+	var fileExt;
+	if (url)
+	{
+		fileExt = Kekule.UrlUtils.extractFileExt(url);
+		/*
+		if (!fileExt)
+			fileExt = urlOrFileExt;
+		else
+			url = urlOrFileExt;
+		*/
+	}
+
+	/*
+	if (mimeType)
+		reader = Kekule.IO.ChemDataReaderManager.getReaderByMimeType(mimeType);
+
+	if (!reader &amp;&amp; fileExt)
+	{
+		reader = Kekule.IO.ChemDataReaderManager.getReaderByFileExt(fileExt);
+	}
+
+
+	if (reader)
+	{
+		var result = reader.readData(content);
+		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
+		{
+			var info = result.getSrcInfo();
+			if (mimeType)
+				info.mimeType = mimeType;
+			if (fileExt)
+				info.fileExt = fileExt;
+			if (url)
+				info.url = url;
+		}
+		return result;
+	}
+	*/
+	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	var result = Kekule.IO.loadFormatData(content, formatId);
+	if (result)
+	{
+		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
+		{
+			var info = result.getSrcInfo();
+			if (mimeType)
+				info.mimeType = mimeType;
+			if (fileExt)
+				info.fileExt = fileExt;
+			if (url)
+				info.url = url;
+		}
+		return result;
+	}
+	else
+	{
+		var msg = mimeType?
+			(/*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_MIMETYPE') + mimeType):
+			(/*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + fileExt);
+		Kekule.raise(msg);
+		return null;
+	}
+};
+/**
+ * Load chem object from a File object.
+ * Note this function relies on FileApi support.
+ * @param {File} file
+ * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
+ * @param {String} formatId If not set, format will be get from file name automatically.
+ */
+Kekule.IO.loadFileData = function(file, callback, formatId)
+{
+	if (Kekule.BrowserFeature.fileapi)
+	{
+		//try
+		{
+			var fileName = file.name;
+			var ext = Kekule.UrlUtils.extractFileExt(fileName);
+			var formatInfo;
+			if (!formatId)
+			{
+				formatInfo = Kekule.IO.DataFormatsManager.findFormat(null, ext);
+			}
+			else
+				formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
+
+			if (!formatInfo)
+			{
+				var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
+				Kekule.raise(msg);
+			}
+
+			//var isBinary = (formatInfo.dataType === Kekule.IO.ChemDataType.BINARY);
+			var isBinary = Kekule.IO.ChemDataType.isBinaryType(formatInfo.dataType);
+
+			// try open it the file by FileReader
+			var reader = new FileReader();
+			reader.onload = function(e)
+			{
+				var content = reader.result;
+				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id);
+				var info = chemObj.getSrcInfo();
+				info.fileName = fileName;
+				var success = !!chemObj;
+				callback(chemObj, success);
+			};
+
+			if (isBinary)
+				//reader.readAsBinaryString(file);
+				reader.readAsArrayBuffer(file);
+			else
+				reader.readAsText(file);
+		}
+		/*
+		catch(e)
+		{
+			console.error('EXTRA ERROR HERE');
+			Kekule.error(e);
+		}
+		*/
+	}
+	else
+	{
+		Kekule.error(/*Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.FILE_API_NOT_SUPPORTED'));
+	}
+};
+
+/**
+ * Save chemObj with certain format.
+ * @param {String} content
+ * @param {String} formatId
+ * @returns {Kekule.ChemObject}
+ */
+Kekule.IO.saveFormatData = function(chemObj, formatId)
+{
+	var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, chemObj);
+	if (writer)
+	{
+		//console.log(writer, writer.writeData);
+		var result = writer.writeData(chemObj, null, formatId);
+		return result;
+	}
+	else
+	{
+		var msg = /*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT') + formatId;
+		Kekule.raise(msg);
+		return null;
+	}
+};
+/**
+ * Save chemObj to string of mimeType.
+ * @param {Kekule.ChemObject} chemObj
+ * @param {String} mimeType
+ * @returns {String}
+ */
+Kekule.IO.saveMimeData = function(chemObj, mimeType)
+{
+	/*
+	var writer = Kekule.IO.ChemDataWriterManager.getWriterByMimeType(mimeType);
+	if (writer)
+		return writer.writeData(chemObj);
+	else
+	{
+		Kekule.raise(Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE + mimeType);
+		return null;
+	}
+	*/
+	return Kekule.IO.saveTypedData(chemObj, mimeType, null);
+};
+/**
+ * Save chem object to a typed content. The type is recognized by mimeType or the file extension.
+ * @param {Kekule.ChemObj} chemObj
+ * @param {String} mimeType
+ * @param {String} urlOrFileExt URL or file ext.
+ * @returns {Variant}
+ */
+Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
+{
+	var fileExt;
+	if (urlOrFileExt)
+	{
+		fileExt = Kekule.UrlUtils.extractFileExt(urlOrFileExt);
+		if (!fileExt)
+			fileExt = urlOrFileExt;
+		/*
+		if (!fileExt)
+			fileExt = urlOrFileExt;
+		else
+			url = urlOrFileExt;
+		*/
+	}
+
+	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	var result = Kekule.IO.saveFormatData(chemObj, formatId);
+	if (Kekule.ObjUtils.isUnset(result))
+	{
+		var msg = mimeType?
+			(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE') + mimeType):
+			(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FILEEXT') + fileExt);
+		Kekule.raise(msg);
+		return null;
+	}
+	else
+		return result;
+
+	/*
+	var writer;
+	if (mimeType)
+		writer = Kekule.IO.ChemDataReaderManager.getWriterByMimeType(mimeType);
+	else if (urlOrFileExt)
+	{
+		var fileExt = Kekule.UrlUtils.extractFileExt(urlOrFileExt);
+		if (!fileExt)
+			fileExt = urlOrFileExt;
+		writer = Kekule.IO.ChemDataReaderManager.getWriterByFileExt(fileExt);
+	}
+	if (writer)
+		return writer.writeData(chemObj);
+	else
+	{
+		var msg = mimeType?
+			Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_MIMETYPE + mimeType:
+			NO_SUITABLE_WRITER_FOR_FILEEXT + fileExt;
+		Kekule.raise(msg);
+		return null;
+	}
+	*/
+};
+
+})();
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.Action.html">Action</a></li><li><a href="Kekule.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.ActionList.html">ActionList</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionFileOpen.html">ActionFileOpen</a></li><li><a href="Kekule.ChemWidget.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html">MetaShapeUIMarker</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataBingItem.html">DataBingItem</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.BoxRegion.html">BoxRegion</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MacroOperation.html">MacroOperation</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.Operation.html">Operation</a></li><li><a href="Kekule.Operation.State.html">State</a></li><li><a href="Kekule.OperationHistory.html">OperationHistory</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html">ArrayEditor</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html">BoolEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html">ColorEditor</a></li><li><a href="Kekule.PropertyEditor.EditorAttributes.html">EditorAttributes</a></li><li><a href="Kekule.PropertyEditor.EditorMananger.html">EditorMananger</a></li><li><a href="Kekule.PropertyEditor.EnumEditor.html">EnumEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html">ObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html">ObjectExEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectFieldEditor.html">ObjectFieldEditor</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html">SelectEditor</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html">SimpleEditor</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.Render.Abstract2DDrawBridge.html">Abstract2DDrawBridge</a></li><li><a href="Kekule.Render.Abstract3DDrawBridge.html">Abstract3DDrawBridge</a></li><li><a href="Kekule.Render.AbstractRenderer.html">AbstractRenderer</a></li><li><a href="Kekule.Render.AbstractTextDrawBridge.html">AbstractTextDrawBridge</a></li><li><a href="Kekule.Render.Base2DRenderer.html">Base2DRenderer</a></li><li><a href="Kekule.Render.Base3DRenderer.html">Base3DRenderer</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html">BaseGlyph2DRenderer</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html">BaseRichTextDrawer</a></li><li><a href="Kekule.Render.Bond3DRenderMode.html">Bond3DRenderMode</a></li><li><a href="Kekule.Render.Bond3DRenderType.html">Bond3DRenderType</a></li><li><a href="Kekule.Render.Bond3DSpliceMode.html">Bond3DSpliceMode</a></li><li><a href="Kekule.Render.BondRenderType.html">BondRenderType</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html">BoundInfoRecorder</a></li><li><a href="Kekule.Render.BoxXAlignment.html">BoxXAlignment</a></li><li><a href="Kekule.Render.BoxYAlignment.html">BoxYAlignment</a></li><li><a href="Kekule.Render.CanvasRendererBridge.html">CanvasRendererBridge</a></li><li><a href="Kekule.Render.ChargeMarkRenderType.html">ChargeMarkRenderType</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html">ChemCtab2DRenderer</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html">ChemCtab3DRenderer</a></li><li><a href="Kekule.Render.ChemDisplayTextUtils.html">ChemDisplayTextUtils</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html">ChemObj2DRenderer</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html">ChemObj3DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html">ChemObjGroupList2DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html">ChemObjGroupList3DRenderer</a></li><li><a href="Kekule.Render.ChemObjPainter.html">ChemObjPainter</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html">ChemObjPainter2D</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html">ChemObjPainter3D</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html">ChemSpace2DRenderer</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html">ChemSpace3DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html">ChemSpaceElement2DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html">ChemSpaceElement3DRenderer</a></li><li><a href="Kekule.Render.ColorConfigs.html">ColorConfigs</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html">CompositeMolecule2DRenderer</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html">CompositeMolecule3DRenderer</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html">CompositeObj2DRenderer</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html">CompositeObj3DRenderer</a></li><li><a href="Kekule.Render.ConnectorDrawUtils.html">ConnectorDrawUtils</a></li><li><a href="Kekule.Render.CoordSystem.html">CoordSystem</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html">Ctab2DRenderer</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html">DisplayLabelConfigs</a></li><li><a href="Kekule.Render.DrawPathUtils.html">DrawPathUtils</a></li><li><a href="Kekule.Render.Formula2DRenderer.html">Formula2DRenderer</a></li><li><a href="Kekule.Render.GeneralConfigs.html">GeneralConfigs</a></li><li><a href="Kekule.Render.HydrogenDisplayLevel.html">HydrogenDisplayLevel</a></li><li><a href="Kekule.Render.Length3DConfigs.html">Length3DConfigs</a></li><li><a href="Kekule.Render.LengthConfigs.html">LengthConfigs</a></li><li><a href="Kekule.Render.MetaShapeType.html">MetaShapeType</a></li><li><a href="Kekule.Render.MetaShapeUtils.html">MetaShapeUtils</a></li><li><a href="Kekule.Render.Model3DConfigs.html">Model3DConfigs</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html">Molecule3DDisplayConfigs</a></li><li><a href="Kekule.Render.Molecule3DDisplayType.html">Molecule3DDisplayType</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html">MoleculeDisplayConfigs</a></li><li><a href="Kekule.Render.MoleculeDisplayType.html">MoleculeDisplayType</a></li><li><a href="Kekule.Render.Node3DRenderMode.html">Node3DRenderMode</a></li><li><a href="Kekule.Render.NodeLabelDisplayMode.html">NodeLabelDisplayMode</a></li><li><a href="Kekule.Render.ObjectUpdateType.html">ObjectUpdateType</a></li><li><a href="Kekule.Render.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html">PathGlyph2DRenderer</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html">PathGlyphCtab2DRenderer</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html">PredefinedConfigsMap</a></li><li><a href="Kekule.Render.RaphaelRendererBridge.html">RaphaelRendererBridge</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html">Reaction2DRenderer</a></li><li><a href="Kekule.Render.Render2DConfigs.html">Render2DConfigs</a></li><li><a href="Kekule.Render.Render3DConfigs.html">Render3DConfigs</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html">Render3DEnvironmentConfigs</a></li><li><a href="Kekule.Render.Render3DGraphicQuality.html">Render3DGraphicQuality</a></li><li><a href="Kekule.Render.Render3DOptionUtils.html">Render3DOptionUtils</a></li><li><a href="Kekule.Render.RenderColorUtils.html">RenderColorUtils</a></li><li><a href="Kekule.Render.Renderer2DFactory.html">Renderer2DFactory</a></li><li><a href="Kekule.Render.Renderer3DFactory.html">Renderer3DFactory</a></li><li><a href="Kekule.Render.RendererDefineUtils.html">RendererDefineUtils</a></li><li><a href="Kekule.Render.RendererType.html">RendererType</a></li><li><a href="Kekule.Render.RenderOptionUtils.html">RenderOptionUtils</a></li><li><a href="Kekule.Render.RichText.html">RichText</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html">RichTextBased2DRenderer</a></li><li><a href="Kekule.Render.RichTextUtils.html">RichTextUtils</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html">StructFragment2DRenderer</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html">StructFragment3DRenderer</a></li><li><a href="Kekule.Render.TextAlign.html">TextAlign</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html">TextBlock2DRenderer</a></li><li><a href="Kekule.Render.TextBoxAlignmentMode.html">TextBoxAlignmentMode</a></li><li><a href="Kekule.Render.TextDirection.html">TextDirection</a></li><li><a href="Kekule.Render.TextDrawUtils.html">TextDrawUtils</a></li><li><a href="Kekule.Render.TextFontConfigs.html">TextFontConfigs</a></li><li><a href="Kekule.Render.ThreeContext.html">ThreeContext</a></li><li><a href="Kekule.Render.ThreeRendererBridge.html">ThreeRendererBridge</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.Widget.ActionOpenConfigWidget.html">ActionOpenConfigWidget</a></li><li><a href="Kekule.Widget.AutoLauncher.html">AutoLauncher</a></li><li><a href="Kekule.Widget.BaseTransition.html">BaseTransition</a></li><li><a href="Kekule.Widget.BaseWidget.html">BaseWidget</a></li><li><a href="Kekule.Widget.Button.html">Button</a></li><li><a href="Kekule.Widget.Button.Kinds.html">Kinds</a></li><li><a href="Kekule.Widget.ButtonGroup.html">ButtonGroup</a></li><li><a href="Kekule.Widget.ButtonTextBox.html">ButtonTextBox</a></li><li><a href="Kekule.Widget.CheckBox.html">CheckBox</a></li><li><a href="Kekule.Widget.CheckButton.html">CheckButton</a></li><li><a href="Kekule.Widget.Clipboard.html">Clipboard</a></li><li><a href="Kekule.Widget.ColorDropButton.html">ColorDropButton</a></li><li><a href="Kekule.Widget.ColorDropTextBox.html">ColorDropTextBox</a></li><li><a href="Kekule.Widget.ColorPicker.html">ColorPicker</a></li><li><a href="Kekule.Widget.ColorPicker.SpecialColors.html">SpecialColors</a></li><li><a href="Kekule.Widget.ComboBox.html">ComboBox</a></li><li><a href="Kekule.Widget.ComboTextBox.html">ComboTextBox</a></li><li><a href="Kekule.Widget.CompactButtonSet.html">CompactButtonSet</a></li><li><a href="Kekule.Widget.Container.html">Container</a></li><li><a href="Kekule.Widget.Css3GrowTransition.html">Css3GrowTransition</a></li><li><a href="Kekule.Widget.Css3OpacityTrans.html">Css3OpacityTrans</a></li><li><a href="Kekule.Widget.Css3SlideTransition.html">Css3SlideTransition</a></li><li><a href="Kekule.Widget.Css3Transition.html">Css3Transition</a></li><li><a href="Kekule.Widget.Css3TransitionSimpleClassCreator.html">Css3TransitionSimpleClassCreator</a></li><li><a href="Kekule.Widget.Dialog.html">Dialog</a></li><li><a href="Kekule.Widget.DialogButtons.html">DialogButtons</a></li><li><a href="Kekule.Widget.DumbWidget.html">DumbWidget</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html">DynamicEvokeHelper</a></li><li><a href="Kekule.Widget.EvokeMode.html">EvokeMode</a></li><li><a href="Kekule.Widget.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.Widget.FontDetector.html">FontDetector</a></li><li><a href="Kekule.Widget.FontEnumerator.html">FontEnumerator</a></li><li><a href="Kekule.Widget.FormWidget.html">FormWidget</a></li><li><a href="Kekule.Widget.GlobalManager.html">GlobalManager</a></li><li><a href="Kekule.Widget.Glyph.html">Glyph</a></li><li><a href="Kekule.Widget.InteractionController.html">InteractionController</a></li><li><a href="Kekule.Widget.Location.html">Location</a></li><li><a href="Kekule.Widget.Menu.html">Menu</a></li><li><a href="Kekule.Widget.MsgGroup.html">MsgGroup</a></li><li><a href="Kekule.Widget.MsgPanel.html">MsgPanel</a></li><li><a href="Kekule.Widget.MsgType.html">MsgType</a></li><li><a href="Kekule.Widget.NestedContainer.html">NestedContainer</a></li><li><a href="Kekule.Widget.ObjectInspector.html">ObjectInspector</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html">ObjPropListEditor</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html">OperHistoryTreeView</a></li><li><a href="Kekule.Widget.Panel.html">Panel</a></li><li><a href="Kekule.Widget.PropEditorModifyOperation.html">PropEditorModifyOperation</a></li><li><a href="Kekule.Widget.RadioButton.html">RadioButton</a></li><li><a href="Kekule.Widget.SelectBox.html">SelectBox</a></li><li><a href="Kekule.Widget.ShowHideManager.html">ShowHideManager</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html">ShowHideTransitionSelector</a></li><li><a href="Kekule.Widget.StyleResource.html">StyleResource</a></li><li><a href="Kekule.Widget.StyleResourceManager.html">StyleResourceManager</a></li><li><a href="Kekule.Widget.StyleResourceNames.html">StyleResourceNames</a></li><li><a href="Kekule.Widget.SysMsgGroup.html">SysMsgGroup</a></li><li><a href="Kekule.Widget.TabButtonGroup.html">TabButtonGroup</a></li><li><a href="Kekule.Widget.TabPage.html">TabPage</a></li><li><a href="Kekule.Widget.TabView.html">TabView</a></li><li><a href="Kekule.Widget.TextArea.html">TextArea</a></li><li><a href="Kekule.Widget.TextBox.html">TextBox</a></li><li><a href="Kekule.Widget.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Widget.Toolbar.html">Toolbar</a></li><li><a href="Kekule.Widget.TreeView.html">TreeView</a></li><li><a href="Kekule.Widget.Utils.html">Utils</a></li><li><a href="Kekule.Widget.ValueListEditor.html">ValueListEditor</a></li><li><a href="Kekule.Widget.ValueListEditor.ValueDisplayMode.html">ValueDisplayMode</a></li><li><a href="Kekule.Widget.WidgetGrid.html">WidgetGrid</a></li><li><a href="Kekule.Widget.WidgetGroup.html">WidgetGroup</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Action.html#event:execute">execute</a></li><li><a href="Kekule.ActionFileOpen.html#event:open">open</a></li><li><a href="Kekule.ActionFileSave.html#event:execute">execute</a></li><li><a href="Kekule.ActionList.html#event:execute">execute</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructObjContainer.html#event:change">change</a></li><li><a href="Kekule.ChemStructObjContainer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructObjContainer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html#event:open">open</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html#event:configChange">configChange</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Settings.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:activate">activate</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:bind">bind</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:deactivate">deactivate</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:resize">resize</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html#event:unbind">unbind</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:activate">activate</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:bind">bind</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:resize">resize</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html#event:clear">clear</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html#event:draw">draw</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer.Settings.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.Viewer.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.Viewer.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.Viewer_.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html#event:change">change</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:activate">activate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:bind">bind</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:deactivate">deactivate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:resize">resize</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html#event:unbind">unbind</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:activate">activate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:bind">bind</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:deactivate">deactivate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:resize">resize</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html#event:unbind">unbind</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:activate">activate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:bind">bind</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:deactivate">deactivate</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:execute">execute</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:resize">resize</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html#event:unbind">unbind</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DataBingItem.html#event:change">change</a></li><li><a href="Kekule.DataBingItem.html#event:finalize">finalize</a></li><li><a href="Kekule.DataBingItem.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html#event:change">change</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionCopySelection.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionCutSelection.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionOnComposer.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionOnEditor.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ActionPaste.html#event:execute">execute</a></li><li><a href="Kekule.Editor.BaseEditor.Settings.html#event:change">change</a></li><li><a href="Kekule.Editor.BaseEditor.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.BaseEditor.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html#event:change">change</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.Settings.html#event:change">change</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.Composer.Configurator.html#event:configChange">configChange</a></li><li><a href="Kekule.Editor.Composer.Settings.html#event:change">change</a></li><li><a href="Kekule.Editor.Composer.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.Composer.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:activate">activate</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:bind">bind</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:resize">resize</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Editor.ComposerDialog.html#event:unbind">unbind</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:activate">activate</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:bind">bind</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:execute">execute</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:resize">resize</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html#event:unbind">unbind</a></li><li><a href="Kekule.Editor.EditorNexus.html#event:change">change</a></li><li><a href="Kekule.Editor.EditorNexus.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.EditorNexus.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.FormulaIaController.html#event:change">change</a></li><li><a href="Kekule.Editor.FormulaIaController.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.FormulaIaController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.InteractionConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.InteractionConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.InteractionConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.MolAtomIaController.html#event:change">change</a></li><li><a href="Kekule.Editor.MolAtomIaController.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.MolAtomIaController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html#event:change">change</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html#event:change">change</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html#event:change">change</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.StructureConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.StructureConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.StructureConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.TextBlockIaController.html#event:change">change</a></li><li><a href="Kekule.Editor.TextBlockIaController.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.TextBlockIaController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html#event:change">change</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Graph.html#event:change">change</a></li><li><a href="Kekule.Graph.html#event:finalize">finalize</a></li><li><a href="Kekule.Graph.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.GraphEdge.html#event:change">change</a></li><li><a href="Kekule.GraphEdge.html#event:finalize">finalize</a></li><li><a href="Kekule.GraphEdge.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.GraphElement.html#event:change">change</a></li><li><a href="Kekule.GraphElement.html#event:finalize">finalize</a></li><li><a href="Kekule.GraphElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.BaseMdlReader.html#event:change">change</a></li><li><a href="Kekule.IO.BaseMdlReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.BaseMdlReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.BaseMdlWriter.html#event:change">change</a></li><li><a href="Kekule.IO.BaseMdlWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.BaseMdlWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.ChemDataReader.html#event:change">change</a></li><li><a href="Kekule.IO.ChemDataReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.ChemDataReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.ChemDataWriter.html#event:change">change</a></li><li><a href="Kekule.IO.ChemDataWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.ChemDataWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlElementHandler.html#event:change">change</a></li><li><a href="Kekule.IO.CmlElementHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlElementHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlElementReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlElementReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlElementReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlElementWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlElementWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlElementWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlFormulaReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlFormulaReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlFormulaReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlListReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlListReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlListReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlListWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlListWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlListWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlNameReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlNameReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlNameReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlReactionReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlReactionReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlReactionReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlReactionWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlReactionWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlReactionWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlRootReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlRootReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlRootReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlRootWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlRootWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlRootWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlScalarReader.html#event:change">change</a></li><li><a href="Kekule.IO.CmlScalarReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlScalarReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlScalarWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlScalarWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlScalarWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.CmlWriter.html#event:change">change</a></li><li><a href="Kekule.IO.CmlWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.CmlWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.KcjReader.html#event:change">change</a></li><li><a href="Kekule.IO.KcjReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.KcjReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.KcjWriter.html#event:change">change</a></li><li><a href="Kekule.IO.KcjWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.KcjWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.KcxReader.html#event:change">change</a></li><li><a href="Kekule.IO.KcxReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.KcxReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.KcxWriter.html#event:change">change</a></li><li><a href="Kekule.IO.KcxWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.KcxWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl2kCTabReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl2kCTabReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl2kCTabReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl2kReactionReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl2kReactionReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl2kReactionReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kBlockReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kBlockReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kBlockReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kBlockWriter.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kBlockWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kBlockWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kCTabReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kCTabReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kCTabReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kReactionReader.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kReactionReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kReactionReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.Mdl3kTextBuffer.html#event:change">change</a></li><li><a href="Kekule.IO.Mdl3kTextBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.Mdl3kTextBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlBaseReactionReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlBaseReactionReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlBaseReactionReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlBlockHandler.html#event:change">change</a></li><li><a href="Kekule.IO.MdlBlockHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlBlockHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlBlockReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlBlockReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlBlockReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlBlockWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlBlockWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlBlockWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlMolReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlMolReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlMolReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlMolWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlMolWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlMolWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlReactionReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlReactionReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlReactionReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlReactionWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlReactionWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlReactionWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlRxnReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlRxnReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlRxnReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlRxnWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlRxnWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlRxnWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlSdReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlSdReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlSdReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlSdWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlSdWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlSdWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlStructDataReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlStructDataReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlStructDataReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html#event:change">change</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.MdlWriter.html#event:change">change</a></li><li><a href="Kekule.IO.MdlWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.MdlWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.IO.SmilesMolWriter.html#event:change">change</a></li><li><a href="Kekule.IO.SmilesMolWriter.html#event:finalize">finalize</a></li><li><a href="Kekule.IO.SmilesMolWriter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.OperationHistory.html#event:clear">clear</a></li><li><a href="Kekule.OperationHistory.html#event:operChange">operChange</a></li><li><a href="Kekule.OperationHistory.html#event:pop">pop</a></li><li><a href="Kekule.OperationHistory.html#event:push">push</a></li><li><a href="Kekule.OperationHistory.html#event:redo">redo</a></li><li><a href="Kekule.OperationHistory.html#event:undo">undo</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html#event:change">change</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html#event:finalize">finalize</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html#event:change">change</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html#event:change">change</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html#event:change">change</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.ChemObjPainter.html#event:change">change</a></li><li><a href="Kekule.Render.ChemObjPainter.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.ChemObjPainter.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ColorConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.ColorConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.ColorConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.GeneralConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.GeneralConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.GeneralConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Length3DConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Length3DConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Length3DConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.LengthConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.LengthConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.LengthConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Model3DConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Model3DConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Model3DConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html#event:change">change</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Render2DConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Render2DConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Render2DConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Render3DConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Render3DConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Render3DConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.TextFontConfigs.html#event:change">change</a></li><li><a href="Kekule.Render.TextFontConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.Render.TextFontConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Widget.BaseWidget.Settings.html#event:change">change</a></li><li><a href="Kekule.Widget.BaseWidget.Settings.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.BaseWidget.Settings.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Button.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Button.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Button.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Button.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Button.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Button.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Button.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.CheckBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.CheckBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:activate">activate</a></li><li><a href="Kekule.Widget.CheckButton.html#event:bind">bind</a></li><li><a href="Kekule.Widget.CheckButton.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.CheckButton.html#event:execute">execute</a></li><li><a href="Kekule.Widget.CheckButton.html#event:resize">resize</a></li><li><a href="Kekule.Widget.CheckButton.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Clipboard.html#event:setData">setData</a></li><li><a href="Kekule.Widget.ColorDropButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.ColorPicker.html#event:valueSet">valueSet</a></li><li><a href="Kekule.Widget.ComboBox.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CompactButtonSet.html#event:select">select</a></li><li><a href="Kekule.Widget.Configurator.html#event:configChange">configChange</a></li><li><a href="Kekule.Widget.Container.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Container.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Container.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Container.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Container.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Container.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Container.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Dialog.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Dialog.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Dialog.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Dialog.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Dialog.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Dialog.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Dialog.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.DropDownButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html#event:change">change</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.Widget.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.Widget.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.FormWidget.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.FormWidget.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetCreate">widgetCreate</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetFinalize">widgetFinalize</a></li><li><a href="Kekule.Widget.Glyph.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Glyph.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Glyph.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Glyph.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Glyph.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Glyph.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Glyph.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.InteractionController.html#event:change">change</a></li><li><a href="Kekule.Widget.InteractionController.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.InteractionController.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.Menu.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Menu.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Menu.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Menu.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Menu.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Menu.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Menu.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:activate">activate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:bind">bind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:execute">execute</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:resize">resize</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:activate">activate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:bind">bind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:execute">execute</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:resize">resize</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html#event:propertyChange">propertyChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Panel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Panel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Panel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Panel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Panel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Panel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Panel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.RadioButton.html#event:activate">activate</a></li><li><a href="Kekule.Widget.RadioButton.html#event:bind">bind</a></li><li><a href="Kekule.Widget.RadioButton.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.RadioButton.html#event:execute">execute</a></li><li><a href="Kekule.Widget.RadioButton.html#event:resize">resize</a></li><li><a href="Kekule.Widget.RadioButton.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.RadioButton.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.SelectBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.SelectBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.ShowHideManager.html#event:change">change</a></li><li><a href="Kekule.Widget.ShowHideManager.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.ShowHideManager.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html#event:change">change</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.StyleResource.html#event:change">change</a></li><li><a href="Kekule.Widget.StyleResource.html#event:finalize">finalize</a></li><li><a href="Kekule.Widget.StyleResource.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabButtonGroup.html#event:switch">switch</a></li><li><a href="Kekule.Widget.TabPage.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TabPage.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TabPage.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TabPage.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TabPage.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TabPage.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TabPage.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabView.html#event:switchTab">switchTab</a></li><li><a href="Kekule.Widget.TextArea.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextArea.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.TextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.Toolbar.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Toolbar.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Toolbar.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Toolbar.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Toolbar.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:activeRowChange">activeRowChange</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editCancel">editCancel</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editFinish">editFinish</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:unbind">unbind</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li><li><a href="Kekule.IO.html">IO</a></li><li><a href="Kekule.Render.html">Render</a></li><li><a href="Kekule.Widget.html">Widget</a></li><li><a href="Kekule.Widget.PropertyEditor.html">PropertyEditor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 18:08:43 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

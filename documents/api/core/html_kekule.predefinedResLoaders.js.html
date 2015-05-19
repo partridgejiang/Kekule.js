@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: html/kekule.predefinedResLoaders.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: html/kekule.predefinedResLoaders.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * Utils and classes to load chem resources embedded or linked in HTML page.
+ *
+ * The chem resources (usually a formatted file (.mol, .cml...) or a formatted string)
+ * can be embedded in &amp;lt;script&amp;gt; tag:
+ * &lt;pre>
+ * &amp;lt;script id="chem1" type="chemical/x-mdl-molfile"&amp;gt;
+ * Untitled Document-1
+ * ChemDraw09151219572D
+ *
+ * 2  1  0  0  0  0  0  0  0  0999 V2000
+ *  -0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+ *   0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+ * 1  2  1  0
+ * M  END
+ * &amp;lt;/script&amp;gt;
+ * &lt;/pre>
+ *
+ * or linked in by &amp;lt;script&amp;gt; or &amp;lt;link&amp;gt; tag as the follows:&lt;br />
+ *   &amp;lt;script id="chem2" type="chemical/x-kekule-json" src="externalMol.kcj"&amp;gt;&amp;lt;/script&amp;gt;&lt;br />
+ *   &amp;lt;link id="chem3" type="chemical/x-cml" href="external.cml" /&amp;gt;
+ *
+ * Afterwards, user can ref to chem resource by ID directly in HTML code, such as:&lt;br />
+ *   &amp;lt;div data-kekule-role="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#chem1)" /&amp;gt;
+ * which will initialize a 2D viewer.
+ *
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /core/kekule.common.js
+ * requires /utils/kekule.utils.js
+ * requires /xbrowsers/kekule.x.js
+ */
+
+
+/**
+ * A resource item predefined with an element.
+ * Resource can be defined directly inside elmenet, e.g.:
+ *   &amp;lt;script id="directResource"&amp;gt;
+ *     Resource content here...
+ *   &amp;lt;/script&amp;gt;
+ * or link in external content, e.g.:
+ *   &amp;lt;script id="externalResource" src="external.content"&amp;gt;&amp;lt;/script&amp;gt;
+ *   &amp;lt;link id="externalResource" href="external.content" /&amp;gt;
+ * User can use url(#id) to refer to resource in HTML file:
+ *   &amp;lt;div data-object="url('#externalResource')" /&amp;gt;
+ * or use url directly:
+ *   &amp;lt;div data-object="url('externalContentUrl')" /&amp;gt;
+ * or even use JSON in html attribute directly:
+ *   &amp;lt;div data-object="{JSON code here}" /&amp;gt;
+ *
+ * @class
+ * @augments ObjectEx
+ * @param {HTMLDocument} doc
+ * @param {String} resUri URI to refer to resource, such as '#id' or 'http://url'.
+ * @param {String} resType Resource type. If element is set, the type can be judged by element automatically.
+ *
+ * @property {HTMLDocument} doc Document contains this resource reference.
+ * @property {String} resUri Text to refer to resource, such as '#id' or 'http://url'. Readonly.
+ * @property {String} resType Resource type id, usually a MIME type text.
+ */
+Kekule.PredefinedResLoader = Class.create(ObjectEx,
+/** @lends Kekule.PredefinedResLoader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.PredefinedResLoader',
+	/** @constructs */
+	initialize: function($super, doc, /*elementOrUrl*/resUri, resType)
+	{
+		$super();
+		/*
+		if (elementOrUrl)
+		{
+			if (typeof(elementOrUrl) === 'string')  // is Url
+			{
+				this.setUrl(elementOrUrl);
+			}
+			else  // is element
+			{
+				this.setElement(elementOrUrl);
+			}
+		}
+		*/
+		if (!resUri)
+			Kekule.Error(/*Kekule.ErrorMsg.EMPTY_RESURI*/Kekule.$L('ErrorMsg.EMPTY_RESURI'));
+		else
+		{
+			this.setPropStoreFieldValue('resUri', resUri);
+			this.setDoc(doc);
+			if (resType)
+				this.setResType(resType);
+		}
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('doc', {'dataType': DataType.OBJECT, 'serializable': false});
+		this.defineProp('resUri', {'dataType': DataType.STRING, 'serializable': false, 'setter': null});
+		this.defineProp('resType', {'dataType': DataType.STRING, 'serializable': false});
+		/*
+		this.defineProp('element', {'dataType': DataType.OBJECT, 'serializable': false});
+		this.defineProp('url', {'dataType': DataType.STRING, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('url');
+				if (!result &amp;&amp; this.getElement())
+					result = this.getLinkedResUrl(this.getElement());
+				return result;
+			}
+		});
+		this.defineProp('resType', {'dataType': DataType.STRING, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('resType');;
+				if (!result &amp;&amp; this.getElement())
+					result = this.getElemResType(this.getElement());
+				return result;
+			}
+		});
+		*/
+	},
+
+	/**
+	 * Returns url linked in by element.
+	 * Usually "href" attribute of &lt;link> element or "src" element of &lt;script> element.
+	 * @param {Element} elem
+	 * @returns {String}
+	 * @private
+	 */
+	getLinkedResUrl: function(elem)
+	{
+		var tagName = elem.tagName.toLowerCase();
+		if (tagName === 'link')
+			return elem.getAttribute('href');
+		else if (tagName === 'script')
+			return elem.getAttribute('src');
+		else
+			return null;
+	},
+	/**
+	 * Returns resource type appointed by element.
+	 * Usually "type" attribute of &amp;lt;link&amp;gt; element or &amp;lt;script&amp;gt; element.
+	 * @param {Element} elem
+	 * @returns {String}
+	 * @private
+	 */
+	getElemResType: function(elem)
+	{
+		return elem.getAttribute('type');
+	},
+
+	/**
+	 * Load content of resource.
+	 * Note if resource if defined by a URL (&amp;lt;script src&amp;gt; or &amp;lt;link href&amp;gt;, the content
+	 *   will be load by AJAX asychronously. So a callback function is used here.
+	 * @param {Func} callback Called after resource is loaded. The callback function has the
+	 *   following params:
+	 *     callback(resInfo, success)
+	 *   where resInfo is a hash object, contains the following fields: {data, text, resType, resUri, success}.
+	 *   If load fails, data and text field of resInfo will be null.
+	 */
+	load: function(callback)
+	{
+		// TODO: currently only handle direct embedded data or simple AJAX data
+		//var url = this.getUrl();
+		var uri = this.getResUri();
+		var resElem, url;
+		var idMark = Kekule.PredefinedResReferer.ID_MARK;
+		if (uri.startsWith(idMark))  // ref to an element
+		{
+			var id = uri.substr(idMark.length).trim();
+			resElem = this.getDoc().getElementById(id);
+			if (resElem)  // check element linked url
+			{
+				url = this.getLinkedResUrl(resElem);
+				var resType = this.getElemResType(resElem);
+				if (resType)
+					this.setResType(resType);
+			}
+		}
+		else  // direct url
+		{
+			url = uri;
+		}
+
+		var resInfo = {'resType': this.getResType(), 'resUri': uri};
+		if (url)
+		{
+			Kekule.X.Ajax.sendRequest(url, function(data, req, success)
+			{
+				if (success)
+				{
+					resInfo = Object.extend(resInfo, {'data': data, 'text': req.responseText, 'success': true});
+					if (!resInfo.resType)
+					{
+						resInfo.resType = Kekule.X.Ajax.getResponseMimeType(req);
+						if (resInfo.resType === Kekule.IO.MimeType.OCTSTREAM)  // returns oct stream mimetype, server may can not reconganize a chem format file
+						{
+							// determine proper mime type by file extension
+							var fileExt = Kekule.UrlUtils.extractFileExt(url);
+							if (fileExt)
+							{
+								var chemFormat = Kekule.IO.DataFormatsManager.findFormat(null, fileExt);
+								if (chemFormat)
+									resInfo.resType = chemFormat.mimeType;
+							}
+						}
+					}
+					callback(resInfo, success);
+				}
+				else  // failed
+				{
+					callback(resInfo, false);
+				}
+			}, null, null, this.getResType() || null);
+		}
+		else if (resElem)  // element set but no url, a internal embedded resource
+		{
+			var content = resElem.innerHTML;
+			// innerHTML often start with a blank lines, erase it
+			// eliminate the first blank line
+			var lbreak = 2;
+			var p = content.indexOf('\r\n');
+			if (p &lt; 0)
+			{
+				p = content.indexOf('\n');
+				lbreak = 1;
+			}
+			if (p === 0)
+			 	content = content.substring(lbreak);
+			//content = content.ltrim();
+			resInfo = Object.extend(resInfo, {'data': content, 'text': content, 'resType': resInfo.resType || 'text/plain', 'success': true});
+			callback(resInfo, true);  // success
+		}
+		else  // no corresponding resource
+		{
+			callback(resInfo, false);
+		}
+	}
+});
+
+/**
+ * Utility class to handle values refered to a predefined resource.
+ * @class
+ */
+Kekule.PredefinedResReferer = {
+	/** @private */
+	REFER_PATTERN: /^\s*url\((\S+)\)\s*$/,
+	/** @private */
+	ID_MARK: '#',
+	/* @private */
+	//JSON_PATTERN: /^\s*(\{\S+\})\s*$/,
+	/**
+	 * Check if a str is a resource referer (like url(#id) or url('url')) or JSON text.
+	 * Both types may be used as resource.
+	 * @param {String} str
+	 * @returns {Bool}
+	 */
+	isResValue: function(str)
+	{
+		//return Kekule.PredefinedResReferer.isResReferrer(str) || Kekule.PredefinedResReferer.isDirectJson(str);
+		return Kekule.PredefinedResReferer.isResReferrer(str);
+	},
+	/**
+	 * Check if a str is a resource referrer (like url(#id) or url('url')).
+	 * @param {String} str
+	 * @returns {Bool}
+	 */
+	isResReferrer: function(str)
+	{
+		return Kekule.PredefinedResReferer.REFER_PATTERN.test(str);
+	},
+	/*
+	 * Check if a str is a JSON text.
+	 * @param {String} str
+	 * @returns {Bool}
+	 */
+	/*
+	isDirectJson: function(str)
+	{
+		return Kekule.PredefinedResReferer.JSON_PATTERN.test(str);
+	},
+	*/
+	/**
+	 * Extract value inside resource referer's parenthesis (e.g. #id from url(#id), url from url('url')).
+	 * @param {String} str
+	 * @returns {String}
+	 */
+	extractReferedValue: function(str)
+	{
+		var result = Kekule.PredefinedResReferer.REFER_PATTERN.exec(str);
+		if (result)
+		{
+			var value = result[1];
+			if (value)
+			{
+				value = Kekule.StrUtils.unquote(value);
+				return value;
+			}
+		}
+		return null;
+	},
+	/*
+	 * Extract JSON str inside HTML attributes.
+	 * @param {String} str
+	 * @returns {String}
+	 */
+	/*
+	extractJsonText: function(str)
+	{
+		var result = Kekule.PredefinedResReferer.JSON_PATTERN.exec(str);
+		if (result)
+		{
+			var s = result[1];
+			if (s)
+			{
+				return s;
+			}
+		}
+		return null;
+	},
+	*/
+	/**
+	 * Get resource content from resource reference string.
+	 * When the retrieve is done, callback will be called.
+	 * @param {String} refStr
+	 * @param {Function} callback Called after resource is loaded. The callback function has the
+	 *   following params:
+	 *     callback(resInfo, success)
+	 *   resInfo will be null if loading failed.
+	 *   On success,resInfo is a hash object, contains the following fields: {data, text, resType, resUrl}.
+	 * @param {String} resType
+	 */
+	loadResource: function(refStr, callback, resType, doc)
+	{
+		if (!doc)
+			doc = document;
+		var R = Kekule.PredefinedResReferer;
+		//if (R.isResReferrer(refStr))
+		{
+			var refValue = R.extractReferedValue(refStr);
+			var resLoader;
+			/*
+			if (refValue.startsWith(R.ID_MARK))  // ref to an element
+			{
+				var id = value.substr(1).trim();
+				var resElem = doc.getElementById(id);
+				if (resElem)
+				{
+					resLoader = new Kekule.PredefinedResLoader(resElem);
+				}
+			}
+			else  // direct url
+			{
+				resLoader = new Kekule.PredefinedResLoader(refValue);
+			}
+			*/
+			resLoader = new Kekule.PredefinedResLoader(doc, refValue);
+
+			if (resLoader)
+			{
+				//console.log(resLoader);
+				if (resType)
+					resLoader.setResType(resType);
+				resLoader.load(callback);
+			}
+		}
+		/*
+		else if (R.isDirectJson(refStr))
+		{
+			var s = R.extractJsonText(refStr);
+			if (s)
+			{
+				//var jsonObj = JSON.parse(s);
+				var resInfo = {'resType': Kekule.IO.MimeType.JSON, 'data': s, 'text': s, 'success': true};
+				callback(resInfo, true);
+			}
+		}
+		*/
+	}
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:23 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

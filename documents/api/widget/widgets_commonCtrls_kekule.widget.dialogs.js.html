@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: widgets/commonCtrls/kekule.widget.dialogs.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: widgets/commonCtrls/kekule.widget.dialogs.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * Implementation of popup dialogs.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /utils/kekule.utils.js
+ * requires /utils/kekule.domUtils.js
+ * requires /xbrowsers/kekule.x.js
+ * requires /widgets/kekule.widget.base.js
+ * requires /localization
+ */
+
+(function(){
+
+"use strict"
+
+var DU = Kekule.DomUtils;
+var EU = Kekule.HtmlElementUtils;
+var SU = Kekule.StyleUtils;
+var CNS = Kekule.Widget.HtmlClassNames;
+
+/** @ignore */
+Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
+	DIALOG: 'K-Dialog',
+	DIALOG_CLIENT: 'K-Dialog-Client',
+	DIALOG_CAPTION: 'K-Dialog-Caption',
+	DIALOG_BTN_PANEL: 'K-Dialog-Button-Panel',
+	DIALOG_MODAL_BACKGROUND: 'K-Dialog-Modal-Background'
+});
+
+/**
+ * Enumeration of predefined dialog buttons.
+ * @class
+ */
+Kekule.Widget.DialogButtons = {
+	OK: 'ok',
+	CANCEL: 'cancel',
+	YES: 'yes',
+	NO: 'no',
+
+	/**
+	 * Whether button is a positive one (e.g. Ok, Yes).
+	 * @param {String} btn
+	 * @returns {Bool}
+	 */
+	isPositive: function(btn)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		return ([DB.OK, DB.YES].indexOf(btn) >= 0);
+	},
+	/**
+	 * Whether button is a negative one (e.g. Cancel, No).
+	 * @param {String} btn
+	 * @returns {Bool}
+	 */
+	isNegative: function(btn)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		return ([DB.CANCEL, DB.NO].indexOf(btn) >= 0);
+	}
+};
+
+/**
+ * Enumeration of location of widget.
+ * @class
+ */
+Kekule.Widget.Location = {
+	/** Show widget as is, no special position handling will be done. */
+	DEFAULT: 1,
+	/** Show widget at center of browser window visible area. */
+	CENTER: 2,
+	/** Widget will fill all area of browser window visible area. */
+	FULLFILL: 3,
+	/**
+	 * Widget will be shown at center of window if its initial size smaller than window,
+	 * or fullfill the whole visible area if its intial size larger than window.
+	 */
+	CENTER_OR_FULLFILL: 4
+};
+
+/**
+ * A popup dialog widget.
+ * @class
+ * @augments Kekule.Widget.BaseWidget
+ *
+ * @property {String} caption Caption of dialog. If no caption is set, the caption bar will be automatically hidden.
+ * @property {Array} buttons Array of predefined button names that should be shown in dialog.
+ * @property {String} result The name of button that close this dialog.
+ * @property {Int} location Value from {@link Kekule.Widget.Location}, determine the position when dialog is popped up.
+ */
+Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
+/** @lends Kekule.Widget.Dialog# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Dialog',
+	/** @private */
+	BINDABLE_TAG_NAMES: ['div', 'span'],
+	/** @private */
+	BTN_NAME_FIELD: '__$btnName__',
+	/** @constructs */
+	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	{
+		this._dialogCallback = null;
+		this._modalInfo = null;
+		this._childButtons = [];
+		this.setPropStoreFieldValue('location', Kekule.Widget.Location.CENTER);
+		$super(parentOrElementOrDocument);
+		this._dialogOpened = false;  // used internally
+		this.setUseCornerDecoration(true);
+		if (caption)
+			this.setCaption(caption);
+		if (buttons)
+			this.setButtons(buttons);
+	},
+	/** @private */
+	doFinalize: function($super)
+	{
+		this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('caption', {'dataType': DataType.STRING,
+			'getter': function() { return DU.getElementText(this.getCaptionElem()); },
+			'setter': function(value)
+			{
+				DU.setElementText(this.getCaptionElem(), value);
+				SU.setDisplay(this.getCaptionElem(), !!value);
+			}
+		});
+		this.defineProp('buttons', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('buttons', value);
+				if (this.getBtnPanelElem())
+					SU.setDisplay(this.getBtnPanelElem(), value &amp;&amp; value.length);
+				this.buttonsChanged();
+			}
+		});
+		this.defineProp('result', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('location', {'dataType': DataType.INT});
+		// private properties
+		this.defineProp('clientElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('captionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('btnPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+	},
+
+	/** @ignore */
+	getCoreElement: function()
+	{
+		return this.getClientElem();
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function()
+	{
+		return CNS.DIALOG;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('div');
+		return result;
+	},
+	/** @ignore */
+	doCreateSubElements: function(doc, rootElem)
+	{
+		var result = [];
+		// caption element
+		var elem = doc.createElement('div');
+		elem.className = CNS.DIALOG_CAPTION;
+		rootElem.appendChild(elem);
+		this.setPropStoreFieldValue('captionElem', elem);
+		result.push(elem);
+
+		// client element
+		var elem = doc.createElement('div');
+		elem.className = CNS.DIALOG_CLIENT;
+		rootElem.appendChild(elem);
+		this.setPropStoreFieldValue('clientElem', elem);
+		this.doCreateClientContents(elem);
+		result.push(elem);
+
+		// button panel element
+		var elem = doc.createElement('div');
+		elem.className = CNS.DIALOG_BTN_PANEL;
+		rootElem.appendChild(elem);
+		this.setPropStoreFieldValue('btnPanelElem', elem);
+		result.push(elem);
+
+		return result;
+	},
+
+	/**
+	 * Create essential child widgets (and other elements) in client area.
+	 * Descendants may override this method.
+	 * @param {HTMLElement} clientElem
+	 * @private
+	 */
+	doCreateClientContents: function(clientElem)
+	{
+		// do nothing here
+	},
+
+	/**
+	 * Called when buttons property is changed.
+	 * @private
+	 */
+	buttonsChanged: function()
+	{
+		// clear old buttons
+		for (var i = this._childButtons.length - 1; i >= 0; --i)
+		{
+			var btn = this._childButtons[i];
+			btn.finalize();
+		}
+		var btns = this.getButtons() || [];
+		for (var i = 0, l = btns.length; i &lt; l; ++i)
+		{
+			this.createDialogButton(btns[i]);
+		}
+	},
+	/** @private */
+	createDialogButton: function(btnName, btnResName, doc, btnPanel)
+	{
+		var btnInfo = this._getPredefinedButtonInfo(btnName);
+		if (!btnInfo)  // info can not get, a custom button
+		{
+			btnInfo = {'text': btnName};
+		}
+		if (btnInfo)
+		{
+			var btn = new Kekule.Widget.Button(this, btnInfo.text);
+			btn[this.BTN_NAME_FIELD] = btnName;
+			btn.addEventListener('execute', this._reactDialogBtnExec, this);
+			btn.appendToElem(this.getBtnPanelElem());
+			btn.__$name__ = btnName;
+			var resName = btnResName || this._getDialogButtonResName(btnName);
+			if (resName)
+			{
+				btn.linkStyleResource(resName);
+			}
+			this._childButtons.push(btn);
+			return btn;
+		}
+		else
+			return null;
+	},
+	/** @private */
+	_getDialogButtonResName: function(btnName)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		if ([DB.OK, DB.YES].indexOf(btnName) >= 0)
+		{
+			return Kekule.Widget.StyleResourceNames.BUTTON_YES_OK;
+		}
+		else if ([DB.CANCEL, DB.NO].indexOf(btnName) >= 0)
+		{
+			return Kekule.Widget.StyleResourceNames.BUTTON_NO_CANCEL;
+		}
+		else
+			return null;
+	},
+
+	/** @private */
+	_reactDialogBtnExec: function(e)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		var closeButtons = [DB.OK, DB.YES, DB.CANCEL, DB.NO];
+		var btn = e.target;
+		if (btn)
+		{
+			var btnName = btn.__$name__;
+			if (closeButtons.indexOf(btnName) >= 0)
+			{
+				this.setResult(btnName);
+				this.close(btnName);
+			}
+		}
+	},
+
+	/** @private */
+	_getPredefinedButtonInfo: function(btnName)
+	{
+		var DB = Kekule.Widget.DialogButtons;
+		//var WT = Kekule.WidgetTexts;
+		var btnNames = [DB.OK, DB.CANCEL, DB.YES, DB.NO];
+		var btnTexts = [
+			//WT.CAPTION_OK, WT.CAPTION_CANCEL, WT.CAPTION_YES, WT.CAPTION_NO
+			Kekule.$L('WidgetTexts.CAPTION_OK'),
+			Kekule.$L('WidgetTexts.CAPTION_CANCEL'),
+			Kekule.$L('WidgetTexts.CAPTION_YES'),
+			Kekule.$L('WidgetTexts.CAPTION_NO')
+		];
+		var index = btnNames.indexOf(btnName);
+		return (index >= 0)? {'text': btnTexts[index]}: null;
+	},
+
+	/**
+	 * Return a button object corresponding to btnName in dialog.
+	 * @param {String} btnName
+	 * @returns {Kekule.Widget.Button}
+	 */
+	getDialogButton: function(btnName)
+	{
+		for (var i = this._childButtons.length - 1; i >= 0; --i)
+		{
+			var btn = this._childButtons[i];
+			if (btn[this.BTN_NAME_FIELD] === btnName)
+				return btn;
+		}
+		return null;
+	},
+
+	/** @private */
+	_storePositionInfo: function()
+	{
+		var elem = this.getElement();
+		var style = elem.style;
+		this._posInfo = {
+			'left': style.left,
+			'top': style.top,
+			'right': style.right,
+			'bottom': style.bottom,
+			'width': style.width,
+			'height': style.height,
+			'position': style.position
+		}
+	},
+	/** @private */
+	_restorePositionInfo: function()
+	{
+		var elem = this.getElement();
+		var style = elem.style;
+		var info = this._posInfo;
+		if (info)
+		{
+			style.left = info.left;
+			style.top = info.top;
+			style.right = info.right;
+			style.bottom = info.bottom;
+			style.width = info.width;
+			style.height = info.height;
+			style.position = info.position;
+		}
+	},
+
+	/**
+	 * Adjust the size and position of dialog before pop up.
+	 * @private
+	 */
+	adjustLocation: function()
+	{
+		this._storePositionInfo();
+
+		var L = Kekule.Widget.Location;
+		var location = this.getLocation() || L.DEFAULT;
+
+		if (location !== L.DEFAULT)
+		{
+			var l, t, w, h, r, b;
+
+			// set display first, otherwise the size may not be set properly
+			var oldDisplayed = this.getDisplayed();
+			var oldVisible = this.getVisible();
+			try
+			{
+				this.setDisplayed(true, true);  // bypass widgetShowStateChange handle, or recursion
+				this.setVisible(true, true);
+				/*
+				 var selfWidth = this.getOffsetWidth();
+				 var selfHeight = this.getOffsetHeight();
+				 */
+				var viewPortDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+				var selfBoundingRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+				var selfWidth = selfBoundingRect.right - selfBoundingRect.left;
+				var selfHeight = selfBoundingRect.bottom - selfBoundingRect.top;
+				var parent = this.getOffsetParent();
+				var parentBoundingRect = parent? Kekule.HtmlElementUtils.getElemBoundingClientRect(parent):
+					{'left': 0, 'top': 0, 'width': 0, 'height': 0};
+			}
+			finally
+			{
+				this.setVisible(oldVisible, true);
+				this.setDisplayed(oldDisplayed, true);
+			}
+
+			if (location === L.CENTER_OR_FULLFILL)
+			{
+				if ((selfWidth >= viewPortDim.width) || (selfHeight >= viewPortDim.height))
+					location = L.FULLFILL;
+				else
+					location = L.CENTER;
+			}
+
+			if (location === L.FULLFILL)
+			{
+				/*
+				w = viewPortDim.width;
+				h = viewPortDim.height;
+				*/
+				l = 0; //-parentBoundingRect.left;
+				t = 0; //-parentBoundingRect.top;
+				r = 0;
+				b = 0;
+			}
+			else if (location === L.CENTER)
+			{
+				/*
+				l = (viewPortDim.width - selfWidth) / 2 - parentBoundingRect.left;
+				t = (viewPortDim.height - selfHeight) / 2 - parentBoundingRect.top;
+				*/
+				l = (viewPortDim.width - selfWidth) / 2;
+				t = (viewPortDim.height - selfHeight) / 2;
+				//console.log('center', l, t);
+			}
+
+			var style = this.getElement().style;
+			var notUnset = Kekule.ObjUtils.notUnset;
+			if (notUnset(l))
+				style.left = l + 'px';
+			if (notUnset(t))
+				style.top = t + 'px';
+			if (notUnset(r))
+				style.right = r + 'px';
+			if (notUnset(b))
+				style.bottom = r + 'px';
+			if (notUnset(w))
+				style.width = w + 'px';
+			if (notUnset(h))
+				style.height = h + 'px';
+			style.position = 'fixed';
+
+			this.adjustClientSize(w, h);
+		}
+	},
+	/** @private */
+	adjustClientSize: function(dialogWidth, dialogHeight)
+	{
+		// TODO: do nothing here
+	},
+
+	/** @private */
+	prepareShow: function(callback)
+	{
+		// if this dialog has no element parent, just append it to body
+		var elem = this.getElement();
+		if (!elem.parentNode)
+			this.getDocument().body.appendChild(elem);
+
+		var self = this;
+		// defer the function, make sure it be called when elem really in DOM tree
+		setTimeout(function()
+			{
+				self._dialogCallback = callback;
+			},
+		0);
+	},
+	/** @private */
+	prepareModal: function()
+	{
+		// create a modal background and then relocate dialog element on it
+		var doc = this.getDocument();
+		var div = this.getModalBackgroundElem();
+		if (!div)
+		{
+			//console.log('create new background');
+			div = doc.createElement('div');
+			div.className = CNS.DIALOG_MODAL_BACKGROUND;
+			this.setPropStoreFieldValue('modalBackgroundElem', div);
+		}
+		var elem = this.getElement();
+		this._modalInfo = {
+			'oldParent': elem.parentNode,
+			'oldSibling': elem.nextSibling
+		};
+		//alert('hi');
+		if (elem.parentNode)
+			elem.parentNode.removeChild(elem);
+		div.appendChild(elem);
+		doc.body.appendChild(div);
+		//console.log(div.parentNode);
+		//console.log('prepare modal done');
+		//console.log(div.parentNode);
+	},
+	unprepareModal: function()
+	{
+		//console.log('unprepareModal');
+		if (this._modalInfo)
+		{
+			if (this._modalInfo.oldParent)
+				this._modalInfo.oldParent.insertBefore(this.getElement(), this._modalInfo.oldSibling);
+		}
+		if (this.getModalBackgroundElem())
+		{
+			this.getDocument().body.removeChild(this.getModalBackgroundElem());
+			//this.setPropStoreFieldValue('modalBackgroundElem', null);
+		}
+	},
+	/**
+	 * Show a modal simulation dialog. When the dialog is closed,
+	 * callback(modalResult) will be called.
+	 * @param {Func} callback
+	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this dialog visible. Can be null.
+	 */
+	openModal: function(callback, caller)
+	{
+		this.prepareModal();
+		  // important, must called before prepareShow, or DOM tree change will cause doWidgetShowStateChanged
+		  // and make callback called even before dialog showing
+		/*
+		this.prepareShow(callback);
+		this.show(caller, null, Kekule.Widget.ShowHideType.DIALOG);
+		*/
+		return this.open(callback, caller);
+	},
+	/**
+	 * Show a popup dialog. When the dialog is closed,
+	 * callback(modalResult) will be called.
+	 * @param {Func} callback
+	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this dialog visible. Can be null.
+	 */
+	openPopup: function(callback, caller)
+	{
+		/*
+		this.prepareShow(callback);
+		this.show(caller, null, Kekule.Widget.ShowHideType.POPUP);
+		*/
+		return this.open(callback, caller, Kekule.Widget.ShowHideType.POPUP);
+	},
+	/**
+	 * Show a modeless dialog. When the dialog is closed,
+	 * callback(dialogResult) will be called.
+	 * @param {Func} callback
+	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this dialog visible. Can be null.
+	 * @param {Int} showType
+	 */
+	open: function(callback, caller, showType)
+	{
+		this.prepareShow(callback);
+		this.show(caller, null, showType || Kekule.Widget.ShowHideType.DIALOG);
+		this._dialogOpened = true;
+		return this;
+	},
+	/**
+	 * Close the dialog.
+	 * @param {String} result What result should this dialog return when closed.
+	 */
+	close: function(result)
+	{
+		//var self = this;
+		this.setResult(result);
+		this.hide();
+	},
+
+	/**
+	 * Returns whether the dialog result is a positive one (like Ok, Yes).
+	 * @param {String} result Dialog result, if not set, current dialog result will be used.
+	 * @returns {Bool}
+	 */
+	isPositiveResult: function(result)
+	{
+		return Kekule.Widget.DialogButtons.isPositive(result || this.getResult());
+	},
+	/**
+	 * Returns whether the dialog result is a negative one (like Cancel, No).
+	 * @param {String} result Dialog result, if not set, current dialog result will be used.
+	 * @returns {Bool}
+	 */
+	isNegativeResult: function(result)
+	{
+		return Kekule.Widget.DialogButtons.isNegative(result || this.getResult());
+	},
+
+	/** @ignore */
+	widgetShowStateBeforeChanging: function($super, isShown)
+	{
+		$super(isShown);
+		if (isShown)  // show
+		{
+			this.adjustLocation();
+			this.setResult(null);
+		}
+		else
+		{
+			// IMPORTANT, can not unprepare modal here, otherwise the modification of DOM tree
+			// affects the disappear transition
+			/*
+			if (this._modalInfo)
+				this.unprepareModal();
+			*/
+		}
+	},
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		$super(isShown);
+		if (!isShown)  // hide
+		{
+			if (this._dialogCallback)
+			{
+				//console.log('hide and call callback');
+				this._dialogCallback(this.getResult());
+				this._dialogCallback = null;  // avoid call twice
+			}
+		}
+	},
+	/** @ignore */
+	widgetShowStateDone: function($super, isShown)
+	{
+		$super(isShown);
+		if (!isShown &amp;&amp; this._dialogOpened)  // hide after dialog open
+		{
+			if (this._modalInfo)
+				this.unprepareModal();
+			this._restorePositionInfo();
+			this._dialogOpened = false;
+		}
+	}
+});
+
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.Action.html">Action</a></li><li><a href="Kekule.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.ActionList.html">ActionList</a></li><li><a href="Kekule.ChemWidget.ActionFileOpen.html">ActionFileOpen</a></li><li><a href="Kekule.ChemWidget.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.DataBingItem.html">DataBingItem</a></li><li><a href="Kekule.MacroOperation.html">MacroOperation</a></li><li><a href="Kekule.Operation.html">Operation</a></li><li><a href="Kekule.Operation.State.html">State</a></li><li><a href="Kekule.OperationHistory.html">OperationHistory</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html">ArrayEditor</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html">BoolEditor</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html">ColorEditor</a></li><li><a href="Kekule.PropertyEditor.EditorAttributes.html">EditorAttributes</a></li><li><a href="Kekule.PropertyEditor.EditorMananger.html">EditorMananger</a></li><li><a href="Kekule.PropertyEditor.EnumEditor.html">EnumEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html">ObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html">ObjectExEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectFieldEditor.html">ObjectFieldEditor</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html">SelectEditor</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html">SimpleEditor</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Widget.ActionOpenConfigWidget.html">ActionOpenConfigWidget</a></li><li><a href="Kekule.Widget.AutoLauncher.html">AutoLauncher</a></li><li><a href="Kekule.Widget.BaseTransition.html">BaseTransition</a></li><li><a href="Kekule.Widget.BaseWidget.html">BaseWidget</a></li><li><a href="Kekule.Widget.Button.html">Button</a></li><li><a href="Kekule.Widget.Button.Kinds.html">Kinds</a></li><li><a href="Kekule.Widget.ButtonGroup.html">ButtonGroup</a></li><li><a href="Kekule.Widget.ButtonTextBox.html">ButtonTextBox</a></li><li><a href="Kekule.Widget.CheckBox.html">CheckBox</a></li><li><a href="Kekule.Widget.CheckButton.html">CheckButton</a></li><li><a href="Kekule.Widget.Clipboard.html">Clipboard</a></li><li><a href="Kekule.Widget.ColorDropButton.html">ColorDropButton</a></li><li><a href="Kekule.Widget.ColorDropTextBox.html">ColorDropTextBox</a></li><li><a href="Kekule.Widget.ColorPicker.html">ColorPicker</a></li><li><a href="Kekule.Widget.ColorPicker.SpecialColors.html">SpecialColors</a></li><li><a href="Kekule.Widget.ComboBox.html">ComboBox</a></li><li><a href="Kekule.Widget.ComboTextBox.html">ComboTextBox</a></li><li><a href="Kekule.Widget.CompactButtonSet.html">CompactButtonSet</a></li><li><a href="Kekule.Widget.Container.html">Container</a></li><li><a href="Kekule.Widget.Css3GrowTransition.html">Css3GrowTransition</a></li><li><a href="Kekule.Widget.Css3OpacityTrans.html">Css3OpacityTrans</a></li><li><a href="Kekule.Widget.Css3SlideTransition.html">Css3SlideTransition</a></li><li><a href="Kekule.Widget.Css3Transition.html">Css3Transition</a></li><li><a href="Kekule.Widget.Css3TransitionSimpleClassCreator.html">Css3TransitionSimpleClassCreator</a></li><li><a href="Kekule.Widget.Dialog.html">Dialog</a></li><li><a href="Kekule.Widget.DialogButtons.html">DialogButtons</a></li><li><a href="Kekule.Widget.DumbWidget.html">DumbWidget</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html">DynamicEvokeHelper</a></li><li><a href="Kekule.Widget.EvokeMode.html">EvokeMode</a></li><li><a href="Kekule.Widget.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.Widget.FontDetector.html">FontDetector</a></li><li><a href="Kekule.Widget.FontEnumerator.html">FontEnumerator</a></li><li><a href="Kekule.Widget.FormWidget.html">FormWidget</a></li><li><a href="Kekule.Widget.GlobalManager.html">GlobalManager</a></li><li><a href="Kekule.Widget.Glyph.html">Glyph</a></li><li><a href="Kekule.Widget.InteractionController.html">InteractionController</a></li><li><a href="Kekule.Widget.Location.html">Location</a></li><li><a href="Kekule.Widget.Menu.html">Menu</a></li><li><a href="Kekule.Widget.MsgGroup.html">MsgGroup</a></li><li><a href="Kekule.Widget.MsgPanel.html">MsgPanel</a></li><li><a href="Kekule.Widget.MsgType.html">MsgType</a></li><li><a href="Kekule.Widget.NestedContainer.html">NestedContainer</a></li><li><a href="Kekule.Widget.ObjectInspector.html">ObjectInspector</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html">ObjPropListEditor</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html">OperHistoryTreeView</a></li><li><a href="Kekule.Widget.Panel.html">Panel</a></li><li><a href="Kekule.Widget.PropEditorModifyOperation.html">PropEditorModifyOperation</a></li><li><a href="Kekule.Widget.RadioButton.html">RadioButton</a></li><li><a href="Kekule.Widget.SelectBox.html">SelectBox</a></li><li><a href="Kekule.Widget.ShowHideManager.html">ShowHideManager</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html">ShowHideTransitionSelector</a></li><li><a href="Kekule.Widget.StyleResource.html">StyleResource</a></li><li><a href="Kekule.Widget.StyleResourceManager.html">StyleResourceManager</a></li><li><a href="Kekule.Widget.StyleResourceNames.html">StyleResourceNames</a></li><li><a href="Kekule.Widget.SysMsgGroup.html">SysMsgGroup</a></li><li><a href="Kekule.Widget.TabButtonGroup.html">TabButtonGroup</a></li><li><a href="Kekule.Widget.TabPage.html">TabPage</a></li><li><a href="Kekule.Widget.TabView.html">TabView</a></li><li><a href="Kekule.Widget.TextArea.html">TextArea</a></li><li><a href="Kekule.Widget.TextBox.html">TextBox</a></li><li><a href="Kekule.Widget.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Widget.Toolbar.html">Toolbar</a></li><li><a href="Kekule.Widget.TreeView.html">TreeView</a></li><li><a href="Kekule.Widget.Utils.html">Utils</a></li><li><a href="Kekule.Widget.ValueListEditor.html">ValueListEditor</a></li><li><a href="Kekule.Widget.ValueListEditor.ValueDisplayMode.html">ValueDisplayMode</a></li><li><a href="Kekule.Widget.WidgetGrid.html">WidgetGrid</a></li><li><a href="Kekule.Widget.WidgetGroup.html">WidgetGroup</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.Action.html#event:execute">execute</a></li><li><a href="Kekule.ActionFileOpen.html#event:open">open</a></li><li><a href="Kekule.ActionFileSave.html#event:execute">execute</a></li><li><a href="Kekule.ActionList.html#event:execute">execute</a></li><li><a href="Kekule.OperationHistory.html#event:clear">clear</a></li><li><a href="Kekule.OperationHistory.html#event:operChange">operChange</a></li><li><a href="Kekule.OperationHistory.html#event:pop">pop</a></li><li><a href="Kekule.OperationHistory.html#event:push">push</a></li><li><a href="Kekule.OperationHistory.html#event:redo">redo</a></li><li><a href="Kekule.OperationHistory.html#event:undo">undo</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Button.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Button.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Button.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Button.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Button.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Button.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Button.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.CheckBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.CheckBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:activate">activate</a></li><li><a href="Kekule.Widget.CheckButton.html#event:bind">bind</a></li><li><a href="Kekule.Widget.CheckButton.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.CheckButton.html#event:execute">execute</a></li><li><a href="Kekule.Widget.CheckButton.html#event:resize">resize</a></li><li><a href="Kekule.Widget.CheckButton.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Clipboard.html#event:setData">setData</a></li><li><a href="Kekule.Widget.ColorDropButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.ColorPicker.html#event:valueSet">valueSet</a></li><li><a href="Kekule.Widget.ComboBox.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CompactButtonSet.html#event:select">select</a></li><li><a href="Kekule.Widget.Configurator.html#event:configChange">configChange</a></li><li><a href="Kekule.Widget.Container.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Container.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Container.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Container.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Container.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Container.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Container.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Dialog.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Dialog.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Dialog.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Dialog.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Dialog.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Dialog.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Dialog.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.DropDownButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.FormWidget.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.FormWidget.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetCreate">widgetCreate</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetFinalize">widgetFinalize</a></li><li><a href="Kekule.Widget.Glyph.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Glyph.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Glyph.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Glyph.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Glyph.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Glyph.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Glyph.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Menu.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Menu.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Menu.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Menu.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Menu.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Menu.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Menu.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:activate">activate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:bind">bind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:execute">execute</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:resize">resize</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:activate">activate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:bind">bind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:execute">execute</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:resize">resize</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html#event:propertyChange">propertyChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Panel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Panel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Panel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Panel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Panel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Panel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Panel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.RadioButton.html#event:activate">activate</a></li><li><a href="Kekule.Widget.RadioButton.html#event:bind">bind</a></li><li><a href="Kekule.Widget.RadioButton.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.RadioButton.html#event:execute">execute</a></li><li><a href="Kekule.Widget.RadioButton.html#event:resize">resize</a></li><li><a href="Kekule.Widget.RadioButton.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.RadioButton.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.SelectBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.SelectBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabButtonGroup.html#event:switch">switch</a></li><li><a href="Kekule.Widget.TabPage.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TabPage.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TabPage.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TabPage.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TabPage.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TabPage.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TabPage.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabView.html#event:switchTab">switchTab</a></li><li><a href="Kekule.Widget.TextArea.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextArea.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.TextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.Toolbar.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Toolbar.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Toolbar.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Toolbar.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Toolbar.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:activeRowChange">activeRowChange</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editCancel">editCancel</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editFinish">editFinish</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:unbind">unbind</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.PropertyEditor.html">PropertyEditor</a></li><li><a href="Kekule.Widget.html">Widget</a></li><li><a href="Kekule.Widget.PropertyEditor.html">PropertyEditor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:45:01 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

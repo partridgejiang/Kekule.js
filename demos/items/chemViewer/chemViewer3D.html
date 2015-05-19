@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Viewer 3D Demo</title>
+
+	<script src="../../../libs/Three.js"></script>
+	<script src="../../../libs/raphael-min.2.0.1.js"></script>	
+	
+	<script src="../../../libs/kekule/kekule.js?modules=chemWidget"></script>
+	<!--
+	<script src="../../../../src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
+	-->
+
+	<link rel="stylesheet" type="text/css" href="../_styles/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/default/chemWidgetColor.css" />
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			position: relative;
+			overflow: hidden;
+		}
+		#chemViewer
+		{
+			border: none;
+			margin: 0;
+		}
+	</style>
+
+	<script name="mol1" id="mol1" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  Kekule  07101201153D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.3586    0.0000   -0.1337 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0564    0.0000   -0.1337 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.0000   -1.1978 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779   -0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3358    0.0000    0.7858 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  3  1  0
+  1  4  1  0
+  1  5  1  0
+  2  6  1  0
+M  END
+	</script>
+
+	<script>
+		var chemViewer;
+		function init()
+		{
+			chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 + 'px');
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div id="chemViewer" style="width:1000px;height:650px"
+			 data-widget="Kekule.ChemWidget.Viewer3D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+			 data-chem-obj="url(#mol1)"></div>
+</body>
+</html>
