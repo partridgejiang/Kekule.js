@@ -281,6 +281,17 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	LEGEND_ATOMIC_NUM: 'atomic number',
 	LEGEND_ATOMIC_WEIGHT: 'atomic weight',
 
+	// ChemObjInserter
+	CAPTION_2D: '2D',
+	CAPTION_3D: '3D',
+	CAPTION_AUTOSIZE: 'Autosize',
+	CAPTION_AUTOFIT: 'Autofit',
+	CAPTION_SHOWINFO: 'Show info',
+	CAPTION_LABEL_SIZE: 'Size: ',
+	PLACEHOLDER_WIDTH: 'width',
+	PLACEHOLDER_HEIGHT: 'height',
+	CAPTION_WIDTH_HEIGHT: 'width: {0}, height: {1}',
+
 	// misc
 	S_VALUE_DEFAULT: '(Default)'
 });
@@ -288,10 +299,11 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 // error messages
 //Object.extend(Kekule.ErrorMsg.en, {
 Kekule.Localization.addResource('en', 'ErrorMsg', {
+	WIDGET_CLASS_NOT_FOUND: 'Widget class not found',
 	WIDGET_CAN_NOT_BIND_TO_ELEM: 'Widget {0} can not be binded to element <{1}>',
 	LOAD_CHEMDATA_FAILED: 'Failed to load data',
 	FILE_API_NOT_SUPPORTED: 'File operations are not supported by your current web browser. Please update it.',
-	DRAW_BRIDGE_NOT_SUPPORTED: 'It seems that your web browser is not modern enough to support the drawing function.Please update it.',
+	DRAW_BRIDGE_NOT_SUPPORTED: 'It seems that your web browser is not modern enough to support the drawing function. Please update it.',
 
 	// widget/operations/kekule.operations.js
 	COMMAND_NOT_REVERSIBLE: 'Command can not be undone',

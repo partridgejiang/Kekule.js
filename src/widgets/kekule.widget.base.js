@@ -687,6 +687,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					elem.setAttribute('disabled', 'true');
 				else
 					elem.removeAttribute('disabled');
+				var elem = this.getCoreElement();
+				if (elem != this.getElement())
+				{
+					if (!value)
+						elem.setAttribute('disabled', 'true');
+					else
+						elem.removeAttribute('disabled');
+				}
 				this.setPropStoreFieldValue('selfEnabled', value);
 				this.stateChanged();
 			}
@@ -870,6 +878,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		$super();
 	},
 
+	/** @ignore */
 	invokeEvent: function($super, eventName, event)
 	{
 		if (!event)
@@ -1359,7 +1368,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		}
 
-		//console.log('show', this.getElement(), this.getElement().parentNode);
+		//console.log('show', this.getClassName(), this.getElement(), this.getElement().parentNode);
 
 		if (Kekule.Widget.showHideManager)
 		{
@@ -2979,6 +2988,58 @@ Kekule.Widget.Utils = {
 		}
 		return result;
 	},
+
+	/**
+	 * Create widget from a definition hash object. The hash object must include the following fields:
+	 *   {
+	 *     'widgetClass': widget class, class object or string,
+	 *     'htmlClass': string, HTML class name should be added to widget
+	 *   }
+	 * Other fields will be set to properties of widget with the same names. If the field name starts with
+	 * '#' and the value is a function, then the function will be set as an event handler.
+	 * @param {Variant} parentOrElementOrDocument
+	 * @param {Hash} defineObj
+	 * @returns {Kekule.Widget.BaseWidget}
+	 */
+	createFromHash: function(parentOrElementOrDocument, defineObj)
+	{
+		var specialFields = ['widgetClass', 'htmlClass'];
+		var wclass = defineObj.widgetClass;
+		if (typeof(wclass) === 'string')
+			wclass = ClassEx.findClass(wclass);
+		if (!wclass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.WIDGET_CLASS_NOT_FOUND'));
+			return null;
+		}
+
+		var result = new wclass(parentOrElementOrDocument);
+		var fields = Kekule.ObjUtils.getOwnedFieldNames(defineObj);
+		fields = Kekule.ArrayUtils.exclude(fields, specialFields);
+		for (var i = 0, l = fields.length; i < l; ++i)
+		{
+			var field = fields[i];
+			var value = defineObj[field];
+			if (field.startsWith('#') && DataType.isFunctionValue(value))
+			{
+				var eventName = field.substr(1);
+				result.addEventListener(eventName, value);
+			}
+			else if (result.hasProperty(field))
+			{
+				//console.log('set prop value', field, value);
+				result.setPropValue(field, value);
+			}
+		}
+
+		if (defineObj.htmlClass)
+		{
+			result.addClassName(defineObj.htmlClass, true);
+		}
+
+		return result;
+	},
+
 	/**
 	 * When binding to element, properties of widget can be set by element attribute values.
 	 * This method helps to turn string type attribute values to proper type and set it to widget.
@@ -2999,42 +3060,6 @@ Kekule.Widget.Utils = {
 			widget.setPropValue(propName, attribValue);
 		else  // need to convert type
 		{
-			/*  Unsafe
-			 var url = function(value)  // handle predefined resource like url('url') or url('#id')
-			 {
-			 var res;
-
-			 // check if value is start with a '#', if so, it is a id
-			 if (value.startsWith('#'))
-			 {
-			 var id = value.substr(1).trim();
-			 var resElem = widget.getDocument().getElementById(id);
-			 if (resElem)
-			 {
-			 res = new Kekule.PredefinedResLoader(resElem);
-			 }
-			 }
-			 else  // direct url
-			 {
-			 res = new Kekule.PredefinedResLoader(value);
-			 }
-			 if (res)
-			 {
-			 res.load(function(resInfo, success) {
-			 if (success)
-			 {
-			 // Check if widget has a special method to handle predefined resource
-			 if (widget.modifyPropByPredefinedResData)
-			 widget.modifyPropByPredefinedResData(propName, resInfo);
-			 }
-			 });
-			 }
-			 return undefined;
-			 };
-
-			 //var value = JSON.parse(attribValue);
-			 var value = eval(attribValue);
-			 */
 			if (Kekule.PredefinedResReferer.isResValue(attribValue))
 			{
 				Kekule.PredefinedResReferer.loadResource(attribValue, function(resInfo, success)

@@ -406,6 +406,7 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 			// TODO: Need find a better solution to avoid transition overlap on one element
 
 			// install transitionend event handler
+			var fallbackTimeout;
 			var self = this;
 			var done = function(e)
 			{
@@ -413,11 +414,18 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 				Kekule.X.Event.removeListener(element, 'transitionend', done);
 				// clear transition props
 				self.setTransitionProp(style, 'transition', '');
+				// clear fallback
+				if (fallbackTimeout)
+					clearTimeout(fallbackTimeout);
 				if (callback)
 					callback();
 			};
 			this._currEventHandler = done;
 			Kekule.X.Event.addListener(element, 'transitionend', done);
+			// some times the transitionend event will not be evoked
+			// (e.g., transition on element out of document in Chrome)
+			// so we need a fallback
+			fallbackTimeout = setTimeout(done, options.duration + 100);
 
 			//console.log('transition execute');
 			// set "to" property, need use setTimeOut to force browser update DOM
@@ -593,6 +601,7 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	canExecute: function($super, element, options)
 	{
 		return true;
+		/*
 		var result = $super(element, options);
 		if (result)
 		{
@@ -603,6 +612,7 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 				result = result && Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value);
 		}
 		return result;
+		*/
 	},
 	/** @private */
 	prepare: function($super, element, caller, options)
@@ -852,6 +862,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	canExecute: function($super, element, options)
 	{
 		return true;
+		/*
 		var result = $super(element, options);
 		if (result)
 		{
@@ -859,6 +870,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 			result = result && Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value);
 		}
 		return result;
+		*/
 	},
 
 	/** @private */

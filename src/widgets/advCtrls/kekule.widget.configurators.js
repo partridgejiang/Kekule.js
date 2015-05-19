@@ -34,6 +34,7 @@ var CNS = Kekule.Widget.HtmlClassNames;
  * @augments Kekule.Widget.Panel
  *
  * @param {Kekule.Widget.BaseWidget} widget
+ * @property {Bool} autoUpdate Whether load and save config values automatically when configurator is shown or hide.
  */
 /**
  * Invoked when the config has been changed. Event param of it has fields: {object, propertyName, oldValue, newValue}.
@@ -47,17 +48,30 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 	CLASS_NAME: 'Kekule.Widget.Configurator',
 	/** @private */
 	TAB_BTN_DATA_FIELD: '__$data__',
+	/** @private */
+	DEF_TAB_POSITION: Kekule.Widget.Position.RIGHT,
 	/** @construct */
 	initialize: function($super, widget)
 	{
 		this.setPropStoreFieldValue('widget', widget);
 		this._objInspector = null;
+		this._tabGroup = null;
 		$super(widget);
 	},
 	/** @private */
 	initProperties: function()
 	{
 		this.defineProp('widget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+		this.defineProp('autoUpdate', {'dataType': DataType.BOOL});
+		// TODO: tabPosition now is not totally workable
+		this.defineProp('tabPosition', {'dataType': DataType.INT,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('tabPosition', value);
+				if (this._tabGroup)
+					this._tabGroup.setTabButtonPosition(value || this.DEF_TAB_POSITION);
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -102,7 +116,9 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 		// tab head
 		var categories = this.getCategoryInfos();
 		var tabBtnGroup = new Kekule.Widget.TabButtonGroup(this);
-		tabBtnGroup.setTabButtonPosition(Kekule.Widget.Position.RIGHT);
+		this._tabGroup = tabBtnGroup;
+		//console.log('tab position', this.getTabPosition());
+		tabBtnGroup.setTabButtonPosition(this.getTabPosition() || this.DEF_TAB_POSITION/*Kekule.Widget.Position.RIGHT*/);
 		var firstBtn;
 		for (var i = 0, l = categories.length; i < l; ++i)
 		{
@@ -123,6 +139,8 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 				this._switchToTab(btn);
 		}, this);
 		tabBtnGroup.appendToElem(rootElem);
+		if (categories.length <= 1)
+			tabBtnGroup.setDisplayed('none');
 
 		// switch
 		firstBtn.setChecked(true);
@@ -131,6 +149,36 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 		element.appendChild(rootElem);
 
 		return result;
+	},
+
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		$super(isShown);
+		if (this.getAutoUpdate())
+		{
+			if (isShown)
+				this.loadConfigValues();
+			else
+				this.saveConfigValues();
+		}
+	},
+
+	/**
+	 * Load config setting values from widget.
+	 * Descendants may override this method.
+	 */
+	loadConfigValues: function()
+	{
+		// do nothing here
+	},
+	/**
+	 * Save config setting values back to widget.
+	 * Descendants may override this method.
+	 */
+	saveConfigValues: function()
+	{
+		// do nothing here
 	},
 
 	/**

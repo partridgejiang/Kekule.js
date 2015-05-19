@@ -109,6 +109,16 @@
     background-repeat: no-repeat;
 }
 
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
+{
+    border-color: #d3d3d3;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel
+{
+    color: #aaaaaa;
+}
+
 .K-Error-Report
 {
     background-color: #eeee00;

@@ -127,6 +127,7 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 				if (callback)
 					callback();
 			};
+			//console.log('do transition');
 			// do transition
 			return transExecutor.execute(widget.getElement(), /*caller && caller.getElement()*/this._getCallerElement(caller), done, transOptions);
 		}

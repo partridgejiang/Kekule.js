@@ -7,12 +7,14 @@
 		function init()
 		{
 			document.addEventListener('copy', function(e){
+				console.log(e.clipboardData.types);
 				console.log('copy data', e.clipboardData.getData('text/plain'));
-				//e.clipboardData.setData('text/plain', 'Hello, world!');
+				e.clipboardData.setData('text/plain', 'Hello, world!');
 				//e.clipboardData.setData('text/html', '<b>Hello, world!</b>');
-				//e.preventDefault(); // We want our data, not data from any selection, to be written to the clipboard
+				e.preventDefault(); // We want our data, not data from any selection, to be written to the clipboard
 			});
 			document.addEventListener('paste', function(e){
+				console.log(e.clipboardData.types);
 				console.log('paste data', e.clipboardData.getData('text/plain'));
 				var data = e.clipboardData.getData('text/plain');
 				data += '!!!';
@@ -24,8 +26,9 @@
 		{
 			var copyEvent = new ClipboardEvent('copy'); //, { dataType: 'text/plain', data: 'My copy string' } );
 			copyEvent.clipboardData.setData('text/plain', 'My copy string');
-			//copyEvent.preventDefault();
-			document.dispatchEvent(copyEvent);
+			copyEvent.preventDefault();
+			//document.dispatchEvent(copyEvent);
+			document.body.dispatchEvent(copyEvent);
 		}
 		function customPaste()
 		{
@@ -39,6 +42,7 @@
 	<div>
 		<textarea id="editor">ada</textarea>
 	</div>
+	<div id="divEmpty" style="background-color: yellow; width: 100px; height: 100px"></div>
 	<div>
 		<button id="btnCopy" value="copy" onclick="customCopy()">Copy</button>
 		<button id="btnPaste" value="paste" onclick="customPaste()">Paste</button>

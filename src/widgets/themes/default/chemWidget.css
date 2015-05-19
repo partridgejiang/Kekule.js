@@ -206,12 +206,15 @@
 .K-Chem-Viewer .K-Chem-InnerToolbar  /* default location */
 {
     display: block;
-    position: absolute;
     /*
     right: 0.5em;
     bottom: 0.5em;
     */
     z-index: 10;
+}
+.K-Chem-Viewer .K-Chem-InnerToolbar.K-Chem-Viewer-Embedded-Toolbar
+{
+    position: absolute;
 }
 
 .K-Chem-Viewer .K-Chem-Viewer-Caption
@@ -441,6 +444,68 @@
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
 {
     width: 10em;
+}
+
+.K-Chem-Obj-Setter
+{
+    width: 550px;
+    height: 450px;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
+{
+    display: block;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
+{
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    bottom: 0px;
+    margin: 0;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
+{
+    border: 1px solid;
+    position: relative;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer.K-Chem-Viewer
+{
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    width: auto;
+    height: auto;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel
+{
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-TabGroup
+{
+    position: absolute;
+    bottom: 5px;
+}
+.K-Chem-Obj-Setter-Configurator
+{
+
+}
+.K-Chem-Obj-Setter-Configurator .K-CheckBox
+{
+    display: block;
+    margin: 0.5em 0.5em;
+}
+.K-Chem-Obj-Setter-Configurator .K-TextBox
+{
+    width: 4em;
+}
+.K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Line
+{
+    white-space: nowrap;
 }
 
 .K-Chem-ComposerDialog .K-Chem-Composer

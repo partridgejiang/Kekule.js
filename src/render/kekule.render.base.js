@@ -291,15 +291,15 @@ Kekule.Render.Render3DGraphicQuality = {
  */
 Kekule.Render.Molecule3DDisplayType = {
 	/** Wire frame */
-	WIRE: 1,
+	WIRE: 31,
 	/** Sticks */
-	STICKS: 2,
+	STICKS: 32,
 	/** Ball and stick */
-	BALL_STICK: 3,
+	BALL_STICK: 33,
 	/** Space fill */
-	SPACE_FILL: 4,
+	SPACE_FILL: 34,
 	/** Default is ball and stick */
-	DEFAULT: 3
+	DEFAULT: 33
 }
 
 /**

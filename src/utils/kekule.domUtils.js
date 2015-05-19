@@ -472,6 +472,24 @@ Kekule.DomUtils = {
 	},
 
 	/**
+	 * Set elem's attributes by values appointed by hash object.
+	 * @param {Element} elem
+	 * @param {Hash} hash
+	 */
+	setElemAttributes: function(elem, hash)
+	{
+		var props = Kekule.ObjUtils.getOwnedFieldNames(hash);
+		for (var i = 0, l = props.length; i < l; ++i)
+		{
+			var prop = props[i];
+			var value = hash[prop];
+			if (prop && value)
+				elem.setAttribute(prop, value);
+		}
+		return elem;
+	},
+
+	/**
 	 * Check if node has been inserted to DOM tree of document.
 	 * @param {DOMNode} node
 	 * @param {Document} doc
