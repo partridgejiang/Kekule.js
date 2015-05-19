@@ -581,7 +581,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	widgetShowStateBeforeChanging: function($super, isShown)
 	{
 		$super(isShown);
-		if (isShown)  // show
+		if (isShown && !this.isShown())  // show
 		{
 			this.adjustLocation();
 			this.setResult(null);

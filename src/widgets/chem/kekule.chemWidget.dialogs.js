@@ -142,7 +142,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		var result = [];
 		//var formatIds = [];
 		var formatIds = this.getAllowedFormatIds() || Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds();
-		console.log(formatIds);
+		//console.log(formatIds);
 
 		/*
 		for (var i = 0, l = readerInfos.length; i < l; ++i)
