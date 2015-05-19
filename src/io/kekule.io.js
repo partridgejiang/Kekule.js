@@ -442,7 +442,8 @@ Kekule.IO.ChemDataReaderManager = {
 		{
 			var item = readers[i];
 			var fids = item.formatId;
-			result = result.concat(fids || []);
+			//result = result.concat(fids || []);
+			Kekule.ArrayUtils.pushUnique(result, fids);
 		}
 		return result;
 	},
@@ -746,7 +747,8 @@ Kekule.IO.ChemDataWriterManager = {
 		{
 			var item = writers[i];
 			var fids = item.formatId;
-			result = result.concat(fids || []);
+			//result = result.concat(fids || []);
+			Kekule.ArrayUtils.pushUnique(result, fids);
 		}
 		return result;
 	},

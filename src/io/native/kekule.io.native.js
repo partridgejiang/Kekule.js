@@ -254,7 +254,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 			'fileExt': 'kcx'
 		});
 	*/
-	var jsonFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-kekule-json');
+	var jsonFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.JSON);
 	var kcjFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-kekule-json');
 	var kcxFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-kekule-xml');
 
