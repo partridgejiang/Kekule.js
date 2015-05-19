@@ -110,6 +110,13 @@
     background-color: transparent;
 }
 
+.K-Resize-Gripper
+{
+    background-repeat: no-repeat;
+    background-image: url("icons/generalUiIcons.png");
+    background-position: -80px -224px;   /* pencil mark */
+}
+
 
 .K-Button,
 .K-Toolbar,

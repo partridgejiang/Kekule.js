@@ -109,6 +109,16 @@
     background-repeat: no-repeat;
 }
 
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
+{
+    border-color: #d3d3d3;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel
+{
+    color: #aaaaaa;
+}
+
 .K-Error-Report
 {
     background-color: #eeee00;
@@ -321,6 +331,10 @@
 {
     background-image: url("iconsSmall/bondTriple.gif");
 }
+.K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/bondOuter.gif");
+}
 .K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/bondWedge.gif");
@@ -332,6 +346,10 @@
 .K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content
 {
     background-image: url("iconsSmall/bondWavy.gif");
+}
+.K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
+{
+    background-image: url("iconsSmall/bondDoubleEither.gif");
 }
 .K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content
 {

@@ -38,12 +38,14 @@ var kekuleFiles = {
 			'lan/xmlJsons.js',
 			'lan/serializations.js'
 		],
+		'category': 'core',
 		'minFile': 'root.min.js'
 	},
 	'root': {
 		'files': [
-			'core/kekule.root.js',
+			'core/kekule.root.js'
 		],
+		'category': 'core',
 		'minFile': 'root.min.js'
 	},
 
@@ -54,7 +56,10 @@ var kekuleFiles = {
 			'localization/en/kekule.localize.en.js',
 			'localization/en/kekule.localize.widget.en.js',
 			'localization/en/kekule.localize.objDefines.en.js'
-		]
+
+			//'localization/zh/kekule.localize.widget.zh.js'
+		],
+		'category': 'localization'
 	},
 
 	'common': {
@@ -66,7 +71,8 @@ var kekuleFiles = {
 			'utils/kekule.domUtils.js',
 			'utils/kekule.domHelper.js',
 			'utils/kekule.textHelper.js'
-		]
+		],
+		'category': 'core'
 		//'minFile': 'root.min.js'
 	},
 
@@ -87,7 +93,8 @@ var kekuleFiles = {
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js'
-		]
+		],
+		'category': 'core'
 	},
 
 	'html': {
@@ -95,7 +102,8 @@ var kekuleFiles = {
 		'files': [
 			'xbrowsers/kekule.x.js',
 			'html/kekule.predefinedResLoaders.js'
-		]
+		],
+		'category': 'core'
 	},
 
 	'io': {
@@ -109,7 +117,8 @@ var kekuleFiles = {
 			'io/mdl/kekule.io.mdlIO.js',
 			'io/smiles/kekule.io.smiles.js',
 			'io/native/kekule.io.native.js'
-		]
+		],
+		'category': 'io'
 	},
 
 	'render': {
@@ -129,7 +138,8 @@ var kekuleFiles = {
 			'render/3d/kekule.render.renderer3D.js',
 			'render/3d/kekule.render.threeRenderer.js',
 			'render/kekule.render.painter.js'
-		]
+		],
+		'category': 'render'
 	},
 
 	'widget': {
@@ -148,7 +158,7 @@ var kekuleFiles = {
 			'widgets/transitions/kekule.widget.transitions.js',
 			'widgets/transitions/kekule.widget.transMgr.js',
 			'widgets/commonCtrls/kekule.widget.images.js',
-			'widgets/commonCtrls/kekule.widget.menus.js',
+			//'widgets/commonCtrls/kekule.widget.menus.js',
 			'widgets/commonCtrls/kekule.widget.containers.js',
 			'widgets/commonCtrls/kekule.widget.buttons.js',
 			'widgets/commonCtrls/kekule.widget.formControls.js',
@@ -157,6 +167,7 @@ var kekuleFiles = {
 			'widgets/commonCtrls/kekule.widget.dialogs.js',
 			'widgets/commonCtrls/kekule.widget.msgPanels.js',
 			'widgets/commonCtrls/kekule.widget.tabViews.js',
+			'widgets/commonCtrls/kekule.widget.resizers.js',
 			'widgets/advCtrls/kekule.widget.valueListEditors.js',
 			'widgets/advCtrls/kekule.widget.colorPickers.js',
 			'widgets/advCtrls/kekule.widget.textEditors.js',
@@ -168,7 +179,8 @@ var kekuleFiles = {
 			'widgets/sys/kekule.widget.sysMsgs.js',
 
 			'widgets/operation/kekule.operHistoryTreeViews.js'  // debug
-		]
+		],
+		'category': 'widget'
 	},
 
 	'chemWidget': {
@@ -182,6 +194,7 @@ var kekuleFiles = {
 			'widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewerGrids.js',
+			'widgets/chem/viewer/kekule.chemWidget.chemObjSetters.js',
 
 			'widgets/chem/editor/kekule.chemEditor.extensions.js',
 			'widgets/chem/editor/kekule.chemEditor.baseEditors.js',
@@ -194,8 +207,9 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 
-			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
-		]
+			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
+		],
+		'category': 'chemWidget'
 	},
 
 	'algorithm': {
@@ -210,7 +224,8 @@ var kekuleFiles = {
 			'algorithm/kekule.structures.standardizers.js',
 			'algorithm/kekule.structures.searches.js',
 			'algorithm/kekule.structures.stereos.js'
-		]
+		],
+		'category': 'algorithm'
 	},
 
 	'data': {
@@ -227,7 +242,8 @@ var kekuleFiles = {
 		'requires': ['root', 'common'],
 		'files': [
 			'_extras/kekule.emscriptenUtils.js'
-		]
+		],
+		'category': 'extra'
 	},
 
 	'openbabel': {
@@ -236,7 +252,8 @@ var kekuleFiles = {
 			'localization/en/kekule.localize.extras.openbabel.en.js',
 			'_extras/OpenBabel/kekule.openbabel.adapters.js',
 			'_extras/OpenBabel/kekule.openbabel.io.js'
-		]
+		],
+		'category': 'extra'
 	}
 };
 

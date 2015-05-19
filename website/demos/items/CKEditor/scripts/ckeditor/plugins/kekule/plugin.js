@@ -1,4 +1,5 @@
 (function(){
+	var CLASS_NAME_VIEWER = 'K-Chem-Viewer';
 	var CLASS_NAME_VIEWER2D = 'K-Chem-Viewer2D';
 	var CLASS_NAME_VIEWER3D = 'K-Chem-Viewer3D';
 
@@ -72,16 +73,18 @@
 		init: function( editor ) {
 			addEssentialAssocFiles(editor, this.path);
 
-			editor.addCommand( 'insertChemObj2D',
-				new CKEDITOR.dialogCommand( 'insertChemObjDialog2D', {
-					allowedContent: 'img[data-*](K-*)'
+			editor.addCommand( 'insertChemObj',
+				new CKEDITOR.dialogCommand( 'insertChemObjDialog', {
+					allowedContent: 'img[data-*,style](K-*)'
 				})
 			);
+			/*
 			editor.addCommand( 'insertChemObj3D',
 				new CKEDITOR.dialogCommand( 'insertChemObjDialog3D', {
 					allowedContent: 'img[data-*](K-*)'
 				})
 			);
+			*/
 			/*
 			editor.addCommand( 'insertChemObj',
 				{
@@ -102,51 +105,57 @@
 
 			var sToolbar = /*'kekule'; //*/ 'insert';
 			//editor.ui.addToolbarGroup(sToolbar, null, 'insert');
-			editor.ui.addButton( 'ChemObj2D', {
-				label: editor.lang.kekule.caption_ins_mol2D, //*/'Insert 2D Molecule',
+			editor.ui.addButton( 'ChemObj', {
+				label: editor.lang.kekule.caption_ins_mol, //*/'Insert 2D Molecule',
 				icon: this.path + 'icons/insertChemObj2D.png',
-				command: 'insertChemObj2D',
+				command: 'insertChemObj',
 				toolbar: sToolbar
 			});
+			/*
 			editor.ui.addButton( 'ChemObj3D', {
-				label: editor.lang.kekule.caption_ins_mol3D, //*/'Insert 3D Molecule',
+				label: editor.lang.kekule.caption_ins_mol3D, //'Insert 3D Molecule',
 				icon: this.path + 'icons/insertChemObj3D.png',
 				command: 'insertChemObj3D',
 				toolbar: sToolbar
 			});
+			*/
 
 			if ( editor.contextMenu ) {
 				editor.addMenuGroup( 'kekuleGroup' );
-				editor.addMenuItem( 'chemObj2DItem', {
-					label: editor.lang.kekule.caption_edit_mol2D,  //'Edit 2D Molecule',
+				editor.addMenuItem( 'chemObjItem', {
+					label: editor.lang.kekule.caption_edit_mol,  //'Edit 2D Molecule',
 					icon: this.path + 'icons/insertChemObj2D.png',
-					command: 'insertChemObj2D',
+					command: 'insertChemObj',
 					group: 'kekuleGroup'
 				});
+				/*
 				editor.addMenuItem( 'chemObj3DItem', {
 					label: editor.lang.kekule.caption_edit_mol3D,  //'Edit 3D Molecule',
 					icon: this.path + 'icons/insertChemObj3D.png',
 					command: 'insertChemObj3D',
 					group: 'kekuleGroup'
 				});
+				*/
 
 				editor.contextMenu.addListener( function( element )
 				{
-					if (element.hasClass(CLASS_NAME_VIEWER2D))  // 2D molecule
+					if (element.hasClass(CLASS_NAME_VIEWER) || element.hasClass(CLASS_NAME_VIEWER2D) || element.hasClass(CLASS_NAME_VIEWER3D))  // 2D molecule
 					{
-						return {chemObj2DItem: CKEDITOR.TRISTATE_OFF};
+						return {chemObjItem: CKEDITOR.TRISTATE_OFF};
 					}
+					/*
 					else if (element.hasClass(CLASS_NAME_VIEWER3D))  // 3D molecule
 					{
 						return {chemObj3DItem: CKEDITOR.TRISTATE_OFF};
 					}
+					*/
 				});
 			}
 
 
 
-			CKEDITOR.dialog.add( 'insertChemObjDialog2D', this.path + 'dialogs/insertChemObjDlg.js' );
-			CKEDITOR.dialog.add( 'insertChemObjDialog3D', this.path + 'dialogs/insertChemObjDlg.js' );
+			CKEDITOR.dialog.add( 'insertChemObjDialog', this.path + 'dialogs/insertChemObjDlg.js' );
+			//CKEDITOR.dialog.add( 'insertChemObjDialog3D', this.path + 'dialogs/insertChemObjDlg.js' );
 		}
 	});
 })();
