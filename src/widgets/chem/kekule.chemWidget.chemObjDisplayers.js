@@ -677,6 +677,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//if (newObj)
 		//console.log('change to new Obj', newObj);
 		this.doLoad(newObj);
+		if (this.getResetAfterLoad() && oldObj)  // clear old draw options if oldObj is set
+			this.resetDisplay();
 	},
 
 	/**
@@ -762,8 +764,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		finally
 		{
-			if (this.getResetAfterLoad() && this.getChemObj())
-				this.resetDisplay();
 			this.doLoadEnd(this.getChemObj());
 		}
 	},
