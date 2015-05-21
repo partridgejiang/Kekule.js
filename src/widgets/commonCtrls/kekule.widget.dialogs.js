@@ -114,6 +114,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			this.setCaption(caption);
 		if (buttons)
 			this.setButtons(buttons);
+
+		this.setDisplayed(false);
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -318,8 +320,20 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
+	needAdjustPosition: function()
+	{
+		var showHideType = this.getShowHideType();
+		var ST = Kekule.Widget.ShowHideType;
+		var result = (showHideType !== ST.DROPDOWN);
+		//console.log('need adjust pos', result, this.getShowHideType());
+		return result;
+	},
+
+	/** @private */
 	_storePositionInfo: function()
 	{
+		if (!this.needAdjustPosition())
+			return;
 		var elem = this.getElement();
 		var style = elem.style;
 		this._posInfo = {
@@ -335,6 +349,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	_restorePositionInfo: function()
 	{
+		if (!this.needAdjustPosition())
+			return;
 		var elem = this.getElement();
 		var style = elem.style;
 		var info = this._posInfo;
@@ -356,6 +372,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	adjustLocation: function()
 	{
+		if (!this.needAdjustPosition())
+			return;
 		this._storePositionInfo();
 
 		var L = Kekule.Widget.Location;
@@ -438,6 +456,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 
 			this.adjustClientSize(w, h);
 		}
+		this._posAdjusted = true;
 	},
 	/** @private */
 	adjustClientSize: function(dialogWidth, dialogHeight)
@@ -460,6 +479,10 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				self._dialogCallback = callback;
 			},
 		0);
+		/*
+		if (!this.isShown())
+			this.adjustLocation();
+		*/
 	},
 	/** @private */
 	prepareModal: function()
@@ -484,6 +507,12 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			elem.parentNode.removeChild(elem);
 		div.appendChild(elem);
 		doc.body.appendChild(div);
+		/*
+		if (!this.isShown())
+			this.adjustLocation();
+		else
+			console.log(this.isShown());
+		*/
 		//console.log(div.parentNode);
 		//console.log('prepare modal done');
 		//console.log(div.parentNode);
@@ -581,7 +610,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	widgetShowStateBeforeChanging: function($super, isShown)
 	{
 		$super(isShown);
-		if (isShown && !this.isShown())  // show
+
+		if (isShown /*&& (!this.isShown())*/)  // show
 		{
 			this.adjustLocation();
 			this.setResult(null);
@@ -618,7 +648,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		{
 			if (this._modalInfo)
 				this.unprepareModal();
-			this._restorePositionInfo();
+			if (!this.isShown())
+				this._restorePositionInfo();
 			this._dialogOpened = false;
 		}
 	}

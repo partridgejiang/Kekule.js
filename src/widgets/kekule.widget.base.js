@@ -1328,7 +1328,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		if (!this.getElement())
 			return;
-		if (this.__$isShowing)  // avoid duplicate execute
+		if (this.__$isShowing || this.__$isHiding)  // avoid duplicate execute
 		{
 			return;
 		}
@@ -1347,7 +1347,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				callback();
 		};
 
-		this.widgetShowStateBeforeChanging(true);
+
+		this.setShowHideType(showType);
 
 		if (Kekule.ObjUtils.notUnset(showType))
 		{
@@ -1361,11 +1362,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 			else
 				this.setIsDialog(false);
+		}
 
-			if (showType === Kekule.Widget.ShowHideType.DROPDOWN)  // prepare
-			{
-				Kekule.Widget.globalManager.preparePopupWidget(this, caller, showType);
-			}
+		this.widgetShowStateBeforeChanging(true);
+
+		if (showType === Kekule.Widget.ShowHideType.DROPDOWN)  // prepare
+		{
+			Kekule.Widget.globalManager.preparePopupWidget(this, caller, showType);
 		}
 
 		//console.log('show', this.getClassName(), this.getElement(), this.getElement().parentNode);
@@ -1393,7 +1396,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 
 		this.setShowHideCaller(caller);
-		this.setShowHideType(showType);
+		//this.setShowHideType(showType);
 
 		this.widgetShowStateChanged(true);
 		return this;
@@ -1428,7 +1431,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		if (!this.getElement())
 			return;
-		if (this.__$isHiding)  // avoid duplicate execute
+		if (this.__$isHiding || this.__$isShowing)  // avoid duplicate execute
 			return;
 		this.__$isHiding = true;
 		//this.__$isShowing = false;
