@@ -254,8 +254,11 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	{
 		$super();
 		var space = this.getChemObj();
-		var screenSize = space.getScreenSize();
-		this.changeClientSize(screenSize.x, screenSize.y, zoomLevel);
+		if (space)
+		{
+			var screenSize = space.getScreenSize();
+			this.changeClientSize(screenSize.x, screenSize.y, zoomLevel);
+		}
 	},
 
 	/** @ignore */

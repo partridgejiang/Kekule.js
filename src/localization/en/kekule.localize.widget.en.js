@@ -24,6 +24,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	S_COLOR_UNSET: '(unset)',
 	S_COLOR_DEFAULT: '(default)',
 	S_COLOR_MIXED: '(mixed)',
+	S_COLOR_TRANSPARENT: '(transparent)',
 
 	S_OBJECT_UNSET: '(none)',
 
@@ -64,6 +65,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 //Kekule.ChemWidgetTexts.en = {
 Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	// ChemDisplayer / ChemViewer
+	CAPTION_CLEAROBJS: 'Clear',
 	CAPTION_LOADFILE: 'Load...',
 	CAPTION_LOADDATA: 'Load...',
 	CAPTION_SAVEFILE: 'Save...',
@@ -88,6 +90,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	CAPTION_EDIT_OBJ: 'Edit',
 
+	HINT_CLEAROBJS: 'Clear objects',
 	HINT_LOADFILE: 'Load from file',
 	HINT_LOADDATA: 'Load data',
 	HINT_SAVEFILE: 'Save to file',
@@ -286,11 +289,14 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_3D: '3D',
 	CAPTION_AUTOSIZE: 'Autosize',
 	CAPTION_AUTOFIT: 'Autofit',
-	CAPTION_SHOWINFO: 'Show info',
+	CAPTION_SHOWSIZEINFO: 'Show size info',
 	CAPTION_LABEL_SIZE: 'Size: ',
+	CAPTION_BACKGROUND_COLOR: 'Background color: ',
 	PLACEHOLDER_WIDTH: 'width',
 	PLACEHOLDER_HEIGHT: 'height',
 	CAPTION_WIDTH_HEIGHT: 'width: {0}, height: {1}',
+
+	//HINT_SHOWSIZEINFO: 'Whether show width and height of context',
 
 	// misc
 	S_VALUE_DEFAULT: '(Default)'

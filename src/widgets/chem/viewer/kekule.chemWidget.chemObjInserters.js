@@ -13,6 +13,9 @@
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/kekule.widget.helpers.js
  * requires /widgets/commonCtrls/kekule.widget.tabViewes.js
+ * requires /widgets/commonCtrls/kekule.widget.buttons.js
+ * requires /widgets/commonCtrls/kekule.widget.formControls.js
+ * requires /widgets/advCtrls/kekule.widget.colorPickers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
  * requires /widgets/chem/kekule.chemWidget.viewers.js
@@ -39,7 +42,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMOBJSETTER_VIEWER: 'K-Chem-Obj-Setter-Viewer',
 	CHEMOBJSETTER_TABGROUP: 'K-Chem-Obj-Setter-TabGroup',
 	CHEMOBJSETTER_INFOLABEL: 'K-Chem-Obj-Setter-InfoLabel',
-	CHEMOBJSETTER_LINE: 'K-Chem-Obj-Setter-Line',
+	CHEMOBJSETTER_REGION: 'K-Chem-Obj-Setter-Region',
 	//CHEMOBJSETTER_OPTIONPANEL: 'K-Chem-Obj-Setter-OptionPanel',
 
 	CHEMOBJSETTER_CONFIGURATOR: 'K-Chem-Obj-Setter-Configurator'
@@ -154,6 +157,13 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			}
 		});
 		this.defineProp('autoSizeExport', {'dataType': DataType.BOOL});
+		this.defineProp('backgroundColor2D', {'dataType': DataType.STRING,
+			'setter': function(value) { this.setPropStoreFieldValue('backgroundColor2D', value); this.backgroundColorChange(); }
+		});
+		this.defineProp('backgroundColor3D', {'dataType': DataType.STRING,
+			'setter': function(value) { this.setPropStoreFieldValue('backgroundColor3D', value); this.backgroundColorChange(); }
+		});
+		this.defineProp('exportViewerPredefinedSetting', {'dataType': DataType.STRING});
 
 		this.defineProp('clientPanel', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': false, 'scope': PS.PRIVATE});
 		this.defineProp('tabs', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': false, 'scope': PS.PRIVATE});
@@ -184,6 +194,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		$super();
 		this.setAutoSizeExport(true);
+		this.setBackgroundColor3D('#000000');
+		this.setExportViewerPredefinedSetting('basic');
 	},
 	/**
 	 * Define property that directly mapped to viewer's property.
@@ -284,6 +296,27 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		return this.getClientPanel()? this.getClientPanel().getCoreElement(): this.getCoreElement();
 	},
 
+	/** @private */
+	getBackgroundColor: function(renderType)
+	{
+		var result = (renderType === Kekule.Render.RendererType.R3D)? this.getBackgroundColor3D(): this.getBackgroundColor2D();
+		if (result === Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT)
+			result = 'transparent';
+		return result;
+	},
+	/** @private */
+	backgroundColorChange: function()
+	{
+		var color = this.getBackgroundColor(this.getRenderType());
+		var viewer = this.getPropStoreFieldValue('viewer');
+		if (viewer)
+		{
+			//console.log('set back color', color);
+			var elem = viewer.getElement();
+			elem.style.backgroundColor = color || 'transparent';
+		}
+	},
+
 	/**
 	 * Adjust size and positions of children when widget size is changed.
 	 * @private
@@ -330,6 +363,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		buttons.push({
 			'action': this._configAction
 		});
+		buttons.splice(2, 0, BNS.clearObjs);
 		result.setToolbarParentElem(this._toolbarParentElem);
 		result.setToolButtons(buttons); //.concat([{'text': 'MyButton', 'hint': 'Custom'}]));
 		result.setToolbarPos(Kekule.Widget.Position.BOTTOM);
@@ -343,6 +377,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		result.setChemObj(this.getChemObj());
 
 		this.setPropStoreFieldValue('viewer', result);
+
+		this.backgroundColorChange();  // force change background color
 
 		return result;
 	},
@@ -377,6 +413,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			var index = btns.indexOf(btn);
 			var rType = (index === 1)? Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D;
 			this.setRenderType(rType);
+			this.backgroundColorChange();  // force change background color
 		}, this);
 		result.appendToElem(rootElem);
 		this.setPropStoreFieldValue('tabs', result);
@@ -491,7 +528,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'autofit': this.getAutofit(),
 			'width': Math.round(dim.width),
 			'height': Math.round(dim.height),
-			'renderType': this.getRenderType() || Kekule.Render.RendererType.R2D
+			'renderType': this.getRenderType() || Kekule.Render.RendererType.R2D,
+			'backgroundColor': this.getBackgroundColor(this.getRenderType()),
+			'predefinedSetting': this.getExportViewerPredefinedSetting()
 		};
 		if (this.getAutoSizeExport())  // restore
 		{
@@ -514,7 +553,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		var detail = this.exportDetails(dataType, options);
 		var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
-		if (this.getIs3D())
+		if (detail.backgroundColor)
+			style += '; background-color: ' + detail.backgroundColor;
+		else if (this.getIs3D())
 			style += '; background-color: #000';
 		var result = {
 			'src': detail.dataUri,
@@ -524,8 +565,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'data-kekule-widget': 'Kekule.ChemWidget.Viewer',
 			'data-render-type': detail.renderType,
 			'data-chem-obj': detail.chemObjJson,
-			'data-draw-options': detail.drawOptionsJson
-		}
+			'data-draw-options': detail.drawOptionsJson,
+			'data-predefined-setting': detail.predefinedSetting
+		};
 		if (detail.autoSize)
 			result['data-auto-size'] = detail.autoSize;
 		if (detail.autofit)
@@ -564,7 +606,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			this.setAutoSizeExport(!!detail.autoSize);
 		if (Kekule.ObjUtils.notUnset(detail.autofit))
 			this.setAutofit(!!detail.autofit);
-		if (detail.width && detail.height && !detail.autoSize)
+		if (detail.width && detail.height && (!detail.autoSize || detail.renderType === Kekule.Render.RendererType.R3D))
 			this.setContextDimension({'width': detail.width, 'height': detail.height});
 		if (detail.drawOptions)
 			this.getViewer().setDrawOptions(detail.drawOptions);
@@ -572,17 +614,15 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	},
 
 	/**
-	 * Load a chem object and apply settings in this widget from an HTML element previously exported.
-	 * @param {HTMLElement} element
+	 * Load a chem object and apply settings in this widget from hash attribs of an HTML element prviously exported.
+	 * @param {Hash} attribs
 	 */
-	importFromElem: function(element)
+	importFromElemAttribs: function(attribs)
 	{
-		var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
-		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
 		//if (!attribs.width)
-		attribs.width = JsonUtility.parse(attribs.width) || dim.width;
+		attribs.width = JsonUtility.parse(attribs.width);
 		//if (!attribs.height)
-		attribs.height = JsonUtility.parse(attribs.height) || dim.height;
+		attribs.height = JsonUtility.parse(attribs.height);
 		var chemObjJson = attribs['data-chem-obj'];
 		var chemObj = chemObjJson? Kekule.IO.loadMimeData(chemObjJson, 'chemical/x-kekule-json'): null;
 		if (attribs['data-render-type'])
@@ -594,6 +634,21 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (attribs['data-autofit'])
 			attribs.autofit = JsonUtility.parse(attribs['data-autofit']);
 		return this.importChemObjWithDetails(chemObj, attribs);
+	},
+
+	/**
+	 * Load a chem object and apply settings in this widget from an HTML element previously exported.
+	 * @param {HTMLElement} element
+	 */
+	importFromElem: function(element)
+	{
+		var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
+		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
+		if (!attribs.width)
+			attribs.width = dim.width;
+		if (!attribs.height)
+			attribs.height = dim.height;
+		return this.importFromElemAttribs(attribs);
 	}
 });
 
@@ -616,6 +671,7 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		this._checkBoxShowInfo = null;
 		this._textBoxWidth = null;
 		this._textBoxHeight = null;
+		this._colorPicker = null;
 		$super(widget);
 
 		this.addEventListener('valueChange', function(e){ this.saveConfigValues(); }, this);
@@ -635,6 +691,11 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 	doCreateSubElements: function(doc, element)
 	{
 		var checkBox = new Kekule.Widget.CheckBox(this);
+		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_SHOWSIZEINFO'));
+		checkBox.appendToElem(element);
+		this._checkBoxShowInfo = checkBox;
+
+		var checkBox = new Kekule.Widget.CheckBox(this);
 		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_AUTOSIZE'));
 		checkBox.appendToElem(element);
 		this._checkBoxAutoSize = checkBox;
@@ -644,16 +705,13 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		checkBox.appendToElem(element);
 		this._checkBoxAutofit = checkBox;
 
-		var checkBox = new Kekule.Widget.CheckBox(this);
-		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_SHOWINFO'));
-		checkBox.appendToElem(element);
-
 		// width/height setter
 		var region = doc.createElement('div');
-		region.className = CCNS.CHEMOBJSETTER_LINE;
-		var labelElem = doc.createElement('span');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
 		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_LABEL_SIZE'));
 		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
 		var textBox = new Kekule.Widget.TextBox(this);
 		textBox.setPlaceholder(Kekule.$L('ChemWidgetTexts.PLACEHOLDER_WIDTH'));
 		textBox.appendToElem(region);
@@ -667,7 +725,18 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		this._textBoxHeight = textBox;
 		element.appendChild(region);
 
-		this._checkBoxShowInfo = checkBox;
+		// background color setter
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_BACKGROUND_COLOR'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+		var colorPicker = new Kekule.Widget.ColorPicker(this);
+		colorPicker.setSpecialColors([Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT]);
+		colorPicker.appendToElem(region);
+		this._colorPicker = colorPicker;
+		element.appendChild(region);
 	},
 	/** @private */
 	loadConfigValues: function($super)
@@ -685,6 +754,8 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 			var dim = w.getContextDimension();
 			this._textBoxWidth.setText(Math.round(dim.width));
 			this._textBoxHeight.setText(Math.round(dim.height));
+			var color = is2D? w.getBackgroundColor2D(): w.getBackgroundColor3D();
+			this._colorPicker.setValue(color || Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT);
 		}
 	},
 	/** @private */
@@ -699,6 +770,12 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 			{
 				w.setAutoSizeExport(this._checkBoxAutoSize.getChecked());
 				w.setAutofit(this._checkBoxAutofit.getChecked());
+
+				w.setBackgroundColor2D(this._colorPicker.getValue());
+			}
+			else
+			{
+				w.setBackgroundColor3D(this._colorPicker.getValue());
 			}
 			w.setShowInfo(this._checkBoxShowInfo.getChecked());
 			var dim = {width: parseInt(this._textBoxWidth.getText()), height: parseInt(this._textBoxHeight.getText())};

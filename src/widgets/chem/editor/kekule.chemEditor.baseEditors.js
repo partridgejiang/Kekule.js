@@ -4539,6 +4539,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 							(region === R.CORNER_BL)? SN.CURSOR_ROTATE_SW:
 							(region === R.CORNER_BR)? SN.CURSOR_ROTATE_SE:
 							SN.CURSOR_ROTATE;
+						console.log('rotate cursor', result);
 					}
 				}
 			}

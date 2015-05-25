@@ -1431,6 +1431,28 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 Kekule.ClassDefineUtils.addExtraObjMapSupport(Kekule.Render.AbstractRenderer);
 
 /**
+ * A dummy renderer that does nothing.
+ * @class
+ * @augments Kekule.Render.AbstractRenderer
+ */
+Kekule.Render.DummyRenderer = Class.create(Kekule.Render.AbstractRenderer,
+/** @lends Kekule.Render.DummyRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Render.DummyRenderer',
+	/** @ignore */
+	draw: function(context, baseCoord, options)
+	{
+		return;
+	},
+	/** @ignore */
+	redraw: function(context)
+	{
+		return;
+	}
+});
+
+/**
  * 2D renderer factory.
  * @class
  */

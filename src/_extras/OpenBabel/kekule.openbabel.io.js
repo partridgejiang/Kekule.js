@@ -334,12 +334,13 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 			var id = info.id;
 			var mimeType = info.mimeType;
 			// check if fileExts or mimeType already exists
-			/*
+
 			var fmtId = formatManager.findFormatId(mimeType);
+			/*
 			if (!fmtId)
 				fmtId = formatManager.findFormatId(null, id);
-			if (!fmtId)  // file ext or MIME type not exists, register
 			*/
+			if (!fmtId)  // file ext or MIME type not exists, register
 			{
 				/*
 				if (ioType === 'in')

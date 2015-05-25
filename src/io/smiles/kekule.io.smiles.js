@@ -214,15 +214,21 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			// standardize molecule and mark the aromatic rings
 			var dupMol = mol.clone();
 			//var aromaticRings = dupMol.perceiveAromaticRings();
-			dupMol.standardize();
+			if (dupMol.standardize)
+			{
+				dupMol.standardize();
+			}
 			var aromaticNodes = [];
 			var aromaticConnectors = [];
-			var aromaticRings = dupMol.getAromaticRings();
-			for (var i = 0, l = aromaticRings.length; i < l; ++i)
+			if (dupMol.getAromaticRings)
 			{
-				var ring = aromaticRings[i];
-				AU.pushUnique(aromaticNodes, ring.nodes);
-				AU.pushUnique(aromaticConnectors, ring.connectors);
+				var aromaticRings = dupMol.getAromaticRings();
+				for (var i = 0, l = aromaticRings.length; i < l; ++i)
+				{
+					var ring = aromaticRings[i];
+					AU.pushUnique(aromaticNodes, ring.nodes);
+					AU.pushUnique(aromaticConnectors, ring.connectors);
+				}
 			}
 
 			var molGraph = Kekule.GraphAdaptUtils.ctabToGraph(dupMol.getCtab());

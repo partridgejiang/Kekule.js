@@ -718,7 +718,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				dialog.setChemObj(cloneObj);
 			}
 			else
-				dialog.setChemObj(null);
+			{
+				//dialog.setChemObj(null);
+				dialog.getComposer().newDoc();
+			}
 
 			var self = this;
 			var callback = function(dialogResult)
@@ -950,6 +953,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			//BNS.loadFile,
 			BNS.loadData,
 			BNS.saveFile,
+			//BNS.clearObjs,
 			BNS.molDisplayType,
 			BNS.molHideHydrogens,
 			BNS.zoomIn, BNS.zoomOut
@@ -985,6 +989,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		result[BNS.loadFile] = CW.ActionDisplayerLoadFile;
 		result[BNS.loadData] = CW.ActionDisplayerLoadData;
 		result[BNS.saveFile] = CW.ActionDisplayerSaveFile;
+		result[BNS.clearObjs] = CW.ActionDisplayerClear;
 		result[BNS.zoomIn] = CW.ActionDisplayerZoomIn;
 		result[BNS.zoomOut] = CW.ActionDisplayerZoomOut;
 		result[BNS.rotateLeft] = CW.ActionViewerRotateLeft;

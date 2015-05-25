@@ -1144,10 +1144,11 @@ Kekule.X.DomReady = {
 		if (!DOM.isReady)
 		{
 			var readyState = document && document.readyState;
-			if (readyState === 'complete' || readyState === 'loaded')  // document already loaded, call fn directly
+			if (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive')  // document already loaded, call fn directly
 			{
 				DOM.isReady = true;
 			}
+			//console.log('[document ready state]', readyState, fn, fn.toString());
 		}
     if (DOM.isReady)
     {

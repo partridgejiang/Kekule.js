@@ -108,10 +108,14 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 		var self = this;
 		var done = function()
 		{
+			if (done.__$applied__)  // avoid duplicated call
+				return;
+			done.__$applied__ = true;
 			self.finish(element, caller, ops);
 			if (callback)
 				callback();
 		};
+		done.__$applied__ = false;
 		this.prepare(element, caller, ops);
 
 		var self = this;

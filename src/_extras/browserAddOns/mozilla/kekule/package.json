@@ -1,9 +1,12 @@
 {
-  "name": "kekule",
-  "title": "kekule",
-  "id": "jid1-PWAnOsSY3ChWuQ",
-  "description": "a basic add-on",
-  "author": "",
+  "name": "firemol",
+  "title": "FireMol",
+  "id": "firemol@kekule",
+  "description": "An addon based on Kekule.js, enables user to open/edit molecule and insert it to HTML pages, especially web editors.",
+  "author": "Partridge Jiang",
   "license": "MPL 2.0",
-  "version": "0.1"
+  "version": "0.5",
+  "homepage": "http://partridgejiang.github.io/Kekule.js/",
+  "icon": "./data/icons/fireMolLogo.png",
+  "permissions": {"private-browsing": true}
 }

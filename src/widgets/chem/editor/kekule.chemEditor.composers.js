@@ -1143,6 +1143,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this.getEditor().isDirty();
 	},
 	/**
+	 * Create a new object and load it in editor.
+	 */
+	newDoc: function()
+	{
+		return this.getEditor().newDoc();
+	},
+	/**
 	 * Load chem object in composer.
 	 * @param {Kekule.ChemObject} chemObj
 	 */

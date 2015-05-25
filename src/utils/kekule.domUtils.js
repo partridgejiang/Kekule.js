@@ -291,7 +291,7 @@ Kekule.DomUtils = {
 		 }
 		 else
 		 */
-		result = elem.setAttribute(attribName, value);  // XML attrib are generally not in any namespace
+		var result = elem.setAttribute(attribName, value);  // XML attrib are generally not in any namespace
 		return result;
 	},
 	/**

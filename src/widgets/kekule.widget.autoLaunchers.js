@@ -231,11 +231,15 @@ Kekule.Widget.AutoLauncher.enableDynamicDomCheck = true;
 
 var _doAutoLaunch = function()
 {
+	//console.log('do autolaunch', _doAutoLaunch.done, Kekule.Widget.AutoLauncher.enabled);
 	if (_doAutoLaunch.done)
 		return;
 
 	if (Kekule.Widget.AutoLauncher.enabled)
+	{
+		//console.log('do autolaunch on body', document.body);
 		Kekule.Widget.autoLauncher.execute(document.body);
+	}
 	// add dynamic node inserting observer
 	if (Kekule.X.MutationObserver)
 	{
@@ -287,5 +291,22 @@ var _doAutoLaunch = function()
 };
 
 Kekule.X.domReady(_doAutoLaunch);
+
+/*
+if ($jsRoot && $jsRoot.addEventListener && $jsRoot.postMessage)
+{
+	// response to special message, force autolaunch widget.
+	// This is usually requested by browser addon.
+	$jsRoot.addEventListener('message', function(event)
+	{
+		console.log('receive message', event, event.source == $jsRoot);
+		if (event.data && event.data.msg === 'kekule-widget-force-autolaunch' && event.source == $jsRoot)
+		{
+			console.log('force autolaunch');
+			_doAutoLaunch();
+		}
+	}, false);
+}
+*/
 
 })();

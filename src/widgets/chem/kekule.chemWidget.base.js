@@ -27,6 +27,7 @@ Kekule.ChemWidget.AbstractWidget = Kekule.Widget.BaseWidget;
 Kekule.ChemWidget.ComponentWidgetNames =
 {
 	newDoc: 'newDoc',
+	clearObjs: 'clearObjs',
 	loadFile: 'loadFile',
 	loadData: 'loadData',
 	saveFile: 'saveFile',

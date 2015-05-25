@@ -1976,7 +1976,7 @@ Kekule.Render.RendererDefineUtils = {
 			var result = rendererMap.get(childObj);
 			if (!result && canCreate)
 			{
-				var c = renderSelector(childObj);
+				var c = renderSelector(childObj) || Kekule.Render.DummyRenderer;  // dummy renderer, do nothing
 				var result = c? new c(childObj, this.getDrawBridge(), /*this.getRenderConfigs(),*/ this): null;  // renderer may be null for some unregistered objects
 				rendererMap.set(childObj, result);
 				result.setRedirectContext(this.getRedirectContext());
@@ -2155,7 +2155,10 @@ Kekule.Render.RendererDefineUtils = {
 			var childRenderers = this.getChildRendererMap().getValues();
 			for (var i = 0, l = childRenderers.length; i < l; ++i)
 			{
-				childRenderers[i].clear(context);
+				if (childRenderers[i])
+				{
+					childRenderers[i].clear(context);
+				}
 			}
 			return true;
 		},

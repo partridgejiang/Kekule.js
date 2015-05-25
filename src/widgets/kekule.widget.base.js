@@ -1318,6 +1318,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		return (index >= 0);
 	},
 
+	/** @private */
+	_haltPrevShowHideProcess: function()
+	{
+		if (Kekule.Widget.showHideManager)
+		{
+			if (this.__$showHideTransInfo)  // has prev transition not finished yet
+			{
+				this.__$showHideTransInfo.halt();
+			}
+		}
+	},
+
 	/**
 	 * Make widget visible.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.
@@ -1328,10 +1340,30 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		if (!this.getElement())
 			return;
-		if (this.__$isShowing || this.__$isHiding)  // avoid duplicate execute
+		if (this.__$isShowing)  // avoid duplicate execute
 		{
 			return;
 		}
+
+		this._haltPrevShowHideProcess();
+
+		//console.log('call show', this.getClassName());
+		/*
+		var self = this;
+		var showProc = function()
+		{
+			self.doShow(caller, callback, showType);
+		}
+		setTimeout(showProc, 0);
+		*/
+		this.doShow(caller, callback, showType);
+
+		return this;
+	},
+	/** @private */
+	doShow: function(caller, callback, showType)
+	{
+		//console.log('do show', this.getClassName());
 		this.__$isShowing = true;
 		//this.__$isHiding = false;
 		var self = this;
@@ -1353,7 +1385,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (Kekule.ObjUtils.notUnset(showType))
 		{
 			this.setIsPopup((showType === Kekule.Widget.ShowHideType.DROPDOWN)
-				|| (showType === Kekule.Widget.ShowHideType.POPUP));
+			|| (showType === Kekule.Widget.ShowHideType.POPUP));
 
 			if (showType === Kekule.Widget.ShowHideType.DIALOG)
 			{
@@ -1375,10 +1407,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		if (Kekule.Widget.showHideManager)
 		{
-			if (this.__$showHideTransInfo)  // has prev transition not finished yet
-			{
-				this.__$showHideTransInfo.halt();
-			}
+			/*
+			 if (this.__$showHideTransInfo)  // has prev transition not finished yet
+			 {
+			 this.__$showHideTransInfo.halt();
+			 }
+			 */
 			//if (!this.__$isShowHiding)  // avoid call show in show transition process
 			if (!this.__$showHideTransInfo)
 			{
@@ -1399,7 +1433,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		//this.setShowHideType(showType);
 
 		this.widgetShowStateChanged(true);
-		return this;
 	},
 	/**
 	 * Show widget then hide it after a period of time.
@@ -1431,7 +1464,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		if (!this.getElement())
 			return;
-		if (this.__$isHiding || this.__$isShowing)  // avoid duplicate execute
+		if (this.__$isHiding)  // avoid duplicate execute
 			return;
 		this.__$isHiding = true;
 		//this.__$isShowing = false;
@@ -1440,11 +1473,30 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (!hideType)
 			hideType = this.getShowHideType();
 
+		this._haltPrevShowHideProcess();
+
+		//console.log('call hide', this.getClassName());
+
+		/*
+		var self = this;
+		var hideProc = function()
+		{
+			self.doHide(caller, callback, hideType, useVisible);
+		};
+		setTimeout(hideProc, 0);
+		*/
+		this.doHide(caller, callback, hideType, useVisible);
+
+		return this;
+	},
+	/** @private */
+	doHide: function(caller, callback, hideType, useVisible)
+	{
 		var self = this;
 		var finalizeAfterHiding = this.getFinalizeAfterHiding();
 		var done = function()
 		{
-			//console.log('Hide done', self.__$isShowHiding);
+			//console.log('do Hide', self.getClassName());
 			//self.__$isShowHiding = false;
 			self.__$showHideTransInfo = null;
 			self.widgetShowStateDone(false);
@@ -1488,8 +1540,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			done();
 		}
 		this.widgetShowStateChanged(false);
-		return this;
 	},
+
 	/*
 	 * Popup the widget.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.

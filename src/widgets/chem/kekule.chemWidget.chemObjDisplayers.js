@@ -52,6 +52,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_LOADFILE: 'K-Chem-LoadFile',
 	ACTION_LOADDATA: 'K-Chem-LoadData',
 	ACTION_SAVEFILE: 'K-Chem-SaveFile',
+	ACTION_CLEAROBJS: 'K-Chem-ClearObjs',
 	ACTION_CONFIG: 'K-Chem-Config',
 
 	DIALOG_CHOOSE_FILE_FORAMT: 'K-Chem-Dialog-Choose-File-Format',
@@ -1427,6 +1428,38 @@ Kekule.ChemWidget.ActionOnDisplayer = Class.create(Kekule.Action,
 });
 
 /**
+ * Action for set chem object to null in chem displayer.
+ * @class
+ * @augments Kekule.ActionOnDisplayer
+ */
+Kekule.ChemWidget.ActionDisplayerClear = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
+/** @lends Kekule.ChemWidget.ActionDisplayerClear# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerClear',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_CLEAROBJS,
+	/** @constructs */
+	initialize: function($super, displayer)
+	{
+		$super(displayer, Kekule.$L('ChemWidgetTexts.CAPTION_CLEAROBJS'), Kekule.$L('ChemWidgetTexts.HINT_CLEAROBJS'));
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		var displayer = this.getDisplayer();
+		this.setEnabled(displayer && displayer.getEnabled() && displayer.getChemObj() /* && displayer.getChemObjLoaded()*/);
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		var displayer = this.getDisplayer();
+		displayer.setChemObj(null);
+	}
+});
+
+/**
  * Action for loading chem object (either from file or from pasted text) to chem displayer.
  * @class
  * @augments Kekule.ActionOnDisplayer
@@ -1819,10 +1852,14 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 					self._saveAction.setData(data);
 					var formatId = dialog._formatSelector.getValue();
 					self.setLastFormat(formatId);
-					var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
+					//var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
+					var formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
+					var fileExts = formatInfo.fileExts;
 					var ext = fileExts[0] || fileExts;
+					var filters = [{'title': formatInfo.title || formatInfo.mimeType, 'filter': '.' + ext}];
 					var fileName = /*CWT.S_DEF_SAVE_FILENAME*/Kekule.$L('ChemWidgetTexts.S_DEF_SAVE_FILENAME') + '.' + ext;
 					self._saveAction.setFileName(fileName);
+					self._saveAction.setFilters(filters);
 					//console.log(fileName);
 					self._saveAction.execute(target);
 				}

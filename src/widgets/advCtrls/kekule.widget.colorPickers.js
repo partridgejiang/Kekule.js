@@ -38,6 +38,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	COLORPICKER_SPEC_COLOR_UNSET: 'K-Color-Unset',
 	COLORPICKER_SPEC_COLOR_DEFAULT: 'K-Color-Default',
 	COLORPICKER_SPEC_COLOR_MIXED: 'K-Color-Mixed',
+	COLORPICKER_SPEC_COLOR_TRANSPARENT: 'K-Color-Transparent',
 
 	COLORDROPTEXTBOX: 'K-ColorDropTextBox',
 	COLORDROPBUTTON: 'K-ColorDropButton',
@@ -61,6 +62,12 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 /**
  * Invoked when the color value is selected. Event param of it has field: {value, colorClassName}.
  * @name Kekule.Widget.ColorPicker#valueSet
+ * @event
+ */
+/**
+ * Invoked when the color value is changed. Event param of it has field: {value, colorClassName}.
+ * (Same as valueSet event).
+ * @name Kekule.Widget.ColorPicker#valueChange
  * @event
  */
 Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
@@ -185,7 +192,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	_isPredefinedSpecialColor: function(color)
 	{
 		var SC = Kekule.Widget.ColorPicker.SpecialColors;
-		var predefines = [SC.UNSET, SC.DEFAULT, SC.MIXED];
+		var predefines = [SC.UNSET, SC.DEFAULT, SC.MIXED, SC.TRANSPARENT];
 		return predefines.indexOf(color) >= 0;
 	},
 	/** @private */
@@ -193,13 +200,15 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	{
 		var SC = Kekule.Widget.ColorPicker.SpecialColors;
 		//var WT = Kekule.WidgetTexts;
-		var predefines = [SC.UNSET, SC.DEFAULT, SC.MIXED];
+		var predefines = [SC.UNSET, SC.DEFAULT, SC.MIXED, SC.TRANSPARENT];
 		//var values = ['(unset)', '(default)', '(mixed)'];
-		var classNames = [CNS.COLORPICKER_SPEC_COLOR_UNSET, CNS.COLORPICKER_SPEC_COLOR_DEFAULT, CNS.COLORPICKER_SPEC_COLOR_MIXED];
+		var classNames = [CNS.COLORPICKER_SPEC_COLOR_UNSET, CNS.COLORPICKER_SPEC_COLOR_DEFAULT,
+			CNS.COLORPICKER_SPEC_COLOR_MIXED, CNS.COLORPICKER_SPEC_COLOR_TRANSPARENT];
 		var texts = [
 			Kekule.$L('WidgetTexts.S_COLOR_UNSET'),
 			Kekule.$L('WidgetTexts.S_COLOR_DEFAULT'),
-			Kekule.$L('WidgetTexts.S_COLOR_MIXED')
+			Kekule.$L('WidgetTexts.S_COLOR_MIXED'),
+			Kekule.$L('WidgetTexts.S_COLOR_TRANSPARENT'),
 		]//[WT.S_COLOR_UNSET, WT.S_COLOR_DEFAULT, WT.S_COLOR_MIXED];
 		var result = {'value': color};
 		var index = predefines.indexOf(color);
@@ -430,6 +439,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	{
 		this.setIsDirty(true);
 		this.invokeEvent('valueSet', {'value': this.getValue(), 'colorClassName': this.getColorClassName()});
+		this.invokeEvent('valueChange', {'value': this.getValue(), 'colorClassName': this.getColorClassName()});
 	},
 
 	/** @private */
@@ -500,7 +510,8 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 Kekule.Widget.ColorPicker.SpecialColors = {
 	UNSET: '(unset)',
 	DEFAULT: '(default)',
-	MIXED: '(mixed)'
+	MIXED: '(mixed)',
+	TRANSPARENT: 'transparent'
 };
 
 

@@ -751,6 +751,8 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
  *
  * @property {String} data Data to save.
  * @property {String} fileName Prefered file name to save.
+ *
+ * @property filters {Array} Filters of save file dialog.
  */
 Kekule.ActionFileSave = Class.create(Kekule.Action,
 /** @lends Kekule.ChemWidget.ActionFileSave# */
@@ -771,6 +773,7 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 	{
 		this.defineProp('data', {'dataType': DataType.STRING, 'serializable': false});
 		this.defineProp('fileName', {'dataType': DataType.STRING, 'serializable': false});
+		this.defineProp('filters', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -789,7 +792,7 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 			var elem = target.getElement();
 			doc = elem.ownerDocument;
 		}
-		Kekule.NativeServices.saveFileData(doc, this.getData(), null, {'initialFileName': this.getFileName()});
+		Kekule.NativeServices.saveFileData(doc, this.getData(), null, {'initialFileName': this.getFileName(), 'filters': this.getFilters()});
 		/*
 		var dataElem = this.createDataElem(doc, this.getData(), this.getFileName());
 		dataElem.click();  // save file dialog
