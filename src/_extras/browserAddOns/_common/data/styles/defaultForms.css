@@ -1,0 +1,10 @@
+html, body
+{
+    margin: 0;
+    overflow: hidden;
+}
+body
+{
+	margin: 0;
+    padding: 6px;
+}
