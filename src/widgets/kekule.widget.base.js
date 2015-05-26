@@ -264,6 +264,8 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Bool} isDumb Whether the widget is a dumb one (do not react to events). Readonly.
  * 	This type of dumb widget is used to create some very light-weighted static widgets, in other word,
  * 	just used to bind widget styles to some HTML element.
+ * @property {Bool} observeElementAttribChanges If this property is true, when the attribute of binded element changed in DOM,
+ *   the widget will also reflect to it.
  * @property {String} id ID of corresponding HTML element.
  * @property {String} width Width style of element.
  * @property {String} height Height style of element.
@@ -367,6 +369,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this._stateClassName = null;
 		this._isDismissed = false;
 		this._pendingHtmlClassNames = '';
+		this._reactElemAttribMutationBind = this._reactElemAttribMutation.bind(this);
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -479,6 +482,16 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					this.setPropStoreFieldValue('element', value);
 					this.elementChanged(value, old);
+				}
+			}
+		});
+		this.defineProp('observeElementAttribChanges', {'dataType': DataType.BOOL, //'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value)
+			{
+				if (!!value !== !!this.getObserveElementAttribChanges())
+				{
+					this.setPropStoreFieldValue('observeElementAttribChanges', value);
+					this.observeElementAttribChangesChanged(!!value);
 				}
 			}
 		});
@@ -2274,6 +2287,64 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (newElem)
 			this.bindElement(newElem);
 	},
+
+	/**
+	 * Called when property observeElementAttribChanges changes.
+	 * This method is used to install/uninstall mutation observes.
+	 * @private
+	 */
+	observeElementAttribChangesChanged: function(value)
+	{
+		var elem = this.getElement();
+		if (value)
+			this._installAttribMutationObserver(elem);
+		else
+			this._uninstallAttribMutationObserver(elem);
+	},
+	/** @private */
+	_installAttribMutationObserver: function(elem)
+	{
+		if (Kekule.X.MutationObserver)
+		{
+			if (!this._attribMutationObserver)
+			{
+				var ob = new Kekule.X.MutationObserver(this._reactElemAttribMutationBind);
+				this._attribMutationObserver = ob;
+			}
+			this._attribMutationObserver.observe(elem, {attributes: true});
+		}
+	},
+	/** @private */
+	_uninstallAttribMutationObserver: function(elem)
+	{
+		if (this._attribMutationObserver)
+			this._attribMutationObserver.disconnect();
+	},
+	/** @private */
+	_reactElemAttribMutation: function(mutations)
+	{
+		var elem = this.getElement();
+		for (var i = 0, l = mutations.length; i < l; ++i)
+		{
+			var m = mutations[i];
+			if (m.type !== 'attributes')
+				continue;
+			if (m.target !== elem)
+				continue;
+			var attribName = m.attributeName;
+			if (attribName && Kekule.DomUtils.isDataAttribName(attribName))
+			{
+				var coreName = Kekule.DomUtils.getDataAttribCoreName(attribName);
+				if (coreName)
+				{
+					var attribValue = elem.getAttribute(attribName);
+					//console.log('set prop', attribName, attribValue);
+					Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, coreName, attribValue);
+				}
+			}
+		}
+	},
+
 
 	/**
 	 * Create a decoration content element and insert it to parentElem before refElem.

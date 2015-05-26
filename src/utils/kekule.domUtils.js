@@ -364,6 +364,28 @@ Kekule.DomUtils = {
 		}
 	},
 	/**
+	 * Returns if a name starts with 'data-'.
+	 * @param {String} attribName
+	 * @returns {Bool}
+	 */
+	isDataAttribName: function(attribName)
+	{
+		return attribName.toString().startsWith('data-');
+	},
+	/**
+	 * Returns attribName without 'data-' prefix.
+	 * If attribName is not a data attribute, null will be returned.
+	 * @param {String} attribName
+	 * @returns {String}
+	 */
+	getDataAttribCoreName: function(attribName)
+	{
+		if (Kekule.DomUtils.isDataAttribName(attribName))
+			return attribName.substr(5);
+		else
+			return null;
+	},
+	/**
 	 * Get value of HTML5 data-* attribute.
 	 * @param {Object} elem
 	 * @param {String} attribName
