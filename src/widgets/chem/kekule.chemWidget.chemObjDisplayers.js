@@ -1753,12 +1753,18 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var format = formatItems[i];
 			var info = format.data;
 			var title = format.text || format.title || format.value;
-			var exts = info.fileExts;
+			var exts = Kekule.ArrayUtils.toArray(info.fileExts);
+			/*
 			for (var j = 0, k = exts.length; j < k; ++j)
 			{
 				result.push({'title': title, 'filter': '.' + exts[j]});
 			}
+			*/
+			result.push({'title': title, 'filter': '.' + exts.join(',.')});
 		}
+		// add all and any filter
+		result.push(Kekule.NativeServices.FILTER_ALL_SUPPORT);
+		result.push(Kekule.NativeServices.FILTER_ANY);
 		return result;
 	},
 	/** @private */
@@ -1855,8 +1861,11 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 					//var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
 					var formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
 					var fileExts = formatInfo.fileExts;
-					var ext = fileExts[0] || fileExts;
-					var filters = [{'title': formatInfo.title || formatInfo.mimeType, 'filter': '.' + ext}];
+					var ext = Kekule.ArrayUtils.toArray(fileExts[0] || fileExts);
+					var filters = [
+						{'title': formatInfo.title || formatInfo.mimeType, 'filter': '.' + ext.join(',.')},
+						Kekule.NativeServices.FILTER_ANY
+					];
 					var fileName = /*CWT.S_DEF_SAVE_FILENAME*/Kekule.$L('ChemWidgetTexts.S_DEF_SAVE_FILENAME') + '.' + ext;
 					self._saveAction.setFileName(fileName);
 					self._saveAction.setFilters(filters);

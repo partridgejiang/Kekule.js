@@ -197,12 +197,19 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			var format = formatItems[i];
 			var info = format.data;
 			var title = format.text || format.title || format.value;
-			var exts = info.fileExts;
+			var exts = Kekule.ArrayUtils.toArray(info.fileExts);
+			/*
 			for (var j = 0, k = exts.length; j < k; ++j)
 			{
 				result.push({'title': title, 'filter': '.' + exts[j]});
 			}
+			*/
+			result.push({'title': title, 'filter': '.' + exts.join(',.')});
 		}
+		// add all and any filter
+		result.push(Kekule.NativeServices.FILTER_ALL_SUPPORT);
+		result.push(Kekule.NativeServices.FILTER_ANY);
+		//console.log(result);
 		return result;
 	},
 	/** @private */

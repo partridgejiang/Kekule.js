@@ -30,6 +30,16 @@ Kekule.NativeServices = {
 	 */
 	MODE_SAVE: 'save',
 	/**
+	 * A special file filter that list all file extension set.
+	 * @const
+	 */
+	FILTER_ALL_SUPPORT: 'all',
+	/**
+	 * A special file filter that list any type of file.
+	 * @const
+	 */
+	FILTER_ANY: 'any',
+	/**
 	 * Open a file picker dialog.
 	 * @param {HTMLDocument} doc Current document.
 	 * @param {Func} callback Callback function when dialog is closed, with params (result, file, files).
@@ -41,6 +51,7 @@ Kekule.NativeServices = {
 	 *     initialFileName: String,
 	 *     filters: Array of filters of dialog, each item is a hash {title, filter},
 	 *       e.g. {title: 'Mol2000 file', filter: '.mol'}.
+	 *       filter file extension can be a string delimitered by ',', e.g., '.mol,.rd'
 	 *     multiple: Bool, whether multi select is allowed.
 	 *   }
 	 */
@@ -188,11 +199,17 @@ Kekule.HtmlNativeServiceImpl = {
 			for (var i = 0, l = ops.filters.length; i < l; ++i)
 			{
 				var filterItem = ops.filters[i];
-				if (filterItem.filter)
-					filterValues.push(filterItem.filter);
+				if (filterItem === Kekule.NativeServices.FILTER_ALL_SUPPORT
+					|| filterItem === Kekule.NativeServices.FILTER_ANY)   // these special filters need not to be handled in HTML
+					continue;
+				var sfilter = filterItem.filter;
+				if (sfilter)
+				{
+					filterValues.push(sfilter);
+				}
 			}
-			var sFilter = filterValues.join(',');
-			result.setAttribute('accept', sFilter);
+			var sAllFilter = filterValues.join(',');
+			result.setAttribute('accept', sAllFilter);
 			//console.log(sFilter);
 		}
 		// IMPORTANT: some browser need this input file element visible to raise the open dialog
@@ -219,7 +236,7 @@ Kekule.HtmlNativeServiceImpl = {
 			target.ownerDocument.body.focus();
 			if (target.parentNode)
 			{
-				target.parentNode.removeChild(target);
+				//target.parentNode.removeChild(target);
 			}
 		};
 
