@@ -37,6 +37,8 @@ Kekule.CmdLineUtils = {
 	DOC_EXCLUDE_SRC_FILES: ['lan/json2.js', 'lan/sizzle.js', 'xbrowsers/kekule.x.js'],
 	/** @private */
 	DOC_EXCLUDE_CATEGORIES: ['localization', 'data', 'extra'],
+	/** @private */
+	STANDALONE_ATTACH_FILES: ['kekule.loaded.js'],
 
 	getModuleStructures: function()
 	{
@@ -112,7 +114,7 @@ Kekule.CmdLineUtils = {
 		}
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
-		compressFileMap[targetFileName] = allSrcFiles;
+		compressFileMap[targetFileName] = allSrcFiles.concat(CU.STANDALONE_ATTACH_FILES);
 		//console.log(compressFileMap);
 
 		for (var i = 0, l = targetMinFileNames.length; i < l; ++i)

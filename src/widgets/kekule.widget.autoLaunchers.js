@@ -235,6 +235,12 @@ var _doAutoLaunch = function()
 	if (_doAutoLaunch.done)
 		return;
 
+	if (!Kekule._isLoaded())  // the whole library is not completely loaded yet, may be some widget class unavailable, waiting
+	{
+		Kekule._registerAfterLoadProc(_doAutoLaunch);
+		return;
+	}
+
 	if (Kekule.Widget.AutoLauncher.enabled)
 	{
 		//console.log('do autolaunch on body', document.body);

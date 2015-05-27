@@ -14,20 +14,65 @@ if (!Array.prototype.indexOf)
 	};
 }
 
-function kekuleRequire(libName)
+var readyState = document && document.readyState;
+var docReady = (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive');
+
+function directAppend(libName)
 {
 	// inserting via DOM fails in Safari 2.0, so brute force approach
   document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
-	/*
-	var elem = document.createElement('script');
-	elem.setAttribute('type', 'text/javascript');
-	elem.src = libName;
-	//document.body.appendChild(elem);
-	var headElem = document.getElementsByTagName('head')[0];
-	var parentElem = headElem || document.body;
-	console.log('insert to ', parentElem.tagName, libName);
-	parentElem.appendChild(elem);
-	*/
+}
+
+function appendScriptFile(doc, url, callback)
+{
+	var result = doc.createElement('script');
+	result.src = url;
+	result.onload = result.onreadystatechange = function(e)
+	{
+		if (result._loaded)
+			return;
+		var readyState = result.readyState;
+		if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+		{
+			result._loaded = true;
+			result.onload = result.onreadystatechange = null;
+			if (callback)
+				callback();
+		}
+	};
+	(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+	//console.log('load script', url);
+	return result;
+}
+function appendScriptFiles(doc, urls, callback)
+{
+	if (urls.length <= 0)
+	{
+		if (callback)
+			callback();
+		return;
+	}
+	var file = urls.shift();
+	appendScriptFile(doc, file, function()
+		{
+			appendScriptFiles(doc, urls, callback);
+		}
+	);
+}
+
+function loadChildScriptFiles(scriptUrls)
+{
+	if (!docReady)  // can directly write to document
+	{
+		for (var i = 0, l = scriptUrls.length; i < l; ++i)
+			directAppend(scriptUrls[i]);
+		document.write('<script type="text/javascript">Kekule._loaded()<\/script>');
+	}
+	else
+		appendScriptFiles(document, scriptUrls, function(){
+			// set a marker indicate that all modules are loaded
+			Kekule._loaded();
+		});
 }
 
 var kekuleFiles = {
@@ -290,7 +335,7 @@ function getEssentialModules(modules)
 		pushModule(result, module);
 	}
 	return result;
-};
+}
 
 function getEssentialFiles(modules, useMinFile)
 {
@@ -313,7 +358,7 @@ function getEssentialFiles(modules, useMinFile)
 		}
 	}
 	return result;
-};
+}
 
 function analysisEntranceScriptSrc()
 {
@@ -381,10 +426,13 @@ function init()
 	var scriptInfo = analysisEntranceScriptSrc();
 	var files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
 	var path = scriptInfo.path;
+	var scriptUrls = [];
 	for (var i = 0, l = files.length; i < l; ++i)
 	{
-		kekuleRequire(path + files[i]);
+		//kekuleRequire(path + files[i]);
+		scriptUrls.push(path + files[i]);
 	}
+	loadChildScriptFiles(scriptUrls);
 	// save loaded module and file information
 	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
