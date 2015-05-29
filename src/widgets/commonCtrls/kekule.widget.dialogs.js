@@ -25,6 +25,7 @@ var CNS = Kekule.Widget.HtmlClassNames;
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	DIALOG: 'K-Dialog',
+	DIALOG_OVERFLOW: 'K-Dialog-Overflow',  // dialog large than current view port size
 	DIALOG_CLIENT: 'K-Dialog-Client',
 	DIALOG_CAPTION: 'K-Dialog-Caption',
 	DIALOG_BTN_PANEL: 'K-Dialog-Button-Panel',
@@ -378,6 +379,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 
 		var L = Kekule.Widget.Location;
 		var location = this.getLocation() || L.DEFAULT;
+		var overflow = false;
 
 		if (location !== L.DEFAULT)
 		{
@@ -401,6 +403,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				var parent = this.getOffsetParent();
 				var parentBoundingRect = parent? Kekule.HtmlElementUtils.getElemBoundingClientRect(parent):
 					{'left': 0, 'top': 0, 'width': 0, 'height': 0};
+				overflow = (selfWidth >= viewPortDim.width) || (selfHeight >= viewPortDim.height);
 			}
 			finally
 			{
@@ -411,7 +414,27 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			if (location === L.CENTER_OR_FULLFILL)
 			{
 				if ((selfWidth >= viewPortDim.width) || (selfHeight >= viewPortDim.height))
-					location = L.FULLFILL;
+				{
+					//location = L.FULLFILL;
+					if (selfWidth >= viewPortDim.width)
+					{
+						l = 0;
+						r = 0;
+					}
+					else  // width not exceed, center the dialog in horizontal direction
+					{
+						l = (viewPortDim.width - selfWidth) / 2;
+					}
+					if (selfHeight >= viewPortDim.height)
+					{
+						t = 0;
+						b = 0;
+					}
+					else  // height not exceed, center in vertical direction
+					{
+						t = (viewPortDim.height - selfHeight) / 2;
+					}
+				}
 				else
 					location = L.CENTER;
 			}
@@ -438,6 +461,16 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				//console.log('center', l, t);
 			}
 
+			if (overflow)  // use absolute position
+			{
+				this.addClassName(CNS.DIALOG_OVERFLOW);
+				var viewPortScrollPos = Kekule.DocumentUtils.getScrollPosition(this.getDocument());
+				l += viewPortScrollPos.left;
+				t += viewPortScrollPos.top;
+			}
+			else  // use fixed position
+				this.removeClassName(CNS.DIALOG_OVERFLOW);
+
 			var style = this.getElement().style;
 			var notUnset = Kekule.ObjUtils.notUnset;
 			if (notUnset(l))
@@ -452,14 +485,15 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				style.width = w + 'px';
 			if (notUnset(h))
 				style.height = h + 'px';
-			style.position = 'fixed';
+			//style.position = 'fixed';
 
-			this.adjustClientSize(w, h);
+			this.adjustClientSize(w, h, overflow);
+
 		}
 		this._posAdjusted = true;
 	},
 	/** @private */
-	adjustClientSize: function(dialogWidth, dialogHeight)
+	adjustClientSize: function(dialogWidth, dialogHeight, overflow)
 	{
 		// TODO: do nothing here
 	},
@@ -505,8 +539,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		//alert('hi');
 		if (elem.parentNode)
 			elem.parentNode.removeChild(elem);
-		div.appendChild(elem);
+		//div.appendChild(elem);
 		doc.body.appendChild(div);
+		doc.body.appendChild(elem);
 		/*
 		if (!this.isShown())
 			this.adjustLocation();

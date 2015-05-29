@@ -694,6 +694,11 @@ table.K-Widget
     overflow: hidden;
     position: absolute;
     position: fixed;
+    z-index: 20001;
+}
+.K-Dialog.K-Dialog-Overflow
+{
+    position: absolute;
 }
 .K-Dialog .K-Dialog-Caption
 {

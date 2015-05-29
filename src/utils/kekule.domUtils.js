@@ -1014,6 +1014,8 @@ Kekule.HtmlElementUtils = {
 Kekule.DocumentUtils = {
 	/**
 	 * Returns dimension of viewport visible client.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
 	 */
 	getClientDimension: function(document)
 	{
@@ -1031,8 +1033,23 @@ Kekule.DocumentUtils = {
 				'height': document.documentElement.clientHeight
 			}
 		}
+	},
+	/**
+	 * Returns scroll top/left of document element.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {left, top}
+	 */
+	getScrollPosition: function(document)
+	{
+		var result = {
+			'left': document.documentElement.scrollLeft || document.body.scrollLeft || 0,
+			'top': document.documentElement.scrollTop || document.body.scrollTop || 0
+		};
+		result.x = result.left;
+		result.y = result.top;
+		return result;
 	}
-}
+};
 
 /**
  * Utils to handle 'url(XXXX)' type of attribute value.
