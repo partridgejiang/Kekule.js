@@ -694,7 +694,6 @@ table.K-Widget
     overflow: hidden;
     position: absolute;
     position: fixed;
-    z-index: 20001;
 }
 .K-Dialog.K-Dialog-Overflow
 {
@@ -734,9 +733,9 @@ table.K-Widget
     left: 0;
     right: 0;
     bottom: 0;
-    /*
-    width: 100%;
-    height: 100%;
+    /* Huge size to ensure cover all HTML page
+    width: 100000px;
+    height: 100000px;
     */
 }
 
@@ -812,6 +811,8 @@ table.K-Widget
 {
     width: 6em;
     background-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
 }
 .K-ColorPicker .K-ColorPicker-Previewer
 {
@@ -1194,10 +1195,14 @@ button.K-Button::-moz-focus-inner {
 
 }
 
-.K-Popup
+.K-Show-Popup
 {
     position: absolute;
     z-index: 21000;
+}
+.K-Show-Dialog
+{
+    z-index: 20500;
 }
 
 

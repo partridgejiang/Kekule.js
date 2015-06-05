@@ -1,6 +1,6 @@
 /**
  * @fileoverview
- * Add on panel to insert chem object.
+ * Addon panel to insert chem object.
  * @author Partridge Jiang
  */
 
@@ -15,10 +15,10 @@ const simpleStorage = require("sdk/simple-storage");
 const { PanelEx } = require('./panelEx.js');
 const nativeServicesBinder = require('../modules/nativeServicesBinder.js');
 const { globalConsts } = require('../globalConsts.js');
+const { MsgUtils } = require('../globalUtils.js');
+const simplePrefs = require('sdk/simple-prefs');
 
 const contentURL = './components/chemObjImport.html';
-const minWidth = 600;
-const minHeight = 500;
 const wigetPropStoreField = 'chemObjInserterProps';
 
 const ChemObjInserterPanel = Class({
@@ -38,8 +38,6 @@ const ChemObjInserterPanel = Class({
 		nativeServicesBinder.bind(this);
 		this.addEventHandlers();
 
-		//this.restoreWidgetSize();
-
 		return result;
 	},
 	show: function(options, anchor)
@@ -50,10 +48,10 @@ const ChemObjInserterPanel = Class({
 		{
 			PanelEx.prototype.show.apply(that, [options, anchor]);
 		};
-		if (!this._sizeRestored)
+		if (!this._propRestored)
 		{
-			this._sizeRestored = true;
-			this.restoreWidgetSize();
+			this._propRestored = true;
+			this.restoreWidgetProps();
 		}
 		this.initWorker();
 		if (ops.querySelElem)
@@ -68,7 +66,7 @@ const ChemObjInserterPanel = Class({
 		//console.log('store size', width, height);
 		simpleStorage.storage[wigetPropStoreField] = data;
 	},
-	restoreWidgetSize: function()
+	restoreWidgetProps: function()
 	{
 		/*
 		// debug
@@ -77,9 +75,9 @@ const ChemObjInserterPanel = Class({
 		return;
 		*/
 		var data = simpleStorage.storage[wigetPropStoreField];
-		if (data && data.size)
+		if (data)
 		{
-			this.port.emit(globalConsts.MSG_RESIZE_WIDGET, {'width': data.size.width, 'height': data.size.height});
+			this.port.emit(globalConsts.MSG_RESTORE_WIDGET_PROP, data);
 		}
 	},
 
@@ -131,11 +129,12 @@ const ChemObjInserterPanel = Class({
 		var worker = this.currWorker;  //this.getWorkerOnTab();
 		if (worker)
 		{
-			worker.port.on(globalConsts.MSG_QUERY_SEL_ELEM_INFO_RESPONSE, function(msg)
-			{
-				done(msg);
+			MsgUtils.emitRequest(worker.port, globalConsts.MSG_QUERY_SEL_ELEM_INFO, {
+				'responseCallback': function(data)
+				{
+					done(data);
+				}
 			});
-			worker.port.emit(globalConsts.MSG_QUERY_SEL_ELEM_INFO_REQUEST);
 		}
 		else
 		{
@@ -144,10 +143,6 @@ const ChemObjInserterPanel = Class({
 	},
 	queryCurrSelElemOnContentDone: function(msg, thisArg)
 	{
-		/*
-		var editable = msg.editable;
-		var attribs = msg.attribs;
-		*/
 		thisArg.port.emit(globalConsts.MSG_LOAD_CHEMOBJ_ELEM_ATTRIBS, msg);
 	},
 
@@ -157,16 +152,24 @@ const ChemObjInserterPanel = Class({
 		if (worker)
 		{
 			var that = this;
-			worker.port.on(globalConsts.MSG_INS_CHEMOBJ_ELEM_RESPONSE, function(msg)
-			{
-				if (msg.success)
-					that.hide();
-				else  // error
+
+			MsgUtils.emitRequest(worker.port, globalConsts.MSG_INS_CHEMOBJ_ELEM, {
+				'data': insertMsg,
+				'responseCallback': function(data)
 				{
-					that.port.emit(globalConsts.MSG_ERROR, {'message': msg.message});
+					if (data.success)
+						that.hide();
+					else  // error
+					{
+						//that.port.emit(globalConsts.MSG_ERROR, {'message': msg.message});
+						MsgUtils.emitError(that.port, data.message);
+					}
+				},
+				'timeoutCallback': function()
+				{
+					MsgUtils.emitRequestTimeoutError(that.port);
 				}
 			});
-			worker.port.emit(/*'insertChemObjElem'*/globalConsts.MSG_INS_CHEMOBJ_ELEM_REQUEST, insertMsg);
 		}
 		//console.log('send insert msg', tab, worker);
 	},
@@ -176,22 +179,23 @@ const ChemObjInserterPanel = Class({
 		var result = this;
 		//
 		result.on('show', function(){
-			/*
-			// check if current selection is chemObj elment. If so, load its chem obj
-			this.queryCurrSelElemOnContent(function(){
-				result.port.emit('show');  // show after chemObj is loaded
-			});
-			*/
-			//console.log('load curr sel');
-			result.port.emit(/*'show'*/globalConsts.MSG_SHOW);
+			result.port.emit(globalConsts.MSG_SHOW);
 		});
 		result.on('hide', function(){
-			result.port.emit(globalConsts.MSG_STORE_WIDGET_PROP_REQUEST);
+			//result.port.emit(globalConsts.MSG_STORE_WIDGET_PROP_REQUEST);
+			MsgUtils.emitRequest(result.port, globalConsts.MSG_STORE_WIDGET_PROP, {
+				'responseCallback': function(data)
+				{
+					result.storeWidgetProps(data);
+				}
+			});
 		});
+		/*
 		result.port.on(globalConsts.MSG_STORE_WIDGET_PROP_RESPONSE, function(msg)
 		{
 			result.storeWidgetProps(msg);
 		});
+		*/
 
 		// event listeners
 		// resize panel
@@ -199,6 +203,8 @@ const ChemObjInserterPanel = Class({
 		{
 			var padding = 0;  //chemObjImportPanel.panelPadding;
 			//console.log('receive resize request', msg);
+			var minWidth = simplePrefs.prefs['importPanelMinWidth']; //600;
+			var minHeight = simplePrefs.prefs['importPanelMinHeight']; //500;
 			if (msg.width)
 				result.width = Math.max(msg.width + padding, minWidth);
 			if (msg.height)
@@ -213,7 +219,7 @@ const ChemObjInserterPanel = Class({
 		});
 		// Listen for messages called "done" coming from
 		// the content script. Which means insert chem object to current cursor position.
-		result.port.on(/*"submit"*/globalConsts.MSG_SUBMIT_REQUEST, function(msg)
+		MsgUtils.onRequest(result.port, globalConsts.MSG_SUBMIT, function(msg)
 		{
 			if (msg.attribs)  // if attribs is null, means chem obj is null in inserter
 			{
@@ -221,6 +227,16 @@ const ChemObjInserterPanel = Class({
 			}
 			//result.hide();
 		});
+		/*
+		result.port.on(globalConsts.MSG_SUBMIT_REQUEST, function(msg)
+		{
+			if (msg.attribs)  // if attribs is null, means chem obj is null in inserter
+			{
+				result.insertChemObjElem(msg, tabs.activeTab);
+			}
+			//result.hide();
+		});
+		*/
 
 		return result;
 	}

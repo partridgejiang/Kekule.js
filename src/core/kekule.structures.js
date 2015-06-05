@@ -5349,7 +5349,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		{
 			for (var i = 0, l = classes.length; i < l; ++i)
 			{
-				if (obj instanceof eval(classes[i]))
+				if (obj instanceof ClassEx.findClass(classes[i]))
 					return true;
 			}
 			// not match

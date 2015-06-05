@@ -7,6 +7,22 @@
   "license": "MPL 2.0",
   "version": "0.5",
   "homepage": "http://partridgejiang.github.io/Kekule.js/",
-  "icon": "./data/icons/fireMolLogo.png",
-  "permissions": {"private-browsing": true}
+  "icon": "./data/icons/addonLogo.png",
+  "permissions": {"private-browsing": true},
+
+  "preferences": [{
+      "name": "importPanelMinWidth",
+      "title": "Molecule Import Panel min width",
+      "description": "Min width of Molecule Import Panel",
+      "type": "integer",
+      "value": 600
+    },
+    {
+      "name": "importPanelMinHeight",
+      "title": "Molecule Import Panel min height",
+      "description": "Min height of Molecule Import Panel",
+      "type": "integer",
+      "value": 500
+    }
+  ]
 }

@@ -2,6 +2,7 @@
 
 #coding=utf-8
 import os,shutil
+import sys
 import datetime
 
 SOURCE_DIR = '_common'
@@ -20,9 +21,10 @@ class TargetConfig:
 	def getExtMark(self):
 		return '.' + self.fileMark
 
+ignoreConfig = TargetConfig('ignore', '', 'ignore')  #special, ignore config, do not need to copy
 firefoxConfig = TargetConfig('firefox', os.path.join('firefox', 'kekule'), 'fx')
 chromeConfig = TargetConfig('chrome', os.path.join('chrome', 'kekule'), 'cr')
-allConfigs = [firefoxConfig, chromeConfig]
+allConfigs = [ignoreConfig, firefoxConfig, chromeConfig]
 
 #builder class
 class Builder:
@@ -51,8 +53,9 @@ class Builder:
 		self.iteratePath(srcRootDir, targetRootDir, targetConfig.getExtMark(), allTargetExtMarks)
 		
 	def getAllTargetExtMarks(self):
+		global allConfigs
 		result = []
-		for c in self.targets:
+		for c in allConfigs:
 			result.append(c.getExtMark())
 		return result
 		
@@ -86,14 +89,16 @@ class Builder:
 				return (result[0], ext)
 			else:
 				return (filename, None)
-		else:  # more than one, usually regard the first ext as mark
-			ext = result[1]
+		else:  # more than one, usually regard the second ext to the end as mark
+			print('result', result)
+			extIndex = len(result) - 2
+			ext = result[extIndex]
 			try:
 				index = allTargetExtMarks.index(ext)
 			except:
 				index = -1
 			if index >= 0:	
-				result.pop(1)
+				result.pop(extIndex)
 				fname = ''
 				for s in result:
 					fname = fname + s
@@ -131,8 +136,23 @@ class Builder:
 				
 # run
 print('====begin======')
-builder = Builder(SOURCE_DIR, [firefoxConfig, chromeConfig])
-#print(builder.splitAllExts('a.1.2.3.4.5'))
-#print(builder.analysisFileExtMark('firefox.fx.txt', ['.fx', '.cr']))
+
+# get args
+argCount = len(sys.argv)
+configs = []
+if (argCount <= 1):  # no extra arg
+	configs = allConfigs
+else:  # specified the target
+	targetName = sys.argv[1]
+	for c in allConfigs:
+		if c.name == targetName:
+			configs = [c]
+			break
+
+#print('curr targets', configs)			
+builder = Builder(SOURCE_DIR, configs)
 builder.build()
+
+#print(builder.analysisFileExtMark('chemObjImport.addon.fx.js', ['.fx', '.cr']))
+
 print('====end======')

@@ -9,7 +9,7 @@
 var DomUtils = {
 	getWindow: function()
 	{
-		return unsafeWindow || window;
+		return this.unsafeWindow || window;
 	},
 	// Returns current focused document. Iframe/frame is considered.
 	getActiveDocument: function(rootDoc)
@@ -47,23 +47,64 @@ var DomUtils = {
 	isActiveElemEditable: function(rootDoc)
 	{
 		var elem = DomUtils.getActiveElem(rootDoc);
-		return (elem && elem.isContentEditable);
-	}
-};
+		return (elem && /*elem.isContentEditable*/DomUtils.isInEditMode(elem));
+	},
 
-var SelectionUtils = {
 	/**
 	 * Check if an element is related to chem object viewer.
 	 * @param elem
+	 * @returns {Bool}
 	 */
 	isChemObjElem: function(elem)
 	{
+		if (!elem || !elem.getAttribute)
+			return false;
 		var widgetClass = elem.getAttribute('data-widget') || elem.getAttribute('data-kekule-widget');
 		if (widgetClass && widgetClass.indexOf('Kekule.ChemWidget.Viewer') >= 0)
 			return true;
 		else
 			return false;
 	},
+	/**
+	 * If elem is inside a chem obj elem, return that parent.
+	 * @param elem
+	 */
+	getParentChemObjElem: function(elem)
+	{
+		if (!elem)
+			return null;
+		if (DomUtils.isChemObjElem(elem))
+			return elem;
+		else if (elem.parentNode)
+			return DomUtils.getParentChemObjElem(elem.parentNode);
+		else
+			return null;
+	},
+	/**
+	 * Check if elem is inside a chem obj element.
+	 * @param elem
+	 * @returns {Bool}
+	 */
+	isInsideChemObjElem: function(elem)
+	{
+		if (!elem)
+			return false;
+		var result = DomUtils.isChemObjElem(elem);
+		if (!result && elem.parentNode)
+			result = DomUtils.isInsideChemObjElem(elem.parentNode);
+		return result;
+	},
+
+	// check if document's body or an element is in edit mode
+	isInEditMode: function(docOrRootElem)
+	{
+		var elem = docOrRootElem.body || docOrRootElem;
+		var doc = elem.ownerDocument;
+		return !!(elem.isContentEditable || doc.designMode === 'on');
+	}
+};
+
+var SelectionUtils = {
 	/**
 	 * If selection containing only one element, returns it.
 	 * Otherwise returns null.
@@ -92,7 +133,7 @@ var SelectionUtils = {
 	{
 		var result = null;
 		var elem = SelectionUtils.getSingleSelectedElem(selection);
-		if (elem && SelectionUtils.isChemObjElem(elem))
+		if (elem && DomUtils.isChemObjElem(elem))
 		{
 			result = {};
 			for (var i = 0, l = elem.attributes.length; i < l; ++i)
@@ -115,6 +156,21 @@ var SelectionUtils = {
 			result.backgroundColor = bgColor;
 		}
 		return result;
+	},
+
+	// select an element
+	selectOnElem: function(elem)
+	{
+		// select on elem first
+		var doc = elem.ownerDocument;
+		var selection = doc.getSelection();
+		if (selection)
+		{
+			var range = doc.createRange();
+			range.selectNode(elem);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
 	}
 };
 
@@ -176,7 +232,7 @@ var ChemObjElemInserter = {
 		{
 			var endNode = selection.focusNode;
 			var parentElem = (endNode.nodeType === Node.TEXT_NODE) ? endNode.parentNode : endNode;
-			if (parentElem.isContentEditable)  // is in editable area, remove selection and try insert again
+			if (/*parentElem.isContentEditable*/DomUtils.isInEditMode(parentElem))  // is in editable area, remove selection and try insert again
 			{
 				doc.execCommand('delete');
 				selection = doc.getSelection();
@@ -252,7 +308,7 @@ var ChemObjElemInserter = {
 			if (activeElem)
 			{
 				//console.log('active element editable', activeElem.isContentEditable);
-				if (activeElem.isContentEditable)  // insert throw command
+				if (/*activeElem.isContentEditable*/DomUtils.isInEditMode(activeElem))  // insert throw command
 				{
 					var sImgCode = ChemObjElemInserter.createChemObjElemHtml(doc, imgAttribs);
 					//console.log('insert img code', sImgCode);
@@ -273,6 +329,43 @@ var ChemObjElemInserter = {
 			}
 		}
 		return result;
+	},
+
+	// main method called by addon to add or modify chem object
+	insertOrModifyChemObjElem: function(elemAttribs, isModify)
+	{
+		var success, errorMsg;
+		try
+		{
+			success = false;
+			var attribs = Object.create(elemAttribs);
+			attribs['data-observe-element-attrib-changes'] = 'true';  // always turn this attrib to true
+			var doc = DomUtils.getActiveDocument(DomUtils.getWindow().document);
+			if (isModify)  // modify mode
+			{
+				var selection = doc.getSelection();
+				// get modify target
+				var elem = SelectionUtils.getSingleSelectedElem(selection);
+				if (DomUtils.isChemObjElem(elem))
+				{
+					success = ChemObjElemInserter.modifyChemObjElem(elem, attribs);
+				}
+			}
+
+			if (!success)
+			{
+				success = ChemObjElemInserter.insertChemObjToDocument(
+					doc,
+					attribs);
+			}
+			//doc.defaultView.postMessage(globalConsts.MSG_INJECTION_DETECT_REQUEST, '*');
+		}
+		catch(e)
+		{
+			success = false;
+			errorMsg = e.message;
+		}
+		return {'success': success, 'message': errorMsg};
 	}
 };
 

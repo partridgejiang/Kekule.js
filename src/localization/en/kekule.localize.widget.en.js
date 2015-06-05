@@ -292,9 +292,12 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_SHOWSIZEINFO: 'Show size info',
 	CAPTION_LABEL_SIZE: 'Size: ',
 	CAPTION_BACKGROUND_COLOR: 'Background color: ',
+	CAPTION_WIDTH_HEIGHT: 'width: {0}, height: {1}',
 	PLACEHOLDER_WIDTH: 'width',
 	PLACEHOLDER_HEIGHT: 'height',
-	CAPTION_WIDTH_HEIGHT: 'width: {0}, height: {1}',
+	HINT_AUTOSIZE: 'Whether graph size is determined by object automatically',
+	HINT_AUTOFIT: 'Whether object is zoomed to fullfill the whole graph',
+
 
 	//HINT_SHOWSIZEINFO: 'Whether show width and height of context',
 

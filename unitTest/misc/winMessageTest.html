@@ -4,12 +4,25 @@
   <meta charset="UTF-8">
   <title>Win Msg Test</title>
   <script>
+    function report(msg)
+    {
+        alert(msg);
+    }
+    function init()
+    {
+        document.addEventListener('beforeunload', function() { report('document before unload'); });
+        document.addEventListener('unload', function() { report('document unload'); });
+        window.addEventListener('beforeunload', function() { report('window before unload'); });
+        window.addEventListener('unload', function() { report('window unload'); });
+    }
+
+
     window.addEventListener('message', function(e){
       console.log('window message received', e);
     });
   </script>
 </head>
-<body>
+<body onload="init()">
   <h1>Win Msg Test</h1>
   <p>blah blah....</p>
 </body>

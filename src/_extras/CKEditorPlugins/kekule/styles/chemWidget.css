@@ -194,11 +194,11 @@
 
 }
 
-.K-Chem-Viewer2D .K-Chem-Displayer-DrawContext-Parent
+.K-Chem-Viewer2D /* .K-Chem-Displayer-DrawContext-Parent*/
 {
 
 }
-.K-Chem-Viewer3D .K-Chem-Displayer-DrawContext-Parent
+.K-Chem-Viewer3D /* .K-Chem-Displayer-DrawContext-Parent*/
 {
     background-color: #000;
 }
@@ -492,12 +492,35 @@
 }
 .K-Chem-Obj-Setter-Configurator
 {
-
+    padding-left: 2em;
 }
 .K-Chem-Obj-Setter-Configurator .K-CheckBox
 {
-    display: block;
+    /*display: block;*/
     margin: 0.5em 0.5em;
+}
+.K-Chem-Obj-Setter-Configurator .K-TextBox
+{
+    width: 4em;
+}
+.K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Line
+{
+    display: block;
+}
+.K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Region
+{
+    display: block;
+}
+.K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Region-Label
+{
+    margin-left:-1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.2em;
+}
+.K-Chem-Obj-Setter-Configurator .K-Assoc-Text-Content
+{
+    margin-left: 1em;
+    font-size: 90%;
 }
 
 .K-Chem-ComposerDialog .K-Chem-Composer

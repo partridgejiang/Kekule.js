@@ -261,6 +261,13 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 	Kekule.IO.ChemDataReaderManager.register('json', Kekule.IO.KcjReader, jsonFmtId);
 	Kekule.IO.ChemDataReaderManager.register('kcj', Kekule.IO.KcjReader, kcjFmtId);
 	Kekule.IO.ChemDataReaderManager.register('kcx', Kekule.IO.KcxReader, kcxFmtId);
+	/* Avoid display two loaders
+	Kekule.IO.ChemDataWriterManager.register('json', Kekule.IO.KcjWriter, [Kekule.ChemObject], kcjFmtId,
+		{
+			'createOptions': {'prettyPrint': !true}
+		}
+	);
+	*/
 	Kekule.IO.ChemDataWriterManager.register('kcj', Kekule.IO.KcjWriter, [Kekule.ChemObject], kcjFmtId,
 		{
 			'createOptions': {'prettyPrint': !true}

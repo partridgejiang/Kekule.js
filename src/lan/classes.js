@@ -2795,7 +2795,7 @@ ObjectEx = Class.create(
   	}
     else
     {
-      console.log(eventName, this.getClassName(), handlerList._$flag_);
+      //console.log(eventName, this.getClassName(), handlerList._$flag_);
     }
   	var higherObj = this.getHigherLevelObj();
   	if (!event.cancelBubble && this.getBubbleEvent() && higherObj)

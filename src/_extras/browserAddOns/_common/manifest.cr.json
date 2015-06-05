@@ -1,0 +1,165 @@
+{
+  "name": "ChromeMol",
+  "version": "0.5",
+  "manifest_version": 2,
+  "description": "An addon based on Kekule.js, enables user to open/edit molecule and insert it to HTML pages, especially web editors.",
+  "icons":
+  {
+	"16": "./data/icons/insertChemObj16.png",
+	"48": "./data/icons/addonLogo.png"
+	//"128": "icon128.png"
+  },
+  "browser_action": {
+	  "default_icon": "./data/icons/insertChemObj32.png",
+	  "default_popup": "./data/components/chemObjImport.html"
+  },
+  "permissions": [
+    "background", "tabs", "contextMenus", "http://*/*", "file://*/*"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  /*
+  "background": {
+	  "scripts": [
+        "lib/globalConsts.js",
+        "data/background/background.js"
+      ]
+  },
+  */
+
+  "web_accessible_resources": [
+    "data/libs/Three.js",
+    "data/libs/kekule/kekule.min.js",
+    // style resources
+    "data/styles/kekule/chemWidget.css",
+    "data/styles/kekule/chemWidgetColor.css",
+    "data/styles/kekule/cursors/rotate.cur",
+    "data/styles/kekule/cursors/rotate.gif",
+    "data/styles/kekule/cursors/rotateNE.cur",
+    "data/styles/kekule/cursors/rotateNW.cur",
+    "data/styles/kekule/cursors/rotateSE.cur",
+    "data/styles/kekule/cursors/rotateSW.cur",
+    "data/styles/kekule/default.css",
+    "data/styles/kekule/defaultColor.css",
+    "data/styles/kekule/icons/arrow.png",
+    "data/styles/kekule/icons/atom.png",
+    "data/styles/kekule/icons/bondDouble.png",
+    "data/styles/kekule/icons/bondProtruding.png",
+    "data/styles/kekule/icons/bondRecessed.png",
+    "data/styles/kekule/icons/bondSingle.png",
+    "data/styles/kekule/icons/bondTriple.png",
+    "data/styles/kekule/icons/cancel.png",
+    "data/styles/kekule/icons/copy.png",
+    "data/styles/kekule/icons/cursorArrow.png",
+    "data/styles/kekule/icons/cut.png",
+    "data/styles/kekule/icons/documentNew.png",
+    "data/styles/kekule/icons/documentOpen.png",
+    "data/styles/kekule/icons/edit.png",
+    "data/styles/kekule/icons/eraser.png",
+    "data/styles/kekule/icons/formula.png",
+    "data/styles/kekule/icons/generalUiIcons.png",
+    "data/styles/kekule/icons/hideHydrogens.png",
+    "data/styles/kekule/icons/inspect.png",
+    "data/styles/kekule/icons/molBallStick.png",
+    "data/styles/kekule/icons/molCondensed.png",
+    "data/styles/kekule/icons/molSkeletal.png",
+    "data/styles/kekule/icons/molSpaceFill.png",
+    "data/styles/kekule/icons/molSticks.png",
+    "data/styles/kekule/icons/molWireFrame.png",
+    "data/styles/kekule/icons/nodeCharge.png",
+    "data/styles/kekule/icons/ok.png",
+    "data/styles/kekule/icons/paste.png",
+    "data/styles/kekule/icons/redo.png",
+    "data/styles/kekule/icons/reset.png",
+    "data/styles/kekule/icons/ring.png",
+    "data/styles/kekule/icons/rotateLeft.png",
+    "data/styles/kekule/icons/rotateRight.png",
+    "data/styles/kekule/icons/rotateX.png",
+    "data/styles/kekule/icons/rotateY.png",
+    "data/styles/kekule/icons/rotateZ.png",
+    "data/styles/kekule/icons/save.png",
+    "data/styles/kekule/icons/settings.png",
+    "data/styles/kekule/icons/text.png",
+    "data/styles/kekule/icons/trash.png",
+    "data/styles/kekule/icons/undo.png",
+    "data/styles/kekule/icons/zoomIn.png",
+    "data/styles/kekule/icons/zoomOut.png",
+    "data/styles/kekule/icons16/error.png",
+    "data/styles/kekule/icons16/fontSizeDec.png",
+    "data/styles/kekule/icons16/fontSizeInc.png",
+    "data/styles/kekule/icons16/info.png",
+    "data/styles/kekule/icons16/textDirectionLtr.png",
+    "data/styles/kekule/icons16/textDirectionTtb.png",
+    "data/styles/kekule/icons16/text_align_bottom.png",
+    "data/styles/kekule/icons16/text_align_center.png",
+    "data/styles/kekule/icons16/text_align_center_v.png",
+    "data/styles/kekule/icons16/text_align_justify.png",
+    "data/styles/kekule/icons16/text_align_left.png",
+    "data/styles/kekule/icons16/text_align_right.png",
+    "data/styles/kekule/icons16/text_align_top.png",
+    "data/styles/kekule/icons16/warning.png",
+    "data/styles/kekule/icons16/wrap.png",
+    "data/styles/kekule/iconsSmall/addSymbol.gif",
+    "data/styles/kekule/iconsSmall/arrowOpen.gif",
+    "data/styles/kekule/iconsSmall/arrowOpenDouble.gif",
+    "data/styles/kekule/iconsSmall/arrowOpenReversible.gif",
+    "data/styles/kekule/iconsSmall/arrowTriangle.gif",
+    "data/styles/kekule/iconsSmall/bondCoord.gif",
+    "data/styles/kekule/iconsSmall/bondDash.gif",
+    "data/styles/kekule/iconsSmall/bondDouble.gif",
+    "data/styles/kekule/iconsSmall/bondDoubleEither.gif",
+    "data/styles/kekule/iconsSmall/bondHash.gif",
+    "data/styles/kekule/iconsSmall/bondOuter.gif",
+    "data/styles/kekule/iconsSmall/bondQuad.gif",
+    "data/styles/kekule/iconsSmall/bondSingle.gif",
+    "data/styles/kekule/iconsSmall/bondTriple.gif",
+    "data/styles/kekule/iconsSmall/bondWavy.gif",
+    "data/styles/kekule/iconsSmall/bondWedge.gif",
+    "data/styles/kekule/iconsSmall/bondWedgeHash.gif",
+    "data/styles/kekule/iconsSmall/charge1.gif",
+    "data/styles/kekule/iconsSmall/charge2.gif",
+    "data/styles/kekule/iconsSmall/chargeClear.gif",
+    "data/styles/kekule/iconsSmall/diArrowOpen.gif",
+    "data/styles/kekule/iconsSmall/diArrowTriangle.gif",
+    "data/styles/kekule/iconsSmall/heatSymbol.gif",
+    "data/styles/kekule/iconsSmall/line.gif",
+    "data/styles/kekule/iconsSmall/radical1.gif",
+    "data/styles/kekule/iconsSmall/radical2.gif",
+    "data/styles/kekule/iconsSmall/radical3.gif",
+    "data/styles/kekule/iconsSmall/ring3.gif",
+    "data/styles/kekule/iconsSmall/ring4.gif",
+    "data/styles/kekule/iconsSmall/ring5.gif",
+    "data/styles/kekule/iconsSmall/ring6.gif",
+    "data/styles/kekule/iconsSmall/ring7.gif",
+    "data/styles/kekule/iconsSmall/ring8.gif",
+    "data/styles/kekule/iconsSmall/ringAr5.gif",
+    "data/styles/kekule/iconsSmall/ringAr6.gif",
+    "data/styles/kekule/other/colorMulti.gif",
+    "data/styles/kekule/other/colorNotSet.gif",
+    "data/styles/kekule/other/transparentMark.gif"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      //"css": ["mystyles.css"],
+      "js": [
+        "lib/globalConsts.js",
+        "data/injectScripts/chemObjInsert.js",
+        "data/injectScripts/chemObjInsert.addon.js"
+      ]
+    },
+    {
+      "matches": ["*://*/*"],
+      "all_frames": true,
+      "js": [
+        "lib/globalConsts.js",
+        "data/injectScripts/elemDetection.js",
+        "data/injectScripts/elemDetection.addon.js"
+      ],
+      "css": [
+
+      ]
+    }
+  ]
+
+}

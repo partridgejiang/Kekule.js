@@ -40,18 +40,48 @@ XpComNativeServiceImpl = {
 		fp.init(domWin, null, mode);
 
 		// filters
+		var filterExtsToNsFilterExts = function(fileExts)
+		{
+			var exts = fileExts.split(',');
+			var s = '*' + exts.join(';*');
+			return s;
+		};
+
 		var filters = options.filters || [];
+		var nsFilterItems = [];
+		var allFilterExts = [];
+		var hasAllFilter, hasAnyFilter;
 		//console.log('filters', filters);
 		if (filters.length)
 		{
 			for (var i = 0, l = filters.length; i < l; ++i)
 			{
 				var item = filters[i];
-				fp.appendFilter(item.title, '*' + item.filter);
+				//fp.appendFilter(item.title, '*' + item.filter);
+				if (item === 'all')
+					hasAllFilter = true;
+				else if (item === 'any')
+					hasAnyFilter = true;
+				else  // normal file extension filters
+				{
+					nsFilterItems.push({'title': item.title, 'filter': item.filter});
+					allFilterExts = allFilterExts.concat(item.filter.split(','));
+				}
 			}
 		}
-		// always add *.*
-		fp.appendFilters(nsIFilePicker.filterAll);
+		// handle special filters
+		if (hasAllFilter)
+			nsFilterItems.unshift({'title': 'All supported', 'filter': allFilterExts.join(',')});
+
+		// add filter to nsIFilePicker
+		for (var i = 0, l = nsFilterItems.length; i < l; ++i)
+		{
+			var item = nsFilterItems[i];
+			fp.appendFilter(item.title, filterExtsToNsFilterExts(item.filter));
+		}
+
+		if (hasAnyFilter)
+			fp.appendFilters(nsIFilePicker.filterAll);
 
 		// default file
 		if (options.initialFileName)

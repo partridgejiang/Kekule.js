@@ -43,6 +43,8 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMOBJSETTER_TABGROUP: 'K-Chem-Obj-Setter-TabGroup',
 	CHEMOBJSETTER_INFOLABEL: 'K-Chem-Obj-Setter-InfoLabel',
 	CHEMOBJSETTER_REGION: 'K-Chem-Obj-Setter-Region',
+	CHEMOBJSETTER_REGION_LABEL: 'K-Chem-Obj-Setter-Region-Label',
+	CHEMOBJSETTER_LINE: 'K-Chem-Obj-Setter-Line',
 	//CHEMOBJSETTER_OPTIONPANEL: 'K-Chem-Obj-Setter-OptionPanel',
 
 	CHEMOBJSETTER_CONFIGURATOR: 'K-Chem-Obj-Setter-Configurator'
@@ -68,6 +70,10 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ChemObjInserter',
+	/** @private */
+	DEF_BGCOLOR_2D: 'transparent',
+	/** @private */
+	DEF_BGCOLOR_3D: '#000000',
 	/** @construct */
 	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
@@ -194,7 +200,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		$super();
 		this.setAutoSizeExport(true);
-		this.setBackgroundColor3D('#000000');
+		this.setBackgroundColor3D(this.DEF_BGCOLOR_3D);
 		this.setExportViewerPredefinedSetting('basic');
 	},
 	/**
@@ -303,6 +309,20 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (result === Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT)
 			result = 'transparent';
 		return result;
+	},
+	/** @private */
+	setBackgroundColor: function(color, renderType)
+	{
+		if (renderType === Kekule.Render.RendererType.R3D)
+		{
+			var value = color || this.DEF_BGCOLOR_3D;
+			this.setBackgroundColor3D(value);
+		}
+		else
+		{
+			var value = color || this.DEF_BGCOLOR_2D;
+			this.setBackgroundColor2D(value);
+		}
 	},
 	/** @private */
 	backgroundColorChange: function()
@@ -610,6 +630,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			this.setContextDimension({'width': detail.width, 'height': detail.height});
 		if (detail.drawOptions)
 			this.getViewer().setDrawOptions(detail.drawOptions);
+		if (detail.backgroundColor)
+			this.setBackgroundColor(detail.backgroundColor, this.getRenderType());
 		return this;
 	},
 
@@ -633,6 +655,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			attribs.autoSize = JsonUtility.parse(attribs['data-auto-size']);
 		if (attribs['data-autofit'])
 			attribs.autofit = JsonUtility.parse(attribs['data-autofit']);
+		if (attribs['backgroundColor'])
+			attribs.backgroundColor = attribs['backgroundColor'];
 		return this.importChemObjWithDetails(chemObj, attribs);
 	},
 
@@ -690,25 +714,37 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 	/** @ignore */
 	doCreateSubElements: function(doc, element)
 	{
-		var checkBox = new Kekule.Widget.CheckBox(this);
-		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_SHOWSIZEINFO'));
-		checkBox.appendToElem(element);
-		this._checkBoxShowInfo = checkBox;
+		// autosize and autofit
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
 
 		var checkBox = new Kekule.Widget.CheckBox(this);
 		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_AUTOSIZE'));
-		checkBox.appendToElem(element);
+		checkBox.addClassName(CCNS.CHEMOBJSETTER_LINE);
+		checkBox.appendToElem(region);
 		this._checkBoxAutoSize = checkBox;
+		var assocText = doc.createElement('span');
+		assocText.className = CNS.PART_ASSOC_TEXT_CONTENT;
+		DU.setElementText(assocText, Kekule.$L('ChemWidgetTexts.HINT_AUTOSIZE'));
+		region.appendChild(assocText);
 
 		var checkBox = new Kekule.Widget.CheckBox(this);
 		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_AUTOFIT'));
-		checkBox.appendToElem(element);
+		checkBox.addClassName(CCNS.CHEMOBJSETTER_LINE);
+		checkBox.appendToElem(region);
 		this._checkBoxAutofit = checkBox;
+		var assocText = doc.createElement('span');
+		assocText.className = CNS.PART_ASSOC_TEXT_CONTENT;
+		DU.setElementText(assocText, Kekule.$L('ChemWidgetTexts.HINT_AUTOFIT'));
+		region.appendChild(assocText);
+
+		element.appendChild(region);
 
 		// width/height setter
 		var region = doc.createElement('div');
 		region.className = CCNS.CHEMOBJSETTER_REGION;
 		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
 		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_LABEL_SIZE'));
 		region.appendChild(labelElem);
 		region.appendChild(doc.createElement('br'));
@@ -723,17 +759,24 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		textBox.setPlaceholder(Kekule.$L('ChemWidgetTexts.PLACEHOLDER_HEIGHT'));
 		textBox.appendToElem(region);
 		this._textBoxHeight = textBox;
+		var checkBox = new Kekule.Widget.CheckBox(this);
+		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_SHOWSIZEINFO'));
+		checkBox.appendToElem(region);
+		this._checkBoxShowInfo = checkBox;
 		element.appendChild(region);
 
 		// background color setter
 		var region = doc.createElement('div');
 		region.className = CCNS.CHEMOBJSETTER_REGION;
 		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
 		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_BACKGROUND_COLOR'));
 		region.appendChild(labelElem);
 		region.appendChild(doc.createElement('br'));
 		var colorPicker = new Kekule.Widget.ColorPicker(this);
-		colorPicker.setSpecialColors([Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT]);
+		colorPicker.setSpecialColors([
+			Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT
+		]);
 		colorPicker.appendToElem(region);
 		this._colorPicker = colorPicker;
 		element.appendChild(region);
@@ -780,6 +823,8 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 			w.setShowInfo(this._checkBoxShowInfo.getChecked());
 			var dim = {width: parseInt(this._textBoxWidth.getText()), height: parseInt(this._textBoxHeight.getText())};
 			w.setContextDimension(dim);
+
+			w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
 		}
 	}
 });

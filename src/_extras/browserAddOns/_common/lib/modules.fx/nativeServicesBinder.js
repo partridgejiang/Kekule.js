@@ -8,6 +8,7 @@ var nativeServices = require('./nativeServicesImpl.js');
 var panel = require("sdk/panel");
 var viewCore = require("sdk/view/core");
 const { globalConsts } = require('../globalConsts.js');
+const { MsgUtils } = require('../globalUtils.js');
 
 XpComNativeServiceBinder = {
 	_targetsListenerField: '__$listener__',
@@ -50,7 +51,8 @@ XpComNativeServiceBinder = {
 					var options = msg.options;
 					var callback = function(result, data, filePath, file)
 					{
-						targetObj.port.emit(/*'loadFileData.response'*/globalConsts.MSG_LOAD_FILE_DATA_RESPONSE, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
+						//targetObj.port.emit(/*'loadFileData.response'*/globalConsts.MSG_LOAD_FILE_DATA_RESPONSE, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
+						MsgUtils.emitResponse(targetObj.port, globalConsts.MSG_LOAD_FILE_DATA, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
 						if (isPanel)
 							targetObj.show();
 					};
@@ -63,10 +65,12 @@ XpComNativeServiceBinder = {
 					catch (e)
 					{
 						targetObj.show();
-						targetObj.port.emit(/*'loadFileData.response'*/globalConsts.MSG_LOAD_FILE_DATA_RESPONSE, {'callerId': id, 'result': false, 'errorMsg': e.message});
+						//targetObj.port.emit(/*'loadFileData.response'*/globalConsts.MSG_LOAD_FILE_DATA_RESPONSE, {'callerId': id, 'result': false, 'errorMsg': e.message});
+						MsgUtils.emitResponse(targetObj.port, globalConsts.MSG_LOAD_FILE_DATA, {'callerId': id, 'result': false, 'errorMsg': e.message});
 					}
 				};
-				targetObj.port.on(/*'loadFileData.request'*/globalConsts.MSG_LOAD_FILE_DATA_REQUEST, listener);
+				//targetObj.port.on(/*'loadFileData.request'*/globalConsts.MSG_LOAD_FILE_DATA_REQUEST, listener);
+				MsgUtils.onRequest(targetObj.port, globalConsts.MSG_LOAD_FILE_DATA, listener);
 			}
 			else if (sv === 'saveFileData')
 			{
@@ -75,10 +79,11 @@ XpComNativeServiceBinder = {
 					var id = msg.callerId;
 					var data = msg.data;
 					var options = msg.options;
-					console.log('save request received', id, data);
+					//console.log('save request received', id, data);
 					var callback = function(result, data, filePath, file)
 					{
-						targetObj.port.emit(/*'saveFileData.response'*/globalConsts.MSG_SAVE_FILE_DATA_RESPONSE, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
+						//targetObj.port.emit(/*'saveFileData.response'*/globalConsts.MSG_SAVE_FILE_DATA_RESPONSE, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
+						MsgUtils.emitResponse(targetObj.port, globalConsts.MSG_SAVE_FILE_DATA, {'callerId': id, 'result': result, 'data': data, 'fileName': filePath});
 						if (isPanel)
 							targetObj.show();
 					};
@@ -91,10 +96,12 @@ XpComNativeServiceBinder = {
 					catch (e)
 					{
 						targetObj.show();
-						targetObj.port.emit(/*'saveFileData.response'*/globalConsts.MSG_SAVE_FILE_DATA_RESPONSE, {'callerId': id, 'result': false, 'errorMsg': e.message});
+						//targetObj.port.emit(/*'saveFileData.response'*/globalConsts.MSG_SAVE_FILE_DATA_RESPONSE, {'callerId': id, 'result': false, 'errorMsg': e.message});
+						MsgUtils.emitResponse(targetObj.port, globalConsts.MSG_SAVE_FILE_DATA, {'callerId': id, 'result': false, 'errorMsg': e.message});
 					}
 				};
-				targetObj.port.on(/*'saveFileData.request'*/globalConsts.MSG_SAVE_FILE_DATA_REQUEST, listener);
+				//targetObj.port.on(/*'saveFileData.request'*/globalConsts.MSG_SAVE_FILE_DATA_REQUEST, listener);
+				MsgUtils.onRequest(targetObj.port, globalConsts.MSG_SAVE_FILE_DATA, listener);
 			}
 
 			if (listener)

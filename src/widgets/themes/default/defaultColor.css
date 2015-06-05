@@ -36,6 +36,10 @@
     color: #555555;
     /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
 }
+.K-Assoc-Text-Content
+{
+    color: #888888;
+}
 .K-Normal-Background,
 .K-ComboBox .K-TextBox,
 .K-Container.K-Panel

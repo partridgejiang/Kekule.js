@@ -9,12 +9,18 @@
   <link rel="stylesheet" type="text/css" href="../styles/kekule/chemWidgetColor.css" />
   <link rel="stylesheet" type="text/css" href="../styles/defaultForms.css" />
   <style>
+    body.ExplicitSize
+    {
+      /* set body size here for proper display in Chrome popup panel */
+      width: 620px;
+      height: 500px;
+    }
     #container
     {
       padding: 0;
       margin: 0;
-      /*float: left;*/
-      position: absolute;
+      float: left;
+      /*position: absolute;*/
     }
     #chemObjInserter
     {
@@ -53,11 +59,15 @@
   <!--
   <script type="application/javascript" src="../libs/OpenBabel.js"></script>
   -->
+  <!-- force use dom loader of Kekule, otherwise causes inline script problem in Chrome extension -->
   <script type="application/javascript" src="../libs/kekule/kekule.js?modules=algorithm,widget,chemWidget,openbabel"></script>
   <script type="application/javascript" src="../../lib/globalConsts.js"></script>
+  <script type="application/javascript" src="../../lib/globalUtils.js"></script>
   <script type="application/javascript" src="../scripts/contentNativeServicesImpl.js"></script>
   <script type="application/javascript" src="../scripts/localizations.js"></script>
+  <script type="application/javascript" src="../scripts/clients.js"></script>
   <script type="application/javascript" src="chemObjImport.js"></script>
+  <script type="application/javascript" src="chemObjImport.addon.js"></script>
 
   <!--
   <script id="product1" type="chemical/x-kekule-json">
@@ -65,7 +75,7 @@
 	</script>
 	-->
 </head>
-<body>
+<body class="ExplicitSize">
   <div id="info" class="Hidden"></div>
   <div id="container">
     <div id="chemObjInserter" data-widget="Kekule.ChemWidget.ChemObjInserter" data-resizable="true"

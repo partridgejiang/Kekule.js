@@ -1051,7 +1051,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					}
 					else
 						pos |= WP.RIGHT;
-					if (toolbarTotalH > viewerClientRect.height)  // can not fit in viewer
+					if (toolbarTotalH > viewerClientRect.height / 2)  // can not fit in viewer
 					{
 						pos |= WP.BOTTOM;
 						vMargin = -1;
@@ -2036,7 +2036,7 @@ Kekule.ChemWidget.ActionViewerEdit = Class.create(Kekule.ChemWidget.ActionOnView
 		//this.setEnabled(this.getEnabled() && viewer.getChemObj() && viewer.getEnableEdit());
 		//this.setEnabled(this.getEnabled() && viewer.getAllowEditing());
 		this.setEnabled(viewer && viewer.getAllowEditing() && viewer.getEnabled());
-		this.setDisplayed(viewer.getEnableEdit());
+		this.setDisplayed(viewer && viewer.getEnableEdit());
 	},
 	/** @private */
 	doExecute: function(target)

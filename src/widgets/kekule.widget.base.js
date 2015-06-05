@@ -67,12 +67,13 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_SELECTED: 'K-State-Selected',
 
 	// show type
-	POPUP: 'K-Popup',
-	DIALOG: 'K-Dialog',
+	SHOW_POPUP: 'K-Show-Popup',
+	SHOW_DIALOG: 'K-Show-Dialog',
 
 	// parts
 	PART_CONTENT: 'K-Content',
 	PART_TEXT_CONTENT: 'K-Text-Content',
+	PART_ASSOC_TEXT_CONTENT: 'K-Assoc-Text-Content',
 	PART_IMG_CONTENT: 'K-Img-Content',
 	PART_GLYPH_CONTENT: 'K-Glyph-Content',
 	PART_PRI_GLYPH_CONTENT: 'K-Pri-Glyph-Content',
@@ -4025,7 +4026,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		var elem = element || widget.getElement();
 		this.getPopupWidgetMapping().set(elem, widget);
 		*/
-    widget.addClassName(CNS.POPUP);
+    widget.addClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.pushUnique(this.getPopupWidgets(), widget);
 	},
 	/**
@@ -4039,7 +4040,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		var elem = element || widget.getElement();
 		this.getPopupWidgetMapping().remove(elem);
 		*/
-    widget.removeClassName(CNS.POPUP);
+    widget.removeClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
 	},
 	/**
@@ -4049,7 +4050,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	registerDialogWidget: function(widget /*, element*/)
 	{
-		widget.addClassName(CNS.DIALOG);
+		widget.addClassName(CNS.SHOW_DIALOG);
 		Kekule.ArrayUtils.pushUnique(this.getDialogWidgets(), widget);
 	},
 	/**
@@ -4059,7 +4060,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	unregisterDialogWidget: function(widget/*, element*/)
 	{
-		widget.removeClassName(CNS.DIALOG);
+		widget.removeClassName(CNS.SHOW_DIALOG);
 		Kekule.ArrayUtils.remove(this.getDialogWidgets(), widget);
 	},
 

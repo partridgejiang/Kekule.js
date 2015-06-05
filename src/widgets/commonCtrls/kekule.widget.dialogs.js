@@ -413,7 +413,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 
 			if (location === L.CENTER_OR_FULLFILL)
 			{
-				if ((selfWidth >= viewPortDim.width) || (selfHeight >= viewPortDim.height))
+				if (overflow)
 				{
 					//location = L.FULLFILL;
 					if (selfWidth >= viewPortDim.width)
@@ -467,6 +467,11 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				var viewPortScrollPos = Kekule.DocumentUtils.getScrollPosition(this.getDocument());
 				l += viewPortScrollPos.left;
 				t += viewPortScrollPos.top;
+				// ensure left/top are not out of page region
+				if (l < 0)
+					l = 0;
+				if (t < 0)
+					t = 0;
 			}
 			else  // use fixed position
 				this.removeClassName(CNS.DIALOG_OVERFLOW);
@@ -560,9 +565,13 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			if (this._modalInfo.oldParent)
 				this._modalInfo.oldParent.insertBefore(this.getElement(), this._modalInfo.oldSibling);
 		}
-		if (this.getModalBackgroundElem())
+		var parentElem = this.getElement().parentNode;
+		if (parentElem)
+			parentElem.removeChild(this.getElement());
+		var bgElem = this.getModalBackgroundElem();
+		if (bgElem && bgElem.parentNode)
 		{
-			this.getDocument().body.removeChild(this.getModalBackgroundElem());
+			bgElem.parentNode.removeChild(bgElem);
 			//this.setPropStoreFieldValue('modalBackgroundElem', null);
 		}
 	},

@@ -1,4 +1,4 @@
-(function(addon)
+(function()
 {
 /**
  * JS object corresponding to chemObjImport.html
@@ -11,6 +11,10 @@ var FormChemObjImport = {
 	idButtonCancel: 'btnCancel',
 	idContainer: 'container',
 	panelExtraPadding: 10,
+
+	// a special mark, whether the panel currently is used to modify an existing chem obj element
+	isModify: false,
+
 	getChemObjInserter: function()
 	{
 		return Kekule.Widget.getWidgetById(F.idChemObjInserter);
@@ -46,7 +50,12 @@ var FormChemObjImport = {
 		var inserter = F.getChemObjInserter();
 		//console.log('receive response', attribs);
 		if (attribs)
+		{
+			F.isModify = true;
 			inserter.importFromElemAttribs(attribs);
+		}
+		else  //
+			F.isModify = false;
 		// If no curr selected chemObj, retain last one in viewer
 		/*
 		else
@@ -57,20 +66,13 @@ var FormChemObjImport = {
 	//
 	submit: function()
 	{
-		if (addon)
-		{
-			var objInserter = F.getChemObjInserter();
-
-			var elemAttribs = objInserter.getChemObj()? objInserter.getExportImgElemAttributes(): null;
-			addon.port.emit(/*'submit'*/globalConsts.MSG_SUBMIT_REQUEST, {'attribs': elemAttribs});
-		}
+		if (F.AddonImpl && F.AddonImpl.submit)
+			F.AddonImpl.submit();
 	},
 	cancel: function()
 	{
-		if (addon)
-		{
-			addon.port.emit(/*'cancel'*/globalConsts.MSG_CANCEL);
-		}
+		if (F.AddonImpl && F.AddonImpl.cancel)
+			F.AddonImpl.cancel();
 	},
 
 	// resize inserter widget
@@ -79,6 +81,51 @@ var FormChemObjImport = {
 		if (size && size.width && size.height)
 			F.getChemObjInserter().setContextDimension(size);
 	},
+	// return object that contains the essential data that should be stored
+	getWidgetStorageData: function()
+	{
+		var inserter = F.getChemObjInserter();
+		var dimContext = inserter.getContextDimension();
+		var chemObj = inserter.getChemObj();
+		var sObjJson = chemObj? Kekule.IO.saveMimeData(chemObj, 'chemical/x-kekule-json'): undefined;
+		return {
+			'chemObj': sObjJson,
+			'renderType': inserter.getRenderType(),
+			'size': dimContext,
+			'autoSizeExport': inserter.getAutoSizeExport(),
+			'autofit': inserter.getAutofit(),
+			'backgroundColor2D': inserter.getBackgroundColor2D(),
+			'backgroundColor3D': inserter.getBackgroundColor3D()
+		};
+	},
+	// restore widget properties from data
+	restoreWidgetProps: function(data)
+	{
+		var inserter = F.getChemObjInserter();
+		if (data)
+		{
+			if (data.chemObj)
+			{
+				var obj = Kekule.IO.loadMimeData(data.chemObj, 'chemical/x-kekule-json');
+				inserter.setChemObj(obj || null);
+			}
+			else
+				inserter.setChemObj(null);
+			if (data.renderType)
+				inserter.setRenderType(data.renderType);
+			if (data.size)
+				inserter.setContextDimension(data.size);
+			if (data.autoSizeExport !== undefined)
+				inserter.setAutoSizeExport(!!data.autoSizeExport);
+			if (data.autofit !== undefined)
+				inserter.setAutofit(!!data.autofit);
+			if (data.backgroundColor2D)
+				inserter.setBackgroundColor2D(data.backgroundColor2D);
+			if (data.backgroundColor3D)
+				inserter.setBackgroundColor3D(data.backgroundColor3D);
+		}
+	},
+
 	// calc the proper size for view to contain all widgets
 	getMinContainerSize: function()
 	{
@@ -98,16 +145,8 @@ var FormChemObjImport = {
 	// send message to tell resize container panel to fit widget size
 	requestResizeContainer: function(forceResize)
 	{
-		if (addon)
-		{
-			var requestDim = F.getMinContainerSize();
-			//var dimInserter = F.getChemObjInserter().getContextDimension();
-			//var viewportDim = Kekule.HtmlElementUtils.getViewportDimension(document);
-			if (requestDim.width || requestDim.height)
-				addon.port.emit(/*'resizeContainer'*/globalConsts.MSG_RESIZE_CONTAINER,
-					{'width': requestDim.width, 'height': requestDim.height});
-			//console.log('request resize', forceResize, dim);
-		}
+		if (F.AddonImpl && F.AddonImpl.requestResizeContainer)
+			F.AddonImpl.requestResizeContainer(forceResize);
 	},
 
 	// auto size form, fit the view
@@ -127,6 +166,17 @@ var FormChemObjImport = {
 		elem.className = sclass;
 	},
 
+	// called after inserter is resized
+	inserterResized: function()
+	{
+		F.requestResizeContainer()
+	},
+	// called after inserter's config has been changed by configurator
+	inserterConfigSaved: function()
+	{
+		// do nothing here
+	},
+
 	_init: function()
 	{
 		/*
@@ -134,43 +184,26 @@ var FormChemObjImport = {
 		F.fitContainerView();
 		*/
 		F._initEventListeners();
-		F.getChemObjInserter().addEventListener('resize', function(e) { F.requestResizeContainer(); });
+		var inserter = F.getChemObjInserter();
+		inserter.addEventListener('resize', function(e) { F.inserterResized(); });
+		inserter.addEventListener('configSave', function(e) { F.inserterConfigSaved(); });
 		Kekule.Widget.getWidgetById(F.idButtonOk).setText(Kekule.$L('WidgetTexts.CAPTION_OK')).addEventListener('execute', F.submit);
 		Kekule.Widget.getWidgetById(F.idButtonCancel).setText(Kekule.$L('WidgetTexts.CAPTION_CANCEL')).addEventListener('execute', F.cancel);
+
+		if (F.AddonImpl && F.AddonImpl._init)
+			F.AddonImpl._init();
 	},
 
 	_initEventListeners: function()
 	{
-		if (addon)
-		{
-			addon.port.on(globalConsts.MSG_ERROR, function(msg) { Kekule.error(msg.message || Kekule.$L('ErrorMsg.UNABLE_TO_INSERT_ELEM')); } );
-			// each time when showing, need to adjust panel size
-			addon.port.on(/*'show'*/globalConsts.MSG_SHOW, function() { F.requestResizeContainer(true); } );
-			//
-			addon.port.on(globalConsts.MSG_RESIZE_WIDGET, function(msg) { F.resizeWidget(msg); } );
-			//
-			addon.port.on(globalConsts.MSG_STORE_WIDGET_PROP_REQUEST, function() {
-				var inserter = F.getChemObjInserter();
-				var dimContext = inserter.getContextDimension();
-				addon.port.emit(/*'submit'*/globalConsts.MSG_STORE_WIDGET_PROP_RESPONSE, {
-					'size': dimContext,
-					'autoSizeExport': inserter.getAutoSizeExport(),
-					'autofit': inserter.getAutofit(),
-					'backgroundColor2D': inserter.getBackgroundColor2D(),
-					'backgroundColor3D': inserter.getBackgroundColor3D()
-				});
-			});
-			// load chem obj by attribs
-			addon.port.on(/*'loadChemObjElemAttribs'*/globalConsts.MSG_LOAD_CHEMOBJ_ELEM_ATTRIBS, function(msg) {
-				F.loadChemObjElemAttribs(msg && msg.attribs);
-				F.displayContentEditableInfo(msg && msg.editable);
-			});
-		}
+		if (F.AddonImpl && F.AddonImpl._initEventListeners)
+			F.AddonImpl._initEventListeners();
 	}
 };
 var F = FormChemObjImport;
+ClientForms.FormChemObjImport = F;
 
 Kekule.X.domReady(FormChemObjImport._init);
 
 
-})(this.addon);
+})();

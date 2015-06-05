@@ -135,6 +135,7 @@ Kekule.CmdLineUtils = {
 		}
 
 		result += '\ncopy kekule.js _compressed\\kekule.js /Y';
+		result += '\ncopy kekule.js _compressed\\kekule.loaded.js /Y';
 
 		/*
 		// level1 compress
