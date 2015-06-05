@@ -1,6 +1,7 @@
 (function(){
 
 	var CLASS_NAME_VIEWER3D = 'K-Chem-Viewer3D';
+	var CLASS_NAME_VIEWER2D = 'K-Chem-Viewer2D';
 	var ID_KCHEMDISPLAYER = 'kChemObjSetter';
 	var DEF_WIDTH = 300;
 	var DEF_HEIGHT = 300;
@@ -115,6 +116,8 @@
 				DU.setElemAttributes(viewerDomElem, exportAttribs);
 				if (chemObjSetter.getIs3D())
 					viewerElem.addClass(CLASS_NAME_VIEWER3D);
+				else
+					viewerElem.addClass(CLASS_NAME_VIEWER2D);
 				viewerElem.setAttribute('data-predefined-setting', 'basic');
 
 				editor.insertElement(viewerElem);
