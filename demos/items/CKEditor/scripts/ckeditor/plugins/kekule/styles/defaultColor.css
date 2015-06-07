@@ -36,6 +36,10 @@
     color: #555555;
     /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
 }
+.K-Assoc-Text-Content
+{
+    color: #888888;
+}
 .K-Normal-Background,
 .K-ComboBox .K-TextBox,
 .K-Container.K-Panel
@@ -492,6 +496,12 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     background-image: url("other/colorMulti.gif");
     background-repeat: no-repeat;
+}
+.K-Res-Icon-Color-Transparent,
+.K-Color-Transparent
+{
+    background-image: url("other/transparentMark.gif");
+    background-repeat: repeat;
 }
 
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,

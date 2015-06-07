@@ -19,9 +19,9 @@
 			<!-- InstanceBeginEditable name="MainnNavItems" -->
 			<a id="kekuleLogo"  href="../index.html" title="Kekule Home"><span>Kekule.js</span></a>
 			<a href="../index.html">Overview</a>
-			<a>Features</a>
 			<a href="../demos/index.html" target="_blank">Demos</a>
 			<a href="../documents/index.html">Documents</a>
+			<a href="../download/index.html">Download</a>
 			<!-- TemplateBeginEditable name="AdditionalMainNavItems" -->
 			<!-- TemplateEndEditable -->			
 			<!-- InstanceEndEditable -->			
@@ -31,9 +31,9 @@
 		<!-- InstanceBeginEditable name="PossibleSideNav" -->
 			<nav class="SideNav">				
 				<a href="../index.html">Overview</a>
-				<a>Features</a>
 				<a href="../demos/index.html" target="_blank">Demos</a>
 				<a href="../documents/index.html">Document</a>
+				<a href="../download/index.html">Download</a>
 				<!-- TemplateBeginEditable name="SideNavContent" -->
 				<!-- TemplateEndEditable -->						
 			</nav>

@@ -19,9 +19,9 @@
 			
 			<a id="kekuleLogo"  href="index.html" title="Kekule Home"><span>Kekule.js</span></a>
 			<a href="index.html">Overview</a>
-			<a>Features</a>
 			<a href="demos/index.html" target="_blank">Demos</a>
 			<a href="documents/index.html">Documents</a>
+			<a href="download/index.html">Download</a>
 			<!-- InstanceBeginEditable name="AdditionalMainNavItems" -->
 			<!-- InstanceEndEditable -->			
 						
@@ -31,9 +31,9 @@
 		
 			<nav class="SideNav">				
 				<a href="index.html">Overview</a>
-				<a>Features</a>
 				<a href="demos/index.html" target="_blank">Demos</a>
 				<a href="documents/index.html">Document</a>
+				<a href="download/index.html">Download</a>
 				<!-- InstanceBeginEditable name="SideNavContent" -->				
 				<!-- InstanceEndEditable -->						
 			</nav>
@@ -43,11 +43,105 @@
 				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" -->Kekule.js Overview<!-- InstanceEndEditable --></h1>
 			</header>		
 			<!-- InstanceBeginEditable name="MainContent" -->
-			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			<p>Kekule.js is an open source JavaScript library for chemoinformatics released under <a href="http://opensource.org/licenses/mit-license.php" target="_blank">MIT license</a>. Currently it is molecule-centric, focusing on providing the ability to represent, draw, edit, compare and search molecule structures on web browsers.</p>
+			<h2>Major Features</h2>
+			<p>The whole library is divided into several  modules, each provides different features and functions. Users can use the combination of modules for specific purpose. The following table lists the major features of each module in Kekule.js.</p>
+			<table class="ExplanationTable">
+				<tr>
+					<th scope="col">Module</th>
+					<th scope="col">Major feature(s)</th>
+				</tr>
+				<tr>
+					<td>Core</td>
+					<td><ul>
+						<li>Representation of chemical concepts including element, atom, bond, molecule and reaction.</li>
+					</ul></td>
+				</tr>
+				<tr>
+					<td>IO</td>
+					<td><ul>
+						<li>Read/write different format of chemical data. Now including:
+							<ul>
+								<li>Kekule JSON/XML format</li>
+								<li>CML</li>
+								<li>MDL MOL2000/3000</li>
+								<li>SMILES</li>
+							</ul>
+						</li>
+					</ul>					</td>
+				</tr>
+				<tr>
+					<td>Render</td>
+					<td><ul>
+						<li>Provides low-level cross-browser render methods to draw molecule (and other chemical objects) in web browser context..</li>
+					</ul></td>
+				</tr>
+				<tr>
+					<td>Widget</td>
+					<td><ul>
+						<li>Small components to be used in web applications, including button, text box, combo box, dialog, tree view, tab view, text editor, color picker, object inspector and so on.</li>
+						<li>Animation system to show/hide those widgets.</li>
+						<li>Actions associated with those widgets.</li>
+					</ul>					</td>
+				</tr>
+				<tr>
+					<td>Chem Widget</td>
+					<td><ul>
+						<li>Widgets related to chemistry, including:
+							<ul>
+								<li>Peridical table</li>
+								<li>2D or 3D viewer for molecule and other chemical objects.</li>
+								<li>2D diagram editor for molecule and other chemical objects.</li>
+							</ul>
+						</li>
+					</ul>					</td>
+				</tr>
+				<tr>
+					<td>Algorithm</td>
+					<td><ul>
+						<li>Algorithms for chemical graph theory, including:
+							<ul>
+								<li>Ring perception</li>
+								<li>Aromatic ring recognization</li>
+								<li>Molecule comparation</li>
+								<li>Sub-structure search</li>
+								<li>Stereo center and stereo bond identification</li>
+							</ul>
+						</li>
+					</ul>					</td>
+				</tr>
+				<tr>
+					<td>Extra</td>
+					<td><ul>
+						<li>Some extra function, including:
+							<ul>
+								<li>Adapter for Open Babel, support of many other chemical data formats.</li>
+							</ul>
+						</li>
+					</ul>					</td>
+				</tr>
+			</table>
+			<h2>How to Use</h2>
+			<p>As a JavaScript library, usually Kekule.js need to be included in HTML page by &lt;script&gt; tag. You can use the compressed script file to reduce the net traffic:</p>
+			<pre class="CodeBlock">&lt;script src=&quot;kekule.min.js&quot;&gt;&lt;/script&gt;</pre>
+			<p>By using kekule.min.js, all modules (exclude module Extra) are loaded into HTML page. If only a few modules is needed, you can utilize a special bootstrap script: </p>
+			<pre class="CodeBlock">&lt;script src=&quot;kekule.js?module=chemWidget,algorithm&quot;&gt;&lt;/script&gt;</pre>
+			<p>Note the module param after &quot;?&quot;. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
+			<p>If widget or chem widget modules are used, additional style sheet files need to be linked in HTML page also. Currently there are four essential CSS files:</p>
+			<pre class="CodeBlock">&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;styles/default.css&quot; /&gt;
+&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;styles/defaultColor.css&quot; /&gt;
+&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;styles/chemWidget.css&quot; /&gt;
+&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;styles/chemWidgetColor.css&quot; /&gt;</pre>
+			<h2>Supported Web Browsers</h2>
+			<p>All modern web browsers, including mobile ones are supported, including (but not limited to):</p>
+			<ul>
+				<li>Firefox</li>
+				<li>Chrome</li>
+				<li>Safari</li>
+				<li>Internet Explorer 8 and above</li>
+				<li>Web browser of Android and iOS</li>
+			</ul>
+			<p>&nbsp;</p>
 			<!-- InstanceEndEditable -->
 		</article>
 	</section>

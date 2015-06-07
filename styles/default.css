@@ -15,3 +15,32 @@ a#kekuleLogo
 {
 	margin-right: 170px;
 }
+
+table.ExplanationTable
+{
+	border-collapse: collapse;
+}
+table.ExplanationTable td,
+table.ExplanationTable th
+{
+	border: 1px solid #555;
+	padding: 0.2em 0.5em;
+}
+
+table.ExplanationTable th
+{
+	background-color: #000;
+	color: #fff;
+	padding: 0.2em;
+}
+
+.CodeBlock
+{
+    font-family: "Courier New", Courier, monospace;
+    display: block;
+		margin: 0 2em;
+    padding: 0.5em 1em;
+    border: 1px dotted #ccc;
+    border-radius: 0.2em;
+    background-color: #eee;
+}

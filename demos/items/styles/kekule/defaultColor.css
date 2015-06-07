@@ -36,6 +36,10 @@
     color: #555555;
     /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
 }
+.K-Assoc-Text-Content
+{
+    color: #888888;
+}
 .K-Normal-Background,
 .K-ComboBox .K-TextBox,
 .K-Container.K-Panel
@@ -456,23 +460,23 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 /* Style resources */
 .K-Res-Cursor-Rotate
 {
-    cursor: url("cursors/rotate.cur") , pointer;
+    cursor: url("./cursors/rotate.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-NE
 {
-    cursor: url("cursors/rotateNE.cur") , pointer;
+    cursor: url("./cursors/rotateNE.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-NW
 {
-    cursor: url("cursors/rotateNW.cur") , pointer;
+    cursor: url("./cursors/rotateNW.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-SE
 {
-    cursor: url("cursors/rotateSE.cur") , pointer;
+    cursor: url("./cursors/rotateSE.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-SW
 {
-    cursor: url("cursors/rotateSW.cur") , pointer;
+    cursor: url("./cursors/rotateSW.cur"), pointer;
 }
 .K-Res-Icon-Color-Pick
 {
@@ -492,6 +496,12 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     background-image: url("other/colorMulti.gif");
     background-repeat: no-repeat;
+}
+.K-Res-Icon-Color-Transparent,
+.K-Color-Transparent
+{
+    background-image: url("other/transparentMark.gif");
+    background-repeat: repeat;
 }
 
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,

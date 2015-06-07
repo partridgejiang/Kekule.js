@@ -14,20 +14,77 @@ if (!Array.prototype.indexOf)
 	};
 }
 
-function kekuleRequire(libName)
+var readyState = document && document.readyState;
+var docReady = (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive');
+
+function directAppend(libName)
 {
 	// inserting via DOM fails in Safari 2.0, so brute force approach
   document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
-	/*
-	var elem = document.createElement('script');
-	elem.setAttribute('type', 'text/javascript');
-	elem.src = libName;
-	//document.body.appendChild(elem);
-	var headElem = document.getElementsByTagName('head')[0];
-	var parentElem = headElem || document.body;
-	console.log('insert to ', parentElem.tagName, libName);
-	parentElem.appendChild(elem);
-	*/
+}
+
+function appendScriptFile(doc, url, callback)
+{
+	var result = doc.createElement('script');
+	result.src = url;
+	result.onload = result.onreadystatechange = function(e)
+	{
+		if (result._loaded)
+			return;
+		var readyState = result.readyState;
+		if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+		{
+			result._loaded = true;
+			result.onload = result.onreadystatechange = null;
+			if (callback)
+				callback();
+		}
+	};
+	(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+	//console.log('load script', url);
+	return result;
+}
+function appendScriptFiles(doc, urls, callback)
+{
+	if (urls.length <= 0)
+	{
+		if (callback)
+			callback();
+		return;
+	}
+	var file = urls.shift();
+	appendScriptFile(doc, file, function()
+		{
+			appendScriptFiles(doc, urls, callback);
+		}
+	);
+}
+
+function loadChildScriptFiles(scriptUrls, forceDomLoader)
+{
+	if (!docReady && !forceDomLoader)  // can directly write to document
+	{
+		for (var i = 0, l = scriptUrls.length; i < l; ++i)
+			directAppend(scriptUrls[i]);
+
+		var sloadedCode = 'Kekule._loaded();';
+		/*
+		if (window.btoa)  // use data uri to insert loaded code, avoid inline script problem in Chrome extension (still no use in Chrome)
+		{
+			var sBase64 = btoa(sloadedCode);
+			var sdataUri = 'data:;base64,' + sBase64;
+			directAppend(sdataUri);
+		}
+		else  // use simple inline code in IE below 10 (which do not support data uri)
+		*/
+		//directAppend('kekule.loaded.js');  // manully add small file to mark lib loaded
+		document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
+	}
+	else
+		appendScriptFiles(document, scriptUrls, function(){
+			// set a marker indicate that all modules are loaded
+			Kekule._loaded();
+		});
 }
 
 var kekuleFiles = {
@@ -185,7 +242,7 @@ var kekuleFiles = {
 	},
 
 	'chemWidget': {
-		'requires': ['lan', 'root', 'common', 'core', 'html', 'io', 'render', 'widget'],
+		'requires': ['lan', 'root', 'common', 'core', 'html', 'io', 'render', 'algorithm', 'widget'],
 		'files': [
 			'widgets/chem/kekule.chemWidget.base.js',
 			'widgets/chem/kekule.chemWidget.dialogs.js',
@@ -290,7 +347,7 @@ function getEssentialModules(modules)
 		pushModule(result, module);
 	}
 	return result;
-};
+}
 
 function getEssentialFiles(modules, useMinFile)
 {
@@ -313,11 +370,12 @@ function getEssentialFiles(modules, useMinFile)
 		}
 	}
 	return result;
-};
+}
 
 function analysisEntranceScriptSrc()
 {
 	var entranceSrc = /^(.*\/?)kekule\.js(\?.*)?$/;
+	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
 	var scriptElems = document.getElementsByTagName('script');
@@ -364,6 +422,14 @@ function analysisEntranceScriptSrc()
 							var modules = moduleStr.split(',');
 							continue;
 						}
+						// force dom loader
+						var forceDomLoaderMatch = params[i].match(paramForceDomLoader);
+						if (forceDomLoaderMatch)
+						{
+							var pvalue = forceDomLoaderMatch[1].toLowerCase();
+							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+							result.forceDomLoader = value;
+						}
 					}
 					if (modules)
 						result.modules = modules;
@@ -381,10 +447,14 @@ function init()
 	var scriptInfo = analysisEntranceScriptSrc();
 	var files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
 	var path = scriptInfo.path;
+	var scriptUrls = [];
 	for (var i = 0, l = files.length; i < l; ++i)
 	{
-		kekuleRequire(path + files[i]);
+		//kekuleRequire(path + files[i]);
+		scriptUrls.push(path + files[i]);
 	}
+	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader);
 	// save loaded module and file information
 	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;

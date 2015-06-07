@@ -216,6 +216,10 @@
 {
     background-image: url("icons/edit.png");
 }
+.K-Chem-ClearObjs > .K-Pri-Glyph-Content
+{
+    background-image: url("icons/trash.png");
+}
 .K-Chem-NewDoc > .K-Pri-Glyph-Content
 {
     background-image: url("icons/documentNew.png");

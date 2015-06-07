@@ -10,6 +10,11 @@ html, body
 	color: #000;
 }
 
+a
+{
+	color: #069;
+}
+
 .MainHeader, .MainContent, .MainFooter
 {
 	position: relative;
