@@ -64,6 +64,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// io/kekule.io.js
 	READER_ID_ALREADY_EXISTS: 'Can not register reader: id already exists',
 	WRITER_ID_ALREADY_EXISTS: 'Can not register writer: id already exists',
+	FAIL_TO_READ_FORMAT: 'Fail to load data of format: ',
 	NO_SUITABLE_READER_FOR_FORMAT: 'Can not read data of format: ',
 	NO_SUITABLE_READER_FOR_MIMETYPE: 'Can not read data of MIME type: ',
 	NO_SUITABLE_READER_FOR_FILEEXT: 'Can not read data of file extension: ',

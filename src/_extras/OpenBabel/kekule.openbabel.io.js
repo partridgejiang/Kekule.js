@@ -335,7 +335,10 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 			var mimeType = info.mimeType;
 			// check if fileExts or mimeType already exists
 
+			// find by both mimeType and file exts, if mimeType exists but file ext not in, still register
 			var fmtId = formatManager.findFormatId(mimeType);
+			if (fmtId)
+				fmtId = formatManager.findFormatId(null, id);
 			/*
 			if (!fmtId)
 				fmtId = formatManager.findFormatId(null, id);
@@ -357,6 +360,7 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 				console.log('[EXISTS]', fmtId, mimeType, info);
 			}
 			*/
+
 			// check if fileExts or mimeType already has reader/writer
 			var readerWriterInfo = (ioType === 'in')?
 				Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(fmtId):

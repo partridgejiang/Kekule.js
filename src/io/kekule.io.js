@@ -1073,6 +1073,11 @@ Kekule.IO.loadFormatData = function(content, formatId)
 			info.url = url;
 		}
 		*/
+		if (!result)
+		{
+			var msg = Kekule.$L('ErrorMsg.FAIL_TO_READ_FORMAT') + formatId;
+			Kekule.raise(msg);
+		}
 		return result;
 	}
 	else
