@@ -67,7 +67,7 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader)
 		for (var i = 0, l = scriptUrls.length; i < l; ++i)
 			directAppend(scriptUrls[i]);
 
-		var sloadedCode = 'Kekule._loaded();';
+		var sloadedCode = 'if (this.Kekule) Kekule._loaded();';
 		/*
 		if (window.btoa)  // use data uri to insert loaded code, avoid inline script problem in Chrome extension (still no use in Chrome)
 		{
