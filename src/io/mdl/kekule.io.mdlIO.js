@@ -403,6 +403,7 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 		if (mol)
 		{
 			var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol);
+			this.setCoordMode(molInfo.coordMode);  // coord mode can be get from mol info
 			// header
 			this.writeHeaderInfo(mol, textBuffer);
 			if (this.getMdlVersion() == Kekule.IO.MdlVersion.V3000)  // add a compatible count line
