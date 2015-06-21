@@ -25,6 +25,17 @@
                         console.log('mouseup', e.shiftKey, e.ctrlKey, e.altKey);
                     }
             );
+            var body = document.documentElement;
+            body.addEventListener('mousewheel', function(e)
+              {
+                  console.log('mousewheel', e.shiftKey, e.ctrlKey, e.altKey);
+              }
+            );
+            body.addEventListener('wheel', function(e)
+              {
+                  console.log('wheel', e.shiftKey, e.ctrlKey, e.altKey);
+              }
+            );
         }
     </script>
 </head>
