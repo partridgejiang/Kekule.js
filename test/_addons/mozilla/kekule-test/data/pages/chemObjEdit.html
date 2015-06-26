@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Edit Chem Object</title>
+  <link rel="stylesheet" type="text/css" href="../styles/default.css" />
+  <link rel="stylesheet" type="text/css" href="../styles/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../styles/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../styles/chemWidgetColor.css" />
+  <style>
+    .ChemObjDisplayer
+    {
+      width: 700px;
+      height: 450px;
+    }
+  </style>
+  <script type="application/javascript" src="../libs/Three.js"></script>
+  <script type="application/javascript" src="../libs/kekule/kekule.js?modules=widget,chemWidget"></script>
+
+  <script type="application/javascript" src="chemObjEdit.js"></script>
+
+
+  <script id="product1" type="chemical/x-kekule-json">
+    {"id":"m1","renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":12.912444254557293,"y":37.61377766927083,"__type__":"object"},"charge":0,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":0.6928203230275525,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a18","coord2D":{"x":1.3856406460551032,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a15","coord2D":{"x":0,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":0.6928203230275525,"y":-0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a19","coord2D":{"x":2.078460969082652,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a21","coord2D":{"x":1.3856406460551032,"y":1.5999999999999943,"__type__":"object"},"charge":0,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a16","coord2D":{"x":-0.6928203230275507,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":0,"y":-0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a20","coord2D":{"x":2.771281292110203,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a17","coord2D":{"x":-0.6928203230275507,"y":-0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b17","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b3","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b2","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b18","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b20","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","id":"b14","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[2,6]},{"__type__":"Kekule.Bond","id":"b1","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[3,7]},{"__type__":"Kekule.Bond","id":"b19","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b15","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[6,9]},{"__type__":"Kekule.Bond","id":"b16","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[7,9]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+	</script>
+</head>
+<body>
+  <!--
+  <div id="tabViewStage" data-widget="Kekule.Widget.TabView">
+    <div data-widget="Kekule.Widget.TabPage" data-text="2D">
+      <div class="ChemObjDisplayer" id="chemComposer" data-widget="Kekule.Editor.Composer"></div>
+    </div>
+    <div data-widget="Kekule.Widget.TabPage" data-text="3D">
+      <div class="ChemObjDisplayer" id="chemViewer3D" data-widget="Kekule.ChemWidget.Viewer3D"
+           data-enable-toolbar="true" data-padding="20" data-chem-obj="url(#product1)">
+      </div>
+    </div>
+  </div>
+  -->
+  <div id="chemObjSetter" data-widget="Kekule.ChemWidget.ChemObjInserter" data-resizable="true"
+    data-auto-size-export="true" data-chem-obj="url(#produc1)"></div>
+  <div>
+    <button id="btnOk" tooltip="btnOk" data-widget="Kekule.Widget.Button">OK</button>
+    <button id="btnCancel" tooltip="btnCancel" data-widget="Kekule.Widget.Button">Cancel</button>
+  </div>
+</body>
+</html>

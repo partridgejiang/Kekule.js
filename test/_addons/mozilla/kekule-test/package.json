@@ -1,0 +1,10 @@
+{
+  "name": "kekule",
+  "title": "Kekule",
+  "id": "jid1-vPLFY7PZQs3j4A",
+  "description": "Addon to insert or modify molecule structures in web editors",
+  "permissions": {"private-browsing": true},
+  "author": "Partridge Jiang",
+  "license": "MPL 2.0",
+  "version": "0.1"
+}

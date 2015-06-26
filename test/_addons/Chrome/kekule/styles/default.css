@@ -1,0 +1,1255 @@
+/* top layer */
+.K-Top-Layer
+{
+    background-color: transparent;
+    z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Widget state */
+.K-State-Disabled {
+    cursor: default !important;
+}
+
+/* Parts */
+.K-Text-Content, .K-Img-Content, .K-Glyph-Content, .K-Decoration-Content
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+/* layout */
+.K-Layout-H>.K-Widget, .K-Layout-H>.K-Content
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+.K-Layout-H>table.K-Widget
+{
+    display: inline-table;
+}
+.K-Content, .K-Layout-H>.K-Content
+{
+    margin: 0 0.1em;
+}
+
+.K-Layout-V>.K-Widget, .K-Layout-V>.K-Content
+{
+    display: block;
+    margin: .2em auto;
+}
+.K-Layout-V>table.K-Widget
+{
+    display: table;
+}
+
+.K-Layout-V>.K-Widget
+{
+    /*width: 100%;*/
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.K-Layout-V>.K-Content
+{
+    margin: 0.2em 0;
+}
+
+.K-Text-Hide>.K-Text-Content, .K-Glyph-Hide>.K-Glyph-Content
+{
+    display: none;
+}
+.K-Text-Show>.K-Text-Content, .K-Glyph-Show>.K-Glyph-Content
+{
+    display: inline-block;
+}
+/*
+.K-Text-Show .K-Text-Hide .K-Text-Content, .K-Glyph-Show .K-Glyph-Hide .K-Glyph-Content
+{
+    display: none;
+}
+.K-Text-Hide .K-Text-Show .K-Text-Content, .K-Glyph-Hide .K-Glyph-Show .K-Glyph-Content
+{
+    display: inline-block;
+}
+*/
+
+
+/* General widgets */
+.K-Widget
+{
+    position: relative;
+    /*font-size: 11px;*/
+    font-size: 0.8em;
+    font-family: Verdana,Arial,sans-serif;
+    text-decoration: none;
+    margin: .1em;
+    z-index: 1;
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.K-Widget.K-NonSelectable
+{
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.K-Widget .K-Selectable
+{
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+.K-Widget, input.K-Widget, button.K-Widget
+{
+    display: inline-block;
+    /*-moz-box-sizing: border-box;*/
+    /* -moz-box-sizing: content-box; */
+    /*box-sizing: border-box;*/
+    /* box-sizing: content-box;*/
+}
+
+table.K-Widget
+{
+    display: table;
+}
+
+.K-Widget .K-Widget
+{
+    font-size: 1em; /* solve the tiny font size problem in nested widgets */
+}
+
+/* Container */
+.K-Container .K-Widget
+{
+    /*margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
+}
+
+/* Panel */
+.K-Panel
+{
+    padding: 0.7em;
+}
+/* Toolbar */
+.K-Panel, .K-Toolbar
+{
+    border: 1px solid;
+}
+
+/* ButtonGroup */
+.K-Toolbar.K-Button-Group
+{
+    border: none;
+}
+.K-Button-Group .K-Widget
+{
+    margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
+}
+.K-Button-Group.K-Layout-H>.K-Widget
+{
+    margin-left: -1px;
+    height: 100%;
+}
+.K-Button-Group.K-Layout-H>.K-Widget.K-First-Child
+{
+    margin-left: 0em;
+}
+
+.K-Button-Group.K-Layout-V>.K-Widget
+{
+    margin-top: -1px;
+    width: 100%;
+}
+.K-Button-Group.K-Layout-V>.K-Widget.K-First-Child
+{
+    margin-top: 0em;
+}
+
+.K-Button-Group .K-Button.K-State-Focused,
+.K-Button-Group .K-Button.K-State-Hover,
+.K-Button-Group .K-Button.K-State-Active
+{
+    z-index: 2;   /* put focused button to front */
+}
+
+
+/* images */
+.K-Glyph
+{
+    /* display: inline-block; */
+    vertical-align: middle;
+}
+
+/* menu */
+.K-Menu
+{
+    cursor: default;
+}
+.K-Menu,
+.K-Menu ul,
+.K-Menu ol
+{
+    border: 1px solid;
+    margin: 0;
+    padding: 0;
+}
+.K-Menu li
+{
+    display: block;
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0.1em 2em;
+    line-height: 1.5;
+}
+.K-Menu.K-Layout-H>li  /* horizon menu bar item */
+{
+    float: left;
+}
+.K-Menu li:hover
+{
+    background-color: #dadada;
+}
+.K-Menu li>ul,
+.K-Menu li>ol
+{
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+}
+.K-Menu li:hover>ul,
+.K-Menu li:hover>ol
+{
+    display: block;
+}
+.K-Menu.K-Layout-H>li>ul,
+.K-Menu.K-Layout-H>li>ol
+{
+    left: 0;
+    top: 100%;
+}
+
+/* MsgPanel */
+.K-MsgPanel
+{
+
+}
+.K-MsgPanel .K-MsgPanel-Content
+{
+    display: inline-block;
+    padding: 0.3em 0.7em;
+    border: 1px solid;
+}
+.K-MsgPanel .K-Pri-Glyph-Content
+{
+    width: 16px;
+    height: 16px;
+    display: none;
+}
+
+.K-SysMsgGroup
+{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 3em;
+    z-index: 30000;
+    text-align: center;
+}
+.K-SysMsgGroup .K-MsgPanel
+{
+    margin: 0.3em auto;
+}
+
+/* Buttons */
+.K-Button {
+    /*display: inline-block;*/
+    position: relative;
+    padding: 0;
+    line-height: normal;
+    cursor: pointer;
+    vertical-align: middle;
+    text-align: center;
+    overflow: visible; /* removes extra width in IE */
+    border: 1px solid;
+    outline: none;
+}
+
+.K-Button,
+.K-Button:link,
+.K-Button:visited,
+.K-Button:hover,
+.K-Button:active {
+    text-decoration: none;
+}
+
+.K-Button
+{
+    /*display: block;*/
+    padding: 0.4em 0.6em;
+}
+
+.K-Button .K-DropDownMark
+{
+    font-size: 70%;
+    margin-left: 0.5em;
+    margin-right: 0;
+}
+
+.K-Button .K-Content
+{
+    vertical-align: middle;
+}
+
+.K-Compact-Mark
+{
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 0px;
+    width: 0px;
+    border: 4px solid;
+    border-top: 4px solid transparent;
+    border-left: 4px solid transparent;
+    /* IE6 hack */
+    _border-top-color: white;
+    _border-left-color: white;
+    _filter: chroma(color=white);
+    font-size: 0;
+    line-height: 0;
+}
+
+
+/* Nested container */
+.K-State-Collapsed .K-NestedContainer
+{
+    display: none;
+}
+
+
+/* Textbox */
+.K-TextBox
+{
+    position: relative;
+    /*border: 1px solid;*/
+}
+
+/* ComboTextBox */
+.K-ComboTextBox
+{
+    position: relative;
+}
+.K-ComboTextBox .K-TextBox
+{
+    margin: 0;
+}
+.K-ComboTextBox.K-Overlap .K-TextBox
+{
+    width: 100%;
+    box-sizing: border-box;
+}
+.K-ComboTextBox .K-ComboTextBox-Assoc-Widget
+{
+    z-index: 2;
+    margin: 0;
+}
+
+/* ButtonTextBox */
+.K-ButtonTextBox .K-Button
+{
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0 0.1em;
+}
+
+.K-ButtonTextBox.K-Overlap .K-Button.K-ComboTextBox-Assoc-Widget
+{
+    border: none;
+    background-color: transparent;
+    opacity: 0.7;
+    filter:Alpha(Opacity=70);
+}
+.K-ButtonTextBox.K-Overlap .K-Button.K-State-Hover,
+.K-ButtonTextBox.K-Overlap .K-Button.K-State-Active
+{
+    opacity: 1;
+    filter:Alpha(Opacity=100);
+}
+
+/* Checkbox */
+.K-CheckBox input
+{
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    margin-right: 0.3em;
+}
+
+/* Combo box */
+.K-ComboBox
+{
+    width: 10em;
+}
+.K-ComboBox .K-ComboBox-TextWrapper
+{
+    position: absolute;
+    top: 1px;
+    left: 2px;
+    right: 22px;
+    bottom: 1px;
+    z-index: 2;
+}
+.K-ComboBox .K-TextBox
+{
+    position: absolute;
+    border: 0px;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+}
+.K-ComboBox .K-SelectBox
+{
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* TextArea */
+.K-TextArea
+{
+    min-width: 5em;
+    min-height: 1em;
+}
+
+/* Tab Button Group */
+.K-TabButtonGroup
+{
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+.K-TabButtonGroup .K-Button
+{
+    /*
+    border-radius: 7px 7px 0 0;
+    */
+    margin: 0;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+.K-TabButtonGroup .K-Button.K-State-Hover,
+.K-TabButtonGroup .K-Button.K-State-Focused,
+.K-TabButtonGroup .K-Button.K-State-Active
+{
+    z-index: 2;
+}
+
+.K-TabButtonGroup.K-Layout-H>.K-Button,
+.K-TabButtonGroup.K-TabAtTop>.K-Button,
+.K-TabButtonGroup.K-TabAtBottom>.K-Button
+{
+    margin-right: -1px;
+}
+.K-TabButtonGroup.K-Layout-V>.K-Button,
+.K-TabButtonGroup.K-TabAtLeft>.K-Button,
+.K-TabButtonGroup.K-TabAtRight>.K-Button
+{
+    margin-bottom: -1px;
+}
+.K-TabButtonGroup.K-TabAtBottom>.K-Button
+{
+    border-bottom: 3px solid transparent;
+}
+.K-TabButtonGroup.K-TabAtTop>.K-Button
+{
+    border-top: 3px solid transparent;
+}
+.K-TabButtonGroup.K-TabAtRight>.K-Button
+{
+    border-right: 3px solid transparent;
+    text-align: left;
+}
+.K-TabButtonGroup.K-TabAtLeft>.K-Button
+{
+    border-left: 3px solid transparent;
+    text-align: right;
+}
+
+/* Resize gripper */
+.K-Resize-Gripper
+{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+    z-index: 1000;
+}
+.K-Resize-Gripper.K-State-Disabled
+{
+    cursor: default;
+}
+.K-Resize-Gripper.K-Normal-Background
+{
+    background-color: transparent;
+}
+
+/* Tab View */
+.K-TabView
+{
+    /*border: 1px solid;*/
+    position: relative;
+}
+.K-TabView-TabAtTop .K-TabView-TabButton-Container,
+.K-TabView-TabAtBottom .K-TabView-TabButton-Container,
+.K-TabView-TabAtTop .K-TabView-Page-Container,
+.K-TabView-TabAtBottom .K-TabView-Page-Container
+{
+    display: block;
+}
+.K-TabView-TabAtLeft .K-TabView-TabButton-Container,
+.K-TabView-TabAtRight .K-TabView-TabButton-Container,
+.K-TabView-TabAtLeft .K-TabView-Page-Container,
+.K-TabView-TabAtRight .K-TabView-Page-Container
+{
+    display: inline-block;
+    vertical-align: top;
+}
+.K-TabView .K-TabView-TabButton-Container
+{
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.K-TabView .K-TabView-Page-Container
+{
+    position: relative;
+    border: 1px solid;
+    margin: 0;
+    padding: 0;
+}
+.K-TabView .K-TabView-Page-Container .K-TabView-Page
+{
+    display: none;
+    left: 0;
+    top: 0;
+    border: none;
+    margin: 0;
+    padding: 0.5em;
+    overflow: hidden;
+}
+.K-TabView .K-TabView-Page-Container .K-TabView-Active-Page
+{
+    display: block;
+}
+
+/* Tree View */
+.K-TreeView
+{
+    border: 1px solid;
+    cursor: default;
+    padding: 0.2em 0.4em;
+    overflow: auto;
+}
+
+.K-TreeView ul
+{
+    padding: 0;
+    margin: 0;
+    padding-left: 1em;
+    line-height: 1.1;
+}
+
+.K-TreeView li
+{
+    list-style: none;
+    white-space: nowrap;
+}
+
+.K-TreeView .K-TreeView-ItemContent, .K-TreeView .K-TreeView-ExpandMark
+{
+    display: inline-block;
+}
+
+/**** Debug settings ****/
+.K-TreeView .K-TreeView-ExpandMark
+{
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+
+/**** Debug settings end ****/
+
+.K-TreeView li.K-State-Empty .K-TreeView-ExpandMark
+{
+    visibility: hidden;
+}
+
+.K-TreeView li .K-Text-Content
+{
+    margin-left: 0.5em;
+}
+
+/** Widget Grid */
+.K-Widget-Grid
+{
+    display: table;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell
+{
+    float: left;
+    /*
+    vertical-align: middle;
+    text-align: center;
+    */
+    position: relative;
+    margin: 3px;
+    padding: 5px;
+    border: 2px solid;
+    width: 10em;
+    height: 5em;
+    /*overflow: hidden;*/
+}
+.K-Widget-Grid .K-Widget-Grid-Cell.K-Widget-Grid-Cell.K-Widget-Grid-Add-Cell
+{
+    border: 2px dashed;
+    font-size: 5em;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    cursor: pointer;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell:hover,
+.K-Widget-Grid .K-Widget-Grid-Cell:focus,
+.K-Widget-Grid .K-Widget-Grid-Cell:active
+{
+    overflow: visible;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area
+{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+    display: none;
+}
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:hover .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:focus .K-Widget-Grid-Interaction-Area,
+.K-Widget-Grid.K-Widget-Grid-Enable-Cell-Interaction .K-Widget-Grid-Cell:active .K-Widget-Grid-Interaction-Area
+{
+    display: block;
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button
+{
+    padding: 0.2em;
+}
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button K-Assoc-Glyph-Content
+{
+    display: none;
+}
+
+.K-Widget-Grid-Widget-Parent
+{   /*
+    vertical-align: middle;
+    */
+    position: absolute;
+    display: block;
+    /*
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    */
+}
+
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Dialog */
+.K-Dialog
+{
+    border: 1px solid;
+    overflow: hidden;
+    position: absolute;
+    position: fixed;
+}
+.K-Dialog .K-Dialog-Caption
+{
+    display: block;
+    padding: 0.4em 1em;
+    border-bottom: 1px solid;
+    font-size: 1.1em;
+    font-family: Verdana,Arial,sans-serif;
+    font-weight: bold;
+}
+.K-Dialog .K-Dialog-Client
+{
+    padding: 0.5em;
+}
+.K-Dialog .K-Dialog-Button-Panel
+{
+    padding: 0 0.25em;
+    text-align: right;
+    overflow: hidden;  /* clear float */
+}
+.K-Dialog .K-Dialog-Button-Panel .K-Widget
+{
+    margin: 0.5em 0.25em;
+}
+.K-Dialog-Modal-Background
+{
+    background-color: rgb(200, 200, 200);
+    background-color: rgba(128, 128, 128, 0.3);
+    z-index: 20000;
+    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /*
+    width: 100%;
+    height: 100%;
+    */
+}
+
+/* Text Editor */
+.K-TextEditor
+{
+
+}
+.K-TextEditor .K-TextEditor-Toolbar,
+.K-TextEditor .K-TextEditor-TextArea
+{
+    display: block;
+    margin: 0;
+    width: 100%;
+}
+.K-TextEditor .K-TextEditor-Toolbar
+{
+    z-index: 100;
+    white-space: nowrap;
+}
+.K-TextEditor .K-TextEditor-TextArea
+{
+
+}
+.K-TextEditor .K-TextEditor-Toolbar .K-Button
+{
+    padding: 0.2em 0.4em;
+}
+.K-TextEditor .K-TextEditor-Toolbar .K-TextEditor-FontBox
+{
+
+}
+
+
+/* Color Picker */
+.K-ColorPicker
+{
+    border: 1px solid;
+    padding: 0.2em 0.5em;
+}
+.K-ColorPicker .K-ColorPicker-Header
+{
+    overflow: hidden;  /* clear float */
+    padding: 0.2em 0;
+}
+.K-ColorPicker .K-ColorPicker-Input
+{
+    /*display: none;*/
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+.K-ColorPicker .K-ColorPicker-Spec-Color-Palette,
+.K-ColorPicker .K-ColorPicker-HexBox,
+.K-ColorPicker .K-ColorPicker-Previewer,
+.K-ColorPicker .K-ColorPicker-Browse-Btn
+{
+    /*display: inline-block;*/
+    float: left;
+    font-size: 80%;
+    line-height: 1.4em;
+    padding: 0em 0.5em;
+    margin-right: 0.3em;
+}
+.K-ColorPicker .K-ColorPicker-HexBox,
+.K-ColorPicker .K-ColorPicker-Previewer
+{
+    border: 1px solid;
+}
+.K-ColorPicker .K-ColorPicker-HexBox
+{
+    width: 6em;
+    background-color: transparent;
+}
+.K-ColorPicker .K-ColorPicker-Previewer
+{
+    width: 2em;
+}
+.K-ColorPicker .K-ColorPicker-Browse-Btn
+{
+    padding: 0em 0em;
+    margin: 0;
+    width: 18px;
+    float: right;
+}
+.K-ColorPicker .K-ColorPicker-Spec-Color-Palette
+{
+    padding: 0;
+    margin: 0;
+    margin-right: 0.3em;
+}
+.K-ColorPicker .K-ColorPicker-Spec-Color-Palette .K-ColorPicker-Palette-Cell
+{
+    float: left;
+    height: 1.4em;
+    width: 1.4em;
+}
+.K-ColorPicker .K-ColorPicker-Palette,
+.K-ColorPicker .K-ColorPicker-Spec-Color-Palette
+{
+    float: left;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
+    cursor: pointer;
+}
+.K-ColorPicker .K-ColorPicker-Palette
+{
+    min-width: 180px;
+}
+.K-ColorPicker .K-ColorPicker-Palette-Line
+{
+    /*height: 10px;*/
+    font-size: 0px;  /* erase gap between lines */
+}
+.K-ColorPicker .K-ColorPicker-Palette-Line, .K-ColorPicker .K-ColorPicker-Palette-Cell
+{
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+}
+.K-ColorPicker .K-ColorPicker-Palette-Cell
+{
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-top: 1px solid;
+    border-left: 1px solid;
+}
+/*
+.K-ColorPicker .K-ColorPicker-Palette-Cell:hover
+{
+    transform: scale(1.5);
+    transform-origin: center center;
+}
+*/
+.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent
+{
+    background-image: url("other/transparentMark.gif");
+}
+
+.K-ColorDropTextBox .K-ColorPreviewer
+{
+    border: 1px solid;
+    box-sizing: border-box;
+    width: 1.5em;
+    height: 80%;
+    padding: 0 0.1em;
+}
+
+.K-ColorDropButton .K-Pri-Glyph-Content
+{
+    border: 1px solid;
+}
+
+/* Value list editor */
+.K-ValueListEditor
+{
+    display: table;  /** Important, override inline-block setting for widget, otherwise cause error in display width. */
+    border: 1px solid;
+    border-collapse: collapse;
+    padding: 0;
+    line-height: normal;
+    cursor: default;
+    vertical-align: top;
+    empty-cells: show;
+    table-layout: fixed;
+    width: 25em;
+    /*height: 40em;*/
+}
+
+.K-ValueListEditor .K-ValueListEditor-Row
+{
+    border-collapse: collapse;
+    border-top: 1px dotted;
+    border-bottom: 1px dotted;
+}
+
+.K-ValueListEditor .K-ValueListEditor-Cell
+{
+    border-collapse: collapse;
+    padding: 0.2em 0.4em;
+    margin: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.K-ValueListEditor .K-ValueListEditor-CellContent
+{
+    display: block;
+    position: relative;
+    /*padding: 0.2em 0.4em;*/
+    margin: 0;
+}
+
+.K-ValueListEditor .K-ValueListEditor-IndicatorCell
+{
+    width: 16px;
+    padding: 0;
+    border: hidden;
+}
+.K-ValueListEditor .K-ValueListEditor-IndicatorCell span
+{
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+/*
+.K-ValueListEditor .K-PropListEditor-IndentDecorator
+{
+    position: absolute;
+    left: 0;
+    top: -1px;
+    bottom: -1px;
+    background-color: gray;
+    z-index: 0;
+}
+*/
+
+.K-ValueListEditor .K-ValueListEditor-KeyCell
+{
+    width: 12em;
+}
+.K-ValueListEditor .K-ValueListEditor-KeyCell, .K-ValueListEditor .K-ValueListEditor-ValueCell
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*
+    position: relative;
+    */
+}
+.K-ValueListEditor .K-ValueListEditor-CellContent
+{
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*
+    width: 99%;
+    max-width: 99%;
+    */
+}
+
+.K-ValueListEditor .K-ValueListEditor-KeyCell
+{
+    border-right: 1px solid;
+    /*padding-left: 0.5em;*/
+}
+
+
+.K-ValueListEditor .K-ValueListEditor-ActiveRow
+{
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+}
+
+/*
+.K-ValueListEditor:first-child
+{
+    border-top: none;
+}
+.K-ValueListEditor:last-child
+{
+    border-bottom: none;
+}
+*/
+
+
+/*
+.K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-ValueCellText
+{
+    visibility: hidden;
+}
+*/
+
+.K-ValueListEditor .K-ValueListEditor-InlineEdit
+{
+    position: absolute;
+    display: block;
+    font-size: 1em;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 99%;
+    border: none;
+    padding: 0;
+    margin: 0;
+    /*z-index: 5;*/
+    outline: none;
+}
+
+.K-ValueListEditor .K-ValueListEditor-InlineEdit input
+{
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+.K-PropListEditor .K-PropListEditor-PropExpandMarker
+{
+    /* debug */
+    position: relative;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin: 0 0.2em;
+    /*z-index: 10;*/
+}
+
+.K-ObjInspector
+{
+    width: 25em;
+    height: 40em;
+    border: 1px solid;
+    padding: 0;
+    overflow: hidden;
+}
+
+.K-ObjInspector .K-ObjInspector-PropListEditorContainer
+{
+    position: absolute;
+    width: 100%;
+    left: 0;
+    right: 0;
+
+    top: 2em;
+    bottom: 5em;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    outline: 1px solid;
+}
+
+.K-ObjInspector .K-PropListEditor
+{
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    /*border: none;*/
+}
+/*
+.K-ObjInspector .K-PropListEditor .K-ValueListEditor-KeyCell,
+.K-ObjInspector .K-PropListEditor .K-ValueListEditor-ValueCell
+{
+    width: 8em;
+}
+*/
+
+.K-ObjInspector .K-ObjInspector-ObjsInfoPanel, .K-ObjInspector .K-ObjInspector-PropInfoPanel
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    padding: 0 1em;
+}
+
+.K-ObjInspector .K-ObjInspector-ObjsInfoPanel
+{
+    top: 0;
+    height: 2em;
+    line-height: 2em;
+    white-space: nowrap;
+    font-weight: bold;
+}
+.K-ObjInspector .K-ObjInspector-PropInfoPanel
+{
+    bottom: 0;
+    height: 5em;
+}
+.K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Title, .K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Description
+{
+
+}
+.K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Title
+{
+    line-height: 1.5em;
+    font-weight: bold;
+    white-space: nowrap;
+    margin: 0.5em 0 0.2em 0;
+}
+.K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Description
+{
+    line-height: 1.2em;
+    margin-left: 0.5em;
+    white-space: normal;
+}
+
+.K-Widget-Configurator .K-Widget-Configurator-Client
+{
+    white-space: nowrap;
+}
+.K-Widget-Configurator .K-ObjInspector,
+.K-Widget-Configurator .K-TabButtonGroup
+{
+    vertical-align: top;
+    margin: 0;
+}
+.K-Widget-Configurator .K-ObjInspector
+{
+    width: 30em;
+    height: 30em;
+}
+.K-Widget-Configurator .K-ObjInspector .K-ObjInspector-PropListEditorContainer
+{
+
+}
+
+.K-Widget-Configurator .K-ObjInspector .K-ValueListEditor-KeyCell
+{
+    width: 18em;
+}
+
+
+/*
+.K-Glyph
+{
+    padding: 0.4em;
+}
+*/
+
+    /* workarounds */
+/* reset extra padding in Firefox, see h5bp.com/l */
+input.K-Button::-moz-focus-inner,
+button.K-Button::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
+
+/* States */
+.K-State-Focused, .K-State-Hover, .K-State-Active
+{
+    /* Note: should not do this, otherwise focused control may overlap some controls (e.g., in colorPicker) */
+    /* z-index: 2;  /* put current widget to front */
+}
+
+.K-State-Focused
+{
+
+}
+
+.K-State-Hover {
+
+}
+
+.K-State-Active {
+
+}
+
+.K-State-Selected {
+
+}
+
+.K-Popup
+{
+    position: absolute;
+    z-index: 21000;
+}
+
+
+
+/* Corner radius */
+.K-Corner-All,
+.K-Corner-Top,
+.K-Corner-Left,
+.K-Layout-H > .K-Corner-Leading,
+.K-Layout-V > .K-Corner-Leading,
+.K-Corner-TL
+{
+    /*border-top-left-radius: 0.4em;*/
+    border-top-left-radius: 4px;
+}
+.K-Corner-All,
+.K-Corner-Top,
+.K-Corner-Right,
+.K-Layout-H > .K-Corner-Tailing,
+.K-Layout-V > .K-Corner-Leading,
+.K-Corner-TR {
+    /*border-top-right-radius: 0.4em;*/
+    border-top-right-radius: 4px;
+}
+.K-Corner-All,
+.K-Corner-Bottom,
+.K-Corner-Left,
+.K-Layout-H > .K-Corner-Leading,
+.K-Layout-V > .K-Corner-Tailing,
+.K-Corner-BL {
+    /*border-bottom-left-radius: 0.4em;*/
+    border-bottom-left-radius: 4px;
+}
+.K-Corner-All,
+.K-Corner-Bottom,
+.K-Corner-Right,
+.K-Layout-H > .K-Corner-Tailing,
+.K-Layout-V > .K-Corner-Tailing,
+.K-Corner-Br {
+    /*border-bottom-right-radius: 0.4em;*/
+    border-bottom-right-radius: 4px;
+}
+
+
+.K-Fulfill
+{
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    display: block;
+}
+
+/* text controls */
+.K-No-Wrap
+{
+    white-space: nowrap;
+}
+

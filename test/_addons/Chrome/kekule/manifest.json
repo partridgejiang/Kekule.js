@@ -1,0 +1,24 @@
+{
+	"name": "Kekule Chrome Addon Test",
+	"version": "1.0",
+	"manifest_version": 2,
+	"description": "Kekule addon",
+	"browser_action": {
+		"default_icon": "icons/insertChemObj2D.png",
+		"default_popup": "pages/popup.html"
+	},
+	"permissions": [
+		//"http://api.flickr.com/"
+	],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"background": {
+		"scripts": ["js/background.js"]
+	},
+	"content_scripts": [
+		{
+			"matches": ["*://*/*"],
+			//"css": ["mystyles.css"],
+			"js": ["js/inject.js"]
+		}
+	]
+}
