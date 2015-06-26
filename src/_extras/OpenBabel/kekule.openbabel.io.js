@@ -300,10 +300,13 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 		var delimiter = '\n';
 		var itemSep = '--';
 		var formatListStr;
+
 		if (ioType === 'in')
 			formatListStr = converter.getSupportedInputFormatsStr(delimiter);
+			//formatListStr = Kekule.OpenBabel.obGetSupportedInputFormatsStr(delimiter);
 		else
 			formatListStr = converter.getSupportedOutputFormatsStr(delimiter);
+			//formatListStr = Kekule.OpenBabel.obGetSupportedOutputFormatsStr(delimiter);
 
 		var basicStrArray = formatListStr.split(delimiter);
 		for (var i = 0, l = basicStrArray.length; i < l; ++i)
@@ -320,6 +323,27 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 				//console.log(info);
 			}
 		}
+		/*
+		var lister = Kekule.OpenBabel.obGetSupportedFormatsDetailStr;
+		if (lister)
+		{
+			formatListStr = lister(ioType, delimiter, itemSep);
+			// analysis format list str
+			var sitems = formatListStr.split(delimiter);
+			for (var i = 0, l = sitems.length; i < l; ++i)
+			{
+				var s = sitems[i];
+				var details = s.split(itemSep);
+				var info = {
+					'id': details[0],
+					'mimeType': details[1],
+					'description': details[2]
+				};
+				result.push(info);
+			}
+		}
+		*/
+
 		return result;
 	},
 	registerByInfos: function(infos, ioType)
@@ -400,6 +424,12 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 			//converter.delete();
 			converter['delete']();  // avoid exception in older version of IE
 		}
+	  /*
+		var infos = this.listFormatInfo('in');
+		this.registerByInfos(infos, 'in');
+		var infos = this.listFormatInfo('out');
+		this.registerByInfos(infos, 'out');
+		*/
 	}
 });
 

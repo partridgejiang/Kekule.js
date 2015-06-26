@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>3D Generator Test</title>
+  <script src="../../../libs/raphael/raphael-min.2.0.1.js"></script>
+  <script src="../../../libs/three.js-r49/build/Three.js"></script>
+  <!--
+  <script src="../../src/_extras/OpenBabel/openbabel.js.O1"></script>
+  -->
+  <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel"></script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+<script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="molSrc" type="chemical/x-mdl-molfile">
+Untitled Document-1
+  ChemDraw10021112262D
+
+ 10  9  0  0  0  0  0  0  0  0999 V2000
+   -3.2151    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5006   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.7862    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0717   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3572    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3572   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0717    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7862   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5006    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2151   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  2  0
+  5  6  1  0
+  6  7  2  0
+  7  8  1  0
+  8  9  2  0
+  9 10  1  0
+M  END
+</script>
+
+  <script>
+    var chemEditor;
+    var chemEditorUi;
+    var viewer;
+
+    function getCurrMol()
+    {
+      return chemEditor.getChemSpace().getChildAt(0);
+      //return Kekule.ChemStructureUtils.getTotalStructFragment(chemEditor.getChemSpace());
+    }
+
+    function generate3D()
+    {
+      var mol = getCurrMol();
+
+      /*
+      var generator = new Kekule.Calculator.ObStructure3DGenerator();
+      generator.setSourceMol(mol);
+      generator.execute(function(){
+        var mol3D = generator.getGeneratedMol();
+        console.log(mol3D);
+        viewer.setChemObj(mol3D);
+      });
+      */
+      Kekule.Calculator.generate3D(mol, {'forceField': ''}, function(err, generatedMol){
+        if (err)
+          Kekule.error(err);
+        else
+        {
+          console.log(generatedMol);
+          viewer.setChemObj(generatedMol);
+        }
+      });
+    }
+
+    function init()
+    {
+      var elem = document.getElementById('chemEditorUi');
+      chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+      chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
+      viewer = Kekule.Widget.getWidgetById('chemViewer');
+    }
+  </script>
+</head>
+<body onload="init()">
+<div id="calcPanel">
+  <button type="button" onclick="generate3D()">Generate</button>
+</div>
+<div id="chemEditorUi" style="width:900px;height:500px" data-chem-obj="url(#molSrc)"></div>
+<div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+
+</body>
+</html>

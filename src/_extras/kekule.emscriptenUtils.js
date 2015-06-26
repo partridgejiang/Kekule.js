@@ -26,8 +26,15 @@ Kekule.EmscriptenUtils = {
 			return EU.getRootModule()[className];
 		else
 			return undefined;
+	},
+	cwrap: function(funcName, retType, inTypes)
+	{
+		if (Kekule.EmscriptenUtils.isSupported())
+			return Module.cwrap(funcName, retType, inTypes);
+		else
+			return null;
 	}
-}
+};
 
 var EU = Kekule.EmscriptenUtils;
 

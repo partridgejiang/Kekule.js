@@ -24,6 +24,8 @@ Kekule.Localization.addResource('en', 'Texts', {
 /** @ignore */
 //Kekule.ErrorMsg.en = {
 Kekule.Localization.addResource('en', 'ErrorMsg', {
+	MODULE_NOT_LOADED: 'Module {0} is not loaded',
+
 	// utils/kekule.utils.js
 	NON_OWN_PROPERTY_CANNOT_BE_REPLACED: 'Only directly owned property of object can be replaced',
 	// utils/kekule.domHelper.js
@@ -122,8 +124,12 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	FORMULA_RENDERER_3D_NOT_AVAILABLE: '3D renderer for molecule formula is not available',
 
 	// render/kekule.render.painter.js
-	CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ: 'Can not find suitable renderer for object'
+	CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ: 'Can not find suitable renderer for object',
 
 	// html/kekule.autoLaunchers.js
 	//MIMETYPE_NOT_SET: 'MIME type not set for resource'
+
+	// calculation/kekule.calc.base.js
+	CALC_TERMINATED_BY_USER: 'Calculation terminated by user',
+	CALC_SERVICE_UNAVAILABLE: 'Calculation service "{0}" is unavailable'
 });
