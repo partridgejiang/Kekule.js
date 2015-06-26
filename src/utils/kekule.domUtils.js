@@ -16,7 +16,7 @@ if (typeof(Kekule) === 'undefined')
 
 /**
  *  An class with static methods handle HTML or XML DOM.
- *  @class
+ *  @object
  */
 Kekule.DomUtils = {
 	/**
@@ -535,7 +535,7 @@ Kekule.DomUtils = {
 
 /**
  * Util methods about CSS and style values.
- * @class
+ * @object
  */
 Kekule.StyleUtils = {
 	/**
@@ -713,7 +713,7 @@ Kekule.StyleUtils = {
 
 /**
  * Utils methods for HTML elements.
- * @class
+ * @object
  */
 Kekule.HtmlElementUtils = {
 	/**
@@ -1009,7 +1009,7 @@ Kekule.HtmlElementUtils = {
 
 /**
  * Utils on document.
- * @class
+ * @object
  */
 Kekule.DocumentUtils = {
 	/**
@@ -1057,7 +1057,7 @@ Kekule.DocumentUtils = {
  *   content directly
  *   url(http://...)
  *   url(#id)
- * @class
+ * @object
  */
 Kekule.DataSrcAttribUtils = {
 	/**
@@ -1154,6 +1154,15 @@ Kekule.DataSrcAttribUtils = {
 	}
 	*/
 };
+
+/**
+ * Utils to handle JavaScript file.
+ * @object
+ */
+Kekule.ScriptFileUtils = {
+};
+Kekule.ScriptFileUtils.appendScriptFile = $jsRoot['__$kekule_scriptfile_utils__'].appendScriptFile;
+Kekule.ScriptFileUtils.appendScriptFiles = $jsRoot['__$kekule_scriptfile_utils__'].appendScriptFiles;
 
 
 })();

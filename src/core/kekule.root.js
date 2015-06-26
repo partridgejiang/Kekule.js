@@ -68,6 +68,11 @@ var $jsRoot = this;
 
 Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
 
+Kekule.getScriptPath = function()
+{
+	return Kekule.scriptSrcInfo.path;
+}
+
 if ($jsRoot && $jsRoot.addEventListener && $jsRoot.postMessage)
 {
 	// response to special message, returns Kekule sys info.

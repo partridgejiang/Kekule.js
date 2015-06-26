@@ -23,8 +23,15 @@ function directAppend(libName)
   document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
 }
 
+var existedScriptUrls = [];
 function appendScriptFile(doc, url, callback)
 {
+	if (existedScriptUrls.indexOf(url) >= 0)  // already loaded
+	{
+		if (callback)
+			callback();
+		return;
+	}
 	var result = doc.createElement('script');
 	result.src = url;
 	result.onload = result.onreadystatechange = function(e)
@@ -36,6 +43,7 @@ function appendScriptFile(doc, url, callback)
 		{
 			result._loaded = true;
 			result.onload = result.onreadystatechange = null;
+			existedScriptUrls.push(url);
 			if (callback)
 				callback();
 		}
@@ -286,6 +294,13 @@ var kekuleFiles = {
 		'category': 'algorithm'
 	},
 
+	'calculation': {
+		'requires': ['lan', 'root', 'common', 'core', 'algorithm'],
+		'files': [
+			'calculation/kekule.calc.base.js'
+		]
+	},
+
 	'data': {
 		'requires': ['root'],
 		'files': [
@@ -308,15 +323,16 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'localization/en/kekule.localize.extras.openbabel.en.js',
-			'_extras/OpenBabel/kekule.openbabel.adapters.js',
-			'_extras/OpenBabel/kekule.openbabel.io.js'
+			'_extras/OpenBabel/kekule.openbabel.base.js',
+			'_extras/OpenBabel/kekule.openbabel.io.js',
+			'_extras/OpenBabel/kekule.openbabel.structures.js'
 		],
 		'category': 'extra'
 	}
 };
 
 var prequestModules = ['lan', 'root', 'localization', 'common'];
-var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'data']);
+var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
 var allModules = usualModules.concat(['emscripten', 'openbabel']);
 
 function getEssentialModules(modules)
@@ -330,7 +346,7 @@ function getEssentialModules(modules)
 		if (modules.indexOf(moduleName) < 0)
 		{
 			var module = kekuleFiles[moduleName];
-			if (module.requires)
+			if (module && module.requires)
 			{
 				for (var j = 0, k = module.requires.length; j < k; ++j)
 				{
@@ -459,6 +475,10 @@ function init()
 	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
 	$root['__$kekule_load_info__'] = scriptInfo;
+	$root['__$kekule_scriptfile_utils__'] = {
+		'appendScriptFile': appendScriptFile,
+		'appendScriptFiles': appendScriptFiles
+	};
 }
 
 init();
