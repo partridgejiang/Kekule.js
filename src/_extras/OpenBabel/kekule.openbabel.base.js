@@ -37,12 +37,17 @@ Kekule.OpenBabel = {
 };
 
 /** @ignore */
-Kekule.OpenBabel.getObScriptUrl = function()
+Kekule.OpenBabel.getObPath = function()
 {
 	var isMin = Kekule.scriptSrcInfo.useMinFile;
 	var path = isMin? '': '_extras/OpenBabel/';
 	path = Kekule.scriptSrcInfo.path + path;
-	return path + Kekule.OpenBabel.SCRIPT_FILE;
+	return path;
+};
+/** @ignore */
+Kekule.OpenBabel.getObScriptUrl = function()
+{
+	return Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
 };
 /** @ignore */
 Kekule.OpenBabel.loadObScript = function(doc, callback)

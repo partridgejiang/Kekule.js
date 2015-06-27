@@ -74,19 +74,22 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	/**
 	 * Run the calculation task. Result will be returned by callback function.
 	 * @param {Func} callback Callback function called when calculation is done.
-	 *   Callback function should has param (err, ...) where err is the possible error object (or string).
-	 *   When err is null, the calculation is succesful.
+	 * @param {Func} errCallback Callback function called when error occurs.
+	 *   errCallback function should has param (err) where err is the possible error object (or string).
 	 */
-	execute: function(callback)
+	execute: function(callback, errCallback)
 	{
 		var self = this;
+		/*
 		var done = function()
 		{
 			if (callback)
 				callback.apply(this, arguments);
-			self.workerJobDone();
+			//self.workerJobDone();
 		};
-		this._doneCallback = done;
+		*/
+		this._doneCallback = callback;  //done;
+		this._errCallback = errCallback;
 		if (this.getAsync() && this.isWorkerSupported() && this.createWorker())  // try using worker
 		{
 			var w = this.getWorker();
@@ -97,16 +100,24 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 			var err, executed;
 			try
 			{
-				executed = this.executeSync(done);
+				executed = this.executeSync(callback);
 			}
 			catch(e)
 			{
 				err = e;
 			}
 			if (err)
+			{
 				Kekule.error(err);
-			if (executed)
-				done(err);
+				this.error(err);
+			}
+			else if (executed)
+			{
+				if (err)
+					this.error(err);
+				else
+					this.done();
+			}
 		}
 	},
 	/**
@@ -119,6 +130,17 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	executeSync: function(callback)
 	{
 		// do nothing here
+	},
+	/**
+	 * Called when error occurs in calculation.
+	 * @param {Object} err
+	 * @private
+	 */
+	error: function(err)
+	{
+		Kekule.error(err);
+		if (this._errCallback)
+			this._errCallback(err);
 	},
 	/**
 	 * Called when the calculation job is done.
@@ -136,7 +158,13 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	halt: function()
 	{
-		this.done(Kekule.$L('ErrorMsg.CALC_TERMINATED_BY_USER'));
+		var w = this.getWorker();
+		if (w)
+		{
+			w.terminate();
+			this.error(Kekule.$L('ErrorMsg.CALC_TERMINATED_BY_USER'));
+		}
+		//this.done(Kekule.$L('ErrorMsg.CALC_TERMINATED_BY_USER'));
 	},
 
 	/**
@@ -214,7 +242,8 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	reactWorkerError: function(e)
 	{
 		Kekule.error(e.message);
-		this.done(e.message);
+		//this.done(e.message);
+		this.error(e.message);
 	},
 	/**
 	 * Notify the worker that the calculation should be started, essential params
@@ -353,10 +382,11 @@ Kekule.Calculator.Services = {
  * This method seek for registered 'gen3D' calculation service.
  * @param {Kekule.StructureFragment} sourceMol
  * @param {Hash} options
- * @param {Func} callback Callback function when the calculation job is done. Callback(err, generatedMol)
+ * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
+ * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
  * @returns {Object} Created calculation object.
  */
-Kekule.Calculator.generate3D = function(sourceMol, options, callback)
+Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallback)
 {
 	var serviceName = Kekule.Calculator.Services.GEN3D;
 	var c = CS.getServiceClass(serviceName);
@@ -365,31 +395,38 @@ Kekule.Calculator.generate3D = function(sourceMol, options, callback)
 		var o = new c();
 		try
 		{
-			var done = function(err)
+			var done = function()
 			{
 				if (callback)
-					callback(err, o.getGeneratedMol());
+					callback(o.getGeneratedMol());
 			};
+			var error = function(err)
+			{
+				if (errCallback)
+					errCallback(err);
+			}
 			try
 			{
 				o.setSourceMol(sourceMol);
 				o.setOptions(options);
-				o.execute(done);
+				o.execute(done, error);
 			}
 			catch(e)
 			{
-				done(e);
+				error(e);
 			}
 		}
 		finally
 		{
-			o.finalize();
+			//o.finalize();
+			return o;
 		}
 	}
 	else
 	{
 		var errMsg = Kekule.$L('ErrorMsg.CALC_SERVICE_UNAVAILABLE').format(serviceName);
-		callback(errMsg);
+		if (callback)
+			callback(errMsg);
 		//Kekule.error(errMsg);
 		return null;
 	}

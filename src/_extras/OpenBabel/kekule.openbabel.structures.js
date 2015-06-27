@@ -112,7 +112,8 @@ if (Kekule.Calculator)
 		/** @ignore */
 		getWorkerScriptFile: function()
 		{
-			return this.getWorkerBasePath() + 'kekule.worker.obStructure3DGenerator.js';
+			//return this.getWorkerBasePath() + 'kekule.worker.obStructure3DGenerator.js';
+			return Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
 		},
 		/** @ignore */
 		doReactWorkerMessage: function(data, e)

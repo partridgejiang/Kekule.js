@@ -45,6 +45,7 @@ M  END
     var chemEditor;
     var chemEditorUi;
     var viewer;
+    var calculator;
 
     function getCurrMol()
     {
@@ -65,15 +66,22 @@ M  END
         viewer.setChemObj(mol3D);
       });
       */
-      Kekule.Calculator.generate3D(mol, {'forceField': ''}, function(err, generatedMol){
-        if (err)
-          Kekule.error(err);
-        else
-        {
+      calculator = Kekule.Calculator.generate3D(mol, {'forceField': ''},
+        function(generatedMol){
           console.log(generatedMol);
           viewer.setChemObj(generatedMol);
+        },
+        function(err)
+        {
+          if (err)
+            Kekule.error(err);
         }
-      });
+      );
+    }
+    function terminate()
+    {
+      if (calculator)
+        calculator.halt();
     }
 
     function init()
@@ -88,6 +96,7 @@ M  END
 <body onload="init()">
 <div id="calcPanel">
   <button type="button" onclick="generate3D()">Generate</button>
+  <button type="button" onclick="terminate()">Terminate</button>
 </div>
 <div id="chemEditorUi" style="width:900px;height:500px" data-chem-obj="url(#molSrc)"></div>
 <div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D"></div>
