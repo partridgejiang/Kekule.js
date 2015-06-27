@@ -17,10 +17,9 @@ if (!Array.prototype.indexOf)
 var readyState = document && document.readyState;
 var docReady = (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive');
 
-function directAppend(libName)
+function directAppend(doc, libName)
 {
-	// inserting via DOM fails in Safari 2.0, so brute force approach
-  document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
+  doc.write('<script type="text/javascript" src="'+libName+'"><\/script>');
 }
 
 var existedScriptUrls = [];
@@ -54,6 +53,11 @@ function appendScriptFile(doc, url, callback)
 }
 function appendScriptFiles(doc, urls, callback)
 {
+	var dupUrls = [].concat(urls);
+	_appendScriptFilesCore(doc, dupUrls, callback);
+}
+function _appendScriptFilesCore(doc, urls, callback)
+{
 	if (urls.length <= 0)
 	{
 		if (callback)
@@ -73,7 +77,7 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader)
 	if (!docReady && !forceDomLoader)  // can directly write to document
 	{
 		for (var i = 0, l = scriptUrls.length; i < l; ++i)
-			directAppend(scriptUrls[i]);
+			directAppend(document, scriptUrls[i]);
 
 		var sloadedCode = 'if (this.Kekule) Kekule._loaded();';
 		/*
@@ -81,11 +85,11 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader)
 		{
 			var sBase64 = btoa(sloadedCode);
 			var sdataUri = 'data:;base64,' + sBase64;
-			directAppend(sdataUri);
+			directAppend(document, sdataUri);
 		}
 		else  // use simple inline code in IE below 10 (which do not support data uri)
 		*/
-		//directAppend('kekule.loaded.js');  // manully add small file to mark lib loaded
+		//directAppend(document, 'kekule.loaded.js');  // manully add small file to mark lib loaded
 		document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
 	}
 	else

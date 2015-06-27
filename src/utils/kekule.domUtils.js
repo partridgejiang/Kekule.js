@@ -1160,9 +1160,78 @@ Kekule.DataSrcAttribUtils = {
  * @object
  */
 Kekule.ScriptFileUtils = {
+	/** @private */
+	_existedScriptUrls: new Kekule.MapEx(),
+	/**
+	 * Append script file to document. When the script is loaded, callback is then called.
+	 * @param {HTMLDocument} doc
+	 * @param {String} url
+	 * @param {Func} callback
+	 * @returns {HTMLElement} New created script element.
+	 */
+	appendScriptFile: function(doc, url, callback)
+	{
+		var exists = Kekule.ScriptFileUtils._existedScriptUrls.get(doc);
+		if (!exists)
+		{
+			exists = [];
+			Kekule.ScriptFileUtils._existedScriptUrls.set(doc, exists);
+		}
+		if (exists.indexOf(url) >= 0)  // already loaded
+		{
+			if (callback)
+				callback();
+			return;
+		}
+		var result = doc.createElement('script');
+		result.src = url;
+		result.onload = result.onreadystatechange = function(e)
+		{
+			if (result._loaded)
+				return;
+			var readyState = result.readyState;
+			if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+			{
+				result._loaded = true;
+				result.onload = result.onreadystatechange = null;
+				exists.push(url);
+				if (callback)
+					callback();
+			}
+		};
+		(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+		//console.log('load script', url);
+		return result;
+	},
+	/**
+	 * Append script files to document. When the all scripts are loaded, callback is then called.
+	 * @param {HTMLDocument} doc
+	 * @param {String} url
+	 * @param {Func} callback
+	 */
+	appendScriptFiles: function(doc, urls, callback)
+	{
+		var dupUrls = [].concat(urls);
+
+		var _appendScriptFilesCore = function(doc, urls, callback)
+		{
+			if (urls.length <= 0)
+			{
+				if (callback)
+					callback();
+				return;
+			}
+			var file = urls.shift();
+			Kekule.ScriptFileUtils.appendScriptFile(doc, file, function()
+				{
+					Kekule.ScriptFileUtils.appendScriptFiles(doc, urls, callback);
+				}
+			);
+		};
+
+		_appendScriptFilesCore(doc, dupUrls, callback);
+	}
 };
-Kekule.ScriptFileUtils.appendScriptFile = $jsRoot['__$kekule_scriptfile_utils__'].appendScriptFile;
-Kekule.ScriptFileUtils.appendScriptFiles = $jsRoot['__$kekule_scriptfile_utils__'].appendScriptFiles;
 
 
 })();

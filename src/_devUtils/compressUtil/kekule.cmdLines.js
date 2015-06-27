@@ -39,6 +39,8 @@ Kekule.CmdLineUtils = {
 	DOC_EXCLUDE_CATEGORIES: ['localization', 'data', 'extra'],
 	/** @private */
 	STANDALONE_ATTACH_FILES: ['kekule.loaded.js'],
+	/** @private */
+	RELEASE_WORKER_DIR: 'workers',
 
 	getModuleStructures: function()
 	{
@@ -135,7 +137,7 @@ Kekule.CmdLineUtils = {
 		}
 
 		result += '\ncopy kekule.js _compressed\\kekule.js /Y';
-		result += '\ncopy kekule.js _compressed\\kekule.loaded.js /Y';
+		result += '\ncopy kekule.loaded.js _compressed\\kekule.loaded.js /Y';
 
 		/*
 		// level1 compress

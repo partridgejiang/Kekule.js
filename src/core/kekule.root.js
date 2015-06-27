@@ -67,6 +67,37 @@ Kekule._registerAfterLoadProc = function(proc)
 var $jsRoot = this;
 
 Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
+if (!Kekule.scriptSrcInfo)  // script info not found, may be use Kekule.min.js directly
+{
+	Kekule.scriptSrcInfo = (function ()
+	{
+		var entranceSrc = /^(.*\/?)kekule\..*\.js(\?.*)?$/;
+		var scriptElems = document.getElementsByTagName('script');
+		var loc;
+		for (var i = scriptElems.length - 1; i >= 0; --i)
+		{
+			var elem = scriptElems[i];
+			if (elem.src)
+			{
+				var matchResult = elem.src.match(entranceSrc);
+				if (matchResult)
+				{
+					var pstr = matchResult[2];
+					if (pstr)
+						pstr = pstr.substr(1);  // eliminate starting '?'
+					var result = {
+						'src': elem.src,
+						'path': matchResult[1],
+						'paramStr': pstr,
+						'useMinFile': true
+					};
+					return result;
+				}
+			}
+		}
+		return null;
+	})();
+}
 
 Kekule.getScriptPath = function()
 {

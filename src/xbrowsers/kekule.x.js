@@ -39,7 +39,28 @@ Kekule.BrowserFeature = {
 	typedArray: (typeof(ArrayBuffer) !== 'undefined'),
 	svg: !!window.SVGSVGElement,
 	canvas: !! window.CanvasRenderingContext2D,
-	webgl: ( function () { try { var canvas = document.createElement( 'canvas' ); return !! window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ); } catch( e ) { return false; } } )(),
+	webgl: (function()
+	{
+		//if (Kekule.BrowserFeature.webgl === undefined)
+		{
+			var result =
+				(function()
+				{
+					try
+					{
+						var canvas = document.createElement('canvas');
+						return !!window.WebGLRenderingContext && ( canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
+					}
+					catch (e)
+					{
+						return false;
+					}
+				})();
+			//Kekule.BrowserFeature.webgl = result;
+		}
+		//return Kekule.BrowserFeature.webgl;
+		return !!result;
+	})(),
 	workers: !! window.Worker,
 	fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
 	sessionStorage: !!window.sessionStorage,
