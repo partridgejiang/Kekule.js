@@ -424,12 +424,27 @@ Kekule.Widget.WidgetGroup = Class.create(Kekule.Widget.Container,
  * An general toolbar that can contain child widgets.
  * @class
  * @augments Kekule.Widget.WidgetGroup
+ *
+ * @property {Array} childDefs Array of hash definition of child widgets.
+ *   When this property is set, new child widgets will be created by it and all old child widgets will be destroyed.
  */
 Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 /** @lends Kekule.Widget.Toolbar# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Toolbar',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('childDefs', {
+			'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('childDefs', value);
+				this.recreateChildrenByDefs();
+			}
+		});
+	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{
@@ -454,6 +469,7 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 		this._updateChildTextGlyphStyles(widget);
 	},
 
+	/** @private */
 	_updateChildTextGlyphStyles: function(widget)
 	{
 		if (widget.setShowText)
@@ -461,7 +477,7 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 		if (widget.setShowGlyph)
 			widget.setShowGlyph(this.getShowGlyph());
 	},
-
+	/** @private */
 	_updateAllChildTextGlyphStyles: function()
 	{
 		var children = this.getChildWidgets();
@@ -469,6 +485,37 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 		{
 			this._updateChildTextGlyphStyles(children[i]);
 		}
+	},
+
+	/** @private */
+	recreateChildrenByDefs: function()
+	{
+		var defs = this.getChildDefs() || [];
+		// remove old children first
+		this.clearWidgets();
+		// add new ones
+		var defWidgetClassName = this.getDefaultChildWidgetClassName();
+		for (var i = 0, l = defs.length; i < l; ++i)
+		{
+			var def = defs[i];
+			if (!def.widget && !def.widgetClass && defWidgetClassName)  // class not set, try to use default one
+			{
+				def = Object.extend({'widget': defWidgetClassName}, def);
+			}
+			var w = Kekule.Widget.createFromHash(this, def);
+			if (w)
+				w.appendToWidget(this);
+		}
+	},
+	/**
+	 * Returns default class name of child widget.
+	 * This method is used in create child widgets by hash definition.
+	 * Descendants may override this method.
+	 * @returns {String}
+	 */
+	getDefaultChildWidgetClassName: function()
+	{
+		return null;
 	}
 });
 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Create Widget By Hash Test</title>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    function createWidgets(defs)
+    {
+      var stage = document.getElementById('stage');
+      for (var i = 0, l = defs.length; i < l; ++i)
+      {
+        var def = defs[i];
+        var w = Kekule.Widget.Utils.createFromHash(document, def);
+        w.appendToElem(stage);
+      }
+    }
+    var widgetDefs;
+    function init()
+    {
+      widgetDefs = [
+        {
+          'widget': 'Kekule.Widget.Button',
+          'text': 'Button1',
+          'hint': 'Created Button 1',
+          '#execute': function() { alert('button1 click'); }
+        },
+        {
+          'widget': 'Kekule.Widget.Toolbar',
+          'showText': true,
+          'children': [
+            {
+              'widget': 'Kekule.Widget.Button',
+              'text': 'ToolBtn1'
+            },
+            {
+              'widget': 'Kekule.Widget.Button',
+              'text': 'ToolBtn2'
+            }
+          ]
+        },
+        {
+          'widget': 'Kekule.Widget.ButtonGroup',
+          'showText': true,
+          'childDefs': [
+            {
+              'text': 'ToolBtn3'
+            },
+            {
+              'text': 'ToolBtn4'
+            },
+            {
+              'widget': 'Kekule.Widget.CheckButton',
+              'text': 'Check Button'
+            }
+          ]
+        }
+      ];
+      //console.log('widgetDefs', widgetDefs);
+      createWidgets(widgetDefs);
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+
+</head>
+<body>
+  <div id="stage"></div>
+</body>
+</html>

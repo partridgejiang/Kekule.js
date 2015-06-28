@@ -689,26 +689,6 @@ Kekule.Widget.ButtonGroup = Class.create(Kekule.Widget.Toolbar,
 		this.setPropStoreFieldValue('showGlyph', true);
 		this.setAllowChildWrap(false);
 	},
-	/** //@private */
-	/*
-	initProperties: function()
-	{
-		this.defineProp('showText', {'dataType': DataType.BOOL,
-			'setter': function(value)
-			{
-				this.setPropStoreFieldValue('showText', value);
-				this._updateAllChildTextGlyphStyles();
-			}
-		});
-		this.defineProp('showGlyph', {'dataType': DataType.BOOL,
-			'setter': function(value)
-			{
-				this.setPropStoreFieldValue('showGlyph', value);
-				this._updateAllChildTextGlyphStyles();
-			}
-		});
-	},
-	*/
 	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{
@@ -719,6 +699,11 @@ Kekule.Widget.ButtonGroup = Class.create(Kekule.Widget.Toolbar,
 	{
 		var result = doc.createElement('span');
 		return result;
+	},
+	/** @ignore */
+	getDefaultChildWidgetClassName: function()
+	{
+		return 'Kekule.Widget.Button';
 	}
 });
 

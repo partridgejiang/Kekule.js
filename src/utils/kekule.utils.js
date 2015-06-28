@@ -152,14 +152,15 @@ Kekule.ObjUtils = {
 	/**
 	 * Return all name of direct fields of obj. Note that functions will not be included.
 	 * @param {Object} obj
+	 * @param {Bool} includeFuncFields Set to true to include function fields in obj.
 	 * @returns {Array} Array of field names
 	 */
-	getOwnedFieldNames: function(obj)
+	getOwnedFieldNames: function(obj, includeFuncFields)
 	{
 		var result = [];
 		for (var fname in obj)
 		{
-			if (obj.hasOwnProperty(fname) && (typeof(obj[fname]) != 'function'))
+			if (obj.hasOwnProperty(fname) && (includeFuncFields || typeof(obj[fname]) != 'function'))
 				result.push(fname);
 		}
 		return result;

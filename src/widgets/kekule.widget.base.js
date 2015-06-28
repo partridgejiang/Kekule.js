@@ -3117,10 +3117,11 @@ Kekule.Widget.Utils = {
 	},
 
 	/**
-	 * Create widget from a definition hash object. The hash object must include the following fields:
+	 * Create widget from a definition hash object. The hash object may include the following fields:
 	 *   {
-	 *     'widgetClass': widget class, class object or string,
-	 *     'htmlClass': string, HTML class name should be added to widget
+	 *     'widgetClass' or 'widget': widget class, class object or string, must have,
+	 *     'htmlClass': string, HTML class name should be added to widget,
+	 *     'children': array of child widget definition hash
 	 *   }
 	 * Other fields will be set to properties of widget with the same names. If the field name starts with
 	 * '#' and the value is a function, then the function will be set as an event handler.
@@ -3130,8 +3131,8 @@ Kekule.Widget.Utils = {
 	 */
 	createFromHash: function(parentOrElementOrDocument, defineObj)
 	{
-		var specialFields = ['widgetClass', 'htmlClass'];
-		var wclass = defineObj.widgetClass;
+		var specialFields = ['widget', 'widgetClass', 'htmlClass', 'children'];
+		var wclass = defineObj.widgetClass || defineObj.widget;
 		if (typeof(wclass) === 'string')
 			wclass = ClassEx.findClass(wclass);
 		if (!wclass)
@@ -3141,7 +3142,7 @@ Kekule.Widget.Utils = {
 		}
 
 		var result = new wclass(parentOrElementOrDocument);
-		var fields = Kekule.ObjUtils.getOwnedFieldNames(defineObj);
+		var fields = Kekule.ObjUtils.getOwnedFieldNames(defineObj, true);
 		fields = Kekule.ArrayUtils.exclude(fields, specialFields);
 		for (var i = 0, l = fields.length; i < l; ++i)
 		{
@@ -3162,6 +3163,20 @@ Kekule.Widget.Utils = {
 		if (defineObj.htmlClass)
 		{
 			result.addClassName(defineObj.htmlClass, true);
+		}
+		if (defineObj.children)
+		{
+			var childDefs = defineObj.children;
+			if (DataType.isArrayValue(childDefs))
+			{
+				for (var i = 0, l = childDefs.length; i < l; ++i)
+				{
+					var def = childDefs[i];
+					var child = Kekule.Widget.Utils.createFromHash(result, def);
+					if (child)
+						child.appendToWidget(result);
+				}
+			}
 		}
 
 		return result;
@@ -3251,6 +3266,20 @@ Kekule.Widget.getWidgetById = Kekule.Widget.Utils.getWidgetById;
  * @function
  */
 Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
+/**
+ * Create widget from a definition hash object. The hash object may include the following fields:
+ *   {
+ *     'widgetClass' or 'widget': widget class, class object or string, must have,
+ *     'htmlClass': string, HTML class name should be added to widget,
+ *     'children': array of child widget definition hash
+ *   }
+ * Other fields will be set to properties of widget with the same names. If the field name starts with
+ * '#' and the value is a function, then the function will be set as an event handler.
+ * @param {Variant} parentOrElementOrDocument
+ * @param {Hash} defineObj
+ * @returns {Kekule.Widget.BaseWidget}
+ */
+Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
 
 /**
  * A singleton class to manage some global settings of widgets on HTML document.
