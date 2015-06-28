@@ -707,8 +707,20 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Kekule.Editor.BaseEditor} editor The editor instance embedded in UI.
  * @property {Array} commonToolButtons buttons in common tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
  *   If not set, default buttons will be used.
+ *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
+ *     [ <br />
+ *       'zoomIn', 'zoomOut',<br />
+ *       {'name': 'myCustomButton1', 'widgetClass': 'Kekule.Widget.Button', 'action': actionClass},<br />
+ *       {'name': 'myCustomButton2', 'htmlClass': 'MyClass' 'caption': 'My Button', 'hint': 'My Hint', '#execute': function(){ ... }},<br />
+ *     ]<br />
  * @property {Array} chemToolButtons buttons in chem tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
  *   If not set, default buttons will be used.
+ *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
+ *     [ <br />
+ *       'zoomIn', 'zoomOut',<br />
+ *       {'name': 'myCustomButton1', 'widgetClass': 'Kekule.Widget.Button', 'action': actionClass},<br />
+ *       {'name': 'myCustomButton2', 'htmlClass': 'MyClass' 'caption': 'My Button', 'hint': 'My Hint', '#execute': function(){ ... }},<br />
+ *     ]<br />
  * @property {Array} styleToolComponents Array of component names that shows in style tool bar.
  * @property {Bool} enableStyleToolbar
  * @property {Bool} showInspector Whether show advanced object inspector and structure view.
@@ -1538,20 +1550,40 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		var result = null;
 
-		var actionClass = this.getToolButtonActionClass(btnName);
-		if (actionClass)
+		if (DataType.isObjectValue(btnName))  // custom button
 		{
-			var btnClass = (btnName === BNS.objInspector)? Kekule.Widget.CheckButton:
-				(!!checkGroup)? Kekule.Widget.RadioButton:
-				Kekule.Widget.Button;
-			result = new btnClass(parentGroup);
-			var targetWidget = this._getActionTargetWidget(actionClass);
-			var action = new actionClass(targetWidget);
-			if (checkGroup)
-				action.setCheckGroup(checkGroup);
-			//this.getActions().add(action);
-			actions.add(action);
-			result.setAction(action);
+			var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
+			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
+			var actionClass = objDefHash.actionClass;
+			if (actionClass)  // create action
+			{
+				if (typeof(actionClass) === 'string')
+					actionClass = ClassEx.findClass(objDefHash.actionClass);
+				if (actionClass)
+				{
+					var action = new actionClass(this);
+					this.getActions().add(action);
+					result.setAction(action);
+				}
+			}
+		}
+		else
+		{
+			var actionClass = this.getToolButtonActionClass(btnName);
+			if (actionClass)
+			{
+				var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
+					(!!checkGroup) ? Kekule.Widget.RadioButton :
+						Kekule.Widget.Button;
+				result = new btnClass(parentGroup);
+				var targetWidget = this._getActionTargetWidget(actionClass);
+				var action = new actionClass(targetWidget);
+				if (checkGroup)
+					action.setCheckGroup(checkGroup);
+				//this.getActions().add(action);
+				actions.add(action);
+				result.setAction(action);
+			}
 		}
 		return result;
 	},

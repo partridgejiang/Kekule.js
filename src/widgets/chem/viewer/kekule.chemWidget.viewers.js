@@ -1173,7 +1173,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		if (DataType.isObjectValue(btnName))  // custom button
 		{
-			var objDefHash = Object.extend({'widgetClass': Kekule.Widget.Button}, btnName);
+			var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
 			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
 			var actionClass = objDefHash.actionClass;
 			if (actionClass)  // create action
