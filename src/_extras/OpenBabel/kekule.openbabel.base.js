@@ -26,7 +26,7 @@ var EU = Kekule.EmscriptenUtils;
  */
 Kekule.OpenBabel = {
 	/** Base URL of OpenBabel script file. */
-	SCRIPT_FILE: 'openbabel.js.O1',
+	SCRIPT_FILE: 'openbabel.js',
 	/** OpenBabel Bond order constants. */
 	BondOrder: {
 		SINGLE: 1,
@@ -47,7 +47,11 @@ Kekule.OpenBabel.getObPath = function()
 /** @ignore */
 Kekule.OpenBabel.getObScriptUrl = function()
 {
-	return Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
+	var result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
+	var isMin = Kekule.scriptSrcInfo.useMinFile;
+	if (!isMin)
+		result += '.dev';
+	return result;
 };
 /** @ignore */
 Kekule.OpenBabel.loadObScript = function(doc, callback)
