@@ -266,6 +266,12 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	/** @private */
 	_qualitySettings: [
 		null,
+		// EXTREME_LOW
+		{
+			'sphereSegments': 6,
+			'sphereRings': 6,
+			'cylinderSegmentsRadius': 6
+		},
 		// LOW
 		{
 			'sphereSegments': 8,
@@ -284,7 +290,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 			'sphereRings': 32,
 			'cylinderSegmentsRadius': 32
 		},
-		// EXTREME
+		// EXTREME_HIGH
 		{
 			'sphereSegments': 64,
 			'sphereRings': 64,
@@ -298,6 +304,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		this.materialCache = Kekule.Render.ThreeMaterialCache.getInstance();
 		this._quality = null;  // used internally
 		this._modelParams = {};
+		this._webglEnabled = true;  // assume first
 	},
 	/** @ignore */
 	finalize: function()
@@ -314,8 +321,17 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	},
 	setGraphicQualityLevel: function(value)
 	{
-		this._quality = value;
-		this._modelParams = this.calcModelParams(value);
+		if (this._webglEnabled)
+			this._quality = value;
+		else
+			this._quality = Kekule.Render.Render3DGraphicQuality.EXTREME_LOW;  // always use low quality when webgl is not available
+		this._modelParams = this.calcModelParams(this._quality);
+	},
+	/** @private */
+	_updateGraphicQualityLevel: function()
+	{
+		if (!this._webglEnabled)
+			this.setGraphicQualityLevel(Kekule.Render.Render3DGraphicQuality.EXTREME_LOW);  // always use low quality when webgl is not available
 	},
 	calcModelParams: function(qualityLevel)
 	{
@@ -341,6 +357,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	createContext: function(parentElem, width, height)
 	{
 		var BF = Kekule.BrowserFeature;
+
 		var renderer = BF.webgl?
 				new THREE.WebGLRenderer({
 					preserveDrawingBuffer: true  // use to enable screenshot
@@ -352,6 +369,9 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		var camera =
 			new THREE.PerspectiveCamera();
 		camera.fov = 5;  // very small fov to avoid too much morphs
+
+		this._webglEnabled = (renderer instanceof THREE.WebGLRenderer);
+		this._updateGraphicQualityLevel();
 
 		// TODO: OrthographicCamera currently unavailable, as left/right/top/bottom need further calculation
 		/*

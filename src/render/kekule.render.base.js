@@ -279,11 +279,12 @@ Kekule.Render.ChargeMarkRenderType = {
  * @enum
  */
 Kekule.Render.Render3DGraphicQuality = {
-	LOW: 1,
-	MEDIUM: 2,
-	HIGH: 3,
-	EXTREME: 4
-}
+	EXTREME_LOW: 1,
+	LOW: 2,
+	MEDIUM: 3,
+	HIGH: 4,
+	EXTREME_HIGH: 5
+};
 
 /**
  * Enumeration of types to render a molecule in 3D.
