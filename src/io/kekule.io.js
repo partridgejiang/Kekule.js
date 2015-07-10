@@ -1162,9 +1162,7 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 	}
 	*/
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
-	var result;
-	if (formatId)
-		result = Kekule.IO.loadFormatData(content, formatId);
+	var result = Kekule.IO.loadFormatData(content, formatId);
 	if (result)
 	{
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
@@ -1322,9 +1320,7 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 	}
 
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
-	var result;
-	if (formatId)
-		result = Kekule.IO.saveFormatData(chemObj, formatId);
+	var result = Kekule.IO.saveFormatData(chemObj, formatId);
 	if (Kekule.ObjUtils.isUnset(result))
 	{
 		var msg = mimeType?
