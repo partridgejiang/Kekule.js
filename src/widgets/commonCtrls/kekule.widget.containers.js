@@ -426,6 +426,8 @@ Kekule.Widget.WidgetGroup = Class.create(Kekule.Widget.Container,
  * @augments Kekule.Widget.WidgetGroup
  *
  * @property {Array} childDefs Array of hash definition of child widgets.
+ *   In definition, a special field "internalName" can be set. After created, the
+ *   child widget can be refered by {@link Kekule.Widget.Toolbar.getChildWidgetByInternalName} method.
  *   When this property is set, new child widgets will be created by it and all old child widgets will be destroyed.
  */
 Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
@@ -433,6 +435,14 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Toolbar',
+	/** @ignore */
+	finalize: function($super)
+	{
+		var map = this.getChildWidgetInternalNameMap();
+		if (map)
+			map.finalize();
+		$super();
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -444,6 +454,8 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 				this.recreateChildrenByDefs();
 			}
 		});
+		// private
+		this.defineProp('childWidgetInternalNameMap', {'dataType': DataType.OBJECT, 'serializable': false});
 	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
@@ -493,6 +505,8 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 		var defs = this.getChildDefs() || [];
 		// remove old children first
 		this.clearWidgets();
+		var internalNameMap = new Kekule.MapEx(true);
+		this.setChildWidgetInternalNameMap(internalNameMap);
 		// add new ones
 		var defWidgetClassName = this.getDefaultChildWidgetClassName();
 		for (var i = 0, l = defs.length; i < l; ++i)
@@ -504,7 +518,13 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 			}
 			var w = Kekule.Widget.createFromHash(this, def);
 			if (w)
+			{
 				w.appendToWidget(this);
+				if (def.internalName)
+				{
+					internalNameMap.set(def.internalName, w);
+				}
+			}
 		}
 	},
 	/**
@@ -516,6 +536,17 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 	getDefaultChildWidgetClassName: function()
 	{
 		return null;
+	},
+
+	/**
+	 * Returns child widget defined by internalName.
+	 * @param {String} name
+	 * @returns {Kekule.Widget.BaseWidget}
+	 */
+	getChildWidgetByInternalName: function(name)
+	{
+		var map = this.getChildWidgetInternalNameMap();
+		return map? map.get(name): null;
 	}
 });
 
