@@ -246,7 +246,8 @@ table.K-Widget
 /* MsgPanel */
 .K-MsgPanel
 {
-
+    display: block;
+    text-align: center;
 }
 .K-MsgPanel .K-MsgPanel-Content
 {
@@ -261,25 +262,54 @@ table.K-Widget
     display: none;
 }
 
+.K-MsgGroup.K-Widget-MsgGroup
+{
+    position: absolute;
+    bottom: 0em;
+    top: 100%;
+    /*
+    left: 50%;
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+    */
+    left: 0;
+    right: 0;
+    text-align: center;
+    background-color: transparent;
+}
+
 .K-SysMsgGroup
 {
     position: fixed;
-    left: 0;
-    right: 0;
     bottom: 3em;
     z-index: 30000;
+
+    margin: 0 auto;
+    left: 0;
+    right: 0;
     text-align: center;
+
+    background-color: transparent;
+    /*
+    left: 50%;
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+    */
 }
-.K-SysMsgGroup .K-MsgPanel
+.K-MsgGroup .K-MsgPanel
 {
     margin: 0.3em auto;
 }
 
 /* Buttons */
-.K-Button {
+.K-Button,
+.K-PageNavigator > .K-PageNavigator-PageIndexer
+{
     /*display: inline-block;*/
     position: relative;
-    padding: 0;
+    padding: 0.4em 0.6em;
     line-height: normal;
     cursor: pointer;
     vertical-align: middle;
@@ -295,12 +325,6 @@ table.K-Widget
 .K-Button:hover,
 .K-Button:active {
     text-decoration: none;
-}
-
-.K-Button
-{
-    /*display: block;*/
-    padding: 0.4em 0.6em;
 }
 
 .K-Button .K-DropDownMark
@@ -1129,6 +1153,48 @@ table.K-Widget
     white-space: normal;
 }
 
+/* DataGrid related widgets */
+.K-DataTable table
+{
+    display: block;
+    border-collapse: collapse;
+}
+.K-DataTable td, .K-DataTable th
+{
+    border: 1px solid;
+    padding: 0;
+}
+.K-DataTable th .K-DataTable-HeadCellInteractable
+{
+    cursor: pointer;
+}
+.K-DataTable th .K-DataTable-SortMark
+{
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0;
+}
+.K-DataTable .K-DataTable-CellWrapper
+{
+    display: inline-block;
+    margin: 0.4em;
+}
+
+/* Page Navigator */
+.K-PageNavigator.K-Layout-H
+{
+    height: 2.5em;  /* explicit set height to let children has the same height */
+}
+.K-PageNavigator > .K-PageNavigator-PageInput
+{
+    width: 3em;
+    text-align: center;
+}
+.K-PageNavigator > .K-PageNavigator-PageIndexer
+{
+}
+
+/* K-Widget-Configurator */
 .K-Widget-Configurator .K-Widget-Configurator-Client
 {
     white-space: nowrap;

@@ -126,7 +126,8 @@
 .K-Toolbar,
 .K-Panel,
 .K-TreeView,
-.K-Widget-Grid .K-Widget-Grid-Cell
+.K-Widget-Grid .K-Widget-Grid-Cell,
+.K-PageNavigator > .K-PageNavigator-PageIndexer
 {
     border-color: #d3d3d3;
 }
@@ -135,7 +136,8 @@
     color: #d3d3d3;
 }
 .K-Button,
-.K-Toolbar
+.K-Toolbar,
+.K-PageNavigator > .K-PageNavigator-PageIndexer
 {
     background-color: #e6e6e6;
 }
@@ -158,11 +160,17 @@
 }
 
 .K-Button.K-State-Active,
-.K-Widget-Grid .K-Widget-Grid-Cell:active
+.K-Widget-Grid .K-Widget-Grid-Cell:active,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Hover,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Focused,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Active
 {
     border-color: #aaaaaa;
 }
-.K-Button.K-State-Active
+.K-Button.K-State-Active,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Hover,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Focused,
+.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Active
 {
     background-color: #ffffff;
 }
@@ -454,6 +462,77 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     background: linear-gradient(to bottom, #eeeeee 0%,#cccccc 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
 }
+
+.K-DataTable thead
+{
+    background-color: #e6e6e6;
+}
+.K-DataTable th .K-DataTable-SortMark
+{
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc,
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc
+{
+    background-image: url("icons/generalUiIcons.png");
+    opacity: 0.5;
+}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc
+{
+    background-position: 0 -16px;
+}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc
+{
+    background-position: -64px -16px;
+}
+.K-DataTable tr.K-State-Hover
+{
+    background-color: #eeeeee;
+}
+.K-DataTable td.K-State-Hover
+{
+    /*background-color: green;*/
+}
+.K-DataTable tr.K-State-Active
+{
+    background-color: #eeeeee;
+}
+.K-DataTable td.K-State-Active
+{
+    /*
+    background-color: #e6e6e6;
+    */
+}
+
+.K-PageNavigator-First > .K-Pri-Glyph-Content,
+.K-PageNavigator-Last > .K-Pri-Glyph-Content,
+.K-PageNavigator-Prev > .K-Pri-Glyph-Content,
+.K-PageNavigator-Next > .K-Pri-Glyph-Content
+{
+    width: 16px;
+    height: 16px;
+    background-image: url("icons/generalUiIcons.png");
+    background-repeat: no-repeat;
+}
+.K-PageNavigator-First > .K-Pri-Glyph-Content
+{
+    background-position: -80px -160px;
+}
+.K-PageNavigator-Last > .K-Pri-Glyph-Content
+{
+    background-position: -64px -160px;
+}
+.K-PageNavigator-Prev > .K-Pri-Glyph-Content
+{
+    background-position: -96px -16px;
+}
+.K-PageNavigator-Next > .K-Pri-Glyph-Content
+{
+    background-position: -32px -16px;
+}
+
 
 
 /*****************************************************************/

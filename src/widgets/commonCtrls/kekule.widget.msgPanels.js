@@ -24,6 +24,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	MSGPANEL: 'K-MsgPanel',
 	MSGPANEL_CONTENT: 'K-MsgPanel-Content',
 	MSGGROUP: 'K-MsgGroup',
+	MSGGROUP_FOR_WIDGET: 'K-Widget-MsgGroup',
 
 	MSG_NORMAL: 'K-Msg-Normal',
 	MSG_INFO: 'K-Msg-Info',
@@ -217,6 +218,12 @@ Kekule.Widget.MsgGroup = Class.create(Kekule.Widget.WidgetGroup,
 		this.defineProp('msgFlashTime', {'dataType': DataType.INT})
 	},
 	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setMsgFlashTime(6000);
+	},
+	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{
 		return $super() + ' ' + CNS.MSGGROUP;
@@ -249,7 +256,7 @@ Kekule.Widget.MsgGroup = Class.create(Kekule.Widget.WidgetGroup,
 				result.insertToWidget(this, this.getChildAt(0));
 			else
 				result.appendToWidget(this);
-			var time = flashTime || this.getMsgFlashTime();
+			var time = Kekule.ObjUtils.isUnset(flashTime)? this.getMsgFlashTime(): flashTime;
 			if (time)
 				result.flash(time, this);
 			else
@@ -302,6 +309,69 @@ Kekule.Widget.MsgGroup = Class.create(Kekule.Widget.WidgetGroup,
 		//var panel = this.getOldestMsgPanel();
 		panel.hide(this, callback);
 		return panel;
+	}
+});
+
+
+// Extent BaseWidget, provide reportMessage method for all widgets.
+ClassEx.defineProp(Kekule.Widget.BaseWidget, 'msgReporter', {
+	'dataType': 'Kekule.Widget.MsgGroup',
+	'serializable': false,
+	'setter': null,
+	'getter': function(canCreate)
+	{
+		var result = this.getPropStoreFieldValue('msgReporter');
+		if (!result && canCreate)
+		{
+			result = new Kekule.Widget.MsgGroup(this);
+			//result.setDisplayed(false);
+			result.addClassName(CNS.MSGGROUP_FOR_WIDGET);
+			result.appendToWidget(this);
+			//result.appendToElem(document.body);
+			//console.log(result.getElement());
+			this.setPropStoreFieldValue('msgReporter', result);
+		}
+		return result;
+	}
+});
+
+ClassEx.extend(Kekule.Widget.BaseWidget, {
+	/**
+	 * Add a message to message reporter of widget.
+	 * If flashTime is not set, the message will always be shown in reporter.
+	 * @param {String} msg
+	 * @param {String} msgType
+	 * @param {Int} flashTime
+	 * @param {String} className Additional HTML class name need to add to new message panel widget.
+	 * @returns {Kekule.Widget.MsgPanel} New message panel added to reporter.
+	 */
+	reportMessage: function(msg, msgType, flashTime, className)
+	{
+		var msgReporter = this.getMsgReporter(true);  // can create
+		var result = msgReporter.addMessage(msg, msgType, flashTime || 0, className);
+		msgReporter.setDisplayed(true);
+		return result;
+	},
+	/**
+	 * Add a flash message to message reporter of widget.
+	 * If flashTime param is not set, default value will be used.
+	 * @param {String} msg
+	 * @param {String} msgType
+	 * @param {Int} flashTime
+	 * @param {String} className Additional HTML class name need to add to new message panel widget.
+	 * @returns {Kekule.Widget.MsgPanel} New message panel added to reporter.
+	 */
+	flashMessage: function(msg, msgType, flashTime, className)
+	{
+		return this.reportMessage(msg, msgType, flashTime || this.getMsgReporter().getMsgFlashTime(), className);
+	},
+	/**
+	 * Remove a message from reporter.
+	 * @param msgPanel
+	 */
+	removeMessage: function(msgPanel)
+	{
+		msgPanel.hide();
 	}
 });
 

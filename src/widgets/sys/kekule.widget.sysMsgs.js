@@ -40,9 +40,13 @@ Kekule.Widget.SysMsgGroup = Class.create(Kekule.Widget.MsgGroup,
 	initialize: function($super, parentOrElementOrDocument)
 	{
 		$super(parentOrElementOrDocument);
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
 		// default values
 		this.setMaxMsgCount(6);
-		this.setMsgFlashTime(6000);
 	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
