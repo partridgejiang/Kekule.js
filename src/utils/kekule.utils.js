@@ -1064,6 +1064,8 @@ Kekule.UrlUtils = {
 	SEARCH_PAIR_DELIMITER: '&',
 	/** @private */
 	KEY_VALUE_DELIMITER: '=',
+	/** @private */
+	HASH_DELIMITER: '#',
 	/**
 	 * Extract file name from url.
 	 * @param {String} url
@@ -1138,6 +1140,48 @@ Kekule.UrlUtils = {
 					result.push({'key': a[0], 'value': a[1]});
 			}
 		}
+		return result;
+	},
+	/**
+	 * Returns concated search part string based on search params.
+	 * @param {Hash} params Search params (key: value pairs).
+	 * @returns {String}
+	 */
+	generateSearchString: function(params)
+	{
+		var U = Kekule.UrlUtils;
+		var parts = [];
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(params);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			var value = params[key];
+			if (Kekule.ObjUtils.notUnset(value))
+			{
+				var value = encodeURIComponent('' + value);
+				parts.push(key + U.KEY_VALUE_DELIMITER + value);
+			}
+		}
+		return parts.join(U.SEARCH_PAIR_DELIMITER)
+	},
+	/**
+	 * Generate a whole url with search and hash part.
+	 * @param {String} baseUrl Url without search and hash part.
+	 * @param {Hash} searchParams Key-value pairs of search.
+	 * @param {String} hash Hash part of Url.
+	 * @returns {String}
+	 */
+	generateUrl: function(baseUrl, searchParams, hash)
+	{
+		var U = Kekule.UrlUtils;
+		var result = baseUrl;
+		if (searchParams)
+		{
+			var ssearch = U.generateSearchString(searchParams);
+			result += U.SEARCH_DELIMITER + ssearch;
+		}
+		if (hash)
+			result += U.HASH_DELIMITER + hash;
 		return result;
 	}
 };

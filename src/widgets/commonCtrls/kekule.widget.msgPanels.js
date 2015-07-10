@@ -363,7 +363,7 @@ ClassEx.extend(Kekule.Widget.BaseWidget, {
 	 */
 	flashMessage: function(msg, msgType, flashTime, className)
 	{
-		return this.reportMessage(msg, msgType, flashTime || this.getMsgReporter().getMsgFlashTime(), className);
+		return this.reportMessage(msg, msgType, flashTime || this.getMsgReporter(true).getMsgFlashTime(), className);
 	},
 	/**
 	 * Remove a message from reporter.
