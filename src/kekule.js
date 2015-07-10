@@ -15,7 +15,9 @@ if (!Array.prototype.indexOf)
 }
 
 var readyState = document && document.readyState;
-var docReady = (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive');
+var isIE = window.attachEvent && !window.opera;
+var docReady = (readyState === 'complete' || readyState === 'loaded' ||
+	(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
 
 function directAppend(doc, libName)
 {
@@ -246,6 +248,8 @@ var kekuleFiles = {
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.propEditors.js',
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.operations.js',
 			'widgets/advCtrls/kekule.widget.configurators.js',
+			'widgets/advCtrls/grids/kekule.widget.dataSets.js',
+			'widgets/advCtrls/grids/kekule.widget.dataGrids.js',
 			'widgets/sys/kekule.widget.sysMsgs.js',
 
 			'widgets/operation/kekule.operHistoryTreeViews.js'  // debug
