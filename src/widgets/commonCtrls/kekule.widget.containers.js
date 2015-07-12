@@ -195,7 +195,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	reactShowStateChange: function(e)
 	{
-		if (e.target !== this)  // invoked by child widget
+		//if (e.target !== this)  // invoked by child widget
 		{
 			this.childrenModified();
 		}
@@ -211,7 +211,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 
 		var index = 0;
 		var curr = widgets[index];
-		while (curr && (!curr.isShown()) && (index < length))
+		while (curr && (!curr.isShown(true)) && (index < length)) // check show ignoring DOM status
 		{
 			++index;
 			curr = widgets[index];
@@ -220,7 +220,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 
 		var index = length - 1;
 		var curr = widgets[length - 1];
-		while (curr && (!curr.isShown()) && (index >= 0))
+		while (curr && (!curr.isShown(true)) && (index >= 0)) // check show ignoring DOM status
 		{
 			--index;
 			curr = widgets[index];
@@ -417,6 +417,7 @@ Kekule.Widget.WidgetGroup = Class.create(Kekule.Widget.Container,
 					child.addClassName(CNS.CORNER_TAILING);
 			}
 		}
+		//console.log('update child style', children.length, useCorner, first, last);
 	}
 });
 

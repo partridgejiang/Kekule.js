@@ -125,6 +125,15 @@ Kekule.Render.Abstract3DDrawBridge = Class.create(
 		return null;
 	},
 
+	/**
+	 * Set background color of content.
+	 * @param {Object} context
+	 * @param {String} color Color in '#RRGGBB' mode. Null means transparent.
+	 */
+	setClearColor: function(context, color)
+	{
+
+	},
 
 	drawSphere: function(context, coord, radius, options)
 	{

@@ -332,8 +332,11 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (viewer)
 		{
 			//console.log('set back color', color);
+			/*
 			var elem = viewer.getElement();
 			elem.style.backgroundColor = color || 'transparent';
+			*/
+			viewer.setBackgroundColor(color);
 		}
 	},
 
@@ -573,10 +576,12 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		var detail = this.exportDetails(dataType, options);
 		var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
+		/*
 		if (detail.backgroundColor)
 			style += '; background-color: ' + detail.backgroundColor;
 		else if (this.getIs3D())
 			style += '; background-color: #000';
+		*/
 		var result = {
 			'src': detail.dataUri,
 			'style': style,
@@ -592,6 +597,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			result['data-auto-size'] = detail.autoSize;
 		if (detail.autofit)
 			result['data-auto-fit'] = detail.autofit;
+		if (detail.backgroundColor)
+			result['data-background-color'] = detail.backgroundColor;
 		return result;
 	},
 

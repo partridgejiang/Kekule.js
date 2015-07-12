@@ -164,6 +164,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 				shadowCanvas.style.height = height + 'px';
 			}
 		}
+		this.clearContext(context);
 	},
 
 	/**
@@ -200,6 +201,27 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)
 			shadowCanvas.width = shadowCanvas.width;
+
+		var clearColor = context.__$clearColor__;
+		if (clearColor)
+		{
+			context.save();
+			try
+			{
+				var dim = this.getContextDimension(context);
+				this.drawRect(context, {x: 0, y: 0}, {x: dim.width, y: dim.height}, {'fillColor': clearColor, 'strokeColor': clearColor});
+			}
+			finally
+			{
+				context.restore();
+			}
+		}
+	},
+	/** @private */
+	setClearColor: function(context, color)
+	{
+		if (context)
+			context.__$clearColor__ = color;
 	},
 
 	renderContext: function(context)

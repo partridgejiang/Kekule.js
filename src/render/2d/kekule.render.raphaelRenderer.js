@@ -165,6 +165,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	setContextDimension: function(context, width, height)
 	{
 		context.setSize(width, height);
+		this.clearContext(context);
 	},
 
 	/**
@@ -174,6 +175,18 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	clearContext: function(context)
 	{
 		context.clear();
+		var clearColor = context.__$clearColor__;
+		if (clearColor)
+		{
+			var dim = this.getContextDimension(context);
+			this.drawRect(context, {x: 0, y: 0}, {x: dim.width, y: dim.height}, {'fillColor': clearColor, 'strokeColor': clearColor});
+		}
+	},
+
+	setClearColor: function(context, color)
+	{
+		if (context)
+			context.__$clearColor__ = color;
 	},
 
 	/**

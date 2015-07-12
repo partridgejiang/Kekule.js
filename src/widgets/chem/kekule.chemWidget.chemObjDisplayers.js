@@ -129,6 +129,7 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Hash} baseCoordOffset Usually displayer draw object at center of widget, use this property to make
  *   the drawing center moved from widget center.
  *   Note: this property is useless when autoSize == true.
+ * @property {String} backgroundColor Get or set background color of displayer. Default is transparent.
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
  * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
  * @property {Array} allowedOutputFormatIds Formats that shown in output file dialog. Default is null, means accept all available formats.
@@ -149,6 +150,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		this._paintFlag = 0;  // used internally
 		//this._errorReportElem = null;  // use internally
+		this._bgColorMap = {};  // use internally
 		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		$super(parentOrElementOrDocument);
@@ -226,6 +228,15 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 						Kekule.Render.Render3DConfigs.getInstance():
 						Kekule.Render.Render2DConfigs.getInstance();
 				return result;
+			}
+		});
+		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('backgroundColor', value);
+				//this.setBackgroundColorOfType(value, this.getRenderType());
+				this._bgColorMap[this.getRenderType().toString()] = value;
+				this.backgroundColorChanged();
 			}
 		});
 		this.defineProp('drawOptions', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
@@ -432,9 +443,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		this.setPropStoreFieldValue('drawContext', null);
 		this.setPropStoreFieldValue('drawBridge', null);
+		var newBgColor = this.getBackgroundColorOfType(newType);
 		this.getDrawOptions().moleculeDisplayType = this.getDefaultMoleculeDisplayType(newType);  // reset display type
-		if (chemObj)  // repaint
-			this.setChemObj(chemObj);
+		//this.setBackgroundColor(newBgColor);
+		this.setPropStoreFieldValue('backgroundColor', newBgColor);
+		this.backgroundColorChanged(true);  // notify back color change but not repaint, as painter currently is still old one
+		//if (chemObj)  // repaint
+		this.setChemObj(chemObj || null);
 	},
 
 	/**
@@ -533,6 +548,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		{
 			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
+		/* infinite loop, remove this part
+		if (this.getBackgroundColor() && result.setClearColor)
+			result.setClearColor(this.getDrawContext(), this.getBackgroundColor());
+		*/
 		return result;
 	},
 
@@ -540,11 +559,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * Returns parent element to create draw context inside.
 	 * Descendants can override this method.
 	 */
-	getDrawContextParentElem: function()
+	getDrawContextParentElem: function(disableAutoCreate)
 	{
 		//return this.getElement();
 		var result = this._drawContextParentElem;
-		if (!result)  // create new
+		if (!result && !disableAutoCreate)  // create new
 		{
 			result = this.getDocument().createElement('div'); // IMPORTANT: span may cause dimension calc problem of context
 			this._drawContextParentElem = result;
@@ -1063,6 +1082,42 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return this._paintFlag > 0;
 	},
 
+	/**
+	 * Returns background color used for a special renderType.
+	 * @param {Int} renderType
+	 * @returns {String}
+	 */
+	getBackgroundColorOfType: function(renderType)
+	{
+		return this._bgColorMap[renderType.toString()];
+	},
+	/**
+	 * Set background color used for a special renderType.
+	 * @param {String} color
+	 * @param {Int} renderType
+	 */
+	setBackgroundColorOfType: function(color, renderType)
+	{
+		this._bgColorMap[renderType.toString()] = color;
+		if (renderType === this.getRenderType())
+			this.setBackgroundColor(color);
+	},
+	/**
+	 * Called after background color is changed, should repaint the context.
+	 */
+	backgroundColorChanged: function(doNotRepaint)
+	{
+		var color = this.getBackgroundColor();
+		if (color === 'transparent')
+			color = null;
+		var drawBridge = this.getDrawBridge();
+		if (drawBridge && drawBridge.setClearColor)
+		{
+			drawBridge.setClearColor(this.getDrawContext(), color);
+			if (!doNotRepaint)
+				this.repaint();
+		}
+	},
 	/**
 	 * Called after draw options are changed. Should repaint the context.
 	 * Repaint is a time-consuming job. So if only rotate/scale/translate options changes,

@@ -165,10 +165,13 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 			// here call setDisplayed and setVisible with second param, avoid call widgetShowStateChanged multiple times
 			var done = function()
 			{
-				if (useVisible)
-					widget.setVisible(false, true);
-				else
-					widget.setDisplayed(false, true);
+				if (widget)
+				{
+					if (useVisible)
+						widget.setVisible(false, true);
+					else
+						widget.setDisplayed(false, true);
+				}
 				if (callback)
 					callback();
 			};

@@ -672,10 +672,13 @@ Kekule.StyleUtils = {
 	 */
 	setDisplay: function(elem, value)
 	{
-		if (typeof(value) === 'string')
-			elem.style.display = value;
-		else
-			elem.style.display = (!!value)? '': 'none';
+		if (elem)
+		{
+			if (typeof(value) === 'string')
+				elem.style.display = value;
+			else
+				elem.style.display = (!!value) ? '' : 'none';
+		}
 	},
 
 	/**
@@ -704,10 +707,13 @@ Kekule.StyleUtils = {
 	 */
 	setVisibility: function(elem, value)
 	{
-		if (typeof(value) === 'string')
-			elem.style.visibility = value;
-		else
-			elem.style.visibility = (!!value)? '': 'hidden';
+		if (elem)
+		{
+			if (typeof(value) === 'string')
+				elem.style.visibility = value;
+			else
+				elem.style.visibility = (!!value) ? '' : 'hidden';
+		}
 	}
 };
 

@@ -1582,11 +1582,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 	/**
 	 * Check if widget element is visible to user.
+	 * @param {Bool} ignoreDom If true, this method will only check CSS visibility and display property.
+	 * @returns {Bool}
 	 */
-	isShown: function()
+	isShown: function(ignoreDom)
 	{
 		//var result = !!this.getElement().parentNode && this.getVisible() && this.getDisplayed();
-		var result = this.isInDomTree() && this.getVisible() && this.getDisplayed();
+		var result = (this.isInDomTree() || ignoreDom) && this.getVisible() && this.getDisplayed();
 		return result;
 	},
 	/**

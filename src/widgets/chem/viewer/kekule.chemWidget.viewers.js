@@ -127,6 +127,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span', 'img'],
 	/** @private */
+	DEF_BGCOLOR_2D: null,
+	/** @private */
+	DEF_BGCOLOR_3D: '#000000',
+	/** @private */
 	DEF_TOOLBAR_EVOKE_MODES: [/*EM.ALWAYS,*/ EM.EVOKEE_CLICK, EM.EVOKEE_MOUSE_ENTER, EM.EVOKEE_TOUCH],
 	/** @private */
 	DEF_TOOLBAR_REVOKE_MODES: [/*EM.ALWAYS,*/ /*EM.EVOKEE_CLICK,*/ EM.EVOKEE_MOUSE_LEAVE, EM.EVOKER_TIMEOUT],
@@ -144,6 +148,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
 		this.setPropStoreFieldValue('showCaption', false);
+		this.setPropStoreFieldValue('useCornerDecoration', true);
+		//this.setUseCornerDecoration(true);
 		$super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs);
 		this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
 		/*
@@ -152,18 +158,18 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.setChemObj(chemObj);
 		}
 		*/
-		this.setUseCornerDecoration(true);
+
 		this._isContinuousRepainting = false;  // flag, use internally
 		//this._lastRotate3DMatrix = null;  // store the last 3D rotation information
 
-		// debug
-		/*
-		this.setEnableEdit(true);
-		*/
-		this.setModalEdit(true);
+		var RT = Kekule.Render.RendererType;
+		var color2D = (this.getRenderType() === RT.R2D)? (this.getBackgroundColor() || this.DEF_BGCOLOR_2D): this.DEF_BGCOLOR_2D;
+		var color3D = (this.getRenderType() === RT.R3D)? (this.getBackgroundColor() || this.DEF_BGCOLOR_3D): this.DEF_BGCOLOR_3D;
+		this.setBackgroundColorOfType(color2D, RT.R2D);
+		this.setBackgroundColorOfType(color3D, RT.R3D);
 
 		this.useCornerDecorationChanged();
-		this.doResize()  // adjust caption and drawParent size
+		this.doResize();  // adjust caption and drawParent size
 
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
@@ -433,6 +439,15 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.defineProp('enableDirectInteraction', {'dataType': DataType.BOOL});
 		this.defineProp('enableTouchInteraction', {'dataType': DataType.BOOL});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		// debug
+		/*
+		this.setEnableEdit(true);
+		*/
+		this.setModalEdit(true);
+	},
 
 	/** @ignore */
 	doObjectChange: function($super, modifiedPropNames)
@@ -488,6 +503,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		return (renderType === Kekule.Render.RendererType.R3D)?
 			CCNS.VIEWER3D: CCNS.VIEWER2D;
+	},
+
+	/** @ignore */
+	getResizerElement: function()
+	{
+		return this.getDrawContextParentElem();
 	},
 
 	/** @ignore */
@@ -550,12 +571,15 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	useCornerDecorationChanged: function()
 	{
-		var v = this.getUseCornerDecoration();
-		var elem = this.getDrawContextParentElem();
-		if (v)
-			Kekule.HtmlElementUtils.addClass(elem, CNS.CORNER_ALL);
-		else
-			Kekule.HtmlElementUtils.removeClass(elem, CNS.CORNER_ALL);
+		var elem = this.getDrawContextParentElem();  // do not auto create element
+		if (elem)
+		{
+			var v = this.getUseCornerDecoration();
+			if (v)
+				Kekule.HtmlElementUtils.addClass(elem, CNS.CORNER_ALL);
+			else
+				Kekule.HtmlElementUtils.removeClass(elem, CNS.CORNER_ALL);
+		}
 	},
 
 	/** @private */
@@ -1152,7 +1176,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			toolBar.addClassName(CCNS.VIEWER_EMBEDDED_TOOLBAR);
 		toolBar.setShowText(false);
 		toolBar.doSetShowGlyph(true);
-		toolBar.appendToElem(/*this.getElement()*/this.getToolbarParentElem() || this.getDrawContextParentElem());
+		toolBar.appendToElem(this.getToolbarParentElem() || this.getElement()/*this.getDrawContextParentElem()*/);
 			// IMPORTANT, must append to widget before setToolbar,
 			// otherwise in Chrome the tool bar may be hidden at first even if we set it to always show
 		//console.log('After append to widget: ', toolBar.getDisplayed());

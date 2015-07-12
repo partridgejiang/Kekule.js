@@ -6,10 +6,10 @@
   <style type="text/css">
     div#canvas3d{
       border: none;
-      cursor: move;
+      /*cursor: move;*/
       width: 1400px;
       height: 600px;
-      background-color: #EEEEEE;
+      /*background-color: #EEEEEE;*/
     }
   </style>
   <script src="../../../libs/three.js-r49/build/Three.js"></script>
@@ -19,13 +19,15 @@
     function initThree() {
       width = document.getElementById('canvas3d').clientWidth;//获取画布「canvas3d」的宽
       height = document.getElementById('canvas3d').clientHeight;//获取画布「canvas3d」的高
-      //renderer=new THREE.WebGLRenderer({antialias:true});//生成渲染器对象（属性：抗锯齿效果为设置有效）
-      renderer=new THREE.CanvasRenderer({antialias:true});//生成渲染器对象（属性：抗锯齿效果为设置有效）
+      renderer=new THREE.WebGLRenderer({antialias:true, 'alpha': true});//生成渲染器对象（属性：抗锯齿效果为设置有效）
+      //renderer=new THREE.CanvasRenderer({antialias:true});//生成渲染器对象（属性：抗锯齿效果为设置有效）
       //renderer=new THREE.SVGRenderer({antialias:true});//生成渲染器对象（属性：抗锯齿效果为设置有效）
       //renderer=new THREE.DOMRenderer({antialias:true})
       renderer.setSize(width, height );//指定渲染器的高宽（和画布框大小一致）
-      document.getElementById('canvas3d').appendChild(renderer.domElement);//追加 【canvas】 元素到 【canvas3d】 元素中。
       //renderer.setClearColorHex(0xFFFFFF, 1.0);//设置canvas背景色(clearColor)
+      //renderer.setClearColorHex(0x0000ff, 1.0);
+      //console.log(renderer.getClearColor(), renderer.getClearAlpha());
+      document.getElementById('canvas3d').appendChild(renderer.domElement);//追加 【canvas】 元素到 【canvas3d】 元素中。
     }
     //设置相机
     var camera;

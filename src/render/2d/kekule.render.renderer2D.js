@@ -123,6 +123,15 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	{
 		return null;
 	},
+	/**
+	 * Set background color of content.
+	 * @param {Object} context
+	 * @param {String} color Color in '#RRGGBB' mode. Null means transparent.
+	 */
+	setClearColor: function(context, color)
+	{
+
+	},
 
 	/**
 	 * Transform a context based coord to screen based one (usually in pixel).

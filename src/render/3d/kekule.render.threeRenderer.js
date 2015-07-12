@@ -360,7 +360,8 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 
 		var renderer = BF.webgl?
 				new THREE.WebGLRenderer({
-					preserveDrawingBuffer: true  // use to enable screenshot
+					preserveDrawingBuffer: true,  // use to enable screenshot
+					alpha: true
 				}):
 			BF.canvas?
 				new THREE.CanvasRenderer():
@@ -541,6 +542,19 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	removeFromGroup: function(elem, group)
 	{
 		group.remove(elem);
+	},
+
+	/** @private */
+	setClearColor: function(context, color)
+	{
+		var r = context.getRenderer();
+		if (r && r.setClearColorHex)
+		{
+			if (color)
+				context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
+			else // color not set, transparent
+				context.getRenderer().setClearColorHex(null, 0);
+		}
 	},
 
 	/** @private */
