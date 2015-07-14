@@ -7,6 +7,8 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+Kekule.Localization.setCurrModule('extra.openbabel');
+
 // error messages
 // Object.extend(Kekule.ErrorMsg.en, {
 Kekule.Localization.addResource('en', 'ErrorMsg', {

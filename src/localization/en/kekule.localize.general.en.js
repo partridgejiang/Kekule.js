@@ -7,6 +7,8 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+Kekule.Localization.setCurrModule('general');
+
 /* @ignore */
 //Kekule.Texts = {};
 
@@ -80,7 +82,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	BONDID_NOT_EXISTS: 'Bond id not exists: ',
 	CML_ELEM_WRITER_TYPE_INPROPER: '{0} is not a proper CML element writer for {1}',
 	CML_CAN_NOT_OUTPUT_TO_EMPTY_ELEMENT: 'Can not output content to empty element',
-	UNABLE_TO_OUTPUT_AS_CML: 'Unable to output object <{0}> to MDL data',
+	UNABLE_TO_OUTPUT_AS_CML: 'Unable to output object <{0}> to CML data',
 
 	// io/mdl/kekule.io.mdlBase.js
 	MDL_CTAB_ATOM_CANNOT_CREATE: 'Can not create atom from source MDL format data',
@@ -113,10 +115,12 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	JSON_SERIALIZER_NOT_EXISTS: 'Serializer for JSON not exists',
 	XML_SERIALIZER_NOT_EXISTS: 'Serializer for XML not exists',
 
+	/*
 	// render/2d/kekule.render.def2DRenderer.js
 	CAN_NOT_REMOVE_INDIVIDUAL_ELEM: 'Unable to remove individual element on context',
 	// render/3d/kekule.render.def3DRenderer.js
 	CAN_NOT_RENDER_MOL_WITHOUT_CTAB_IN_3D: 'Can not render molecule without connection table in 3D mode',
+	*/
 
 	// render/3d/kekule.render.renderer3D.js
 	INAVAILABLE_AUTOSCALE_REF_LENGTH: 'Can not determine the length for calculation of auto scale',

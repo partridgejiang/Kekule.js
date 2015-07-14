@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Translator Test</title>
+  <script>
+    var __kekuleMarkLocalizationModuleInfo__ = !true;
+  </script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css"/>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css"/>
+  <script src="../../src/kekule.js?min=false"></script>
+  <script src="../../src/localization/en/kekule.localize.extras.openbabel.en.js"></script>
+  <script src="../../src/localization/zh/kekule.localize.general.zh.js"></script>
+  <script src="../../src/localization/zh/kekule.localize.widget.zh.js"></script>
+  <script src="../../src/_devUtils/localizationUtil/kekule.translators.js"></script>
+  <style>
+    #inputModule
+    {
+      display: block;
+    }
+    #output
+    {
+      display: block;
+      width: 80em;
+      height: 20em;
+    }
+    #objInspector, #valueListEditor
+    {
+      float: right;
+      height: 50em;
+      width: 30em;
+    }
+  </style>
+
+  <script>
+    var Wrapper = Class.create(ObjectEx, {
+      /** @private */
+      initProperties: function()
+      {
+        this.defineProp('dummy', {'dataType': DataType.INT});
+        this.defineProp('obj', {'dataType': DataType.OBJECT});
+      }
+    });
+
+    var TU = Kekule.Localization.TranslatorUtils;
+    var inputModule, output, objInspector, valueListEditor;
+    function generateContent()
+    {
+      var locModuleInfos = Kekule.Localization.getModuleInfos();
+      var moduleName = inputModule.getValue();
+      //var rootObj = Object.getCascadeFieldValue(moduleName, locModuleInfos);
+      var content = TU.generateLocalModuleContent('zh', moduleName);
+      output.setValue(content);
+    }
+    function setInspectObj()
+    {
+      var moduleName = inputModule.getValue();
+      var obj = TU.createLocalModuleObj('en', moduleName);
+
+      var wrapper = new Wrapper();
+      wrapper.setObj(obj);
+      objInspector.setObjects(wrapper);
+      //objInspector.setObjects(obj);
+
+      var cascadeNames = Kekule.ObjUtils.getLeafFieldCascadeNames(obj);
+      var hashWrapper = {};
+      for (var i = 0, l = cascadeNames.length; i < l; ++i)
+      {
+        var name = cascadeNames[i];
+        var value = Object.getCascadeFieldValue(name, obj);
+        hashWrapper[name] = value;
+      }
+      valueListEditor.setHash(hashWrapper);
+    }
+    function init()
+    {
+      inputModule = Kekule.Widget.getWidgetById('inputModule');
+      output = Kekule.Widget.getWidgetById('output');
+      objInspector = Kekule.Widget.getWidgetById('objInspector');
+      valueListEditor = Kekule.Widget.getWidgetById('valueListEditor');
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <table id="valueListEditor" data-widget="Kekule.Widget.ValueListEditor"></table>
+  <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+
+  <input type="text" id="inputModule" data-widget="Kekule.Widget.TextBox" value="GLOBAL"/>
+  <textarea id="output" data-widget="Kekule.Widget.TextArea"></textarea>
+  <div>
+    <button id="btnGenerate" data-widget="Kekule.Widget.Button" onclick="generateContent()">Generate</button>
+    <button id="btnSetObj" data-widget="Kekule.Widget.Button" onclick="setInspectObj()">Set Obj</button>
+  </div>
+</body>
+</html>

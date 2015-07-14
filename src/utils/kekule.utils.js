@@ -260,6 +260,36 @@ Kekule.ObjUtils = {
 			}
 			return false;
 		}
+	},
+
+	/**
+	 * Returns an array of cascade names that matches all leaf field of obj.
+	 * For example, call on object {a: {b: 1, c: 2}, b: 2} will returns ['a.b', 'a.c', 'b'];
+	 * @param {Object} obj
+	 * @param {Bool} includeFuncFields
+	 * @returns {Array}
+	 */
+	getLeafFieldCascadeNames: function(obj, includeFuncFields)
+	{
+		var fillCascadeNames = function(names, prefix, obj, includeFuncFields)
+		{
+			for (var fname in obj)
+			{
+				if (obj.hasOwnProperty(fname) && (includeFuncFields || typeof(obj[fname]) != 'function'))
+				{
+					var value = obj[fname];
+					if (typeof(value) === 'object')
+					{
+						fillCascadeNames(names, prefix + fname + '.', value, includeFuncFields);
+					}
+					else
+						names.push(prefix + fname);
+				}
+			}
+		};
+		var result = [];
+		fillCascadeNames(result, '', obj, includeFuncFields);
+		return result;
 	}
 };
 

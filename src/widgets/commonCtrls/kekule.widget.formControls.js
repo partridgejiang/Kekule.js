@@ -1203,6 +1203,10 @@ Kekule.Widget.SelectBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	_setBoxItemInfo: function(itemElem, info)
 	{
+		if (DataType.isSimpleValue(info))  // info is direct text
+		{
+			info = {'value': info};
+		}
 		var text = info.text || info.value;
 		if (OU.notUnset(text))
 			Kekule.DomUtils.setElementText(itemElem, text);

@@ -7,6 +7,8 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+Kekule.Localization.setCurrModule('widget');
+
 /* @ignore */
 //Kekule.WidgetTexts = {};
 /** @ignore */
@@ -46,6 +48,26 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	HINT_INC_TEXT_SIZE: 'Increase text size',
 	HINT_DEC_TEXT_SIZE: 'Decrease text size',
 	HINT_CHOOSE_FONT_FAMILY: 'Choose font family',
+
+	// Page Navigator
+	CAPTION_FIRST_PAGE: 'First',
+	CAPTION_LAST_PAGE: 'Last',
+	CAPTION_PREV_PAGE: 'Prev',
+	CAPTION_NEXT_PAGE: 'Next',
+	HINT_FIRST_PAGE: 'First page',
+	HINT_LAST_PAGE: 'Last page',
+	HINT_PREV_PAGE: 'Previous page',
+	HINT_NEXT_PAGE: 'Next page',
+	HINT_CURR_PAGE: 'Current page',
+
+	// Data table
+	MSG_RETRIEVING_DATA: 'Loading data...',
+	CAPTION_DATATABLE_EDIT: 'Edit',
+	CAPTION_DATATABLE_DELETE: 'Delete',
+	CAPTION_DATATABLE_INSERT: 'Insert',
+	HINT_DATATABLE_EDIT: 'Edit',
+	HINT_DATATABLE_DELETE: 'Delete',
+	HINT_DATATABLE_INSERT: 'Insert',
 
 	// widget grid
 	CAPTION_ADD_CELL: '+',
@@ -316,6 +338,12 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 	// widget/operations/kekule.operations.js
 	COMMAND_NOT_REVERSIBLE: 'Command can not be undone',
+
+	// page navigator
+	PAGE_INDEX_OUTOF_RANGE: 'Page index out of range',
+
+	// DataSet
+	FETCH_DATA_TIMEOUT: 'Time out to fetch data',
 
 	// displayer
 	RENDER_TYPE_CHANGE_NOT_ALLOWED: 'It is not allowed to change render type',

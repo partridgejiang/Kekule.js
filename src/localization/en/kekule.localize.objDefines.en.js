@@ -7,6 +7,8 @@
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
+Kekule.Localization.setCurrModule('objDefines');
+
 /** @ignore */
 Kekule.OBJDEF_TEXTS = {};
 

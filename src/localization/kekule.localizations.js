@@ -52,21 +52,29 @@
 
 	Kekule.Localization = {};
 	Kekule.LocalizationRes = {};
+	//Kekule.Localization
 
 	var localizationRootObj = Kekule.LocalizationRes;
-	function getLanugageRoot(languageName, canCreate)
+	function getLanguages()
 	{
-		var result = localizationRootObj[languageName];
+		var result = [];
+		for (var name in localizationRootObj)
+			result.push(name);
+		return result;
+	}
+	function getLanguageRoot(languageName, canCreate, localRoot)
+	{
+		var result = localRoot || localizationRootObj[languageName];
 		if (!result && canCreate)
 		{
 			result = {};
 			localizationRootObj[languageName] = result;
 		}
 		return result;
-	};
-	function getLocalizationValueOfLan(cascadeName, languageName)
+	}
+	function getLocalizationValueOfLan(cascadeName, languageName, localRoot)
 	{
-		var lanObj = getLanugageRoot(languageName);
+		var lanObj = getLanguageRoot(languageName, false, localRoot);
 		if (lanObj)  // found suitable language
 		{
 			var value = Object.getCascadeFieldValue(cascadeName, lanObj);
@@ -74,51 +82,113 @@
 				return value;
 		}
 		return undefined;
-	};
-	function findLocalizationValue(cascadeName, preferedLanguageName)
+	}
+	function findLocalizationValue(cascadeName, preferedLanguageName, localRoot)
 	{
 		var lanNames = (preferedLanguageName? [preferedLanguageName]: []).concat(candicateLanNames);
 		for (var j = 0, k = lanNames.length; j < k; ++j)
 		{
 			var lanName = lanNames[j];
-			var value = getLocalizationValueOfLan(cascadeName, lanName);
+			var value = getLocalizationValueOfLan(cascadeName, lanName, localRoot);
 			if (value !== undefined)
 				return value;
 		}
 		// not found
 		return undefined;
-	};
-	function getLocalizationValue(cascadeName, preferedLanguageName)
+	}
+	function getLocalizationValue(cascadeName, preferedLanguageName, localRoot)
 	{
-		var result = findLocalizationValue(cascadeName, preferedLanguageName);
+		var result = findLocalizationValue(cascadeName, preferedLanguageName, localRoot);
 		if (result === undefined)
 			Kekule.error('Can not find localization resource: ' + cascadeName);
 		else
 			return result;
-	};
-	function setLocalizationValueOfLan(cascadeName, value, languageName, canCreate)
+	}
+	function setLocalizationValueOfLan(cascadeName, value, languageName, canCreate, localRoot)
 	{
-		var lanRoot = getLanugageRoot(languageName, canCreate);
+		var lanRoot = getLanguageRoot(languageName, canCreate, localRoot);
 		if (lanRoot)
 			return Object.setCascadeFieldValue(cascadeName, value, lanRoot, canCreate);
 		else
 			return false;
-	};
+	}
 
-	function addLocalizationResources(languageName, resourceName, resources)
+	var locModuleNames = [];
+	var currLocModuleName;
+	var saveLocModuleInfo = !!(this || window).__kekuleMarkLocalizationModuleInfo__;  // set this extra global var to true to save module information
+	var locModuleInfo = {};
+	function setCurrLocalizationModule(moduleName)
 	{
-		var oldValue = getLocalizationValueOfLan(resourceName, languageName);
+		currLocModuleName = moduleName;
+		if (locModuleNames.indexOf(moduleName) < 0)
+			locModuleNames.push(moduleName);
+	}
+	function getLocModuleRootObj(moduleName, canCreate)
+	{
+		var moduleName = moduleName || 'GLOBAL';
+		var result = Object.getCascadeFieldValue(moduleName, locModuleInfo);
+		if (!result && canCreate)
+			result = Object.setCascadeFieldValue(moduleName, {}, locModuleInfo, true);
+		return result;
+	}
+	function getLocalizationModuleNames()
+	{
+		return locModuleNames;
+	}
+
+	function addLocalizationResources(languageName, resourceName, resources, localRoot)
+	{
+		if (!resources)
+			return;
+		var oldValue = getLocalizationValueOfLan(resourceName, languageName, localRoot);
 		var newValue;
 		if (!oldValue)
-			newValue = resources;
+			newValue = JSON.parse(JSON.stringify(resources));  // force deep clone
 		else
-			newValue = Object.extend(oldValue, resources);
-		setLocalizationValueOfLan(resourceName, newValue, languageName, true);
-	};
+			newValue = Object.extendEx(oldValue, resources, {'cascade': true});
+		setLocalizationValueOfLan(resourceName, newValue, languageName, true, localRoot);
+
+		/*
+		if (saveLocModuleInfo)
+		{
+			var moduleName = currLocModuleName || 'GLOBAL';
+			var cascadeName = moduleName + '.' + resourceName;
+			var fieldNames = []; //resources.getOwnPropertyNames();
+			for (var fname in resources)
+			{
+				if (resources.hasOwnProperty(fname) && (typeof(resources[fname]) != 'function'))
+					fieldNames.push(fname);
+			}
+			var oldValues = Object.getCascadeFieldValue(cascadeName, locModuleInfo);
+			if (!oldValues)
+				Object.setCascadeFieldValue(cascadeName, fieldNames, locModuleInfo, true);
+			else
+				Object.setCascadeFieldValue(cascadeName, oldValues.concat(fieldNames), locModuleInfo, true);
+		}
+		*/
+	}
+	function getLocalizationModuleInfos()
+	{
+		return locModuleInfo;
+	}
+
 	/** Short cut to get localization value */
 	Kekule.$L = getLocalizationValue;
+	Kekule.Localization.getLanguages = getLanguages;
 	Kekule.Localization.getValue = getLocalizationValue;
 	Kekule.Localization.findValue = findLocalizationValue;
-	/** Short cut to set localization values */
-	Kekule.Localization.addResource = addLocalizationResources;
+
+	Kekule.Localization.getModuleInfos = getLocalizationModuleInfos;
+	Kekule.Localization.setCurrModule = setCurrLocalizationModule;
+	Kekule.Localization.getModuleNames = getLocalizationModuleNames;
+
+	Kekule.Localization.addResource = function(languageName, resourceName, resources)
+	{
+		addLocalizationResources(languageName, resourceName, resources);
+		if (saveLocModuleInfo)
+		{
+			var root = getLocModuleRootObj(currLocModuleName, true);
+			addLocalizationResources(languageName, resourceName, resources, root);
+		}
+	}
 })();

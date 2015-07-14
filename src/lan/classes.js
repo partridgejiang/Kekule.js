@@ -160,6 +160,28 @@ Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyStrin
     return destination;
 };
 /** @ignore */
+Object.extendEx = function(destination, source, options)
+{
+  var ops = options || {};
+  for (var property in source)
+  {
+    var value = source[property];
+    if (ops.ignoreUnsetValue && ((value === undefined) || (value === null)))
+      continue;
+    if (ops.ignoreEmptyString && (value === ''))
+      continue;
+
+    var oldValue = destination[property];
+    var oldProto = oldValue && oldValue.constructor && oldValue.constructor.prototype;
+    var newProto = value && value.constructor && value.constructor.prototype;
+    if (oldValue && typeof(oldValue) === 'object' && oldProto === newProto)
+      Object.extend(oldValue, value);
+    else
+      destination[property] = value;
+  }
+  return destination;
+};
+/** @ignore */
 // e.g., obj.getCascadeFieldValue('level1.level2.name') will return obj.level1.level2.name.
 Object.getCascadeFieldValue = function(fieldName, root)
 {
@@ -196,7 +218,7 @@ Object.setCascadeFieldValue = function(fieldName, value, root, forceCreateEssent
     if (i === l - 1)  // success
     {
       parent[name] = value;
-      return true;
+      return value; //true;
     }
     else
     {
