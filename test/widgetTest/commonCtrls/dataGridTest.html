@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>DataGrid Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+
+  <script>
+    var data1 = {
+      'columns': [
+        {'name': 'key1', 'text': 'ColA', 'hint': 'First column', 'style': 'font-size:120%;text-align:center', 'colStyle': 'background:red'},
+        {'name': 'key2', 'text': 'ColB', 'hint': 'Second column'},
+        {'name': 'key3', 'text': 'ColC', 'hint': 'Third column', 'disableInteract': true},
+        {'name': 'keyEmpty', 'text': 'Empty Col', 'hint': 'Empty column', 'disableInteract': true}
+      ],
+      'data': [
+        {'key1': 2, 'key2': 'String1', 'key3': true},
+        {'key1': 1, 'key2': 'String2', 'key3': true},
+        {'key1': 3, 'key2': 'String3', 'key3': false},
+        {'key1': 3, 'key2': 'StringValue', 'key4': 'Key4Value'}
+      ],
+      'sortFields': ['!key1', 'key2']
+    };
+
+    var dataSet, dataPager;
+    function prepareDataSet()
+    {
+      var a = [];
+      for (var i = 0; i < 1000; ++i)
+      {
+        var item = {
+          'index': i,
+          'name': 'DataItem' + i,
+          'description': 'Description of item' + i
+        };
+        a.push(item);
+      }
+
+      dataSet = new Kekule.Widget.ArrayDataSet(a);
+
+      dataPager = new Kekule.Widget.DataPager(dataSet);
+      dataPager.setPageSize(10);
+    };
+
+    function init()
+    {
+      prepareDataSet();
+      /*
+      var table1 = Kekule.Widget.getWidgetById('table1');
+      table1.load(data1.data, data1.columns, data1.sortFields);
+
+      var table2 = Kekule.Widget.getWidgetById('table2');
+      table2.load(data1.data, null, data1.sortFields);
+      */
+      var table1 = Kekule.Widget.getWidgetById('table1');
+      table1.setDataPager(dataPager);
+
+      var pageNav = Kekule.Widget.getWidgetById('pageNav');
+      if (pageNav)
+        pageNav.setDataPager(dataPager);
+
+      Kekule.Widget.getWidgetById('objInspector').setObjects(table1);
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector" style="float: right"></div>
+
+  <div id="pageNav" data-widget="Kekule.Widget.PageNavigator" data-curr-index="2" data-last-index="4" data-first-index="1" ></div>
+
+  <div id="table1" data-widget="Kekule.Widget.DataTable" data-enable-head-interaction="true" data-enable-active-row="true" data-oper-col-show-mode="hover"></div>
+  <div id="table2" data-widget="Kekule.Widget.DataTable"></div>
+</body>
+</html>

@@ -124,11 +124,13 @@ var kekuleFiles = {
 		'requires': ['lan', 'root'],
 		'files': [
 			'localization/kekule.localizations.js',
-			'localization/en/kekule.localize.en.js',
+			'localization/en/kekule.localize.general.en.js',
 			'localization/en/kekule.localize.widget.en.js',
 			'localization/en/kekule.localize.objDefines.en.js'
-
-			//'localization/zh/kekule.localize.widget.zh.js'
+			/*
+			'localization/zh/kekule.localize.general.zh.js',
+			'localization/zh/kekule.localize.widget.zh.js'
+			*/
 		],
 		'category': 'localization'
 	},

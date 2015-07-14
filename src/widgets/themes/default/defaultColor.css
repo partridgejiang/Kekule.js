@@ -506,6 +506,9 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     */
 }
 
+.K-DataTable-Edit > .K-Pri-Glyph-Content,
+.K-DataTable-Insert > .K-Pri-Glyph-Content,
+.K-DataTable-Delete > .K-Pri-Glyph-Content,
 .K-PageNavigator-First > .K-Pri-Glyph-Content,
 .K-PageNavigator-Last > .K-Pri-Glyph-Content,
 .K-PageNavigator-Prev > .K-Pri-Glyph-Content,
@@ -515,6 +518,18 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     height: 16px;
     background-image: url("icons/generalUiIcons.png");
     background-repeat: no-repeat;
+}
+.K-DataTable-Edit > .K-Pri-Glyph-Content
+{
+    background-position: 0px -16px;
+}
+.K-DataTable-Insert > .K-Pri-Glyph-Content
+{
+    background-position: -16px -128px;
+}
+.K-DataTable-Delete > .K-Pri-Glyph-Content
+{
+    background-position: -80px -128px;
 }
 .K-PageNavigator-First > .K-Pri-Glyph-Content
 {
