@@ -16,6 +16,8 @@
 
 "use strict";
 
+var AU = Kekule.ArrayUtils;
+
 /**
  * Namespace for all property editors.
  * @namespace
@@ -122,12 +124,14 @@ Kekule.PropertyEditor.BaseEditor = Class.create(ObjectEx,
 	/**
 	 * Returns property or field value of object.
 	 * @param {Object} obj A plain object or instance of ObjectEx.
-	 * @param {String} propName
+	 * @param {String} propName If propName not set, obj itself will be returned.
 	 * @returns {Variant}
 	 * @private
 	 */
 	getObjPropValue: function(obj, propName)
 	{
+		if (Kekule.ObjUtils.isUnset(propName))
+			return obj;
 		if (obj instanceof ObjectEx)
 		{
 			return obj.getPropValue(propName);
@@ -167,14 +171,16 @@ Kekule.PropertyEditor.BaseEditor = Class.create(ObjectEx,
 	 * If all objects have the same property value, this value will be returned.
 	 * Otherwise this method will return undefined.
 	 * @param {Array} objects
-	 * @param {String} propName
+	 * @param {String} propName If propName is not set, objects themselves will be returned.
 	 * @returns {Variant}
 	 * @private
 	 */
 	getObjsPropValue: function(objects, propName)
 	{
-		if (!objects || Kekule.ObjUtils.isUnset(propName))
+		if (!objects) // || Kekule.ObjUtils.isUnset(propName))
 			return undefined;
+		if (Kekule.ObjUtils.isUnset(propName))
+			return objects;
 		var obj = objects[0];
 		var result = this.getObjPropValue(obj, propName);
 		for (var i = 1, l = objects.length; i < l; ++i)
@@ -1069,13 +1075,22 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 		return [editor, editor];
     */
 		var result = [];
-		var obj = this.getValue();
-		if (obj && (obj instanceof ObjectEx))
+		var objs = this.getValue();
+		if (objs)
 		{
-			// iterate all properties of obj
-			var objClass = obj.getClass();
+			if (objs instanceof ObjectEx)  // a single instance
+			{
+				var obj = objs;
+				// iterate all properties of obj
+				var objClass = obj.getClass();
+			}
+			else  // array of instances
+			{
+				var objClass = ClassEx.getCommonSuperClass(objs);
+			}
 			//var propList = obj.getAllPropList();
-			var propList = obj.getPropListOfScopes(propScopes);
+			//var propList = obj.getPropListOfScopes(propScopes);
+			var propList = ClassEx.getPropListOfScopes(objClass, propScopes);
 			for (var i = 0, l = propList.getLength(); i < l; ++i)
 			{
 				var propInfo = propList.getPropInfoAt(i);
@@ -1083,7 +1098,7 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 				if (editorClass)
 				{
 					var editor = new editorClass();
-					editor.setObjects([obj]);
+					editor.setObjects(Kekule.ArrayUtils.toArray(objs));
 					editor.setPropertyInfo(propInfo);
 					// copy some settings
 					editor.setValueTextMode(this.getValueTextMode());
@@ -1323,7 +1338,10 @@ Kekule.PropertyEditor.ObjectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 	getSubPropertyEditors: function(propScopes)
 	{
 		var result = [];
-		var obj = this.getValue();
+		var objs = AU.toArray(this.getValue());
+		if (objs.length > 1)  // TODO: more than one object, currently can not handle
+			return [];
+		var obj = objs[0];
 		if (!obj)
 			this._initialObjValue = {};
 		else

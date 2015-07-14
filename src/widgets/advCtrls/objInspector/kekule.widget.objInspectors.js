@@ -484,6 +484,37 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		return this.getRowData(row).propInfo;
 	},
 	*/
+
+	/**
+	 * Returns key name like 'parentPropName.childPropName'.
+	 * @param {HTMLElement} row
+	 * @returns {String}
+	 */
+	getRowCascadeKey: function(row)
+	{
+		if (row && this.getRowData(row))
+		{
+			var result = this.getRowData(row).key;
+			var parentRow = this.getParentPropRow(row);
+			if (parentRow)
+			{
+				result = this.getRowCascadeKey(parentRow) + '.' + result;
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Returns cascade key of current selected row.
+	 * @returns {String}
+	 */
+	getActiveRowCascadeKey: function()
+	{
+		var row = this.getActiveRow();
+		return row && this.getRowCascadeKey(row);
+	},
+
 	/** @private */
 	getRowPropEditor: function(row)
 	{
@@ -496,6 +527,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 			return null;
 		}
 	},
+
 	/**
 	 * Returns property editor instance associated with this row.
 	 * @param {Class} objClass
@@ -508,6 +540,20 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		//return new Kekule.PropertyEditor.SimpleEditor();
 		//return new Kekule.PropertyEditor.SelectEditor();
 		var c = Kekule.PropertyEditor.findEditorClass(objClass, propInfo);
+		if (c)
+			return new c();
+		else
+			return null;
+	},
+	/**
+	 * Returns property editor instance associated with a native JavaScript type (object, array...).
+	 * @param {String} propType
+	 * @param {String} propName
+	 * @private
+	 */
+	getPropEditorForType: function(propType, propName)
+	{
+		var c = Kekule.PropertyEditor.findEditorClassForType(propType, propName);
 		if (c)
 			return new c();
 		else
@@ -591,6 +637,12 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	 */
 	expandRow: function(row)
 	{
+		this._doExpandRow(row);
+		return this;
+	},
+	/** @private */
+	_doExpandRow: function(row)
+	{
 		if (this.isRowExpandable(row) && (!this.isRowExpanded(row)))
 		{
 			EU.removeClass(row, CNS.PROPLISTEDITOR_PROPCOLLAPSED);
@@ -603,8 +655,10 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 			var subPropEditors = propEditor.getSubPropertyEditors(this.getDisplayedPropScopes());
 
 			row[this.SUB_ROWS_FIELD] = this.addSubPropertyRows(row, subPropEditors);
+			return row[this.SUB_ROWS_FIELD];
 		}
-		return this;
+		else
+			return null;
 	},
 	/**
 	 * Collapse row with sub properties.
@@ -631,12 +685,13 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	{
 		if (this.isRowExpanded(row))
 		{
-			return this.collapseRow(row);
+			this.collapseRow(row);
 		}
 		else
 		{
-			return this.expandRow(row);
+			this.expandRow(row);
 		}
+		return this;
 	},
 	/**
 	 * Collapse all rows in editor.
@@ -648,6 +703,28 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		{
 			this.collapseRow(rows[i]);
 		}
+		return this;
+	},
+	/**
+	 * Expand all rows in editor.
+	 * @param {Bool} cascade
+	 */
+	expandAllRows: function(cascade)
+	{
+		var self = this;
+		var doExpandAll = function(rows, cascade)
+		{
+			for (var i = 0, l = rows.length; i < l; ++i)
+			{
+				var addedRows = self._doExpandRow(rows[i]);
+				if (addedRows && cascade)
+				{
+					doExpandAll(addedRows, cascade);
+				}
+			}
+		}
+		var rows = this.getRows();
+		doExpandAll(rows, cascade);
 		return this;
 	},
 
@@ -838,21 +915,6 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	 */
 	getCommonSuperClass: function(objects)
 	{
-		/*
-		if (!objects || !objects.length)
-			return null;
-		var result = objects[0].getClass? objects[0].getClass(): null;
-		if (!result)
-			return null;
-		for (var i = 1, l = objects.length; i < l; ++i)
-		{
-			var classObj = objects[i].getClass? objects[i].getClass(): null;
-			if (!classObj)
-				return null;
-			result = ClassEx.getCommonSuperClass(result, classObj);
-		}
-		return result;
-		*/
 		return ClassEx.getCommonSuperClass(objects);
 	},
 	/**
@@ -863,17 +925,24 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	 */
 	getCommonPropNames: function(objects)
 	{
-		var superClass = this.getCommonSuperClass(objects);
-		// TODO: we may filter out prop of unneed scope here
-		//var propList = ClassEx.getAllPropList(superClass);
-		var propList = ClassEx.getPropListOfScopes(superClass, this.getDisplayedPropScopes());
 		var result = [];
-		for (var i = 0, l = propList.getLength(); i < l; ++i)
+		var superClass = this.getCommonSuperClass(objects);
+		if (superClass)
 		{
-			var propInfo = propList.getPropInfoAt(i);
-			result.push(propInfo.name);
+			// TODO: we may filter out prop of unneed scope here
+			//var propList = ClassEx.getAllPropList(superClass);
+			var propList = ClassEx.getPropListOfScopes(superClass, this.getDisplayedPropScopes());
+			for (var i = 0, l = propList.getLength(); i < l; ++i)
+			{
+				var propInfo = propList.getPropInfoAt(i);
+				result.push(propInfo.name);
+			}
+			//result.sort();
 		}
-		//result.sort();
+		else  // no common super class
+		{
+			// TODO: if objects are plain object (not ObjectEx), how to handle
+		}
 		return result;
 	},
 	/**
@@ -895,18 +964,46 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	getDisplayPropEditors: function(objects)
 	{
 		var result = [];
-		var propNames = this.getDisplayPropNames(objects);
+		//var propNames = this.getDisplayPropNames(objects);
 		var superClass = this.getCommonSuperClass(objects);
-		var obj = objects[0];
-		for (var i = 0, l = propNames.length; i < l; ++i)
+		if (superClass)  // is ObjectEx
 		{
-			var propName = propNames[i];
-			var propInfo = obj.getPropInfo(propName);
-			var propEditor = this.getPropEditor(superClass, propInfo);
-			propEditor.setObjects(objects);
-			propEditor.setPropertyInfo(propInfo);
-			result.push(propEditor);
+			/*
+			var obj = objects[0];
+			for (var i = 0, l = propNames.length; i < l; ++i)
+			{
+				var propName = propNames[i];
+				var propInfo = obj.getPropInfo(propName);
+				var propEditor = this.getPropEditor(superClass, propInfo);
+				propEditor.setObjects(objects);
+				propEditor.setPropertyInfo(propInfo);
+				result.push(propEditor);
+			}
+			*/
+			var basePropEditor = this.getPropEditor(null, {'dataType': ClassEx.getClassName(superClass)});
+			if (basePropEditor)
+			{
+				basePropEditor.setObjects(objects);
+				result = result.concat(basePropEditor.getSubPropertyEditors(this.getDisplayedPropScopes()) || []);
+			}
 		}
+		else  // no super class, maybe objects are plain object?
+		{
+			if (objects.length === 1)  // now only handle one object
+			{
+				var obj = objects[0];
+				if (DataType.isObjectValue(obj))
+				{
+					var basePropEditor = this.getPropEditorForType('object');
+					if (basePropEditor)
+					{
+						basePropEditor.setObjects(/*objects*/obj);
+						result = result.concat(basePropEditor.getSubPropertyEditors() || []);
+					}
+				}
+			}
+		}
+		//console.log(basePropEditor.getClassName());
 		return result;
 	},
 	/**
@@ -1041,6 +1138,10 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
  * @property {Array} objects Objects inspected.
  * @property {Bool} showObjsInfoPanel
  * @property {Bool} showPropInfoPanel
+ * @property {String} keyField Which text should be displayed in key column of inspector.
+ *   Value can set to be 'name', 'title' or any other field of propInfo. If such field can not be found, name will be used instead.
+ * @property {String} sortField How to sort rows in prop list.
+ *   Value can set to be 'key', 'name', 'title' or null, respectively sort by property name, title, or no sort.
  * @property {Bool} enableOperHistory Whether undo/redo function is enabled. Undo/redo will be functional only if property operHistory is also set.
  * @property {Kekule.OperationHistory} operHistory History of operations. Used to enable undo/redo function.
  */
@@ -1087,6 +1188,29 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 				this.setPropStoreFieldValue('showPropInfoPanel', value);
 				SU.setDisplay(this._propInfoElem, !!value);
 				this._updateChildElemSize();
+			}
+		});
+
+		this.defineProp('keyField', {'dataType': DataType.STRING,
+			'getter': function() { var pe = this.getPropEditor();	return pe && pe.getKeyField(); },
+			'setter': function(value) { var pe = this.getPropEditor(); if (pe) pe.setKeyField(value); }
+		});
+		this.defineProp('sortField', {'dataType': DataType.STRING,
+			'getter': function() { var pe = this.getPropEditor();	return pe && pe.getSortField(); },
+			'setter': function(value) { var pe = this.getPropEditor(); if (pe) pe.setSortField(value); }
+		});
+		this.defineProp('activeRow', {'dataType': DataType.OBJECT, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function()
+			{
+				var pe = this.getPropEditor();
+				return pe && pe.getActiveRow();
+			},
+			'setter': function(value)
+			{
+				var pe = this.getPropEditor();
+				if (pe)
+					pe.setActiveRow(value);
 			}
 		});
 
@@ -1286,6 +1410,100 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 	{
 		if (this.getPropEditor())
 			this.getPropEditor().redo();
+		return this;
+	},
+
+	// utils shortcut methods of PropListEditor
+	/**
+	 * Returns key name like 'parentPropName.childPropName'.
+	 * @param {HTMLElement} row
+	 * @returns {String}
+	 */
+	getRowCascadeKey: function(row)
+	{
+		var pe = this.getPropEditor();
+		return pe && pe.getRowCascadeKey(row);
+	},
+	/**
+	 * Returns cascade key of current selected row.
+	 * @returns {String}
+	 */
+	getActiveRowCascadeKey: function()
+	{
+		var pe = this.getPropEditor();
+		return pe && pe.getActiveRowCascadeKey();
+	},
+	/**
+	 * Check if a row has sub properties and can be expanded.
+	 * @param {HTMLElement} row
+	 * @returns {Bool}
+	 */
+	isRowExpandable: function(row)
+	{
+		var pe = this.getPropEditor();
+		return pe && pe.isRowExpandable(row);
+	},
+	/**
+	 * Check if a row with sub properties is expanded.
+	 * @param {HTMLElement} row
+	 */
+	isRowExpanded: function(row)
+	{
+		var pe = this.getPropEditor();
+		return pe && pe.isRowExpanded(row);
+	},
+	/**
+	 * Expand row with sub properties.
+	 * @param {HTMLElement} row
+	 */
+	expandRow: function(row)
+	{
+		var pe = this.getPropEditor();
+		if (pe)
+			pe.expandRow(row);
+		return this;
+	},
+	/**
+	 * Collapse row with sub properties.
+	 * @param {HTMLElement} row
+	 */
+	collapseRow: function(row)
+	{
+		var pe = this.getPropEditor();
+		if (pe)
+			pe.collapseRow(row);
+		return this;
+	},
+	/**
+	 * Expand a collapsed row or collapse an expanded row.
+	 * @param {HTMLElement} row
+	 */
+	toggleRowExpandState: function(row)
+	{
+		var pe = this.getPropEditor();
+		if (pe)
+			pe.toggleRowExpandState(row);
+		return this;
+	},
+	/**
+	 * Collapse all rows in inspector.
+	 */
+	collapseAllRows: function()
+	{
+		var pe = this.getPropEditor();
+		if (pe)
+			pe.collapseAllRows();
+		return this;
+	},
+	/**
+	 * Expand all rows in editor.
+	 * @param {Bool} cascade
+	 */
+	expandAllRows: function(cascade)
+	{
+		var pe = this.getPropEditor();
+		if (pe)
+			pe.expandAllRows(cascade);
 		return this;
 	},
 
