@@ -59,6 +59,12 @@
     border-color: #d3d3d3;
 }
 
+.K-Dialog-Modal-Background
+{
+    background-color: rgb(200, 200, 200);
+    background-color: rgba(128, 128, 128, 0.3);
+}
+
 .K-MsgPanel
 {
     background-color: transparent;
@@ -94,19 +100,18 @@
 .K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content
 {
     display: inline-block;
-    background-repeat: no-repeat;
 }
 .K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content
 {
-    background-image: url('icons16/info.png');
+    background-image: url('images/slice/icons16/info.png');
 }
 .K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content
 {
-    background-image: url('icons16/warning.png');
+    background-image: url('images/slice/icons16/warning.png');
 }
 .K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content
 {
-    background-image: url('icons16/error.png');
+    background-image: url('images/slice/icons16/error.png');
 }
 
 .K-MsgGroup
@@ -116,9 +121,7 @@
 
 .K-Resize-Gripper
 {
-    background-repeat: no-repeat;
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -80px -224px;   /* pencil mark */
+    background-image: url("images/slice/icons16/resizer.png");
 }
 
 
@@ -180,7 +183,9 @@
 {
     width: 16px;
     height: 16px;
+    /*
     background-repeat: no-repeat;
+    */
 }
 .K-Button.K-Button-Kinded .K-Pri-Glyph-Content
 {
@@ -190,23 +195,19 @@
 /* different button kinds */
 .K-Button.K-Button-Kinded.K-Kind-DropDown .K-Assoc-Glyph-Content
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -64px -16px;   /* drop down mark */
+    background-image: url("images/slice/icons16/triangleDown.png"); /* drop down mark */
 }
 .K-Button.K-Button-Kinded.K-Kind-Popup .K-Assoc-Glyph-Content
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -32px -80px;   /* popup mark */
+    background-image: url("images/slice/icons16/openExternal.png"); /* popup mark */
 }
 .K-Button.K-Button-Kinded.K-Kind-Search .K-Assoc-Glyph-Content
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -160px -112px;   /* popup mark */
+    background-image: url("images/slice/icons16/search.png");
 }
 .K-Button.K-Button-Kinded.K-Kind-Edit .K-Assoc-Glyph-Content
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -64px -112px;   /* popup mark */
+    background-image: url("images/slice/icons16/pencil.png");
 }
 
 .K-Compact-Mark
@@ -247,15 +248,15 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/fontSizeInc.png");
+    background-image: url("images/slice/icons16/fontSizeInc.png");
 }
 .K-TextEditor-Btn-FontSizeDec > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/fontSizeDec.png");
+    background-image: url("images/slice/icons16/fontSizeDec.png");
 }
 .K-TextEditor-Btn-TextWrap > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/wrap.png");
+    background-image: url("images/slice/icons16/wrap.png");
 }
 
 .K-TreeView,
@@ -333,13 +334,12 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-TreeView .K-TreeView-ExpandMark
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -64px -16px;
+    background-image: url("images/slice/icons16/triangleDown.png");
 }
 
 .K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark
 {
-    background-position: -32px -16px;
+    background-image: url("images/slice/icons16/triangleRight.png");
 }
 
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Pri-Glyph-Content
@@ -347,12 +347,13 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     display: inline-block;
     width: 16px;
     height: 16px;
+    /*
     background-repeat: no-repeat;
+    */
 }
 .K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -80px -128px;
+    background-image: url("images/slice/icons16/close.png");
 }
 
 .K-ColorPicker .K-ColorPicker-Palette,
@@ -361,6 +362,10 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-ColorDropButton .K-Pri-Glyph-Content
 {
     border-color: #333;
+}
+.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent
+{
+    background-image: url("images/slice/icons16/transparentGrid.png");
 }
 
 .K-ValueListEditor .K-ValueListEditor-Row
@@ -380,9 +385,7 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -64px -112px;   /* pencil mark */
-    background-repeat: no-repeat;
+    background-image: url("images/slice/icons16/pencil.png"); /* pencil mark */
 }
 
 .K-ValueListEditor,
@@ -411,23 +414,25 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-PropListEditor .K-PropListEditor-PropExpandMarker
 {
+    /*
     background-image: url("icons/generalUiIcons.png");
     background-position: 1000px 1000px;
     background-repeat: no-repeat;
+    */
 }
 
 .K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker
 {
-    background-position: -64px -16px;
+    background-image: url("images/slice/icons16/triangleDown.png");
 }
 .K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker
 {
-    background-position: -32px -16px;
+    background-image: url("images/slice/icons16/triangleRight.png");
 }
 
 .K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span
 {
-    background-position: -192px -96px;  /* lock mark */
+    background-image: url("images/slice/icons16/locked.png");  /* lock mark */
 }
 
 .K-ObjInspector /*.K-ObjInspector-PropInfoPanel, .K-ObjInspector .K-ObjInspector-ObjsInfoPanel*/
@@ -471,21 +476,25 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 16px;
     height: 16px;
+    /*
     background-repeat: no-repeat;
+    */
 }
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc,
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Desc
 {
+    /*
     background-image: url("icons/generalUiIcons.png");
+    */
     opacity: 0.5;
 }
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc
 {
-    background-position: 0 -16px;
+    background-image: url("images/slice/icons16/triangleUp.png");
 }
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Desc
 {
-    background-position: -64px -16px;
+    background-image: url("images/slice/icons16/triangleDown.png");
 }
 .K-DataTable tr.K-State-Hover
 {
@@ -516,36 +525,37 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 16px;
     height: 16px;
+    /*
     background-image: url("icons/generalUiIcons.png");
-    background-repeat: no-repeat;
+    */
 }
 .K-DataTable-Edit > .K-Pri-Glyph-Content
 {
-    background-position: 0px -16px;
+    background-image: url("images/slice/icons16/triangleUp.png");
 }
 .K-DataTable-Insert > .K-Pri-Glyph-Content
 {
-    background-position: -16px -128px;
+    background-image: url("images/slice/icons16/plus.png");
 }
 .K-DataTable-Delete > .K-Pri-Glyph-Content
 {
-    background-position: -80px -128px;
+    background-image: url("images/slice/icons16/minus.png");
 }
 .K-PageNavigator-First > .K-Pri-Glyph-Content
 {
-    background-position: -80px -160px;
+    background-image: url("images/slice/icons16/first.png");
 }
 .K-PageNavigator-Last > .K-Pri-Glyph-Content
 {
-    background-position: -64px -160px;
+    background-image: url("images/slice/icons16/last.png");
 }
 .K-PageNavigator-Prev > .K-Pri-Glyph-Content
 {
-    background-position: -96px -16px;
+    background-image: url("images/slice/icons16/triangleLeft.png");
 }
 .K-PageNavigator-Next > .K-Pri-Glyph-Content
 {
-    background-position: -32px -16px;
+    background-image: url("images/slice/icons16/triangleRight.png");
 }
 
 
@@ -554,48 +564,43 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 /* Style resources */
 .K-Res-Cursor-Rotate
 {
-    cursor: url("./cursors/rotate.cur"), pointer;
+    cursor: url("images/cursors/rotate.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-NE
 {
-    cursor: url("./cursors/rotateNE.cur"), pointer;
+    cursor: url("images/cursors/rotateNE.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-NW
 {
-    cursor: url("./cursors/rotateNW.cur"), pointer;
+    cursor: url("images/cursors/rotateNW.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-SE
 {
-    cursor: url("./cursors/rotateSE.cur"), pointer;
+    cursor: url("images/cursors/rotateSE.cur"), pointer;
 }
 .K-Res-Cursor-Rotate-SW
 {
-    cursor: url("./cursors/rotateSW.cur"), pointer;
+    cursor: url("images/cursors/rotateSW.cur"), pointer;
 }
 .K-Res-Icon-Color-Pick
 {
-    background-image: url("icons/generalUiIcons.png");
-    background-position: -64px -112px;   /* pencil mark */
-    background-repeat: no-repeat;
+    background-image: url("images/slice/icons16/pencil.png"); /* pencil mark */
 }
 .K-Res-Icon-Color-NotSet,
 .K-Color-Unset,
 .K-Color-Default
 {
-    background-image: url("other/colorNotSet.gif");
-    background-repeat: no-repeat;
+    background-image: url("images/slice/other/colorNotSet.gif");
 }
 .K-Res-Icon-Color-Mixed,
 .K-Color-Mixed
 {
-    background-image: url("other/colorMulti.gif");
-    background-repeat: no-repeat;
+    background-image: url("images/slice/other/colorMulti.gif");
 }
 .K-Res-Icon-Color-Transparent,
 .K-Color-Transparent
 {
-    background-image: url("other/transparentMark.gif");
-    background-repeat: repeat;
+    background-image: url("images/slice/icons16/transparentGrid.png");
 }
 
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,
@@ -605,19 +610,18 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     /*display: inherit;*/
     width: 24px;
     height: 24px;
-    background-repeat: no-repeat;
 }
 
 .K-Res-Button-YesOk .K-Pri-Glyph-Content
 {
-    background-image: url("icons/ok.png");
+    background-image: url("images/slice/icons/ok.png");
 }
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content
 {
-    background-image: url("icons/cancel.png");
+    background-image: url("images/slice/icons/cancel.png");
 }
 
 .K-Res-Button-LoadFile .K-Pri-Glyph-Content
 {
-    background-image: url("icons/documentOpen.png");
+    background-image: url("images/slice/icons/documentOpen.png");
 }

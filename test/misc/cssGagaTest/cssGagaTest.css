@@ -1,0 +1,12 @@
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content
+{
+    background-image: url('icons16/slice/icons/info.png');
+}
+.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content
+{
+    background-image: url('icons16/slice/icons/warning.png');
+}
+.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content
+{
+    background-image: url('icons16/slice/icons/error.png');
+}

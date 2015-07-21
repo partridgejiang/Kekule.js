@@ -96,7 +96,6 @@
 
 .K-Widget.K-NonSelectable
 {
-    -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
@@ -105,7 +104,6 @@
 }
 .K-Widget .K-Selectable
 {
-    -webkit-touch-callout: text;
     -webkit-user-select: text;
     -khtml-user-select: text;
     -moz-user-select: text;
@@ -687,7 +685,7 @@ table.K-Widget
 {
     padding: 0.2em;
 }
-.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button K-Assoc-Glyph-Content
+.K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Assoc-Glyph-Content
 {
     display: none;
 }
@@ -748,8 +746,6 @@ table.K-Widget
 }
 .K-Dialog-Modal-Background
 {
-    background-color: rgb(200, 200, 200);
-    background-color: rgba(128, 128, 128, 0.3);
     z-index: 20000;
     position: absolute;
     position: fixed;
@@ -899,10 +895,6 @@ table.K-Widget
     transform-origin: center center;
 }
 */
-.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent
-{
-    background-image: url("other/transparentMark.gif");
-}
 
 .K-ColorDropTextBox .K-ColorPreviewer
 {

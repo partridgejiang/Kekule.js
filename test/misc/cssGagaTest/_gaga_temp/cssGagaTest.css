@@ -1,0 +1,4 @@
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/cssGagaTest.png);background-position:0 0}
+.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/cssGagaTest.png);background-position:-17px 0}
+.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/cssGagaTest.png);background-position:-34px 0}
+#CssGaga{content:"150715173715,swt,333"}

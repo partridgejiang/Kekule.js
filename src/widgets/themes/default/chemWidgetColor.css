@@ -146,123 +146,123 @@
 
 .K-Action-Open-Configurator > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/settings.png");
+    background-image: url("images/slice/icons/settings.png");
 }
 
 .K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molSkeletal.png");
+    background-image: url("images/slice/icons/molSkeletal.png");
 }
 .K-Chem-MolDisplayCondensed > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molCondensed.png");
+    background-image: url("images/slice/icons/molCondensed.png");
 }
 .K-Chem-MolDisplayWire > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molWireFrame.png");
+    background-image: url("images/slice/icons/molWireFrame.png");
 }
 .K-Chem-MolDisplaySticks > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molSticks.png");
+    background-image: url("images/slice/icons/molSticks.png");
 }
 .K-Chem-MolDisplayBallStick > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molBallStick.png");
+    background-image: url("images/slice/icons/molBallStick.png");
 }
 .K-Chem-MolDisplaySpaceFill > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/molSpaceFill.png");
+    background-image: url("images/slice/icons/molSpaceFill.png");
 }
 
 .K-Chem-MolHideHydrogens > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/hideHydrogens.png");
+    background-image: url("images/slice/icons/hideHydrogens.png");
 }
 
 .K-Chem-RotateLeft > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/rotateLeft.png");
+    background-image: url("images/slice/icons/rotateLeft.png");
 }
 .K-Chem-RotateRight > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/rotateRight.png");
+    background-image: url("images/slice/icons/rotateRight.png");
 }
 .K-Chem-RotateX > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/rotateX.png");
+    background-image: url("images/slice/icons/rotateX.png");
 }
 .K-Chem-RotateY > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/rotateY.png");
+    background-image: url("images/slice/icons/rotateY.png");
 }
 .K-Chem-RotateZ > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/rotateZ.png");
+    background-image: url("images/slice/icons/rotateZ.png");
 }
 
 .K-Chem-ZoomIn > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/zoomIn.png");
+    background-image: url("images/slice/icons/zoomIn.png");
 }
 .K-Chem-ZoomOut > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/zoomOut.png");
+    background-image: url("images/slice/icons/zoomOut.png");
 }
 .K-Chem-Reset > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/reset.png");
+    background-image: url("images/slice/icons/reset.png");
 }
 .K-Chem-Viewer-Edit > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/edit.png");
+    background-image: url("images/slice/icons/edit.png");
 }
 .K-Chem-ClearObjs > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/trash.png");
+    background-image: url("images/slice/icons/trash.png");
 }
 .K-Chem-NewDoc > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/documentNew.png");
+    background-image: url("images/slice/icons/documentNew.png");
 }
 .K-Chem-LoadFile > .K-Pri-Glyph-Content,
 .K-Chem-LoadData > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/documentOpen.png");
+    background-image: url("images/slice/icons/documentOpen.png");
 }
 .K-Chem-SaveFile > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/save.png");
+    background-image: url("images/slice/icons/save.png");
 }
 .K-Chem-Undo > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/undo.png");
+    background-image: url("images/slice/icons/undo.png");
 }
 .K-Chem-Redo > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/redo.png");
+    background-image: url("images/slice/icons/redo.png");
 }
 .K-Chem-Clone-Selection > .K-Pri-Glyph-Content,
 .K-Chem-Copy > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/copy.png");
+    background-image: url("images/slice/icons/copy.png");
 }
 .K-Chem-Cut > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/cut.png");
+    background-image: url("images/slice/icons/cut.png");
 }
 .K-Chem-Paste > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/paste.png");
+    background-image: url("images/slice/icons/paste.png");
 }
 
 .K-Chem-Toggle-Inspector > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/inspect.png");
+    background-image: url("images/slice/icons/inspect.png");
 }
 
 .K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/textDirectionTtb.png");
+    background-image: url("images/slice/icons16/textDirectionTtb.png");
 }
 /*
 .K-Chem-Composer-TextDirection-Button-LTR > .K-Pri-Glyph-Content
@@ -276,175 +276,175 @@
 */
 .K-Chem-Composer-TextAlign-Button-Horizontal > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/text_align_center.png");
+    background-image: url("images/slice/icons16/text_align_center.png");
 }
 .K-Chem-Composer-TextAlign-Button-Vertical > .K-Pri-Glyph-Content
 {
-    background-image: url("icons16/text_align_center_v.png");
+    background-image: url("images/slice/icons16/text_align_center_v.png");
 }
 
 .K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/cursorArrow.png");
+    background-image: url("images/slice/icons/cursorArrow.png");
 }
 .K-Chem-BasicMolEraserIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/eraser.png");
+    background-image: url("images/slice/icons/eraser.png");
 }
 .K-Chem-MolAtomIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/atom.png");
+    background-image: url("images/slice/icons/atom.png");
 }
 .K-Chem-FormulaIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/formula.png");
+    background-image: url("images/slice/icons/formula.png");
 }
 .K-Chem-MolBondIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/bondSingle.png");
+    background-image: url("images/slice/icons/bondSingle.png");
 }
 .K-Chem-MolNodeChargeIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/nodeCharge.png");
+    background-image: url("images/slice/icons/nodeCharge.png");
 }
 
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/text.png");
+    background-image: url("images/slice/icons/text.png");
 }
 
 .K-Chem-MolRingIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/ring.png");
+    background-image: url("images/slice/icons/ring.png");
 }
 
 .K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content
 {
-    background-image: url("icons/arrow.png");
+    background-image: url("images/slice/icons/arrow.png");
 }
 
 .K-Chem-MolBondIaController-Single .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondSingle.gif");
+    background-image: url("images/slice/iconsSmall/bondSingle.gif");
 }
 .K-Chem-MolBondIaController-Double .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondDouble.gif");
+    background-image: url("images/slice/iconsSmall/bondDouble.gif");
 }
 .K-Chem-MolBondIaController-Triple .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondTriple.gif");
+    background-image: url("images/slice/iconsSmall/bondTriple.gif");
 }
 .K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondOuter.gif");
+    background-image: url("images/slice/iconsSmall/bondOuter.gif");
 }
 .K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondWedge.gif");
+    background-image: url("images/slice/iconsSmall/bondWedge.gif");
 }
 .K-Chem-MolBondIaController-WedgeDown .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondWedgeHash.gif");
+    background-image: url("images/slice/iconsSmall/bondWedgeHash.gif");
 }
 .K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondWavy.gif");
+    background-image: url("images/slice/iconsSmall/bondWavy.gif");
 }
 .K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/bondDoubleEither.gif");
+    background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");
 }
 .K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/chargeClear.gif");
+    background-image: url("images/slice/iconsSmall/chargeClear.gif");
 }
 .K-Chem-MolNodeChargeIaController-Positive > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/charge1.gif");
+    background-image: url("images/slice/iconsSmall/charge1.gif");
 }
 .K-Chem-MolNodeChargeIaController-Negative > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/charge2.gif");
+    background-image: url("images/slice/iconsSmall/charge2.gif");
 }
 .K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/radical1.gif");
+    background-image: url("images/slice/iconsSmall/radical1.gif");
 }
 .K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/radical3.gif");
+    background-image: url("images/slice/iconsSmall/radical3.gif");
 }
 .K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/radical2.gif");
+    background-image: url("images/slice/iconsSmall/radical2.gif");
 }
 
 .K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring3.gif");
+    background-image: url("images/slice/iconsSmall/ring3.gif");
 }
 .K-Chem-MolRingIaController-4 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring4.gif");
+    background-image: url("images/slice/iconsSmall/ring4.gif");
 }
 .K-Chem-MolRingIaController-5 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring5.gif");
+    background-image: url("images/slice/iconsSmall/ring5.gif");
 }
 .K-Chem-MolRingIaController-6 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring6.gif");
+    background-image: url("images/slice/iconsSmall/ring6.gif");
 }
 .K-Chem-MolRingIaController-7 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring7.gif");
+    background-image: url("images/slice/iconsSmall/ring7.gif");
 }
 .K-Chem-MolRingIaController-8 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ring8.gif");
+    background-image: url("images/slice/iconsSmall/ring8.gif");
 }
 .K-Chem-MolRingIaController-Ar-6 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ringAr6.gif");
+    background-image: url("images/slice/iconsSmall/ringAr6.gif");
 }
 .K-Chem-MolRingIaController-Ar-5 > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/ringAr5.gif");
+    background-image: url("images/slice/iconsSmall/ringAr5.gif");
 }
 .K-Chem-ArrowLineIaController-Line > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/line.gif");
+    background-image: url("images/slice/iconsSmall/line.gif");
 }
 .K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/arrowOpen.gif");
+    background-image: url("images/slice/iconsSmall/arrowOpen.gif");
 }
 .K-Chem-ArrowLineIaController-TriangleArrowLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/arrowTriangle.gif");
+    background-image: url("images/slice/iconsSmall/arrowTriangle.gif");
 }
 .K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/diArrowOpen.gif");
+    background-image: url("images/slice/iconsSmall/diArrowOpen.gif");
 }
 .K-Chem-ArrowLineIaController-DiTriangleArrowLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/diArrowTriangle.gif");
+    background-image: url("images/slice/iconsSmall/diArrowTriangle.gif");
 }
 .K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/arrowOpenReversible.gif");
+    background-image: url("images/slice/iconsSmall/arrowOpenReversible.gif");
 }
 .K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/arrowOpenDouble.gif");
+    background-image: url("images/slice/iconsSmall/arrowOpenDouble.gif");
 }
 .K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/heatSymbol.gif");
+    background-image: url("images/slice/iconsSmall/heatSymbol.gif");
 }
 .K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content
 {
-    background-image: url("iconsSmall/addSymbol.gif");
+    background-image: url("images/slice/iconsSmall/addSymbol.gif");
 }
