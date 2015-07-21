@@ -15,16 +15,24 @@ if (!Array.prototype.indexOf)
 }
 
 var readyState = document && document.readyState;
-var docReady = (readyState === 'complete' || readyState === 'loaded' || readyState === 'interactive');
+var isIE = window.attachEvent && !window.opera;
+var docReady = (readyState === 'complete' || readyState === 'loaded' ||
+	(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
 
-function directAppend(libName)
+function directAppend(doc, libName)
 {
-	// inserting via DOM fails in Safari 2.0, so brute force approach
-  document.write('<script type="text/javascript" src="'+libName+'"><\/script>');
+  doc.write('<script type="text/javascript" src="'+libName+'"><\/script>');
 }
 
+var existedScriptUrls = [];
 function appendScriptFile(doc, url, callback)
 {
+	if (existedScriptUrls.indexOf(url) >= 0)  // already loaded
+	{
+		if (callback)
+			callback();
+		return;
+	}
 	var result = doc.createElement('script');
 	result.src = url;
 	result.onload = result.onreadystatechange = function(e)
@@ -36,6 +44,7 @@ function appendScriptFile(doc, url, callback)
 		{
 			result._loaded = true;
 			result.onload = result.onreadystatechange = null;
+			existedScriptUrls.push(url);
 			if (callback)
 				callback();
 		}
@@ -45,6 +54,11 @@ function appendScriptFile(doc, url, callback)
 	return result;
 }
 function appendScriptFiles(doc, urls, callback)
+{
+	var dupUrls = [].concat(urls);
+	_appendScriptFilesCore(doc, dupUrls, callback);
+}
+function _appendScriptFilesCore(doc, urls, callback)
 {
 	if (urls.length <= 0)
 	{
@@ -65,19 +79,19 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader)
 	if (!docReady && !forceDomLoader)  // can directly write to document
 	{
 		for (var i = 0, l = scriptUrls.length; i < l; ++i)
-			directAppend(scriptUrls[i]);
+			directAppend(document, scriptUrls[i]);
 
-		var sloadedCode = 'Kekule._loaded();';
+		var sloadedCode = 'if (this.Kekule) Kekule._loaded();';
 		/*
 		if (window.btoa)  // use data uri to insert loaded code, avoid inline script problem in Chrome extension (still no use in Chrome)
 		{
 			var sBase64 = btoa(sloadedCode);
 			var sdataUri = 'data:;base64,' + sBase64;
-			directAppend(sdataUri);
+			directAppend(document, sdataUri);
 		}
 		else  // use simple inline code in IE below 10 (which do not support data uri)
 		*/
-		//directAppend('kekule.loaded.js');  // manully add small file to mark lib loaded
+		//directAppend(document, 'kekule.loaded.js');  // manully add small file to mark lib loaded
 		document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
 	}
 	else
@@ -110,11 +124,13 @@ var kekuleFiles = {
 		'requires': ['lan', 'root'],
 		'files': [
 			'localization/kekule.localizations.js',
-			'localization/en/kekule.localize.en.js',
+			'localization/en/kekule.localize.general.en.js',
 			'localization/en/kekule.localize.widget.en.js',
 			'localization/en/kekule.localize.objDefines.en.js'
-
-			//'localization/zh/kekule.localize.widget.zh.js'
+			/*
+			'localization/zh/kekule.localize.general.zh.js',
+			'localization/zh/kekule.localize.widget.zh.js'
+			*/
 		],
 		'category': 'localization'
 	},
@@ -234,6 +250,8 @@ var kekuleFiles = {
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.propEditors.js',
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.operations.js',
 			'widgets/advCtrls/kekule.widget.configurators.js',
+			'widgets/advCtrls/grids/kekule.widget.dataSets.js',
+			'widgets/advCtrls/grids/kekule.widget.dataGrids.js',
 			'widgets/sys/kekule.widget.sysMsgs.js',
 
 			'widgets/operation/kekule.operHistoryTreeViews.js'  // debug
@@ -286,6 +304,13 @@ var kekuleFiles = {
 		'category': 'algorithm'
 	},
 
+	'calculation': {
+		'requires': ['lan', 'root', 'common', 'core', 'algorithm'],
+		'files': [
+			'calculation/kekule.calc.base.js'
+		]
+	},
+
 	'data': {
 		'requires': ['root'],
 		'files': [
@@ -308,15 +333,16 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'localization/en/kekule.localize.extras.openbabel.en.js',
-			'_extras/OpenBabel/kekule.openbabel.adapters.js',
-			'_extras/OpenBabel/kekule.openbabel.io.js'
+			'_extras/OpenBabel/kekule.openbabel.base.js',
+			'_extras/OpenBabel/kekule.openbabel.io.js',
+			'_extras/OpenBabel/kekule.openbabel.structures.js'
 		],
 		'category': 'extra'
 	}
 };
 
 var prequestModules = ['lan', 'root', 'localization', 'common'];
-var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'data']);
+var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
 var allModules = usualModules.concat(['emscripten', 'openbabel']);
 
 function getEssentialModules(modules)
@@ -330,7 +356,7 @@ function getEssentialModules(modules)
 		if (modules.indexOf(moduleName) < 0)
 		{
 			var module = kekuleFiles[moduleName];
-			if (module.requires)
+			if (module && module.requires)
 			{
 				for (var j = 0, k = module.requires.length; j < k; ++j)
 				{
@@ -459,6 +485,10 @@ function init()
 	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
 	$root['__$kekule_load_info__'] = scriptInfo;
+	$root['__$kekule_scriptfile_utils__'] = {
+		'appendScriptFile': appendScriptFile,
+		'appendScriptFiles': appendScriptFiles
+	};
 }
 
 init();
