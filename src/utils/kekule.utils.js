@@ -1131,6 +1131,25 @@ Kekule.UrlUtils = {
 			return null;
 	},
 	/**
+	 * Get core file name without extension from a url based file name
+	 * @param {String} url
+	 * @returns {String}
+	 */
+	extractFileCoreName: function(url)
+	{
+		var fileName = Kekule.UrlUtils.extractFileName(url);
+		if (fileName)
+		{
+			var p = fileName.lastIndexOf(Kekule.UrlUtils.EXT_DELIMITER);
+			if (p >= 0)
+				return fileName.substr(0, p);
+			else
+				return '';
+		}
+		else
+			return null;
+	},
+	/**
 	 * Get search part (e.g. http://127.0.0.1/url?key=value, part after "?") of URL.
 	 * @param {String} url
 	 * @returns {String} Search part of URL with "?".

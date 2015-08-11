@@ -247,10 +247,19 @@ Kekule.HtmlNativeServiceImpl = {
 	/** @ignore */
 	doSaveFileData: function(doc, data, callback, options)
 	{
-		// TODO: IE has problem in saving file in this style
-		var dataElem = Kekule.HtmlNativeServiceImpl._createDataElem(doc, data, options.initialFileName || null);
-		dataElem.click();  // save file dialog
-		dataElem.parentNode.removeChild(dataElem);
+		var fileName = options.initialFileName || null;
+		//if (Kekule.BrowserFeature.downloadHref)
+		{
+			var dataElem = Kekule.HtmlNativeServiceImpl._createDataElem(doc, data, fileName);
+			dataElem.click();  // save file dialog
+			dataElem.parentNode.removeChild(dataElem);
+		}
+		/*
+		else // IE, use execCommand to save
+		{
+			Kekule.HtmlNativeServiceImpl.doSaveFileDataIe(doc, data, fileName);
+		}
+		*/
 		if (callback)
 			callback(null, null);  // can not determine the final file name and result.
 	},
@@ -271,14 +280,51 @@ Kekule.HtmlNativeServiceImpl = {
 
 		doc.body.appendChild(elem);
 		return elem;
+	},
+	doSaveFileDataIe: function(doc, data, callback, options)
+	{
+		var fileName = options.initialFileName || null;
+		//console.log('save ie');
+		if (Kekule.BrowserFeature.blob && window.navigator.msSaveOrOpenBlob)  // IE 10 and above, use blob to save
+		{
+			var blobObject = new Blob([data]);
+			window.navigator.msSaveBlob(blobObject, fileName);
+		}
+		else
+		{
+			// data must be string
+			var iframeElem = Kekule.HtmlNativeServiceImpl._createAndExecDataIframe(doc, data, fileName);
+			// after save remove iframe
+			iframeElem.parentNode.removeChild(iframeElem);
+		}
+		if (callback)
+			callback(null, null);  // can not determine the final file name and result.
+	},
+	/** @private */
+	_createAndExecDataIframe: function(doc, data, fileName)
+	{
+		//console.log('iframe save');
+		var result = doc.createElement('iframe');
+		//result.style.display = 'none';
+		doc.body.appendChild(result);
+		var iframe = result.contentWindow || result.contentDocument;
+		iframe.document.open("text/html", "replace");
+		var s = data.toString();
+		iframe.document.write(s);
+		iframe.document.close();
+		iframe.focus();
+		iframe.document.execCommand('SaveAs', true, Kekule.UrlUtils.extractFileCoreName(fileName));  // extension IE don't know will supress the save dialog
+		//iframe.document.execCommand('SaveAs', true, fileName);
+		return result;
 	}
 };
 
 // register
 if (Kekule.BrowserFeature.fileapi)
-{
 	KNS.doShowFilePickerDialog = Kekule.HtmlNativeServiceImpl.doShowFilePickerDialog;
+if (Kekule.Browser.IE || window.navigator.msSaveOrOpenBlob)
+	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileDataIe;
+else if (Kekule.BrowserFeature.downloadHref)
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileData;
-}
 
 })();

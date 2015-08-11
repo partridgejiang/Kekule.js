@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Save File in IE Test</title>
+    <script>
+        var saveData = function(data) {
+            var csvData = data;
+            //if (navigator.appName === "Microsoft Internet Explorer")
+            {
+                //csvData = decodeURIComponent(csvData);
+
+                //var iframe = document.getElementById('csvDownloadFrame');
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                iframe = iframe.contentWindow || iframe.contentDocument;
+
+                //csvData = 'sep=,\r\n' + csvData;
+
+                //iframe.document.open("text/html", "replace");
+                iframe.document.open("text/kekule", "replace");
+                iframe.document.write(csvData);
+                iframe.document.close();
+                iframe.focus();
+                iframe.document.execCommand('SaveAs', true, 'data');
+            }
+        };
+
+        function save()
+        {
+            var data = 'test data\nA new line and    space';
+            saveData(data);
+        }
+    </script>
+</head>
+<body>
+    <button onclick="save()">Save</button>
+</body>
+</html>

@@ -457,18 +457,24 @@ Object.extend(String.prototype, {
     return this.extractScripts().map(function(script) { return eval(script); });
   },
 
-  escapeHTML: function() {
+  escapeHTML: function escapeHTML() {
+		/*
     var self = arguments.callee;
     self.text.data = this;
     return self.div.innerHTML;
+    */
+		return this.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br />');
   },
 
   unescapeHTML: function() {
+		/*
     var div = new Element('div');
     div.innerHTML = this.stripTags();
     return div.childNodes[0] ? (div.childNodes.length > 1 ?
       $A(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
       div.childNodes[0].nodeValue) : '';
+    */
+		return this.replace(/\<br \/\>/g, '\n').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
   },
 
   toQueryParams: function(separator) {

@@ -779,7 +779,7 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 	doUpdate: function($super)
 	{
 		$super();
-		this.setEnabled(this.getEnabled() && this.getData() && Kekule.NativeServices.canLoadFileData());
+		this.setEnabled(this.getEnabled() /*&& this.getData()*/ && Kekule.NativeServices.canSaveFileData());
 	},
 	/** @private */
 	doExecute: function(target)

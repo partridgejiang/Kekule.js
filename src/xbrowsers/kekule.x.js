@@ -61,6 +61,8 @@ Kekule.BrowserFeature = {
 		//return Kekule.BrowserFeature.webgl;
 		return !!result;
 	})(),
+	downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
+	blob: !!window.Blob,
 	workers: !! window.Worker,
 	fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
 	sessionStorage: !!window.sessionStorage,

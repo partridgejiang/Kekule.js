@@ -3991,7 +3991,6 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	hidePopupWidgets: function(activateElement, isDismissed)
 	{
-		//console.log('hidePopup', activateElement);
 		var widgets = this.getPopupWidgets();
 		var activateWidget = Kekule.Widget.getBelongedWidget(activateElement);
 		var activateWidgetCaller = activateWidget? activateWidget.getPopupCaller(): null;

@@ -1885,7 +1885,9 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	{
 		$super();
 		var displayer = this.getDisplayer();
-		this.setEnabled(displayer && displayer.getEnabled() && displayer.getChemObj() && this._saveAction.getEnabled());
+		if (this._saveAction)
+			this._saveAction.update();
+		this.setEnabled(displayer && displayer.getEnabled() && displayer.getChemObj()/* && this._saveAction.getEnabled()*/);
 	},
 	/** @private */
 	doExecute: function(target)
@@ -1899,6 +1901,17 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		var formatItems = this.getFormatSelectorItems(chemObj, writerInfos);
 		formatSelector.setItems(formatItems);
 		this.reactFormatSelectorChange();
+
+		// update OK button enabled
+		var saveEnabled = false;
+		if (this._saveAction)
+		{
+			//this._saveAction.update();
+			saveEnabled = this._saveAction.getEnabled();
+		}
+		var btn = dialog.getDialogButton(Kekule.Widget.DialogButtons.OK);
+		if (btn)
+			btn.setEnabled(saveEnabled);
 
 		// open a dialog to choose format first, then save to file
 		var showType = this.getDialogShowType();

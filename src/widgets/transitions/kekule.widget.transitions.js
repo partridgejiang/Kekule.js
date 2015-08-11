@@ -374,6 +374,7 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 	/** @private */
 	doExecute: function(element, caller, callback, options)
 	{
+		//console.log('transition execute', options);
 		var SU = Kekule.StyleUtils;
 
 		var style = element.style;
@@ -439,7 +440,6 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 		}
 		else  // not supported
 		{
-			//console.log('not supported');
 			try
 			{
 				this.setElementProp(element, options.to, options);
@@ -448,8 +448,12 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 			{
 
 			}
+			/*
 			if (callback)
 				callback();
+			*/
+			if (callback)  // delay call callback, after all routines of execute
+				setTimeout(callback, 0);
 		}
 	},
 
