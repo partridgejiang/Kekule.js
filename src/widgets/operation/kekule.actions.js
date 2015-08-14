@@ -50,7 +50,6 @@ Kekule.Action = Class.create(ObjectEx,
 	initialize: function($super)
 	{
 		$super();
-		this.setPropStoreFieldValue('enabled', true);
 		this.setPropStoreFieldValue('linkedWidgets', []);
 
 		this.setPropStoreFieldValue('enabled', true);

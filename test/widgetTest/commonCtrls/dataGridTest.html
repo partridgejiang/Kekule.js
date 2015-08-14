@@ -25,27 +25,45 @@
     };
 
     var dataSet, dataPager;
-    function prepareDataSet()
+    function prepareDataSet(alt)
     {
       var a = [];
       for (var i = 0; i < 1000; ++i)
       {
-        var item = {
-          'index': i,
-          'name': 'DataItem' + i,
-          'description': 'Description of item' + i
-        };
+        if (alt)
+        {
+          var item = {
+            'index': -i,
+            'name': 'AltDataItem' + i,
+            'description': 'Alt Description of item' + i
+          };
+        }
+        else
+        {
+          var item = {
+            'index': i,
+            'name': 'DataItem' + i,
+            'description': 'Description of item' + i
+          };
+        }
         a.push(item);
       }
-
-      dataSet = new Kekule.Widget.ArrayDataSet(a);
+      dataSet.setData(a);
 
       dataPager = new Kekule.Widget.DataPager(dataSet);
       dataPager.setPageSize(10);
-    };
+    }
+
+    var altData = false;
+    function changeData()
+    {
+      altData = !altData;
+      prepareDataSet(altData);
+    }
 
     function init()
     {
+      dataSet = new Kekule.Widget.ArrayDataSet();
       prepareDataSet();
       /*
       var table1 = Kekule.Widget.getWidgetById('table1');
@@ -55,6 +73,7 @@
       table2.load(data1.data, null, data1.sortFields);
       */
       var table1 = Kekule.Widget.getWidgetById('table1');
+      table1.setColumns(['OPER', '*', {'name': 'CHECK'}, {'name': '*'}]);
       table1.setDataPager(dataPager);
 
       var pageNav = Kekule.Widget.getWidgetById('pageNav');
@@ -62,6 +81,8 @@
         pageNav.setDataPager(dataPager);
 
       Kekule.Widget.getWidgetById('objInspector').setObjects(table1);
+
+      Kekule.Widget.getWidgetById('btnAlt').addEventListener('execute', changeData);
     }
 
     Kekule.X.domReady(init);
@@ -70,6 +91,9 @@
 <body>
   <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector" style="float: right"></div>
 
+  <div>
+    <button id="btnAlt" data-widget="Kekule.Widget.Button">Alt</button>
+  </div>
   <div id="pageNav" data-widget="Kekule.Widget.PageNavigator" data-curr-index="2" data-last-index="4" data-first-index="1" ></div>
 
   <div id="table1" data-widget="Kekule.Widget.DataTable" data-enable-head-interaction="true" data-enable-active-row="true" data-oper-col-show-mode="hover"></div>

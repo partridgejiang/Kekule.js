@@ -2000,7 +2000,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
-		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getElement()))
+		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()))
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
 		return result;

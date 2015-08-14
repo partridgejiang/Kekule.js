@@ -35,6 +35,8 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	DATATABLE_HEADCELL_INTERACTABLE: 'K-DataTable-HeadCellInteractable',
 	DATATABLE_OPER_COL: 'K-DataTable-OperCol',
 	DATATABLE_OPER_CELL: 'K-DataTable-OperCell',
+	DATATABLE_CHECK_COL: 'K-DataTable-CheckCol',
+	DATATABLE_CHECK_CELL: 'K-DataTable-CheckCell',
 	DATATABLE_DATA_COL: 'K-DataTable-DataCol',
 	DATATABLE_DATA_CELL: 'K-DataTable-DataCell',
 	DATATABLE_SORTMARK: 'K-DataTable-SortMark',
@@ -60,6 +62,18 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 });
 
 /**
+ * Enumeration of predifined data table column names.
+ * @enum
+ */
+Kekule.Widget.DataTableColNames = {
+	OPER: 'OPER',
+	CHECK: 'CHECK',
+	ALL: '*'
+};
+var TCN = Kekule.Widget.DataTableColNames;
+
+
+/**
  * An widget to to display array of data in grid table (based on HTML table).
  * @class
  * @augments Kekule.Widget.BaseWidget
@@ -71,6 +85,13 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  *      'className': 'HtmlClassOfEachColumnCell', 'style': 'CSSInlineStyleOfEachColumnCell',
  *      'colClassName': 'HtmlClassOfColElem', 'colStyle': 'CSSInlineStyleOfColElem'}
  *   ]
+ *   name can be set to some special values to create special columns:
+ *     'OPER': operation column,
+ *     'CHECK': check box column,
+ *     '*': Show all fields in data
+ *   e.g.: [{'name': 'CHECK'}, {'name': '*'}, {'name': 'OPER}],
+ *   or use string directly: ['CHECK', '*', 'OPER'].
+ *
  * @property {Array} data Data displayed in grid, each item is a hash. e.g.:
  *   [
  *     {'id': 1, 'name': 'Smith', 'email': 'smith@ab.com'},
@@ -79,6 +100,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * @property {Array} sortFields Fields to sort data. If field name is prefixed with '!', means sort in desc order.
  *   e.g. ['id', '!name']
  * @property {Func} sortFunc Custom function to sort data. Func(dataItem1, dataItem2).
+ *   Note: if data is provided by data pager, this property will be unusable.
  * @property {String} operColShowMode Value from {@link Kekule.Widget.DataTable.OperColShowMode},
  *   determinate when to show operation column in data table.
  * @property {Array} operWidgets Array of predefined button names or widget definition hashes shown in operation column.
@@ -101,7 +123,15 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	ROWDATA_FIELD: '__$rowData__',
 	/** @private */
-	ROW_OPER_TOOLBAR_FIELD: '__$rowOperToolbar',
+	ROW_OPER_TOOLBAR_FIELD: '__$rowOperToolbar__',
+	/** @private */
+	ROW_CHECKBOX_FIELD: '__$rowCheckBox__',
+	/** @private */
+	COLNAME_OPER: TCN.OPER,
+	/** @private */
+	COLNAME_CHECK: TCN.CHECK,
+	/** @private */
+	COLNAME_ALL: TCN.ALL,
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument)
 	{
@@ -121,8 +151,12 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 			'dataType': DataType.ARRAY,
 			'setter': function(value)
 			{
-				var a = value? Kekule.ArrayUtils.toArray(value): null;
+				var a = value ? Kekule.ArrayUtils.toArray(value) : null;
 				this.setPropStoreFieldValue('sortFields', a);
+				if (this.getDataPager())
+				{
+					this.getDataPager().setSortFields(a);
+				}
 			}
 		});
 		this.defineProp('sortFunc', {'dataType': DataType.FUNCTION});
@@ -424,18 +458,7 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 				if (colDef.style)
 					cellElem.style.cssText = colDef.style;
 				var wrapperElem = this.doCreateDataTableCellWrapper(doc, cellElem);
-				if (!colDef.isOperCol)
-				{
-					var ops = {
-						'rowData': rowData,
-						'cellKey': key,
-						'cellValue': value,
-						'rowIndex': i,
-						'colIndex': j
-					};
-					this.doCreateDataCellContent(wrapperElem, ops);
-				}
-				else
+				if (colDef.isOperCol)
 				{
 					var ops = {
 						'rowData': rowData,
@@ -445,6 +468,27 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 					};
 					var w = this.doCreateOperCellContent(wrapperElem, ops);
 					rowElem[this.ROW_OPER_TOOLBAR_FIELD] = w;
+				}
+				else if (colDef.isCheckCol)
+				{
+					var ops = {
+						'rowData': rowData,
+						'rowIndex': i,
+						'colIndex': j
+					}
+					var c = this.doCreateCheckCellContent(wrapperElem, ops);
+					rowElem[this.ROW_CHECKBOX_FIELD] = c;
+				}
+				else  // normal cell
+				{
+					var ops = {
+						'rowData': rowData,
+						'cellKey': key,
+						'cellValue': value,
+						'rowIndex': i,
+						'colIndex': j
+					};
+					this.doCreateDataCellContent(wrapperElem, ops);
 				}
 				cellElem.appendChild(wrapperElem);
 				rowElem.appendChild(cellElem);
@@ -476,6 +520,26 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		if (Kekule.ObjUtils.notUnset(options.cellValue))
 			svalue = '' + options.cellValue;
 		DU.setElementText(parentElem, svalue);
+	},
+	/**
+	 * Create content of cell in check column in table.
+	 * Descendants may override this method and must return a created checkable widget.
+	 * @param {HTMLElement} parentElem
+	 * @param {Hash} options A hash that containing essential infos about cell, including:
+	 *   {
+	 *     rowData: Hash,
+	 *     rowIndex: Integer,
+	 *     colIndex: Integer,
+	 *     childWidgetDefinitions: Hash
+	 *   }
+	 * @returns {Kekule.Widget.BaseWidget}
+	 * @private
+	 */
+	doCreateCheckCellContent: function(parentElem, options)
+	{
+		var result = new Kekule.Widget.CheckBox(this);
+		result.appendToElem(parentElem);
+		return result;
 	},
 	/**
 	 * Create content of cell in operation column in table.
@@ -570,6 +634,15 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/**
+	 * Whether data is provided by external dataset or data pager.
+	 * @private
+	 */
+	hasExternalDataProvider: function()
+	{
+		return !!this.getDataPager();
+	},
+
+	/**
 	 * Returns whether the data need to be sorted.
 	 * @private
 	 */
@@ -586,7 +659,7 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		var data = this.getData() || [];
 		if (this.needSort())
 		{
-			var dupData = Kekule.ArrayUtils.clone(data);
+			/*
 			var sortFields = this.getSortFields();
 			var sortFieldInfos = [];
 			for (var i = 0, l = sortFields.length; i < l; ++i)
@@ -605,28 +678,37 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 				}
 				sortFieldInfos.push(info);
 			}
-			var sortFunc = this.getSortFunc() || function(hash1, hash2)
-				{
-					var compareValue = 0;
-					for (var i = 0, l = sortFieldInfos.length; i < l; ++i)
+			*/
+
+			if (!this.hasExternalDataProvider()) // if using datapager, sort by external dataset
+			{
+				var dupData = Kekule.ArrayUtils.clone(data);
+				/*
+				var sortFunc = this.getSortFunc() || function(hash1, hash2)
 					{
-						var field = sortFieldInfos[i].field;
-						var v1 = hash1[field] || '';
-						var v2 = hash2[field] || '';
-						compareValue = (v1 > v2)? 1:
-							(v1 < v2)? -1: 0;
-						if (sortFieldInfos[i].desc)
-							compareValue = -compareValue;
-						if (compareValue !== 0)
-							break;
-					}
-					return compareValue;
-				};
-			dupData.sort(sortFunc);
-			return dupData;
+						var compareValue = 0;
+						for (var i = 0, l = sortFieldInfos.length; i < l; ++i)
+						{
+							var field = sortFieldInfos[i].field;
+							var v1 = hash1[field] || '';
+							var v2 = hash2[field] || '';
+							compareValue = (v1 > v2) ? 1 :
+								(v1 < v2) ? -1 : 0;
+							if (sortFieldInfos[i].desc)
+								compareValue = -compareValue;
+							if (compareValue !== 0)
+								break;
+						}
+						return compareValue;
+					};
+				dupData.sort(sortFunc);
+				*/
+				Kekule.ArrayUtils.sortHashArray(dupData, this.getSortFields());
+				return dupData;
+			}
 		}
-		else
-			return data;
+
+		return data;
 	},
 	/**
 	 * Prepare final data to display.
@@ -637,12 +719,30 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		var result = {};
 		var data = this.sortData();
 		result.data = data;
+
+		var createDefaultCols = function(data)
+		{
+			var fields = [];
+			for (var i = 0, l = data.length; i < l; ++i)
+			{
+				var currFields = Kekule.ObjUtils.getOwnedFieldNames(data[i]);
+				Kekule.ArrayUtils.pushUnique(fields, currFields);
+			}
+			var columns = [];
+			for (var i = 0, l = fields.length; i < l; ++i)
+			{
+				columns.push({'name': fields[i], 'text': fields[i]});
+			}
+			return columns;
+		};
+
 		if (this.getColumns())  // column definition set, use it to decide shown columns
 		{
 			result.columns = Kekule.ArrayUtils.clone(this.getColumns());
 		}
 		else  // else get column heads by data fields
 		{
+			/*
 			var fields = [];
 			for (var i = 0, l = data.length; i < l; ++i)
 			{
@@ -654,6 +754,43 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 			{
 				result.columns.push({'name': fields[i], 'text': fields[i]});
 			}
+			*/
+			result.columns = createDefaultCols(data);
+		}
+		// add default col/cell class names
+		//for (var i = 0, l = result.columns.length; i < l; ++i)
+		var i = 0;
+		while (i < result.columns.length)
+		{
+			var col = result.columns[i];
+
+			if (typeof(col) === 'string')
+				col = {'name': col};
+
+			if (col.name === this.COLNAME_OPER)
+			{
+				result.columns[i] = {'name': '', 'text': '', 'enableInteract': false, 'isOperCol': true,
+					'colClassName': CNS.DATATABLE_OPER_COL, 'className': CNS.DATATABLE_OPER_CELL};
+			}
+			else if (col.name === this.COLNAME_CHECK)
+			{
+				result.columns[i] = {'name': '', 'text': '', 'enableInteract': false, 'isCheckCol': true,
+					'colClassName': CNS.DATATABLE_CHECK_COL, 'className': CNS.DATATABLE_CHECK_CELL};
+			}
+			else if (col.name === this.COLNAME_ALL)
+			{
+				var newCols = createDefaultCols(data);
+				var arg = newCols;
+				arg.unshift(1);
+				arg.unshift(i);
+				result.columns.splice.apply(result.columns, arg);
+			}
+			else
+			{
+				col.colClassName = CNS.DATATABLE_DATA_COL + ' ' + (col.colClassName || '');
+				col.className = CNS.DATATABLE_DATA_CELL + ' ' + (col.className || '');
+			}
+			++i;
 		}
 		// mark column sort states
 		if (this.needSort() && !this.getSortFunc())  // sort by fields
@@ -671,19 +808,14 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 					result.columns[i].sorting = 0;
 			}
 		}
-		// add default col/cell class names
-		for (var i = 0, l = result.columns.length; i < l; ++i)
-		{
-			var col = result.columns[i];
-			col.colClassName = CNS.DATATABLE_DATA_COL + ' ' + (col.colClassName || '');
-			col.className = CNS.DATATABLE_DATA_CELL + ' ' + (col.className || '');
-		}
-		// if necessary, add operation column
+		/*
+		// if necessary, add operation column and check column
 		if (this.getShowOperCol())
 		{
 			result.columns.push({'name': '', 'text': '', 'enableInteract': false, 'isOperCol': true,
 				'colClassName': CNS.DATATABLE_OPER_COL, 'className': CNS.DATATABLE_OPER_CELL});
 		}
+		*/
 		return result;
 	},
 
@@ -778,6 +910,32 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/**
+	 * Returns all data row elements in table.
+	 * @returns {Array}
+	 */
+	getDataRows: function()
+	{
+		var result = [];
+		var tbody = this.getElement().getElementsByTagName('tbody')[0];
+		return tbody && tbody.getElementsByTagName('tr');
+	},
+	/**
+	 * Returns all checked data row elements in table.
+	 * @returns {Array}
+	 */
+	getCheckedRows: function()
+	{
+		var result = [];
+		var rows = this.getDataRows();
+		for (var i = 0, l = rows.length; i < l; ++i)
+		{
+			if (this.isRowChecked(rows[i]))
+				result.push(rows[i]);
+		}
+		return result;
+	},
+
+	/**
 	 * Returns data associated with a row element.
 	 * @param {HTMLElement} rowElem
 	 * @returns {Variant}
@@ -785,6 +943,27 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	getRowData: function(rowElem)
 	{
 		return rowElem? rowElem[this.ROWDATA_FIELD]: null;
+	},
+	/**
+	 * Returns whether check box of a row is checked.
+	 * @param {HTMLElement} rowElem
+	 * @returns {Bool}
+	 */
+	isRowChecked: function(rowElem)
+	{
+		var c = this.getRowCheckBox(rowElem);
+		return c && c.getChecked && c.getChecked();
+	},
+
+	/**
+	 * Returns check box inside row.
+	 * @param {HTMLElement} rowElem
+	 * @returns {Kekule.Widget.BaseWidget}
+	 * @private
+	 */
+	getRowCheckBox: function(rowElem)
+	{
+		return rowElem && rowElem[this.ROW_CHECKBOX_FIELD];
 	},
 	/**
 	 * Returns operation toolbar inside row.

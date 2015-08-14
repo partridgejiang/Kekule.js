@@ -27,6 +27,8 @@
  *
  * @property {Bool} enableCache Whether previous fetched data can be cached for further use.
  * @property {Int} defaultTimeout Default timeout milliseconds when fetching data. 0 means never timeout.
+ * @property {Array} sortFields Field names to sort data. If field name is prefixed with '!', means sort in desc order.
+ *   e.g. ['id', '!name'].
  */
 /**
  * Invoked when record count in dataset is changed
@@ -34,11 +36,19 @@
  * @name Kekule.Widget.BaseDataSet#totalCountChange
  * @event
  */
+/**
+ * Invoked when data in dataset is changed
+ *   event param of it has field: {totalCount}
+ * @name Kekule.Widget.BaseDataSet#dataChange
+ * @event
+ */
 Kekule.Widget.BaseDataSet = Class.create(ObjectEx,
 /** @lends Kekule.Widget.BaseDataSet# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.BaseDataSet',
+	/** @private */
+	PREFIX_SORT_DESC: '!',
 	/** @private */
 	initProperties: function()
 	{
@@ -53,6 +63,16 @@ Kekule.Widget.BaseDataSet = Class.create(ObjectEx,
 			}
 		});
 		this.defineProp('defaultTimeout', {'dataType': DataType.INT});
+
+		this.defineProp('sortFields', {
+			'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				var a = value? Kekule.ArrayUtils.toArray(value): null;
+				this.setPropStoreFieldValue('sortFields', a);
+				this.sortFieldsChanged(a);
+			}
+		});
 
 		// private
 		this.defineProp('cache', {'dataType': DataType.ARRAY});
@@ -71,6 +91,61 @@ Kekule.Widget.BaseDataSet = Class.create(ObjectEx,
 		this.clearCache();
 		this.setCache(null);
 		$super();
+	},
+
+	/**
+	 * Notify the data in dataset has been changed.
+	 * @private
+	 */
+	dataChanged: function()
+	{
+		this.clearCache();
+		this.invokeEvent('dataChange');
+	},
+
+	/* @private */
+	/*
+	getSortFieldInfo: function(sortFields)
+	{
+		var sortFieldInfos = [];
+		for (var i = 0, l = sortFields.length; i < l; ++i)
+		{
+			var info = {};
+			var field = sortFields[i] || '';
+			if (field.startsWith(this.PREFIX_SORT_DESC))  // sort desc
+			{
+				info.field = field.substr(1);
+				info.desc = true;
+			}
+			else
+			{
+				info.field = field;
+				info.desc = false;
+			}
+			sortFieldInfos.push(info);
+		}
+		return sortFieldInfos;
+	},
+	*/
+	/**
+	 * Called when sort fields is changed.
+	 * @param {Array} newFields
+	 * @private
+	 */
+	sortFieldsChanged: function(newFields)
+	{
+		// usually sort field change caused cache to invalidate
+		this.clearCache();
+		this.doSortFieldsChanged(newFields);
+	},
+	/**
+	 * Do actual work of sorting data.
+	 * Descendants need to override this method.
+	 * @param {Array} newFields
+	 */
+	doSortFieldsChanged: function(newFields)
+	{
+		// do nothing here
 	},
 
 	/**
@@ -299,13 +374,56 @@ Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('data', {'dataType': DataType.ARRAY});
+		this.defineProp('data', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('data', value);
+				// if has sort fields, sort data first
+				var sortFields = this.getSortFields();
+				if (sortFields)
+					this.doSortFieldsChanged(sortFields);
+				this.dataChanged();
+			}
+		});
 	},
 	/** @ignore */
 	getCacheAvailable: function()
 	{
 		// as all data are in data property, no need to cache.
-		return !false;  // debug
+		return false;
+	},
+	/** @ignore */
+	doSortFieldsChanged: function(newFields)
+	{
+		/*
+		var sortFieldInfos = this.getSortFieldInfo(newFields);
+		var sortFunc = function(hash1, hash2)
+			{
+				var compareValue = 0;
+				for (var i = 0, l = sortFieldInfos.length; i < l; ++i)
+				{
+					var field = sortFieldInfos[i].field;
+					var v1 = hash1[field] || '';
+					var v2 = hash2[field] || '';
+					compareValue = (v1 > v2)? 1:
+						(v1 < v2)? -1: 0;
+					if (sortFieldInfos[i].desc)
+						compareValue = -compareValue;
+					if (compareValue !== 0)
+						break;
+				}
+				return compareValue;
+			};
+		var data = this.getData() || [];
+		data.sort(sortFunc);
+		this.dataChanged();
+		return this;
+		*/
+
+		var data = this.getData() || [];
+		Kekule.ArrayUtils.sortHashArray(data, newFields);
+		this.dataChanged();
+		return this;
 	},
 	/** @ignore */
 	doGetTotalCount: function()
@@ -324,6 +442,7 @@ Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
 		}
 
 		// debug
+		/*
 		var done = function()
 		{
 			//if ((fromIndex / count) % 2)
@@ -332,8 +451,9 @@ Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
 			//	errCallback('A Error');
 		};
 		setTimeout(done, 500);
+		*/
 
-		//callback(result);
+		callback(result);
 	}
 });
 
@@ -348,6 +468,7 @@ Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
  * @property {Int} pageSize Item count in one page.
  * @property {Int} currPageIndex Index of current page.
  * @property {Array} currPageData Cache data of current page.
+ * @property {Array} sortFields Field names to sort data in dataset.
  */
 /**
  * Invoked when data of new page is starting to retrieve.
@@ -412,6 +533,23 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 		});
 		this.defineProp('currPageIndex', {'dataType': DataType.INT});
 		this.defineProp('currPageData', {'dataType': DataType.ARRAY});
+
+		this.defineProp('sortFields', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getDataSet() && this.getDataSet().getSortFields();
+			},
+			'setter': function(value)
+			{
+				if (this.getDataSet())
+				{
+					this.getDataSet().setSortFields(value);
+					//this.sortFieldsChanged();
+				}
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -425,18 +563,42 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 	{
 		if (oldDataSet)
 		{
+			oldDataSet.RemoveEventListener('dataChange', this.reactDataSetDataChange, this);
 			oldDataSet.RemoveEventListener('totalCountChange', this.reactDataSetTotalCountChange, this);
 		}
 		if (newDataSet)
 		{
+			newDataSet.addEventListener('dataChange', this.reactDataSetDataChange, this);
 			newDataSet.addEventListener('totalCountChange', this.reactDataSetTotalCountChange, this);
 		}
 	},
+	/** @private */
+	reactDataSetDataChange: function(e)
+	{
+		this.dataChanged();
+	},
+	/**
+	 * Called when data in dataset has been changed, need to refetch data.
+	 * @private
+	 */
+	dataChanged: function()
+	{
+		this.switchToPage(this.getCurrPageIndex() || 0);
+	},
+
 	/** @private */
 	reactDataSetTotalCountChange: function(e)
 	{
 		this.pageCountChanged(this.getPageCount());
 	},
+
+	/* @private */
+	/*
+	sortFieldsChanged: function()
+	{
+		//this.switchToPage(this.getCurrPageIndex() || 0);
+	},
+	*/
 
 	/**
 	 * Returns total page count.

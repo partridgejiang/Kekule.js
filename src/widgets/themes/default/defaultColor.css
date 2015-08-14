@@ -100,6 +100,7 @@
 .K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content
 {
     display: inline-block;
+	background-repeat: no-repeat;
 }
 .K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content
 {

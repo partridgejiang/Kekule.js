@@ -696,6 +696,48 @@ Kekule.ArrayUtils = {
 			a.sort(function(a, b) { return a - b;} );
 			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) + 1]) / 2;
 		}
+	},
+
+	sortHashArray: function(arr, sortFields)
+	{
+		var PREFIX_SORT_DESC = '!';
+		var sortFieldInfos = [];
+		for (var i = 0, l = sortFields.length; i < l; ++i)
+		{
+			var info = {};
+			var field = sortFields[i] || '';
+			if (field.startsWith(PREFIX_SORT_DESC))  // sort desc
+			{
+				info.field = field.substr(1);
+				info.desc = true;
+			}
+			else
+			{
+				info.field = field;
+				info.desc = false;
+			}
+			sortFieldInfos.push(info);
+		}
+
+		var sortFunc = function(hash1, hash2)
+		{
+			var compareValue = 0;
+			for (var i = 0, l = sortFieldInfos.length; i < l; ++i)
+			{
+				var field = sortFieldInfos[i].field;
+				var v1 = hash1[field] || '';
+				var v2 = hash2[field] || '';
+				compareValue = (v1 > v2)? 1:
+					(v1 < v2)? -1: 0;
+				if (sortFieldInfos[i].desc)
+					compareValue = -compareValue;
+				if (compareValue !== 0)
+					break;
+			}
+			return compareValue;
+		};
+		arr.sort(sortFunc);
+		return arr;
 	}
 };
 
