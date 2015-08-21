@@ -14,7 +14,7 @@
 .K-MsgPanel.K-Msg-Info .K-MsgPanel-Content{background-color:#ebf5ff;color:#000}
 .K-MsgPanel.K-Msg-Warning .K-MsgPanel-Content{background-color:#ffffc8;color:#000}
 .K-MsgPanel.K-Msg-Error .K-MsgPanel-Content{background-color:#ffebeb;color:#f00}
-.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block}
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block;background-repeat:no-repeat}
 .K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px 0}
 .K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -17px}
 .K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -34px}
@@ -106,4 +106,4 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px 0}
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px -25px}
 .K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-125px 0}
-#CssGaga{content:"150715193823,swt,333"}
+#CssGaga{content:"150821213114,swt,333"}

@@ -49,7 +49,8 @@ DU.newRootCategory('algorithm', 'Algorithm', 'Demos about molecule algorithm', [
 ]);
 DU.newRootCategory('widget', 'Common Widget', 'Demos about common widgets such as button, textbox, etc.', [
 	DU.newConcreteDemo('autoLaunch', 'Widget Auto-Launching', 'Demonstrates of embeddeding widgets in HTML page and launching them automatically.', 'widget/autoLaunch.html'),
-	DU.newConcreteDemo('commonWidgets', 'Common Widgets', 'Demonstrates general-use widgets like button, check box, tab view and so on.', 'widget/commonWidgets.html')
+	DU.newConcreteDemo('commonWidgets', 'Common Widgets', 'Demonstrates general-use widgets like button, check box, tab view and so on.', 'widget/commonWidgets.html'),
+	DU.newConcreteDemo('dataTable', 'Data Table', 'Demonstrates the usage of data table widget to display chemical data..', 'dataTable/dataTable.html')
 ]);
 DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistry', [
 	DU.newConcreteDemo('periodicRTable', 'Periodic Table', 'Demonstrates the use of periodic table widget.', 'periodicTable/periodicTable.html'),

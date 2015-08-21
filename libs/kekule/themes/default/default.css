@@ -152,7 +152,7 @@ table.K-Widget{display:table}
 .K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Description{line-height:1.2em;margin-left:.5em;white-space:normal}
 .K-DataTable table{display:block;border-collapse:collapse}
 .K-DataTable td,.K-DataTable th{border:1px solid;padding:0}
-.K-DataTable th .K-DataTable-HeadCellInteractable{cursor:pointer}
+.K-DataTable th.K-DataTable-HeadCellInteractable{cursor:pointer}
 .K-DataTable th .K-DataTable-SortMark{display:inline-block;vertical-align:middle;padding:0}
 .K-DataTable .K-DataTable-CellWrapper{display:inline-block;margin:.4em}
 .K-PageNavigator.K-Layout-H{height:2.5em}
@@ -177,4 +177,4 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"150715182251,swt,333"}
+#CssGaga{content:"150821213111,swt,333"}
