@@ -81,7 +81,7 @@ var TCN = Kekule.Widget.DataTableColNames;
  * @property {Array} columns Column definitions. Each item is a hash that defines the aspects of column, e.g.:
  *   [
  *     {'name': 'fieldName', 'text': 'Caption of column', 'hint': 'hint of column head',
- *     	'enableInteract': trueOrFalse,
+ *     	'disableInteract': trueOrFalse,
  *      'className': 'HtmlClassOfEachColumnCell', 'style': 'CSSInlineStyleOfEachColumnCell',
  *      'colClassName': 'HtmlClassOfColElem', 'colStyle': 'CSSInlineStyleOfColElem'}
  *   ]
@@ -397,7 +397,7 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		var interactable = Kekule.ObjUtils.notUnset(colDef.disableInteract)? !colDef.disableInteract: headInteractable;
 		if (interactable)
 		{
-			EU.addClass(wrapperElem, CNS.DATATABLE_HEADCELL_INTERACTABLE);
+			EU.addClass(/*wrapperElem*/elem, CNS.DATATABLE_HEADCELL_INTERACTABLE);
 		}
 
 		DU.setElementText(wrapperElem, colDef.text || colDef.name);
@@ -769,12 +769,12 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 
 			if (col.name === this.COLNAME_OPER)
 			{
-				result.columns[i] = {'name': '', 'text': '', 'enableInteract': false, 'isOperCol': true,
+				result.columns[i] = {'name': '', 'text': '', 'disableInteract': true, 'isOperCol': true,
 					'colClassName': CNS.DATATABLE_OPER_COL, 'className': CNS.DATATABLE_OPER_CELL};
 			}
 			else if (col.name === this.COLNAME_CHECK)
 			{
-				result.columns[i] = {'name': '', 'text': '', 'enableInteract': false, 'isCheckCol': true,
+				result.columns[i] = {'name': '', 'text': '', 'disableInteract': true, 'isCheckCol': true,
 					'colClassName': CNS.DATATABLE_CHECK_COL, 'className': CNS.DATATABLE_CHECK_CELL};
 			}
 			else if (col.name === this.COLNAME_ALL)
@@ -1284,7 +1284,7 @@ Kekule.Widget.PageNavigator = Class.create(Kekule.Widget.ButtonGroup,
 	/** @private */
 	getDefaultComponents: function()
 	{
-		return [PNC.FIRST, PNC.PREV, PNC.PAGEINPUT, PNC.PAGESELECTOR, PNC.NEXT, PNC.LAST];
+		return [PNC.FIRST, PNC.PREV, /*PNC.PAGEINPUT,*/ PNC.PAGESELECTOR, PNC.NEXT, PNC.LAST];
 	},
 	/** @private */
 	recreateChildContent: function()

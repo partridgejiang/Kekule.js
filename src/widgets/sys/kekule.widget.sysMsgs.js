@@ -117,7 +117,10 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.ExceptionHandler);
 
 // register exception handler
-Kekule.exceptionHandler = Kekule.Widget.ExceptionHandler.getInstance();
+Kekule.X.domReady(function()
+{
+	Kekule.exceptionHandler = Kekule.Widget.ExceptionHandler.getInstance();
+});
 
 
 })();

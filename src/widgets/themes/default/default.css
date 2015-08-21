@@ -1156,7 +1156,7 @@ table.K-Widget
     border: 1px solid;
     padding: 0;
 }
-.K-DataTable th .K-DataTable-HeadCellInteractable
+.K-DataTable th.K-DataTable-HeadCellInteractable
 {
     cursor: pointer;
 }

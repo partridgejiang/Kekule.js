@@ -2861,7 +2861,8 @@ ObjectEx = Class.create(
     var oldMethod = this[methodName];
     this[methodName] = function _delegator_()
     {
-      var args = [oldMethod.bind(self)].concat(arguments);
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift(oldMethod.bind(self));
       return newMethod.apply(self, args);
     };
     return this;
