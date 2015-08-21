@@ -6,12 +6,19 @@
   <script src="../../src/kekule.js?min=false"></script>
   <script>
     var obj = new ObjectEx();
+    /*
     obj.getClassName = function()
     {
       console.log('injected');
       return obj.getPrototype().getClassName();
     }
-    console.log(obj.getClassName());
+    */
+    obj.overwriteMethod('getPropValue', function($old, propName){
+      console.log('injected');
+      console.log(arguments);
+      return $old();
+    });
+    console.log(obj.getPropValue('bubbleEvent'));
   </script>
 </head>
 <body>

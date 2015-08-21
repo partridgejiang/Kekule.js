@@ -2841,6 +2841,32 @@ ObjectEx = Class.create(
   	event.cancelBubble = true;
   },
 
+  /**
+   * Overwrite method of object instance (rather than prototype) with a new one.
+   * @param {String} methodName
+   * @param {Func} newMethod New function.
+   *   The arguments of function should be same as overwritten one plus a extra leading param stores the old method.
+   *   e.g. Overwrite getPropValue method: <br />
+   *     var obj = new ObjectEx(); <br />
+   *     obj.overwriteMethod('getPropValue', function($old, propName) <br />
+   *       { <br />
+   *         console.log('new method');
+   *         return $old(propName);
+   *       });
+   * @returns {ObjectEx}
+   */
+  overwriteMethod: function(methodName, newMethod)
+  {
+    var self = this;
+    var oldMethod = this[methodName];
+    this[methodName] = function _delegator_()
+    {
+      var args = [oldMethod.bind(self)].concat(arguments);
+      return newMethod.apply(self, args);
+    };
+    return this;
+  },
+
 	// clone and assign services
 	/**
 	 * Assign data in srcObj to this object.
