@@ -1215,7 +1215,7 @@ Kekule.UrlUtils = {
 	 */
 	analysisSearch: function(url, returnHash)
 	{
-		var s = Kekule.UrlUtils.extractSearch(url);
+		var s = Kekule.UrlUtils.extractSearch(url) || '';
 		s = s.substr(1);  // eliminate "?"
 		var pairs = s.split(Kekule.UrlUtils.SEARCH_PAIR_DELIMITER);
 		var result = returnHash? {}: [];

@@ -295,6 +295,12 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		//this.getViewer().resized();
 		this.adjustChildrenSizes();
 	},
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		$super(isShown);
+		this.adjustChildrenSizes();
+	},
 
 	/** @ignore */
 	getResizerElement: function()
@@ -351,6 +357,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		var tabs = this.getTabs();
 		var tabRect = tabs && tabs.getBoundingClientRect();
 		var h = tabRect.top - toolbarRect.bottom;
+		//console.log(selfRect.height, toolbarRect.height, tabRect.height, h);
 		this.getClientPanel().setHeight(h + 'px');
 		this.getViewer().resized();
 		//var clientRect = this.getClientPanel().getBoundingClientRect();

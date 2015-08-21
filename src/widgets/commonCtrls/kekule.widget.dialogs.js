@@ -196,6 +196,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.setPropStoreFieldValue('btnPanelElem', elem);
 		result.push(elem);
 
+		this.buttonsChanged();  // create buttons if essential
+
 		return result;
 	},
 

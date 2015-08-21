@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Method Override</title>
+  <script src="../../src/kekule.js?min=false"></script>
+  <script>
+    var obj = new ObjectEx();
+    obj.getClassName = function()
+    {
+      console.log('injected');
+      return obj.getPrototype().getClassName();
+    }
+    console.log(obj.getClassName());
+  </script>
+</head>
+<body>
+
+</body>
+</html>

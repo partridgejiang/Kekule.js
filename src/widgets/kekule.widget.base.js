@@ -3261,6 +3261,7 @@ Kekule.Widget.getWidgetOnElem = Kekule.Widget.Utils.getWidgetOnElem;
  * @function
  */
 Kekule.Widget.getWidgetById = Kekule.Widget.Utils.getWidgetById;
+Kekule.$W = Kekule.Widget.Utils.getWidgetById;
 /**
  * Returns widget the element belonged to.
  * @param {HTMLElement} element

@@ -7,6 +7,7 @@
 /*
  * requires /lan/classes.js
  * require /core/kekule.root.js
+ * require /utils/kekule.utils.js
  */
 
 (function ()
@@ -1082,6 +1083,16 @@ X.Ajax = {
 		return xmlhttp;
 	},
 
+	preparePostData: function(data)
+	{
+		var result = data;
+		if (typeof(data) === 'object')  // HASH
+		{
+			result = Kekule.UrlUtils.generateSearchString(data);
+		}
+		return result;
+	},
+
 	/**
 	 * Send an AJAX request to URL.
 	 * @param {String} url
@@ -1134,7 +1145,7 @@ X.Ajax = {
 				callback(req.response || req.responseText, req, true);
 			};
 		if (req.readyState == 4) return;
-		req.send(postData);
+		req.send(X.Ajax.preparePostData(postData));
 	},
 	/**
 	 * Retrieve response MIME type of an AJAX request object.

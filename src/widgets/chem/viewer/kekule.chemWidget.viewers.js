@@ -240,7 +240,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.defineProp('enableEditFromVoid', {'dataType': DataType.BOOL});
 		this.defineProp('modalEdit', {'dataType': DataType.BOOL});
 
-		this.defineProp('toolButtons', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
+		this.defineProp('toolButtons', {'dataType': DataType.ARRAY, 'serializable': !false, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
 				var result = this.getPropStoreFieldValue('toolButtons');
