@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Menu Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    function addDynamic()
+    {
+      var menu = Kekule.Widget.getWidgetById('subMenu1');
+      var item = new Kekule.Widget.MenuItem(document, 'Dyn Item');
+      menu.appendMenuItem(item);
+      var subMenu = item.createSubMenu();
+      subMenu.appendMenuItem(new Kekule.Widget.MenuItem(document, 'Dyn Sub Item'));
+      subMenu.appendMenuItem(new Kekule.Widget.MenuItem(document, 'Dyn Sub Item'));
+    }
+    function init()
+    {
+      Kekule.Widget.getWidgetById('menuItem1').addEventListener('execute', addDynamic);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+
+<div id="menus" style="height: 300px">
+  <ul id="menu1" data-widget="Kekule.Widget.Menu" data-layout="1">
+    <li id="menuItem1">Item1</li>
+    <li>Item2
+      <ul id="subMenu1">
+        <li>Item2-1</li>
+        <li>Item2-2</li>
+        <li><span style="display: block;">Item2-3</span>
+          <ul>
+            <li>item2-3-1</li>
+            <li>item2-3-2</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li>Item3
+      <ul>
+        <li>Item3-1</li>
+        <li>Item3-2</li>
+        <li>Item3-3</li>
+      </ul>
+    </li>
+    <li>Item4</li>
+  </ul>
+  <ul id="menu2" data-widget="Kekule.Widget.Menu" data-layout="2">
+    <li id="menuItem2">Item1</li>
+    <li>Item2
+      <ul>
+        <li>Item2-1</li>
+        <li>Item2-2</li>
+        <li>Item2-3</span>
+          <ul>
+            <li>item2-3-1</li>
+            <li>item2-3-2</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li>Item3
+      <ul>
+        <li>Item3-1</li>
+        <li>Item3-2</li>
+        <li>Item3-3</li>
+      </ul>
+    </li>
+    <li>Item4</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -247,6 +247,19 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     height: 16px;
 }
 
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker
+{
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    top: 50%;
+    margin-top: -8px;
+    background-repeat: no-repeat;
+    /*background-position: right center;*/
+    background-image: url("images/slice/icons16/caratRight.png");
+}
+
 .K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons16/fontSizeInc.png");
