@@ -19,6 +19,8 @@
     function init()
     {
       Kekule.Widget.getWidgetById('menuItem1').addEventListener('execute', addDynamic);
+      var menu2 = Kekule.Widget.getWidgetById('menu2')
+      Kekule.Widget.getWidgetById('btn1').setDropDownWidget(menu2);
     }
     Kekule.X.domReady(init);
   </script>
@@ -26,16 +28,16 @@
 <body>
 
 <div id="menus" style="height: 300px">
-  <ul id="menu1" data-widget="Kekule.Widget.Menu" data-layout="1">
-    <li id="menuItem1">Item1</li>
+  <ul id="menu1" data-widget="Kekule.Widget.MenuBar" data-layout="1">
+    <li id="menuItem1"  data-auto-check="true">Item1</li>
     <li>Item2
       <ul id="subMenu1">
-        <li>Item2-1</li>
+        <li data-auto-check="true">Item2-1</li>
         <li>Item2-2</li>
         <li><span style="display: block;">Item2-3</span>
           <ul>
-            <li>item2-3-1</li>
-            <li>item2-3-2</li>
+            <li data-auto-check="true">item2-3-1</li>
+            <li data-auto-check="true">item2-3-2</li>
           </ul>
         </li>
       </ul>
@@ -72,6 +74,8 @@
     </li>
     <li>Item4</li>
   </ul>
+
+  <button id="btn1" data-widget="Kekule.Widget.DropDownButton">Drop Button</button>
 </div>
 
 </body>

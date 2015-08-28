@@ -27,14 +27,27 @@ var CNS = Kekule.Widget.HtmlClassNames;
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	MENU: 'K-Menu',
+	POPUPMENU: 'K-PopupMenu',
+	MENUBAR: 'K-MenuBar',
 	MENUITEM: 'K-MenuItem',
-	SUBMENU_MARKER: 'K-SubMenu-Marker'
+	SUBMENU_MARKER: 'K-SubMenu-Marker',
+	CHECKMENU_MARKER: 'K-CheckMenu-Marker'
 });
 
 /**
  * Menu item in menu widget.
  * @class
  * @augments Kekule.Widget.BaseWidget
+ *
+ * @property {String} text Text on menu.
+ * @property {Bool} checked Whether the menu item is checked.
+ * @property {Bool} autoCheck If true, the menu item will be automatically checked/unchecked when clicking on it.
+ */
+/**
+ * Invoked when menu item is checked.
+ *   event param of it has field: {widget}
+ * @name Kekule.Widget.MenuItem#check
+ * @event
  */
 Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 /** @lends Kekule.Widget.MenuItem# */
@@ -53,14 +66,26 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 		if (text)
 			this.setText(text);
 		this._subMenuMarker = null;
+		this._checkMarker = null;
 	},
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('text', {'dataType': DataType.STRING, 'serializable': false,
+		this.defineProp('text', {'dataType': DataType.STRING,
 			'getter': function() { return Kekule.HtmlElementUtils.getInnerText(this.getElement()); },
 			'setter': function(value) { this.changeContentText(value); }
 		});
+		this.defineProp('checked', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (this.getPropStoreFieldValue('checked') !== value)
+				{
+					this.setPropStoreFieldValue('checked', value);
+					this.checkChanged();
+				}
+			}
+		});
+		this.defineProp('autoCheck', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -107,6 +132,42 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 			this.bindSubMenu(elem);
 	},
 
+	/** @private */
+	checkChanged: function()
+	{
+		var checked = this.getChecked();
+		if (checked)
+		{
+			this._createCheckMarker();
+			this.addClassName(CNS.STATE_CHECKED);
+			this.invokeEvent('check');
+		}
+		else
+			this.removeClassName(CNS.STATE_CHECKED);
+	},
+	/** @private */
+	_createCheckMarker: function()
+	{
+		var result = this._checkMarker;
+		if (!result)
+		{
+			var result = this.getDocument().createElement('span');
+			result.className = CNS.CHECKMENU_MARKER;
+			this.getElement().appendChild(result);
+			this._checkMarker = result;
+		}
+		return result;
+	},
+	/** @private */
+	_removeCheckMarker: function()
+	{
+		if (this._checkMarker)
+		{
+			this._checkMarker.parentNode.removeChild(this._checkMarker);
+			this._checkMarker = null;
+		}
+	},
+
 	/** @ignore */
 	childWidgetAdded: function($super, widget)
 	{
@@ -129,7 +190,7 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 		var tagName = elem.tagName.toLowerCase();
 		if (tagName === 'ul' || tagName === 'ol')
 		{
-			var result = new Kekule.Widget.Menu(elem);
+			var result = new Kekule.Widget.PopupMenu(elem);
 			this.addSubMenu(result);
 			return result;
 		}
@@ -275,13 +336,43 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 			if (this.getIsActive())  // meet a active-deactive event, clicked or key pressed on menu
 			{
 				this.execute(e);
+				if (this.getAutoCheck())
+					this.setChecked(!this.getChecked());
+				this.notifyDeactivated();
 			}
+		}
+	},
+	/**
+	 * Notify parent menu that this item is activated (executed)
+	 * and the menu may be hidden now.
+	 * @private
+	 */
+	notifyDeactivated: function()
+	{
+		var p = this.getParent();
+		if (p && p.childDeactivated)
+		{
+			p.childDeactivated(this);
+		}
+	},
+	/**
+	 * Be notified by child that child has been activated.
+	 * @param {Kekule.Widget.BaseWidget} childWidget
+	 * @private
+	 */
+	childDeactivated: function(childWidget)
+	{
+		var p = this.getParent();
+		if (p && p.childDeactivated)
+		{
+			p.childDeactivated(this);
 		}
 	}
 });
 
 /**
- * An menu widget.
+ * Base class of menu. Do not use it directly. Using {@link Kekule.Widget.PopupMenu} or
+ * {@link Kekule.Widget.MenuBar} instead.
  * @class
  * @augments Kekule.Widget.BaseWidget
  *
@@ -411,6 +502,101 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
 	{
 		menuItem.appendToWidget(this);
 		return this;
+	},
+	/**
+	 * Remove a menu item.
+	 * @param {Kekule.Widget.MenuItem} menuItem
+	 * @param {Bool} doNotFinalize
+	 */
+	removeMenuItem: function(menuItem, doNotFinalize)
+	{
+		menuItem.setParent(null);
+		if (!doNotFinalize)
+			menuItem.finalize();
+	},
+	/**
+	 * Remove all items in menu.
+	 * @param {Bool} doNotFinalize If set to true, the child menu items will not be finalized.
+	 */
+	clearMenuItems: function(doNotFinalize)
+	{
+		var children = this.getChildWidgets();
+		for (var i = children.length - 1; i >= 0; --i)
+		{
+			var child = children[i];
+			this.removeMenuItem(child, doNotFinalize);
+		}
+	},
+	/**
+	 * Returns whether current menu is the top level one.
+	 * @returns {Bool}
+	 */
+	isTopLevel: function()
+	{
+		var p = this.getParent();
+		return !p ||
+			!((p instanceof Kekule.Widget.MenuItem) || (p instanceof Kekule.Widget.Menu));
+	},
+
+	/**
+	 * Be notified by child that child has been activated.
+	 * @param {Kekule.Widget.BaseWidget} childWidget
+	 * @private
+	 */
+	childDeactivated: function(childWidget)
+	{
+		var p = this.getParent();
+		if (p)
+		{
+			if (p.childDeactivated)
+			{
+				p.childDeactivated(this);
+			}
+		}
+	}
+});
+
+/**
+ * An popup menu widget.
+ * @class
+ * @augments Kekule.Widget.Menu
+ */
+Kekule.Widget.PopupMenu = Class.create(Kekule.Widget.Menu,
+/** @lends Kekule.Widget.Menu# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Menu',
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setLayout(Kekule.Widget.Layout.VERTICAL);
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CNS.POPUPMENU;
+	},
+	/** @ignore */
+	childDeactivated: function(childWidget)
+	{
+		//this.hide();
+	}
+});
+
+/**
+ * Menu bar (main manu) widget.
+ * This widget is usually the top level menu and will not hide automatically.
+ * @class
+ * @augments Kekule.Widget.Menu
+ */
+Kekule.Widget.MenuBar = Class.create(Kekule.Widget.Menu,
+/** @lends Kekule.Widget.MenuBar# */
+{
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CNS.MENUBAR;
 	}
 });
 

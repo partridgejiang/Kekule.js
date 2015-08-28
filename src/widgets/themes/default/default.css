@@ -213,12 +213,20 @@ table.K-Widget
     line-height: 1.5;
     white-space: nowrap;
 }
-.K-Menu .K-MenuItem .K-SubMenu-Marker
+.K-Menu .K-MenuItem .K-SubMenu-Marker,
+.K-Menu .K-MenuItem .K-CheckMenu-Marker
 {
     display: inline-block;
     position: absolute;
+}
+.K-Menu .K-MenuItem .K-SubMenu-Marker
+{
     left: auto;
     right: 0.3em;
+}
+.K-Menu .K-MenuItem .K-CheckMenu-Marker
+{
+    left: 0.3em;
 }
 
 .K-Menu.K-Layout-H>.K-MenuItem  /* horizon menu bar item */

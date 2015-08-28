@@ -65,6 +65,7 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_FOCUSED: 'K-State-Focused',
 
 	STATE_SELECTED: 'K-State-Selected',
+	STATE_CHECKED: 'K-State-Checked',
 
 	// show type
 	SHOW_POPUP: 'K-Show-Popup',
