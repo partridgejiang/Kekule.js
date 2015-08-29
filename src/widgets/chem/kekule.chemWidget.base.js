@@ -26,6 +26,8 @@ Kekule.ChemWidget.AbstractWidget = Kekule.Widget.BaseWidget;
  */
 Kekule.ChemWidget.ComponentWidgetNames =
 {
+	menu: 'menu',
+
 	newDoc: 'newDoc',
 	clearObjs: 'clearObjs',
 	loadFile: 'loadFile',
@@ -40,6 +42,12 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	rotateZ: 'rotateZ',
 	reset: 'reset',
 	molDisplayType: 'molDisplayType',
+	molDisplayTypeCondensed: 'molDisplayTypeCondensed',
+	molDisplayTypeSkeletal: 'molDisplayTypeSkeletal',
+	molDisplayTypeWire: 'molDisplayTypeWire',
+	molDisplayTypeSticks: 'molDisplayTypeSticks',
+	molDisplayTypeBallStick: 'molDisplayTypeBallStick',
+	molDisplayTypeSpaceFill: 'molDisplayTypeSpaceFill',
 	molHideHydrogens: 'molHideHydrogens',
 	openEditor: 'openEditor',
 	config: 'config',

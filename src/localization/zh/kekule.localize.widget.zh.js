@@ -1,6 +1,6 @@
 Kekule.Localization.setCurrModule("widget");
 
-Kekule.Localization.addResource("zh", "WidgetTexts", 
+Kekule.Localization.addResource("zh", "WidgetTexts",
 {
 	"CAPTION_OK": "确定",
 	"CAPTION_CANCEL": "取消",
@@ -51,11 +51,11 @@ Kekule.Localization.addResource("zh", "WidgetTexts",
 	"HINT_CONFIG": "修改设置"
 });
 
-Kekule.Localization.addResource("zh", "ChemWidgetTexts", 
+Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 {
 	"CAPTION_CLEAROBJS": "清除",
 	"CAPTION_LOADFILE": "载入…",
-	"CAPTION_LOADDATA": "载入数据",
+	"CAPTION_LOADDATA": "载入…",
 	"CAPTION_SAVEFILE": "保存…",
 	"CAPTION_ZOOMIN": "放大",
 	"CAPTION_ZOOMOUT": "缩小",
@@ -258,7 +258,7 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 	"S_VALUE_DEFAULT": "(缺省)"
 });
 
-Kekule.Localization.addResource("zh", "ErrorMsg", 
+Kekule.Localization.addResource("zh", "ErrorMsg",
 {
 	"WIDGET_CLASS_NOT_FOUND": "控件类不存在",
 	"WIDGET_CAN_NOT_BIND_TO_ELEM": "控件{0}无法绑定到HTML元素<{1}>",
