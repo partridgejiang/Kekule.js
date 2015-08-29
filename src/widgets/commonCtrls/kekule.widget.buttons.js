@@ -371,6 +371,7 @@ Kekule.Widget.Button.Kinds = {
  * @augments Kekule.Widget.Button
  *
  * @property {Bool} checked Whether the button has been pressed down.
+ * @property {Bool} autoCheck If true, the button will be automatically checked/unchecked when clicking on it.
  */
 /**
  * Invoked button is checked.
@@ -402,6 +403,13 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 					}
 				}
 		});
+		this.defineProp('autoCheck', {'dataType': DataType.BOOL});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setAutoCheck(true);
 	},
 
 	/**
@@ -427,7 +435,8 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 	{
 		//$super(invokerHtmlEvent);
 		$super(e);
-		this._doCheckOnSelf();
+		if (this.getAutoCheck())
+			this._doCheckOnSelf();
 	},
 	/** @private */
 	_doCheckOnSelf: function()
