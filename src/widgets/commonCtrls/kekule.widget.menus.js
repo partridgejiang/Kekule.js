@@ -30,6 +30,8 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	POPUPMENU: 'K-PopupMenu',
 	MENUBAR: 'K-MenuBar',
 	MENUITEM: 'K-MenuItem',
+	MENUITEM_NORMAL: 'K-MenuItem-Normal',
+	MENUITEM_SEPARATOR: 'K-MenuItem-Separator',
 	SUBMENU_MARKER: 'K-SubMenu-Marker',
 	CHECKMENU_MARKER: 'K-CheckMenu-Marker'
 });
@@ -42,6 +44,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * @property {String} text Text on menu.
  * @property {Bool} checked Whether the menu item is checked.
  * @property {Bool} autoCheck If true, the menu item will be automatically checked/unchecked when clicking on it.
+ * @property {Bool} isSeparator If true, the menu item is a static separator (single line).
  */
 /**
  * Invoked when menu item is checked.
@@ -58,6 +61,8 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	BINDABLE_TAG_NAMES: ['li'],
 	/** @private */
 	SUB_MENU_TAGS: ['ol', 'ul'],
+	/** @private */
+	SEPARATOR_TEXT: '-',
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, text)
 	{
@@ -73,7 +78,11 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	{
 		this.defineProp('text', {'dataType': DataType.STRING,
 			'getter': function() { return Kekule.HtmlElementUtils.getInnerText(this.getElement()); },
-			'setter': function(value) { this.changeContentText(value); }
+			'setter': function(value) {
+				if (!!value)
+					this.setIsSeparator(false);
+				this.changeContentText(value);
+			}
 		});
 		this.defineProp('checked', {'dataType': DataType.BOOL,
 			'setter': function(value)
@@ -86,17 +95,25 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 			}
 		});
 		this.defineProp('autoCheck', {'dataType': DataType.BOOL});
+		this.defineProp('isSeparator', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('isSeparator', value);
+				this.isSeparatorChanged(value);
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
 	{
 		$super();
 		this.setUseCornerDecoration(false);
+		this.setIsSeparator(false);
 	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{
-		return $super() + ' ' + CNS.MENUITEM;
+		return $super() + ' ' + CNS.MENUITEM; // + ' ' + CNS.MENUITEM_NORMAL;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -108,6 +125,23 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	changeContentText: function(newText)
 	{
 		this.getElement().innerHTML = newText || '';
+	},
+	/** @private */
+	isSeparatorChanged: function(isSeparator)
+	{
+		if (isSeparator)
+		{
+			this.setText('&nbsp;');
+			this.removeClassName(CNS.MENUITEM_NORMAL);
+			this.addClassName(CNS.MENUITEM_SEPARATOR);
+			this.setStatic(true);
+		}
+		else
+		{
+			this.removeClassName(CNS.MENUITEM_SEPARATOR);
+			this.addClassName(CNS.MENUITEM_NORMAL);
+			this.setStatic(false);
+		}
 	},
 
 	/** @ignore */
@@ -176,6 +210,15 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 		{
 			widget.setIsSubMenu(true);
 		}
+		else if (widget instanceof Kekule.Widget.MenuItem)  // child menu item should be put in sub menu
+		{
+			var menu = this.getSubMenu(true);
+			(function()
+				{
+					widget.setParent(menu);
+					widget.appendToWidget(menu);
+				}).defer(10);  // Important: must may item to sub menu after usual child widget add routine
+		}
 	},
 	/** @ignore */
 	childrenModified: function($super)
@@ -212,9 +255,10 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 
 	/**
 	 * Returns sub menu of this menu item.
+	 * @param {Bool} canCreate If no sub menu exists, create a new one.
 	 * @returns {Kekule.Widget.Menu}
 	 */
-	getSubMenu: function()
+	getSubMenu: function(canCreate)
 	{
 		/*
 		var menuItemElem = this.getElement();
@@ -245,7 +289,12 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 			if (w instanceof Kekule.Widget.Menu)
 				return w;
 		}
-		return null;
+		if (canCreate)
+		{
+			return this.createSubMenu();
+		}
+		else
+			return null;
 	},
 	/**
 	 * Add sub menu to this item.
@@ -271,7 +320,7 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	createSubMenu: function()
 	{
-		var result = new Kekule.Widget.Menu(this);
+		var result = new Kekule.Widget.PopupMenu(this);
 		this.addSubMenu(result);
 		return result;
 	},
@@ -565,7 +614,7 @@ Kekule.Widget.PopupMenu = Class.create(Kekule.Widget.Menu,
 /** @lends Kekule.Widget.Menu# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Menu',
+	CLASS_NAME: 'Kekule.Widget.PopupMenu',
 	/** @ignore */
 	initPropValues: function($super)
 	{
@@ -593,6 +642,8 @@ Kekule.Widget.PopupMenu = Class.create(Kekule.Widget.Menu,
 Kekule.Widget.MenuBar = Class.create(Kekule.Widget.Menu,
 /** @lends Kekule.Widget.MenuBar# */
 {
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.MenuBar',
 	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{

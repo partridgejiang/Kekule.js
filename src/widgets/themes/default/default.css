@@ -233,10 +233,27 @@ table.K-Widget
 {
     float: left;
 }
-.K-Menu .K-MenuItem:hover
+.K-Menu .K-MenuItem-Separator
 {
-    background-color: #dadada;
+
 }
+.K-Menu.K-Layout-H>.K-MenuItem-Separator
+{
+    margin: 0 0.2em;
+    padding-left: 0;
+    padding-right: 0;
+    width: 0px;
+    border-left: 1px solid;
+}
+.K-Menu.K-Layout-V>.K-MenuItem-Separator
+{
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0.2em 0;
+    height: 0px;
+    border-top: 1px solid;
+}
+
 .K-Menu .K-MenuItem>.K-Menu,
 .K-Menu .K-MenuItem>.K-Menu
 {

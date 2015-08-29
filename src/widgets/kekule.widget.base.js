@@ -373,17 +373,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this._pendingHtmlClassNames = '';
 		this._reactElemAttribMutationBind = this._reactElemAttribMutation.bind(this);
 
-		$super();
-		this.setPropStoreFieldValue('isDumb', !!isDumb);
-		if (!isDumb)
-			this.reactUiEventBind = this.reactUiEvent.bind(this);
-
 		this.setPropStoreFieldValue('inheritEnabled', true);
 		this.setPropStoreFieldValue('inheritStatic', true);
 		this.setPropStoreFieldValue('selfEnabled', true);
 		this.setPropStoreFieldValue('selfStatic', false);
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
+
+		$super();
+		this.setPropStoreFieldValue('isDumb', !!isDumb);
+		if (!isDumb)
+			this.reactUiEventBind = this.reactUiEvent.bind(this);
+
 		/*
 		this.setShowText(true);
 		this.setShowGlyph(true);
@@ -1219,6 +1220,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			var refElem = refWidget? refWidget.getElement(): null;
 			this.getChildrenHolderElement().insertBefore(child.getElement(), refElem);
 			*/
+			this.childWidgetAdded(child);
 			this.childrenModified();
 		}
 	},

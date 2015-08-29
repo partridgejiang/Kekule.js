@@ -52,11 +52,6 @@
     background-color: transparent;
 }
 
-.K-Menu
-{
-    border-color: #d3d3d3;
-}
-
 .K-Dialog-Modal-Background
 {
     background-color: rgb(200, 200, 200);
@@ -243,6 +238,22 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 16px;
     height: 16px;
+}
+
+.K-Menu .K-MenuItem-Normal:hover,
+.K-Menu .K-MenuItem-Normal:active,
+.K-Menu .K-MenuItem-Normal:focus
+{
+    background-color: #dadada;
+}
+.K-Menu,
+.K-Menu .K-MenuItem-Separator
+{
+    border-color: #d3d3d3;
+}
+.K-Menu .K-MenuItem-Separator
+{
+    color: #d3d3d3;
 }
 
 .K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker,
