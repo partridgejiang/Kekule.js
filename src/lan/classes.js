@@ -328,8 +328,42 @@ if (!Function.prototype.bind)
         return function() {
             return __method.apply(object, args.concat($A(arguments)));
         };
+    },
+    delay: function() {
+      var __method = this, args = $A(arguments), timeout = args.shift();
+      return window.setTimeout(function() {
+        return __method.apply(__method, args);
+      }, timeout);
+    },
+    defer: function() {
+      var __method = this, args = $A(arguments), timeout = args.shift();
+      return window.setTimeout(function() {
+        return __method.apply(__method, args);
+      }, 10);
     }
 	});
+}
+if (!Function.prototype.delay)
+{
+  Object.extend(Function.prototype, {
+    delay: function() {
+      var __method = this, args = $A(arguments), timeout = args.shift();
+      return window.setTimeout(function() {
+        return __method.apply(__method, args);
+      }, timeout);
+    }
+  });
+}
+if (!Function.prototype.defer)
+{
+  Object.extend(Function.prototype, {
+    defer: function() {
+      var __method = this, args = $A(arguments), timeout = args.shift();
+      return window.setTimeout(function() {
+        return __method.apply(__method, args);
+      }, 10);
+    }
+  });
 }
 
 /** @ignore */
