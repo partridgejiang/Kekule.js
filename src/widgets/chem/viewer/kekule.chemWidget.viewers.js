@@ -11,6 +11,7 @@
  * requires /xbrowsers/kekule.x.js
  * requires /core/kekule.common.js
  * requires /widgets/kekule.widget.base.js
+ * requires /widgets/kekule.widget.menus.js
  * requires /widgets/kekule.widget.dialogs.js
  * requires /widgets/kekule.widget.helpers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
@@ -1414,10 +1415,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getDefaultMenuItems: function()
 	{
+		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
 		var items = [
 			BNS.loadData,
 			BNS.saveFile,
-			{'isSeparator': true},
+			sSeparator,
 			BNS.molDisplayType,
 			BNS.molHideHydrogens,
 			BNS.zoomIn, BNS.zoomOut
@@ -1442,7 +1444,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		*/
 		items.push(BNS.reset);
-		items.push({'isSeparator': true});
+		items.push(sSeparator);
 		items.push(BNS.openEditor);
 		// config
 		items.push(BNS.config);
@@ -1458,13 +1460,18 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	prepareMenuItems: function(items)
 	{
+		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
 		for (var i = 0, l = items.length; i < l; ++i)
 		{
 			var item = items[i];
-			if (typeof(item) === 'string')  // not hash, but a predefined comp name
+			if (typeof(item) === 'string')  // not hash, but a predefined comp name or separator
 			{
-				var defHash = this.createPredefinedMenuItemDefHash(item);
-				items[i] = defHash;
+				if (item !== sSeparator)
+				{
+					var defHash = this.createPredefinedMenuItemDefHash(item);
+					if (defHash)
+						items[i] = defHash;
+				}
 			}
 			else  // hash definition
 			{
@@ -1497,19 +1504,24 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var actionClass = this.getCompActionClass(compName);
 		var itemClass = Kekule.Widget.MenuItem;
 
+		var result = null;
+
 		var action = this._getActionOfComp(compName, true);
-		var result = {
-			'widget': itemClass,
-			'action': action
-		};
-		if (rotateCompNames.indexOf(compName) >= 0)
+		if (action)
 		{
-			result = Object.extend(result, {
-				'periodicalExecInterval': 20,
-				'enablePeriodicalExec': true,
-				'#activate': beginContinuousRepaintingBind,
-				'@deactivate': endContinuousRepaintingBind
-			});
+			result = {
+				'widget': itemClass,
+				'action': action
+			};
+			if (rotateCompNames.indexOf(compName) >= 0)
+			{
+				result = Object.extend(result, {
+					'periodicalExecInterval': 20,
+					'enablePeriodicalExec': true,
+					'#activate': beginContinuousRepaintingBind,
+					'@deactivate': endContinuousRepaintingBind
+				});
+			}
 		}
 		return result;
 	},
@@ -1561,11 +1573,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		var items = this.getMenuItems() || this.getDefaultMenuItems();
 		items = this.prepareMenuItems(items);
+		/*
 		for (var i = 0, l = items.length; i < l; ++i)
 		{
 			var menuItem = Kekule.Widget.Utils.createFromHash(result, items[i]);
 			result.appendMenuItem(menuItem);
 		}
+		*/
+		result.createChildrenByDefs(items);
 		this.setMenu(result);
 		//this.updateActions();
 		return result;
@@ -2025,14 +2040,14 @@ SM.register('Kekule.ChemWidget.Viewer.basic', {  // viewer with basic function, 
 	enableDirectInteraction: true,
 	enableTouchInteraction: false,
 	toolButtons: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut],
-	menuItems: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
 });
 SM.register('Kekule.ChemWidget.Viewer.mini', {  // viewer with only one menu button
 	enableToolbar: true,
 	enableDirectInteraction: true,
 	enableTouchInteraction: false,
 	toolButtons: [BNS.menu],
-	menuItems: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
 });
 SM.register('Kekule.ChemWidget.Viewer.static', {  // viewer with no interaction ability, suitable for static embedded chem object
 	enableToolbar: false,
@@ -2044,7 +2059,8 @@ SM.register('Kekule.ChemWidget.Viewer.static', {  // viewer with no interaction 
 SM.register('Kekule.ChemWidget.Viewer.editOnly', {  // viewer can be editted
 	enableToolbar: true,
 	enableEdit: true,
-	toolButtons: [BNS.openEditor]
+	toolButtons: [BNS.openEditor],
+	menuItems: [BNS.openEditor]
 });
 
 /**

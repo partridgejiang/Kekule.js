@@ -15,8 +15,6 @@
  * requires /widgets/commonCtrls/kekule.widget.images.js
  */
 
-// TODO: The whole widget is not finished and is unusable
-
 (function(){
 "use strict";
 
@@ -39,7 +37,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 /**
  * Menu item in menu widget.
  * @class
- * @augments Kekule.Widget.BaseWidget
+ * @augments Kekule.Widget.Container
  *
  * @property {String} text Text on menu.
  * @property {Bool} checked Whether the menu item is checked.
@@ -52,7 +50,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * @name Kekule.Widget.MenuItem#check
  * @event
  */
-Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
+Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 /** @lends Kekule.Widget.MenuItem# */
 {
 	/** @private */
@@ -61,8 +59,6 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	BINDABLE_TAG_NAMES: ['li'],
 	/** @private */
 	SUB_MENU_TAGS: ['ol', 'ul'],
-	/** @private */
-	SEPARATOR_TEXT: '-',
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, text)
 	{
@@ -79,9 +75,14 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 		this.defineProp('text', {'dataType': DataType.STRING,
 			'getter': function() { return Kekule.HtmlElementUtils.getInnerText(this.getElement()); },
 			'setter': function(value) {
-				if (!!value)
-					this.setIsSeparator(false);
-				this.changeContentText(value);
+				if (value === Kekule.Widget.MenuItem.SEPARATOR_TEXT)
+					this.setIsSeparator(true);
+				else
+				{
+					if (!!value)
+						this.setIsSeparator(false);
+					this.changeContentText(value);
+				}
 			}
 		});
 		this.defineProp('checked', {'dataType': DataType.BOOL,
@@ -149,9 +150,10 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 	{
 		$super(element);
 		// check if there is sub menu items
-		var child = element.firstChild;
-		while(child)
+		var children = DU.getDirectChildElems(element);
+		for (var i = 0, l = children.length; i < l; ++i)
 		{
+			var child = children[i];
 			if (child.nodeType === Node.ELEMENT_NODE)
 			{
 				this.bindSubMenu(child);
@@ -418,16 +420,41 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.BaseWidget,
 		}
 	}
 });
+/** @ignore */
+Kekule.Widget.MenuItem.SEPARATOR_TEXT = '-';
+/**
+ * A class method to create menu item from a definition hash.
+ * If input parameter is string rather than hash, it will be regarded as
+ * menu text. If the text is '-', a separator will be created.
+ * @param {Variant} parentOrElementOrDocument
+ * @param {Hash} defHash
+ * @returns {Kekule.Widget.MenuItem}
+ */
+Kekule.Widget.MenuItem.createFromHash = function(parentOrElementOrDocument, defHash)
+{
+	var def = defHash;
+	if (DataType.isSimpleValue(def))  // simple string value
+	{
+
+		if (def === Kekule.Widget.MenuItem.SEPARATOR_TEXT)  // create separator
+			def = {isSeparator: true};
+		else
+			def = {'text': def};
+	}
+	if (!def.widget && !def.widgetClass)
+		def.widget = Kekule.Widget.MenuItem;
+	return Kekule.Widget.createFromHash(parentOrElementOrDocument, def);
+};
 
 /**
  * Base class of menu. Do not use it directly. Using {@link Kekule.Widget.PopupMenu} or
  * {@link Kekule.Widget.MenuBar} instead.
  * @class
- * @augments Kekule.Widget.BaseWidget
+ * @augments Kekule.Widget.Container
  *
  * @property {Bool} isSubMenu Whether the object is a nested sub menu.
  */
-Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
+Kekule.Widget.Menu = Class.create(Kekule.Widget.Container,
 /** @lends Kekule.Widget.Menu# */
 {
 	/** @private */
@@ -475,9 +502,10 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
 	doBindElement: function($super, element)
 	{
 		$super(element);
-		var child = element.firstChild;
-		while(child)
+		var children = Kekule.DomUtils.getDirectChildElems(element);
+		for (var i = 0, l = children.length; i < l; ++i)
 		{
+			var child = children[i];
 			if (child.nodeType === Node.ELEMENT_NODE)
 			{
 				this.bindMenuItem(child);
@@ -498,7 +526,6 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
 	{
 		if (elem.tagName.toLowerCase() === 'li')
 		{
-			//console.log('bind item', elem);
 			var result = new Kekule.Widget.MenuItem(elem);
 			result.setParent(this);
 			return result;
@@ -569,12 +596,8 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	clearMenuItems: function(doNotFinalize)
 	{
-		var children = this.getChildWidgets();
-		for (var i = children.length - 1; i >= 0; --i)
-		{
-			var child = children[i];
-			this.removeMenuItem(child, doNotFinalize);
-		}
+		this.clearWidgets(doNotFinalize);
+		return this;
 	},
 	/**
 	 * Returns whether current menu is the top level one.
@@ -602,8 +625,22 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.BaseWidget,
 				p.childDeactivated(this);
 			}
 		}
+	},
+	/**
+	 * Create child menu items by hash definitions.
+	 * @param {Array} defs Hash definition of child menu items.
+	 */
+	createChildrenByDefs: function(defs)
+	{
+		for (var i = 0, l = defs.length; i < l; ++i)
+		{
+			var def = defs[i];
+			var item = Kekule.Widget.MenuItem.createFromHash(this, def);
+		}
+		return this;
 	}
 });
+
 
 /**
  * An popup menu widget.
