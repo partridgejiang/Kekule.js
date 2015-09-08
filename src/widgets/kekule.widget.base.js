@@ -273,6 +273,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {String} height Height style of element.
  * @property {String} innerHTML Current element's innerHTML value.
  * @property {Object} style CSS style object of current binding element.
+ * @property {String} cssText CSS text of current binding element.
  * @property {String} htmlClassName HTML class of current binding element. This property will include all values in element's class attribute.
  * @property {String} customHtmlClassName HTML class set by user. This property will exclude some predefined class names.
  * //@property {Array} outlookStyleClassNames Classes used to control the outlook of widget. Usually user do not need to access this value.
@@ -536,6 +537,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'scope': Class.PropertyScope.PUBLIC,
 			'getter': function() { return this.getElement().style; },
 			'setter': null
+		});
+		this.defineProp('cssText', {'dataType': DataType.STRING, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getElement().style.cssText; },
+			'setter': function(value)
+			{
+				this.getElement().style.cssText = value;
+			}
 		});
 		this.defineProp('htmlClassName', {'dataType': DataType.STRING, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
