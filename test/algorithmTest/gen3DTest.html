@@ -12,16 +12,23 @@
   <!--
   <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel"></script>
   -->
-
+  <!--
   <script src="../../src/_compressed/kekule.js?min=true&modules=calculation,chemWidget,openbabel"></script>
+  -->
+
+  <script src="../../release/kekule.js?min=true&modules=calculation,chemWidget,openbabel"></script>
+
 
   <!--
   <script src="../../src/_compressed/kekule.min.js"></script>
   -->
+  <!--
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+  -->
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
 
 <script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="molSrc" type="chemical/x-mdl-molfile">
 Untitled Document-1
@@ -58,8 +65,8 @@ M  END
 
     function getCurrMol()
     {
-      return chemEditor.getChemSpace().getChildAt(0);
-      //return Kekule.ChemStructureUtils.getTotalStructFragment(chemEditor.getChemSpace());
+      //return chemEditor.getChemSpace().getChildAt(0);
+      return Kekule.ChemStructureUtils.getTotalStructFragment(chemEditor.getChemSpace());
     }
 
     function generate3D()
@@ -99,6 +106,13 @@ M  END
       chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
       chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
       viewer = Kekule.Widget.getWidgetById('chemViewer');
+
+      var toolButtons = chemEditorUi.getCommonToolButtons() || chemEditorUi.getDefaultCommonToolBarButtons();
+      toolButtons.push({
+        'text': 'Generate 3D', 'hint': 'Generate 3D structure', 'showText': true, 'showGlyph': false, 'cssText': 'background-color:yellow;width:auto',
+        '#execute': generate3D
+      });
+      chemEditorUi.setCommonToolButtons(toolButtons);
     }
   </script>
 </head>
