@@ -34,6 +34,14 @@ table.ExplanationTable th
 	padding: 0.2em;
 }
 
+table.ExplanationTable ul
+{
+	padding-top: 0.2em;
+	padding-bottom: 0.2em;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
 .CodeBlock
 {
     font-family: "Courier New", Courier, monospace;
