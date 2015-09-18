@@ -83,7 +83,9 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 		{
 			var target = e.target;
 			if ((target instanceof Kekule.Widget.RadioButton)/* && (target.getChecked())*/)  // switch may fail and the tab button be not be checked
+			{
 				this.invokeEvent('switch', {'button': target});
+			}
 		}, this);
 		this.tabButtonPosChanged();
 	},
@@ -291,7 +293,7 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		result.appendToElem(parentElem);
 		result.addEventListener('switch', function(e){
 			var btn = e.button;
-			if (btn.getChecked())
+			//if (btn.getChecked())  // when switching begins, the btn may not be checked yet
 			{
 				var page = this._getPageOfTabButton(btn);
 				if (page)
