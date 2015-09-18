@@ -52,13 +52,6 @@
     background-color: transparent;
 }
 
-.K-Menu,
-.K-Menu ul,
-.K-Menu ol
-{
-    border-color: #d3d3d3;
-}
-
 .K-Dialog-Modal-Background
 {
     background-color: rgb(200, 200, 200);
@@ -245,6 +238,42 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 16px;
     height: 16px;
+}
+
+.K-Menu .K-MenuItem-Normal:hover,
+.K-Menu .K-MenuItem-Normal:active,
+.K-Menu .K-MenuItem-Normal:focus
+{
+    background-color: #dadada;
+}
+.K-Menu,
+.K-Menu .K-MenuItem-Separator
+{
+    border-color: #d3d3d3;
+}
+.K-Menu .K-MenuItem-Separator
+{
+    color: #d3d3d3;
+}
+
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker,
+.K-Menu .K-MenuItem .K-CheckMenu-Marker
+{
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    top: 50%;
+    margin-top: -8px;
+    background-repeat: no-repeat;
+}
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker
+{
+    background-image: url("images/slice/icons16/caratRight.png");
+}
+.K-Menu .K-MenuItem.K-State-Checked .K-CheckMenu-Marker
+{
+    background-image: url("images/slice/icons16/checked.png");
 }
 
 .K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content
@@ -559,6 +588,12 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     background-image: url("images/slice/icons16/triangleRight.png");
 }
 
+
+
+.K-Action-Open-Configurator > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/settings.png");
+}
 
 
 /*****************************************************************/

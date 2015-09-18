@@ -35,6 +35,10 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	S_OBJECT: 'object',
 	S_VALUE_UNSET: '(Unset)',
 
+	// General
+	CAPTION_MENU: 'Menu',
+	HINT_MENU: 'Open menu',
+
 	// Object inspector
 	S_INSPECT_NONE: '(none)',
 	S_INSPECT_OBJECTS: '({0} objects)',
@@ -95,12 +99,13 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ZOOMOUT: 'Zoom Out',
 	CAPTION_RESETZOOM: 'Reset Zoom',
 	CAPTION_RESETVIEW: 'Reset',
+	CAPTION_ROTATE: 'Rotate',
 	CAPTION_ROTATELEFT: 'Left Rotate',
 	CAPTION_ROTATERIGHT: 'Right Rotate',
 	CAPTION_ROTATEX: 'X Rotate',
 	CAPTION_ROTATEY: 'Y Rotate',
 	CAPTION_ROTATEZ: 'Z Rotate',
-	CAPTION_MOL_DISPLAY_TYPE: 'Molecule display style',
+	CAPTION_MOL_DISPLAY_TYPE: 'Molecule Display Style',
 	CAPTION_SKELETAL: 'Skeletal',
 	CAPTION_CONDENSED: 'Condensed',
 	CAPTION_WIRE: 'Wire Frame',
@@ -120,6 +125,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_ZOOMOUT: 'Zoom out',
 	HINT_RESETZOOM: 'Reset zoom',
 	HINT_RESETVIEW: 'Reset zoom and rotation',
+	HINT_ROTATE: 'Rotate',
 	HINT_ROTATELEFT: 'Rotate in anticlockwise direction',
 	HINT_ROTATERIGHT: 'Rotate in clockwise direction',
 	HINT_ROTATEX: 'Rotate around X axis',
@@ -268,7 +274,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
 
 	// load data dialog
-	CAPTION_LOADDATA: 'Load data',
+	CAPTION_LOADDATA_DIALOG: 'Load data',
 	CAPTION_DATA_FORMAT: 'Data format:',
 	CAPTION_DATA_SRC: 'Input or paste data below:',
 	CAPTION_LOADDATA_FROM_FILE: 'Load from file',

@@ -371,6 +371,13 @@ Kekule.Widget.Button.Kinds = {
  * @augments Kekule.Widget.Button
  *
  * @property {Bool} checked Whether the button has been pressed down.
+ * @property {Bool} autoCheck If true, the button will be automatically checked/unchecked when clicking on it.
+ */
+/**
+ * Invoked button is checked.
+ *   event param of it has field: {widget}
+ * @name Kekule.Widget.CheckButton#check
+ * @event
  */
 Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 /** @lends Kekule.Widget.CheckButton# */
@@ -396,6 +403,13 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 					}
 				}
 		});
+		this.defineProp('autoCheck', {'dataType': DataType.BOOL});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setAutoCheck(true);
 	},
 
 	/**
@@ -405,6 +419,8 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 	checkChanged: function()
 	{
 		// do nothing here
+		if (this.getChecked())
+			this.invokeEvent('check');
 	},
 
 	/** @ignore */
@@ -414,7 +430,16 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 		return $super(st);
 	},
 	/** @ignore */
-	doReactActiviting: function(e)
+	doReactDeactiviting: function($super, e)
+	//doExecute: function($super, invokerHtmlEvent)
+	{
+		//$super(invokerHtmlEvent);
+		$super(e);
+		if (this.getAutoCheck())
+			this._doCheckOnSelf();
+	},
+	/** @private */
+	_doCheckOnSelf: function()
 	{
 		if (this.getEnabled())
 			this.setChecked(!this.getChecked());
@@ -446,8 +471,9 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	},
 
 	/** @ignore */
-	checkChanged: function()
+	checkChanged: function($super)
 	{
+		$super();
 		if (this.getChecked())
 		{
 			//check parent widget, and set all radio button with same group name to unchecked
@@ -473,9 +499,13 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	},
 
 	/** @ignore */
-	doReactActiviting: function(e)
+	doReactDeactiviting: function($super, e)
 	{
-		// do not call super here
+		$super(e);
+	},
+	/** @private */
+	_doCheckOnSelf: function()
+	{
 		if (this.getEnabled())
 			this.setChecked(true);
 	}
@@ -505,9 +535,12 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	/** @private */
 	doFinalize: function($super)
 	{
+		$super();
+		/*
 		var w = this.getDropDownWidget();
 		if (w)
 			w.finalize();
+		*/
 	},
 	/** @private */
 	initProperties: function()
@@ -731,6 +764,7 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 	initialize: function($super, parentOrElementOrDocument, text)
 	{
 		this.reactSetButtonExecuteBind = this.reactSetButtonExecute.bind(this);
+		//this.reactSetButtonCheckBind = this.reactSetButtonCheck.bind(this);
 		this.setPropStoreFieldValue('showCompactMark', true);
 		this.setPropStoreFieldValue('cloneSelectedOutlook', true);
 		$super(parentOrElementOrDocument, text);
@@ -851,6 +885,7 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 		this.setPropStoreFieldValue('buttonSet', btnSet);
 		this.setDropDownWidget(btnSet);
 		btnSet.addEventListener('execute', this.reactSetButtonExecuteBind);
+		btnSet.addEventListener('check', this.reactSetButtonExecuteBind);
 
 		if (checkedBtn)
 		{
@@ -951,8 +986,11 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 				e.target.setIsFocused(false);
 				e.target.setIsHover(false);
 				e.target.setIsActive(false);
-				this.getButtonSet().hide();
+
 				this.setSelected(e.target);
+
+				if (this.getButtonSet().isShown())
+					this.getButtonSet().hide();
 				/*
 				var self = this;
 				this.getButtonSet().hide(function() { self.setSelected(e.target); });

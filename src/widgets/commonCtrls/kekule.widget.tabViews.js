@@ -79,9 +79,10 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 	initialize: function($super, parentOrElementOrDocument)
 	{
 		$super(parentOrElementOrDocument);
-		this.addEventListener('execute', function(e){
+		this.addEventListener('execute'/*'check'*/, function(e)
+		{
 			var target = e.target;
-			if ((target instanceof Kekule.Widget.RadioButton) && (target.getChecked()))
+			if ((target instanceof Kekule.Widget.RadioButton)/* && (target.getChecked())*/)  // switch may fail and the tab button be not be checked
 				this.invokeEvent('switch', {'button': target});
 		}, this);
 		this.tabButtonPosChanged();

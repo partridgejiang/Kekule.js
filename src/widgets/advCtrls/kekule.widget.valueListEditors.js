@@ -207,23 +207,37 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	createValueEditWidget: function(row)
 	{
-		if (this._inlineEdit)
+		var result = null;
+		if (row === this.getActiveRow())  // is active, inlineEdit is on self, may reuse it
+			result = this._inlineEdit;
+		else if (this._inlineEdit)  // finalize old first
 		{
 			this._inlineEdit.finalize();
 			this._inlineEdit = null;
 		}
-		var result = this.doCreateValueEditWidget(row);
-		if (result)
+
+		if (!result)
 		{
-			//result.setStatic(true);
+			result = this.doCreateValueEditWidget(row);
 			result.setBubbleUiEvents(true);  // IMPORTANT, make sure event not eaten by edit
 			EU.addClass(result.getElement(), CNS.VALUELISTEDITOR_INLINE_EDIT);
+			var cell = this.getValueCell(row);
+			var contentWrapper = this.getCellContentWrapper(cell, true);
+			result.appendToElem(contentWrapper);
+		}
+		if (result)
+		{
+			/*
+			result.setStatic(true);
+			result.setBubbleUiEvents(true);  // IMPORTANT, make sure event not eaten by edit
+			//EU.addClass(result.getElement(), CNS.VALUELISTEDITOR_INLINE_EDIT);
 			var cell = this.getValueCell(row);
 			var contentWrapper = this.getCellContentWrapper(cell, true);
 			//console.log('set active row', result.getClassName(), contentWrapper.tagName);
 			result.appendToElem(contentWrapper);
 			//result.appendToElem(document.body);
 			//console.log(result.getElement().parentNode);
+			*/
 
 			if (result.focus)
 				result.focus();

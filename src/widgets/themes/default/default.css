@@ -196,46 +196,87 @@ table.K-Widget
 {
     cursor: default;
 }
-.K-Menu,
-.K-Menu ul,
-.K-Menu ol
+.K-Menu
 {
     border: 1px solid;
     margin: 0;
     padding: 0;
 }
-.K-Menu li
+.K-Menu .K-MenuItem
 {
+    background: none;
     display: block;
     position: relative;
     list-style: none;
     margin: 0;
-    padding: 0.1em 2em;
+    padding: 0.2em 2em;
     line-height: 1.5;
+    white-space: nowrap;
 }
-.K-Menu.K-Layout-H>li  /* horizon menu bar item */
+.K-Menu .K-MenuItem .K-SubMenu-Marker,
+.K-Menu .K-MenuItem .K-CheckMenu-Marker
+{
+    display: inline-block;
+    position: absolute;
+}
+.K-Menu .K-MenuItem .K-SubMenu-Marker
+{
+    left: auto;
+    right: 0.3em;
+}
+.K-Menu .K-MenuItem .K-CheckMenu-Marker
+{
+    left: 0.3em;
+}
+
+.K-Menu.K-Layout-H>.K-MenuItem  /* horizon menu bar item */
 {
     float: left;
 }
-.K-Menu li:hover
+.K-Menu .K-MenuItem-Separator
 {
-    background-color: #dadada;
+
 }
-.K-Menu li>ul,
-.K-Menu li>ol
+.K-Menu.K-Layout-H>.K-MenuItem-Separator
+{
+    margin: 0 0.2em;
+    padding-left: 0;
+    padding-right: 0;
+    width: 0px;
+    border-left: 1px solid;
+}
+.K-Menu.K-Layout-V>.K-MenuItem-Separator
+{
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0.2em 0;
+    height: 0px;
+    border-top: 1px solid;
+}
+
+.K-Menu .K-MenuItem>.K-Menu,
+.K-Menu .K-MenuItem>.K-Menu
 {
     display: none;
     position: absolute;
     left: 100%;
     top: 0;
 }
-.K-Menu li:hover>ul,
-.K-Menu li:hover>ol
+.K-Menu .K-MenuItem:hover>.K-Menu,
+.K-Menu .K-MenuItem:active>.K-Menu,
+.K-Menu .K-MenuItem:focus>.K-Menu
 {
     display: block;
 }
-.K-Menu.K-Layout-H>li>ul,
-.K-Menu.K-Layout-H>li>ol
+.K-Menu .K-MenuItem.K-State-Disabled:hover>.K-Menu,
+.K-Menu .K-MenuItem.K-State-Disabled:active>.K-Menu,
+.K-Menu .K-MenuItem.K-State-Disabled:focus>.K-Menu
+{
+    display: none;
+}
+
+
+.K-Menu.K-Layout-H>.K-MenuItem>.K-Menu
 {
     left: 0;
     top: 100%;

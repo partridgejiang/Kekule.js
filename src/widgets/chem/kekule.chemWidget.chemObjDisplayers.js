@@ -202,7 +202,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': null,
 			'getter': function() { return this.getChemObj() && this.getPropStoreFieldValue('chemObjLoaded'); }
 		});
-		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLIC,
+		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLISHED,
 			'setter': function(value)
 			{
 				if (!this.getAllowRenderTypeChange())
@@ -2062,7 +2062,7 @@ Kekule.ChemWidget.ActionDisplayerHideHydrogens = Class.create(Kekule.ChemWidget.
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer && (displayer.getRenderType() === Kekule.Render.RendererType.R3D);
-		this.setDisplayed(this.getDisplayed() && flag).setEnabled(this.getEnabled() && flag);
+		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
 	},
 	/** @private */
 	doExecute: function()
@@ -2088,11 +2088,20 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase = Class.create(Kekule.
 	{
 		$super(displayer, caption, hint);
 		this._displayType = displayType;
+		this.setCheckGroup('__molDisplayType__');
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		var displayer = this.getDisplayer();
+		this.setChecked(displayer && displayer.getCurrMoleculeDisplayType() === this.getMolDisplayType());
 	},
 	/** @private */
 	doExecute: function()
 	{
 		this.getDisplayer().setMoleculeDisplayType(this._displayType);
+		this.setChecked(true);
 	},
 	/**
 	 * Returns molecule display type set by this action.
@@ -2119,7 +2128,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D = Class.create(Kekul
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer && (displayer.getRenderType() === Kekule.Render.RendererType.R2D);
-		this.setDisplayed(this.getDisplayed() && flag).setEnabled(this.getEnabled() && flag);
+		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
 	}
 });
 /**
@@ -2138,7 +2147,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D = Class.create(Kekul
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer && (displayer.getRenderType() === Kekule.Render.RendererType.R3D);
-		this.setDisplayed(this.getDisplayed() && flag).setEnabled(this.getEnabled() && flag);
+		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
 	}
 });
 /**

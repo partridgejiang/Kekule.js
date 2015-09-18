@@ -11,6 +11,7 @@
  * requires /xbrowsers/kekule.x.js
  * requires /core/kekule.common.js
  * requires /widgets/kekule.widget.base.js
+ * requires /widgets/kekule.widget.menus.js
  * requires /widgets/kekule.widget.dialogs.js
  * requires /widgets/kekule.widget.helpers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
@@ -40,6 +41,8 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER3D: 'K-Chem-Viewer3D',
 	VIEWER_CAPTION: 'K-Chem-Viewer-Caption',
 	VIEWER_EMBEDDED_TOOLBAR: 'K-Chem-Viewer-Embedded-Toolbar',
+
+	VIEWER_MENU_BUTTON: 'K-Chem-Viewer-Menu-Button',
 
 	// predefined actions
 	ACTION_ROTATE_LEFT: 'K-Chem-RotateLeft',
@@ -224,7 +227,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('allowedMolDisplayTypes', value);
-				this.updateToolbar();
+				//this.updateToolbar();
+				this.updateUiComps();
 			}
 		});
 
@@ -240,7 +244,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.defineProp('enableEditFromVoid', {'dataType': DataType.BOOL});
 		this.defineProp('modalEdit', {'dataType': DataType.BOOL});
 
-		this.defineProp('toolButtons', {'dataType': DataType.ARRAY, 'serializable': !false, 'scope': PS.PUBLIC,
+		this.defineProp('toolButtons', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
 				var result = this.getPropStoreFieldValue('toolButtons');
@@ -259,6 +263,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.updateToolbar();
 			}
 		});
+		this.defineProp('menuItems', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('menuItems', value);
+				this.updateMenu();
+			}
+		});
 		// private
 		this.defineProp('toolButtonNameMapping', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': null,
@@ -274,6 +285,22 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		// private
+		this.defineProp('menu', {'dataType': 'Kekule.Widget.Menu', 'serializable': false, 'scope': PS.PRIVATE,
+			'setter': function(value)
+			{
+				var old = this.getMenu();
+				if (value !== old)
+				{
+					if (old)
+					{
+						old.finalize();
+						old = null;
+					}
+					this.setPropStoreFieldValue('menu', value);
+				}
+			}
+		});
+
 		this.defineProp('toolbar', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': function(value)
 			{
@@ -435,6 +462,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return result;
 			}
 		});
+		this.defineProp('actionMap', {'dataType': 'Kekule.MapEx', 'serializable': false, 'scope': PS.PRIVATE,
+			'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('actionMap');
+				if (!result)
+				{
+					result = new Kekule.MapEx(true);
+					this.setPropStoreFieldValue('actionMap', result);
+				}
+				return result;
+			}
+		});
 
 		this.defineProp('enableDirectInteraction', {'dataType': DataType.BOOL});
 		this.defineProp('enableTouchInteraction', {'dataType': DataType.BOOL});
@@ -552,7 +592,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.removeClassName(oldHtmlClassName);
 		this.addClassName(newHtmlClassName);
 		// toolbar
-		this.updateToolbar();
+		//this.updateToolbar();
+		this.updateUiComps();
 	},
 
 	/** @private */
@@ -996,6 +1037,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		buttons.push(BNS.openEditor);
 		// config
 		buttons.push(BNS.config);
+		// debug
+		//buttons.push(BNS.menu);
 
 		/*
 		var result = {
@@ -1023,6 +1066,15 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		result[BNS.rotateZ] = CW.ActionViewerRotateZ;
 		result[BNS.reset] = CW.ActionDisplayerReset;
 		result[BNS.molHideHydrogens] = CW.ActionDisplayerHideHydrogens;
+		result[BNS.molDisplayType] = CW.ActionViewerChangeMolDisplayTypeStub;
+		/*
+		result[BNS.molDisplayTypeCondensed] = CW.ActionDisplayerChangeMolDisplayTypeCondensed;
+		result[BNS.molDisplayTypeSkeletal] = CW.ActionDisplayerChangeMolDisplayTypeSkeletal;
+		result[BNS.molDisplayTypeWire] = CW.ActionDisplayerChangeMolDisplayTypeWire;
+		result[BNS.molDisplayTypeSticks] = CW.ActionDisplayerChangeMolDisplayTypeSticks;
+		result[BNS.molDisplayTypeBallStick] = CW.ActionDisplayerChangeMolDisplayTypeBallStick;
+		result[BNS.molDisplayTypeSpaceFill] = CW.ActionDisplayerChangeMolDisplayTypeSpaceFill;
+		*/
 		result[BNS.openEditor] = CW.ActionViewerEdit;
 		result[BNS.config] = Kekule.Widget.ActionOpenConfigWidget;
 
@@ -1137,6 +1189,21 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		else
 			this.setToolbar(null);
 	},
+	/**
+	 * Update menu in viewer.
+	 */
+	updateMenu: function()
+	{
+		this.createMenu();
+	},
+	/**
+	 * Update toolbar and menu in viewer.
+	 */
+	updateUiComps: function()
+	{
+		this.updateToolbar();
+		this.updateMenu();
+	},
 
 	/**
 	 * Update toolbar actions.
@@ -1149,15 +1216,41 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @private */
-	getToolButtonActionClass: function(btnName)
+	clearActions: function()
 	{
-		return this.getToolButtonNameMapping()[btnName];
+		this.getActions().clear();
+		this.getActionMap().clear();
+	},
+
+	/** @private */
+	getCompActionClass: function(compNameOrActionClass)
+	{
+		return this.getToolButtonNameMapping()[compNameOrActionClass];
+	},
+
+	/** @private */
+	_getActionOfComp: function(compNameOrComp, canCreate, defActionClass)
+	{
+		var map = this.getActionMap();
+		var result = map.get(compNameOrComp);
+		if (!result && canCreate)
+		{
+			var c = this.getCompActionClass(compNameOrComp) || defActionClass;
+			if (c)
+			{
+				result = new c(this);
+				map.set(compNameOrComp, result);
+				this.getActions().add(result);
+			}
+		}
+		return result;
 	},
 
 	/** @private */
 	createToolbar: function()
 	{
-		this.getActions().clear();
+		//this.getActionMap().clear();
+		//this.getActions().clear();
 		var toolBar = new Kekule.Widget.ButtonGroup(this);
 		toolBar.addClassName(CNS.DYN_CREATED);
 		toolBar.setDisplayed(false);  // hide at first, evokeHelper controls its visibility
@@ -1182,7 +1275,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log('After append to widget: ', toolBar.getDisplayed());
 		this.setToolbar(toolBar);
 		//console.log('After set tool bar, display to: ', toolBar.getDisplayed());
-
+		//this.updateActions();
 
 		return toolBar;
 	},
@@ -1204,32 +1297,40 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				if (typeof(actionClass) === 'string')
 					actionClass = ClassEx.findClass(objDefHash.actionClass);
-				if (actionClass)
-				{
-					var action = new actionClass(this);
-					this.getActions().add(action);
+			}
+			if (actionClass)
+			{
+				//var action = new actionClass(this);
+				//this.getActions().add(action);
+				var action = this._getActionOfComp(result, true, actionClass);
+				if (action)
 					result.setAction(action);
-				}
 			}
 		}
 		else
 		{
 			if (btnName === BNS.molDisplayType)  // in 2D or 3D mode, type differs a lot, need handle separately
 			{
-				this.createMolDisplayTypeButton(parentGroup);
+				return this.createMolDisplayTypeButton(parentGroup);
+			}
+			else if (btnName === BNS.menu)  // menu button
+			{
+				return this.createMenuButton(parentGroup);
 			}
 
-			var actionClass = this.getToolButtonActionClass(btnName);
+			var actionClass = this.getCompActionClass(btnName);
 			var btnClass = Kekule.Widget.Button;
 			if (btnName === BNS.molHideHydrogens)
 				btnClass = Kekule.Widget.CheckButton;
-			if (actionClass)
+			//if (actionClass)
 			{
 				result = new btnClass(parentGroup);
 				//result.addClassName(CCNS.PREFIX + btnName);
-				var action = new actionClass(this);
-				this.getActions().add(action);
-				result.setAction(action);
+				//var action = new actionClass(this);
+				var action = this._getActionOfComp(btnName, true);
+				//this.getActions().add(action);
+				if (action)
+					result.setAction(action);
 				if (rotateBtnNames.indexOf(btnName) >= 0)
 				{
 					result.setPeriodicalExecInterval(20);
@@ -1242,6 +1343,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 	/** @private */
+	createMenuButton: function(parentGroup)
+	{
+		var result = new Kekule.Widget.DropDownButton(parentGroup);
+		result.setText(Kekule.$L('WidgetTexts.CAPTION_MENU')).setHint(Kekule.$L('WidgetTexts.HINT_MENU'));
+		result.addClassName(CCNS.VIEWER_MENU_BUTTON);
+		// create menu if essential
+		if (!this.getMenu())
+			this.createMenu();
+		result.setDropDownWidget(this.getMenu());
+
+		return result;
+	},
+	/** @private */
 	createMolDisplayTypeButton: function(parentGroup)
 	{
 		var result = new Kekule.Widget.CompactButtonSet(parentGroup);
@@ -1251,7 +1365,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		  // TODO: may find a better solution to solve popup widget style lost problem
 		result.setShowText(false);
 		//result.setHint(CWT.HINT_MOL_DISPLAY_TYPE);
-		var action = new Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub(this);
+		//var action = new Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub(this);
+		var action = this._getActionOfComp(BNS.molDisplayType, true);
 		result.setAction(action);
 		this.getActions().add(action);
 
@@ -1259,22 +1374,215 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//result.setDropPosition(Kekule.Widget.Position.TOP);
 
 		var doc = this.getDocument();
-		var actionClasses = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
-			CW.Viewer.molDisplayType3DActionClasses: CW.Viewer.molDisplayType2DActionClasses;
 		var allowedType = this.getAllowedMolDisplayTypes();
+		var actionClasses = this._getUsableMolDisplayActionClasses(allowedType);
 
 		for (var i = 0, l = actionClasses.length; i < l; ++i)
 		{
 			var displayType = actionClasses[i].TYPE;
+			/*
 			if (allowedType && (allowedType.indexOf(displayType) < 0) && (displayType !== this.getCurrMoleculeDisplayType()))  // not in allowed type
 				continue;
+			*/
 
 			var btn = new Kekule.Widget.RadioButton(doc);
-			action = new actionClasses[i](this);
-			this.getActions().add(action);
+			//action = new actionClasses[i](this);
+			var action = this._getActionOfComp(BNS.molDisplayType + displayType, true, actionClasses[i]);
+			//this.getActions().add(action);
 			btn.setAction(action);
 			result.append(btn, displayType === this.getCurrMoleculeDisplayType());
 		}
+		return result;
+	},
+
+	/* @private */
+	_getUsableMolDisplayActionClasses: function(allowedTypes)
+	{
+		var result = [];
+		var actionClasses = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
+			CW.Viewer.molDisplayType3DActionClasses: CW.Viewer.molDisplayType2DActionClasses;
+		for (var i = 0, l = actionClasses.length; i < l; ++i)
+		{
+			var displayType = actionClasses[i].TYPE;
+			if (allowedTypes && (allowedTypes.indexOf(displayType) < 0) && (displayType !== this.getCurrMoleculeDisplayType()))  // not in allowed type
+				continue;
+			result.push(actionClasses[i]);
+		}
+		return result;
+	},
+
+	// abount menu
+	/** @private */
+	getDefaultMenuItems: function()
+	{
+		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
+		var items = [
+			BNS.loadData,
+			BNS.saveFile,
+			sSeparator,
+			BNS.molDisplayType,
+			BNS.molHideHydrogens,
+			BNS.zoomIn, BNS.zoomOut
+		];
+		// rotate
+		items.push({
+			'text': Kekule.$L('ChemWidgetTexts.CAPTION_ROTATE'),
+			'hint': Kekule.$L('ChemWidgetTexts.HINT_ROTATE'),
+			'children': [
+				BNS.rotateLeft, BNS.rotateRight,
+				BNS.rotateX, BNS.rotateY, BNS.rotateZ
+			]
+		});
+		/*
+		//if (this.getRenderType() === Kekule.Render.RendererType.R3D)
+		{
+			items = items.concat([BNS.rotateX, BNS.rotateY, BNS.rotateZ]);
+		}
+		//else
+		{
+			items = items.concat([BNS.rotateLeft, BNS.rotateRight]);
+		}
+		*/
+		items.push(BNS.reset);
+		items.push(sSeparator);
+		items.push(BNS.openEditor);
+		// config
+		items.push(BNS.config);
+
+		/*
+		 var result = {
+		 'buttons': buttons
+		 };
+		 return result;
+		 */
+		return items;
+	},
+	/** @private */
+	prepareMenuItems: function(items)
+	{
+		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
+		for (var i = 0, l = items.length; i < l; ++i)
+		{
+			var item = items[i];
+			if (typeof(item) === 'string')  // not hash, but a predefined comp name or separator
+			{
+				if (item !== sSeparator)
+				{
+					var defHash = this.createPredefinedMenuItemDefHash(item);
+					if (defHash)
+						items[i] = defHash;
+				}
+			}
+			else  // hash definition
+			{
+				if (!item.widget && !item.widgetClass)
+				{
+					var newItem = Object.extend({}, item);
+					newItem.widget = Kekule.Widget.MenuItem;
+					item = newItem;
+					items[i] = newItem;
+				}
+				if (item.children && item.children.length)
+				{
+					this.prepareMenuItems(item.children);
+				}
+			}
+		}
+		return items;
+	},
+	/** @private */
+	createPredefinedMenuItemDefHash: function(compName)
+	{
+		if (compName === BNS.molDisplayType)  // in 2D or 3D mode, type differs a lot, need handle separately
+		{
+			return this.createMolDisplayMenuDefHash();
+		}
+		var rotateCompNames = [BNS.rotateX, BNS.rotateY, BNS.rotateZ, BNS.rotateLeft, BNS.rotateRight];
+		var beginContinuousRepaintingBind = this.beginContinuousRepainting.bind(this);
+		var endContinuousRepaintingBind = this.endContinuousRepainting.bind(this);
+
+		var actionClass = this.getCompActionClass(compName);
+		var itemClass = Kekule.Widget.MenuItem;
+
+		var result = null;
+
+		var action = this._getActionOfComp(compName, true);
+		if (action)
+		{
+			result = {
+				'widget': itemClass,
+				'action': action
+			};
+			if (rotateCompNames.indexOf(compName) >= 0)
+			{
+				result = Object.extend(result, {
+					'periodicalExecInterval': 20,
+					'enablePeriodicalExec': true,
+					'#activate': beginContinuousRepaintingBind,
+					'@deactivate': endContinuousRepaintingBind
+				});
+			}
+		}
+		return result;
+	},
+	/** @private */
+	createMolDisplayMenuDefHash: function()
+	{
+		var action = this._getActionOfComp(BNS.molDisplayType, true);
+		var result = {
+			'widget': Kekule.Widget.MenuItem,
+			'action': action
+		};
+
+		var children = [];
+		var allowedType = this.getAllowedMolDisplayTypes();
+		var actionClasses = this._getUsableMolDisplayActionClasses(allowedType);
+
+		for (var i = 0, l = actionClasses.length; i < l; ++i)
+		{
+			var displayType = actionClasses[i].TYPE;
+			var action = this._getActionOfComp(BNS.molDisplayType + displayType, true, actionClasses[i]);
+			children.push({
+				'widget': Kekule.Widget.MenuItem,
+				'action': action
+			});
+		}
+		if (children.length)
+		{
+			result.children = [{
+				'widget': Kekule.Widget.PopupMenu,
+				'children': children
+			}];
+		}
+
+		return result;
+	},
+	/** @private */
+	createMenu: function()
+	{
+		var result = this.getMenu();
+		if (!result)
+		{
+			result = new Kekule.Widget.PopupMenu(this);
+			result.addClassName(CNS.DYN_CREATED);
+			result.setDisplayed(false);  // hide at first;
+		}
+		else  // clear old first
+		{
+			result.clearMenuItems();
+		}
+		var items = this.getMenuItems() || this.getDefaultMenuItems();
+		items = this.prepareMenuItems(items);
+		/*
+		for (var i = 0, l = items.length; i < l; ++i)
+		{
+			var menuItem = Kekule.Widget.Utils.createFromHash(result, items[i]);
+			result.appendMenuItem(menuItem);
+		}
+		*/
+		result.createChildrenByDefs(items);
+		this.setMenu(result);
+		//this.updateActions();
 		return result;
 	},
 
@@ -1731,18 +2039,28 @@ SM.register('Kekule.ChemWidget.Viewer.basic', {  // viewer with basic function, 
 	enableToolbar: true,
 	enableDirectInteraction: true,
 	enableTouchInteraction: false,
-	toolButtons: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+	toolButtons: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut],
+	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+});
+SM.register('Kekule.ChemWidget.Viewer.mini', {  // viewer with only one menu button
+	enableToolbar: true,
+	enableDirectInteraction: true,
+	enableTouchInteraction: false,
+	toolButtons: [BNS.menu],
+	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
 });
 SM.register('Kekule.ChemWidget.Viewer.static', {  // viewer with no interaction ability, suitable for static embedded chem object
 	enableToolbar: false,
 	enableDirectInteraction: false,
 	enableTouchInteraction: false,
-	toolButtons: []
+	toolButtons: [],
+	menuItems: []
 });
 SM.register('Kekule.ChemWidget.Viewer.editOnly', {  // viewer can be editted
 	enableToolbar: true,
 	enableEdit: true,
-	toolButtons: [BNS.openEditor]
+	toolButtons: [BNS.openEditor],
+	menuItems: [BNS.openEditor]
 });
 
 /**
@@ -1856,7 +2174,7 @@ Kekule.ChemWidget.ActionViewerRotateBase2D = Class.create(Kekule.ChemWidget.Acti
 		$super();
 		var viewer = this.getViewer();
 		var flag = viewer && (viewer.getRenderType() === Kekule.Render.RendererType.R2D);
-		this.setDisplayed(this.getDisplayed() && flag).setEnabled(this.getEnabled() && flag);
+		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
 	}
 });
 /**
@@ -1877,7 +2195,7 @@ Kekule.ChemWidget.ActionViewerRotateBase3D = Class.create(Kekule.ChemWidget.Acti
 		$super();
 		var viewer = this.getViewer();
 		var flag = viewer && (viewer.getRenderType() === Kekule.Render.RendererType.R3D);
-		this.setDisplayed(this.getDisplayed()  && flag).setEnabled(this.getEnabled() && flag);
+		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
 	}
 });
 

@@ -142,11 +142,10 @@
     outline: 1px solid #aaa;
 }
 
-/* TODO: Note now these settings are for debug proper. In release CSS sprite should be used. */
 
-.K-Action-Open-Configurator > .K-Pri-Glyph-Content
+.K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content
 {
-    background-image: url("images/slice/icons/settings.png");
+    background-image: url("images/slice/icons/menu.png");
 }
 
 .K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content

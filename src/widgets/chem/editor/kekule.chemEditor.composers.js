@@ -1525,7 +1525,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @private */
-	getToolButtonActionClass: function(btnName)
+	getCompActionClass: function(btnName)
 	{
 		return this.getToolButtonNameMapping()[btnName];
 	},
@@ -1569,7 +1569,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		else
 		{
-			var actionClass = this.getToolButtonActionClass(btnName);
+			var actionClass = this.getCompActionClass(btnName);
 			if (actionClass)
 			{
 				var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :

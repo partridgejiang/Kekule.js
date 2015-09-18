@@ -1769,6 +1769,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	CLASS_NAME: 'Kekule.Render.ChemCtab2DRenderer',
 	/** @private */
 	OBJ_NEED_LABEL_FIELD: '__$needDrawLabel__',
+	/** @private */
+	OBJ_NEED_DOT_FIELD: '__$needDrawDot__',
 	//* @private */
 	//OBJ_HIDDEN_FIELD: '__$hidden__',
 
@@ -1821,6 +1823,26 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	setObjNeedDrawLabel: function(context, obj, value)
 	{
 		this.setExtraProp2(context, obj, this.OBJ_NEED_LABEL_FIELD, value);
+	},
+	/**
+	 * Note: param passing to this function may be node or connector.
+	 * @private
+	 */
+	getObjNeedDrawDot: function(context, obj)
+	{
+		/*
+		var result = this.getExtraProp2(context, obj, this.OBJ_NEED_DOT_FIELD);
+		if (Kekule.ObjUtils.isUnset(result))
+		{
+			var drawOptions = this.getRenderCache(context).appliedOptions;
+			result = (obj instanceof Kekule.ChemStructureConnector)? false: this._needNodeDrawDot(context, obj, drawOptions);
+			//this.setExtraProp2(context, obj, this.OBJ_NEED_LABEL_FIELD, result);
+			this.setObjNeedDrawDot(context, obj, result);
+		}
+		*/
+		var drawOptions = this.getRenderCache(context).appliedOptions;
+		var result = (obj instanceof Kekule.ChemStructureConnector)? false: this._needNodeDrawDot(context, obj, drawOptions);
+		return result;
 	},
 
 	/** @private */
@@ -2099,12 +2121,17 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		else
 		{
 			var nodeCoreElem, chargeElem;
+			if (this.getObjNeedDrawDot(context, node) && Kekule.ObjUtils.isUnset(nodeRenderOptions.atomRadius))
+			{
+				nodeRenderOptions.atomRadius = nodeRenderOptions.allenCenterAtomRadius;
+			}
 			if (nodeRenderOptions.atomRadius)
 			{
+				var radius = nodeRenderOptions.atomRadius * nodeRenderOptions.unitLength;
 				nodeRenderOptions.strokeColor = nodeRenderOptions.color;
 				nodeRenderOptions.fillColor = nodeRenderOptions.color;
-				nodeCoreElem = this.drawCircle(context, coord, nodeRenderOptions.atomRadius, nodeRenderOptions);
-				boundInfo = this.createCircleBoundInfo(coord, nodeRenderOptions.atomRadius);
+				nodeCoreElem = this.drawCircle(context, coord, radius, nodeRenderOptions);
+				boundInfo = this.createCircleBoundInfo(coord, radius);
 			}
 			else
 				boundInfo = this.createPointBoundInfo(coord);
@@ -2187,6 +2214,40 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 					drawOptions.hydrogenDisplayLevel);
 					//this.getRenderConfigs().getMoleculeDisplayConfigs().getDefHydrogenDisplayLevel());
 		return hdisplayLevel;
+	},
+
+	/**
+	 * Check if a node is carbon atom between two multiple (double) bonds,
+	 * so that a explicit dot should be drawn to avoid confusions in outlook.
+	 * @param {Object} context
+	 * @param {Object} node
+	 * @param {Hash} drawOptions
+	 * @private
+	 */
+	_needNodeDrawDot: function(context, node, drawOptions)
+	{
+		var renderOps = node.getOverriddenRenderOptions();
+		if (!(node instanceof Kekule.Atom))
+			return false;
+		else if (node.getAtomicNumber() !== Kekule.Render.DEF_ATOM_ATOMIC_NUM)
+			return false;
+		else  // C atom
+		{
+			if (this.getObjNeedDrawLabel(context, node))
+				return false;
+			var connectors = node.getLinkedBonds();
+			if (connectors.length === 2)
+			{
+				var bonds = node.getLinkedMultipleBonds();
+				if (bonds.length === 2)
+				{
+					// we have two multiple bonds
+					if (bonds[0].getBondOrder() === bonds[1].getBondOrder() && bonds[0].getBondOrder() >= 2)
+						return true;
+				}
+			}
+			return false;
+		}
 	},
 
 	/**

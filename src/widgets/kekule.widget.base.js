@@ -65,6 +65,7 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_FOCUSED: 'K-State-Focused',
 
 	STATE_SELECTED: 'K-State-Selected',
+	STATE_CHECKED: 'K-State-Checked',
 
 	// show type
 	SHOW_POPUP: 'K-Show-Popup',
@@ -272,6 +273,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {String} height Height style of element.
  * @property {String} innerHTML Current element's innerHTML value.
  * @property {Object} style CSS style object of current binding element.
+ * @property {String} cssText CSS text of current binding element.
  * @property {String} htmlClassName HTML class of current binding element. This property will include all values in element's class attribute.
  * @property {String} customHtmlClassName HTML class set by user. This property will exclude some predefined class names.
  * //@property {Array} outlookStyleClassNames Classes used to control the outlook of widget. Usually user do not need to access this value.
@@ -372,17 +374,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this._pendingHtmlClassNames = '';
 		this._reactElemAttribMutationBind = this._reactElemAttribMutation.bind(this);
 
-		$super();
-		this.setPropStoreFieldValue('isDumb', !!isDumb);
-		if (!isDumb)
-			this.reactUiEventBind = this.reactUiEvent.bind(this);
-
 		this.setPropStoreFieldValue('inheritEnabled', true);
 		this.setPropStoreFieldValue('inheritStatic', true);
 		this.setPropStoreFieldValue('selfEnabled', true);
 		this.setPropStoreFieldValue('selfStatic', false);
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
+
+		$super();
+		this.setPropStoreFieldValue('isDumb', !!isDumb);
+		if (!isDumb)
+			this.reactUiEventBind = this.reactUiEvent.bind(this);
+
 		/*
 		this.setShowText(true);
 		this.setShowGlyph(true);
@@ -534,6 +537,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'scope': Class.PropertyScope.PUBLIC,
 			'getter': function() { return this.getElement().style; },
 			'setter': null
+		});
+		this.defineProp('cssText', {'dataType': DataType.STRING, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getElement().style.cssText; },
+			'setter': function(value)
+			{
+				this.getElement().style.cssText = value;
+			}
 		});
 		this.defineProp('htmlClassName', {'dataType': DataType.STRING, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
@@ -795,6 +806,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('isActive', value);
+
+				if (value)  // active widget should always be focused
+				{
+					this.focus();
+				}
+				var m = this.getGlobalManager();
+				if (m)
+					m.notifyWidgetActiveChanged(this, value);
 				this.stateChanged();
 			}
 		});
@@ -803,18 +822,24 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'getter': function()
 			{
 				var doc = this.getDocument();
-				var elem = this.getElement();
+				var elem = this.getCoreElement();
 				if (doc && elem && doc.activeElement)
 					return (doc.activeElement === elem);
 			},
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('isFocused', value);
+				var m = this.getGlobalManager();
+				if (m)
+					m.notifyWidgetFocusChanged(this, value);
 				var elem = this.getCoreElement();
-				if (elem && elem.focus && value)
-					elem.focus();
-				if (elem && elem.blur && (!value))
-					elem.blur();
+				if (elem)
+				{
+					if (elem.focus && value)
+						elem.focus();
+					if (elem.blur && (!value))
+						elem.blur();
+				}
 				this.stateChanged();
 			}
 		});
@@ -886,8 +911,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setElement(null);
 		this.destroyElement(elem);
 
-		if (Kekule.Widget.globalManager)
-			Kekule.Widget.globalManager.notifyWidgetFinalized(this);
+		if (this.getGlobalManager())
+			this.getGlobalManager().notifyWidgetFinalized(this);
 
 		$super();
 	},
@@ -907,6 +932,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		{
 			m.notifyWidgetEventFired(this, eventName, event);
 		}
+	},
+
+	/**
+	 * Returns global widget manager in current document.
+	 * @returns {Object}
+	 */
+	getGlobalManager: function()
+	{
+		return Kekule.Widget.globalManager;
 	},
 
 	/**
@@ -1218,6 +1252,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			var refElem = refWidget? refWidget.getElement(): null;
 			this.getChildrenHolderElement().insertBefore(child.getElement(), refElem);
 			*/
+			this.childWidgetAdded(child);
 			this.childrenModified();
 		}
 	},
@@ -2487,6 +2522,10 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				e.setCustomPropValue('__kekule_widget__', this);
 				*/
 
+				var targetElem = e.getTarget();
+				var targetWidget = Kekule.Widget.Utils.getBelongedResponsiveWidget(targetElem);
+				var eventOnSelf = targetWidget === this;
+
 				var KC = Kekule.X.Event.KeyCode;
 				var keyCode;
 				if (evType === 'mousemove')  // test mouse cursor
@@ -2508,7 +2547,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if (evType === 'focus')
 				{
-					if (e.getTarget() == this.getCoreElement())  // important, only react to focus on the very element
+					if (eventOnSelf && e.getTarget() === this.getCoreElement())  // important, only react to focus on the very element
 					{
 						this.setIsFocused(true);
 						handled = true;
@@ -2516,7 +2555,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if (evType === 'blur')
 				{
-					if (e.getTarget() == this.getCoreElement()) // important, only react to blur off the very element
+					if (eventOnSelf && e.getTarget() == this.getCoreElement()) // important, only react to blur off the very element
 					{
 						// check if focus changed to another child element
 						var currFocusElem = this.getDocument().activeElement;
@@ -2560,7 +2599,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 				else if ((evType === 'mousedown' && e.getButton() === Kekule.X.Event.MouseButton.LEFT) || (evType === 'touchstart'))
 				{
-					if (!e.ghostMouseEvent)
+					if (eventOnSelf && !e.ghostMouseEvent)
 					{
 						this.reactActiviting(e);
 					}
@@ -2579,7 +2618,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				else if ((evType === 'mouseup' && e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 					|| (evType === 'touchend') || (evType === 'touchcancel'))
 					{
-					if (!e.ghostMouseEvent)
+					if (eventOnSelf && !e.ghostMouseEvent)
 					{
 						this.reactDeactiviting(e);
 					}
@@ -2590,7 +2629,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					keyCode = e.getKeyCode();
 					if ((keyCode === KC.ENTER) || (keyCode === KC.SPACE))
 					{
-						if (!this.getIsActive())
+						if (eventOnSelf && !this.getIsActive())
 						{
 							this.reactActiviting(e);
 						}
@@ -2602,7 +2641,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					keyCode = e.getKeyCode();
 					if ((keyCode === KC.ENTER) || (keyCode === KC.SPACE))
 					{
-						if (this.getIsActive())
+						if (eventOnSelf && this.getIsActive())
 							this.reactDeactiviting(e);
 						handled = true;
 					}
@@ -3117,6 +3156,23 @@ Kekule.Widget.Utils = {
 		}
 		return result;
 	},
+	/**
+	 * Returns widget the element belonged to. The widget must be a non-static one.
+	 * @param {HTMLElement} element
+	 * @returns {Kekule.Widget.BaseWidget}
+	 */
+	getBelongedResponsiveWidget: function(element)
+	{
+		var result = null;
+		while (element && (!result))
+		{
+			result = Kekule.Widget.Utils.getWidgetOnElem(element);
+			if (result && result.getStatic())
+				result = null;
+			element = element.parentNode;
+		}
+		return result;
+	},
 
 	/**
 	 * Create widget from a definition hash object. The hash object may include the following fields:
@@ -3371,6 +3427,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			}
 		});
 		this.defineProp('widgets', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		// private, record current active and focused widget
+		// at one time, only one widget can be in those states
+		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 	},
 
 	/** @private */
@@ -3399,8 +3460,67 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	notifyWidgetFinalized: function(widget)
 	{
-		Kekule.ArrayUtils.remove(this.getWidgets(), widget);
+		if (this.getWidgets())
+			Kekule.ArrayUtils.remove(this.getWidgets(), widget);
+		if (this.getPopupWidgets())
+			Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
+		if (this.getDialogWidgets())
+			Kekule.ArrayUtils.remove(this.getDialogWidgets(), widget);
+		if (widget === this.getCurrActiveWidget())
+			this.setCurrActiveWidget(null);
+		if (widget === this.getCurrFocusedWidget())
+			this.setCurrFocusedWidget(null);
+
 		this.invokeEvent('widgetFinalize', {'widget': widget});
+	},
+	/**
+	 * Notify that active state of a widget is changed.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} active
+	 * @private
+	 */
+	notifyWidgetActiveChanged: function(widget, active)
+	{
+		var oldWidget = this.getCurrActiveWidget();
+		if (active)
+		{
+			if (widget !== oldWidget)
+			{
+				if (oldWidget)
+					oldWidget.setIsActive(false);
+				this.setCurrActiveWidget(widget);
+			}
+		}
+		else
+		{
+			if (oldWidget === widget)
+				this.setCurrActiveWidget(null);
+		}
+	},
+	/**
+	 * Notify that focus state of a widget is changed.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} focused
+	 * @private
+	 */
+	notifyWidgetFocusChanged: function(widget, focused)
+	{
+		var oldWidget = this.getCurrFocusedWidget();
+		if (focused)
+		{
+			if (widget !== oldWidget)
+			{
+				// do not need to blur old widget, this will be done automatically by browser
+				if (oldWidget)
+					oldWidget.setIsFocused(false);
+				this.setCurrFocusedWidget(widget);
+			}
+		}
+		else
+		{
+			if (oldWidget === widget)
+				this.setCurrFocusedWidget(null);
+		}
 	},
 
 	/**
@@ -3425,6 +3545,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	getBelongedResponsiveWidget: function(element)
 	{
+		/*
 		var result = null;
 		while (element && (!result))
 		{
@@ -3434,6 +3555,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			element = element.parentNode;
 		}
 		return result;
+		*/
+		return Kekule.Widget.Utils.getBelongedResponsiveWidget(element);
 	},
 
 	/**
@@ -3698,7 +3821,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 		if (widget)
 		{
-			//console.log(e.getType(), widget.getElement());
+			//console.log('event', e.getTarget().tagName, widget.getClassName());
 			widget.reactUiEvent(e);
 		}
 	},
@@ -4135,11 +4258,15 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	_getElemStoredInfo: function(elem)
 	{
-		var result = elem[this.INFO_FIELD];
-		if (!result)
+		var result = null;
+		if (elem)
 		{
-			result = {};
-			elem[this.INFO_FIELD] = result;
+			result = elem[this.INFO_FIELD];
+			if (!result)
+			{
+				result = {};
+				elem[this.INFO_FIELD] = result;
+			}
 		}
 		return result;
 	},
@@ -4177,7 +4304,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	restoreElem: function(elem)
 	{
+		if (!elem)
+			return;
 		var info = this._getElemStoredInfo(elem);
+		if (!info)
+			return;
 		// restore style
 		var oldStyles = info.styles;
 		var names = Kekule.ObjUtils.getOwnedFieldNames(oldStyles);
