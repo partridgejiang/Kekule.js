@@ -36,7 +36,7 @@
 	<script>
 	
 	var composer, viewer, btnGen, btnTerminate;	
-	var calculator;
+	var calculator, timeStart, timeEnd;
 	
 	function report(stateText)
 	{
@@ -53,11 +53,13 @@
 	{
 		btnGen.setEnabled(false);
 		btnTerminate.setEnabled(true);
+		timeStart = Date.now();
 	}
 	function calcEnd()
 	{
 		btnGen.setEnabled(true);
 		btnTerminate.setEnabled(false);
+		timeEnd = Date.now();
 	}
 		
 	function generate3D()
@@ -67,9 +69,10 @@
 		calcStart();
 		calculator = Kekule.Calculator.generate3D(mol, {'forceField': ''},
 			function(generatedMol){
-				report('Calculation done');
 				calcEnd();
+				var elapse = (timeEnd - timeStart) / 1000;
 				viewer.setChemObj(generatedMol);
+				report('Calculation done in ' + elapse + ' sec');
 			},
 			function(err)
 			{
