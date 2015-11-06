@@ -341,12 +341,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		// private properties
 		this.defineProp('drawBridge', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': null,
-			'getter': function()
+			'getter': function(slient)
 			{
 				var result = this.getPropStoreFieldValue('drawBridge');
 				if (!result)
 				{
-					result = this.createDrawBridge();
+					result = this.createDrawBridge(slient);
 					this.setPropStoreFieldValue('drawBridge', result);
 				}
 				return result;
@@ -539,14 +539,15 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	*/
 
 	/** @private */
-	createDrawBridge: function()
+	createDrawBridge: function(slient)
 	{
 		var M = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
 			Kekule.Render.DrawBridge3DMananger: Kekule.Render.DrawBridge2DMananger;
 		var result = M.getPreferredBridgeInstance();
 		if (!result)   // can not find suitable draw bridge
 		{
-			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			if (!slient)
+				Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
 		/* infinite loop, remove this part
 		if (this.getBackgroundColor() && result.setClearColor)
@@ -621,7 +622,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	refitDrawContext: function(doNotRepaint)
 	{
-		if (this.getDrawBridge() && this.getDrawContext())
+		if (this.getDrawBridge(true) && this.getDrawContext())
 		{
 			//var dim = Kekule.HtmlElementUtils.getElemScrollDimension(this.getElement());
 			var dim = Kekule.HtmlElementUtils.getElemClientDimension(this.getDrawContextParentElem());
@@ -1110,7 +1111,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var color = this.getBackgroundColor();
 		if (color === 'transparent')
 			color = null;
-		var drawBridge = this.getDrawBridge();
+		var drawBridge = this.getDrawBridge(true);
 		if (drawBridge && drawBridge.setClearColor)
 		{
 			drawBridge.setClearColor(this.getDrawContext(), color);

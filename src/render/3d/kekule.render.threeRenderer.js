@@ -853,14 +853,43 @@ Kekule.Render.ThreeRendererBridge = Class.create(
  */
 Kekule.Render.ThreeRendererBridge.isSupported = function()
 {
-	var result = (typeof(THREE) !== 'undefined');
+	var result = (typeof($jsRoot.THREE) !== 'undefined');
 	if (result)
 	{
 		var F = Kekule.BrowserFeature;
 		result = F.webgl || F.canvas || F.svg;
 	}
 	return !!result;
-}
+	//return Kekule.Render.ThreeRendererBridge.CheckSupporting().isSupported;
+};
+/*
+ * Check if current environment supports Three.js drawing.
+ * This function will returns more detailed information than {@link Kekule.Render.ThreeRendererBridge.isSupported}.
+ * @returns {Object} Info about supporting, including:
+ *   {
+ *     isSupported: Bool,
+ *     message: If not supported, provides error message.
+ *   }
+ */
+/*
+Kekule.Render.ThreeRendererBridge.CheckSupporting = function()
+{
+	var msg;
+	var isSupported = (typeof($jsRoot.THREE) !== 'undefined');
+	if (!isSupported)  // Three.js lib not loaded
+	{
+		msg = Kekule.$L('ErrorMsg.LIB_THREE_JS_NOT_LOADED');
+	}
+	else  // lib loaded, check if 3D context is supported
+	{
+		var F = Kekule.BrowserFeature;
+		isSupported = F.webgl || F.canvas || F.svg;
+		if (!supported)
+			msg = Kekule.$L('ErrorMsg.BROWSER_3D_DRAWING_NOT_SUPPORTED');
+	}
+	return {'isSupported': isSupported, 'message': msg};
+};
+*/
 
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.ThreeRendererBridge);
 

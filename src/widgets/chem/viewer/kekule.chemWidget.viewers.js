@@ -85,6 +85,8 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  *
  * @property {Bool} enableDirectInteraction Whether interact without tool button is allowed (e.g., zoom/rotate by mouse).
  * @property {Bool} enableTouchInteraction Whether touch interaction is allowed. Note if enableDirectInteraction is false, touch interaction will also be disabled.
+ * @property {Bool} enableRestraintRotation3D Set to true to rotate only on one axis of X/Y/Z when the starting point is near edge of viewer.
+ * @property {Float} restraintRotation3DEdgeRatio
  * @property {Bool} enableEdit Whether a edit button is shown in toolbar to edit object in viewer. Works only in 2D mode.
  * @property {Bool} modalEdit Whether opens a modal dialog when editting object in viewer.
  * @property {Bool} enableEditFromVoid Whether editor can be launched even if viewer is empty.
@@ -232,6 +234,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 
+		this.defineProp('enableRestraintRotation3D', {'dataType': DataType.BOOL});
+		this.defineProp('restraintRotation3DEdgeRatio', {'dataType': DataType.FLOAT});
 		//this.defineProp('liveUpdate', {'dataType': DataType.BOOL});
 
 		this.defineProp('enableEdit', {'dataType': DataType.BOOL,
@@ -487,6 +491,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableEdit(true);
 		*/
 		this.setModalEdit(true);
+		this.setRestraintRotation3DEdgeRatio(0.18);
+		this.setEnableRestraintRotation3D(true);
 	},
 
 	/** @ignore */
@@ -1632,6 +1638,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			'lastCoord': null,
 			'lastZoom': null
 		};
+		this._restraintCoord = null;
 		/*
 		this._zoomInfo = {
 			'isTransforming': false,
@@ -1669,9 +1676,21 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	_initTransform: function()
 	{
 		var viewer = this.getViewer();
-		var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
+		var w = viewer.getOffsetWidth();
+		var h = viewer.getOffsetHeight();
+		var refLength;
 		var info = this._transformInfo;
-		info.angleRatio = 1 / minLength * Math.PI;
+		var rc = this._restraintCoord;
+		if (rc)
+		{
+			refLength = (rc === 'x')? h: w;
+			info.angleRatio = 1 / refLength * Math.PI * 2;
+		}
+		else
+		{
+			refLength = Math.min(w, h);
+			info.angleRatio = 1 / refLength * Math.PI;
+		}
 		//info.lastRotateXYZ = {'x': 0, 'y': 0, 'z': 0};
 	},
 	/** @private */
@@ -1699,7 +1718,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
 	},
 	/** @private */
-	_beginInteractTransformAtCoord: function(screenX, screenY)
+	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY)
 	{
 		var viewer = this.getViewer();
 		if (viewer && viewer.getChemObj())
@@ -1714,9 +1733,69 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 				 var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
 				 info.angleRatio = 1 / minLength * Math.PI;
 				 */
+				this._restraintCoord = this._calcRestraintRotateCoord(clientX, clientY);
+
 				this._initTransform();
 			}
 		}
+	},
+	/** @private */
+	_calcRestraintRotateCoord: function(clientX, clientY)
+	{
+		var viewer = this.getViewer();
+		var result = null;
+		// check if ned restraint rotate
+		var restraintRotateEdgeSize = this._getRestraintRotate3DEdgeSize();
+		if (restraintRotateEdgeSize > 0)
+		{
+			var elem = viewer.getInteractionReceiverElem();
+			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
+			var x1 = clientX - rect.left;
+			var y1 = clientY - rect.top;
+			var x2 = rect.right - clientX; //rect.right - screenX;
+			var y2 = rect.bottom - clientY; //rect.bottom - screenY;
+			var minX, minY, flagX, flagY;
+			if (x1 <= x2)
+			{
+				flagX = 1;
+				minX = x1;
+			}
+			else
+			{
+				flagX = -1;
+				minX = x2;
+			}
+			if (y1 <= y2)
+			{
+				flagY = 1;
+				minY = y1;
+			}
+			else
+			{
+				flagY = -1;
+				minY = y2;
+			}
+			var minOffset = Math.min(minX, minY);
+			if (minOffset > restraintRotateEdgeSize)  // no restraint
+				return null;
+			else  // calc restraint coord
+			{
+				if (minY > minOffset)  // more near to left or right edge
+				{
+					if (flagX < 0)  // on right edge
+						result = 'x';
+				}
+				else  // more near to top/bottom edge
+				{
+					if (flagY > 0)  // on top edge, rotate on z axis
+						result = 'z';
+					else  // on bottom edge
+						result = 'y';
+				}
+			}
+		}
+		//console.log('rotate restraint coord', result);
+		return result;
 	},
 	/** @private */
 	_interactTransformAtCoord: function(screenX, screenY)
@@ -1725,6 +1804,19 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			this.rotateByXYDistance(screenX, screenY);
 		else
 			this.moveByXYDistance(screenX, screenY);
+	},
+	/** @private */
+	_getRestraintRotate3DEdgeSize: function()
+	{
+		var viewer = this.getViewer();
+		if (viewer.getEnableRestraintRotation3D() && viewer.getRenderType() === Kekule.Render.RendererType.R3D)
+		{
+			var dim = viewer.getDimension();
+			var length = Math.min(dim.width, dim.height);
+			return length * (viewer.getRestraintRotation3DEdgeRatio() || 0);
+		}
+		else
+			return 0;
 	},
 	/** @private */
 	needReactEvent: function(e)
@@ -1766,7 +1858,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
 			// start mouse drag rotation in 3D render mode
-			this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY());
+			this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
 		}
 	},
 	/** @private */
@@ -1778,7 +1870,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		var notUnset = Kekule.ObjUtils.notUnset;
 		if (touchInfo && notUnset(touchInfo.screenX) && notUnset(touchInfo.screenY))
 		{
-			this._beginInteractTransformAtCoord(touchInfo.screenX, touchInfo.screenY);
+			this._beginInteractTransformAtCoord(touchInfo.screenX, touchInfo.screenY, touchInfo.clientX, touchInfo.clientY);
 			e.stopPropagation();
 			e.preventDefault();
 		}
@@ -1878,9 +1970,33 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 				var currCoord = {'x': currX, 'y': currY};
 				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
 				delta.y = -delta.y;
-				var dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
-				var rotateAngle = dis * info.angleRatio;
-				var axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
+
+				var dis, rotateAngle, axisVector;
+				if (this._restraintCoord)  // restraint rotation on one axis
+				{
+					var rc = this._restraintCoord;
+
+					if (rc === 'x')
+					{
+						dis = delta.y;
+						axisVector = {'x': 1, 'y': 0, 'z': 0};
+					}
+					else
+					{
+						dis = delta.x;
+						if (rc === 'y')
+							axisVector = {'x': 0, 'y': -1, 'z': 0};
+						else
+							axisVector = {'x': 0, 'y': 0, 'z': 1};
+					}
+					rotateAngle = -dis * info.angleRatio;
+				}
+				else  // normal rotation
+				{
+					dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
+					rotateAngle = dis * info.angleRatio;
+					axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
+				}
 
 				viewer.rotate3DByAxis(rotateAngle, axisVector);
 
