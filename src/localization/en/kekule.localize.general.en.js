@@ -130,6 +130,12 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// render/kekule.render.painter.js
 	CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ: 'Can not find suitable renderer for object',
 
+	// render/3d/kekule.render.threeRenderer.js
+	/*
+	LIB_THREE_JS_NOT_LOADED: 'Three.js not loaded, can not render 3D context',
+	BROWSER_3D_DRAWING_NOT_SUPPORTED: 'It seems that your web browser is not modern enough to support the 3D drawing function. Please update it.',
+	*/
+
 	// html/kekule.autoLaunchers.js
 	//MIMETYPE_NOT_SET: 'MIME type not set for resource'
 
