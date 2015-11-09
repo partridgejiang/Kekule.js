@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="reactionExercise.manifest">
 <head lang="en">
   <meta charset="UTF-8">
   <title>Reaction Exercises</title>
@@ -188,6 +188,7 @@
     }
     function toggleKeys()
     {
+			setTimeout((function() {
         var visible = Kekule.Widget.getWidgetById('btnToggleKeys').getChecked();
         for (var i = 0, l = viewerKeyIds.length; i < l; ++i)
         {
@@ -197,6 +198,7 @@
             else
                 elem.style.visibility = 'hidden';
         }
+			}), 10);
     }
 
     function init()

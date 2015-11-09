@@ -53,7 +53,7 @@ DU.newRootCategory('widget', 'Common Widget', 'Demos about common widgets such a
 	DU.newConcreteDemo('dataTable', 'Data Table', 'Demonstrates the usage of data table widget to display chemical data..', 'dataTable/dataTable.html')
 ]);
 DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistry', [
-	DU.newConcreteDemo('periodicRTable', 'Periodic Table', 'Demonstrates the use of periodic table widget.', 'periodicTable/periodicTable.html'),
+	DU.newConcreteDemo('periodicTable', 'Periodic Table', 'Demonstrates the use of periodic table widget.', 'periodicTable/periodicTable.html'),
 	DU.newConcreteDemo('chemViewer2D', 'Chem Viewer 2D', 'Demonstrates function of 2D chem viewer widget.', 'chemViewer/chemViewer2D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('chemViewer3D', 'Chem Viewer 3D', 'Demonstrates function of 3D chem viewer widget.', 'chemViewer/chemViewer3D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('embeddedViewer', 'Embedded Chem Object', 'Demonstrates display molecules using embedded chem viewer and pure HTML code (without JavaScript).', 'chemViewer/embeddedChemViewer.html'),
@@ -203,6 +203,14 @@ Kekule.Demos.LaunchUtils = {
 		var url = demoInfo.url;
 		demoFrameElem.src = ILU.DEMO_ITEM_BASE_PATH + url;
 		demoFrameElem.ownerDocument.title = demoInfo.title + ' - Kekule.js Demo';
+		var rootElem = demoFrameElem.ownerDocument.documentElement;
+		/*
+		if (rootElem)  // add offline manifest		
+		{
+			var manifestUrl = ILU.DEMO_ITEM_BASE_PATH + url.replace('.html', '.manifest'); 
+			rootElem.setAttribute('manifest', manifestUrl);
+		}
+		*/
 
 		url = demoInfo.introUrl;
 		if (url)

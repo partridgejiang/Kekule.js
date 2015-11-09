@@ -29,6 +29,7 @@ section.DemoCategory
 	border-radius: 0.5em;
 	margin: 0.5em;
 	width: 20em;
+	min-height: 30em;
 	overflow: hidden;
 }
 
