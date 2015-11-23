@@ -627,6 +627,12 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 				result.translateZ = baseCoord.z || 0 - boxCenter.z || 0;
 			}
 		}
+		else
+		{
+			result.translateX = drawOptions.translateX || 0;
+			result.translateY = drawOptions.translateY || 0;
+			result.translateZ = drawOptions.translateZ || 0;
+		}
 
 		result.zoom = drawOptions.zoom || 1;
 
