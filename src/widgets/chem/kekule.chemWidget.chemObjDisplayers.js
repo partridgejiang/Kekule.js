@@ -1047,6 +1047,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 baseCoord = null;
 			 */
 
+			//console.log(drawParams, drawParams.baseCoord, drawParams.drawOptions);
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
 
 			//var end = (new Date()).getTime();
