@@ -151,6 +151,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this._paintFlag = 0;  // used internally
 		//this._errorReportElem = null;  // use internally
 		this._bgColorMap = {};  // use internally
+		this._contextTransformOpsMap = new Kekule.MapEx();
 		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		$super(parentOrElementOrDocument);
@@ -175,6 +176,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			b.finalize();
 		this.setPropStoreFieldValue('drawBridge', null);
 		this.setPropStoreFieldValue('drawContext', null);
+		if (this._contextTransformOpsMap)
+			this._contextTransformOpsMap.finalize();
 		$super();
 	},
 	/** @private */
@@ -1002,6 +1005,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return this.getDrawOptions();
 	},
 
+	/** @private */
 	calcDrawParams: function(overrideOptions)
 	{
 		var ops = this.getActualDrawOptions();
@@ -1011,9 +1015,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return {'drawOptions': ops, 'baseCoord': baseCoordResult.baseCoord, 'newWidgetDimension': baseCoordResult.newWidgetDimension};
 	},
 
+	/** @private */
+	_savePainterInitialRenderTransformOptions: function(context, painter)
+	{
+		var actualTransformOps = painter.getActualInitialRenderTransformOptions(context);
+		this._contextTransformOpsMap.set(context, actualTransformOps);
+		//console.log('store transform ops', actualTransformOps);
+	},
+
 	/**
-	 * Repaint the context.
-	 * @private
+	 * Repaint the context with current chem object.
+	 * @param {Hash} overrideOptions Transform options to do repainting.
+	 *   If this param is set to null, all transform options will be recalculated.
+	 *   If overrideOptions.preserveTransformOptions is true, transform options remains same as
+	 *   last painting process (rather than recalculated).
 	 */
 	repaint: function(overrideOptions)
 	{
@@ -1034,9 +1049,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 drawOptions = Object.extend(drawOptions, overrideOptions);
 			 var baseCoord = this.calcDrawBaseCoord(drawOptions);
 			 */
-			var drawParams = this.calcDrawParams(overrideOptions);
-
 			var context = this.getDrawContext();
+			var drawParams;
+			var transformOps;
+
+			var transformOpsChanged = true;
+			if (overrideOptions && overrideOptions.preserveTransformOptions)
+			{
+				transformOps = this._contextTransformOpsMap.get(context) || null;
+				transformOpsChanged = false;
+				//console.log(transformOps);
+				drawParams = this.calcDrawParams(transformOps);
+			}
+			else
+				drawParams = this.calcDrawParams(overrideOptions);
 
 			this._lastBaseCoord = drawParams.baseCoord;  // save for next time use in drawOptionChanged
 			//console.log('context center', baseCoord);
@@ -1049,6 +1075,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 
 			//console.log(drawParams, drawParams.baseCoord, drawParams.drawOptions);
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
+
+			if (transformOpsChanged)
+			{
+				this._savePainterInitialRenderTransformOptions(context, painter);
+			}
 
 			//var end = (new Date()).getTime();
 			//var duration = end - start;
@@ -1140,7 +1171,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var drawOptions = this.getDrawOptions();
 		if (painter.supportGeometryOptionChange())
 		{
-			painter.changeGeometryOptions(this.getDrawContext(), drawOptions.baseCoord || this._lastBaseCoord, drawOptions);
+			var context = this.getDrawContext();
+			painter.changeGeometryOptions(context, drawOptions.baseCoord || this._lastBaseCoord, drawOptions);
+			this._savePainterInitialRenderTransformOptions(context, painter);
 		}
 		else
 			this.drawOptionChanged();
