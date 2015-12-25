@@ -66,8 +66,8 @@ Kekule.BrowserFeature = {
 	blob: !!window.Blob,
 	workers: !! window.Worker,
 	fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
-	sessionStorage: !!window.sessionStorage,
-	localStorage: !!window.localStorage,
+	sessionStorage: (function() { try { return !!window.sessionStorage} catch(e) { return false} })(),  // directly call session storage locally on Firefox now will cause exception
+	localStorage: (function() { try { return !!window.localStorage} catch(e) { return false} })(),  // !!window.localStorage,
 	cssTransition: (function(s) {
 		return 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
 	})(document.createElement('div').style),
