@@ -14,7 +14,7 @@
 .K-MsgPanel.K-Msg-Info .K-MsgPanel-Content{background-color:#ebf5ff;color:#000}
 .K-MsgPanel.K-Msg-Warning .K-MsgPanel-Content{background-color:#ffffc8;color:#000}
 .K-MsgPanel.K-Msg-Error .K-MsgPanel-Content{background-color:#ffebeb;color:#f00}
-.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block;background-repeat:no-repeat}
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block}
 .K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px 0}
 .K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -17px}
 .K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -34px}
@@ -93,11 +93,11 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-PageNavigator-Last > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-252px -17px}
 .K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-252px -34px}
 .K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-201px -34px}
-.K-Res-Cursor-Rotate{cursor:url(images/cursors/rotate.cur),pointer}
-.K-Res-Cursor-Rotate-NE{cursor:url(images/cursors/rotateNE.cur),pointer}
-.K-Res-Cursor-Rotate-NW{cursor:url(images/cursors/rotateNW.cur),pointer}
-.K-Res-Cursor-Rotate-SE{cursor:url(images/cursors/rotateSE.cur),pointer}
-.K-Res-Cursor-Rotate-SW{cursor:url(images/cursors/rotateSW.cur),pointer}
+.K-Res-Cursor-Rotate{cursor:url(/./absolute/cursors/rotate.cur),pointer}
+.K-Res-Cursor-Rotate-NE{cursor:url(./absolute/cursors/rotateNE.cur),pointer}
+.K-Res-Cursor-Rotate-NW{cursor:url(./absolute/cursors/rotateNW.cur),pointer}
+.K-Res-Cursor-Rotate-SE{cursor:url(./absolute/cursors/rotateSE.cur),pointer}
+.K-Res-Cursor-Rotate-SW{cursor:url(./absolute/cursors/rotateSW.cur),pointer}
 .K-Res-Icon-Color-Pick{background-image:url(sprite/defaultColor.png);background-position:-184px -17px}
 .K-Res-Icon-Color-NotSet,.K-Color-Unset,.K-Color-Default{background-image:url(sprite/defaultColor.png);background-position:0 0}
 .K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/defaultColor.png);background-position:-50px 0}
@@ -106,4 +106,4 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px 0}
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px -25px}
 .K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-125px 0}
-#CssGaga{content:"150821213114,swt,333"}
+#CssGaga{content:"150715175642,swt,333"}
