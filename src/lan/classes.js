@@ -172,6 +172,8 @@ Object.extendEx = function(destination, source, options)
       continue;
 
     var oldValue = destination[property];
+    if (options.preserveExisted && oldValue)
+      continue;
     var oldProto = oldValue && oldValue.constructor && oldValue.constructor.prototype;
     var newProto = value && value.constructor && value.constructor.prototype;
     if (oldValue && typeof(oldValue) === 'object' && oldProto === newProto)
@@ -180,6 +182,11 @@ Object.extendEx = function(destination, source, options)
       destination[property] = value;
   }
   return destination;
+};
+/** @ignore */
+Object._extendSupportMethods = function(destination, methods)
+{
+  return Object.extendEx(destination, methods, {ignoreUnsetValue: true, preserveExisted: true});
 };
 /** @ignore */
 // e.g., obj.getCascadeFieldValue('level1.level2.name') will return obj.level1.level2.name.
@@ -281,7 +288,7 @@ Object.copyValues = function(dest, src, propNames)
 
 // extend class methods
 /** @ignore */
-Object.extend(Object, {
+Object._extendSupportMethods(Object, {
     keys: function(object) {
         var keys = [];
         for (var property in object)
@@ -297,7 +304,7 @@ Object.extend(Object, {
 });
 
 /** @ignore */
-Object.extend(Function.prototype, {
+Object._extendSupportMethods(Function.prototype, {
     argumentNames: function() {
         var names = this.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/)[1].replace(/\s+/g, '').split(',');
         return names.length == 1 && !names[0] ? [] : names;
@@ -319,9 +326,9 @@ Object.extend(Function.prototype, {
   }
 });
 
-if (!Function.prototype.bind)
+//if (!Function.prototype.bind)
 {
-	Object.extend(Function.prototype, {
+	Object._extendSupportMethods(Function.prototype, {
 		bind: function() {
         if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
         var __method = this, args = $A(arguments), object = args.shift();
@@ -343,6 +350,7 @@ if (!Function.prototype.bind)
     }
 	});
 }
+/*
 if (!Function.prototype.delay)
 {
   Object.extend(Function.prototype, {
@@ -365,9 +373,10 @@ if (!Function.prototype.defer)
     }
   });
 }
+*/
 
 /** @ignore */
-Object.extend(Array.prototype, {
+Object._extendSupportMethods(Array.prototype, {
     first: function() {
         return this[0];
     },
@@ -426,7 +435,7 @@ if (!Array.prototype.lastIndexOf)
 }
 
 /** @ignore */
-Object.extend(String.prototype, {
+Object._extendSupportMethods(String.prototype, {
 	/*
   gsub: function(pattern, replacement) {
     var result = '', source = this, match;
@@ -633,7 +642,7 @@ Object.extend(String.prototype, {
 
 // added by partridge
 /** @ignore */
-Object.extend(String.prototype, {
+Object._extendSupportMethods(String.prototype, {
 	upperFirst: function()
 	{
 		return this.charAt(0).toUpperCase() + this.substring(1);
