@@ -416,6 +416,8 @@ Kekule.IO.ChemDataReaderManager = {
 	 */
 	register: function(id, readerClass, formatId, additionalInfo)
 	{
+		if (!id || !readerClass || !formatId || (DataType.isArrayValue(formatId) && !formatId.length))  // empty format
+			return;
 		if (Kekule.IO.ChemDataReaderManager.getReaderInfoById(id)) // id can not be duplicate
 		{
 			Kekule.raise(/*Kekule.ErrorMsg.READER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.READER_ID_ALREADY_EXISTS'));
@@ -720,6 +722,8 @@ Kekule.IO.ChemDataWriterManager = {
 	 */
 	register: function(id, writerClass, srcClasses, formatId, additionalInfo)
 	{
+		if (!id || !writerClass || !formatId || (DataType.isArrayValue(formatId) && !formatId.length))  // empty format
+			return;
 		if (Kekule.IO.ChemDataWriterManager.getWriterInfoById(id)) // id can not be duplicate
 		{
 			Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));

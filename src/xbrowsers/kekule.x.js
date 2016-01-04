@@ -1146,6 +1146,7 @@ X.Ajax = {
 			};
 		if (req.readyState == 4) return;
 		req.send(X.Ajax.preparePostData(postData));
+		return req;
 	},
 	/**
 	 * Retrieve response MIME type of an AJAX request object.

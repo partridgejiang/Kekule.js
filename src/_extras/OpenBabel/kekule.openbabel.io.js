@@ -395,14 +395,17 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 			}
 		}
 		//console.log(ioType, handleIds);
-		if (ioType === 'in')
+		if (handleIds.length)
 		{
-			Kekule.IO.ChemDataReaderManager.register('openbabel', Kekule.IO.OpenBabelReader, handleIds);
-		}
-		else
-		{
-			Kekule.IO.ChemDataWriterManager.register('openbabel', Kekule.IO.OpenBabelWriter,
-				Kekule.IO.OpenBabelWriter.ALLOWED_CLASSES, handleIds);
+			if (ioType === 'in')
+			{
+				Kekule.IO.ChemDataReaderManager.register('openbabel', Kekule.IO.OpenBabelReader, handleIds);
+			}
+			else
+			{
+				Kekule.IO.ChemDataWriterManager.register('openbabel', Kekule.IO.OpenBabelWriter,
+						Kekule.IO.OpenBabelWriter.ALLOWED_CLASSES, handleIds);
+			}
 		}
 	},
 
@@ -433,6 +436,40 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 	}
 });
 
+/**
+ * A helper method to register all I/O formats supported by open babel.
+ */
+Kekule.IO.registerAllOpenBabelFormats = function()
+{
+	if (Kekule.OpenBabel.AdaptUtils.isAvailable())
+	{
+		try
+		{
+			var helper = new Kekule.OpenBabel.IORegHelper();
+			helper.registerAll();
+		}
+		finally
+		{
+			helper = null;
+		}
+	}
+};
+
+/**
+ * A helper method to load open babel script library and register all I/O formats
+ */
+Kekule.IO.enableOpenBabelFormats = function()
+{
+	if (!Kekule.OpenBabel.AdaptUtils.isAvailable())  // OB not loaded?
+	{
+		Kekule.OpenBabel.loadObScript(document, function(){
+			Kekule.IO.registerAllOpenBabelFormats();
+		});
+	}
+	else
+		Kekule.IO.registerAllOpenBabelFormats();
+};
+
 (function(){
 	/*
 	// register chem data formats
@@ -459,12 +496,7 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 	*/
 	Kekule.X.domReady(function()
 	{
-		if (Kekule.OpenBabel.AdaptUtils.isAvailable())
-		{
-			var helper = new Kekule.OpenBabel.IORegHelper();
-			helper.registerAll();
-			helper = null;
-		}
+		Kekule.IO.registerAllOpenBabelFormats();
 	});
 })();
 
