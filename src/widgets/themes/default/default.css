@@ -204,7 +204,7 @@ table.K-Widget
 }
 .K-Menu .K-MenuItem
 {
-    background: none;
+    /*background: none;*/
     display: block;
     position: relative;
     list-style: none;

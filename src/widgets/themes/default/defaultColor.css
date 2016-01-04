@@ -240,6 +240,10 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
     height: 16px;
 }
 
+.K-Menu, .K-MenuItem, .K-MenuItem-Separator
+{
+    background-color: #fff;
+}
 .K-Menu .K-MenuItem-Normal:hover,
 .K-Menu .K-MenuItem-Normal:active,
 .K-Menu .K-MenuItem-Normal:focus
