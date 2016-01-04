@@ -2973,6 +2973,14 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		this.defineProp('addRepObjsOper', {'dataType': 'Kekule.MacroOperation', 'serializable': false});
 	},
 
+	/** @ignore */
+	doTestMouseCursor: function(coord, e)
+	{
+		// Overwrite parent BasicMolManipulationIaController,
+		// Always show pointer cursor
+		return '';
+	},
+
 	/** @private */
 	_calcNodeMergeAdjustRotateAngle: function(mergeNode, destNode)
 	{
