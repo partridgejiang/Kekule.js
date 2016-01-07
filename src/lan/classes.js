@@ -7,16 +7,19 @@
  *  @author Partridge Jiang
  */
 
+
 "use strict";
 
 var $jsRoot = this;
+
+(function(){
 
 /** @ignore */
 function emptyFunction() {};
 
 
 /** @ignore */
-function $A(iterable) {
+function __$A__(iterable) {
     if (!iterable) return [];
     if (iterable.toArray) return iterable.toArray();
     var length = iterable.length || 0, results = new Array(length);
@@ -33,7 +36,7 @@ var Class = {
 		 * @return {Class} The class created.
 		 */
     createCore: function() {
-        var parent = null, properties = $A(arguments);
+        var parent = null, properties = __$A__(arguments);
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
 
@@ -312,7 +315,7 @@ Object._extendSupportMethods(Function.prototype, {
     wrap: function(wrapper) {
         var __method = this;
         return function() {
-            return wrapper.apply(this, [__method.bind(this)].concat($A(arguments)));
+            return wrapper.apply(this, [__method.bind(this)].concat(__$A__(arguments)));
         };
     },
     methodize: function() {
@@ -331,19 +334,19 @@ Object._extendSupportMethods(Function.prototype, {
 	Object._extendSupportMethods(Function.prototype, {
 		bind: function() {
         if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
-        var __method = this, args = $A(arguments), object = args.shift();
+        var __method = this, args = __$A__(arguments), object = args.shift();
         return function() {
-            return __method.apply(object, args.concat($A(arguments)));
+            return __method.apply(object, args.concat(__$A__(arguments)));
         };
     },
     delay: function() {
-      var __method = this, args = $A(arguments), timeout = args.shift();
+      var __method = this, args = __$A__(arguments), timeout = args.shift();
       return window.setTimeout(function() {
         return __method.apply(__method, args);
       }, timeout);
     },
     defer: function() {
-      var __method = this, args = $A(arguments), timeout = args.shift();
+      var __method = this, args = __$A__(arguments), timeout = args.shift();
       return window.setTimeout(function() {
         return __method.apply(__method, args);
       }, 10);
@@ -355,7 +358,7 @@ if (!Function.prototype.delay)
 {
   Object.extend(Function.prototype, {
     delay: function() {
-      var __method = this, args = $A(arguments), timeout = args.shift();
+      var __method = this, args = __$A__(arguments), timeout = args.shift();
       return window.setTimeout(function() {
         return __method.apply(__method, args);
       }, timeout);
@@ -366,7 +369,7 @@ if (!Function.prototype.defer)
 {
   Object.extend(Function.prototype, {
     defer: function() {
-      var __method = this, args = $A(arguments), timeout = args.shift();
+      var __method = this, args = __$A__(arguments), timeout = args.shift();
       return window.setTimeout(function() {
         return __method.apply(__method, args);
       }, 10);
@@ -388,7 +391,7 @@ Object._extendSupportMethods(Array.prototype, {
       return this;
     },
     without: function() {
-      var values = $A(arguments);
+      var values = __$A__(arguments);
       return this.select(function(value) {
         return !values.include(value);
       });
@@ -514,7 +517,7 @@ Object._extendSupportMethods(String.prototype, {
     var div = new Element('div');
     div.innerHTML = this.stripTags();
     return div.childNodes[0] ? (div.childNodes.length > 1 ?
-      $A(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
+      __$A__(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
       div.childNodes[0].nodeValue) : '';
     */
 		return this.replace(/\<br \/\>/g, '\n').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
@@ -900,7 +903,13 @@ Object.extend(Date.prototype, {
 });
 
 /** @ignore */
-Math.sqr = function(x) { return x * x; };
+if (!Math.sqr)
+{
+  Math.sqr = function(x)
+  {
+    return x * x;
+  };
+}
 /** @ignore */
 if (!Math.sign)
   Math.sign = function(x) {
@@ -911,11 +920,11 @@ if (!Math.sign)
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };
-if (!this.Node) var Node = { };
+if (!$jsRoot.Node) $jsRoot.Node = { };
 
-if (!Node.ELEMENT_NODE) {
+if (!$jsRoot.Node.ELEMENT_NODE) {
   // DOM level 2 ECMAScript Language Binding
-  Object.extend(Node, {
+  Object.extend($jsRoot.Node, {
     ELEMENT_NODE: 1,
     ATTRIBUTE_NODE: 2,
     TEXT_NODE: 3,
@@ -3034,4 +3043,23 @@ ObjectEx = Class.create(
 /** @private */
 ObjectEx._PROPINFO_HASHKEY_PREFIX = '__$propInfo__';
 ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
+
+
+/*
+return {
+  'Class': Class,
+  'ClassEx': ClassEx,
+  'ObjectEx': ObjectEx,
+  'StringUtils': StringUtils,
+  'DataType': DataType
+};
+*/
+// Export to root name space
+$jsRoot.Class = Class;
+$jsRoot.ClassEx = ClassEx;
+$jsRoot.ObjectEx = ObjectEx;
+$jsRoot.StringUtils = StringUtils;
+$jsRoot.DataType = DataType;
+
+})();
 
