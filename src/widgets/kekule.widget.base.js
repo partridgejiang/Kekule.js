@@ -609,6 +609,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		// stores show/hide information
 		this.defineProp('showHideType', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCaller', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
+		this.defineProp('showHideCallerPageRect', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 
 		this.defineProp('finalizeAfterHiding', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 
@@ -1405,6 +1406,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 		setTimeout(showProc, 0);
 		*/
+
 		this.doShow(caller, callback, showType);
 
 		return this;
@@ -1478,8 +1480,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			done();
 		}
 
-		this.setShowHideCaller(caller);
 		//this.setShowHideType(showType);
+		this.setShowHideCaller(caller);
+		if (caller)  // also save the page rect of caller, avoid caller to be hidden afterward
+		{
+			this.setShowHideCallerPageRect(EU.getElemPageRect(caller.getElement()));
+		}
 
 		this.widgetShowStateChanged(true);
 	},
@@ -1518,7 +1524,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.__$isHiding = true;
 		//this.__$isShowing = false;
 		if (!caller)
+		{
 			caller = this.getShowHideCaller();
+		}
 		if (!hideType)
 			hideType = this.getShowHideType();
 
@@ -1577,7 +1585,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				//console.log('hide', this.__$isShowHiding);
 				//this.__$isShowHiding = true;
 				//console.log('Hide by manager');
-				this.__$showHideTransInfo = Kekule.Widget.showHideManager.hide(this, caller, done, hideType);
+				this.__$showHideTransInfo = Kekule.Widget.showHideManager.hide(this, caller, done, hideType,
+					false, {'callerPageRect': this.getShowHideCallerPageRect()});
 			}
 		}
 		else

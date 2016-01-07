@@ -13,7 +13,9 @@
 <script src="../../../../libs/raphael/raphael-min.2.0.1.js"></script>
 <script src="../../../../libs/Raphael.Export/raphael.export.js"></script>
 
+	<!--
 <script src="../../../src/_extras/OpenBabel/openbabel.js.dev"></script>
+-->
 
 <script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel&min=false"></script>
 <script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" type="chemical/x-mdl-molfile">
@@ -252,7 +254,7 @@ M  END
 	function init()
 	{
     var elem = document.getElementById('chemViewer');
-    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
     chemViewer.setEnableToolbar(true);
     //chemViewer.setRenderType(Kekule.Render.RendererType.R3D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
@@ -281,7 +283,7 @@ M  END
 	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
 	<div id="report"></div>
     <div id="drawParent">
-      <div id="chemViewer" data-chem-obj="url('#externalRes')" data-toolbar-evoke-modes="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
+      <div id="chemViewer" data-chem-obj="url('#externalRes')" data-toolbar-evoke-modes1="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
 					 data-draw-options='{"autofitContextPadding":20,"zoom":1.5,"rotateX":0,"rotateY":0,"rotateZ":0,"rotateAngle":0.48869219055841223,"rotateAxisVector":null,"rotateMatrix":null,"autofit":false}'
 					 data-predefined-setting="basic"
 					 style="width:600px;height:400px"></div>

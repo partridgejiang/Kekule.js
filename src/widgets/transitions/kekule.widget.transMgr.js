@@ -96,8 +96,9 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.
 	 * @param {Function} callback
 	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType).
+	 * @param {Hash} extraOptions Extra options passed to transition executor.
 	 */
-	show: function(widget, caller, callback, showType)
+	show: function(widget, caller, callback, showType, extraOptions)
 	{
 		// prepare transition
 		/*
@@ -107,12 +108,12 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 		widget.setVisible(true);
 		widget.setDisplayed(true);
 		*/
-		var transOptions = {
+		var transOptions = Object.extend(extraOptions || {}, {
 			'from': 0,
 			'to': 1,
 			'isAppear': true,
 			'duration': this.getShowDuration()
-		};
+		});
 		var transExecutor = this.selectTransition(widget, caller, showType);
 
 		if (transExecutor && this.isUsingTransition() && transExecutor.canExecute(widget.getElement(), transOptions))
@@ -148,15 +149,22 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 	 * @param {Kekule.Widget.BaseWidget} caller
 	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType).
 	 * @param {Bool} useVisible If true CSS visible property will be set to hidden finally to hide widget, otherwise display: none will be used.
+	 * @param {Hash} extraOptions Extra options passed to transition executor, can include special field:
+	 *   {
+	 *     useVisible: If true CSS visible property will be set to hidden finally to hide widget, otherwise display: none will be used.
+	 *     callerPageRect: Sometimes caller widget is hidden and the ref rect can not be calculated directly from caller,
+	 *       if so, this value ,may be used by transition executor.
+	 *   }
 	 */
-	hide: function(widget, caller, callback, hideType, useVisible)
+	hide: function(widget, caller, callback, hideType, useVisible, extraOptions)
 	{
-		var transOptions = {
+		var transOptions = Object.extend(extraOptions, {
 			'from': 1,
 			'to': 0,
 			'isDisappear': true,
 			'duration': this.getHideDuration()
-		};
+		});
+		var useVisible = !!extraOptions.useVisible;
 		var transExecutor = this.selectTransition(widget, caller, hideType);
 
 		if (transExecutor && this.isUsingTransition() && transExecutor.canExecute(widget.getElement(), transOptions))

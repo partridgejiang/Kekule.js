@@ -2883,6 +2883,14 @@ Kekule.RectUtils = {
 		return result;
 	},
 	/**
+	 * Returns if the width/height of rect is zero
+	 * @param rect
+	 */
+	isZero: function(rect)
+	{
+		return (rect.width === 0) && (rect.height === 0);
+	},
+	/**
 	 * Convert a rect to a box defined by two coords.
 	 * @param {Hash} rect
 	 * @returns {Hash}

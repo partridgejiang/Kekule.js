@@ -91,6 +91,7 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 	 *     from: Float, the starting position of transition. For appear/disappear transition, 0 means hidden and 1 means totally shown.
 	 *     to: Float, the ending position of transition. For appear/disappear transition, 0 means hidden and 1 means totally shown.
 	 *     duration: Int, in millisecond, the duration of transition.
+	 *     callerRect: {left, top, width, height}, explicitly set the page rect of caller
 	 *     ...
 	 *   }
 	 *   Different transition may has more properties here.
@@ -214,19 +215,21 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 	/**
 	 * Returns an array of CSS property names that may be changed during transition.
 	 * Descendants may override this method.
+	 * @param {Hash} transOptions
 	 * @returns {Array}
 	 * @private
 	 */
-	getAffectedCssPropNames: function()
+	getAffectedCssPropNames: function(transOptions)
 	{
 		// do nothing here
 	},
 	/**
 	 * Determinate the direct CSS transition property names.
+	 * @param {Hash} transOptions
 	 * @returns {Array} Properties to be changed.
 	 * @private
 	 */
-	getTransCssPropNames: function()
+	getTransCssPropNames: function(transOptions)
 	{
 		// do nothing here
 	},
@@ -354,8 +357,8 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 	prepare: function(element, caller, options)
 	{
 		//console.log('prepare', this.getTransCssPropNames());
-		this.setCssProperty(this.getTransCssPropNames().join(','));
-		var cssPropNames = this.getAffectedCssPropNames();
+		this.setCssProperty(this.getTransCssPropNames(options).join(','));
+		var cssPropNames = this.getAffectedCssPropNames(options);
 		this._affectedCssPropNames = cssPropNames;
 		// store CSS values to future use
 		this._originCssInlineValues = this.storeCssInlineValues(element, cssPropNames);
@@ -561,12 +564,12 @@ Kekule.Widget.Css3OpacityTrans = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3OpacityTrans',
 	/** @private */
-	getAffectedCssPropNames: function()
+	getAffectedCssPropNames: function(transOptions)
 	{
 		return ['opacity'];
 	},
 	/** @private */
-	getTransCssPropNames: function()
+	getTransCssPropNames: function(transOptions)
 	{
 		return ['opacity'];
 	},
@@ -625,8 +628,9 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	prepare: function($super, element, caller, options)
 	{
+		//console.log('prepare', options);
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
-		this._direction = this.getActualDirection(element);  // save this value, avoid user change direction property during transition
+		this._direction = this.getActualDirection(element, options);  // save this value, avoid user change direction property during transition
 
 		$super(element, caller, options);
 
@@ -705,9 +709,9 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	getAffectedCssPropNames: function()
+	getAffectedCssPropNames: function(transOptions)
 	{
-		var result = [].concat(this.getTransCssPropNames());
+		var result = [].concat(this.getTransCssPropNames(transOptions));
 		result.push('overflow');
 		return result;
 	},
@@ -717,9 +721,9 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	 * @returns {Array} Properties to be changed.
 	 * @private
 	 */
-	getTransCssPropNames: function()
+	getTransCssPropNames: function(transOptions)
 	{
-		var direction = this.getActualDirection(this.getElement());
+		var direction = this.getActualDirection(this.getElement(), transOptions);
 		var result = [];
 		if (D.isInHorizontal(direction))
 		{
@@ -737,11 +741,13 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	getRefRect: function()
+	getRefRect: function(transOptions)
 	{
+		var result;
 		var EU = Kekule.HtmlElementUtils;
 		if (this.getCaller())
 		{
+			/*
 			var pos = EU.getElemPagePos(this.getCaller());
 			var dim = EU.getElemClientDimension(this.getCaller());
 			return {
@@ -750,13 +756,20 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 				'width': dim.width || 0,
 				'height': dim.height || 0
 			};
+			*/
+			result = EU.getElemPageRect(this.getCaller());
+			if (Kekule.RectUtils.isZero(result))  // rect is null, maybe the caller widget is hidden, use cached one instead
+			{
+				result = (transOptions || {}).callerPageRect || null;
+			}
 		}
 		else
 		{
-			return null;
+			result = null;
 		}
+		return result;
 	},
-	getActualDirection: function(element)
+	getActualDirection: function(element, transOptions)
 	{
 		if (!element)
 			element = this.getElement();
@@ -766,7 +779,8 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		var result = this.getDirection();
 		if (!result || (result === D.AUTO))
 		{
-			var refRect = this.getRefRect();
+			var refRect = this.getRefRect(transOptions);
+			//console.log(refRect);
 			if (!refRect)
 				result = D.TTB;  // default
 			else
@@ -844,13 +858,15 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	getRefRect: function()
+	getRefRect: function(transOptions)
 	{
 		var EU = Kekule.HtmlElementUtils;
+		var result = null;
 		if (this.getBaseRect())
-			return this.getBaseRect();
+			result = this.getBaseRect();
 		else if (this.getCaller())
 		{
+			/*
 			var pos = EU.getElemPagePos(this.getCaller());
 			var dim = EU.getElemClientDimension(this.getCaller());
 			return {
@@ -859,11 +875,17 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 				'width': dim.width,
 				'height': dim.height
 			};
+			*/
+			result = EU.getElemPageRect(this.getCaller());
+			if (Kekule.RectUtils.isZero(result))
+				result = (transOptions || {}).callerPageRect || null;
 		}
-		else
+
+		if (!result)
 		{
-			return {'x': 0, 'y': 0, 'width': 0, 'height': 0};
+			result = {'x': 0, 'y': 0, 'width': 0, 'height': 0};
 		}
+		return result;
 	},
 
 	/** @private */
@@ -890,7 +912,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 		element.style.overflow = 'hidden';
 		Kekule.HtmlElementUtils.makePositioned(element);
 
-		var refRect = this.getRefRect();
+		var refRect = this.getRefRect(options);
 
 		// calculate delta information
 		var EU = Kekule.HtmlElementUtils;
@@ -934,9 +956,9 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	getAffectedCssPropNames: function()
+	getAffectedCssPropNames: function(transOptions)
 	{
-		var result = [].concat(this.getTransCssPropNames());
+		var result = [].concat(this.getTransCssPropNames(transOptions));
 		result.push('overflow');
 		return result;
 	},
@@ -946,7 +968,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	 * @returns {Array} Properties to be changed.
 	 * @private
 	 */
-	getTransCssPropNames: function()
+	getTransCssPropNames: function(transOptions)
 	{
 		return ['left', 'top', 'width', 'height', 'position'];
 	}

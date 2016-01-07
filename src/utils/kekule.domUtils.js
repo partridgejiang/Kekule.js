@@ -979,6 +979,20 @@ Kekule.HtmlElementUtils = {
 		return { x: xPosition, y: yPosition };
 	},
 	/**
+	 * Get position relative to top-left corner of HTML page togather with width/height of elem.
+	 * @param {HTMLElement} elem
+	 * @returns {Hash} {x, y, width, height}
+	 */
+	getElemPageRect: function(elem)
+	{
+		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		return {
+			'x': pos.x, 'y': pos.y, 'left': pos.x, 'top': pos.y,
+			'width': dim.width, 'height': dim.height
+		};
+	},
+	/**
 	 * Get position relative to top-left corner of viewport.
 	 * @param {HTMLElement} elem
 	 * @returns {Hash}
