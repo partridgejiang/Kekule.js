@@ -15,7 +15,7 @@
 
 (function(){
 
-"use strict"
+"use strict";
 
 var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;
@@ -152,6 +152,20 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.defineProp('btnPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		if (this.setMovable)
+		{
+			this.setMovable(true);
+		}
+	},
+	/** @ignore */
+	getDefaultMovingGripper: function()
+	{
+		return this.getCaptionElem();
+	},
 
 	/** @ignore */
 	getCoreElement: function()
@@ -180,6 +194,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		rootElem.appendChild(elem);
 		this.setPropStoreFieldValue('captionElem', elem);
 		result.push(elem);
+		// click on caption to move
+		if (this.setMovingGripper)
+			this.setMovingGripper(elem);
 
 		// client element
 		var elem = doc.createElement('div');

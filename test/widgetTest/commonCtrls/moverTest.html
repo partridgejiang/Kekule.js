@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Mover Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js?modules=widget&min=false"></script>
+  <style>
+    html, body
+    {
+      width: 100%;
+      height: 100%;
+    }
+    #target
+    {
+      background-color: yellow;
+      border: 3px solid black;
+      width: 200px;
+      height: 150px;
+      /*position: absolute;*/
+      position: relative;
+
+
+      top: 50px;
+      left: 50px;
+
+      /*
+      right: 200px;
+      bottom: 200px;
+      */
+
+    }
+    #gripper
+    {
+      background-color: green;
+      width: 100%;
+      height: 30px;
+      cursor: pointer;
+    }
+    #child
+    {
+      display: block;
+    }
+    #btnMove
+    {
+      /*position: absolute;*/
+      /*top: 100px;*/
+    }
+  </style>
+  <script>
+    var moveHelper;
+    function init()
+    {
+      var target = document.getElementById('target');
+      var gripper = document.getElementById('gripper');
+      moveHelper = new Kekule.Widget.MoveHelper(target, gripper);
+      //moveHelper.setCssPropX('right');
+      //moveHelper.setCssPropY('bottom');
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="target">
+    <div id="gripper" style="cursor: col-resize">
+      <span id="child">Caption</span>
+    </div>
+  </div>
+
+  <button id="btnMove" data-widget="Kekule.Widget.Button" data-movable="true">Move me</button>
+</body>
+</html>

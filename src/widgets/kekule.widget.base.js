@@ -1484,7 +1484,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setShowHideCaller(caller);
 		if (caller)  // also save the page rect of caller, avoid caller to be hidden afterward
 		{
-			this.setShowHideCallerPageRect(EU.getElemPageRect(caller.getElement()));
+			this.setShowHideCallerPageRect(EU.getElemPageRect((caller.getElement && caller.getElement()) || caller));
 		}
 
 		this.widgetShowStateChanged(true);
