@@ -380,39 +380,48 @@ if (!Function.prototype.defer)
 
 /** @ignore */
 Object._extendSupportMethods(Array.prototype, {
-    first: function() {
-        return this[0];
-    },
-    last: function() {
-      return this[this.length - 1];
-    },
-    clear: function() {
-      this.length = 0;
-      return this;
-    },
-    without: function() {
-      var values = __$A__(arguments);
-      return this.select(function(value) {
-        return !values.include(value);
-      });
-    },
-    removeAt: function(index)
+  first: function() {
+      return this[0];
+  },
+  last: function() {
+    return this[this.length - 1];
+  },
+  clear: function() {
+    this.length = 0;
+    return this;
+  },
+  without: function() {
+    var values = __$A__(arguments);
+    return this.select(function(value) {
+      return !values.include(value);
+    });
+  },
+  removeAt: function(index)
+  {
+    /*
+    for (var i = index, l = this.length - 1; i < l - 1; ++i)
     {
-			/*
-    	for (var i = index, l = this.length - 1; i < l - 1; ++i)
-    	{
-    		this[i] = this[i + 1];
-    	}
-    	delete this[length - 1];
-    	*/
-			this.splice(index, 1);
-    },
-    remove: function(item)
-    {
-    	var index = this.indexOf(item);
-    	if (index >= 0)
-    		return this.removeAt(index);
+      this[i] = this[i + 1];
     }
+    delete this[length - 1];
+    */
+    this.splice(index, 1);
+  },
+  remove: function(item)
+  {
+    var index = this.indexOf(item);
+    if (index >= 0)
+      return this.removeAt(index);
+  },
+  forEach: function(func, scope)
+  {
+    var i, len;
+    for (i = 0, len = this.length; i < len; ++i) {
+      if (i in this) {
+        func.call(scope, this[i], i, this);
+      }
+    }
+  }
 });
 if (!Array.prototype.indexOf)
 {
