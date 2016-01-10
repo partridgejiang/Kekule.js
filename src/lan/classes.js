@@ -2804,7 +2804,7 @@ ObjectEx = Class.create(
 		{
 			self.removeEventListener(eventName, wrapper, thisArg);
 			listener(event);
-		}
+		};
 		return this.addEventListener(eventName, wrapper, thisArg);
 	},
   /**
@@ -2821,6 +2821,39 @@ ObjectEx = Class.create(
   	{
   		return handlerList.remove(listener, thisArg);
   	}
+  },
+  /**
+   * Add an event handler, shortcut for {@link ObjectEx.addEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   * @return {Object} Handler info object on success, null on fail.
+   */
+  on: function(eventName, listener, thisArg)
+  {
+    return this.addEventListener(eventName, listener, thisArg);
+  },
+  /**
+   * Add an event handler that will only be evoked once, shortcut for {@link ObjectEx.addOnceEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   * @return {Object} Handler info object on success, null on fail.
+   */
+  once: function(eventName, listener, thisArg)
+  {
+    return this.addOnceEventListener(eventName, listener, thisArg);
+  },
+  /**
+   * Remove an event handler, shortcut for (@link ObjectEx.removeEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   *   If not set, all listenr function in list will be removed.
+   */
+  off: function(eventName, listener, thisArg)
+  {
+    return this.removeEventListener(eventName, listener, thisArg);
   },
   /**
    * Invoke an event and call all corresponding handlers (listeners).
