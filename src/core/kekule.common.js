@@ -430,8 +430,8 @@ Kekule.MapEx = Class.create(
 /** @private */
 Kekule.MapEx._init = function()
 {
-	if ($jsRoot.WeakMap)  // Fx6 and above, use built-in WeakMap object
-		Kekule.MapEx._implementation = $jsRoot.WeakMap;
+	if (Kekule.$jsRoot.WeakMap)  // Fx6 and above, use built-in WeakMap object
+		Kekule.MapEx._implementation = Kekule.$jsRoot.WeakMap;
 	else
 		Kekule.MapEx._implementation = null;  // use JavaScript implementation
 	Kekule.MapEx._inited = true;

@@ -10,9 +10,7 @@
 
 "use strict";
 
-var $jsRoot = this;
-
-(function(){
+(function($jsRoot){
 
 /** @ignore */
 function emptyFunction() {};
@@ -132,7 +130,8 @@ Class.Methods = {
 
 						var isFunction = Object.isFunction(value);
 
-				    if (ancestor && isFunction && value.argumentNames().first() == "$super")
+				    //if (ancestor && isFunction && value.argumentNames().first() == "$super")
+					if (ancestor && isFunction && FunctionUtils.argumentNames(value).first() == "$super")
 						{
 				        var method = value;
 				        /** @inner */
@@ -292,91 +291,127 @@ Object.copyValues = function(dest, src, propNames)
 // extend class methods
 /** @ignore */
 Object._extendSupportMethods(Object, {
-    keys: function(object) {
-        var keys = [];
-        for (var property in object)
-            keys.push(property);
-        return keys;
-    },
-    isFunction: function(object) {
-        return typeof object == "function";
-    },
-    isUndefined: function(object) {
-        return typeof object == "undefined";
-    }
-});
-
-/** @ignore */
-Object._extendSupportMethods(Function.prototype, {
-    argumentNames: function() {
-        var names = this.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/)[1].replace(/\s+/g, '').split(',');
-        return names.length == 1 && !names[0] ? [] : names;
-    },
-    wrap: function(wrapper) {
-        var __method = this;
-        return function() {
-            return wrapper.apply(this, [__method.bind(this)].concat(__$A__(arguments)));
-        };
-    },
-    methodize: function() {
-	    if (this._methodized) return this._methodized;
-	    var __method = this;
-	    return this._methodized = function() {
-	      var a = Array.prototype.slice.call(arguments);
-	      a.unshift(this);
-	      return __method.apply(null, a);
-    };
+  keys: function(object) {
+      var keys = [];
+      for (var property in object)
+          keys.push(property);
+      return keys;
+  },
+  isFunction: function(object) {
+      return typeof object == "function";
+  },
+  isUndefined: function(object) {
+      return typeof object == "undefined";
   }
 });
 
-//if (!Function.prototype.bind)
-{
-	Object._extendSupportMethods(Function.prototype, {
-		bind: function() {
-        if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
-        var __method = this, args = __$A__(arguments), object = args.shift();
-        return function() {
-            return __method.apply(object, args.concat(__$A__(arguments)));
-        };
-    },
-    delay: function() {
-      var __method = this, args = __$A__(arguments), timeout = args.shift();
-      return window.setTimeout(function() {
-        return __method.apply(__method, args);
-      }, timeout);
-    },
-    defer: function() {
-      var __method = this, args = __$A__(arguments), timeout = args.shift();
-      return window.setTimeout(function() {
-        return __method.apply(__method, args);
-      }, 10);
-    }
-	});
-}
+var FunctionUtils = {
+	argumentNames: function(f) {
+		var names = ((f.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/) || [])[1] || '').replace(/\s+/g, '').split(',');
+		return names.length == 1 && !names[0] ? [] : names;
+	},
+	/*
+	wrap: function(f, wrapper) {
+		var __method = f;
+		return function() {
+			return wrapper.apply(f, [__method.bind(f)].concat(__$A__(arguments)));
+		};
+	},
+	methodize: function(f) {
+		if (f._methodized) return f._methodized;
+		var __method = f;
+		return f._methodized = function() {
+			var a = Array.prototype.slice.call(arguments);
+			a.unshift(f);
+			return __method.apply(null, a);
+		};
+	},
+	bind: function(f) {
+		if (arguments.length < 2 && Object.isUndefined(arguments[0])) return f;
+		var __method = f, args = __$A__(arguments), object = args.shift();
+		return function() {
+			return __method.apply(object, args.concat(__$A__(arguments)));
+		};
+	},
+	delay: function(f) {
+		var __method = f, args = __$A__(arguments), timeout = args.shift();
+		return window.setTimeout(function() {
+			return __method.apply(__method, args);
+		}, timeout);
+	},
+	defer: function() {
+		var __method = f, args = __$A__(arguments), timeout = args.shift();
+		return window.setTimeout(function() {
+			return __method.apply(__method, args);
+		}, 10);
+	}
+	*/
+};
+
+/** @ignore */
+Object._extendSupportMethods(Function.prototype, {
+  argumentNames: function() {
+      var names = this.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/)[1].replace(/\s+/g, '').split(',');
+      return names.length == 1 && !names[0] ? [] : names;
+  },
+  wrap: function(wrapper) {
+      var __method = this;
+      return function() {
+          return wrapper.apply(this, [__method.bind(this)].concat(__$A__(arguments)));
+      };
+  },
+  methodize: function() {
+    if (this._methodized) return this._methodized;
+    var __method = this;
+    return this._methodized = function() {
+      var a = Array.prototype.slice.call(arguments);
+      a.unshift(this);
+      return __method.apply(null, a);
+    };
+  },
+  bind: function() {
+    if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
+    var __method = this, args = __$A__(arguments), object = args.shift();
+    return function() {
+      return __method.apply(object, args.concat(__$A__(arguments)));
+    };
+  },
+  delay: function() {
+    var __method = this, args = __$A__(arguments), timeout = args.shift();
+    return window.setTimeout(function() {
+      return __method.apply(__method, args);
+    }, timeout);
+  },
+  defer: function() {
+    var __method = this, args = __$A__(arguments), timeout = args.shift();
+    return window.setTimeout(function() {
+      return __method.apply(__method, args);
+    }, 10);
+  }
+});
 /*
-if (!Function.prototype.delay)
-{
-  Object.extend(Function.prototype, {
-    delay: function() {
-      var __method = this, args = __$A__(arguments), timeout = args.shift();
-      return window.setTimeout(function() {
-        return __method.apply(__method, args);
-      }, timeout);
-    }
-  });
-}
-if (!Function.prototype.defer)
-{
-  Object.extend(Function.prototype, {
-    defer: function() {
-      var __method = this, args = __$A__(arguments), timeout = args.shift();
-      return window.setTimeout(function() {
-        return __method.apply(__method, args);
-      }, 10);
-    }
-  });
-}
+Object._extendSupportMethods(Function.prototype, {
+	argumentNames: function() {
+		return FunctionUtils.argumentNames(this);
+	},
+	wrap: function(wrapper) {
+		return FunctionUtils.wrap(this, wrapper);
+	},
+	methodize: function() {
+		return FunctionUtils.methodize(this);
+	},
+	bind: function() {
+		return FunctionUtils.bind(this);
+	},
+	delay: function() {
+		return FunctionUtils.delay(this);
+	},
+	defer: function() {
+		return FunctionUtils.defer(this);
+	}
+});
 */
+
 
 /** @ignore */
 Object._extendSupportMethods(Array.prototype, {
@@ -448,38 +483,36 @@ if (!Array.prototype.lastIndexOf)
 
 /** @ignore */
 Object._extendSupportMethods(String.prototype, {
-	/*
-  gsub: function(pattern, replacement) {
-    var result = '', source = this, match;
-    replacement = arguments.callee.prepareReplacement(replacement);
+	gsub: function gsub(pattern, replacement) {
+		var result = '', source = this, match;
+		//replacement = this.gsub.prepareReplacement(replacement);
 
-    while (source.length > 0) {
-      if (match = source.match(pattern)) {
-        result += source.slice(0, match.index);
-        result += String.interpret(replacement(match));
-        source  = source.slice(match.index + match[0].length);
-      } else {
-        result += source, source = '';
-      }
-    }
-    return result;
-  },
+		while (source.length > 0) {
+			if (match = source.match(pattern)) {
+				result += source.slice(0, match.index);
+				result += replacement;
+				source  = source.slice(match.index + match[0].length);
+			} else {
+				result += source, source = '';
+			}
+		}
+		return result;
+	},
 
-  sub: function(pattern, replacement, count) {
-    replacement = this.gsub.prepareReplacement(replacement);
-    count = Object.isUndefined(count) ? 1 : count;
+	sub: function(pattern, replacement, count) {
+		//replacement = this.gsub.prepareReplacement(replacement);
+		count = Object.isUndefined(count) ? 1 : count;
 
-    return this.gsub(pattern, function(match) {
-      if (--count < 0) return match[0];
-      return replacement(match);
-    });
-  },
+		return this.gsub(pattern, function(match) {
+			if (--count < 0) return match[0];
+			return replacement(match);
+		});
+	},
 
-  scan: function(pattern, iterator) {
-    this.gsub(pattern, iterator);
-    return String(this);
-  },
-  */
+	scan: function(pattern, iterator) {
+		this.gsub(pattern, iterator);
+		return String(this);
+	},
 
   truncate: function(length, truncation) {
     length = length || 30;
@@ -668,6 +701,10 @@ Object._extendSupportMethods(String.prototype, {
     }
     return formatted;
 	},
+  trim: function()
+  {
+    return this.replace(/^\s*|\s*$/g, "");
+  },
 	ltrim: function()
 	{
 		return this.replace(/^\s+/,"");
@@ -676,6 +713,14 @@ Object._extendSupportMethods(String.prototype, {
 	{
 		return this.replace(/\s+$/,"");
 	},
+  trimLeft: function()
+  {
+    return this.ltrim();
+  },
+  trimRight: function()
+  {
+    return this.rtrim();
+  },
 	pad: function(length, padString, rightPad)
 	{
 		var p = padString || ' ';
@@ -739,25 +784,7 @@ Object._extendSupportMethods(String.prototype, {
 	}
 });
 
-// implementation of JS string standard methods
-if (!String.prototype.trim)
-{
-	/** @ignore */
-	Object.extend(String.prototype, {
-		trim: function()
-		{
-			return this.replace(/^\s*|\s*$/g, "");
-		}
-	});
-}
-if (!String.prototype.trimLeft)
-{
-	String.prototype.trimLeft = String.prototype.ltrim;
-}
-if (!String.prototype.trimRight)
-{
-	String.prototype.trimLeft = String.prototype.rtrim;
-}
+
 
 /**
  * Some helper methods about string
@@ -1985,7 +2012,8 @@ var ClassEx = {
 		    var property = properties[i], value = extension[property];
 				if (typeof(value) == 'function')
 				{
-					var args = value.argumentNames();
+					//var args = value.argumentNames();
+					var args = FunctionUtils.argumentNames(value);
 					var first = args.first();
 
 					if (first == '$origin')
@@ -3086,22 +3114,12 @@ ObjectEx = Class.create(
 ObjectEx._PROPINFO_HASHKEY_PREFIX = '__$propInfo__';
 ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
 
-
-/*
-return {
-  'Class': Class,
-  'ClassEx': ClassEx,
-  'ObjectEx': ObjectEx,
-  'StringUtils': StringUtils,
-  'DataType': DataType
-};
-*/
 // Export to root name space
 $jsRoot.Class = Class;
 $jsRoot.ClassEx = ClassEx;
 $jsRoot.ObjectEx = ObjectEx;
-$jsRoot.StringUtils = StringUtils;
 $jsRoot.DataType = DataType;
+DataType.StringUtils = StringUtils;
 
-})();
+})(this);
 

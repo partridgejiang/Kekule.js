@@ -9,9 +9,12 @@
  * requires /localizations/
  */
 
-
+/*
 if (!this.Kekule)
+{
 	Kekule = {};
+}
+*/
 
 /**
  * Return value of the first setted params.
@@ -523,6 +526,22 @@ Kekule.ArrayUtils = {
 				result[l - i - 1] = a[i];
 			}
 		}
+		return result;
+	},
+	/**
+	 * Returns a new array that change the order of items in src array.
+	 * @param {Array} src
+	 */
+	randomize: function(src)
+	{
+		var result = [];
+		var remaining = src.slice(0);
+		while (remaining.length > 1)
+		{
+			var index = Math.round(Math.random() * (remaining.length - 1));
+			result.push(remaining.splice(index, 1)[0]);
+		}
+		result.push(remaining[0]);
 		return result;
 	},
 	/**

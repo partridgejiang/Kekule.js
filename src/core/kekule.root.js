@@ -64,10 +64,14 @@ Kekule._registerAfterLoadProc = function(proc)
 /**
  * Root object of JavaScript environment, usually window.
  */
-var $jsRoot = this;
+Kekule.$jsRoot = this;
 
-Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
-if (!Kekule.scriptSrcInfo)  // script info not found, may be use Kekule.min.js directly
+Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language
+{
+	Kekule.language = Kekule.scriptSrcInfo.language;
+}
+if (!Kekule.scriptSrcInfo && Kekule.$jsRoot.document)  // script info not found, may be use Kekule.min.js directly
 {
 	Kekule.scriptSrcInfo = (function ()
 	{
@@ -102,18 +106,18 @@ if (!Kekule.scriptSrcInfo)  // script info not found, may be use Kekule.min.js d
 Kekule.getScriptPath = function()
 {
 	return Kekule.scriptSrcInfo.path;
-}
+};
 
-if ($jsRoot && $jsRoot.addEventListener && $jsRoot.postMessage)
+if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMessage)
 {
 	// response to special message, returns Kekule sys info.
 	// This query is usually requested by browser addon to check
 	// if Kekule lib is loaded into a web page
-	$jsRoot.addEventListener('message', function(event)
+	Kekule.$jsRoot.addEventListener('message', function(event)
 	{
 		if (event.data === 'kekule-sys-info-query')
 		{
-			$jsRoot.postMessage({
+			Kekule.$jsRoot.postMessage({
 				'msg': 'kekule-sys-info-result',
 				'libName': Kekule.LIBNAME,
 				'version': Kekule.VERSION

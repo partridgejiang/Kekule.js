@@ -473,7 +473,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 Kekule.Render.RaphaelRendererBridge.isSupported = function()
 {
 	var result = false;
-	if ($jsRoot.Raphael)
+	if (Kekule.$jsRoot.Raphael)
 	{
 		result = !!(Raphael.svg || Raphael.vml);
 	}

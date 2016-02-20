@@ -110,7 +110,7 @@ ClassEx.extend(ObjectEx,
 			var valueType = DataType.getType(value);
 			if ((propType !== valueType) && (valueType === DataType.STRING))  // need to convert, now only convert string to other type
 			{
-				v = StringUtils.deserializeValue(value);
+				v = DataType.StringUtils.deserializeValue(value);
 			}
 		}
 		this.setPropValue(name, v);

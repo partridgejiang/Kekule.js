@@ -8,18 +8,18 @@
  * requires /localization
  */
 
-(function(){
+(function($root){
 "use strict";
 
 	function analysisLanguage(lanName)
 	{
 		var parts = lanName.split('-');
 		return {'language': parts[0], 'local': parts[1]};
-	};
+	}
 
 	var rootObj = Kekule;
 	var DEF_LANGUAGE = 'en-US';
-	var language = navigator? navigator.language || navigator.browserLanguage: DEF_LANGUAGE;
+	var language = Kekule.language || ($root.navigator? navigator.language || navigator.browserLanguage: DEF_LANGUAGE);
 	rootObj.language = language;  // save language info
 	var lanInfo = analysisLanguage(language);
 	var defLanInfo = analysisLanguage(DEF_LANGUAGE);
@@ -115,7 +115,7 @@
 
 	var locModuleNames = [];
 	var currLocModuleName;
-	var saveLocModuleInfo = !!(this || window).__kekuleMarkLocalizationModuleInfo__;  // set this extra global var to true to save module information
+	var saveLocModuleInfo = !!($root || $root.window).__kekuleMarkLocalizationModuleInfo__;  // set this extra global var to true to save module information
 	var locModuleInfo = {};
 	function setCurrLocalizationModule(moduleName)
 	{
@@ -191,4 +191,4 @@
 			addLocalizationResources(languageName, resourceName, resources, root);
 		}
 	}
-})();
+})(this);

@@ -12,7 +12,7 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-if ($jsRoot.THREE)
+if (Kekule.$jsRoot.THREE)
 {
 	/** @ignore */
 	THREE.Object3D.prototype.clear = function(){
@@ -853,7 +853,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
  */
 Kekule.Render.ThreeRendererBridge.isSupported = function()
 {
-	var result = (typeof($jsRoot.THREE) !== 'undefined');
+	var result = (typeof(Kekule.$jsRoot.THREE) !== 'undefined');
 	if (result)
 	{
 		var F = Kekule.BrowserFeature;

@@ -2230,7 +2230,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed = Class.create(Ke
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.TYPE = Kekule.Render.Molecule2DDisplayType.CONDENSED;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.WIRE}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.WIRE}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2252,7 +2252,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire = Class.create(Kekule.
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.TYPE = Kekule.Render.Molecule3DDisplayType.WIRE;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.STICKS}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.STICKS}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2274,7 +2274,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks = Class.create(Kekul
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.TYPE = Kekule.Render.Molecule3DDisplayType.STICKS;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.BALL_STICK}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.BALL_STICK}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2296,7 +2296,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick = Class.create(Ke
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.TYPE = Kekule.Render.Molecule3DDisplayType.BALL_STICK;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.SPACE_FILL}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.SPACE_FILL}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */

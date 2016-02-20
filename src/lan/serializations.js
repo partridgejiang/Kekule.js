@@ -1078,12 +1078,12 @@ XmlObjSerializer = Class.create(ObjSerializer,
 			}
 		}
 		*/
-		return StringUtils.serializeValue(value);
+		return DataType.StringUtils.serializeValue(value);
 	},
 	/** @private */
 	deserializeValue: function(value, preferedType)
 	{
-		return StringUtils.deserializeValue(value, preferedType);
+		return DataType.StringUtils.deserializeValue(value, preferedType);
 		/*
 		if (typeof(value) != 'string')
 			return value;
@@ -1346,6 +1346,12 @@ ClassEx.extend(ObjectEx,
 			serializer = serializerOrName;
 		return serializer.save(this, destNode, options);
 	},
+	/**
+	 * load current object from srcNode.
+	 * @param {Object} srcNode Storage node to load object. Different serializer requires different node.
+	 * @param {Variant} serializerOrName A {@link ObjSerializer} instance or name registered in {@link ObjSerializerFactory}.
+	 *   Can be null to use the default serializer.
+	 */
 	loadObj: function(srcNode, serializerOrName)
 	{
 		if (!serializerOrName)  // use default
@@ -1355,5 +1361,82 @@ ClassEx.extend(ObjectEx,
 		else
 			serializer = serializerOrName;
 		return serializer.load(this, srcNode);
+	}
+});
+
+// extend to ClassEx, add new save/load method
+Object.extend(ClassEx, {
+	/**
+	 * Save an object to destNode.
+	 * @param {Variant} obj
+	 * @param {Object} destNode Storage node to save object. Different serializer requires different node.
+	 * @param {Variant} serializerOrName A {@link ObjSerializer} instance or name registered in {@link ObjSerializerFactory}.
+	 *   Can be null to use the default serializer.
+	 * @param {Hash} options
+	 */
+	saveObj: function(obj, destNode, serializerOrName, options)
+	{
+		if (!serializerOrName)  // use default
+			serializer = ObjSerializerFactory.getSerializer();
+		else if (typeof(serializerOrName) == 'string')  // is name
+			serializer = ObjSerializerFactory.getSerializer(serializerOrName);
+		else
+			serializer = serializerOrName;
+		return serializer.save(obj, destNode, options);
+	},
+	/**
+	 * load object from srcNode.
+	 * @param {Object} srcNode Storage node to load object. Different serializer requires different node.
+	 * @param {Variant} serializerOrName A {@link ObjSerializer} instance or name registered in {@link ObjSerializerFactory}.
+	 *   Can be null to use the default serializer.
+	 */
+	loadObj: function(obj, srcNode, serializerOrName)
+	{
+		if (!serializerOrName)  // use default
+			serializer = ObjSerializerFactory.getSerializer();
+		else if (typeof(serializerOrName) == 'string')  // is name
+			serializer = ObjSerializerFactory.getSerializer(serializerOrName);
+		else
+			serializer = serializerOrName;
+		return serializer.load(obj, srcNode);
+	}
+});
+
+Object.extend(DataType, {
+	/**
+	 * Convert a value to JSON string. If value is a complex type (Object, Array, ObjectEx),
+	 * JSON serializer will be used.
+	 * @param {Variant} value
+	 * @param {Hash} options JSON serializer options
+	 * @returns {String}
+	 */
+	valueToJson: function(value, options)
+	{
+		if (DataType.isSimpleValue(value))
+		{
+			return JSON.stringify(value);
+		}
+		else  // complex type, use serializer
+		{
+			var result = DataType.isArrayValue(value)? []: {};
+			ClassEx.saveObj(value, result, 'json', options);
+			return JSON.stringify(result);
+		}
+	},
+	/**
+	 * Convert a JSON string to value.
+	 * JSON serializer may be used if the value is a complex one (Object, Array, ObjectEx, etc.).
+	 * @param {String} jsonStr
+	 * @returns {Variant}
+	 */
+	jsonToValue: function(jsonStr)
+	{
+		var jsonObj = JSON.parse(jsonStr);
+		if (!jsonObj || DataType.isSimpleValue(jsonObj))
+			return jsonObj;
+		else
+		{
+			return ClassEx.loadObj(null, jsonObj, 'json');
+		}
 	}
 });

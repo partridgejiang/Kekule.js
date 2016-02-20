@@ -1046,7 +1046,7 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 						metaListElem = this.createChildElem('metaDataList', elem);
 					var metaElem = this.createChildElem('metaData', metaListElem);
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'name', key, this.getDomHelper());
-					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', StringUtils.serializeValue(value), this.getDomHelper());
+					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', DataType.StringUtils.serializeValue(value), this.getDomHelper());
 				}
 			}
 		}
@@ -1354,7 +1354,7 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 	readMeta: function(elem)
 	{
 		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
-		var result = {'key': jsonObj.name, 'value': StringUtils.deserializeValue(jsonObj.content)};
+		var result = {'key': jsonObj.name, 'value': DataType.StringUtils.deserializeValue(jsonObj.content)};
 		return result;
 	}
 });
