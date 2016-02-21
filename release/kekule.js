@@ -1,14 +1,5 @@
 (function($root){
 
-// check if is in Node.js environment
-var isNode = false;
-if (typeof process === 'object') {
-	if (typeof process.versions === 'object') {
-		if (typeof process.versions.node !== 'undefined') {
-			isNode = true;
-		}
-	}
-}
 
 // IE8 does not support array.indexOf
 if (!Array.prototype.indexOf)
@@ -24,10 +15,22 @@ if (!Array.prototype.indexOf)
 	};
 }
 
-var readyState = document && document.readyState;
-var isIE = window.attachEvent && !window.opera;
-var docReady = (readyState === 'complete' || readyState === 'loaded' ||
-	(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
+// check if is in Node.js environment
+var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+
+if (isNode)
+{
+	var __nodeContext = {};
+}
+
+if (!isNode)
+{
+	var readyState = document && document.readyState;
+	var isIE = window.attachEvent && !window.opera;
+	var docReady = (readyState === 'complete' || readyState === 'loaded' ||
+		(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
+}
+var document = $root.document;  // avoid Node error
 
 function directAppend(doc, libName)
 {
@@ -37,12 +40,13 @@ function nodeAppend(url)
 {
 	if (isNode)
 	{
-		//var vm = require("vm");
+		var vm = require("vm");
 		var fs = require("fs");
 		var data = fs.readFileSync(url);
-		console.log('node append', url);
-		//vm.runInThisContext(data, path);
-		eval(data);
+		//console.log('[k] node append', url, data.length);
+		vm.runInThisContext(data, {'filename': url});
+		//vm.runInNewContext(data, __nodeContext, {'filename': url});
+		//eval(data);
 	}
 }
 
@@ -104,14 +108,16 @@ function _appendScriptFilesCore(doc, urls, callback)
 	);
 }
 
-function loadChildScriptFiles(scriptUrls, forceDomLoader)
+function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 {
 	if (isNode)  // Node.js environment
 	{
 		appendScriptFiles(document, scriptUrls, function()
 		{
 			// set a marker indicate that all modules are loaded
-			Kekule._loaded();
+			(this.Kekule || __nodeContext.Kekule)._loaded();
+			if (callback)
+				callback();
 		});
 	}
 	else  // in normal browser environment
@@ -133,12 +139,16 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader)
 			 */
 			//directAppend(document, 'kekule.loaded.js');  // manully add small file to mark lib loaded
 			document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
+			if (callback)
+				callback();
 		}
 		else
 			appendScriptFiles(document, scriptUrls, function()
 			{
 				// set a marker indicate that all modules are loaded
 				Kekule._loaded();
+				if (callback)
+					callback();
 			});
 	}
 }
@@ -151,14 +161,14 @@ var kekuleFiles = {
 			'lan/xmlJsons.js',
 			'lan/serializations.js'
 		],
-		'category': 'common',
+		'category': 'lan',
 		'minFile': 'common.min.js'
 	},
 	'root': {
 		'files': [
 			'core/kekule.root.js'
 		],
-		'category': 'common',
+		'category': 'root',
 		'minFile': 'common.min.js'
 	},
 
@@ -448,6 +458,7 @@ function analysisEntranceScriptSrc(doc)
 	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
+	var paramLanguage = /^language\= (.+)$/;
 	var scriptElems = doc.getElementsByTagName('script');
 	var loc;
 	for (var j = scriptElems.length - 1; j >= 0; --j)
@@ -500,6 +511,13 @@ function analysisEntranceScriptSrc(doc)
 							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
 							result.forceDomLoader = value;
 						}
+						// language
+						var forceLanguage = params[i].match(paramLanguage);
+						if (forceLanguage)
+						{
+							var pvalue = forceLanguage[1];
+							result.language = pvalue;
+						}
 					}
 					if (modules)
 						result.modules = modules;
@@ -514,18 +532,23 @@ function analysisEntranceScriptSrc(doc)
 
 function init()
 {
-	var files, path;
+	var scriptInfo, files, path;
 	if (isNode)
 	{
-		files = getEssentialFiles(nodeModules, true);  // currently use min file directly
-		path = __dirName + '/';
+		scriptInfo = {
+			'src': this.__filename || '',
+			'path': 'F:/Users/Ginger/Programer/Project/MolGraphics/WebBasedGraphics_Kekule/Kekule/project/src/', // fixed for debug  // __dirname + '/',
+			'modules': nodeModules,
+			'useMinFile': false
+		};
 	}
 	else  // in browser
 	{
-		var scriptInfo = analysisEntranceScriptSrc(document);
-		files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
-		path = scriptInfo.path;
+		scriptInfo = analysisEntranceScriptSrc($root.document);
 	}
+
+	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
+	path = scriptInfo.path;
 
 	var scriptUrls = [];
 	for (var i = 0, l = files.length; i < l; ++i)
@@ -534,7 +557,7 @@ function init()
 		scriptUrls.push(path + files[i]);
 	}
 	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
-	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader);
+
 	// save loaded module and file information
 	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
@@ -544,10 +567,22 @@ function init()
 		'appendScriptFiles': appendScriptFiles
 	};
 
-	if (isNode)  // export Kekule namespace
-	{
-		exports.Kekule = Kekule;
-	}
+	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		if (isNode)  // export Kekule namespace
+		{
+			// export Kekule in module
+			exports.Kekule = this.Kekule || __nodeContext.Kekule;
+			exports.Class = this.Class || __nodeContext.Class;
+			exports.ClassEx = this.ClassEx || __nodeContext.ClassEx;
+			exports.ObjectEx = this.ObjectEx || __nodeContext.ObjectEx;
+			exports.DataType = this.DataType || __nodeContext.DataType;
+			// and these common vars in global
+			this.Class = exports.Class;
+			this.ClassEx = exports.ClassEx;
+			this.ObjectEx = exports.ObjectEx;
+			this.DataType = exports.DataType;
+		}
+	});
 }
 
 init();

@@ -434,15 +434,16 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 	//doExecute: function($super, invokerHtmlEvent)
 	{
 		//$super(invokerHtmlEvent);
-		$super(e);
+		var oldChecked = this.getChecked();
+		$super(e);  // execute runs here, may also change checked status
 		if (this.getAutoCheck())
-			this._doCheckOnSelf();
+			this._doToggleCheckOnSelf(oldChecked);
 	},
 	/** @private */
-	_doCheckOnSelf: function()
+	_doToggleCheckOnSelf: function(oldChecked)
 	{
 		if (this.getEnabled())
-			this.setChecked(!this.getChecked());
+			this.setChecked(/*!this.getChecked()*/!oldChecked);
 	}
 });
 

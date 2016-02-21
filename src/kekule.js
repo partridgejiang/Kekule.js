@@ -168,7 +168,7 @@ var kekuleFiles = {
 		'files': [
 			'core/kekule.root.js'
 		],
-		'category': 'common',
+		'category': 'root',
 		'minFile': 'common.min.js'
 	},
 
