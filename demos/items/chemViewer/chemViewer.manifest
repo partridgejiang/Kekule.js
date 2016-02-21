@@ -1,5 +1,6 @@
 CACHE MANIFEST
 CACHE:
+
 ../../../libs/raphael-min.2.0.1.js
 ../../../libs/Three.js
 ../../../libs/kekule/kekule.js?modules=chemWidget

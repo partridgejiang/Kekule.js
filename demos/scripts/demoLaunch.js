@@ -57,6 +57,7 @@ DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistr
 	DU.newConcreteDemo('chemViewer2D', 'Chem Viewer 2D', 'Demonstrates function of 2D chem viewer widget.', 'chemViewer/chemViewer2D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('chemViewer3D', 'Chem Viewer 3D', 'Demonstrates function of 3D chem viewer widget.', 'chemViewer/chemViewer3D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('embeddedViewer', 'Embedded Chem Object', 'Demonstrates display molecules using embedded chem viewer and pure HTML code (without JavaScript).', 'chemViewer/embeddedChemViewer.html'),
+	DU.newConcreteDemo('moleculeViewer', 'Molecule Viewer', 'Demonstrates variety forms of chem viewer widge to display molecule.', 'chemViewer/moleculeViewer.html'),
 	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html')
 ]);
 DU.newRootCategory('extra', 'Extra', 'Demos some extra functions of Kekule.js', [
