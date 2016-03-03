@@ -74,8 +74,8 @@
 
   </style>
 
-  <script src="../../../libs/raphael-min.2.0.1.js"></script>  
-  <script src="../../../libs/kekule/kekule.js?modules=chemWidget,algorithm"></script>  
+  <script src="../../../libs/raphael-min.2.0.1.js"></script>
+  <script src="../../../libs/kekule/kekule.js?modules=chemWidget,algorithm"></script>
 
   <link type="chemical/x-mdl-molfile" id="cyclopropene" href="../../chemFiles/2D/cyclopropene.mol" />
   <link type="chemical/x-mdl-molfile" id="cyclobutadiene" href="../../chemFiles/2D/cyclobutadiene.mol" />
@@ -208,13 +208,15 @@
       Kekule.DomUtils.clearChildContent(parentElem);
     }
 
-    function listRings(parentMol, rings)
+    function listRings(parentMol, rings, duration)
     {
       clearResult();
 
       var elem = $('resultSummary');
       var ringCount = rings? rings.length: 0;
       var s = ringCount + ' ' + ((ringCount > 1)? 'rings': 'ring') + ' found';
+      if (duration !== undefined)
+        s += ' in ' + duration + 'ms'
       if (ringCount)
         s += ', click item to highlight it.';
       elem.innerHTML = s;
@@ -264,8 +266,10 @@
       var mol = getTargetObj();
       if (mol)
       {
-        var rings = mol.findAllRings();		
-        listRings(mol, rings);
+        var tStart = Date.now();
+        var rings = mol.findAllRings();
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
       }
     }
     function findSssrRings()
@@ -273,8 +277,10 @@
       var mol = getTargetObj();
       if (mol)
       {
+        var tStart = Date.now();
         var rings = mol.findSSSR();
-        listRings(mol, rings);
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
       }
     }
     function findAromaticRings()
@@ -282,8 +288,10 @@
       var mol = getTargetObj();
       if (mol)
       {
+        var tStart = Date.now();
         var rings = mol.findAromaticRings(true);
-        listRings(mol, rings);
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
       }
     }
 
