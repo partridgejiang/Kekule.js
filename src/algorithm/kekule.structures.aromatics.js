@@ -411,6 +411,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	perceiveAromaticRings: function(allowUncertainRings, candidateRings)
 	{
+		// TODO: need to detect azulene and some other special aromatic rings
 		var rings = candidateRings || this.findSSSR();
 		var result = [];
 

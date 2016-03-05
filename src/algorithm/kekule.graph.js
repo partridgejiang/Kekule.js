@@ -1565,8 +1565,14 @@ Kekule.GraphAlgorithmUtils = {
 		for (var i = 0, l = cycleParts.length; i < l; ++i)
 		{
 			var part = cycleParts[i];
+			//var tStart = Date.now();
 			var allRings = U.findAllRings(part);
+			//var tEnd = Date.now();
+			//console.log('Find all rings in ', tEnd - tStart);
+			//var tStart = Date.now();
 			var sssrRings = U.findSSSR(part, allRings);
+			//var tEnd = Date.now();
+			//console.log('Find SSSR in ', tEnd - tStart);
 
 			result.push({
 				'vertexes': part.vertexes,

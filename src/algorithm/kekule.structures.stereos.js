@@ -332,7 +332,7 @@ Kekule.MolStereoUtils = {
 
 	/**
 	 * Check if a chem structure node is a chiral one.
-	 * Note: now only C/S/P/N atoms are considered, and the parent structure fragment may be standardized.
+	 * Note: now only C/Si/S/P/N/B atoms are considered, and the parent structure fragment may be standardized.
 	 * @param {Kekule.ChemStructureNode} node
 	 */
 	isChiralNode: function(node)
@@ -342,12 +342,14 @@ Kekule.MolStereoUtils = {
 		{
 			var diffNeighborCount;
 			var maxMultiBondCount;
+			var possibleCharges = null;
 			var mayBeChiral = false;
 			// check C first
-			if (node.mayContainElement('C'))  // must has four different attached groups
+			if (node.mayContainElement('C') || node.mayContainElement('Si'))  // must has four different attached groups
 			{
 				diffNeighborCount = 4;
 				maxMultiBondCount = 0;
+				possibleCharges = [0];
 				mayBeChiral = true;
 			}
 			else if (node.mayContainElement('N'))  // must has four different attached groups
@@ -362,6 +364,13 @@ Kekule.MolStereoUtils = {
 				maxMultiBondCount = 0;
 				mayBeChiral = true;
 			}
+			else if (node.mayContainElement('B'))
+			{
+				diffNeighborCount = 3;
+				maxMultiBondCount = 0;
+				possibleCharges = [-1];
+				mayBeChiral = true;
+			}
 
 			if (mayBeChiral)
 			{
@@ -369,7 +378,10 @@ Kekule.MolStereoUtils = {
 				var multibonds = node.getLinkedMultipleBonds();
 				var hydroCount = node.getHydrogenCount ? node.getHydrogenCount() : 0;
 				var allHydroCount = node.getHydrogenCount ? node.getHydrogenCount(true) : 0;
-				if (multibonds.length > maxMultiBondCount || allHydroCount >= 2 || neighbors.length + hydroCount < diffNeighborCount)
+				var charge = node.getCharge() || 0;
+				//console.log(charge);
+				if (multibonds.length > maxMultiBondCount || allHydroCount >= 2 || neighbors.length + hydroCount < diffNeighborCount
+					|| (possibleCharges && possibleCharges.indexOf(charge) < 0))
 					result = false;
 				else  // check cano index of neighbors, see whether they are different
 				{

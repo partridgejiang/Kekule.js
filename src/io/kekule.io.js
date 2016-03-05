@@ -1223,6 +1223,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 			{
 				var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
 				Kekule.raise(msg);
+				return;
 			}
 
 			//var isBinary = (formatInfo.dataType === Kekule.IO.ChemDataType.BINARY);
@@ -1257,6 +1258,60 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 	else
 	{
 		Kekule.error(/*Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.FILE_API_NOT_SUPPORTED'));
+	}
+};
+
+/**
+ * Load chem object from a URL.
+ * Note this function relies on AJAX support.
+ * @param {String} fileUrl
+ * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
+ * @param {String} formatId If not set, format will be get from file name automatically.
+ */
+Kekule.IO.loadUrlData = function(fileUrl, callback, formatId)
+{
+	if (Kekule.Ajax)
+	{
+		Kekule.Ajax.sendRequest(fileUrl, function(data, requestObj, success){
+			if (data && success)
+			{
+				// try resolve file format
+				var formatInfo;
+				if (formatId)
+					formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
+				if (!formatId)
+				{
+					var mimeType = Kekule.Ajax.getResponseMimeType(requestObj);
+					formatInfo = Kekule.IO.DataFormatsManager.findFormat(mimeType);
+				}
+				if (!formatId)
+				{
+					var ext = Kekule.UrlUtils.extractFileExt(fileUrl);
+					formatInfo = Kekule.IO.DataFormatsManager.findFormat(null, ext);
+				}
+				if (!formatInfo)
+				{
+					var msg = Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
+					Kekule.raise(msg);
+					return;
+				}
+
+				var chemObj = Kekule.IO.loadFormatData(data, formatInfo.id);
+				var info = chemObj.getSrcInfo();
+				info.fileName = fileUrl;
+				var success = !!chemObj;
+				callback(chemObj, success);
+			}
+			else
+			{
+				Kekule.raise(Kekule.$L('ErrorMsg.FAIL_TO_LOAD_FILE_URL') + fileUrl);
+			}
+		});
+	}
+	else
+	{
+		Kekule.raise(Kekule.$L('ErrorMsg.AJAX_FILELOADER_NOT_FOUND'));
+		return null;
 	}
 };
 

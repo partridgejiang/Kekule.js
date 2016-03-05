@@ -75,6 +75,8 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	NO_SUITABLE_WRITER_FOR_FORMAT: 'Can not write data of format: ',
 	NO_SUITABLE_WRITER_FOR_MIMETYPE: 'Can not write data of MIME type: ',
 	NO_SUITABLE_WRITER_FOR_FILEEXT: 'Can not write data of file extension: ',
+	AJAX_FILELOADER_NOT_FOUND: 'AJAX file loader not found, can not load URL',
+	FAIL_TO_LOAD_FILE_URL: 'Fail to load file of URL: ',
 
 	// io/cml/kekule.io.cml.js
 	CML_ELEM_READER_NOT_FOUND: 'Reader for element <{0}> not found',

@@ -2318,6 +2318,38 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Create a new Kekule.Atom instance.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	_createAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		var atom = new Kekule.Atom(null, elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+		return atom;
+	},
+
+	/**
+	 * Util method to create a new Kekule.Atom instance and append to current connection table.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	appendAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		var atom = this._createAtom(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+		if (atom)
+			this.appendNode(atom);
+		return atom;
+	},
+
+	/**
 	 * Return count of anchorNodes.
 	 * @returns {Int}
 	 */
@@ -2554,6 +2586,42 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 		else
 			Kekule.error(/*Kekule.ErrorMsg.SORT_FUNC_UNSET*/Kekule.$L('ErrorMsg.SORT_FUNC_UNSET'));
+	},
+
+	/**
+	 * A util method to create a new bond object connected with node only.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 * @private
+	 */
+	_createBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		var connectedObjs = [];
+		for (var i = 0, l = nodesOrIndexes.length; i < l; ++i)
+		{
+			var a = nodesOrIndexes[i];
+			if (DataType.isSimpleValue(a))  // not node object, should be index of node
+				a = this.getNodeAt(a);
+			connectedObjs.push(a);
+		}
+		var result = new Kekule.Bond(null, connectedObjs, bondOrder, bondType);
+		return result;
+	},
+	/**
+	 * A util method to create a new bond object connected with nodes and append to current connection table.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 */
+	appendBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		var bond = this._createBond(nodesOrIndexes, bondOrder, bondType);
+		if (bond)
+			this.appendConnector(bond);
+		return bond;
 	},
 
 	/**
@@ -3696,6 +3764,20 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Util method to create a new Kekule.Atom instance and append to current connection table.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	appendAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		return this.doGetCtab(true).appendAtom(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+	},
+
+	/**
 	 * Return count of anchorNodes.
 	 * @returns {Int}
 	 */
@@ -3897,7 +3979,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			return this.getCtab().sortConnectors(sortFunc);
 	},
 
-
 	/**
 	 * Check if a connector is in aromatic ring stored in aromaticRings property.
 	 * @param {Kekule.ChemStructureConnector} connector
@@ -3913,6 +3994,18 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				return true;
 		}
 		return false;
+	},
+
+	/**
+	 * A util method to create a new bond object connected with nodes and append to current connection table.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 */
+	appendBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		return this.doGetCtab(true).appendBond(nodesOrIndexes, bondOrder, bondType);
 	},
 
 	/**
