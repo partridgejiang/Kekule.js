@@ -258,29 +258,35 @@ Kekule.IO.MdlStructureUtils = {
 				isCoord3D = coordMode == Kekule.CoordMode.COORD3D;
 			else
 				isCoord3D = ctabInfo.atomInfos.isCoord3D;
-			for (var i = 0, l = ctabInfo.atomInfos.length; i < l; ++i)
+			if (ctabInfo.atomInfos)
 			{
-				var info = ctabInfo.atomInfos[i];
-				if (info)
+				for (var i = 0, l = ctabInfo.atomInfos.length; i < l; ++i)
 				{
-					var atom = Kekule.IO.MdlStructureUtils.createStructureNode(fragment, info, isCoord3D);
-					if (atom)
-						fragment.appendNode(atom);
-					else
-						Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE'));
+					var info = ctabInfo.atomInfos[i];
+					if (info)
+					{
+						var atom = Kekule.IO.MdlStructureUtils.createStructureNode(fragment, info, isCoord3D);
+						if (atom)
+							fragment.appendNode(atom);
+						else
+							Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_ATOM_CANNOT_CREATE'));
+					}
 				}
 			}
 			// bonds
-			for (var i = 0, l = ctabInfo.bondInfos.length; i < l; ++i)
+			if (ctabInfo.bondInfos)
 			{
-				var info = ctabInfo.bondInfos[i];
-				if (info)
+				for (var i = 0, l = ctabInfo.bondInfos.length; i < l; ++i)
 				{
-					var bond = Kekule.IO.MdlStructureUtils.createStructureConnector(fragment, info);
-					if (bond)
-						fragment.appendConnector(bond);
-					else
-						Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE'));
+					var info = ctabInfo.bondInfos[i];
+					if (info)
+					{
+						var bond = Kekule.IO.MdlStructureUtils.createStructureConnector(fragment, info);
+						if (bond)
+							fragment.appendConnector(bond);
+						else
+							Kekule.raise(/*Kekule.ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE*/Kekule.$L('ErrorMsg.MDL_CTAB_BOND_CANNOT_CREATE'));
+					}
 				}
 			}
 			// sgroup

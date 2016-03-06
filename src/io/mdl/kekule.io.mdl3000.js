@@ -1253,7 +1253,7 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		if (atom.getMassNumber && atom.getMassNumber())
 			values.push({'key': 'MASS', 'value': atom.getMassNumber()});
 		if (atom.getExplicitHydrogenCount && (!Kekule.ObjUtils.isUnset(atom.getExplicitHydrogenCount())))
-			values.push({'key': 'HCOUNT', 'value': atom.getExplicitHydrogenCount()});
+			values.push({'key': 'HCOUNT', 'value': atom.getExplicitHydrogenCount() + 1});
 		return Kekule.IO.Mdl3kValueUtils.mergeValues(values);
 	},
 	/**

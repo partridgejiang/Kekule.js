@@ -373,7 +373,8 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 		// line format: aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv
 		// vvvvvv: version flag, check if it is V2000
 		var s = line.substr(33, 6).trim();
-		if (s != Kekule.IO.MDL.VER2000) // wrong version flag, it may be not a CTAB 2000, raise exception
+		if (s && s != Kekule.IO.MDL.VER2000) // wrong version flag, it may be not a CTAB 2000, raise exception
+		  // Note: sometime Version mark may be missing (s is empty), assume V2000
 		{
 			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL2000_FORMAT_DATA*/Kekule.$L('ErrorMsg.NOT_MDL2000_FORMAT_DATA'));
 			return null;

@@ -219,7 +219,7 @@ Kekule.IO.CmlUtils = {
 			return node.getSymbol();
 		else if (node instanceof Kekule.Pseudoatom)
 		{
-			console.log(node);
+			//console.log(node);
 			switch (node.getAtomType())
 			{
 				case Kekule.PseudoatomType.DUMMY: return 'Du';
@@ -509,6 +509,19 @@ Kekule.IO.CmlDomUtils = {
 			result = result && (elem.namespaceURI == namespaceURI);
 		return result;
 	},
+	/**
+	 * Check if an element has builtin attribute.
+	 * @param {Object} elem
+	 * @param {String} namespaceURI Can be null.
+	 * @returns {Bool}
+	 */
+	isCmlBuiltInMarkedElem: function(elem, namespaceURI)
+	{
+		var result = Kekule.DomUtils.hasAttribute(elem, 'builtin');
+		if (namespaceURI && result)
+			result = elem.namespaceURI === namespaceURI;
+		return result;
+	},
 
 	FILTER_TYPED_ELEM: 1,
 	FILTER_TYPEDARRAY_ELEM: 2,
@@ -537,6 +550,30 @@ Kekule.IO.CmlDomUtils = {
 		return null;
 	},
 	/**
+	 * Get all child typed elements with specified builtinName.
+	 * @param {Object} parent
+	 * @param {String} builtinName
+	 * @param {Int} filter
+	 * @returns {Array} Elements found or null.
+	 */
+	getCmlTypedElems: function(parent, builtinName, filter)
+	{
+		var result = [];
+		var nsURI = parent.namespaceURI;
+		var elems = Kekule.DomUtils.getDirectChildElemsOfAttribValues(parent, [{'builtin': builtinName}], null, null, nsURI);
+		if (elems && (elems.length > 0))
+		{
+			for (var i = elems.length - 1; i >= 0; --i)
+			{
+				if ((filter & Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM) && Kekule.IO.CmlDomUtils.isCmlTypedElem(elems[i], nsURI))
+					result.push(elems[i]);
+				else if ((filter & Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM) && Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(elems[i], nsURI))
+					result.push(elems[i]);
+			}
+		}
+		return result.length? result: null;
+	},
+	/**
 	 * Get value of child typed element with specified builtinName.
 	 * @param {Object} parent
 	 * @param {String} builtinName
@@ -551,6 +588,31 @@ Kekule.IO.CmlDomUtils = {
 		if (elem)
 			//return Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(elem, parent.namespaceURI, domHelper);
 			return Kekule.DomUtils.getElementText(elem);
+	},
+	/**
+	 * Get value of child typed elements (maybe multiple) with specified builtinName.
+	 * @param {Object} parent
+	 * @param {String} builtinName
+	 * @param {Int} filter
+	 * @returns {Variant} Value found (array) or null.
+	 */
+	getMultipleCmlTypedElemValues: function(parent, builtinName, filter, domHelper)
+	{
+		if (!filter)
+			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
+		var elems = Kekule.IO.CmlDomUtils.getCmlTypedElems(parent, builtinName, filter);
+		if (elems)
+		{
+			var result = [];
+			//return Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(elem, parent.namespaceURI, domHelper);
+			for (var i = 0, l = elems.length; i < l; ++i)
+			{
+				result.push(Kekule.DomUtils.getElementText(elems[i]));
+			}
+			return result;
+		}
+		else
+			return null;
 	},
 	/**
 	 * Get attribute value of elem. If attribName not found in elem's attributes,
@@ -568,6 +630,25 @@ Kekule.IO.CmlDomUtils = {
 		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
 		{
 			result = Kekule.IO.CmlDomUtils.getCmlTypedElemValue(elem, attribName, filter, domHelper);
+		}
+		return result;
+	},
+	/**
+	 * Get attribute values of (may) multiple elem. If attribName not found in elem's attributes,
+	 *   this method will automatically check child <string>, <float> or <integer> elements.
+	 * @param {Object} elem
+	 * @param {String} attribName
+	 * @param {Int} filter
+	 * @returns {Variant} Value of attribute.
+	 */
+	getMultipleCmlElemAttribute: function(elem, attribName, filter, domHelper)
+	{
+		if (!filter)
+			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
+		var result = Kekule.DomUtils.getSameNSAttributeValue(elem, attribName, domHelper);
+		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		{
+			result = Kekule.IO.CmlDomUtils.getMultipleCmlTypedElemValues(elem, attribName, filter, domHelper);
 		}
 		return result;
 	},
@@ -596,21 +677,28 @@ Kekule.IO.CmlDomUtils = {
 		for (var i = 0, l = childElems.length; i < l; ++i)
 		{
 			var childElem = childElems[i];
-			if ((filter & Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM) && Kekule.IO.CmlDomUtils.isCmlTypedElem(childElem, nsURI))
+			if ((filter & Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM)
+					&& (Kekule.IO.CmlDomUtils.isCmlTypedElem(childElem, nsURI) || Kekule.IO.CmlDomUtils.isCmlBuiltInMarkedElem(childElem, nsURI)))
 			{
 				var obj = Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(childElem, nsURI, domHelper);
-				if (result[obj.name] && mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
-					result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
-				else
-					result[obj.name] = obj.value;
+				if (obj)
+				{
+					if (result[obj.name] && mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
+						result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
+					else
+						result[obj.name] = obj.value;
+				}
 			}
 			else if ((filter & Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM) && Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(childElem, nsURI))
 			{
 				var obj = Kekule.IO.CmlDomUtils.getCmlBuiltinElemInfo(childElem, nsURI, domHelper);
-				if (result[obj.name] && mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
-					result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
-				else
-					result[obj.name] = obj.value;
+				if (obj)
+				{
+					if (result[obj.name] && mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
+						result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
+					else
+						result[obj.name] = obj.value;
+				}
 			}
 		}
 		return result;
@@ -1448,10 +1536,10 @@ Kekule.IO.CmlChemStructureReader = Class.create(Kekule.IO.CmlElementReader,
 	 */
 	arrayedAtomInfosToJSON: function(elem, domHelper)
 	{
-		var arrayedAttribNames = ['atomID', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
+		var arrayedAttribNames = ['id', 'atomID', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
 			'xFract', 'yFract', 'zFract',
 			'x2', 'y2', 'x3', 'y3', 'z3'];
-		var attribNames = ['id', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
+		var attribNames = ['id', 'id', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
 			'xFract', 'yFract', 'zFract',
 			'x2', 'y2', 'x3', 'y3', 'z3'];
 		var atomAttribs = [];
@@ -2024,6 +2112,16 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					case 'formula':
 						this.readFormula(result, node, domHelper);
 						break;
+					case 'atom':   // sometimes atom or bond is directly add to molecule element
+						this.getStructureBuilder().setTarget(result);
+						var structureNode = this.readAtom(node, domHelper);
+						this.getStructureBuilder().appendNode(structureNode);
+						break;
+					case 'bond':
+						this.getStructureBuilder().setTarget(result);
+						var connector = this.readBond(result, node, domHelper);
+						this.getStructureBuilder().appendConnector(connector);
+						break;
 					case 'molecule':
 						break;  // do nothing, as pure molecule element should not contain sub-molecule
 					default:
@@ -2318,7 +2416,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				var xy = Kekule.IO.CmlDomUtils.splitCmlArrayValue(attribs.xy2);
 				if (xy.length == 2)
 				{
-					coord2D = {'x': xy[0], 'y': xy[1]};
+					coord2D = {'x': parseFloat(xy[0]), 'y': parseFloat(xy[1])};
 				}
 			}
 			delete attribs['x2'];
@@ -2333,7 +2431,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				var xyz = Kekule.IO.CmlDomUtils.splitCmlArrayValue(attribs.xyz3);
 				if (xyz.length == 3)
 				{
-					coord2D = {'x': xyz[0], 'y': xyz[1], 'z': xyz[2]};
+					coord2D = {'x': parseFloat(xyz[0]), 'y': parseFloat(xyz[1]), 'z': parseFloat(xyz[2])};
 				}
 			}
 			delete attribs['x3'];
@@ -2499,9 +2597,29 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	 */
 	readArrayedBonds: function(molecule, elem, domHelper)
 	{
-		var arrayedAttribNames = ['bondID', 'atomRef1', 'atomRef2', 'order', 'bondStereo'];
-		var attribNames = ['id', 'atomRefs2', 'atomRefs2', 'order', 'bondStereo'];
+		var arrayedAttribNames = ['id', 'bondID', /*'atomRefs',*/ 'atomRef1', 'atomRef2', 'order', 'bondStereo'];
+		var attribNames = ['id', 'id', /*'atomRefs',*/ 'atomRefs2', 'atomRefs2', 'order', 'bondStereo'];
 		var bondAttribs = [];
+
+		// handle atomRefs attrib first, as it may concern to multiple child elems
+		var svalues = Kekule.IO.CmlDomUtils.getMultipleCmlElemAttribute(elem, 'atomRefs', Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM, domHelper);
+		if (svalues && svalues.length)
+		{
+			for (var i = 0, l = svalues.length; i < l; ++i)
+			{
+				var svalue = svalues[i];
+				var values = Kekule.IO.CmlDomUtils.splitCmlArrayValue(svalue);;
+				for (var j = 0, k = values.length; j < k; ++j)
+				{
+					if (!bondAttribs[j])
+						bondAttribs[j] = {};
+					if (bondAttribs[j]['atomRefs'] == undefined)
+						bondAttribs[j]['atomRefs'] = [];
+					(bondAttribs[j]['atomRefs']).push(values[j]);
+				}
+			}
+		}
+
 		for (var i = 0, l = arrayedAttribNames.length; i < l; ++i)
 		{
 			var svalue;
@@ -2511,12 +2629,23 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			if (svalue)
 				values = Kekule.IO.CmlDomUtils.splitCmlArrayValue(svalue);
 
+			//console.log(arrayedAttribNames[i], svalue, values);
+
 			for (var j = 0, k = values.length; j < k; ++j)
 			{
 				if (!bondAttribs[j])
 					bondAttribs[j] = {};
 				if (values[j])
 				{
+					/*
+					if (arrayedAttribNames[i] == 'atomRefs')
+					{
+						if (bondAttribs[j]['atomRefs'] == undefined)
+							bondAttribs[j]['atomRefs'] = [];
+						(bondAttribs[j]['atomRefs']).push(values[j]);
+					}
+					else
+					*/
 					if ((arrayedAttribNames[i] == 'atomRef1') || (arrayedAttribNames[i] == 'atomRef2'))
 					{
 						if (bondAttribs[j]['atomRefs2'] == undefined)
@@ -3450,7 +3579,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 				break;
 			}
 		}
-		this.setCoreNamespaceURI(uri || null);
+		this.setCoreNamespaceURI(legalCoreUri || null);
 	}
 });
 

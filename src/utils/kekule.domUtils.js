@@ -183,6 +183,7 @@ Kekule.DomUtils = {
 			if (fitAttribValue)
 				result.push(elems[i]);
 		}
+		return result;
 	},
 	/**
 	 * Check if childElem is inside parentElem.

@@ -850,7 +850,7 @@ var StringUtils = {
 				case 'boolean':
 					return value ? StringUtils.STRUE : StringUtils.SFALSE;
 					break;
-				case 'number':
+				case 'number': case DataType.INT:case DataType.FLOAT:
 					// add '+' or '-' symbol before a number value
 					var sign = (value >= 0)? StringUtils.SPOSITIVE: '';  //this.SNEGATIVE;
 					return sign + value;

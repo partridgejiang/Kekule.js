@@ -5591,7 +5591,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 * @param {Int} index
 	 * @param {Hash} attributes Additional attributes of this object. Can be null.
 	 */
-	insertObj: function(obj, index, attribute)
+	insertObj: function(obj, index, attributes)
 	{
 		if (!obj)
 			return;
