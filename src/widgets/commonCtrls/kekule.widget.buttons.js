@@ -379,6 +379,18 @@ Kekule.Widget.Button.Kinds = {
  * @name Kekule.Widget.CheckButton#check
  * @event
  */
+/**
+ * Invoked button is unchecked.
+ *   event param of it has field: {widget}
+ * @name Kekule.Widget.CheckButton#uncheck
+ * @event
+ */
+/**
+ * Invoked button checked state changed.
+ *   event param of it has field: {widget, checked}
+ * @name Kekule.Widget.CheckButton#checkChange
+ * @event
+ */
 Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 /** @lends Kekule.Widget.CheckButton# */
 {
@@ -421,6 +433,9 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 		// do nothing here
 		if (this.getChecked())
 			this.invokeEvent('check');
+		else
+			this.invokeEvent('uncheck');
+		this.invokeEvent('checkChange', {'checked': this.getChecked()});
 	},
 
 	/** @ignore */

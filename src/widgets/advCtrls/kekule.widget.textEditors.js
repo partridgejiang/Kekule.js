@@ -306,7 +306,7 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 			hint = Kekule.$L('WidgetTexts.HINT_TOGGLE_TEXTWRAP'); // CWT.HINT_TOGGLE_TEXTWRAP;
 			cssClassName = CNS.TEXTEDITOR_BTN_TEXTWRAP;
 			result.setChecked(this.getWrap() !== 'off');
-			result.addEventListener('execute', function(e){
+			result.addEventListener('checkChange', function(e){
 				var wrap = result.getChecked();
 				this.setWrap(wrap? 'virtual': 'off');
 			}, this);
