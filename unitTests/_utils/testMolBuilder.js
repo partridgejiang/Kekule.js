@@ -49,7 +49,7 @@ var BO = Kekule.BondOrder;
 TestMolBuilder = {
 	loadExternalData: function(relUrl, callback)
 	{
-		return Kekule.IO.loadUrlData('../data/' + relUrl, function(chemObj, success){
+		return Kekule.IO.loadUrlData('./data/' + relUrl, function(chemObj, success){
 			callback(chemObj);
 		});
 	},
