@@ -2,7 +2,7 @@
  * Created by ginger on 2016/3/6.
  */
 
-describe('Test of canonicalization of molecules', function(){
+describe('Test of canonicalization of molecule', function(){
 
 	var testCanonicalization = function(title, fileUrl)
 	{

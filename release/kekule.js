@@ -539,7 +539,7 @@ function init()
 			'src': this.__filename || '',
 			'path': 'F:/Users/Ginger/Programer/Project/MolGraphics/WebBasedGraphics_Kekule/Kekule/project/src/', // fixed for debug  // __dirname + '/',
 			'modules': nodeModules,
-			'useMinFile': false
+			'useMinFile': false  // for debug
 		};
 	}
 	else  // in browser

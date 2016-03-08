@@ -53,6 +53,39 @@ TestMolBuilder = {
 			callback(chemObj);
 		});
 	},
+	loadExternalFiles: function(refUrls, callback)
+	{
+		var totalCount = refUrls.length;
+		if (totalCount > 0)
+		{
+			var loadedCount = 0;
+			var loadResults = [];
+			refUrls.forEach(function(url, index)
+			{
+				try
+				{
+					TestMolBuilder.loadExternalData(url, function(chemObj)
+					{
+						loadResults[index] = chemObj;
+						loadedCount++;
+						//console.log('loaded', url, !!chemObj);
+						if (loadedCount >= totalCount)
+						{
+							//console.log('All loaded', totalCount);
+							callback(loadResults);
+						}
+					});
+				}
+				catch(e)
+				{
+					//console.log('Fail load', url);
+					throw e;
+				}
+			});
+		}
+		else
+			callback([]);
+	},
 
 	// Generate an Alkane (chain of carbons with no hydrogens) of a given length.
 	makeAlkane: function(length)

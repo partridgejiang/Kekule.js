@@ -50,6 +50,7 @@ Kekule.ChemStructureSearcher = {
 	 */
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
+		// TODO: configuration search need to be rechecked
 		var op = Object.extend({doStandardize: true}, options);
 
 		if (op.exactMatch)
