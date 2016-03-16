@@ -17,7 +17,7 @@
 //var OT = Kekule.OBJDEF_TEXTS;
 
 // modify defineProp method of ObjectEx, add auto title/description supports
-if (false && Kekule.PROP_AUTO_TITLE)
+if (Kekule.PROP_AUTO_TITLE)
 {
 	var originMethod = ClassEx.getPrototype(ObjectEx).defineProp;
 	var OBJ_PROP_TITLE_TEXT_PREFIX = 'TITLE_';

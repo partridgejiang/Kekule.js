@@ -162,14 +162,14 @@ var kekuleFiles = {
 			'lan/serializations.js'
 		],
 		'category': 'lan',
-		'minFile': 'common.min.js'
+		'minFile': 'root.min.js'
 	},
 	'root': {
 		'files': [
 			'core/kekule.root.js'
 		],
 		'category': 'root',
-		'minFile': 'common.min.js'
+		'minFile': 'root.min.js'
 	},
 
 	'localization': {
