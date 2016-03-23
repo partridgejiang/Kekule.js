@@ -93,7 +93,7 @@ describe('Test of finding all rings in molecule', function(){
 		});
 	});
 
-	// TODO: ring too large
+	// TODO: molecule too large and complex, time consuming, disable them temporarily
 	/*
 	xit('Test on external data: Big ring system test, certain size ring count 2', function(done){
 		MB.loadExternalData('mdl/four-ring-5x10.mol', function(mol){

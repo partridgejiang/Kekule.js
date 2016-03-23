@@ -92,15 +92,10 @@ describe('Test of finding stereo center in molecule', function()
 	none("N(C)(N)(O)", 'stereoTest/stereoCenterN2.mol');
 	none("N(=C)(C)", 'stereoTest/stereoCenterN3.mol');
 
-	// TODO: can not distinguish chiral center in small rings
-	//tetrahedral("N(C)(C1)O1", 'stereoTest/stereoCenterN4.mol');
-	//tetrahedral("N(C)(C1)C1C", 'stereoTest/stereoCenterN5.mol');
 
 	none("N(C)(C1)CCCC1", 'stereoTest/stereoCenterN6.mol'); // n.b. equivalence checked later
-	/*none*/tetrahedral("N(C)(C1)CCCC1C", 'stereoTest/stereoCenterN7.mol');  // TODO: should has no chiral center in large ring (in CDK)
 
 	none("N(C1)C1", 'stereoTest/stereoCenterN8.mol'); // n.b. equivalence checked later
-	//none("N(C1)C1C", 'stereoTest/stereoCenterN9.mol');  // should has a center of C, but CDK reports none
 
 	tetrahedral("[N+](C)(N)(O)CC", 'stereoTest/stereoCenterN10.mol');
 	none("[N+](=C)(C)C", 'stereoTest/stereoCenterN11.mol');
@@ -112,13 +107,9 @@ describe('Test of finding stereo center in molecule', function()
 	none("[NH3+]C", 'stereoTest/stereoCenterN16.mol');
 	none("[NH4+]", 'stereoTest/stereoCenterN17.mol');
 
-	//none("[N+](N)([NH])(C)CC", 'stereoTest/stereoCenterN18.mol');   // TODO:
-	//none("[N+](O)([O])(C)CC", 'stereoTest/stereoCenterN19.mol');
-	//none("[N+](S)([S])(C)CC", 'stereoTest/stereoCenterN20.mol');
 	none("[N+]([SeH])([Se])(C)C", 'stereoTest/stereoCenterN21.mol');
 	none("[N+]([TeH])([Te])(C)C", 'stereoTest/stereoCenterN22.mol');
 
-	//tetrahedral("N(=C)(C)(N)O", 'stereoTest/stereoCenterN23.mol');
 	none("N(=C)(=C)C", 'stereoTest/stereoCenterN24.mol');
 	none("N(#C)=C", 'stereoTest/stereoCenterN25.mol');
 

@@ -35,19 +35,6 @@ describe('Test of finding aromatic rings in molecule', function()
 		});
 	});
 
-	// TODO:
-	/*
-	xit('aromatic test on azulene', function(done){
-		MB.loadExternalData('mdl/aromatic4.mol', function(mol){
-			expect(mol).not.toBeNull();
-			var rings = mol.findAromaticRings();
-			expect(rings.length).toEqual(1);
-			expect(rings[0].connectors.length).toEqual(10);
-			done();
-		});
-	});
-	*/
-
 	it('aromatic test on oxypyridinide', function(done){
 		MB.loadExternalData('mdl/aromatic5.mol', function(mol){
 			expect(mol).not.toBeNull();
