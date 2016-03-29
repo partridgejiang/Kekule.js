@@ -1122,6 +1122,164 @@ Kekule.Render.MetaShapeUtils = {
 		return result;
 	},
 	/**
+	 * Returns distance of coord to a bound shape. A negative value means coord insude shape.
+	 * @param {Hash} coord
+	 * @param {Hash} shapeInfo Provides the shape box information of this object on context. It has the following fields:
+	 *   {
+	 *     shapeType: value from {@link Kekule.Render.MetaShapeType}.
+	 *     coords: [Array of coords]
+	 *     otherInfo: ...
+	 *   }
+	 *   Note that shapeInfo may be an array, in that case, nearest distance will be returned.
+	 * @param {Float} inflate
+	 * @returns {Float}
+	 */
+	getDistance: function(coord, shapeInfo, inflate)
+	{
+		if (Kekule.Render.MetaShapeUtils.isCompositeShape(shapeInfo))
+		{
+			var result = null;
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var info = shapeInfo[i];
+				var d = Kekule.Render.MetaShapeUtils.getDistance(coord, info, inflate);
+				if (result === null || result > d)
+					result = d;
+			}
+			return result;
+		}
+		else
+		{
+			var T = Kekule.Render.MetaShapeType;
+			var B = Kekule.Render.MetaShapeUtils;
+			var newBound = inflate? B.inflateShape(shapeInfo, inflate): shapeInfo;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT: return (inflate? B._getDistanceToCircle(coord, newBound): B._getDistanceToPoint(coord, newBound));
+				case T.CIRCLE: return B._getDistanceToCircle(coord, newBound);
+				case T.LINE: return B._getDistanceToLine(coord, newBound);
+				case T.RECT: return B._getDistanceToRect(coord, newBound);
+				case T.POLYGON: return B._getDistanceToPolygon(coord, newBound);
+				default: return false;
+			}
+		}
+	},
+	/** @private */
+	_getDistanceToPoint: function(coord, shapeInfo)
+	{
+		return Kekule.CoordUtils.getDistance(coord, shapeInfo.coords[0]);
+	},
+	/** @private */
+	_getDistanceToCircle: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var d = C.getDistance(coord, shapeInfo.coords[0]);
+		return d - shapeInfo.radius;
+	},
+	/** @private */
+	_getDistanceToLine: function(coord, shapeInfo)
+	{
+		var SU = Kekule.Render.MetaShapeUtils;
+		// get cross point of coord and line
+		var lineCoords = shapeInfo.coords;
+		var crossPoint = Kekule.Render.MetaShapeUtils._calcVerticalLineCrossPoint(coord, lineCoords[0], lineCoords[1]);
+		// check if cross point is between two coords of line
+		var betweenFlag;
+
+		var NU = Kekule.NumUtils;
+		//if (lineCoords[0].x !== lineCoords[1].x)
+		/*
+		 if (!NU.isFloatEqual(lineCoords[0].x, lineCoords[1].x))
+		 betweenFlag = (Math.sign(crossPoint.x - lineCoords[0].x) * Math.sign(crossPoint.x - lineCoords[1].x) <= 0);
+		 //else if (lineCoords[0].y !== lineCoords[1].y)
+		 else if (!NU.isFloatEqual(lineCoords[0].y, lineCoords[1].y))
+		 betweenFlag = (Math.sign(crossPoint.y - lineCoords[0].y) * Math.sign(crossPoint.y - lineCoords[1].y) <= 0);
+		 else // x/y of coord0/1 all equal, two coords are actually the same point
+		 */
+		if (NU.isFloatEqual(lineCoords[0].x, lineCoords[1].x) && NU.isFloatEqual(lineCoords[0].y, lineCoords[1].y))
+		// x/y of coord0/1 all equal, two coords are actually the same point
+		{
+			var circleInfo = {coords: [shapeInfo.coords[0]], radius: shapeInfo.width};
+			var result = SU._getDistanceToCircle(coord, circleInfo);
+			return result;
+		}
+		else
+		{
+			var vector = Kekule.CoordUtils.substract(lineCoords[1], lineCoords[0]);
+			if (Math.abs(vector.y) > Math.abs(vector.x))
+				betweenFlag = (Math.sign(crossPoint.y - lineCoords[0].y) * Math.sign(crossPoint.y - lineCoords[1].y) <= 0);
+			else
+				betweenFlag = (Math.sign(crossPoint.x - lineCoords[0].x) * Math.sign(crossPoint.x - lineCoords[1].x) <= 0);
+		}
+
+		if (!betweenFlag)  // not inside
+		{
+			//console.log(crossPoint, crossPoint.x - lineCoords[0].x, crossPoint.x - lineCoords[1].x);
+			//return false;
+			// returns distance to nearest end point circle
+			var circleInfo0 = {coords: [shapeInfo.coords[0]], radius: shapeInfo.width || 0};
+			var circleInfo1 = {coords: [shapeInfo.coords[1]], radius: shapeInfo.width || 0};
+			var d0 = SU._getDistanceToCircle(coord, circleInfo0);
+			var d1 = SU._getDistanceToCircle(coord, circleInfo1);
+			return Math.min(d0, d1);
+		}
+		else  // inside line (with width)
+		{
+			var distance = Kekule.CoordUtils.getDistance(coord, crossPoint) - (shapeInfo.width || 0) / 2;
+			//console.log('distance', distance, boundInfo.width);
+			//return (distance <= shapeInfo.width / 2);
+			return distance;
+		}
+	},
+	/** @private */
+	_getDistanceToRect: function(coord, shapeInfo)
+	{
+		var cornerCoords = shapeInfo.coords;
+		var dx0 = (coord.x - cornerCoords[0].x);
+		var dx1 = (coord.x - cornerCoords[1].x);
+		var dy0 = (coord.y - cornerCoords[0].y);
+		var dy1 = (coord.y - cornerCoords[1].y);
+		var inside = (dx0 * dx1 <= 0) && (dy0 * dy1 <= 0);
+		if (inside)
+			return -Math.min(Math.abs(dx0), Math.abs(dx1), Math.abs(dy0), Math.abs(dy1));
+		else  // outside, calc distance to each corner
+		{
+			var CU = Kekule.CoordUtils;
+			return Math.min(
+					CU.getDistance(coord, cornerCoords[0]),
+					CU.getDistance(coord, cornerCoords[1]),
+					CU.getDistance(coord, {'x': cornerCoords[0].x, 'y': cornerCoords[1].y}),
+					CU.getDistance(coord, {'x': cornerCoords[1].x, 'y': cornerCoords[0].y})
+			);
+		}
+	},
+	/** @private */
+	_getDistanceToPolygon: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var SU = Kekule.Render.MetaShapeUtils;
+		var T = Kekule.Render.MetaShapeType;
+		var inside = SU._isInsidePolygon(coord, shapeInfo);
+		var lineCoords = shapeInfo.coords;
+		var distance = null;
+		for (var i = 0, l = lineCoords.length; i < l; ++i)
+		{
+			var coord1 = lineCoords[i];
+			var coord2 = lineCoords[(i + 1) % l];
+			// calc distance to line
+			var lineShape = SU.createShapeInfo(T.LINE, [coord1, coord2], {'width': 0});
+			var d = SU._getDistanceToLine(coord, lineShape);
+			if (distance === null)
+				distance = d;
+			else if (distance > d)
+				distance = d;
+		}
+		if (inside)
+			distance = -distance;
+		return distance;
+	},
+
+	/**
 	 * Check if a point is inside a bound.
 	 * @param {Hash} coord
 	 * @param {Hash} shapeInfo Provides the shape box information of this object on context. It has the following fields:
@@ -1131,6 +1289,7 @@ Kekule.Render.MetaShapeUtils = {
 	 *     otherInfo: ...
 	 *   }
 	 *   Note that shapeInfo may be an array to check if coord in either of items of array.
+	 * @param {Float} inflate
 	 * @returns {Bool}
 	 */
 	isCoordInside: function(coord, shapeInfo, inflate)

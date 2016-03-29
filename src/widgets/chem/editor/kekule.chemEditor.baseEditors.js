@@ -1592,7 +1592,48 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs)
 	{
-		return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord), excludeObjs);
+		var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+		if (!enableTrackNearest)
+			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord), excludeObjs);
+		// else, track on nearest
+		// new approach, find nearest boundInfo at coord
+		var SU = Kekule.Render.MetaShapeUtils;
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord);
+		//var filteredBoundInfos = [];
+		var result, lastShapeInfo, lastDistance;
+		var setResult = function(boundInfo, shapeInfo, distance)
+		{
+			result = boundInfo;
+			lastShapeInfo = shapeInfo || boundInfo.boundInfo;
+			if (Kekule.ObjUtils.notUnset(distance))
+				lastDistance = distance;
+			else
+				lastDistance = SU.getDistance(screenCoord, lastShapeInfo);
+		};
+		for (var i = boundInfos.length - 1; i >= 0; --i)
+		{
+			var info = boundInfos[i];
+			if (excludeObjs && (excludeObjs.indexOf(info.obj) >= 0))
+				continue;
+			if (!result)
+				setResult(info);
+			else
+			{
+				var shapeInfo = info.boundInfo;
+				if (shapeInfo.shapeType < lastShapeInfo.shapeType)
+					setResult(info, shapeInfo);
+				else if (shapeInfo.shapeType === lastShapeInfo.shapeType)
+				{
+					var currDistance = SU.getDistance(screenCoord, shapeInfo);
+					if (currDistance < lastDistance)
+					{
+						//console.log('distanceCompare', currDistance, lastDistance);
+						setResult(info, shapeInfo, currDistance);
+					}
+				}
+			}
+		}
+		return result;
 	},
 	/**
 	 * Returns the topmost basic drawn object at coord based on screen system.

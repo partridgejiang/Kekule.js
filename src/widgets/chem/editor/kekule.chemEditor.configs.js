@@ -84,6 +84,8 @@ Kekule.Editor.ChemSpaceEditorConfigs = Class.create(Kekule.Editor.BaseEditorConf
  * @class
  * @augments Kekule.AbstractConfigs
  *
+ * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
+ *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
  * @property {Int} objBoundTrackInflation The bound of object will usually be inflated to make it easier to select. This value controls the inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
@@ -105,6 +107,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 	/** @private */
 	initProperties: function()
 	{
+		this.addBoolConfigProp('enableTrackOnNearest', true);
+
 		this.addBoolConfigProp('enableHotTrack', true);
 		this.addIntConfigProp('objBoundTrackInflation', 5);
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
