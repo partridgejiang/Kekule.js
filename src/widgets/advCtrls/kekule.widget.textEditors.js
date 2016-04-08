@@ -49,14 +49,14 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  */
 /**
  * Invoked when the color value is selected. Event param of it has field: {value, colorClassName}.
- * @name Kekule.Widget.ColorPicker#valueSet
+ * @name Kekule.Widget.TextEditor#valueSet
  * @event
  */
 Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 /** @lends Kekule.Widget.TextEditor# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.ColorPicker',
+	CLASS_NAME: 'Kekule.Widget.TextEditor',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @private */
