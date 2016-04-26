@@ -1343,6 +1343,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @private */
+	_needToCanonicalizeBeforeSaving: function()
+	{
+		return true;
+	},
+
+	/** @private */
 	_getAdditionalRenderRelatedObjs: function(objs)
 	{
 		var result = [];

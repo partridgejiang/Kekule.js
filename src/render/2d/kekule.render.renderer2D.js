@@ -1525,7 +1525,9 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			allowCoordBorrow = this.getRenderCache(context).options.transformParams.allowCoordBorrow;
 		}
 		//if (!obj[this.TRANSFORM_COORD_FIELD])  // not transformed yet
-		var result = this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		var isNode = obj instanceof Kekule.BaseStructureNode;
+		var result = isNode && this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		  // IMPORTANT: connector center coord is based on node and should not be cached
 		if (!result)
 		{
 			/*
