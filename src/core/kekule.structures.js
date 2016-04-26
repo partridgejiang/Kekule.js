@@ -1909,7 +1909,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						connector = DataType.createInstance(valueType);
 						serializer.load(connector, itemNode);
 						// then handle connectedObjs array
-						/*
+						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
+						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
+						if (conObjsNode)
+						{
+							var connectedObjs = [];
+							serializer.load(connectedObjs, conObjsNode);
+							connector.__load_connectedObj_indexes = connectedObjs;
+						}
+
+						// conNode/conConnector are for back compatity
 						var conNodeNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedNodes'));
 						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
 						if (conNodeNode)
@@ -1925,15 +1934,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 							serializer.load(connectedConnectors, conConnectorNode);
 							connector.__load_connectedConnector_indexes = connectedConnectors;
 						}
-						*/
-						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
-						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
-						if (conObjsNode)
-						{
-							var connectedObjs = [];
-							serializer.load(connectedObjs, conObjsNode);
-							connector.__load_connectedObj_indexes = connectedObjs;
-						}
+
 						obj.appendConnector(connector);
 					}
 				}
@@ -1961,29 +1962,6 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		for (var i = 0, l = this.getConnectorCount(); i < l; ++i)
 		{
 			var connector = this.getConnectorAt(i);
-			/*
-			if (connector.__load_connectedNode_indexes)
-			{
-				for (var j = 0, k = connector.__load_connectedNode_indexes.length; j < k; ++j)
-				{
-					var index = connector.__load_connectedNode_indexes[j];
-					if (typeof(index) == 'object')  // is array, actually the index stack
-						connector.appendConnectedObj(this.getNodeAtIndexStack(index));
-					else  // normal stack
-						connector.appendConnectedObj(this.getNodeAt(index));
-				}
-				delete connector.__load_connectedNode_indexes;
-			}
-			if (connector.__load_connectedConnector_indexes)
-			{
-				for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j < k; ++j)
-				{
-					var index = connector.__load_connectedConnector_indexes[j];
-					connector.appendConnectedObj(this.getConnectorAt(index));
-				}
-				delete connector.__load_connectedConnector_indexes;
-			}
-			*/
 			if (connector.__load_connectedObj_indexes)
 			{
 				for (var j = 0, k = connector.__load_connectedObj_indexes.length; j < k; ++j)
@@ -1998,6 +1976,30 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						connector.appendConnectedObj(connObj);
 				}
 				delete connector.__load_connectedObj_indexes;
+			}
+			//else // for back compatity
+			{
+				if (connector.__load_connectedNode_indexes)
+				{
+					for (var j = 0, k = connector.__load_connectedNode_indexes.length; j < k; ++j)
+					{
+						var index = connector.__load_connectedNode_indexes[j];
+						if (typeof(index) == 'object')  // is array, actually the index stack
+							connector.appendConnectedObj(this.getNodeAtIndexStack(index));
+						else  // normal stack
+							connector.appendConnectedObj(this.getNodeAt(index));
+					}
+					delete connector.__load_connectedNode_indexes;
+				}
+				if (connector.__load_connectedConnector_indexes)
+				{
+					for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j < k; ++j)
+					{
+						var index = connector.__load_connectedConnector_indexes[j];
+						connector.appendConnectedObj(this.getConnectorAt(index));
+					}
+					delete connector.__load_connectedConnector_indexes;
+				}
 			}
 		}
 		this.ownerChanged(this.getOwner());

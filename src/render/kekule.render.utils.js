@@ -856,6 +856,8 @@ Kekule.Render.ConnectorDrawUtils = {
 				return [RT.SINGLE, RT.DASHED, RT.ARROWED, RT.WAVY];
 		}
 		// if covalent bond, then further check it
+		if (bond.getConnectedObjCount() > 2)  // multiple center bond
+			return [RT.DASHED, RT.SINGLE];
 		var BO = Kekule.BondOrder;
 		switch (bond.getBondOrder())
 		{
