@@ -132,8 +132,8 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 	 */
 	createContext: function(parentElem, width, height)
 	{
-		var r = this.getRenderer();
-		return r.createContext(parentElem, width, height);
+		var b = this.getDrawBridge();
+		return b.createContext(parentElem, width, height);
 	},
 
 	/** @private */
