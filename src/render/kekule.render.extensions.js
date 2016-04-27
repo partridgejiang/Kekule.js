@@ -1457,6 +1457,15 @@
 			if (Kekule.ObjUtils.isUnset(showCharge))
 				showCharge = true;
 			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength, displayLabelConfigs);
+		},
+		/**
+		 * Return plain text to represent formula.
+		 * @return {String}
+		 */
+		getDisplayText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength)
+		{
+			var richText = this.getDisplayRichText();
+			return Kekule.Render.RichTextUtils.toText(richText);
 		}
 	});
 
