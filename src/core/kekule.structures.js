@@ -1085,7 +1085,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{
 				var coValentBondsInfo = this._getCurrCovalentBondsInfo();
-				var ionicBondsInfo = this._getCurrIonicBondsInfo;
+				var ionicBondsInfo = this._getCurrIonicBondsInfo();
 				/*
 				var atype = this.getProximalAtomType();
 				var valence = atype? atype.bondOrderSum: 0;
