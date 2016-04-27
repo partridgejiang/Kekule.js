@@ -171,7 +171,15 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 	{
 		return ((this.getSeries() === Kekule.ElementSeries.NONMETAL) || (this.getSeries() === Kekule.ElementSeries.HALOGEN))
 			&& (this.getAtomicNumber() !== 6) && (this.getAtomicNumber() !== 1); // not C/H
-	}
+	},
+	/**
+	 * Returns a string label to represent this element.
+	 * @returns {String}
+	 */
+	getLabel: function()
+	{
+		return this.getSymbol();
+	},
 });
 // Copy all methods of Kekule.ChemicalElementsDataUtil to Element as shortcut
 Object.extend(Kekule.Element, Kekule.ChemicalElementsDataUtil);
@@ -402,6 +410,11 @@ Kekule.Isotope = Class.create(Kekule.Element,
 	getIsotopeId: function()
 	{
 		return Kekule.IsotopesDataUtil.getIsotopeId(this.getAtomicNumber(), this.getMassNumber());
+	},
+	/** @ignore */
+	getLabel: function()
+	{
+		return '' + (this.getMassNumber() || '') + this.getSymbol();
 	}
 });
 
