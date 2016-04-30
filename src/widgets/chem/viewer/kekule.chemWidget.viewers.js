@@ -1264,6 +1264,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//toolBar.show();
 		// add buttons
 		//var settings = this.getToolButtonSettings();
+		toolBar.setShowText(false);
+		toolBar.doSetShowGlyph(true);
+
 		var btns = this.getToolButtons() || this.getDefaultToolBarButtons(); //settings.buttons;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
@@ -1273,8 +1276,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		toolBar.addClassName(CCNS.INNER_TOOLBAR);
 		if (this.isToolbarEmbedded())
 			toolBar.addClassName(CCNS.VIEWER_EMBEDDED_TOOLBAR);
-		toolBar.setShowText(false);
-		toolBar.doSetShowGlyph(true);
+
 		toolBar.appendToElem(this.getToolbarParentElem() || this.getElement()/*this.getDrawContextParentElem()*/);
 			// IMPORTANT, must append to widget before setToolbar,
 			// otherwise in Chrome the tool bar may be hidden at first even if we set it to always show
