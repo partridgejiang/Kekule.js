@@ -1450,7 +1450,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		result[BNS.newDoc] = CE.ActionEditorNewDoc;
 		result[BNS.loadFile] = CW.ActionDisplayerLoadFile;
 		result[BNS.loadData] = CW.ActionDisplayerLoadData;
-		result[BNS.saveFile] = CW.ActionDisplayerSaveFile;
+		result[BNS.saveData] = CW.ActionDisplayerSaveFile;
 		result[BNS.zoomIn] = CW.ActionDisplayerZoomIn;
 		result[BNS.zoomOut] = CW.ActionDisplayerZoomOut;
 		result[BNS.reset] = CW.ActionDisplayerReset;
@@ -1483,7 +1483,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.newDoc,
 			//BNS.loadFile,
 			BNS.loadData,
-			BNS.saveFile,
+			BNS.saveData,
 			BNS.undo,
 			BNS.redo,
 			BNS.copy,
@@ -2068,7 +2068,7 @@ SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool butt
 	commonToolButtons: [
 		BNS.newDoc,
 		BNS.loadData,
-		BNS.saveFile,
+		BNS.saveData,
 		BNS.undo,
 		BNS.redo
 	]
