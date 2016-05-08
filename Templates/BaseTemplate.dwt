@@ -27,6 +27,8 @@
 		<!-- TemplateEndEditable -->			
 		<article id="mainArticle" class="MainArticle">			
 			<header>
+				<!-- TemplateBeginEditable name="PossibleGroupSection" -->
+				<!-- TemplateEndEditable -->				
 				<h1 class="MainTitle" id="mainTitle"><!-- TemplateBeginEditable name="ArticleHeadLine" -->ArticleHeadLine<!-- TemplateEndEditable --></h1>
 			</header>		
 			<!-- TemplateBeginEditable name="MainContent" -->MainContent<!-- TemplateEndEditable -->

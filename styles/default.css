@@ -45,10 +45,31 @@ table.ExplanationTable ul
 .CodeBlock
 {
     font-family: "Courier New", Courier, monospace;
+		white-space: pre-wrap;
     display: block;
 		margin: 0 2em;
     padding: 0.5em 1em;
     border: 1px dotted #ccc;
     border-radius: 0.2em;
     background-color: #eee;
+}
+
+.TutorialHead
+{
+	display: block;
+	padding: 0.1em 0.3em;
+	margin: 0;
+	font-size: 90%;
+	color: #888;
+	border-bottom: 1px dotted #ccc;
+}
+.TutorialHead a
+{
+	font-style: italic;
+	color: #888;
+	text-decoration: none;
+}
+.TutorialHead a:hover
+{
+	text-decoration: underline;
 }

@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Molecule Comparison and Searching &mdash; Kekule Tutorial 2016.4 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2016.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <link rel="next" title="Drawing Molecule" href="renderMol.html" />
+    <link rel="prev" title="Get Molecule Information" href="getMolInfo.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="renderMol.html" title="Drawing Molecule"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="getMolInfo.html" title="Get Molecule Information"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Molecule Comparison and Searching</a><ul>
+<li><a class="reference internal" href="#comparing-molecules">Comparing Molecules </a></li>
+<li><a class="reference internal" href="#substructure-searching">Substructure Searching </a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="getMolInfo.html"
+                        title="previous chapter">Get Molecule Information</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="renderMol.html"
+                        title="next chapter">Drawing Molecule</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="molecule-comparison-and-searching">
+<h1>Molecule Comparison and Searching<a class="headerlink" href="#molecule-comparison-and-searching" title="Permalink to this headline">¶</a></h1>
+<p>Users often need to compare the structure, or search for substructure in molecules.
+The toolkit provides corresponding APIs.</p>
+<div class="section" id="comparing-molecules">
+<h2>Comparing Molecules <a class="footnote-reference" href="#module" id="id1">[2]</a><a class="headerlink" href="#comparing-molecules" title="Permalink to this headline">¶</a></h2>
+<p>To check if two molecule structure is same, just call method <code class="docutils literal"><span class="pre">isSameStructureWith</span></code>:<a class="footnote-reference" href="#example" id="id2">[1]</a></p>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// compare srcMol and targetMol, check if the structure is same</span>
+<span class="kd">var</span> <span class="nx">isSame</span> <span class="o">=</span> <span class="nx">srcMol</span><span class="p">.</span><span class="nx">isSameStructureWith</span><span class="p">(</span><span class="nx">targetMol</span><span class="p">);</span>
+<span class="c1">// report in console</span>
+<span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="s1">&#39;The two molecules are &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">isSame</span><span class="o">?</span> <span class="s1">&#39;same&#39;</span><span class="o">:</span> <span class="s1">&#39;different&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="substructure-searching">
+<h2>Substructure Searching <a class="footnote-reference" href="#module" id="id3">[2]</a><a class="headerlink" href="#substructure-searching" title="Permalink to this headline">¶</a></h2>
+<p>Substructure matching can be done by the following code:<a class="footnote-reference" href="#example" id="id4">[1]</a></p>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// search options</span>
+<span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;level&#39;</span><span class="o">:</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">StructureComparationLevel</span><span class="p">.</span><span class="nx">CONSTITUTION</span><span class="p">,</span>  <span class="c1">// compare in consititution level</span>
+  <span class="s1">&#39;compareCharge&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>   <span class="c1">// ignore charge</span>
+  <span class="s1">&#39;compareMass&#39;</span><span class="o">:</span> <span class="kc">false</span>      <span class="c1">// ignore mass number difference</span>
+<span class="p">};</span>
+<span class="c1">// check if srcMol is a sub structure in targetMol</span>
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">targetMol</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">srcMol</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>When not matching, the search result will be <code class="docutils literal"><span class="pre">null</span></code>, otherwise the result is an array that
+contains matching child objects (atoms and bonds) in targetMol. You can iterate it easily:<a class="footnote-reference" href="#example" id="id5">[1]</a></p>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span> <span class="k">instanceof</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">ChemStructureConnector</span><span class="p">)</span>  <span class="c1">// is bond</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="o">?</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="p">()</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+  <span class="k">else</span>   <span class="c1">// is atom</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getLabel</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently, stereochemistry is ignore during substructure search.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Substructure search is a time-consuming job, especially to complex molecules.</p>
+</div>
+<table class="docutils footnote" frame="void" id="example" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>, <a class="fn-backref" href="#id5">3</a>)</em> Example of this chapter can be found and run at <a class="reference external" href="../examples/searchMol.html">here</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="module" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> To use this feature, algorithm module must be loaded, e.g.:</td></tr>
+</tbody>
+</table>
+<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="renderMol.html" title="Drawing Molecule"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="getMolInfo.html" title="Get Molecule Information"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

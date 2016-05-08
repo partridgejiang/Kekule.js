@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Composer</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+
+  <style>
+    p
+    {
+      margin: 0.3em 0.5em;
+    }
+    #composer, #codeViewer
+    {
+      height: 450px;
+      float: left;
+    }
+    #composer
+    {
+      width: 600px;
+    }
+    #codeViewer
+    {
+      border: 1px solid black;
+      width: 400px;
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+    }
+    .FloatClearer
+    {
+      clear: both;
+    }
+    #setter
+    {
+      max-width: 1000px;
+    }
+
+    #panelToolButtons
+    {
+      overflow: hidden;
+    }
+    .ToolButtonSetter
+    {
+      width: 12em;
+    }
+    .ChemViewer
+    {
+      width: 500px;
+      height: 400px;
+      border: 1px solid #ccc;
+    }
+  </style>
+
+  <script id="initialMol" type="chemical/x-kekule-json">
+    {"defAutoScaleRefLength":0.8,"root":{"id":"o1","children":{"id":"o2","items":[{"__type__":"Kekule.Molecule","id":"m1","renderOptions":{"expanded":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":2.502349097842262,"y":38.33168247767857,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":-0.39948698969421814,"y":-2.5600000000000023,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":-0.39948698969421814,"y":-1.759999999999998,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.293333333333333,"y":-2.9599999999999937,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.293333333333333,"y":-1.3599999999999994,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.9861536563608841,"y":-2.5600000000000023,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.9861536563608841,"y":-1.759999999999998,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b1","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b2","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b3","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,3]},{"__type__":"Kekule.Bond","id":"b4","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[2,4]},{"__type__":"Kekule.Bond","id":"b5","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,5]},{"__type__":"Kekule.Bond","id":"b6","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,5]}],"__type__":"Kekule.StructureConnectionTable"}},{"__type__":"Kekule.Glyph.StraightLine","id":"p1","overrideRenderOptionItems":[null],"coord2D":{"x":4.529015764508928,"y":38.346920572916666,"__type__":"object"},"ctab":{"nodes":[{"__type__":"Kekule.Glyph.PathGlyphNode","id":"n1","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":3.219047619047619,"y":-2.1447619047619,"__type__":"object"},"coord3D":{"x":0,"y":0,"z":0,"__type__":"object"},"nodeType":"location"},{"__type__":"Kekule.Glyph.PathGlyphNode","id":"n2","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":4.754285714285716,"y":-2.1447619047619,"__type__":"object"},"coord3D":{"x":1.2000000000000002,"y":0,"z":0,"__type__":"object"},"nodeType":"location"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Glyph.PathGlyphConnector","id":"c1","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"pathType":"L","pathParams":{"endArrowType":"open","endArrowWidth":0.2,"endArrowLength":0.2,"lineLength":1.5,"__type__":"object"},"connectedNodes":[0,1]}],"__type__":"Kekule.StructureConnectionTable"}},{"__type__":"Kekule.Molecule","id":"m2","renderOptions":{"expanded":true,"__type__":"object"},"overrideRenderOptionItems":[null],"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a7","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":6.436561172468792,"y":36.202158668154766,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":5.743740849441242,"y":36.60215866815476,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":7.129381495496341,"y":36.60215866815476,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"Cl"},{"__type__":"Kekule.Atom","id":"a10","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":6.436561172468792,"y":35.40215866815476,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a11","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":5.05092052641369,"y":36.202158668154766,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b7","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b8","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b9","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b10","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,4]}],"__type__":"Kekule.StructureConnectionTable"}},{"__type__":"Kekule.TextBlock","id":"t1","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"text":"+","coord2D":{"x":4.212825288318453,"y":36.35453962053571,"__type__":"object"},"size2D":{"x":0.21333333333333293,"y":0.37333333333333485,"__type__":"object"}},{"__type__":"Kekule.Molecule","id":"m3","renderOptions":{"expanded":true,"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null,null],"coord2D":{"x":8.433777669270833,"y":36.53739676339286,"__type__":"object"},"charge":0,"parity":null,"formula":{"sections":[{"__type__":"object","obj":{"__type__":"Kekule.Atom","charge":0,"parity":null,"isotopeId":"Al"},"count":1},{"__type__":"object","obj":{"__type__":"Kekule.Atom","charge":0,"parity":null,"isotopeId":"Cl"},"count":3}],"charge":0,"radical":0,"__type__":"Kekule.MolecularFormula"}},{"__type__":"Kekule.Glyph.HeatSymbol","id":"p2","renderOptions":{"strokeWidth":1.5,"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":8.1404443359375,"y":38.11834914434524,"__type__":"object"},"ctab":{"nodes":[{"__type__":"Kekule.Glyph.PathGlyphNode","id":"n3","interactMode":-1,"overrideRenderOptionItems":[null],"coord2D":{"x":0.3390476190476175,"y":-2.0057142857142836,"__type__":"object"},"coord3D":{"x":0,"y":0.2,"z":0,"__type__":"object"},"nodeType":"location"},{"__type__":"Kekule.Glyph.PathGlyphNode","id":"n4","interactMode":-1,"overrideRenderOptionItems":[null,null],"coord2D":{"x":0.512252699804506,"y":-2.305714285714288,"__type__":"object"},"coord3D":{"x":0.17320508075688776,"y":-0.09999999999999996,"z":0,"__type__":"object"},"nodeType":"location"},{"__type__":"Kekule.Glyph.PathGlyphNode","id":"n5","interactMode":-1,"overrideRenderOptionItems":[null],"coord2D":{"x":0.16584253829073248,"y":-2.305714285714288,"__type__":"object"},"coord3D":{"x":-0.17320508075688767,"y":-0.10000000000000009,"z":0,"__type__":"object"},"nodeType":"location"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Glyph.PathGlyphConnector","id":"c2","interactMode":-1,"overrideRenderOptionItems":[null],"pathType":"L","pathParams":{"lineLength":1,"edgeCount":3,"nodeProps":{"__type__":"object","interactMode":-1},"connectorProps":{"__type__":"object","interactMode":-1},"__type__":"object"},"connectedNodes":[0,1]},{"__type__":"Kekule.Glyph.PathGlyphConnector","id":"c3","interactMode":-1,"overrideRenderOptionItems":[null],"pathType":"L","pathParams":{"lineLength":1,"edgeCount":3,"nodeProps":{"__type__":"object","interactMode":-1},"connectorProps":{"__type__":"object","interactMode":-1},"__type__":"object"},"connectedNodes":[1,2]},{"__type__":"Kekule.Glyph.PathGlyphConnector","id":"c4","interactMode":-1,"overrideRenderOptionItems":[null],"pathType":"L","pathParams":{"lineLength":1,"edgeCount":3,"nodeProps":{"__type__":"object","interactMode":-1},"connectorProps":{"__type__":"object","interactMode":-1},"__type__":"object"},"connectedNodes":[2,0]}],"__type__":"Kekule.StructureConnectionTable"}},{"__type__":"Kekule.Molecule","id":"m4","renderOptions":{"expanded":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":9.865777994791667,"y":38.89377766927083,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a14","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":1.332820323027553,"y":-2.266666666666673,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a18","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":2.0256406460551055,"y":-1.8666666666666742,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a13","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":1.332820323027553,"y":-3.066666666666663,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a15","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.6400000000000023,"y":-1.8666666666666742,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a19","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":2.7184609690826544,"y":-2.266666666666673,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a21","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":2.0256406460551073,"y":-1.066666666666677,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a12","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":0.6400000000000023,"y":-3.4666666666666686,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a16","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":-0.052820323027548355,"y":-2.266666666666673,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a20","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":3.4112812921102034,"y":-1.8666666666666742,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a17","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"coord2D":{"x":-0.052820323027548355,"y":-3.066666666666663,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b17","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b12","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b13","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b18","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b20","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","id":"b11","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[2,6]},{"__type__":"Kekule.Bond","id":"b14","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,7]},{"__type__":"Kekule.Bond","id":"b19","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b16","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,9]},{"__type__":"Kekule.Bond","id":"b15","renderOptions":{"useAtomSpecifiedColor":true,"__type__":"object"},"overrideRenderOptionItems":[null],"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[7,9]}],"__type__":"Kekule.StructureConnectionTable"}},{"__type__":"Kekule.TextBlock","id":"t2","renderOptions":{"fontFamily":"Georgia, Times New Roman, Times, serif","fontSize":20,"useAtomSpecifiedColor":false,"color":"#000066","__type__":"object"},"overrideRenderOptionItems":[null,null],"text":"Friedel-Crafts Reaction","coord2D":{"x":4.825777994791667,"y":34.6804443359375,"__type__":"object"},"size2D":{"x":5.501333414713541,"y":0.5333333333333385,"__type__":"object"}}],"__type__":"Kekule.ChemObjList"},"__type__":"Kekule.ChemSpaceElement"},"enableAutoId":true,"screenSize":{"x":900,"y":1500,"__type__":"object"},"size2D":{"x":24,"y":40,"__type__":"object"},"__type__":"Kekule.ChemDocument"}
+  </script>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget"></script>
+  <!--
+    <script src="../../../../src/kekule.js?min=false&modules=io,chemWidget"></script>
+    <link rel="stylesheet" type="text/css" href="../../../../src/widgets/themes/default/kekule.css" />
+  -->
+
+  <script>
+    function getComposer()
+    {
+      return Kekule.Widget.getWidgetById('composer');
+    }
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function getViewerDialog()
+    {
+      var result = getViewerDialog._dialog;
+      if (!result)  // create new
+      {
+        result = new Kekule.Widget.Dialog(document, 'View', [Kekule.Widget.DialogButtons.OK]);
+        result.setLocation(Kekule.Widget.Location.CENTER_OR_FULLFILL);
+        var viewer = new Kekule.ChemWidget.Viewer(document, null, Kekule.Render.RendererType.R2D);
+        viewer.addClassName('ChemViewer');
+        viewer.setResizable(true);
+        viewer.setPredefinedSetting('basic');
+        viewer.appendToWidget(result);
+        result._viewer = viewer;
+        getViewerDialog._dialog = result;
+      }
+      return result;
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function getFuncCode(func)
+    {
+      return func.toString();
+    }
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+      func();
+    }
+
+    function dumpObject()
+    {
+      // get root object in editor
+      var chemObj = getComposer().getChemObj();
+      // dump the information
+      var msg = chemObj.getClassName() + '\n';
+      msg += Kekule.IO.saveFormatData(chemObj, 'Kekule-JSON');
+      console.log(msg);
+      alert(msg);
+    }
+    function dumpMolecules()
+    {
+      // Get all molecule objects inside editor
+      var mols = getComposer().exportObjs(Kekule.Molecule);
+      // dump information
+      var msg = 'Molecule count: ' + mols.length + '\n';
+      for (var i = 0, l = mols.length; i < l; ++i)
+      {
+        var mol = mols[i];
+        msg += '--------------------\n' + Kekule.IO.saveFormatData(mol, 'cml') + '\n';
+      }
+      console.log(msg);
+      alert(msg);
+    }
+
+    function dumpSelectedObjects()
+    {
+      var selObjs = getComposer().getSelection();
+      // dump information
+      var msg = 'Selected objects count: ' + selObjs.length;
+      for (var i = 0, l = selObjs.length; i < l; ++i)
+      {
+        msg += '\n' + selObjs[i].getClassName() + ': ' + (selObjs[i].getId() || '');
+      }
+      console.log(msg);
+      alert(msg);
+    }
+
+    function createNewDoc()
+    {
+      getComposer().newDoc();
+    }
+    function getIsDirty()
+    {
+      var msg = getComposer().isDirty()? 'Content modified': 'Content unmodified';
+      alert(msg);
+    }
+
+    function undo()
+    {
+      getComposer().undo();
+    }
+    function redo()
+    {
+      getComposer().redo();
+    }
+
+    function changeEnableLoadData()
+    {
+      var enabled = document.getElementById('checkBoxEnableLoad').checked;
+      getComposer().setEnableLoadNewFile(enabled);
+      getComposer().updateAllActions();
+    }
+    function changeEnableCreateNewDoc()
+    {
+      var enabled = document.getElementById('checkBoxEnableCreateNew').checked;
+      getComposer().setEnableCreateNewDoc(enabled);
+      getComposer().updateAllActions();
+    }
+    function changeAllowCreateNewChild()
+    {
+      var enabled = document.getElementById('checkBoxAllowCreateNewChild').checked;
+      getComposer().setAllowCreateNewChild(enabled);
+    }
+
+    var commonToolBtns = [
+      'newDoc', 'loadData', 'saveData', 'undo', 'redo', 'copy', 'cut', 'paste',
+      'zoomIn', 'reset', 'zoomOut', 'config', 'objInspector', 'custom'
+    ];
+    var commonToolBtnSetCheckBoxes = [];
+    var chemToolBtns = [
+      'manipulate', 'erase', 'bond', 'atom', 'formula',
+      'ring', 'charge', 'glyph', 'textBlock'
+    ];
+    var chemToolBtnSetCheckBoxes = [];
+    var styleToolbarCompNames = [
+      'fontName', 'fontSize', 'color', 'textDirection', 'textAlign'
+    ];
+    var styleToolbarCompCheckBoxes = [];
+
+    function changeCommonToolButtons()
+    {
+      var btns = [];
+      // gather buttons
+      for (var i = 0, l = commonToolBtnSetCheckBoxes.length; i < l; ++i)
+      {
+        var checkBox = commonToolBtnSetCheckBoxes[i];
+        if (checkBox.getChecked())
+          btns.push(checkBox._value || checkBox.getValue());
+      }
+      // set tool buttons of chem viewer
+      getComposer().setCommonToolButtons(btns);
+    }
+    function changeChemToolButtons()
+    {
+      var btns = [];
+      // gather buttons
+      for (var i = 0, l = chemToolBtnSetCheckBoxes.length; i < l; ++i)
+      {
+        var checkBox = chemToolBtnSetCheckBoxes[i];
+        if (checkBox.getChecked())
+          btns.push(checkBox._value || checkBox.getValue());
+      }
+      // set tool buttons of chem viewer
+      getComposer().setChemToolButtons(btns);
+    }
+    function changeStyleToolbarComps()
+    {
+      var comps = [];
+      // gather buttons
+      for (var i = 0, l = styleToolbarCompCheckBoxes.length; i < l; ++i)
+      {
+        var checkBox = styleToolbarCompCheckBoxes[i];
+        if (checkBox.getChecked())
+          comps.push(checkBox._value || checkBox.getValue());
+      }
+      // set tool buttons of chem viewer
+      getComposer().setStyleToolComponentNames(comps);
+    }
+    function initToolButtonSetter(setterBtnNames, currComposerButtons, parentElem)
+    {
+      var result = [];
+      var composer = getComposer();
+      var btns = setterBtnNames;
+      var currBtns = currComposerButtons;
+      for (var i = 0, l = btns.length; i < l; ++i)
+      {
+        var btnName = btns[i];
+        // create check box widget
+        var checkBox = new Kekule.Widget.CheckBox(document);
+        checkBox.addClassName('ToolButtonSetter');
+        checkBox.setText(btnName);
+        checkBox.setValue(btnName);
+        if (btnName === 'custom')  // custom button
+          checkBox._value = {'text': 'Custom', 'htmlClass': 'K-Res-Button-YesOk', 'cssText': 'width:auto', 'showText': true, '#execute': function(){ alert('Custom button'); } };
+        else  // default button
+          checkBox._value = btnName;
+        if (currBtns.indexOf(btnName) >= 0)
+          checkBox.setChecked(true);
+        checkBox.appendToElem(parentElem);
+        result.push(checkBox);
+      }
+      return result;
+    }
+
+    function changePredefinedSetting()
+    {
+      var preset = document.getElementById('selectPreset').value;
+      getComposer().setPredefinedSetting(preset);
+    }
+
+    function exportToViewer()
+    {
+      var dialog = getViewerDialog();
+      dialog.openPopup();
+      var viewer = dialog._viewer;
+      // get object from composer
+      var chemObj = getComposer().getChemObj();
+      // load it into viewer
+      viewer.setChemObj(chemObj);
+    }
+
+
+    function init()
+    {
+      var composer = getComposer();
+      commonToolBtnSetCheckBoxes = initToolButtonSetter(commonToolBtns, composer.getCommonToolButtons(), document.getElementById('panelCommonToolButtons'));
+      chemToolBtnSetCheckBoxes = initToolButtonSetter(chemToolBtns, composer.getChemToolButtons(), document.getElementById('panelChemToolButtons'));
+      styleToolbarCompCheckBoxes = initToolButtonSetter(styleToolbarCompNames, composer.getStyleToolComponentNames(), document.getElementById('panelStyleCompButtons'));
+      Kekule.Widget.getWidgetById('btnSetCommonToolButtons').on('execute', function(){
+        runOperation('changeCommonToolButtons');
+      });
+      Kekule.Widget.getWidgetById('btnSetChemToolButtons').on('execute', function(){
+        runOperation('changeChemToolButtons');
+      });
+      Kekule.Widget.getWidgetById('btnSetStyleCompButtons').on('execute', function(){
+        runOperation('changeStyleToolbarComps');
+      });
+
+      document.getElementById('checkBoxEnableLoad').checked = composer.getEnableLoadNewFile();
+      document.getElementById('checkBoxEnableLoad').addEventListener('change', function()
+      {
+        runOperation('changeEnableLoadData');
+      });
+      document.getElementById('checkBoxEnableCreateNew').checked = composer.getEnableCreateNewDoc();
+      document.getElementById('checkBoxEnableCreateNew').addEventListener('change', function()
+      {
+        runOperation('changeEnableCreateNewDoc');
+      });
+      document.getElementById('checkBoxAllowCreateNewChild').checked = composer.getAllowCreateNewChild();
+      document.getElementById('checkBoxAllowCreateNewChild').addEventListener('change', function()
+      {
+        runOperation('changeAllowCreateNewChild');
+      });
+
+      var presets = ['', 'fullFunc', 'molOnly', 'compact'];
+      var presetItems = [];
+      for (var i = 0, l = presets.length; i < l; ++i)
+      {
+        presetItems.push({'value': presets[i]});
+      }
+      Kekule.Widget.getWidgetById('selectPreset')
+        .setItems(presetItems).setValue('')
+        .on('valueChange', function(){
+          runOperation('changePredefinedSetting');
+        });
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+
+<h1>Kekule.js Tutorial Example: Composer</h1>
+
+<p>
+  Composer is a full function 2D chemistry editor to modify molecule and other chemistry objects.
+</p>
+
+<div id="stage">
+  <div id="composer" data-widget="Kekule.Editor.Composer"
+       data-chem-obj="url(#initialMol)" data-resizable="true"></div>
+  <textarea class="Output" id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+  <div class="FloatClearer"></div>
+</div>
+
+<div id="setter">
+  <input id="inputFile" type="file" style="display: none" />
+  <div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+    <label for="inputFile" data-widget="Kekule.Widget.Button">Load Object</label>
+    <button onclick="runOperation('dumpObject')" data-widget="Kekule.Widget.Button">Get Root</button>
+    <button onclick="runOperation('dumpMolecules')" data-widget="Kekule.Widget.Button">Get Molecules</button>
+    <button onclick="runOperation('dumpSelectedObjects')" data-widget="Kekule.Widget.Button">Get Selection</button>
+    <button onclick="runOperation('exportToViewer')" data-widget="Kekule.Widget.Button">Export to Viewer</button>
+    <button onclick="runOperation('createNewDoc')" data-widget="Kekule.Widget.Button">New Document</button>
+    <button onclick="runOperation('getIsDirty')" data-widget="Kekule.Widget.Button">Check Modification State</button>
+    <button onclick="runOperation('undo')" data-widget="Kekule.Widget.Button">Undo</button>
+    <button onclick="runOperation('redo')" data-widget="Kekule.Widget.Button">Redo</button>
+  </div>
+
+  <fieldset>
+    <legend>Options</legend>
+    <p>
+      <label for="checkBoxEnableLoad">
+        <input type="checkbox" id="checkBoxEnableLoad" />
+        Enable load data
+      </label>
+      <label for="checkBoxEnableCreateNew">
+        <input type="checkbox" id="checkBoxEnableCreateNew" />
+        Enable create new document
+      </label>
+      <label for="checkBoxAllowCreateNewChild">
+        <input type="checkbox" id="checkBoxAllowCreateNewChild" />
+        Allow creating new object
+      </label>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Common Tool Buttons</legend>
+    <p>
+      <div id="panelCommonToolButtons"></div>
+    </p>
+    <button id="btnSetCommonToolButtons" data-widget="Kekule.Widget.Button">Apply</button>
+  </fieldset>
+  <fieldset>
+    <legend>Chem Tool Buttons</legend>
+    <p>
+    <div id="panelChemToolButtons"></div>
+    </p>
+    <button id="btnSetChemToolButtons" data-widget="Kekule.Widget.Button">Apply</button>
+  </fieldset>
+  <fieldset>
+    <legend>Style Toolbar Components</legend>
+    <p>
+    <div id="panelStyleCompButtons"></div>
+    </p>
+    <button id="btnSetStyleCompButtons" data-widget="Kekule.Widget.Button">Apply</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Predefined-Settings</legend>
+    <label>
+      <p>
+        <select id="selectPreset" data-widget="Kekule.Widget.SelectBox"></select>
+      </p>
+    </label>
+  </fieldset>
+</div>
+
+</body>
+</html>

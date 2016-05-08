@@ -1,0 +1,59 @@
+<!doctype html>
+<html><!-- InstanceBegin template="/Templates/BaseTemplate.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta charset="utf-8">
+	<!-- InstanceBeginEditable name="doctitle" -->
+	<title>Tutorial of Kekule.js</title>
+	<!-- InstanceEndEditable -->
+	<link href="../styles/base.css" rel="stylesheet" type="text/css">	
+	<!-- InstanceBeginEditable name="head" -->
+	<link href="../styles/default.css" rel="stylesheet" type="text/css">
+	<link href="../styles/tutorial.css" rel="stylesheet" type="text/css">	
+	<!-- TemplateBeginEditable name="head" -->
+	<!-- TemplateEndEditable -->
+	<!-- InstanceEndEditable -->
+</head>
+
+<body>
+	<header class="MainHeader" id="mainHeader">
+		<nav class="MainNav" id="mainNav">			
+			<!-- InstanceBeginEditable name="MainnNavItems" -->
+			<a id="kekuleLogo"  href="../index.html" title="Kekule Home"><span>Kekule.js</span></a>
+			<a href="../index.html">Overview</a>
+			<a href="../demos/index.html" target="_blank">Demos</a>
+			<a href="../documents/index.html">Documents</a>
+			<a href="../download/index.html">Download</a>
+			<!-- TemplateBeginEditable name="AdditionalMainNavItems" -->
+			<!-- TemplateEndEditable -->			
+			<!-- InstanceEndEditable -->			
+		</nav>
+	</header>	
+	<section class="MainContent" id="mainContent">    			
+		<!-- InstanceBeginEditable name="PossibleSideNav" -->
+			<nav class="SideNav">				
+				<a href="../index.html">Overview</a>
+				<a href="../demos/index.html" target="_blank">Demos</a>
+				<a href="../documents/index.html">Document</a>
+				<a href="../download/index.html">Download</a>
+				<!-- TemplateBeginEditable name="SideNavContent" -->
+				<!-- TemplateEndEditable -->						
+			</nav>
+		<!-- InstanceEndEditable -->			
+		<article id="mainArticle" class="MainArticle">			
+			<header>
+				<!-- InstanceBeginEditable name="PossibleGroupSection" -->
+					<p class="TutorialHead"><a href="../documents/tutorial/index.html">Kekule.js Tutorial</a> »</p>
+					<!-- TemplateBeginEditable name="PossibleGroupSectionExtra" -->
+					<!-- TemplateEndEditable -->				
+				<!-- InstanceEndEditable -->				
+				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" -->ArticleHeadLine<!-- InstanceEndEditable --></h1>
+			</header>		
+			<!-- InstanceBeginEditable name="MainContent" -->
+			<!-- InstanceEndEditable -->
+		</article>
+	</section>
+	<footer class="MainFooter" id="mainFooter">
+		<span>Copyright 2014-2016 Kekule.js Lab</span>
+	</footer>
+</body>
+<!-- InstanceEnd --></html>

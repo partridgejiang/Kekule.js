@@ -8,7 +8,7 @@
 	<link href="../styles/base.css" rel="stylesheet" type="text/css">	
 	<!-- InstanceBeginEditable name="head" -->
 	<link href="../styles/demos.css" rel="stylesheet" type="text/css">
-	<script src="../libs/kekule.compressed.js"></script>		
+	<script src="../libs/kekule/kekule.js"></script>		
 	<script src="../demos/scripts/demoLaunch.js"></script>
 	<!-- TemplateBeginEditable name="head" -->
 	<!-- TemplateEndEditable -->
@@ -30,6 +30,8 @@
 			<!-- InstanceEndEditable -->			
 		<article id="mainArticle" class="MainArticle">			
 			<header>
+				<!-- InstanceBeginEditable name="PossibleGroupSection" -->
+				<!-- InstanceEndEditable -->				
 				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" -->ArticleHeadLine<!-- InstanceEndEditable --></h1>
 			</header>		
 			<!-- InstanceBeginEditable name="MainContent" -->MainContent<!-- InstanceEndEditable -->
