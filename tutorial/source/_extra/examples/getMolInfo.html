@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Get Molecule Information</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    #chemComposer, #codeViewer
+    {
+      height: 400px;
+      float: left;
+    }
+    #chemComposer
+    {
+      width: 600px;
+    }
+    #codeViewer
+    {
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+      width: 400px;
+    }
+  </style>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget,algorithm"></script>
+
+  <!--
+  <script src="../../../../src/kekule.js?min=false&modules=io,chemWidget"></script>
+  -->
+
+  <script id="demoMol" type="chemical/x-kekule-json">
+    {"id":"m1","info":{"generator":"ChemDraw","date":{"__type__":"date","date":"Thu, 05 Mar 2015 12:23:58 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":12.37537726697655,"y":37.40111563803555,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":-0.1169,"y":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":-0.1169,"y":-0.825,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":-0.8315,"y":0.4125,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a10","coord2D":{"x":0.5976,"y":0.4125,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":-0.8315,"y":-1.2375,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a7","coord2D":{"x":0.5976,"y":-1.2375,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":-1.5459,"y":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a15","coord2D":{"x":-0.8315,"y":1.2375,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","coord2D":{"x":1.312,"y":0,"__type__":"object"},"charge":0,"parity":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","coord2D":{"x":-1.5459,"y":-0.825,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a11","coord2D":{"x":-0.8315,"y":-2.0625,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","coord2D":{"x":1.312,"y":-0.825,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a13","coord2D":{"x":0.5976,"y":-2.0625,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a14","coord2D":{"x":-2.2604,"y":0.4125,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a16","coord2D":{"x":-0.1169,"y":1.65,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a19","coord2D":{"x":2.0265,"y":0.4125,"__type__":"object"},"charge":0,"parity":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a12","coord2D":{"x":-0.1169,"y":-2.4751,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a26","coord2D":{"x":-2.3466,"y":1.233,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a29","coord2D":{"x":-3.014,"y":0.0769,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a18","coord2D":{"x":-0.1169,"y":2.4751,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a17","coord2D":{"x":0.5976,"y":1.2375,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a20","coord2D":{"x":2.7411,"y":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a21","coord2D":{"x":2.0265,"y":1.2375,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a27","coord2D":{"x":-3.1536,"y":1.4045,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a28","coord2D":{"x":-3.5661,"y":0.69,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a25","coord2D":{"x":3.5661,"y":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a24","coord2D":{"x":3.1536,"y":-0.7145,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a23","coord2D":{"x":2.7411,"y":1.65,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a22","coord2D":{"x":1.312,"y":1.65,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b11","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b7","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[2,6]},{"__type__":"Kekule.Bond","id":"b17","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[2,7]},{"__type__":"Kekule.Bond","id":"b10","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[3,8]},{"__type__":"Kekule.Bond","id":"b6","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,9]},{"__type__":"Kekule.Bond","id":"b12","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,10]},{"__type__":"Kekule.Bond","id":"b8","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[5,11]},{"__type__":"Kekule.Bond","id":"b15","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[5,12]},{"__type__":"Kekule.Bond","id":"b5","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,9]},{"__type__":"Kekule.Bond","id":"b16","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[6,13]},{"__type__":"Kekule.Bond","id":"b18","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[7,14]},{"__type__":"Kekule.Bond","id":"b9","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[8,11]},{"__type__":"Kekule.Bond","id":"b21","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[8,15]},{"__type__":"Kekule.Bond","id":"b13","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[10,16]},{"__type__":"Kekule.Bond","id":"b14","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[12,16]},{"__type__":"Kekule.Bond","id":"b29","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[13,17]},{"__type__":"Kekule.Bond","id":"b33","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[13,18]},{"__type__":"Kekule.Bond","id":"b20","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[14,19]},{"__type__":"Kekule.Bond","id":"b19","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[14,20]},{"__type__":"Kekule.Bond","id":"b22","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[15,21]},{"__type__":"Kekule.Bond","id":"b23","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[15,22]},{"__type__":"Kekule.Bond","id":"b30","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[17,23]},{"__type__":"Kekule.Bond","id":"b32","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[18,24]},{"__type__":"Kekule.Bond","id":"b28","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[21,25]},{"__type__":"Kekule.Bond","id":"b26","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[21,26]},{"__type__":"Kekule.Bond","id":"b25","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[22,27]},{"__type__":"Kekule.Bond","id":"b24","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[22,28]},{"__type__":"Kekule.Bond","id":"b31","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[23,24]},{"__type__":"Kekule.Bond","id":"b27","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[25,26]}],"__type__":"Kekule.StructureConnectionTable"},"name":"_graphTest.mol","__type__":"Kekule.Molecule"}
+  </script>
+
+  <script>
+    function getCurrMol()
+    {
+      var obj = getComposer().getChemObj();
+      return obj? Kekule.ChemStructureUtils.getTotalStructFragment(obj): null;
+    }
+    function getComposer()
+    {
+      return Kekule.Widget.getWidgetById('chemComposer');
+    }
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function showMolecule(mol)
+    {
+      getComposer().setChemObj(mol);
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      func();
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+    }
+
+    function iterateMol()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // iterate all nodes(atoms)
+        for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+        {
+          var node = mol.getNodeAt(i);
+          console.log('node ' + i, node.getClassName(), node.getLabel());
+        }
+        // iterate all connectors(bonds)
+        for (var i = 0, l = mol.getConnectorCount(); i < l; ++i)
+        {
+          var connector = mol.getConnectorAt(i);
+          console.log('connector ' + i,
+            connector.getClassName(), connector.getBondOrder? connector.getBondOrder(): '?');
+        }
+      }
+      return mol;
+    }
+
+    function getFormula()
+    {
+      // get molecule in editor
+      var mol = getCurrMol();
+      // get the formula object
+      var formula = mol.calcFormula();
+      // turn formula object into text
+      console.log(formula.getText());
+    }
+
+    function canonicalize()
+    {
+      // get molecule in editor
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // do canonicalization
+        mol.canonicalize();
+        // display result in console and editor
+        for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+        {
+          var node = mol.getNodeAt(i);
+          console.log('node ' + i, node.getClassName(), node.getLabel());
+          node.setRenderOption('customLabel', '' + i);
+        }
+      }
+    }
+
+    function findAllRings()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // find all rings of molecule
+        var rings = mol.findAllRings();
+        var ringCountMap = [];
+        // iterate over those rings
+        for (var i = 0, l = rings.length; i < l; ++i)
+        {
+          var ring = rings[i];
+          var nodeCount = ring.nodes.length;
+          ringCountMap[nodeCount] = (ringCountMap[nodeCount] || 0) + 1;
+        }
+        // report
+        console.log('Find ' + (rings.length || 0) + ' rings');
+        for (var i = 0, l = ringCountMap.length; i < l; ++i)
+        {
+          var count = ringCountMap[i] || 0;
+          if (count)
+            console.log('ring with ' + i + ' atoms: ', count);
+        }
+      }
+    }
+
+    function findSSSR()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // find SSSR of molecule
+        var rings = mol.findSSSR();
+        var ringCountMap = [];
+        // iterate over those rings
+        for (var i = 0, l = rings.length; i < l; ++i)
+        {
+          var ring = rings[i];
+          var nodeCount = ring.nodes.length;
+          ringCountMap[nodeCount] = (ringCountMap[nodeCount] || 0) + 1;
+        }
+        // report
+        console.log('Find ' + (rings.length || 0) + ' SSSR rings');
+        for (var i = 0, l = ringCountMap.length; i < l; ++i)
+        {
+          var count = ringCountMap[i] || 0;
+          if (count)
+            console.log('ring with ' + i + ' atoms: ', count);
+        }
+      }
+    }
+
+    function findAromaticRings()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // find aromatic of molecule
+        var rings = mol.findAromaticRings();
+        var ringCountMap = [];
+        // iterate over those rings
+        for (var i = 0, l = rings.length; i < l; ++i)
+        {
+          var ring = rings[i];
+          var nodeCount = ring.nodes.length;
+          ringCountMap[nodeCount] = (ringCountMap[nodeCount] || 0) + 1;
+        }
+        // report
+        console.log('Find ' + (rings.length || 0) + ' aromatic rings');
+        for (var i = 0, l = ringCountMap.length; i < l; ++i)
+        {
+          var count = ringCountMap[i] || 0;
+          if (count)
+            console.log('ring with ' + i + ' atoms: ', count);
+        }
+      }
+    }
+
+    function findChiralCenter()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // find chiral atoms in molecule
+        var chiralNodes = mol.perceiveChiralNodes();
+        // report in console
+        console.log('Find chiral atoms: ' + chiralNodes.length);
+        // display in editor
+        mol.beginUpdate();
+        for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+        {
+          var n = mol.getNodeAt(i);
+          if (chiralNodes.indexOf(n) >= 0)  // is chiral center
+          {
+
+            // report in console
+            console.log('Chiral center: ', n.getLabel(), n.getParity());
+            var label = '[' + (n.getParity() || '*') + ']';  // chiral center parity
+            if (n.getSymbol)
+              label += n.getSymbol();
+            // mark chiral atoms
+            n.setRenderOption('customLabel', label);
+            n.setRenderOption('color', 'red');
+          }
+          else  // non-chiral atom
+          {
+            n.setRenderOption('customLabel', null);
+            n.setRenderOption('color', null);
+          }
+        }
+        mol.endUpdate();
+      }
+    }
+
+    function findStereoBond()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // find stereo bonds
+        var stereoBonds = mol.perceiveStereoConnectors();
+        // report in console
+        console.log('Find stereo bonds: ' + stereoBonds.length);
+        // display in editor
+        mol.beginUpdate();
+        var SP = Kekule.StereoParity;
+        for (var i = 0, l = mol.getConnectorCount(); i < l; ++i)
+        {
+          var c = mol.getConnectorAt(i);
+          var color = null;
+          if (stereoBonds.indexOf(c) >= 0)  // is stereo bond
+          {
+            // report in console
+            console.log('Stereo bond: ', c.getParity());
+            var parity = c.getParity();  // check bond stereo parity, set different color
+            color = (parity === SP.ODD) ? 'green' :
+              (parity === SP.EVEN) ? 'red' :
+                'blue';
+          }
+          // mark stereo and normal bonds
+          c.setRenderOption('color', color);
+        }
+        mol.endUpdate();
+      }
+    }
+  </script>
+</head>
+<body>
+<h1>Kekule.js Tutorial Example: Get Molecule Information</h1>
+<p>Open the console of web browser (usually by pressing F12) to see the output of some functions.</p>
+<div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+  <!--
+  <button onclick="runOperation('canonicalize')" data-widget="Kekule.Widget.Button">Canonicalize</button>
+  -->
+  <button onclick="runOperation('getFormula')" data-widget="Kekule.Widget.Button">Get Formula</button>
+  <button onclick="runOperation('iterateMol')" data-widget="Kekule.Widget.Button">Iterate Atoms/Bonds</button>
+  <button onclick="runOperation('findAllRings')" data-widget="Kekule.Widget.Button">All Rings</button>
+  <button onclick="runOperation('findSSSR')" data-widget="Kekule.Widget.Button">SSSR</button>
+  <button onclick="runOperation('findAromaticRings')" data-widget="Kekule.Widget.Button">Aromatic Rings</button>
+  <button onclick="runOperation('findChiralCenter')" data-widget="Kekule.Widget.Button">Chira Atoms</button>
+  <button onclick="runOperation('findStereoBond')" data-widget="Kekule.Widget.Button">Stereo Bonds</button>
+</div>
+<div  style="display: block; clear: both"></div>
+<div id="chemComposer" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly" data-chem-obj="url(#demoMol)"></div>
+<textarea id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+
+</body>
+</html>

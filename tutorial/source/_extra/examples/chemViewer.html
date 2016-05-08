@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Chem Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    p
+    {
+      margin: 0.3em 0.5em;
+    }
+    #chemViewer, #codeViewer
+    {
+      height: 350px;
+      border: 1px solid black;
+      float: left;
+    }
+    #chemViewer
+    {
+      width: 550px;
+    }
+    #codeViewer
+    {
+      width: 450px;
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+    }
+    .FloatClearer
+    {
+      clear: both;
+    }
+    #setter
+    {
+      max-width: 1000px;
+    }
+
+    #panelToolButtons
+    {
+      overflow: hidden;
+    }
+    .ToolButtonSetter
+    {
+      width: 12em;
+    }
+  </style>
+
+  <script id="initialMol" type="chemical/x-kekule-json">
+    {"id":"m1","info":{"generator":"Kekule","date":{"__type__":"date","date":"Sat, 07 Feb 2015 04:26:58 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":2.474317998547942,"y":1.5324413286544782,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":9.1791,"y":35.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.8719,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":9.1791,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":8.4863,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":9.8719,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","coord2D":{"x":8.4863,"y":36.3338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a7","coord2D":{"x":8.4863,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","coord2D":{"x":9.1791,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","coord2D":{"x":10.5648,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a11","coord2D":{"x":7.7935,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a10","coord2D":{"x":8.4863,"y":37.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a12","coord2D":{"x":11.2576,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b5","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[2,5]},{"__type__":"Kekule.Bond","id":"b6","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,6]},{"__type__":"Kekule.Bond","id":"b7","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,7]},{"__type__":"Kekule.Bond","id":"b8","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b10","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[5,9]},{"__type__":"Kekule.Bond","id":"b9","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[5,10]},{"__type__":"Kekule.Bond","id":"b11","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,7]},{"__type__":"Kekule.Bond","id":"b12","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[8,11]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+  <script src="libs/Three.js"></script>
+
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget"></script>
+  <!--
+  <script src="../../../../src/kekule.js?min=false&modules=io,chemWidget"></script>
+  -->
+
+  <script>
+    function getCurrMol()
+    {
+      return getChemViewer().getChemObj();
+    }
+    function getChemViewer()
+    {
+      return Kekule.Widget.getWidgetById('chemViewer');
+    }
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function getFuncCode(func)
+    {
+      return func.toString();
+    }
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      func();
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+    }
+
+    function loadFromFile()
+    {
+      // get local file object
+      var file = document.getElementById('inputFile').files[0];
+      if (file)
+      {
+        // load file and parse to chem object
+        Kekule.IO.loadFileData(file, function(chemObj, success)
+        {
+          // load chem object into chem viewer
+          if (success && chemObj)
+            getChemViewer().setChemObj(chemObj);
+        });
+      }
+    }
+    function dumpObject()
+    {
+      // Get current object in viewer
+      var obj = getChemViewer().getChemObj();
+      // Save the object into CML
+      var cmlData = Kekule.IO.saveFormatData(obj, 'cml');
+      // Show object data
+      var msg = 'Object type: ' + obj.getClassName() + '\n';
+      msg += cmlData;
+      console.log(msg);
+      alert(msg);
+    }
+    function editObject()
+    {
+      var chemViewer = getChemViewer();
+      // Can only edit in 2D mode
+      if (chemViewer.getRenderType() !== Kekule.Render.RendererType.R2D)
+        alert('Now only support editing of 2D objects')
+      else
+      {
+        chemViewer.setEnableEdit(true);
+        chemViewer.openEditor();
+      }
+    }
+    function changeRenderType()
+    {
+      var chemViewer = getChemViewer();
+      var newType = document.getElementById('selectRenderType').value;
+      if (newType === '3D')
+        chemViewer.setRenderType(Kekule.Render.RendererType.R3D);
+      else
+        chemViewer.setRenderType(Kekule.Render.RendererType.R2D);
+    }
+    function zoomToRatio()
+    {
+      var ratio = document.getElementById('selectZoomRatio').value;
+      getChemViewer().setZoom(ratio);
+    }
+    function changeMol2DDisplayType()
+    {
+      var disType = document.getElementById('selectMol2DDisplayType').value;
+      getChemViewer().setMoleculeDisplayType(Kekule.Render.Molecule2DDisplayType[disType.toUpperCase()]);
+    }
+    function changeMol3DDisplayType()
+    {
+      var disType = document.getElementById('selectMol3DDisplayType').value;
+      getChemViewer().setMoleculeDisplayType(Kekule.Render.Molecule3DDisplayType[disType.toUpperCase()]);
+    }
+    function changeAutofit()
+    {
+      var autofit = document.getElementById('checkBoxAutofit').checked;
+      getChemViewer().setAutofit(autofit);
+    }
+    function changeDirectInteraction()
+    {
+      var enabled = document.getElementById('checkBoxDirectInteraction').checked;
+      getChemViewer().setEnableDirectInteraction(enabled);
+    }
+    /*
+    function changeRotation2D()
+    {
+      var rotation = parseInt(document.getElementById('inputRotation2D').value) || 0;
+      getChemViewer().rotate2DTo(rotation / 180 * Math.PI);
+    }
+    function changeRotation3D()
+    {
+      var rotationX = (parseInt(document.getElementById('inputRotationX').value) || 0) * Math.PI / 180;
+      var rotationY = (parseInt(document.getElementById('inputRotationY').value) || 0) * Math.PI / 180;
+      var rotationZ = (parseInt(document.getElementById('inputRotationZ').value) || 0) * Math.PI / 180;
+      var xMatrix = Kekule.CoordUtils.calcRotate3DMatrix({
+        'rotateX': rotationX,
+        'rotateY': 0,
+        'rotateZ': 0
+      });
+      var yMatrix = Kekule.CoordUtils.calcRotate3DMatrix({
+        'rotateX': 0,
+        'rotateY': rotationY,
+        'rotateZ': 0
+      });
+      var zMatrix = Kekule.CoordUtils.calcRotate3DMatrix({
+        'rotateX': 0,
+        'rotateY': 0,
+        'rotateZ': rotationZ
+      });
+      var rotationMatrix = Kekule.MatrixUtils.multiply(xMatrix, yMatrix);
+      rotationMatrix = Kekule.MatrixUtils.multiply(rotationMatrix, zMatrix);
+      getChemViewer().setRotate3DMatrix(rotationMatrix);
+    }
+    */
+    function rotate2D()
+    {
+      var delta = 5 * Math.PI / 180;
+      getChemViewer().rotate2DBy(delta);
+    }
+    function rotateX()
+    {
+      var delta = 5 * Math.PI / 180;
+      getChemViewer().rotate3DBy(delta, 0, 0);
+    }
+    function rotateY()
+    {
+      var delta = 5 * Math.PI / 180;
+      getChemViewer().rotate3DBy(0, delta, 0);
+    }
+    function rotateZ()
+    {
+      var delta = 5 * Math.PI / 180;
+      getChemViewer().rotate3DBy(0, 0, delta);
+    }
+
+    function changeEnableToolbar()
+    {
+      var enabled = document.getElementById('checkBoxEnableToolbar').checked;
+      getChemViewer().setEnableToolbar(enabled);
+    }
+    function changeToolbarEvokeMode()
+    {
+      var chemViewer = getChemViewer();
+      var mode = document.getElementById('selectToolbarEvokeMode').value;
+      if (mode === 'always')
+      {
+        chemViewer.setToolbarEvokeModes([Kekule.Widget.EvokeMode.ALWAYS]);
+        chemViewer.setToolbarRevokeModes([]);
+      }
+      else if (mode === 'click')
+      {
+        chemViewer.setToolbarEvokeModes([Kekule.Widget.EvokeMode.EVOKEE_CLICK]);
+        chemViewer.setToolbarRevokeModes([Kekule.Widget.EvokeMode.EVOKEE_MOUSE_LEAVE]);
+      }
+      else if (mode === 'mouseenter')
+      {
+        chemViewer.setToolbarEvokeModes([Kekule.Widget.EvokeMode.EVOKEE_MOUSE_ENTER]);
+        chemViewer.setToolbarRevokeModes([Kekule.Widget.EvokeMode.EVOKEE_MOUSE_LEAVE]);
+      }
+    }
+    function changeToolbarPos()
+    {
+      var chemViewer = getChemViewer();
+      var pos = document.getElementById('selectToolbarPos').value;
+      var posValue;
+      switch (pos)
+      {
+        case 'left': posValue = Kekule.Widget.Position.LEFT; break;
+        case 'right': posValue = Kekule.Widget.Position.RIGHT; break;
+        case 'top': posValue = Kekule.Widget.Position.TOP; break;
+        case 'bottom': posValue = Kekule.Widget.Position.BOTTOM; break;
+        case 'top-left': posValue = Kekule.Widget.Position.TOP_LEFT; break;
+        case 'top-right': posValue = Kekule.Widget.Position.TOP_RIGHT; break;
+        case 'bottom-left': posValue = Kekule.Widget.Position.BOTTOM_LEFT; break;
+        case 'bottom-right': posValue = Kekule.Widget.Position.BOTTOM_RIGHT; break;
+        default: posValue = Kekule.Widget.Position.AUTO;
+      }
+      chemViewer.setToolbarPos(posValue);
+    }
+
+    var toolBtns = [
+      'loadData', 'saveData', 'clearObjs', 'molDisplayType', 'zoomIn', 'zoomOut',
+      'rotateLeft', 'rotateRight', 'rotateX', 'rotateY', 'rotateZ',
+      'reset', 'molHideHydrogens', 'openEditor', 'config', 'custom'
+    ];
+    var toolBtnSetCheckBoxes = [];
+
+    function changeToolButtons()
+    {
+      var btns = [];
+      // gather buttons
+      for (var i = 0, l = toolBtnSetCheckBoxes.length; i < l; ++i)
+      {
+        var checkBox = toolBtnSetCheckBoxes[i];
+        if (checkBox.getChecked())
+          btns.push(checkBox._value || checkBox.getValue());
+      }
+      // set tool buttons of chem viewer
+      getChemViewer().setToolButtons(btns);
+    }
+    function initToolButtonSetter()
+    {
+      var chemViewer = getChemViewer();
+      var btns = toolBtns;
+      var currBtns = chemViewer.getToolButtons() || chemViewer.getDefaultToolBarButtons();
+      var parentElem = document.getElementById('panelToolButtons');
+      for (var i = 0, l = btns.length; i < l; ++i)
+      {
+        var btnName = btns[i];
+        // create check box widget
+        var checkBox = new Kekule.Widget.CheckBox(document);
+        checkBox.addClassName('ToolButtonSetter');
+        checkBox.setText(btnName);
+        checkBox.setValue(btnName);
+        if (btnName === 'custom')  // custom button
+          checkBox._value = {'text': 'Custom', 'htmlClass': 'K-Res-Button-YesOk', 'showText': true, '#execute': function(){ alert('Custom button'); } };
+        else  // default button
+          checkBox._value = btnName;
+        if (currBtns.indexOf(btnName) >= 0)
+          checkBox.setChecked(true);
+        checkBox.appendToElem(parentElem);
+        toolBtnSetCheckBoxes.push(checkBox);
+      }
+    }
+
+
+    function changePredefinedSetting()
+    {
+      var chemViewer = getChemViewer();
+      var preset = document.getElementById('selectPreset').value;
+      chemViewer.setPredefinedSetting(preset);
+    }
+
+    function init()
+    {
+      document.getElementById('inputFile').addEventListener('change', function()
+      {
+        runOperation('loadFromFile');
+      });
+      document.getElementById('selectRenderType').addEventListener('change', function()
+      {
+        runOperation('changeRenderType');
+      });
+      document.getElementById('checkBoxAutofit').addEventListener('change', function()
+      {
+        runOperation('changeAutofit');
+      });
+      document.getElementById('checkBoxDirectInteraction').addEventListener('change', function()
+      {
+        runOperation('changeDirectInteraction');
+      });
+      document.getElementById('checkBoxDirectInteraction').checked = getChemViewer().getEnableDirectInteraction();
+      document.getElementById('checkBoxEnableToolbar').addEventListener('change', function()
+      {
+        runOperation('changeEnableToolbar');
+      });
+      document.getElementById('checkBoxEnableToolbar').checked = getChemViewer().getEnableToolbar();
+
+      var zoomRatios = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+      var zoomItems = [];
+      for (var i = 0, l = zoomRatios.length; i < l; ++i)
+      {
+        var zoom = zoomRatios[i];
+        zoomItems.push({'text': Math.round(zoom * 100) + '%', 'value': zoom});
+      }
+      Kekule.Widget.getWidgetById('selectZoomRatio')
+        .setItems(zoomItems).setValue(getChemViewer().getZoom() || 1)
+        .on('valueChange', function(){
+          runOperation('zoomToRatio');
+        });
+
+      var mol2DDisplayTypes = ['skeletal', 'condensed'];
+      var mol3DDisplayTypes = ['wire', 'sticks', 'ball_stick', 'space_fill'];
+      var disTypeItems = [];
+      for (var i = 0, l = mol2DDisplayTypes.length; i < l; ++i)
+      {
+        disTypeItems.push({'value': mol2DDisplayTypes[i]});
+      }
+      Kekule.Widget.getWidgetById('selectMol2DDisplayType')
+        .setItems(disTypeItems)
+        .on('valueChange', function(){
+          runOperation('changeMol2DDisplayType');
+        });
+      var disTypeItems = [];
+      for (var i = 0, l = mol3DDisplayTypes.length; i < l; ++i)
+      {
+        disTypeItems.push({'value': mol3DDisplayTypes[i]});
+      }
+      Kekule.Widget.getWidgetById('selectMol3DDisplayType')
+        .setItems(disTypeItems)
+        .on('valueChange', function(){
+          runOperation('changeMol3DDisplayType');
+        });
+
+      Kekule.Widget.getWidgetById('btnRotate2D').on('execute', function(){
+        runOperation('rotate2D');
+      });
+      Kekule.Widget.getWidgetById('btnRotateX').on('execute', function(){
+        runOperation('rotateX');
+      });
+      Kekule.Widget.getWidgetById('btnRotateY').on('execute', function(){
+        runOperation('rotateY');
+      });
+      Kekule.Widget.getWidgetById('btnRotateZ').on('execute', function(){
+        runOperation('rotateZ');
+      });
+
+      /*
+      document.getElementById('inputRotation2D').addEventListener('change', function(){
+        runOperation('changeRotation2D');
+      });
+      var rotation3DEventHandler = function(){
+        runOperation('changeRotation3D');
+      };
+      document.getElementById('inputRotationX').addEventListener('change', rotation3DEventHandler);
+      document.getElementById('inputRotationY').addEventListener('change', rotation3DEventHandler);
+      document.getElementById('inputRotationZ').addEventListener('change', rotation3DEventHandler);
+      */
+
+      var evokeModes = ['always', 'click', 'mouseenter'];
+      var evokeItems = [];
+      for (var i = 0, l = evokeModes.length; i < l; ++i)
+        evokeItems.push({'value': evokeModes[i]});
+      Kekule.Widget.getWidgetById('selectToolbarEvokeMode')
+        .setItems(evokeItems).setValue('mouseenter')
+        .on('valueChange', function(){
+          runOperation('changeToolbarEvokeMode');
+        });
+      changeToolbarEvokeMode();
+
+      var toolbarPoses = ['top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      var toolbarPosItems = [];
+      for (var i = 0, l = toolbarPoses.length; i < l; ++i)
+        toolbarPosItems.push({'value': toolbarPoses[i]});
+      Kekule.Widget.getWidgetById('selectToolbarPos')
+        .setItems(toolbarPosItems).setValue('bottom-right')
+        .on('valueChange', function(){
+          runOperation('changeToolbarPos');
+        });
+      changeToolbarPos();
+
+      initToolButtonSetter();
+      Kekule.Widget.getWidgetById('btnSetToolButtons').on('execute', function(){
+        runOperation('changeToolButtons');
+      });
+
+      var presets = ['', 'fullFunc', 'basic', 'static', 'editOnly'];
+      var presetItems = [];
+      for (var i = 0, l = presets.length; i < l; ++i)
+      {
+        presetItems.push({'value': presets[i]});
+      }
+      Kekule.Widget.getWidgetById('selectPreset')
+        .setItems(presetItems).setValue('')
+        .on('valueChange', function(){
+          runOperation('changePredefinedSetting');
+        });
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+
+<h1>Kekule.js Tutorial Example: Chem Viewer</h1>
+
+<p>
+  Chem Viewer is a useful widget to display molecule and other chemistry objects.
+</p>
+
+<div id="stage">
+  <div id="chemViewer" data-widget="Kekule.ChemWidget.Viewer"
+       data-chem-obj="url(#initialMol)" data-enable-edit="true" data-enable-toolbar="true"></div>
+  <textarea class="Output" id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+  <div class="FloatClearer"></div>
+</div>
+
+<div id="setter">
+  <input id="inputFile" type="file" style="display: none" />
+  <div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+    <label for="inputFile" data-widget="Kekule.Widget.Button">Load Object</label>
+    <button onclick="runOperation('dumpObject')" data-widget="Kekule.Widget.Button">Retrieve Object</button>
+    <button onclick="runOperation('editObject')" data-widget="Kekule.Widget.Button">Edit Object</button>
+    <button id="btnRotate2D" data-widget="Kekule.Widget.Button" data-enable-periodical-exec="true">Rotate2D</button>
+    <button id="btnRotateX" data-widget="Kekule.Widget.Button" data-enable-periodical-exec="true">Rotate3D X</button>
+    <button id="btnRotateY" data-widget="Kekule.Widget.Button" data-enable-periodical-exec="true">Rotate3D Y</button>
+    <button id="btnRotateZ" data-widget="Kekule.Widget.Button" data-enable-periodical-exec="true">Rotate3D Z</button>
+  </div>
+
+  <fieldset>
+    <legend>Options</legend>
+    <p>
+      <label for="selectRenderType">
+        Mode:
+        <select id="selectRenderType" data-widget="Kekule.Widget.SelectBox" data-items='[{"value": "2D"}, {"value": "3D"}]'></select>
+      </label>
+      <label for="selectMol2DDisplayType">
+        Molecule display type 2D:
+        <select id="selectMol2DDisplayType" data-widget="Kekule.Widget.SelectBox"></select>
+      </label>
+      <label for="selectMol3DDisplayType">
+        3D:
+        <select id="selectMol3DDisplayType" data-widget="Kekule.Widget.SelectBox"></select>
+      </label>
+      <label>
+        <input type="checkbox" id="checkBoxAutofit" />
+        Autofit (in 2D mode only)
+      </label>
+    </p>
+    <p>
+      <label>
+        <input type="checkbox" id="checkBoxDirectInteraction" />
+        Enable direct interaction&nbsp;&nbsp;
+      </label>
+      <label for="selectZoomRatio">
+        Zoom:
+        <select id="selectZoomRatio" data-widget="Kekule.Widget.SelectBox"></select>
+      </label>
+    </p>
+    <!--
+    <label>
+      2D Rotation
+      <input type="range" id="inputRotation2D" min="0" max="360" value="0"/>
+    </label>
+    <br />
+    <label>
+      3D Rotation X
+      <input type="range" id="inputRotationX" min="0" max="360" value="0"/>
+    </label>
+    <label>
+      3D Rotation Y
+      <input type="range" id="inputRotationY" min="0" max="360" value="0"/>
+    </label>
+    <label>
+      3D Rotation Z
+      <input type="range" id="inputRotationZ" min="0" max="360" value="0"/>
+    </label>
+    -->
+
+  </fieldset>
+
+  <fieldset>
+    <legend>Toolbar</legend>
+    <p>
+      <label>
+        <input type="checkbox" id="checkBoxEnableToolbar" />
+        Enable toolbar&nbsp;&nbsp;
+      </label>
+      <label for="selectToolbarEvokeMode">
+        Show toolbar when:
+        <select id="selectToolbarEvokeMode" data-widget="Kekule.Widget.SelectBox"></select>
+      </label>
+      <label for="selectToolbarPos">
+        Toolbar position:
+        <select id="selectToolbarPos" data-widget="Kekule.Widget.SelectBox"></select>
+      </label>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Tool Buttons</legend>
+    <p>
+      <div id="panelToolButtons"></div>
+    </p>
+    <button id="btnSetToolButtons" data-widget="Kekule.Widget.Button">Apply</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Predefined-Settings</legend>
+    <label>
+      <p>
+        <select id="selectPreset" data-widget="Kekule.Widget.SelectBox"></select>
+      </p>
+    </label>
+  </fieldset>
+</div>
+
+</body>
+</html>
+

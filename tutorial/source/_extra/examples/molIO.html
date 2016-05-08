@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Loading and Saving Molecule</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    .Output
+    {
+      width: 400px;
+      height: 300px;
+      float: left;
+      border: 1px solid black;
+    }
+    #codeViewer
+    {
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+      width: 600px;
+    }
+  </style>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget"></script>
+  <!--
+  <script src="../../../../src/kekule.js?min=false&modules=io,chemWidget"></script>
+  -->
+
+  <!-- predefined resources -->
+  <script id="initialMol" type="chemical/x-kekule-json">
+    {"id":"m1","info":{"generator":"Kekule","date":{"__type__":"date","date":"Sat, 07 Feb 2015 04:26:58 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":2.474317998547942,"y":1.5324413286544782,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":9.1791,"y":35.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.8719,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":9.1791,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":8.4863,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":9.8719,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","coord2D":{"x":8.4863,"y":36.3338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a7","coord2D":{"x":8.4863,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","coord2D":{"x":9.1791,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","coord2D":{"x":10.5648,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a11","coord2D":{"x":7.7935,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a10","coord2D":{"x":8.4863,"y":37.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a12","coord2D":{"x":11.2576,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b5","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[2,5]},{"__type__":"Kekule.Bond","id":"b6","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,6]},{"__type__":"Kekule.Bond","id":"b7","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,7]},{"__type__":"Kekule.Bond","id":"b8","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b10","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[5,9]},{"__type__":"Kekule.Bond","id":"b9","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[5,10]},{"__type__":"Kekule.Bond","id":"b11","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,7]},{"__type__":"Kekule.Bond","id":"b12","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[8,11]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
+  <script id="molResInsideElem" type="chemical/x-mdl-molfile">
+
+  CDK    9/19/06,14:29
+
+ 12 12  0  0  0  0  0  0  0  0999 V2000
+  415.0000  974.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  383.8231  992.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  383.8231 1028.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  415.0000 1046.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  446.1769 1028.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  446.1769  992.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  352.6462 1046.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  352.6462 1082.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  352.6462  974.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  415.0000  938.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  477.3538  974.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  477.3538 1046.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  2  3  1  0  0  0  0
+  3  4  1  0  0  0  0
+  4  5  1  0  0  0  0
+  5  6  1  0  0  0  0
+  6  1  1  0  0  0  0
+  3  7  1  1  0  0  0
+  7  8  1  0  0  0  0
+  2  9  1  6  0  0  0
+  1 10  1  1  0  0  0
+  6 11  1  1  0  0  0
+  5 12  1  0  0  0  0
+M  END
+  </script>
+  <link id="molResExternalLink" href="./data/mol2D/porphyrin.mol" type="chemical/x-mdl-molfile" />
+
+
+  <script>
+    function getCurrMol()
+    {
+      return getChemViewer().getChemObj();
+    }
+    function getChemViewer()
+    {
+      return Kekule.Widget.getWidgetById('chemViewer');
+    }
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function showMolecule(mol)
+    {
+      getChemViewer().setChemObj(mol);
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function getFuncCode(func)
+    {
+      return func.toString();
+    }
+
+    function showResLoaderCode(resId, resContent, loadFunc)
+    {
+      if (!loadFunc)
+        loadFunc = loadMolFromResource;
+      var funcCodes = loadFunc.toString().split('\n');
+      funcCodes.splice(0, 2);
+      funcCodes.pop();
+      var funcCode = funcCodes.join('\n');
+
+      var code = '[Resource Definition]\n\n' + resContent + '\n\n';
+      code += '========================================\n\n';
+      code += '[JavaScript Code]\n\n';
+      code += '\tvar resId = \'' + resId + '\';\n';
+      code += funcCode;
+
+      showCode(code);
+    }
+
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      var mol = func();
+      if (mol)
+      {
+        // show molecule in chem viewer
+        showMolecule(mol);
+      }
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+    }
+
+    function saveMolToData()
+    {
+      var mol = getCurrMol();
+      var data = Kekule.IO.saveFormatData(mol, 'cml');
+      // or Kekule.IO.saveMimeData(mol, 'chemical/x-cml');
+      console.log(data);
+      var data = Kekule.IO.saveFormatData(mol, 'mol');
+      // or Kekule.IO.saveMimeData(mol, 'chemical/x-mdl-molfile');
+      console.log(data);
+      var data = Kekule.IO.saveFormatData(mol, 'smi');
+      // or Kekule.IO.saveMimeData(mol, 'chemical/x-daylight-smiles');
+      console.log(data);
+      return mol;
+    }
+    function loadMolFromData()
+    {
+      var cmlData = '<cml xmlns="http://www.xml-cml.org/schema"><molecule id="m1"><atomArray><atom id="a2" elementType="C" x2="7.493264658965051" y2="35.58088907877604"/><atom id="a3" elementType="O" x2="8.186084981992602" y2="35.18088907877604"/><atom id="a1" elementType="C" x2="6.800444335937501" y2="35.18088907877604"/></atomArray><bondArray><bond id="b2" order="S" atomRefs2="a2 a3"/><bond id="b1" order="S" atomRefs2="a2 a1"/></bondArray></molecule></cml>';
+      var mol = Kekule.IO.loadFormatData(cmlData, 'cml');
+      // or Kekule.IO.loadMimeData(cmlData, 'chemical/x-cml');
+      return mol;
+    }
+    function loadMolFromResource(resId)
+    {
+      Kekule.IO.loadResourceData(resId, function(mol, success)
+      {
+        if (success)
+        {
+          console.log('Loading from ' + resId + ' Successful');
+          showMolecule(mol);
+        }
+        else
+        {
+          console.log('Loading from ' + resId + ' Failed');
+          showMolecule(null);
+        }
+      });
+    }
+    function loadInlineResource()
+    {
+      loadMolFromResource('url(#molResInsideElem)');
+      var resContent =
+        '<script id="molResInsideElem" type="chemical/x-mdl-molfile">' +
+        document.getElementById('molResInsideElem').innerHTML + '\n<\/script>';
+      showResLoaderCode('url(#molResInsideElem)', resContent);
+    }
+    function loadExternalResource()
+    {
+      loadMolFromResource('url(#molResExternalLink)');
+      var resContent = '<link id="molResExternalLink" href="./data/mol2D/porphyrin.mol" \/>';
+      showResLoaderCode('url(#molResExternalLink)', resContent);
+    }
+    function loadDirectExternalResource()
+    {
+      loadMolFromResource('url(data/mol2D/cyclohextone.mol)');
+      showResLoaderCode('url(data/mol2D/cyclohextone.mol)', '');
+    }
+    function loadMolFromUrl()
+    {
+      var url = 'data/mol2D/quinone.mol';
+      Kekule.IO.loadUrlData(url, function(mol, success){
+        if (success)
+        {
+          console.log('Loading from ' + url + ' Successful');
+          showMolecule(mol);
+        }
+        else
+        {
+          console.log('Loading from ' + url + ' Failed');
+          showMolecule(null);
+        }
+      });
+    }
+    function loadLocalFile()
+    {
+      var file = document.getElementById('inputFile').files[0];
+      if (file)
+      {
+        Kekule.IO.loadFileData(file, function(mol, success)
+        {
+          if (success && mol)
+            showMolecule(mol);
+        });
+      }
+    }
+
+    function init()
+    {
+      document.getElementById('inputFile').addEventListener('change', function(){
+        runOperation('loadLocalFile');
+      });
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<h1>Kekule.js Tutorial Example: Loading and Saving Molecule</h1>
+<p>Open the console of web browser (usually by pressing F12) to see the output of some functions.</p>
+<div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+  <button onclick="runOperation('saveMolToData')" data-widget="Kekule.Widget.Button">Save Molecule</button>
+  <button onclick="runOperation('loadMolFromData')" data-widget="Kekule.Widget.Button">Load From Var</button>
+  <button onclick="loadInlineResource()" data-widget="Kekule.Widget.Button">Load Inline Resource</button>
+  <button onclick="loadExternalResource()" data-widget="Kekule.Widget.Button">Load External Resource</button>
+  <button onclick="loadDirectExternalResource()" data-widget="Kekule.Widget.Button">Load URL Resource</button>
+  <button onclick="runOperation('loadMolFromUrl')" data-widget="Kekule.Widget.Button">Load URL File</button>
+  <label for="inputFile" data-widget="Kekule.Widget.Button">Load Local File</label><input id="inputFile" type="file" style="display: none" />
+</div>
+<p />
+<div  style="display: block; clear: both"></div>
+<textarea class="Output" id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+<div class="Output" id="chemViewer" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#initialMol)" data-predefined-setting="basic"></div>
+
+</body>
+</html>

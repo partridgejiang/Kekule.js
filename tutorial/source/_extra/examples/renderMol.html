@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Drawing Molecule</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    #stage, #codeViewer
+    {
+      height: 400px;
+      width: 400px;
+      float: left;
+    }
+    #codeViewer
+    {
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+    }
+    #stage
+    {
+      border: 1px solid #999;
+    }
+    .Back2D
+    {
+      background-color: #fff;
+    }
+    .Back3D
+    {
+      background-color: #000;
+    }
+  </style>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+  <script src="libs/Three.js"></script>
+
+  <script src="libs/kekule/kekule.js?modules=io,render,widget"></script>
+  <!--
+  <script src="../../../../src/kekule.js?min=false&modules=io,render,widget"></script>
+  -->
+
+  <script>
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function showCode(func)
+    {
+      getCodeViewer().setValue(func.toString());
+    }
+
+    function getDrawParentElem()
+    {
+      return document.getElementById('stage');
+    }
+
+    function renderMol(mol, renderType)
+    {
+      var is3D = (renderType === Kekule.Render.RendererType.R3D);
+      var elemClass = is3D? 'Back3D': 'Back2D';
+
+      // parent element, we will draw inside it
+      var parentElem = getDrawParentElem();
+      parentElem.className = elemClass;
+      // clear parent elem
+      Kekule.DomUtils.clearChildContent(parentElem);
+
+      // Get suitable draw bridge for 2D or 3D
+      var drawBridgeManager = (renderType === Kekule.Render.RendererType.R3D)?
+        Kekule.Render.DrawBridge3DMananger: Kekule.Render.DrawBridge2DMananger;
+      var drawBridge = drawBridgeManager.getPreferredBridgeInstance();
+
+      // then create render context by drawBridge first
+      var dim = Kekule.HtmlElementUtils.getElemOffsetDimension(parentElem); // get width/height of parent element
+      var context = drawBridge.createContext(parentElem, dim.width, dim.height);  // create context fulfill parent element
+
+      // then create suitable renderer to render molecule object
+      var rendererClass;
+      if (is3D)
+        rendererClass = Kekule.Render.get3DRendererClass(mol);
+      else
+        rendererClass = Kekule.Render.get2DRendererClass(mol);
+      var renderer = new rendererClass(mol, drawBridge);  // create concrete renderer object and bind it with mol and draw bridge
+
+      /*
+      prepare render options, options is a something like
+
+      var options = {
+        atomColor: '#000000',
+        bondColor: '#000000',
+        defBondLength: 30
+        ...
+      };
+
+      it is quite complex, so we use some magic here, generate the option object by default configuration of Kekule.js.
+      */
+      var configObj = is3D? Kekule.Render.Render3DConfigs.getInstance():
+        Kekule.Render.Render2DConfigs.getInstance();
+      var options = Kekule.Render.RenderOptionUtils.convertConfigsToPlainHash(configObj);
+
+      // at last, draw the molecule to the center of context
+      renderer.draw(context, {'x': dim.width / 2, 'y': dim.height / 2}, options);
+    }
+
+    function paintMol(mol, renderType)
+    {
+      var elemClass = (renderType === Kekule.Render.RendererType.R3D)?
+        'Back3D': 'Back2D';
+
+      // parent element, we will draw inside it
+      var parentElem = getDrawParentElem();
+      parentElem.className = elemClass;
+      // clear parent elem
+      Kekule.DomUtils.clearChildContent(parentElem);
+
+      // create painter, bind with molecule
+      var painter = new Kekule.Render.ChemObjPainter(renderType, mol);
+      // create context inside parentElem
+      var dim = Kekule.HtmlElementUtils.getElemOffsetDimension(parentElem); // get width/height of parent element
+      var context = painter.createContext(parentElem, dim.width, dim.height); // create context fulfill parent element
+      // at last, draw the molecule at the center of context
+      painter.draw(context, {'x': dim.width / 2, 'y': dim.height / 2});
+    }
+
+    function drawObj(obj, renderType)
+    {
+      var usePainter = Kekule.Widget.getWidgetById('checkBoxUsePainter').getChecked();
+      if (usePainter)
+      {
+        paintMol(obj, renderType);
+        showCode(paintMol);
+      }
+      else
+      {
+        renderMol(obj, renderType);
+        showCode(renderMol);
+      }
+    }
+
+    function drawGlyph()
+    {
+      // Create arrow glyph with initial parameters
+      var glyph = new Kekule.Glyph.StraightLine('glyph1', 1, {
+        'startArrowType': Kekule.Glyph.ArrowType.OPEN,
+        'startArrowSide': Kekule.Glyph.ArrowSide.REVERSED,
+        'startArrowWidth': 0.25,
+        'startArrowLength': 0.25,
+        'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+        'endArrowSide': Kekule.Glyph.ArrowSide.SINGLE,
+        'endArrowWidth': 0.25,
+        'endArrowLength': 0.25,
+        'lineLength': 1.5,
+        'lineGap': 0.1,
+        'lineCount': 2
+      });
+      // draw on screen
+      drawObj(glyph, Kekule.Render.RendererType.R2D);
+    }
+    function drawText()
+    {
+      // create text block
+      var textBlock = new Kekule.TextBlock();
+      textBlock.setText('Example');
+      // draw on screen
+      drawObj(textBlock, Kekule.Render.RendererType.R2D);
+    }
+
+    function init()
+    {
+      var btn2D = Kekule.Widget.getWidgetById('btnDraw2D');
+      var btn3D = Kekule.Widget.getWidgetById('btnDraw3D');
+
+      var actionOpenFile = new Kekule.ActionFileOpen();
+
+      actionOpenFile.on('open', function(event){
+        var renderType = (event.invoker === btn3D)?
+          Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D;
+        // load molecule from file
+        Kekule.IO.loadFileData(event.file, function(mol, success){
+          if (mol && success)  // now we can draw it
+          {
+            drawObj(mol, renderType);
+          }
+        });
+      });
+
+      btn2D.setAction(actionOpenFile);
+      btn3D.setAction(actionOpenFile);
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<h1>Kekule.js Tutorial Example: Drawing Molecule</h1>
+<p>
+  Click the first two buttons to load molecule file and draw it in 2D or 3D form.
+  Click on "Draw Arrow" to button to draw an balance arrow glyph on page.
+</p>
+<div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+  <button id="btnDraw2D" data-widget="Kekule.Widget.Button">Draw 2D Molecule</button>
+  <button id="btnDraw3D" data-widget="Kekule.Widget.Button">Draw 3D Molecule</button>
+  <button id="btnDrawGlyph" data-widget="Kekule.Widget.Button" onclick="drawGlyph()">Draw Arrow</button>
+  <!--
+  <button id="btnDrawText" data-widget="Kekule.Widget.Button" onclick="drawText()">Draw Text</button>
+  -->
+</div>
+<span type="checkbox" id="checkBoxUsePainter" data-widget="Kekule.Widget.CheckBox" data-checked="true">Use Painter </span>
+<div  style="display: block; clear: both"></div>
+<textarea id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+<div id="stage"></div>
+
+</body>
+</html>
