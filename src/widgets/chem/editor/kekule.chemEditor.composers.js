@@ -700,9 +700,6 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  * @augments Kekule.ChemWidget.AbstractWidget
  * @param {Variant} parentOrElementOrDocument
  * @param {Kekule.Editor.BaseEditor} editor An editor instance embedded in UI.
- * @param {Kekule.ChemObject} chemObj initially loaded chemObj.
- * @param {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}.
- * @param {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
  *
  * @property {Kekule.Editor.BaseEditor} editor The editor instance embedded in UI.
  * @property {Array} commonToolButtons buttons in common tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
@@ -721,7 +718,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  *       {'name': 'myCustomButton1', 'widgetClass': 'Kekule.Widget.Button', 'action': actionClass},<br />
  *       {'name': 'myCustomButton2', 'htmlClass': 'MyClass' 'caption': 'My Button', 'hint': 'My Hint', '#execute': function(){ ... }},<br />
  *     ]<br />
- * @property {Array} styleToolComponents Array of component names that shows in style tool bar.
+ * @property {Array} styleToolComponentNames Array of component names that shows in style tool bar.
  * @property {Bool} enableStyleToolbar
  * @property {Bool} showInspector Whether show advanced object inspector and structure view.
  *
@@ -1199,6 +1196,54 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		return this.getEditor().exportObj(objClass);
 	},
+	/**
+	 * Returns all exportable objects for specified class.
+	 * Descendants can override this method.
+	 * @param {Class} objClass Set null to export default object.
+	 * @returns {Array}
+	 */
+	exportObjs: function(objClass)
+	{
+		return this.getEditor().exportObjs(objClass);
+	},
+
+	/**
+	 * Undo last operation.
+	 */
+	undo: function()
+	{
+		return this.getEditor().undo();
+	},
+	/**
+	 * Redo last operation.
+	 */
+	redo: function()
+	{
+		return this.getEditor().redo();
+	},
+	/**
+	 * Undo all operations.
+	 */
+	undoAll: function()
+	{
+		return this.getEditor().undoAll();
+	},
+	/**
+	 * Check if an undo action can be taken.
+	 * @returns {Bool}
+	 */
+	canUndo: function()
+	{
+		return this.getEditor().canUndo();
+	},
+	/**
+	 * Check if an undo action can be taken.
+	 * @returns {Bool}
+	 */
+	canRedo: function()
+	{
+		return this.getEditor().canRedo();
+	},
 
 	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
@@ -1627,7 +1672,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.setCommonBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
 
-		this.createZoomToolbar();
+		this.updateZoomToolbar();
 
 		this.adjustComponentPositions();
 		return toolbar;
@@ -2037,7 +2082,7 @@ Kekule.Editor.Composer.Configurator = Class.create(Kekule.Widget.Configurator,
 var SM = Kekule.ObjPropSettingManager;
 SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
 	enableStyleToolbar: true,
-	enableOperHistor: true,
+	enableOperHistory: true,
 	enableLoadNewFile: true,
 	enableCreateNewDoc: true,
 	allowCreateNewChild: true,
@@ -2071,7 +2116,9 @@ SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool butt
 		BNS.saveData,
 		BNS.undo,
 		BNS.redo
-	]
+	],
+	chemToolButtons: null,   // create all default chem tool buttons
+	styleToolComponentNames: null  // create all default style components
 });
 SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
 	allowCreateNewChild: false

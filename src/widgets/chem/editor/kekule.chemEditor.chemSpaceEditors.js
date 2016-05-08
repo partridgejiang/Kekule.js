@@ -171,11 +171,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		return result;
 	},
 	/** @ignore */
-	exportObj: function($super, objClass)
+	exportObjs: function($super, objClass)
 	{
 		var result = $super(objClass);
-		if (!result && objClass)  // check child objects of chemSpace
+		if ((!result || !result.length) && objClass)  // check child objects of chemSpace
 		{
+			result = [];
 			var space = this.getChemSpace();
 			if (space)
 			{
@@ -183,7 +184,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				{
 					var obj = space.getChildAt(i);
 					if (obj && (obj instanceof objClass))
-						return obj;
+						result.push(obj);
 				}
 			}
 		}
