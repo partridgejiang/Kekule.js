@@ -40,6 +40,7 @@ Kekule.ElementSeries = {
  * @property {Int} group Group of element. Read only.
  * @property {Int} period Period of element. Read only.
  * @property {String} series Series of element, e.g. nonmetal.
+ * @property {Float} naturalMass Natural mass of element.
  */
 Kekule.Element = Class.create(Kekule.ChemObject,
 /** @lends Kekule.Element# */
@@ -63,6 +64,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 				this.setPropStoreFieldValue('group', elemInfo.group);
 				this.setPropStoreFieldValue('period', elemInfo.period);
 				this.setPropStoreFieldValue('series', elemInfo.chemicalSerie);
+				this.setPropStoreFieldValue('naturalMass', elemInfo.naturalMass);
 				if (elemInfo.name)
 					this.setPropStoreFieldValue('name', elemInfo.name);
 			}
@@ -97,6 +99,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 		this.defineProp('group', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
 		this.defineProp('period', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
 		this.defineProp('series', {'dataType': DataType.STRING, 'serializable': false, 'setter': null});
+		this.defineProp('naturalMass', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null});
 	},
 	/**
 	 * Get element info of symbolOrAtomicNumber. Support pseudo element.
@@ -105,7 +108,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 	getElementInfo: function(symbolOrAtomicNumber)
 	{
 		if (symbolOrAtomicNumber == Kekule.Element.UNSET_ELEMENT)
-			return {'symbol': Kekule.Element.UNSET_ELEMENT, 'atomicNumber': Kekule.Element.UNSET_ELEMENT};;
+			return {'symbol': Kekule.Element.UNSET_ELEMENT, 'atomicNumber': Kekule.Element.UNSET_ELEMENT};
 		if (Kekule.Element.isDummyElement(symbolOrAtomicNumber))
 			return {'symbol': Kekule.Element.DUMMY_ELEMENT, 'atomicNumber': Kekule.Element.DUMMY_ELEMENT_ATOMICNUM};
 		else if (Kekule.Element.isRGroup(symbolOrAtomicNumber))
@@ -179,7 +182,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 	getLabel: function()
 	{
 		return this.getSymbol();
-	},
+	}
 });
 // Copy all methods of Kekule.ChemicalElementsDataUtil to Element as shortcut
 Object.extend(Kekule.Element, Kekule.ChemicalElementsDataUtil);

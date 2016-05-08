@@ -1119,6 +1119,20 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		if (includingBondedHydrogen)
 			result += this.getLinkedHydrogenAtoms().length || 0;
 		return result;
+	},
+	/**
+	 * Returns exact mass of current atom.
+	 * @returns {Float}
+	 */
+	getAtomicMass: function()
+	{
+		var result = null;
+		var isotope = this.getIsotope();
+		if (isotope)
+		{
+			result = isotope.getExactMass() || isotope.getNaturalMass();
+		}
+		return result;
 	}
 });
 
