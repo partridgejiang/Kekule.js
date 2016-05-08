@@ -25,7 +25,8 @@ var CNS = Kekule.Widget.HtmlClassNames;
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	DIALOG: 'K-Dialog',
-	DIALOG_OVERFLOW: 'K-Dialog-Overflow',  // dialog large than current view port size
+	DIALOG_INSIDE: 'K-Dialog-Inside', // dialog smaller than current view port size
+	DIALOG_OVERFLOW: 'K-Dialog-Overflow',  // dialog larger than current view port size
 	DIALOG_CLIENT: 'K-Dialog-Client',
 	DIALOG_CAPTION: 'K-Dialog-Caption',
 	DIALOG_BTN_PANEL: 'K-Dialog-Button-Panel',
@@ -482,6 +483,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 
 			if (overflow)  // use absolute position
 			{
+				this.removeClassName(CNS.DIALOG_INSIDE);
 				this.addClassName(CNS.DIALOG_OVERFLOW);
 				var viewPortScrollPos = Kekule.DocumentUtils.getScrollPosition(this.getDocument());
 				l += viewPortScrollPos.left;
@@ -493,7 +495,10 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 					t = 0;
 			}
 			else  // use fixed position
+			{
 				this.removeClassName(CNS.DIALOG_OVERFLOW);
+				this.addClassName(CNS.DIALOG_INSIDE);
+			}
 
 			var style = this.getElement().style;
 			var notUnset = Kekule.ObjUtils.notUnset;

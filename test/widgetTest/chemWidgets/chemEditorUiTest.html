@@ -26,7 +26,7 @@
       chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
       chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
       var toolButtons = chemEditorUi.getDefaultCommonToolBarButtons();
-      toolButtons.push({'text': 'CustomButton'});
+      toolButtons.push({'text': 'CustomButton', 'showText': true});
       toolButtons.push({'widget': 'Kekule.Widget.CheckButton', 'text': 'Custom CheckButton'});
       chemEditorUi.setCommonToolButtons(toolButtons);
 

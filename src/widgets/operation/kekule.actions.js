@@ -33,6 +33,7 @@
  * @property {Text} text Caption/text of action. If this value is set, all widgets' hint properties will be updated.
  * @property {String} htmlClassName This value will be added to widget when action is linked and will be removed when action is unlinked.
  * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
+ * @property {Kekule.Widget.BaseWidget} invoker Who invokes this action.
  */
 /**
  * Invoked when an action is executed. Has one field: {htmlEvent: html event to raise the action}.
@@ -152,13 +153,25 @@ Kekule.Action = Class.create(ObjectEx,
 		this.defineProp('owner', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
 		// widgets that associated with this action. Private property.
-		this.defineProp('linkedWidgets', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null})
+		this.defineProp('linkedWidgets', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		this.defineProp('invoker', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null});
 	},
 
 	/** @private */
 	getHigherLevelObj: function()
 	{
 		return this.getOwner();
+	},
+
+	/** @ignore */
+	invokeEvent: function($super, eventName, event)
+	{
+		if (!event)
+			event = {};
+		// save invoker into event param
+		if (!event.invoker)
+			event.invoker = this.getInvoker();
+		$super(eventName, event);
 	},
 
 	/** @private */
@@ -269,6 +282,7 @@ Kekule.Action = Class.create(ObjectEx,
 				this.setChecked(true);
 			}
 		}
+		this.setPropStoreFieldValue('invoker', target);
 		this.invokeEvent('execute', {'htmlEvent': htmlEvent});
 		return this;
 	},
@@ -571,7 +585,7 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 	initialize: function($super)
 	{
 		$super();
-		this.reactFileOpenBind = this.reactFileOpen.bind(this);
+		//this.reactFileOpenBind = this.reactFileOpen.bind(this);
 	},
 	/** @private */
 	initProperties: function()
@@ -594,7 +608,13 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 		input.click();  // open file dialog
 		//this._inputElem = input;
 		*/
-		this.openFilePicker(doc, this.reactFileOpenBind);
+		var self = this;
+		var invoker = this.getInvoker();  // save invoker in closure
+		//this.openFilePicker(doc, this.reactFileOpenBind);
+		this.openFilePicker(doc, function(result, firstFile, files){
+			if (result)
+				self.fileOpened(files, invoker);
+		});
 	},
 	/**
 	 * Open a file open dialog, when it is closed, callback will be evoked.
@@ -632,20 +652,22 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 		}
 	},
 	*/
-	/** @private */
+	/* @private */
+	/*
 	reactFileOpen: function(result, firstFile, files)
 	{
 		if (result)
 			this.fileOpened(files);
 	},
+	*/
 	/**
 	 * Called when file is opened from input element.
 	 * @param {Object} files
 	 * @private
 	 */
-	fileOpened: function(files)
+	fileOpened: function(files, invoker)
 	{
-		this.doFileOpened(files);
+		this.doFileOpened(files, invoker);
 		this.invokeEvent('open', {'files': files, 'file': files[0]});
 	},
 	/**
@@ -653,7 +675,7 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 	 * @param {Object} files
 	 * @private
 	 */
-	doFileOpened: function(files)
+	doFileOpened: function(files, invoker)
 	{
 		// do nothing here
 	}
@@ -681,7 +703,7 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	initialize: function($super)
 	{
 		$super();
-		this.reactFileLoadBind = this.reactFileLoad.bind(this);
+		//this.reactFileLoadBind = this.reactFileLoad.bind(this);
 	},
 	/** @private */
 	initProperties: function()
@@ -699,7 +721,12 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	{
 		var elem = target.getElement();
 		var doc = elem.ownerDocument;
-		this.loadFileData(doc, this.reactFileLoadBind);
+		//this.loadFileData(doc, this.reactFileLoadBind);
+		var self = this;
+		var invoker = this.getInvoker();  // save invoker in closure
+		this.loadFileData(doc, function(result, data, fileName){
+			self.dataLoaded(data, fileName, !!result, invoker);
+		});
 	},
 	/**
 	 * Open a file open dialog, when it is closed, callback will be evoked.
@@ -723,16 +750,16 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	 * Called when file is opened and data is loaded.
 	 * @private
 	 */
-	dataLoaded: function(data, fileName, loaded)
+	dataLoaded: function(data, fileName, loaded, invoker)
 	{
-		this.doDataLoaded(data, fileName, loaded);
+		this.doDataLoaded(data, fileName, loaded, invoker);
 		this.invokeEvent('load', {'fileName': fileName, 'data': data, 'success': loaded});
 	},
 	/**
 	 * Do actual work of fileOpened. Descendants can override this method.
 	 * @private
 	 */
-	doDataLoaded: function(data, fileName)
+	doDataLoaded: function(data, fileName, loaded, invoker)
 	{
 		// do nothing here
 	}

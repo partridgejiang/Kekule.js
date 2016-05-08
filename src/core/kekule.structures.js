@@ -109,8 +109,9 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('linkedConnectors', []);
 		this.setSuppressChildChangeEventInUpdating(true);
 	},
@@ -988,6 +989,26 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		}
 		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	},
+	/** @private */
+	_getCurrIonicBondsInfo: function()
+	{
+		var valenceSum = 0;
+		var maxValence = 0;
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			// check if connector is a covalance bond
+			if ((connector instanceof Kekule.Bond)
+					&& (connector.getBondType() == Kekule.BondType.IONIC))
+			{
+				var v = connector.getBondValence();
+				valenceSum += v;
+				if (v > maxValence)
+					maxValence = v;
+			}
+		}
+		return {'valenceSum': valenceSum, 'maxValence': maxValence};
+	},
 
 	/**
 	 * If the atomType property is not set explicitly, use this function to guess the atom type.
@@ -1063,7 +1084,8 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		{
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{
-				var bondsInfo = this._getCurrCovalentBondsInfo();
+				var coValentBondsInfo = this._getCurrCovalentBondsInfo();
+				var ionicBondsInfo = this._getCurrIonicBondsInfo();
 				/*
 				var atype = this.getProximalAtomType();
 				var valence = atype? atype.bondOrderSum: 0;
@@ -1076,7 +1098,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				valence -= radical;
 
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
-				return Math.max(valence - bondsInfo.valenceSum /* + charge */, 0);
+				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum /* + charge */, 0);
 			}
 		}
 		else
@@ -1096,6 +1118,20 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			result = this.getExplicitHydrogenCount() || 0;
 		if (includingBondedHydrogen)
 			result += this.getLinkedHydrogenAtoms().length || 0;
+		return result;
+	},
+	/**
+	 * Returns exact mass of current atom.
+	 * @returns {Float}
+	 */
+	getAtomicMass: function()
+	{
+		var result = null;
+		var isotope = this.getIsotope();
+		if (isotope)
+		{
+			result = isotope.getExactMass() || isotope.getNaturalMass();
+		}
 		return result;
 	}
 });
@@ -1746,8 +1782,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('nodes', []);
 		this.setPropStoreFieldValue('anchorNodes', []);
 		this.setPropStoreFieldValue('connectors', []);
@@ -1793,11 +1830,15 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						serializer.setStorageNodeExplicitType(itemNode, serializer.getValueExplicitType(item));
 						serializer.save(item, itemNode);
 						// as connector's connectedObjs property is marked as unserializable, need to be handled here
+						/*
 						var connectedNodes = [];
 						var connectedConnectors = [];
+						*/
+						var connectedObjs = [];
 						for (var j = 0, k = item.getConnectedObjCount(); j < k; ++j)
 						{
 							var conObj = item.getConnectedObjAt(j);
+							/*
 							var index = obj.indexOfNode(conObj);
 							if (index >= 0)
 								connectedNodes.push(index);
@@ -1815,8 +1856,21 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 									}
 								}
 							}
+							*/
+							var index = obj.indexOfChild(conObj);
+							if (index >= 0)
+								connectedObjs.push(index);
+							else  // not in direct children, check nested structures's nodes
+							{
+								var indexStack = obj.indexStackOfChild(conObj);
+								if ((indexStack !== null)&& (typeof(indexStack) !== 'undefined'))
+								{
+									connectedObjs.push(indexStack);
+								}
+							}
 						}
 						// save connected array
+						/*
 						if (connectedNodes.length)
 						{
 							var conNodeNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedNodes'), true); // create sub node for array
@@ -1826,6 +1880,12 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						{
 							var conConnectorNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedConnectors'), true); // create sub node for array
 							serializer.save(connectedConnectors, conConnectorNode);
+						}
+						*/
+						if (connectedObjs.length)
+						{
+							var conObjsNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'), true); // create sub node for array
+							serializer.save(connectedObjs, conObjsNode);
 						}
 					}
 					return true;
@@ -1863,6 +1923,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						connector = DataType.createInstance(valueType);
 						serializer.load(connector, itemNode);
 						// then handle connectedObjs array
+						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
+						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
+						if (conObjsNode)
+						{
+							var connectedObjs = [];
+							serializer.load(connectedObjs, conObjsNode);
+							connector.__load_connectedObj_indexes = connectedObjs;
+						}
+
+						// conNode/conConnector are for back compatity
 						var conNodeNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedNodes'));
 						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
 						if (conNodeNode)
@@ -1878,6 +1948,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 							serializer.load(connectedConnectors, conConnectorNode);
 							connector.__load_connectedConnector_indexes = connectedConnectors;
 						}
+
 						obj.appendConnector(connector);
 					}
 				}
@@ -1905,26 +1976,44 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		for (var i = 0, l = this.getConnectorCount(); i < l; ++i)
 		{
 			var connector = this.getConnectorAt(i);
-			if (connector.__load_connectedNode_indexes)
+			if (connector.__load_connectedObj_indexes)
 			{
-				for (var j = 0, k = connector.__load_connectedNode_indexes.length; j < k; ++j)
+				for (var j = 0, k = connector.__load_connectedObj_indexes.length; j < k; ++j)
 				{
-					var index = connector.__load_connectedNode_indexes[j];
+					var index = connector.__load_connectedObj_indexes[j];
+					var connObj;
 					if (typeof(index) == 'object')  // is array, actually the index stack
-						connector.appendConnectedObj(this.getNodeAtIndexStack(index));
+						connObj = this.getChildAtIndexStack(index);
 					else  // normal stack
-						connector.appendConnectedObj(this.getNodeAt(index));
+						connObj = this.getChildAt(index);
+					if (connObj)
+						connector.appendConnectedObj(connObj);
 				}
-				delete connector.__load_connectedNode_indexes;
+				delete connector.__load_connectedObj_indexes;
 			}
-			if (connector.__load_connectedConnector_indexes)
+			//else // for back compatity
 			{
-				for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j < k; ++j)
+				if (connector.__load_connectedNode_indexes)
 				{
-					var index = connector.__load_connectedConnector_indexes[j];
-					connector.appendConnectedObj(this.getConnectorAt(index));
+					for (var j = 0, k = connector.__load_connectedNode_indexes.length; j < k; ++j)
+					{
+						var index = connector.__load_connectedNode_indexes[j];
+						if (typeof(index) == 'object')  // is array, actually the index stack
+							connector.appendConnectedObj(this.getNodeAtIndexStack(index));
+						else  // normal stack
+							connector.appendConnectedObj(this.getNodeAt(index));
+					}
+					delete connector.__load_connectedNode_indexes;
 				}
-				delete connector.__load_connectedConnector_indexes;
+				if (connector.__load_connectedConnector_indexes)
+				{
+					for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j < k; ++j)
+					{
+						var index = connector.__load_connectedConnector_indexes[j];
+						connector.appendConnectedObj(this.getConnectorAt(index));
+					}
+					delete connector.__load_connectedConnector_indexes;
+				}
 			}
 		}
 		this.ownerChanged(this.getOwner());
@@ -2123,6 +2212,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 */
 	getNodeAtIndexStack: function(indexStack)
 	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
 		if (indexStack.length <= 0)
 			return null;
 		else
@@ -2130,7 +2220,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			var node = this.getNodeAt(indexStack[0]);
 			for (var i = 1, l = indexStack.length; i < l; ++i)
 			{
-				if (node.getNodeAt)
+				if (node && node.getNodeAt)
 					node = node.getNodeAt(indexStack[i]);
 				else
 					return null;
@@ -2451,6 +2541,73 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	{
 		return this.getConnectors()[index];
 	},
+
+	/**
+	 * Returns index of connector. If connector exists in nested sub group, index in sub group will be pushed to stack as well.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @returns {Variant} If connector is the direct child of this structure, returns {Int}, otherwise stack {Array} will be returned.
+	 */
+	indexStackOfConnector: function(connector)
+	{
+		var index = this.indexOfConnector(connector);
+		if (index >= 0)
+			return index;
+		else  // check nested structures
+		{
+			var stack = null;
+			for (var i = 0, l = this.getNodeCount(); i < l; ++i)
+			{
+				var n = this.getNodeAt(i);
+				if (n.indexStackOfConnector)
+				{
+					stack = n.indexStackOfConnector(connector);
+					if (!Kekule.ObjUtils.isUnset(stack))  // found
+					{
+						// push index of n to stack
+						if (typeof(stack) != 'object')
+							stack = [stack];
+						stack.unshift(i);
+						//console.log('get stack: ', stack);
+						return stack;
+					}
+				}
+			}
+			return stack;
+		}
+	},
+	/**
+	 * Get connector at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getConnectorAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	getConnectorAtIndexStack: function(indexStack)
+	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
+		if (indexStack.length <= 0)
+			return null;
+		else if (indexStack.length === 1)
+		{
+			return this.getConnectorAt(indexStack[0]);
+		}
+		else
+		{
+			var stackTail = indexStack.length - 1;
+			var node = this.getNodeAt(indexStack[0]);
+			for (var i = 1; i < stackTail; ++i)
+			{
+				if (node && node.getNodeAt)
+					node = node.getNodeAt(indexStack[i]);
+				else
+					return null;
+			}
+			if (node)
+				return node.getConnectorAt(indexStack[stackTail]);
+			else
+				return null;
+		}
+	},
+
 	/**
 	 * Add connector to connection table.
 	 * @param {Kekule.ChemStructureConnector} connector
@@ -2606,7 +2763,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				a = this.getNodeAt(a);
 			connectedObjs.push(a);
 		}
-		var result = new Kekule.Bond(null, connectedObjs, bondOrder, bondType);
+		var result = new Kekule.Bond(null, connectedObjs, bondOrder, null, bondType);
 		return result;
 	},
 	/**
@@ -2830,9 +2987,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	indexOfChild: function(obj)
 	{
 		var result;
-		if (obj instanceof Kekule.ChemStructureNode)
+		if (obj instanceof Kekule.BaseStructureNode)
 			result = this.indexOfNode(obj);
-		else if (obj instanceof Kekule.ChemStructureConnector)
+		else if (obj instanceof Kekule.BaseStructureConnector)
 		{
 			result = this.indexOfConnector(obj);
 			if (result >= 0)
@@ -2844,6 +3001,59 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		else
 			result = -1;
 		return result;
+	},
+
+	/**
+	 * Get child object at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getChildAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	indexStackOfChild: function(obj)
+	{
+		var result;
+		if (obj instanceof Kekule.BaseStructureNode)
+			result = this.indexStackOfNode(obj);
+		else if (obj instanceof Kekule.BaseStructureConnector)
+		{
+			var nodeCount = this.getNodeCount();
+			result = this.indexStackOfConnector(obj);
+			if (result.length)  // is array
+			{
+				result[result.length - 1] += nodeCount;
+			}
+			else  // simple int value
+			{
+				result += nodeCount;
+			}
+		}
+		else
+			result = -1;
+		return result;
+	},
+	/**
+	 * Get child object at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getChildAt(2).getChildAt(3).getChildAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getChildAtIndexStack: function(indexStack)
+	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
+		if (indexStack.length <= 0)
+			return null;
+		else
+		{
+			var child = this.getChildAt(indexStack[0]);
+			for (var i = 1, l = indexStack.length; i < l; ++i)
+			{
+				if (child && child.getChildAt)
+					child = child.getChildAt(indexStack[i]);
+				else
+					return null;
+			}
+			return child;
+		}
 	},
 
 	/**
@@ -4942,7 +5152,7 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 			}
 			else
 				return childObj;
-		}
+		};
 
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
@@ -5152,8 +5362,8 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	initialize: function($super, id, connectedObjs, bondOrder, electronCount, bondType)
 	{
 		$super(id, connectedObjs || []);
-		if (bondOrder || electronCount)
-			this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount));
+		if (bondOrder || electronCount || bondType)
+			this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount, bondType));
 	},
 	/** @private */
 	initProperties: function()
@@ -5182,7 +5392,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 				},
 			'setter': function(value)
 				{
-					this.changeBondForm(value, Kekule.ElectronSet.UNSET_ELECTRONCOUNT);
+					this.changeBondForm(value, Kekule.ElectronSet.UNSET_ELECTRONCOUNT, this.getBondType());
 				}
 		});
 		this.defineProp('bondValence', {
@@ -5207,7 +5417,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 			'setter': function(value)
 				{
 					var order = this.getBondOrder();
-					this.changeBondForm(order, value);
+					this.changeBondForm(order, value, this.getBondType());
 				}
 		});
 		this.defineProp('stereo', {'dataType': DataType.INT, 'enumSource': Kekule.BondStereo, 'defaultValue': Kekule.BondStereo.NONE});
@@ -5225,8 +5435,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('stereo', Kekule.BondStereo.NONE);
 	},
 	/** @private */
@@ -5261,6 +5472,13 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	{
 		this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount, bondType));
 	},
+	/** @private */
+	canInvertBondDirection: function()
+	{
+		var BT = Kekule.BondType;
+		var bType = this.getBondType();
+		return [BT.COVALENT, BT.IONIC, BT.METALLIC, BT.HYDROGEN, BT.UNKNOWN].indexOf(bType) >= 0;
+	},
 	/**
 	 * Change bond direction to a inverted one (in case when connected object order swapped).
 	 * @private
@@ -5273,9 +5491,16 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	/** @ignore */
 	reverseConnectedObjOrder: function($super)
 	{
-		$super();
-		// direction of bond also need to be reversed
-		this.invertBondDirection();
+		if (this.canInvertBondDirection())
+		{
+			$super();
+			// direction of bond also need to be reversed
+			this.invertBondDirection();
+		}
+		else // can not reverse a directed bond, do nothing
+		{
+
+		}
 	},
 
 	/**

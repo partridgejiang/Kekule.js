@@ -794,12 +794,22 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	exportObj: function(objClass)
 	{
+		return this.exportObjs(objClass)[0];
+	},
+	/**
+	 * Returns all exportable objects for specified class.
+	 * Descendants can override this method.
+	 * @param {Class} objClass Set null to export default object.
+	 * @returns {Array}
+	 */
+	exportObjs: function(objClass)
+	{
 		var obj = this.getChemObj();
 		if (!objClass)
-			return obj;
+			return [obj];
 		else
 		{
-			return (obj && (obj instanceof objClass))? obj: null;
+			return (obj && (obj instanceof objClass))? [obj]: [];
 		}
 	},
 
@@ -1340,6 +1350,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.repaint();
 			}
 		}
+	},
+
+	/** @private */
+	_needToCanonicalizeBeforeSaving: function()
+	{
+		return true;
 	},
 
 	/** @private */

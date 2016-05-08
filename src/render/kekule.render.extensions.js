@@ -1135,7 +1135,11 @@
 		getExposedContainerBox: function(coordMode, allowCoordBorrow)
 		{
 			//console.log(this.getExposedNodes());
-			return this.getNodesContainBox(this.getExposedNodes(), coordMode, allowCoordBorrow);
+			var nodes = this.getExposedNodes();
+			if (nodes.length)
+				return this.getNodesContainBox(nodes, coordMode, allowCoordBorrow);
+			else  // no exposed nodes
+				return null;
 		},
 		getExposedContainerBox2D: function(allowCoordBorrow)
 		{
@@ -1263,7 +1267,12 @@
 		getExposedContainerBox: function(coordMode, allowCoordBorrow)
 		{
 			if (this.hasCtab())
-				return this.getCtab().getExposedContainerBox(coordMode, allowCoordBorrow);
+			{
+				var box = this.getCtab().getExposedContainerBox(coordMode, allowCoordBorrow);
+				if (!box)  // may be all sub nodes are not exposed
+					box = this.getContainerBox(coordMode, allowCoordBorrow);
+				return box;
+			}
 			else /*  if (this.hasFormula()) */
 			{
 				//return this.getFormula().getExposedContainerBox(coordMode);
@@ -1448,6 +1457,15 @@
 			if (Kekule.ObjUtils.isUnset(showCharge))
 				showCharge = true;
 			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength, displayLabelConfigs);
+		},
+		/**
+		 * Return plain text to represent formula.
+		 * @return {String}
+		 */
+		getDisplayText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength)
+		{
+			var richText = this.getDisplayRichText();
+			return Kekule.Render.RichTextUtils.toText(richText);
 		}
 	});
 

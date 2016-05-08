@@ -762,6 +762,11 @@ table.K-Widget
 {
     position: absolute;
 }
+.K-Dialog.K-Dialog-Inside
+{
+    position: absolute;
+    position: fixed;
+}
 .K-Dialog .K-Dialog-Caption
 {
     display: block;

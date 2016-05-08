@@ -217,6 +217,10 @@
 {
     position: absolute;
 }
+.K-Chem-Viewer .K-Chem-InnerToolbar.K-Button
+{
+    height: 37px;
+}
 
 .K-Chem-Viewer .K-Chem-Viewer-Caption
 {

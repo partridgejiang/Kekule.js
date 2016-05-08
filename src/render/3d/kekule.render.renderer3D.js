@@ -1296,7 +1296,9 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	{
 		if (Kekule.ObjUtils.isUnset(allowCoordBorrow))
 			allowCoordBorrow = this.getRenderCache(context).options.transformParams.allowCoordBorrow;
-		var result = this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		var isNode = obj instanceof Kekule.BaseStructureNode;
+		var result = isNode && this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+			// IMPORTANT: connector center coord is based on node and should not be cached
 		if (!result)
 		{
 			var ctab = this.getChemObj();

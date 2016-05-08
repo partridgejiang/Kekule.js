@@ -1023,7 +1023,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var buttons = [
 			//BNS.loadFile,
 			BNS.loadData,
-			BNS.saveFile,
+			BNS.saveData,
 			//BNS.clearObjs,
 			BNS.molDisplayType,
 			BNS.molHideHydrogens,
@@ -1061,7 +1061,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = {};
 		result[BNS.loadFile] = CW.ActionDisplayerLoadFile;
 		result[BNS.loadData] = CW.ActionDisplayerLoadData;
-		result[BNS.saveFile] = CW.ActionDisplayerSaveFile;
+		result[BNS.saveData] = CW.ActionDisplayerSaveFile;
 		result[BNS.clearObjs] = CW.ActionDisplayerClear;
 		result[BNS.zoomIn] = CW.ActionDisplayerZoomIn;
 		result[BNS.zoomOut] = CW.ActionDisplayerZoomOut;
@@ -1264,6 +1264,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//toolBar.show();
 		// add buttons
 		//var settings = this.getToolButtonSettings();
+		toolBar.setShowText(false);
+		toolBar.doSetShowGlyph(true);
+
 		var btns = this.getToolButtons() || this.getDefaultToolBarButtons(); //settings.buttons;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
@@ -1273,8 +1276,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		toolBar.addClassName(CCNS.INNER_TOOLBAR);
 		if (this.isToolbarEmbedded())
 			toolBar.addClassName(CCNS.VIEWER_EMBEDDED_TOOLBAR);
-		toolBar.setShowText(false);
-		toolBar.doSetShowGlyph(true);
+
 		toolBar.appendToElem(this.getToolbarParentElem() || this.getElement()/*this.getDrawContextParentElem()*/);
 			// IMPORTANT, must append to widget before setToolbar,
 			// otherwise in Chrome the tool bar may be hidden at first even if we set it to always show
@@ -1424,7 +1426,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
 		var items = [
 			BNS.loadData,
-			BNS.saveFile,
+			BNS.saveData,
 			sSeparator,
 			BNS.molDisplayType,
 			BNS.molHideHydrogens,
@@ -2155,15 +2157,15 @@ SM.register('Kekule.ChemWidget.Viewer.basic', {  // viewer with basic function, 
 	enableToolbar: true,
 	enableDirectInteraction: true,
 	enableTouchInteraction: false,
-	toolButtons: [BNS.saveFile, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut],
-	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+	toolButtons: [BNS.saveData, BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut],
+	menuItems: [BNS.saveData, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
 });
 SM.register('Kekule.ChemWidget.Viewer.mini', {  // viewer with only one menu button
 	enableToolbar: true,
 	enableDirectInteraction: true,
 	enableTouchInteraction: false,
 	toolButtons: [BNS.menu],
-	menuItems: [BNS.saveFile, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
+	menuItems: [BNS.saveData, '-', BNS.molDisplayType, BNS.zoomIn, BNS.zoomOut]
 });
 SM.register('Kekule.ChemWidget.Viewer.static', {  // viewer with no interaction ability, suitable for static embedded chem object
 	enableToolbar: false,

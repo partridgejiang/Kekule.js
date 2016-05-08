@@ -888,7 +888,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, obj);
 		if (writer)
 		{
-			var doCanonicalize = this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
+			var doCanonicalize = this._needToCanonicalizeBeforeSaving() && this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
 			if (doCanonicalize && obj.standardize)  // canonicalize first
 			{
 				var obj = obj.clone? obj.clone(true): obj;  // clone with id
@@ -907,6 +907,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			Kekule.error(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT'));
 			return null;
 		}
+	},
+	/**
+	 * Return whether this displayer need to canonicalize molecule before save.
+	 * Descendants may override this method.
+	 * @returns {Bool}
+	 * @private
+	 */
+	_needToCanonicalizeBeforeSaving: function()
+	{
+		return false;
 	},
 	/**
 	 * Called before obj is saved. Descendants can overrride this method.

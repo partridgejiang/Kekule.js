@@ -52,7 +52,7 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Button',
 	/** @private */
-	BINDABLE_TAG_NAMES: ['input', 'button', 'a'],
+	BINDABLE_TAG_NAMES: ['input', 'button', 'a', 'label'],
 	/** @private */
 	CSS_DROPDOWN_CLASS_NAME: 'K-DropDownMark',
 	/** @private */
