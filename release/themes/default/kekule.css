@@ -105,6 +105,7 @@ table.K-Widget{display:table}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget{display:inline-block;vertical-align:middle}
 .K-Dialog{border:1px solid;overflow:hidden;position:absolute;position:fixed}
 .K-Dialog.K-Dialog-Overflow{position:absolute}
+.K-Dialog.K-Dialog-Inside{position:absolute;position:fixed}
 .K-Dialog .K-Dialog-Caption{display:block;padding:.4em 1em;border-bottom:1px solid;font-size:1.1em;font-family:Verdana,Arial;font-weight:bold}
 .K-Dialog .K-Dialog-Client{padding:.5em}
 .K-Dialog .K-Dialog-Button-Panel{padding:0 .25em;text-align:right;overflow:hidden}
@@ -199,11 +200,11 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-MsgPanel.K-Msg-Warning .K-MsgPanel-Content{background-color:#ffffc8;color:#000}
 .K-MsgPanel.K-Msg-Error .K-MsgPanel-Content{background-color:#ffebeb;color:#f00}
 .K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block;background-repeat:no-repeat}
-.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-622px 0}
-.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-622px -17px}
-.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-622px -34px}
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-645px 0}
+.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-645px -18px}
+.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-645px -36px}
 .K-MsgGroup{background-color:transparent}
-.K-Resize-Gripper{background-image:url(sprite/kekule.png);background-position:-622px -51px}
+.K-Resize-Gripper{background-image:url(sprite/kekule.png);background-position:-645px -54px}
 .K-Button,.K-Toolbar,.K-Panel,.K-TreeView,.K-Widget-Grid .K-Widget-Grid-Cell,.K-PageNavigator > .K-PageNavigator-PageIndexer{border-color:#d3d3d3}
 .K-Widget-Grid .K-Widget-Grid-Cell{color:#d3d3d3}
 .K-Button,.K-Toolbar,.K-PageNavigator > .K-PageNavigator-PageIndexer{background-color:#e6e6e6}
@@ -214,10 +215,10 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Button.K-State-Active,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Hover,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Focused,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Active{background-color:#fff}
 .K-Button.K-Button-Kinded .K-Pri-Glyph-Content,.K-Button.K-Button-Kinded .K-Assoc-Glyph-Content{width:16px;height:16px}
 .K-Button.K-Button-Kinded .K-Pri-Glyph-Content{}
-.K-Button.K-Button-Kinded.K-Kind-DropDown .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-639px 0}
-.K-Button.K-Button-Kinded.K-Kind-Popup .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-639px -17px}
-.K-Button.K-Button-Kinded.K-Kind-Search .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-639px -34px}
-.K-Button.K-Button-Kinded.K-Kind-Edit .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-639px -51px}
+.K-Button.K-Button-Kinded.K-Kind-DropDown .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-663px 0}
+.K-Button.K-Button-Kinded.K-Kind-Popup .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-663px -18px}
+.K-Button.K-Button-Kinded.K-Kind-Search .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-663px -36px}
+.K-Button.K-Button-Kinded.K-Kind-Edit .K-Assoc-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-663px -54px}
 .K-Compact-Mark{border-bottom-color:#a3a3a3;border-right-color:#a3a3a3}
 .K-State-Focused>.K-Compact-Mark,.K-State-Hover>.K-Compact-Mark{border-bottom-color:#999;border-right-color:#999}
 .K-State-Active>.K-Compact-Mark{border-bottom-color:#777;border-right-color:#777}
@@ -229,11 +230,11 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Menu,.K-Menu .K-MenuItem-Separator{border-color:#d3d3d3}
 .K-Menu .K-MenuItem-Separator{color:#d3d3d3}
 .K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker,.K-Menu .K-MenuItem .K-CheckMenu-Marker{width:16px;height:16px;margin:0;padding:0;top:50%;margin-top:-8px;background-repeat:no-repeat}
-.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker{background-image:url(sprite/kekule.png);background-position:-656px 0}
-.K-Menu .K-MenuItem.K-State-Checked .K-CheckMenu-Marker{background-image:url(sprite/kekule.png);background-position:-656px -17px}
-.K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-656px -34px}
-.K-TextEditor-Btn-FontSizeDec > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-656px -51px}
-.K-TextEditor-Btn-TextWrap > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-673px 0}
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker{background-image:url(sprite/kekule.png);background-position:-681px 0}
+.K-Menu .K-MenuItem.K-State-Checked .K-CheckMenu-Marker{background-image:url(sprite/kekule.png);background-position:-681px -18px}
+.K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-681px -36px}
+.K-TextEditor-Btn-FontSizeDec > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-681px -54px}
+.K-TextEditor-Btn-TextWrap > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-699px 0}
 .K-TreeView,.K-ColorPicker,.K-TabView{}
 .K-TabView .K-TabView-TabButton-Container{}
 .K-TabButtonGroup .K-Button,.K-TabView .K-TabView-Page-Container{background-color:#fff;color:#d3d3d3;border-color:#ddd}
@@ -245,23 +246,23 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-TabButtonGroup.K-TabAtTop>.K-Button.K-State-Active,.K-TabButtonGroup.K-TabAtBottom>.K-Button.K-State-Active{border-bottom-color:#F39814;border-top-color:#F39814}
 .K-TabButtonGroup.K-TabAtLeft>.K-Button.K-State-Active,.K-TabButtonGroup.K-TabAtRight>.K-Button.K-State-Active{border-left-color:#F39814;border-right-color:#F39814}
 .K-TabView .K-TabView-Page-Container{border-color:#d3d3d3}
-.K-TreeView .K-TreeView-ExpandMark{background-image:url(sprite/kekule.png);background-position:-639px 0}
-.K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark{background-image:url(sprite/kekule.png);background-position:-673px -17px}
+.K-TreeView .K-TreeView-ExpandMark{background-image:url(sprite/kekule.png);background-position:-663px 0}
+.K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark{background-image:url(sprite/kekule.png);background-position:-699px -18px}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Pri-Glyph-Content{display:inline-block;width:16px;height:16px}
-.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-673px -34px}
+.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-699px -36px}
 .K-ColorPicker .K-ColorPicker-Palette,.K-ColorPicker .K-ColorPicker-Palette-Cell,.K-ColorPicker .K-ColorPicker-Spec-Color-Palette,.K-ColorDropButton .K-Pri-Glyph-Content{border-color:#333}
-.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent{background-image:url(sprite/kekule.png);background-position:-673px -51px}
+.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent{background-image:url(sprite/kekule.png);background-position:-699px -54px}
 .K-ValueListEditor .K-ValueListEditor-Row{background-color:#fff;border-color:transparent}
 .K-ValueListEditor,.K-ValueListEditor .K-ValueListEditor-Cell,.K-ObjInspector,.K-ObjInspector .K-ObjInspector-PropListEditorContainer{border-color:#d3d3d3;outline-color:#d3d3d3}
 .K-ValueListEditor .K-ValueListEditor-ValueCell{color:#303080}
-.K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/kekule.png);background-position:-639px -51px}
+.K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/kekule.png);background-position:-663px -54px}
 .K-ValueListEditor,.K-ValueListEditor .K-ValueListEditor-Row:hover,.K-ValueListEditor .K-ValueListEditor-Row:active,.K-ValueListEditor .K-ValueListEditor-ActiveRow,.K-ValueListEditor .K-ValueListEditor-IndicatorCell{background-color:#e6e6e6}
 .K-ValueListEditor .K-ValueListEditor-ActiveRow{border-color:#d3d3d3;outline-color:#d3d3d3}
 .K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-ValueCell{background-color:#fff}
 .K-PropListEditor .K-PropListEditor-PropExpandMarker{}
-.K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker{background-image:url(sprite/kekule.png);background-position:-639px 0}
-.K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker{background-image:url(sprite/kekule.png);background-position:-673px -17px}
-.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/kekule.png);background-position:-690px 0}
+.K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker{background-image:url(sprite/kekule.png);background-position:-663px 0}
+.K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker{background-image:url(sprite/kekule.png);background-position:-699px -18px}
+.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/kekule.png);background-position:-717px 0}
 .K-ObjInspector{background-color:#f6f6f6}
 .K-Widget-Configurator .K-ObjInspector{background-color:#fff}
 .K-Dialog,.K-Dialog .K-Dialog-Caption{border-color:#aaa;text-shadow:1px 1px 2px rgba(255,255,255,.7)}
@@ -270,34 +271,34 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-DataTable thead{background-color:#e6e6e6}
 .K-DataTable th .K-DataTable-SortMark{width:16px;height:16px}
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc,.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{opacity:.5}
-.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc{background-image:url(sprite/kekule.png);background-position:-690px -17px}
-.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{background-image:url(sprite/kekule.png);background-position:-639px 0}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc{background-image:url(sprite/kekule.png);background-position:-717px -18px}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{background-image:url(sprite/kekule.png);background-position:-663px 0}
 .K-DataTable tr.K-State-Hover{background-color:#eee}
 .K-DataTable td.K-State-Hover{}
 .K-DataTable tr.K-State-Active{background-color:#eee}
 .K-DataTable td.K-State-Active{}
 .K-DataTable-Edit > .K-Pri-Glyph-Content,.K-DataTable-Insert > .K-Pri-Glyph-Content,.K-DataTable-Delete > .K-Pri-Glyph-Content,.K-PageNavigator-First > .K-Pri-Glyph-Content,.K-PageNavigator-Last > .K-Pri-Glyph-Content,.K-PageNavigator-Prev > .K-Pri-Glyph-Content,.K-PageNavigator-Next > .K-Pri-Glyph-Content{width:16px;height:16px}
-.K-DataTable-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-690px -17px}
-.K-DataTable-Insert > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-690px -34px}
-.K-DataTable-Delete > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-690px -51px}
-.K-PageNavigator-First > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-707px 0}
-.K-PageNavigator-Last > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-707px -17px}
-.K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-707px -34px}
-.K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-673px -17px}
-.K-Action-Open-Configurator > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-100px 0}
+.K-DataTable-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-717px -18px}
+.K-DataTable-Insert > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-717px -36px}
+.K-DataTable-Delete > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-717px -54px}
+.K-PageNavigator-First > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-735px 0}
+.K-PageNavigator-Last > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-735px -18px}
+.K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-735px -36px}
+.K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-699px -18px}
+.K-Action-Open-Configurator > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-102px 0}
 .K-Res-Cursor-Rotate{cursor:url(images/cursors/rotate.cur),pointer}
 .K-Res-Cursor-Rotate-NE{cursor:url(images/cursors/rotateNE.cur),pointer}
 .K-Res-Cursor-Rotate-NW{cursor:url(images/cursors/rotateNW.cur),pointer}
 .K-Res-Cursor-Rotate-SE{cursor:url(images/cursors/rotateSE.cur),pointer}
 .K-Res-Cursor-Rotate-SW{cursor:url(images/cursors/rotateSW.cur),pointer}
-.K-Res-Icon-Color-Pick{background-image:url(sprite/kekule.png);background-position:-639px -51px}
+.K-Res-Icon-Color-Pick{background-image:url(sprite/kekule.png);background-position:-663px -54px}
 .K-Res-Icon-Color-NotSet,.K-Color-Unset,.K-Color-Default{background-image:url(sprite/kekule.png);background-position:0 0}
-.K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/kekule.png);background-position:-50px 0}
-.K-Res-Icon-Color-Transparent,.K-Color-Transparent{background-image:url(sprite/kekule.png);background-position:-673px -51px}
+.K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/kekule.png);background-position:-51px 0}
+.K-Res-Icon-Color-Transparent,.K-Color-Transparent{background-image:url(sprite/kekule.png);background-position:-699px -54px}
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,.K-Res-Button-NoCancel .K-Pri-Glyph-Content,.K-Res-Button-LoadFile .K-Pri-Glyph-Content{width:24px;height:24px}
-.K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-100px -25px}
-.K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-125px 0}
-.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-125px -25px}
+.K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-102px -26px}
+.K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-128px 0}
+.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-128px -26px}
 .K-Chem-Periodic-Table{cursor:default}
 .K-Chem-Periodic-Table .K-Chem-Periodic-Table-Legend{float:right;position:relative;text-decoration:none;border:1px solid;padding:.3em .5em}
 .K-Chem-Periodic-Table .K-Chem-Periodic-Table-Legend-Content{position:absolute;right:0;bottom:1.6em;padding:.5em;display:none;border:1px solid;z-index:10;cursor:default}
@@ -333,6 +334,7 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Chem-Viewer3D{}
 .K-Chem-Viewer .K-Chem-InnerToolbar{display:block;z-index:10}
 .K-Chem-Viewer .K-Chem-InnerToolbar.K-Chem-Viewer-Embedded-Toolbar{position:absolute}
+.K-Chem-Viewer .K-Chem-InnerToolbar.K-Button{height:37px}
 .K-Chem-Viewer .K-Chem-Viewer-Caption{display:block;position:absolute;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;margin:0;padding:.5em 0;width:100%;text-align:center}
 .K-Chem-Viewer .K-Error-Report{display:block;position:absolute;left:0;right:0;top:0;padding:.3em .6em}
 .K-Chem-Editor{overflow:auto}
@@ -408,74 +410,74 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Chem-Struct-TreeView .K-Chem-Struct-TreeView-ItemType{color:#999}
 .K-Chem-Editor .K-Chem-Editor-Client{background-color:#fff;outline:1px solid #666}
 .K-Chem-Composer .K-Chem-Editor{background-color:#aaa;outline:1px solid #aaa}
-.K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-150px 0}
-.K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-150px -25px}
-.K-Chem-MolDisplayCondensed > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-175px 0}
-.K-Chem-MolDisplayWire > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-175px -25px}
-.K-Chem-MolDisplaySticks > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-200px 0}
-.K-Chem-MolDisplayBallStick > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-200px -25px}
-.K-Chem-MolDisplaySpaceFill > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-225px 0}
-.K-Chem-MolHideHydrogens > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-225px -25px}
-.K-Chem-RotateLeft > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-250px 0}
-.K-Chem-RotateRight > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-250px -25px}
-.K-Chem-RotateX > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-275px 0}
-.K-Chem-RotateY > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-275px -25px}
-.K-Chem-RotateZ > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-300px 0}
-.K-Chem-ZoomIn > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-300px -25px}
-.K-Chem-ZoomOut > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-325px 0}
-.K-Chem-Reset > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-325px -25px}
-.K-Chem-Viewer-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-350px 0}
-.K-Chem-ClearObjs > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-350px -25px}
-.K-Chem-NewDoc > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-375px 0}
-.K-Chem-LoadFile > .K-Pri-Glyph-Content,.K-Chem-LoadData > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-125px -25px}
-.K-Chem-SaveFile > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-375px -25px}
-.K-Chem-Undo > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-400px 0}
-.K-Chem-Redo > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-400px -25px}
-.K-Chem-Clone-Selection > .K-Pri-Glyph-Content,.K-Chem-Copy > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-425px 0}
-.K-Chem-Cut > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-425px -25px}
-.K-Chem-Paste > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-450px 0}
-.K-Chem-Toggle-Inspector > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-450px -25px}
-.K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-707px -51px}
-.K-Chem-Composer-TextAlign-Button-Horizontal > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-724px 0}
-.K-Chem-Composer-TextAlign-Button-Vertical > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-724px -17px}
-.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-475px 0}
-.K-Chem-BasicMolEraserIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-475px -25px}
-.K-Chem-MolAtomIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-500px 0}
-.K-Chem-FormulaIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-500px -25px}
-.K-Chem-MolBondIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-525px 0}
-.K-Chem-MolNodeChargeIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-525px -25px}
-.K-Chem-TextBlockIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-550px 0}
-.K-Chem-MolRingIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-550px -25px}
-.K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-575px 0}
-.K-Chem-MolBondIaController-Single .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:0 -50px}
-.K-Chem-MolBondIaController-Double .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-22px -50px}
-.K-Chem-MolBondIaController-Triple .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-44px -50px}
-.K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-66px -50px}
-.K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-88px -50px}
-.K-Chem-MolBondIaController-WedgeDown .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-110px -50px}
-.K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-132px -50px}
-.K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-154px -50px}
-.K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-176px -50px}
-.K-Chem-MolNodeChargeIaController-Positive > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-198px -50px}
-.K-Chem-MolNodeChargeIaController-Negative > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-220px -50px}
-.K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-242px -50px}
-.K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-264px -50px}
-.K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-286px -50px}
-.K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-308px -50px}
-.K-Chem-MolRingIaController-4 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-330px -50px}
-.K-Chem-MolRingIaController-5 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-352px -50px}
-.K-Chem-MolRingIaController-6 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-374px -50px}
-.K-Chem-MolRingIaController-7 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-396px -50px}
-.K-Chem-MolRingIaController-8 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-418px -50px}
-.K-Chem-MolRingIaController-Ar-6 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-440px -50px}
-.K-Chem-MolRingIaController-Ar-5 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-462px -50px}
-.K-Chem-ArrowLineIaController-Line > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-484px -50px}
-.K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-506px -50px}
-.K-Chem-ArrowLineIaController-TriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-528px -50px}
-.K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-550px -50px}
-.K-Chem-ArrowLineIaController-DiTriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-572px -50px}
-.K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-575px -25px}
-.K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-594px -47px}
-.K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-597px -25px}
-.K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-600px 0}
-#CssGaga{content:"160430195013,swt,333"}
+.K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-154px 0}
+.K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-154px -26px}
+.K-Chem-MolDisplayCondensed > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-180px 0}
+.K-Chem-MolDisplayWire > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-180px -26px}
+.K-Chem-MolDisplaySticks > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-206px 0}
+.K-Chem-MolDisplayBallStick > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-206px -26px}
+.K-Chem-MolDisplaySpaceFill > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-232px 0}
+.K-Chem-MolHideHydrogens > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-232px -26px}
+.K-Chem-RotateLeft > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-258px 0}
+.K-Chem-RotateRight > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-258px -26px}
+.K-Chem-RotateX > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-284px 0}
+.K-Chem-RotateY > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-284px -26px}
+.K-Chem-RotateZ > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-310px 0}
+.K-Chem-ZoomIn > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-310px -26px}
+.K-Chem-ZoomOut > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-336px 0}
+.K-Chem-Reset > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-336px -26px}
+.K-Chem-Viewer-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-362px 0}
+.K-Chem-ClearObjs > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-362px -26px}
+.K-Chem-NewDoc > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-388px 0}
+.K-Chem-LoadFile > .K-Pri-Glyph-Content,.K-Chem-LoadData > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-128px -26px}
+.K-Chem-SaveFile > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-388px -26px}
+.K-Chem-Undo > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-414px 0}
+.K-Chem-Redo > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-414px -26px}
+.K-Chem-Clone-Selection > .K-Pri-Glyph-Content,.K-Chem-Copy > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-440px 0}
+.K-Chem-Cut > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-440px -26px}
+.K-Chem-Paste > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-466px 0}
+.K-Chem-Toggle-Inspector > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-466px -26px}
+.K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-735px -54px}
+.K-Chem-Composer-TextAlign-Button-Horizontal > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-753px 0}
+.K-Chem-Composer-TextAlign-Button-Vertical > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-753px -18px}
+.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-492px 0}
+.K-Chem-BasicMolEraserIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-492px -26px}
+.K-Chem-MolAtomIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-518px 0}
+.K-Chem-FormulaIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-518px -26px}
+.K-Chem-MolBondIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-544px 0}
+.K-Chem-MolNodeChargeIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-544px -26px}
+.K-Chem-TextBlockIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-570px 0}
+.K-Chem-MolRingIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-570px -26px}
+.K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-596px 0}
+.K-Chem-MolBondIaController-Single .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:0 -51px}
+.K-Chem-MolBondIaController-Double .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-23px -51px}
+.K-Chem-MolBondIaController-Triple .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-46px -51px}
+.K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-69px -51px}
+.K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-92px -52px}
+.K-Chem-MolBondIaController-WedgeDown .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-115px -52px}
+.K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-138px -52px}
+.K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-161px -52px}
+.K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-184px -52px}
+.K-Chem-MolNodeChargeIaController-Positive > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-207px -52px}
+.K-Chem-MolNodeChargeIaController-Negative > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-230px -52px}
+.K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-253px -52px}
+.K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-276px -52px}
+.K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-299px -52px}
+.K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-322px -52px}
+.K-Chem-MolRingIaController-4 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-345px -52px}
+.K-Chem-MolRingIaController-5 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-368px -52px}
+.K-Chem-MolRingIaController-6 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-391px -52px}
+.K-Chem-MolRingIaController-7 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-414px -52px}
+.K-Chem-MolRingIaController-8 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-437px -52px}
+.K-Chem-MolRingIaController-Ar-6 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-460px -52px}
+.K-Chem-MolRingIaController-Ar-5 > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-483px -52px}
+.K-Chem-ArrowLineIaController-Line > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-506px -52px}
+.K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-529px -52px}
+.K-Chem-ArrowLineIaController-TriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-552px -52px}
+.K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-575px -52px}
+.K-Chem-ArrowLineIaController-DiTriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-596px -26px}
+.K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-598px -49px}
+.K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-619px -26px}
+.K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-621px -49px}
+.K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/kekule.png);background-position:-622px 0}
+#CssGaga{content:"160508203730,swt,334"}
