@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Compare and Search Molecule</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    #composerSrc, #composerTarget, #codeViewer
+    {
+      height: 400px;
+      float: left;
+    }
+    #composerSrc, #composerTarget
+    {
+      width: 550px;
+    }
+    #codeViewer
+    {
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+      width: 400px;
+    }
+    .Positive { color: green; }
+    .Negative { color: red; }
+  </style>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget,algorithm"></script>
+
+  <script id="srcMol" type="chemical/x-kekule-json">
+    {"id":"m1","info":{"generator":"Kekule","date":{"__type__":"date","date":"Sat, 07 Feb 2015 04:26:58 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":2.474317998547942,"y":1.5324413286544782,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":9.1791,"y":35.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.8719,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":9.1791,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":8.4863,"y":34.7338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":9.8719,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","coord2D":{"x":8.4863,"y":36.3338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a7","coord2D":{"x":8.4863,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","coord2D":{"x":9.1791,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","coord2D":{"x":10.5648,"y":33.5338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a11","coord2D":{"x":7.7935,"y":35.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a10","coord2D":{"x":8.4863,"y":37.1338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a12","coord2D":{"x":11.2576,"y":33.9338,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b5","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[2,5]},{"__type__":"Kekule.Bond","id":"b6","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,6]},{"__type__":"Kekule.Bond","id":"b7","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,7]},{"__type__":"Kekule.Bond","id":"b8","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b10","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[5,9]},{"__type__":"Kekule.Bond","id":"b9","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[5,10]},{"__type__":"Kekule.Bond","id":"b11","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,7]},{"__type__":"Kekule.Bond","id":"b12","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[8,11]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
+  <script id="targetMol" type="chemical/x-kekule-json">
+    {"id":"m1","info":{"generator":"Kekule","date":{"__type__":"date","date":"Sat, 07 Feb 2015 04:29:59 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":3.9756679985479675,"y":5.9858413286545655,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":8.3706,"y":31.4804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":7.6778,"y":31.0804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":9.0634,"y":31.0804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":8.3706,"y":32.2804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a5","coord2D":{"x":6.985,"y":31.4804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a6","coord2D":{"x":9.7562,"y":31.4804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a7","coord2D":{"x":7.6778,"y":32.6804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a8","coord2D":{"x":6.985,"y":32.2804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a9","coord2D":{"x":6.2921,"y":31.0804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a11","coord2D":{"x":10.4491,"y":31.0804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a10","coord2D":{"x":9.7562,"y":32.2804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a12","coord2D":{"x":5.5993,"y":31.4804,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b4","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b5","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[2,5]},{"__type__":"Kekule.Bond","id":"b6","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[3,6]},{"__type__":"Kekule.Bond","id":"b7","parity":null,"bondType":"covalent","bondOrder":2,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[4,7]},{"__type__":"Kekule.Bond","id":"b8","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b10","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[5,9]},{"__type__":"Kekule.Bond","id":"b9","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[5,10]},{"__type__":"Kekule.Bond","id":"b11","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":3,"isInAromaticRing":true,"connectedNodes":[6,7]},{"__type__":"Kekule.Bond","id":"b12","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[8,11]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
+
+  <script>
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function getTargetComposer()
+    {
+      return Kekule.Widget.getWidgetById('composerTarget');
+    }
+    function getSrcComposer()
+    {
+      return Kekule.Widget.getWidgetById('composerSrc');
+    }
+    function getTargetMol()
+    {
+      return getTargetComposer().exportObj(Kekule.StructureFragment);
+    }
+    function getSrcMol()
+    {
+      return getSrcComposer().exportObj(Kekule.StructureFragment);
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      func();
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+    }
+
+    function compareMols()
+    {
+      // get two molecules
+      var srcMol = getSrcMol();
+      var targetMol = getTargetMol();
+      // compare srcMol and targetMol, check if the structure is same
+      var isSame = srcMol && targetMol && srcMol.isSameStructureWith(targetMol);
+      // report in console
+      var msg = 'The two molecules are ' + (isSame? 'same': 'different');
+      console.log(msg);
+      // report in HTML page
+      var sClass = isSame? 'Positive': 'Nagative';
+      var elem = document.getElementById('labelResult');
+      elem.className = sClass;
+      elem.innerHTML = msg;
+    }
+
+    function subStructSearch()
+    {
+      // get two molecules
+      var srcMol = getSrcMol();
+      var targetMol = getTargetMol();
+      // search options
+      var options = {
+        'level': Kekule.StructureComparationLevel.CONSTITUTION,  // compare in consititution level
+        'compareCharge': false,   // ignore charge
+        'compareMass': false      // ignore mass number difference
+      };
+      // check if srcMol is a sub structure in targetMol
+      var result = targetMol.search(srcMol, options) || [];
+        // result is an array that contains all matching child objects (atoms and bonds)
+
+      // iterate the search result
+      for (var i = 0, l = result.length; i < l; ++i)
+      {
+        var obj = result[i];
+        if (obj instanceof Kekule.ChemStructureConnector)  // is bond
+          console.log(obj.getClassName(), obj.getBondOrder? obj.getBondOrder(): '');
+        else   // is atom
+          console.log(obj.getClassName(), obj.getLabel());
+      }
+      // hightlight matching part in targetMol
+      for (var i = 0, l = targetMol.getChildCount(); i < l; ++i)
+      {
+        var child = targetMol.getChildAt(i);
+        var color = (result.indexOf(child) >= 0)? 'red': null;
+        child.setRenderOption('color', color);
+      }
+      // report in console and web page
+      var msg = result.length? 'Found sub structure': 'Sub structure not found';
+      var sClass = result.length? 'Positive': 'Nagative';
+      console.log(msg);
+      var elem = document.getElementById('labelResult');
+      elem.className = sClass;
+      elem.innerHTML = msg;
+    }
+  </script>
+</head>
+<body>
+<h1>Kekule.js Tutorial Example: Compare and Search Molecule</h1>
+<p>
+  Input molecules in the following two editors.
+  Click on "Compare" button to check if two molecules have same structure.
+  Click on "Sub Structure Search" button two see if first molecule is a sub structure of the second one.
+  Open the console of web browser (usually by pressing F12) to see some of the output.
+</p>
+<div id="operButtons" data-widget="Kekule.Widget.ButtonGroup">
+  <button onclick="runOperation('compareMols')" data-widget="Kekule.Widget.Button">Compare</button>
+  <button onclick="runOperation('subStructSearch')" data-widget="Kekule.Widget.Button">Sub Structure Search</button>
+</div>
+<div style="display: block; clear: both"></div>
+<p id="labelResult">&nbsp;</p>
+<div id="composerSrc" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly" data-chem-obj="url(#srcMol)"></div>
+<div id="composerTarget" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly" data-chem-obj="url(#targetMol)"></div>
+<textarea id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+
+</body>
+</html>

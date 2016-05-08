@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kekule.js Tutorial Example: Creating Molecule</title>
+
+  <link rel="stylesheet" type="text/css" href="libs/kekule/themes/default/kekule.css" />
+  <style>
+    .Output
+    {
+      width: 400px;
+      height: 300px;
+      float: left;
+      border: 1px solid black;
+    }
+    #codeViewer
+    {
+      font-family: "Courier New", Courier, monospace;
+      white-space: pre;
+      width: 600px;
+    }
+  </style>
+
+  <script src="libs/raphael-min.2.0.1.js"></script>
+
+  <script src="libs/kekule/kekule.js?modules=io,chemWidget"></script>
+  <!--
+  <script src="../../../../src/kekule.js?min=false&modules=io,chemWidget"></script>
+  -->
+
+  <script>
+    var currMol;
+    function getCurrMol()
+    {
+      return currMol;
+    }
+    function getChemViewer()
+    {
+      return Kekule.Widget.getWidgetById('chemViewer');
+    }
+    function getCodeViewer()
+    {
+      return Kekule.Widget.getWidgetById('codeViewer');
+    }
+    function showMolecule(mol)
+    {
+      getChemViewer().setChemObj(mol);
+    }
+    function showCode(code)
+    {
+      getCodeViewer().setValue(code);
+    }
+    function runOperation(funcName)
+    {
+      var func = this[funcName];
+      var mol = func();
+      currMol = mol;
+      // show molecule in chem viewer
+      showMolecule(mol);
+      // show function code in text area
+      var code = func.toString();
+      showCode(code);
+    }
+
+    function createBasicMolecule()
+    {
+      // create molecule first
+      var mol = new Kekule.Molecule();
+      // add three atoms to molecule, property setter can be called cascadely
+      var a1 = (new Kekule.Atom()).setSymbol('C').setCoord2D({'x': -0.4, 'y': 0.23});
+      var a2 = (new Kekule.Atom()).setSymbol('C').setCoord2D({'x': 0.4, 'y': 0.23});
+      var a3 = (new Kekule.Atom()).setSymbol('O').setCoord2D({'x': 0, 'y': -0.46});
+      mol.appendNode(a1);
+      mol.appendNode(a2);
+      mol.appendNode(a3);
+      // add three bonds to molecule
+      var b1 = (new Kekule.Bond()).setBondOrder(1).setConnectedObjs([a1, a2]);
+      var b2 = (new Kekule.Bond()).setBondOrder(1).setConnectedObjs([a2, a3]);
+      var b3 = (new Kekule.Bond()).setBondOrder(1).setConnectedObjs([a3, a1]);
+      mol.appendConnector(b1);
+      mol.appendConnector(b2);
+      mol.appendConnector(b3);
+
+      return mol;
+    }
+
+    function removeChildren()
+    {
+      var mol = createBasicMolecule();
+      // remove atom O related bonds in molecule
+      mol.removeNodeAt(2);  // the atom index starts from 0
+        // or mol.removeNode(mol.getNodeAt(2));
+      mol.removeConnectorAt(1);
+        // or mol.removeConnector(mol.getConnectorAt(1));
+      mol.removeConnectorAt(2);
+      return mol;
+    }
+
+    function createMolWithMoreTypesOfNodes()
+    {
+      // create molecule
+      var mol = new Kekule.Molecule();
+
+      // add atoms to molecule
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0, y: 0.80}));
+      // explicit set mass number of an atom
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setMassNumber(13).setCoord2D({x: -0.69, y: 0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: -0.69, y: -0.40}));
+      // a pseudo atom
+      mol.appendNode(new Kekule.Pseudoatom().setAtomType(Kekule.PseudoatomType.ANY).setCoord2D({x: 0, y: -0.80}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0.69, y: -0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0.69, y: 0.40}));
+      // a variable atom
+      mol.appendNode(new Kekule.VariableAtom().setAllowedIsotopeIds(['F', 'Cl', 'Br']).setCoord2D({x: 1.39, y: 0.80}));
+
+      // add bonds to molecule
+      //   here a shortcut method appendBond(atomIndexes, bondOrder) is used
+      mol.appendBond([0, 1], 1);
+      mol.appendBond([1, 2], 2);
+      mol.appendBond([2, 3], 1);
+      mol.appendBond([3, 4], 2);
+      mol.appendBond([4, 5], 1);
+      mol.appendBond([5, 0], 2);
+      mol.appendBond([5, 6], 1);
+
+      return mol;
+    }
+
+    function createMolWithSubStructure()
+    {
+
+      // create molecule
+      var mol = new Kekule.Molecule();
+
+      // add atoms to molecule
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0, y: 0.80}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: -0.69, y: 0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: -0.69, y: -0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0, y: -0.80}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0.69, y: -0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 0.69, y: 0.40}));
+
+      // add bonds to molecule
+      //   here a shortcut method appendBond(atomIndexes, bondOrder) is used
+      mol.appendBond([0, 1], 1);
+      mol.appendBond([1, 2], 2);
+      mol.appendBond([2, 3], 1);
+      mol.appendBond([3, 4], 2);
+      mol.appendBond([4, 5], 1);
+      mol.appendBond([5, 0], 2);
+
+      // create a sub group
+      var sub = new Kekule.SubGroup();
+      // add atoms/bonds to sub structure
+      sub.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 1.39, y: 0.80}));
+      sub.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: 2.0, y: 0.40}));
+      sub.appendBond([0, 1], 1);
+      // atom 0 in subgroup connected with main body
+      sub.appendAnchorNode(sub.getNodeAt(0));
+      sub.setAbbr('Et');
+
+      // then add sub structure to molecule
+      mol.appendNode(sub);
+      // bond connecting subgroup
+      mol.appendConnector((new Kekule.Bond()).setBondOrder(1).setConnectedObjs([
+        mol.getNodeAt(5), sub.getNodeAt(0)
+      ]));
+
+      return mol;
+    }
+
+    function createMolWithMulticenterBond()
+    {
+      // create molecule
+      var mol = new Kekule.Molecule();
+
+      // add atoms to molecule
+      mol.appendNode(new Kekule.Atom().setSymbol('B').setExplicitHydrogenCount(2).setCoord2D({x: -1, y: 0}));
+      mol.appendNode(new Kekule.Atom().setSymbol('B').setExplicitHydrogenCount(2).setCoord2D({x: 1, y: 0}));
+      mol.appendNode(new Kekule.Atom().setSymbol('H').setCoord2D({x: 0, y: 1}));
+      mol.appendNode(new Kekule.Atom().setSymbol('H').setCoord2D({x: 0, y: -1}));
+      // add two multicenter bond: B-H-B
+      mol.appendBond([0, 2, 1], 1);
+      mol.appendBond([0, 3, 1], 1);
+
+      return mol;
+    }
+
+    function creatMolWithBondBondConnection()
+    {
+      // create molecule
+      var mol = new Kekule.Molecule();
+
+      var atomPt = new Kekule.Atom();  // Pt atom
+      mol.appendNode(atomPt.setSymbol('Pt').setCoord2D({x: 0.35, y: 0}));
+      mol.appendNode(new Kekule.Atom().setSymbol('Cl').setCoord2D({x: 0.35, y: 0.80}));
+      mol.appendNode(new Kekule.Atom().setSymbol('Cl').setCoord2D({x: 0.35, y: -0.80}));
+      mol.appendNode(new Kekule.Atom().setSymbol('Cl').setCoord2D({x: 1.14, y: 0}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: -0.45, y: 0.40}));
+      mol.appendNode(new Kekule.Atom().setSymbol('C').setCoord2D({x: -0.45, y: -0.40}));
+
+      mol.appendBond([1, 0], 1, Kekule.BondType.IONIC);  // Pt-Cl
+      mol.appendBond([2, 0], 1, Kekule.BondType.IONIC);  // Pt-Cl
+      mol.appendBond([3, 0], 1, Kekule.BondType.IONIC);  // Pt-Cl
+      var doubleBond = mol.appendBond([4, 5], 2);        // C=C
+      // create bond-bond connection
+      var coordinateBond = new Kekule.Bond();            // (C=C)-Pt
+      coordinateBond.setBondType(Kekule.BondType.COORDINATE);
+      coordinateBond.setConnectedObjs([doubleBond, atomPt]);
+      mol.appendConnector(coordinateBond);
+
+      return mol;
+    }
+
+    function loadMolFromData()
+    {
+      var cmlData = '<cml xmlns="http://www.xml-cml.org/schema"><molecule id="m1"><atomArray><atom id="a2" elementType="C" x2="7.493264658965051" y2="35.58088907877604"/><atom id="a3" elementType="O" x2="8.186084981992602" y2="35.18088907877604"/><atom id="a1" elementType="C" x2="6.800444335937501" y2="35.18088907877604"/></atomArray><bondArray><bond id="b2" order="S" atomRefs2="a2 a3"/><bond id="b1" order="S" atomRefs2="a2 a1"/></bondArray></molecule></cml>';
+      var mol = Kekule.IO.loadFormatData(cmlData, 'cml');
+        // or Kekule.IO.loadMimeData(cmlData, 'chemical/x-cml');
+      return mol;
+    }
+    function saveMolToData()
+    {
+      var mol = getCurrMol();
+      var data = Kekule.IO.saveFormatData(mol, 'cml');
+        // or Kekule.IO.saveMimeData(mol, 'chemical/x-cml');
+      console.log(data);
+      var data = Kekule.IO.saveFormatData(mol, 'mol');
+        // or Kekule.IO.saveMimeData(mol, 'chemical/x-mdl-molfile');
+      console.log(data);
+      var data = Kekule.IO.saveFormatData(mol, 'smi');
+        // or Kekule.IO.saveMimeData(mol, 'chemical/x-daylight-smiles');
+      console.log(data);
+      return mol;
+    }
+
+    function iterateMol()
+    {
+      var mol = getCurrMol();
+      if (mol)
+      {
+        // iterate all nodes(atoms)
+        for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+        {
+          var node = mol.getNodeAt(i);
+          console.log('node ' + i, node.getClassName(), node.getLabel());
+        }
+        // iterate all connectors(bonds)
+        for (var i = 0, l = mol.getConnectorCount(); i < l; ++i)
+        {
+          var connector = mol.getConnectorAt(i);
+          console.log('connector ' + i,
+            connector.getClassName(), connector.getBondOrder? connector.getBondOrder(): '?');
+        }
+      }
+      return mol;
+    }
+  </script>
+</head>
+<body>
+  <h1>Kekule.js Tutorial Example: Basic Operations of Molecule</h1>
+  <p>Open the console of web browser (usually by pressing F12) to see the output of some functions.</p>
+  <div id="operButtons1" data-widget="Kekule.Widget.ButtonGroup">
+    <button onclick="runOperation('createBasicMolecule')" data-widget="Kekule.Widget.Button">Create Basic Molecule</button>
+    <button onclick="runOperation('removeChildren')" data-widget="Kekule.Widget.Button">Remove Child Objects</button>
+    <button onclick="runOperation('createMolWithMoreTypesOfNodes')" data-widget="Kekule.Widget.Button">More Types of Nodes</button>
+    <button onclick="runOperation('createMolWithSubStructure')" data-widget="Kekule.Widget.Button">Molecule with Subgroup</button>
+    <button onclick="runOperation('createMolWithMulticenterBond')" data-widget="Kekule.Widget.Button">Diborane</button>
+    <button onclick="runOperation('creatMolWithBondBondConnection')" data-widget="Kekule.Widget.Button">Zeise's salt</button>
+  </div>
+  <div id="operButtons2" data-widget="Kekule.Widget.ButtonGroup">
+    <button onclick="runOperation('loadMolFromData')" data-widget="Kekule.Widget.Button">Load Molecule</button>
+    <button onclick="runOperation('saveMolToData')" data-widget="Kekule.Widget.Button">Save Molecule</button>
+    <button onclick="runOperation('iterateMol')" data-widget="Kekule.Widget.Button">Iterate Atoms/Bonds</button>
+  </div>
+  <div  style="display: block; clear: both"></div>
+  <textarea class="Output" id="codeViewer" readonly="true" data-widget="Kekule.Widget.TextArea"></textarea>
+  <div class="Output" id="chemViewer" data-widget="Kekule.ChemWidget.Viewer2D" data-predefined-setting="basic"></div>
+
+</body>
+</html>
