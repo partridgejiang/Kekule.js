@@ -2103,6 +2103,8 @@ Kekule.Scalar = Class.create(Kekule.ChemObject,
  * @param {String} id Id of this object.
  * @param {Class} itemBaseClass Base class of each item in list.
  *   If this value is null, any type of object can be inserted into list.
+ * @param {Bool} transparent If true, the parent object of children in list will not be the list itself,
+ *   but relay to parent of list.
  *
  * @property {Class} itemBaseClass Base class of each item in list.
  *   If this value is null, any type of object can be inserted into list.
@@ -2114,10 +2116,11 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjList',
 	/** @constructs */
-	initialize: function($super, id, itemBaseClass)
+	initialize: function($super, id, itemBaseClass, transparent)
 	{
 		$super(id);
 		this.setPropStoreFieldValue('itemBaseClass', itemBaseClass);
+		this._transparent = !!transparent;
 	},
 	/** @private */
 	initProperties: function()
@@ -2207,7 +2210,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	/** @private */
 	getItemParent: function()
 	{
-		return this.getParent() || this;
+		return this._transparent? this.getParent() || this: this;
 	},
 	/** @private */
 	changeAllItemsParent: function()
@@ -2451,7 +2454,7 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	initialize: function($super, id)
 	{
 		$super(id);
-		var list = new Kekule.ChemObjList(null, Kekule.ChemObject);
+		var list = new Kekule.ChemObjList(null, Kekule.ChemObject, true);  // create transparent list
 		list.setParent(this);
 		list.addEventListener('change', function()
 			{

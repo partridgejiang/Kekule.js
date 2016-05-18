@@ -351,11 +351,17 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				var objBox = Kekule.Render.ObjUtils.getContainerBox(containingChemObj, this.getCoordMode(), this.getAllowCoordBorrow());
 				//console.log('adjust inside obj size', objBox, this.isShown());
 			}
+
+			var oldObjCoord = containingChemObj.getCoordOfMode?
+				containingChemObj.getCoordOfMode(this.getCoordMode()) || {}:
+				{};
 			if (ratio && objBox)  // 2D and calc padding
 			{
+				/*
 				var oldObjCoord = containingChemObj.getCoordOfMode?
 					containingChemObj.getCoordOfMode(this.getCoordMode()) || {}:
 					{};
+				*/
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
 				//coord.y = spaceSize.y - /*(objBox.y2 - objBox.y1) / 2*/objBox.y2 - padding * ratio;
 				//coord.y = spaceSize.y - Math.abs(objBox.y2 - objBox.y1) / 2 - padding * ratio;
@@ -367,7 +373,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 			else
 			{
-				var oldObjCoord = containingChemObj.getCoordOfMode(this.getCoordMode()) || {};
+				//var oldObjCoord = containingChemObj.getCoordOfMode(this.getCoordMode()) || {};
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
 				coord.x -= (objBox.x2 + objBox.x1) / 2;
 				coord.y -= (objBox.y2 + objBox.y1) / 2;

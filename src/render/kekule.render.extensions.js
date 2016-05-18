@@ -536,6 +536,7 @@
 			return result;
 		}
 	});
+	Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.ChemObjList);
 
 	ClassEx.extend(Kekule.ChemSpaceElement,
 	/** @lends Kekule.ChemSpaceElement# */
