@@ -2264,6 +2264,23 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		var index = this.indexOf(childObj);
 		return (index >= 0)? this.getItemAt(index + 1): null;
 	},
+
+	/** @ignore */
+	getChildCount: function()
+	{
+		return this.getItemCount();
+	},
+	/** @ignore */
+	getChildAt: function(index)
+	{
+		return this.getItemAt(index);
+	},
+	/** @ignore */
+	indexOfChild: function(obj)
+	{
+		return this.indexOf(obj);
+	},
+
 	/**
 	 * Append obj to children array. If obj already inside, nothing will be done.
 	 * @param {Object} obj
