@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ring Perception Introduction</title>
+  <link rel="stylesheet" type="text/css" href="../styles/demoPages.css" />
+</head>
+
+<body>
+
+<p>Molecule ring perception is a common task in chemoinformatics system. Kekule.js provides built-in method to detect all rings, SSSR (smallest set of smallest rings) and even aromatic rings. The code is simple, suppose variable molecule is an instance of Kekule.StructureFragment:</p>
+<pre class="CodeBlock">
+var allRings = molecule.findAllRings();
+var sssr = molecule.findSSSR();
+var aromaticRings = molecule.perceiveAromaticRings();<br></pre>
+<p>Each result of three different methods is a ring array. Each element in array is a plain JavaScript object with fields:</p>
+<pre class="CodeBlock">
+nodes: Array of all nodes (atoms) in ring.
+connectors: Array of all connectors (bonds) in ring.</pre>		 
+<p>&nbsp;</p>
+</body>
+</html>

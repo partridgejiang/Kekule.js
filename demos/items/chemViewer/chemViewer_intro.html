@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Chem Viewer Introduction</title>
+<link rel="stylesheet" type="text/css" href="../styles/demoPages.css" />
+</head>
+
+<body>
+
+<p>ChemViewer is the most important widget to display molecules and other chemical objects in 2D or 3D mode. It can be used in stand-alone web application or embedded web page.</p>
+<p>To add a viewer widget, the easiest method is using the widget &quot;auto-launch&quot; feature describled in <a href="../../demoLauncher.html?id=autoLaunch" target="_blank">Auto-Launch demo</a>, for example:</p>
+<pre class="CodeBlock">
+&lt;div&#32;id="chemViewer2D"&#32;style=&quot;width:600px;height:400px&quot;
+  data-widget="Kekule.ChemWidget.Viewer2D"&gt;&lt;/div&gt; &lt;!-- a 2D viewer --&gt;
+&lt;div&#32;id="chemViewer3D"&#32;style=&quot;width:600px;height:400px&quot;
+ &#32;data-widget="Kekule.ChemWidget.Viewer3D"&gt;&lt;/div&gt; &lt;!-- a 3D viewer --&gt;
+</pre>
+<p>then refer to them in JavaScript code:</p>
+<pre class="CodeBlock">
+var chemViewer2D&#32;=&#32;Kekule.Widget.getWidgetById('chemViewer2D');
+var chemViewer3D&#32;=&#32;Kekule.Widget.getWidgetById('chemViewer3D');
+</pre>
+<p>Of course, you can also create a new viewer:</p>
+<pre class="CodeBlock">
+var viewer = new Kekule.ChemWidget.Viewer2D(document);
+viewer.appendToElem(document.body);
+</pre>
+<p>To load an object in viewer:</p>
+<pre class="CodeBlock">
+viewer.load(molecule);
+</pre>
+<p>or:</p>
+<pre class="CodeBlock">
+viewer.setChemObj(molecule);
+</pre>
+<p>By the way, molecule and other chem object data can also be embedded in HTML, just see <a href="../../demoLauncher.html?id=autoLaunch" target="_blank">this demo.</a></p>
+</body>
+</html>

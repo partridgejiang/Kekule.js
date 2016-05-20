@@ -1,0 +1,27 @@
+{
+  "name": "kekule",
+  "version": "0.0.13",
+  "description": "Kekule.js library for Node",
+  "author": {
+    "name": "Chen Jiang"
+  },
+  "main": "kekule.js",
+  "maintainers": [
+    {
+      "name": "Chen Jiang",
+      "email": "partridge@cpu.edu.cn"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/partridgejiang/Kekule.js/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",      
+    }
+  ],
+  "engines": {
+    "node": ">=0.10"
+  },    
+  "directories": {}
+}

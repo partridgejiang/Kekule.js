@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html manifest1="chemViewer.manifest1">
+<head>
+	<meta charset="UTF-8">
+	<title>Splitted Chem Viewer Demo</title>
+
+	<script src="../../libs/Three.js"></script>
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../libs/kekule/kekule.js?module=chemWidget"></script>
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+
+	<script id="CycloHex-Chair" type="chemical/x-mdl-molfile">
+Untitled
+  Kekule 12.011231217083D
+
+ 18 18  0  0  0  0  0  0  0  0999 V2000
+    0.7368   -0.1051    1.2731 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7093   -0.5794    1.1576 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4630    0.1738    0.0648 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7367    0.0965   -1.2754 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7095    0.5709   -1.1599 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4632   -0.1823   -0.0672 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2695   -0.7476    2.0094 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7291    0.9576    1.6037 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7142   -1.6658    0.9159 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2177   -0.3847    2.1284 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4763   -0.2728   -0.0479 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5302    1.2440    0.3629 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7429   -0.9588   -1.6287 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2643    0.7610   -1.9959 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2229    0.4034   -2.1332 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7010    1.6519   -0.8949 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5578   -1.2505   -0.3650 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.4647    0.2883    0.0523 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  6  1  0
+  1  7  1  0
+  1  8  1  0
+  2  3  1  0
+  2  9  1  0
+  2 10  1  0
+  3  4  1  0
+  3 11  1  0
+  3 12  1  0
+  4  5  1  0
+  4 13  1  0
+  4 14  1  0
+  5  6  1  0
+  5 15  1  0
+  5 16  1  0
+  6 17  1  0
+  6 18  1  0
+M  END
+	</script>
+	<script id="CycloHex-Boat" type="chemical/x-mdl-molfile">
+
+  Chem3D  09120808303D
+
+ 18 18  0  0  0  0  0  0  0  0999 V2000
+    4.4350    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9570    0.0340   -0.4210 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0660    0.5100    0.7370 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2630   -0.3710    1.9810 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7400   -0.4060    2.4020 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5610    0.5730    1.4590 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.8070   -1.0490   -0.0240 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.0380    0.6220   -0.6990 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8400    0.7310   -1.2820 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.6420   -0.9880   -0.7280 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3280    1.5620    0.9910 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0000    0.4610    0.4210 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6540    0.0380    2.8180 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9250   -1.4070    1.7500 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8360   -0.0750    3.4600 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1350   -1.4420    2.3010 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1340    1.6000    1.5070 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6290    0.6010    1.7710 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  6  1  0
+  1  7  1  0
+  1  8  1  0
+  2  3  1  0
+  2  9  1  0
+  2 10  1  0
+  3  4  1  0
+  3 11  1  0
+  3 12  1  0
+  4  5  1  0
+  4 13  1  0
+  4 14  1  0
+  5  6  1  0
+  5 15  1  0
+  5 16  1  0
+  6 17  1  0
+  6 18  1  0
+M  END
+	</script>
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		#chemViewer1, #chemViewer2
+		{
+			border: none;
+			margin: 0;
+			float: left;
+		}
+	</style>
+
+	<script>
+		var viewerElemIds = ['chemViewer1', 'chemViewer2'];
+		var chemViewers = [];
+		function init()
+		{
+			var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+			for (var i = 0, l = viewerElemIds.length; i < l; ++i)
+			{
+				var elem = document.getElementById(viewerElemIds[i]);
+				chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+				chemViewer.setEnableToolbar(true)
+					.setToolButtons([
+							BNS.loadFile, BNS.molDisplayType, BNS.molHideHydrogens,
+							BNS.zoomIn, BNS.zoomOut,
+							BNS.rotateX, BNS.rotateY, BNS.rotateZ, BNS.reset
+						]);
+				chemViewer.setAutoSize(false).setPadding(20);
+				chemViewers.push(chemViewer);
+			}
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var width = (dim.width - 10) / chemViewers.length;
+			for (var i = 0, l = chemViewers.length; i < l; ++i)
+			{
+				chemViewers[i].setWidth(width + 'px').setHeight(dim.height + 'px');
+			}
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div id="chemViewer1" style="width:100%;height:650px" data-chem-obj="url(#CycloHex-Chair)"></div>
+	<div id="chemViewer2" style="width:100%;height:650px" data-chem-obj="url(#CycloHex-Boat)"></div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html manifest1="chemViewer.manufest1">
+<head>
+	<meta charset="utf-8">
+	<title>Embedded Chem Viewer Demo</title>
+
+	<script src="../../libs/Three.js"></script>
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+  
+	<script src="../../libs/kekule/kekule.js?module=chemWidget"></script>
+	<!--
+	<script src="../../../../src/kekule.js?modules=chemWidget,io&min=false"></script>
+	-->
+
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+	<style>
+		.BlockViewer
+		{
+			margin: 0.5em auto;
+		}
+	</style>
+
+<script id="CycloHex-Chair" type="chemical/x-mdl-molfile">
+Untitled
+  Kekule 12.011231217083D
+
+ 18 18  0  0  0  0  0  0  0  0999 V2000
+    0.7368   -0.1051    1.2731 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7093   -0.5794    1.1576 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4630    0.1738    0.0648 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7367    0.0965   -1.2754 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7095    0.5709   -1.1599 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4632   -0.1823   -0.0672 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2695   -0.7476    2.0094 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7291    0.9576    1.6037 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7142   -1.6658    0.9159 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2177   -0.3847    2.1284 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4763   -0.2728   -0.0479 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5302    1.2440    0.3629 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7429   -0.9588   -1.6287 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2643    0.7610   -1.9959 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2229    0.4034   -2.1332 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7010    1.6519   -0.8949 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5578   -1.2505   -0.3650 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.4647    0.2883    0.0523 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  6  1  0
+  1  7  1  0
+  1  8  1  0
+  2  3  1  0
+  2  9  1  0
+  2 10  1  0
+  3  4  1  0
+  3 11  1  0
+  3 12  1  0
+  4  5  1  0
+  4 13  1  0
+  4 14  1  0
+  5  6  1  0
+  5 15  1  0
+  5 16  1  0
+  6 17  1  0
+  6 18  1  0
+M  END
+</script>
+
+</head>
+<body>
+<h2>Basic Usage</h2>
+<p>Chem viewer widget can be embedded in web page to display molecules and other chem objects. Just like using &lt;img src=&quot;url&quot;&gt; tag to display an image file, chem viewer can load and display a molecule file with ease:</p>
+<pre class="CodeBlock">&lt;span&#32;id="viewer2D1"&#32;style=&quot;display:block&quot; data-widget="Kekule.ChemWidget.Viewer2D"
+ &#32;data-chem-obj="url(../../chemFiles/benzene.mol)"&#32;data-predefined-setting="basic"&#32;data-auto-size="true"&gt;&lt;/span&gt;
+</pre>
+<p>Note the &quot;data-chem-obj&quot; attribute, url refers to a external chem file. If the web server is properly configurated and a proper MIME type (&quot;chemical/x-mdl-molfile&quot; for MOL format file) is returned for .mol file, the molecule will be displayed in browser. The result:</p>
+<span class="BlockViewer" id="viewer2D1" style="display:block" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true"></span>
+<p>You can even add a caption to it:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block&quot; data-widget="Kekule.ChemWidget.Viewer2D"
+ &#32;data-chem-obj="url(../../chemFiles/benzene.mol)"&#32;data-predefined-setting="basic"&#32;data-auto-size="true" data-caption=&quot;Benzene&quot;&gt;&lt;/span&gt;
+</pre>
+<span class="BlockViewer" style="display:block" data-widget="Kekule.ChemWidget.Viewer2D"
+  data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true" data-show-caption="true" data-caption="Benzene"></span>
+
+<h2>Inline Embedding</h2>
+<p>The molecule can also be embedded inline, e.g. <span id="viewer2D2" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true"></span> Just remove style=&quot;display:block&quot; attribute. Of course, you can change vertical alignment by usual CSS vertical-align property: <span id="viewer2D3" style="vertical-align:middle" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="basic" data-auto-size="true"></span>, or change zoom level: <span id="viewer2D4" style="vertical-align:middle" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="basic" data-auto-size="true" data-zoom="0.5"></span>. HTML code of the last viewer is:</p>
+<pre class="CodeBlock">&lt;span id=&quot;viewer2D4&quot; style=&quot;vertical-align:middle&quot; data-widget=&quot;Kekule.ChemWidget.Viewer2D&quot;
+  data-chem-obj=&quot;url(../../chemFiles/pyrrole.mol)&quot; data-predefined-setting=&quot;basic&quot; data-auto-size=&quot;true&quot; data-zoom=&quot;0.5&quot;&gt;&lt;/span&gt;
+</pre>
+<h2>Set Explicit Size of Viewer</h2>
+<p>All the  viewers above are set with attribute data-auto-size to true, so the widge size is calculated and set by molecule. You can also turn off auto-size and set size of widget explicitly by CSS, e.g.:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;border:1px solid black;width:300px;height:300px&quot; data-widget="Kekule.ChemWidget.Viewer2D"
+ &#32;data-chem-obj="url(../../chemFiles/acenaphthylene.mol)"&#32;data-predefined-setting="basic" data-caption=&quot;acenaphthylene&quot;&gt;&lt;/span&gt;
+</pre>
+<p>result (here a border is added to show the actual dimension of viewer):</p>
+<span class="BlockViewer" style="display:block;border:1px solid black;width:300px;height:300px" data-widget="Kekule.ChemWidget.Viewer2D"
+  data-chem-obj="url(../../chemFiles/acenaphthylene.mol)" data-predefined-setting="basic" data-caption="acenaphthylene"></span>
+<p>If you want molecule and other chem object full fill the viewer, just set data-autofit attribute to true:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;border:1px solid black;width:300px;height:300px&quot; data-widget="Kekule.ChemWidget.Viewer2D"
+ &#32;data-chem-obj="url(../../chemFiles/acenaphthylene.mol)"&#32;data-predefined-setting="basic" data-autofit=&quot;true&quot; data-caption=&quot;acenaphthylene&quot;&gt;&lt;/span&gt;
+</pre>
+<span class="BlockViewer" style="display:block;border:1px solid black;width:300px;height:300px" data-widget="Kekule.ChemWidget.Viewer2D"
+  data-chem-obj="url(../../chemFiles/acenaphthylene.mol)" data-predefined-setting="basic" data-autofit="true" data-caption="acenaphthylene"></span>
+
+<h2>Static Viewer</h2>
+<p>Web page readers can interact with viewer widget defaultly, including zoom, move and save object. If those interactions are considered unneeded, you can disable it easily:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block&quot; data-widget="Kekule.ChemWidget.Viewer2D"
+ &#32;data-chem-obj="url(../../chemFiles/pyrrole.mol)"&#32;data-predefined-setting="static"&#32;data-auto-size="true"&gt;&lt;/span&gt;
+</pre>
+<span class="BlockViewer"  style="display:block" data-widget="Kekule.ChemWidget.Viewer2D"
+  data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="static" data-auto-size="true"></span>
+<h2>3D Viewer Widget</h2>
+<p>3D viewer is similiar to 2D viewer with a little difference: it can not be auto-sized for some consideration, you must set its size explicitly. e.g.:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;width:400px;height:400px&quot; data-widget="Kekule.ChemWidget.Viewer3D"
+ &#32;data-chem-obj="url(../../chemFiles/3D/taxol.mol)"&#32;data-predefined-setting="basic" data-caption=&quot;taxol&quot;&gt;&lt;/span&gt;
+</pre>
+<span class="BlockViewer" style="display:block;width:400px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D"
+  data-chem-obj="url(../../chemFiles/3D/taxol.mol)" data-predefined-setting="basic"  data-caption="taxol"></span>
+<p>Embedding it inline is also possible: <span style="vertical-align:middle;width:150px;height:150px" data-widget="Kekule.ChemWidget.Viewer3D"
+  data-chem-obj="url(../../chemFiles/3D/methane.mol)" data-predefined-setting="basic"></span></p>
+<h2>Internal Chem Object Data</h2>
+<p>Besides using external chem file, you can even store chem object data inside a web page itself. Kekule.js supports storing chem formatted data inside an HTML tag (usually a &lt;script&gt; tag) with id. For example, the following code stores a mol2000 format molecule data inside a &lt;script&gt; tag:</p>
+<pre class="CodeBlock">
+&lt;script&#32;id="CycloHex-Chair"&#32;type="chemical/x-mdl-molfile"&gt;<br><br>&#32;&#32;Chem3D&#32;Core&#32;12.011231217083D<br><br>&#32;18&#32;18&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0999&#32;V2000<br>&#32;&#32;&#32;&#32;0.7368&#32;&#32;&#32;-0.1051&#32;&#32;&#32;&#32;1.2731&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-0.7093&#32;&#32;&#32;-0.5794&#32;&#32;&#32;&#32;1.1576&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-1.4630&#32;&#32;&#32;&#32;0.1738&#32;&#32;&#32;&#32;0.0648&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-0.7367&#32;&#32;&#32;&#32;0.0965&#32;&#32;&#32;-1.2754&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;0.7095&#32;&#32;&#32;&#32;0.5709&#32;&#32;&#32;-1.1599&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;1.4632&#32;&#32;&#32;-0.1823&#32;&#32;&#32;-0.0672&#32;C&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;1.2695&#32;&#32;&#32;-0.7476&#32;&#32;&#32;&#32;2.0094&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;0.7291&#32;&#32;&#32;&#32;0.9576&#32;&#32;&#32;&#32;1.6037&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-0.7142&#32;&#32;&#32;-1.6658&#32;&#32;&#32;&#32;0.9159&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-1.2177&#32;&#32;&#32;-0.3847&#32;&#32;&#32;&#32;2.1284&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-2.4763&#32;&#32;&#32;-0.2728&#32;&#32;&#32;-0.0479&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-1.5302&#32;&#32;&#32;&#32;1.2440&#32;&#32;&#32;&#32;0.3629&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-0.7429&#32;&#32;&#32;-0.9588&#32;&#32;&#32;-1.6287&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;-1.2643&#32;&#32;&#32;&#32;0.7610&#32;&#32;&#32;-1.9959&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;1.2229&#32;&#32;&#32;&#32;0.4034&#32;&#32;&#32;-2.1332&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;0.7010&#32;&#32;&#32;&#32;1.6519&#32;&#32;&#32;-0.8949&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;1.5578&#32;&#32;&#32;-1.2505&#32;&#32;&#32;-0.3650&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;&#32;&#32;2.4647&#32;&#32;&#32;&#32;0.2883&#32;&#32;&#32;&#32;0.0523&#32;H&#32;&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0&#32;&#32;0<br>&#32;&#32;1&#32;&#32;2&#32;&#32;1&#32;&#32;0<br>&#32;&#32;1&#32;&#32;6&#32;&#32;1&#32;&#32;0<br>&#32;&#32;1&#32;&#32;7&#32;&#32;1&#32;&#32;0<br>&#32;&#32;1&#32;&#32;8&#32;&#32;1&#32;&#32;0<br>&#32;&#32;2&#32;&#32;3&#32;&#32;1&#32;&#32;0<br>&#32;&#32;2&#32;&#32;9&#32;&#32;1&#32;&#32;0<br>&#32;&#32;2&#32;10&#32;&#32;1&#32;&#32;0<br>&#32;&#32;3&#32;&#32;4&#32;&#32;1&#32;&#32;0<br>&#32;&#32;3&#32;11&#32;&#32;1&#32;&#32;0<br>&#32;&#32;3&#32;12&#32;&#32;1&#32;&#32;0<br>&#32;&#32;4&#32;&#32;5&#32;&#32;1&#32;&#32;0<br>&#32;&#32;4&#32;13&#32;&#32;1&#32;&#32;0<br>&#32;&#32;4&#32;14&#32;&#32;1&#32;&#32;0<br>&#32;&#32;5&#32;&#32;6&#32;&#32;1&#32;&#32;0<br>&#32;&#32;5&#32;15&#32;&#32;1&#32;&#32;0<br>&#32;&#32;5&#32;16&#32;&#32;1&#32;&#32;0<br>&#32;&#32;6&#32;17&#32;&#32;1&#32;&#32;0<br>&#32;&#32;6&#32;18&#32;&#32;1&#32;&#32;0<br>M&#32;&#32;END<br>&lt;/script&gt;
+</pre>
+<p>Note the id and type attributes are essential to refer to resource and recognize the format. Then, viewer widget can load it by id:</p>
+<pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;width:300px;height:200px&quot; data-widget="Kekule.ChemWidget.Viewer3D"
+ &#32;data-chem-obj="url(#CycloHex-Chair)"&#32;data-predefined-setting="basic"&gt;&lt;/span&gt;
+</pre>
+<span class="BlockViewer" style="display:block;width:300px;height:200px" data-widget="Kekule.ChemWidget.Viewer3D"
+  data-chem-obj="url(#CycloHex-Chair)" data-predefined-setting="basic"></span>
+
+<p>Or even embed JSON format data inside viewer's tag directly:</p>
+<p class="CodeBlock">&lt;span style=&quot;display:block;width:300px;height:200px&quot; data-widget=&quot;Kekule.ChemWidget.Viewer3D&quot; data-predefined-setting=&quot;basic&quot;<br>
+data-chem-obj='{&quot;ctab&quot;:{&quot;nodes&quot;:[{&quot;__type__&quot;:&quot;Kekule.Atom&quot;,&quot;coord3D&quot;:{&quot;x&quot;:-0.3586,&quot;y&quot;:0,&quot;z&quot;:-0.1337,&quot;__type__&quot;:&quot;object&quot;}<br>
+... (more JSON
+data)...<br>&quot;__type__&quot;:&quot;Kekule.StructureConnectionTable&quot;},&quot;__type__&quot;:&quot;Kekule.Molecule&quot;}' &gt;&lt;/span&gt;</p>
+<span class="BlockViewer" style="display:block;width:300px;height:200px" data-widget="Kekule.ChemWidget.Viewer3D" data-predefined-setting="basic"
+  data-chem-obj='{"ctab":{"nodes":[{"__type__":"Kekule.Atom","coord3D":{"x":-0.3586,"y":0,"z":-0.1337,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","coord3D":{"x":1.0564,"y":0,"z":-0.1337,"__type__":"object"},"charge":0,"isotopeId":"O"},{"__type__":"Kekule.Atom","coord3D":{"x":-0.6779,"y":-0.953,"z":0.3397,"__type__":"object"},"charge":0,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-0.6779,"y":0.953,"z":0.3397,"__type__":"object"},"charge":0,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-0.6779,"y":0,"z":-1.1978,"__type__":"object"},"charge":0,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":1.3358,"y":0,"z":0.7858,"__type__":"object"},"charge":0,"isotopeId":"H"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,4]},{"__type__":"Kekule.Bond","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,5]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}' ></span>
+<h2>Summary</h2>
+<p>With Kekule.js, molecule and even other chemical object can be drawn from raw data directly on web page. To web page authors, the annoying process of converting chemical file into image is totally unessential now. To web page readers, since the raw data is retained, they can save chemical object to file and get ready-to-use data immediately.  Keeping the raw data is also quite helpful for automated processing system to analysis chemical information.</p>
+</body>
+</html>

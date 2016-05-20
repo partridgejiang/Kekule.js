@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html manifest1="dataTable.manifest1">
+<head>
+	<meta charset="UTF-8">
+	<title>Data Table Demo</title>
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../libs/kekule/kekule.js?modules=widget,chemWidget"></script>
+	<Script src="dataTable.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+</head>
+
+<body>
+	<p>
+	  This page demonstrates the usage of data table widget to display chemical data. Note that the data of bp/mp or freezing is calculated from molecule structure rather than from experiment.
+	</p>
+	<div>
+		<div id="pageNav" data-widget="Kekule.Widget.PageNavigator"></div>
+	</div>
+	<div>
+		<div id="dataTable" data-widget="Kekule.Widget.DataTable" data-enable-head-interaction="true" data-enable-active-row="true" data-oper-col-show-mode="hover"></div>
+	</div>
+</body>
+</html>

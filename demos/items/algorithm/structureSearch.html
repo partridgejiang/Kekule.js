@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html manifest1="structureSearch.manifest1">
+<head>
+	<meta charset="UTF-8">
+	<title>Sub Structure Search</title>
+
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+	<style>
+		body
+		{
+			font-family: 'Microsoft Sans Serif' , Arial, Helvetica, Verdana;
+		}
+		#searchPanel
+		{
+			overflow: hidden;
+		}
+		#searchOptionPanel, #composerSearch
+		{
+			margin: 0.5em 0.5em;
+			float: left;
+		}
+		#composerSearch
+		{
+			width: 600px;
+			height: 400px;
+		}
+
+		#searchOptionPanel
+		{
+			margin-top: 2em;
+			padding: 1em;
+			padding-top: 0.2em;
+			border: 1px dotted #666;
+			line-height: 2;
+		}
+	</style>
+
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../libs/kekule/kekule.js?modules=chemWidget,algorithm"></script>
+	<!--
+	<script src="../../../../src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
+	-->
+
+
+<script name="ethane" id="ethane" type="chemical/x-mdl-molfile">
+Untitled Document-1
+  ChemDraw11231215572D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4125   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250    0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8250   -0.7145    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  1  3  1  0
+  1  4  1  0
+  2  5  1  0
+  2  6  1  0
+M  END
+</script>
+<script name="ethyne" id="ethyne" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  ChemDraw11231215592D
+
+  4  3  0  0  0  0  0  0  0  0999 V2000
+   -0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4125    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2375    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2375    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  3  0
+  1  3  1  0
+  2  4  1  0
+M  END
+</script>
+<script name="2-phenylpropane" id="2-phenylpropane" type="chemical/x-mdl-molfile">
+Untitled Document-3
+  ChemDraw11231216002D
+
+  9  9  0  0  0  0  0  0  0  0999 V2000
+   -0.7145   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    1.0313    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145    1.4438    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  2  3  1  0
+  3  4  2  0
+  4  5  1  0
+  5  6  2  0
+  6  1  1  0
+  6  7  1  0
+  7  8  1  0
+  7  9  1  0
+M  END
+</script>
+<script name="benzylBromide" id="benzylBromide" type="chemical/x-mdl-molfile">
+Untitled Document-4
+  ChemDraw11231216022D
+
+  8  8  0  0  0  0  0  0  0  0999 V2000
+   -1.0313   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2062   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2062    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2062    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0313    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4438    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0313    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4438    0.7145    0.0000 Br  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  2  3  1  0
+  3  4  2  0
+  4  5  1  0
+  5  6  2  0
+  6  1  1  0
+  3  7  1  0
+  7  8  1  0
+M  END
+</script>
+
+<script name="cyclohexane" id="cyclohexane" type="chemical/x-mdl-molfile">
+Untitled Document-5
+  ChemDraw11231216312D
+
+  6  6  0  0  0  0  0  0  0  0999 V2000
+   -0.7145    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+M  END
+</script>
+
+<script name="cisDiEtCyclohexane" id="cisDiEtCyclohexane" type="chemical/x-mdl-molfile">
+unnamed
+  Kekule  03121521052D
+
+ 10 10  0  0  0  0  0  0  0  0999 V2000
+   10.8022   35.7769    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+   10.8022   36.5769    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+   10.1093   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.1093   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  1  0  0  0
+  2  5  1  0  0  0  0
+  2  6  1  1  0  0  0
+  3  7  1  0  0  0  0
+  4  8  1  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  1  0  0  0  0
+  7  9  1  0  0  0  0
+M  END
+</script>
+
+<script name="transDiEtCyclohexane1" id="transDiEtCyclohexane1" type="chemical/x-mdl-molfile">
+unnamed
+  Kekule  03121521042D
+
+ 10 10  0  0  0  0  0  0  0  0999 V2000
+   10.8022   36.5769    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+   10.8022   35.7769    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+   10.1093   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.1093   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  6  0  0  0
+  2  5  1  0  0  0  0
+  2  6  1  1  0  0  0
+  3  7  1  0  0  0  0
+  4  8  1  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  1  0  0  0  0
+  7  9  1  0  0  0  0
+M  END
+</script>
+
+<script name="transDiEtCyclohexane2" id="transDiEtCyclohexane2" type="chemical/x-mdl-molfile">
+unnamed
+  Kekule  03121521052D
+
+ 10 10  0  0  0  0  0  0  0  0999 V2000
+   10.8022   36.5769    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+   10.8022   35.7769    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+   10.1093   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   36.9769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.1093   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.4950   35.3769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   36.5769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4165   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.1878   35.7769    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  1  0  0  0
+  2  5  1  0  0  0  0
+  2  6  1  6  0  0  0
+  3  7  1  0  0  0  0
+  4  8  1  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  1  0  0  0  0
+  7  9  1  0  0  0  0
+M  END
+</script>
+
+<script name="transDimethylheptadiene" id="transDimethylheptadiene" type="chemical/x-mdl-molfile">
+unnamed
+  Kekule  03121521072D
+
+  9  8  0  0  0  0  0  0  0  0999 V2000
+   10.0011   36.8969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.6939   36.4969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.3083   36.4969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   11.3868   36.8969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.6939   35.6969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.6155   36.8969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.3083   35.6969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   12.0796   36.4969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    7.9227   36.4969    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  1  3  1  0  0  0  0
+  2  4  1  0  0  0  0
+  2  5  1  0  0  0  0
+  3  6  2  0  0  0  0
+  3  7  1  0  0  0  0
+  4  8  1  0  0  0  0
+  6  9  1  0  0  0  0
+M  END
+</script>
+
+
+    <script>
+			var gridMol;
+
+			function $(id)
+			{
+				return document.getElementById(id);
+			}
+
+			function fillGrid(molGrid)
+			{
+				var molUris= [
+					'#ethane', '#ethyne', '#2-phenylpropane', '#benzylBromide', '#cyclohexane',
+					'#cisDiEtCyclohexane', '#transDiEtCyclohexane1', '#transDiEtCyclohexane2', '#transDimethylheptadiene'
+				];
+				for (var i = 0, l = molUris.length; i < l; ++i)
+				{
+					var uri = molUris[i];
+					var resStr = 'url(' + uri + ')';
+
+					Kekule.PredefinedResReferer.loadResource(resStr, function(resInfo, success)
+					{
+						if (success)
+						{
+							var chemObj = Kekule.IO.loadTypedData(resInfo.data, resInfo.resType, resInfo.resUri);
+							gridMol.addChemObj(chemObj);
+						}
+					}, null, document);
+				}
+			}
+			function selectGridMol(e)
+			{
+				var target = e.widget;
+				if (target && target.getChemObj)
+				{
+					var obj = target.getChemObj();
+					if (obj)
+					Kekule.Widget.getWidgetById('composerSearch').setChemObj(obj.clone());
+				}
+			}
+
+			function highlightStructObjs(index, parentMol, highlightObjs, highlightColor)
+			{
+				var color = highlightColor || 'red';
+				if (!highlightObjs)
+					highlightObjs = [];
+				for (var i = 0, l = parentMol.getChildCount(); i < l; ++i)
+				{
+					var o = parentMol.getChildAt(i);
+					if (highlightObjs.indexOf(o) >= 0)
+						o.setRenderOption('color', color);
+					else
+						o.setRenderOption('color', null);
+				}
+				var w = gridMol.getChildWidgets()[index];
+				if (w && w.repaint)
+					w.repaint();
+			}
+			function highlightStructRings(index, parentMol, rings, highlightColor)
+			{
+				var highlightObjs = [];
+				for (var i = 0, l = rings.length; i < l; ++i)
+				{
+					var part = rings[i];
+					highlightObjs = highlightObjs.concat(part.nodes).concat(part.connectors);
+				}
+				return highlightStructObjs(index, parentMol, highlightObjs, highlightColor);
+			}
+
+			function getAllMols()
+			{
+				var chemObjs = gridMol.getChemObjs();
+				var result = [];
+				for (var i = 0, l = chemObjs.length; i < l; ++i)
+				{
+					var mol = Kekule.ChemStructureUtils.getTotalStructFragment(chemObjs[i]);
+					//if (mol)
+					result.push(mol);
+				}
+				return result;
+			}
+
+			function search()
+			{
+				var composer = Kekule.Widget.getWidgetById('composerSearch');
+				var targetMol = composer.exportObj(Kekule.StructureFragment);
+				if (targetMol)
+				{
+					var ops = {};
+                    var level;
+                    var CL = Kekule.StructureComparationLevel;
+                    var levelValue = $('listCompareLevel').value;
+                    if (levelValue === 'Skeletal')
+                        level = CL.SKELETAL;
+                    else if (levelValue === 'Constitution')
+                        level = CL.CONSTITUTION;
+                    else if (levelValue === 'Configuration')
+                        level = CL.CONFIGURATION;
+                    else
+                        level = CL.EXACT;
+                    ops.level = level;
+                    ops.compareCharge = !($('checkboxIgnoreCharge').checked);
+                    /*
+					if ($('checkboxIgnoreBondOrder').checked)
+						ops.ignoreBondOrder = true;
+					*/
+                    ops.compareMass = !($('checkboxIgnoreMass').checked);
+                    /*
+					if ($('checkboxExactly').checked)
+						ops.exactMatch = true;
+					*/
+                    ops.exactMatch = $('checkboxExactly').checked;
+
+					var mols = this.getAllMols();
+					for (var i = 0, l = mols.length; i < l; ++i)
+					{
+						var mol = mols[i];
+						if (mol)
+						{
+							{
+								var searchResult = mol.search(targetMol, ops);
+								if (searchResult)
+								{
+									//console.log(searchResult);
+									highlightStructObjs(i, mol, searchResult);
+								}
+								else
+									highlightStructObjs(i, mol, null);
+							}
+						}
+					}
+				}
+			}
+
+			function init()
+			{
+				gridMol = Kekule.Widget.getWidgetById('gridMol');
+				fillGrid(gridMol);
+				gridMol.addEventListener('dblclick', selectGridMol)
+				var btn = Kekule.Widget.getWidgetById('btnSearch');
+				btn.addEventListener('execute', search);
+			}
+
+			Kekule.X.domReady(init);
+    </script>
+</head>
+<body>
+	<div id="searchPanel">
+		<p>Draw molecule structure and click "search" button to search sub structure in grid below.</p>
+		<div id="composerSearch" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,compact,singleObj"></div>
+		<fieldset id="searchOptionPanel">
+			<legend>Search Options</legend>
+            <label for="listCompareLevel">Comparation Level: </label><br />
+            <select id="listCompareLevel">
+                <option value="Skeletal">Skeletal</option>
+                <option value="Constitution" selected="selected">Constitution</option>
+				<!--
+                <option value="Configuration">Configuration</option>
+				-->
+            </select><br />
+			<input type="checkbox" id="checkboxExactly" /><label for="checkboxExactly">Exactly structure</label><br />
+			<input type="checkbox" id="checkboxIgnoreCharge" checked="true" /><label for="checkboxIgnoreCharge">Ignore charge</label><br />
+			<input type="checkbox" id="checkboxIgnoreMass" checked="true" /><label for="checkboxIgnoreMass">Ignore Mass Number</label><br />
+			<button id="btnSearch" data-widget="Kekule.Widget.Button">Search</button>
+		</fieldset>
+	</div>
+
+	<hr />
+
+	<div id="gridMol" data-widget="Kekule.ChemWidget.ViewerGrid2D" data-enable-add="true" data-show-caption="false" data-auto-size="true" data-cell-width="150px" data-cell-height="150px"></div>
+</body>
+</html>

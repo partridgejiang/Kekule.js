@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html manifest1="commonWidgets.manifest1">
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Common Widgets Demo</title>
+
+  <script src="../../libs/kekule/kekule.js?modules=widget&min=true"></script>
+
+  <!--
+  <script src="../../../../src/kekule.js?modules=widget&min=false"></script>
+  -->
+	
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+  <link rel="stylesheet" type="text/css" href="../styles/demoPages.css" />
+  <style>
+    #tabViewStage
+    {
+      display: block;
+      /*width: 90%;*/
+      float: left;
+      margin: 1em auto;
+    }
+    #tabViewStage .K-TabView-Page
+    {
+      overflow: hidden;
+    }
+    fieldset
+    {
+      float: left;
+      clear: left;
+    }
+    textarea
+    {
+      vertical-align: top;
+    }
+
+    #objInspector
+    {
+      float: right;
+    }
+
+    .TextEditor
+    {
+      width: 350px;
+    }
+    .TextEditor textarea
+    {
+      height: 130px;
+    }
+
+    .GlyphButton .K-Pri-Glyph-Content
+    {
+      width: 16px;
+      height: 16px;
+      background-repeat: no-repeat;
+    }
+    .gButton1 .K-Pri-Glyph-Content
+    {
+      background-image: url("../styles/kekule/icons16/text_align_left.png");
+    }
+    .gButton2 .K-Pri-Glyph-Content
+    {
+      background-image: url("../styles/kekule/icons16/text_align_center.png");
+    }
+    .gButton3 .K-Pri-Glyph-Content
+    {
+      background-image: url("../styles/kekule/icons16/text_align_right.png");
+    }
+  </style>
+  <script>
+    function init()
+    {
+      var objInspector = Kekule.Widget.getWidgetById('objInspector');
+      var rootWidget = Kekule.Widget.getWidgetById('tabViewStage');
+      rootWidget.addEventListener('click', function(e){
+        var widget = e.widget;
+        if (widget)
+          objInspector.setObjects(widget);
+      });
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <p>
+    Kekule.js includes a widget system to build interface of web application. Aside from widgets related to chemistry,
+    there are also some general widgets. From simple ones such as button, textbox to advanced widget like color picker and object
+    inspector. This page list some of them.
+  </p>
+  <p>
+    Click on widget to show their properties in object inspector.
+  </p>
+  <div id="tabViewStage" data-widget="Kekule.Widget.TabView">
+    <div data-widget="Kekule.Widget.TabPage" data-text="Buttons">
+      <fieldset>
+        <legend>Normal Buttons</legend>
+        <a id="button1" data-widget="Kekule.Widget.Button" data-text="Normal Button" data-Hint="Click this type of button to execute an action"></a>
+        <button id="checkButton1" data-widget="Kekule.Widget.CheckButton" data-text="Check Button" data-Hint="Toggle check state"></button>
+      </fieldset>
+      <fieldset>
+        <legend>Styled Buttons</legend>
+        <button id="styledButton1" data-widget="Kekule.Widget.Button" data-text="Dropdown Style Button" data-button-kind="K-Kind-DropDown" data-Hint="Button with a drop-down mark"></button>
+        <button id="styledButton2" data-widget="Kekule.Widget.Button" data-text="Popup Style Button" data-button-kind="K-Kind-Popup" data-Hint="Button with a popup mark"></button>
+        <button id="styledButton3" data-widget="Kekule.Widget.Button" data-text="Search Style Button" data-button-kind="K-Kind-Search" data-Hint="Button with a search mark"></button>
+        <button id="styledButton4" data-widget="Kekule.Widget.Button" data-text="Edit Style Button" data-button-kind="K-Kind-Edit" data-Hint="Button with an editting mark"></button>
+      </fieldset>
+      <fieldset>
+        <legend>Button Groups</legend>
+        <div><label>Normal Button Toolbar</label>
+          <div id="buttonGroup1" data-widget="Kekule.Widget.ButtonGroup" data-layout="2">
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton1"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton2"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton3"></button>
+          </div>
+          <div data-widget="Kekule.Widget.ButtonGroup">
+            <button data-widget="Kekule.Widget.Button" data-text="Button1"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="Button2"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="Button3"></button>
+            <button data-widget="Kekule.Widget.DropDownButton" data-text="Dropdown Button" data-button-kind="K-Kind-DropDown" data-drop-down-widget="#buttonGroup1"></button>
+          </div>
+        </div>
+        <div><label>Radio Button Toolbar</label>
+          <div data-widget="Kekule.Widget.ButtonGroup">
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button1"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button2"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button3"></button>
+          </div>
+        </div>
+        <div><label>Glyph Button Toolbar</label>
+          <div data-widget="Kekule.Widget.ButtonGroup" data-show-text="false">
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button1" class="GlyphButton gButton1"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button2" class="GlyphButton gButton2"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button3" class="GlyphButton gButton3"></button>
+          </div>
+        </div>
+        <div><label>Vertical Button Toolbar</label>
+          <div id="buttonGroup2" data-widget="Kekule.Widget.ButtonGroup" data-layout="1">
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton1"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton2"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="ChildButton3"></button>
+          </div>
+          <div data-widget="Kekule.Widget.ButtonGroup" data-layout="2" style="vertical-align: top">
+            <button data-widget="Kekule.Widget.Button" data-text="Button1"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="Button2"></button>
+            <button data-widget="Kekule.Widget.Button" data-text="Button3"></button>
+            <button data-widget="Kekule.Widget.DropDownButton" data-text="Dropdown Button" data-button-kind="K-Kind-DropDown" data-drop-down-widget="#buttonGroup2"></button>
+          </div>
+        </div>
+        <div><label>Compact Button Set</label>
+          <div id="radioButtonGroup1" data-widget="Kekule.Widget.ButtonGroup">
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button1"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button2"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button3" data-checked="true"></button>
+          </div>
+          <div id="radioButtonGroup2" data-widget="Kekule.Widget.ButtonGroup">
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button1" class="GlyphButton gButton1" data-checked="true"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button2" class="GlyphButton gButton2"></button>
+            <button data-widget="Kekule.Widget.RadioButton" data-text="Button3" class="GlyphButton gButton3"></button>
+          </div>
+          <button data-widget="Kekule.Widget.CompactButtonSet" data-text="Compact" data-button-set="#radioButtonGroup1"></button>
+          <button class="GlyphButton" data-widget="Kekule.Widget.CompactButtonSet" data-text="Button4" data-show-text="false" data-button-set="#radioButtonGroup2"></button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div data-widget="Kekule.Widget.TabPage" data-text="Form Widgets">
+      <fieldset>
+        <legend>Normal Controls</legend>
+        <span data-widget="Kekule.Widget.CheckBox" data-text="Check Box" data-hint="Toggle check state"></span>
+        <br />
+        <label>Text Box</label>
+        <input data-widget="Kekule.Widget.TextBox" data-placeholder="Input text here" data-hint="A text box" />
+        <br />
+        <label>Select Box</label>
+        <select data-widget="Kekule.Widget.SelectBox" data-hint="A Select box"
+                data-items='[{"text": "Item1", "title": "Hint1"}, {"text": "Item2", "title": "Hint2"}, {"text": "Item3", "title": "Hint3"}]' >
+        </select>
+        <br />
+        <label>Combo Box</label>
+        <span data-widget="Kekule.Widget.ComboBox" data-text="A Combo Box" data-hint="Can input or select data"
+              data-items='[{"text": "Item1", "title": "Hint1"}, {"text": "Item2", "title": "Hint2"}, {"text": "Item3", "title": "Hint3"}]'>
+        </span>
+      </fieldset>
+      <fieldset>
+        <legend>Button Text Box</legend>
+        <span data-widget="Kekule.Widget.ButtonTextBox" data-placeholder="Popup" data-hint="Text box with extra button"
+              data-button-kind="K-Kind-Popup">
+        </span>
+        <span data-widget="Kekule.Widget.ButtonTextBox" data-placeholder="Search" data-hint="Text box with extra button"
+              data-button-kind="K-Kind-Search">
+        </span>
+      </fieldset>
+      <fieldset>
+        <legend>Text Area</legend>
+        <label>Nomral Text Area</label>
+        <textarea data-widget="Kekule.Widget.TextArea" data-placeholder="Input text here"></textarea>
+        <br />
+        <label>Autosized Text Area</label>
+        <textarea data-widget="Kekule.Widget.TextArea" data-text="Input text here" data-placeholder="Input text here" data-auto-size-y="true"></textarea>
+      </fieldset>
+    </div>
+
+    <div data-widget="Kekule.Widget.TabPage" data-text="Adv Widgets">
+      <fieldset style="float: right">
+        <legend>Value List Editor</legend>
+        <table data-widget="Kekule.Widget.ValueListEditor" data-value-display-mode="1"
+               data-hash='{"id": "vEditor1", "name": "ValueListEditor", "IntValue": 3, "BoolValue": false, "StringValue": "A line of text", "ObjValue": {"id": "obj2"}}'></table>
+      </fieldset>
+      <fieldset>
+        <legend>Text Editor</legend>
+        <div data-widget="Kekule.Widget.TextEditor" class="TextEditor" data-text="Display font family, font size can be changed in text editor."></div>
+      </fieldset>
+      <fieldset>
+        <legend>Color Picker</legend>
+        <div>
+          <label>Pick Panel</label>
+          <div data-widget="Kekule.Widget.ColorPicker"></div>
+        </div>
+        <div>
+          <label>Picker Textbox</label>
+          <span data-widget="Kekule.Widget.ColorDropTextBox"></span>
+        </div>
+        <div>
+          <label>Picker Button</label>
+          <button data-widget="Kekule.Widget.ColorDropButton"></button>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+</body>
+</html>

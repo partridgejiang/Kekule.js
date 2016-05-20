@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sub Structure Search Introduction</title>
+  <link rel="stylesheet" type="text/css" href="../styles/demoPages.css" />
+</head>
+
+<body>
+
+<p>Kekule includes a easy-to-use method to search sub structure of molecules. For instance, if you have sub structure A (structA)and now want to check if A exists in molecule B (molB), the following JavaScript code can be used (note: both A and B should be instance of Kekule.StructureFragment):</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA);</pre>
+<p>If molB does not have sub structure of A, searchResult will be false. Otherwise, an array of matched nodes and connectors (usually atoms and bonds) will be returned.</p>
+<p>The search method accept a second parameter, options, which is a plain object and specifies the searching option. It may include the following fields:</p>
+<pre class="CodeBlock">exactMatch:&#32;Bool.&#32;If&#32;true,&#32;only&#32;the&#32;same&#32;structure&#32;with&#32;subStructure&#32;will&#32;be&#32;matched.
+compareAtom: Bool. If set to false false, all node will be regarded as same (ignoring their atomic number or node type). Default is true.<br>compareMass: Bool, whether mass number is compared. Default is false.<br>compareCharge: Bool, whether charge of node is compared. Default is false.<br>compareBondOrder: Bool, whether order of bond is compared. Default is true.<br>compareStereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
+</pre>	
+<p>For example, if structure A is cyclohexane and molecule B is methylbenzene，the direct search will returns false:</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA);  // searchResult is false</pre>
+<p>but if compareBondOrder option is set to false, the result will be different:</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA, {compareBondOrder: false});
+  // searchResult will be an array of all atoms and connectors in benzene ring.</pre>
+<p>The option parameter also accept a special field: level, which accepts an integer value. Different values actually set different compareXXX flags:</p>
+<table class="ExplanationTable">
+	<tr>
+		<th scope="col">Constant</th>
+		<th scope="col">Value</th>
+		<th scope="col">compareAtom</th>
+		<th scope="col">compareMass</th>
+		<th scope="col">compareCharge </th>
+		<th scope="col">compareBondOrder</th>
+		<th scope="col">compareStereo</th>
+	</tr>
+	<tr>
+		<td><pre>Kekule.StructureComparationLevel.SKELETAL</pre></td>
+		<td>1</td>
+		<td>false</td>
+		<td>false</td>
+		<td>false</td>
+		<td>false</td>
+		<td>false</td>
+	</tr>
+	<tr>
+		<td><pre>Kekule.StructureComparationLevel.CONSTITUTION</pre></td>
+		<td>2</td>
+		<td>true</td>
+		<td>false</td>
+		<td>false</td>
+		<td>true</td>
+		<td>false</td>
+	</tr>
+	<br>
+	<!--
+	<tr>
+		<td><pre>Kekule.StructureComparationLevel.CONFIGURATION</pre></td>
+		<td>3</td>
+		<td>true</td>
+		<td>false</td>
+		<td>false</td>
+		<td>true</td>
+		<td>true</td>
+	</tr>
+	-->
+	<tr>
+		<td><pre>Kekule.StructureComparationLevel.EXACT</pre></td>
+		<td>4</td>
+		<td>true</td>
+		<td>true</td>
+		<td>true</td>
+		<td>true</td>
+		<td>true</td>
+	</tr>
+</table>
+<p>For example, search cyclohexane (A) in methylbenzene (B), the following code will also returns atoms and connectors:</p>
+<pre class="CodeBlock">
+var searchResult = molB.search(structA, {level: Kekule.StructureComparationLevel.SKELETAL});
+  // searchResult will be an array of all atoms and connectors in benzene ring.</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html manifest1="autoLaunch.manifest1">
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Widget Auto-Launch Demo</title>
+	<script src="../../libs/kekule/kekule.js?modules=widget"></script>
+	
+	<script>
+		function init()
+		{
+			var btnDynIns = Kekule.Widget.getWidgetById('btnDynIns');
+			if (btnDynIns)
+			{
+				btnDynIns.addEventListener('execute', function() {
+					var stage = document.getElementById('dynInsStage');
+					var pElem = document.createElement('p');
+					pElem.innerHTML = 'This is a line of dynamicly inserted HTML with a color picker button.' + 
+						'<button id="colorButton1" data-widget="Kekule.Widget.ColorDropButton" data-show-text="false"></button>';
+					stage.appendChild(pElem);
+				});
+			}
+		}
+		Kekule.X.domReady(init);
+	</script>
+	
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+	<link rel="stylesheet" type="text/css" href="../styles/demoPages.css" />
+</head>
+<body>
+<h2>Basic Auto-Launching</h2>
+<p>A commonly used way to add  widget in HTML page is using the &quot;auto-launching&quot;
+	feature of Kekule.js. To accomplish that is easy: just insert a suitable tag in HTML, add a special attribute &quot;data-widget&quot; (or &quot;data-kekule-widget&quot;) which appoints the widget class (e.g. &quot;Kekule.Widget.Button&quot;). During the loading process of HTML page, Kekule.js will check that specified tag and create proper widget on it automatically. </p>
+<p>For instance, to add a button in page, just using the following code:</p>
+<pre class="CodeBlock">&lt;button&#32;id="button1"&#32;data-widget="Kekule.Widget.Button"&gt;Button&lt;/button&gt;</pre>
+<p>The result will be:</p>
+<p><button id="button1" data-widget="Kekule.Widget.Button">Button</button></p>
+<h2>Set Widget Property in HTML Tag</h2>
+<p>User can also set properties of widget in tag, for example:</p>
+<pre class="CodeBlock">&lt;button&#32;id="button2"&#32;data-widget="Kekule.Widget.Button"&#32;data-text="Button&#32;2" data-button-kind=&quot;K-Kind-DropDown&quot;&gt;&lt;/button&gt;</pre>
+<p><button id="button2" data-widget="Kekule.Widget.Button" data-text="Button 2" data-button-kind="K-Kind-DropDown"></button></p>
+<p>The code above set text and buttonKind property of button. Note that the camelized property name should be converted to dash-connected style with a &quot;data-&quot; prefix (like data-button-kind).</p>
+<h2>Using Auto-Launched Widget in Code</h2>
+<p>It is recommended to use &quot;id&quot; attribute in those auto-launching tags. Id is quite helpful to find the widget in your JavaScript program by function Kekule.Widget.getWidgetById. That function is similar to documet.getElementById and returns a widget instance rather than a HTML element. To refer to the two buttons we created above, the following code can be used:</p>
+<pre class="CodeBlock">var button1 = Kekule.Widget.getWidgetById('button1');
+var button2 = Kekule.Widget.getWidgetById('button2');</pre>
+<p>Afterwards those button widget instances can be manipulated, for example, binding an event handler:</p>
+<pre class="CodeBlock">button1.addEventListener('execute', function(){ alert('button1 executed'); });</pre>
+<h2>Nested Widget</h2>
+<p>Widget can also be &quot;nested&quot;, for example, the following code forms a radio button group:</p>
+<pre class="CodeBlock">&lt;div&#32;id="btnGroup1"&#32;data-widget="Kekule.Widget.ButtonGroup"&gt;<br>&#32;&#32;&lt;button&#32;id="innerBtn1"&#32;data-widget="Kekule.Widget.RadioButton"&#32;data-text="Radio&#32;1"&gt;&lt;/button&gt;<br>&#32;&#32;&lt;button&#32;id="innerBtn2"&#32;data-widget="Kekule.Widget.RadioButton"&#32;data-text="Radio&#32;2"&gt;&lt;/button&gt;<br>&#32;&#32;&lt;a&#32;id="innerBtn3"&#32;data-widget="Kekule.Widget.RadioButton"&#32;data-text="Radio&#32;3"&gt;&lt;/a&gt;<br>&lt;/div&gt;</pre>
+<p>
+<div id="btnGroup1" data-widget="Kekule.Widget.ButtonGroup">
+		<button id="innerBtn1" data-widget="Kekule.Widget.RadioButton" data-text="Radio 1"></button>
+		<button id="innerBtn2" data-widget="Kekule.Widget.RadioButton" data-text="Radio 2" data-checked="true"></button>
+		<a id="innerBtn3" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3"></a>
+	</div>
+</p>
+<p>The three inner buttons (&quot;innerButton1&quot; to &quot;innerButton3&quot;) automatically becomes the children of &quot;btnGroup1&quot;.</p>
+<h2>Dynamic Inserted HTML</h2>
+<p>Auto-Launching also affects HTML dynamicly inserted into web page. Click on the following button to see what's happening.</p>
+<div>
+	<p><button id="btnDynIns" data-widget="Kekule.Widget.Button">Insert dynamic HTML</button></p>
+	<div id="dynInsStage"></div>
+</div>
+<h2>Disable Auto-Launching</h2>
+<p>In some cases, if auto-launching is not wanted, you can turn it off easily by the following HTML pattern:</p>
+<pre class="CodeBlock">
+&lt;script src=&quot;../../../libs/kekule.compressed.js&quot;&gt;&lt;/script&gt; &lt;!-- script tag to load Kekule.js --&gt;
+&lt;script&gt;  &lt;!-- right after loading Kekule.js, turn auto-launching off. --&gt;
+  Kekule.Widget.AutoLauncher.enabled&#32;=&#32;false;  // Note: here AutoLauncher is capticalized
+&lt;/script&gt;
+</pre>
+<p>Of course, later you can launch widget tags manually:</p>
+<pre class="CodeBlock">Kekule.Widget.autoLauncher.execute(document.body);</pre>
+<p>&nbsp;</p>
+</body>
+</html>

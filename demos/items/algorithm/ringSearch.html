@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html manifest1="ringSearch.manifest1">
+<head>
+  <meta charset="UTF-8">
+  <title>Ring Perception</title>
+
+  <link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+
+  <style>
+    body
+    {
+      font-family: 'Microsoft Sans Serif' , Arial, Helvetica, Verdana;
+    }
+    #gridMol
+    {
+      clear: both;
+    }
+
+    #searchPanel, #composerMol
+    {
+      display: block;
+      position: relative;
+      float: left;
+      height: 400px;
+      margin: 0.5em;
+      box-sizing: border-box;
+    }
+
+    #composerMol
+    {
+      width: 650px;
+    }
+    #searchPanel
+    {
+      border: 2px solid;
+      border-radius: 4px;
+      border-color: #ccc;
+      padding: 0.5em;
+    }
+    #resultContainer
+    {
+      position: relative;
+    }
+    #resultSummary
+    {
+      color: #006400;
+      margin: 0.5em 0.5em;
+    }
+    #resultSummary.NoRing
+    {
+      color: #ff0000;
+    }
+    #resultList
+    {
+      overflow-y: scroll;
+      overflow-x: auto;
+      height: 300px;
+      padding-top: 0em;
+      margin-top: 0;
+    }
+    #resultList li a
+    {
+      display: block;
+      text-decoration: none;
+      color: #000;
+      padding: 0.2em 1em;
+    }
+    #resultList li a:hover
+    {
+      background-color: #555;
+      color: #fff;
+    }
+
+
+  </style>
+
+  <script src="../../libs/raphael-min.2.0.1.js"></script>
+  <script src="../../libs/kekule/kekule.js?modules=chemWidget,algorithm"></script>
+
+  <link type="chemical/x-mdl-molfile" id="cyclopropene" href="../../chemFiles/2D/cyclopropene.mol" />
+  <link type="chemical/x-mdl-molfile" id="cyclobutadiene" href="../../chemFiles/2D/cyclobutadiene.mol" />
+  <link type="chemical/x-mdl-molfile" id="cyclopentadiene" href="../../chemFiles/2D/cyclopentadiene.mol" />
+  <link type="chemical/x-mdl-molfile" id="cyclopentadiene-neg" href="../../chemFiles/2D/cyclopentadiene-neg.mol" />
+  <link type="chemical/x-mdl-molfile" id="tetraene" href="../../chemFiles/2D/tetraene.mol" />
+  <link type="chemical/x-mdl-molfile" id="sub-quinoline" href="../../chemFiles/2D/sub-quinoline.mol" />
+  <link type="chemical/x-mdl-molfile" id="sub-biphenyl" href="../../chemFiles/2D/sub-biphenyl.mol" />
+  <link type="chemical/x-mdl-molfile" id="acenaphthylene" href="../../chemFiles/2D/acenaphthylene.mol" />
+  <link type="chemical/x-mdl-molfile" id="phenanthrene" href="../../chemFiles/2D/phenanthrene.mol" />
+  <link type="chemical/x-mdl-molfile" id="benzenoanthracene" href="../../chemFiles/2D/benzenoanthracene.mol" />
+  <link type="chemical/x-mdl-molfile" id="aromaticRings" href="../../chemFiles/2D/aromaticRings.mol" />
+  <link type="chemical/x-mdl-molfile" id="ringTest1" href="../../chemFiles/2D/ringTest1.mol" />
+  <link type="chemical/x-mdl-molfile" id="ringTest2" href="../../chemFiles/2D/ringTest2.mol" />
+  <link type="chemical/x-mdl-molfile" id="ringTest3" href="../../chemFiles/2D/ringTest3.mol" />
+  <link type="chemical/x-mdl-molfile" id="cubane" href="../../chemFiles/2D/cubane.mol" />
+  <link type="chemical/x-mdl-molfile" id="completeGraph8" href="../../chemFiles/2D/completeGraph8.mol" />
+
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    function fillGrid(molGrid)
+    {
+      var gridMol = Kekule.Widget.getWidgetById('gridMol');
+      var molUris= [
+        '#cyclopropene', '#cyclobutadiene', '#cyclopentadiene', '#cyclopentadiene-neg',
+        '#tetraene', '#sub-quinoline', '#sub-biphenyl', '#acenaphthylene', '#phenanthrene', '#benzenoanthracene',
+        '#aromaticRings',
+        '#ringTest1', '#ringTest2', '#ringTest3', '#completeGraph8', '#cubane'
+      ];
+      var chemObjMap = {};
+      var loadedCount = 0;
+      var totalCount = molUris.length;
+      for (var i = 0; i < totalCount; ++i)
+      {
+        var uri = molUris[i];
+        var resStr = 'url(' + uri + ')';
+        var index = i;
+
+        Kekule.PredefinedResReferer.loadResource(resStr, (function(resInfo, success)
+        {
+          if (success)
+          {
+            var chemObj = Kekule.IO.loadTypedData(resInfo.data, resInfo.resType, resInfo.resUri);
+            //gridMol.addChemObj(chemObj);
+            //chemObjs[index] = chemObj;
+            chemObjMap[resInfo.resUri] = chemObj;
+          }
+          ++loadedCount;
+          //console.log(loadedCount, totalCount, chemObjs.length);
+          if (loadedCount >= totalCount)  // all loaded, add to grid
+          {
+            for (var j = 0; j < totalCount; ++j)
+            {
+              var uri = molUris[j];
+              var obj = chemObjMap[uri];
+              gridMol.addChemObj(obj);
+            }
+          }
+        }), null, document);
+      }
+
+      //console.log(uri);
+      //console.log(chemObjs);
+    }
+    function selectGridMol(e)
+    {
+      var target = e.widget;
+      if (target && target.getChemObj)
+      {
+        var obj = target.getChemObj();
+        if (obj)
+          Kekule.Widget.getWidgetById('composerMol').setChemObj(obj.clone());
+      }
+    }
+
+    var prevHighlightObjs = null;
+    function highlightStructObjs(highlightObjs, highlightColor)
+    {
+      var editor = Kekule.Widget.getWidgetById('composerMol').getEditor();
+      editor.beginUpdateObject();
+      //parentMol.beginUpdate()
+      try
+      {
+        if (prevHighlightObjs && prevHighlightObjs.length)
+        for (var i = 0, l = prevHighlightObjs.length; i < l; ++i)
+        {
+          var o = prevHighlightObjs[i];
+          o.setRenderOption('color', null);
+        }
+
+        if (highlightObjs)
+        {
+          var color = highlightColor || 'red';
+          for (var i = 0, l = highlightObjs.length; i < l; ++i)
+          {
+            var o = highlightObjs[i];
+            o.setRenderOption('color', color);
+          }
+        }
+
+        prevHighlightObjs = highlightObjs;
+      }
+      finally
+      {
+        //parentMol.endUpdate();
+        editor.endUpdateObject();
+      }
+    }
+    function highlightStructRings(rings, highlightColor)
+    {
+      var highlightObjs = [];
+      for (var i = 0, l = rings.length; i < l; ++i)
+      {
+        var part = rings[i];
+        highlightObjs = highlightObjs.concat(part.nodes).concat(part.connectors);
+      }
+      return highlightStructObjs(highlightObjs, highlightColor);
+    }
+
+    function clearResult()
+    {
+      highlightStructObjs();  // clear highlight
+      var elem = $('resultSummary');
+      elem.innerHTML = '';
+      var parentElem = $('resultList');
+      Kekule.DomUtils.clearChildContent(parentElem);
+    }
+
+    function listRings(parentMol, rings, duration)
+    {
+      clearResult();
+
+      var elem = $('resultSummary');
+      var ringCount = rings? rings.length: 0;
+      var s = ringCount + ' ' + ((ringCount > 1)? 'rings': 'ring') + ' found';
+      if (duration !== undefined)
+        s += ' in ' + duration + 'ms'
+      if (ringCount)
+        s += ', click item to highlight it.';
+      elem.innerHTML = s;
+      elem.className = ringCount? 'Found': 'NoRing';
+
+      if (ringCount)
+        rings.sort(function(a, b){
+          return a.nodes.length - b.nodes.length;
+        });
+
+      var parentElem = $('resultList');
+      for (var i = 0, l = rings.length; i < l; ++i)
+      {
+        var ring = rings[i];
+        var s = 'ring with ' + ring.nodes.length + ' atoms';
+        var linkElem = document.createElement('a');
+        Kekule.DomUtils.setElementText(linkElem, s);
+        linkElem._ring = ring;
+        linkElem._mol = parentMol;
+        linkElem.href = 'javascript:void(0)';
+        var liElem = document.createElement('li');
+        liElem.appendChild(linkElem);
+        parentElem.appendChild(liElem);
+      }
+    }
+    function selectRing(e)
+    {
+      var targetElem = e.getTarget();
+      if (targetElem._ring && targetElem._mol)
+      {
+        highlightStructRings([targetElem._ring]);
+      }
+    }
+
+    function getTargetObj()
+    {
+      var composer = Kekule.Widget.getWidgetById('composerMol');
+      /*
+      var obj = composer.getChemObj();
+      return obj? Kekule.ChemStructureUtils.getTotalStructFragment(obj): null;
+      */
+      return composer.getChemObj();
+    }
+
+    function findAllRings()
+    {
+      var mol = getTargetObj();
+      if (mol)
+      {
+        var tStart = Date.now();
+        var rings = mol.findAllRings();
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
+      }
+    }
+    function findSssrRings()
+    {
+      var mol = getTargetObj();
+      if (mol)
+      {
+        var tStart = Date.now();
+        var rings = mol.findSSSR();
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
+      }
+    }
+    function findAromaticRings()
+    {
+      var mol = getTargetObj();
+      if (mol)
+      {
+        var tStart = Date.now();
+        var rings = mol.findAromaticRings(true);
+        var tEnd = Date.now();
+        listRings(mol, rings, tEnd - tStart);
+      }
+    }
+
+    function init()
+    {
+      var gridMol = Kekule.Widget.getWidgetById('gridMol');
+      fillGrid(gridMol);
+      gridMol.addEventListener('dblclick', selectGridMol)
+      var btn = Kekule.Widget.getWidgetById('btnFindAllRings');
+      btn.addEventListener('execute', findAllRings);
+      var btn = Kekule.Widget.getWidgetById('btnFindSssrRings');
+      btn.addEventListener('execute', findSssrRings);
+      var btn = Kekule.Widget.getWidgetById('btnFindAromaticRings');
+      btn.addEventListener('execute', findAromaticRings);
+
+      var composer = Kekule.Widget.getWidgetById('composerMol');
+      composer.addEventListener('load', clearResult);
+
+      Kekule.X.Event.addListener($('resultList'), 'click', selectRing);
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <p>Draw or load molecule in editor and click ring find buttons to perform ring perception.</p>
+
+  <div id="composerMol" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly" data-chem-obj="url(#ringTest1)">
+
+  </div>
+  <div id="searchPanel">
+    <div id="resultPanel">
+      <div id="toolbarSearch" data-widget="Kekule.Widget.ButtonGroup">
+        <button id="btnFindAllRings" data-widget="Kekule.Widget.Button">Find All Rings</button>
+        <button id="btnFindSssrRings" data-widget="Kekule.Widget.Button">Find SSSR Rings</button>
+        <button id="btnFindAromaticRings" data-widget="Kekule.Widget.Button">Find Aromatic Rings</button>
+      </div>
+      <div id="resultContainer">
+        <div id="resultSummary"></div>
+        <ol id="resultList">
+
+        </ol>
+      </div>
+    </div>
+  </div>
+  <p style="clear: both;">Double click on template molecule to load it in editor.</p>
+  <div id="gridMol" data-widget="Kekule.ChemWidget.ViewerGrid2D" data-enable-add="false" data-show-caption="false" data-auto-size="true" data-cell-width="150px" data-cell-height="150px"></div>
+</body>
+</html>

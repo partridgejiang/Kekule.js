@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html manifest1="chemViewer.manifest1">
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Viewer 2D Demo</title>
+
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+	
+	<script src="../../libs/kekule/kekule.js?modules=chemWidget,openbabel"></script>
+	<!--
+	<script src="../../../../project/src/kekule.js?modules=chemWidget,openbabel&min=false"></script>
+	-->
+	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		#header
+		{
+			padding: 0.2em 1em;
+			overflow: hidden;
+			vertical-align: middle;
+		}
+		#header button, #header span
+		{
+			display: inline-block;			
+		}
+		#chemViewer
+		{
+			border: 1px solid #ccc;
+		}
+	</style>
+
+	<script name="pyrrole" id="pyrrole" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  Kekule  11201418212D
+
+  5  5  0  0  0  0  0  0  0  0999 V2000
+    0.4125    0.6348    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4125    0.6348    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6674   -0.1498    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.6348    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6674   -0.1498    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  1  0
+  5  1  2  0
+M  END
+	</script>
+
+	<script>
+		var chemViewer;
+		function init()
+		{
+			/*
+			var elem = document.getElementById('chemViewer');
+			chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
+			chemViewer.setEnableToolbar(true);
+			chemViewer.setAutoSize(false).setPadding(20);
+			*/
+			chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+			// adjust size
+			adjustSize();
+			window.onresize = adjustSize;
+			
+			Kekule.Widget.getWidgetById('btnOpenBabel').addEventListener('execute', function(e){
+				Kekule.IO.enableOpenBabelFormats();
+			});
+		}
+		function adjustSize()
+		{
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var headerDim = Kekule.HtmlElementUtils.getElemClientDimension(document.getElementById('header'));
+			chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 - headerDim.height + 'px');
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+<div id="chemViewer" style="width:100%;height:650px"
+		 data-widget="Kekule.ChemWidget.Viewer2D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+		 data-toolbar-evoke-modes="[0]"
+		 data-chem-obj="url(#pyrrole)"></div>
+<div id="header">
+	<button id="btnOpenBabel" data-widget="Kekule.Widget.Button">Enable OpenBabel Formats</button>
+	<span>Click this button to load OpenBabel library to support more chemical data formats. Check the load or save button in viewer to see the changes.</span>
+</div>		 
+</body>
+</html>

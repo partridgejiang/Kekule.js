@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html manifest1="chemViewer.manifest1">
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Viewer 3D Demo</title>
+
+	<script src="../../libs/Three.js"></script>
+	<!--
+	<script src="../../libs/raphael-min.2.0.1.js"></script>	
+	-->
+	<script src="../../libs/kekule/kekule.js?modules=chemWidget,openbabel"></script>
+	<link rel="stylesheet" type="text/css" href="../../../libs/kekule/themes/default/kekule.css" />
+	<!--
+	<script src="../../../../src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
+	-->
+
+	<style>
+		html, body
+		{
+			margin: 0;
+			padding: 0;
+			position: relative;
+			overflow: hidden;
+		}
+		#chemViewer
+		{
+			border: none;
+			margin: 0;
+		}
+		#header
+		{
+			padding: 0.2em 1em;
+			overflow: hidden;
+			vertical-align: middle;
+		}
+		#header button, #header span
+		{
+			display: inline-block;			
+		}		
+	</style>
+
+	<script name="mol1" id="mol1" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  Kekule  07101201153D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.3586    0.0000   -0.1337 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0564    0.0000   -0.1337 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.0000   -1.1978 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779   -0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3358    0.0000    0.7858 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  3  1  0
+  1  4  1  0
+  1  5  1  0
+  2  6  1  0
+M  END
+	</script>
+
+	<script>
+		var chemViewer;
+		function init()
+		{
+			chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+			
+			Kekule.Widget.getWidgetById('btnOpenBabel').addEventListener('execute', function(e){
+				Kekule.IO.enableOpenBabelFormats();
+			});
+		}
+		function adjustSize()
+		{			
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var headerDim = Kekule.HtmlElementUtils.getElemClientDimension(document.getElementById('header'));
+			chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 - headerDim.height + 'px');
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>	
+	<div id="chemViewer" style="width:1000px;height:650px"
+			 data-widget="Kekule.ChemWidget.Viewer3D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+			 data-toolbar-evoke-modes="[0]"
+			 data-chem-obj="url(#mol1)"></div>
+	<div id="header">
+		<button id="btnOpenBabel" data-widget="Kekule.Widget.Button">Enable OpenBabel Formats</button>
+		<span>Click this button to load OpenBabel library to support more chemical data formats. Check the load or save button in viewer to see the changes.</span>
+	</div>
+</body>
+</html>
