@@ -16,7 +16,7 @@
 		background-color: yellow;
 	}
 </style>
-<script type="text/javascript" src="../../../libs/raphael/raphael.js"></script>
+	<script src="../_libs/raphael-min.2.0.1.js"></script>
 <script src="../../src/kekule.js?min=false"></script>
 <script>
 	var paper;
@@ -63,7 +63,7 @@
 		*/
 		render = new Kekule.Render.Mol2DRenderer(
 			mol,
-			Kekule.Render.RaphaelRendererBridge.getInstance()
+			new Kekule.Render.RaphaelRendererBridge()
 		);
 		bounds = [];
 		var canvasOffset = {'x': paper.canvas.parentNode.offsetLeft, 'y': paper.canvas.parentNode.offsetTop};

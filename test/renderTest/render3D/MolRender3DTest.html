@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Kekule 3D Molecule Renderer Test</title>
-    <script src="../../../../libs/three.js-r49/build/Three.js"></script>
-<script src="../../../src/kekule.js"></script>
+	<script src="../../_libs/Three.js"></script>
+<script src="../../../src/kekule.js?min=false"></script>
 <style>
     canvas
     {
@@ -298,7 +298,7 @@
   var globalMol;
   var angleCount;
   var angleStep = 3;
-  function animate()
+  function doAnimate()
   {
     clearLog();
     globalMol = readMol();
@@ -343,7 +343,7 @@
 		<input type="radio" name="radioBtnMType" id="radioBtnCml">CML</input>
 	</form>
 	<button value="Draw Mol" onclick="draw()">Draw Molecule</button>
-  <button value="Animate Mol" onclick="animate()">Animate Molecule</button>
+  <button value="Animate Mol" onclick="doAnimate()">Animate Molecule</button>
 	<label for="editMultiple">Multiple</label>
 	<input type="text" id="editMultiple" name="editMultiple" value="1"/>
 	<label for="editLevel">Level</label>

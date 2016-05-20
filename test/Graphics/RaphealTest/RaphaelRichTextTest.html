@@ -4,7 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>Raphael Text Draw Test</title>
-	<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
 	<script>
 		function drawString(paper, s, x, y, styles)
 		{
@@ -16,33 +16,33 @@
 			r.attr('y', y + box.height / 2);
 			return r;
 		};
-		
+
 		function drawText()
 		{
 			// draw a C2H4 formula
 			var richText = [
 				{
-					'str': 'C', 
+					'str': 'C',
 					style: {'font-size': '20px'}
 				},
 				{
-					'str': '2', 
+					'str': '2',
 					style: {'font-size': '20px', 'vertical-align': 'subscript'}
 				},
 				{
-					'str': 'H', 
+					'str': 'H',
 					style: {'font-size': '20px'}
 				},
 				{
-					'str': '4', 
+					'str': '4',
 					style: {'font-size': '12px', 'vertical-align': 'subscript'}
 				},
 			];
 			var paper = Raphael('stage', 1000, 600);
-			
+
 			var x = 10;
 			var y = 10;
-			
+
 			for (var i = 0, l = richText.length; i < l; ++i)
 			{
 				var item = richText[i];
@@ -51,7 +51,7 @@
 				x += box.width;
 			}
 		};
-		
+
 		function init()
 		{
 			drawText();

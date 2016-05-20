@@ -4,7 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>Raphael Text Draw Test</title>
-	<script type="text/javascript" src="../../../../libs/raphael/raphael.js"></script>
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
 	<script>
 		function drawChar(paper, c, x, y)
 		{
@@ -21,11 +21,11 @@
 			border.attr('stroke', 'red');
 			return result;
 		}
-		
+
 		function drawText()
 		{
 			var paper = Raphael('stage', 1000, 600);
-			
+
 			var x = 20;
 			var y = 50;
 			var deltaX;
@@ -42,7 +42,7 @@
 				//glyph.attr('x', x);
 				//bbox = newBbox;
 			}
-			
+
 			var x = 20;
 			var y = 120;
 			var bbox = {'width': 0, 'height': 0};
@@ -57,7 +57,7 @@
 				//glyph.attr('x', x);
 			}
 		}
-		
+
 		function init()
 		{
 			drawText();

@@ -10,7 +10,7 @@
 		background-color: black;
 	}
 </style>
-<script src="../../../libs/three.js-r49/build/Three.js"></script>
+	<script src="../_libs/Three.js"></script>
 <script src="../../src/kekule.js?min=false"></script>
 <script>
 	var drawBoxWidth = 500;
@@ -39,7 +39,7 @@
 		var viewBoxHeight = 300;
 
 		var render = new Kekule.Render.Def3DStructFragmentRenderer(null,
-			Kekule.Render.ThreeRendererBridge.getInstance(),
+			new Kekule.Render.ThreeRendererBridge(),
 			Kekule.Render.Molecule3DDisplayType.STICKS);
 
 		var mol = readMol();
