@@ -248,7 +248,7 @@ var kekuleFiles = {
 	},
 
 	'render': {
-		'requires': ['lan', 'root', 'common', 'core'],
+		'requires': ['lan', 'root', 'common', 'core', 'html'],
 		'files': [
 			'render/kekule.render.extensions.js',
 			'render/kekule.render.base.js',
