@@ -571,6 +571,7 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 			newDataSet.addEventListener('dataChange', this.reactDataSetDataChange, this);
 			newDataSet.addEventListener('totalCountChange', this.reactDataSetTotalCountChange, this);
 		}
+		this.pageCountChanged(this.getPageCount());
 	},
 	/** @private */
 	reactDataSetDataChange: function(e)
@@ -583,6 +584,7 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 	 */
 	dataChanged: function()
 	{
+		this.pageCountChanged(this.getPageCount());
 		this.switchToPage(this.getCurrPageIndex() || 0);
 	},
 
@@ -606,7 +608,9 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 	 */
 	getPageCount: function()
 	{
-		return Math.ceil(this.getDataSet().getTotalCount() / this.getPageSize());
+		var dataset = this.getDataSet();
+		var totalCount = dataset? (dataset.getTotalCount() || 0): 0;
+		return Math.ceil(totalCount / this.getPageSize());
 	},
 	/**
 	 * Notify page count has been changed.

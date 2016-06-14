@@ -122,7 +122,7 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 				{
 					viewer.setPropValue(viewerPropName, value);
 				});
-			}
+			};
 			this.defineProp(propName, propInfo);
 			this._shadowedPropPairs.push({'prop': propName, 'viewerProp': viewerPropName});
 		}
