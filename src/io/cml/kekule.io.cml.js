@@ -2159,7 +2159,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			var atomIds = bond[this._BOND_ATOM_REF_TEMP_FIELD];
 			if (atomIds && atomIds.length)
 			{
-				for (j = 0, k = atomIds.length; j < k; ++j)
+				for (var j = 0, k = atomIds.length; j < k; ++j)
 				{
 					var refedAtom = molecule.getNodeById(atomIds[j]);
 					if (refedAtom)
@@ -2178,7 +2178,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			var bondIds = bond[this._BOND_BOND_REF_TEMP_FIELD];
 			if (bondIds && bondIds.length)
 			{
-				for (j = 0, k = bondIds.length; j < k; ++j)
+				for (var j = 0, k = bondIds.length; j < k; ++j)
 				{
 					var refedBond = molecule.getConnectorById(bondIds[j]);
 					if (refedBond)

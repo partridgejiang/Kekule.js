@@ -298,7 +298,7 @@ Kekule.IO.MdlStructureUtils = {
 					if (info && (info.sgType == 'SUP'))  // superAtom, subgroup
 					{
 						var atoms = [];
-						for (j = 0, k = info.atomIndexes.length; j < k; ++j)
+						for (var j = 0, k = info.atomIndexes.length; j < k; ++j)
 							atoms.push(fragment.getNodeAt(info.atomIndexes[j]));
 						if (atoms.length)
 						{
