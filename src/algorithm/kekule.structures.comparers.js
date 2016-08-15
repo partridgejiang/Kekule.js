@@ -265,14 +265,15 @@ Kekule.UnivChemStructObjComparer = {
 	 * Sort an array of chem objects.
 	 * @param {Array} objs
 	 * @param {Bool} ascendOrder
+	 * @param {Hash} compareOptions
 	 * @returns {Array}
 	 */
-	sort: function(objs, ascendOrder)
+	sort: function(objs, ascendOrder, compareOptions)
 	{
 		objs.sort(
 			function(obj1, obj2)
 			{
-				var r = Kekule.UnivChemStructObjComparer.compare(obj1, obj2);
+				var r = Kekule.UnivChemStructObjComparer.compare(obj1, obj2, compareOptions);
 				if (ascendOrder)
 					r = -r;
 				return r;
