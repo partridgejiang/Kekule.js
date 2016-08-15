@@ -216,7 +216,7 @@ Kekule.UnivChemStructObjComparer = {
 				{
 					for (var i = 0, l = nodes1.length; i < l; ++i)
 					{
-						var result = U.compare(nodes1[i], nodes2[i]);
+						var result = U.compare(nodes1[i], nodes2[i], compareOptions);
 						if (result !== 0)
 							break;
 					}
@@ -231,7 +231,7 @@ Kekule.UnivChemStructObjComparer = {
 				{
 					for (var i = 0, l = connectors1.length; i < l; ++i)
 					{
-						var result = U.compare(connectors1[i], connectors2[i]);
+						var result = U.compare(connectors1[i], connectors2[i], compareOptions);
 						if (result !== 0)
 							break;
 					}
