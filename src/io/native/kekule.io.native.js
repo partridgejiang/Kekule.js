@@ -216,12 +216,16 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 });
 
 (function(){
+	// extents mime type consts
+	Kekule.IO.MimeType.KEKULE_JSON = 'chemical/x-kekule-json';
+	Kekule.IO.MimeType.KEKULE_XML = 'chemical/x-kekule-xml';
+
 	// register chem data formats
 	Kekule.IO.DataFormatsManager.register('JSON', Kekule.IO.MimeType.JSON, 'json',
 		Kekule.IO.ChemDataType.TEXT, 'JSON format');
-	Kekule.IO.DataFormatsManager.register('Kekule-JSON', 'chemical/x-kekule-json', 'kcj',
+	Kekule.IO.DataFormatsManager.register('Kekule-JSON', Kekule.IO.MimeType.KEKULE_JSON, 'kcj',
 		Kekule.IO.ChemDataType.TEXT, 'Kekule Chemical JSON format');
-	Kekule.IO.DataFormatsManager.register('Kekule-XML', 'chemical/x-kekule-xml', 'kcx',
+	Kekule.IO.DataFormatsManager.register('Kekule-XML', Kekule.IO.MimeType.KEKULE_XML, 'kcx',
 		Kekule.IO.ChemDataType.TEXT, 'Kekule Chemical XML format');
 
 	// register ChemData reader and writer
