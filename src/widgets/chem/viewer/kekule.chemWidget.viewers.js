@@ -767,6 +767,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var chemObj = this.getChemObj();
 			var cloneObj;
 			var editFromVoid = !chemObj;
+			var editFromEmpty =  chemObj && chemObj.isEmpty && chemObj.isEmpty(); // has chem object but obj is empty (e.g., mol with no atom and bond)
 
 			var dialog = this.getComposerDialog();
 			if (!dialog)  // can not invoke composer dialog
@@ -783,7 +784,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			//composer.updateAllActions();
 			//console.log(composer.getEnableLoadNewFile(), editFromVoid);
 
-			if (!editFromVoid)
+			if (!editFromVoid && !editFromEmpty)
 			{
 				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
 				dialog.setChemObj(cloneObj);
@@ -799,14 +800,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
 				{
+					var newObj = dialog.getSavingTargetObj();
 					if (editFromVoid)
 					{
-						var newObj = dialog.getSavingTargetObj();
 						self.setChemObj(newObj.clone());
 					}
 					else
 					{
-						chemObj.assign(cloneObj);
+						if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
+							chemObj.assign(newObj.clone());
+						else  // preserve old object type in viewer
+							chemObj.assign(cloneObj);
 						// clear src info data
 						chemObj.setSrcInfo(null);
 						//self.repaint();
@@ -814,7 +818,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					}
 				}
 				//dialog.finalize();
-			}
+			};
 			if (this.getModalEdit())
 				dialog.openModal(callback, callerWidget || this);
 			else
