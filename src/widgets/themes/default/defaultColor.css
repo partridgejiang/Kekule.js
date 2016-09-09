@@ -137,6 +137,7 @@
 .K-PageNavigator > .K-PageNavigator-PageIndexer
 {
     background-color: #e6e6e6;
+    background-image: none;
 }
 
 .K-Button .K-DropDownMark
