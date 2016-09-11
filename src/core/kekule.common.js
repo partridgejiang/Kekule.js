@@ -2940,8 +2940,7 @@ Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.ChemSpace);
  * @augments Kekule.ChemSpace
  * @param {String} id Id of this object.
  *
- * @property {Kekule.ChemObject} docObj Root object of document, like documentElement in HTML or XML.
- * @deprecated
+ * //@property {Kekule.ChemObject} docObj Root object of document, like documentElement in HTML or XML.
  */
 Kekule.ChemDocument = Class.create(Kekule.ChemSpace,
 /** @lends Kekule.ChemDocument# */

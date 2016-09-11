@@ -760,8 +760,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	newDoc: function()
 	{
-		if (this.getEnableCreateNewDoc())
-			this.load(this.doCreateNewDocObj());
+		//if (this.getEnableCreateNewDoc()) // enable property only affects UI, always could create new doc in code
+		this.load(this.doCreateNewDocObj());
 	},
 	/**
 	 * Create a new object for new document.

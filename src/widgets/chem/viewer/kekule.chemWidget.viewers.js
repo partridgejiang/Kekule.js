@@ -94,6 +94,8 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Bool} restrainEditorWithCurrObj If true, the editor popuped can only edit current object in viewer (and add new
  *   objects is disabled). If false, the editor can do everything like a normal composer, viewer will load objects in composer
  *   after editting (and will not keep the original object in viewer).
+ * @property {Bool} shareEditorInstance If true, all viewers in one document will shares one editor.
+ *   This setting may reduce the cost of creating many composer widgets.
  *
  * @property {Array} toolButtons buttons in interaction tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...]. <br />
  *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
@@ -249,6 +251,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return this.getPropStoreFieldValue('enableEdit') && (this.getCoordMode() !== Kekule.CoordMode.COORD3D);
 			}
 		});
+		this.defineProp('shareEditorInstance', {'dataType': DataType.BOOL});
 		this.defineProp('enableEditFromVoid', {'dataType': DataType.BOOL});
 		this.defineProp('restrainEditorWithCurrObj', {'dataType': DataType.BOOL});
 		this.defineProp('modalEdit', {'dataType': DataType.BOOL});
@@ -500,6 +503,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setRestrainEditorWithCurrObj(true);
 		this.setRestraintRotation3DEdgeRatio(0.18);
 		this.setEnableRestraintRotation3D(true);
+		this.setShareEditorInstance(true);
 	},
 
 	/** @ignore */
@@ -760,13 +764,24 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getComposerDialog: function()
 	{
-		if (!this._composerDialog)
+		var result;
+		if (this.getShareEditorInstance())
+			result = Kekule.ChemWidget.Viewer._composerDialog;
+		else
+			result = this._composerDialog;
+		if (!result)
+		{
 			if (Kekule.Editor.ComposerDialog)
 			{
-				this._composerDialog = new Kekule.Editor.ComposerDialog(this, Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
-					[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+				result = new Kekule.Editor.ComposerDialog(this, Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
+						[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 			}
-		return this._composerDialog;
+		}
+		if (this.getShareEditorInstance())
+			Kekule.ChemWidget.Viewer._composerDialog = result;
+		else
+			this._composerDialog = result;
+		return result;
 	},
 	/**
 	 * Open a popup editor to modify displayed object.
