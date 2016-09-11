@@ -120,10 +120,19 @@ M  END
 					{
 						//console.log(data);
 						var tEnd = Date.now();
-						var isSame = JSON.parse(data);
-						var sResult = isSame? 'Same molecules': 'Different molecules';
-						sResult += ' (in ' + (tEnd - tStart) + ' ms)';
-						var sClass = isSame? 'Same': 'Diff';
+						var returnData = JSON.parse(data);
+						if (returnData.error)  // error occurs
+						{
+							var sResult = 'ERROR: ' + returnData.error;
+							var sClass = 'Diff';
+						}
+						else
+						{
+							var isSame = returnData.result;
+							var sResult = isSame ? 'Same molecules' : 'Different molecules';
+							sResult += ' (in ' + (tEnd - tStart) + ' ms)';
+							var sClass = isSame ? 'Same' : 'Diff';
+						}
 					}
 					else // AJAX failed
 					{
