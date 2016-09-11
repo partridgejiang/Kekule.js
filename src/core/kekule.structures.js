@@ -4460,7 +4460,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						continue;
 					var isAnchor = false;
 					var connectors = node.getLinkedConnectors();
-					for (j = 0, k = connectors.length; j < k; ++j)
+					for (var j = 0, k = connectors.length; j < k; ++j)
 					{
 						var connector = connectors[j];
 						var isExternalConnector = false;
