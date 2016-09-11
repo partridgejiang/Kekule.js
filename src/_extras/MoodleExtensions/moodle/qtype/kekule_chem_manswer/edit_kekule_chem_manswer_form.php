@@ -16,13 +16,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016090600;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
+require_once($CFG->dirroot . '/question/type/kekule_chem_base/lib.php');
+require_once($CFG->dirroot . '/question/type/kekule_chem_base/edit_kekule_chem_base_form.php');
 
-$plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
-);
+class qtype_kekule_chem_manswer_edit_form extends qtype_kekule_chem_base_edit_form {
+    public function qtype() {
+        return 'kekule_chem_manswer';
+    }
+}

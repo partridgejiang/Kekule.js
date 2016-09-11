@@ -16,13 +16,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016090600;
+$plugin->version   = 2016090400;
 $plugin->requires  = 2012062500;
 $plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
+$plugin->component = 'qtype_kekule_mol_naming';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = '0.1';
 
 $plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
+    'qtype_kekule_multianswer' => 2016082300
 );

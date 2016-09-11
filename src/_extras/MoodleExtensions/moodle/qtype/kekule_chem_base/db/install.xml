@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="question/type/kekule_chem/db" VERSION="2016090100" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
+<XMLDB PATH="question/type/kekule_chem_base/db" VERSION="2016082700" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="qtype_kekule_manswer_ops" COMMENT="Defines the question-type specific options for Kekule Chem questions">
+    <TABLE NAME="qtype_kekulechem_options" COMMENT="Defines the question-type specific options for Kekule Chem questions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key link to question.id."/>
         <FIELD NAME="manualgraded" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether answers graded manually."/>
-        <!--
-        <FIELD NAME="inputtype" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="hack"/>
-        -->
+        <FIELD NAME="defcomparemethod" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Default method to compare molecules"/>
+        <FIELD NAME="inputtype" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Restrict input one molecule or a chem document"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="questionid" TYPE="foreign-unique" FIELDS="questionid" REFTABLE="question" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="qtype_kekule_manswer_ans_ops" COMMENT="Options for Kekule Multianswer question answers">
+    <TABLE NAME="qtype_kekulechem_ans_ops" COMMENT="Options for Kekule Chem question answers">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="answerid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references answer.id."/>
         <FIELD NAME="blankindex" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Index of blank in question body."/>
+        <FIELD NAME="smiles" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="SMILES value of answer molecule."/>
+        <FIELD NAME="moldata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Raw molecule data of answer molecule."/>
+        <FIELD NAME="comparemethod" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Method to compare molecules, override value of question"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

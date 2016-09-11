@@ -14,15 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Question type class for the Kekule Chem question type.
+ *
+ * @package    qtype_kekule_chem
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016090600;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
+require_once($CFG->dirroot . '/question/type/kekule_chem_base/lib.php');
+require_once($CFG->dirroot . '/question/type/kekule_chem_base/questiontype.php');
 
-$plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
-);
+
+/**
+ * The Kekule Chem question type.
+ */
+class qtype_kekule_chem_manswer extends qtype_kekule_chem_base {
+    public function menu_name() {
+        return $this->local_name();
+    }
+}

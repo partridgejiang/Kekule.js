@@ -14,15 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Admin settings for the Kekule plugins for atto.
+ *
+ * @package    atto
+ * @subpackage kekule
+ * @copyright  2011 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016090600;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
+require_once($CFG->dirroot . '/lib/editor/atto/plugins/kekulechem/lib.php');
 
-$plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
-);
+$settings->add(new admin_setting_configtext('mod_kekule/kekule_dir',
+    get_string('captionKekuleDir', 'atto_kekulechem'), get_string('descKekuleDir', 'atto_kekulechem'),
+    atto_kekulechem_configs::DEF_KEKULE_DIR, PARAM_TEXT));

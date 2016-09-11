@@ -1,0 +1,43 @@
+button.K-Button
+{
+    background-image: none;
+}
+
+.K-Chem-Viewer
+{
+    background-color: transparent;
+    vertical-align: middle;
+}
+
+.K-Chem-Question-Design-BlankViewer,
+.K-Chem-Question-Blank-Mol,
+.K-Chem-Question-Blank-Doc
+{
+    border: 2px dashed #666;
+    border-radius: 5px;
+    background-color: #fff;
+}
+.K-Chem-Question-Design-BlankViewer
+{
+    width: 20em;
+    height: 15em;
+}
+.K-Chem-Question-Blank-Mol
+{
+    vertical-align: middle;
+    width: 15em;
+    height: 10em;
+}
+
+.K-Chem-Question-Blank-Doc
+{
+    width: 80%;
+    height: 20em;
+}
+
+.K-Chem-Question-CorrectResponse
+{
+    background-color: transparent;
+    border-radius: 5px;
+    border: none;
+}

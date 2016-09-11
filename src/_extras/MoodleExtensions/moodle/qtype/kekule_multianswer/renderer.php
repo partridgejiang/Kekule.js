@@ -30,22 +30,15 @@ defined('MOODLE_INTERNAL') || die();
 //require_once($CFG->dirroot . '/question/type/shortanswer/renderer.php');
 
 class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_renderer {
-    private function getAnswerFieldName($key)
+    protected function getAnswerFieldName($key)
     {
         return 'answer' . $key;
     }
+    /*
     public function head_code(question_attempt $qa) {
         global $PAGE, $CFG;
-
-        /*
-        // dependant files
-        $PAGE->requires->js('/question/type/kekulemol/scripts/raphael-min.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/Three.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/kekule/kekule.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/render.js');
-        $PAGE->requires->css('/question/type/kekulemol/scripts/kekule/themes/default/kekule.css');
-        */
     }
+    */
     public function formulation_and_controls(question_attempt $qa,
                                              question_display_options $options) {
 
@@ -123,9 +116,10 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
         question_attempt $qa, question_display_options $options, $correctResponse)
     {
         $answerFieldName = $this->getAnswerFieldName($blankIndex);
+        $ctrlName = $qa->get_qt_field_name($answerFieldName);
         $inputAttributes = array(
             'type' => 'text',
-            'name' => $ctrlName = $qa->get_qt_field_name($answerFieldName),
+            'name' => $ctrlName,
             'value' => $answer,
             'id' => $ctrlName,
             'size' => 40
@@ -167,11 +161,24 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
             $sResults[$key] = $question->make_html_inline($answer);
         }
         if (!empty($sResults)) {
-            return get_string('correctAnswerIs', 'qtype_kekule_multianswer') . ' ' . implode(', ', $sResults);
+            return get_string('correctAnswerIs', 'qtype_kekule_multianswer') . ' ' .
+                implode(', ', $this->correctResponseTextsToHtml($qa, $question, $sResults));
             //return get_string('correctanswers', 'qtype_shortanswer') . ' ' . implode(', ', $sResults);
         }
         else
             return '';
+    }
+
+    /**
+     * Returns HTML code to wrap texts in "correct answer is“ block of question.
+     * Descandants may override this method.
+     * @param $qa
+     * @param $question
+     * @param $texts
+     */
+    protected function correctResponseTextsToHtml(question_attempt $qa, $question, $texts)
+    {
+        return $texts;
     }
 
     public function specific_feedback(question_attempt $qa) {

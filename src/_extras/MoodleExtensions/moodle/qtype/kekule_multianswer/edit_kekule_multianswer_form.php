@@ -18,40 +18,50 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/question/type/shortanswer/edit_shortanswer_form.php');
 
-class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
+class qtype_kekule_multianswer_edit_form extends question_edit_form {
+    private $currAnsIndex = 0;
 
     protected function data_preprocessing($question) {
         $question = parent::data_preprocessing($question);
-        //var_dump($question);
-        //var_dump($question->options);
-        //die();
+        $question = $this->data_preprocessing_answers($question);
+        $question = $this->data_preprocessing_hints($question);
 
         return $question;
     }
 
     protected function definition_inner($mform) {
-        global $PAGE, $CFG;
+        //global $PAGE, $CFG;
 
-        // dependant files
+        $this->addQuestionFormControls($mform);
+
         /*
-        $PAGE->requires->js('/question/type/kekulemol/scripts/raphael-min.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/Three.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/kekule/kekule.js');
-        $PAGE->requires->js('/question/type/kekulemol/scripts/editForm.js');
-        $PAGE->requires->css('/question/type/kekulemol/scripts/kekule/themes/default/kekule.css');
-        */
-
-        //$mform->addElement('hidden', 'usecase', 1);
         $mform->addElement('static', 'answersinstruct',
             get_string('correctanswers', 'qtype_shortanswer'),
             get_string('filloutoneanswer', 'qtype_shortanswer'));
+        */
+
         $mform->closeHeaderBefore('answersinstruct');
 
-
+        $this->currAnsIndex = 0;
         $this->add_per_answer_fields($mform, get_string('answerno', 'qtype_shortanswer', '{no}'),
                 question_bank::fraction_options());
 
         $this->add_interactive_settings();
+    }
+
+    /**
+     * Add additional form controls in question block.
+     * Descendants may override this method.
+     * @param $mform
+     */
+    protected function addQuestionFormControls($mform)
+    {
+        $menu = array(
+            0 => get_string('false', 'qtype_kekule_multianswer'),
+            1 => get_string('true', 'qtype_kekule_multianswer')
+        );
+        $mform->addElement('select', 'manualgraded',
+            get_string('manualGraded', 'qtype_kekule_multianswer'), $menu);
     }
 
     /**
@@ -66,8 +76,6 @@ class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
      */
     protected function get_per_answer_fields($mform, $label, $gradeoptions,
                                              &$repeatedoptions, &$answersoption) {
-
-        //var_dump($repeatedoptions);
 
         $repeated = array();
         $answeroptions = array();
@@ -87,7 +95,7 @@ class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
             $label, array('size' => 80));
         */
 
-        $ansDataCtrls = $this->getAnswerDataFormControls($mform, $label, $gradeoptions);
+        $ansDataCtrls = $this->getAnswerDataFormControls($mform, $label, $gradeoptions, $this->currAnsIndex);
         if (!empty($ansDataCtrls))
         {
             $answeroptions = array_merge($answeroptions, $ansDataCtrls);
@@ -99,7 +107,7 @@ class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
         */
 
         $answeroptions[] = $mform->createElement('select', 'blankindex',
-            get_string('answerIndex', 'qtype_kekule_multianswer'), array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+            get_string('answerIndex', 'qtype_kekule_multianswer'), $this->_getBlankIndexSelectAttribute(9));
         $answeroptions[] = $mform->createElement('select', 'fraction',
             get_string('grade'), $gradeoptions);
 
@@ -113,6 +121,9 @@ class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
         $repeatedoptions['blankindex']['type'] = PARAM_INT;
         $repeatedoptions['blankindex']['default'] = 0;
         $answersoption = 'answers';
+
+        ++$this->currAnsIndex;
+
         return $repeated;
     }
 
@@ -120,10 +131,25 @@ class qtype_kekule_multianswer_edit_form extends qtype_shortanswer_edit_form {
      * Get concrete form control for answer fields.
      * Descendants should override this method.
      */
-    protected function getAnswerDataFormControls($mform, $label, $gradeoptions)
+    protected function getAnswerDataFormControls($mform, $label, $gradeoptions, $ansIndex)
     {
-        return array($mform->createElement('text', 'answer', $label, array('size' => 60)));
+        return array($mform->createElement('text', 'answer', $label, array('size' => 40)));
     }
+    private function _getBlankIndexSelectAttribute($maxValue)
+    {
+        $result = array();
+        for ($i = 0; $i <= $maxValue; ++$i)
+        {
+            $result[$i] = strval($i + 1);
+        }
+        return $result;
+    }
+
+    protected function get_more_choices_string() {
+        return parent::get_more_choices_string();
+        //return get_string('addmoreanswerblanks', 'qtype_shortanswer');
+    }
+
 
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);

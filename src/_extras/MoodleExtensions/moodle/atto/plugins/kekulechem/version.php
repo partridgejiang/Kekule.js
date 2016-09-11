@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Atto text editor integration version file.
+ *
+ * @package    atto_strike
+ * @copyright  2013 Damyon Wiese  <damyon@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016090600;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
-
-$plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
-);
+$plugin->version   = 2016090902;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2016051900;        // Requires this Moodle version.
+$plugin->component = 'atto_kekulechem';  // Full name of the plugin (used for diagnostics).

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'qtype_YOURQTYPENAME', language 'en', branch 'MOODLE_20_STABLE'
+ * Strings for component 'qtype_kekule_chem', language 'en', branch 'MOODLE_20_STABLE'
  *
  * @package    qtype
  * @subpackage YOURQTYPENAME
@@ -23,15 +23,9 @@
 
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-$string['pluginname'] = 'Kekule Multianswer';
-$string['pluginname_help'] = 'Base question type to create question with multiple (and grouped) shortanswers';
-$string['pluginname_link'] = 'question/type/kekule_multianswer';
-$string['pluginnameadding'] = 'Adding a Kekule Multianswer question';
-$string['pluginnameediting'] = 'Editing a Kekule Multianswer question';
-$string['pluginnamesummary'] = 'A question type which includes multi question points.';
-$string['pleaseananswerallparts'] = 'Please answer all blanks of this question';
-$string['answerIndex'] = 'Answer index';
-$string['correctAnswerIs'] = 'Correct answer is: ';
-$string['manualGraded'] = 'Manual graded';
-$string['true'] = 'Yes';
-$string['false'] = 'No';
+$string['pluginname'] = 'Kekule Chem Multianswer';
+$string['pluginname_help'] = 'Allow input multiple molecule or other chemical structures as answers';
+$string['pluginname_link'] = 'question/type/kekule_chem_manswer';
+$string['pluginnameadding'] = 'Adding a Kekule Chem Multianswer question';
+$string['pluginnameediting'] = 'Editing a Kekule Chem Multianswer question';
+$string['pluginnamesummary'] = 'A question type which allows the students to input multiple chemistry structures as answers.';

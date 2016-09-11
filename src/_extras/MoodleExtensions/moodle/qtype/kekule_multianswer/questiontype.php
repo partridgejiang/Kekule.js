@@ -57,6 +57,10 @@ class qtype_kekule_multianswer_answer extends question_answer {
  * The Kekule Chem question type.
  */
 class qtype_kekule_multianswer extends question_type {
+    public function extra_question_fields() {
+        //return array('qtype_kekule_manswer_ops', 'inputtype'); // hack, otherwise can not export the question
+        return array('qtype_kekule_manswer_ops', 'manualgraded'); // hack, otherwise can not export the question
+    }
     public function extra_answer_fields() {
         //return parent::extra_answer_fields();
         return array('qtype_kekule_manswer_ans_ops', 'blankindex');
@@ -65,13 +69,19 @@ class qtype_kekule_multianswer extends question_type {
         return false;
     }
 
-    public function menu_name() {
-        //return false;  // do not appear in question type list
+    public function is_manual_graded() {
         return true;
     }
 
     public function can_analyse_responses() {
         return true;
+    }
+    public function is_question_manual_graded($question, $otherquestionsinuse) {
+        $result = boolval($question->manualgraded);
+        if (isset($question->options))
+            $result = $result || boolval($question->options->manualgraded);
+        $result = $result || $this->is_manual_graded();
+        return $result;
     }
 
     public function move_files($questionid, $oldcontextid, $newcontextid) {
@@ -86,33 +96,102 @@ class qtype_kekule_multianswer extends question_type {
         $this->delete_files_in_hints($questionid, $contextid);
     }
 
-    public function get_question_options($question) {
-        $result = parent::get_question_options($question);
-        return $result;
-    }
-
     public function save_question_options($question) {
         global $DB;
         $result = new stdClass();
 
         // Perform sanity checks on fractional grades.
-        $maxfraction = -1;
-        foreach ($question->answer as $key => $answerdata) {
-            if ($question->fraction[$key] > $maxfraction) {
-                $maxfraction = $question->fraction[$key];
+        if (!$this->is_question_manual_graded($question, '')) {
+            $maxfraction = -1;
+            foreach ($question->answer as $key => $answerdata) {
+                if ($question->fraction[$key] > $maxfraction) {
+                    $maxfraction = $question->fraction[$key];
+                }
+            }
+
+            if ($maxfraction != 1) {
+                $result->error = get_string('fractionsnomax', 'question', $maxfraction * 100);
+                return $result;
             }
         }
 
-        if ($maxfraction != 1) {
-            $result->error = get_string('fractionsnomax', 'question', $maxfraction * 100);
-            return $result;
-        }
+        //var_dump($question);
 
         parent::save_question_options($question);
 
         $this->save_question_answers($question);
 
         $this->save_hints($question);
+    }
+
+    /**
+     * Loads the question type specific options for the question.
+     *
+     * This function loads any question type specific options for the
+     * question from the database into the question object. This information
+     * is placed in the $question->options field. A question type is
+     * free, however, to decide on a internal structure of the options field.
+     * @return bool            Indicates success or failure.
+     * @param object $question The question object for the question. This object
+     *                         should be updated to include the question type
+     *                         specific information (it is passed by reference).
+     *
+     * This method is modified from Moodle original source to handle manual graded questions that may has no answer.
+     */
+    public function get_question_options($question) {
+        global $CFG, $DB, $OUTPUT;
+
+        if (!isset($question->options)) {
+            $question->options = new stdClass();
+        }
+
+        $extraquestionfields = $this->extra_question_fields();
+        if (is_array($extraquestionfields)) {
+            $question_extension_table = array_shift($extraquestionfields);
+            $extra_data = $DB->get_record($question_extension_table,
+                array($this->questionid_column_name() => $question->id),
+                implode(', ', $extraquestionfields));
+            if ($extra_data) {
+                foreach ($extraquestionfields as $field) {
+                    $question->options->$field = $extra_data->$field;
+                }
+            } else {
+                echo $OUTPUT->notification('Failed to load question options from the table ' .
+                    $question_extension_table . ' for questionid ' . $question->id);
+                return false;
+            }
+        }
+
+        $extraanswerfields = $this->extra_answer_fields();
+        if (is_array($extraanswerfields)) {
+            $answerextensiontable = array_shift($extraanswerfields);
+            // Use LEFT JOIN in case not every answer has extra data.
+            $question->options->answers = $DB->get_records_sql("
+                    SELECT qa.*, qax." . implode(', qax.', $extraanswerfields) . '
+                    FROM {question_answers} qa ' . "
+                    LEFT JOIN {{$answerextensiontable}} qax ON qa.id = qax.answerid
+                    WHERE qa.question = ?
+                    ORDER BY qa.id", array($question->id));
+            if (!$question->options->answers) {
+                // Original code changes here
+                // Error will not be raised for manual graded questions
+                if (!$this->is_question_manual_graded($question, '')) {  // This line is added!!!
+                    echo $OUTPUT->notification('Failed to load question answers from the table ' .
+                        $answerextensiontable . 'for questionid ' . $question->id);
+                    return false;
+                }
+            }
+        } else {
+            // Don't check for success or failure because some question types do
+            // not use the answers table.
+            $question->options->answers = $DB->get_records('question_answers',
+                array('question' => $question->id), 'id ASC');
+        }
+
+        $question->hints = $DB->get_records('question_hints',
+            array('questionid' => $question->id), 'id ASC');
+
+        return true;
     }
 
     protected function initialise_question_instance(question_definition $question, $questiondata) {
@@ -123,23 +202,11 @@ class qtype_kekule_multianswer extends question_type {
         $matchedCount = preg_match_all(qtype_kekule_multianswer_format::BLANK_PATTERN, $bodyText, $matches, /*PREG_PATTERN_ORDER*/PREG_OFFSET_CAPTURE);
           // got all sub parts
 
-        /*
-        // group all sub parts
-        $groups = array();
-        for ($i = 0; $i < $matchedCount; ++$i)
+        if ($matchedCount <= 0)  // blank placeholder not found, we assume one at the tail of question body
         {
-            $groupName = trim($matches[1][$i]);
-            if (empty($groupName))  // {{}}, no group name, a standalone part
-            {
-                $groupName = $i;
-            }
-            if (empty($groups[$groupName]))
-                $groups[$groupName] = array();
-            $groups[$groupName][] = $i;
+            $bodyText .= ' ' . qtype_kekule_multianswer_format::BLANK_HEAD . qtype_kekule_multianswer_format::BLANK_TAIL;
+            $matchedCount = preg_match_all(qtype_kekule_multianswer_format::BLANK_PATTERN, $bodyText, $matches, /*PREG_PATTERN_ORDER*/PREG_OFFSET_CAPTURE);
         }
-        $question->subGroups = $groups;
-        $question->blankCount = $matchedCount;
-        */
         // split all sub parts
         $groups = array();
         $subParts = array();
@@ -251,21 +318,52 @@ class qtype_kekule_multianswer extends question_type {
 
     public function get_possible_responses($questiondata)
     {
+        //var_dump($questiondata->options->answers);
+
         $responses = array();
         $q = $this->make_question($questiondata);
 
+        /*
         foreach($q->answerKeyMap as $index => $answers)
         {
             $subResponses = array();
+
             $subResponses[0] = new question_possible_response(
                 get_string('didnotmatchanyanswer', 'question'), 0);
+
             foreach ($answers as $answer) {
-                $subResponses[] = new question_possible_response($answer->answer, $answer->fraction);
+                $subResponses[$answer->id] = new question_possible_response($answer->answer, $answer->fraction);
             }
+            //$subResponses[null] = question_possible_response::no_response();
             $responses[$index] = $subResponses;
         }
-        $responses[null] = question_possible_response::no_response();
+        */
+        foreach ($q->subGroups as $key => $group)
+        {
+            $groupAnswers = array();
+            foreach ($group as $key => $blankIndex)
+            {
+                $groupAnswers = array_merge($groupAnswers, $q->answerKeyMap[$blankIndex]);
+            }
+            foreach ($group as $key => $blankIndex)
+            {
+                foreach($groupAnswers as $answer)
+                {
+                    $subResponses[$answer->id] = new question_possible_response($answer->answer, $answer->fraction);
+                }
+                $subResponses[null] = question_possible_response::no_response();
+                $subResponses[0] = new question_possible_response(
+                    get_string('didnotmatchanyanswer', 'question'), 0);
+                $responses[$blankIndex] = $subResponses;
+            }
+        }
 
         return $responses;
     }
+    /*
+    protected function getContentOfPossibleResponse()
+    {
+
+    }
+    */
 }

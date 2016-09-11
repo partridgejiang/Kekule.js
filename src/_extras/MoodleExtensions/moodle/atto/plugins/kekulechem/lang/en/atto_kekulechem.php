@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Strings for component 'atto_strike', language 'en'.
+ *
+ * @package    atto_strike
+ * @copyright  2013 Damyon Wiese  <damyon@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
-$plugin->version   = 2016090600;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_multianswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
+$string['pluginname'] = 'Kekule Chem';
+$string['kekuleCssUrl'] = '/kekule.js/kekule/themes/default/kekule.css';
 
-$plugin->dependencies = array(
-    'qtype_shortanswer' => 2012061700
-);
+$string['captionAddChemObj'] = 'Insert Chem Object';
+$string['captionEditChemObj'] = 'Edit Chem Object';
+
+$string['captionKekuleDir'] = 'Kekule.js directory';
+$string['descKekuleDir'] = 'Root directory that contains Kekule.js lib (and its dependant libs)';

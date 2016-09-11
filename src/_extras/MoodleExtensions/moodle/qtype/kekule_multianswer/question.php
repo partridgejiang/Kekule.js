@@ -24,7 +24,9 @@ require_once($CFG->dirroot . '/question/type/kekule_multianswer/lib.php');
 /**
  * Represents a Kekule Chem question.
  */
-class qtype_kekule_multianswer_question extends question_graded_automatically_with_countback {
+class qtype_kekule_multianswer_question extends question_graded_automatically_with_countback
+{
+    public $manualgraded = false;
     public $questionParts = array();
     public $blankCount = 0;
     public $blanks = array();
@@ -34,6 +36,14 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
     public $scoreRatioSum = 0;
     // Matching answer keys to currect response
     public $matchingAnswers = array();
+
+    public function isManualGraded()
+    {
+        $result = isset($this->manualgraded) && boolval($this->manualgraded);
+        if (isset($this->options) && isset($this->options->manualgraded))
+            $result = $result || $this->options->manualgraded;
+        return $result;
+    }
 
     /**
      * Returns detailed hash data of answer.
@@ -288,16 +298,23 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
      * @param int $key stem number
      * @return string the question-type variable name.
      */
-    protected function getFieldName($key) {
+    protected function getAnswerFieldName($key) {
         return 'answer' . $key;
     }
 
     //// overwrite methods //////////////////////////////////////
+    public function make_behaviour(question_attempt $qa, $preferredbehaviour) {
+        if ($this->isManualGraded())
+            return question_engine::make_behaviour('manualgraded', $qa, $preferredbehaviour);
+        else
+            return parent::make_behaviour($qa, $preferredbehaviour);
+    }
+
     public function get_expected_data() {
         $result = array();
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
-            $result[$this->getFieldName($i)] = PARAM_RAW_TRIMMED;
+            $result[$this->getAnswerFieldName($i)] = PARAM_RAW_TRIMMED;
         }
         return $result;
     }
@@ -307,7 +324,7 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         $response = array();
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
-            $response[$this->getFieldName($i)] = $correctSet[$i]->answer;
+            $response[$this->getAnswerFieldName($i)] = $correctSet[$i]->answer;
         }
         return $response;
     }
@@ -323,6 +340,11 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
     }
 
     public function is_gradable_response(array $response) {
+        /*
+        if ($this->isManualGraded()) {
+            return false;
+        }
+        */
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
             if (!empty($response['answer' . strval($i)]))
@@ -345,12 +367,7 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         if (empty($prevAns) || empty($newAns))
             return false;
 
-        function compareObj($a, $b)
-        {
-            return ($a == $b)? 0: -1;
-        }
-
-        $diff = array_udiff($prevAns, $newAns, 'compareObj');
+        $diff = array_udiff($prevAns, $newAns, '__compareObj');
         return empty($diff);
         /*
         if (!isset($prevAns) || !isset($newAns))
@@ -374,7 +391,7 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         $currAnswers = array();
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
-            $currAnswers[$i] = $response[$this->getFieldName($i)];
+            $currAnswers[$i] = $response[$this->getAnswerFieldName($i)];
         }
         // grade answers according to blank groups
         foreach ($this->subGroups as $key => $group)
@@ -431,7 +448,12 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         $maxFraction = 0;
         foreach($responses as $response)
         {
-            $fraction = $this->grade_response($response);
+            list($fraction, $state) = $this->grade_response($response);
+            /*
+            echo 'one try';
+            var_dump($response);
+            var_dump($fraction);
+            */
             if ($fraction > $maxFraction)
                 $maxFraction = $fraction;
         }
@@ -451,4 +473,44 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         }
         return implode('; ', $result);
     }
+
+    public function classify_response(array $response) {
+        //parent::classify_response(array $response);
+        //echo 'classify_response';
+        //var_dump($response);
+        $this->grade_response($response);
+        //var_dump($this->blanks);
+        $result = array();
+        for ($i = 0; $i < $this->blankCount; ++$i)
+        {
+            $resData = $response[$this->getAnswerFieldName($i)];
+            $blank = $this->blanks[$i];
+            if (isset($blank->matchAnswerKey))
+                $result[$i] = new question_classified_response($blank->matchAnswerKey->id,
+                    $resData, $blank->matchAnswerKey->fraction * $blank->matchRatio);
+            else
+                $result[$i] = new question_classified_response(0, $resData, 0);
+
+        }
+        return $result;
+        /*
+        if (empty($response['answer'])) {
+            return array($this->id => question_classified_response::no_response());
+        }
+
+        $ans = $this->get_matching_answer($response);
+        if (!$ans) {
+            return array($this->id => new question_classified_response(
+                0, $response['answer'], 0));
+        }
+
+        return array($this->id => new question_classified_response(
+            $ans->id, $response['answer'], $ans->fraction));
+        */
+    }
+}
+
+function __compareObj($a, $b)
+{
+    return ($a == $b)? 0: -1;
 }
