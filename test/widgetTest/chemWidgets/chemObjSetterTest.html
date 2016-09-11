@@ -31,10 +31,14 @@
       var objSetter = Kekule.Widget.getWidgetById('chemObjSetter');
       Kekule.Widget.getWidgetById('objInspector').setObjects(objSetter);
       Kekule.Widget.getWidgetById('btnAdd').addEventListener('execute', function(){
-        var imgElem = objSetter.createExportImgElement(document);
+        var imgElem = objSetter.createExportImgElement(document/*, 'image/svg+xml'*/);
         imgElem.className += 'Viewer';
         document.getElementById('stage').appendChild(imgElem);
       });
+      /*
+      Kekule.Widget.AutoLauncher.enabled = false;
+      Kekule.Widget.AutoLauncher.enableDynamicDomCheck = false;
+      */
     });
   </script>
 </head>
