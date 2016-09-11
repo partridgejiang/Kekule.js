@@ -1,0 +1,10 @@
+{
+  "name": "moodle-KekuleChem-button",
+  "builds": {
+    "moodle-atto_kekulechem-button": {
+      "jsfiles": [
+        "button.js"
+      ]
+    }
+  }
+}

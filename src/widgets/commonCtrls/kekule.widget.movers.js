@@ -52,10 +52,10 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		this.reactMouseUpBind = this.reactMouseUp.bind(this);
 		this.reactMouseMoveBind = this.reactMouseMove.bind(this);
 		this.reactTouchDownBind = this.reactTouchDown.bind(this);
-		this.reactTouchUpBind = this.reactTouchUp.bind(this);
+		this.reactTouchEndBind = this.reactTouchEnd.bind(this);
 		this.reactTouchMoveBind = this.reactTouchMove.bind(this);
 
-		this._initialInfo = {};  // private
+		this.__$K_initialMoverInfo__ = {};  // private
 
 		this.setCssPropX('left').setCssPropY('top').setMovingCursor('move').setMovingCursorDelay(500);
 
@@ -127,6 +127,14 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		return this._objIsWidget(g)? g.getElement(): g;
 	},
 	/** @private */
+	/*
+	getGripperWidget: function(gripperElem)
+	{
+		var g = gripperElem || this.getGripper();
+		return this._objIsWidget(g)? g: null;
+	},
+	*/
+	/** @private */
 	gripperChanged: function(newGripper, oldGripper)
 	{
 		if (oldGripper)
@@ -140,11 +148,11 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		if (gripperElem)
 		{
 			EV.addListener(gripperElem, 'mousedown', this.reactMouseDownBind);
-			EV.addListener(gripperElem, 'mouseup', this.reactMouseUpBind);
-			EV.addListener(gripperElem, 'mousemove', this.reactMouseMoveBind);
+			//EV.addListener(gripperElem, 'mouseup', this.reactMouseUpBind);
+			//EV.addListener(gripperElem, 'mousemove', this.reactMouseMoveBind);
 			EV.addListener(gripperElem, 'touchstart', this.reactTouchDownBind);
-			EV.addListener(gripperElem, 'touchend', this.reactTouchUpBind);
-			EV.addListener(gripperElem, 'touchmove', this.reactTouchMoveBind);
+			//EV.addListener(gripperElem, 'touchend', this.reactTouchEndBind);
+			//EV.addListener(gripperElem, 'touchmove', this.reactTouchMoveBind);
 		}
 	},
 	/** @private */
@@ -153,25 +161,79 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		if (gripperElem)
 		{
 			EV.removeListener(gripperElem, 'mousedown', this.reactMouseDownBind);
-			EV.removeListener(gripperElem, 'mouseup', this.reactMouseUpBind);
-			EV.removeListener(gripperElem, 'mousemove', this.reactMouseMoveBind);
+			//EV.removeListener(gripperElem, 'mouseup', this.reactMouseUpBind);
+			//EV.removeListener(gripperElem, 'mousemove', this.reactMouseMoveBind);
 			EV.removeListener(gripperElem, 'touchstart', this.reactTouchDownBind);
-			EV.removeListener(gripperElem, 'touchend', this.reactTouchUpBind);
-			EV.removeListener(gripperElem, 'touchmove', this.reactTouchMoveBind);
+			//EV.removeListener(gripperElem, 'touchend', this.reactTouchEndBind);
+			//EV.removeListener(gripperElem, 'touchmove', this.reactTouchMoveBind);
+		}
+	},
+
+	/** @private */
+	_elemSupportCapture: function(elem)
+	{
+		return !!elem.setCapture;
+	},
+	/** @private */
+	_getMoveEventReceiverElem: function(gripperElem)
+	{
+		return (/*this.getGripperWidget(gripperElem) ||*/ this._elemSupportCapture(gripperElem))?
+				gripperElem: gripperElem.ownerDocument.documentElement;
+	},
+	/** @private */
+	setMouseCapture: function(capture)
+	{
+		/*
+		var w = this.getGripperWidget();
+		if (w)
+		{
+			w.setMouseCapture(capture);
+		}
+		else // gripper is not widget, just element
+		*/
+		{
+			var gripperElem = this.getGripperElement();
+			if (gripperElem)
+			{
+				if (capture)
+				{
+					if (gripperElem.setCapture)
+						gripperElem.setCapture(true);
+				}
+				else
+				{
+					if (gripperElem.releaseCapture)
+						gripperElem.releaseCapture();
+				}
+			}
 		}
 	},
 
 	/** @private */
 	beginMoving: function(initialScreenCoord)
 	{
+		if (this.getIsMoving())
+			return;
 
 		var targetElem = this.getTargetElement();
 		EU.makePositioned(targetElem);
 
 		// save initial information
 		this.saveInitialInformation(initialScreenCoord);
+
+		// install move event listener
+		var moveReceiver = this._getMoveEventReceiverElem(this.getGripperElement());
+		EV.addListener(moveReceiver, 'mousemove', this.reactMouseMoveBind);
+		EV.addListener(moveReceiver, 'touchmove', this.reactTouchMoveBind);
+		EV.addListener(moveReceiver, 'mouseup', this.reactMouseUpBind);
+		EV.addListener(moveReceiver, 'touchend', this.reactTouchEndBind);
+
+		/*
 		var gripperElem = this.getGripperElement();
-		gripperElem.setCapture(true);
+		if (gripperElem.setCapture)
+			gripperElem.setCapture(true);
+		*/
+		this.setMouseCapture(true);
 		this._setCursorHandle = this.delaySetMoveCursor();
 		this.setIsMoving(true);
 		//console.log('begin move');
@@ -180,14 +242,22 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 	endMoving: function()
 	{
 		this.setIsMoving(false);
-		// restore gripper cursor
+		this.setMouseCapture(false);
+		// restore gripper cursor and remove moving event listener
 		var gripper = this.getGripperElement();
+		var moveReceiver = this._getMoveEventReceiverElem(gripper);
+		EV.removeListener(moveReceiver, 'mousemove', this.reactMouseMoveBind);
+		EV.removeListener(moveReceiver, 'touchmove', this.reactTouchMoveBind);
+		EV.removeListener(moveReceiver, 'mouseup', this.reactMouseUpBind);
+		EV.removeListener(moveReceiver, 'touchend', this.reactTouchEndBind);
+
 		// restore cursor
 		this.clearCursorSetter();
 		if (gripper)
 		{
-			var cursor = this._initialInfo.cursor;
+			var cursor = this.__$K_initialMoverInfo__.cursor;
 			gripper.style.cursor = cursor || '';
+			this.__$K_initialMoverInfo__.cursor = null;
 		}
 		//console.log('begin move');
 	},
@@ -201,7 +271,7 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		var elem = this.getTargetElement();
 		if (!elem)
 			return;
-		var initInfo = this._initialInfo;
+		var initInfo = this.__$K_initialMoverInfo__;
 		var coordDelta = Kekule.CoordUtils.substract(newPointerCoord, initInfo.pointerCoord);
 		//console.log(initInfo.pointerCoord.y, newPointerCoord.y, initInfo.elemCoord.y);
 		//var newElemPos = Kekule.CoordUtils.add(initInfo.elemCoord, coordDelta);
@@ -239,7 +309,7 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		if (elem)
 		{
 			// save mouse initial position
-			this._initialInfo.pointerCoord = pointerScreenCoord;
+			this.__$K_initialMoverInfo__.pointerCoord = pointerScreenCoord;
 			var coord;
 			var p = (SU.getComputedStyle(elem, 'position') || '').toLowerCase();
 			// save element initial position
@@ -262,10 +332,11 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 				coord.x += dim.width;
 			if (cssPropY === 'bottom')
 				coord.y += dim.height;
-			this._initialInfo.elemCoord = coord;
+			this.__$K_initialMoverInfo__.elemCoord = coord;
 			if (this.getGripperElement())
 			{
-				this._initialInfo.cursor = this.getGripperElement().style.cursor;
+				//if (!this.__$K_initialMoverInfo__.cursor)  // avoid set cursor twice
+				this.__$K_initialMoverInfo__.cursor = this.getGripperElement().style.cursor;
 			}
 		}
 	},
@@ -289,8 +360,11 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 	{
 		if (e.getButton() === EV.MouseButton.LEFT)
 		{
-			this.endMoving();
-			e.preventDefault();
+			if (this.getIsMoving())
+			{
+				this.endMoving();
+				e.preventDefault();
+			}
 		}
 	},
 	/** @private */
@@ -314,10 +388,13 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	reactTouchUp: function(e)
+	reactTouchEnd: function(e)
 	{
-		this.endMoving();
-		e.preventDefault();
+		if (this.getIsMoving())
+		{
+			this.endMoving();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	reactTouchMove: function(e)

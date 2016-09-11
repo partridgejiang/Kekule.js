@@ -216,7 +216,7 @@ Kekule.UnivChemStructObjComparer = {
 				{
 					for (var i = 0, l = nodes1.length; i < l; ++i)
 					{
-						var result = U.compare(nodes1[i], nodes2[i]);
+						var result = U.compare(nodes1[i], nodes2[i], compareOptions);
 						if (result !== 0)
 							break;
 					}
@@ -231,7 +231,7 @@ Kekule.UnivChemStructObjComparer = {
 				{
 					for (var i = 0, l = connectors1.length; i < l; ++i)
 					{
-						var result = U.compare(connectors1[i], connectors2[i]);
+						var result = U.compare(connectors1[i], connectors2[i], compareOptions);
 						if (result !== 0)
 							break;
 					}
@@ -265,14 +265,15 @@ Kekule.UnivChemStructObjComparer = {
 	 * Sort an array of chem objects.
 	 * @param {Array} objs
 	 * @param {Bool} ascendOrder
+	 * @param {Hash} compareOptions
 	 * @returns {Array}
 	 */
-	sort: function(objs, ascendOrder)
+	sort: function(objs, ascendOrder, compareOptions)
 	{
 		objs.sort(
 			function(obj1, obj2)
 			{
-				var r = Kekule.UnivChemStructObjComparer.compare(obj1, obj2);
+				var r = Kekule.UnivChemStructObjComparer.compare(obj1, obj2, compareOptions);
 				if (ascendOrder)
 					r = -r;
 				return r;

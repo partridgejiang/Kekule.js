@@ -237,7 +237,7 @@ Kekule.DomUtils = {
 	getNearestAncestorByTagName: function(elem, tagName, includingSelf)
 	{
 		var tag = tagName.toLowerCase();
-		if (includingSelf && (elem.tagName.toLowerCase() === tag))
+		if (includingSelf && elem.tagName && (elem.tagName.toLowerCase() === tag))
 			return elem;
 		var result = elem.parentNode;
 		while (result && result.tagName)

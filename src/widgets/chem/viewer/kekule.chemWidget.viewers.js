@@ -90,6 +90,10 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Bool} enableEdit Whether a edit button is shown in toolbar to edit object in viewer. Works only in 2D mode.
  * @property {Bool} modalEdit Whether opens a modal dialog when editting object in viewer.
  * @property {Bool} enableEditFromVoid Whether editor can be launched even if viewer is empty.
+ * @property {Hash} editorProperties Hash object to set properties of popup editor.
+ * @property {Bool} restrainEditorWithCurrObj If true, the editor popuped can only edit current object in viewer (and add new
+ *   objects is disabled). If false, the editor can do everything like a normal composer, viewer will load objects in composer
+ *   after editting (and will not keep the original object in viewer).
  *
  * @property {Array} toolButtons buttons in interaction tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...]. <br />
  *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
@@ -246,7 +250,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		this.defineProp('enableEditFromVoid', {'dataType': DataType.BOOL});
+		this.defineProp('restrainEditorWithCurrObj', {'dataType': DataType.BOOL});
 		this.defineProp('modalEdit', {'dataType': DataType.BOOL});
+		this.defineProp('editorProperties', {'dataType': DataType.HASH});
 
 		this.defineProp('toolButtons', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
 			'getter': function()
@@ -491,6 +497,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableEdit(true);
 		*/
 		this.setModalEdit(true);
+		this.setRestrainEditorWithCurrObj(true);
 		this.setRestraintRotation3DEdgeRatio(0.18);
 		this.setEnableRestraintRotation3D(true);
 	},
@@ -642,14 +649,21 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var dimCaption = Kekule.HtmlElementUtils.getElemClientDimension(captionElem);
 			h = Math.max(dimParent.height - dimCaption.height, 0);  // avoid value < 0
 			t = (this.getCaptionPos() & Kekule.Widget.Position.TOP)? dimCaption.height: 0;
+
+			drawParentElem.style.top = t + 'px';
+			drawParentElem.style.height = h + 'px';
 		}
 		else
 		{
+			/*
 			t = 0;
 			h = dimParent.height;
+			*/
+			// restore 100% height setting
+			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'top');
+			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
 		}
-		drawParentElem.style.top = t + 'px';
-		drawParentElem.style.height = h + 'px';
+
 		//this.refitDrawContext();
 	},
 
@@ -767,6 +781,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var chemObj = this.getChemObj();
 			var cloneObj;
 			var editFromVoid = !chemObj;
+			var editFromEmpty =  chemObj && chemObj.isEmpty && chemObj.isEmpty(); // has chem object but obj is empty (e.g., mol with no atom and bond)
+			var restrainObj = this.getRestrainEditorWithCurrObj();
 
 			var dialog = this.getComposerDialog();
 			if (!dialog)  // can not invoke composer dialog
@@ -776,14 +792,18 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 
 			var composer = dialog.getComposer();
-			composer.setEnableCreateNewDoc(editFromVoid);
-			composer.setEnableLoadNewFile(editFromVoid);
-			composer.setAllowCreateNewChild(editFromVoid);
-			composer.setEnableLoadNewFile(editFromVoid);
+			composer.setEnableCreateNewDoc(editFromVoid || !restrainObj);
+			composer.setEnableLoadNewFile(editFromVoid || !restrainObj);
+			composer.setAllowCreateNewChild(editFromVoid || !restrainObj);
+
+			var editorProperties = this.getEditorProperties();
+			if (editorProperties)
+				composer.setPropValues(editorProperties);
+
 			//composer.updateAllActions();
 			//console.log(composer.getEnableLoadNewFile(), editFromVoid);
 
-			if (!editFromVoid)
+			if (!editFromVoid && !editFromEmpty)
 			{
 				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
 				dialog.setChemObj(cloneObj);
@@ -799,22 +819,33 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
 				{
+					var newObj = dialog.getSavingTargetObj();
 					if (editFromVoid)
 					{
-						var newObj = dialog.getSavingTargetObj();
 						self.setChemObj(newObj.clone());
 					}
 					else
 					{
-						chemObj.assign(cloneObj);
-						// clear src info data
-						chemObj.setSrcInfo(null);
-						//self.repaint();
-						self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+						if (self.getRestrainEditorWithCurrObj())
+						{
+							if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
+								chemObj.assign(newObj.clone());
+							else  // preserve old object type in viewer
+								chemObj.assign(cloneObj);
+							// clear src info data
+							chemObj.setSrcInfo(null);
+							//self.repaint();
+							self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+						}
+						else // not restrain, load object in composer directy into viewer
+						{
+							//console.log(newObj);
+							self.setChemObj(newObj);
+						}
 					}
 				}
 				//dialog.finalize();
-			}
+			};
 			if (this.getModalEdit())
 				dialog.openModal(callback, callerWidget || this);
 			else

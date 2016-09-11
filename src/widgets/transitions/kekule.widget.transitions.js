@@ -670,6 +670,16 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		//console.log(this._computedCssStorage);
 
 		element.style.overflow = 'hidden';
+		this._clearDimesionConstraints(element);
+	},
+	/** @private */
+	_clearDimesionConstraints: function(elem)
+	{
+		var style = elem.style;
+		style.minWidth = '0';
+		style.minHeight = '0';
+		style.maxWidth = 'none';
+		style.maxHeight = 'none';
 	},
 	/** @private */
 	setElementProp: function(element, position, options)
@@ -712,7 +722,7 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	getAffectedCssPropNames: function(transOptions)
 	{
 		var result = [].concat(this.getTransCssPropNames(transOptions));
-		result.push('overflow');
+		result = result.concat(['overflow', 'min-width', 'min-height', 'max-width', 'max-height']);
 		return result;
 	},
 
@@ -925,6 +935,17 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 			height: odim.height - refRect.height
 		};
 		this._delta = delta;
+
+		this._clearDimesionConstraints(element);
+	},
+	/** @private */
+	_clearDimesionConstraints: function(elem)
+	{
+		var style = elem.style;
+		style.minWidth = '0';
+		style.minHeight = '0';
+		style.maxWidth = 'none';
+		style.maxHeight = 'none';
 	},
 
 	/** @private */
@@ -959,7 +980,8 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	getAffectedCssPropNames: function(transOptions)
 	{
 		var result = [].concat(this.getTransCssPropNames(transOptions));
-		result.push('overflow');
+		// TODO: min/max/width/height should be taken into consideration
+		result = result.concat(['overflow', 'min-width', 'min-height', 'max-width', 'max-height']);
 		return result;
 	},
 

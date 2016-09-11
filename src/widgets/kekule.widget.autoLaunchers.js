@@ -149,6 +149,8 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	 */
 	executeOnElem: function(doc, elem, parentWidget)
 	{
+		if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+			return;
 		var widget;
 		var currParent = parentWidget;
 		// if elem already binded with a widget, do nothing
@@ -228,6 +230,9 @@ Kekule.Widget.AutoLauncher.enabled = true;
 Kekule.Widget.AutoLauncher.enableCascadeLaunch = true;
 /** A flag to enable or disable checking dynamic inserted content in HTML page. */
 Kekule.Widget.AutoLauncher.enableDynamicDomCheck = true;
+/** A flag to enable or disable launching widgets on element in HTML editor (usually should not). */
+Kekule.Widget.AutoLauncher.enableOnEditable = false;
+
 
 var _doAutoLaunch = function()
 {

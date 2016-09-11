@@ -3799,6 +3799,21 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	reactUiEvent: function(e)
 	{
 		var evType = e.getType();
+
+		// get target widget to dispatch event
+		var targetWidget;
+		var mouseCaptured;
+		if (this.getMouseCaptureWidget() && (this.isMouseEvent(evType) || this.isTouchEvent(evType)))  // may be captured
+		{
+			targetWidget = this.getMouseCaptureWidget();
+			mouseCaptured = true;
+		}
+		else
+		{
+			var elem = e.getTarget();
+			targetWidget = this.getBelongedResponsiveWidget(elem);
+		}
+
 		if (evType === 'touchstart' || evType === 'touchend')
 		{
 			//console.log('[Global touch event]', evType, e.getTarget());
@@ -3813,6 +3828,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				//return;
 		}
 
+		/*
+		if (['mouseup', 'click', 'touchend'].indexOf(evType) >= 0)  // dismiss mouse capture
+		{
+			if (mouseCaptured)
+				this.setMouseCaptureWidget(null);
+		}
+		*/
+
 		// check first if the component has event handler itself
 		var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
 
@@ -3820,18 +3843,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this[funcName](e);
 
 		// dispatch to widget
-		var widget;
-		if (this.getMouseCaptureWidget() && (this.isMouseEvent(evType) || this.isTouchEvent(evType)))  // may be captured
-			widget = this.getMouseCaptureWidget();
-		else
-		{
-			var elem = e.getTarget();
-			widget = this.getBelongedResponsiveWidget(elem);
-		}
-		if (widget)
+		if (targetWidget)
 		{
 			//console.log('event', e.getTarget().tagName, widget.getClassName());
-			widget.reactUiEvent(e);
+			targetWidget.reactUiEvent(e);
 		}
 	},
 	/** @private */

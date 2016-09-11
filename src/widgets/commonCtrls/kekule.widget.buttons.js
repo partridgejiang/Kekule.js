@@ -244,6 +244,7 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('button');
+		result.setAttribute('type', 'button');  // avoid default submit type
 		/*
 		var result = doc.createElement('a');
 		result.setAttribute('href', 'javascript:void(0)');

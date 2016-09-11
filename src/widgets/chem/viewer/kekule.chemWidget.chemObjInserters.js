@@ -600,11 +600,11 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'data-draw-options': detail.drawOptionsJson,
 			'data-predefined-setting': detail.predefinedSetting
 		};
-		if (detail.autoSize)
+		if (Kekule.ObjUtils.notUnset(detail.autoSize))
 			result['data-auto-size'] = detail.autoSize;
-		if (detail.autofit)
+		if (Kekule.ObjUtils.notUnset(detail.autofit))
 			result['data-auto-fit'] = detail.autofit;
-		if (detail.backgroundColor)
+		if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
 			result['data-background-color'] = detail.backgroundColor;
 		return result;
 	},

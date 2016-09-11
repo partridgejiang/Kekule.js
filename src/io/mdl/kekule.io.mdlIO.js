@@ -1372,6 +1372,11 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	var mol3kFmtId = 'mol3k';
 	var rxn3kFmtId = 'rxn3k';
 
+	// extents mime type consts
+	Kekule.IO.MimeType.MDL_MOL = 'chemical/x-mdl-molfile';
+	Kekule.IO.MimeType.MDL_RXN = 'chemical/x-mdl-rxnfile';
+	Kekule.IO.MimeType.MDL_SD = 'chemical/x-mdl-sdfile';
+
 	/*
 	Kekule.IO.DataFormatsManager.register('mol', 'chemical/x-mdl-molfile', 'mol',
 		Kekule.IO.ChemDataType.TEXT, 'MDL Mol 2000/3000 format');
@@ -1385,15 +1390,15 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	var sdFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-mdl-sdfile');
 	*/
 
-	Kekule.IO.DataFormatsManager.register(molFmtId, 'chemical/x-mdl-molfile', 'mol',
+	Kekule.IO.DataFormatsManager.register(molFmtId, Kekule.IO.MimeType.MDL_MOL, 'mol',
 		Kekule.IO.ChemDataType.TEXT, 'MDL Mol 2000 format');
-	Kekule.IO.DataFormatsManager.register(rxnFmtId, 'chemical/x-mdl-rxnfile', 'rxn',
+	Kekule.IO.DataFormatsManager.register(rxnFmtId, Kekule.IO.MimeType.MDL_RXN, 'rxn',
 		Kekule.IO.ChemDataType.TEXT, 'MDL Reaction 2000 format');
-	Kekule.IO.DataFormatsManager.register(sdFmtId, 'chemical/x-mdl-sdfile', ['sd', 'sdf'],
+	Kekule.IO.DataFormatsManager.register(sdFmtId, Kekule.IO.MimeType.MDL_SD, ['sd', 'sdf'],
 		Kekule.IO.ChemDataType.TEXT, 'MDL Structure-Data format');
-	Kekule.IO.DataFormatsManager.register(mol3kFmtId, 'chemical/x-mdl-molfile', 'mol',
+	Kekule.IO.DataFormatsManager.register(mol3kFmtId, Kekule.IO.MimeType.MDL_MOL, 'mol',
 		Kekule.IO.ChemDataType.TEXT, 'MDL Mol 3000 format');
-	Kekule.IO.DataFormatsManager.register(rxn3kFmtId, 'chemical/x-mdl-rxnfile', 'rxn',
+	Kekule.IO.DataFormatsManager.register(rxn3kFmtId, Kekule.IO.MimeType.MDL_RXN, 'rxn',
 		Kekule.IO.ChemDataType.TEXT, 'MDL Reaction 3000 format');
 
 	// register ChemData reader and writer
