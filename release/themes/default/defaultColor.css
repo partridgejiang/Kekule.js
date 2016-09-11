@@ -6,7 +6,6 @@
 .K-Assoc-Text-Content{color:#888}
 .K-Normal-Background,.K-ComboBox .K-TextBox,.K-Container.K-Panel{background-color:#fff}
 .K-Container{background-color:transparent}
-.K-Menu,.K-Menu ul,.K-Menu ol{border-color:#d3d3d3}
 .K-Dialog-Modal-Background{background-color:#C8C8C8;background-color:rgba(128,128,128,.3)}
 .K-MsgPanel{background-color:transparent}
 .K-MsgPanel .K-MsgPanel-Content{background-color:#fff;border-color:#d3d3d3;color:#000;box-shadow:1px 1px 2px #aaa}
@@ -14,15 +13,15 @@
 .K-MsgPanel.K-Msg-Info .K-MsgPanel-Content{background-color:#ebf5ff;color:#000}
 .K-MsgPanel.K-Msg-Warning .K-MsgPanel-Content{background-color:#ffffc8;color:#000}
 .K-MsgPanel.K-Msg-Error .K-MsgPanel-Content{background-color:#ffebeb;color:#f00}
-.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block}
-.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px 0}
-.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -17px}
-.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-150px -34px}
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content,.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{display:inline-block;background-repeat:no-repeat}
+.K-MsgPanel.K-Msg-Info .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-154px 0}
+.K-MsgPanel.K-Msg-Warning .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-154px -18px}
+.K-MsgPanel.K-Msg-Error .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-154px -36px}
 .K-MsgGroup{background-color:transparent}
-.K-Resize-Gripper{background-image:url(sprite/defaultColor.png);background-position:-167px 0}
+.K-Resize-Gripper{background-image:url(sprite/defaultColor.png);background-position:-172px 0}
 .K-Button,.K-Toolbar,.K-Panel,.K-TreeView,.K-Widget-Grid .K-Widget-Grid-Cell,.K-PageNavigator > .K-PageNavigator-PageIndexer{border-color:#d3d3d3}
 .K-Widget-Grid .K-Widget-Grid-Cell{color:#d3d3d3}
-.K-Button,.K-Toolbar,.K-PageNavigator > .K-PageNavigator-PageIndexer{background-color:#e6e6e6}
+.K-Button,.K-Toolbar,.K-PageNavigator > .K-PageNavigator-PageIndexer{background-color:#e6e6e6;background-image:none}
 .K-Button .K-DropDownMark{opacity:.7;filter:Alpha(Opacity=70)}
 .K-Button.K-State-Focused,.K-Button.K-State-Hover,.K-Widget-Grid .K-Widget-Grid-Cell.K-State-Hover{color:#212121;border-color:#999}
 .K-Button.K-State-Focused,.K-Button.K-State-Hover{background-color:#dadada}
@@ -30,19 +29,26 @@
 .K-Button.K-State-Active,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Hover,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Focused,.K-PageNavigator > .K-PageNavigator-PageIndexer.K-State-Active{background-color:#fff}
 .K-Button.K-Button-Kinded .K-Pri-Glyph-Content,.K-Button.K-Button-Kinded .K-Assoc-Glyph-Content{width:16px;height:16px}
 .K-Button.K-Button-Kinded .K-Pri-Glyph-Content{}
-.K-Button.K-Button-Kinded.K-Kind-DropDown .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-167px -17px}
-.K-Button.K-Button-Kinded.K-Kind-Popup .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-167px -34px}
-.K-Button.K-Button-Kinded.K-Kind-Search .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-184px 0}
-.K-Button.K-Button-Kinded.K-Kind-Edit .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-184px -17px}
+.K-Button.K-Button-Kinded.K-Kind-DropDown .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-172px -18px}
+.K-Button.K-Button-Kinded.K-Kind-Popup .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-172px -36px}
+.K-Button.K-Button-Kinded.K-Kind-Search .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-190px 0}
+.K-Button.K-Button-Kinded.K-Kind-Edit .K-Assoc-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-190px -18px}
 .K-Compact-Mark{border-bottom-color:#a3a3a3;border-right-color:#a3a3a3}
 .K-State-Focused>.K-Compact-Mark,.K-State-Hover>.K-Compact-Mark{border-bottom-color:#999;border-right-color:#999}
 .K-State-Active>.K-Compact-Mark{border-bottom-color:#777;border-right-color:#777}
 .K-State-Disabled{opacity:.35;filter:Alpha(Opacity=35);color:#555}
 input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity:inherit;filter:'';color:inherit}
 .K-TextEditor .K-TextEditor-Toolbar .K-Button .K-Pri-Glyph-Content{width:16px;height:16px}
-.K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-184px -34px}
-.K-TextEditor-Btn-FontSizeDec > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-201px 0}
-.K-TextEditor-Btn-TextWrap > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-201px -17px}
+.K-Menu,.K-MenuItem,.K-MenuItem-Separator{background-color:#fff}
+.K-Menu .K-MenuItem-Normal:hover,.K-Menu .K-MenuItem-Normal:active,.K-Menu .K-MenuItem-Normal:focus{background-color:#dadada}
+.K-Menu,.K-Menu .K-MenuItem-Separator{border-color:#d3d3d3}
+.K-Menu .K-MenuItem-Separator{color:#d3d3d3}
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker,.K-Menu .K-MenuItem .K-CheckMenu-Marker{width:16px;height:16px;margin:0;padding:0;top:50%;margin-top:-8px;background-repeat:no-repeat}
+.K-Menu.K-Layout-V .K-MenuItem .K-SubMenu-Marker{background-image:url(sprite/defaultColor.png);background-position:-190px -36px}
+.K-Menu .K-MenuItem.K-State-Checked .K-CheckMenu-Marker{background-image:url(sprite/defaultColor.png);background-position:-208px 0}
+.K-TextEditor-Btn-FontSizeInc > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-208px -18px}
+.K-TextEditor-Btn-FontSizeDec > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-208px -36px}
+.K-TextEditor-Btn-TextWrap > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-226px 0}
 .K-TreeView,.K-ColorPicker,.K-TabView{}
 .K-TabView .K-TabView-TabButton-Container{}
 .K-TabButtonGroup .K-Button,.K-TabView .K-TabView-Page-Container{background-color:#fff;color:#d3d3d3;border-color:#ddd}
@@ -54,23 +60,23 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-TabButtonGroup.K-TabAtTop>.K-Button.K-State-Active,.K-TabButtonGroup.K-TabAtBottom>.K-Button.K-State-Active{border-bottom-color:#F39814;border-top-color:#F39814}
 .K-TabButtonGroup.K-TabAtLeft>.K-Button.K-State-Active,.K-TabButtonGroup.K-TabAtRight>.K-Button.K-State-Active{border-left-color:#F39814;border-right-color:#F39814}
 .K-TabView .K-TabView-Page-Container{border-color:#d3d3d3}
-.K-TreeView .K-TreeView-ExpandMark{background-image:url(sprite/defaultColor.png);background-position:-167px -17px}
-.K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark{background-image:url(sprite/defaultColor.png);background-position:-201px -34px}
+.K-TreeView .K-TreeView-ExpandMark{background-image:url(sprite/defaultColor.png);background-position:-172px -18px}
+.K-TreeView .K-State-Collapsed .K-TreeView-ExpandMark{background-image:url(sprite/defaultColor.png);background-position:-226px -18px}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Pri-Glyph-Content{display:inline-block;width:16px;height:16px}
-.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-218px 0}
+.K-Widget-Grid-Button-Remove .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-226px -36px}
 .K-ColorPicker .K-ColorPicker-Palette,.K-ColorPicker .K-ColorPicker-Palette-Cell,.K-ColorPicker .K-ColorPicker-Spec-Color-Palette,.K-ColorDropButton .K-Pri-Glyph-Content{border-color:#333}
-.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent{background-image:url(sprite/defaultColor.png);background-position:-218px -17px}
+.K-ColorPicker .K-ColorPicker-Palette-Cell-Transparent{background-image:url(sprite/defaultColor.png);background-position:-244px 0}
 .K-ValueListEditor .K-ValueListEditor-Row{background-color:#fff;border-color:transparent}
 .K-ValueListEditor,.K-ValueListEditor .K-ValueListEditor-Cell,.K-ObjInspector,.K-ObjInspector .K-ObjInspector-PropListEditorContainer{border-color:#d3d3d3;outline-color:#d3d3d3}
 .K-ValueListEditor .K-ValueListEditor-ValueCell{color:#303080}
-.K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/defaultColor.png);background-position:-184px -17px}
+.K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/defaultColor.png);background-position:-190px -18px}
 .K-ValueListEditor,.K-ValueListEditor .K-ValueListEditor-Row:hover,.K-ValueListEditor .K-ValueListEditor-Row:active,.K-ValueListEditor .K-ValueListEditor-ActiveRow,.K-ValueListEditor .K-ValueListEditor-IndicatorCell{background-color:#e6e6e6}
 .K-ValueListEditor .K-ValueListEditor-ActiveRow{border-color:#d3d3d3;outline-color:#d3d3d3}
 .K-ValueListEditor .K-ValueListEditor-ActiveRow .K-ValueListEditor-ValueCell{background-color:#fff}
 .K-PropListEditor .K-PropListEditor-PropExpandMarker{}
-.K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker{background-image:url(sprite/defaultColor.png);background-position:-167px -17px}
-.K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker{background-image:url(sprite/defaultColor.png);background-position:-201px -34px}
-.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/defaultColor.png);background-position:-218px -34px}
+.K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker{background-image:url(sprite/defaultColor.png);background-position:-172px -18px}
+.K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker{background-image:url(sprite/defaultColor.png);background-position:-226px -18px}
+.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span{background-image:url(sprite/defaultColor.png);background-position:-244px -18px}
 .K-ObjInspector{background-color:#f6f6f6}
 .K-Widget-Configurator .K-ObjInspector{background-color:#fff}
 .K-Dialog,.K-Dialog .K-Dialog-Caption{border-color:#aaa;text-shadow:1px 1px 2px rgba(255,255,255,.7)}
@@ -79,31 +85,32 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-DataTable thead{background-color:#e6e6e6}
 .K-DataTable th .K-DataTable-SortMark{width:16px;height:16px}
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc,.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{opacity:.5}
-.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc{background-image:url(sprite/defaultColor.png);background-position:-235px 0}
-.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{background-image:url(sprite/defaultColor.png);background-position:-167px -17px}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Asc{background-image:url(sprite/defaultColor.png);background-position:-244px -36px}
+.K-DataTable th .K-DataTable-SortMark.K-Sort-Desc{background-image:url(sprite/defaultColor.png);background-position:-172px -18px}
 .K-DataTable tr.K-State-Hover{background-color:#eee}
 .K-DataTable td.K-State-Hover{}
 .K-DataTable tr.K-State-Active{background-color:#eee}
 .K-DataTable td.K-State-Active{}
 .K-DataTable-Edit > .K-Pri-Glyph-Content,.K-DataTable-Insert > .K-Pri-Glyph-Content,.K-DataTable-Delete > .K-Pri-Glyph-Content,.K-PageNavigator-First > .K-Pri-Glyph-Content,.K-PageNavigator-Last > .K-Pri-Glyph-Content,.K-PageNavigator-Prev > .K-Pri-Glyph-Content,.K-PageNavigator-Next > .K-Pri-Glyph-Content{width:16px;height:16px}
-.K-DataTable-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-235px 0}
-.K-DataTable-Insert > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-235px -17px}
-.K-DataTable-Delete > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-235px -34px}
-.K-PageNavigator-First > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-252px 0}
-.K-PageNavigator-Last > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-252px -17px}
-.K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-252px -34px}
-.K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-201px -34px}
-.K-Res-Cursor-Rotate{cursor:url(/./absolute/cursors/rotate.cur),pointer}
-.K-Res-Cursor-Rotate-NE{cursor:url(./absolute/cursors/rotateNE.cur),pointer}
-.K-Res-Cursor-Rotate-NW{cursor:url(./absolute/cursors/rotateNW.cur),pointer}
-.K-Res-Cursor-Rotate-SE{cursor:url(./absolute/cursors/rotateSE.cur),pointer}
-.K-Res-Cursor-Rotate-SW{cursor:url(./absolute/cursors/rotateSW.cur),pointer}
-.K-Res-Icon-Color-Pick{background-image:url(sprite/defaultColor.png);background-position:-184px -17px}
+.K-DataTable-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-244px -36px}
+.K-DataTable-Insert > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-262px 0}
+.K-DataTable-Delete > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-262px -18px}
+.K-PageNavigator-First > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-262px -36px}
+.K-PageNavigator-Last > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-280px 0}
+.K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-280px -18px}
+.K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-226px -18px}
+.K-Action-Open-Configurator > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-102px 0}
+.K-Res-Cursor-Rotate{cursor:url(images/cursors/rotate.cur),pointer}
+.K-Res-Cursor-Rotate-NE{cursor:url(images/cursors/rotateNE.cur),pointer}
+.K-Res-Cursor-Rotate-NW{cursor:url(images/cursors/rotateNW.cur),pointer}
+.K-Res-Cursor-Rotate-SE{cursor:url(images/cursors/rotateSE.cur),pointer}
+.K-Res-Cursor-Rotate-SW{cursor:url(images/cursors/rotateSW.cur),pointer}
+.K-Res-Icon-Color-Pick{background-image:url(sprite/defaultColor.png);background-position:-190px -18px}
 .K-Res-Icon-Color-NotSet,.K-Color-Unset,.K-Color-Default{background-image:url(sprite/defaultColor.png);background-position:0 0}
-.K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/defaultColor.png);background-position:-50px 0}
-.K-Res-Icon-Color-Transparent,.K-Color-Transparent{background-image:url(sprite/defaultColor.png);background-position:-218px -17px}
+.K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/defaultColor.png);background-position:-51px 0}
+.K-Res-Icon-Color-Transparent,.K-Color-Transparent{background-image:url(sprite/defaultColor.png);background-position:-244px 0}
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,.K-Res-Button-NoCancel .K-Pri-Glyph-Content,.K-Res-Button-LoadFile .K-Pri-Glyph-Content{width:24px;height:24px}
-.K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px 0}
-.K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-100px -25px}
-.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-125px 0}
-#CssGaga{content:"150715175642,swt,333"}
+.K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-102px -26px}
+.K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px 0}
+.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px -26px}
+#CssGaga{content:"160908233128,swt,334"}
