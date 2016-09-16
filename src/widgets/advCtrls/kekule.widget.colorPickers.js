@@ -577,7 +577,7 @@ Kekule.Widget.ColorDropTextBox = Class.create(Kekule.Widget.ButtonTextBox,
 					result.setDisplayed(false);
 					result.getElement().style.position = 'absolute';  // important, do not affect normal content flow
 					result.setSpecialColors(this.getSpecialColors());
-					result.addEventListener('valueSet', this.reactColorPickerValueSet, this);
+					result.addEventListener('valueChange', this.reactColorPickerValueSet, this);
 					result.appendToElem(this.getElement());
 					this.setPropStoreFieldValue('colorPicker', result);
 				}
@@ -671,6 +671,7 @@ Kekule.Widget.ColorDropTextBox = Class.create(Kekule.Widget.ButtonTextBox,
 		this.setIsDirty(this.getIsDirty() || this.getColorPicker().getIsDirty());
 		this.setColorClassName(e.colorClassName);
 		this.hideColorPicker();
+		e.stopPropagation();
 	},
 
 	/** @ignore */
@@ -758,7 +759,7 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 					result.setDisplayed(false);
 					result.getElement().style.position = 'absolute';  // important, do not affect normal content flow
 					result.setSpecialColors(this.getSpecialColors());
-					result.addEventListener('valueSet', this.reactColorPickerValueSet, this);
+					result.addEventListener('valueChange', this.reactColorPickerValueSet, this);
 					//result.appendToElem(this.getElement());
 					this.setPropStoreFieldValue('colorPicker', result);
 				}
@@ -834,6 +835,7 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 		this.setColorClassName(className);
 		this.hideColorPicker();
 		this.invokeEvent('valueChange', {'value': value});
+		e.stopPropagation();
 	},
 
 	/** @private */
