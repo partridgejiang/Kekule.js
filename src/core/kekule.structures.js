@@ -138,6 +138,17 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns self or child object that can directly linked to a connector.
+	 * For atom or other simple chem objetc, this function should just returns self,
+	 * for structure fragment, this function need to returns an anchor node.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getCurrConnectableObj: function()
+	{
+		return this;
+	},
+
+	/**
 	 * Return count of linkedConnectors.
 	 * @returns {Int}
 	 */
@@ -500,6 +511,7 @@ Kekule.StereoParity = {
  * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalType}.
  * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
  * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
+ * @property {Bool} isAnchor Whether this node is among anchors in parent structure.
  */
 Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.ChemStructureNode# */
@@ -525,6 +537,30 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		});
 		this.defineProp('radical', {'dataType': DataType.INT});
 		this.defineProp('parity', {'dataType': DataType.INT});
+		this.defineProp('isAnchor', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var p = this.getParent();
+				if (p && p.indexOfAnchorNode)
+					return p.indexOfAnchorNode(this) >= 0;
+				else
+					return false;
+			},
+			'setter': function(value)
+			{
+				if (value !== this.getIsAnchor())
+				{
+					var p = this.getParent();
+					if (p)
+					{
+						if (value && p.appendAnchorNode())
+							p.appendAnchorNode(this);
+						else if (!value && p.removeAnchorNode)
+							p.removeAnchorNode(this);
+					}
+				}
+			}
+		});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)
@@ -1472,6 +1508,14 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	{
 		return this.getParent();
 	},
+	/**
+	 * Check if this formula contains no data.
+	 * @returns {Bool}
+	 */
+	isEmpty: function()
+	{
+		return this.getSectionCount() <= 0;
+	},
 
 	/** @private */
 	notifySectionsChanged: function()
@@ -1687,7 +1731,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
  * @property {Kekule.ChemSpace} owner Owner for each objects in connection table.
  * @property {Kekule.StructureFragment} parent Parent to hold this Ctab. Read only.
  * @property {Array} nodes All structure nodes in this connection table.
- * @property {Array} anchorNodes Nodes that can have bond connected to other structure nodes.
+ * @property {Array} anchorNodes Nodes that can have bond connected to other structure fragments.
  * @property {Array} connectors Connectors (usually bonds) in this connection table.
  * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this connection table.
  * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this connection table.
@@ -2347,6 +2391,27 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				var connector = connectors[i];
 				connector.replaceConnectedObj(oldNode, newNode);
 			}
+
+			// replace related cross connectors of oldNode (when it is subgroup)
+			if (oldNode.getNodes && oldNode.getCrossConnectors)
+			{
+				var crossConnectors = Kekule.ArrayUtils.clone(oldNode.getCrossConnectors());
+				for (var i = 0, l = crossConnectors.length; i < l; ++i)
+				{
+					var connector = crossConnectors[i];
+					if (this.indexOfConnector(connector) >= 0)  // is connector in this ctab
+					{
+						for (var j = 0, k = connector.getConnectedObjCount(); j < k; ++j)
+						{
+							var obj = connector.getConnectedObjAt(j);
+							if (oldNode.indexOfChild(obj) >= 0)  // obj is inside oldNode group, replace it with new Node
+							  connector.replaceConnectedObj(obj, newNode);
+						}
+					}
+					connector.replaceConnectedObj(oldNode, newNode);
+				}
+			}
+
 			this.removeNode(oldNode);
 		}
 	},
@@ -3201,7 +3266,11 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		var result = new Kekule.MolecularFormula();
 		for (var i = 0, l = isotopeMaps.length; i < l; ++i)
 		{
-			result.appendSection(isotopeMaps[i].isotope, isotopeMaps[i].count, isotopeMaps[i].charge);
+			// create fake atom
+			var fakeAtom = new Kekule.Atom();
+			fakeAtom.setIsotope(isotopeMaps[i].isotope);
+			//result.appendSection(isotopeMaps[i].isotope, isotopeMaps[i].count, isotopeMaps[i].charge);
+			result.appendSection(fakeAtom, isotopeMaps[i].count, isotopeMaps[i].charge);
 		}
 		return result;
 	},
@@ -3455,7 +3524,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		this.defineProp('anchorNodes', {
 			'dataType': DataType.ARRAY,
 			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC,
+			'scope': Class.PropertyScope.PUBLISHED,
 			'setter': null,
 			'getter': function() { return this.hasCtab()? this.getCtab().getAnchorNodes(): []; }
 		});
@@ -3477,9 +3546,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					//var result = [].concat(this.getLinkedConnectors());
 					var result = [].concat(this.getPropStoreFieldValue('linkedConnectors'));
 					// check external connectors of anchor nodes
-					for (var i = 0, l = this.getAnchorNodeCount(); i < l; ++i)
+					for (var i = 0, l = this.getNodeCount(); /*this.getAnchorNodeCount();*/ i < l; ++i)
 					{
-						var connectors = this.getAnchorNodeAt(i).getLinkedConnectors();
+						//var connectors = this.getAnchorNodeAt(i).getLinkedConnectors();
+						var node = this.getNodeAt(i);
+						var connectors = node.getLinkedConnectors() || [];
+						/*
+						if (node.getCrossConnectors())
+							Kekule.ArrayUtils.pushUnique(connectors, node.getCrossConnectors());
+						*/
 						for (var j = 0, k = connectors.length; j < k; ++j)
 						{
 							if (this.indexOfConnector(connectors[j]) < 0) // external connector
@@ -3619,10 +3694,48 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return !this.hasCtab() || this.getCtab().isEmpty();
 	},
 
-	/** @private */
+	/** @ignore */
 	doGetLinkedConnectors: function()
 	{
 		return this.getCrossConnectors();
+	},
+	/* @ignore */
+
+	appendLinkedConnector: function(connector)
+	{
+		// instead of link connector to self, we'd rather link connector to child anchor node
+		var actualLinkedNode = this.getCurrConnectableObj();
+		return actualLinkedNode.appendLinkedConnector(connector);
+	},
+
+
+	/** @ignore */
+	getCurrConnectableObj: function()
+	{
+		// instead of link connector to self, we'd rather link connector to child anchor node
+		var candidates = (this.getAnchorNodeCount() > 0)? this.getAnchorNodes(): this.getNodes();
+		if (candidates.length <= 0)
+			return this;
+		else  // iterate all candidates, find the first one with min cross connector count
+		{
+			var allCrossConnectors = this.getCrossConnectors();
+			var minCrossConnectorCount = null;
+			var minNode = null;
+			for (var i = 0, l = candidates.length; i < l; ++i)
+			{
+				var node = candidates[i];
+				var connectors = node.getLinkedConnectors();
+				var crossConnectors = Kekule.ArrayUtils.intersect(connectors, allCrossConnectors);
+				var crossConnectorCount = crossConnectors.length;
+				if (minCrossConnectorCount === null || minCrossConnectorCount > crossConnectorCount)
+				{
+					minCrossConnectorCount = crossConnectorCount;
+					minNode = node;
+				}
+			}
+			return minNode;
+		}
+		//return this.getAnchorNodeAt(0) || this.getNodeAt(0) || this.getChildAt(0) || this;
 	},
 
 	/** @private */
@@ -4733,7 +4846,9 @@ Kekule.StructureFragment.moveChildBetweenStructFragment = function(target, dest,
  * @param {Object} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {String} name Name of group.
- * @property {String} abbr Abbreviation of group.
+ * @property {String} abbr Abbreviation of group, e.g. OMe.
+ * @property {String} formulaText Formula in plain text to represent subgroup, e.g. CO2H.
+ *   This property has nothing to do with the actual formula of subgroup.
  */
 Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 /** @lends Kekule.SubGroup# */
@@ -4753,6 +4868,7 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 	initProperties: function()
 	{
 		this.defineProp('abbr', {'dataType': DataType.STRING});
+		this.defineProp('formulaText', {'dataType': DataType.STRING});
 		this.defineProp('name', {'dataType': DataType.STRING});
 	},
 	/** @private */
@@ -4869,7 +4985,11 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 						for (var i = 0, l = value.length; i < l; ++i)
 							this.assertConnectedObjLegal(value[i]);
 						for (var i = 0, l = value.length; i < l; ++i)
-							Kekule.ArrayUtils.pushUnique(objs, value[i]);
+						{
+							var obj = value[i];
+							var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+							Kekule.ArrayUtils.pushUnique(objs, actualConnObj);
+						}
 					}
 					else
 						this.setPropStoreFieldValue('connectedObjs', []);
@@ -4992,9 +5112,10 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	appendConnectedObj: function(obj)
 	{
 		this.assertConnectedObjLegal(obj);
-		var result = this._doAppendConnectedObj(obj);
-		if (obj)
-			obj.appendLinkedConnector(this);
+		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+		var result = this._doAppendConnectedObj(actualConnObj);
+		if (actualConnObj)
+			actualConnObj.appendLinkedConnector(this);
 		return result;
 	},
 	/** @private */
@@ -5013,21 +5134,22 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	insertConnectedObjAt: function(obj, index)
 	{
 		this.assertConnectedObjLegal(obj);
-		var i = this.indexOfConnectedObj(obj);
+		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+		var i = this.indexOfConnectedObj(actualConnObj);
 		var objs = this.getConnectedObjs();
 		if (i >= 0)  // already inside, adjust position
 		{
 			objs.splice(i, 1);
-			objs.splice(index, 0, obj);
+			objs.splice(index, 0, actualConnObj);
 			this.notifyConnectedObjsChanged();
 		}
 		else // new one
 		{
-			objs.splice(index, 0, obj);
-			if (obj)
-				obj.appendLinkedConnector(this);
+			objs.splice(index, 0, actualConnObj);
+			if (actualConnObj)
+				actualConnObj.appendLinkedConnector(this);
 			//console.log('insert new one', obj.getLinkedConnectorCount());
-			this.connectedObjAdded(obj);
+			this.connectedObjAdded(actualConnObj);
 		}
 	},
 	/**

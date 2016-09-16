@@ -73,7 +73,7 @@ Kekule.Editor.StructureUtils = {
 		if (l === 0)
 			return 0;
 		else if (l === 1)  // only one connector
-			return -angles[0]
+			return -angles[0];
 		else  // more than two connectors
 		{
 			var max = 0;
@@ -214,6 +214,162 @@ Kekule.Editor.StructureUtils = {
 		*/
 		var direction = Kekule.Editor.StructureUtils.calcPreferred2DBondGrowingDirection(startingObj, defAngle, allowCoordBorrow);
 		return Kekule.CoordUtils.add(startingCoord, {'x': bondLength * Math.cos(direction), 'y': bondLength * Math.sin(direction)});
+	}
+};
+
+Kekule.Editor.RepositoryStructureUtils = {
+	/** @private */
+	_calcNodeMergeAdjustRotateAngle: function(editor, mergeNode, destNode)
+	{
+		var result = 0;
+		var coordMode = editor.getCoordMode();
+
+		// TODO: currently only handles 2D situation
+		if (coordMode !== Kekule.CoordMode.COORD3D)
+		{
+			var allowCoordBorrow = editor.getAllowCoordBorrow();
+			var structConfigs = editor.getEditorConfigs().getStructureConfigs();
+			var targetSurroundingObjs = Kekule.Editor.StructureUtils.getSurroundingObjs(mergeNode);
+			var destSurroundingObjs = Kekule.Editor.StructureUtils.getSurroundingObjs(destNode);
+
+			if (targetSurroundingObjs.length === 1)  // only one bond connected to mergeNode in repository
+			{
+				var connector = mergeNode.getLinkedConnectorAt(0);
+				var bondOrder = connector.getBondOrder? connector.getBondOrder(): 0;
+				var bondAngle = structConfigs.getNewBondDefAngle(destNode, bondOrder);
+				refAngle = Kekule.Editor.StructureUtils.calcPreferred2DBondGrowingDirection(destNode, bondAngle, allowCoordBorrow);
+
+				var vector = Kekule.ChemStructureUtils.getAbsCoordVectorBetweenObjs(mergeNode, targetSurroundingObjs[0], coordMode, allowCoordBorrow);
+				var targetOriginAngle = Math.atan2(vector.y, vector.x);
+				result = refAngle - targetOriginAngle;
+			}
+			else if (destSurroundingObjs.length === 1)  // only one bond connected to dest node
+			{
+				var connector = destNode.getLinkedConnectorAt(0);
+				var bondOrder = connector.getBondOrder? connector.getBondOrder(): 0;
+				var bondAngle = structConfigs.getNewBondDefAngle(mergeNode, bondOrder);
+				var refAngle = Kekule.Editor.StructureUtils.calcPreferred2DBondGrowingDirection(mergeNode, bondAngle, allowCoordBorrow);
+
+				var vector = Kekule.ChemStructureUtils.getAbsCoordVectorBetweenObjs(destNode, destSurroundingObjs[0], coordMode, allowCoordBorrow);
+				var destOriginAngle = Math.atan2(vector.y, vector.x);
+				result = destOriginAngle - refAngle;
+			}
+			else  // more than one bonds in both mergeNode and destNode
+			{
+				var bondAngle = structConfigs.getNewBondDefAngle(destNode, null);
+				var refAngle = Kekule.Editor.StructureUtils.calcPreferred2DBondGrowingDirection(destNode, bondAngle, allowCoordBorrow);
+
+				var targetBondAngleRange = {};
+				for (var i = 0, l = targetSurroundingObjs.length; i < l; ++i)
+				{
+					var vector = Kekule.ChemStructureUtils.getAbsCoordVectorBetweenObjs(mergeNode, targetSurroundingObjs[i], coordMode, allowCoordBorrow);
+					var angle = Math.atan2(vector.y, vector.x);
+					if (Kekule.ObjUtils.isUnset(targetBondAngleRange.min) || (angle < targetBondAngleRange.min))
+						targetBondAngleRange.min = angle;
+					if (Kekule.ObjUtils.isUnset(targetBondAngleRange.max) || (angle > targetBondAngleRange.max))
+						targetBondAngleRange.max = angle;
+				}
+				var middleAngle = (targetBondAngleRange.max + targetBondAngleRange.min) / 2;
+				result = refAngle - middleAngle;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_calcConnectorMergeTransformParams: function(editor, mergeConnector, destConnector)
+	{
+		var targetObj0 = mergeConnector.getConnectedObjAt(0);
+		var targetObj1 = mergeConnector.getConnectedObjAt(1);
+		var destObj0 = destConnector.getConnectedObjAt(0);
+		var destObj1 = destConnector.getConnectedObjAt(1);
+
+		var targetCoord0 = editor.getObjCoord(targetObj0);
+		var targetCoord1 = editor.getObjCoord(targetObj1);
+		var destCoord0 = editor.getObjCoord(destObj0);
+		var destCoord1 = editor.getObjCoord(destObj1);
+
+		// TODO: currently only handles 2D situation
+		var result = Kekule.CoordUtils.calcCoordGroup2DTransformParams(targetCoord0, targetCoord1, destCoord1, destCoord0);
+		// targetCoord0 map to destCoord1, as in merging of ring, ring order are always reversed
+		return result;
+	},
+
+	/** @private */
+	calcRepObjInitialTransformParams: function(editor, repItem, repResult, destObj, targetCoord)
+	{
+		var repBaseCoord = repResult.baseObjCoord;
+
+		var editorRefLength = editor.getDefBondLength();
+		var coordScale = editorRefLength / repItem.getRefLength();
+		var rotateAngle;
+		var center = repBaseCoord;
+
+		//var targetCoord = screenCoord;
+		if (repResult.mergeObj)
+		{
+			var destObj = repResult.mergeDest || destObj;
+			if (destObj)  // targetCoord decide by merge position
+			{
+				targetCoord = editor.getObjectScreenCoord(destObj);
+
+				if ((repResult.mergeObj instanceof Kekule.ChemStructureNode)
+						&& (destObj instanceof Kekule.ChemStructureNode))  // node merge, calc initial angle by bond
+				{
+					rotateAngle = Kekule.Editor.RepositoryStructureUtils._calcNodeMergeAdjustRotateAngle(editor, repResult.mergeObj, destObj);
+					//console.log(center);
+				}
+				else if ((repResult.mergeObj instanceof Kekule.ChemStructureConnector)
+						&& (destObj instanceof Kekule.ChemStructureConnector))  // connector merge
+				{
+					// return directly
+					return Kekule.Editor.RepositoryStructureUtils._calcConnectorMergeTransformParams(editor, repResult.mergeObj, destObj);
+				}
+			}
+		}
+
+		var objCoord = editor.translateCoord(targetCoord, Kekule.Editor.CoordSys.SCREEN, Kekule.Editor.CoordSys.CHEM);
+		if (repBaseCoord)
+		{
+			objCoord = Kekule.CoordUtils.substract(objCoord, repBaseCoord);
+		}
+
+		var transformParams = {
+			'scale': coordScale,
+			'translateX': objCoord.x,
+			'translateY': objCoord.y,
+			'translateZ': objCoord.z,
+			'rotateAngle': rotateAngle,
+			'center': center
+		};
+
+		return transformParams;
+	},
+
+	/** @private */
+	transformChemObjectsCoordAndSize: function(editor, objects, transformParams)
+	{
+		var coordMode = editor.getCoordMode();
+		var allowCoordBorrow = editor.getAllowCoordBorrow();
+		var matrix = (coordMode === Kekule.CoordMode.COORD3D)?
+				Kekule.CoordUtils.calcTransform3DMatrix(transformParams):
+				Kekule.CoordUtils.calcTransform2DMatrix(transformParams);
+		var childTransformParams = Object.extend({}, transformParams);
+		childTransformParams = Object.extend(childTransformParams, {
+			'translateX': 0,
+			'translateY': 0,
+			'translateZ': 0,
+			'center': {'x': 0, 'y': 0, 'z': 0}
+		});
+		var childMatrix = (coordMode === Kekule.CoordMode.COORD3D)?
+				Kekule.CoordUtils.calcTransform3DMatrix(childTransformParams):
+				Kekule.CoordUtils.calcTransform2DMatrix(childTransformParams);
+
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			obj.transformAbsCoordByMatrix(matrix, childMatrix, coordMode, true, allowCoordBorrow);
+			obj.scaleSize(transformParams.scale, coordMode, true, allowCoordBorrow);
+		}
 	}
 };
 
