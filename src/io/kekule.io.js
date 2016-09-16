@@ -50,6 +50,14 @@ Kekule.IO.ChemDataType = {
 };
 
 /**
+ * Enumeration of common data format ids.
+ * @class
+ */
+Kekule.IO.DataFormat = {
+
+};
+
+/**
  * Enumeration of common MIME types.
  * @class
  */

@@ -220,12 +220,15 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 	Kekule.IO.MimeType.KEKULE_JSON = 'chemical/x-kekule-json';
 	Kekule.IO.MimeType.KEKULE_XML = 'chemical/x-kekule-xml';
 
+	Kekule.IO.DataFormat.KEKULE_JSON = 'Kekule-JSON';
+	Kekule.IO.DataFormat.KEKULE_XML = 'Kekule-XML';
+
 	// register chem data formats
 	Kekule.IO.DataFormatsManager.register('JSON', Kekule.IO.MimeType.JSON, 'json',
 		Kekule.IO.ChemDataType.TEXT, 'JSON format');
-	Kekule.IO.DataFormatsManager.register('Kekule-JSON', Kekule.IO.MimeType.KEKULE_JSON, 'kcj',
+	Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.KEKULE_JSON, Kekule.IO.MimeType.KEKULE_JSON, 'kcj',
 		Kekule.IO.ChemDataType.TEXT, 'Kekule Chemical JSON format');
-	Kekule.IO.DataFormatsManager.register('Kekule-XML', Kekule.IO.MimeType.KEKULE_XML, 'kcx',
+	Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.KEKULE_XML, Kekule.IO.MimeType.KEKULE_XML, 'kcx',
 		Kekule.IO.ChemDataType.TEXT, 'Kekule Chemical XML format');
 
 	// register ChemData reader and writer
@@ -259,8 +262,8 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		});
 	*/
 	var jsonFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.JSON);
-	var kcjFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-kekule-json');
-	var kcxFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-kekule-xml');
+	var kcjFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.KEKULE_JSON);
+	var kcxFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.KEKULE_XML);
 
 	Kekule.IO.ChemDataReaderManager.register('json', Kekule.IO.KcjReader, jsonFmtId);
 	Kekule.IO.ChemDataReaderManager.register('kcj', Kekule.IO.KcjReader, kcjFmtId);

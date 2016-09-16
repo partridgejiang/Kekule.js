@@ -1372,6 +1372,12 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	var mol3kFmtId = 'mol3k';
 	var rxn3kFmtId = 'rxn3k';
 
+	Kekule.IO.DataFormat.MOL = molFmtId;
+	Kekule.IO.DataFormat.RXN = rxnFmtId;
+	Kekule.IO.DataFormat.SD = sdFmtId;
+	Kekule.IO.DataFormat.MOL3K = mol3kFmtId;
+	Kekule.IO.DataFormat.RXN3K = rxn3kFmtId;
+
 	// extents mime type consts
 	Kekule.IO.MimeType.MDL_MOL = 'chemical/x-mdl-molfile';
 	Kekule.IO.MimeType.MDL_RXN = 'chemical/x-mdl-rxnfile';
