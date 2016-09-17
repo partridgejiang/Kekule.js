@@ -100,11 +100,11 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-PageNavigator-Prev > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-280px -18px}
 .K-PageNavigator-Next > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-226px -18px}
 .K-Action-Open-Configurator > .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-102px 0}
-.K-Res-Cursor-Rotate{cursor:url(images/cursors/rotate.cur),pointer}
-.K-Res-Cursor-Rotate-NE{cursor:url(images/cursors/rotateNE.cur),pointer}
-.K-Res-Cursor-Rotate-NW{cursor:url(images/cursors/rotateNW.cur),pointer}
-.K-Res-Cursor-Rotate-SE{cursor:url(images/cursors/rotateSE.cur),pointer}
-.K-Res-Cursor-Rotate-SW{cursor:url(images/cursors/rotateSW.cur),pointer}
+.K-Res-Cursor-Rotate{cursor:url(images/cursors/rotate.cur),url(images/cursors/rotate.png) 10 12,pointer}
+.K-Res-Cursor-Rotate-NE{cursor:url(images/cursors/rotateNE.cur),url(images/cursors/rotateNE.png) 16 16,pointer}
+.K-Res-Cursor-Rotate-NW{cursor:url(images/cursors/rotateNW.cur),url(images/cursors/rotateNW.png) 16 16,pointer}
+.K-Res-Cursor-Rotate-SE{cursor:url(images/cursors/rotateSE.cur),url(images/cursors/rotateSE.png) 16 16,pointer}
+.K-Res-Cursor-Rotate-SW{cursor:url(images/cursors/rotateSW.cur),url(images/cursors/rotateSW.png) 16 16,pointer}
 .K-Res-Icon-Color-Pick{background-image:url(sprite/defaultColor.png);background-position:-190px -18px}
 .K-Res-Icon-Color-NotSet,.K-Color-Unset,.K-Color-Default{background-image:url(sprite/defaultColor.png);background-position:0 0}
 .K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/defaultColor.png);background-position:-51px 0}
@@ -113,4 +113,4 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-102px -26px}
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px 0}
 .K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px -26px}
-#CssGaga{content:"160908233128,swt,334"}
+#CssGaga{content:"160917092045,swt,334"}
