@@ -133,6 +133,7 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
  * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
  * @property {Array} allowedOutputFormatIds Formats that shown in output file dialog. Default is null, means accept all available formats.
+ * @property {Hash} standardizationOptions Possible options when do standardization on molecule before saving.
  */
 /**
  * Invoked when the an chem object (or null) is loaded into the displayer.
@@ -188,6 +189,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL});
 		this.defineProp('allowedInputFormatIds', {'dataType': DataType.ARRAY});
 		this.defineProp('allowedOutputFormatIds', {'dataType': DataType.ARRAY});
+
+		this.defineProp('standardizationOptions', {'dataType': DataType.HASH});
 
 		this.defineProp('resetAfterLoad', {'dataType': DataType.BOOL});
 		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
@@ -406,6 +409,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return p? p.getRenderer(): null;
 			}
 		});
+	},
+	initPropValues: function($super)
+	{
+		$super();
+		this.setStandardizationOptions({'unmarshalSubFragments': false});
 	},
 
 	/** @ignore */
@@ -892,7 +900,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			if (doCanonicalize && obj.standardize)  // canonicalize first
 			{
 				var obj = obj.clone? obj.clone(true): obj;  // clone with id
-				obj.standardize();
+				obj.standardize(this.getStandardizationOptions());
 			}
 			if (!dataType)
 			{

@@ -83,9 +83,324 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 });
 
 /**
- * A base class to generate ring structure based repository item.
+ * A base class for molecule structure based repository item.
  * @class
  * @augments Kekule.Editor.AbstractRepositoryItem
+ *
+ */
+Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositoryItem,
+/** @lends Kekule.Editor.MolRepositoryItem2D# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolRepositoryItem2D',
+	/** @construct */
+	initialize: function($super)
+	{
+		$super();
+	},
+	/** @ignore */
+	getAvailableCoordModes: function()
+	{
+		return Kekule.CoordMode.COORD2D;  // only support 2D
+	},
+	/** @ignore */
+	isOneStructureFragmentObj: function()
+	{
+		return true;
+	},
+	/** @ignore */
+	createObjects: function(targetObj)
+	{
+		var mol = this.doCreateObjects(targetObj);
+		if (!mol)
+			return null;
+		var mergeObj = null;
+		var mergeDest = null;
+		var baseCoord = {'x': 0, 'y': 0};
+		if (targetObj)  // targetObj not empty, and a new mol is created, need to merge
+		{
+			mergeObj = (targetObj instanceof Kekule.ChemStructureNode)? this.doGetMergableNode(mol, targetObj):
+					(targetObj instanceof Kekule.ChemStructureConnector)? this.doGetMergableConnector(mol, targetObj):
+							null;
+			if (mergeObj)
+				mergeDest = targetObj;
+			baseCoord = mergeObj.getAbsBaseCoord2D();
+		}
+		return {
+			'objects': [mol],
+			'mergeObj': mergeObj,
+			'mergeDest': mergeDest,
+			'baseObjCoord': baseCoord,
+			'centerCoord': {'x': 0, 'y': 0}
+		};
+	},
+	/**
+	 * Do actual work of createObjects.
+	 * Descendants should override this method.
+	 * @param {Object} targetObj
+	 * @private
+	 */
+	doCreateObjects: function(targetObj)
+	{
+		return null;  // do nothing here
+	},
+	/**
+	 * Returns node in repository molecule that need to be merged with target.
+	 * Descendants should override this method.
+	 * @returns {Kekule.ChemStructureNode}
+	 * @private
+	 */
+	doGetMergableNode: function(mol, targetNode)
+	{
+		return null;
+	},
+	/**
+	 * Returns connector in repository molecule that need to be merged with target.
+	 * Descendants should override this method.
+	 * @returns {Kekule.ChemStructureConnector}
+	 * @private
+	 */
+	doGetMergableConnector: function(mol, targetNode)
+	{
+		return null;
+	}
+});
+
+/**
+ * A class to store predefined molecule template.
+ * @class
+ * @augments Kekule.Editor.MolRepositoryItem2D
+ * @param {Variant} structData Source data of structfragment.
+ * @param {String} dataFormat Format id of structData.
+ *
+ * @property {Variant} structData Source data of structfragment.
+ * @property {String} dataFormat Format id of structData.
+ */
+Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.MolRepositoryItem2D,
+/** @lends Kekule.Editor.StoredStructFragmentRepositoryItem2D# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.StoredStructFragmentRepositoryItem2D',
+	/** @construct */
+	initialize: function($super, structData, dataFormat)
+	{
+		$super();
+		this.beginUpdate();
+		try
+		{
+			if (dataFormat)
+			{
+				this.setDataFormat(dataFormat);
+			}
+			if (structData)  // create stored structfragment
+			{
+				this.setStructData(structData);
+			}
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('structureFragment', {'dataType': 'Kekule.StructureFragment', 'setter': null, 'serializable': false});
+		this.defineProp('structData', {'dataType': DataType.STRING});
+		this.defineProp('dataFormat', {'dataType': DataType.STRING});
+	},
+	/** @ignore */
+	objectChange: function($super, modifiedProps)
+	{
+		$super(modifiedProps);
+		if ((modifiedProps.indexOf('structData') >= 0) || (modifiedProps.indexOf('dataFormat') >= 0))
+		{
+			var structFragment = null;
+			if (this.getStructData())
+				structFragment = this._createTemplateStructFragment();
+			this.setPropStoreFieldValue('structureFragment', structFragment);
+		}
+	},
+
+	/** @private */
+	_createTemplateStructFragment: function()
+	{
+		var structFragment = null;
+		if (this.getStructData())
+			structFragment = Kekule.IO.loadFormatData(this.getStructData(), this.getDataFormat() || Kekule.IO.DataFormat.KEKULE_JSON);
+		if (structFragment)
+		{
+			// adjust coord
+			this._adjustTemplateStructureFragmentCoords(structFragment);
+		}
+		return structFragment;
+	},
+	/** @private */
+	_adjustTemplateStructureFragmentCoords: function(structFragment)
+	{
+		structFragment.setCoord2D({'x': 0, 'y': 0});
+		var objBox = Kekule.Render.ObjUtils.getContainerBox(structFragment, Kekule.CoordMode.COORD2D, true);
+
+		if (objBox)
+		{
+			var oldObjCoord = structFragment.getCoordOfMode ?
+			structFragment.getCoordOfMode(Kekule.CoordMode.COORD2D, true) || {} :
+			{};
+			var delta = {};
+			delta.x = -(objBox.x2 + objBox.x1) / 2;
+			delta.y = -(objBox.y2 + objBox.y1) / 2;
+			/*
+			 var newObjCoord = Kekule.CoordUtils.add(oldObjCoord, delta);
+			 if (structFragment.setCoordOfMode)
+			 structFragment.setCoordOfMode(newObjCoord, Kekule.CoordMode.COORD2D);
+			 */
+			// transform coords of children
+			structFragment.beginUpdate();
+			try
+			{
+				for (var i = 0, l = structFragment.getNodeCount(); i < l; ++i)
+				{
+					var node = structFragment.getNodeAt(i);
+					var coord = node.getCoord2D(true);
+					coord = Kekule.CoordUtils.add(coord, delta);
+					node.setCoord2D(coord);
+				}
+			}
+			finally
+			{
+				structFragment.endUpdate();
+			}
+		}
+	},
+
+	/** @ignore */
+	getRefLength: function()
+	{
+		var mol = this.getStructureFragment();
+		return mol? mol.getConnectorLengthMedian(Kekule.CoordMode.COORD2D, true): 0;
+	},
+	/** @ignore */
+	doCreateObjects: function(targetObj)
+	{
+		var structFragment = this.getStructureFragment();
+		return structFragment? structFragment.clone(): null;
+	},
+	/** @ignore */
+	doGetMergableNode: function(mol, targetNode)
+	{
+		return mol.getAnchorNodeAt(0) || mol.getNodeAt(0);
+	},
+	/** @ignore */
+	doGetMergableConnector: function(mol, targetNode)
+	{
+		return null;
+	}
+});
+
+/**
+ * A class to store predefined subgroup templates.
+ * @class
+ * @augments Kekule.Editor.StoredStructFragmentRepositoryItem2D
+ * @param {Variant} structData Source data of structfragment.
+ * @param {String} dataFormat Format id of structData.
+ *
+ * @property {Variant} structData Source data of structfragment.
+ * @property {String} dataFormat Format id of structData.
+ * @property {Array} inputTexts Strings that can direcly used to be insert subgroup,
+ *   e.g, COOH and CO2H can both input a carboxyl.
+ */
+Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.StoredStructFragmentRepositoryItem2D,
+/** @lends Kekule.Editor.StoredSubgroupRepositoryItem2D# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.StoredSubgroupRepositoryItem2D',
+	/** @construct */
+	initialize: function($super, structData, dataFormat)
+	{
+		$super(structData, dataFormat);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		//this.defineProp('abbr', {'dataType': DataType.STRING});
+		this.defineProp('inputTexts', {'dataType': DataType.STRING});
+	},
+	/** @ignore */
+	doCreateObjects: function(targetObj)
+	{
+		var structFragment = this.getStructureFragment();
+		if (structFragment)
+		{
+			var result = new Kekule.SubGroup();  // always returns sub group even if structureFragment is in molecule class
+			result.assign(structFragment, false);  // do not copy id
+			return result;
+		}
+		else
+			return null;
+	},
+	/** @ignore */
+	createObjects: function($super, targetObj)
+	{
+		var result = $super(targetObj);
+		return result;
+		/*
+		 var mol = result.objects[0];
+		 if (mol && mol.getAnchorNodeCount() >= 0)
+		 {
+		 var coord = (mol.getAnchorNodeAt(0) || mol.getNodeAt(0)).getAbsCoord2D(true);
+		 result.baseObjCoord = coord;
+		 }
+		 return result;
+		 */
+	},
+
+	/** @ignore */
+	_adjustTemplateStructureFragmentCoords: function(structFragment)
+	{
+		structFragment.setCoord2D({'x': 0, 'y': 0});
+		var anchorNode = structFragment.getCurrConnectableObj();
+		if (anchorNode)
+		{
+			var delta = Kekule.CoordUtils.substract({x: 0, y: 0}, anchorNode.getCoord2D(true));
+
+			// transform coords of children
+			structFragment.beginUpdate();
+			try
+			{
+				for (var i = 0, l = structFragment.getNodeCount(); i < l; ++i)
+				{
+					var node = structFragment.getNodeAt(i);
+					var coord = node.getCoord2D(true);
+					coord = Kekule.CoordUtils.add(coord, delta);
+					node.setCoord2D(coord);
+				}
+			}
+			finally
+			{
+				structFragment.endUpdate();
+			}
+		}
+	}
+});
+
+// utils functions
+Kekule.Editor.StoredSubgroupRepositoryItem2D.getRepItemOfInputText = function(inputText)
+{
+	var repItems = Kekule.Editor.RepositoryItemManager.getAllItems(Kekule.Editor.StoredSubgroupRepositoryItem2D) || [];
+	for (var i = 0, l = repItems.length; i < l; ++i)
+	{
+		var repItem = repItems[i];
+		if ((repItem.getInputTexts() || []).indexOf(inputText) >= 0)
+			return repItem;
+	}
+	return null;
+};
+
+
+/**
+ * A base class to generate ring structure based repository item.
+ * @class
+ * @augments Kekule.Editor.MolRepositoryItem2D
  * @param {Int} ringAtomCount Atom count on ring.
  * @param {Float} bondLength Default bond length to generate ring.
  *
@@ -93,7 +408,7 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
  * @property {Float} bondLength Default bond length to generate ring.
  * @property {Bool} isAromatic Whether this ring is a aromatic one (single/double bond intersect),
  */
-Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositoryItem,
+Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepositoryItem2D,
 /** @lends Kekule.Editor.MolRingRepositoryItem2D# */
 {
 	/** @private */
@@ -136,45 +451,26 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepos
 			this.setPropStoreFieldValue('ring', null);
 	},
 	*/
-
-	/** @ignore */
-	getAvailableCoordModes: function()
-	{
-		return Kekule.CoordMode.COORD2D;  // only support 2D
-	},
 	/** @ignore */
 	getRefLength: function()
 	{
 		return this.getBondLength();
 	},
+
 	/** @ignore */
-	isOneStructureFragmentObj: function()
+	doCreateObjects: function(targetObj)
 	{
-		return true;
+		return this.generateRing();
 	},
 	/** @ignore */
-	createObjects: function(targetObj)
+	doGetMergableNode: function(mol, targetNode)
 	{
-		var ring = this.generateRing();
-		var mergeObj = null;
-		var mergeDest = null;
-		var baseCoord = {'x': 0, 'y': 0};
-		if (targetObj)  // targetObj not empty, and a new mol is created, need to merge
-		{
-			mergeObj = (targetObj instanceof Kekule.ChemStructureNode)? ring.getNodeAt(0):
-					(targetObj instanceof Kekule.ChemStructureConnector)? ring.getConnectorAt(0):
-					null;
-			if (mergeObj)
-				mergeDest = targetObj;
-			baseCoord = mergeObj.getAbsBaseCoord2D();
-		}
-		return {
-			'objects': [ring],
-			'mergeObj': mergeObj,
-			'mergeDest': mergeDest,
-			'baseObjCoord': baseCoord,
-			'centerCoord': {'x': 0, 'y': 0}
-		};
+		return mol.getNodeAt(0);
+	},
+	/** @ignore */
+	doGetMergableConnector: function(mol, targetNode)
+	{
+		return mol.getConnectorAt(0);
 	},
 
 	/**
@@ -266,6 +562,7 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepos
 	}
 });
 
+
 /**
  * A base class to generate path glyphs.
  * @class
@@ -332,5 +629,71 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
 		return obj;
 	}
 });
+
+
+/**
+ * A manager to store all predefined subgroup repositories
+ * @class
+ */
+Kekule.Editor.RepositoryItemManager = {
+	/** @private */
+	_itemMap: new Kekule.MapEx(true),
+	/**
+	 * Returns all repository items of a particular repository class.
+	 * @param {Class} repClass
+	 * @returns {Array}
+	 */
+	getAllItems: function(repClass)
+	{
+		return RM._itemMap.get(repClass);
+	},
+	/**
+	 * Register a repository item.
+	 * @param {Kekule.Editor.AbstractRepositoryItem} repItem
+	 */
+	register: function(repItem)
+	{
+		var repClass = repItem.getClass();
+		var items = RM.getAllItems(repClass);
+		if (!items)
+		{
+			items = [repItem];
+			RM._itemMap.set(repClass, items);
+		}
+		else
+			Kekule.ArrayUtils.pushUnique(items, repItem);
+	},
+	/**
+	 * Unregister a repository item.
+	 * @param {Kekule.Editor.AbstractRepositoryItem} repItem
+	 */
+	unregister: function(repItem)
+	{
+		var repClass = repItem.getClass();
+		var items = RM.getAllItems(repClass);
+		if (items)
+		{
+			Kekule.ArrayUtils.remove(items, repItem);
+		}
+	}
+};
+var RM = Kekule.Editor.RepositoryItemManager;
+
+
+// register all predefined subgroup rep items
+(function (){
+	if (Kekule.Editor.RepositoryData)
+	{
+		var data = Kekule.Editor.RepositoryData.subGroups || [];
+		for (var i = 0, l = data.length; i < l; ++i)
+		{
+			var detail = data[i];
+			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat);
+			repItem.setInputTexts(detail.inputTexts);
+			RM.register(repItem);
+			//console.log('reg', repItem);
+		}
+	}
+})();
 
 })();

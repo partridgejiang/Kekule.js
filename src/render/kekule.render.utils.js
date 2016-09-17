@@ -286,6 +286,23 @@ Kekule.Render.RichTextUtils = {
 	},
 
 	/**
+	 * Returns the first normal text (nor sub/superscript) in rich text.
+	 * @param {Object} richTextGroup
+	 * @returns {Object}
+	 */
+	getFirstNormalTextSection: function(richTextGroup)
+	{
+		for (var i = 0, l = richTextGroup.items.length; i < l; ++i)
+		{
+			var item = richTextGroup.items[i];
+			var textType = Kekule.Render.RichTextUtils.getItemTextType(item);
+			if (textType === Kekule.Render.RichText.NORMAL)
+				return item;
+		}
+		return null;
+	},
+
+	/**
 	 * Returns the actual refItem of item. Generally this function returns item.refItem,
 	 * however, if that value is not set, function will return item's nearest sibling.
 	 * @param {Object} item
@@ -530,9 +547,10 @@ Kekule.Render.ChemDisplayTextUtils = {
 			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical) || '';
 		}
 
-		result = Kekule.Render.RichTextUtils.createSection(slabel,
-			{'textType': Kekule.Render.RichText.SUP, 'charDirection': Kekule.Render.TextDirection.LTR}
-		);
+		if (slabel)
+			result = Kekule.Render.RichTextUtils.createSection(slabel,
+				{'textType': Kekule.Render.RichText.SUP, 'charDirection': Kekule.Render.TextDirection.LTR}
+			);
 		return result;
 	},
 
@@ -582,7 +600,10 @@ Kekule.Render.ChemDisplayTextUtils = {
 			{
 				// count
 				if (sections[i].count != 1)
+				{
 					subgroup = Kekule.Render.RichTextUtils.appendText(subgroup, sections[i].count.toString(), {'textType': Kekule.Render.RichText.SUB});
+					subgroup.charDirection = Kekule.Render.TextDirection.LTR;
+				}
 
 				// charge is draw after count
 				if (showCharge && charge)

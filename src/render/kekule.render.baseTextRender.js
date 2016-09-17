@@ -226,7 +226,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	_FONT_OPTION_FIELDS: ['fontSize', 'fontFamily', 'fontWeight', 'fontStyle',
 		'color', 'overhang', 'oversink', 'opacity', 'zoom'],
 	/** @private */
-	_DRAW_OPTIONS_FIELDS: ['textType', 'charDirection',
+	_DRAW_OPTIONS_FIELDS: ['textType', 'charDirection', 'defaultCharDirection',
 		'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'color',
 		'horizontalAlign', 'verticalAlign', 'zoom'],
 	/**
@@ -250,6 +250,10 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				++fieldCount;
 			}
 		}
+		if (Kekule.ObjUtils.isUnset(richTextItem.charDirection))  // char direction is regarded as default when not set in item
+			result.charDirection = TD.DEFAULT;
+		else if (richTextItem.charDirection === TD.INHERIT)
+			result.charDirection = options.charDirection;
 		return result;
 	},
 
@@ -381,6 +385,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 			ops = Object.extend(ops, options);
 		}
 
+		if (!ops.defaultCharDirection)
+			ops.defaultCharDirection = ops.charDirection;
+
+		//console.log('draw rich text ex', richText, ops);
+
 		//this.doPrepare(richText);
 		// clone richtext to modify the object freely
 		var destRichText = this.cloneRichText(richText);
@@ -439,7 +448,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 		}
 
 		var rectInfo = this._getItemRectInfo(richText);
-		var delta
+		var delta;
 		if (anchorAlignRect)
 		{
 			var newAnchorAlignRect = this.doAlignRectToCoord(coord, anchorAlignRect, options.textBoxXAlignment, options.textBoxYAlignment);
@@ -547,6 +556,10 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 		// get the actual draw options on item
 		var ops = Object.create(options);
 		ops = this._fillLocalDrawOptions(item, ops);
+		if (ops.charDirection === TD.DEFAULT || Kekule.ObjUtils.isUnset(ops.charDirection))  // default char direction
+		{
+			ops.charDirection = ops.defaultCharDirection;
+		}
 
 		var result;
 		switch (itemType)
@@ -649,9 +662,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	doPrepareGroup: function(context, group, drawOptions, drawMode)
 	{
 		// prepare each items first to get basic dimension information
-		var items = group.items;  // items.length should large than 1
-		if (items.length <= 0)
+		var items = group.items;
+		/*
+		if (items.length <= 0)    // items.length should large than 1
 			return null;
+		*/
 
 		for (var i = 0, l = items.length; i < l; ++i)
 		{
@@ -821,6 +836,12 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				gBoundRect = Object.extend({}, rectInfo.boundRect);
 			else
 				gBoundRect = Kekule.RectUtils.getContainerRect(gBoundRect, rectInfo.boundRect);
+		}
+
+		if (items.length <= 0)  // no child item, gAlignRect/gBoundRect need to be set manually
+		{
+			gAlignRect = Kekule.RectUtils.createRect(0, 0, 0, 0);
+			gBoundRect = Kekule.RectUtils.createRect(0, 0, 0, 0);
 		}
 
 		// Standard group rect, make alignRect.top/left = 0, adjust children's rects correspondingly

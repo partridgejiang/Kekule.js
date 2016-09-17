@@ -1053,11 +1053,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set2DX: function(x)
 		{
-			var c = fetchCoord2D();
+			var c = this.fetchCoord2D();
 			if (c.x != x)
 			{
 				c.x = x;
-				notifyCoord2DChanged(c);
+				this.notifyCoord2DChanged(c);
 			}
 		},
 		/**
@@ -1077,11 +1077,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set2DY: function(y)
 		{
-			var c = fetchCoord2D();
+			var c = this.fetchCoord2D();
 			if (c.y != y)
 			{
 				c.y = y;
-				notifyCoord2DChanged(c);
+				this.notifyCoord2DChanged(c);
 			}
 		}
 	},
@@ -1145,11 +1145,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DX: function(x)
 		{
-			var c = fetchCoord3D();
+			var c = this.fetchCoord3D();
 			if (c.x != x)
 			{
 				c.x = x;
-				notifyCoord3DChanged(c);
+				this.notifyCoord3DChanged(c);
 			}
 		},
 		/**
@@ -1169,11 +1169,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DY: function(y)
 		{
-			var c = fetchCoord3D();
+			var c = this.fetchCoord3D();
 			if (c.y != y)
 			{
 				c.y = y;
-				notifyCoord3DChanged(c);
+				this.notifyCoord3DChanged(c);
 			}
 		},
 		/**
@@ -1193,11 +1193,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DZ: function(z)
 		{
-			var c = fetchCoord3D();
+			var c = this.fetchCoord3D();
 			if (c.z != z)
 			{
 				c.z = z;
-				notifyCoord3DChanged(c);
+				this.notifyCoord3DChanged(c);
 			}
 		}
 	},

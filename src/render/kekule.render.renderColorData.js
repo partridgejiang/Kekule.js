@@ -5,7 +5,7 @@
  */
 
 (function(){
-	
+
 var R = Kekule.Render;
 
 /**
@@ -48,16 +48,19 @@ R.atomColorSets = {
 		'#A52A2A',  // Co, note: this value is not set in original CPK
 		'#A52A2A',  // Ni
 		'#A52A2A',  // Cu
-		'#A52A2A',  // Zn
+		'#A52A2A'  // Zn
 	]
 };
 
 var a = R.atomColorSets.cpk2D;
+var j = R.atomColorSets.jmol;
 a[35] = '#A52A2A';  // Br
 a[47] = '#808090';  // Ag
 a[53] = '#A020F0';  // I
 a[56] = '#FFA500';  // Ba
 a[79] = '#DAA520';  // Au
+
+a['SubGroup'] = j['SubGroup'] = '#0000CC';	 // additional for none-atom nodes
 
 /**
  * Current used color set.

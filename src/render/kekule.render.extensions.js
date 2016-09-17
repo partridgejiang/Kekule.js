@@ -803,10 +803,11 @@
 			}
 			else
 			{
-				coreItem = this.getCoreDisplayRichTextItem(displayLabelConfigs);
+				coreItem = this.getCoreDisplayRichTextItem(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength);
 			}
 			if (coreItem)
 			{
+				//var coreAnchorItem = coreItem.anchorItem;  // preserve previous core anchor
 				if (showCharge)
 				{
 					coreItem = this.appendElectronStateDisplayText(coreItem, partialChargeDecimalsLength);
@@ -815,6 +816,7 @@
 				{
 					R.RichTextUtils.append(result, coreItem);
 					//result.anchorItem = coreItem.anchorItem || coreItem;
+					//result.anchorItem = coreAnchorItem || coreItem;
 					result.anchorItem = coreItem;
 				}
 			}
@@ -837,10 +839,12 @@
 				result = this.appendElectronStateDisplayText(result);
 			*/
 
+			//console.log('rich text', result);
+
 			return result;
 		},
 		/** @private */
-		getCoreDisplayRichTextItem: function(displayLabelConfig){
+		getCoreDisplayRichTextItem: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength){
 			// do nothing here, descendants need to override this method.
 			return null;
 		},
@@ -948,7 +952,7 @@
 	ClassEx.extend(Kekule.Atom,
 	/** @lends Kekule.Atom# */
 	{
-		getCoreDisplayRichTextItem: function(displayLabelConfig)
+		getCoreDisplayRichTextItem: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
 			var result = R.RichTextUtils.createGroup();
@@ -983,7 +987,7 @@
 				}
 			}
 			else // no element assigned
- 				result = R.RichTextUtils.appendText(result, (displayLabelConfig && displayLabelConfig.getUnsetElement()) || NL.UNSET_ELEMENT);
+ 				result = R.RichTextUtils.appendText(result, (displayLabelConfigs && displayLabelConfigs.getUnsetElement()) || NL.UNSET_ELEMENT);
 			return result;
 		}
 	});
@@ -992,11 +996,11 @@
 	/** @lends Kekule.Pseudoatom# */
 	{
 		/** @ignore */
-		getCoreDisplayRichTextItem: function(displayLabelConfig)
+		getCoreDisplayRichTextItem: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
 			var s;
-			var D = displayLabelConfig;
+			var D = displayLabelConfigs;
 			/*
 			switch (this.getAtomType())
 			{
@@ -1029,7 +1033,7 @@
 			if (detail.massNumber)
 				massSection = R.RichTextUtils.appendText2(richText, detail.massNumber.toString(),
 					{'textType': Kekule.Render.RichText.SUP, 'charDirection': Kekule.Render.TextDirection.LTR});
-			var symbolSection = R.RichTextUtils.appendText2(richText, detail.symbol, null, isAnchor);
+			var symbolSection = R.RichTextUtils.appendText2(richText, detail.symbol, {'charDirection': Kekule.Render.TextDirection.LTR}, isAnchor);
 			if (massSection)
 				massSection.refItem = symbolSection;
 			richText.charDirection = Kekule.Render.TextDirection.LTR;
@@ -1040,19 +1044,23 @@
 	/** @lends Kekule.VariableAtom# */
 	{
 		/** @ignore */
-		getCoreDisplayRichTextItem: function(displayLabelConfig)
+		getCoreDisplayRichTextItem: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
-			var D = displayLabelConfig;
+			var D = displayLabelConfigs;
+			var result;
 			if (this.isListEmpty())
 			{
-				return R.RichTextUtils.strToRichText((D && D.getVariableAtom()) || NL.VARIABLE_ATOM);
+				result = R.RichTextUtils.strToRichText((D && D.getVariableAtom()) || NL.VARIABLE_ATOM);
+				result.charDirection = Kekule.Render.TextDirection.LTR;
+				return result;
 			}
 
 			var isotopeIds = this.getAllowedIsotopeIds() || this.getDisallowedIsotopeIds();
 			var isDisallowed = this.isDisallowedList();
 			//var result = R.RichTextUtils.create();
-			var result = R.RichTextUtils.createGroup();
+			result = R.RichTextUtils.createGroup();
+			result.charDirection = Kekule.Render.TextDirection.LTR;
 			if (isDisallowed)
 				result = R.RichTextUtils.appendText(result, D.getIsoListDisallowPrefix());
 			result = R.RichTextUtils.appendText(result, D.getIsoListLeadingBracket());
@@ -1328,7 +1336,7 @@
 	/** @lends Kekule.SubGroup# */
 	{
 		/** @ignore */
-		getCoreDisplayRichTextItem: function(displayLabelConfig)
+		getCoreDisplayRichTextItem: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength)
 		{
 			var R = Kekule.Render;
 			//var result = R.RichTextUtils.create();
@@ -1336,23 +1344,75 @@
 			var result = R.RichTextUtils.createGroup();
 			result = R.RichTextUtils.appendText(result, C.getDisplayLabelConfigs.getRgroup(), null, true);
 			*/
+			var formula = null;
 			var caption = this.getAbbr();
-			if (!caption)
-				caption = (displayLabelConfig && displayLabelConfig.getRgroup()) || NL.SUBGROUP;
-			var result;
-			if (caption.length <= 1)
-				result = R.RichTextUtils.createSection(caption);
-			else // usually the first letter should be the anchor section
+			if (!caption)  // caption not set, use formula as display text
 			{
-				result = R.RichTextUtils.createGroup();
-				result.charDirection = Kekule.Render.TextDirection.LTR;
-				var section = R.RichTextUtils.createSection(caption.charAt(0));
-				result = R.RichTextUtils.append(result, section);
-				result.anchorItem = section;
-				section = R.RichTextUtils.createSection(caption.substring(1));
-				result = R.RichTextUtils.append(result, section);
+				if (this.getFormulaText())
+					formula = Kekule.FormulaUtils.textToFormula(this.getFormulaText());
+				else
+					formula = this.getFormula(false) || this.calcFormula();
+				if (formula.isEmpty())  // formula empty, use default caption
+					caption = (displayLabelConfigs && displayLabelConfigs.getRgroup()) || NL.SUBGROUP;
+			}
+			var result;
+			if (caption)
+			{
+				if (caption.length <= 1)
+				{
+					result = R.RichTextUtils.createSection(caption);
+				}
+				else // usually the first uppercase letter (or first letter) should be the anchor section
+				{
+					var anchorIndex = this._indexOfFirstUppercaseLetter(caption);
+					if (anchorIndex < 0)  // no uppercase, use first letter
+						anchorIndex = 0;
+					result = R.RichTextUtils.createGroup();
+					result.charDirection = Kekule.Render.TextDirection.LTR;
+					// heading section
+					if (anchorIndex > 0)
+					{
+						section = R.RichTextUtils.createSection(caption.substring(0, anchorIndex));
+						section.charDirection = Kekule.Render.TextDirection.INHERIT;
+						result = R.RichTextUtils.append(result, section);
+					}
+					// anchor section
+					var section = R.RichTextUtils.createSection(caption.charAt(anchorIndex));
+					result = R.RichTextUtils.append(result, section);
+					result.anchorItem = section;
+					// tailing section
+					if (anchorIndex < caption.length - 1)
+					{
+						section = R.RichTextUtils.createSection(caption.substring(anchorIndex + 1));
+						section.charDirection = Kekule.Render.TextDirection.INHERIT;
+						result = R.RichTextUtils.append(result, section);
+					}
+					//console.log(caption, result);
+				}
+			}
+			else if (formula)
+			{
+				result = formula.getDisplayRichText(showCharge, displayLabelConfigs, partialChargeDecimalsLength);
+				// first normal section of result usually should be the anchor section
+				var section = R.RichTextUtils.getFirstNormalTextSection(result);
+				if (!section)
+					section = result.items[0];
+
+				result.anchorItem = /* anchorItem; // */ section;
 			}
 			return result;
+		},
+
+		/** @private */
+		_indexOfFirstUppercaseLetter: function(str)
+		{
+			for (var i = 0, l = str.length; i < l; ++i)
+			{
+				var sChar = str.charAt(i);
+				if (sChar >= 'A' && sChar <= 'Z')
+					return i;
+			}
+			return -1;
 		},
 
 		/** @private */
@@ -1471,7 +1531,7 @@
 	});
 
 	ClassEx.extend(Kekule.Molecule,
-	/** @lends Kekule.MolecularFormula# */
+	/** @lends Kekule.Molecule# */
 	{
 		/*
 		 * IMPORTANT: YUI Compressor will change $origin to a dump var name, so ClassEx.extend is unable to find

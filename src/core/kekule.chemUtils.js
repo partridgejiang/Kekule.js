@@ -623,7 +623,7 @@ Kekule.FormulaUtils = {
 				{
 					if (currSection && currSection.obj)
 						currFormula.appendSection(currSection.obj, currSection.count, currSection.charge);
-				}
+				};
 
 				// iterate through tokens
 				for (var i = 0; i < tokenLength; ++i)
@@ -862,6 +862,5 @@ ClassEx.defineProp(Kekule.MolecularFormula, 'text', {
 		FU.textToFormula(value, this.getParent(), this);
 	}
 });
-
 
 })();

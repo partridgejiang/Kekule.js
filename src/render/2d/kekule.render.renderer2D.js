@@ -2064,9 +2064,15 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var localOptions = node.getOverriddenRenderOptions() || {};
 		//var localColor = localOptions.atomColor || localOptions.color;
 		var localColor = localOptions.color || localOptions.atomColor;
+		var atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType());
+		if (atomicNumber <= 0)  // not a real atom, may be subgroup or peseudo atom, etc.
+		{
+			var atomTypeName = node.getClassLocalName();
+			atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomTypeName, this.getRendererType());
+		}
 		var defColor = localColor ||
 			(nodeRenderOptions.useAtomSpecifiedColor?
-				Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType()):
+					atomSpecifiedColor:
 				nodeRenderOptions.color);
 		//console.log(defColor);
 		nodeRenderOptions.color = defColor;
@@ -2099,7 +2105,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// decide charDirection
 			//label.charDirection = Kekule.ObjUtils.isUnset(nodeRenderOptions.charDirection) ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
 			//console.log('nodeCharDirection', nodeRenderOptions.charDirection);
-			label.charDirection = !nodeRenderOptions.charDirection ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
+			//label.charDirection = !nodeRenderOptions.charDirection ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
+			var labelCharDirection = !nodeRenderOptions.charDirection ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
 
 			// recalc font size to px
 			//richTextDrawOptions.fontSize *= localLabelDrawOptions.unitLength || renderConfigs.getLengthConfigs().getUnitLength();
@@ -2111,8 +2118,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				console.log('draw node label', nodeRenderOptions);
 			*/
 			//console.log('draw node label', nodeRenderOptions, label);
+			var actualDrawOptions = Object.create(nodeRenderOptions);
+			actualDrawOptions.charDirection = labelCharDirection;
 			var elemEx = this.drawRichText(context, coord, label,
-				nodeRenderOptions/*richTextDrawOptions*/);
+					actualDrawOptions/*nodeRenderOptions/*richTextDrawOptions*/);
 			var elem = elemEx.drawnObj;
 			var rect = elemEx.boundRect;
 			// change boundInfo to a rect

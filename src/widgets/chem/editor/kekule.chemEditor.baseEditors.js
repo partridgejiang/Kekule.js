@@ -102,6 +102,7 @@ Kekule.Editor.BoxRegion = {
  * @property {Object} objDrawBridge Bridge to draw chem objects. Alias of property drawBridge.
  * @property {Object} uiDrawBridge Bridge to draw UI markers.
  * @property {Array} selection An array of selected basic object.
+ * //@property {Bool} standardizeObjectsBeforeSaving Whether standardize molecules (and other possible objects) before saving them.
  */
 
 /**
@@ -211,6 +212,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getDisplayerConfigs(); },
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
 		});
+
+		//this.defineProp('standardizeObjectsBeforeSaving', {'dataType': DataType.BOOL});
 
 		this.defineProp('enableCreateNewDoc', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('initOnNewDoc', {'dataType': DataType.BOOL, 'serializable': false});
@@ -482,6 +485,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// private object to record all bound infos
 		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
 	},
+
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
 	{
@@ -1355,7 +1359,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	_needToCanonicalizeBeforeSaving: function()
 	{
-		return true;
+		return true; // !!this.getStandardizeObjectsBeforeSaving();
 	},
 
 	/** @private */
@@ -2911,6 +2915,38 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return this.getRootRenderer().transformCoordToContext(this.getObjContext(), this.getChemObj(), coord);
 			else  // S.OBJ
 				return coord;
+		}
+	},
+
+	/**
+	 * Transform sizes and coords of objects based on coord sys of current editor.
+	 * @param {Array} objects
+	 * @param {Hash} transformParams
+	 * @private
+	 */
+	transformCoordAndSizeOfObjects: function(objects, transformParams)
+	{
+		var coordMode = this.getCoordMode();
+		var allowCoordBorrow = this.getAllowCoordBorrow();
+		var matrix = (coordMode === Kekule.CoordMode.COORD3D)?
+				Kekule.CoordUtils.calcTransform3DMatrix(transformParams):
+				Kekule.CoordUtils.calcTransform2DMatrix(transformParams);
+		var childTransformParams = Object.extend({}, transformParams);
+		childTransformParams = Object.extend(childTransformParams, {
+			'translateX': 0,
+			'translateY': 0,
+			'translateZ': 0,
+			'center': {'x': 0, 'y': 0, 'z': 0}
+		});
+		var childMatrix = (coordMode === Kekule.CoordMode.COORD3D)?
+				Kekule.CoordUtils.calcTransform3DMatrix(childTransformParams):
+				Kekule.CoordUtils.calcTransform2DMatrix(childTransformParams);
+
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			obj.transformAbsCoordByMatrix(matrix, childMatrix, coordMode, true, allowCoordBorrow);
+			obj.scaleSize(transformParams.scale, coordMode, true, allowCoordBorrow);
 		}
 	},
 
