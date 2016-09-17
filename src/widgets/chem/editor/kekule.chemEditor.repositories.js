@@ -386,7 +386,7 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.Stored
 // utils functions
 Kekule.Editor.StoredSubgroupRepositoryItem2D.getRepItemOfInputText = function(inputText)
 {
-	var repItems = Kekule.Editor.RepositoryItemManager.getAllItems(Kekule.Editor.StoredSubgroupRepositoryItem2D);
+	var repItems = Kekule.Editor.RepositoryItemManager.getAllItems(Kekule.Editor.StoredSubgroupRepositoryItem2D) || [];
 	for (var i = 0, l = repItems.length; i < l; ++i)
 	{
 		var repItem = repItems[i];
