@@ -491,16 +491,17 @@ function analysisEntranceScriptSrc(doc)
 	for (var j = scriptElems.length - 1; j >= 0; --j)
 	{
 		var elem = scriptElems[j];
-		if (elem.src)
+		var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+		if (scriptSrc)
 		{
-			var matchResult = elem.src.match(entranceSrc);
+			var matchResult = scriptSrc.match(entranceSrc);
 			if (matchResult)
 			{
 				var pstr = matchResult[2];
 				if (pstr)
 					pstr = pstr.substr(1);  // eliminate starting '?'
 				var result = {
-					'src': elem.src,
+					'src': scriptSrc,
 					'path': matchResult[1],
 					'paramStr': pstr,
 					'useMinFile': true
