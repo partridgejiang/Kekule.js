@@ -1139,7 +1139,10 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 				if (globalUseAtomSpecifiedColor || localOptions.useAtomSpecifiedColor)
 				{
 					var atomicNumber = node.getAtomicNumber? node.getAtomicNumber(): 0;
-					color = Kekule.Render.RenderColorUtils.getColor(atomicNumber,  this.getRendererType());
+					if (atomicNumber >= 0)
+						color = Kekule.Render.RenderColorUtils.getColor(atomicNumber,  this.getRendererType());
+					else  // may be subgroup or other none-atom node
+						color = Kekule.Render.RenderColorUtils.getColor(node.getClassLocalName(),  this.getRendererType());
 				}
 				else  // use global color/atom color settings
 					//color = oneOf(renderOptions.atomColor || localOptions.color);

@@ -28,13 +28,19 @@ table.K-Widget{display:table}
 .K-Button-Group .K-Button.K-State-Focused,.K-Button-Group .K-Button.K-State-Hover,.K-Button-Group .K-Button.K-State-Active{z-index:2}
 .K-Glyph{vertical-align:middle}
 .K-Menu{cursor:default}
-.K-Menu,.K-Menu ul,.K-Menu ol{border:1px solid;margin:0;padding:0}
-.K-Menu li{display:block;position:relative;list-style:none;margin:0;padding:.1em 2em;line-height:1.5}
-.K-Menu.K-Layout-H>li{float:left}
-.K-Menu li:hover{background-color:#dadada}
-.K-Menu li>ul,.K-Menu li>ol{display:none;position:absolute;left:100%;top:0}
-.K-Menu li:hover>ul,.K-Menu li:hover>ol{display:block}
-.K-Menu.K-Layout-H>li>ul,.K-Menu.K-Layout-H>li>ol{left:0;top:100%}
+.K-Menu{border:1px solid;margin:0;padding:0}
+.K-Menu .K-MenuItem{display:block;position:relative;list-style:none;margin:0;padding:.2em 2em;line-height:1.5;white-space:nowrap}
+.K-Menu .K-MenuItem .K-SubMenu-Marker,.K-Menu .K-MenuItem .K-CheckMenu-Marker{display:inline-block;position:absolute}
+.K-Menu .K-MenuItem .K-SubMenu-Marker{left:auto;right:.3em}
+.K-Menu .K-MenuItem .K-CheckMenu-Marker{left:.3em}
+.K-Menu.K-Layout-H>.K-MenuItem{float:left}
+.K-Menu .K-MenuItem-Separator{}
+.K-Menu.K-Layout-H>.K-MenuItem-Separator{margin:0 .2em;padding-left:0;padding-right:0;width:0;border-left:1px solid}
+.K-Menu.K-Layout-V>.K-MenuItem-Separator{padding-top:0;padding-bottom:0;margin:.2em 0;height:0;border-top:1px solid}
+.K-Menu .K-MenuItem>.K-Menu,.K-Menu .K-MenuItem>.K-Menu{display:none;position:absolute;left:100%;top:0}
+.K-Menu .K-MenuItem:hover>.K-Menu,.K-Menu .K-MenuItem:active>.K-Menu,.K-Menu .K-MenuItem:focus>.K-Menu{display:block}
+.K-Menu .K-MenuItem.K-State-Disabled:hover>.K-Menu,.K-Menu .K-MenuItem.K-State-Disabled:active>.K-Menu,.K-Menu .K-MenuItem.K-State-Disabled:focus>.K-Menu{display:none}
+.K-Menu.K-Layout-H>.K-MenuItem>.K-Menu{left:0;top:100%}
 .K-MsgPanel{display:block;text-align:center}
 .K-MsgPanel .K-MsgPanel-Content{display:inline-block;padding:.3em .7em;border:1px solid}
 .K-MsgPanel .K-Pri-Glyph-Content{width:16px;height:16px;display:none}
@@ -99,6 +105,7 @@ table.K-Widget{display:table}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget{display:inline-block;vertical-align:middle}
 .K-Dialog{border:1px solid;overflow:hidden;position:absolute;position:fixed}
 .K-Dialog.K-Dialog-Overflow{position:absolute}
+.K-Dialog.K-Dialog-Inside{position:absolute;position:fixed}
 .K-Dialog .K-Dialog-Caption{display:block;padding:.4em 1em;border-bottom:1px solid;font-size:1.1em;font-family:Verdana,Arial;font-weight:bold}
 .K-Dialog .K-Dialog-Client{padding:.5em}
 .K-Dialog .K-Dialog-Button-Panel{padding:0 .25em;text-align:right;overflow:hidden}
@@ -152,7 +159,7 @@ table.K-Widget{display:table}
 .K-ObjInspector .K-ObjInspector-PropInfoPanel .K-ObjInspector-PropInfoPanel-Description{line-height:1.2em;margin-left:.5em;white-space:normal}
 .K-DataTable table{display:block;border-collapse:collapse}
 .K-DataTable td,.K-DataTable th{border:1px solid;padding:0}
-.K-DataTable th .K-DataTable-HeadCellInteractable{cursor:pointer}
+.K-DataTable th.K-DataTable-HeadCellInteractable{cursor:pointer}
 .K-DataTable th .K-DataTable-SortMark{display:inline-block;vertical-align:middle;padding:0}
 .K-DataTable .K-DataTable-CellWrapper{display:inline-block;margin:.4em}
 .K-PageNavigator.K-Layout-H{height:2.5em}
@@ -177,4 +184,4 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"150715175641,swt,333"}
+#CssGaga{content:"160917092039,swt,334"}

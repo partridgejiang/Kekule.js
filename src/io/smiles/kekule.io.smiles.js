@@ -527,13 +527,14 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 Kekule.IO.MimeType.SMILES = 'chemical/x-daylight-smiles';
 
 // register chem data formats
+Kekule.IO.DataFormat.SMILES = 'smi';
 var smilesFmtId = 'smi';
 
-Kekule.IO.DataFormatsManager.register(smilesFmtId, Kekule.IO.MimeType.SMILES, 'smi',
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, 'smi',
 	Kekule.IO.ChemDataType.TEXT, 'SMILES format');
 
 var suitableClasses = [Kekule.StructureFragment, Kekule.ChemObjList, Kekule.ChemStructureObjectGroup, Kekule.ChemSpaceElement, Kekule.ChemSpace];
 Kekule.IO.ChemDataWriterManager.register('SMILES', Kekule.IO.SmilesMolWriter,
 	suitableClasses,
-	[smilesFmtId]);
+	[Kekule.IO.DataFormat.SMILES]);
 })();

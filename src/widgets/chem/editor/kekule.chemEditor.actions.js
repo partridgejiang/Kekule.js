@@ -792,6 +792,7 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			{
 				controller.setPropValues(specifiedProps);
 			}
+			$super();
 		}
 	}
 	if (attachedActionClasses)
@@ -1198,6 +1199,21 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.creat
 		'isAromatic': true
 	}
 );
+
+	// debug
+	/*
+	Kekule.Editor.ActionComposerSetRepositoryTBuController = Kekule.Editor.createComposerIaControllerActionClass(
+			'Kekule.Editor.ActionComposerSetRepositoryTBuController',
+			'tBu', //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+			't-Bu', //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
+			'StoredStructureFragmentIaController',
+			'StoredStructureFragmentIaController-tBu',
+			{
+				'structData': '{"id":"m1","renderOptions":{"expanded":false,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":8.792444254557292,"y":35.52755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":9.485264577584852,"y":35.12755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":8.792444254557287,"y":36.32755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.485264577584843,"y":35.92755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,3]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}'
+			}
+	);
+	*/
+
 Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_RING'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING,
@@ -1214,9 +1230,9 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller
+		//Kekule.Editor.ActionComposerSetRepositoryTBuController   // debug
 	]
 );
-
 
 // PathGlyph
 Kekule.Editor.ActionComposerSetRepositoryPathLineController = Kekule.Editor.createComposerIaControllerActionClass(

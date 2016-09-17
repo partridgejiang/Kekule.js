@@ -122,7 +122,9 @@ Kekule.Render.TextDirection = {
 	/** Top to bottom. */
 	TTB: 2,
 	/** Bottom to top */
-	BTT: 4
+	BTT: 4,
+	/** Inherit from parent setting */
+	INHERIT: 10
 	/* Decide the direction by environment around. Useful when draw label in ctab. */
 	/*SMART: 20*/
 };

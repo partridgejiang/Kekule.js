@@ -520,6 +520,14 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	{
 		$super(e);
 	},
+	/** @ignore */
+	_doToggleCheckOnSelf: function($super, oldChecked)
+	{
+		if (oldChecked)
+			return;  // radio button cannot uncheck self
+		else
+			$super(oldChecked);
+	},
 	/** @private */
 	_doCheckOnSelf: function()
 	{

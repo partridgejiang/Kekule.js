@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Composer with subgroup repository test</title>
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+
+  <script src="../../../src/kekule.js?min=false"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/chemWidgetColor.css" />
+
+  <script>
+    var chemEditor;
+    var composer;
+    var operHistoryView;
+    var subGroupRepItem;
+
+    function addSubgroup()
+    {
+      var node = chemEditor.getSelection()[0];
+      if (node)  // merge sub group to node
+      {
+        var editor = chemEditor;
+        var repItem = subGroupRepItem;
+        editor.beginUpdateObject();
+        try
+        {
+          repResult = repItem.createObjects(node) || {};
+
+          var repObjects = repResult.objects;
+          console.log(repObjects);
+          var transformParams = Kekule.Editor.RepositoryStructureUtils.calcRepObjInitialTransformParams(editor, repItem, repResult, node, null)
+          editor.transformCoordAndSizeOfObjects(repObjects, transformParams);
+
+          var oper = new Kekule.ChemStructOperation.ReplaceNode(node, repObjects[0]);
+          oper.execute();
+
+          editor.pushOperation(oper);
+        }
+        finally
+        {
+          editor.endUpdateObject();
+        }
+      }
+    }
+
+    function init()
+    {
+      var elem = document.getElementById('chemEditorUi');
+      chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
+      composer = new Kekule.Editor.Composer(elem, chemEditor);
+      var toolButtons = composer.getDefaultCommonToolBarButtons();
+      toolButtons.push({'text': 'Subgroup', 'showText': true, '#execute': addSubgroup});
+      //toolButtons.push({'widget': 'Kekule.Widget.CheckButton', 'text': 'Custom CheckButton'});
+      composer.setCommonToolButtons(toolButtons);
+
+      subGroupRepItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(
+        '{"id":"m1","renderOptions":{"expanded":false,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":8.792444254557292,"y":35.52755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":9.485264577584852,"y":35.12755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":8.792444254557287,"y":36.32755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.485264577584843,"y":35.92755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,3]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}'
+      );
+
+
+      var elem = document.getElementById('operHis');
+      operHistoryView = new Kekule.Widget.OperHistoryTreeView(elem, chemEditor.getOperHistory());
+      operHistoryView.setItemInitialExpanded(true);
+    }
+  </script>
+</head>
+<body onload="init()" onpageshow="console.log('chem editor page show');">
+<div id="chemEditorUi" style="width:800px;height:600px" data-resizable="true"></div>
+<div id="operHis" style="width:400px;height:600px;float:right"></div>
+</body>
+</html>

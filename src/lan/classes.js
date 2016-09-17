@@ -1656,6 +1656,17 @@ var ClassEx = {
 	{
 		return aClass.prototype.CLASS_NAME;
 	},
+  /**
+   * Get last part of class name of this class.
+   * For example, 'Atom' will be returned by class 'Kekule.Atom'.
+   * @return {String} Last part of class name of class.
+   */
+  getClassLocalName: function(aClass)
+  {
+    var className = ClassEx.getClassName(aClass);
+    var pos = className.lastIndexOf('.');
+    return (pos >= 0)? className.substring(pos + 1): className;
+  },
 	/**
 	 * Get prototype of aClass.
 	 * @returns {Object}
@@ -2261,6 +2272,15 @@ ObjectEx = Class.create(
 	{
 		return this.getPrototype().CLASS_NAME;
 	},
+  /**
+   * Get last part of class name of this object.
+   * For example, 'Atom' will be returned by instance of class 'Kekule.Atom'.
+   * @return {String} Last part of class name of object.
+   */
+  getClassLocalName: function()
+  {
+    return ClassEx.getClassLocalName(this.getClass());
+  },
 	/**
 	 * Returns a name to be used in serialization. Descendants can override this.
 	 * @return {String}
@@ -2909,7 +2929,7 @@ ObjectEx = Class.create(
   		event = {};
   	event.name = eventName;
 	  event.target = this;
-	  event.stopPropagation = this._eventStopPropagation;
+	  event.stopPropagation = function() { event.cancelBubble = true; };
   	this.dispatchEvent(eventName, event);
   },
   /**
