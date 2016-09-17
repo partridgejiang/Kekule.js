@@ -662,9 +662,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	doPrepareGroup: function(context, group, drawOptions, drawMode)
 	{
 		// prepare each items first to get basic dimension information
-		var items = group.items;  // items.length should large than 1
-		if (items.length <= 0)
+		var items = group.items;
+		/*
+		if (items.length <= 0)    // items.length should large than 1
 			return null;
+		*/
 
 		for (var i = 0, l = items.length; i < l; ++i)
 		{
@@ -834,6 +836,12 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				gBoundRect = Object.extend({}, rectInfo.boundRect);
 			else
 				gBoundRect = Kekule.RectUtils.getContainerRect(gBoundRect, rectInfo.boundRect);
+		}
+
+		if (items.length <= 0)  // no child item, gAlignRect/gBoundRect need to be set manually
+		{
+			gAlignRect = Kekule.RectUtils.createRect(0, 0, 0, 0);
+			gBoundRect = Kekule.RectUtils.createRect(0, 0, 0, 0);
 		}
 
 		// Standard group rect, make alignRect.top/left = 0, adjust children's rects correspondingly
