@@ -274,7 +274,7 @@ Kekule.ChemStructureUtils = {
 	},
 
 	/** @private */
-	_getCascadeConnectedNodesAndConnectors: function(connector)
+	_getCascadeConnectedNodesAndConnectors: function(connector, parentStructFragment)
 	{
 		var connectors = [];
 		var nodes = [];
@@ -284,6 +284,8 @@ Kekule.ChemStructureUtils = {
 			var obj = objs[j];
 			if (obj !== connector)
 			{
+				if (parentStructFragment)
+					obj = parentStructFragment.findDirectChildOfObj(obj);
 				if (obj instanceof Kekule.ChemStructureNode)
 					Kekule.ArrayUtils.pushUnique(nodes, obj);
 				else if (obj instanceof Kekule.ChemStructureConnector)
@@ -348,10 +350,12 @@ Kekule.ChemStructureUtils = {
 		{
 			var node = currNodes[currIndex];
 			var connectors = node.getLinkedConnectors();
+			if (node.getCrossConnectors)
+				connectors.concat(node.getCrossConnectors() || []);
 			Kekule.ArrayUtils.pushUnique(currConnectors, connectors);
 			for (var i = 0, l = connectors.length; i < l; ++i)
 			{
-				var connected = Kekule.ChemStructureUtils._getCascadeConnectedNodesAndConnectors(connectors[i]);
+				var connected = Kekule.ChemStructureUtils._getCascadeConnectedNodesAndConnectors(connectors[i], structFragment);
 				Kekule.ArrayUtils.pushUnique(currConnectors, connected.connectors);
 				Kekule.ArrayUtils.pushUnique(currNodes, connected.nodes);
 			}

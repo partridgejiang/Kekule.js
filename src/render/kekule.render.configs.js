@@ -363,7 +363,7 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('rxnMolMargin', 10, {'scope': PS.PUBLIC});
 
 		// length for context
-		this.addFloatConfigProp('autofitContextPadding', 20);
+		this.addFloatConfigProp('autofitContextPadding', /*20*/45);
 	},
 
 	/**

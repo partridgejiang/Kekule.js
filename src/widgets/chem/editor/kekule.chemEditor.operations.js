@@ -378,6 +378,7 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	initProperties: function()
 	{
 		this.defineProp('parentObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+		this.defineProp('ownerObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('refSibling', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 	},
 	/** @private */
@@ -385,10 +386,16 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	{
 		var obj = this.getTarget();
 		var parent = this.getParentObj();
+		var owner = this.getOwnerObj();
 		if (!parent && obj.getParent)
 		{
 			parent = obj.getParent();
 			this.setParentObj(parent);
+		}
+		if (!owner && obj.getOwner)
+		{
+			owner = obj.getOwner();
+			this.setOwnerObj(owner);
 		}
 
 		if (parent && obj)
@@ -406,10 +413,13 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	doReverse: function()
 	{
 		var parent = this.getParentObj();
+		var owner = this.getOwnerObj();
 		var obj = this.getTarget();
 		if (parent && obj)
 		{
 			var sibling = this.getRefSibling();
+			if (owner)
+				obj.setOwner(owner);
 			parent.insertBefore(obj, sibling);
 		}
 	}
