@@ -65,7 +65,7 @@ function createChemWidget(placeHolder, ansCtrlName, className, widgetType, input
 
 	var ctrlElem = getBlankRelatedElems(ansCtrlName).answer;
 
-	var isEmpty = false;
+	var isEmpty = !ctrlElem;
 	var jsonObj = null;
 	if (ctrlElem)
 	{
@@ -75,6 +75,7 @@ function createChemWidget(placeHolder, ansCtrlName, className, widgetType, input
 		var ansValue = ctrlElem.value;
 		if (ansValue)
 		{
+			//console.log(ansValue);
 			jsonObj = parseAnswerString(ansValue);
 			/*
 			if (jsonObj && jsonObj.molData)
@@ -84,9 +85,9 @@ function createChemWidget(placeHolder, ansCtrlName, className, widgetType, input
 			else
 				isEmpty = true;
 			*/
-			if (!jsonObj || !jsonObj.molData)
-				isEmpty = true;
 		}
+		if (!jsonObj || !jsonObj.molData)
+			isEmpty = true;
 	}
 
 	var result = new widgetClass(placeHolder);

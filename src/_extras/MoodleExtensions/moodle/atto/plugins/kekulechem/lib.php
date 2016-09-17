@@ -47,7 +47,9 @@ function atto_kekulechem_strings_for_js() {
     $kekuleDir = atto_kekulechem_configs::getKekuleDir();
     $PAGE->requires->js($kekuleDir . 'raphael-min.js');
     $PAGE->requires->js($kekuleDir . 'Three.js');
-    $PAGE->requires->js($kekuleDir . 'kekule/kekule.js');
+    $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
+    //$PAGE->requires->js($kekuleDir . 'kekule/kekule.js');
+    //$PAGE->requires->js($kekuleDir . 'kekule/localizationData.zh.min.js');
 
     /*
     $cssUrl = $CFG->httpswwwroot . '/kekule.js/kekule/themes/default/kekule.css';
