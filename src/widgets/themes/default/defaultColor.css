@@ -605,23 +605,23 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 /* Style resources */
 .K-Res-Cursor-Rotate
 {
-    cursor: url("images/cursors/rotate.cur"), pointer;
+    cursor: url("images/cursors/rotate.cur"), url("images/cursors/rotate.png") 10 12, pointer;
 }
 .K-Res-Cursor-Rotate-NE
 {
-    cursor: url("images/cursors/rotateNE.cur"), pointer;
+    cursor: url("images/cursors/rotateNE.cur"), url("images/cursors/rotateNE.png") 16 16, pointer;
 }
 .K-Res-Cursor-Rotate-NW
 {
-    cursor: url("images/cursors/rotateNW.cur"), pointer;
+    cursor: url("images/cursors/rotateNW.cur"), url("images/cursors/rotateNW.png") 16 16, pointer;
 }
 .K-Res-Cursor-Rotate-SE
 {
-    cursor: url("images/cursors/rotateSE.cur"), pointer;
+    cursor: url("images/cursors/rotateSE.cur"), url("images/cursors/rotateSE.png") 16 16, pointer;
 }
 .K-Res-Cursor-Rotate-SW
 {
-    cursor: url("images/cursors/rotateSW.cur"), pointer;
+    cursor: url("images/cursors/rotateSW.cur"), url("images/cursors/rotateSW.png") 16 16, pointer;
 }
 .K-Res-Icon-Color-Pick
 {
