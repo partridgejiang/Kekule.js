@@ -106,13 +106,16 @@ Kekule.CmdLineUtils = {
 			var m = moduleInfos[i];
 			var targetMinFileName = m.minFile || (m.name + '.min.js');
 			var srcFiles = m.files;
-			Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetMinFileName);
-			if (!compressFileMap[targetMinFileName])
+			if (m.autoCompress !== false)
 			{
-				compressFileMap[targetMinFileName] = [];
+				Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetMinFileName);
+				if (!compressFileMap[targetMinFileName])
+				{
+					compressFileMap[targetMinFileName] = [];
+				}
+				compressFileMap[targetMinFileName] = compressFileMap[targetMinFileName].concat(srcFiles);
+				allSrcFiles = allSrcFiles.concat(srcFiles);
 			}
-			compressFileMap[targetMinFileName] = compressFileMap[targetMinFileName].concat(srcFiles);
-			allSrcFiles = allSrcFiles.concat(srcFiles);
 		}
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
