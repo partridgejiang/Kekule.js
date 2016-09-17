@@ -1408,8 +1408,8 @@
 		{
 			for (var i = 0, l = str.length; i < l; ++i)
 			{
-				var char = str.charAt(i);
-				if (char >= 'A' && char <= 'Z')
+				var sChar = str.charAt(i);
+				if (sChar >= 'A' && sChar <= 'Z')
 					return i;
 			}
 			return -1;
