@@ -175,7 +175,8 @@ var kekuleFiles = {
 	'localization': {
 		'requires': ['lan', 'root'],
 		'files': [
-			'localization/kekule.localizations.js',
+			'localization/kekule.localizations.js'
+			/*
 			'localization/en/kekule.localize.general.en.js',
 			'localization/en/kekule.localize.widget.en.js',
 			'localization/en/kekule.localize.objDefines.en.js'
@@ -184,7 +185,18 @@ var kekuleFiles = {
 			'localization/zh/kekule.localize.widget.zh.js'
 			*/
 		],
-		'category': 'localization'
+		'category': 'localization',
+		'minFile': 'localization.min.js'
+	},
+	'localizationData': {
+		'requires': ['localization'],
+		'files': [
+			'localization/en/kekule.localize.general.en.js',
+			'localization/en/kekule.localize.widget.en.js',
+			'localization/en/kekule.localize.objDefines.en.js'
+		],
+		'category': 'localization',
+		'minFile': 'localization.min.js'
 	},
 
 	'common': {
@@ -392,13 +404,26 @@ var kekuleFiles = {
 			'_extras/OpenBabel/kekule.openbabel.structures.js'
 		],
 		'category': 'extra'
+	},
+
+	// Localization resources
+	'localizationData.zh': {
+		'requires': ['localization'],
+		'files': [
+			'localization/zh/kekule.localize.general.zh.js',
+			'localization/zh/kekule.localize.widget.zh.js'
+			//'localization/zh/kekule.localize.objDefines.zh.js'
+		],
+		'category': 'localizationData.zh',
+		'autoCompress': false  // do not compress js automatically
 	}
 };
 
-var prequestModules = ['lan', 'root', 'localization', 'common'];
+var prequestModules = ['lan', 'root', 'localization', 'localizationData', 'common'];
 var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
 var allModules = usualModules.concat(['emscripten', 'openbabel']);
 var nodeModules = prequestModules.concat(['core', 'io', 'algorithm', 'calculation', 'data']);
+var defaultLocals = [];
 
 function getEssentialModules(modules)
 {
@@ -459,22 +484,24 @@ function analysisEntranceScriptSrc(doc)
 	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
-	var paramLanguage = /^language\= (.+)$/;
+	var paramLocalDatas = /^locals\=(.+)$/;
+	var paramLanguage = /^language\=(.+)$/;
 	var scriptElems = doc.getElementsByTagName('script');
 	var loc;
 	for (var j = scriptElems.length - 1; j >= 0; --j)
 	{
 		var elem = scriptElems[j];
-		if (elem.src)
+		var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+		if (scriptSrc)
 		{
-			var matchResult = elem.src.match(entranceSrc);
+			var matchResult = scriptSrc.match(entranceSrc);
 			if (matchResult)
 			{
 				var pstr = matchResult[2];
 				if (pstr)
 					pstr = pstr.substr(1);  // eliminate starting '?'
 				var result = {
-					'src': elem.src,
+					'src': scriptSrc,
 					'path': matchResult[1],
 					'paramStr': pstr,
 					'useMinFile': true
@@ -495,6 +522,7 @@ function analysisEntranceScriptSrc(doc)
 							//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
 							//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
 							result.useMinFile = value;
+							continue;
 						}
 						// check module param
 						var moduleMatch = params[i].match(paramModules);
@@ -511,6 +539,16 @@ function analysisEntranceScriptSrc(doc)
 							var pvalue = forceDomLoaderMatch[1].toLowerCase();
 							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
 							result.forceDomLoader = value;
+							continue;
+						}
+						// check required local data
+						var localsMatch = params[i].match(paramLocalDatas);
+						if (localsMatch)
+						{
+							var localsStr = localsMatch[1];
+							var locals = localsStr.split(',');
+							result.locals = locals;
+							continue;
 						}
 						// language
 						var forceLanguage = params[i].match(paramLanguage);
@@ -518,10 +556,39 @@ function analysisEntranceScriptSrc(doc)
 						{
 							var pvalue = forceLanguage[1];
 							result.language = pvalue;
+							continue;
 						}
 					}
 					if (modules)
 						result.modules = modules;
+					else
+						result.modules = usualModules;  // no modules appointed, use default setting
+
+					// handle local data
+					if (!result.locals)
+						result.locals = defaultLocals;
+					if (result.locals || result.language)
+					{
+						var localNames = [].concat(result.locals || []);
+						if (result.language && localNames.indexOf(result.language) < 0)  // local resources of forced language should always be loaded
+						{
+							localNames.push(result.language);
+						}
+						if (localNames.length)
+						{
+							var localizationModuleIndex = result.modules.indexOf('localizationData');
+							if (localizationModuleIndex < 0)  // local data module not listed, put local data as first module
+								localizationModuleIndex = -1;
+							for (var i = 0, l = localNames.length; i < l; ++i)
+							{
+								var localName = localNames[i];
+								if (localName === 'en')  // default local resource, already be loaded, by pass
+									continue;
+								// insert resources, right after localization module, before other widget modules
+								result.modules.splice(localizationModuleIndex + 1, 0, 'localizationData.' + localName);
+							}
+						}
+					}
 				}
 
 				return result;

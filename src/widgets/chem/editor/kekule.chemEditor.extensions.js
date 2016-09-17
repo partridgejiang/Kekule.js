@@ -177,6 +177,7 @@ ClassEx.extend(Kekule.ChemStructureObject,
 	/** @ignore */
 	getCascadeDeleteObjs: function($super)
 	{
+		// TODO: here nested substructures is not considered
 		var result = $super();
 		var linkedConnectors = this.getLinkedConnectors? this.getLinkedConnectors(): [];
 		for (var i = 0, l = linkedConnectors.length; i < l; ++i)

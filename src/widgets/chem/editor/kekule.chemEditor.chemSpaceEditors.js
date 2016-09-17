@@ -784,7 +784,7 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var delObjs = objs[i].getCascadeDeleteObjs? objs[i].getCascadeDeleteObjs(): [];
-			Kekule.Editor.StructureUtils.getCascadeDeleteObjs(objs[i]);
+			//Kekule.Editor.StructureUtils.getCascadeDeleteObjs(objs[i]);
 			if (delObjs)
 				Kekule.ArrayUtils.pushUnique(result, delObjs);
 		}
@@ -2674,6 +2674,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		 style.marginLeft = -posAdjust + 'px';
 		 */
 		//setter.show();
+		setter._applied = false;
 		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
 
 		(function(){
@@ -2689,6 +2690,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	/** @private */
 	applySetter: function(setter, atom)
 	{
+		if (setter._applied)  // avoid called twice
+			return;
 		if (!atom)
 			atom = this.getCurrAtom();
 		var nodeClass;
@@ -2780,6 +2783,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			}
 		}
 		this.applyModification(atom, newNode, nodeClass, modifiedProps);
+		setter._applied = true;
 	},
 
 	/**

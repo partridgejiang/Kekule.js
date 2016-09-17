@@ -3169,6 +3169,22 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		return result;
 	},
 	/**
+	 * Returns the direct node/substructure that contains originObj.
+	 * originObj may be a child node or connector of substructure in this ctab.
+	 * If originObj is actually not in this ctab, null will be returned.
+	 * @param {Kekule.ChemStructureObject} originObj
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	findDirectChildOfObj: function(originObj)
+	{
+		var obj = originObj;
+		while (obj && this.indexOfChild(obj) < 0)
+		{
+			obj = obj.getParent? obj.getParent(): null;
+		}
+		return obj;
+	},
+	/**
 	 * Return all bonds in structure as well as in sub structure.
 	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
 	 */
@@ -4496,6 +4512,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return this.hasCtab()? this.getCtab().getLeafNodes(): [];
 	},
 	/**
+	 * Returns the direct node/substructure that contains originObj.
+	 * originObj may be a child node or connector of substructure in this structure fragment.
+	 * If originObj is actually not in this ctab, null will be returned.
+	 * @param {Kekule.ChemStructureObject} originObj
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	findDirectChildOfObj: function(originObj)
+	{
+		return this.hasCtab()? this.getCtab().findDirectChildOfObj(originObj): null;
+	},
+	/**
 	 * Return all bonds in structure as well as in sub structure.
 	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
 	 */
@@ -5042,7 +5069,8 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 					'Unable to link mistyped node to connector'
 			);
 		}
-		else if (obj.getOwner() != this.getOwner())
+		else if (obj.getOwner() && obj.getOwner() != this.getOwner())
+		// if owner is null, still allow connect, this may occur when undo remove a subgroup in editor
 		{
 			Kekule.chemError(
 				Kekule.hasLocalRes()?
