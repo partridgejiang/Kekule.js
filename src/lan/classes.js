@@ -2587,6 +2587,34 @@ ObjectEx = Class.create(
   	else
   		return null;
   },
+	/**
+   * Returns values of a series of properties.
+   * @param {Variant} propNames Can be an array of property names, also can be an object while the
+   *   direct field names of object will be regarded as property names.
+   * @returns {Hash} Stores all property name-value pair.
+   */
+  getPropValues: function(propNames)
+  {
+    var result = {};
+    var names;
+    if (DataType.isArrayValue(propNames))
+    {
+      for (var i = 0, l = propNames.length; i < l; ++i)
+      {
+        var pname = propNames[i];
+        result[pname] = this.getPropValue(pname);
+      }
+    }
+    else if (DataType.isObjectValue(propNames))
+    {
+      for (var pname in propNames)
+      {
+        if (propNames.hasOwnProperty(pname) && typeof(obj[pname]) !== 'function')
+          result[pname] = this.getPropValue(pname);
+      }
+    }
+    return result;
+  },
   /**
    * Set value of a property's store field. Use this method to set property value and avoid
    * the call of property setter. Readonly property can also be changed in this method.

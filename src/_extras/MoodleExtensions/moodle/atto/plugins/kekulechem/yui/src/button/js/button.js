@@ -120,6 +120,7 @@ Y.namespace('M.atto_kekulechem').Button = Y.Base.create('button', Y.M.editor_att
 		{
 			this._targetElem = null;
 		}
+		var editor = this.get('host');
 		this._openDialog();
 	},
 	/*
@@ -284,16 +285,22 @@ Y.namespace('M.atto_kekulechem').Button = Y.Base.create('button', Y.M.editor_att
 			details['class'] = '';
 		details['class'] = ' ' + this.CHEM_OBJ_VIEWER_CLASS;
 
+		//console.log('export detail', details);
+
+		var editor = this.get('host');
+		editor.focus();   // IMPORTANT: must focus back to editor, otherwise insertion may failed in blured editor
+		//editor.restoreSelection(this._editorSelection);
 		if (!this._targetElem)  // add new, insert new chem obj
 		{
 			var htmlCode = this._generateElemHtmlCode(this.CHEM_OBJ_TAGNAME, null, details);
-			var editor = this.get('host');
 			editor.insertContentAtFocusPoint(htmlCode);
+			//console.log('insert new HTML', htmlCode);
 		}
 		else  // modify existing chem obj element
 		{
 			Kekule.DomUtils.setElemAttributes(this._targetElem, details);
 		}
+
 		this.markUpdated();
 	},
 

@@ -35,25 +35,34 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
         global $PAGE, $CFG;
 
         // dependant files
-        /*
-        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/raphael-min.js');
-        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/Three.js');
-        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/kekule/kekule.js');
-        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
-        $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule/themes/default/kekule.css');
-        $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
-        */
         $kekuleDir = qtype_kekule_chem_configs::getKekuleDir();
+        /*
         $PAGE->requires->js($kekuleDir . 'raphael-min.js');
         $PAGE->requires->js($kekuleDir . 'Three.js');
-        $PAGE->requires->js($kekuleDir . 'kekule/kekule.js');
+        $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
         $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
+        */
         $PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
         $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
     }
 
     public function formulation_and_controls(question_attempt $qa,
-                                             question_display_options $options) {
+                                             question_display_options $options)
+    {
+        global $PAGE, $CFG;
+
+        // In some environment, method head_code will not be called (e.g., in quiz manual grade page),
+        // so here we ensure the JS files are all loaded.
+        // Mean while CSS can not be required in after body, that problem need to be resolved later.
+        // dependant files
+        $kekuleDir = qtype_kekule_chem_configs::getKekuleDir();
+        $PAGE->requires->js($kekuleDir . 'raphael-min.js');
+        $PAGE->requires->js($kekuleDir . 'Three.js');
+        $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
+        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
+        //$PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
+        //$PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
+
         $result = parent::formulation_and_controls($qa, $options);
         return $result;
         /*
