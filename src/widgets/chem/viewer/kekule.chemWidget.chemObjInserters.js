@@ -388,7 +388,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		result.setRenderType(Kekule.Render.RendererType.R2D);
 		result.setEnableEdit(true);
 		result.setEnableEditFromVoid(true);
+		result.setRestrainEditorWithCurrObj(false);  // can edit anything defaultly
 		result.setEnableToolbar(true);
+		result.setPredefinedSetting('fullFunc');  // enable all functions of composer
 		var buttons = AU.exclude(result.getDefaultToolBarButtons(), BNS.config);
 		buttons.push({
 			'action': this._configAction
