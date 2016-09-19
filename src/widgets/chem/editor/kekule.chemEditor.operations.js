@@ -813,11 +813,14 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 	 */
 Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMergeStructFragment, canMergeNeighborNodes)
 {
+	// never allow merge to another molecule point (e.g. formula molecule) or subgroup
+	if ((target instanceof Kekule.StructureFragment) || (dest instanceof Kekule.StructureFragment))
+		return false;
 	var targetFragment = target.getParent();
 	var destFragment = dest.getParent();
 	var result = (targetFragment === destFragment) || canMergeStructFragment;
 	if (!canMergeNeighborNodes)
-		result = result && (!target.getConnectorTo(dest))
+		result = result && (!target.getConnectorTo(dest));
 	return result;
 };
 
