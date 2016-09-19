@@ -65,6 +65,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	/** @private */
 	doDraw: function($super, context, baseCoord, options)
 	{
+		//console.log('do draw ctab');
 		return $super(context, baseCoord, options);
 	},
 	/** @private */
@@ -411,10 +412,14 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 	/** @ignore */
 	doDraw: function($super, context, baseCoord, options)
 	{
+		//console.log('dodraw path', this._concreteRenderer.getClassName());
 		$super(context, baseCoord, options);
 
 		var chemObj = this.getChemObj();
-		return this._concreteRenderer.draw(context, baseCoord, this._getConcreteRendererDrawOptions(options));
+		var op = Object.create(options);
+		if (op.partialDrawObjs)  // path glyph is a whole and can not be partial drawn
+			op.partialDrawObjs = null;
+		return this._concreteRenderer.draw(context, baseCoord, this._getConcreteRendererDrawOptions(op));
 	},
 	/** @ignore */
 	doRedraw: function(context)
