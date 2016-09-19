@@ -3622,7 +3622,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		*/
 
 		if (!chemObj.hasFormula() && !chemObj.hasCtab())  // no context, need not to draw
-			return null
+			return null;
 		else if (r)
 		{
 			//console.log('concrete draw', r.getClassName(), options.partialDrawObjs, !!r.getRedirectContext());

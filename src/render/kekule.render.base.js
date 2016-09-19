@@ -747,14 +747,17 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 
 		var partialDrawObjs = ops.partialDrawObjs;
 
+		/*
+		if ((this instanceof Kekule.Render.Ctab2DRenderer))
+			console.log(this.getClassName(), partialDrawObjs, !partialDrawObjs || this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context));
+    */
+
 		if (partialDrawObjs && (!this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context)))
 			return null;
 		/*
 		else if (partialDrawObjs)
 			console.log('partial draw objects', this.getClassName(), partialDrawObjs && partialDrawObjs.length);
-		*/
-
-
+    */
 		//p.options = ops;
 
 		var renderOptionsGetter = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
@@ -773,7 +776,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		//console.log('DRAW', isRoot);
 		if (isRoot)
 			this.beginDraw(context, baseCoord, ops);
-		//console.log(this.getClassName(), this.getRenderCache(context));
+
 		var result = this.doDraw(context, baseCoord, ops);
 		this.getRenderCache(context).drawnElem = result;
 		if (isRoot)
