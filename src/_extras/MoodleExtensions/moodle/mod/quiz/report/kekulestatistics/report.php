@@ -45,10 +45,14 @@ class quiz_kekulestatistics_report extends quiz_statistics_report {
         // Add essential script and css
         $kekuleDir = quiz_kekulestatistics_configs::getKekuleDir();
 
+        /*
         $PAGE->requires->js($kekuleDir . 'raphael-min.js');
         $PAGE->requires->js($kekuleDir . 'Three.js');
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
         $PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
+        */
+        kekulejs_utils::includeKekuleJsFiles();
+        kekulejs_utils::includeKekuleCssFiles();
 
         parent::print_header_and_tabs($cm, $course, $quiz, $reportmode);
     }

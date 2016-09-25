@@ -26,6 +26,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+
+$kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
+
+if (empty($kekulePluginsPath))
+    $kekulePluginsPath = self::DEF_KEKULE_DIR;
+require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
+
 // consts
 class qtype_kekule_chem_compare_methods {
     const DEF_METHOD = 0;  // default
@@ -59,14 +66,16 @@ class qtype_kekule_chem_html
 class qtype_kekule_chem_configs
 {
     const DEF_MOL_COMPARER_URL = 'http://127.0.0.1:3000/mols/compare';
-    const DEF_KEKULE_DIR = '/kekule.js/';
+    const DEF_KEKULE_DIR = '/local/kekulejs/';
 
     static public function getKekuleDir()
     {
-        $result = get_config('mod_kekule', 'kekule_dir');
+        return kekulejs_configs::getScriptDir();
+        /*
         if (empty($result))
             $result = self::DEF_KEKULE_DIR;
         return $result;
+        */
     }
 }
 

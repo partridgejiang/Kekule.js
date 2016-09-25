@@ -42,8 +42,12 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
         $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
         */
+        /*
         $PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
+        */
+        kekulejs_utils::includeKekuleCssFiles();
         $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
+
     }
 
     public function formulation_and_controls(question_attempt $qa,
@@ -55,10 +59,13 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
         // so here we ensure the JS files are all loaded.
         // Mean while CSS can not be required in after body, that problem need to be resolved later.
         // dependant files
+        /*
         $kekuleDir = qtype_kekule_chem_configs::getKekuleDir();
         $PAGE->requires->js($kekuleDir . 'raphael-min.js');
         $PAGE->requires->js($kekuleDir . 'Three.js');
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
+        */
+        kekulejs_utils::includeKekuleScriptFiles();
         $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
         //$PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
         //$PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
@@ -151,6 +158,7 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
         return $result;
     }
 
+    /*
     protected function correctResponseTextsToHtml(question_attempt $qa, $question, $texts)
     {
         $result = array();
@@ -169,5 +177,20 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
             $result[$key] = $html;
         }
         return $result;
+    }
+    */
+    protected function correctResponseTextToHtml(question_attempt $qa, $question, $text)
+    {
+        $ansDetail = $question->parseAnswerString($text);
+        // create auto launch viewer widget
+        $attr = array(
+            'data-widget' => 'Kekule.ChemWidget.Viewer',
+            'data-auto-size' => 'true',
+            'data-predefined-setting' => 'static'
+        );
+        if (!empty($ansDetail->molData))
+            $attr['data-chem-obj'] = $ansDetail->molData;
+        $html = html_writer::span('', qtype_kekule_chem_html::CLASS_CORRECT_RESPONSE, $attr);
+        return $html;
     }
 }

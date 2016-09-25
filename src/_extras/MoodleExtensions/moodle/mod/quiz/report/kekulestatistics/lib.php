@@ -6,15 +6,16 @@
  * Time: 20:03
  */
 
+$kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
+if (empty($kekulePluginsPath))
+    $kekulePluginsPath = self::DEF_KEKULE_DIR;
+require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
+
 class quiz_kekulestatistics_configs
 {
-    const DEF_KEKULE_DIR = '/kekule.js/';
-
+    const DEF_KEKULE_DIR = '/local/kekulejs/';
     static public function getKekuleDir()
     {
-        $result = get_config('mod_kekule', 'kekule_dir');
-        if (empty($result))
-            $result = self::DEF_KEKULE_DIR;
-        return $result;
+        return kekulejs_configs::getScriptDir();
     }
 };

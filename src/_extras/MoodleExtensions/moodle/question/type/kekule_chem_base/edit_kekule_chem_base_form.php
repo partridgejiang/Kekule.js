@@ -49,12 +49,16 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
         global $PAGE, $CFG;
 
         // dependant files
+        /*
         $kekuleDir = qtype_kekule_chem_configs::getKekuleDir();
         $PAGE->requires->js($kekuleDir . 'raphael-min.js');
         $PAGE->requires->js($kekuleDir . 'Three.js');
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
+        */
+        kekulejs_utils::includeKekuleScriptFiles();
         $PAGE->requires->js('/question/type/kekule_chem_base/scripts/editForm.js');
-        $PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
+        //$PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
+        kekulejs_utils::includeKekuleCssFiles();
         $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
 
         parent::definition_inner($mform);

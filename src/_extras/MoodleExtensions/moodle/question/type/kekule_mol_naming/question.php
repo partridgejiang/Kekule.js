@@ -41,11 +41,13 @@ class qtype_kekule_mol_naming_question extends qtype_kekule_multianswer_question
         */
         $nameSrc = $this->cleanNameText($src);
         $nameTarget = $this->cleanNameText($target);
-        //echo $nameSrc, $nameTarget;
         if ($this->ignorecase)
             $compResult = strcasecmp($nameSrc, $nameTarget);
         else
             $compResult = strcmp($nameSrc, $nameTarget);
+
+        //echo $nameSrc, ' :: ',  $nameTarget, ' / ', $compResult, ' ', $compResult === 0, '<br />';
+
         return ($compResult === 0)? 1: 0;
     }
 

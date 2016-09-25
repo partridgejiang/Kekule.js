@@ -59,13 +59,15 @@ class qtype_kekule_mol_naming_utils
             $replacements = qtype_kekule_mol_naming_configs::DEF_STR_REPLACEMENT;
         }
         $result = array();
-        foreach($replacements as $line)
+        $repLines = explode("\n", $replacements);   // here must be "\n" rather than '\n'
+        foreach($repLines as $line)
         {
             $pos = strpos($line, '=');
             if ($pos !== false)
             {
                 $key = substr($line, 0, $pos);
                 $value = substr($line, $pos + 1);
+                //echo 'LINE: ', $key, ' ', $value;
                 if (!empty($key)) {
                     $result[$key] = $value;
                 }
@@ -84,6 +86,7 @@ class qtype_kekule_mol_naming_utils
         if ($options['replaceunstandardchars'])
         {
             $charMap = self::getUnstandardCharMap();
+            //var_dump($charMap);
             $result = self::_replaceUnstandardChars($result, $charMap);
             $result = self::_fullWidthToHalfWidthChar($result);
         }
@@ -91,6 +94,7 @@ class qtype_kekule_mol_naming_utils
         {
             $result = self::_removeSpaces($result);
         }
+        //echo 'clean: ', $molName, ' :: ', $result, '<br />';
         return $result;
     }
     static private function _replaceUnstandardChars($text, $charMap)
@@ -107,7 +111,8 @@ class qtype_kekule_mol_naming_utils
     }
     static private function _removeSpaces($text)
     {
-        return str_replace(' ', '', $text);
+        //return str_replace(' ', '', $text);
+        return preg_replace('/\s/', '', $text); // using str_replace may miss some blanks
     }
     static private function _fullWidthToHalfWidthChar($text)
     {

@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
+/*
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/editor/atto/plugins/kekulechem/lib.php');
@@ -31,3 +31,5 @@ require_once($CFG->dirroot . '/lib/editor/atto/plugins/kekulechem/lib.php');
 $settings->add(new admin_setting_configtext('mod_kekule/kekule_dir',
     get_string('captionKekuleDir', 'atto_kekulechem'), get_string('descKekuleDir', 'atto_kekulechem'),
     atto_kekulechem_configs::DEF_KEKULE_DIR, PARAM_TEXT));
+
+*/
