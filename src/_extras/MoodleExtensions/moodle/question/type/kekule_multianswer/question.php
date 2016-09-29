@@ -108,10 +108,21 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
                 $maxFraction = 0;
 
             $fraction = $answer->fraction;
-            if ($fraction > $maxFraction)
+            if ($fraction >= $maxFraction)
             {
-                $maxFractions[$blankIndex] = $fraction;
-                $result[$blankIndex] = $answer;
+                if ($fraction > $maxFraction)
+                {
+                    $maxFractions[$blankIndex] = $fraction;
+                    //$result[$blankIndex] =  $answer;
+                    $result[$blankIndex] = array($answer);
+                }
+                else if ($fraction > 0) // equals
+                {
+                    if (!isset($result[$blankIndex]))
+                        $result[$blankIndex] = array($answer);
+                    else
+                        $result[$blankIndex][] = $answer;
+                }
             }
         }
         return $result;
@@ -324,7 +335,34 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         $response = array();
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
-            $response[$this->getAnswerFieldName($i)] = $correctSet[$i]->answer;
+            /*
+            $correctResponses = $correctSet[$i];
+            $answers = array();
+            foreach ($correctResponses as $res)
+            {
+                $answers[] = $res->answer;
+            }
+            //$response[$this->getAnswerFieldName($i)] = $correctSet[$i]->answer;
+            $response[$this->getAnswerFieldName($i)] = implode($answers, ' / ');
+            */
+            $response[$this->getAnswerFieldName($i)] = $correctSet[$i][0]->answer;
+        }
+        return $response;
+    }
+    // there maybe multiple correct answers of one blank
+    public function getCorrectAnswers()
+    {
+        $correctSet = $this->getCorrectAnswerSet();
+        $response = array();
+        for ($i = 0; $i < $this->blankCount; ++$i)
+        {
+            $correctResponses = $correctSet[$i];
+            $answers = array();
+            foreach ($correctResponses as $res)
+            {
+                $answers[] = $res->answer;
+            }
+            $response[$this->getAnswerFieldName($i)] = $answers;
         }
         return $response;
     }

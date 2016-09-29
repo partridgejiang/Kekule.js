@@ -117,27 +117,17 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
         return $result;
     }
 
+    /*
     public function get_correct_response() {
         $correctSet = $this->getCorrectAnswerSet();
         $response = array();
         for ($i = 0; $i < $this->blankCount; ++$i)
         {
             $ansString = $correctSet[$i]->answer;
-            /*
-            $ansDetail = $this->parseAnswerString($ansString);
-            // create auto launch viewer widget
-            $attr = array(
-                'data-widget' => 'Kekule.ChemWidget.Viewer',
-                'data-auto-size' => 'true',
-                'data-predefined-setting' => 'static'
-            );
-            if (!empty($ansDetail->molData))
-                $attr['data-chem-obj'] = $ansDetail->molData;
-            $html = html_writer::span('', qtype_kekule_chem_html::CLASS_CORRECT_RESPONSE, $attr);
-            */
             //$response[$this->getAnswerFieldName($i)] = $html;
             $response[$this->getAnswerFieldName($i)] = $ansString;  //->molData;
         }
         return $response;
     }
+    */
 }

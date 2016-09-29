@@ -569,6 +569,7 @@ table.K-Widget
 {
     cursor: default;
 }
+.K-Widget.K-Transparent-Background,
 .K-Resize-Gripper.K-Normal-Background
 {
     background-color: transparent;

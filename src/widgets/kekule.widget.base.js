@@ -1632,7 +1632,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	isShown: function(ignoreDom)
 	{
 		//var result = !!this.getElement().parentNode && this.getVisible() && this.getDisplayed();
-		var result = (this.isInDomTree() || ignoreDom) && this.getVisible() && this.getDisplayed();
+		var result = (this.isInDomTree() || ignoreDom) && this.getElement() && this.getVisible() && this.getDisplayed();
 		return result;
 	},
 	/**
@@ -1939,7 +1939,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	appendToElem: function(parentElem)
 	{
-		parentElem.appendChild(this.getElement());
+		if (parentElem)
+			parentElem.appendChild(this.getElement());
 		//this.insertedToDom();
 		return this;
 	},
@@ -2233,8 +2234,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			var h = element.getAttribute('height');
 			if (Kekule.ObjUtils.notUnset(w) || Kekule.ObjUtils.notUnset(h))
 			{
-				w = parseFloat(w.toString()) || 0;
-				h = parseFloat(h.toString()) || 0;
+				w = parseFloat((w || '').toString()) || 0;
+				h = parseFloat((h || '').toString()) || 0;
 				this.setDimension(w, h);
 			}
 			var dataset = Kekule.DomUtils.getDataset(element);

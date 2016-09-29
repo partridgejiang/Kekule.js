@@ -186,10 +186,14 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	_insertChildWidget: function(widget, refWidget)
 	{
 		var refElem = refWidget? refWidget.getElement(): null;
-		if (refElem)
-			this.getContainerElement().insertBefore(widget.getElement(), refElem);
-		else
-			this.getContainerElement().appendChild(widget.getElement());
+		var containerElem = this.getContainerElement();
+		if (containerElem)
+		{
+			if (refElem)
+				containerElem.insertBefore(widget.getElement(), refElem);
+			else
+				containerElem.appendChild(widget.getElement());
+		}
 	},
 
 	/** @private */

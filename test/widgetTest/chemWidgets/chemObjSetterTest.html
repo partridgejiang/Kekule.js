@@ -32,7 +32,8 @@
       Kekule.Widget.getWidgetById('objInspector').setObjects(objSetter);
       Kekule.Widget.getWidgetById('btnAdd').addEventListener('execute', function(){
         var imgElem = objSetter.createExportImgElement(document/*, 'image/svg+xml'*/);
-        imgElem.className += 'Viewer';
+        imgElem.className += ' Viewer';
+        //imgElem.setAttribute('data-predefined-setting', 'mini');
         document.getElementById('stage').appendChild(imgElem);
       });
       /*

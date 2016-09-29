@@ -51,7 +51,9 @@ $string['errAnswerMissingField'] = 'Answer {$a} is not complete';
 $string['externalMolComparerNotFound'] = 'External molecule comparer not found';
 
 // string used in settings
+/*
 $string['captionKekuleDir'] = 'Kekule.js directory';
 $string['descKekuleDir'] = 'Root directory that contains Kekule.js lib (and its dependant libs)';
+*/
 $string['captionMolComparerUrl'] = 'Molecule comparer URL';
 $string['descMolComparerUrl'] = 'URL of the node.js application that compares molecule structures';

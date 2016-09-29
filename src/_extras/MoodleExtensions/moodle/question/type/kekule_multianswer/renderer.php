@@ -155,14 +155,30 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
     public function correct_response(question_attempt $qa) {
         $sResults = array();
         $question = $qa->get_question();
+        /*
         $correctRes = $question->get_correct_response();
         foreach($correctRes as $key=>$answer)
         {
             $sResults[$key] = $question->make_html_inline($answer);
         }
+        */
+        $correctRes = $question->getCorrectAnswers();
+        foreach($correctRes as $key=>$answers)
+        {
+            $sAnswers = array();
+            foreach ($answers as $answer)
+            {
+                $sAnswers[] = $this->correctResponseTextToHtml($qa, $question, $answer);
+            }
+            $sResults[$key] = $question->make_html_inline(implode(' / ', $sAnswers));
+        }
         if (!empty($sResults)) {
+            /*
             return get_string('correctAnswerIs', 'qtype_kekule_multianswer') . ' ' .
                 implode(', ', $this->correctResponseTextsToHtml($qa, $question, $sResults));
+            */
+            return get_string('correctAnswerIs', 'qtype_kekule_multianswer') . ' ' .
+            implode(', ', $sResults);
             //return get_string('correctanswers', 'qtype_shortanswer') . ' ' . implode(', ', $sResults);
         }
         else
@@ -176,9 +192,22 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
      * @param $question
      * @param $texts
      */
+    /*
     protected function correctResponseTextsToHtml(question_attempt $qa, $question, $texts)
     {
         return $texts;
+    }
+    */
+    /**
+     * Returns HTML code to wrap text in "correct answer is“ block of question.
+     * Descandants may override this method.
+     * @param $qa
+     * @param $question
+     * @param $texts
+     */
+    protected function correctResponseTextToHtml(question_attempt $qa, $question, $text)
+    {
+        return $text;
     }
 
     public function specific_feedback(question_attempt $qa) {

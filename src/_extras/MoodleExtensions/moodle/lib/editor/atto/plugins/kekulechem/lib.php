@@ -23,16 +23,24 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
+if (empty($kekulePluginsPath))
+    $kekulePluginsPath = self::DEF_KEKULE_DIR;
+require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
+
 class atto_kekulechem_configs
 {
-    const DEF_KEKULE_DIR = '/kekule.js/';
+    const DEF_KEKULE_DIR = '/local/kekulejs/';
 
     static public function getKekuleDir()
     {
+        /*
         $result = get_config('mod_kekule', 'kekule_dir');
         if (empty($result))
             $result = self::DEF_KEKULE_DIR;
         return $result;
+        */
+        return kekulejs_configs::getScriptDir();
     }
 }
 
@@ -44,10 +52,14 @@ function atto_kekulechem_strings_for_js() {
     global $CFG;
 
     // hack, load essential Kekule.js files
+    /*
     $kekuleDir = atto_kekulechem_configs::getKekuleDir();
     $PAGE->requires->js($kekuleDir . 'raphael-min.js');
     $PAGE->requires->js($kekuleDir . 'Three.js');
     $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
+    */
+    kekulejs_utils::includeKekuleScriptFiles();
+    kekulejs_utils::includeAdapterJsFiles();
     //$PAGE->requires->js($kekuleDir . 'kekule/kekule.js');
     //$PAGE->requires->js($kekuleDir . 'kekule/localizationData.zh.min.js');
 
@@ -80,9 +92,21 @@ function atto_kekulechem_strings_for_js() {
  */
 function atto_kekulechem_params_for_js($elementid, $options, $foptions) {
     global $CFG;
+    global $PAGE;
+
+    $purifyHtml = 'false';
+    $cm = $PAGE->cm;
+    if (!empty($cm))
+    {
+        if ($cm->modname === 'forum')  // public forum, HTML purified
+            $purifyHtml = 'true';
+    }
+
     $params = array(
-        'kekuleCssUrl' => $CFG->httpswwwroot . atto_kekulechem_configs::getKekuleDir() . 'kekule/themes/default/kekule.css',
+        'kekuleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getScriptDir() . 'kekule/themes/default/kekule.css',
+        'kekuleMoodleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getAdapterDir() . 'kekuleMoodle.css',
         'attoKekulePluginPath' => $CFG->httpswwwroot . '/lib/editor/atto/plugins/kekulechem/',
+        'purifyHtml' => $purifyHtml
     );
     return $params;
 }

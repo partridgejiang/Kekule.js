@@ -1,0 +1,99 @@
+.K-Chem-Periodic-Table{color:#000}
+.K-Chem-Periodic-Table .K-Chem-Periodic-Table-Legend{color:#000}
+.K-Chem-Periodic-Table .K-Chem-Periodic-Table-Legend-Content{background-color:#eee;box-shadow:1px 1px 2px #aaa}
+.K-Chem-Periodic-Table-Head-Cell-Content{color:#aaa}
+.K-Chem-Periodic-Table td.K-Chem-Periodic-Table-Elem-Cell,.K-Chem-Periodic-Table td.K-Chem-Periodic-Table-Elem-StubsCell{border-color:transparent}
+.K-Chem-Periodic-Table-Legend .K-Chem-Periodic-Table-Elem-Cell-Content{background-color:#3098d5}
+.K-Chem-Periodic-Table td.K-Chem-Periodic-Table-Elem-Cell .K-Chem-Periodic-Table-Elem-Cell-Content:hover{outline-color:#fff}
+.K-Chem-Periodic-Table .K-Chem-Atomic-Num{}
+.K-Chem-Periodic-Table .Nonmetals{background-color:#d8d5c4}
+.K-Chem-Periodic-Table .NobleGasses{background-color:#3098d5}
+.K-Chem-Periodic-Table .AlkaliMetals{background-color:#fff798}
+.K-Chem-Periodic-Table .AlkaliEarthMetals{background-color:#a986be}
+.K-Chem-Periodic-Table .Metalloids{background-color:#faab4e}
+.K-Chem-Periodic-Table .Halogens{background-color:#bbc0d6}
+.K-Chem-Periodic-Table .Metals{background-color:#2bbda8}
+.K-Chem-Periodic-Table .Transitionmetals{background-color:#f2635d}
+.K-Chem-Periodic-Table .Lanthanides,.K-Chem-Periodic-Table .Actinides{background-color:#e4e5e7}
+.K-Chem-Periodic-Table td.K-State-Selected{border-color:#000}
+.K-Chem-Periodic-Table .K-State-Selected .K-Chem-Periodic-Table-Elem-Cell-Content{background-color:#fff;outline:1px solid #000;transform:scale(1.1)}
+.K-Chem-Composer .K-Chem-Editor-Client{margin-bottom:30px}
+.K-Chem-InnerToolbar .K-Pri-Glyph-Content{width:24px;height:24px;background-repeat:no-repeat}
+.K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content{width:21px;height:21px;background-repeat:no-repeat}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,.K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client{border-color:#d3d3d3}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel{color:#aaa}
+.K-Error-Report{background-color:#ee0;color:#e00}
+.K-Chem-Struct-TreeView .K-Chem-Struct-TreeView-ItemType{color:#999}
+.K-Chem-Editor .K-Chem-Editor-Client{background-color:#fff;outline:1px solid #666}
+.K-Chem-Composer .K-Chem-Editor{background-color:#aaa;outline:1px solid #aaa}
+.K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 0}
+.K-Chem-MolDisplaySkeletal > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -26px}
+.K-Chem-MolDisplayCondensed > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -52px}
+.K-Chem-MolDisplayWire > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -78px}
+.K-Chem-MolDisplaySticks > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -104px}
+.K-Chem-MolDisplayBallStick > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -130px}
+.K-Chem-MolDisplaySpaceFill > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -156px}
+.K-Chem-MolHideHydrogens > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -182px}
+.K-Chem-RotateLeft > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -208px}
+.K-Chem-RotateRight > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -234px}
+.K-Chem-RotateX > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -260px}
+.K-Chem-RotateY > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -286px}
+.K-Chem-RotateZ > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px 0}
+.K-Chem-ZoomIn > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -26px}
+.K-Chem-ZoomOut > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -52px}
+.K-Chem-Reset > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -78px}
+.K-Chem-Viewer-Edit > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -104px}
+.K-Chem-ClearObjs > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -130px}
+.K-Chem-NewDoc > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -156px}
+.K-Chem-LoadFile > .K-Pri-Glyph-Content,.K-Chem-LoadData > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -182px}
+.K-Chem-SaveFile > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -208px}
+.K-Chem-Undo > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -234px}
+.K-Chem-Redo > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -260px}
+.K-Chem-Clone-Selection > .K-Pri-Glyph-Content,.K-Chem-Copy > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-26px -286px}
+.K-Chem-Cut > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px 0}
+.K-Chem-Paste > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -26px}
+.K-Chem-Toggle-Inspector > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -52px}
+.K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-124px 0}
+.K-Chem-Composer-TextAlign-Button-Horizontal > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-124px -18px}
+.K-Chem-Composer-TextAlign-Button-Vertical > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-124px -36px}
+.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -78px}
+.K-Chem-BasicMolEraserIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -104px}
+.K-Chem-MolAtomIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -130px}
+.K-Chem-FormulaIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -156px}
+.K-Chem-MolBondIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -182px}
+.K-Chem-MolNodeChargeIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -208px}
+.K-Chem-TextBlockIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -234px}
+.K-Chem-MolRingIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -260px}
+.K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-52px -286px}
+.K-Chem-MolBondIaController-Single .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:0 -312px}
+.K-Chem-MolBondIaController-Double .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-23px -312px}
+.K-Chem-MolBondIaController-Triple .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-46px -312px}
+.K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-69px -312px}
+.K-Chem-MolBondIaController-WedgeUp .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px 0}
+.K-Chem-MolBondIaController-WedgeDown .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -23px}
+.K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -46px}
+.K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -69px}
+.K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -92px}
+.K-Chem-MolNodeChargeIaController-Positive > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -115px}
+.K-Chem-MolNodeChargeIaController-Negative > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -138px}
+.K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -161px}
+.K-Chem-MolNodeChargeIaController-Triplet > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -184px}
+.K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -207px}
+.K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -230px}
+.K-Chem-MolRingIaController-4 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -253px}
+.K-Chem-MolRingIaController-5 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-78px -276px}
+.K-Chem-MolRingIaController-6 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-92px -299px}
+.K-Chem-MolRingIaController-7 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px 0}
+.K-Chem-MolRingIaController-8 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -23px}
+.K-Chem-MolRingIaController-Ar-6 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -46px}
+.K-Chem-MolRingIaController-Ar-5 > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -69px}
+.K-Chem-ArrowLineIaController-Line > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -92px}
+.K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -115px}
+.K-Chem-ArrowLineIaController-TriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -138px}
+.K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -161px}
+.K-Chem-ArrowLineIaController-DiTriangleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -184px}
+.K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -207px}
+.K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -230px}
+.K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -253px}
+.K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/chemWidgetColor.png);background-position:-101px -276px}
+#CssGaga{content:"160917092039,swt,334"}
