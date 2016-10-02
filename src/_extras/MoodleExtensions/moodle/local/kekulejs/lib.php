@@ -24,7 +24,7 @@ class kekulejs_configs
 {
     //const DEF_MOL_COMPARER_URL = 'http://127.0.0.1:3000/mols/compare';
 
-    const DEF_KEKULE_DIR = '/local/kekule.js/';
+    const DEF_KEKULE_DIR = '/local/kekulejs/';
     //const DEF_KEKULE_JS_DIR = '/local/kekule.js/scripts/';
 
     /**

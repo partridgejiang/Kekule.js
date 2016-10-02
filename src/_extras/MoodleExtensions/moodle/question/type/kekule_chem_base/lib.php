@@ -26,7 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-
 $kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
 
 if (empty($kekulePluginsPath))
@@ -36,8 +35,10 @@ require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
 // consts
 class qtype_kekule_chem_compare_methods {
     const DEF_METHOD = 0;  // default
-    const SMILES = 1;
-    const MOLDATA = 2;
+    const SMILES = 1;  // Exact match with SMILES
+    const MOLDATA = 2;  // Exact match with molecule data, usually can be replaced with SMILES
+    const PARENTOF = 11; // answer is parent structure of key molecule
+    const CHILDOF = 12;  // answer is sub structure of key molecule
     //const MANUAL = 10;  // manually compare, not grade automatically
 }
 
@@ -66,6 +67,11 @@ class qtype_kekule_chem_html
 class qtype_kekule_chem_configs
 {
     const DEF_MOL_COMPARER_URL = 'http://127.0.0.1:3000/mols/compare';
+    const DEF_JS_SERVER_URL = 'http://127.0.0.1:3000/mols';
+
+    const PATH_COMPARE = '/compare';
+    const PATH_CONTAIN = '/contain';
+
     const DEF_KEKULE_DIR = '/local/kekulejs/';
 
     static public function getKekuleDir()

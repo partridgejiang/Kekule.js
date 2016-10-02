@@ -33,6 +33,12 @@ $settings->add(new admin_setting_configtext('mod_kekule/kekule_dir',
     get_string('captionKekuleDir', 'qtype_kekule_chem_base'), get_string('descKekuleDir', 'qtype_kekule_chem_base'),
     qtype_kekule_chem_configs::DEF_KEKULE_DIR, PARAM_TEXT));
 */
+$settings->add(new admin_setting_configtext('mod_qtype_kekule_chem/js_server_url',
+    get_string('captionJsServerUrl', 'qtype_kekule_chem_base'), get_string('descJsServerUrl', 'qtype_kekule_chem_base'),
+    qtype_kekule_chem_configs::DEF_JS_SERVER_URL, PARAM_TEXT));
+
+/*
 $settings->add(new admin_setting_configtext('mod_qtype_kekule_chem/mol_comparer_url',
     get_string('captionMolComparerUrl', 'qtype_kekule_chem_base'), get_string('descMolComparerUrl', 'qtype_kekule_chem_base'),
     qtype_kekule_chem_configs::DEF_MOL_COMPARER_URL, PARAM_TEXT));
+*/

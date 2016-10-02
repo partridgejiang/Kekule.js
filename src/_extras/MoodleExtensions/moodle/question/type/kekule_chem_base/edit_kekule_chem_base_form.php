@@ -80,7 +80,9 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
             get_string('captionDefCompareMethod', 'qtype_kekule_chem_base'),
             array(
                 qtype_kekule_chem_compare_methods::SMILES => get_string('molCompareMethodSmiles', 'qtype_kekule_chem_base'),
-                qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base')
+                qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_methods::PARENTOF => get_string('molCompareMethodParentOf', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_methods::CHILDOF => get_string('molCompareMethodChildOf', 'qtype_kekule_chem_base')
             )
         );
     }
@@ -134,7 +136,8 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
                 qtype_kekule_chem_compare_methods::SMILES => get_string('molCompareMethodSmiles', 'qtype_kekule_chem_base'),
                 //qtype_kekule_chem_compare_methods::MANUAL => get_string('molCompareMethodManual', 'qtype_kekule_chem_base')
                 qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
-
+                qtype_kekule_chem_compare_methods::PARENTOF => get_string('molCompareMethodParentOf', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_methods::CHILDOF => get_string('molCompareMethodChildOf', 'qtype_kekule_chem_base')
             )
         );
         /*

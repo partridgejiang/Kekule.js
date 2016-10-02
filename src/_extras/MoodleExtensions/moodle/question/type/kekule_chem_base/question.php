@@ -55,6 +55,12 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
     {
         return $this->_compareMolAnsString($responseItem, $key->answer, $this->getAnsCompareMethod($key));
     }
+    private function _getComparerPath($compareMethod)
+    {
+        return ($compareMethod == qtype_kekule_chem_compare_methods::PARENTOF)? qtype_kekule_chem_configs::PATH_CONTAIN:
+            ($compareMethod == qtype_kekule_chem_compare_methods::CHILDOF)? qtype_kekule_chem_configs::PATH_CONTAIN:
+            qtype_kekule_chem_configs::PATH_COMPARE;
+    }
     private function _compareMolAnsString($src, $target, $compareMethod)
     {
         $srcDetail = $this->parseAnswerString($src);
@@ -72,16 +78,23 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
             if (empty($srcDetail->molData) || empty($targetDetail->molData))
                 return 0;
 
-            $externalComparerUrl = get_config('mod_qtype_kekule_chem', 'mol_comparer_url');
+            //$externalComparerUrl = get_config('mod_qtype_kekule_chem', 'mol_comparer_url');
+            $externalComparerUrl = get_config('mod_qtype_kekule_chem', 'js_server_url');
+            //$comparePath = ($compareMethod == );
             //$compareUrl = $externalComparerUrl .
             if (empty($externalComparerUrl))
-                $externalComparerUrl = qtype_kekule_chem_configs::DEF_MOL_COMPARER_URL;
+                //$externalComparerUrl = qtype_kekule_chem_configs::DEF_MOL_COMPARER_URL;
+                $externalComparerUrl = qtype_kekule_chem_configs::DEF_JS_SERVER_URL;
             if (empty($externalComparerUrl))
                 throw new Exception(get_string('externalMolComparerNotFound', 'qtype_kekule_chem_base'));
             else  // compare externally
             {
+                $comparePath = $this->_getComparerPath($compareMethod);
+                $externalComparerUrl .= $comparePath;
                 $ops = new stdClass();
                 $ops->level = 3;  // Kekule.StructureComparationLevel.CONFIGURATION // TODO: now fixed
+                if ($compareMethod == qtype_kekule_chem_compare_methods::CHILDOF)
+                    $ops->reversed = true;
                 $postData = array(
                     'options' => json_encode($ops),
                     'sourceMol' => $srcDetail->molData,
