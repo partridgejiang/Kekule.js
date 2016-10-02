@@ -76,6 +76,7 @@ M  END
 	</script>
 
 	<script>
+		var CONTAIN_URL = '/mols/contain';
 		var COMPARE_URL = '/mols/compare';
 
 		var chemEditors = [];
@@ -98,9 +99,17 @@ M  END
 						compare();
 					}
 			);
+			Kekule.X.Event.addListener(document.getElementById('btnContain'), 'click', function(e)
+					{
+						compare('contain');
+					}
+			);
 		}
-		function compare()
+		function compare(compareMethod)
 		{
+			if (!compareMethod)
+				compareMethod = 'compare';
+
 			var mimeType = 'chemical/x-kekule-json';
 			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
 			var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
@@ -112,7 +121,7 @@ M  END
 			var elem = document.getElementById('labelResult');
 			elem.innerHTML = 'Sending request...';
 
-			var url = COMPARE_URL;
+			var url = compareMethod === 'contain'? CONTAIN_URL: COMPARE_URL;
 			var tStart = Date.now();
 			Kekule.X.Ajax.sendRequest(url, function(data, req, success){
 					// handle result
@@ -128,10 +137,10 @@ M  END
 						}
 						else
 						{
-							var isSame = returnData.result;
-							var sResult = isSame ? 'Same molecules' : 'Different molecules';
+							var isPositive = returnData.result;
+							var sResult = isPositive ? 'True' : 'False';
 							sResult += ' (in ' + (tEnd - tStart) + ' ms)';
-							var sClass = isSame ? 'Same' : 'Diff';
+							var sClass = isPositive ? 'Same' : 'Diff';
 						}
 					}
 					else // AJAX failed
@@ -192,7 +201,8 @@ M  END
 	<p>Draw or load molecules in both editors and click on "compare" button to check whether molecules are same.</p>
 	<div>
 		<span type="checkbox" id="checkBoxStereo" data-widget="Kekule.Widget.CheckBox" data-text="Check stereo"></span>
-		<button id="btnCompare" data-widget="Kekule.Widget.Button">Compare Molecules</button>
+		<button id="btnCompare" data-widget="Kekule.Widget.Button">Same Molecules?</button>
+		<button id="btnContain" data-widget="Kekule.Widget.Button">Contains Sub Structure?</button>
 		<span id="labelResult"></span>
 	</div>
 	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>

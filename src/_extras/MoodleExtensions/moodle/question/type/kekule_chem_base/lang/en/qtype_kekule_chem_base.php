@@ -38,6 +38,8 @@ $string['captionDefCompareMethod'] = 'Default structure comparisn method';
 $string['molCompareMethodDefault'] = 'Default';
 $string['molCompareMethodSmiles'] = 'SMILES';
 $string['molCompareMethodMolData'] = 'Mol data';
+$string['molCompareMethodParentOf'] = 'Parent of';
+$string['molCompareMethodChildOf'] = 'Child of';
 $string['molCompareMethodManual'] = 'Manual';
 // molecule input type
 $string['captionMolInputType'] = 'Chemistry input type';
@@ -55,5 +57,7 @@ $string['externalMolComparerNotFound'] = 'External molecule comparer not found';
 $string['captionKekuleDir'] = 'Kekule.js directory';
 $string['descKekuleDir'] = 'Root directory that contains Kekule.js lib (and its dependant libs)';
 */
+$string['captionJsServerUrl'] = 'Kekule Molecule Comparer Server URL';
+$string['descJsServerUrl'] = 'URL of the node.js application that compares molecule structures';
 $string['captionMolComparerUrl'] = 'Molecule comparer URL';
 $string['descMolComparerUrl'] = 'URL of the node.js application that compares molecule structures';
