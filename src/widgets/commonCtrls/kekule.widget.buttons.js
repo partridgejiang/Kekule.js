@@ -76,7 +76,11 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	{
 		this.defineElemAttribMappingProp('actionType', 'type');
 		this.defineProp('text', {'dataType': DataType.STRING, 'serializable': false,
-			'getter': function() { return Kekule.HtmlElementUtils.getInnerText(this.getElement()); },
+			'getter': function() {
+				//return Kekule.HtmlElementUtils.getInnerText(this.getElement());
+				var elem = (this._elemTextPart || this.getElement());
+				return elem? elem.innerHTML: null;
+			},
 			'setter': function(value) { this.changeContentText(value); }
 		});
 		/*
@@ -256,7 +260,8 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	doBindElement: function($super, element)
 	{
 		$super(element);
-		var text = EU.getInnerText(element);
+		//var text = EU.getInnerText(element);
+		var text = element.innerHTML || '';
 		element.innerHTML = '';  // clear old content first
 		this._elemTextPart = this.createTextContent(text, element);
 		this._elemLeadingGlyphPart = this.createGlyphContent(element, this._elemTextPart, CNS.PART_PRI_GLYPH_CONTENT);
