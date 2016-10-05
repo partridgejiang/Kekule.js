@@ -6469,14 +6469,18 @@ Kekule.ChemStructureNodeFactory = {
 	/** @private */
 	CANDIDATE_CLASSES: [Kekule.SubGroup, Kekule.VariableAtom, Kekule.Pseudoatom /*, Kekule.Atom*/],
 
-	getClassByLabel: function(label)
+	getClassByLabel: function(label, defaultClass)
 	{
+		if (defaultClass === undefined)
+		{
+			defaultClass = Kekule.Pseudoatom;
+		}
 		var NL = Kekule.ChemStructureNodeLabels;
 		var candidateLabels = [
 			[NL.SUBGROUP],
 			[NL.VARIABLE_ATOM],
 			[NL.DUMMY_ATOM, NL.HETERO_ATOM, NL.ANY_ATOM, NL.CUSTOM_ATOM]
-		]
+		];
 		var classes = Kekule.ChemStructureNodeFactory.CANDIDATE_CLASSES;
 		var cclass;
 		for (var i = 0, l = classes.length; i < l; ++i)
@@ -6489,7 +6493,7 @@ Kekule.ChemStructureNodeFactory = {
 				break;
 			}
 		}
-		if (!cclass)  // class not found, use default one, atom or custom pseudoatom
+		if (!cclass)  // class not found, check if it is atom or use default one
 		{
 			/*
 			if (label === Kekule.ChemStructureNodeLabels.DEUTERIUM)
@@ -6499,7 +6503,7 @@ Kekule.ChemStructureNodeFactory = {
 			if (Kekule.IsotopesDataUtil.isIsotopeIdAvailable(label))
 				cclass = Kekule.Atom;
 			else
-				cclass = Kekule.Pseudoatom;
+				cclass = defaultClass;
 		}
 		return cclass;
 	},

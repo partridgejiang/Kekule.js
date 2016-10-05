@@ -2776,14 +2776,27 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			}
 			else  // add normal node
 			{
-				nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(text); //Kekule.Atom;
+				nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(text, null); // explicit set defaultClass parameter to null
+				if (!nodeClass)
+				{
+					if (this.getEditorConfigs().getInteractionConfigs().getAllowUnknownAtomSymbol())
+						nodeClass = Kekule.Pseudoatom;
+				}
 				modifiedProps = (nodeClass === Kekule.Atom) ? {'isotopeId': text} :
 						(nodeClass === Kekule.Pseudoatom) ? {'symbol': text} :
 						{};
 			}
 		}
-		this.applyModification(atom, newNode, nodeClass, modifiedProps);
-		setter._applied = true;
+
+		if (!nodeClass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.INVALID_ATOM_SYMBOL'));
+		}
+		else
+		{
+			this.applyModification(atom, newNode, nodeClass, modifiedProps);
+			setter._applied = true;
+		}
 	},
 
 	/**
