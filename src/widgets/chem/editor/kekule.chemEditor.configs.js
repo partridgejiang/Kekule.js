@@ -78,6 +78,7 @@ Kekule.Editor.ChemSpaceEditorConfigs = Class.create(Kekule.Editor.BaseEditorConf
 		this.setPropStoreFieldValue('styleSetterConfigs', new Kekule.Editor.StyleSetterConfigs());
 	}
 });
+Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
 
 /**
  * Configs of interaction between user and editor.

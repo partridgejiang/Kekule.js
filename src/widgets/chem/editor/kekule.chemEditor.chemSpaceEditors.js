@@ -207,7 +207,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	/** @ignore */
 	createDefaultConfigs: function()
 	{
-		return new Kekule.Editor.ChemSpaceEditorConfigs();
+		//return new Kekule.Editor.ChemSpaceEditorConfigs();
+		return Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
 	},
 
 	/** @private */
