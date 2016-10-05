@@ -1358,11 +1358,12 @@
 			var result;
 			if (caption)
 			{
-				if (caption.length <= 1)
+				if (caption.length <= 3)  // to short caption, e.g. Me, all regard as one section and aligns to the center
 				{
 					result = R.RichTextUtils.createSection(caption);
+					result.charDirection = Kekule.Render.TextDirection.LTR;
 				}
-				else // usually the first uppercase letter (or first letter) should be the anchor section
+				else // to long, e.g. t-Bu, usually the first uppercase letter (or first letter) should be the anchor section
 				{
 					var anchorIndex = this._indexOfFirstUppercaseLetter(caption);
 					if (anchorIndex < 0)  // no uppercase, use first letter
