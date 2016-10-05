@@ -97,6 +97,7 @@ Kekule.Editor.ChemSpaceEditorConfigs = Class.create(Kekule.Editor.BaseEditorConf
  * @property {Int} directedMoveDistanceThreshold Directed moving will only be done if moved distance large than this value.
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
+ * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
  */
 Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
@@ -122,6 +123,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('clonedObjectScreenOffset', 10);
 
 		this.addIntConfigProp('atomSetterFontSize', 14);
+		this.addBoolConfigProp('allowUnknownAtomSymbol', true);
 	}
 });
 

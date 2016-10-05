@@ -281,6 +281,7 @@ Kekule.Localization.addResource("zh", "ErrorMsg",
 			"CAN_NOT_SET_COORD_OF_CLASS": "无法设置对象{0}实例的坐标",
 			"CAN_NOT_SET_DIMENSION_OF_CLASS": "无法设置对象{0}实例的尺寸",
 			"CAN_NOT_MERGE_CONNECTORS": "化学键或连接符无法合并",
-			"NOT_A_VALID_ATOM": "无效的原子"
+			"NOT_A_VALID_ATOM": "无效的原子",
+			"INVALID_ATOM_SYMBOL": "原子符号无效"
 		});
 

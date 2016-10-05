@@ -367,5 +367,6 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	*/
 	CAN_NOT_MERGE_CONNECTORS: 'Specified connectors can not be merged.',
 
-	NOT_A_VALID_ATOM: 'Not a valid atom'
+	NOT_A_VALID_ATOM: 'Not a valid atom',
+	INVALID_ATOM_SYMBOL: 'Invalid atom symbol'
 });
