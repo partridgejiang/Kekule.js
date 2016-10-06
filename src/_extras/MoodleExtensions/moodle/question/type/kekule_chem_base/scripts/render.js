@@ -178,6 +178,13 @@ function hideElem(elem)
 
 function init()
 {
+	// avoid student to input unwanted pseudo atoms
+	if (Kekule.Editor.ChemSpaceEditorConfigs && Kekule.Editor.ChemSpaceEditorConfigs.getInstance)
+	{
+		var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
+		editorConfigs.getInteractionConfigs().setAllowUnknownAtomSymbol(false);
+	}
+
 	var placeHolders = findPlaceHolders();
 	createChemWidgets(placeHolders);
 }

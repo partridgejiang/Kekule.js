@@ -62,6 +62,16 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
 		var self = this;
 		var form = editor.textarea.getDOMNode().form;
+
+		Kekule.X.domReady(function(){
+			// avoid student to input unwanted pseudo atoms
+			if (Kekule.Editor.ChemSpaceEditorConfigs && Kekule.Editor.ChemSpaceEditorConfigs.getInstance)
+			{
+				var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
+				editorConfigs.getInteractionConfigs().setAllowUnknownAtomSymbol(false);
+			}
+		});
+
 		Kekule.X.Event.addListener(form, 'submit', function(e){
 			//if (e.getTarget() === form)
 			self._prepareForSubmit();
