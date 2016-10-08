@@ -70,6 +70,7 @@ Kekule.Widget.HtmlClassNames = {
 	// show type
 	SHOW_POPUP: 'K-Show-Popup',
 	SHOW_DIALOG: 'K-Show-Dialog',
+	SHOW_ACTIVE_MODAL: 'K-Show-ActiveModal',
 
 	// parts
 	PART_CONTENT: 'K-Content',
@@ -112,7 +113,9 @@ Kekule.Widget.HtmlClassNames = {
 	HIDE_TEXT: 'K-Text-Hide',
 	HIDE_GLYPH: 'K-Glyph-Hide',
 	SHOW_TEXT: 'K-Text-Show',
-	SHOW_GLYPH: 'K-Glyph-Show'
+	SHOW_GLYPH: 'K-Glyph-Show',
+
+	MODAL_BACKGROUND: 'K-Modal-Background'
 };
 
 var CNS = Kekule.Widget.HtmlClassNames;
@@ -848,6 +851,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.defineProp('isDialog', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('popupCaller', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE}); // private, record who calls this popup
+
+		this.defineProp('modalInfo', {'dataType': DataType.HASH, 'scope': Class.PropertyScope.PUBLIC});  // for dialog only
 
 		this.defineProp('enablePeriodicalExec', {'dataType': DataType.BOOL});
 		this.defineProp('periodicalExecDelay', {'dataType': DataType.INT});
@@ -3393,6 +3398,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
+		this.setPropStoreFieldValue('modalWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 
@@ -3428,6 +3434,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('mouseCaptureWidget', {'dataType': DataType.OBJECT, 'serializable': false});
 		this.defineProp('popupWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('dialogWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('modalWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('preserveWidgetList', {'dataType': DataType.BOOL, 'serializable': false,
 			'setter': function(value)
 			{
@@ -3442,6 +3449,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+
+		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 	},
 
 	/** @private */
@@ -4241,6 +4250,115 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		widget.removeClassName(CNS.SHOW_DIALOG);
 		Kekule.ArrayUtils.remove(this.getDialogWidgets(), widget);
+	},
+
+	/**
+	 * Notify the manager that an dialog widget is shown.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 */
+	registerModalWidget: function(widget)
+	{
+		var prevModal = this.getCurrModalWidget();
+		if (prevModal)
+			prevModal.removeClassName(CNS.SHOW_ACTIVE_MODAL);
+		Kekule.ArrayUtils.pushUnique(this.getModalWidgets(), widget);
+		widget.addClassName(CNS.SHOW_ACTIVE_MODAL);
+	},
+	/**
+	 * Notify the manager that an dialog widget is hidden.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 */
+	unregisterModalWidget: function(widget)
+	{
+		widget.removeClassName(CNS.SHOW_ACTIVE_MODAL);
+		Kekule.ArrayUtils.remove(this.getModalWidgets(), widget);
+		var prevModal = this.getCurrModalWidget();
+		if (prevModal)
+			prevModal.addClassName(CNS.SHOW_ACTIVE_MODAL);
+	},
+	/**
+	 * Returns current (topmost) modal widget.
+	 * @returns {Kekule.Widget.BaseWidget}
+	 */
+	getCurrModalWidget: function()
+	{
+		var remainingModalWidgets = this.getModalWidgets();
+		if (!remainingModalWidgets || !remainingModalWidgets.length)
+			return null;
+		else
+			return remainingModalWidgets[0];
+	},
+
+
+	/** @private */
+	prepareModalWidget: function(widget)
+	{
+		// create a modal background and then relocate dialog element on it
+		var doc = widget.getDocument();
+		var bgElem = this.getModalBackgroundElem();
+		if (!bgElem)
+		{
+			//console.log('create new background');
+			bgElem = doc.createElement('div');
+			bgElem.className = CNS.MODAL_BACKGROUND;
+			this.setPropStoreFieldValue('modalBackgroundElem', bgElem);
+		}
+		var elem = widget.getElement();
+		widget.setModalInfo({
+			'oldParent': elem.parentNode,
+			'oldSibling': elem.nextSibling
+		});
+		//alert('hi');
+		if (elem.parentNode)
+			elem.parentNode.removeChild(elem);
+		//div.appendChild(elem);
+
+		if (bgElem.parentNode)
+			bgElem.parentNode.removeChild(bgElem);
+		doc.body.appendChild(bgElem);
+		doc.body.appendChild(elem);  // append widget elem on background
+
+		this.registerModalWidget(widget);
+	},
+	/** @private */
+	unprepareModalWidget: function(widget)
+	{
+		var doc = widget.getDocument();
+
+		this.unregisterModalWidget(widget);
+
+		//console.log('unprepareModal');
+		var parentElem = widget.getElement().parentNode;
+		if (parentElem)
+			parentElem.removeChild(widget.getElement());
+
+		var modalInfo = widget.getModalInfo();
+		if (modalInfo)
+		{
+			if (modalInfo.oldParent)
+				modalInfo.oldParent.insertBefore(widget.getElement(), modalInfo.oldSibling);
+			widget.setModalInfo(null);
+		}
+
+		var remainActiveModalWidget = this.getCurrModalWidget();
+		var bgElem = this.getModalBackgroundElem();
+		if (bgElem)
+		{
+			if (remainActiveModalWidget)  // still has modal widget, move background element under it
+			{
+				if (bgElem.parentNode)
+					bgElem.parentNode.removeChild(bgElem);
+				var parentNode = remainActiveModalWidget.getElement().parentNode;
+				parentNode.insertBefore(bgElem, remainActiveModalWidget.getElement());
+			}
+			else  // no modal widget, remove background element
+			{
+				if (bgElem.parentNode)
+				{
+					bgElem.parentNode.removeChild(bgElem);
+				}
+			}
+		}
 	},
 
 	/**

@@ -791,7 +791,7 @@ table.K-Widget
 {
     margin: 0.5em 0.25em;
 }
-.K-Dialog-Modal-Background
+.K-Modal-Background
 {
     z-index: 20000;
     position: absolute;
@@ -1300,12 +1300,16 @@ button.K-Button::-moz-focus-inner {
 
 }
 
+.K-Show-Dialog
+{
+    z-index: 10000;
+}
 .K-Show-Popup
 {
     position: absolute;
     z-index: 21000;
 }
-.K-Show-Dialog
+.K-Show-ActiveModal
 {
     z-index: 20500;
 }
