@@ -73,6 +73,8 @@ Kekule.Render.RichText = {
  *  @class
  */
 Kekule.Render.RichTextUtils = {
+	/** @private */
+	STYLE_PROPS: ['fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'color', 'opacity'],
 	/**
 	 * Create a new and empty rich text object.
 	 */
@@ -85,9 +87,20 @@ Kekule.Render.RichTextUtils = {
 	 * Create a new group.
 	 * @param {String} role Role of group, if not set, a normal role of 'group' will be created.
 	 */
-	createGroup: function(role)
+	createGroup: function(role, style)
 	{
-		return {'role': role || 'group', 'items': []};
+		var result = {'role': role || 'group', 'items': []};
+		if (style)
+		{
+			for (var p in style)
+			{
+				if (style.hasOwnProperty(p))
+				{
+					result[p] = style[p];
+				}
+			}
+		}
+		return result;
 	},
 	/**
 	 * Create a section object of richText (an item in richtext array).
@@ -208,6 +221,17 @@ Kekule.Render.RichTextUtils = {
 	append: function(destGroup, groupOrSection)
 	{
 		destGroup.items.push(groupOrSection);
+		return destGroup;
+	},
+	/**
+	 * Append a set of groups or sections to tail in destGroup.
+	 * @param {Object} destGroup
+	 * @param {Array} items
+	 * @returns {Object}
+	 */
+	appendItems: function(destGroup, items)
+	{
+		destGroup.items = destGroup.items.concat(Kekule.ArrayUtils.toArray(items));
 		return destGroup;
 	},
 
@@ -499,6 +523,249 @@ Kekule.Render.RichTextUtils = {
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Convert rich text to HTML element.
+	 * Note: in the conversion, vertical lines are all turned into horizontal lines
+	 * @param {Document} doc Owner document of result element.
+	 * @param {Object} richText
+	 * @param {Bool} reversedDirection
+	 * @returns {HTMLElement}
+	 */
+	toHtml: function(doc, richText, reversedDirection)
+	{
+		var RT = Kekule.Render.RichText;
+		var result;
+
+		var reversed;
+		if (richText.charDirection)
+			reversed = richText.charDirection === Kekule.Render.TextDirection.RTL
+				|| richText.charDirection === Kekule.Render.TextDirection.BTT;
+		else
+			reversed = reversedDirection;
+
+
+		var role = richText.role;
+		if (role === RT.SECTION || richText.text)  // text section
+		{
+			var textType = richText.textType;
+			var tagName = (textType === RT.SUB)? 'sub':
+					(textType === RT.SUP)? 'sup':
+					'span';
+			result = doc.createElement(tagName);
+			var text = richText.text;
+			if (reversed)
+				text = text.reverse();
+			Kekule.DomUtils.setElementText(result, richText.text || '');
+		}
+		else // line or group
+		{
+			var childEmbedTagName = null;
+			var childEmbedStyleText;
+			if (role === RT.LINES)
+			{
+				result = doc.createElement('div');
+				childEmbedTagName = 'p';
+				childEmbedStyleText = 'margin:0.2em 0;padding:0';
+			}
+			else // group
+			{
+				result = doc.createElement('span');
+			}
+			// convert children
+			var lastChildElem;
+			for (var i = 0, l = richText.items.length; i < l; ++i)
+			{
+				var item = richText.items[i];
+				var childElem = Kekule.Render.RichTextUtils.toHtml(doc, item, reversed);
+				if (childEmbedTagName)
+				{
+					var embedElem = doc.createElement(childEmbedTagName);
+					if (childEmbedStyleText)
+						embedElem.style.cssText = childEmbedStyleText;
+					embedElem.appendChild(childElem);
+					childElem = embedElem;
+				}
+				if (!reversed || !lastChildElem)
+					result.appendChild(childElem);
+				else
+					result.insertBefore(childElem, lastChildElem);
+				lastChildElem = childElem;
+			}
+		}
+
+		// styles
+		var elemStyle = result.style;
+		var styleProps = Kekule.Render.RichTextUtils.STYLE_PROPS;
+		for (var i = 0, l = styleProps.length; i < l; ++i)
+		{
+			var prop = styleProps[i];
+			if (richText[prop])
+			{
+				elemStyle[prop] = richText[prop];
+			}
+		}
+
+		return result;
+	},
+
+	/**
+	 * Create new rich text from HTML element.
+	 * @param {Element} htmlElement
+	 * @returns {Object} Created richtext object.
+	 */
+	fromHtml: function(htmlElement)
+	{
+		var RT = Kekule.Render.RichText;
+		var RTU = Kekule.Render.RichTextUtils;
+		var DU = Kekule.DomUtils;
+		var SU = Kekule.StyleUtils;
+
+		function _createRichTextFromHtmlNode(node, isRoot)
+		{
+			if (node.nodeType === Node.TEXT_NODE)  // pure text node, create a section
+			{
+				var text = node.nodeValue;
+				// erase line breaks
+				text = text.replace(/[\r\n]/g, '');
+				return text.trim()? RTU.createSection(text): null; // ignore all space text
+			}
+			else if (node.nodeType === Node.ELEMENT_NODE)
+			{
+				var stylePropNames = RTU.STYLE_PROPS;
+				stylePropNames.push('direction');
+				var styles = {};
+				// extract styles from HTML
+				for (var i = 0, l = stylePropNames.length; i < l; ++i)
+				{
+					var stylePropName = stylePropNames[i];
+					var value;
+					if (isRoot)  // is root element, consider computed styles
+					{
+						value = SU.getComputedStyle(node, stylePropName);
+					}
+					else  // child elements, only consider inline styles
+					{
+						value = node.style[stylePropName];
+					}
+					if (value)
+						styles[stylePropName] = value;
+				}
+				// char direction
+				if (!styles.direction)
+					styles.charDirection = Kekule.Render.TextDirection.DEFAULT;
+				else
+				{
+					styles.charDirection = (styles.direction === 'ltr')? Kekule.Render.TextDirection.LTR:
+							(styles.direction === 'rtl')? Kekule.Render.TextDirection.RTL:
+							(styles.direction === 'inherit')? Kekule.Render.TextDirection.INHERIT:
+							null;
+					delete styles.direction;
+				}
+
+				// Check if element has children elements
+				if (!DU.getFirstChildElem(node))  // no child element, may elem only contains text
+				{
+					var text = DU.getElementText(node);
+					var tagName = node.tagName.toLowerCase();
+					if (tagName === 'sub')
+						styles.textType = RT.SUB;
+					else if (tagName === 'sup')
+						styles.textType = RT.SUP;
+					else
+						styles.textType = RT.NORMAL;
+					return text? RTU.createSection(text, styles): null;
+				}
+				else  // iterate through children
+				{
+					var resultRole = RT.GROUP;
+					var childNodes = DU.getChildNodesOfTypes(node, [Node.ELEMENT_NODE, Node.TEXT_NODE]);
+					var childRTs = [];
+					var hasLines = false;
+					for (var i = 0, l = childNodes.length; i < l; ++i)
+					{
+						var child = childNodes[i];
+						var childRT = _createRichTextFromHtmlNode(child, false);
+						if (child.nodeType === Node.ELEMENT_NODE)  //
+						{
+							if (child.tagName.toLowerCase() === 'br')  // explicit line break
+							{
+								// push special flags
+								childRTs.push('br');
+								hasLines = true;
+							}
+							var isBlockElem = SU.isBlockElem(child);
+							if (isBlockElem)
+							{
+								hasLines = true;
+								childRT._isLine = true; // markup it is a text line
+							}
+						}
+						if (childRT)
+						{
+							childRTs.push(childRT);
+							//RTU.append(result, childRT);
+						}
+					}
+					if (hasLines)  // need to group childRTs into lines
+					{
+						var linedChildRTs = [];
+						var unpushedChildren = [];
+						for (var i = 0, l = childRTs.length; i < l; ++i)
+						{
+							var childRT = childRTs[i];
+							if (childRT._isLine || childRT == 'br')  // special break flag
+							{
+								if (unpushedChildren.length)  // create a new group to include all unhandled inline sections
+								{
+									if (unpushedChildren.length > 1)
+									{
+										var prevGroup = RTU.createGroup();
+										RTU.appendItems(prevGroup, unpushedChildren);
+										linedChildRTs.push(prevGroup);
+									}
+									else
+										linedChildRTs.push(unpushedChildren[0]);
+									unpushedChildren = [];
+								}
+								if (childRT._isLine)
+								{
+									delete childRT._isLine;
+									linedChildRTs.push(childRT);
+								}
+							}
+							else
+								unpushedChildren.push(childRT);
+						}
+						if (unpushedChildren.length)
+						{
+							if (unpushedChildren.length > 1)
+							{
+								var prevGroup = RTU.createGroup();
+								RTU.appendItems(prevGroup, unpushedChildren);
+								linedChildRTs.push(prevGroup);
+							}
+							else
+								linedChildRTs.push(unpushedChildren[0]);
+						}
+						childRTs = linedChildRTs;
+					}
+					// at last push childRTs to result
+					if (hasLines)
+						resultRole = RT.LINES;
+
+					var result = RTU.createGroup(resultRole, styles);
+					for (var i = 0, l = childRTs.length; i < l; ++i)
+					{
+						RTU.append(result, childRTs[i]);
+					}
+					return result;
+				}
+			}
+		}
+
+		return _createRichTextFromHtmlNode(htmlElement, true);
 	}
 };
 

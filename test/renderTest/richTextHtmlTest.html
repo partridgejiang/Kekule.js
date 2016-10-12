@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RichText HTML Test</title>
+  <style>
+    #raphaelParent svg, canvas
+    {
+      background-color: #D7F0C4;
+      border: 2px solid black;
+    }
+    #clonedHtmlElements
+    {
+      float: right;
+      background-color: #50D4FD;
+    }
+  </style>
+  <script src="../_libs/raphael-min.2.0.1.js"></script>
+  <script src="../../src/kekule.js?min=false"></script>
+
+  <script>
+    var srcIds = ['src1', 'src2', 'src3', 'src4', 'src5', 'src6'];
+
+    function createRichTexts()
+    {
+      var result = [];
+      for (var i = 0, l = srcIds.length; i < l; ++i)
+      {
+        var elem = document.getElementById(srcIds[i]);
+        if (elem)
+        {
+          var rt = Kekule.Render.RichTextUtils.fromHtml(elem);
+          result.push(rt);
+          console.log(rt);
+        }
+      }
+      return result;
+    }
+
+    var paper;
+    var drawBoxWidth = 1000;
+    var drawBoxHeight = 600;
+    function getPaper()
+    {
+      if (!paper)
+        paper = Raphael('raphaelParent', drawBoxWidth, drawBoxHeight);
+      return paper;
+    }
+    function getContext()
+    {
+      var elem = document.getElementById('canvasContext');
+      return elem.getContext('2d');
+    }
+    function getBridgeId()
+    {
+      return 'raphael';
+    }
+
+    function drawRichText(richTexts)
+    {
+      var startTime = (new Date()).getTime();
+      var useRaphael = getBridgeId() == 'raphael';
+
+      document.getElementById('raphaelParent').style.display = useRaphael? 'block': 'none';
+      document.getElementById('canvasContext').style.display = useRaphael? 'none': 'block';
+
+      if (!useRaphael)
+      {
+        var bridge = new Kekule.Render.CanvasRendererBridge();
+        var ctx = getContext();
+        ctx.clearRect(0, 0, drawBoxWidth, drawBoxHeight);
+      }
+      else
+      {
+        var bridge = new Kekule.Render.RaphaelRendererBridge();
+        var ctx = getPaper();
+        ctx.clear();
+      }
+
+      //var drawer = new Kekule.Render.RaphaelRichTextDrawer();
+      var config = Kekule.Render.getRender2DConfigs();
+
+      var drawer = new Kekule.Render.BaseRichTextDrawer(bridge);
+
+      //drawer.fillOptions(config);
+      //console.log(drawer.options);
+      var rts = richTexts;
+      var deltaY = drawBoxHeight / (rts.length);
+      for (var i = 0, l = rts.length; i < l; ++i)
+      {
+        var rt = rts[i];
+        var x = 0;
+        var y = i * deltaY + 40;
+
+        drawer.draw(ctx, {'x': x, 'y': y}, rt, {
+          'fontSize': '25px',
+          'fontFamily': 'Times new Roman',
+          'color': '#000000',
+          'supFontSizeRatio': 0.66,
+          'subFontSizeRatio': 0.66
+          //'textBoxAlignmentMode': Kekule.Render.TextBoxAlignmentMode.ANCHOR
+        });
+
+        // to HTML test
+        /*
+          var rtElem = Kekule.Render.RichTextUtils.toHtml(document, rt);
+          parentElem.appendChild(rtElem);
+          parentElem.appendChild(document.createElement('br'));
+        */
+      }
+    }
+    function convToHtmlElements(richTexts)
+    {
+      var parent = document.getElementById('clonedHtmlElements');
+      for (var i = 0, l = richTexts.length; i < l; ++i)
+      {
+        var rt = richTexts[i];
+        var elem = Kekule.Render.RichTextUtils.toHtml(document, rt);
+        parent.appendChild(elem);
+        parent.appendChild(document.createElement('br'));
+      }
+    }
+    function init()
+    {
+      var rts = createRichTexts();
+      drawRichText(rts);
+      convToHtmlElements(rts);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="clonedHtmlElements">
+
+  </div>
+  <div id="SrcHtmlElements">
+    <div id="src1" style="font-size: 30px">A &nbsp; &nbsp; simple line of text</div>
+    <div id="src2">A <span style="font-size:30px;font-weight:bold">nested</span> structure with <sub>sub</sub> and <sup>sup</sup></sup></sub></div>
+    <div id="src3" style="font-size:20px;color:red">A <span style="font-size:10px">nested</span> structure with <span style="color:green">style</span></div>
+    <div id="src4">A source of multiple lines:
+      <p>Line1</p>
+      <p>Line2</p>
+    </div>
+    <div id="src5">A source of multiple   <span style="font-weight:bold">styled</span>      lines:
+      <p>Line1 with <span style="font-size:30px">style</span></p>
+      <p>Line2</p>
+    </div>
+    <div id="src6">A source of multiple lines breaks with BR:
+      <p>
+      <span>Line1</span>
+      <br />
+      <span>Line2</span>
+      </p>
+    </div>
+  </div>
+  <div>
+    <div id="raphaelParent">
+    </div>
+    <canvas id="canvasContext" width="1000" height="1000"></canvas>
+  </div>
+</body>
+</html>
