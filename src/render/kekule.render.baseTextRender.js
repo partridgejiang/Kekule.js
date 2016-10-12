@@ -508,6 +508,18 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	/** @private */
 	doCalcActualDrawFontInfo: function(richTextItem, ops)
 	{
+		function _multipyFontSize(fontSize, times)
+		{
+			if (typeof(fontSize) === 'string')  // united string, like '10px'
+			{
+				var details = Kekule.StyleUtils.analysisUnitsValue(fontSize);
+				details.value = Math.round(Math.max(details.value * times, 1));  // minimal 1px
+				return '' + details.value + details.units;
+				//return Kekule.StyleUtils.multiplyUnitsValue(fontSize, times);
+			}
+			else  // integer
+				return fontSize * times;
+		}
 		/*
 		var result = {
 			'fontFamily': ops.fontFamily, 'fontSize': ops.fontSize, 'sizeScale': 1,
@@ -526,12 +538,16 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 		//console.log(result, ops);
 
-		result.fontSize *= (ops.zoom || 1);
+		if (Kekule.ObjUtils.notUnset(ops.zoom))
+		{
+			result.fontSize = _multipyFontSize(result.fontSize, ops.zoom || 1);
+		}
 
 		if (RTU.isSuperscript(richTextItem))
 		{
 			result.sizeScale = ops.supFontSizeRatio;
-			result.fontSize *= ops.supFontSizeRatio;
+			//result.fontSize *= ops.supFontSizeRatio;
+			result.fontSize = _multipyFontSize(result.fontSize, ops.supFontSizeRatio);
 			result.isSup = true;
 			if (Kekule.ObjUtils.isUnset(result.overhang))
 				result.overhang = ops.superscriptOverhang || 0;
@@ -539,7 +555,8 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 		else if (RTU.isSubscript(richTextItem))
 		{
 			result.sizeScale = ops.subFontSizeRatio;
-			result.fontSize *= ops.subFontSizeRatio;
+			//result.fontSize *= ops.subFontSizeRatio;
+			result.fontSize = _multipyFontSize(result.fontSize, ops.subFontSizeRatio);
 			result.isSub = true;
 			if (Kekule.ObjUtils.isUnset(result.oversink))
 				result.oversink = ops.subscriptOversink || 0;
@@ -581,6 +598,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 		// get actual draw font info
 		var actualFontInfo = this.doCalcActualDrawFontInfo(section, drawOptions);
+		//console.log('actualFonrInfo', actualFontInfo);
 		this._setActualFontInfo(section, actualFontInfo);
 
 		//this._setLocalDrawOptions(item, drawOptions);
