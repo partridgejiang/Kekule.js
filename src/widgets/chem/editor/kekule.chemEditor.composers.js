@@ -1514,6 +1514,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		result[BNS.molBond] = CE.ActionComposerSetBondController;
 		result[BNS.molCharge] = CE.ActionComposerSetNodeChargeController;
 		result[BNS.textBlock] = CE.ActionComposerSetTextBlockController;
+		result[BNS.imageBlock] = CE.ActionComposerSetImageBlockController;
+		result[BNS.textImage] = CE.ActionComposerSetTextImageController;
 		result[BNS.molRing] = CE.ActionComposerSetRepositoryRingController;
 		result[BNS.glyph] = CE.ActionComposerSetRepositoryGlyphController;
 
@@ -1564,7 +1566,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.molRing,
 			BNS.molCharge,
 			BNS.glyph,
-			BNS.textBlock
+			BNS.textImage
+			/*
+			BNS.textBlock,
+			BNS.imageBlock
+			*/
 		];
 		return buttons;
 	},

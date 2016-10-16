@@ -223,10 +223,10 @@ var kekuleFiles = {
 			'core/kekule.chemUtils.js',
 
 			'chemdoc/kekule.glyph.base.js',
-			'chemdoc/kekule.textBlocks.js',
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
-			'chemdoc/kekule.glyph.chemGlyphs.js'
+			'chemdoc/kekule.glyph.chemGlyphs.js',
+			'chemdoc/kekule.contentBlocks.js'
 		],
 		'category': 'core'
 	},

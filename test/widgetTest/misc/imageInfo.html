@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Info Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    function loadImgFromFile(file)
+    {
+      var reader = new FileReader();
+      reader.addEventListener('load', function(){
+        var imgElem = document.getElementById('image');
+        imgElem.src = reader.result;
+        (function(){ console.log(imgElem.width, imgElem.height); }).defer();
+      });
+      reader.readAsDataURL(file);
+    }
+
+    function init()
+    {
+      var btnOpen = Kekule.Widget.getWidgetById('btnOpen');
+      // create open file action
+      var action = new Kekule.ActionFileOpen();
+      btnOpen.setAction(action);
+
+      action.on('open', function(e){
+        var file = e.file;
+        loadImgFromFile(file);
+      });
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div>
+    <button id="btnOpen" data-widget="Kekule.Widget.Button">Open...</button>
+  </div>
+  <div id="imageStage">
+    <img id="image" />
+  </div>
+</body>
+</html>

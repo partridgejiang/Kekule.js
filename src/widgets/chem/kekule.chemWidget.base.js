@@ -66,8 +66,10 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	molFormula: 'formula',
 	molCharge: 'charge',
 	textBlock: 'textBlock',
+	imageBlock: 'imageBlock',
 	molRing: 'ring',
 	glyph: 'glyph',
+	textImage: 'textImage',
 
 	fontName: 'fontName',
 	fontSize: 'fontSize',

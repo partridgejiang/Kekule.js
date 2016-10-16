@@ -293,7 +293,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			{
 				//console.log('text box changed', obj.getId());
 				// must not use setSize2D, otherwise a new object change event will be triggered
-				obj.setPropStoreFieldValue('size2D', {'x': null, 'y': null});
+				//obj.setPropStoreFieldValue('size2D', {'x': null, 'y': null});
+				obj.__$needRecalcSize__ = true;  // special flag, indicating to recalculate size
 			}
 		}
 		return $super(obj, changedPropNames);
@@ -303,9 +304,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	{
 		if (this.getCoordMode() !== Kekule.CoordMode.COORD2D)  // only works in 2D mode
 			return;
-
+		/*
 		var oldSize = textBlock.getSize2D();
 		if (Kekule.ObjUtils.notUnset(oldSize.x) || Kekule.ObjUtils.notUnset(oldSize.y))  // size already set, by pass
+			return;
+    */
+		if (!textBlock.__$needRecalcSize__)
 			return;
 
 		var stype = boundInfo.shapeType;
@@ -315,10 +319,10 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			var objCoord1 = this.contextCoordToObj(coords[0]);
 			var objCoord2 = this.contextCoordToObj(coords[1]);
 			var delta = Kekule.CoordUtils.substract(objCoord2, objCoord1);
-			//console.log('Set text block size', delta);
 			// must not use setSize2D, otherwise a new object change event will be triggered and a new update process will be launched
 			textBlock.setPropStoreFieldValue('size2D', {'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
 			//textBlock.setSize2D({'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
+			delete textBlock.__$needRecalcSize__;
 		}
 	},
 
@@ -336,6 +340,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			var spaceSize = result.getSizeOfMode(this.getCoordMode(), this.getAllowCoordBorrow());
 
 			var coord, ratio;
+			var objBox = Kekule.Render.ObjUtils.getContainerBox(containingChemObj, this.getCoordMode(), this.getAllowCoordBorrow());
 			if (this.getCoordMode() === Kekule.CoordMode.COORD2D)
 			{
 				/*
@@ -349,13 +354,19 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				var padding = this.getEditorConfigs().getChemSpaceConfigs().getDefPadding();
 
 				var ratio = result.getObjScreenLengthRatio();
-				var objBox = Kekule.Render.ObjUtils.getContainerBox(containingChemObj, this.getCoordMode(), this.getAllowCoordBorrow());
 				//console.log('adjust inside obj size', objBox, this.isShown());
 			}
 
+			/*
 			var oldObjCoord = containingChemObj.getCoordOfMode?
 				containingChemObj.getCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow()) || {}:
 				{};
+			*/
+			var oldObjCoord = containingChemObj.getAbsBaseCoord?
+				containingChemObj.getAbsBaseCoord(this.getCoordMode(), this.getAllowCoordBorrow()) || {}:
+				{};
+
+
 			if (ratio && objBox)  // 2D and calc padding
 			{
 				/*
@@ -366,9 +377,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
 				//coord.y = spaceSize.y - /*(objBox.y2 - objBox.y1) / 2*/objBox.y2 - padding * ratio;
 				//coord.y = spaceSize.y - Math.abs(objBox.y2 - objBox.y1) / 2 - padding * ratio;
-				coord.y = (oldObjCoord.y || 0) + spaceSize.y - padding * ratio - objBox.y2;
 				//coord.x -= (objBox.x2 + objBox.x1) / 2;
+				/*
+				coord.y = (oldObjCoord.y || 0) + spaceSize.y - padding * ratio - objBox.y2;
 				coord.x += (oldObjCoord.x || 0) - (objBox.x2 + objBox.x1) / 2;
+				*/
+				coord.y = spaceSize.y - padding * ratio - (objBox.y2 - objBox.y1) / 2;
 
 				//console.log(spaceSize, coord, objBox);
 			}
@@ -376,15 +390,24 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			{
 				//var oldObjCoord = containingChemObj.getCoordOfMode(this.getCoordMode()) || {};
 				coord = Kekule.CoordUtils.divide(spaceSize, 2);
+				/*
 				coord.x -= (objBox.x2 + objBox.x1) / 2;
 				coord.y -= (objBox.y2 + objBox.y1) / 2;
 				if (this.getCoordMode() === Kekule.CoordMode.COORD3D)
 					coord.z -= (objBox.z2 + objBox.z1) / 2;
 
 				coord = Kekule.CoordUtils.add(coord, oldObjCoord);
+				*/
 			}
+
+			/*
 			if (containingChemObj.setCoordOfMode)
 				containingChemObj.setCoordOfMode(coord, this.getCoordMode());
+			*/
+			if (containingChemObj.setAbsBaseCoord)
+				containingChemObj.setAbsBaseCoord(coord, this.getCoordMode());
+
+			//this.setObjCoord(containingChemObj, coord, Kekule.Render.CoordPos.CENTER);
 		}
 
 		return result;
@@ -3646,11 +3669,94 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.FormulaIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
- * Controller to add or edit text block in document.
+ * Base controller to add or edit content block in document.
  * @class
  * @augments Kekule.Editor.BaseEditorIaController
  */
-Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.ContentBlockIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ContentBlockIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('currBlock', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+	},
+	/** @private */
+	canInteractWithObj: function($super, obj)
+	{
+		return (obj && this.isValidBlock(obj));
+	},
+	/**
+	 * Check if obj is a valid text block and can be edited.
+	 * Descendants must override this method.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	isValidBlock: function(obj)
+	{
+		return obj instanceof Kekule.ContentBlock;
+	},
+	/**
+	 * Called when IaController is selected and mouse clicked on document.
+	 * Need to modify block or create new one when param block is null.
+	 * Descendants need to override this method.
+	 * @param {Kekule.ChemSpace} chemSpace
+	 * @param {Hash} baseCoord
+	 * @param {Kekule.ContentBlock} block
+	 */
+	execute: function(chemSpace, baseCoord, block)
+	{
+		// do nothing here
+	},
+
+	/** @private */
+	react_mousedown: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		{
+			this.getEditor().setSelection(null);
+			var coord = this._getEventMouseCoord(e);
+			{
+				var block;
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				if (boundItem)
+				{
+					var obj = boundItem.obj;
+
+					if (this.isValidBlock(obj))  // can modify atom of this object
+					{
+						block = obj;
+					}
+				}
+
+				var baseCoord = block? this.getEditor().getObjectScreenCoord(block): coord;
+				e.preventDefault();
+				e.stopPropagation();
+				// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
+				//  and the setter may be closed immediately.
+				//console.log('block execute', baseCoord, e.getTarget(), e.getCurrentTarget());
+				this.execute(this.getEditor().getChemObj(), baseCoord, block);
+				//this.getEditor().setSelection([block]);
+				return true;  // important
+			}
+		}
+	}
+});
+
+/**
+ * Controller to add or edit text block in document.
+ * @class
+ * @augments Kekule.Editor.ContentBlockIaController
+ */
+Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaController,
 /** @lends Kekule.Editor.TextBlockIaController# */
 {
 	/** @private */
@@ -3664,27 +3770,44 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('currBlock', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+		//this.defineProp('currBlock', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 		this.defineProp('textSetter', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 	},
-	/** @private */
-	canInteractWithObj: function($super, obj)
-	{
-		if (obj && this.isValidBlock(obj))
-			return true;
-		else
-			return false;
-	},
 
-	/**
-	 * Check if obj is a valid text block and can be edited.
-	 * @param {Kekule.ChemObject} obj
-	 * @returns {Bool}
-	 * @private
-	 */
+	/** @ignore */
 	isValidBlock: function(obj)
 	{
 		return obj instanceof Kekule.TextBlock;
+	},
+
+	/**
+	 * Create new content block on document.
+	 * @private
+	 */
+	createNewBlock: function(chemSpace, coord)
+	{
+		var editor = this.getEditor();
+		if (!editor.canCreateNewChild())
+			return null;
+
+		editor.beginUpdateObject();
+		try
+		{
+			var block = new Kekule.TextBlock();
+			if (block)
+			{
+				chemSpace.appendChild(block);
+				editor.setObjectScreenCoord(block, coord, Kekule.Render.CoordPos.CORNER_TL);
+				//console.log('set text block cord', coord, block.getSize2D());
+				var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+				this._operAddBlock = addOperation;
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+		return block;
 	},
 
 	/**
@@ -3698,27 +3821,10 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		return block.getText();
 	},
 
-	/** @private */
-	createNewBlock: function(chemSpace, coord)
+	/** @ignore */
+	execute: function(chemSpace, baseCoord, block)
 	{
-		var editor = this.getEditor();
-		if (!editor.canCreateNewChild())
-			return null;
-
-		editor.beginUpdateObject();
-		try
-		{
-			var block = new Kekule.TextBlock();
-			chemSpace.appendChild(block);
-			editor.setObjectScreenCoord(block, coord);
-			var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
-			this._operAddBlock = addOperation;
-		}
-		finally
-		{
-			editor.endUpdateObject();
-		}
-		return block;
+		this.openSetterUi(baseCoord, block);
 	},
 
 	/** @private */
@@ -3839,13 +3945,18 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		}
 
 		if (!block)  // need create new
+		{
 			block = this.createNewBlock(this.getEditor().getChemObj(), coord);
+		}
 
 		if (!this.isValidBlock(block))
 			return;
 		this.setCurrBlock(block);
 
 		this.getEditor().setSelection([block]);
+
+		// calculate the top-left position of block
+		var setterCoord = this.getEditor().getObjectScreenCoord(block, Kekule.Render.CoordPos.CORNER_TL);
 
 		//console.log(block.getCascadedRenderOption('fontSize'));
 
@@ -3863,8 +3974,8 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		var style = setter.getElement().style;
 		style.position = 'absolute';
 		style.fontSize = fontSize + 'px';
-		style.left = coord.x + 'px';
-		style.top = coord.y + 'px';
+		style.left = setterCoord.x + 'px';
+		style.top = setterCoord.y + 'px';
 		style.fontFamily = fontName;
 		/*
 		style.marginTop = -posAdjust + 'px';
@@ -3873,53 +3984,177 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.BaseEditorIaCon
 		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
 		setter.selectAll();
 		setter.focus();
-	},
-
-	/** @private */
-	react_mouseup: function(e)
-	{
-		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
-		{
-			this.getEditor().setSelection(null);
-			var coord = this._getEventMouseCoord(e);
-			{
-				var block;
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
-				if (boundItem)
-				{
-					var obj = boundItem.obj;
-
-					if (this.isValidBlock(obj))  // can modify atom of this object
-					{
-						block = obj;
-					}
-				}
-
-				/*
-				if (!block)  // create new
-				{
-					block = this.createNewBlock(this.getEditor().getChemObj(), coord);
-					//console.log(coord, this.getEditor().getObjectScreenCoord(block));
-				}
-
-				if (block)
-				*/
-				{
-					var baseCoord = block? this.getEditor().getObjectScreenCoord(block): coord;
-					e.preventDefault();
-					e.stopPropagation();
-					// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
-					//  and the setter will be closed immediately.
-					this.openSetterUi(baseCoord, block);
-					//this.getEditor().setSelection([block]);
-					return true;  // important
-				}
-			}
-		}
 	}
 });
 // register
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.TextBlockIaController, Kekule.Editor.ChemSpaceEditor);
 
+
+/**
+ * Controller to add or edit image block in document.
+ * @class
+ * @augments Kekule.Editor.ContentBlockIaController
+ */
+Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIaController,
+/** @lends Kekule.Editor.ImageBlockIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ImageBlockIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._operAddBlock = null;  // private
+		this._imgProbeElem = null;
+		this._actionOpenFile = this.createOpenAction();
+	},
+	doFinalize: function()
+	{
+		if (this._actionOpenFile)
+			this.actionOpenFile.finalize();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		//this.defineProp('currBlock', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+	},
+
+	/**
+	 * Check if obj is a valid text block and can be edited.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	isValidBlock: function(obj)
+	{
+		return obj instanceof Kekule.ImageBlock;
+	},
+
+	/** @private */
+	createNewBlock: function(chemSpace, coord, size, src)
+	{
+		var editor = this.getEditor();
+		if (!editor.canCreateNewChild())
+			return null;
+
+		editor.beginUpdateObject();
+		try
+		{
+			var block = new Kekule.ImageBlock();
+			if (src)
+				block.setSrc(src);
+			if (size)
+				block.setSize2D(size);
+			//chemSpace.appendChild(block);
+			editor.setObjectScreenCoord(block, coord, Kekule.Render.CoordPos.CORNER_TL);
+			var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+			this._operAddBlock = addOperation;
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+		return block;
+	},
+	/** @private */
+	createOpenAction: function()
+	{
+		var result = new Kekule.ActionFileOpen();
+		result.on('open', this.reactImageFileOpen, this);
+		return result;
+	},
+	/** @private */
+	reactImageFileOpen: function(e)
+	{
+		var file = e.file;
+		if (file)
+		{
+			var self = this;
+			var reader = new FileReader();
+			reader.addEventListener('load', function(){
+				var imgElem = self._getImageProbeElem();
+				var doc = imgElem.ownerDocument;
+				// hide imgElem and append it to body to calculate size
+				//imgElem.style.display = 'none';
+				//doc.body.appendChild(imgElem);
+				try
+				{
+					// clear img prev width/height
+					delete imgElem.width;
+					delete imgElem.height;
+				}
+				catch(e)
+				{
+
+				}
+				imgElem.src = reader.result;
+				var editor = self.getEditor();
+				//(function(){ console.log(imgElem.width, imgElem.height); }).defer();
+				(function(){
+					var size = {'x': imgElem.width, 'y': imgElem.height};
+					//console.log('imgSize', size);
+					//imgElem.parentNode.removeChild(imgElem);
+					//size = editor.translateCoord(size, Kekule.Editor.CoordSys.SCREEN, Kekule.Editor.CoordSys.CHEM);
+					//console.log('transSize', size);
+					var coord1 = self._currCoord;
+					var contextCoord1 = editor.objCoordToContext(coord1);
+					var contextCoord2 = Kekule.CoordUtils.add(contextCoord1, size);
+					var coord2 = editor.contextCoordToObj(contextCoord2);
+					var size = Kekule.CoordUtils.substract(coord2, coord1);
+					size = Kekule.CoordUtils.absValue(size);
+
+					var currBlock = self.getCurrBlock();
+					var oper;
+					var chemSpace = editor.getChemObj();
+					if (currBlock)  // modify existed
+					{
+						oper = new Kekule.ChemObjOperation.Modify(currBlock, {'src': reader.result, 'size2D': size});
+					}
+					else  // create new
+					{
+						var block = self.createNewBlock(self.getEditor().getChemObj(), self._currCoord, size, reader.result);
+						self.setCurrBlock(block);
+						oper = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+					}
+					if (oper)
+					{
+						//editor.beginUpdateObject();
+						try
+						{
+							oper.execute();
+							if (editor && editor.getEnableOperHistory())
+								editor.pushOperation(oper);
+						}
+						finally
+						{
+							//editor.endUpdateObject();
+						}
+					}
+				}).defer();  // execute later, get accurate image size
+			});
+			reader.readAsDataURL(file);
+		}
+	},
+	/** @private */
+	_getImageProbeElem: function()
+	{
+		if (!this._imgProbeElem)
+		{
+			var doc = this.getEditor().getElement().ownerDocument;
+			this._imgProbeElem = doc.createElement('img');
+		}
+		return this._imgProbeElem;
+	},
+
+	/** @private */
+	execute: function(chemSpace, baseCoord, block)
+	{
+		this.setCurrBlock(block);
+		this._currCoord = baseCoord;
+		this._actionOpenFile.execute(this.getEditor());
+	}
+});
+// register
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.ImageBlockIaController, Kekule.Editor.ChemSpaceEditor);
 
 })();

@@ -65,6 +65,11 @@ Kekule._registerAfterLoadProc = function(proc)
  * Root object of JavaScript environment, usually window.
  */
 Kekule.$jsRoot = this;
+/**
+ * Root document of JavaScript environment.
+ * Can be null in Node.js.
+ */
+Kekule.$document = this.document || null;
 
 Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
 if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language

@@ -868,6 +868,8 @@ Kekule.ClassDefineUtils = {
 					}
 
 					var result = c? {'x': c.x, 'y': c.y}: undefined;
+					if (result)
+						result = Kekule.CoordUtils.absValue(result);    // size should always be positive value
 					return result;
 				},
 				// clone value from input
@@ -2052,6 +2054,18 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		this.doGetInfo(true)[key] = value;
 		this.notifyInfoChange();
+	},
+
+	/**
+	 * Calculate the box to contain the object.
+	 * Descendants may override this method.
+	 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
+	 * @param {Bool} allowCoordBorrow
+	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+	 */
+	getContainerBox: function(coordMode, allowCoordBorrow)
+	{
+		return null;
 	}
 });
 

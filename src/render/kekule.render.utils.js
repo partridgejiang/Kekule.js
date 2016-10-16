@@ -2372,7 +2372,7 @@ Kekule.Render.RendererDefineUtils = {
 			{
 				this.refreshChildObjs();
 				var objs = this.getTargetChildObjs();
-				result = (objs.indexOf(obj) >= 0);
+				result = (objs && objs.indexOf(obj) >= 0);
 				//console.log('here', this.getClassName(), obj.getClassName(), result);
 			}
 			return result;

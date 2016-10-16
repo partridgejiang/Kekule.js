@@ -57,6 +57,19 @@ Kekule.Render.RendererType = {
 };
 
 /**
+ * The position of coord point in object box.
+ * @enum
+ */
+Kekule.Render.CoordPos = {
+	/** Center point of object. */
+	CENTER: 0,
+	/** Top left point of object, usually used in blocks of 2D context. */
+	CORNER_TL: 21,
+	/** Default value, same as CENTER. */
+	DEFAULT: 0
+};
+
+/**
  * C is the most common element in organic molecule. So the label of C will be ignored in bond-line formula.
  * @constant
  */

@@ -238,6 +238,35 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 
 	},
 	/**
+	 * Draw an image on context
+	 * @param {Object} context
+	 * @param {String} src Src url of image.
+	 * @param {Hash} baseCoord
+	 * @param {Hash} size Target size ({x, y} of drawing image.
+	 * @param {Hash} options
+	 * @param {Function} callback Since image may need to be loaded from src on net,
+	 *   this method may draw concrete image on context async. When the draw job
+	 *   is done or failed, callback(success) will be called.
+	 * @returns {Object} Element drawn on context
+	 */
+	drawImage: function(context, src, baseCoord, size, options, callback)
+	{
+
+	},
+	/**
+	 * Draw the content of an image element on context
+	 * @param {Object} context
+	 * @param {HTMLElement} imgElem Source image element.
+	 * @param {Hash} baseCoord
+	 * @param {Hash} size Target size ({x, y} of drawing image.
+	 * @param {Hash} options
+	 * @returns {Object} Element drawn on context
+	 */
+	drawImageElem: function(context, imgElem, baseCoord, size, options)
+	{
+
+	},
+	/**
 	 * Create a nested structure on context.
 	 * @param {Object} context
 	 * @returns {Object}
@@ -383,12 +412,12 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		if (obj.getAllAutoScaleRefLengths)
 		{
 			var lengths = obj.getAllAutoScaleRefLengths(Kekule.CoordMode.COORD2D, allowCoordBorrow);
-			if (lengths)
+			if (lengths && lengths.length)
 				return Kekule.ArrayUtils.getMedian(lengths);
 		}
 		else
 			//Kekule.error(Kekule.ErrorMsg.INAVAILABLE_AUTOSCALE_REF_LENGTH);
-			return 1;  // TODO: need to calculate this
+			return null;  //1;
 	},
 
 	/**
@@ -469,6 +498,15 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	{
 		var c1 = {'x': Math.min(coord1.x, coord2.x), 'y': Math.min(coord1.y, coord2.y)};
 		var c2 = {'x': Math.max(coord1.x, coord2.x), 'y': Math.max(coord1.y, coord2.y)};
+		/*
+		// debug
+		var op = Object.create(options);
+		if (this.getRedirectContext())
+		{
+			op.color = op.strokeColor = '#ff0000';
+		}
+		return this.getDrawBridge().drawRect(this.getActualTargetContext(context), c1, c2, op);
+		*/
 		return this.getDrawBridge().drawRect(this.getActualTargetContext(context), c1, c2, options);
 	},
 	drawRoundRect: function(context, coord1, coord2, cornerRadius, options)
@@ -510,6 +548,16 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		*/
 
 		return drawer.drawEx(this.getActualTargetContext(context), coord, richText, /*op*/ options /*, this.getRenderConfigs()*/);
+	},
+	drawImage: function(context, src, baseCoord, size, options, callback)
+	{
+		var self = this;
+		return this.getDrawBridge().drawImage(this.getActualTargetContext(context), src, baseCoord, size, options, callback,
+				function(){ return self.getActualTargetContext(context); });
+	},
+	drawImageElem: function(context, imgElem, baseCoord, size, options)
+	{
+		return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
 	},
 	createDrawGroup: function(context)
 	{
@@ -603,7 +651,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		if (transformParams)
 		{
 			var obj = this.getChemObj();
-			var objCoord = obj.getAbsBaseCoord? obj.getAbsBaseCoord():
+			var objCoord = obj.getAbsBaseCoord? obj.getAbsBaseCoord(Kekule.CoordMode.COORD2D):
 				obj.getAbsBaseCoord2D? obj.getAbsBaseCoord2D(): null;
 
 			//console.log('autoCoord', objCoord, transformParams);
@@ -744,7 +792,9 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			{
 				// auto determinate the scale by defBondLength and median of ctab bond length
 				var defDrawRefLength = oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1;
-				var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow) || 1;
+				var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
+				if (Kekule.ObjUtils.isUnset(medianObjRefLength))
+				  medianObjRefLength = drawOptions.defScaleRefLength;
 				result.scaleX = result.scaleY = (defDrawRefLength / medianObjRefLength) || 1;  // medianObjRefLength may be NaN
 			}
 		}
@@ -969,6 +1019,17 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 		result.charDirection = oneOf(result.charDirection, result.textCharDirection);
 		return result;
 	},
+	/**
+	 * Returns the actual alignment coord to draw text.
+	 * Decendants may override this method.
+	 * @param {Hash} baseCoord
+	 * @returns {Hash}
+	 * @private
+	 */
+	getDrawTextCoord: function(context, baseCoord)
+	{
+		return baseCoord;
+	},
 
 	/** @private */
 	doDraw: function($super, context, baseCoord, options)
@@ -987,11 +1048,13 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 		if (!baseCoord)
 			baseCoord = this.getAutoBaseCoord(options);
 
+		var textCoord = this.getDrawTextCoord(context, baseCoord);
+
 		//console.log('draw text', this.getChemObj().getText(), baseCoord);
 
-		//console.log('draw text options', options);
+		//console.log('draw text options', Kekule.Render.RichTextUtils.toText(richText), options, this.extractRichTextDrawOptions(options));
 
-		var result = this.drawRichText(context, baseCoord, richText,
+		var result = this.drawRichText(context, textCoord, richText,
 			this.extractRichTextDrawOptions(options));
 		//console.log(result);
 		var rect = result.boundRect;
@@ -1028,6 +1091,23 @@ Kekule.Render.TextBlock2DRenderer = Class.create(Kekule.Render.RichTextBased2DRe
 	doEstimateObjBox: function(context, options, allowCoordBorrow)
 	{
 		return this.getChemObj().getBox2D(allowCoordBorrow);
+	},
+
+	/** @ignore */
+	getDrawTextCoord: function(context, baseCoord)
+	{
+		var chemObj = this.getChemObj();
+		// calc context size of text box
+		var objBox = chemObj.getExposedContainerBox();
+		var coord1 = {x: objBox.x1, y: objBox.y2};
+		var coord2 = {x: objBox.x2, y: objBox.y1};
+		var contextCoord1 = this.transformCoordToContext(context, chemObj, coord1);
+		var contextCoord2 = this.transformCoordToContext(context, chemObj, coord2);
+		var size = Kekule.CoordUtils.substract(contextCoord2, contextCoord1);
+
+		// since baseCoord is at the center of object, we need calculate out the corner coord to draw text
+		var result = {x: baseCoord.x - size.x / 2, y: baseCoord.y - size.y / 2};
+		return result;
 	},
 
 	/** private */
@@ -1107,6 +1187,82 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 //Kekule.ClassDefineUtils.addExtraObjMapSupport(Kekule.Render.Formula2DRenderer);
 
 /**
+ * Class to render a image block object.
+ * @class
+ * @augments Kekule.Render.ChemObj2DRenderer
+ */
+Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
+/** @lends Kekule.Render.ImageBlock2DRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Render.ImageBlock2DRenderer',
+	/** @constructs */
+	initialize: function($super, chemObj, drawBridge, parent)
+	{
+		$super(chemObj, drawBridge, parent);
+	},
+	/** @private */
+	doDraw: function($super, context, baseCoord, options)
+	{
+		$super(context, baseCoord, options);
+
+		//console.log('draw text options', options);
+
+		var chemObj = this.getChemObj();
+		var transformOptions = options.transformParams;
+
+		if (!chemObj || !chemObj.getSrc || !chemObj.getSrc())
+			return null;
+
+		if (!baseCoord)
+			baseCoord = this.getAutoBaseCoord(options);
+
+		// calc context size of image
+		var objBox = chemObj.getExposedContainerBox();
+		/*
+		var coord1 = chemObj.getCornerCoord1(Kekule.CoordMode.COORD2D, true);
+		var coord2 = chemObj.getCornerCoord2(Kekule.CoordMode.COORD2D, true);
+		*/
+		var coord1 = {x: objBox.x1, y: objBox.y2};
+		var coord2 = {x: objBox.x2, y: objBox.y1};
+		var contextCoord1 = this.transformCoordToContext(context, chemObj, coord1);
+		var contextCoord2 = this.transformCoordToContext(context, chemObj, coord2);
+		var size = Kekule.CoordUtils.substract(contextCoord2, contextCoord1);
+
+		// since baseCoord is at the center of object, we need calculate out the corner coord
+		var drawCoord = {x: baseCoord.x - size.x / 2, y: baseCoord.y - size.y / 2};
+		//var drawCoord = contextCoord1;
+
+		/*
+		var result = this.drawImage(context, chemObj.getSrc(), baseCoord, size,
+				options);
+		*/
+		var result;
+		var imgElem = chemObj.getCacheImg();
+
+		if (imgElem)
+		{
+			result = this.drawImageElem(context, imgElem, drawCoord, size, options);
+		}
+		else
+			result = this.drawImage(context, chemObj.getSrc(), drawCoord, size,
+					options);
+
+		// debug
+		//var result = this.drawRect(context, contextCoord1, contextCoord2, options);
+
+		this.basicDrawObjectUpdated(context, chemObj, chemObj,
+				this.createRectBoundInfo(drawCoord, Kekule.CoordUtils.add(drawCoord, size)), Kekule.Render.ObjectUpdateType.ADD);
+
+		//this.setObjDrawElem(context, chemObj, result);
+
+		return result;
+	}
+});
+Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
+
+
+	/**
  * A default implementation of 2D Ctab (in molecule or path glyph) renderer.
  * @class
  * @augments Kekule.Render.ChemObj2DRenderer

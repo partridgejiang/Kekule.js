@@ -1098,15 +1098,38 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 	]
 );
 
+//////////// Text and image /////////////
 
 // Text block
 Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetTextBlockController',
-	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.CAPTION_TEXT_BLOCK,
-	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.HINT_TEXT_BLOCK,
+	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_BLOCK'),
+	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'),
 	'TextBlockIaController',
 	null,
 	null
+);
+// Image block
+Kekule.Editor.ActionComposerSetImageBlockController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetImageBlockController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_IMAGE_BLOCK'),
+		Kekule.$L('ChemWidgetTexts.HINT_IMAGE_BLOCK'),
+		'ImageBlockIaController',
+		null,
+		null
+);
+
+Kekule.Editor.ActionComposerSetTextImageController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetTextImageController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_IMAGE'),
+	Kekule.$L('ChemWidgetTexts.HINT_TEXT_IMAGE'),
+	'TextImageIaController',
+	'TextImageIaController',
+	null,
+	[
+		Kekule.Editor.ActionComposerSetTextBlockController,
+		Kekule.Editor.ActionComposerSetImageBlockController
+	]
 );
 
 //////////////////// repository and its variations //////////////////////////

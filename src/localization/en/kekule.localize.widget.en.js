@@ -171,6 +171,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_CHARGE_DOUBLET: 'Doublet radical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
 	CAPTION_TEXT_BLOCK: 'Text Block',
+	CAPTION_IMAGE_BLOCK: 'Image Block',
+	CAPTION_TEXT_IMAGE: 'Text and Image',
 
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
@@ -242,7 +244,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_CHARGE_SINGLET: 'Singlet radical',
 	HINT_MOL_CHARGE_DOUBLET: 'Doublet radical',
 	HINT_MOL_CHARGE_TRIPLET: 'Triplet radical',
-	HINT_TEXT_BLOCK: 'Text Block tool',
+	HINT_TEXT_BLOCK: 'Text block tool',
+	HINT_IMAGE_BLOCK: 'Image block tool',
+	HINT_TEXT_IMAGE: 'Text and image tool',
 
 	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',

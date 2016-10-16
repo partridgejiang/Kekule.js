@@ -365,7 +365,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	{
 		var context = this.getOperatingContext(ctx);
 
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.rect(coord1.x, coord1.y, coord2.x - coord1.x, coord2.y - coord1.y);
 		this.doneDraw(context, options);
@@ -378,7 +378,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	drawCircle: function(ctx, baseCoord, radius, options)
 	{
 		var context = this.getOperatingContext(ctx);
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.arc(baseCoord.x, baseCoord.y, radius, 0, 2 * Math.PI, false);
 		this.doneDraw(context, options);
@@ -412,6 +412,47 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 				context[method].apply(context, pathArgs);
 			}
 		}
+		this.doneDraw(context, options);
+	},
+	drawImage: function(ctx, src, baseCoord, size, options, callback, ctxGetter)
+	{
+		var context = this.getOperatingContext(ctx);
+		// first load image into current document
+		var contextElem = this.getContextElem(context);
+		var doc = contextElem.ownerDocument;
+		var imgElem = doc.createElement('img');
+		imgElem.src = src;
+		var self = this;
+		imgElem.onload = function(){
+			try
+			{
+				self.setDrawStyle(context, options);
+				// draw after image is loaded
+				// since actual drawing context may change after image is loaded,
+				// here we must use a getter function to retrieve the real context used
+				var actualCtx = ctx;
+				if (ctxGetter)
+					actualCtx = ctxGetter();
+				actualCtx = self.getOperatingContext(actualCtx);
+				actualCtx.drawImage(imgElem, baseCoord.x, baseCoord.y, size.x, size.y);
+				if (callback)
+					callback(true);
+				self.doneDraw(context, options);
+			}
+			catch(e)
+			{
+				if (callback)
+					callback(false);
+				throw e;
+			}
+		};
+		imgElem.src = src;
+	},
+	drawImageElem: function(ctx, imgElem, baseCoord, size, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		this.setDrawStyle(context, options);
+		context.drawImage(imgElem, baseCoord.x, baseCoord.y, size.x, size.y);
 		this.doneDraw(context, options);
 	},
 
@@ -469,7 +510,12 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		if (drawOptions.fontWeight)
 			result += drawOptions.fontWeight + ' ';
 		if (drawOptions.fontSize)
-			result += drawOptions.fontSize + 'px ';
+		{
+			if (typeof(drawOptions.fontSize) === 'string')  // already contains unit
+				result += drawOptions.fontSize + ' ';
+			else  // integer value
+				result += drawOptions.fontSize + 'px ';
+		}
 		if (drawOptions.fontFamily)
 			result += drawOptions.fontFamily + ' ';
 		return result;
@@ -532,7 +578,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		var fontStyle = this.getCanvasFontStyle(options);
 		context.font = fontStyle;
 		var m = context.measureText(text);
-		var result = {'width': m.width, 'height': options.fontSize};  // height can not be got from Canvas API, use font size instead
+		var fontSize = options.fontSize;
+		if (typeof(fontSize) === 'string')  // with unit, e.g. 10px
+			fontSize = Kekule.StyleUtils.analysisUnitsValue(fontSize).value;
+		var result = {'width': m.width, 'height': fontSize};  // height can not be got from Canvas API, use font size instead
 		return result;
 	},
 

@@ -337,7 +337,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		return (!!this.getPropStoreFieldValue('ctab'));
 	},
 	/**
-	 * Calculate the box to fit all sub molecule.
+	 * Calculate the box to fit whole glyph.
 	 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).

@@ -307,10 +307,18 @@
     background-image: url("images/slice/icons/nodeCharge.png");
 }
 
+/*
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/text.png");
 }
+*/
+
+.K-Chem-TextImageIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/textImage.png");
+}
+
 
 .K-Chem-MolRingIaController > .K-Pri-Glyph-Content
 {
@@ -320,6 +328,15 @@
 .K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/arrow.png");
+}
+
+.K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/text.gif");
+}
+.K-Chem-ImageBlockIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/image.gif");
 }
 
 .K-Chem-MolBondIaController-Single .K-Pri-Glyph-Content

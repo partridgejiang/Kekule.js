@@ -85,13 +85,21 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 		var oldValues = {};
 		var map = this.getNewPropValues();
 		var obj = this.getTarget();
-		for (var prop in map)
+		obj.beginUpdate();
+		try
 		{
-			var value = map[prop];
-			// store old value first
-			oldValues[prop] = obj.getPropValue(prop);
-			// set new value
-			obj.setPropValue(prop, value);
+			for (var prop in map)
+			{
+				var value = map[prop];
+				// store old value first
+				oldValues[prop] = obj.getPropValue(prop);
+				// set new value
+				obj.setPropValue(prop, value);
+			}
+		}
+		finally
+		{
+			obj.endUpdate();
 		}
 		this.setOldPropValues(oldValues);
 	},
@@ -117,12 +125,12 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
  * @param {Kekule.ChemObject} chemObject Target chem object.
  * @param {Hash} newCoord
  * @param {Int} coordMode
- * @param {Bool} useAbsCoord
+ * @param {Bool} useAbsBaseCoord
  *
  * @property {Hash} newCoord
  * @property {Hash} oldCoord If old coord is not set, this property will be automatically calculated when execute the operation.
  * @property {Int} coordMode
- * @property {Bool} useAbsCoord
+ * @property {Bool} useAbsBaseCoord
  */
 Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 /** @lends Kekule.ChemObjOperation.MoveTo# */
@@ -130,13 +138,13 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.MoveTo',
 	/** @constructs */
-	initialize: function($super, chemObj, newCoord, coordMode, useAbsCoord)
+	initialize: function($super, chemObj, newCoord, coordMode, useAbsBaseCoord)
 	{
 		$super(chemObj);
 		if (newCoord)
 			this.setNewCoord(newCoord);
 		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
-		this.setUseAbsCoord(!!useAbsCoord);
+		this.setUseAbsBaseCoord(!!useAbsBaseCoord);
 	},
 	/** @private */
 	initProperties: function()
@@ -144,7 +152,7 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 		this.defineProp('newCoord', {'dataType': DataType.HASH});
 		this.defineProp('oldCoord', {'dataType': DataType.HASH});
 		this.defineProp('coordMode', {'dataType': DataType.INT});
-		this.defineProp('useAbsCoord', {'dataType': DataType.BOOL});
+		this.defineProp('useAbsBaseCoord', {'dataType': DataType.BOOL});
 	},
 	/** @private */
 	setObjCoord: function(obj, coord, coordMode)
@@ -152,11 +160,18 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 		if (obj && coord && coordMode)
 		{
 			var success = false;
-			if (this.getUseAbsCoord())
+			if (this.getUseAbsBaseCoord())
 			{
+				/*
 				if (obj.setAbsCoordOfMode)
 				{
 					obj.setAbsCoordOfMode(coord, coordMode);
+					success = true;
+				}
+				*/
+				if (obj.setAbsBaseCoord)
+				{
+					obj.setAbsBaseCoord(coord, coordMode, this.getAllowCoordBorrow());
 					success = true;
 				}
 			}
@@ -178,10 +193,14 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	getObjCoord: function(obj, coordMode)
 	{
-		if (this.getUseAbsCoord())
+		if (this.getUseAbsBaseCoord())
 		{
+			/*
 			if (obj.getAbsCoordOfMode)
 				return obj.getAbsCoordOfMode(coordMode, this.getAllowCoordBorrow());
+			*/
+			if (obj.getAbsBaseCoord)
+				return obj.getAbsBaseCoord(coordMode, this.getAllowCoordBorrow());
 		}
 		else
 		{
@@ -270,7 +289,9 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 		$super();
 		var obj = this.getTarget();
 		if (!this.getOldDimension())
+		{
 			this.setOldDimension(this.getObjSize(obj, this.getCoordMode()));
+		}
 		if (this.getNewDimension())
 			this.setObjSize(this.getTarget(), this.getNewDimension(), this.getCoordMode());
 	},
