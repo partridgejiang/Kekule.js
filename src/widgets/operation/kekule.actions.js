@@ -410,14 +410,24 @@ Kekule.ActionList = Class.create(ObjectEx,
 	 */
 	hasActionChecked: function(group)
 	{
+		return !!this.getCheckedAction(group);
+	},
+
+	/**
+	 * Returns checked action of group.
+	 * @param {String} group
+	 * @returns {Kekule.Action}
+	 */
+	getCheckedAction: function(group)
+	{
 		var actions = this.getActions();
 		for (var i = 0, l = actions.length; i < l; ++i)
 		{
 			var a = actions[i];
 			if ((a.getCheckGroup() === group) && (a.getChecked()))
-				return true;
+				return a;
 		}
-		return false;
+		return null;
 	},
 
 	/**

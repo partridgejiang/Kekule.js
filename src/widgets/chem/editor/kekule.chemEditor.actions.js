@@ -617,13 +617,34 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 			{
 				if (checked)
 				{
-					composer.bindAssocActions(this.getAttachedActions());
+					var attachedActions = this.getAttachedActions();
+					composer.bindAssocActions(attachedActions);
 					composer.showAssocToolbar();
-					var defAction = this.getDefaultAttachedAction();
-					if (defAction)
+					var checkedChild = attachedActions.getCheckedAction(this.getClassName());
+					//console.log('self checked change', this.getClassName(), checkedChild, attachedActions.getActions());
+					/*
+					if (checkedChild)
 					{
-						if (defAction.getCheckGroup() && !this.getAttachedActions().hasActionChecked(defAction.getCheckGroup()))
-							defAction.execute();
+						console.log('execute child', checkedChild.getClassName());
+						checkedChild.execute();
+					}
+					else
+					{
+						var defAction = this.getDefaultAttachedAction();
+						if (defAction)
+						{
+							if (defAction.getCheckGroup() && !this.getAttachedActions().hasActionChecked(defAction.getCheckGroup()))
+								defAction.execute();
+						}
+					}
+					*/
+					if (!checkedChild)
+						checkedChild = this.getDefaultAttachedAction();
+					// check and execute child
+					if (checkedChild)
+					{
+						checkedChild.setChecked(false);  // important, force execute again
+						checkedChild.execute();
 					}
 				}
 				else
@@ -792,6 +813,7 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			{
 				controller.setPropValues(specifiedProps);
 			}
+			//console.log('execute self', this.getClassName());
 			$super();
 		}
 	}
