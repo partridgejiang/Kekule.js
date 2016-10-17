@@ -4057,9 +4057,24 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 		return block;
 	},
 	/** @private */
+	_getImgFilters: function()
+	{
+		// add png, jpg, gif and svg
+		var result = [
+			{'title': Kekule.$L('WidgetTexts.TITLE_IMG_FORMAT_PNG'), 'filter': '.png'},
+			{'title': Kekule.$L('WidgetTexts.TITLE_IMG_FORMAT_JPG'), 'filter': '.jpg,.jpeg'},
+			{'title': Kekule.$L('WidgetTexts.TITLE_IMG_FORMAT_GIF'), 'filter': '.gif'},
+			{'title': Kekule.$L('WidgetTexts.TITLE_IMG_FORMAT_SVG'), 'filter': '.svg'},
+			Kekule.NativeServices.FILTER_ALL_SUPPORT,
+			Kekule.NativeServices.FILTER_ANY
+		];
+		return result;
+	},
+	/** @private */
 	createOpenAction: function()
 	{
 		var result = new Kekule.ActionFileOpen();
+		result.setFilters(this._getImgFilters());
 		result.on('open', this.reactImageFileOpen, this);
 		return result;
 	},
@@ -4092,6 +4107,11 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 				//(function(){ console.log(imgElem.width, imgElem.height); }).defer();
 				(function(){
 					var size = {'x': imgElem.width, 'y': imgElem.height};
+					if (size.x <= 0 || size.y <= 0)  // empty image
+					{
+						Kekule.error(Kekule.$L('ErrorMsg.INVALID_OR_EMPTY_IMAGE'));
+						return;
+					}
 					//console.log('imgSize', size);
 					//imgElem.parentNode.removeChild(imgElem);
 					//size = editor.translateCoord(size, Kekule.Editor.CoordSys.SCREEN, Kekule.Editor.CoordSys.CHEM);
