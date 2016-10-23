@@ -78,7 +78,7 @@ table.K-Widget{display:table}
 .K-TabButtonGroup.K-TabAtLeft>.K-Button{border-left:3px solid transparent;text-align:right}
 .K-Resize-Gripper{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:se-resize;z-index:1000}
 .K-Resize-Gripper.K-State-Disabled{cursor:default}
-.K-Resize-Gripper.K-Normal-Background{background-color:transparent}
+.K-Widget.K-Transparent-Background,.K-Resize-Gripper.K-Normal-Background{background-color:transparent}
 .K-TabView{position:relative}
 .K-TabView-TabAtTop .K-TabView-TabButton-Container,.K-TabView-TabAtBottom .K-TabView-TabButton-Container,.K-TabView-TabAtTop .K-TabView-Page-Container,.K-TabView-TabAtBottom .K-TabView-Page-Container{display:block}
 .K-TabView-TabAtLeft .K-TabView-TabButton-Container,.K-TabView-TabAtRight .K-TabView-TabButton-Container,.K-TabView-TabAtLeft .K-TabView-Page-Container,.K-TabView-TabAtRight .K-TabView-Page-Container{display:inline-block;vertical-align:top}
@@ -110,7 +110,7 @@ table.K-Widget{display:table}
 .K-Dialog .K-Dialog-Client{padding:.5em}
 .K-Dialog .K-Dialog-Button-Panel{padding:0 .25em;text-align:right;overflow:hidden}
 .K-Dialog .K-Dialog-Button-Panel .K-Widget{margin:.5em .25em}
-.K-Dialog-Modal-Background{z-index:20000;position:absolute;position:fixed;top:0;left:0;right:0;bottom:0}
+.K-Modal-Background{z-index:20000;position:absolute;position:fixed;top:0;left:0;right:0;bottom:0}
 .K-TextEditor{}
 .K-TextEditor .K-TextEditor-Toolbar,.K-TextEditor .K-TextEditor-TextArea{display:block;margin:0;width:100%}
 .K-TextEditor .K-TextEditor-Toolbar{z-index:100;white-space:nowrap}
@@ -176,12 +176,13 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-State-Hover{}
 .K-State-Active{}
 .K-State-Selected{}
+.K-Show-Dialog{z-index:10000}
 .K-Show-Popup{position:absolute;z-index:21000}
-.K-Show-Dialog{z-index:20500}
+.K-Show-ActiveModal{z-index:20500}
 .K-Corner-All,.K-Corner-Top,.K-Corner-Left,.K-Layout-H > .K-Corner-Leading,.K-Layout-V > .K-Corner-Leading,.K-Corner-TL{border-top-left-radius:4px}
 .K-Corner-All,.K-Corner-Top,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Leading,.K-Corner-TR{border-top-right-radius:4px}
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Left,.K-Layout-H > .K-Corner-Leading,.K-Layout-V > .K-Corner-Tailing,.K-Corner-BL{border-bottom-left-radius:4px}
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"160917092039,swt,334"}
+#CssGaga{content:"161008090949,swt,334"}

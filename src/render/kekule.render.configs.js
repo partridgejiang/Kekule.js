@@ -362,6 +362,9 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		// length for reaction
 		this.addFloatConfigProp('rxnMolMargin', 10, {'scope': PS.PUBLIC});
 
+		// default scale ref length, should be same as the default bond length in editor configs
+		this.addFloatConfigProp('defScaleRefLength', 0.8); //35/* 14 /* 52 */);
+
 		// length for context
 		this.addFloatConfigProp('autofitContextPadding', /*20*/45);
 	},

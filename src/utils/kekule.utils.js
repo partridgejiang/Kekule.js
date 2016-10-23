@@ -1553,6 +1553,25 @@ Kekule.CoordUtils = {
 			&& (Math.abs(coord.y || 0) <= error) && (Math.abs(coord.z || 0) <= error);
 	},
 	/**
+	 * Returns the absolute value of each coord axises.
+	 * @param {Hash} coord
+	 * @returns {Hash}
+	 */
+	absValue: function(coord)
+	{
+		if (coord)
+		{
+			var result = {};
+			if (!Kekule.ObjUtils.isUnset(coord.x))
+				result.x = Math.abs(coord.x);
+			if (!Kekule.ObjUtils.isUnset(coord.y))
+				result.y = Math.abs(coord.y);
+			if (!Kekule.ObjUtils.isUnset(coord.z))
+				result.z = Math.abs(coord.z);
+			return result;
+		}
+	},
+	/**
 	 * Add value of two coordinates.
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2

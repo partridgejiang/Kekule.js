@@ -465,9 +465,6 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 		return this._concreteRenderer.transformCoordToContext(context, obj, coord);
 	}
 });
-
-
 Kekule.Render.Renderer2DFactory.register(Kekule.Glyph.PathGlyph, Kekule.Render.PathGlyph2DRenderer);
-
 
 })();

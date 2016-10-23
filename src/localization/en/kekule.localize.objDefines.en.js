@@ -270,6 +270,8 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_enablePartialAreaSelecting: 'If this value is true, when drag a selecting rubber band, object partly in the band will be totally selected',
 			TITLE_atomSetterFontSize: 'Atom setter font size',
 			DES_atomSetterFontSize: 'Font size of atom setter',
+			TITLE_allowUnknownAtomSymbol: 'Allow unknown atom symbol',
+			DES_allowUnknownAtomSymbol: 'Allow inputting unknown symbol and handle it as pseudo atom in atom setter',
 			TITLE_clonedObjectScreenOffset: 'Copied object coord offset',
 			DES_clonedObjectScreenOffset: 'The distance between copied objects and origin objects when doing paste selection action in editor'
 		},

@@ -16,12 +16,36 @@
 {
 	var K = Kekule;
 	var NL = Kekule.ChemStructureNodeLabels;
+	var CM = Kekule.CoordMode;
 	//var C = Kekule.Render.getRenderConfigs();
 
 	/** @ignore */
 	ClassEx.extend(Kekule.ChemObject,
-		/** @lends Kekule.ChemObject# */
+	/** @lends Kekule.ChemObject# */
+	{
+		/**
+		 * Returns default coord position of this object.
+		 * Descendants may override this method
+		 * @param {Int} coordMode
+		 * @returns {Int} Value from {@link Kekule.Render.CoordPos}
+		 */
+		getDefCoordPos: function(coordMode)
 		{
+			return Kekule.Render.CoordPos.CENTER;
+		},
+		/**
+		 * Returns the actual base coord position of this object.
+		 * @param {Int} coordMode
+		 * @returns {Int} Value from {@link Kekule.Render.CoordPos}
+		 */
+		getCoordPos: function(coordMode)
+		{
+			var result = (coordMode === Kekule.CoordMode.COORD3D)?
+					this.getPropStoreFieldValue('coordPos3D'): this.getPropStoreFieldValue('coordPos2D');
+			if (Kekule.ObjUtils.isUnset(result))  // not explict set, use default value
+				result = this.getDefCoordPos(coordMode);
+			return result;
+		},
 		/**
 		 * @property {Hash} renderOptions Options to render this chem object in 2D.
 		 * This property may has the following fields:
@@ -310,15 +334,33 @@
 			return result;
 		},
 		/**
-		 * Get center coord of object. Param coordMode determinate which coord (2D or 3D) will be returned.
+		 * Get base coord (coord that deciding the position) of object. Param coordMode determinate which coord (2D or 3D) will be returned.
 		 * @param {Int} coordMode
 		 * @param {Bool} allowCoordBorrow
 		 * @returns {Hash}
 		 */
 		getBaseCoord: function(coordMode, allowCoordBorrow)
 		{
-			//return null;
-			return this.getCoordOfMode? this.getCoordOfMode(coordMode, allowCoordBorrow): null;
+			var coordPos = this.getCoordPos(coordMode);
+			var result = this.getCoordOfMode? this.getCoordOfMode(coordMode, allowCoordBorrow): null;
+			if (result && coordPos !== Kekule.Render.CoordPos.CENTER)
+			{
+				if (coordPos === Kekule.Render.CoordPos.CORNER_TL)  // now only handles 2D situation
+				{
+					var box = this.getExposedContainerBox(coordMode, allowCoordBorrow);
+					var delta = {x: (box.x2 - box.x1) / 2, y: (box.y2 - box.y1) / 2};
+					if (coordMode === CM.COORD3D)
+						delta.z = (box.z2 - box.z1) / 2;
+					if (coordMode === CM.COORD3D)
+						result = Kekule.CoordUtils.add(result, delta);
+					else  // 2D
+					{
+						result.x += delta.x;
+						result.y -= delta.y;
+					}
+				}
+			}
+			return result;
 		},
 		/**
 		 * Get center 2D coord of object.
@@ -346,8 +388,26 @@
 		 */
 		getAbsBaseCoord: function(coordMode, allowCoordBorrow)
 		{
-			//return null;
-			return this.getAbsCoordOfMode? this.getAbsCoordOfMode(coordMode, allowCoordBorrow): null;
+			var coordPos = this.getCoordPos(coordMode);
+			var result = this.getAbsCoordOfMode? this.getAbsCoordOfMode(coordMode, allowCoordBorrow): null;
+			if (result && coordPos !== Kekule.Render.CoordPos.CENTER)
+			{
+				if (coordPos === Kekule.Render.CoordPos.CORNER_TL)  // now only handles 2D situation
+				{
+					var box = this.getExposedContainerBox(coordMode, allowCoordBorrow);
+					var delta = {x: (box.x2 - box.x1) / 2, y: (box.y2 - box.y1) / 2};
+					if (coordMode === CM.COORD3D)
+						delta.z = (box.z2 - box.z1) / 2;
+					if (coordMode === CM.COORD3D)
+						result = Kekule.CoordUtils.add(result, delta);
+					else  // 2D
+					{
+						result.x += delta.x;
+						result.y -= delta.y;
+					}
+				}
+			}
+			return result;
 		},
 		/**
 		 * Get absolute center 2D coord of object.
@@ -367,6 +427,91 @@
 		{
 			return this.getAbsBaseCoord(Kekule.CoordMode.COORD3D, allowCoordBorrow);
 		},
+		/**
+		 * Set absolute center coord of object.
+		 * @param {Hash} value
+		 * @param {Int} coordMode
+		 */
+		setAbsBaseCoord: function(value, coordMode, allowCoordBorrow)
+		{
+			var coordPos = this.getCoordPos(coordMode);
+			var coord = Object.extend({}, value);
+			if (value && coordPos !== Kekule.Render.CoordPos.CENTER)
+			{
+				if (coordPos === Kekule.Render.CoordPos.CORNER_TL)  // now only handles 2D situation
+				{
+					var box = this.getExposedContainerBox(coordMode, allowCoordBorrow);
+					var delta = {x: (box.x2 - box.x1) / 2, y: (box.y2 - box.y1) / 2};
+					if (coordMode === CM.COORD3D)
+						delta.z = (box.z2 - box.z1) / 2;
+					if (coordMode === CM.COORD3D)
+						coord = Kekule.CoordUtils.substract(coord, delta);
+					else  // 2D
+					{
+						coord.x -= delta.x;
+						coord.y += delta.y;
+					}
+				}
+			}
+			if (this.setAbsCoordOfMode)
+				this.setAbsCoordOfMode(coord, coordMode);
+			else if (this.setCoordOfMode)
+				this.setCoordOfMode(coord, coordMode);
+			return this;
+		},
+		setAbsBaseCoord2D: function(value, allowCoordBorrow)
+		{
+			return this.setAbsCoordOfMode(value, Kekule.CoordMode.COORD2D, allowCoordBorrow);
+		},
+		setAbsBaseCoord3D: function(value, allowCoordBorrow)
+		{
+			return this.setAbsCoordOfMode(value, Kekule.CoordMode.COORD3D, allowCoordBorrow);
+		},
+		/*
+		 * Returns abs center coord of object.
+		 * @param {Int} coordMode
+		 * @param {Bool} allowCoordBorrow
+		 * @returs {Hash}
+		 */
+		/*
+		getAbsCenterCoord: function(coordMode, allowCoordBorrow)
+		{
+			var baseCoordPos = this.getCoordPos(coordMode);
+			if (coordMode === Kekule.CoordMode.COORD2D && baseCoordPos === Kekule.Render.CoordPos.CORNER_TL)
+			{
+				var box = this.getExposedContainerBox(coordMode, allowCoordBorrow);
+				var result = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
+				return result;
+			}
+			else  // center
+				return getAbsBaseCoord(coordMode, allowCoordBorrow);
+		},
+		*/
+		/*
+		 * Set the abs center coord of object.
+		 * @param {Hash} value
+		 * @param {Int} coordMode
+		 * @param {Bool} allowCoordBorrow
+		 */
+		/*
+		setAbsCenterCoord: function(value, coordMode, allowCoordBorrow)
+		{
+			var baseCoordPos = this.getCoordPos(coordMode);
+			if (coordMode === Kekule.CoordMode.COORD2D && baseCoordPos === Kekule.Render.CoordPos.CORNER_TL)
+			{
+				var oldCenterCoord = this.getAbsCenterCoord(coordMode, allowCoordBorrow);
+				var delta = Kekule.CoordUtils.substract(value, oldCoord);
+				var oldBaseCoord = this.getAbsBaseCoord(coordMode, allowCoordBorrow);
+				var newBaseCoord = Kekule.CoordUtils.add(oldBaseCoord, delta);
+				this.setAbsBaseCoord(newBaseCoord, coordMode);
+			}
+			else  // center
+			{
+				this.setAbsBaseCoord(value, coordMode);
+			}
+			return this;
+		},
+		*/
 
 		/**
 		 * If object is a child of subgroup, this function will return the nearest visible (displayed) ancestor.
@@ -428,6 +573,18 @@
 			}
 			return result;
 		},
+		/**
+		 * Returns container box to contain this object with all its exposed children.
+		 * Descendants may override this method.
+		 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
+		 * @param {Bool} allowCoordBorrow
+		 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
+		 */
+		getExposedContainerBox: function(coordMode, allowCoordBorrow)
+		{
+			var result = this.getContainerBox(coordMode, allowCoordBorrow);
+			return result;
+		},
 
 		/**
 		 * Returns all length factors in object to help the scale ratio in autoscale mode.
@@ -466,6 +623,13 @@
 	});
 
 	ClassEx.defineProps(Kekule.ChemObject, [
+		// explict set the coord position
+		{'name': 'coordPos2D', 'dataType': DataType.INT, 'scope':  Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getCoordPos(Kekule.CoordMode.COORD2D); }
+		},
+		{'name': 'coordPos3D', 'dataType': DataType.INT, 'scope':  Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getCoordPos(Kekule.CoordMode.COORD3D); }
+		},
 		// new property, decide the 2D render style of a object (node or connector)
 		{'name': 'renderOptions', 'dataType': DataType.OBJECT},
 		// new property, decide the 3D render style of a object (node or connector)
@@ -737,23 +901,6 @@
 		getAbsBaseCoord: function(coordMode, allowCoordBorrow)
 		{
 			return this.getAbsCoordOfMode(coordMode, allowCoordBorrow);
-		},
-		/**
-		 * Set absolute center coord of object.
-		 * @param {Hash} value
-		 * @param {Int} coordMode
-		 */
-		setAbsBaseCoord: function(value, coordMode)
-		{
-			this.setAbsCoordOfMode(value, coordMode);
-		},
-		setAbsBaseCoord2D: function(value)
-		{
-			this.setAbsCoordOfMode(value, Kekule.CoordMode.COORD2D);
-		},
-		setAbsBaseCoord3D: function(value)
-		{
-			this.setAbsCoordOfMode(value, Kekule.CoordMode.COORD3D);
 		},
 
 		// Calculate the box to fit this object.
@@ -1224,6 +1371,17 @@
 				}
 			}
 			return result;
+		}
+	});
+
+	ClassEx.extend(Kekule.ContentBlock, {
+		/** @ignore */
+		getDefCoordPos: function($super, coordMode)
+		{
+			if (coordMode !== CM.COORD3D)
+				return Kekule.Render.CoordPos.CORNER_TL;
+			else
+				return $super(coordMode);
 		}
 	});
 

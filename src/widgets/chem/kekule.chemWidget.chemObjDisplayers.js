@@ -1008,7 +1008,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}
 		}
 		baseCoord = this.getDrawBridge().transformScreenCoordToContext(context, baseCoord);
-		return {baseCoord: baseCoord, newWidgetDimension: newDimension};
+		return {'baseCoord': baseCoord, 'baseCoordPos': Kekule.Render.CoordPos.CENTER, 'newWidgetDimension': newDimension};
 	},
 
 	/**
@@ -1030,7 +1030,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		if (overrideOptions)
 			ops = Object.extend(ops, overrideOptions);
 		var baseCoordResult = this.calcDrawBaseCoord(ops);
-		return {'drawOptions': ops, 'baseCoord': baseCoordResult.baseCoord, 'newWidgetDimension': baseCoordResult.newWidgetDimension};
+		return {
+			'drawOptions': ops,
+			'baseCoord': baseCoordResult.baseCoord,
+			'baseCoordPos': baseCoordResult.baseCoordPos,
+			'newWidgetDimension': baseCoordResult.newWidgetDimension};
 	},
 
 	/** @private */

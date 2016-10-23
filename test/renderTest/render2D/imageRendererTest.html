@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Glyph Renderer 2D Test</title>
+  <style>
+    canvas
+    {
+      background-color: #D7F0C4;
+    }
+  </style>
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    var drawBoxWidth = 500;
+    var drawBoxHeight = 500;
+    var drawBridge;
+    var drawContext;
+
+    function createImages()
+    {
+      var result = [];
+      var imgProps = [
+        {'src': 'images/generalUiIcons.png', 'width': 256, 'height': 240, 'x': 0, 'y': 0},
+        {'src': 'images/warning.svg', 'width': 50, 'height': 50, 'x': 300, y: 0},
+        {'src': 'data:image/png;base64,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', 'width': 218 * 1.5, 'height': 178, 'x': 0, y: 250}
+      ];
+      for (var i = 0, l = imgProps.length; i < l; ++i)
+      {
+        var imgProp = imgProps[i];
+        var imgGlyph = new Kekule.ImageBlock('img' + i, imgProp.src);
+        imgGlyph.setCoord2D({x: imgProp.x, y: imgProp.y});
+        imgGlyph.setSize2D({x: imgProp.width, y: imgProp.height});
+        result.push(imgGlyph);
+      }
+      return result;
+    }
+
+    function getDrawStage()
+    {
+      return document.getElementById('drawStage');
+    }
+    function getDrawBridge()
+    {
+      if (!drawBridge)
+        drawBridge = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+      return drawBridge;
+    }
+    function getContext()
+    {
+      if (!drawContext)
+        drawContext = getDrawBridge().createContext(getDrawStage(), drawBoxWidth, drawBoxHeight);
+      return drawContext;
+    }
+    function drawImage()
+    {
+      var images = createImages();
+      for (var i = 0, l = images.length; i < l; ++i)
+      {
+        var image = images[i];
+        var renderer = new Kekule.Render.ImageBlock2DRenderer(image, getDrawBridge());
+        renderer.draw(getContext(), null, {transformParams: {}});
+      }
+    }
+
+    function init()
+    {
+      drawImage();
+    }
+  </script>
+</head>
+<body onload="init()">
+  <div id="drawStage">
+  </div>
+</body>
+</html>

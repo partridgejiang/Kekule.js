@@ -224,7 +224,7 @@ Kekule.PropertyEditor.ChemSizeEditor = Class.create(Kekule.PropertyEditor.Object
 				if (Kekule.ObjUtils.notUnset(v))
 				{
 					if (!!result)
-						result += ', '
+						result += ', ';
 					result += fields[i] + ': ' + v;
 				}
 			}

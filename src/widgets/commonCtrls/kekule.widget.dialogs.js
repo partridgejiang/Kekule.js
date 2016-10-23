@@ -29,8 +29,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	DIALOG_OVERFLOW: 'K-Dialog-Overflow',  // dialog larger than current view port size
 	DIALOG_CLIENT: 'K-Dialog-Client',
 	DIALOG_CAPTION: 'K-Dialog-Caption',
-	DIALOG_BTN_PANEL: 'K-Dialog-Button-Panel',
-	DIALOG_MODAL_BACKGROUND: 'K-Dialog-Modal-Background'
+	DIALOG_BTN_PANEL: 'K-Dialog-Button-Panel'
 });
 
 /**
@@ -151,7 +150,6 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.defineProp('clientElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('captionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('btnPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
-		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -547,58 +545,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			this.adjustLocation();
 		*/
 	},
-	/** @private */
-	prepareModal: function()
-	{
-		// create a modal background and then relocate dialog element on it
-		var doc = this.getDocument();
-		var div = this.getModalBackgroundElem();
-		if (!div)
-		{
-			//console.log('create new background');
-			div = doc.createElement('div');
-			div.className = CNS.DIALOG_MODAL_BACKGROUND;
-			this.setPropStoreFieldValue('modalBackgroundElem', div);
-		}
-		var elem = this.getElement();
-		this._modalInfo = {
-			'oldParent': elem.parentNode,
-			'oldSibling': elem.nextSibling
-		};
-		//alert('hi');
-		if (elem.parentNode)
-			elem.parentNode.removeChild(elem);
-		//div.appendChild(elem);
-		doc.body.appendChild(div);
-		doc.body.appendChild(elem);
-		/*
-		if (!this.isShown())
-			this.adjustLocation();
-		else
-			console.log(this.isShown());
-		*/
-		//console.log(div.parentNode);
-		//console.log('prepare modal done');
-		//console.log(div.parentNode);
-	},
-	unprepareModal: function()
-	{
-		//console.log('unprepareModal');
-		if (this._modalInfo)
-		{
-			if (this._modalInfo.oldParent)
-				this._modalInfo.oldParent.insertBefore(this.getElement(), this._modalInfo.oldSibling);
-		}
-		var parentElem = this.getElement().parentNode;
-		if (parentElem)
-			parentElem.removeChild(this.getElement());
-		var bgElem = this.getModalBackgroundElem();
-		if (bgElem && bgElem.parentNode)
-		{
-			bgElem.parentNode.removeChild(bgElem);
-			//this.setPropStoreFieldValue('modalBackgroundElem', null);
-		}
-	},
+
 	/**
 	 * Show a modal simulation dialog. When the dialog is closed,
 	 * callback(modalResult) will be called.
@@ -607,7 +554,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	openModal: function(callback, caller)
 	{
-		this.prepareModal();
+		//this.prepareModal();
+		this.getGlobalManager().prepareModalWidget(this);
 		  // important, must called before prepareShow, or DOM tree change will cause doWidgetShowStateChanged
 		  // and make callback called even before dialog showing
 		/*
@@ -714,8 +662,10 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		$super(isShown);
 		if (!isShown && this._dialogOpened)  // hide after dialog open
 		{
-			if (this._modalInfo)
-				this.unprepareModal();
+			if (this.getModalInfo())
+			{
+				this.getGlobalManager().unprepareModalWidget(this);
+			}
 			if (!this.isShown())
 				this._restorePositionInfo();
 			this._dialogOpened = false;

@@ -812,7 +812,12 @@ Kekule.PropertyEditor.TextEditor = Class.create(Kekule.PropertyEditor.SimpleEdit
 		dialog.openPopup(function(result)
 			{
 				if (result === Kekule.Widget.DialogButtons.OK)  // feedback value
+				{
 					self._textbox.setValue(self.textToSingleLine(editor.getValue()));
+					self._textbox.setIsDirty(true);
+					//self._textbox.focus();
+					self.saveEditValue();
+				}
 			}, this._textbox);
 	},
 	/** @private */

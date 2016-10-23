@@ -30,7 +30,8 @@
 				{
 				"role": "group",
 				"items": [{
-					"text": "C"
+					"text": "C",
+					fontSize: "40px"
 				},
 				{
 					"text": "sub",
@@ -142,7 +143,7 @@
 		}],
 		"anchorItem": anchor2
 	};
-	var rt3 = {"role": "group", "charDirection": 2,
+	var rt3 = {"role": "lines", "charDirection": 1,
     items: [
       {"role": "section", "text": 'abcdefghijk', "charDirection": 1},
       {"role": "section", "text": 'line2', "charDirection": 1}
@@ -232,6 +233,9 @@
 		var config = Kekule.Render.getRender2DConfigs();
 
 		var drawer = new Kekule.Render.BaseRichTextDrawer(bridge);
+
+		var parentElem = document.getElementById('elementStage');
+		Kekule.DomUtils.clearChildContent(parentElem);
 		//drawer.fillOptions(config);
 		//console.log(drawer.options);
 		for (var i = 0, l = rts.length; i < l; ++i)
@@ -290,6 +294,11 @@
           'subFontSizeRatio': 0.66
 					//'textBoxAlignmentMode': Kekule.Render.TextBoxAlignmentMode.ANCHOR
 				});
+
+				// to HTML test
+				var rtElem = Kekule.Render.RichTextUtils.toHtml(document, rt);
+				parentElem.appendChild(rtElem);
+				parentElem.appendChild(document.createElement('br'));
 			}
 		}
     var endTime = (new Date()).getTime();
@@ -360,5 +369,6 @@
 	</div>
 	<canvas id="canvasContext" width="1000" height="1000"></canvas>
 
+	<div id="elementStage"></div>
 </body>
 </html>

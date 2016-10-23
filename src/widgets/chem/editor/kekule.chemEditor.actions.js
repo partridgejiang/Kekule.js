@@ -617,13 +617,34 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 			{
 				if (checked)
 				{
-					composer.bindAssocActions(this.getAttachedActions());
+					var attachedActions = this.getAttachedActions();
+					composer.bindAssocActions(attachedActions);
 					composer.showAssocToolbar();
-					var defAction = this.getDefaultAttachedAction();
-					if (defAction)
+					var checkedChild = attachedActions.getCheckedAction(this.getClassName());
+					//console.log('self checked change', this.getClassName(), checkedChild, attachedActions.getActions());
+					/*
+					if (checkedChild)
 					{
-						if (defAction.getCheckGroup() && !this.getAttachedActions().hasActionChecked(defAction.getCheckGroup()))
-							defAction.execute();
+						console.log('execute child', checkedChild.getClassName());
+						checkedChild.execute();
+					}
+					else
+					{
+						var defAction = this.getDefaultAttachedAction();
+						if (defAction)
+						{
+							if (defAction.getCheckGroup() && !this.getAttachedActions().hasActionChecked(defAction.getCheckGroup()))
+								defAction.execute();
+						}
+					}
+					*/
+					if (!checkedChild)
+						checkedChild = this.getDefaultAttachedAction();
+					// check and execute child
+					if (checkedChild)
+					{
+						checkedChild.setChecked(false);  // important, force execute again
+						checkedChild.execute();
 					}
 				}
 				else
@@ -792,6 +813,7 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			{
 				controller.setPropValues(specifiedProps);
 			}
+			//console.log('execute self', this.getClassName());
 			$super();
 		}
 	}
@@ -1098,15 +1120,38 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 	]
 );
 
+//////////// Text and image /////////////
 
 // Text block
 Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetTextBlockController',
-	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.CAPTION_TEXT_BLOCK,
-	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'), //Kekule.ChemWidgetTexts.HINT_TEXT_BLOCK,
+	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_BLOCK'),
+	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'),
 	'TextBlockIaController',
 	null,
 	null
+);
+// Image block
+Kekule.Editor.ActionComposerSetImageBlockController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetImageBlockController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_IMAGE_BLOCK'),
+		Kekule.$L('ChemWidgetTexts.HINT_IMAGE_BLOCK'),
+		'ImageBlockIaController',
+		null,
+		null
+);
+
+Kekule.Editor.ActionComposerSetTextImageController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetTextImageController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_IMAGE'),
+	Kekule.$L('ChemWidgetTexts.HINT_TEXT_IMAGE'),
+	'TextImageIaController',
+	'TextImageIaController',
+	null,
+	[
+		Kekule.Editor.ActionComposerSetTextBlockController,
+		Kekule.Editor.ActionComposerSetImageBlockController
+	]
 );
 
 //////////////////// repository and its variations //////////////////////////

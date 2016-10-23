@@ -715,6 +715,17 @@ Kekule.StyleUtils = {
 			else
 				elem.style.visibility = (!!value) ? '' : 'hidden';
 		}
+	},
+
+	/**
+	 * Returns whether the element generates a block element box.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isBlockElem: function(elem)
+	{
+		var display = Kekule.StyleUtils.getComputedStyle(elem, 'display');
+		return ['block', 'list-item', 'table', 'flex', 'grid'].indexOf(display) >= 0;
 	}
 };
 

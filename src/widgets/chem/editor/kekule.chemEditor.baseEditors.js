@@ -2735,24 +2735,49 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/**
 	 * Returns own coord of obj.
 	 * @param {Object} obj
+	 * @param {Int} coordPos Value from {@link Kekule.Render.CoordPos}, relative position of coord in object.
 	 * @returns {Hash}
 	 */
-	getObjCoord: function(obj)
+	getObjCoord: function(obj, coordPos)
 	{
-		return this.doGetObjCoord(obj);
+		return this.doGetObjCoord(obj, coordPos);
 	},
 	/**
 	 * Do actual job of getObjCoord. Descendants may override this method.
 	 * @private
 	 */
-	doGetObjCoord: function(obj)
+	doGetObjCoord: function(obj, coordPos)
 	{
 		var coordMode = this.getCoordMode();
 		var allowCoordBorrow = this.getAllowCoordBorrow();
-		return obj.getAbsBaseCoord? obj.getAbsBaseCoord(coordMode, allowCoordBorrow):
+		var result = obj.getAbsBaseCoord? obj.getAbsBaseCoord(coordMode, allowCoordBorrow):
 			obj.getAbsCoordOfMode? obj.getAbsCoordOfMode(coordMode, allowCoordBorrow):
 			obj.getCoordOfMode? obj.getCoordOfMode(coordMode, allowCoordBorrow):
 			null;
+
+		if (coordMode === Kekule.CoordMode.COORD2D && Kekule.ObjUtils.notUnset(coordPos))  // appoint coord pos, need further calculation
+		{
+			var baseCoordPos = Kekule.Render.CoordPos.DEFAULT;
+			if (coordPos !== baseCoordPos)
+			{
+				var allowCoordBorrow = this.getAllowCoordBorrow();
+				var box = obj.getExposedContainerBox? obj.getExposedContainerBox(coordMode, allowCoordBorrow):
+						obj.getContainerBox? obj.getContainerBox(coordMode, allowCoordBorrow): null;
+				//console.log(obj.getClassName(), coordPos, objBasePos, box);
+				if (box)
+				{
+					if (coordPos === Kekule.Render.CoordPos.CORNER_TL)
+					{
+						var delta = {x: (box.x2 - box.x1) / 2, y: (box.y2 - box.y1) / 2};
+
+						result.x = result.x - delta.x;
+						result.y = result.y + delta.y;
+					}
+				}
+			}
+		}
+
+		return result;
 		/*
 		return obj.getAbsBaseCoord2D? obj.getAbsBaseCoord2D(allowCoordBorrow):
 			obj.getAbsCoord2D? obj.getAbsCoord2D(allowCoordBorrow):
@@ -2764,32 +2789,57 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Set own coord of obj.
 	 * @param {Object} obj
 	 * @param {Hash} coord
+	 * @param {Int} coordPos Value from {@link Kekule.Render.CoordPos}, relative position of coord in object.
 	 */
-	setObjCoord: function(obj, coord)
+	setObjCoord: function(obj, coord, coordPos)
 	{
-		this.doSetObjCoord(obj, coord);
+		this.doSetObjCoord(obj, coord, coordPos);
 		this.objectChanged(obj);
 	},
 	/**
 	 * Do actual job of setObjCoord. Descendants can override this method.
 	 * @private
 	 */
-	doSetObjCoord: function(obj, coord)
+	doSetObjCoord: function(obj, coord, coordPos)
 	{
-		var coordMode = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
-			Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
+		var newCoord = Object.create(coord);
+		var coordMode = this.getCoordMode();
 		//console.log(obj.setAbsBaseCoord, obj.setAbsCoordOfMode, obj.setAbsCoordOfMode);
+
+		if (coordMode === Kekule.CoordMode.COORD2D && Kekule.ObjUtils.notUnset(coordPos))  // appoint coord pos, need further calculation
+		{
+			//var baseCoordPos = obj.getCoordPos? obj.getCoordPos(coordMode): Kekule.Render.CoordPos.DEFAULT;
+			var baseCoordPos = Kekule.Render.CoordPos.DEFAULT;
+			if (coordPos !== baseCoordPos)
+			{
+				var allowCoordBorrow = this.getAllowCoordBorrow();
+				var box = obj.getExposedContainerBox? obj.getExposedContainerBox(coordMode, allowCoordBorrow):
+						obj.getContainerBox? obj.getContainerBox(coordMode, allowCoordBorrow): null;
+				//console.log(obj.getClassName(), coordPos, objBasePos, box);
+				if (box)
+				{
+					var delta = {x: (box.x2 - box.x1) / 2, y: (box.y2 - box.y1) / 2};
+					if (coordPos === Kekule.Render.CoordPos.CORNER_TL)
+					  // base coord on center and set coord as top left
+					{
+						newCoord.x = coord.x + delta.x;
+						newCoord.y = coord.y - delta.y;
+					}
+				}
+			}
+		}
+
 		if (obj.setAbsBaseCoord)
 		{
-			obj.setAbsBaseCoord(coord, coordMode);
+			obj.setAbsBaseCoord(newCoord, coordMode);
 		}
 		else if (obj.setAbsCoordOfMode)
 		{
-			obj.setAbsCoordOfMode(coord, coordMode);
+			obj.setAbsCoordOfMode(newCoord, coordMode);
 		}
 		else if (obj.setAbsCoordOfMode)
 		{
-			obj.setCoordOfMode(coord, coordMode);
+			obj.setCoordOfMode(newCoord, coordMode);
 		}
 	},
 
@@ -2798,9 +2848,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Object} obj
 	 * @returns {Hash}
 	 */
-	getObjectContextCoord: function(obj)
+	getObjectContextCoord: function(obj, coordPos)
 	{
-		var coord = this.getObjCoord(obj);
+		var coord = this.getObjCoord(obj, coordPos);
 		return this.objCoordToContext(coord);
 	},
 	/**
@@ -2808,20 +2858,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Object} obj
 	 * @param {Hash} contextCoord
 	 */
-	setObjectContextCoord: function(obj, contextCoord)
+	setObjectContextCoord: function(obj, contextCoord, coordPos)
 	{
 		var coord = this.contextCoordToObj(contextCoord);
 		if (coord)
-			this.setObjCoord(obj, coord);
+			this.setObjCoord(obj, coord, coordPos);
 	},
 	/**
 	 * Get object's coord on screen.
 	 * @param {Object} obj
 	 * @returns {Hash}
 	 */
-	getObjectScreenCoord: function(obj)
+	getObjectScreenCoord: function(obj, coordPos)
 	{
-		var coord = this.getObjCoord(obj);
+		var coord = this.getObjCoord(obj, coordPos);
 		return this.objCoordToScreen(coord);
 	},
 	/**
@@ -2829,11 +2879,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Object} obj
 	 * @param {Hash} contextCoord
 	 */
-	setObjectScreenCoord: function(obj, screenCoord)
+	setObjectScreenCoord: function(obj, screenCoord, coordPos)
 	{
 		var coord = this.screenCoordToObj(screenCoord);
 		if (coord)
-			this.setObjCoord(obj, coord);
+			this.setObjCoord(obj, coord, coordPos);
 	},
 
 	/**
@@ -2842,7 +2892,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Int} coordSys Value from {@link Kekule.Render.CoordSystem}. Only CONTEXT and CHEM are available here.
 	 * @returns {Hash}
 	 */
-	getCoord: function(obj, coordSys)
+	getCoord: function(obj, coordSys, coordPos)
 	{
 		/*
 		if (coordSys === Kekule.Render.CoordSystem.CONTEXT)
@@ -2850,7 +2900,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		else
 			return this.getObjCoord(obj);
 		*/
-		var objCoord = this.getObjCoord(obj);
+		var objCoord = this.getObjCoord(obj, coordPos);
 		return this.translateCoord(objCoord, Kekule.Editor.CoordSys.OBJ, coordSys);
 	},
 	/**
@@ -2859,7 +2909,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Hash} value
 	 * @param {Int} coordSys Value from {@link Kekule.Render.CoordSystem}. Only CONTEXT and CHEM are available here.
 	 */
-	setCoord: function(obj, value, coordSys)
+	setCoord: function(obj, value, coordSys, coordPos)
 	{
 		/*
 		if (coordSys === Kekule.Render.CoordSystem.CONTEXT)
@@ -2868,7 +2918,29 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.setObjCoord(obj, value);
 		*/
 		var objCoord = this.translateCoord(value, coordSys, Kekule.Editor.CoordSys.OBJ);
-		this.setObjCoord(obj, objCoord);
+		this.setObjCoord(obj, objCoord, coordPos);
+	},
+	/**
+	 * Get size of obj.
+	 * @param {Object} obj
+	 * @param {Int} coordSys Value from {@link Kekule.Render.CoordSystem}. Only CONTEXT and CHEM are available here.
+	 * @returns {Hash}
+	 */
+	getSize: function(obj, coordSys)
+	{
+		var objSize = this.getObjSize(obj);
+		return this.translateCoord(objSize, Kekule.Editor.CoordSys.OBJ, coordSys);
+	},
+	/**
+	 * Set size of obj.
+	 * @param {Object} obj
+	 * @param {Hash} value
+	 * @param {Int} coordSys Value from {@link Kekule.Render.CoordSystem}. Only CONTEXT and CHEM are available here.
+	 */
+	setSize: function(obj, value, coordSys)
+	{
+		var objSize = this.translateCoord(value, coordSys, Kekule.Editor.CoordSys.OBJ);
+		this.setObjSize(obj, objSize);
 	},
 
 	// Coord translate methods
@@ -3882,7 +3954,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var sub = new Kekule.ChemObjOperation.MoveAndResize(obj, null, null, this.getEditor().getCoordMode(), true);  // use abs coord
 			sub.setAllowCoordBorrow(this.getEditor().getAllowCoordBorrow());
 			sub.setOldCoord(item.objCoord);
-			sub.setOldDimension(item.dimension);
+			sub.setOldDimension(item.size);
 			//oper.add(sub);
 			//operMap.set(obj, sub);
 			opers.push(sub);
@@ -4565,7 +4637,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var editor = this.getEditor();
 		var info = {
 			//'obj': obj,
-			'objCoord': editor.getObjCoord(obj),  // abs coord
+			'objCoord': editor.getObjCoord(obj),  // abs base coord
 			//'objSelfCoord': obj.getCoordOfMode? obj.getCoordOfMode(editor.getCoordMode()): null,
 			'screenCoord': editor.getObjectScreenCoord(obj),
 			'size': editor.getObjSize(obj)

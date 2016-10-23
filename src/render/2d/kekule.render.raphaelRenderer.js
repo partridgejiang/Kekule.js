@@ -282,6 +282,27 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 		this.setBasicElemAttribs(result, options);
 		return result;
 	},
+	drawImage: function(context, src, baseCoord, size, options, callback)
+	{
+		try
+		{
+			var result = context.image(src, baseCoord.x, baseCoord.y, size.x, size.y);
+			this.setBasicElemAttribs(result, options);
+			if (callback)
+				callback(true);
+		}
+		catch(e)
+		{
+			if (callback)
+				callback(false);
+			throw e;
+		}
+		return result;
+	},
+	drawImageElem: function(context, imgElem, baseCoord, size, options)
+	{
+		return this.drawImage(context, imgElem.src, baseCoord, size, options);
+	},
 
 	/** @private */
 	setBasicElemAttribs: function(elem, options)
@@ -343,6 +364,13 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	 */
 	drawText: function(context, coord, text, options)
 	{
+		// hack, otherwise the leading and tailing space may not be displayed in SVG
+		if (text.endsWith(' '))
+			text = text.substring(0, text.length - 1) + '\u00A0';
+		if (text.startsWith(' '))
+			text = '\u00A0' + text.substr(1);
+
+
 		var fontStyle = this.getRaphaelFontStyle(options);
 		//console.log(text, options);
 
