@@ -130,6 +130,18 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		var p = this.getParent();
 		return (p instanceof Kekule.StructureFragment)? p: null;
 	},
+	/**
+	 * Returns the root parent of {@link Kekule.StructureFragment}, rather than subgroups.
+	 * @returns {Kekule.StructureFragment}
+	 */
+	getRootFragment: function()
+	{
+		var p = this.getParentFragment();
+		if (p)
+			return p.getRootFragment() || p;
+		else
+			return p;
+	},
 
 	/** @private */
 	notifyLinkedConnectorsChanged: function()

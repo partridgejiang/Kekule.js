@@ -712,8 +712,8 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 	{
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
-		var structFragment = fromNode.getParent();
-		var destFragment = toNode.getParent();
+		var structFragment = fromNode.getParentFragment();
+		var destFragment = toNode.getParentFragment();
 		if (structFragment !== destFragment)  // from different molecule
 		{
 			//console.log('need merge mol');
