@@ -57,9 +57,6 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
 		var editor = this.get('host');
 
-		//console.log('initialize plugins', this);
-		//console.log('textArea', editor.textarea, editor.textarea.getDOMNode());
-
 		var self = this;
 		var form = editor.textarea.getDOMNode().form;
 
@@ -221,8 +218,13 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	},
 	_getParentChemObjElement: function(childElem, rootElem)
 	{
-		if (Kekule.HtmlElementUtils.hasClass(childElem, this.CHEM_OBJ_VIEWER_CLASS))
+		if (Kekule.HtmlElementUtils.hasClass(childElem, this.CHEM_OBJ_VIEWER_CLASS)) // has class tag
 			return childElem;
+		else if ((childElem.getAttribute('data-kekule-widget') || '').indexOf('ChemWidget.Viewer') >= 0)
+		{
+			// some times class may be lost due to cut/paste operations, check data- attribute instead
+			return childElem;
+		}
 		else if (childElem !== rootElem)
 		{
 			return this._getParentChemObjElement(childElem.parentNode, rootElem);

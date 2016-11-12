@@ -59,11 +59,18 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
 		var editor = this.get('host');
 
-		//console.log('initialize plugins', this);
-		//console.log('textArea', editor.textarea, editor.textarea.getDOMNode());
-
 		var self = this;
 		var form = editor.textarea.getDOMNode().form;
+
+		Kekule.X.domReady(function(){
+			// avoid student to input unwanted pseudo atoms
+			if (Kekule.Editor.ChemSpaceEditorConfigs && Kekule.Editor.ChemSpaceEditorConfigs.getInstance)
+			{
+				var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
+				editorConfigs.getInteractionConfigs().setAllowUnknownAtomSymbol(false);
+			}
+		});
+
 		Kekule.X.Event.addListener(form, 'submit', function(e){
 			//if (e.getTarget() === form)
 			self._prepareForSubmit();
@@ -213,8 +220,13 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	},
 	_getParentChemObjElement: function(childElem, rootElem)
 	{
-		if (Kekule.HtmlElementUtils.hasClass(childElem, this.CHEM_OBJ_VIEWER_CLASS))
+		if (Kekule.HtmlElementUtils.hasClass(childElem, this.CHEM_OBJ_VIEWER_CLASS)) // has class tag
 			return childElem;
+		else if ((childElem.getAttribute('data-kekule-widget') || '').indexOf('ChemWidget.Viewer') >= 0)
+		{
+			// some times class may be lost due to cut/paste operations, check data- attribute instead
+			return childElem;
+		}
 		else if (childElem !== rootElem)
 		{
 			return this._getParentChemObjElement(childElem.parentNode, rootElem);
