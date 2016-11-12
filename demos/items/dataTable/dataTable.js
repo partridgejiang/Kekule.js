@@ -25,8 +25,8 @@ function fillData(dataset, chemObjList)
 			curr[name] = info[name];
 		}
 		data.push(curr);
-		dataset.setData(data);
 	}
+	dataset.setData(data);
 }
 
 function init()
