@@ -74,6 +74,8 @@
 			if (searchResult)
 			{
 				//console.log(searchResult.length);
+				markObjects(mol2.getNodes(), null);
+				markObjects(mol2.getConnectors(), null);
 				markObjects(searchResult, 'red');
 			}
 		}
