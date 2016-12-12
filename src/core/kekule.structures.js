@@ -3433,6 +3433,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
  * @property {Array} crossConnectors Connectors outside the fragment connected to nodes inside fragment. Read only.
  * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this fragment.
  * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this fragment.
+ * @property {Kekule.StructureFragmentShadow} flattenedShadow A shadow that "flatten" this structure fragment,
+ *   unmarshalling all subgroups. Some algorithms (e.g., stereo detection) need to be carried out on flattened
+ *   structure, this shadow may prevent the original structure from being modified.
  */
 Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 /** @lends Kekule.StructureFragment# */
@@ -3634,6 +3637,25 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				return result;
 			}
 		});
+
+		this.defineProp('flattenedShadow', {
+			'dataType': 'Kekule.StructureFragmentShadow',
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function(autoCreate)
+			{
+				if (Kekule.ObjUtils.isUnset(autoCreate))
+					autoCreate = true;
+				var result = this.getPropStoreFieldValue('flattenedShadow');
+				if (!result && autoCreate)
+				{
+					result = new Kekule.StructureFragmentShadow(this);
+					result.getShadowFragment().unmarshalAllSubFragments(true);
+					this.setPropStoreFieldValue('flattenedShadow', result);
+				}
+				return result;
+			}
+		});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -3644,6 +3666,18 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	getStructureRelatedPropNames: function($super)
 	{
 		return $super().concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
+	},
+	/** @ignore */
+	structureChange: function($super, originObj)
+	{
+		// when structure is changed, clear old shadow fragment
+		var shadow = this.getFlattenedShadow(false);
+		if (shadow)
+		{
+			shadow.finalize();
+			this.setPropStoreFieldValue('flattenedShadow', null);
+		}
+		$super(originObj);
 	},
 	/** @ignore */
 	clearStructureFlags: function($super)
@@ -4792,6 +4826,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				this.endUpdate();
 			}
 		}
+	},
+
+	/**
+	 * Returns the shadow fragment with all subgroups unmarshalled
+	 * @param {Bool} autoCreate Whether allow to create new one when the shadow does not exists.
+	 * @returns {Kekule.StructureFragment}
+	 */
+	getFlattenedShadowFragment: function(autoCreate)
+	{
+		var shadow = this.getFlattenedShadow(autoCreate);
+		return shadow? shadow.getShadowFragment(): null;
 	}
 });
 
@@ -4873,6 +4918,103 @@ Kekule.StructureFragment.moveChildBetweenStructFragment = function(target, dest,
 		target.endUpdate();
 	}
 };
+
+/**
+ * Represent an "shadow" of structure fragment.
+ * The shadow is cloned fragment from source with two maps (source->shadow and shadow->source)
+ * to connect all child nodes/connectors between shadow and source fragment.
+ * @class
+ * @augments ObjectEx
+ *
+ * @param {Kekule.StructureFragment} srcFragment
+ *
+ * @property {Kekule.MapEx} shadowToSourceMap
+ * @property {Kekule.MapEx} sourceToShadowMap
+ * @property {Kekule.StructureFragment} shadowFragment
+ */
+Kekule.StructureFragmentShadow = Class.create(ObjectEx,
+/** @lends Kekule.StructureFragmentShadow# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.StructureFragmentShadow',
+	initialize: function($super, srcFragment)
+	{
+		if (!srcFragment)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.SOURCE_FRAGMENT_NOT_SET'));
+			return;
+		}
+		$super();
+		this.setPropStoreFieldValue('shadowToSourceMap', new Kekule.MapEx());
+		this.setPropStoreFieldValue('sourceToShadowMap', new Kekule.MapEx());
+		var shadowFragment = this._createShadowFragment(srcFragment, this.getSourceToShadowMap(), this.getShadowToSourceMap());
+		this.setPropStoreFieldValue('shadowFragment', shadowFragment);
+	},
+	doFinalize: function($super)
+	{
+		this.getShadowToSourceMap().finalize();
+		this.getSourceToShadowMap().finalize();
+		this.getShadowFragment().finalize();
+		this.setPropStoreFieldValue('shadowToSourceMap', null);
+		this.setPropStoreFieldValue('sourceToShadowMap', null);
+		this.setPropStoreFieldValue('shadowFragment', null);
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('shadowFragment', {'dataType': 'Kekule.StructureFragment', 'setter': null});
+		this.defineProp('sourceToShadowMap', {'dataType': 'Kekule.MapEx', 'setter': null});
+		this.defineProp('shadowToSourceMap', {'dataType': 'Kekule.MapEx', 'setter': null});
+	},
+
+	/**
+	 * Create the shadow fragment from source, and fill the two direction maps.
+	 * @param sourceFragment
+	 * @private
+	 */
+	_createShadowFragment: function(sourceFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var result = sourceFragment.clone();
+		this._mapFragmentChildren(sourceFragment, result, srcToShadowMap, shadowToSrcMap);
+		return result;
+	},
+	/** @private */
+	_mapFragmentChildren: function(src, shadow, srcToShadowMap, shadowToSrcMap)
+	{
+		for (var i = 0, l = src.getChildCount(); i < l; ++i)
+		{
+			var srcObj = src.getChildAt(i);
+			var shadowObj = shadow.getChildAt(i);
+			srcToShadowMap.set(srcObj, shadowObj);
+			shadowToSrcMap.set(shadowObj, srcObj);
+			// if object is nested, cascade the mapping
+			if (srcObj.getChildCount && shadowObj.getChildCount)
+			{
+				this._mapFragmentChildren(srcObj, shadowObj, srcToShadowMap, shadowToSrcMap);
+			}
+		}
+	},
+
+	/**
+	 * Returns the shadowed object of source.
+	 * @param {Kekule.ChemStructureObject} srcObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getShadowObj: function(srcObj)
+	{
+		return this.getSourceToShadowMap().get(srcObj);
+	},
+	/**
+	 * Returns the source object from shadow.
+	 * @param {Kekule.ChemStructureObject} shadowObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getSourceObj: function(shadowObj)
+	{
+		return this.getShadowToSourceMap().get(shadowObj);
+	}
+});
 
 /**
  * Represent an substituent group.
