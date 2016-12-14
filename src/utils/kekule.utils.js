@@ -534,6 +534,10 @@ Kekule.ArrayUtils = {
 	 */
 	randomize: function(src)
 	{
+		if (!src)
+			return null;
+		if (!src.length)
+			return [];
 		var result = [];
 		var remaining = src.slice(0);
 		while (remaining.length > 1)
