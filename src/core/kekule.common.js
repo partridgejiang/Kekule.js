@@ -1892,6 +1892,23 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		return -1;
 	},
+	/**
+	 * Run a cascade function on all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascadeOnChildren: function(func)
+	{
+		if (!func)
+			return;
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var obj = this.getChildAt(i);
+			if (obj.cascadeOnChildren)
+				obj.cascadeOnChildren(func);
+			func(obj);
+		}
+		return this;
+	},
 
 	/**
 	 * Check if this object contains no data.
