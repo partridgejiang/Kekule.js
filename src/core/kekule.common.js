@@ -1899,7 +1899,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	cascadeOnChildren: function(func)
 	{
 		if (!func)
-			return;
+			return this;
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
 		{
 			var obj = this.getChildAt(i);
@@ -1908,6 +1908,19 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			func(obj);
 		}
 		return this;
+	},
+	/**
+	 * Run a cascade function on self and all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascade: function(func)
+	{
+		if (!func)
+			return this;
+		this.cascadeOnChildren(func);
+		func(this);
+		return this;
+
 	},
 
 	/**
@@ -1925,7 +1938,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	clearIds: function()
 	{
-		this.setId(null);
+		this.setId(undefined);
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
 		{
 			var child = this.getChildAt(i);
