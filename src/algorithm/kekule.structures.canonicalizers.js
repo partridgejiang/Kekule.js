@@ -922,7 +922,7 @@ Kekule.Canonicalizer = Class.create(
 			// now the flatterned structure is canonicalization, we index the original structure based on it
 			this._sortSrcStructBaseOnShadow(structFragment, flatternedStruct, structFragment.getFlattenedShadow());
 			// at last sort connected objs of each connector
-			executor.connectorConnectedObjsSorter.execute(structFragment);
+			executor.connectorConnectedObjsSorter.execute(structFragment.getCtab());
 		}
 		finally
 		{
@@ -932,19 +932,30 @@ Kekule.Canonicalizer = Class.create(
 	/** @private */
 	_sortSrcStructBaseOnShadow: function(srcStruct, shadowStruct, shadowInfo)
 	{
-		var _setSrcNodeCanonicalizationIndex = function(rootStruct, node, index, allChildrenCount)
+		var FLATTERN_INDEX_KEY = '__$flattern_index$__';
+		var getFlatternIndex = function(obj)
 		{
-			node.setCanonicalizationIndex(i);
+			return obj[FLATTERN_INDEX_KEY];
+		};
+		var setFlatternIndex = function(obj, value)
+		{
+			obj[FLATTERN_INDEX_KEY] = value;
+		};
+		var _setSrcNodeFlatternIndex = function(rootStruct, node, index, allChildrenCount)
+		{
+			//node.setCanonicalizationIndex(index);
+			setFlatternIndex(node, index);
 			// if node is in a subgroup, set index of its parent
 			var parent = node.getParent();
 			if (parent.isChildOf(srcStruct))
 			{
-				var pIndex = parent.getCanonicalizationIndex();
+				//var pIndex = parent.getCanonicalizationIndex();
+				var pIndex = getFlatternIndex(parent);
 				var newPIndex = index + allChildrenCount;  // ensure subgroup sort after all single nodes
 				if (Kekule.ObjUtils.isUnset(pIndex) || pIndex > newPIndex)
 				{
 					//parent.setCanonicalizationIndex(newPIndex);
-					_setSrcNodeCanonicalizationIndex(rootStruct, parent, newPIndex, allChildrenCount);
+					_setSrcNodeFlatternIndex(rootStruct, parent, newPIndex, allChildrenCount);
 				}
 			}
 		};
@@ -952,10 +963,11 @@ Kekule.Canonicalizer = Class.create(
 		{
 			// sort first level children
 			struct.sortNodes(function(a, b) {
-				return a.getCanonicalizationIndex() - b.getCanonicalizationIndex();
+				//return a.getCanonicalizationIndex() - b.getCanonicalizationIndex();
+				return getFlatternIndex(a) - getFlatternIndex(b);
 			});
 			struct.sortConnectors(function(a, b) {
-				return a.getCanonicalizationIndex() - b.getCanonicalizationIndex();
+				return getFlatternIndex(a) - getFlatternIndex(b);
 			});
 			// then handle nested subgroups
 			for (var i = 0, l = struct.getNodeCount(); i < l; ++i)
@@ -968,8 +980,12 @@ Kekule.Canonicalizer = Class.create(
 
 		// first save index of each flattern shadow / source children (nodes and connectors)
 		srcStruct.cascadeOnChildren(function(obj){
+			/*
 			if (obj.setCanonicalizationIndex)
 				obj.setCanonicalizationIndex(null);
+			*/
+			if (obj)
+				setFlatternIndex(obj, null);
 		});
 		// the subgroup canonicalization index is calculated based on its own child nodes
 		var shadowChildCount = shadowStruct.getChildCount();
@@ -982,14 +998,15 @@ Kekule.Canonicalizer = Class.create(
 				var srcNode = shadowInfo.getSourceObj(shadowNode);
 				if (srcNode)
 				{
-					_setSrcNodeCanonicalizationIndex(srcStruct, srcNode, i, shadowChildCount);
+					_setSrcNodeFlatternIndex(srcStruct, srcNode, i, shadowChildCount);
 				}
 			}
 			else if (childObj instanceof Kekule.ChemStructureConnector)
 			{
 				var shadowConn = childObj;
 				var srcConn = shadowInfo.getSourceObj(shadowConn);
-				srcConn.setCanonicalizationIndex(i);
+				//srcConn.setCanonicalizationIndex(i);
+				setFlatternIndex(srcConn, i);
 			}
 		}
 
