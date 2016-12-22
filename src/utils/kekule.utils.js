@@ -333,6 +333,32 @@ Kekule.ArrayUtils = {
 		return src.slice(0);
 	},
 	/**
+	 * Divide array into several small ones, each containing memberCount numbers of elements.
+	 * @param {Array} src
+	 * @param {Int} memberCount
+	 * @returns {Array} Array of array.
+	 */
+	divide: function(src, memberCount)
+	{
+		var result = [];
+		var curr = [];
+		var offset = 0;
+		for (var i = 0, l = src.length; i < l; ++i)
+		{
+			curr.push(src[i]);
+			++offset;
+			if (offset >= memberCount)
+			{
+				result.push(curr);
+				curr = [];
+				offset = 0;
+			}
+		}
+		if (curr.length)
+			result.push(curr);
+		return result;
+	},
+	/**
 	 * Append obj (or an array of obj) to the tail of array and returns the index of newly pushed obj.
 	 * If obj already inside array, also returns index of obj in array.
 	 * @param {Array} targetArray Target array.

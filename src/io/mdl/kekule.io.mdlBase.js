@@ -292,6 +292,7 @@ Kekule.IO.MdlStructureUtils = {
 			// sgroup
 			if (ctabInfo.sgInfos && ctabInfo.sgInfos.length)
 			{
+				var subGroupInfo = [];
 				for (var i = 0, l = ctabInfo.sgInfos.length; i < l; ++i)
 				{
 					var info = ctabInfo.sgInfos[i];
@@ -301,10 +302,20 @@ Kekule.IO.MdlStructureUtils = {
 						for (var j = 0, k = info.atomIndexes.length; j < k; ++j)
 							atoms.push(fragment.getNodeAt(info.atomIndexes[j]));
 						if (atoms.length)
-						{
-							var subGroup = fragment.marshalSubFragment(atoms, new Kekule.SubGroup());
-							subGroup.setAbbr(info.label);
-						}
+							subGroupInfo.push({'atoms': atoms, 'text': info.label});
+					}
+				}
+				for (var i = 0, l = subGroupInfo.length; i < l; ++i)
+				{
+					var atoms = subGroupInfo[i].atoms;
+					if (atoms.length)
+					{
+						var subGroup = fragment.marshalSubFragment(atoms, new Kekule.SubGroup());
+						var groupText = subGroupInfo[i].text;
+						if (subGroup.setFormulaText && groupText.match(/.+\d/))  // text has number at middle, may be a formula
+							subGroup.setFormulaText(subGroupInfo[i].text);
+						else
+							subGroup.setAbbr(subGroupInfo[i].text);
 					}
 				}
 			}

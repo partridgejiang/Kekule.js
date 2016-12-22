@@ -29,7 +29,7 @@ describe('IO Test of different file formats', function(){
 				});
 				done();
 			});
-		});
+		}, 50000);
 	};
 
 	var srcUrls = [
@@ -44,7 +44,8 @@ describe('IO Test of different file formats', function(){
 		'cml/(1R)-1-aminoethan-1-ol.cml', 'cml/(1R)-1-aminoethan-1-ol-malformedDictRef.cml', 'cml/(1R)-1-aminoethan-1-ol-multipleBondStereo.cml',
 		'cml/benzene.cml', 'cml/butadiene.cml', 'cml/COONa.cml', 'cml/cs2a.mol.cml',
 		'cml/cyclohexane-xdrawchem.cml', 'cml/isolated_ringsystems.cml', 'cml/keggtest.cml', 'cml/methanol1.cml', 'cml/methanol2.cml',
-		'cml/mol28.cml', 'cml/naphtalene.cml', 'cml/nitrate.cml', 'cml/phosphate.cml', 'cml/toluene.cml'
+		'cml/mol28.cml', 'cml/naphtalene.cml', 'cml/nitrate.cml', 'cml/phosphate.cml', 'cml/toluene.cml',
+		'json/DoubleRingInSubgroup.kcj', 'json/FischerProjection1.kcj', 'json/NestedSubgroup.kcj', 'json/PhCOOH.kcj', 'json/subgroups.kcj'
 	];
 	var formats = ['mol', 'sd', 'mol3k', 'cml', 'Kekule-JSON', 'Kekule-XML'];
 	srcUrls.forEach(function(url){
