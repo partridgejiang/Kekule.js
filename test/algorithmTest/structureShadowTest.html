@@ -56,7 +56,7 @@
       for (var i = 0, l = srcSel.length; i < l; ++i)
       {
         var srcObj = srcSel[i];
-        var shadowObj1 = srcMol.getFlattenedShadow().getShadowObj(srcObj);
+        var shadowObj1 = srcMol.getFlatternedShadowShadowObj(srcObj);
         var shadowObj2 = interShadow.getShadowObj(shadowObj1);
         if (shadowObj2)
           shadowSel.push(shadowObj2);
@@ -73,7 +73,7 @@
       {
         var shadowObj2 = shadowSel[i];
         var shadowObj1 = interShadow.getSourceObj(shadowObj2);
-        var srcObj = srcMol.getFlattenedShadow().getSourceObj(shadowObj1);
+        var srcObj = srcMol.getFlattenedShadowSourceObj(shadowObj1);
         if (srcObj)
           srcSel.push(srcObj);
       }

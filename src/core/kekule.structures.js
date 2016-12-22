@@ -3160,6 +3160,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		return result;
 	},
 	/**
+	 * Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this ctab.
+	 * Note if a sub group has no children, it will not be regarded as sub fragment.
+	 * @returns {Bool}
+	 */
+	hasSubFragments: function()
+	{
+		var subs = this.getSubFragments();
+		return subs && subs.length;
+	},
+	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
 	 * Note if a sub group has no children, it will be regarded as leaf node too.
 	 * @returns {Array} Array of {@link Kekule.ChemStructureNode}.
@@ -3641,17 +3651,43 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		this.defineProp('flattenedShadow', {
 			'dataType': 'Kekule.StructureFragmentShadow',
 			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC,
+			'scope': Class.PropertyScope.PRIVATE,
 			'getter': function(autoCreate)
 			{
+				var result = null;
 				if (Kekule.ObjUtils.isUnset(autoCreate))
 					autoCreate = true;
-				var result = this.getPropStoreFieldValue('flattenedShadow');
-				if (!result && autoCreate)
+				var shadowOnSelf = this.getFlattenedShadowOnSelf();
+				if (shadowOnSelf)   // no explicit shadow object, shadow maps on self
+					return null;
+				else // has sub fragment, need explicit shadow object
 				{
-					result = new Kekule.StructureFragmentShadow(this);
-					result.getShadowFragment().unmarshalAllSubFragments(true);
-					this.setPropStoreFieldValue('flattenedShadow', result);
+					result = this.getPropStoreFieldValue('flattenedShadow');
+					if (!result && autoCreate)
+					{
+						//console.log('create shadow');
+						result = new Kekule.StructureFragmentShadow(this);
+						var shadowFragment = result.getShadowFragment();// this.getFlattenedShadowFragment();
+						shadowFragment.unmarshalAllSubFragments(true);
+						// copy structure info (e.g., ringInfo, aromatic info) to shadow
+						this._copyAdditionalInfoToShadowFragment(shadowFragment, result.getSourceToShadowMap(), result.getShadowToSourceMap());
+						this.setPropStoreFieldValue('flattenedShadow', result);
+					}
+				}
+
+				return result;
+			}
+		});
+		// a special property, marks that this fragment has no subgroup, and the flattenedShadow is actually map to itself
+		this.defineProp('flattenedShadowOnSelf', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PROVATE,
+			'setter': null,
+			'getter': function()
+			{
+				var result = this.setPropStoreFieldValue('flattenedShadowOnSelf');
+				if (Kekule.ObjUtils.isUnset(result))
+				{
+					result = !this.hasSubFragments();
+					this.setPropStoreFieldValue('flattenedShadowOnSelf', result);
 				}
 				return result;
 			}
@@ -3671,6 +3707,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	structureChange: function($super, originObj)
 	{
 		// when structure is changed, clear old shadow fragment
+		this.setPropStoreFieldValue('flattenedShadowOnSelf', null);
 		var shadow = this.getFlattenedShadow(false);
 		if (shadow)
 		{
@@ -4521,17 +4558,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 */
 	getSubFragments: function()
 	{
-		/*
-		var result = [];
-		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
-		{
-			var node = this.getNodeAt(i);
-			if (this.isSubFragment(node))
-				result.push(node);
-		}
-		return result;
-		*/
 		return this.hasCtab()? this.getCtab().getSubFragments(): [];
+	},
+	/**
+	 * Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this fragment.
+	 * Note if a sub group has no children, it will not be regarded as sub fragment.
+	 * @returns {Bool}
+	 */
+	hasSubFragments: function()
+	{
+		return this.hasCtab()? this.getCtab().hasSubFragments(): false;
 	},
 	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
@@ -4829,14 +4865,132 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Copy additional structure info to shadow fragment.
+	 * @param shadowFragment
+	 * @param srcToShadowMap
+	 * @param shadowToSrcMap
+	 * @private
+	 */
+	_copyAdditionalInfoToShadowFragment: function(shadowFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var sourceFragment = this;
+		// copy aromatic rings info
+		var srcAromaticRings = sourceFragment.getAromaticRings();
+		if (srcAromaticRings && srcAromaticRings.length)
+		{
+			var shadowAromaticRings = [];
+			for (var i = 0, l = srcAromaticRings.length; i < l; ++i)
+			{
+				var srcAromaticRing = srcAromaticRings[i];
+				var shadowNodes = [], shadowConnectors = [];
+				for (var j = 0, k = srcAromaticRing.nodes.length; j < k; ++j)
+				{
+					var shadowObj = srcToShadowMap.get(srcAromaticRing.nodes[j]);
+					if (shadowObj)
+						shadowNodes.push(shadowObj);
+				}
+				for (var j = 0, k = srcAromaticRing.connectors.length; j < k; ++j)
+				{
+					var shadowObj = srcToShadowMap.get(srcAromaticRing.connectors[j]);
+					if (shadowObj)
+						shadowConnectors.push(shadowObj);
+				}
+				shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+			}
+			shadowFragment.setAromaticRings(shadowAromaticRings);
+		}
+	},
+	/**
 	 * Returns the shadow fragment with all subgroups unmarshalled
 	 * @param {Bool} autoCreate Whether allow to create new one when the shadow does not exists.
 	 * @returns {Kekule.StructureFragment}
 	 */
 	getFlattenedShadowFragment: function(autoCreate)
 	{
-		var shadow = this.getFlattenedShadow(autoCreate);
-		return shadow? shadow.getShadowFragment(): null;
+		if (this.getFlattenedShadowOnSelf())
+			return this;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getShadowFragment() : null;
+		}
+	},
+	/**
+	 * Returns the flatterned shadowed object of source.
+	 * @param {Kekule.ChemStructureObject} srcObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getFlatternedShadowShadowObj: function(srcObj, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return srcObj;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getShadowObj(srcObj) : null;
+		}
+	},
+	/**
+	 * Returns the source object from flatterned shadow.
+	 * @param {Kekule.ChemStructureObject} shadowObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getFlatternedShadowSourceObj: function(shadowObj, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return shadowObj;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getSourceObj(shadowObj) : null;
+		}
+	},
+
+	/**
+	 * Returns the flatterned shadowed objects of source.
+	 * @param {Array} srcObjs
+	 * @returns {Array}
+	 */
+	getFlatternedShadowShadowObjs: function(srcObjs, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return srcObjs;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			var result = [];
+			if (shadow)
+			{
+				for (var i = 0, l = srcObjs.length; i < l; ++i)
+				{
+					result.push(shadow.getShadowObj(srcObjs[i]))
+				}
+			}
+			return result
+		}
+	},
+	/**
+	 * Returns the source objects from flatterned shadow.
+	 * @param {Array} shadowObjs
+	 * @returns {Array}
+	 */
+	getFlatternedShadowSourceObjs: function(shadowObjs, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return shadowObjs;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			var result = [];
+			if (shadow)
+			{
+				for (var i = 0, l = shadowObjs.length; i < l; ++i)
+				{
+					result.push(shadow.getSourceObj(shadowObjs[i]));
+				}
+			}
+			return result;
+		}
 	}
 });
 

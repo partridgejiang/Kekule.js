@@ -319,6 +319,62 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 	}
 ]);
 
+/** @ignore */
+// ensure ringInfo is cloned when creating shadow in structureFragment
+{
+	ClassEx.extendMethod(Kekule.StructureFragment, '_copyAdditionalFragmentInfo',
+			function($origin, shadowFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var mapRing = function(srcRing)
+		{
+			var result = {'nodes': [], 'connectors': []};
+			for (var i = 0, l = srcRing.nodes.length; i < l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.nodes[i]);
+				if (shadowObj)
+					result.nodes.push(shadowObj);
+			}
+			for (var i = 0, l = srcRing.connectors.length; i < l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.connectors[i]);
+				if (shadowObj)
+					result.connectors.push(shadowObj);
+			}
+			return result;
+		};
+
+		$origin(shadowFragment, srcToShadowMap, shadowToSrcMap);
+		var sourceFragment = this;
+		var srcRingInfo = sourceFragment.getRingInfo(true);  // do not auto create
+		if (srcRingInfo)  // copy to shadow
+		{
+			var shadowRingInfo = {'cycleBlocks': []};
+			for (var i = 0, l = srcRingInfo.cycleBlocks.length; i < l; ++i)
+			{
+				var srcBlock = srcRingInfo.cycleBlocks[i];
+				var shadowBlock = {'allRings': [], 'sssrRings': []};
+				// all rings and SSSR
+				var srcAllRings = srcBlock.allRings;
+				for (var j = 0, k = srcAllRings.length; j < k; ++j)
+				{
+					var srcRing = srcAllRings[j];
+					shadowBlock.allRings.push(mapRing(srcRing));
+				}
+				var srcSSSRs = srcBlock.sssrRings;
+				for (var j = 0, k = srcSSSRs.length; j < k; ++j)
+				{
+					var srcRing = srcSSSRs[j];
+					shadowBlock.sssrRings.push(mapRing(srcRing));
+				}
+				shadowRingInfo.cycleBlocks.push(shadowBlock);
+			}
+			// hack
+			shadowFragment.setPropStoreFieldValue('ringInfo', shadowRingInfo);
+			console.log('set ringInfo', srcRingInfo, shadowRingInfo);
+		}
+	});
+}
+
 ClassEx.extend(Kekule.ChemStructureObject,
 /** @lends Kekule.ChemStructureObject# */
 {

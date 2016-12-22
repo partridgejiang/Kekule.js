@@ -197,8 +197,9 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Bool} ignoreCanonicalization
 	 * @returns {Array}
+	 * @private
 	 */
-	findStereoBonds: function(structFragmentOrCtab, ignoreCanonicalization)
+	doFindStereoBonds: function(structFragmentOrCtab, ignoreCanonicalization)
 	{
 		var result = [];
 		if (!ignoreCanonicalization)
@@ -307,10 +308,11 @@ Kekule.MolStereoUtils = {
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
 	 * @returns {Array} Array of all chiral nodes.
+	 * @private
 	 */
-	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	doPerceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
 	{
-		var result = Kekule.MolStereoUtils.findStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
+		var result = Kekule.MolStereoUtils.doFindStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
 		structFragmentOrCtab.beginUpdate();
 		try
 		{
@@ -415,8 +417,9 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Bool} ignoreCanonicalization
 	 * @returns {Array}
+	 * @private
 	 */
-	findChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
+	doFindChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
 	{
 		var result = [];
 		//structFragment.canonicalize('morgan');
@@ -898,13 +901,14 @@ Kekule.MolStereoUtils = {
 	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>
 	 *   }
 	 * @returns {Array} Array of all chiral nodes.
+	 * @private
 	 */
-	perceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
+	doPerceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
 	{
 		var ops = Object.create(options || null);
 		var parityCalcOps = Object.create(ops);
 		parityCalcOps.ignoreChiralCheck = true;
-		var result = Kekule.MolStereoUtils.findChiralNodes(structFragmentOrCtab, ignoreCanonicalization);
+		var result = Kekule.MolStereoUtils.doFindChiralNodes(structFragmentOrCtab, ignoreCanonicalization);
 		structFragmentOrCtab.beginUpdate();
 		try
 		{
@@ -936,6 +940,10 @@ Kekule.MolStereoUtils = {
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
 	 * @param {Hash} options Chiral calculation options, including:
 	 *   { <br/>
+	 *     useFlatternedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />
+	 *     perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. <br />
+	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />
+	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />
 	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
 	 *       Only works when coord mode is 2D. <br/>
 	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
@@ -947,8 +955,85 @@ Kekule.MolStereoUtils = {
 	 */
 	perceiveStereos: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
 	{
-		var result = [];
+		var ops = Object.extend({
+			useFlatternedShadow: true,
+			perceiveStereoConnectors: true,
+			perceiveChiralNodes: true,
+			calcParity: true
+		}, options);
 
+		var result;
+
+		var srcStructFragment = (structFragmentOrCtab instanceof Kekule.StructureConnectionTable) ? structFragmentOrCtab.getParent() : structFragmentOrCtab;
+
+		var targetFragment;
+		if (ops.useFlatternedShadow)
+		{
+			targetFragment = srcStructFragment.getFlattenedShadowFragment(true);
+		}
+		else
+			targetFragment = srcStructFragment;
+
+		// Canonicalize first
+		if (!ignoreCanonicalization)
+			Kekule.canonicalizer.canonicalize(targetFragment, 'morganEx');
+
+		targetFragment.beginUpdate();
+		try
+		{
+			// then perceive and calculate stereo
+			var stereoBonds, chiralNodes;
+			if (ops.perceiveStereoConnectors)
+			{
+				if (ops.calcParity)
+					stereoBonds = Kekule.MolStereoUtils.doPerceiveStereoConnectors(targetFragment, coordMode, true);
+				else
+					stereoBonds = Kekule.MolStereoUtils.doFindStereoBonds(targetFragment, true);
+			}
+			if (ops.perceiveChiralNodes)
+			{
+				if (ops.calcParity)
+					chiralNodes = Kekule.MolStereoUtils.doPerceiveChiralNodes(targetFragment, coordMode, true, ops);
+				else
+					chiralNodes = Kekule.MolStereoUtils.doFindChiralNodes(targetFragment, true);
+			}
+			var stereoObjs = (chiralNodes || []).concat(stereoBonds || []);
+			//console.log(ops, stereoBonds, chiralNodes, stereoObjs);
+
+			if (ops.useFlatternedShadow)  // map back to src fragment
+			{
+				result = [];
+				srcStructFragment.beginUpdate();
+				try
+				{
+					//var shadowInfo = srcStructFragment.getFlattenedShadow();
+					for (var i = 0, l = stereoObjs.length; i < l; ++i)
+					{
+						var srcObj = srcStructFragment.getFlatternedShadowSourceObj(stereoObjs[i]);
+						if (srcObj)
+						{
+							if (ops.calcParity)
+								srcObj.setParity(stereoObjs[i].getParity());
+							result.push(srcObj);
+						}
+					}
+				}
+				finally
+				{
+					srcStructFragment.endUpdate();
+				}
+			}
+			else
+				result = stereoObjs;
+		}
+		finally
+		{
+			targetFragment.endUpdate();
+		}
+
+		return result;
+
+		/*
 		var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(structFragmentOrCtab, coordMode, ignoreCanonicalization);
 		var chiralNodes = Kekule.MolStereoUtils.perceiveChiralNodes(structFragmentOrCtab, coordMode, true, options);  // already canonicalized when finding bonds
 		if (stereoBonds)
@@ -957,6 +1042,91 @@ Kekule.MolStereoUtils = {
 			result = result.concat(chiralNodes);
 		//console.log(result, stereoBonds, chiralNodes);
 		return result;
+		*/
+	},
+
+	/**
+	 * Find stereo double bond in struct fragment or ctab.
+	 * Note, before finding, if param ignoreCanonicalization is false,
+	 * the struct fragment will be canonicalized by morgan algorithm to set node cano index.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Bool} ignoreCanonicalization
+	 * @returns {Array}
+	 * @deprecated
+	 */
+	findStereoConnectors: function(structFragmentOrCtab, ignoreCanonicalization)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, null, ignoreCanonicalization,
+				{
+					perceiveStereoConnectors: true,
+					perceiveChiralNodes: false,
+					calcParity: false
+				});
+	},
+
+	/**
+	 * Detect and mark parity of all stereo bonds in structure fragment.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @returns {Array} Array of all chiral nodes.
+	 * @deprecated
+	 */
+	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, coordMode, ignoreCanonicalization,
+				{
+					perceiveStereoConnectors: true,
+					perceiveChiralNodes: false,
+					calcParity: true
+				});
+	},
+
+	/**
+	 * Find chiral nodes in struct fragment or ctab.
+	 * Note, before finding, if param ignoreCanonicalization is false,
+	 * the struct fragment will be canonicalized by morgan algorithm to set node cano index.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Bool} ignoreCanonicalization
+	 * @returns {Array}
+	 * @deprecated
+	 */
+	findChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, null, ignoreCanonicalization,
+				{
+					perceiveStereoConnectors: false,
+					perceiveChiralNodes: true,
+					calcParity: false
+				});
+	},
+
+	/**
+	 * Detect and mark parity of all chiral nodes in structure fragment.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { <br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. <br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>
+	 *   }
+	 * @returns {Array} Array of all chiral nodes.
+	 * @deprecated
+	 */
+	perceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
+	{
+		var ops = Object.create(options || null);
+		ops = Object.extend(ops, {
+			perceiveStereoConnectors: false,
+			perceiveChiralNodes: true,
+			calcParity: true
+		});
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, coordMode, ignoreCanonicalization, ops);
 	}
 };
 
@@ -989,7 +1159,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 
 			stereoObjCount = stereoObjs.length;
 			stereoObjs = Kekule.MolStereoUtils.perceiveStereos(ctab, null, true) || [];
-			//console.log(stereoObjCount, stereoObjs.length);
+			//console.log('here', stereoObjCount, stereoObjs.length);
 		}
 	},
 
