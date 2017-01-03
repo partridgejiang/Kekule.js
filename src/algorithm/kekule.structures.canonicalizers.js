@@ -375,6 +375,13 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 	/** @ignore */
 	doExecute: function(ctab)
 	{
+		// clear old indexes
+		/*
+		for (var i = 0, l = ctab.getNodeCount(); i < l; ++i)
+		{
+			ctab.getNodeAt(i).setCanonicalizationIndex(null);
+		}
+		*/
 		// turn ctab into pure graph first (with sub structure degrouped)
 		var graph = Kekule.GraphAdaptUtils.ctabToGraph(ctab, null, {'expandSubStructures': true, ignoreBondedHydrogen: true});
 		if (!graph)
@@ -411,7 +418,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		}
 		*/
 		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping);
-
 		// at last assign indexes
 		this._setCanonicalizationIndexToNodeGroups(sortedNodes);
 	},
@@ -447,11 +453,15 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			{
 				for (var j = 0, k = item.length; j < k; ++j)
 				{
+					//console.log('set cano index', item[j].getSymbol(), vIndex, j, k);
 					item[j].setCanonicalizationIndex(vIndex);
 				}
 			}
 			else
+			{
+				//console.log('set cano index', item.getSymbol(), vIndex);
 				item.setCanonicalizationIndex(vIndex);
+			}
 		}
 	},
 
@@ -581,7 +591,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				vertexesCount: vs.length
 			});
 		}
-		//console.log(result);
 		return result;
 	},
 	/** @private */
@@ -660,8 +669,26 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				indexA = sortedNodesLength;
 			if (indexB < 0)
 				indexB = sortedNodesLength;
-			return indexA - indexB;
+			var result = indexA - indexB;
+			if (result === 0 && indexA === sortedNodeLength)  // H hydrogen, need compare
+			{
+				result = this._getNeighborNodesMinIndex(a, sortedNodes) - this._getNeighborNodesMinIndex(b, sortedNodes);
+			}
+			return result;
 		});
+	},
+	/** @private */
+	_getNeighborNodesMinIndex: function(node, sortedNodes)
+	{
+		var neighbors = node.getLinkedChemNodes();
+		var result = sortedNodes.length;
+		for (var i = 0, l = neighbors.length; i < l; ++i)
+		{
+			var index = sortedNodes.indexOf(neighbors[i]);
+			if (index > 0 && index < result)
+				result = index;
+		}
+		return result;
 	},
 	/** @private */
 	_getNodeSortedArray: function(ctab)
@@ -681,7 +708,12 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 		*/
 		var nodeCompareFunc = function(startingNode, n1, n2)
 		{
-			var result = ((n1.getCanonicalizationIndex() || -1) - (n2.getCanonicalizationIndex() || -1));
+			var result;
+			var cIndex1 = n1.getCanonicalizationIndex();
+			var cIndex2 = n2.getCanonicalizationIndex();
+			// console.log('INDEX', n1.getSymbol(), cIndex1, n2.getSymbol(), cIndex2);
+			result = (cIndex1 || -1) - (cIndex2 || -1);
+
 			if (result === 0)  // canonicalization index is same, compare connector\
 			{
 				if (startingNode)
@@ -706,6 +738,11 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 		{
 			//var remainingNodes = AU.clone(nodeSeq);
 			var remainingNodes = AU.clone(ctab.getNodes());
+			/*
+			remainingNodes.forEach(function(n) {
+				console.log('node', n.getSymbol(), n.getCanonicalizationIndex());
+			});
+			*/
 			// first seek out the starting node with highest canonicalization index
 			var currNode, currNodeIndex;
 			for (var i = 0, l = remainingNodes.length; i < l; ++i)
@@ -718,7 +755,7 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				}
 				else
 				{
-					if (nodeCompareFunc(null, node, currNode) < 0)
+					if (nodeCompareFunc(null, node, currNode) > 0)
 					{
 						currNode = node;
 						currNodeIndex = i;
@@ -726,10 +763,13 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				}
 			}
 
+			//console.log('starting node', currNode.getSymbol(), i);
+
 			//var currNode = nodeSeq[nodeSeq.length - 1];
 			//remainingNodes.splice(nodeSeq.length - 1, 1);
-			remainingNodes.splice(i, 1);
+			remainingNodes.splice(currNodeIndex, 1);
 			var sortedNodes = [];
+			var sortedUnindexedNodes = [];  // sorted hydrogen atom that has no cannonicalization index
 
 			sortedNodes.push(currNode);
 			//nodeIndexMap.set(currNode, 0);
@@ -762,13 +802,19 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 						vIndex = remainingNodes.indexOf(neighbor);
 						if (vIndex >= 0)
 						{
-							sortedNodes.push(neighbor);
+							var canoIndex = neighbor.getCanonicalizationIndex();
+							if (Kekule.ObjUtils.isUnset(canoIndex))
+								sortedUnindexedNodes.push(neighbor);
+							else
+								sortedNodes.push(neighbor);
 							//nodeIndexMap.set(neighbors[j], sortedNodes.length - 1);
 							remainingNodes.splice(vIndex, 1);
 						}
 					}
 				}
 			}
+
+			sortedNodes = sortedNodes.concat(sortedUnindexedNodes);
 
 			return sortedNodes;
 		}
@@ -904,6 +950,11 @@ Kekule.Canonicalizer = Class.create(
 	{
 		// ensure the canonicalization is executed on flattened structure (without subgroups)
 		var flatternedStruct = structFragment.getFlattenedShadowFragment();
+		var data = Kekule.IO.saveFormatData(flatternedStruct, 'mol');
+		/*
+		console.log('FLATTERN');
+		console.log(data);
+		*/
 		var ctab = flatternedStruct.getCtab();
 		ctab.beginUpdate();
 		try
