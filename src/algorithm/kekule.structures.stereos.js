@@ -32,6 +32,17 @@ Kekule.RotationDir = {
 var RD = Kekule.RotationDir;
 
 /**
+ * Default options to do stereo identification.
+ * @object
+ */
+Kekule.globalOptions.stereoPerception = {
+	useFlatternedShadow: true,
+	perceiveStereoConnectors: true,
+	perceiveChiralNodes: true,
+	calcParity: true
+};
+
+/**
  * Util class about stereo chemistry.
  * @class
  */
@@ -955,12 +966,15 @@ Kekule.MolStereoUtils = {
 	 */
 	perceiveStereos: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
 	{
+		/*
 		var ops = Object.extend({
 			useFlatternedShadow: true,
 			perceiveStereoConnectors: true,
 			perceiveChiralNodes: true,
 			calcParity: true
 		}, options);
+		*/
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.stereoPerception), options);
 
 		var result;
 
@@ -1000,7 +1014,7 @@ Kekule.MolStereoUtils = {
 			var stereoObjs = (chiralNodes || []).concat(stereoBonds || []);
 			//console.log(ops, stereoBonds, chiralNodes, stereoObjs);
 
-			if (ops.useFlatternedShadow)  // map back to src fragment
+			if (ops.useFlatternedShadow && !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
 			{
 				result = [];
 				srcStructFragment.beginUpdate();

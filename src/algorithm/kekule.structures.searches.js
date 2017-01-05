@@ -19,6 +19,14 @@ var AU = Kekule.ArrayUtils;
 var SC = Kekule.UnivChemStructObjComparer;
 
 /**
+ * Default options to do sub structure search.
+ * @object
+ */
+Kekule.globalOptions.structureSearch = {
+	doStandardize: true
+};
+
+/**
  * A util class to search sub structures in ctab based molecule.
  * @class
  */
@@ -51,7 +59,7 @@ Kekule.ChemStructureSearcher = {
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
 		// TODO: configuration search need to be rechecked
-		var op = Object.extend({doStandardize: true}, options);
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.structureSearch), options);
 
 		if (op.exactMatch)
 		{

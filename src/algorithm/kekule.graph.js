@@ -441,6 +441,15 @@ Kekule.Graph = Class.create(ObjectEx,
 });
 
 /**
+ * Default options to convert ctab to graph.
+ * @object
+ */
+Kekule.globalOptions.molToGraph = {
+	expandSubStructures: true,
+	ignoreBondedHydrogen: true
+};
+
+/**
  * Util class to help to convert other structures (e.g., molecule ctab) to graph.
  * @class
  */
@@ -460,7 +469,7 @@ Kekule.GraphAdaptUtils = {
 	 */
 	ctabToGraph: function(connTab, graph, options)
 	{
-		var op = Object.extend({expandSubStructures: true, ignoreBondedHydrogen: true}, options || {});
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.molToGraph), options || {});
 		var ctab = connTab;
 		var AU = Kekule.ArrayUtils;
 		var result = null;
@@ -618,6 +627,7 @@ Kekule.GraphAdaptUtils = {
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
 	 *   }
 	 * @returns {Kekule.Graph}
 	 */

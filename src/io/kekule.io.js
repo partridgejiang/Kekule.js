@@ -14,6 +14,14 @@
 (function(){
 
 /**
+ * Root object of I/O default options
+ * @object
+ */
+Kekule.globalOptions.IO = {
+
+};
+
+/**
  * Name space for IO package of Kekule.
  * @namespace
  */

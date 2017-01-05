@@ -206,6 +206,7 @@ Kekule.CanonicalizationCustomExecutor = Class.create(ObjectEx,
 	{
 		if (!ctab)
 			return;
+		/*
 		var sortFunc = function(a, b)
 		{
 			var indexA = ctab.indexOfChild(a);
@@ -218,6 +219,9 @@ Kekule.CanonicalizationCustomExecutor = Class.create(ObjectEx,
 			var connObjs = conn.getConnectedObjs();
 			connObjs.sort(sortFunc);
 		}
+		*/
+		var connObjsSorter = new Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter();
+		connObjsSorter.execute(ctab);
 	}
 });
 
@@ -326,8 +330,8 @@ Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter = Class.create(Kekule
 					// this approach will compare their canonicalization index (the order in shadow flattern structure).
 					if (cIndex1 < 0 || cIndex2 < 0)
 					{
-						cIndex1 = (o1.getCanonicalizationIndex? o1.getCanonicalizationIndex(): 0) || 0;
-						cIndex2 = (o2.getCanonicalizationIndex? o2.getCanonicalizationIndex(): 0) || 0;
+						cIndex1 = (o1.getCanonicalizationIndex? -o1.getCanonicalizationIndex(): 0) || 0;
+						cIndex2 = (o2.getCanonicalizationIndex? -o2.getCanonicalizationIndex(): 0) || 0;
 					}
 					if (cIndex1 > cIndex2) // swap two nodes, may reverse wedge direction also
 					{
@@ -342,8 +346,8 @@ Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter = Class.create(Kekule
 						var cIndex2 = ctab.indexOfChild(o2);
 						if (cIndex1 < 0 || cIndex2 < 0)  // same index, may be all -1, o1, o2 outside subgroup, compare their canonicalization index
 						{
-							cIndex1 = (o1.getCanonicalizationIndex ? o1.getCanonicalizationIndex() : 0) || 0;
-							cIndex2 = (o2.getCanonicalizationIndex ? o2.getCanonicalizationIndex() : 0) || 0;
+							cIndex1 = (o1.getCanonicalizationIndex ? -o1.getCanonicalizationIndex() : 0) || 0;
+							cIndex2 = (o2.getCanonicalizationIndex ? -o2.getCanonicalizationIndex() : 0) || 0;
 							result = (cIndex1 || 0) - (cIndex2 || 0);
 						}
 						var result = ctab.indexOfChild(o1) - ctab.indexOfChild(o2);
@@ -661,6 +665,7 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 	{
 		var sortedNodes = this._getNodeSortedArray(ctab);
 		var sortedNodesLength = sortedNodes.length;
+		var self = this;
 		ctab.sortNodes(function(a, b){
 			var indexA = sortedNodes.indexOf(a);
 			var indexB = sortedNodes.indexOf(b);
@@ -670,9 +675,9 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 			if (indexB < 0)
 				indexB = sortedNodesLength;
 			var result = indexA - indexB;
-			if (result === 0 && indexA === sortedNodeLength)  // H hydrogen, need compare
+			if (result === 0 && indexA === sortedNodesLength)  // H hydrogen, need compare
 			{
-				result = this._getNeighborNodesMinIndex(a, sortedNodes) - this._getNeighborNodesMinIndex(b, sortedNodes);
+				result = self._getNeighborNodesMinIndex(a, sortedNodes) - self._getNeighborNodesMinIndex(b, sortedNodes);
 			}
 			return result;
 		});
@@ -950,8 +955,9 @@ Kekule.Canonicalizer = Class.create(
 	{
 		// ensure the canonicalization is executed on flattened structure (without subgroups)
 		var flatternedStruct = structFragment.getFlattenedShadowFragment();
-		var data = Kekule.IO.saveFormatData(flatternedStruct, 'mol');
+
 		/*
+		var data = Kekule.IO.saveFormatData(flatternedStruct, 'mol');
 		console.log('FLATTERN');
 		console.log(data);
 		*/
@@ -962,22 +968,28 @@ Kekule.Canonicalizer = Class.create(
 			executor.indexer.execute(ctab);
 			executor.nodeSorter.execute(ctab);
 			executor.connectorSorter.execute(ctab);
+			executor.connectorConnectedObjsSorter.execute(ctab);
 		}
 		finally
 		{
 			ctab.endUpdate();
 		}
-		structFragment.beginUpdate();
-		try
+
+		// if structFragment has subgroup (flattenedShadow not self), handle it
+		if (!structFragment.getFlattenedShadowOnSelf())
 		{
-			// now the flatterned structure is canonicalization, we index the original structure based on it
-			this._sortSrcStructBaseOnShadow(structFragment, flatternedStruct/*, structFragment.getFlattenedShadow()*/);
-			// at last sort connected objs of each connector
-			executor.connectorConnectedObjsSorter.execute(structFragment.getCtab());
-		}
-		finally
-		{
-			structFragment.endUpdate();
+			structFragment.beginUpdate();
+			try
+			{
+				// now the flatterned structure is canonicalization, we index the original structure based on it
+				this._sortSrcStructBaseOnShadow(structFragment, flatternedStruct/*, structFragment.getFlattenedShadow()*/);
+				// at last sort connected objs of each connector
+				executor.connectorConnectedObjsSorter.execute(structFragment.getCtab());
+			}
+			finally
+			{
+				structFragment.endUpdate();
+			}
 		}
 	},
 	/** @private */

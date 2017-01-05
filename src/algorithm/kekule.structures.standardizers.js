@@ -20,6 +20,17 @@
 "use strict";
 
 /**
+ * Default options to do structure standardize.
+ * @object
+ */
+Kekule.globalOptions.molStandardization = {
+	unmarshalSubFragments: true,
+	doCanonicalization: true,
+	doAromaticPerception: true,
+	doStereoPerception: true
+};
+
+/**
  * A helper class to standardize molecule.
  * @class
  */
@@ -40,12 +51,7 @@ Kekule.MolStandardizer = {
 	 */
 	standardize: function(structureFragment, options)
 	{
-		var defOptions = {
-			unmarshalSubFragments: true,
-			doCanonicalization: true,
-			doAromaticPerception: true,
-			doStereoPerception: true
-		};
+		var defOptions = Object.extend({}, Kekule.globalOptions.molStandardization);
 		var mol = structureFragment;
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)

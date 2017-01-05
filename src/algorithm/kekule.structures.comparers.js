@@ -37,6 +37,15 @@ Kekule.StructureComparationLevel = {
 	DEFAULT: 4
 };
 
+
+/**
+ * Default options to compare chem structures.
+ * @object
+ */
+Kekule.globalOptions.structureComparation = {
+	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
+};
+
 /**
  * A comparer to decide which chem structure object is "bigger" or "superior" than another one.
  * In the comparer, each structure object is turned to a int value with the fixed format.
@@ -106,7 +115,7 @@ Kekule.UnivChemStructObjComparer = {
 	prepareCompareOptions: function(options)
 	{
 		var CL = Kekule.StructureComparationLevel;
-		var level = (options && options.level) || CL.DEFAULT;
+		var level = (options && options.level) || Kekule.globalOptions.structureComparation.structureComparationLevel; /*CL.DEFAULT*/
 		var result;
 		if (level === CL.SKELETAL)
 			result = {
