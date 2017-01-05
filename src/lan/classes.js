@@ -2549,7 +2549,7 @@ ObjectEx = Class.create(
 	isPropertySerializable: function(propName)
 	{
 		var info = this.getPropInfo(propName);
-		var s = info.serializable;
+		var s = info && info.serializable;
 		return (s === undefined) || (!!s);
 	},
   /**
@@ -3099,7 +3099,7 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
       if (this._childChangeEventSuppressed)
-        modifiedProps.push('[children]');
+        modifiedProps.push('[children]');  // TODO: special propName, indicating children has been changed
       this.doEndUpdate(modifiedProps);
       this._childChangeEventSuppressed = false;
 		}
