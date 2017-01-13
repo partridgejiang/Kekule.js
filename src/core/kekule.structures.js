@@ -423,6 +423,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
  * @property {Hash} coord3D The 3D coordinates of node, {x, y, z}.
  * @property {Hash} absCoord2D The absolute 2D coordinates of node, {x, y}.
  * @property {Hash} absCoord3D The absolute 3D coordinates of node, {x, y, z}.
+ * @property {Int} zIndex2D A special property like zIndex in HTML, indicating the position of z-stack for 2D sketch.
  *
  * @borrows Kekule.ClassDefineUtils.CommonCoordMethods#getCoordOfMode as #getCoordOfMode
  * @borrows Kekule.ClassDefineUtils.CommonCoordMethods#setCoordOfMode as #setCoordOfMode
@@ -456,6 +457,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 			this.setCoord2D(coord2D);
 		if (coord3D)
 			this.setCoord3D(coord3D);
+	},
+	initProperties: function()
+	{
+		this.defineProp('zIndex2D', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)

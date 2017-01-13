@@ -708,7 +708,7 @@ Kekule.MolStereoUtils = {
 			 */
 			if (coordMode !== Kekule.CoordMode.COORD2D)  // 3D, get 3D absolute coord directly
 				return node.getAbsCoordOfMode(coordMode, true);  // allow borrow
-			else  // coord 2D, add z value, consider wedge bonds
+			else  // coord 2D, add z value, consider wedge bonds and special "zIndex2D" property expliciting z stack of 2D sketch
 			{
 				var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
 				if (centerNode && centerCoord)
@@ -738,6 +738,10 @@ Kekule.MolStereoUtils = {
 						else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
 							return null;  // return a special mark, can determinate angle calculation
 					}
+				}
+				if (!result.z && node.getZIndex2D)  // check zIndex2D property of node
+				{
+					result.z = node.getZIndex2D();
 				}
 				result.z = result.z || 0;
 				return result;
