@@ -20,10 +20,12 @@ var GU = Kekule.GraphAlgorithmUtils;
 var CU = Kekule.ChemStructureUtils;
 
 var BT = Kekule.BondType;
+
 /**
  * Default Options used to search rings in chem structure.
+ * @object
  */
-Kekule.StructureRingSearchDefOptions = {
+Kekule.globalOptions.ringSearch = {
 	/**
 	 * Which types of bond can be considered as an edge of ring.
 	 * [] means no bond is allowed in ring (as no ring can actually be found.
@@ -172,7 +174,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 *   {
 	 *     bondTypes: []
 	 *   }
-	 * If this param is not set, {@link Kekule.StructureRingSearchDefOptions} will be used.
+	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
 	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
 	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
@@ -184,8 +186,9 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	analysisRings: function(options)
 	{
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.ringSearch), options);
 		// no stored ring info, analysis
-		var g = this.getGraph(options || Kekule.StructureRingSearchDefOptions);
+		var g = this.getGraph(ops);
 		if (g)
 		{
 			var resultBlocks = [];
@@ -295,16 +298,23 @@ ClassEx.extend(Kekule.StructureFragment,
 	},
 	/**
 	 * Returns ring system details of structure fragment.
-	 * @returns {Array} An array, each items is a cycle block detail. Item containing a series of hash with fields:
+	 * @param {Hash} options Options to find rings. Can include the following fields:
+	 *   {
+	 *     bondTypes: []
+	 *   }
+	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
+	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
+	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
 	 *     connectors: Array of all vertexes in cycle block.
 	 *     nodes: Array of all edges in cycle block.
+	 *     allRings: Array of all rings in cycle block, each item list connectors and nodes of one ring.
 	 *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
 	 *   }
 	 */
-	analysisRings: function()
+	analysisRings: function(options)
 	{
-		return this.hasCtab()? this.getCtab().analysisRings(): null;
+		return this.hasCtab()? this.getCtab().analysisRings(options): null;
 	}
 });
 /** @ignore */
@@ -318,6 +328,62 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 		'setter': null
 	}
 ]);
+
+/** @ignore */
+// ensure ringInfo is cloned when creating shadow in structureFragment
+{
+	ClassEx.extendMethod(Kekule.StructureFragment, '_copyAdditionalFragmentInfo',
+			function($origin, shadowFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var mapRing = function(srcRing)
+		{
+			var result = {'nodes': [], 'connectors': []};
+			for (var i = 0, l = srcRing.nodes.length; i < l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.nodes[i]);
+				if (shadowObj)
+					result.nodes.push(shadowObj);
+			}
+			for (var i = 0, l = srcRing.connectors.length; i < l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.connectors[i]);
+				if (shadowObj)
+					result.connectors.push(shadowObj);
+			}
+			return result;
+		};
+
+		$origin(shadowFragment, srcToShadowMap, shadowToSrcMap);
+		var sourceFragment = this;
+		var srcRingInfo = sourceFragment.getRingInfo(true);  // do not auto create
+		if (srcRingInfo)  // copy to shadow
+		{
+			var shadowRingInfo = {'cycleBlocks': []};
+			for (var i = 0, l = srcRingInfo.cycleBlocks.length; i < l; ++i)
+			{
+				var srcBlock = srcRingInfo.cycleBlocks[i];
+				var shadowBlock = {'allRings': [], 'sssrRings': []};
+				// all rings and SSSR
+				var srcAllRings = srcBlock.allRings;
+				for (var j = 0, k = srcAllRings.length; j < k; ++j)
+				{
+					var srcRing = srcAllRings[j];
+					shadowBlock.allRings.push(mapRing(srcRing));
+				}
+				var srcSSSRs = srcBlock.sssrRings;
+				for (var j = 0, k = srcSSSRs.length; j < k; ++j)
+				{
+					var srcRing = srcSSSRs[j];
+					shadowBlock.sssrRings.push(mapRing(srcRing));
+				}
+				shadowRingInfo.cycleBlocks.push(shadowBlock);
+			}
+			// hack
+			shadowFragment.setPropStoreFieldValue('ringInfo', shadowRingInfo);
+			console.log('set ringInfo', srcRingInfo, shadowRingInfo);
+		}
+	});
+}
 
 ClassEx.extend(Kekule.ChemStructureObject,
 /** @lends Kekule.ChemStructureObject# */
@@ -443,20 +509,27 @@ ClassEx.extend(Kekule.ChemObject,
 	},
 	/**
 	 * Returns ring system details of chem object.
-	 * @returns {Array} An array, each items is a cycle block detail. Item containing a series of hash with fields:
+	 * @param {Hash} options Options to find rings. Can include the following fields:
 	 *   {
- *     connectors: Array of all vertexes in cycle block.
- *     nodes: Array of all edges in cycle block.
- *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
- *   }
+	 *     bondTypes: []
+	 *   }
+	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
+	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
+	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
+	 *   {
+	 *     connectors: Array of all vertexes in cycle block.
+	 *     nodes: Array of all edges in cycle block.
+	 *     allRings: Array of all rings in cycle block, each item list connectors and nodes of one ring.
+	 *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
+	 *   }
 	 */
-	analysisRings: function()
+	analysisRings: function(options)
 	{
 		var ss = CU.getAllStructFragments(this);
 		var result = [];
 		for (var i = 0, l = ss.length; i < l; ++i)
 		{
-			var blocks = ss[i].analysisRings();
+			var blocks = ss[i].analysisRings(options);
 			if (blocks)
 				result = result.concat(blocks);
 		}

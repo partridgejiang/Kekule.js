@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Molecule Structure Search Test</title>
+  <!--
+  <script src="../_libs/kekule.compressed.js"></script>
+  -->
+
+  <script src="../../src/kekule.js?min=false"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+  <script>
+    var chemComposers = [];
+    var chemEditors = [];
+    var interShadow;
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      var w = (dim.width - 50) / chemComposers.length;
+      var h = dim.height - 100;
+      for (var i = 0, l = chemComposers.length; i < l; ++i)
+      {
+        chemComposers[i].setWidth(w + 'px').setHeight(h + 'px');
+      }
+    }
+
+    function getSrcMol()
+    {
+      return chemEditors[0].exportObjs(Kekule.StructureFragment)[0];
+    }
+    function getShadowMol()
+    {
+      return chemEditors[1].exportObjs(Kekule.StructureFragment)[0];
+    }
+    function syncShadow()
+    {
+      var mol = getSrcMol();
+      var shadowStructure = mol.getFlattenedShadowFragment();
+      interShadow = new Kekule.StructureFragmentShadow(shadowStructure);
+      chemEditors[1].setChemObj(interShadow.getShadowFragment());
+    }
+    function syncSelInEditors(srcEditor, targetEditor)
+    {
+      var selection = srcEditor.getSelection();
+    }
+    function syncSelToShadow()
+    {
+      var srcSel = chemEditors[0].getSelection();
+      var shadowSel = [];
+      var srcMol = getSrcMol();
+      for (var i = 0, l = srcSel.length; i < l; ++i)
+      {
+        var srcObj = srcSel[i];
+        var shadowObj1 = srcMol.getFlatternedShadowShadowObj(srcObj);
+        var shadowObj2 = interShadow.getShadowObj(shadowObj1);
+        if (shadowObj2)
+          shadowSel.push(shadowObj2);
+      }
+      chemEditors[1].setSelection(shadowSel);
+    }
+    function syncSelToSource()
+    {
+      var shadowSel = chemEditors[1].getSelection();
+      var srcSel = [];
+      var shadowMol = getShadowMol();
+      var srcMol = getSrcMol();
+      for (var i = 0, l = shadowSel.length; i < l; ++i)
+      {
+        var shadowObj2 = shadowSel[i];
+        var shadowObj1 = interShadow.getSourceObj(shadowObj2);
+        var srcObj = srcMol.getFlattenedShadowSourceObj(shadowObj1);
+        if (srcObj)
+          srcSel.push(srcObj);
+      }
+      chemEditors[0].setSelection(srcSel);
+    }
+
+    function init()
+    {
+      for (var i = 0; i < 2; ++i)
+      {
+        var chemComposer = Kekule.Widget.getWidgetById('chemComposer' + i);
+        var chemEditor = chemComposer.getEditor();
+        chemEditor.setAllowCreateNewChild(false);
+        chemEditors[i] = chemEditor;
+        chemComposers[i] = chemComposer;
+      }
+
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+
+      Kekule.Widget.getWidgetById('btnGetShadow').on('execute', syncShadow);
+      Kekule.Widget.getWidgetById('btnSyncSelToShadow').on('execute', syncSelToShadow);
+      Kekule.Widget.getWidgetById('btnSyncSelToSource').on('execute', syncSelToSource);
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<div>
+  <div data-widget="Kekule.Widget.ButtonGroup">
+    <button id="btnGetShadow" data-widget="Kekule.Widget.Button">Get shadow</button>
+    <button id="btnSyncSelToShadow" data-widget="Kekule.Widget.Button">Sync selection to shadow</button>
+    <button id="btnSyncSelToSource" data-widget="Kekule.Widget.Button">Sync selection to source</button>
+  </div>
+</div>
+<div id="chemComposer0" data-widget="Kekule.Editor.Composer" style="width:800px;height:600px"></div>
+<div id="chemComposer1" data-widget="Kekule.Editor.Composer" style="width:800px;height:600px"></div>
+</body>
+</html>

@@ -131,4 +131,6 @@ describe('Test of finding stereo center in molecule', function()
 	none("N(S)(=S)(C)CC", 'stereoTest/stereoCenterN31.mol');
 	none("N([SeH])(=[Se])(C)C", 'stereoTest/stereoCenterN32.mol');
 	none("N([TeH])(=[Te])(C)C", 'stereoTest/stereoCenterN33.mol');
+
+	testStereoCenter("Molecule with subgroup", 'json/FischerProjection1.kcj', 1);
 });

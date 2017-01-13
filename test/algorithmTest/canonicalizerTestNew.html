@@ -27,7 +27,7 @@
 			var c = new Kekule.MorganCanonicalizationExecutor();
 			c.execute(mol.getCtab());
 			*/
-			Kekule.canonicalizer.canonicalize(mol);
+			Kekule.canonicalizer.canonicalize(mol/*, 'morgan'*/);
 			// set mark
 			for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
 			{

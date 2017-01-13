@@ -12,6 +12,7 @@ describe('Test of sub structure search', function(){
 		'cisDiene', 'transDiene',
 		'cisDiMeHexane', 'transDiMeHexane1', 'transDiMeHexane2',
 		'cisDiEtHexane', 'transDiEtHexane1', 'transDiEtHexane2',
+		'subgroup1',
 		'github112_qry', 'github112_tgt'
 	];
 	beforeAll(function(done){   // load all essential molecules
@@ -143,4 +144,33 @@ describe('Test of sub structure search', function(){
 			{'level': Kekule.StructureComparationLevel.CONFIGURATION},
 			[false, true]
 	);
+
+	testSearch('Search on molecule with subgroup-1',
+			'benzene',
+			['subgroup1'],
+			{'level': Kekule.StructureComparationLevel.CONFIGURATION},
+			[true]
+	);
+
+	testSearch('Search on molecule with subgroup-2',
+			'PhEt',
+			['subgroup1'],
+			{'level': Kekule.StructureComparationLevel.CONFIGURATION},
+			[true]
+	);
+
+	testSearch('Search on molecule with subgroup-3',
+			'iPrPh',
+			['subgroup1'],
+			{'level': Kekule.StructureComparationLevel.CONFIGURATION},
+			[true]
+	);
+
+	testSearch('Search on molecule with subgroup-3',
+			'transDiene',
+			['subgroup1'],
+			{'level': Kekule.StructureComparationLevel.CONFIGURATION},
+			[false]
+	);
+
 });

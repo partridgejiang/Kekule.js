@@ -1903,7 +1903,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
 			var obj = this.getTargetObj();
 			var srcInfo = this.getChemObjSrcInfo(obj);
-			if (srcInfo && srcInfo.format === formatId)  // can use src data
+			if (srcInfo && srcInfo.format === formatId && srcInfo.data)  // can use src data
 			{
 				textArea.setValue(srcInfo.data);
 				this.setCurrSaveData(srcInfo.data);

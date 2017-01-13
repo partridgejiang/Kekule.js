@@ -52,6 +52,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	UNABLE_ADD_DIFF_OWNER_OBJ: 'Object with different owner can not be linked to connector',
 	CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH: 'Mismatched group item class',
 	SORT_FUNC_UNSET: 'Sort function is not set',
+	SOURCE_FRAGMENT_NOT_SET: 'Source structure fragment not set',
 
 	// core/kekule.reactions.js
 	UNABLE_ADD_NONMOLECULE_MAP: 'Unable to add non-molecule to reactants or products',

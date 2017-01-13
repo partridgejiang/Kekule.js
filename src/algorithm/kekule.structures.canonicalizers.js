@@ -136,6 +136,39 @@ Kekule.CanonicalizationConnectorSorter = Class.create(ObjectEx,
 });
 
 /**
+ * An abstract class to sort connected objects of each connector according to sorted nodes.
+ * @class
+ */
+Kekule.CanonicalizationConnectorConnectedObjsSorter = Class.create(ObjectEx,
+/** @lends Kekule.CanonicalizationConnectorConnectedObjsSorter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.CanonicalizationConnectorConnectedObjsSorter',
+	/**
+	 * Execute and sort connectors according connected nodes.
+	 * @param {Variant} ctabOrStructFragment
+	 */
+	execute: function(ctabOrStructFragment)
+	{
+		var ctab = (ctabOrStructFragment instanceof Kekule.StructureFragment)?
+				ctabOrStructFragment.getCtab(): ctabOrStructFragment;
+		if (ctab)
+			return this.doExecute(ctab, ctab.getConnectors());
+		else
+			return null;
+	},
+	/**
+	 * Do actual job of connector sorting.
+	 * Descendants should override this method.
+	 * @param {Kekule.StructureConnectionTable} ctab
+	 */
+	doExecute: function(ctab)
+	{
+		// do nothing here
+	}
+});
+
+/**
  * Base class for do a custom molecule canonicalization job (do not use indexer, node or connector sorter).
  * @class
  */
@@ -173,6 +206,7 @@ Kekule.CanonicalizationCustomExecutor = Class.create(ObjectEx,
 	{
 		if (!ctab)
 			return;
+		/*
 		var sortFunc = function(a, b)
 		{
 			var indexA = ctab.indexOfChild(a);
@@ -185,6 +219,9 @@ Kekule.CanonicalizationCustomExecutor = Class.create(ObjectEx,
 			var connObjs = conn.getConnectedObjs();
 			connObjs.sort(sortFunc);
 		}
+		*/
+		var connObjsSorter = new Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter();
+		connObjsSorter.execute(ctab);
 	}
 });
 
@@ -236,7 +273,9 @@ Kekule.CanonicalizationGeneralConnectorSorter = Class.create(Kekule.Canonicaliza
 					result = -(c1.getConnectedObjCount() - c2.getConnectedObjCount());
 				return result;
 			});
+			/*
 			// sort connected objs in connectors
+			// Now this job is moved to CanonicalizationGeneralConnectorConnectedObjsSorter
 			for (var i = 0, l = ctab.getConnectorCount(); i < l; ++i)
 			{
 				var conn = ctab.getConnectorAt(i);
@@ -251,6 +290,70 @@ Kekule.CanonicalizationGeneralConnectorSorter = Class.create(Kekule.Canonicaliza
 					conn.sortConnectedObjs(function(o1, o2){
 						return ctab.indexOfChild(o1) - ctab.indexOfChild(o2);
 					});
+			}
+			*/
+		}
+		finally
+		{
+			connectedNodeSeqMap.finalize();
+		}
+	}
+});
+
+/**
+ * An general sorter class to sort connected objects of each connector according to sorted nodes.
+ * @arguments Kekule.CanonicalizationConnectorConnectedObjsSorter
+ * @class
+ */
+Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter = Class.create(Kekule.CanonicalizationConnectorConnectedObjsSorter,
+/** @lends Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter',
+	/** @ignore */
+	doExecute: function(ctab)
+	{
+		var connectedNodeSeqMap = new Kekule.MapEx();
+		try
+		{
+			// sort connected objs in connectors
+			for (var i = 0, l = ctab.getConnectorCount(); i < l; ++i)
+			{
+				var conn = ctab.getConnectorAt(i);
+				if (conn.getConnectedObjCount() === 2)  // usual connector, connect with two nodes
+				{
+					var o1 = conn.getConnectedObjAt(0);
+					var o2 = conn.getConnectedObjAt(1);
+					var cIndex1 = ctab.indexOfChild(o1);
+					var cIndex2 = ctab.indexOfChild(o2);
+					// if o1 or o2 is outside ctab (may ocurr in crossConnector of subgroup,
+					// this approach will compare their canonicalization index (the order in shadow flattern structure).
+					if (cIndex1 < 0 || cIndex2 < 0)
+					{
+						cIndex1 = (o1.getCanonicalizationIndex? -o1.getCanonicalizationIndex(): 0) || 0;
+						cIndex2 = (o2.getCanonicalizationIndex? -o2.getCanonicalizationIndex(): 0) || 0;
+					}
+					if (cIndex1 > cIndex2) // swap two nodes, may reverse wedge direction also
+					{
+						conn.reverseConnectedObjOrder();
+					}
+				}
+				else
+				{
+					conn.sortConnectedObjs(function(o1, o2)
+					{
+						var cIndex1 = ctab.indexOfChild(o1);
+						var cIndex2 = ctab.indexOfChild(o2);
+						if (cIndex1 < 0 || cIndex2 < 0)  // same index, may be all -1, o1, o2 outside subgroup, compare their canonicalization index
+						{
+							cIndex1 = (o1.getCanonicalizationIndex ? -o1.getCanonicalizationIndex() : 0) || 0;
+							cIndex2 = (o2.getCanonicalizationIndex ? -o2.getCanonicalizationIndex() : 0) || 0;
+							result = (cIndex1 || 0) - (cIndex2 || 0);
+						}
+						var result = ctab.indexOfChild(o1) - ctab.indexOfChild(o2);
+						return result;
+					});
+				}
 			}
 		}
 		finally
@@ -276,6 +379,13 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 	/** @ignore */
 	doExecute: function(ctab)
 	{
+		// clear old indexes
+		/*
+		for (var i = 0, l = ctab.getNodeCount(); i < l; ++i)
+		{
+			ctab.getNodeAt(i).setCanonicalizationIndex(null);
+		}
+		*/
 		// turn ctab into pure graph first (with sub structure degrouped)
 		var graph = Kekule.GraphAdaptUtils.ctabToGraph(ctab, null, {'expandSubStructures': true, ignoreBondedHydrogen: true});
 		if (!graph)
@@ -312,7 +422,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		}
 		*/
 		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping);
-
 		// at last assign indexes
 		this._setCanonicalizationIndexToNodeGroups(sortedNodes);
 	},
@@ -348,11 +457,15 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			{
 				for (var j = 0, k = item.length; j < k; ++j)
 				{
+					//console.log('set cano index', item[j].getSymbol(), vIndex, j, k);
 					item[j].setCanonicalizationIndex(vIndex);
 				}
 			}
 			else
+			{
+				//console.log('set cano index', item.getSymbol(), vIndex);
 				item.setCanonicalizationIndex(vIndex);
+			}
 		}
 	},
 
@@ -482,7 +595,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				vertexesCount: vs.length
 			});
 		}
-		//console.log(result);
 		return result;
 	},
 	/** @private */
@@ -553,6 +665,7 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 	{
 		var sortedNodes = this._getNodeSortedArray(ctab);
 		var sortedNodesLength = sortedNodes.length;
+		var self = this;
 		ctab.sortNodes(function(a, b){
 			var indexA = sortedNodes.indexOf(a);
 			var indexB = sortedNodes.indexOf(b);
@@ -561,31 +674,110 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				indexA = sortedNodesLength;
 			if (indexB < 0)
 				indexB = sortedNodesLength;
-			return indexA - indexB;
+			var result = indexA - indexB;
+			if (result === 0 && indexA === sortedNodesLength)  // H hydrogen, need compare
+			{
+				result = self._getNeighborNodesMinIndex(a, sortedNodes) - self._getNeighborNodesMinIndex(b, sortedNodes);
+			}
+			return result;
 		});
+	},
+	/** @private */
+	_getNeighborNodesMinIndex: function(node, sortedNodes)
+	{
+		var neighbors = node.getLinkedChemNodes();
+		var result = sortedNodes.length;
+		for (var i = 0, l = neighbors.length; i < l; ++i)
+		{
+			var index = sortedNodes.indexOf(neighbors[i]);
+			if (index > 0 && index < result)
+				result = index;
+		}
+		return result;
 	},
 	/** @private */
 	_getNodeSortedArray: function(ctab)
 	{
 		var result = [];
+		/*
 		var nodeSeq = AU.clone(ctab.getNodes());
 		nodeSeq.sort(function(a, b){
 			return ((a.getCanonicalizationIndex() || -1) - (b.getCanonicalizationIndex() || -1));
 		});
+		*/
+		/*
 		var sortFunc = function(n1, n2)
 		{
 			return nodeSeq.indexOf(n1) - nodeSeq.indexOf(n2);
 		};
-		var nodeIndexMap = new Kekule.MapEx();
+		*/
+		var nodeCompareFunc = function(startingNode, n1, n2)
+		{
+			var result;
+			var cIndex1 = n1.getCanonicalizationIndex();
+			var cIndex2 = n2.getCanonicalizationIndex();
+			// console.log('INDEX', n1.getSymbol(), cIndex1, n2.getSymbol(), cIndex2);
+			result = (cIndex1 || -1) - (cIndex2 || -1);
+
+			if (result === 0)  // canonicalization index is same, compare connector\
+			{
+				if (startingNode)
+				{
+					var connector1 = startingNode.getConnectorTo(n1);
+					var connector2 = startingNode.getConnectorTo(n2);
+					result = Kekule.UnivChemStructObjComparer.compare(connector1, connector2);
+				}
+				if (result === 0) // still same, compare coord if possible
+				{
+					if (n1.hasCoord3D(true) && n2.hasCoord3D(true))  // allow borrow from 2D
+					{
+						var deltaCoord = Kekule.CoordUtils.substract(n1.getAbsCoord3D(true), n2.getAbsCoord3D(true));
+						result = deltaCoord.z || deltaCoord.y || deltaCoord.x;
+					}
+				}
+			}
+			return result;
+		};
+		//var nodeIndexMap = new Kekule.MapEx();
 		try
 		{
-			var remainingNodes = AU.clone(nodeSeq);
+			//var remainingNodes = AU.clone(nodeSeq);
+			var remainingNodes = AU.clone(ctab.getNodes());
+			/*
+			remainingNodes.forEach(function(n) {
+				console.log('node', n.getSymbol(), n.getCanonicalizationIndex());
+			});
+			*/
+			// first seek out the starting node with highest canonicalization index
+			var currNode, currNodeIndex;
+			for (var i = 0, l = remainingNodes.length; i < l; ++i)
+			{
+				var node = remainingNodes[i];
+				if (!currNode)
+				{
+					currNode = node;
+					currNodeIndex = i;
+				}
+				else
+				{
+					if (nodeCompareFunc(null, node, currNode) > 0)
+					{
+						currNode = node;
+						currNodeIndex = i;
+					}
+				}
+			}
+
+			//console.log('starting node', currNode.getSymbol(), i);
+
+			//var currNode = nodeSeq[nodeSeq.length - 1];
+			//remainingNodes.splice(nodeSeq.length - 1, 1);
+			remainingNodes.splice(currNodeIndex, 1);
 			var sortedNodes = [];
-			var currNode = nodeSeq[nodeSeq.length - 1];
+			var sortedUnindexedNodes = [];  // sorted hydrogen atom that has no cannonicalization index
 
 			sortedNodes.push(currNode);
-			nodeIndexMap.set(currNode, 0);
-			remainingNodes.splice(nodeSeq.length - 1, 1);
+			//nodeIndexMap.set(currNode, 0);
 
 			for (var i = 0; i < sortedNodes.length; ++i)
 			{
@@ -596,7 +788,7 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 					if (vIndex >= 0)
 					{
 						sortedNodes.push(currNode);
-						nodeIndexMap.set(currNode, sortedNodes.length - 1);
+						//nodeIndexMap.set(currNode, sortedNodes.length - 1);
 						remainingNodes.splice(vIndex, 1);
 					}
 				}
@@ -604,26 +796,36 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				neighbors = AU.intersect(neighbors, remainingNodes);
 				if (neighbors.length)
 				{
-					neighbors.sort(sortFunc);
+					//neighbors.sort(sortFunc);
+					neighbors.sort(function(a, b){
+						var startingNode = currNode;
+						return nodeCompareFunc(startingNode, a, b);
+					});
 					for (var j = neighbors.length - 1; j >= 0; --j)
 					{
 						var neighbor = neighbors[j];
 						vIndex = remainingNodes.indexOf(neighbor);
 						if (vIndex >= 0)
 						{
-							sortedNodes.push(neighbor);
-							nodeIndexMap.set(neighbors[j], sortedNodes.length - 1);
+							var canoIndex = neighbor.getCanonicalizationIndex();
+							if (Kekule.ObjUtils.isUnset(canoIndex))
+								sortedUnindexedNodes.push(neighbor);
+							else
+								sortedNodes.push(neighbor);
+							//nodeIndexMap.set(neighbors[j], sortedNodes.length - 1);
 							remainingNodes.splice(vIndex, 1);
 						}
 					}
 				}
 			}
 
+			sortedNodes = sortedNodes.concat(sortedUnindexedNodes);
+
 			return sortedNodes;
 		}
 		finally
 		{
-			nodeIndexMap.finalize();
+			//nodeIndexMap.finalize();
 		}
 	}
 });
@@ -660,7 +862,8 @@ Kekule.Canonicalizer = Class.create(
 			this._executorClasses[id] = {
 				'indexer': executorClasses[0],
 				'nodeSorter': executorClasses[1],
-				'connectorSorter': executorClasses[2] || Kekule.CanonicalizationGeneralConnectorSorter
+				'connectorSorter': executorClasses[2] || Kekule.CanonicalizationGeneralConnectorSorter,
+				'connectorConnectedObjsSorter': executorClasses[3] || Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter
 			};
 		}
 		else
@@ -692,7 +895,8 @@ Kekule.Canonicalizer = Class.create(
 					result = {
 						'indexer': new (eClasses.indexer)(),
 						'nodeSorter': new (eClasses.nodeSorter)(),
-						'connectorSorter': new (eClasses.connectorSorter)()
+						'connectorSorter': new (eClasses.connectorSorter)(),
+						'connectorConnectedObjsSorter': new (eClasses.connectorConnectedObjsSorter)()
 					};
 				}
 				this._executorInstances[id] = result;
@@ -725,14 +929,14 @@ Kekule.Canonicalizer = Class.create(
 					return structFragmentOrCtab;
 				}
 				var ctab = structFragmentOrCtab.getCtab? structFragmentOrCtab.getCtab(): structFragmentOrCtab;
+				if (!ctab)  // empty structure
+					return;
+				var structFragment = ctab.getParent();
 				if (executor.customExecutor)
 					executor.customExecutor.execute(ctab);
-				else
+				else  // use default approach
 				{
-					executor.indexer.execute(ctab);
-					//if ()
-					executor.nodeSorter.execute(ctab);
-					executor.connectorSorter.execute(ctab);
+					this._doDefaultCanonicalize(executor, ctab, structFragment);
 				}
 				struct.setCanonicalizationInfo({'id': id});  // save cano info
 			}
@@ -742,6 +946,154 @@ Kekule.Canonicalizer = Class.create(
 			structFragmentOrCtab.endUpdate();
 		}
 		return structFragmentOrCtab;
+	},
+	/**
+	 * Default approach to do canonicalization.
+	 * @private
+	 */
+	_doDefaultCanonicalize: function(executor, ctab, structFragment)
+	{
+		// ensure the canonicalization is executed on flattened structure (without subgroups)
+		var flatternedStruct = structFragment.getFlattenedShadowFragment();
+
+		/*
+		var data = Kekule.IO.saveFormatData(flatternedStruct, 'mol');
+		console.log('FLATTERN');
+		console.log(data);
+		*/
+		var ctab = flatternedStruct.getCtab();
+		ctab.beginUpdate();
+		try
+		{
+			executor.indexer.execute(ctab);
+			executor.nodeSorter.execute(ctab);
+			executor.connectorSorter.execute(ctab);
+			executor.connectorConnectedObjsSorter.execute(ctab);
+		}
+		finally
+		{
+			ctab.endUpdate();
+		}
+
+		// if structFragment has subgroup (flattenedShadow not self), handle it
+		if (!structFragment.getFlattenedShadowOnSelf())
+		{
+			structFragment.beginUpdate();
+			try
+			{
+				// now the flatterned structure is canonicalization, we index the original structure based on it
+				this._sortSrcStructBaseOnShadow(structFragment, flatternedStruct/*, structFragment.getFlattenedShadow()*/);
+				// at last sort connected objs of each connector
+				executor.connectorConnectedObjsSorter.execute(structFragment.getCtab());
+			}
+			finally
+			{
+				structFragment.endUpdate();
+			}
+		}
+	},
+	/** @private */
+	_sortSrcStructBaseOnShadow: function(srcStruct, shadowStruct/*, shadowInfo*/)
+	{
+		var FLATTERN_INDEX_KEY = '__$flattern_index$__';
+		var getFlatternIndex = function(obj)
+		{
+			return obj[FLATTERN_INDEX_KEY];
+		};
+		var setFlatternIndex = function(obj, value)
+		{
+			obj[FLATTERN_INDEX_KEY] = value;
+		};
+		var _setSrcNodeFlatternIndex = function(rootStruct, node, index, allChildrenCount)
+		{
+			//node.setCanonicalizationIndex(index);
+			setFlatternIndex(node, index);
+			// if node is in a subgroup, set index of its parent
+			var parent = node.getParent();
+			if (parent.isChildOf(srcStruct))
+			{
+				//var pIndex = parent.getCanonicalizationIndex();
+				var pIndex = getFlatternIndex(parent);
+				var newPIndex = index + allChildrenCount;  // ensure subgroup sort after all single nodes
+				if (Kekule.ObjUtils.isUnset(pIndex) || pIndex > newPIndex)
+				{
+					//parent.setCanonicalizationIndex(newPIndex);
+					_setSrcNodeFlatternIndex(rootStruct, parent, newPIndex, allChildrenCount);
+				}
+			}
+		};
+		var _sortSrcStructure = function(struct)
+		{
+			struct.beginUpdate();
+			try
+			{
+				// sort first level children
+				struct.sortNodes(function(a, b)
+				{
+					//return a.getCanonicalizationIndex() - b.getCanonicalizationIndex();
+					return getFlatternIndex(a) - getFlatternIndex(b);
+				});
+				struct.sortConnectors(function(a, b)
+				{
+					return getFlatternIndex(a) - getFlatternIndex(b);
+				});
+				// then handle nested subgroups
+				for (var i = 0, l = struct.getNodeCount(); i < l; ++i)
+				{
+					var node = struct.getNodeAt(i);
+					if (node instanceof Kekule.StructureFragment) // is subgroup, sort
+						_sortSrcStructure(node);
+				}
+			}
+			finally
+			{
+				struct.endUpdate();
+			}
+		};
+
+		// first save index of each flattern shadow / source children (nodes and connectors)
+		srcStruct.cascadeOnChildren(function(obj){
+			/*
+			if (obj.setCanonicalizationIndex)
+				obj.setCanonicalizationIndex(null);
+			*/
+			if (obj)
+				setFlatternIndex(obj, null);
+		});
+		// the subgroup canonicalization index is calculated based on its own child nodes
+		var shadowChildCount = shadowStruct.getChildCount();
+		srcStruct.beginUpdate();
+		try
+		{
+			for (var i = 0; i < shadowChildCount; ++i)
+			{
+				var childObj = shadowStruct.getChildAt(i);
+				if (childObj instanceof Kekule.ChemStructureNode)
+				{
+					var shadowNode = childObj;
+					var srcNode = srcStruct.getFlatternedShadowSourceObj(shadowNode);
+					if (srcNode)
+					{
+						_setSrcNodeFlatternIndex(srcStruct, srcNode, i, shadowChildCount);
+						srcNode.setCanonicalizationIndex(shadowNode.getCanonicalizationIndex());
+					}
+				}
+				else if (childObj instanceof Kekule.ChemStructureConnector)
+				{
+					var shadowConn = childObj;
+					var srcConn = srcStruct.getFlatternedShadowSourceObj(shadowConn);
+					//srcConn.setCanonicalizationIndex(i);
+					setFlatternIndex(srcConn, i);
+				}
+			}
+
+			// then sort source struct cascadlly
+			_sortSrcStructure(srcStruct);
+		}
+		finally
+		{
+			srcStruct.endUpdate();
+		}
 	}
 });
 Kekule.ClassUtils.makeSingleton(Kekule.Canonicalizer);

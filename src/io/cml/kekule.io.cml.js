@@ -19,6 +19,14 @@
  */
 
 /**
+ * Default options to read/write CML format data.
+ * @object
+ */
+Kekule.globalOptions.IO.cml = {
+	prettyPrint: true
+};
+
+/**
  * Defines some constants about CML.
  * @class
  * @private
@@ -31,7 +39,7 @@ Kekule.IO.CML = {
 	TYPED_ARRAY_ELEM_NAMES: ['stringArray', 'integerArray', 'floatArray'],
 	ATOMS_REF_ATTRIBS: ['atomRef', 'atomRefs2', 'atomRefs3', 'atomRefs4', 'atomRefs', 'atomRefArray'],
 	BONDS_REF_ATTRIBS: ['bondRef', 'bondRefs', 'bondRefArray']
-}
+};
 Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
 	Kekule.IO.CML.CML2CORE_NAMESPACE_URI,
 	Kekule.IO.CML.CML3_SCHEMA_NAMESPACE_URI
@@ -3715,7 +3723,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.cml.prettyPrint: op.prettyPrint);
 	},
 	/** @private */
 	initProperties: function()

@@ -93,6 +93,33 @@ describe('Test of finding all rings in molecule', function(){
 		});
 	});
 
+	it('Test on external data: molecule with subgroups - PhCOOH', function(done){
+		MB.loadExternalData('json/PhCOOH.kcj', function(mol){
+			expect(mol).not.toBeNull();
+			var rings = mol.findAllRings();
+			expect(rings.length).toEqual(1);
+			done();
+		});
+	});
+
+	it('Test on external data: molecule with subgroups - Custom', function(done){
+		MB.loadExternalData('json/DoubleRingInSubgroup.kcj', function(mol){
+			expect(mol).not.toBeNull();
+			var rings = mol.findAllRings();
+			expect(rings.length).toEqual(4);
+			done();
+		});
+	});
+
+	it('Test on external data: molecule with nested subgroups', function(done){
+		MB.loadExternalData('json/NestedSubgroup.kcj', function(mol){
+			expect(mol).not.toBeNull();
+			var rings = mol.findAllRings();
+			expect(rings.length).toEqual(5);
+			done();
+		});
+	});
+
 	// TODO: ring too large
 	/*
 	xit('Test on external data: Big ring system test, certain size ring count 2', function(done){

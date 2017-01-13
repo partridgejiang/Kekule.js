@@ -13,6 +13,14 @@
  */
 
 /**
+ * Default options to read/write KCJ/KCX/JSON/XML format data.
+ * @object
+ */
+Kekule.globalOptions.IO.kekuleNative = {
+	prettyPrint: true
+};
+
+/**
  * Reader for KCJ JSON data.
  * Use KcjReader.readData() can retrieve a suitable Kekule object.
  * Data fetch in should be a string or a JSON.
@@ -69,7 +77,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 	},
 	/** @private */
 	initProperties: function()
@@ -171,7 +179,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 		this.setRootTag(op.rootTag || 'kcx');
 	},
 	/** @private */

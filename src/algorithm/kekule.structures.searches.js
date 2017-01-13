@@ -19,6 +19,14 @@ var AU = Kekule.ArrayUtils;
 var SC = Kekule.UnivChemStructObjComparer;
 
 /**
+ * Default options to do sub structure search.
+ * @object
+ */
+Kekule.globalOptions.structureSearch = {
+	doStandardize: true
+};
+
+/**
  * A util class to search sub structures in ctab based molecule.
  * @class
  */
@@ -51,7 +59,7 @@ Kekule.ChemStructureSearcher = {
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
 		// TODO: configuration search need to be rechecked
-		var op = Object.extend({doStandardize: true}, options);
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.structureSearch), options);
 
 		if (op.exactMatch)
 		{
@@ -89,21 +97,30 @@ Kekule.ChemStructureSearcher = {
 		var objCompareOptions = op;
 
 		// standardize structures first, perceive aromatic rings
+		//console.log(op);
 		if (op.doStandardize)
 		{
 			var standardizeOps = {
-				unmarshalSubFragments: true,
+				unmarshalSubFragments: !true,
 				doCanonicalization: true,
 				doAromaticPerception: true
 			};
 			if (!op.compareStereo)  // do not need perceive stereo
-				op.doCanonicalization = false;
+				standardizeOps.doCanonicalization = false;
+			// here we ensure two structures are standardized (with their flattened shadows).
 			subStructure.standardize(standardizeOps);
 			sourceMol.standardize(standardizeOps);
 		}
+		var flattenedSrcMol = sourceMol.getFlattenedShadowFragment(true);
+		var flattenedSubStruct = subStructure.getFlattenedShadowFragment(true);
 
+		/*
 		var targetStartingNode = subStructure.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
 		var srcNodes = sourceMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+		*/
+		var targetStartingNode = flattenedSubStruct.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
+		var srcNodes = flattenedSrcMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+
 		var srcNodeCount = srcNodes.length;
 		var srcIndex = 0;
 
@@ -124,7 +141,10 @@ Kekule.ChemStructureSearcher = {
 			return false;
 		else
 		{
-			return AU.toUnique(compareResult);
+			var matchedObjs = AU.toUnique(compareResult);
+			// map back to original structure
+			var result = sourceMol.getFlatternedShadowSourceObjs(matchedObjs);
+			return result;
 		}
 	},
 

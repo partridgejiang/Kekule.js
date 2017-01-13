@@ -188,6 +188,15 @@ Kekule.hasLocalRes = function()
 };
 
 /**
+ * An root object to store default options for many operations (e.g., ring search, stereo perception).
+ * User can modify concrete options to change the default action of some functions.
+ * @object
+ */
+Kekule.globalOptions = {
+
+};
+
+/**
  * A class to implement str => variant mapping.
  * @class
  */
@@ -1642,11 +1651,11 @@ Kekule.ChemObject = Class.create(ObjectEx,
 
 		// react on change (both on self and children)
 		// when object is modified,clear srcInfo information
-		/*
+
 		this.addEventListener('change', function(e)
 		{
 			var srcInfo = this.getPropStoreFieldValue('srcInfo');
-			if (srcInfo)
+			if (srcInfo && srcInfo.data)
 			{
 				var target = e.target;
 				var propNames = e.changedPropNames;
@@ -1654,7 +1663,12 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				for (var i = 0, l = propNames.length; i < l; ++i)
 				{
 					var name = propNames[i];
-					if (name !== 'srcInfo' && target.isPropertySerializable(name))
+					if (name && name !== 'srcInfo' && target.isPropertySerializable(name))
+					{
+						clearSrcInfo = true;
+						break;
+					}
+					else if (name === '[children]') // special prop name indicating children has been changed
 					{
 						clearSrcInfo = true;
 						break;
@@ -1662,12 +1676,13 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				}
 				if (clearSrcInfo)
 				{
-					this.setPropStoreFieldValue('srcInfo', undefined);
-					console.log('clear src info', propNames);
+					//this.setPropStoreFieldValue('srcInfo', undefined);
+					//console.log('clear src info', propNames);
+					srcInfo.data = null;
 				}
 			}
 		}, this);
-		*/
+
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -1892,6 +1907,36 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		return -1;
 	},
+	/**
+	 * Run a cascade function on all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascadeOnChildren: function(func)
+	{
+		if (!func)
+			return this;
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var obj = this.getChildAt(i);
+			if (obj.cascadeOnChildren)
+				obj.cascadeOnChildren(func);
+			func(obj);
+		}
+		return this;
+	},
+	/**
+	 * Run a cascade function on self and all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascade: function(func)
+	{
+		if (!func)
+			return this;
+		this.cascadeOnChildren(func);
+		func(this);
+		return this;
+
+	},
 
 	/**
 	 * Check if this object contains no data.
@@ -1908,7 +1953,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	clearIds: function()
 	{
-		this.setId(null);
+		this.setId(undefined);
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
 		{
 			var child = this.getChildAt(i);
