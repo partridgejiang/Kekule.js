@@ -4184,10 +4184,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	/* @private */
-	_calcActualRotateAngle: function(objs, newAngle)
+	_calcActualRotateAngle: function(objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
 	{
-		return newAngle;
+		return newDeltaAngle;
 	},
 
 	/** @private */
@@ -4233,7 +4232,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			vector = C.substract(startCoord, rotateCenter);
 			var startAngle = Math.atan2(vector.y, vector.x);
 			angle = endAngle - startAngle;
-			angle = this._calcActualRotateAngle(manipulatingObjs, angle);
+			angle = this._calcActualRotateAngle(manipulatingObjs, angle, startAngle, endAngle);
 		}
 
 		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({

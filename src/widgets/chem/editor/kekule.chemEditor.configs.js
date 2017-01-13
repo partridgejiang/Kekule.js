@@ -109,6 +109,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 	/** @private */
 	initProperties: function()
 	{
+		var degreeStep = Math.PI / 180;
+
 		this.addBoolConfigProp('enableTrackOnNearest', true);
 
 		this.addBoolConfigProp('enableHotTrack', true);
@@ -117,7 +119,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('selectionMarkerInflation', 5, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('selectionMarkerEdgeInflation', 5, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('rotationRegionInflation', 10, {'scope': PS.PUBLIC});
-		this.addFloatConfigProp('constrainedRotateStep', Math.PI / 18 * 1.5, {'scope': PS.PUBLIC});  // 15 degree
+		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15, {'scope': PS.PUBLIC});  // 15 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
 
@@ -186,6 +188,8 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  *     angles[bondOrder1][0] = [defaultAngle];
  *     angles[bondOrder1][bondOrder2] = [angle of two bonds];
  * @property {Float} bondConstrainedDirectionDelta When moving bond, the bond angle will be changed in n*delta in constrained mode.
+ * @property {Array} bondConstrainedDirectionAngles When moving bond, besides bondConstrainedDirectionDelta, bond angle can also be "docked" to these values.
+ * @property {Float} bondConstrainedDirectionAngleThreshold
  * @property {Float} initialBondDirection When create a brand new bond (without any existed bond connected), which direction should the bond be.
  * @property {String} defIsotopeId Default isotope of atom.
  * @property {Array} primaryOrgChemAtoms Atom symbols of most often seen in organic chemistry.
@@ -210,6 +214,8 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('defBondLength', 0.8);
 		this.addConfigProp('defBondAngles', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addFloatConfigProp('bondConstrainedDirectionDelta', undefined, {'scope': PS.PUBLIC});
+		this.addConfigProp('bondConstrainedDirectionAngles', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
+		this.addFloatConfigProp('bondConstrainedDirectionAngleThreshold', undefined, {'scope': PS.PUBLIC});
 		this.addFloatConfigProp('initialBondDirection', undefined, {'scope': PS.PUBLIC});
 		this.addStrConfigProp('defIsotopeId', 'C');
 		this.addConfigProp('primaryOrgChemAtoms', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
@@ -218,6 +224,9 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 	initPropValues: function($super)
 	{
 		$super();
+
+		var degreeStep = Math.PI / 180;
+
 		// init defBondAngles array
 		var angles = [];
 		var BO = Kekule.BondOrder;
@@ -231,7 +240,12 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.setDefBondAngles(angles);
 		this.setBondConstrainedDirectionDelta(10 * Math.PI / 180);
-		this.setInitialBondDirection(30 * Math.PI / 180);
+		this.setBondConstrainedDirectionAngles(/*[
+			0, degreeStep * 30, degreeStep * 60, degreeStep * 90, degreeStep * 120, degreeStep * 150, degreeStep * 180,
+			degreeStep * 210, degreeStep * 240, degreeStep * 270, degreeStep * 300, degreeStep * 330
+		]*/[0, 90 * degreeStep, 180 * degreeStep, 270 * degreeStep]);
+		this.setBondConstrainedDirectionAngleThreshold(degreeStep * 3);
+		this.setInitialBondDirection(30 * degreeStep);
 
 		this.setPrimaryOrgChemAtoms(['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I']);
 	},

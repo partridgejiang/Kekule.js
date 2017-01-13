@@ -1028,6 +1028,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					info.originBondDirectionAngle = Math.atan2(delta.y, delta.x);
 					//console.log('create Info', info.screenCoord, info.refScreenCoord, info.connectorScreenLength);
 					info.constrainedBondDirectionDelta = this.getEditorConfigs().getStructureConfigs().getBondConstrainedDirectionDelta();
+					info.constrainedBondDirectionAngles = this.getEditorConfigs().getStructureConfigs().getBondConstrainedDirectionAngles();
+					info.constrainedBondDirectionAngleThreshold = this.getEditorConfigs().getStructureConfigs().getBondConstrainedDirectionAngleThreshold();
 				}
 			}
 		}
@@ -1042,16 +1044,35 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		if (info.isConstrained && (!this._suppressConstrainedMoving))  // constrained, need to reserve bond length, recalc coord
 		{
 			var constrainedBondDirectionDelta = info.constrainedBondDirectionDelta || null;
+			var constrainedBondDirectionAngles = info.constrainedBondDirectionAngles || null;
+			var constrainedBondDirectionAngleThreshold = info.constrainedBondDirectionAngleThreshold || null;
+			var directionAngleResolved = false;
 			var directionAngle;
 			var currVector = C.substract(newScreenCoord, info.refScreenCoord);
 			var currDirection = Math.atan2(currVector.y, currVector.x);
-			if (constrainedBondDirectionDelta)
+
+			if (constrainedBondDirectionAngles && constrainedBondDirectionAngleThreshold)
+			{
+				for (var i = 0, l = constrainedBondDirectionAngles.length; i < l; ++i)
+				{
+					var dAngle = constrainedBondDirectionAngles[i];
+					if (Math.abs(dAngle - currDirection) <= constrainedBondDirectionAngleThreshold)
+					{
+						directionAngleResolved = true;
+						directionAngle = dAngle;
+					}
+				}
+			}
+
+			if (!directionAngleResolved && constrainedBondDirectionDelta)
 			{
 				var step = Math.round((currDirection - info.originBondDirectionAngle) / constrainedBondDirectionDelta);
 				//console.log()
 				directionAngle = info.originBondDirectionAngle + step * constrainedBondDirectionDelta;
+				directionAngleResolved = true;
 			}
-			else
+
+			if (!directionAngleResolved)
 				directionAngle = currDirection;
 
 			result = C.add(info.refScreenCoord,
@@ -1075,17 +1096,19 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		return result;
 	},
 	/** @private */
-	_calcActualRotateAngle: function($super, objs, newAngle)
+	_calcActualRotateAngle: function($super, objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
 	{
-		var angleStep = (this.isConstrainedRotate() && (!this._suppressConstrainedRotating))?
+		var isConstrained = (this.isConstrainedRotate() && (!this._suppressConstrainedRotating));
+		var angleStep = isConstrained?
 			this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep(): null;
+
 		if (angleStep)
 		{
-			var times = Math.floor(newAngle / angleStep);
+			var times = Math.floor(newDeltaAngle / angleStep);
 			return times * angleStep;
 		}
 		else
-			return $super(objs, newAngle);
+			return $super(objs, newDeltaAngle, oldAbsAngle, newAbsAngle);
 	},
 
 	/** @private */
