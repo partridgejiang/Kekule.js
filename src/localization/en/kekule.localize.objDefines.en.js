@@ -252,6 +252,8 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_styleSetterConfigs: 'Settings of style toolbar of editor'
 		},
 		InteractionConfigs: {
+			TITLE_enableTrackOnNearest: 'Enale track on nearest',
+			DES_enableTrackOnNearest: 'If setting to true, hot track or selection will focus on nearest object to current position, otherwise, the topmost object around will be focused.',
 			TITLE_enableHotTrack: 'Enable hot track',
 			DES_enableHotTrack: 'Whether highlighting objects under mouse position',
 			TITLE_objBoundTrackInflation: 'Object bound inflation',
