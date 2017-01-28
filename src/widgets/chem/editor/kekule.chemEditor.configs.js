@@ -240,10 +240,7 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.setDefBondAngles(angles);
 		this.setBondConstrainedDirectionDelta(10 * Math.PI / 180);
-		this.setBondConstrainedDirectionAngles(/*[
-			0, degreeStep * 30, degreeStep * 60, degreeStep * 90, degreeStep * 120, degreeStep * 150, degreeStep * 180,
-			degreeStep * 210, degreeStep * 240, degreeStep * 270, degreeStep * 300, degreeStep * 330
-		]*/[0, 90 * degreeStep, 180 * degreeStep, 270 * degreeStep]);
+		this.setBondConstrainedDirectionAngles([0, 90 * degreeStep, 180 * degreeStep, 270 * degreeStep]);
 		this.setBondConstrainedDirectionAngleThreshold(degreeStep * 3);
 		this.setInitialBondDirection(30 * degreeStep);
 
