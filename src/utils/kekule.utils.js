@@ -465,13 +465,40 @@ Kekule.ArrayUtils = {
 	 * If success, returns obj. If obj not in array, returns null.
 	 * @param {Array} targetArray
 	 * @param {Object} obj
+	 * @param {Bool} removeAll Whether all appearance of obj in array should be removed.
 	 * @returns {Object} Object removed or null.
 	 */
-	remove: function(targetArray, obj)
+	remove: function(targetArray, obj, removeAll)
 	{
 		var index = targetArray.indexOf(obj);
 		if (index >= 0)
-			return Kekule.ArrayUtils.removeAt(targetArray, index);
+		{
+			Kekule.ArrayUtils.removeAt(targetArray, index);
+			if (removeAll)
+				Kekule.ArrayUtils.remove(targetArray, obj, removeAll);
+			return obj;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Replace oldObj in array with newObj.
+	 * @param {Array} targetArray
+	 * @param {Variant} oldObj
+	 * @param {Variant} newObj
+	 * @param {Bool} replaceAll
+	 * @returns {Variant} Object replaced or null.
+	 */
+	replace: function(targetArray, oldObj, newObj, replaceAll)
+	{
+		var index = targetArray.indexOf(oldObj);
+		if (index >= 0)
+		{
+			targetArray[index] = newObj;
+			if (replaceAll)
+				Kekule.ArrayUtils.replace(targetArray, oldObj, newObj, replaceAll);
+			return oldObj;
+		}
 		else
 			return null;
 	},

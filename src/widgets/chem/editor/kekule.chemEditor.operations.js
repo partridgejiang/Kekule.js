@@ -837,6 +837,8 @@ Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMerge
 	// never allow merge to another molecule point (e.g. formula molecule) or subgroup
 	if ((target instanceof Kekule.StructureFragment) || (dest instanceof Kekule.StructureFragment))
 		return false;
+	if (!((target instanceof Kekule.ChemStructureNode) && (dest instanceof Kekule.ChemStructureNode)))
+		return false;
 	var targetFragment = target.getParent();
 	var destFragment = dest.getParent();
 	var result = (targetFragment === destFragment) || canMergeStructFragment;
