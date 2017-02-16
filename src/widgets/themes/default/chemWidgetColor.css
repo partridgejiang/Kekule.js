@@ -371,6 +371,28 @@
 {
     background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");
 }
+
+.K-Chem-RepositoryStructureFragmentIaController-Fischer1 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/fischer1.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-Fischer2 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/fischer2.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-Fischer3 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/fischer3.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-SawhorseStaggered > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/sawhorseStaggered.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-SawhorseEclipsed > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/sawhorseEclipsed.gif");
+}
+
 .K-Chem-MolNodeChargeIaController-Clear > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/chargeClear.gif");
@@ -427,6 +449,30 @@
 .K-Chem-MolRingIaController-Ar-5 > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/ringAr5.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclopentaneHaworth1 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclopentaneHaworth1.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclopentaneHaworth2 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclopentaneHaworth2.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclohexaneHaworth1 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclohexaneHaworth1.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclohexaneHaworth2 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclohexaneHaworth2.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclohexaneChair1 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclohexaneChair1.gif");
+}
+.K-Chem-RepositoryStructureFragmentIaController-CyclohexaneChair2 > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/cyclohexaneChair2.gif");
 }
 .K-Chem-ArrowLineIaController-Line > .K-Pri-Glyph-Content
 {

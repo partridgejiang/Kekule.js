@@ -968,6 +968,57 @@ Kekule.Editor.ActionComposerSetBondControllerDoubleEither = Kekule.Editor.create
 	}
 );
 
+Kekule.Editor.ActionComposerSetRepositoryFischer1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositoryFischer1Controller',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER1'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER1'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-Fischer1',
+		{
+			'repItemName': 'fischer1'
+		}
+);
+Kekule.Editor.ActionComposerSetRepositoryFischer2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositoryFischer2Controller',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER2'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER2'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-Fischer2',
+		{
+			'repItemName': 'fischer2'
+		}
+);
+Kekule.Editor.ActionComposerSetRepositoryFischer3Controller = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositoryFischer3Controller',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER3'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER3'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-Fischer3',
+		{
+			'repItemName': 'fischer3'
+		}
+);
+Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SAWHORSE_STAGGERED'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SAWHORSE_STAGGERED'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-SawhorseStaggered',
+		{
+			'repItemName': 'sawhorseStaggered'
+		}
+);
+Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SAWHORSE_ECLIPSED'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SAWHORSE_ECLIPSED'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-SawhorseEclipsed',
+		{
+			'repItemName': 'sawhorseEclipsed'
+		}
+);
+
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND'), //Kekule.ChemWidgetTexts.CAPTION_MOL_BOND,
@@ -983,7 +1034,12 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
-		Kekule.Editor.ActionComposerSetBondControllerDoubleEither
+		Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
+		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
+		Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController,
+		Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController
 	]
 	/*
 	 {
@@ -1245,19 +1301,66 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.creat
 	}
 );
 
-	// debug
-	/*
-	Kekule.Editor.ActionComposerSetRepositoryTBuController = Kekule.Editor.createComposerIaControllerActionClass(
-			'Kekule.Editor.ActionComposerSetRepositoryTBuController',
-			'tBu', //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
-			't-Bu', //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
-			'StoredStructureFragmentIaController',
-			'StoredStructureFragmentIaController-tBu',
-			{
-				'structData': '{"id":"m1","renderOptions":{"expanded":false,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":8.792444254557292,"y":35.52755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":9.485264577584852,"y":35.12755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":8.792444254557287,"y":36.32755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.485264577584843,"y":35.92755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,3]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}'
-			}
-	);
-	*/
+Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH1'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOPENTANE_HARWORTH1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclopentaneHaworth1',
+	{
+		'repItemName': 'cyclopentaneHaworth1'
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH2'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOPENTANE_HARWORTH2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclopentaneHaworth2',
+	{
+		'repItemName': 'cyclopentaneHaworth2'
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_HARWORTH1'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_HARWORTH1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneHaworth1',
+	{
+		'repItemName': 'cyclohexaneHaworth1'
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_HARWORTH2'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_HARWORTH2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneHaworth2',
+	{
+		'repItemName': 'cyclohexaneHaworth2'
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR1'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_CHAIR1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneChair1',
+	{
+		'repItemName': 'cyclohexaneChair1'
+	}
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR2'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_CHAIR2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneChair2',
+	{
+		'repItemName': 'cyclohexaneChair2'
+	}
+);
 
 Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingController',
@@ -1274,8 +1377,13 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller
-		//Kekule.Editor.ActionComposerSetRepositoryTBuController   // debug
+		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller
 	]
 );
 
