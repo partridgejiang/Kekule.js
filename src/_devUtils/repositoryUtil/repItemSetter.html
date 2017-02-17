@@ -103,6 +103,9 @@
       var repObj = getRepObject();
       var structData = Kekule.IO.saveFormatData(repObj, Kekule.IO.DataFormat.KEKULE_JSON);
       var obj = {};
+      var name = Kekule.Widget.getWidgetById('editName').getValue();
+      if (name)
+        obj.name = name;
       if (repObj instanceof Kekule.SubGroup)
       {
         var inputTexts = Kekule.Widget.getWidgetById('editInputTexts').getValue();
@@ -117,6 +120,8 @@
           Kekule.ArrayUtils.pushUnique(obj.inputTexts, repObj.getAbbr());
         if (repObj.getFormulaText())
           Kekule.ArrayUtils.pushUnique(obj.inputTexts, repObj.getFormulaText());
+        if (repObj.getName())
+          obj.name = repObj.getName();
       }
       obj.dataFormat = Kekule.IO.DataFormat.KEKULE_JSON;
       obj.structData = structData;
@@ -143,6 +148,9 @@
     <button id="btnGetData" data-widget="Kekule.Widget.Button" data-text="Get Data">Get Data</button>
     <button id="btnSetAnchor" data-widget="Kekule.Widget.Button" data-text="Set Anchor(s)">Set Anchor(s)</button>
     <select id="selStructType" data-widget="Kekule.Widget.SelectBox"></select>
+    <label>Name:
+      <input id="editName" type="text" data-widget="Kekule.Widget.TextBox" />
+    </label>
     <label>Abbr:
       <input id="editAbbr" type="text" data-widget="Kekule.Widget.TextBox" />
     </label>

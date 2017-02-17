@@ -20,6 +20,8 @@
  * Base repository item class.
  * @class
  * @augments ObjectEx
+ *
+ * @property {String} name The unique name of this repository item.
  */
 Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 /** @lends Kekule.Editor.AbstractRepositoryItem# */
@@ -35,6 +37,7 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		//this.defineProp('repository', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+		this.defineProp('name', {'dataType': DataType.STRING});
 	},
 
 	/**
@@ -637,7 +640,9 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
  */
 Kekule.Editor.RepositoryItemManager = {
 	/** @private */
-	_itemMap: new Kekule.MapEx(true),
+	_itemClassMap: new Kekule.MapEx(true),
+	/** @private */
+	_itemNameMap: new Kekule.MapEx(true),
 	/**
 	 * Returns all repository items of a particular repository class.
 	 * @param {Class} repClass
@@ -645,7 +650,11 @@ Kekule.Editor.RepositoryItemManager = {
 	 */
 	getAllItems: function(repClass)
 	{
-		return RM._itemMap.get(repClass);
+		return RM._itemClassMap.get(repClass);
+	},
+	getItem: function(name)
+	{
+		return RM._itemNameMap.get(name);
 	},
 	/**
 	 * Register a repository item.
@@ -653,15 +662,28 @@ Kekule.Editor.RepositoryItemManager = {
 	 */
 	register: function(repItem)
 	{
+		var name = repItem.getName();
+		var replacedItem;
+		if (name)		// add to name map
+		{
+			replacedItem = RM.getItem();
+			RM._itemNameMap.set(name, repItem);
+		}
+		// add to class map
 		var repClass = repItem.getClass();
 		var items = RM.getAllItems(repClass);
 		if (!items)
 		{
 			items = [repItem];
-			RM._itemMap.set(repClass, items);
+			RM._itemClassMap.set(repClass, items);
 		}
 		else
-			Kekule.ArrayUtils.pushUnique(items, repItem);
+		{
+			if (replacedItem)  // replace old
+				Kekule.ArrayUtils.replace(items, replacedItem, repItem);
+			else  // add new
+				Kekule.ArrayUtils.pushUnique(items, repItem);
+		}
 	},
 	/**
 	 * Unregister a repository item.
@@ -670,10 +692,17 @@ Kekule.Editor.RepositoryItemManager = {
 	unregister: function(repItem)
 	{
 		var repClass = repItem.getClass();
+		// remove from class map
 		var items = RM.getAllItems(repClass);
 		if (items)
 		{
 			Kekule.ArrayUtils.remove(items, repItem);
+		}
+		// remove from name map
+		var name = repItem.getName();
+		if (name)
+		{
+			RM._itemNameMap.remove(name);
 		}
 	}
 };
@@ -689,7 +718,16 @@ var RM = Kekule.Editor.RepositoryItemManager;
 		{
 			var detail = data[i];
 			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat);
-			repItem.setInputTexts(detail.inputTexts);
+			repItem.setInputTexts(detail.inputTexts).setName(detail.name || detail.inputTexts[0]);
+			RM.register(repItem);
+			//console.log('reg', repItem);
+		}
+		var data = Kekule.Editor.RepositoryData.fragments || [];
+		for (var i = 0, l = data.length; i < l; ++i)
+		{
+			var detail = data[i];
+			var repItem = new Kekule.Editor.StoredStructFragmentRepositoryItem2D(detail.structData, detail.dataFormat);
+			repItem.setName(detail.name);
 			RM.register(repItem);
 			//console.log('reg', repItem);
 		}
