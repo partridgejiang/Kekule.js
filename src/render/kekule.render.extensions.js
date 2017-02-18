@@ -1510,7 +1510,7 @@
 					formula = Kekule.FormulaUtils.textToFormula(this.getFormulaText());
 				else
 					formula = this.getFormula(false) || this.calcFormula();
-				if (formula.isEmpty())  // formula empty, use default caption
+				if (!formula || formula.isEmpty())  // formula empty, use default caption
 					caption = (displayLabelConfigs && displayLabelConfigs.getRgroup()) || NL.SUBGROUP;
 			}
 			var result;

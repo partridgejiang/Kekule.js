@@ -2508,7 +2508,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 */
 	getNodeLabel: function(node)
 	{
-		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
+		var editor = this.getEditor();
+		var labelConfigs = editor.getRenderConfigs().getDisplayLabelConfigs();
 		if (node.getIsotopeId)  // atom
 			return node.getIsotopeId();
 		else if (node instanceof Kekule.SubGroup)
@@ -2516,9 +2517,17 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			var groupLabel = node.getAbbr() || node.getFormulaText();
 			return groupLabel || labelConfigs.getRgroup();
 		}
+		else if (node instanceof Kekule.VariableAtom)  // return 'L' rather than actual atom list to activate element table
+		{
+			var allowedIds = node.getAllowedIsotopeIds();
+			var disallowedIds = node.getDisallowedIsotopeIds();
+			return (allowedIds && allowedIds.length)? this._getVarAtomListLabel():
+					(disallowedIds && disallowedIds.length)? this._getVarAtomNotListLabel():
+					this._getVarAtomListLabel();
+		}
 		else
 		{
-			var ri = node.getCoreDisplayRichTextItem(labelConfigs);
+			var ri = node.getCoreDisplayRichTextItem(null, null, labelConfigs);
 			return Kekule.Render.RichTextUtils.toText(ri);
 		}
 	},
@@ -2713,6 +2722,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		var slabel = this.getNodeLabel(obj);
 		var setter = this.getAtomSetterWidget(true);
 		setter.setValue(slabel);
+		setter.setIsDirty(false);
 		//setter.setIsPopup(true);
 		var style = setter.getElement().style;
 		style.position = 'absolute';
@@ -2742,12 +2752,15 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	{
 		if (setter._applied)  // avoid called twice
 			return;
+		if (!setter.getIsDirty())  // setter not modified
+			return;
 		if (!atom)
 			atom = this.getCurrAtom();
 		var nodeClass;
 		var modifiedProps = null;
 		//var isNonAtom = false;
 		var text = setter.getValue();
+		//console.log('value', text);
 
 		// check if setter list need to raise other widget
 		var periodicTableDialog;
@@ -2884,26 +2897,29 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 				operGroup.add(oper);
 		}
 
-		var editor = this.getEditor();
-		editor.beginUpdateObject();
-		try
+		var operation = operGroup || oper;
+		if (operation)  // only execute when there is real modification
 		{
-			var operation = operGroup || oper;
-			operation.execute();
-		}
-		catch(e)
-		{
-			Kekule.error(/*Kekule.ErrorMsg.NOT_A_VALID_ATOM*/Kekule.$L('ErrorMsg.NOT_A_VALID_ATOM'));
-			throw(e);
-		}
-		finally
-		{
-			editor.endUpdateObject();
-		}
+			var editor = this.getEditor();
+			editor.beginUpdateObject();
+			try
+			{
+				operation.execute();
+			}
+			catch (e)
+			{
+				//Kekule.error(/*Kekule.ErrorMsg.NOT_A_VALID_ATOM*/Kekule.$L('ErrorMsg.NOT_A_VALID_ATOM'));
+				throw(e);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
 
-		if (editor && editor.getEnableOperHistory() && operation)
-		{
-			editor.pushOperation(operation);
+			if (editor && editor.getEnableOperHistory() && operation)
+			{
+				editor.pushOperation(operation);
+			}
 		}
 	},
 

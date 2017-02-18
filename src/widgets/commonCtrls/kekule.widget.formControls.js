@@ -119,6 +119,12 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		}
 		$super(element);
 	},
+	notifyValueChanged: function()
+	{
+		//console.log('value change', this.getClassName());
+		this.setIsDirty(true);
+		this.invokeEvent('valueChange', {'widget': this});
+	},
 	/**
 	 * Select all content in widget.
 	 */
@@ -132,9 +138,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	reactValueChange: function()
 	{
-		//console.log('value change', this.getClassName());
-		this.setIsDirty(true);
-		this.invokeEvent('valueChange', {'widget': this});
+		this.notifyValueChanged();
 	},
 	/** @private */
 	reactInput: function()
@@ -1367,7 +1371,11 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 					var text = itemElem.text || itemElem.value;
 					//var value = selectBox.getValue();
 					//textBox.setValue(value);
-					textBox.setText(text);
+					if (text !== textBox.getText())
+					{
+						textBox.setText(text);
+						self.notifyValueChanged();
+					}
 					textBox.selectAll();
 					textBox.focus();
 					self.invokeEvent('valueSelect', {'widget': self, 'value': value});

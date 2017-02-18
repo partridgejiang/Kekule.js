@@ -3805,11 +3805,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/* @ignore */
 
-	appendLinkedConnector: function(connector)
+	appendLinkedConnector: function($super, connector)
 	{
-		// instead of link connector to self, we'd rather link connector to child anchor node
 		var actualLinkedNode = this.getCurrConnectableObj();
-		return actualLinkedNode.appendLinkedConnector(connector);
+		if (actualLinkedNode && actualLinkedNode !== this) // instead of link connector to self, we'd rather link connector to child anchor node
+			return actualLinkedNode.appendLinkedConnector(connector);
+		else  // no child, link to self
+		  return $super(connector);
 	},
 
 
