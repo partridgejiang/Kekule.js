@@ -76,11 +76,17 @@ describe('Test of some core data and functions', function(){
 		{
 			atoms[i] = new Kekule.Atom(atomSymbols[i], massNumbers[i]);
 			atoms[i].setCharge(charges[i]);
-			compareValues[i] = Kekule.UnivChemStructObjComparer.getNodeCompareValue(atoms[i], ops);
+			//compareValues[i] = Kekule.UnivChemStructObjComparer.getNodeCompareValue(atoms[i], ops);
 		}
+		/*
 		for (var i = 1, l = compareValues.length; i < l; ++i)
 		{
 			expect(compareValues[i]).toBeGreaterThan(compareValues[i - 1]);
+		}
+		*/
+		for (var i = 1, l = atomSymbols.length; i < l; ++i)
+		{
+			expect(atoms[i].compare(atoms[i-1]).toBeGreaterThan(0);
 		}
 	});
 

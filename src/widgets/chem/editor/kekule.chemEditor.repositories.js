@@ -710,7 +710,7 @@ var RM = Kekule.Editor.RepositoryItemManager;
 
 
 // register all predefined subgroup rep items
-(function (){
+Kekule._registerAfterLoadProc(function (){
 	if (Kekule.Editor.RepositoryData)
 	{
 		var data = Kekule.Editor.RepositoryData.subGroups || [];
@@ -732,6 +732,6 @@ var RM = Kekule.Editor.RepositoryItemManager;
 			//console.log('reg', repItem);
 		}
 	}
-})();
+});
 
 })();

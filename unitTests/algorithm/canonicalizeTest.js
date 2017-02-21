@@ -86,21 +86,27 @@ describe('Test of canonicalization of molecule', function(){
 
 				for (var i = 0, l = nodes.length; i < l; ++i)
 				{
-					var compareValue = Kekule.UnivChemStructObjComparer.compare(nodes[i], newNodes[i]);
+					//var compareValue = Kekule.UnivChemStructObjComparer.compare(nodes[i], newNodes[i]);
+					var compareValue = Kekule.ObjComparer.compareStructure(nodes[i], newNodes[i]);
 					expect(compareValue).toEqual(0);
+					/*
 					if (compareValue !== 0)
 					{
 						console.log('node1', Kekule.UnivChemStructObjComparer.getCompareValue(nodes[i]), 'node2', Kekule.UnivChemStructObjComparer.getCompareValue(newNodes[i]));
 					}
+					*/
 				}
 				for (var i = 0, l = nodes.length; i < l; ++i)
 				{
-					var compareValue = Kekule.UnivChemStructObjComparer.compare(connectors[i], newConnectors[i]);
+					//var compareValue = Kekule.UnivChemStructObjComparer.compare(connectors[i], newConnectors[i]);
+					var compareValue = Kekule.ObjComparer.compareStructure(connectors[i], newConnectors[i]);
 					expect(compareValue).toEqual(0);
+					/*
 					if (compareValue !== 0)
 					{
 						console.log('conn1', Kekule.UnivChemStructObjComparer.getCompareValue(connectors[i]), 'conn2', Kekule.UnivChemStructObjComparer.getCompareValue(newConnectors[i]));
 					}
+					*/
 				}
 
 				var formats = ['mol', /*'cml',*/ 'Kekule-JSON', 'Kekule-XML'];

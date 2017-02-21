@@ -125,7 +125,7 @@ Class.Methods = {
 
 
 				for (var i = 0, length = properties.length; i < length; i++) {
-				    var property = properties[i]
+				    var property = properties[i];
 				    var value = source[property];
 
 						var isFunction = Object.isFunction(value);

@@ -626,7 +626,8 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 
 		var nodeGroups = AU.group(nodes, function(n1, n2)
 			{
-				var result = Kekule.UnivChemStructObjComparer.compare(n1, n2);
+				//var result = Kekule.UnivChemStructObjComparer.compare(n1, n2);
+				var result = n1.compareStructure(n2);
 				if (result === 0)  // same compare value, need further check
 				{
 					var compareValue1 = formAssocCompareArray(n1, sortedNodes);
@@ -725,7 +726,8 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 				{
 					var connector1 = startingNode.getConnectorTo(n1);
 					var connector2 = startingNode.getConnectorTo(n2);
-					result = Kekule.UnivChemStructObjComparer.compare(connector1, connector2);
+					//result = Kekule.UnivChemStructObjComparer.compare(connector1, connector2);
+					result = connector1.compareStructure(connector2);
 				}
 				if (result === 0) // still same, compare coord if possible
 				{
