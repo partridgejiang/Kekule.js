@@ -16,7 +16,7 @@
 "use strict";
 
 var AU = Kekule.ArrayUtils;
-var SC = Kekule.UnivChemStructObjComparer;
+//var SC = Kekule.UnivChemStructObjComparer;
 
 /**
  * Default options to do sub structure search.
@@ -46,12 +46,12 @@ Kekule.ChemStructureSearcher = {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
 	 *       default is true.
 	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
-	 *     level: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
-	 *     compareAtom: Bool, if false, all node will be regarded as same. Default is true.
-	 *     compareMass: Bool, whether mass number is compared. Default is false.
-	 *     compareCharge: Bool, whether charge of node is compared. Default is false.
-	 *     compareBondOrder: Bool, whether order of bond is compared. Default is true.
-	 *     compareStereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
+	 *     structureLevel: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
+	 *     atom: Bool, if false, all node will be regarded as same. Default is true.
+	 *     mass: Bool, whether mass number is compared. Default is false.
+	 *     charge: Bool, whether charge of node is compared. Default is false.
+	 *     bondOrder: Bool, whether order of bond is compared. Default is true.
+	 *     stereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
 	 *   }
 	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
 	 *   Otherwise false will be returned.
@@ -93,7 +93,15 @@ Kekule.ChemStructureSearcher = {
 		// initial options
 		op = Object.extend({level: Kekule.StructureComparationLevel.CONSTITUTION,
 			compareLinkedConnectorCount: false, compareHydrogenCount: false, compareConnectedObjCount: false}, op);
-		op = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		/*
+		var op1 = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		var op2 = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
+		op = op2;
+		console.log(op1);
+		console.log(op2);
+		console.log('===================');
+		*/
+		op = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
 		var objCompareOptions = op;
 
 		// standardize structures first, perceive aromatic rings
@@ -236,7 +244,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		//if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		if (targetNode.compareStructure(srcNode, compareOptions) !== 0)
 			return false;
 		else
 		{
@@ -327,7 +336,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		//if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		if (targetConn.compareStructure(srcConn, compareOptions) !== 0)
 			return false;
 		else
 		{

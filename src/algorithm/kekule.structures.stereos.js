@@ -1214,12 +1214,19 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 					return result;
 				};
 				var resorted = AU.group(n, function(a, b) {
-					var result = Kekule.UnivChemStructObjComparer.compare(a, b);
+					//var result = Kekule.UnivChemStructObjComparer.compare(a, b);
+					var result = a.compareStructure(b);
 					if (result === 0)  // still can not distinguish, check linked bonds
 					{
+						/*
 						var cvaluesA = getConnectorCompareValues(a);
 						var cvaluesB = getConnectorCompareValues(b);
 						result = AU.compare(cvaluesA, cvaluesB);
+            */
+
+						var connsA = a.getLinkedConnectors();
+						var connsB = b.getLinkedConnectors();
+						result = Kekule.ObjComparer.compareStructure(connsA, connsB);
 					}
 					return result;
 				});

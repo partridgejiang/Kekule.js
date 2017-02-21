@@ -47,8 +47,8 @@ describe('IO Test of different file formats', function(){
 
 		'cml/cyclohexane-xdrawchem.cml', 'cml/isolated_ringsystems.cml', 'cml/keggtest.cml', 'cml/methanol1.cml', 'cml/methanol2.cml',
 		'cml/mol28.cml', 'cml/naphtalene.cml', 'cml/nitrate.cml', 'cml/phosphate.cml', 'cml/toluene.cml',
-		'json/DoubleRingInSubgroup.kcj', 'json/FischerProjection1.kcj', 'json/NestedSubgroup.kcj', 'json/PhCOOH.kcj', 'json/subgroups.kcj'
 
+		'json/DoubleRingInSubgroup.kcj', 'json/FischerProjection1.kcj', 'json/NestedSubgroup.kcj', 'json/PhCOOH.kcj', 'json/subgroups.kcj'
 	];
 	var formats = ['mol', 'sd', 'mol3k', 'cml', 'Kekule-JSON', 'Kekule-XML'];
 	srcUrls.forEach(function(url){

@@ -92,7 +92,8 @@ Object.extend(Kekule.ChemStructureUtils,
 		// compare options
 		var op = compareOptions || {}; //Object.extend(compareOptions || {});
 		// compare
-		return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
+		//return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
+		return m1.compareStructure(m2, op) === 0;
 	}
 });
 
