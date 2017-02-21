@@ -359,7 +359,7 @@ var kekuleFiles = {
 		'files': [
 			'algorithm/kekule.graph.js',
 			'algorithm/kekule.structures.helpers.js',
-			'algorithm/kekule.structures.comparers.js',
+			//'algorithm/kekule.structures.comparers.js',
 			'algorithm/kekule.structures.canonicalizers.js',
 			'algorithm/kekule.structures.ringSearches.js',
 			'algorithm/kekule.structures.aromatics.js',
