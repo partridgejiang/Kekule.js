@@ -1632,6 +1632,24 @@ Kekule.ComparisonMethod = {
  *  @class
  */
 Kekule.ObjComparer = {
+
+	/**
+	 * Check if two objects are equivalent.
+	 * @param {Kekule.ChemObj} obj1
+	 * @param {Kekule.ChemObj} obj2
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Bool}
+	 */
+	equal: function(obj1, obj2, options)
+	{
+		return Kekule.ObjComparer.compare(obj1, obj2, options) === 0;
+	},
 	/**
 	 * Compare two objects.
 	 * @param {Kekule.ChemObj} obj1
@@ -2241,6 +2259,22 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return null;
 	},
 
+	/**
+	 * Check if this object is equivalent to targetObj.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Bool}
+	 */
+	equal: function(targetObj, options)
+	{
+		return this.compare(targetObj, options) === 0;
+	},
 	/**
 	 * Compare this object to a targetObj.
 	 * @param {Kekule.ChemObj} targetObj

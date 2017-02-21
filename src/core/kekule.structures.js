@@ -50,6 +50,10 @@ Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
 	ops.method = Kekule.ComparisonMethod.CHEM_STRUCTURE;
 	return Kekule.ObjComparer.compare(obj1, obj2, ops);
 };
+Kekule.ObjComparer.equalStructure = function(obj1, obj2, options)
+{
+	return Kekule.ObjComparer.compareStructure(obj1, obj2, options) === 0;
+};
 Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions)
 {
 	var result = Object.extend({}, initialOptions);
@@ -286,6 +290,16 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		var ops = Object.create(options || {});
 		ops.method = Kekule.ComparisonMethod.CHEM_STRUCTURE;
 		return this.compare(targetObj, ops);
+	},
+	/**
+	 * Check if this object and targetObj has equivalent chem structure.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {Hash} options
+	 * @returns {Bool}
+	 */
+	equalStructure: function(targetObj, options)
+	{
+		return this.compareStructure(targetObj, options) === 0;
 	},
 
 	/**
