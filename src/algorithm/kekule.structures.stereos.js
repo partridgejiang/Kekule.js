@@ -1202,6 +1202,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 			}
 			else
 			{
+				/*
 				var getConnectorCompareValues = function(node)
 				{
 					var result = [];
@@ -1213,6 +1214,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 					result.sort(function(a, b) { return a - b; });
 					return result;
 				};
+				*/
 				var resorted = AU.group(n, function(a, b) {
 					//var result = Kekule.UnivChemStructObjComparer.compare(a, b);
 					var result = a.compareStructure(b);
