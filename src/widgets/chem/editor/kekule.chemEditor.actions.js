@@ -77,6 +77,7 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	molRepCyclohexaneChair1: 'repCyclohexaneChair1',
 	molRepCyclohexaneChair2: 'repCyclohexaneChair2',
 
+	molRepMethane: 'methane',
 	molRepFischer1: 'repFischer1',
 	molRepFischer2: 'repFischer2',
 	molRepFischer3: 'repFischer3',
@@ -1113,6 +1114,18 @@ Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController = Kekule.Edi
 	null, null,
 	BNS.molRepSawhorseEclipsed
 );
+Kekule.Editor.ActionComposerSetRepositoryMethaneController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositoryMethaneController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_METHANE'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_METHANE'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-Methane',
+		{
+			'repItemName': 'methane'
+		},
+		null, null,
+		BNS.molRepMethane
+);
 
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondController',
@@ -1130,6 +1143,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
 		Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
+		Kekule.Editor.ActionComposerSetRepositoryMethaneController,
 		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
 		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
 		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
