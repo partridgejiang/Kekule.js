@@ -77,6 +77,7 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	molRepCyclohexaneChair1: 'repCyclohexaneChair1',
 	molRepCyclohexaneChair2: 'repCyclohexaneChair2',
 
+	molRepSubBondMark: 'subBondMark',
 	molRepMethane: 'methane',
 	molRepFischer1: 'repFischer1',
 	molRepFischer2: 'repFischer2',
@@ -667,6 +668,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	{
 		$super();
 		var checked = this.getChecked();
+		//console.log('self checked change', this.getClassName(), checked);
 		if (this.hasAttachedActions())
 		{
 			var composer = this.getComposer();
@@ -678,7 +680,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 					composer.bindAssocActions(attachedActions);
 					composer.showAssocToolbar();
 					var checkedChild = attachedActions.getCheckedAction(this.getClassName());
-					//console.log('self checked change', this.getClassName(), checkedChild, attachedActions.getActions());
+					//console.log('child checked change', this.getClassName(), checkedChild.getClassName(), attachedActions.getActions());
 					/*
 					if (checkedChild)
 					{
@@ -1126,6 +1128,18 @@ Kekule.Editor.ActionComposerSetRepositoryMethaneController = Kekule.Editor.creat
 		null, null,
 		BNS.molRepMethane
 );
+Kekule.Editor.ActionComposerSetRepositorySubBondMarkController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositorySubBondMarkController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SUBBOND_MARK'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SUBBOND_MARK'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-SubBondMark',
+	{
+		'repItemName': 'substituentMark'
+	},
+	null, null,
+	BNS.molRepSubBondMark
+);
 
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondController',
@@ -1144,6 +1158,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
 		Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
 		Kekule.Editor.ActionComposerSetRepositoryMethaneController,
+		//Kekule.Editor.ActionComposerSetRepositorySubBondMarkController,
 		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
 		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
 		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,

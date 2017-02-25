@@ -203,6 +203,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	CAPTION_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
 
+	CAPTION_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
+
 	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & lines',
 	CAPTION_REPOSITORY_GLYPH: 'Glyphs',
 	CAPTION_REPOSITORY_GLYPH_LINE: 'Line',
@@ -282,6 +284,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_CYCLOHEXANE_HARWORTH2: 'Cyclohexane Haworth 2',
 	HINT_REPOSITORY_CYCLOPENTANE_HARWORTH1: 'Cyclopentane Haworth 1',
 	HINT_REPOSITORY_CYCLOPENTANE_HARWORTH2: 'Cyclopentane Haworth 2',
+
+	HINT_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
 
 	HINT_REPOSITORY_METHANE: 'Methane',
 	HINT_REPOSITORY_FISCHER1: 'Fischer projection with one chiral center',
