@@ -712,9 +712,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  *     ]<br />
  * @property {Array} chemToolButtons buttons in chem tool bar. This is a array of predefined strings, e.g.: ['zoomIn', 'zoomOut', 'resetZoom', 'molDisplayType', ...].
  *   If not set, default buttons will be used.
+ *   Chem tool often has a series of child tool buttons, you can also control to display which child buttons, e.g.:
+ *    [
+ *      {'name': 'bond', 'attached': ['bondSingle', 'bondDouble']}, <br />
+ *      'atom', 'formula',<br />
+ *    ] <br />
  *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
  *     [ <br />
- *       'zoomIn', 'zoomOut',<br />
+ *       'atom', 'formula',<br />
  *       {'name': 'myCustomButton1', 'widgetClass': 'Kekule.Widget.Button', 'action': actionClass},<br />
  *       {'name': 'myCustomButton2', 'htmlClass': 'MyClass' 'caption': 'My Button', 'hint': 'My Hint', '#execute': function(){ ... }},<br />
  *     ]<br />
@@ -748,6 +753,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	CLASS_NAME: 'Kekule.Editor.Composer',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div'],
+	/** @private */
+	CHEM_TOOL_CHILD_FIELDS: '__$children__',
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, editor)
 	{
@@ -927,6 +934,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			}
 		});
 
+		/*
 		// private
 		this.defineProp('toolButtonNameMapping', {'dataType': DataType.HASH, 'serializable': false, 'setter': null,
 			'getter': function()
@@ -940,6 +948,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return result;
 			}
 		});
+		*/
 		// private
 		this.defineProp('commonActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null,
 			'getter': function()
@@ -973,6 +982,18 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				{
 					result = new Kekule.ActionList();
 					this.setPropStoreFieldValue('chemActions', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('actionMap', {'dataType': 'Kekule.MapEx', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('actionMap');
+				if (!result)
+				{
+					result = new Kekule.MapEx();
+					this.setPropStoreFieldValue('actionMap', result);
 				}
 				return result;
 			}
@@ -1133,6 +1154,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	getResizerElement: function()
 	{
 		return this.getEditorStageElem();
+	},
+
+	/** @ignore */
+	getChildActionClass: function($super, actionName, checkSupClasses)
+	{
+		var result = $super(actionName, checkSupClasses);
+		if (!result)
+			result = this.getEditor().getChildActionClass(actionName, checkSupClasses);
+		return result;
 	},
 
 	/**
@@ -1488,7 +1518,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 	////////////////// methods about tool buttons and actions  ///////////////////////
 
-	/** @private */
+	/* @private */
+	/*
 	_createDefaultToolButtonNameMapping: function()
 	{
 		var result = {};
@@ -1523,6 +1554,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		return result;
 	},
+	*/
 	/** @private */
 	getDefaultCommonToolBarButtons: function()
 	{
@@ -1578,7 +1610,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	getCompActionClass: function(btnName)
 	{
-		return this.getToolButtonNameMapping()[btnName];
+		//return this.getToolButtonNameMapping()[btnName];
+		return this.getChildActionClass(btnName, false);
 	},
 	/** @private */
 	_getActionTargetWidget: function(actionClass)
@@ -1599,10 +1632,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createToolButton: function(btnName, parentGroup, actions, checkGroup)
 	{
+		/*
 		var result = null;
+		var name = DataType.isObjectValue(btnName)? btnName.name: btnName;
+		var children = DataType.isObjectValue(btnName)? btnName.attached: null;
+		var actionClass = this.getCompActionClass(name);
 
-		if (DataType.isObjectValue(btnName))  // custom button
+		if (DataType.isObjectValue(btnName) && !actionClass)  // custom button
 		{
+			if (!actionClass)  // no binded action, custom button
 			var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
 			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
 			var actionClass = objDefHash.actionClass;
@@ -1620,8 +1658,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		else
 		{
-			var actionClass = this.getCompActionClass(btnName);
-			if (actionClass)
+			//var actionClass = this.getCompActionClass(btnName);
+			//if (actionClass)
 			{
 				var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
 					(!!checkGroup) ? Kekule.Widget.RadioButton :
@@ -1636,6 +1674,97 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				result.setAction(action);
 			}
 		}
+
+		return result;
+		*/
+		var result = null;
+		var name = DataType.isObjectValue(btnName)? btnName.name: btnName;
+		var actionClass = this.getCompActionClass(name);
+		var action = this._createToolButtonAction(btnName, actions, checkGroup);
+
+		if (DataType.isObjectValue(btnName) && !actionClass)  // custom button
+		{
+			if (!actionClass)  // no binded action, custom button
+				var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
+			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
+		}
+		else  // predefined names
+		{
+			var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
+					(!!checkGroup) ? Kekule.Widget.RadioButton :
+					Kekule.Widget.Button;
+			result = new btnClass(parentGroup);
+		}
+		if (action)
+			result.setAction(action);
+	},
+	/** @private */
+	_createToolButtonAction: function(actionNameOrHash, defActions, checkGroup)
+	{
+		var result = null;
+		var name = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.name: actionNameOrHash;
+		var children = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.attached: null;
+		var actionClass = this.getCompActionClass(name);
+
+		var result;
+
+		if (DataType.isObjectValue(actionNameOrHash) && !actionClass)  // custom button
+		{
+			var objDefHash = actionNameOrHash;
+			var actionClass = objDefHash.actionClass;
+			if (actionClass)  // create action
+			{
+				if (typeof(actionClass) === 'string')
+					actionClass = ClassEx.findClass(objDefHash.actionClass);
+			}
+		}
+
+		if (actionClass)
+		{
+			var actionMap = this.getActionMap();
+			// check if this action already exists
+			var result = actionMap.get(actionClass);
+			if (!result)
+			{
+				var result = new actionClass(this._getActionTargetWidget(actionClass));
+				if (checkGroup)
+					result.setCheckGroup(checkGroup);
+				//this.getActions().add(action);
+				actionMap.set(actionClass, result);
+			}
+
+			if (result && result.addAttachedAction)
+			{
+				defActions.add(result);
+				//result.setChecked(false);
+				var subGroupName = result.getClassName();
+				result.clearAttachedActions();
+				if (children)  // has custom defined chem tool children buttons
+				{
+					for (var i = 0, l = children.length; i < l; ++i)
+					{
+						var child = children[i];
+						var childAction = this._createToolButtonAction(child, defActions, subGroupName);
+						result.addAttachedAction(childAction, i === 0);
+					}
+				}
+				else  // use default attached classes
+				{
+					var attachedActionClasses = result.getAttachedActionClasses();
+					if (attachedActionClasses)
+					{
+						for (var i = 0, l = attachedActionClasses.length; i < l; ++i)
+						{
+							var aClass = attachedActionClasses[i];
+							var childAction = new aClass(this._getActionTargetWidget(aClass));
+							childAction.setCheckGroup(checkGroup);
+							result.addAttachedAction(childAction, i === 0);
+						}
+					}
+				}
+			}
+		}
+
 		return result;
 	},
 
