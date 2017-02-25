@@ -345,7 +345,7 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 
 		// length for chem structures
 		this.addFloatConfigProp('allenCenterAtomRadius', 3);
-		this.addFloatConfigProp('defBondLength', 30); //35/* 14 /* 52 */);
+		this.addFloatConfigProp('defBondLength', 25); // 30); //35/* 14 /* 52 */);
 		this.addFloatConfigProp('bondLineWidth', 1);
 		this.addFloatConfigProp('boldBondLineWidthRatio', 2, {'scope': PS.PUBLIC});
 		this.addFloatConfigProp('hashSpacing', 3);
