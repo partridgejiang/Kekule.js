@@ -493,8 +493,19 @@ Kekule.ActionList = Class.create(ObjectEx,
 
 	/**
 	 * Returns count of actions inside.
+	 * Same as {@link Kekule.ActionList.getActionLength}.
+	 * @returns {Int}
 	 */
 	getActionCount: function()
+	{
+		return this.getActions().length;
+	},
+	/**
+	 * Returns count of actions inside.
+	 * Same as {@link Kekule.ActionList.getActionCount}.
+	 * @returns {Int}
+	 */
+	getActionLength: function()
 	{
 		return this.getActions().length;
 	},
@@ -506,6 +517,24 @@ Kekule.ActionList = Class.create(ObjectEx,
 	getActionAt: function(index)
 	{
 		return this.getActions()[index];
+	},
+	/**
+	 * Returns index of an action in list.
+	 * @param {Kekule.Action} action
+	 * @returns {Int}
+	 */
+	indexOfAction: function(action)
+	{
+		return this.getActions().indexOf(action);
+	},
+	/**
+	 * Check whether an action is in this list.
+	 * @param {Kekule.Action} action
+	 * @returns {Bool}
+	 */
+	hasAction: function(action)
+	{
+		return this.indexOfAction(action) >= 0;
 	},
 
 	/**
