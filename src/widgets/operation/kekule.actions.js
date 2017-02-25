@@ -850,4 +850,83 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
   */
 });
 
+/**
+ * A util to manager all named actions for special widgets.
+ * @class
+ */
+Kekule.ActionManager = {
+	/** @private */
+	_namedActionMap: null,
+	/** @private */
+	_getNamedActionMap: function(canCreate)
+	{
+		var result = AM._namedActionMap;
+		if (!result && canCreate)
+		{
+			result = new Kekule.MapEx();
+			AM._namedActionMap = result;
+		}
+		return result;
+	},
+	/** @private */
+	getRegisteredActionsOfClass: function(widgetClass, canCreate)
+	{
+		var actionMap = AM._getNamedActionMap(canCreate);
+		if (actionMap)
+		{
+			var result = actionMap.get(widgetClass);
+			if (!result && canCreate)
+			{
+				result = {};
+				actionMap.set(widgetClass, result);
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Register a named action to a special widget class.
+	 * @param {String} name
+	 * @param {Class} actionClass
+	 * @param {Class} targetWidgetClass
+	 */
+	registerNamedActionClass: function(name, actionClass, targetWidgetClass)
+	{
+		var actions = AM.getRegisteredActionsOfClass(targetWidgetClass, true);
+		actions[name] = actionClass;
+	},
+	/**
+	 * Unregister a named action from a special widget class.
+	 * @param {String} name
+	 * @param {Class} targetWidgetClass
+	 */
+	unregisterNamedActionClass: function(name, targetWidgetClass)
+	{
+		var actions = AM.getRegisteredActionsOfClass(targetWidgetClass, false);
+		if (actions && actions[name])
+			delete actions[name];
+	},
+	/**
+	 * Returns action class associated with name for a specific widget class.
+	 * @param {String} name
+	 * @param {Variant} widgetOrClass Widget instance of widget class.
+	 * @param {Bool} checkSupClasses When true, if action is not found in current widget class, super classes will also be checked.
+	 * @returns {Class}
+	 */
+	getActionClassOfName: function(name, widgetOrClass, checkSupClasses)
+	{
+		var widgetClass = ClassEx.isClass(widgetOrClass)? widgetOrClass: widgetOrClass.getClass();
+		var actions = AM.getRegisteredActionsOfClass(widgetClass, false);
+		var result = actions && actions[name];
+		if (!result && checkSupClasses)  // cascade
+		{
+			var supClass = ClassEx.getSuperClass(widgetClass);
+			result = supClass? AM.getActionOfName(name, supClass): null;
+		}
+		return result;
+	}
+};
+var AM = Kekule.ActionManager;
+
 })();
