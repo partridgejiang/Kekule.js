@@ -717,6 +717,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  *      {'name': 'bond', 'attached': ['bondSingle', 'bondDouble']}, <br />
  *      'atom', 'formula',<br />
  *    ] <br />
+ *   Note: currently same child button can not be existed in different chem tool buttons.
  *   In the array, complex hash can also be used to add custom buttons, e.g.: <br />
  *     [ <br />
  *       'atom', 'formula',<br />
@@ -1727,25 +1728,41 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			if (!result)
 			{
 				var result = new actionClass(this._getActionTargetWidget(actionClass));
-				if (checkGroup)
-					result.setCheckGroup(checkGroup);
 				//this.getActions().add(action);
 				actionMap.set(actionClass, result);
 			}
+			if (checkGroup)
+				result.setCheckGroup(checkGroup);
 
 			if (result && result.addAttachedAction)
 			{
 				defActions.add(result);
 				//result.setChecked(false);
 				var subGroupName = result.getClassName();
-				result.clearAttachedActions();
+				// result.clearAttachedActions();
+				var oldAttachedActions = Kekule.ArrayUtils.clone(result.getAttachedActions().getActions() || []);
+
+				var attachChildAction = function(action, childAction, oldAttachedActions, asDefault)
+				{
+					if (!childAction)
+						return null;
+					var oldIndex = oldAttachedActions.indexOf(childAction);
+					if (oldIndex >= 0)  // action already attached, bypass
+					{
+						oldAttachedActions[oldIndex] = null;
+						//console.log('use old action', oldIndex, childAction.getClassName());
+					}
+					else
+						action.addAttachedAction(childAction, asDefault);
+				};
+
 				if (children)  // has custom defined chem tool children buttons
 				{
 					for (var i = 0, l = children.length; i < l; ++i)
 					{
 						var child = children[i];
 						var childAction = this._createToolButtonAction(child, defActions, subGroupName);
-						result.addAttachedAction(childAction, i === 0);
+						attachChildAction(result, childAction, oldAttachedActions, i === 0);
 					}
 				}
 				else  // use default attached classes
@@ -1756,9 +1773,29 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 						for (var i = 0, l = attachedActionClasses.length; i < l; ++i)
 						{
 							var aClass = attachedActionClasses[i];
-							var childAction = new aClass(this._getActionTargetWidget(aClass));
-							childAction.setCheckGroup(checkGroup);
-							result.addAttachedAction(childAction, i === 0);
+							var childAction = actionMap.get(aClass);
+							if (!childAction)
+							{
+								childAction = new aClass(this._getActionTargetWidget(aClass));
+								childAction.setCheckGroup(subGroupName);
+								actionMap.set(aClass, childAction);
+							}
+							//result.addAttachedAction(childAction, i === 0);
+							attachChildAction(result, childAction, oldAttachedActions, i === 0);
+						}
+					}
+				}
+				// at last remove unused old actions
+				if (oldAttachedActions.length)
+				{
+					var actions = result.getAttachedActions();
+					for (var i = 0, l = oldAttachedActions.length; i < l; ++i)
+					{
+						var unusedAction = oldAttachedActions[i];
+						if (unusedAction)
+						{
+							//console.log('remove action', unusedAction.getClassName());
+							actions.remove(unusedAction);
 						}
 					}
 				}
@@ -1888,6 +1925,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		this.setChemBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
+		// TODO: when change chem toolbar, associate toolbar should also change. Now we only simply clear it.
+		this.bindAssocActions(null);
 		this.adjustComponentPositions();
 		return toolbar;
 	},
@@ -1983,13 +2022,16 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (!toolbar)
 			toolbar = this.createAssocToolbar();
 		toolbar.clearWidgets();
-		for (var i = 0, l = actions.getActionCount(); i < l; ++i)
+		if (actions)
 		{
-			var action = actions.getActionAt(i);
-			var checkGroup = action.getCheckGroup();
-			var btnClass = (!!checkGroup)? Kekule.Widget.RadioButton: Kekule.Widget.Button;
-			var btn = new btnClass(toolbar);
-			btn.setAction(action);
+			for (var i = 0, l = actions.getActionCount(); i < l; ++i)
+			{
+				var action = actions.getActionAt(i);
+				var checkGroup = action.getCheckGroup();
+				var btnClass = (!!checkGroup) ? Kekule.Widget.RadioButton : Kekule.Widget.Button;
+				var btn = new btnClass(toolbar);
+				btn.setAction(action);
+			}
 		}
 	},
 
