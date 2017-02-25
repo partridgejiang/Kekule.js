@@ -126,8 +126,10 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 					(targetObj instanceof Kekule.ChemStructureConnector)? this.doGetMergableConnector(mol, targetObj):
 							null;
 			if (mergeObj)
+			{
 				mergeDest = targetObj;
-			baseCoord = mergeObj.getAbsBaseCoord2D();
+				baseCoord = mergeObj.getAbsBaseCoord2D();
+			}
 		}
 		return {
 			'objects': [mol],
