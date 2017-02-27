@@ -193,7 +193,10 @@ Kekule.hasLocalRes = function()
  * @object
  */
 Kekule.globalOptions = {
-
+	add: function(optionName, valueOrHash)
+	{
+		Object.setCascadeFieldValue(optionName, valueOrHash, Kekule.globalOptions, true);
+	}
 };
 
 /**

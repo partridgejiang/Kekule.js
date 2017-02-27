@@ -21,18 +21,18 @@ var CU = Kekule.ChemStructureUtils;
 
 var BT = Kekule.BondType;
 
-/**
+/*
  * Default Options used to search rings in chem structure.
  * @object
  */
-Kekule.globalOptions.ringSearch = {
+Kekule.globalOptions.add('algorithm.ringSearch', {
 	/**
 	 * Which types of bond can be considered as an edge of ring.
 	 * [] means no bond is allowed in ring (as no ring can actually be found.
 	 * Null means all bond type can be included in ring.
 	 */
 	bondTypes: [BT.COVALENT]
-};
+});
 
 ClassEx.extend(Kekule.StructureConnectionTable,
 /** @lends Kekule.StructureConnectionTable# */
@@ -174,7 +174,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 *   {
 	 *     bondTypes: []
 	 *   }
-	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
 	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
 	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
@@ -186,7 +186,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	analysisRings: function(options)
 	{
-		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.ringSearch), options);
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.ringSearch), options);
 		// no stored ring info, analysis
 		var g = this.getGraph(ops);
 		if (g)
@@ -302,7 +302,7 @@ ClassEx.extend(Kekule.StructureFragment,
 	 *   {
 	 *     bondTypes: []
 	 *   }
-	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
 	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
 	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
@@ -513,7 +513,7 @@ ClassEx.extend(Kekule.ChemObject,
 	 *   {
 	 *     bondTypes: []
 	 *   }
-	 * If this param is not set, {@link Kekule.globalOptions.ringSearch} will be used.
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
 	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
 	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {

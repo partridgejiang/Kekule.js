@@ -35,13 +35,19 @@ Kekule.StructureComparationLevel = {
 	DEFAULT: 4
 };
 
-/**
+/*
  * Default options to compare chem structures.
  * @object
  */
+/*
 Kekule.globalOptions.structureComparation = {
 	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
 };
+*/
+
+Kekule.globalOptions.add('algorithm.structureComparation', {
+	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
+});
 
 // extend method to Kekule.ObjComparer
 Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
@@ -61,7 +67,7 @@ Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions
 	{
 		var CL = Kekule.StructureComparationLevel;
 		var level = initialOptions.structureLevel || initialOptions.level  // options.level for backward compatible
-				|| Kekule.globalOptions.structureComparation.structureComparationLevel;
+				|| Kekule.globalOptions.algorithm.structureComparation.structureComparationLevel;
 		//if (Kekule.ObjUtils.notUnset(level))
 		{
 			var affectedFields = [
