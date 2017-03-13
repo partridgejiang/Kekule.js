@@ -440,14 +440,14 @@ Kekule.Graph = Class.create(ObjectEx,
 	}
 });
 
-/**
+/*
  * Default options to convert ctab to graph.
  * @object
  */
-Kekule.globalOptions.molToGraph = {
+Kekule.globalOptions.add('algorithm.molToGraph', {
 	expandSubStructures: true,
 	ignoreBondedHydrogen: true
-};
+});
 
 /**
  * Util class to help to convert other structures (e.g., molecule ctab) to graph.
@@ -469,7 +469,7 @@ Kekule.GraphAdaptUtils = {
 	 */
 	ctabToGraph: function(connTab, graph, options)
 	{
-		var op = Object.extend(Object.extend({}, Kekule.globalOptions.molToGraph), options || {});
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.molToGraph), options || {});
 		var ctab = connTab;
 		var AU = Kekule.ArrayUtils;
 		var result = null;

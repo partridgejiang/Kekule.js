@@ -23,12 +23,12 @@
  * Default options to do structure standardize.
  * @object
  */
-Kekule.globalOptions.molStandardization = {
+Kekule.globalOptions.add('algorithm.molStandardization', {
 	unmarshalSubFragments: true,
 	doCanonicalization: true,
 	doAromaticPerception: true,
 	doStereoPerception: true
-};
+});
 
 /**
  * A helper class to standardize molecule.
@@ -51,7 +51,7 @@ Kekule.MolStandardizer = {
 	 */
 	standardize: function(structureFragment, options)
 	{
-		var defOptions = Object.extend({}, Kekule.globalOptions.molStandardization);
+		var defOptions = Object.extend({}, Kekule.globalOptions.algorithm.molStandardization);
 		var mol = structureFragment;
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)

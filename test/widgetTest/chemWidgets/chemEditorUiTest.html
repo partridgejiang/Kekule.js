@@ -20,6 +20,22 @@
   -->
 
   <script>
+    /*
+    BNS = Kekule.ChemWidget.ComponentWidgetNames;
+    Kekule.globalOptions.chemWidget.composer.commonToolButtons = [
+      BNS.newDoc,
+      BNS.loadData,
+      BNS.saveData,
+      BNS.undo,
+      BNS.redo,
+      BNS.zoomIn,
+      BNS.reset,
+      BNS.zoomOut,
+      BNS.config,
+      BNS.objInspector
+    ];
+    */
+
     var chemEditor;
     var chemEditorUi;
     var operHistoryView;
@@ -33,6 +49,8 @@
       toolButtons.push({'text': 'View Obj', 'showText': true, '#execute': openObjInViewer});
       toolButtons.push({'text': 'View Doc', 'showText': true, '#execute': openDocInViewer});
       toolButtons.push({'widget': 'Kekule.Widget.CheckButton', 'text': 'Custom CheckButton'});
+      toolButtons.push({'text': 'Set Btn', 'showText': true, '#execute': setCustomChemButtons});
+      toolButtons.push({'text': 'Set Btn2', 'showText': true, '#execute': setCustomChemButtons2});
       chemEditorUi.setCommonToolButtons(toolButtons);
 
       // debug
@@ -76,6 +94,43 @@
         var viewer = Kekule.Widget.getWidgetById('chemViewer');
         viewer.setAutoSize(true).setChemObj(chemObj);
       }
+    }
+
+    function setCustomChemButtons()
+    {
+      var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+      var chemButtons = [
+        BNS.manipulate,
+        BNS.erase,
+        {'name': BNS.molBond, 'attached': [BNS.molBondSingle, BNS.molBondDouble, BNS.molRing6]},
+        BNS.molRing,
+        BNS.molAtom,
+        BNS.molFormula,
+        //BNS.molCharge,
+        //BNS.glyph,
+        //BNS.textImage
+        BNS.textBlock,
+        BNS.imageBlock
+      ];
+      chemEditorUi.setChemToolButtons(chemButtons);
+    }
+    function setCustomChemButtons2()
+    {
+      var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+      var chemButtons = [
+        BNS.manipulate,
+        BNS.erase,
+        BNS.molBond,
+        BNS.molRing,
+        BNS.molAtom,
+        BNS.molFormula,
+        //BNS.molCharge,
+        //BNS.glyph,
+        //BNS.textImage
+        BNS.textBlock,
+        BNS.imageBlock
+      ];
+      chemEditorUi.setChemToolButtons(chemButtons);
     }
   </script>
 </head>

@@ -311,6 +311,8 @@ Kekule.PropertyEditor.ChemRender2DOptionsEditor = Class.create(Kekule.PropertyEd
 	CHILD_FIELD_INFOS: [
 		{'name': 'expanded', dataType: DataType.BOOL, 'targetClass': Kekule.StructureFragment},
 
+		{'name': 'unitLength', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemObject},
+
 		{'name': 'moleculeDisplayType', dataType: DataType.INT, 'enumSource':  Kekule.Render.MoleculeDisplayType, 'targetClass': Kekule.StructureFragment},
 		{'name': 'renderType', dataType: DataType.INT, 'enumSource':  Kekule.Render.BondRenderType, 'targetClass': Kekule.ChemStructureConnector},
 		{'name': 'nodeDisplayMode', dataType: DataType.INT, 'enumSource':  Kekule.Render.NodeLabelDisplayMode, 'targetClass': Kekule.ChemStructureNode},
@@ -347,6 +349,7 @@ Kekule.PropertyEditor.ChemRender2DOptionsEditor = Class.create(Kekule.PropertyEd
 		{'name': 'bondArrowWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
 		{'name': 'bondWedgeWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
 		{'name': 'bondWedgeHashMinWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
+		{'name': 'bondLengthScaleRatio', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
 
 		{'name': 'color', dataType: DataType.STRING},
 		{'name': 'atomColor', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureNode},

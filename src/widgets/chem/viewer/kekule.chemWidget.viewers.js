@@ -34,6 +34,42 @@ var CW = Kekule.ChemWidget;
 //var CWT = Kekule.ChemWidgetTexts;
 var EM = Kekule.Widget.EvokeMode;
 
+Kekule.globalOptions.add('chemWidget.viewer', {
+	toolButtons: [
+		//BNS.loadFile,
+		BNS.loadData,
+		BNS.saveData,
+		//BNS.clearObjs,
+		BNS.molDisplayType,
+		BNS.molHideHydrogens,
+		BNS.zoomIn, BNS.zoomOut,
+		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
+		BNS.rotateLeft, BNS.rotateRight,
+		BNS.reset,
+		BNS.openEditor
+	],
+	menuItems: [
+		BNS.loadData,
+		BNS.saveData,
+		Kekule.Widget.MenuItem.SEPARATOR_TEXT,
+		BNS.molDisplayType,
+		BNS.molHideHydrogens,
+		BNS.zoomIn, BNS.zoomOut,
+		{
+			'text': Kekule.$L('ChemWidgetTexts.CAPTION_ROTATE'),
+			'hint': Kekule.$L('ChemWidgetTexts.HINT_ROTATE'),
+			'children': [
+				BNS.rotateLeft, BNS.rotateRight,
+				BNS.rotateX, BNS.rotateY, BNS.rotateZ
+			]
+		},
+		BNS.reset,
+		Kekule.Widget.MenuItem.SEPARATOR_TEXT,
+		BNS.openEditor,
+		BNS.config
+	]
+});
+
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	VIEWER: 'K-Chem-Viewer',
@@ -283,6 +319,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.updateMenu();
 			}
 		});
+		/*
 		// private
 		this.defineProp('toolButtonNameMapping', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': null,
@@ -297,6 +334,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return result;
 			}
 		});
+		*/
 		// private
 		this.defineProp('menu', {'dataType': 'Kekule.Widget.Menu', 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': function(value)
@@ -1066,6 +1104,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getDefaultToolBarButtons: function()
 	{
+		return Kekule.globalOptions.chemWidget.viewer.toolButtons;
+		/*
 		var buttons = [
 			//BNS.loadFile,
 			BNS.loadData,
@@ -1092,16 +1132,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// debug
 		//buttons.push(BNS.menu);
 
-		/*
-		var result = {
-			'buttons': buttons
-		};
-		return result;
-		*/
 		return buttons;
+		*/
 	},
 
-	/** @private */
+	/* @private */
+	/*
 	createDefaultToolButtonNameMapping: function()
 	{
 		var result = {};
@@ -1119,19 +1155,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		result[BNS.reset] = CW.ActionDisplayerReset;
 		result[BNS.molHideHydrogens] = CW.ActionDisplayerHideHydrogens;
 		result[BNS.molDisplayType] = CW.ActionViewerChangeMolDisplayTypeStub;
-		/*
-		result[BNS.molDisplayTypeCondensed] = CW.ActionDisplayerChangeMolDisplayTypeCondensed;
-		result[BNS.molDisplayTypeSkeletal] = CW.ActionDisplayerChangeMolDisplayTypeSkeletal;
-		result[BNS.molDisplayTypeWire] = CW.ActionDisplayerChangeMolDisplayTypeWire;
-		result[BNS.molDisplayTypeSticks] = CW.ActionDisplayerChangeMolDisplayTypeSticks;
-		result[BNS.molDisplayTypeBallStick] = CW.ActionDisplayerChangeMolDisplayTypeBallStick;
-		result[BNS.molDisplayTypeSpaceFill] = CW.ActionDisplayerChangeMolDisplayTypeSpaceFill;
-		*/
+
 		result[BNS.openEditor] = CW.ActionViewerEdit;
 		result[BNS.config] = Kekule.Widget.ActionOpenConfigWidget;
 
 		return result;
 	},
+	*/
 
 	/**
 	 * Return whether toolbarParentElem is not set the the toolbar is directly embedded in viewer itself.
@@ -1275,9 +1305,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @private */
-	getCompActionClass: function(compNameOrActionClass)
+	getCompActionClass: function(compName)
 	{
-		return this.getToolButtonNameMapping()[compNameOrActionClass];
+		//return this.getToolButtonNameMapping()[compName];
+		return this.getChildActionClass(compName, false);
 	},
 
 	/** @private */
@@ -1301,8 +1332,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	createToolbar: function()
 	{
-		//this.getActionMap().clear();
-		//this.getActions().clear();
+		this.clearActions();
 		var toolBar = new Kekule.Widget.ButtonGroup(this);
 		toolBar.addClassName(CNS.DYN_CREATED);
 		toolBar.setDisplayed(false);  // hide at first, evokeHelper controls its visibility
@@ -1469,6 +1499,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getDefaultMenuItems: function()
 	{
+		return Kekule.globalOptions.chemWidget.viewer.menuItems;
+		/*
 		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
 		var items = [
 			BNS.loadData,
@@ -1487,29 +1519,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				BNS.rotateX, BNS.rotateY, BNS.rotateZ
 			]
 		});
-		/*
-		//if (this.getRenderType() === Kekule.Render.RendererType.R3D)
-		{
-			items = items.concat([BNS.rotateX, BNS.rotateY, BNS.rotateZ]);
-		}
-		//else
-		{
-			items = items.concat([BNS.rotateLeft, BNS.rotateRight]);
-		}
-		*/
 		items.push(BNS.reset);
 		items.push(sSeparator);
 		items.push(BNS.openEditor);
 		// config
 		items.push(BNS.config);
-
-		/*
-		 var result = {
-		 'buttons': buttons
-		 };
-		 return result;
-		 */
 		return items;
+		*/
 	},
 	/** @private */
 	prepareMenuItems: function(items)
@@ -2575,5 +2591,37 @@ Kekule.ChemWidget.Viewer.molDisplayType3DActionClasses = [
 	CW.ActionDisplayerChangeMolDisplayTypeBallStick,
 	CW.ActionDisplayerChangeMolDisplayTypeSpaceFill
 ];
+
+// register actions to viewer widget
+Kekule._registerAfterLoadProc(function(){
+	var AM = Kekule.ActionManager;
+	var CW = Kekule.ChemWidget;
+	var widgetClass = Kekule.ChemWidget.Viewer;
+	var reg = AM.registerNamedActionClass;
+
+	reg(BNS.loadFile, CW.ActionDisplayerLoadFile, widgetClass);
+	reg(BNS.loadData, CW.ActionDisplayerLoadData, widgetClass);
+	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
+	reg(BNS.clearObjs, CW.ActionDisplayerClear, widgetClass);
+	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
+	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);
+	reg(BNS.rotateLeft, CW.ActionViewerRotateLeft, widgetClass);
+	reg(BNS.rotateRight, CW.ActionViewerRotateRight, widgetClass);
+	reg(BNS.rotateX, CW.ActionViewerRotateX, widgetClass);
+	reg(BNS.rotateY, CW.ActionViewerRotateY, widgetClass);
+	reg(BNS.rotateZ, CW.ActionViewerRotateZ, widgetClass);
+	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
+	reg(BNS.molHideHydrogens, CW.ActionDisplayerHideHydrogens, widgetClass);
+	reg(BNS.molDisplayType, CW.ActionViewerChangeMolDisplayTypeStub, widgetClass);
+	reg(BNS.openEditor, CW.ActionViewerEdit, widgetClass);
+	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
+
+	reg(BNS.molDisplayTypeCondensed, CW.ActionDisplayerChangeMolDisplayTypeCondensed, widgetClass);
+	reg(BNS.molDisplayTypeSkeletal, CW.ActionDisplayerChangeMolDisplayTypeSkeletal, widgetClass);
+	reg(BNS.molDisplayTypeWire, CW.ActionDisplayerChangeMolDisplayTypeWire, widgetClass);
+	reg(BNS.molDisplayTypeSticks, CW.ActionDisplayerChangeMolDisplayTypeSticks, widgetClass);
+	reg(BNS.molDisplayTypeBallStick, CW.ActionDisplayerChangeMolDisplayTypeBallStick, widgetClass);
+	reg(BNS.molDisplayTypeSpaceFill, CW.ActionDisplayerChangeMolDisplayTypeSpaceFill, widgetClass);
+});
 
 })();

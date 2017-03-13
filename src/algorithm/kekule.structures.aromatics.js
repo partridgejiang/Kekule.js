@@ -99,13 +99,13 @@ ClassEx.extend(Kekule.Atom,
 	}
 });
 
-/**
+/*
  * Default options to percept aromatic rings.
  * @object
  */
-Kekule.globalOptions.aromaticRingsPerception = {
+Kekule.globalOptions.add('algorithm.aromaticRingsPerception', {
 	allowUncertainRings: false
-};
+});
 
 ClassEx.extend(Kekule.StructureConnectionTable,
 	/** @lends Kekule.StructureConnectionTable# */
@@ -420,7 +420,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	perceiveAromaticRings: function(allowUncertainRings, candidateRings)
 	{
 		if (Kekule.ObjUtils.isUnset(allowUncertainRings))
-			allowUncertainRings = Kekule.globalOptions.aromaticRingsPerception.allowUncertainRings;
+			allowUncertainRings = Kekule.globalOptions.algorithm.aromaticRingsPerception.allowUncertainRings;
 
 		// TODO: need to detect azulene and some other special aromatic rings
 		var rings = candidateRings || this.findSSSR();

@@ -12,13 +12,13 @@
  * requires /core/kekule.common.js
  */
 
-/**
+/*
  * Default options to read/write KCJ/KCX/JSON/XML format data.
  * @object
  */
-Kekule.globalOptions.IO.kekuleNative = {
+Kekule.globalOptions.add('IO.kekuleNative', {
 	prettyPrint: true
-};
+});
 
 /**
  * Reader for KCJ JSON data.
