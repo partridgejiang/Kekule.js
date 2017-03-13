@@ -436,8 +436,15 @@ Kekule.ActionList = Class.create(ObjectEx,
 	 */
 	actionAdded: function(action)
 	{
+		if (this.getOwnActions())
+		{
+			var oldOwner = action.getOwner();
+			if (oldOwner && oldOwner.actionRemoved)
+				oldOwner.actionRemoved(action);
+			action.setPropStoreFieldValue('owner', this);
+		}
+
 		Kekule.ArrayUtils.pushUnique(this.getActions(), action);
-		action.setPropStoreFieldValue('owner', this);
 		action.update();
 		// install event listener
 		//action.addEventListener('execute', this.reactActionExecutedBinded);
