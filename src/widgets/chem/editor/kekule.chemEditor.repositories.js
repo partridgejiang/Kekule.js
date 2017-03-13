@@ -68,10 +68,28 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 		// do nothing here
 	},
 	/**
+	 * Returns default scale level of this repository object when adding to editor.
+	 * @returns {Float}
+	 */
+	getScale: function()
+	{
+		return this.doGetScale() || 1;
+	},
+	/** @private */
+	doGetScale: function()
+	{
+		return 1;
+	},
+	/**
 	 * Returns ref length to adjust repository object coord and size in editor.
 	 * @returns {Float}
 	 */
 	getRefLength: function()
+	{
+		return this.doGetRefLength() / (this.getScale() || 1);
+	},
+	/** @private */
+	doGetRefLength: function()
 	{
 		// do nothing here
 	},
@@ -101,6 +119,16 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 	{
 		$super();
 	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('molScale', {'dataType': DataType.FLOAT});
+	},
+	/** @ignore */
+	doGetScale: function($super)
+	{
+		return this.getMolScale() || $super();
+	},
 	/** @ignore */
 	getAvailableCoordModes: function()
 	{
@@ -126,8 +154,10 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 					(targetObj instanceof Kekule.ChemStructureConnector)? this.doGetMergableConnector(mol, targetObj):
 							null;
 			if (mergeObj)
+			{
 				mergeDest = targetObj;
-			baseCoord = mergeObj.getAbsBaseCoord2D();
+				baseCoord = mergeObj.getAbsBaseCoord2D();
+			}
 		}
 		return {
 			'objects': [mol],
@@ -185,7 +215,7 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredStructFragmentRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat)
+	initialize: function($super, structData, dataFormat, defScale)
 	{
 		$super();
 		this.beginUpdate();
@@ -199,6 +229,8 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 			{
 				this.setStructData(structData);
 			}
+			if (defScale)
+				this.setMolScale(defScale);
 		}
 		finally
 		{
@@ -277,7 +309,7 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 	},
 
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		var mol = this.getStructureFragment();
 		return mol? mol.getConnectorLengthMedian(Kekule.CoordMode.COORD2D, true): 0;
@@ -318,9 +350,9 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.Stored
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredSubgroupRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat)
+	initialize: function($super, structData, dataFormat, defScale)
 	{
-		$super(structData, dataFormat);
+		$super(structData, dataFormat, defScale);
 	},
 	/** @private */
 	initProperties: function()
@@ -455,7 +487,7 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 	},
 	*/
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		return this.getBondLength();
 	},
@@ -605,7 +637,7 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
 		return Kekule.CoordMode.COORD2D;  // only support 2D
 	},
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		return this.getGlyphRefLength();
 	},
@@ -717,7 +749,7 @@ Kekule._registerAfterLoadProc(function (){
 		for (var i = 0, l = data.length; i < l; ++i)
 		{
 			var detail = data[i];
-			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat);
+			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat, detail.scale);
 			repItem.setInputTexts(detail.inputTexts).setName(detail.name || detail.inputTexts[0]);
 			RM.register(repItem);
 			//console.log('reg', repItem);
@@ -726,7 +758,7 @@ Kekule._registerAfterLoadProc(function (){
 		for (var i = 0, l = data.length; i < l; ++i)
 		{
 			var detail = data[i];
-			var repItem = new Kekule.Editor.StoredStructFragmentRepositoryItem2D(detail.structData, detail.dataFormat);
+			var repItem = new Kekule.Editor.StoredStructFragmentRepositoryItem2D(detail.structData, detail.dataFormat, detail.scale);
 			repItem.setName(detail.name);
 			RM.register(repItem);
 			//console.log('reg', repItem);

@@ -35,12 +35,12 @@ var RD = Kekule.RotationDir;
  * Default options to do stereo identification.
  * @object
  */
-Kekule.globalOptions.stereoPerception = {
+Kekule.globalOptions.add('algorithm.stereoPerception', {
 	useFlatternedShadow: true,
 	perceiveStereoConnectors: true,
 	perceiveChiralNodes: true,
 	calcParity: true
-};
+});
 
 /**
  * Util class about stereo chemistry.
@@ -978,7 +978,7 @@ Kekule.MolStereoUtils = {
 			calcParity: true
 		}, options);
 		*/
-		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.stereoPerception), options);
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.stereoPerception), options);
 
 		var result;
 

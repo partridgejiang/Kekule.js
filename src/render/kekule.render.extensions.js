@@ -71,6 +71,7 @@
 		 *	 multipleBondSpacingAbs, multipleBondMaxAbsSpacing, bondArrowLength, bondArrowWidth,
 		 *   bondWedgeWidth, bondWedgeHashMinWidth:
 		 *     Those values are for drawing connectors.
+		 *   bondLengthScaleRatio: The actual bond length will be scaled according to this value.
 		 *   color: String. Color for drawing node label or connector shape.
 		 *     If this value is set, atomColor/bondColor/useAtomSpecifiedColor will be ignored.
 		 *   //  If atomColor or bondColor is set, this value is ignored.

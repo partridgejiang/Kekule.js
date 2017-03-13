@@ -18,13 +18,13 @@
  * requires /localization
  */
 
-/**
+/*
  * Default options to read/write CML format data.
  * @object
  */
-Kekule.globalOptions.IO.cml = {
+Kekule.globalOptions.add('IO.cml', {
 	prettyPrint: true
-};
+});
 
 /**
  * Defines some constants about CML.

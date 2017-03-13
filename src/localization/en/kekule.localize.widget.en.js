@@ -196,11 +196,14 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH1: 'Cyclopentane Haworth 1',
 	CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH2: 'Cyclopentane Haworth 2',
 
+	CAPTION_REPOSITORY_METHANE: 'Methane',
 	CAPTION_REPOSITORY_FISCHER1: 'Fischer projection 1',
 	CAPTION_REPOSITORY_FISCHER2: 'Fischer projection 2',
 	CAPTION_REPOSITORY_FISCHER3: 'Fischer projection 3',
 	CAPTION_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	CAPTION_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
+
+	CAPTION_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
 
 	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & lines',
 	CAPTION_REPOSITORY_GLYPH: 'Glyphs',
@@ -282,6 +285,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_CYCLOPENTANE_HARWORTH1: 'Cyclopentane Haworth 1',
 	HINT_REPOSITORY_CYCLOPENTANE_HARWORTH2: 'Cyclopentane Haworth 2',
 
+	HINT_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
+
+	HINT_REPOSITORY_METHANE: 'Methane',
 	HINT_REPOSITORY_FISCHER1: 'Fischer projection with one chiral center',
 	HINT_REPOSITORY_FISCHER2: 'Fischer projection with two chiral centers',
 	HINT_REPOSITORY_FISCHER3: 'Fischer projection with three chiral centers',

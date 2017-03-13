@@ -436,8 +436,15 @@ Kekule.ActionList = Class.create(ObjectEx,
 	 */
 	actionAdded: function(action)
 	{
+		if (this.getOwnActions())
+		{
+			var oldOwner = action.getOwner();
+			if (oldOwner && oldOwner.actionRemoved)
+				oldOwner.actionRemoved(action);
+			action.setPropStoreFieldValue('owner', this);
+		}
+
 		Kekule.ArrayUtils.pushUnique(this.getActions(), action);
-		action.setPropStoreFieldValue('owner', this);
 		action.update();
 		// install event listener
 		//action.addEventListener('execute', this.reactActionExecutedBinded);
@@ -493,8 +500,19 @@ Kekule.ActionList = Class.create(ObjectEx,
 
 	/**
 	 * Returns count of actions inside.
+	 * Same as {@link Kekule.ActionList.getActionLength}.
+	 * @returns {Int}
 	 */
 	getActionCount: function()
+	{
+		return this.getActions().length;
+	},
+	/**
+	 * Returns count of actions inside.
+	 * Same as {@link Kekule.ActionList.getActionCount}.
+	 * @returns {Int}
+	 */
+	getActionLength: function()
 	{
 		return this.getActions().length;
 	},
@@ -506,6 +524,24 @@ Kekule.ActionList = Class.create(ObjectEx,
 	getActionAt: function(index)
 	{
 		return this.getActions()[index];
+	},
+	/**
+	 * Returns index of an action in list.
+	 * @param {Kekule.Action} action
+	 * @returns {Int}
+	 */
+	indexOfAction: function(action)
+	{
+		return this.getActions().indexOf(action);
+	},
+	/**
+	 * Check whether an action is in this list.
+	 * @param {Kekule.Action} action
+	 * @returns {Bool}
+	 */
+	hasAction: function(action)
+	{
+		return this.indexOfAction(action) >= 0;
 	},
 
 	/**
@@ -849,5 +885,84 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 	}
   */
 });
+
+/**
+ * A util to manager all named actions for special widgets.
+ * @class
+ */
+Kekule.ActionManager = {
+	/** @private */
+	_namedActionMap: null,
+	/** @private */
+	_getNamedActionMap: function(canCreate)
+	{
+		var result = AM._namedActionMap;
+		if (!result && canCreate)
+		{
+			result = new Kekule.MapEx();
+			AM._namedActionMap = result;
+		}
+		return result;
+	},
+	/** @private */
+	getRegisteredActionsOfClass: function(widgetClass, canCreate)
+	{
+		var actionMap = AM._getNamedActionMap(canCreate);
+		if (actionMap)
+		{
+			var result = actionMap.get(widgetClass);
+			if (!result && canCreate)
+			{
+				result = {};
+				actionMap.set(widgetClass, result);
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Register a named action to a special widget class.
+	 * @param {String} name
+	 * @param {Class} actionClass
+	 * @param {Class} targetWidgetClass
+	 */
+	registerNamedActionClass: function(name, actionClass, targetWidgetClass)
+	{
+		var actions = AM.getRegisteredActionsOfClass(targetWidgetClass, true);
+		actions[name] = actionClass;
+	},
+	/**
+	 * Unregister a named action from a special widget class.
+	 * @param {String} name
+	 * @param {Class} targetWidgetClass
+	 */
+	unregisterNamedActionClass: function(name, targetWidgetClass)
+	{
+		var actions = AM.getRegisteredActionsOfClass(targetWidgetClass, false);
+		if (actions && actions[name])
+			delete actions[name];
+	},
+	/**
+	 * Returns action class associated with name for a specific widget class.
+	 * @param {String} name
+	 * @param {Variant} widgetOrClass Widget instance of widget class.
+	 * @param {Bool} checkSupClasses When true, if action is not found in current widget class, super classes will also be checked.
+	 * @returns {Class}
+	 */
+	getActionClassOfName: function(name, widgetOrClass, checkSupClasses)
+	{
+		var widgetClass = ClassEx.isClass(widgetOrClass)? widgetOrClass: widgetOrClass.getClass();
+		var actions = AM.getRegisteredActionsOfClass(widgetClass, false);
+		var result = actions && actions[name];
+		if (!result && checkSupClasses)  // cascade
+		{
+			var supClass = ClassEx.getSuperClass(widgetClass);
+			result = supClass? AM.getActionOfName(name, supClass): null;
+		}
+		return result;
+	}
+};
+var AM = Kekule.ActionManager;
 
 })();

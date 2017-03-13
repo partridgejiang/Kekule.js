@@ -19,14 +19,14 @@
  * requires /localization
  */
 
-/**
+/*
  * Default options to read/write CML format data.
  * @object
  */
-Kekule.globalOptions.IO.mdl = {
+Kekule.globalOptions.add('IO.mdl', {
 	mdlVersion: Kekule.IO.MdlVersion.V2000,
 	coordMode: Kekule.CoordMode.UNKNOWN
-};
+});
 
 /**
  * Class to read and anaylsis MDL 2000 / 3000 Connection Table block.
