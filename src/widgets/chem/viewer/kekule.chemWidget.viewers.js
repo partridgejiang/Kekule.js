@@ -34,6 +34,42 @@ var CW = Kekule.ChemWidget;
 //var CWT = Kekule.ChemWidgetTexts;
 var EM = Kekule.Widget.EvokeMode;
 
+Kekule.globalOptions.add('chemWidget.viewer', {
+	toolButtons: [
+		//BNS.loadFile,
+		BNS.loadData,
+		BNS.saveData,
+		//BNS.clearObjs,
+		BNS.molDisplayType,
+		BNS.molHideHydrogens,
+		BNS.zoomIn, BNS.zoomOut,
+		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
+		BNS.rotateLeft, BNS.rotateRight,
+		BNS.reset,
+		BNS.openEditor
+	],
+	menuItems: [
+		BNS.loadData,
+		BNS.saveData,
+		Kekule.Widget.MenuItem.SEPARATOR_TEXT,
+		BNS.molDisplayType,
+		BNS.molHideHydrogens,
+		BNS.zoomIn, BNS.zoomOut,
+		{
+			'text': Kekule.$L('ChemWidgetTexts.CAPTION_ROTATE'),
+			'hint': Kekule.$L('ChemWidgetTexts.HINT_ROTATE'),
+			'children': [
+				BNS.rotateLeft, BNS.rotateRight,
+				BNS.rotateX, BNS.rotateY, BNS.rotateZ
+			]
+		},
+		BNS.reset,
+		Kekule.Widget.MenuItem.SEPARATOR_TEXT,
+		BNS.openEditor,
+		BNS.config
+	]
+});
+
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	VIEWER: 'K-Chem-Viewer',
@@ -1068,6 +1104,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getDefaultToolBarButtons: function()
 	{
+		return Kekule.globalOptions.chemWidget.viewer.toolButtons;
+		/*
 		var buttons = [
 			//BNS.loadFile,
 			BNS.loadData,
@@ -1094,13 +1132,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// debug
 		//buttons.push(BNS.menu);
 
-		/*
-		var result = {
-			'buttons': buttons
-		};
-		return result;
-		*/
 		return buttons;
+		*/
 	},
 
 	/* @private */
@@ -1466,6 +1499,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getDefaultMenuItems: function()
 	{
+		return Kekule.globalOptions.chemWidget.viewer.menuItems;
+		/*
 		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
 		var items = [
 			BNS.loadData,
@@ -1484,29 +1519,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				BNS.rotateX, BNS.rotateY, BNS.rotateZ
 			]
 		});
-		/*
-		//if (this.getRenderType() === Kekule.Render.RendererType.R3D)
-		{
-			items = items.concat([BNS.rotateX, BNS.rotateY, BNS.rotateZ]);
-		}
-		//else
-		{
-			items = items.concat([BNS.rotateLeft, BNS.rotateRight]);
-		}
-		*/
 		items.push(BNS.reset);
 		items.push(sSeparator);
 		items.push(BNS.openEditor);
 		// config
 		items.push(BNS.config);
-
-		/*
-		 var result = {
-		 'buttons': buttons
-		 };
-		 return result;
-		 */
 		return items;
+		*/
 	},
 	/** @private */
 	prepareMenuItems: function(items)
@@ -2583,6 +2602,7 @@ Kekule._registerAfterLoadProc(function(){
 	reg(BNS.loadFile, CW.ActionDisplayerLoadFile, widgetClass);
 	reg(BNS.loadData, CW.ActionDisplayerLoadData, widgetClass);
 	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
+	reg(BNS.clearObjs, CW.ActionDisplayerClear, widgetClass);
 	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
 	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);
 	reg(BNS.rotateLeft, CW.ActionViewerRotateLeft, widgetClass);

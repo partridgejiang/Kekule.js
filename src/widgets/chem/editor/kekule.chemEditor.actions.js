@@ -659,7 +659,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	initProperties: function()
 	{
 		this.defineProp('attachedActionClasses', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
-		this.defineProp('attachedActions', {'dataType': 'Kekule.ActionList', 'serializable': false});
+		this.defineProp('attachedActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null});
 		this.defineProp('defaultAttachedAction', {'dataType': 'Kekule.Action', 'serializable': false});
 	},
 

@@ -68,6 +68,44 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_DIALOG: 'K-Chem-ComposerDialog'  //'K-Chem-Viewer-Assoc-Editor'
 });
 
+Kekule.globalOptions.add('chemWidget.composer', {
+	commonToolButtons: [
+		BNS.newDoc,
+		//BNS.loadFile,
+		BNS.loadData,
+		BNS.saveData,
+		BNS.undo,
+		BNS.redo,
+		BNS.copy,
+		BNS.cut,
+		BNS.paste,
+		//BNS.cloneSelection,
+		BNS.zoomIn,
+		BNS.reset,
+		BNS.zoomOut,
+		BNS.config,
+		BNS.objInspector
+	],
+	chemToolButtons: [
+		BNS.manipulate,
+		BNS.erase,
+		BNS.molBond,
+		BNS.molAtom,
+		BNS.molFormula,
+		BNS.molRing,
+		BNS.molCharge,
+		BNS.glyph,
+		BNS.textImage
+	],
+	styleToolComponentNames:	[
+		BNS.fontName,
+		BNS.fontSize,
+		BNS.color,
+		BNS.textDirection,
+		BNS.textAlign
+	]
+});
+
 /**
  * The style toolbar for composer.
  * @class
@@ -414,6 +452,8 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	getDefaultComponentNames: function()
 	{
+		return Kekule.globalOptions.chemWidget.composer.styleToolComponentNames;
+		/*
 		return [
 			BNS.fontName,
 			BNS.fontSize,
@@ -421,6 +461,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			BNS.textDirection,
 			BNS.textAlign
 		];
+		*/
 	},
 	/** @private */
 	recreateComponents: function()
@@ -1559,6 +1600,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	getDefaultCommonToolBarButtons: function()
 	{
+		return Kekule.globalOptions.chemWidget.composer.commonToolButtons;
+		/*
 		var buttons = [
 			BNS.newDoc,
 			//BNS.loadFile,
@@ -1577,6 +1620,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.objInspector
 		];
 		return buttons;
+		*/
 	},
 	/** @private */
 	getZoomButtonNames: function()
@@ -1590,6 +1634,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	getDefaultChemToolBarButtons: function()
 	{
+		return Kekule.globalOptions.chemWidget.composer.chemToolButtons;
+		/*
 		var buttons = [
 			BNS.manipulate,
 			BNS.erase,
@@ -1600,12 +1646,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			BNS.molCharge,
 			BNS.glyph,
 			BNS.textImage
-			/*
-			BNS.textBlock,
-			BNS.imageBlock
-			*/
 		];
 		return buttons;
+		*/
 	},
 
 	/** @private */
@@ -1734,9 +1777,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			if (checkGroup)
 				result.setCheckGroup(checkGroup);
 
+			if (result && defActions)
+				defActions.add(result);
+
 			if (result && result.addAttachedAction)
 			{
-				defActions.add(result);
 				//result.setChecked(false);
 				var subGroupName = result.getClassName();
 				// result.clearAttachedActions();
@@ -1761,7 +1806,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 					for (var i = 0, l = children.length; i < l; ++i)
 					{
 						var child = children[i];
-						var childAction = this._createToolButtonAction(child, defActions, subGroupName);
+						var childAction = this._createToolButtonAction(child, null, subGroupName); // do not add to default action list
 						attachChildAction(result, childAction, oldAttachedActions, i === 0);
 					}
 				}
@@ -1780,6 +1825,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 								childAction.setCheckGroup(subGroupName);
 								actionMap.set(aClass, childAction);
 							}
+							/*
+							else
+							{
+								console.log('use old action', childAction.getClassName());
+								if (childAction.getAttachedActions)
+									console.log(childAction.getAttachedActions().getActions());
+							}
+							*/
 							//result.addAttachedAction(childAction, i === 0);
 							attachChildAction(result, childAction, oldAttachedActions, i === 0);
 						}
@@ -1788,14 +1841,17 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				// at last remove unused old actions
 				if (oldAttachedActions.length)
 				{
-					var actions = result.getAttachedActions();
+					//var actions = result.getAttachedActions();
 					for (var i = 0, l = oldAttachedActions.length; i < l; ++i)
 					{
 						var unusedAction = oldAttachedActions[i];
 						if (unusedAction)
 						{
-							//console.log('remove action', unusedAction.getClassName());
-							actions.remove(unusedAction);
+							result.removeAttachedAction(unusedAction);
+							//actions.remove(unusedAction);
+							actionMap.remove(unusedAction.getClass());
+							//unusedAction.finalize();
+							console.log('remove action', unusedAction.getClassName(), unusedAction.getAttachedActions().getActions());
 						}
 					}
 				}
