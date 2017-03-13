@@ -1240,7 +1240,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.crea
 	'MolNodeChargeIaController-Positive',
 	{
 		'charge': null,
-		'chargeInc': 1
+		'chargeInc': 1,
+		'radical': Kekule.RadicalOrder.NONE
 	},
 	null, null,
 	BNS.molChargePositive
@@ -1253,7 +1254,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.crea
 	'MolNodeChargeIaController-Negative',
 	{
 		'charge': null,
-		'chargeInc': -1
+		'chargeInc': -1,
+		'radical': Kekule.RadicalOrder.NONE
 	},
 	null, null,
 	BNS.molChargeNegative
