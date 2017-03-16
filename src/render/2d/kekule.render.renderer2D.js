@@ -552,12 +552,38 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	drawImage: function(context, src, baseCoord, size, options, callback)
 	{
 		var self = this;
+		// TODO: this approach need to be refined in the future
 		return this.getDrawBridge().drawImage(this.getActualTargetContext(context), src, baseCoord, size, options, callback,
 				function(){ return self.getActualTargetContext(context); });
 	},
 	drawImageElem: function(context, imgElem, baseCoord, size, options)
 	{
-		return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		if (imgElem.complete)  // image already been loaded, can draw now
+		{
+			//console.log('do actual draw');
+			return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		}
+		else  // need to bind to load event, try draw later
+		{
+			var XEvent = Kekule.X.Event;
+			if (XEvent)
+			{
+				var self = this;
+				var unlinkImgDrawProc = function()
+				{
+					XEvent.removeListener(imgElem, 'load', updateImgDrawing);
+				};
+				var updateImgDrawing = function()
+				{
+					//console.log('update draw', imgElem.complete);
+					unlinkImgDrawProc(imgElem, updateImgDrawing);
+					// force update the render, force redraw again
+					self.update(self.getActualTargetContext(context), [{'obj': self.getChemObj()}], Kekule.Render.ObjectUpdateType.MODIFY);
+				};
+				XEvent.addListener(imgElem, 'load', updateImgDrawing);
+				XEvent.addListener(imgElem, 'error', unlinkImgDrawProc);
+			}
+		}
 	},
 	createDrawGroup: function(context)
 	{
@@ -1257,6 +1283,10 @@ Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRendere
 		//this.setObjDrawElem(context, chemObj, result);
 
 		return result;
+	},
+	doDrawImgContent: function(imgElem)
+	{
+
 	}
 });
 Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
