@@ -1655,7 +1655,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	getCompActionClass: function(btnName)
 	{
 		//return this.getToolButtonNameMapping()[btnName];
-		return this.getChildActionClass(btnName, false);
+		return this.getChildActionClass(btnName, true);
 	},
 	/** @private */
 	_getActionTargetWidget: function(actionClass)

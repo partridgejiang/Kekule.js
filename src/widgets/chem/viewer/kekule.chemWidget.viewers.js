@@ -1308,7 +1308,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	getCompActionClass: function(compName)
 	{
 		//return this.getToolButtonNameMapping()[compName];
-		return this.getChildActionClass(compName, false);
+		return this.getChildActionClass(compName, true);
 	},
 
 	/** @private */
