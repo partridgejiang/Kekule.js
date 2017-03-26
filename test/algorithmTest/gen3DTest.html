@@ -82,7 +82,7 @@ M  END
         viewer.setChemObj(mol3D);
       });
       */
-      calculator = Kekule.Calculator.generate3D(mol, {'forceField': ''},
+      calculator = Kekule.Calculator.generate3D(mol, {'forceField': 'mm2'},
         function(generatedMol){
           console.log(generatedMol);
           viewer.setChemObj(generatedMol);
