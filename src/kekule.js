@@ -396,7 +396,7 @@ var kekuleFiles = {
 	},
 
 	'openbabel': {
-		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io', 'html'],
 		'files': [
 			'localization/en/kekule.localize.extras.openbabel.en.js',
 			'_extras/OpenBabel/kekule.openbabel.base.js',
