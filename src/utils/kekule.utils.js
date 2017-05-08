@@ -951,7 +951,8 @@ Kekule.StrUtils = {
 		else  // assume is string
 		{
 			var reg = separator? new RegExp(separator, 'g'): /\s+/g;
-			return str.replace(reg, ' ').split(' ');
+			//return str.replace(reg, ' ').split(' ');
+			return str.split(reg);
 		}
 	},
 	/**
