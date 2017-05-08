@@ -9,30 +9,81 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function() {
+(function($root) {
 /** ignore */
 Kekule.EmscriptenUtils = {
-	isSupported: function()
+	/** @private */
+	DEF_MODULE_NAME: 'Module',
+	/** @private */
+	_createdModules: {},
+	_getActualModule: function(moduleName)
 	{
-		return (typeof(Module) !== 'undefined');
+		return $root[moduleName || EU.DEF_MODULE_NAME];
 	},
-	getRootModule: function()
+	isSupported: function(moduleName)
 	{
-		return Module;
+		return (typeof(EU._getActualModule(moduleName)) !== 'undefined');
 	},
-	getClassCtor: function(className)
+	getRootModule: function(moduleName, creationOptions)
 	{
-		if (Kekule.EmscriptenUtils.isSupported())
-			return EU.getRootModule()[className];
+		// if already created, returns
+		var name = EU._getActualModule(moduleName);
+		var result = EU._createdModules[name];
+		if (result)
+		{
+			return result;
+		}
+
+		// else try to create
+		var m = EU._getActualModule(moduleName);
+		result = m;
+		if (typeof(m) === 'function')  // compiled with modularized option
+		{
+			result = m(creationOptions);
+			EU._createdModules[name] = result;
+		}
+		return result;
+	},
+	getModuleObj: function(moduleNameOrObj)
+	{
+		if (typeof(moduleNameOrObj) === 'object')
+			return moduleNameOrObj;
+		else
+			return EU.getRootModule(moduleNameOrObj);
+	},
+	getClassCtor: function(className, moduleNameOrObj)
+	{
+		/*
+		if (Kekule.EmscriptenUtils.isSupported(moduleName))
+			return EU.getRootModule(moduleName)[className];
 		else
 			return undefined;
+		*/
+		return (EU.getModuleObj(moduleNameOrObj) || {}) [className];
 	},
-	cwrap: function(funcName, retType, inTypes)
+	cwrap: function(funcName, retType, inTypes, moduleNameOrObj)
 	{
-		if (Kekule.EmscriptenUtils.isSupported())
-			return Module.cwrap(funcName, retType, inTypes);
+		/*
+		if (Kekule.EmscriptenUtils.isSupported(moduleName))
+			return EU.getRootModule(moduleName).cwrap(funcName, retType, inTypes);
 		else
 			return null;
+		*/
+		var m = EU.getModuleObj(moduleNameOrObj);
+		return (m && m.cwrap && m.cwrap(funcName, retType, inTypes));
+	},
+
+	/**
+	 * Load an emscripten script file. When ready, callback() will be called
+	 * @param {String} url
+	 * @param {Func} callback
+	 * @param {Object} doc
+	 */
+	loadScript: function(url, callback, doc)
+	{
+		if (!doc)
+			doc = document;
+		Kekule.ScriptFileUtils.appendScriptFile(doc, url, callback);
 	}
 };
 
@@ -56,4 +107,4 @@ Module = Object.extend(Module, {
 */
 
 
-})();
+})(this);

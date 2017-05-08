@@ -22,6 +22,8 @@
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;
 /** @ignore */
+var OB = Kekule.OpenBabel;
+/** @ignore */
 var AU = Kekule.OpenBabel.AdaptUtils;
 
 /**
@@ -38,7 +40,7 @@ Kekule.OpenBabel.StructUtils = {
 	 */
 	generate3DStructure: function(mol, forceFieldName)
 	{
-		var _obGen = new (EU.getClassCtor('OB3DGenWrapper'))();
+		var _obGen = new (OB.getClassCtor('OB3DGenWrapper'))();
 		try
 		{
 			//var obMol = AU.kObjToOB(mol);
