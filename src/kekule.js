@@ -405,6 +405,13 @@ var kekuleFiles = {
 		],
 		'category': 'extra'
 	},
+	'inchi': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/InChI/kekule.inchi.js'
+		],
+		'category': 'extra'
+	},
 
 	// Localization resources
 	'localizationData.zh': {
