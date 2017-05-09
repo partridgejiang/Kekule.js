@@ -46,6 +46,10 @@ Kekule.OpenBabel = {
 		TRIPLE: 3,
 		EXPLICIT_AROMATIC: 5
 	},
+	getObInitOptions: function()
+	{
+		return obInitOptions;
+	},
 	getModule: function()
 	{
 		if (!OB._module)
@@ -64,7 +68,7 @@ Kekule.OpenBabel = {
 Kekule.OpenBabel.getObPath = function()
 {
 	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	var path = isMin? '': '_extras/OpenBabel/';
+	var path = isMin? 'extra/': '_extras/OpenBabel/';
 	path = Kekule.scriptSrcInfo.path + path;
 	return path;
 };

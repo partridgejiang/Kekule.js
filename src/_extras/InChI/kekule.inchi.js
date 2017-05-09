@@ -51,7 +51,7 @@ Kekule.InChI = {
 	getInChIPath: function()
 	{
 		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		var path = isMin? '': '_extras/InChI/';
+		var path = isMin? 'extra/': '_extras/InChI/';
 		path = Kekule.scriptSrcInfo.path + path;
 		return path;
 	},
