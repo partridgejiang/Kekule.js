@@ -95,6 +95,11 @@ if (Kekule.Calculator)
 		/** @private */
 		CLASS_NAME: 'Kekule.Calculator.ObStructure3DGenerator',
 		/** @private */
+		getObInitOptions: function()
+		{
+			return Kekule.OpenBabel.getObInitOptions();
+		},
+		/** @private */
 		getForceField: function()
 		{
 			return this.getOptions().forceField;
@@ -108,6 +113,12 @@ if (Kekule.Calculator)
 				//var url = Kekule.getScriptPath() + '_extras/OpenBabel/openbabel.js.O1';
 				var url = Kekule.OpenBabel.getObScriptUrl();
 				this.importWorkerScriptFile(url);
+				var initOps = this.getObInitOptions();
+				this.postWorkerMessage({
+					'type': 'obInit',
+					'usingModulaize': initOps.usingModulaize,
+					'moduleName': initOps.moduleName
+				});
 			}
 			return w;
 		},
@@ -115,7 +126,8 @@ if (Kekule.Calculator)
 		getWorkerScriptFile: function()
 		{
 			//return this.getWorkerBasePath() + 'kekule.worker.obStructure3DGenerator.js';
-			return Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
+			var result = Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
+			return result;
 		},
 		/** @ignore */
 		doReactWorkerMessage: function(data, e)

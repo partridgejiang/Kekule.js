@@ -4,6 +4,30 @@
  * @author Partridge Jiang
  */
 
+(function($root)
+{
+var obScriptLoaded = false;
+var initOps;
+var Module;
+
+function initEnv()
+{
+	if (!obScriptLoaded)  // OpenBabel.js not loaded, can not init now, suspend
+		return;
+	if (typeof(Module) === 'object')  // module already set up, no need to set up again
+		return;
+	if (initOps)
+	{
+		var moduleName = initOps.moduleName;
+		var module = $root[moduleName];
+		if (initOps.usingModulaize && typeof(module) === 'function')
+		{
+			module = module();
+		}
+		Module = module;
+	}
+}
+
 addEventListener('message', function(e)
 {
 	handleMessages(e.data);
@@ -14,7 +38,16 @@ function handleMessages(msgData)
 	var msgType = msgData.type;
 	if (msgType === 'importScript')
 	{
+		//console.log('import script', msgData.url);
 		importScripts(msgData.url);
+		obScriptLoaded = true;
+		// after import, set intial data
+		initEnv();
+	}
+	else if (msgType === 'obInit')  // set up initial environment
+	{
+		initOps = msgData;
+		initEnv();
 	}
 	else if (msgType === 'gen3D')
 	{
@@ -28,6 +61,7 @@ function handleMessages(msgData)
 
 function generate3DMolData(molData, forceFieldName)
 {
+	//console.log('Module', Module);
 	var _obGen = new (Module['OB3DGenWrapper'])();
 	var result = null;
 	try
@@ -64,3 +98,5 @@ function generate3DMolData(molData, forceFieldName)
 	}
 	return result;
 };
+
+})(this);
