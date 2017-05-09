@@ -396,12 +396,20 @@ var kekuleFiles = {
 	},
 
 	'openbabel': {
-		'requires': ['lan', 'root', 'core', 'emscripten', 'io', 'html'],
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'localization/en/kekule.localize.extras.openbabel.en.js',
 			'_extras/OpenBabel/kekule.openbabel.base.js',
 			'_extras/OpenBabel/kekule.openbabel.io.js',
 			'_extras/OpenBabel/kekule.openbabel.structures.js'
+		],
+		'category': 'extra'
+	},
+	'indigo': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/Indigo/kekule.indigo.base.js',
+			'_extras/Indigo/kekule.indigo.io.js'
 		],
 		'category': 'extra'
 	},
