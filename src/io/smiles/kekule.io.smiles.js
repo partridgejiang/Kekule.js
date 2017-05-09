@@ -530,7 +530,7 @@ Kekule.IO.MimeType.SMILES = 'chemical/x-daylight-smiles';
 Kekule.IO.DataFormat.SMILES = 'smi';
 var smilesFmtId = 'smi';
 
-Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, 'smi',
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, ['smi', 'smiles'],
 	Kekule.IO.ChemDataType.TEXT, 'SMILES format');
 
 var suitableClasses = [Kekule.StructureFragment, Kekule.ChemObjList, Kekule.ChemStructureObjectGroup, Kekule.ChemSpaceElement, Kekule.ChemSpace];
