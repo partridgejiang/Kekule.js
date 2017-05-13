@@ -35,10 +35,16 @@ var obInitOptions = {
  * @namespace
  */
 Kekule.OpenBabel = {
+	/**
+	 * A flag, whether auto enable InChI function when find InChI lib is already loaded.
+	 */
+	_autoEnabled: true,
 	/** @private */
 	_module: null, // a variable to store created OpenBabel module object
 	/** Base URL of OpenBabel script file. */
 	SCRIPT_FILE: 'openbabel.js',
+	/** @private */
+	_enableFuncs: [],
 	/** OpenBabel Bond order constants. */
 	BondOrder: {
 		SINGLE: 1,
@@ -61,8 +67,43 @@ Kekule.OpenBabel = {
 	getClassCtor: function(className)
 	{
 		return EU.getClassCtor(className, OB.getModule());
+	},
+	isScriptLoaded: function()
+	{
+		return EU.isSupported(obInitOptions.moduleName);
+	},
+
+	/**
+	 * Load OpenBabel.js lib and enable all related functions
+	 */
+	enable: function()
+	{
+		if (!OB.isScriptLoaded())  // OpenBabel not loaded?
+		{
+			OB.loadIndigoScript(document, function(){
+				//Kekule.IO.registerAllInChIFormats();
+				OB._enableAllFunctions();
+			});
+		}
+		else
+			OB._enableAllFunctions();
+	},
+	_enableAllFunctions: function()
+	{
+		if (OB.isScriptLoaded())
+		{
+			var funcs = OB._enableFuncs;
+			for (var i = 0, l = funcs.length; i < l; ++i)
+			{
+				var func = funcs[i];
+				if (func)
+					func();
+			}
+		}
 	}
 };
+
+Kekule._registerAfterLoadProc(function() {if (OB._autoEnabled) OB._enableAllFunctions()} );
 
 /** @ignore */
 Kekule.OpenBabel.getObPath = function()
@@ -86,19 +127,19 @@ Kekule.OpenBabel.loadObScript = function(doc, callback)
 {
 	if (!doc)
 		doc = document;
-	if (!Kekule.OpenBabel._obScriptLoaded)
+	if (!OB._obScriptLoadedBySelf && !OB.isScriptLoaded())
 	{
 		//console.log('load');
 		var filePath = Kekule.OpenBabel.getObScriptUrl();
 		EU.loadScript(filePath, callback, doc);
-		Kekule.OpenBabel._obScriptLoaded = true;
+		OB._obScriptLoadedBySelf = true;
 	}
 	else
 	{
+		OB._obScriptLoadedBySelf = true;
 		if (callback)
 			callback();
 	}
-
 };
 
 var OB = Kekule.OpenBabel;

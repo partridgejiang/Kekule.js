@@ -34,12 +34,22 @@ var inchiInitOptions = {
  * @namespace
  */
 Kekule.InChI = {
+	/**
+	 * A flag, whether auto enable InChI function when find InChI lib is already loaded.
+	 */
+	_autoEnabled: true,
 	/** @private */
-	_scriptLoaded: false,
+	_scriptLoadedBySelf: false,
 	/** @private */
 	_module: null, // a variable to store created OpenBabel module object
+	/** @private */
+	_enableFuncs: [],
 	/** Base URL of OpenBabel script file. */
 	SCRIPT_FILE: 'inchi.js',
+	isScriptLoaded: function()
+	{
+		return EU.isSupported(inchiInitOptions.moduleName);
+	},
 	getModule: function()
 	{
 		if (!InChI._module)
@@ -67,14 +77,15 @@ Kekule.InChI = {
 	{
 		if (!doc)
 			doc = document;
-		if (!InChI._scriptLoaded)
+		if (!InChI.isScriptLoaded() && !InChI._scriptLoadedBySelf)
 		{
 			var filePath = InChI.getInChIScriptUrl();
 			EU.loadScript(filePath, callback, doc);
-			InChI._scriptLoaded = true;
+			InChI._scriptLoadedBySelf = true;
 		}
 		else
 		{
+			InChI._scriptLoadedBySelf = true;
 			if (callback)
 				callback();
 		}
@@ -107,6 +118,35 @@ Kekule.InChI = {
 		// then to InChI
 		var inchi = InChI.molDataToInChI(molData);
 		return inchi;
+	},
+
+	/**
+	 * Load InChI.js lib and enable all related functions
+	 */
+	enable: function()
+	{
+		if (!InChI.isScriptLoaded())  // InChI not loaded?
+		{
+			InChI.loadInChIScript(document, function(){
+				//Kekule.IO.registerAllInChIFormats();
+				InChI._enableAllFunctions();
+			});
+		}
+		else
+			InChI._enableAllFunctions();
+	},
+	_enableAllFunctions: function()
+	{
+		if (InChI.isScriptLoaded())
+		{
+			var funcs = InChI._enableFuncs;
+			for (var i = 0, l = funcs.length; i < l; ++i)
+			{
+				var func = funcs[i];
+				if (func)
+					func();
+			}
+		}
 	}
 };
 
@@ -148,7 +188,7 @@ Kekule.IO.InChIWriter.ALLOWED_CLASSES = [Kekule.StructureFragment, Kekule.Reacti
 
 Kekule.IO.registerAllInChIFormats = function()
 {
-	if (EU.isSupported(inchiInitOptions.moduleName))
+	if (InChI.isScriptLoaded())
 	{
 		var fmtInChI = 'inchi';
 		Kekule.IO.DataFormat.INCHI = fmtInChI;
@@ -165,16 +205,11 @@ Kekule.IO.registerAllInChIFormats = function()
  */
 Kekule.IO.enableInChIFormats = function()
 {
-	if (!EU.isSupported(inchiInitOptions.moduleName))  // InChI not loaded?
-	{
-		InChI.loadInChIScript(document, function(){
-			Kekule.IO.registerAllInChIFormats();
-		});
-	}
-	else
-		Kekule.IO.registerAllInChIFormats();
+	//Kekule.IO.registerAllInChIFormats();
+	InChI.enable();
 };
+InChI._enableFuncs.push(Kekule.IO.registerAllInChIFormats);
 
-Kekule._registerAfterLoadProc(Kekule.IO.registerAllInChIFormats);
+Kekule._registerAfterLoadProc(function() {if (InChI._autoEnabled) InChI._enableAllFunctions()} );
 
 })();

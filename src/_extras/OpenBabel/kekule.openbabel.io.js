@@ -455,6 +455,7 @@ Kekule.IO.registerAllOpenBabelFormats = function()
 		}
 	}
 };
+Kekule.OpenBabel._enableFuncs.push(Kekule.IO.registerAllOpenBabelFormats);
 
 /**
  * A helper method to load open babel script library and register all I/O formats
@@ -496,10 +497,12 @@ Kekule.IO.enableOpenBabelFormats = function()
 		['MDL-rxn']);
 	*/
 	//Kekule.X.domReady(function()
+	/*
 	Kekule._registerAfterLoadProc(function()
 	{
 		Kekule.IO.registerAllOpenBabelFormats();
 	});
+	*/
 })();
 
 })();
