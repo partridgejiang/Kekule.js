@@ -187,7 +187,7 @@ Kekule.MolStereoUtils = {
 					}
 					else if (sideObjs.length === 2)
 					{
-						if (isUnset(sideObjs[0].getCanonicalizationIndex()) || isUnset(sideObjs[1].getCanonicalizationIndex())
+						if (isUnset(sideObjs[0].getCanonicalizationIndex()) && isUnset(sideObjs[1].getCanonicalizationIndex())
 							|| (sideObjs[0].getCanonicalizationIndex() === sideObjs[1].getCanonicalizationIndex()))
 						{
 							result = false;
