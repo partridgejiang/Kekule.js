@@ -76,17 +76,23 @@ Kekule.OpenBabel = {
 	/**
 	 * Load OpenBabel.js lib and enable all related functions
 	 */
-	enable: function()
+	enable: function(callback)
 	{
 		if (!OB.isScriptLoaded())  // OpenBabel not loaded?
 		{
-			OB.loadIndigoScript(document, function(){
+			OB.loadObScript(document, function(){
 				//Kekule.IO.registerAllInChIFormats();
 				OB._enableAllFunctions();
+				if (callback)
+					callback();
 			});
 		}
 		else
+		{
 			OB._enableAllFunctions();
+			if (callback)
+				callback();
+		}
 	},
 	_enableAllFunctions: function()
 	{

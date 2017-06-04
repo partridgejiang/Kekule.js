@@ -88,17 +88,23 @@ Kekule.Indigo = {
 	/**
 	 * Load Indigo.js lib and enable all related functions
 	 */
-	enable: function()
+	enable: function(callback)
 	{
 		if (!KI.isScriptLoaded())  // Indigo not loaded?
 		{
 			KI.loadIndigoScript(document, function(){
 				//Kekule.IO.registerAllInChIFormats();
 				KI._enableAllFunctions();
+				if (callback)
+					callback();
 			});
 		}
 		else
+		{
 			KI._enableAllFunctions();
+			if (callback)
+				callback();
+		}
 	},
 	_enableAllFunctions: function()
 	{

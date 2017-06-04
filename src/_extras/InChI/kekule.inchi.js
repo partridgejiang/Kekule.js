@@ -123,17 +123,23 @@ Kekule.InChI = {
 	/**
 	 * Load InChI.js lib and enable all related functions
 	 */
-	enable: function()
+	enable: function(callback)
 	{
 		if (!InChI.isScriptLoaded())  // InChI not loaded?
 		{
 			InChI.loadInChIScript(document, function(){
 				//Kekule.IO.registerAllInChIFormats();
 				InChI._enableAllFunctions();
+				if (callback)
+					callback();
 			});
 		}
 		else
+		{
 			InChI._enableAllFunctions();
+			if (callback)
+				callback();
+		}
 	},
 	_enableAllFunctions: function()
 	{
