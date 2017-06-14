@@ -249,6 +249,10 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 			for (var i = 0, l = allElems.length; i < l; ++i)
 			{
 				var elem = allElems[i];
+
+				if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+					continue;
+
 				var parentWidgetElem = elem[this.FIELD_PARENT_WIDGET_ELEM] || null;
 				// create widget only on top level elem when enableCascadeLaunch is false
 				if (Kekule.Widget.AutoLauncher.enableCascadeLaunch || !parentWidgetElem)
