@@ -5,8 +5,8 @@
 	<title>Chem Viewer 2D Demo</title>
 
 	<script src="../../libs/raphael-min.2.0.1.js"></script>
-	
-	<script src="../../libs/kekule/kekule.js?modules=chemWidget,openbabel"></script>
+
+	<script src="../../libs/kekule/kekule.js?modules=chemWidget,openbabel,indigo"></script>
 	<!--
 	<script src="../../../../project/src/kekule.js?modules=chemWidget,openbabel&min=false"></script>
 	-->
@@ -27,11 +27,15 @@
 		}
 		#header button, #header span
 		{
-			display: inline-block;			
+			display: inline-block;
 		}
 		#chemViewer
 		{
 			border: 1px solid #ccc;
+		}
+		#btnOpenBabel, #btnIndigo
+		{
+			width: 20em;
 		}
 	</style>
 
@@ -67,9 +71,12 @@ M  END
 			// adjust size
 			adjustSize();
 			window.onresize = adjustSize;
-			
+
 			Kekule.Widget.getWidgetById('btnOpenBabel').addEventListener('execute', function(e){
-				Kekule.IO.enableOpenBabelFormats();
+				Kekule.OpenBabel.enable();  //.enableOpenBabelFormats();
+			});
+			Kekule.Widget.getWidgetById('btnIndigo').addEventListener('execute', function(e){
+				Kekule.Indigo.enable();
 			});
 		}
 		function adjustSize()
@@ -90,6 +97,9 @@ M  END
 <div id="header">
 	<button id="btnOpenBabel" data-widget="Kekule.Widget.Button">Enable OpenBabel Formats</button>
 	<span>Click this button to load OpenBabel library to support more chemical data formats. Check the load or save button in viewer to see the changes.</span>
-</div>		 
+	<br />
+	<button id="btnIndigo" data-widget="Kekule.Widget.Button">Enable Indigo Plugins</button>
+	<span>Click this button to load Indigo library to support SMILES loading and auto-layout. Check the load button in viewer to load SMILES and to see the changes.</span>
+</div>
 </body>
 </html>
