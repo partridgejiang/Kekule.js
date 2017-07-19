@@ -134,12 +134,19 @@ function reactViewerChemObjLoad(e)
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
 			{
-				molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-				smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+				try
+				{
+					molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
+					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+				}
+				catch(e)
+				{
+
+				}
 				var saveObj = {
-					'smiles': smiles,
-					'molData': molData
-					};
+					'smiles': smiles || '',
+					'molData': molData || ''
+				};
 				sAnswer = JSON.stringify(saveObj);
 			}
 			ansElem.value = sAnswer;

@@ -148,14 +148,22 @@ function reactChemObjLoad(e)
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
 			{
-				molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-				smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+				var sAnswer = '';
+				try
+				{
+					molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
+					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+				}
+				catch(e)
+				{
+
+				}
 				var saveObj = {
 					'smiles': smiles,
 					'molDataType': Kekule.IO.MimeType.KEKULE_JSON,
 					'molData': molData
 				};
-				var sAnswer = JSON.stringify(saveObj);
+				sAnswer = JSON.stringify(saveObj);
 			}
 			//molDataElem.value = molData;
 			//smilesElem.value = smiles;
