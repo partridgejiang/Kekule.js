@@ -85,7 +85,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('prettyPrint', {'dataType': DataType.BOOL, 'defaultValue': true});
 	},
 	/** @private */
-	writeData: function($super, obj, dataType)
+	writeData: function($super, obj, dataType, format, options)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if ((dtype != Kekule.IO.ChemDataType.JSON) && (dtype != Kekule.IO.ChemDataType.TEXT))
@@ -101,11 +101,12 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
 		{
 			//console.log(JsonUtility.serializeToStr(result, {'prettyPrint': false}));
-			return JsonUtility.serializeToStr(result, {'prettyPrint': this.getPrettyPrint()});
+			var prettyPrint = (options && Kekule.ObjUtils.notUnset(options.prettyPrint))? options.prettyPrint: this.getPrettyPrint();
+			return JsonUtility.serializeToStr(result, {'prettyPrint': prettyPrint});
 		}
 	},
 	/** @private */
-	doWriteData: function(obj, dataType)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
