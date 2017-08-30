@@ -71,6 +71,7 @@
 		 *	 multipleBondSpacingAbs, multipleBondMaxAbsSpacing, bondArrowLength, bondArrowWidth,
 		 *   bondWedgeWidth, bondWedgeHashMinWidth:
 		 *     Those values are for drawing connectors.
+		 *   bondLengthScaleRatio: The actual bond length will be scaled according to this value.
 		 *   color: String. Color for drawing node label or connector shape.
 		 *     If this value is set, atomColor/bondColor/useAtomSpecifiedColor will be ignored.
 		 *   //  If atomColor or bondColor is set, this value is ignored.
@@ -1510,7 +1511,7 @@
 					formula = Kekule.FormulaUtils.textToFormula(this.getFormulaText());
 				else
 					formula = this.getFormula(false) || this.calcFormula();
-				if (formula.isEmpty())  // formula empty, use default caption
+				if (!formula || formula.isEmpty())  // formula empty, use default caption
 					caption = (displayLabelConfigs && displayLabelConfigs.getRgroup()) || NL.SUBGROUP;
 			}
 			var result;

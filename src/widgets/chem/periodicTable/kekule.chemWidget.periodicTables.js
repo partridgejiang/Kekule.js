@@ -48,6 +48,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ATOMIC_WEIGHT: 'K-Chem-Atomic-Weight'
 });
 
+Kekule.globalOptions.add('chemWidget.periodicTable',{
+	'displayedComponents': ['symbol', 'name', 'atomicNumber', /*'atomicWeight',*/ 'groupHead', /*'periodHead',*/ 'legend']
+});
+
 /**
  * An widget to display periodic table and to select element on it.
  * @class
@@ -209,7 +213,8 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	getDefaultDisplayedComponents: function()
 	{
-		return ['symbol', 'name', 'atomicNumber', /*'atomicWeight',*/ 'groupHead', /*'periodHead',*/ 'legend'];
+		//return ['symbol', 'name', 'atomicNumber', /*'atomicWeight',*/ 'groupHead', /*'periodHead',*/ 'legend'];
+		return Kekule.globalOptions.chemWidget.periodicTable.displayedComponents;
 	},
 	/** @private */
 	getShowElemSymbol: function()

@@ -38,6 +38,10 @@ class qtype_kekule_mol_naming_configs
 ）=)
 【=[
 】=]
+‘='
+’='
+“="
+”="
 STR;
     const DEF_REMOVE_SPACES = true;
     const DEF_REPLACE_UNSTANDARD_CHARS= true;

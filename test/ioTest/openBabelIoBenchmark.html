@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenBabel IO Benchmark</title>
+  <script src="../../src/_extras/OpenBabel/openbabel.js.dev"></script>
+  <script src="../../src/kekule.js?modules=chemWidget,openbabel&min=false"></script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+  <script>
+    /** @ignore */
+    var EU = Kekule.EmscriptenUtils;
+    /** @ignore */
+    var AU = Kekule.OpenBabel.AdaptUtils;
+
+    function loadFile(fileName, data, loopCount)
+    {
+      console.log(fileName, data);
+      var ext = Kekule.UrlUtils.extractFileExt(fileName);
+      var formatInfo = Kekule.IO.DataFormatsManager.findFormat(null, ext);
+
+      // Now load via OpenBabel
+      var reader = new Kekule.IO.OpenBabelReader();
+
+      // benchmark
+      var mol = reader.readData(data, null, formatInfo.id);
+      if (mol)
+      {
+        var _obConv = new (EU.getClassCtor('ObConversionWrapper'))();
+        var mimeType = formatInfo.mimeType;
+        var fileExt = formatInfo.fileExts[0];
+        var fmt = _obConv.setInFormat(mimeType, fileExt);
+        var obClassName = 'OBMol';
+        var obObj = new (EU.getClassCtor(obClassName))();
+
+        var tStart = Date.now();
+        for (var i = 0; i < loopCount; ++i)
+        {
+          /*
+          _obConv.setInStr(data);
+          var hasObj = _obConv.readFromInput(obObj);
+          if (hasObj)
+            console.log('Read success', i);
+          */
+
+          var mol = reader.readData(data, null, formatInfo.id);
+          /*
+          if (!!mol)
+            console.log('Read success', i);
+          */
+        }
+        var tEnd = Date.now();
+        _obConv['delete']();
+      }
+      console.log(mol);
+      console.log('Run read MOL ' + loopCount + ' times in ', tEnd - tStart, ' ms');
+    }
+    function init()
+    {
+      var btnInput = Kekule.Widget.getWidgetById('btnOpenFile');
+      var inputLoopCount = Kekule.Widget.getWidgetById('inputLoopCount');
+      var actionLoadFile = new Kekule.ActionLoadFileData();
+      actionLoadFile.on('load', function(e){
+        if (e.success)
+        {
+          var loopCount = parseInt(inputLoopCount.getValue());
+          loadFile(e.fileName, e.data, loopCount || 1);
+        }
+        else
+          Kekule.error('Fail to load data');
+      });
+      btnInput.setAction(actionLoadFile);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <button id="btnOpenFile" data-widget="Kekule.Widget.Button">Input file...</button>
+  <input type="text" id="inputLoopCount" data-widget="Kekule.Widget.TextBox" value="100"/>
+</body>
+</html>

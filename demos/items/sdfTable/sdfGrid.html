@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html manifest1="dataTable.manifest1">
+<head>
+  <meta charset="UTF-8">
+  <title>SDF Grid Demo</title>
+  <script src="../../libs/raphael-min.2.0.1.js"></script>
+
+  <script src="../../libs/kekule/kekule.js?modules=widget,chemWidget"></script>
+
+  <script src="sdfGrid.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+</head>
+
+<body>
+<div>
+  <label for="inputFile" data-widget="Kekule.Widget.Button">Load SDF File</label><input id="inputFile" type="file" style="display: none" />
+</div>
+
+<div id="viewerGrid" data-widget="Kekule.ChemWidget.ViewerGrid2D" data-cell-width="300px" data-cell-height="250px"></div>
+
+</body>
+</html>

@@ -1103,6 +1103,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns child action class associated with name for this widget.
+	 * @param {String} actionName
+	 * @param {Bool} checkSupClasses When true, if action is not found in current widget class, super classes will also be checked.
+	 * @returns {Class}
+	 */
+	getChildActionClass: function(actionName, checkSupClasses)
+	{
+		var result = Kekule.ActionManager.getActionClassOfName(actionName, this, checkSupClasses);
+		return result;
+	},
+
+	/**
 	 * Apply style resource to self or an element.
 	 * @param {Variant} resOrName An instance of {@link Kekule.Widget.StyleResource} or resource name.
 	 * @param {HTMLElement} element If not set, style will be set to widget element.

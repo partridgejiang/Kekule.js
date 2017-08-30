@@ -20,11 +20,16 @@
  */
 
 (function(){
-"use strict"
+"use strict";
 
 var AU = Kekule.ArrayUtils;
+var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 //var CWT = Kekule.ChemWidgetTexts;
+var AM = Kekule.ActionManager;
+
+var _editorActionRegInfo = [];
+
 
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
@@ -37,6 +42,58 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
 	ACTION_TOGGLE_INSPECTOR: 'K-Chem-Toggle-Inspector'
+});
+
+Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
+	molBondSingle: 'bondSingle',
+	molBondDouble: 'bondDouble',
+	molBondTriple: 'bondTriple',
+	molBondCloser: 'bondCloser',
+	molBondWedgeUp: 'bondWedgeUp',
+	molBondWedgeDown: 'bondWedgeDown',
+	molBondWedgeUpOrDown: 'bondWedgeUpOrDown',
+	molBondDoubleEither: 'bondDoubleEither',
+
+	molChargeClear: 'chargeClear',
+	molChargePositive: 'chargePositive',
+	molChargeNegative: 'chargeNegative',
+	molRadicalSinglet: 'radicalSinglet',
+	molRadicalTriplet: 'radicalTriplet',
+	molRadicalDoublet: 'radicalDoublet',
+
+	molRing3: 'ring3',
+	molRing4: 'ring4',
+	molRing5: 'ring5',
+	molRing6: 'ring6',
+	molRing7: 'ring7',
+	molRing8: 'ring8',
+	molRingAr6: 'ringAr6',
+	molRingAr5: 'ringAr5',
+
+	molRepCyclopentaneHaworth1: 'repCyclopentaneHaworth1',
+	molRepCyclopentaneHaworth2: 'repCyclopentaneHaworth2',
+	molRepCyclohexaneHaworth1: 'repCyclohexaneHaworth1',
+	molRepCyclohexaneHaworth2: 'repCyclohexaneHaworth2',
+	molRepCyclohexaneChair1: 'repCyclohexaneChair1',
+	molRepCyclohexaneChair2: 'repCyclohexaneChair2',
+
+	molRepSubBondMark: 'subBondMark',
+	molRepMethane: 'methane',
+	molRepFischer1: 'repFischer1',
+	molRepFischer2: 'repFischer2',
+	molRepFischer3: 'repFischer3',
+	molRepSawhorseStaggered: 'repSawhorseStaggered',
+	molRepSawhorseEclipsed: 'repSawhorseEclipsed',
+
+	glyphRepLine: 'repLine',
+	glyphRepOpenArrowLine: 'repOpenArrowLine',
+	glyphRepTriangleArrowLine: 'repTriangleArrowLine',
+	glyphRepDiOpenArrowLine: 'repDiOpenArrowLine',
+	glyphRepDiTriangleArrowLine: 'repDiTriangleArrowLine',
+	glyphRepReversibleArrowLine: 'repReversibleArrowLine',
+	glyphRepOpenArrowDiLine: 'repOpenArrowDiLine',
+	glyphRepHeatSymbol: 'repHeatSymbol',
+	glyphRepAddSymbol: 'repAddSymbol'
 });
 
 /**
@@ -601,6 +658,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('attachedActionClasses', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		this.defineProp('attachedActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null});
 		this.defineProp('defaultAttachedAction', {'dataType': 'Kekule.Action', 'serializable': false});
 	},
@@ -610,6 +668,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	{
 		$super();
 		var checked = this.getChecked();
+		//console.log('self checked change', this.getClassName(), checked);
 		if (this.hasAttachedActions())
 		{
 			var composer = this.getComposer();
@@ -621,7 +680,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 					composer.bindAssocActions(attachedActions);
 					composer.showAssocToolbar();
 					var checkedChild = attachedActions.getCheckedAction(this.getClassName());
-					//console.log('self checked change', this.getClassName(), checkedChild, attachedActions.getActions());
+					//console.log('child checked change', this.getClassName(), checkedChild.getClassName(), attachedActions.getActions());
 					/*
 					if (checkedChild)
 					{
@@ -666,7 +725,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	/**
 	 * Add an attached actions.
 	 */
-	addAttachedActions: function(action, asDefault)
+	addAttachedAction: function(action, asDefault)
 	{
 		this.getAttachedActions().add(action);
 		if (asDefault)
@@ -676,7 +735,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	/**
 	 * Remove attached actions.
 	 */
-	removeAttachedActions: function(action)
+	removeAttachedAction: function(action)
 	{
 		if (this.getDefaultAttachedAction() === action)
 			this.setDefaultAttachedAction(null);
@@ -784,10 +843,13 @@ Kekule.Editor.ActionComposerSetIaController = Class.create(Kekule.Editor.ActionO
 	}
 });
 
+
+
 /** @ignore */
 Kekule.Editor.createComposerIaControllerActionClass = function(className,
 	caption, hint, iaControllerId, htmlClassName,
-	specifiedProps, attachedActionClasses, methods)
+	specifiedProps, attachedActionClasses, methods,
+	actionRegName, actionTargetClass)
 {
 	if (!htmlClassName)
 		htmlClassName = iaControllerId;
@@ -817,25 +879,33 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			$super();
 		}
 	}
+	if (methods)
+	{
+		data = Object.extend(data, methods);
+	}
 	if (attachedActionClasses)
 	{
 		data.initAttachedActions = function()
 		{
+			/*
 			var composer = this.getComposer();
 			var checkGroup = this.getClassName();
 			for (var i = 0, l = attachedActionClasses.length; i < l; ++i)
 			{
 				var action = new attachedActionClasses[i](composer);
 				action.setCheckGroup(checkGroup);
-				this.addAttachedActions(action, i === 0);  // the first one is the default action
+				this.addAttachedAction(action, i === 0);  // the first one is the default action
 			}
-		}
+			*/
+			this.setPropStoreFieldValue('attachedActionClasses', attachedActionClasses);
+		};
 	}
-	if (methods)
+	var result = Class.create(Kekule.Editor.ActionComposerSetIaController, data);
+	if (actionRegName)
 	{
-		data = Object.extend(data, methods);
+		_editorActionRegInfo.push({'name': actionRegName, 'actionClass': result, 'widgetClass': actionTargetClass});
 	}
-	return Class.create(Kekule.Editor.ActionComposerSetIaController, data);
+	return result;
 };
 
 ////////////// create ia controller actions ///////////////////////////
@@ -847,7 +917,8 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE'), //Kekule.ChemWidgetTexts.HINT_MANIPULATE,
 	'BasicMolManipulationIaController',
 	null,
-	null
+	null, null, null,
+	BNS.manipulate
 );
 
 // Erase
@@ -867,7 +938,8 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 			if (editor.hasSelection())
 				editor.getActiveIaController().removeSelection();
 		}
-	}
+	},
+	BNS.erase
 );
 
 // Bond and its variations
@@ -881,7 +953,9 @@ Kekule.Editor.ActionComposerSetBondControllerSingle = Kekule.Editor.createCompos
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.SINGLE,
 		'bondStereo': Kekule.BondStereo.NONE
-	}
+	},
+	null, null,
+	BNS.molBondSingle
 );
 Kekule.Editor.ActionComposerSetBondControllerDouble = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerDouble',
@@ -893,7 +967,9 @@ Kekule.Editor.ActionComposerSetBondControllerDouble = Kekule.Editor.createCompos
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.DOUBLE,
 		'bondStereo': Kekule.BondStereo.NONE
-	}
+	},
+	null, null,
+	BNS.molBondDouble
 );
 Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerTriple',
@@ -905,7 +981,9 @@ Kekule.Editor.ActionComposerSetBondControllerTriple = Kekule.Editor.createCompos
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.TRIPLE,
 		'bondStereo': Kekule.BondStereo.NONE
-	}
+	},
+	null, null,
+	BNS.molBondTriple
 );
 Kekule.Editor.ActionComposerSetBondControllerCloser = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerCloser',
@@ -917,7 +995,9 @@ Kekule.Editor.ActionComposerSetBondControllerCloser = Kekule.Editor.createCompos
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.SINGLE,
 		'bondStereo': Kekule.BondStereo.CLOSER
-	}
+	},
+	null, null,
+	BNS.molBondCloser
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeUp',
@@ -929,7 +1009,9 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeUp = Kekule.Editor.createCompo
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.SINGLE,
 		'bondStereo': Kekule.BondStereo.UP
-	}
+	},
+	null, null,
+	BNS.molBondWedgeUp
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeDown = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeDown',
@@ -941,7 +1023,9 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeDown = Kekule.Editor.createCom
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.SINGLE,
 		'bondStereo': Kekule.BondStereo.DOWN
-	}
+	},
+	null, null,
+	BNS.molBondWedgeDown
 );
 Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown',
@@ -953,7 +1037,9 @@ Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown = Kekule.Editor.creat
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.SINGLE,
 		'bondStereo': Kekule.BondStereo.UP_OR_DOWN
-	}
+	},
+	null, null,
+	BNS.molBondWedgeUpOrDown
 );
 Kekule.Editor.ActionComposerSetBondControllerDoubleEither = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerDoubleEither',
@@ -965,7 +1051,94 @@ Kekule.Editor.ActionComposerSetBondControllerDoubleEither = Kekule.Editor.create
 		'bondType': Kekule.BondType.COVALENT,
 		'bondOrder': Kekule.BondOrder.DOUBLE,
 		'bondStereo': Kekule.BondStereo.E_OR_Z
-	}
+	},
+	null, null,
+	BNS.molBondDoubleEither
+);
+
+Kekule.Editor.ActionComposerSetRepositoryFischer1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryFischer1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER1'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-Fischer1',
+	{
+		'repItemName': 'fischer1'
+	},
+	null, null,
+	BNS.molRepFischer1
+);
+Kekule.Editor.ActionComposerSetRepositoryFischer2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryFischer2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER2'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-Fischer2',
+	{
+		'repItemName': 'fischer2'
+	},
+	null, null,
+	BNS.molRepFischer2
+);
+Kekule.Editor.ActionComposerSetRepositoryFischer3Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryFischer3Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_FISCHER3'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_FISCHER3'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-Fischer3',
+	{
+		'repItemName': 'fischer3'
+	},
+	null, null,
+	BNS.molRepFischer3
+);
+Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SAWHORSE_STAGGERED'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SAWHORSE_STAGGERED'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-SawhorseStaggered',
+	{
+		'repItemName': 'sawhorseStaggered'
+	},
+	null, null,
+	BNS.molRepSawhorseStaggered
+);
+Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SAWHORSE_ECLIPSED'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SAWHORSE_ECLIPSED'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-SawhorseEclipsed',
+	{
+		'repItemName': 'sawhorseEclipsed'
+	},
+	null, null,
+	BNS.molRepSawhorseEclipsed
+);
+Kekule.Editor.ActionComposerSetRepositoryMethaneController = Kekule.Editor.createComposerIaControllerActionClass(
+		'Kekule.Editor.ActionComposerSetRepositoryMethaneController',
+		Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_METHANE'),
+		Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_METHANE'),
+		'RepositoryStructureFragmentIaController',
+		'RepositoryStructureFragmentIaController-Methane',
+		{
+			'repItemName': 'methane'
+		},
+		null, null,
+		BNS.molRepMethane
+);
+Kekule.Editor.ActionComposerSetRepositorySubBondMarkController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositorySubBondMarkController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_SUBBOND_MARK'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_SUBBOND_MARK'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-SubBondMark',
+	{
+		'repItemName': 'substituentMark'
+	},
+	null, null,
+	BNS.molRepSubBondMark
 );
 
 Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaControllerActionClass(
@@ -983,7 +1156,14 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
-		Kekule.Editor.ActionComposerSetBondControllerDoubleEither
+		Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
+		Kekule.Editor.ActionComposerSetRepositoryMethaneController,
+		//Kekule.Editor.ActionComposerSetRepositorySubBondMarkController,
+		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
+		Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController,
+		Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController
 	]
 	/*
 	 {
@@ -991,7 +1171,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 	 {
 	 var composer = this.getComposer();
 	 var checkGroup = this.getClassName();
-	 //console.log(this, this.addAttachedActions);
+	 //console.log(this, this.addAttachedAction);
 	 var classes = [
 	 Kekule.Editor.ActionComposerSetBondControllerSingle,
 	 Kekule.Editor.ActionComposerSetBondControllerDouble,
@@ -1004,11 +1184,13 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 	 {
 	 var action = new classes[i](composer);
 	 action.setCheckGroup(checkGroup);
-	 this.addAttachedActions(action);
+	 this.addAttachedAction(action);
 	 }
 	 }
 	 }
 	 */
+	,null,
+	BNS.molBond
 );
 
 // Atom
@@ -1018,7 +1200,9 @@ Kekule.Editor.ActionComposerSetAtomController = Kekule.Editor.createComposerIaCo
 	Kekule.$L('ChemWidgetTexts.HINT_MOL_ATOM'), //Kekule.ChemWidgetTexts.HINT_MOL_ATOM,
 	'MolAtomIaController',
 	null,
-	null
+	null,
+	null, null,
+	BNS.molAtom
 );
 
 // formula
@@ -1028,7 +1212,9 @@ Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerI
 	Kekule.$L('ChemWidgetTexts.HINT_MOL_FORMULA'), //Kekule.ChemWidgetTexts.HINT_MOL_FORMULA,
 	'FormulaIaController',
 	null,
-	null
+	null,
+	null, null,
+	BNS.molFormula
 );
 
 // Charge and its variations
@@ -1042,7 +1228,9 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createC
 		'charge': 0,
 		'chargeInc': 0,
 		'radical': Kekule.RadicalOrder.NONE
-	}
+	},
+	null, null,
+	BNS.molChargeClear
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerPositive',
@@ -1052,8 +1240,11 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.crea
 	'MolNodeChargeIaController-Positive',
 	{
 		'charge': null,
-		'chargeInc': 1
-	}
+		'chargeInc': 1,
+		'radical': Kekule.RadicalOrder.NONE
+	},
+	null, null,
+	BNS.molChargePositive
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerNegative',
@@ -1063,8 +1254,11 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.crea
 	'MolNodeChargeIaController-Negative',
 	{
 		'charge': null,
-		'chargeInc': -1
-	}
+		'chargeInc': -1,
+		'radical': Kekule.RadicalOrder.NONE
+	},
+	null, null,
+	BNS.molChargeNegative
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet',
@@ -1076,7 +1270,9 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Edito
 		'charge': null,
 		'chargeInc': 0,
 		'radical': Kekule.RadicalOrder.SINGLET
-	}
+	},
+	null, null,
+	BNS.molRadicalSinglet
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet',
@@ -1088,7 +1284,9 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet = Kekule.Edito
 		'charge': null,
 		'chargeInc': 0,
 		'radical': Kekule.RadicalOrder.TRIPLET
-	}
+	},
+	null, null,
+	BNS.molRadicalTriplet
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet',
@@ -1100,7 +1298,9 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet = Kekule.Edito
 		'charge': null,
 		'chargeInc': 0,
 		'radical': Kekule.RadicalOrder.DOUBLET
-	}
+	},
+	null, null,
+	BNS.molRadicalDoublet
 );
 
 Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createComposerIaControllerActionClass(
@@ -1117,7 +1317,9 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet
-	]
+	],
+	null,
+	BNS.molCharge
 );
 
 //////////// Text and image /////////////
@@ -1129,16 +1331,20 @@ Kekule.Editor.ActionComposerSetTextBlockController = Kekule.Editor.createCompose
 	Kekule.$L('ChemWidgetTexts.HINT_TEXT_BLOCK'),
 	'TextBlockIaController',
 	null,
-	null
+	null,
+	null, null,
+	BNS.textBlock
 );
 // Image block
 Kekule.Editor.ActionComposerSetImageBlockController = Kekule.Editor.createComposerIaControllerActionClass(
-		'Kekule.Editor.ActionComposerSetImageBlockController',
-		Kekule.$L('ChemWidgetTexts.CAPTION_IMAGE_BLOCK'),
-		Kekule.$L('ChemWidgetTexts.HINT_IMAGE_BLOCK'),
-		'ImageBlockIaController',
-		null,
-		null
+	'Kekule.Editor.ActionComposerSetImageBlockController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_IMAGE_BLOCK'),
+	Kekule.$L('ChemWidgetTexts.HINT_IMAGE_BLOCK'),
+	'ImageBlockIaController',
+	null,
+	null,
+	null, null,
+	BNS.imageBlock
 );
 
 Kekule.Editor.ActionComposerSetTextImageController = Kekule.Editor.createComposerIaControllerActionClass(
@@ -1151,7 +1357,9 @@ Kekule.Editor.ActionComposerSetTextImageController = Kekule.Editor.createCompose
 	[
 		Kekule.Editor.ActionComposerSetTextBlockController,
 		Kekule.Editor.ActionComposerSetImageBlockController
-	]
+	],
+	null,
+	BNS.textImage
 );
 
 //////////////////// repository and its variations //////////////////////////
@@ -1165,7 +1373,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing3Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 3,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing3
 );
 Kekule.Editor.ActionComposerSetRepositoryRing4Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing4Controller',
@@ -1176,7 +1386,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing4Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 4,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing4
 );
 Kekule.Editor.ActionComposerSetRepositoryRing5Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing5Controller',
@@ -1187,7 +1399,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing5Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 5,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing5
 );
 Kekule.Editor.ActionComposerSetRepositoryRing6Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing6Controller',
@@ -1198,7 +1412,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing6Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 6,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing6
 );
 Kekule.Editor.ActionComposerSetRepositoryRing7Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing7Controller',
@@ -1209,7 +1425,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing7Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 7,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing7
 );
 Kekule.Editor.ActionComposerSetRepositoryRing8Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRing8Controller',
@@ -1220,7 +1438,9 @@ Kekule.Editor.ActionComposerSetRepositoryRing8Controller = Kekule.Editor.createC
 	{
 		'ringAtomCount': 8,
 		'isAromatic': false
-	}
+	},
+	null, null,
+	BNS.molRing8
 );
 Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller',
@@ -1231,7 +1451,9 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller = Kekule.Editor.creat
 	{
 		'ringAtomCount': 6,
 		'isAromatic': true
-	}
+	},
+	null, null,
+	BNS.molRingAr6
 );
 Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller',
@@ -1242,22 +1464,83 @@ Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller = Kekule.Editor.creat
 	{
 		'ringAtomCount': 5,
 		'isAromatic': true
-	}
+	},
+	null, null,
+	BNS.molRingAr5
 );
 
-	// debug
-	/*
-	Kekule.Editor.ActionComposerSetRepositoryTBuController = Kekule.Editor.createComposerIaControllerActionClass(
-			'Kekule.Editor.ActionComposerSetRepositoryTBuController',
-			'tBu', //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
-			't-Bu', //Kekule.ChemWidgetTexts.HINT_REPOSITORY_RING_AR_5,
-			'StoredStructureFragmentIaController',
-			'StoredStructureFragmentIaController-tBu',
-			{
-				'structData': '{"id":"m1","renderOptions":{"expanded":false,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":8.792444254557292,"y":35.52755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a4","coord2D":{"x":9.485264577584852,"y":35.12755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":8.792444254557287,"y":36.32755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":9.485264577584843,"y":35.92755574544271,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b3","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b2","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b1","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,3]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}'
-			}
-	);
-	*/
+Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH1'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOPENTANE_HARWORTH1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclopentaneHaworth1',
+	{
+		'repItemName': 'cyclopentaneHaworth1'
+	},
+	null, null,
+	BNS.molRepCyclopentaneHaworth1
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOPENTANE_HARWORTH2'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOPENTANE_HARWORTH2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclopentaneHaworth2',
+	{
+		'repItemName': 'cyclopentaneHaworth2'
+	},
+	null, null,
+	BNS.molRepCyclopentaneHaworth2
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_HARWORTH1'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_HARWORTH1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneHaworth1',
+	{
+		'repItemName': 'cyclohexaneHaworth1'
+	},
+	null, null,
+	BNS.molRepCyclohexaneHaworth1
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_HARWORTH2'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_HARWORTH2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneHaworth2',
+	{
+		'repItemName': 'cyclohexaneHaworth2'
+	},
+	null, null,
+	BNS.molRepCyclohexaneHaworth2
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR1'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_CHAIR1'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneChair1',
+	{
+		'repItemName': 'cyclohexaneChair1'
+	},
+	null, null,
+	BNS.molRepCyclohexaneChair1
+);
+Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR2'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_RING_AR_5,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_CYCLOHEXANE_CHAIR2'),
+	'RepositoryStructureFragmentIaController',
+	'RepositoryStructureFragmentIaController-CyclohexaneChair2',
+	{
+		'repItemName': 'cyclohexaneChair2'
+	},
+	null, null,
+	BNS.molRepCyclohexaneChair2
+);
 
 Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryRingController',
@@ -1274,9 +1557,16 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller
-		//Kekule.Editor.ActionComposerSetRepositoryTBuController   // debug
-	]
+		Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller,
+		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller
+	],
+	null,
+	BNS.molRing
 );
 
 // PathGlyph
@@ -1290,7 +1580,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathLineController = Kekule.Editor.crea
 		'glyphClass': Kekule.Glyph.StraightLine,
 		'glyphInitialParams': null,
 		'lineLength': 1.5
-	}
+	},
+	null, null,
+	BNS.glyphRepLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController',
@@ -1306,7 +1598,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController = Kekule.Ed
 			'endArrowLength': 0.25,
 			'lineLength': 1.5
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepOpenArrowLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController',
@@ -1322,7 +1616,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController = Kekul
 			'endArrowLength': 0.25,
 			'lineLength': 1.5
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepTriangleArrowLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController',
@@ -1341,7 +1637,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController = Kekule.
 			'endArrowLength': 0.25,
 			'lineLength': 1.5
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepDiOpenArrowLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController',
@@ -1360,7 +1658,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController = Kek
 			'endArrowLength': 0.25,
 			'lineLength': 1.5
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepDiTriangleArrowLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController',
@@ -1383,7 +1683,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController = Kek
 			'lineGap': 0.1,
 			'lineCount': 2
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepReversibleArrowLine
 );
 Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController',
@@ -1401,7 +1703,9 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule
 			'lineGap': 0.1,
 			'lineCount': 2
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepOpenArrowDiLine
 );
 Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController',
@@ -1414,7 +1718,9 @@ Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.cr
 		'glyphInitialParams': {
 			'lineLength': 1
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepHeatSymbol
 );
 Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryAddSymbolController',
@@ -1427,7 +1733,9 @@ Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.cre
 		'glyphInitialParams': {
 			'lineLength': 1
 		}
-	}
+	},
+	null, null,
+	BNS.glyphRepAddSymbol
 );
 
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
@@ -1447,8 +1755,55 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
 		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
-	]
+	],
+	null,
+	BNS.glyph
 );
+
+// register actions to editor/composer widget
+Kekule._registerAfterLoadProc(function(){
+	var AM = Kekule.ActionManager;
+	var CW = Kekule.ChemWidget;
+	var CE = Kekule.Editor;
+	var widgetClass = Kekule.Editor.ChemSpaceEditor;
+	var reg = AM.registerNamedActionClass;
+
+	reg(BNS.newDoc, CE.ActionEditorNewDoc, widgetClass);
+	reg(BNS.loadFile, CW.ActionDisplayerLoadFile, widgetClass);
+	reg(BNS.loadData, CW.ActionDisplayerLoadData, widgetClass);
+	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
+	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
+	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);
+	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
+	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
+	reg(BNS.undo, CE.ActionEditorUndo, widgetClass);
+	reg(BNS.redo, CE.ActionEditorRedo, widgetClass);
+	reg(BNS.cloneSelection, CE.ActionCloneSelection, widgetClass);
+	reg(BNS.copy, CE.ActionCopySelection, widgetClass);
+	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
+	reg(BNS.paste, CE.ActionPaste, widgetClass);
+
+	//reg(BNS.manipulate, CE.ActionComposerSetManipulateController, widgetClass);
+	//reg(BNS.erase, CE.ActionComposerSetEraserController, widgetClass);
+	//reg(BNS.molAtom, CE.ActionComposerSetAtomController, widgetClass);
+	//reg(BNS.molFormula, CE.ActionComposerSetFormulaController, widgetClass);
+	//reg(BNS.molBond, CE.ActionComposerSetBondController, widgetClass);
+	//reg(BNS.molCharge, CE.ActionComposerSetNodeChargeController, widgetClass);
+	//reg(BNS.textBlock, CE.ActionComposerSetTextBlockController, widgetClass);
+	//reg(BNS.imageBlock, CE.ActionComposerSetImageBlockController, widgetClass);
+	//reg(BNS.textImage, CE.ActionComposerSetTextImageController, widgetClass);
+	//reg(BNS.molRing, CE.ActionComposerSetRepositoryRingController, widgetClass);
+	//reg(BNS.glyph, CE.ActionComposerSetRepositoryGlyphController, widgetClass);
+
+	reg(BNS.objInspector, CE.ActionComposerToggleInspector, widgetClass);
+
+	// actions created by function createComposerIaControllerActionClass
+	for (var i = 0, l = _editorActionRegInfo.length; i < l; ++i)
+	{
+		var info = _editorActionRegInfo[i];
+		reg(info.name, info.actionClass, info.widgetClass || widgetClass);
+	}
+});
 
 
 })();

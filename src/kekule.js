@@ -359,7 +359,7 @@ var kekuleFiles = {
 		'files': [
 			'algorithm/kekule.graph.js',
 			'algorithm/kekule.structures.helpers.js',
-			'algorithm/kekule.structures.comparers.js',
+			//'algorithm/kekule.structures.comparers.js',
 			'algorithm/kekule.structures.canonicalizers.js',
 			'algorithm/kekule.structures.ringSearches.js',
 			'algorithm/kekule.structures.aromatics.js',
@@ -402,6 +402,21 @@ var kekuleFiles = {
 			'_extras/OpenBabel/kekule.openbabel.base.js',
 			'_extras/OpenBabel/kekule.openbabel.io.js',
 			'_extras/OpenBabel/kekule.openbabel.structures.js'
+		],
+		'category': 'extra'
+	},
+	'indigo': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/Indigo/kekule.indigo.base.js',
+			'_extras/Indigo/kekule.indigo.io.js'
+		],
+		'category': 'extra'
+	},
+	'inchi': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/InChI/kekule.inchi.js'
 		],
 		'category': 'extra'
 	},

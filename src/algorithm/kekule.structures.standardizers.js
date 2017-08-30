@@ -20,6 +20,17 @@
 "use strict";
 
 /**
+ * Default options to do structure standardize.
+ * @object
+ */
+Kekule.globalOptions.add('algorithm.molStandardization', {
+	unmarshalSubFragments: true,
+	doCanonicalization: true,
+	doAromaticPerception: true,
+	doStereoPerception: true
+});
+
+/**
  * A helper class to standardize molecule.
  * @class
  */
@@ -40,12 +51,7 @@ Kekule.MolStandardizer = {
 	 */
 	standardize: function(structureFragment, options)
 	{
-		var defOptions = {
-			unmarshalSubFragments: true,
-			doCanonicalization: true,
-			doAromaticPerception: true,
-			doStereoPerception: true
-		};
+		var defOptions = Object.extend({}, Kekule.globalOptions.algorithm.molStandardization);
 		var mol = structureFragment;
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)
@@ -68,6 +74,28 @@ Object.extend(Kekule.ChemStructureUtils,
 /** @lends Kekule.ChemStructureUtils */
 {
 	/**
+	 * Compare two structure fragment (molecule) in chem level (atoms, bonds and structures).
+	 * @param {Kekule.StructureFragment} mol1
+	 * @param {Kekule.StructureFragment} mol2
+	 * @param {Hash} compareOptions
+	 * @returns {Int}
+	 */
+	compareStructFragment: function(mol1, mol2, compareOptions)
+	{
+		// clone the structure to avoid change original molecule objects
+		var m1 = mol1.clone(false);
+		var m2 = mol2.clone(false);
+		// standardize each
+		m1 = Kekule.MolStandardizer.standardize(m1);
+		m2 = Kekule.MolStandardizer.standardize(m2);
+		// compare options
+		var op = Object.create(compareOptions || {}); //Object.extend(compareOptions || {});
+		op.doStandardize = false;  // flag that notify the molecule do not do standardize again (that will invoke recursion)
+		// compare
+		//return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
+		return m1.compareStructure(m2, op);
+	},
+	/**
 	 * Check if two structure fragment (molecule) is same in chem level (same
 	 * atoms, bonds and structures).
 	 * @param {Kekule.StructureFragment} mol1
@@ -77,16 +105,7 @@ Object.extend(Kekule.ChemStructureUtils,
 	 */
 	isSameStructure: function(mol1, mol2, compareOptions)
 	{
-		// clone the structure to avoid change original molecule objects
-		var m1 = mol1.clone(false);
-		var m2 = mol2.clone(false);
-		// standardize each
-		m1 = Kekule.MolStandardizer.standardize(m1);
-		m2 = Kekule.MolStandardizer.standardize(m2);
-		// compare options
-		var op = compareOptions || {}; //Object.extend(compareOptions || {});
-		// compare
-		return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
+		return Kekule.ChemStructureUtils.compareStructFragment(mol1, mol2, compareOptions) === 0;
 	}
 });
 
@@ -146,6 +165,16 @@ ClassEx.extend(Kekule.StructureFragment,
 	{
 		return Kekule.ChemStructureUtils.isSameStructure(this, target, compareOptions);
 	}
+});
+ClassEx.extendMethod(Kekule.StructureFragment, 'compare', function($origin, targetObj, options){
+	if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE
+			&& (options.doStandardize !== false)
+			&& (targetObj instanceof Kekule.StructureFragment))
+	{
+		return Kekule.ChemStructureUtils.compareStructFragment(this, targetObj, options);
+	}
+	else
+		return $origin(targetObj, options);
 });
 
 })();

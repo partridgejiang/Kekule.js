@@ -712,8 +712,8 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 	{
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
-		var structFragment = fromNode.getParent();
-		var destFragment = toNode.getParent();
+		var structFragment = fromNode.getParentFragment();
+		var destFragment = toNode.getParentFragment();
 		if (structFragment !== destFragment)  // from different molecule
 		{
 			//console.log('need merge mol');
@@ -836,6 +836,8 @@ Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMerge
 {
 	// never allow merge to another molecule point (e.g. formula molecule) or subgroup
 	if ((target instanceof Kekule.StructureFragment) || (dest instanceof Kekule.StructureFragment))
+		return false;
+	if (!((target instanceof Kekule.ChemStructureNode) && (dest instanceof Kekule.ChemStructureNode)))
 		return false;
 	var targetFragment = target.getParent();
 	var destFragment = dest.getParent();

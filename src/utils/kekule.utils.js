@@ -333,6 +333,32 @@ Kekule.ArrayUtils = {
 		return src.slice(0);
 	},
 	/**
+	 * Divide array into several small ones, each containing memberCount numbers of elements.
+	 * @param {Array} src
+	 * @param {Int} memberCount
+	 * @returns {Array} Array of array.
+	 */
+	divide: function(src, memberCount)
+	{
+		var result = [];
+		var curr = [];
+		var offset = 0;
+		for (var i = 0, l = src.length; i < l; ++i)
+		{
+			curr.push(src[i]);
+			++offset;
+			if (offset >= memberCount)
+			{
+				result.push(curr);
+				curr = [];
+				offset = 0;
+			}
+		}
+		if (curr.length)
+			result.push(curr);
+		return result;
+	},
+	/**
 	 * Append obj (or an array of obj) to the tail of array and returns the index of newly pushed obj.
 	 * If obj already inside array, also returns index of obj in array.
 	 * @param {Array} targetArray Target array.
@@ -439,13 +465,40 @@ Kekule.ArrayUtils = {
 	 * If success, returns obj. If obj not in array, returns null.
 	 * @param {Array} targetArray
 	 * @param {Object} obj
+	 * @param {Bool} removeAll Whether all appearance of obj in array should be removed.
 	 * @returns {Object} Object removed or null.
 	 */
-	remove: function(targetArray, obj)
+	remove: function(targetArray, obj, removeAll)
 	{
 		var index = targetArray.indexOf(obj);
 		if (index >= 0)
-			return Kekule.ArrayUtils.removeAt(targetArray, index);
+		{
+			Kekule.ArrayUtils.removeAt(targetArray, index);
+			if (removeAll)
+				Kekule.ArrayUtils.remove(targetArray, obj, removeAll);
+			return obj;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Replace oldObj in array with newObj.
+	 * @param {Array} targetArray
+	 * @param {Variant} oldObj
+	 * @param {Variant} newObj
+	 * @param {Bool} replaceAll
+	 * @returns {Variant} Object replaced or null.
+	 */
+	replace: function(targetArray, oldObj, newObj, replaceAll)
+	{
+		var index = targetArray.indexOf(oldObj);
+		if (index >= 0)
+		{
+			targetArray[index] = newObj;
+			if (replaceAll)
+				Kekule.ArrayUtils.replace(targetArray, oldObj, newObj, replaceAll);
+			return oldObj;
+		}
 		else
 			return null;
 	},
@@ -534,6 +587,10 @@ Kekule.ArrayUtils = {
 	 */
 	randomize: function(src)
 	{
+		if (!src)
+			return null;
+		if (!src.length)
+			return [];
 		var result = [];
 		var remaining = src.slice(0);
 		while (remaining.length > 1)
@@ -713,7 +770,7 @@ Kekule.ArrayUtils = {
 		{
 			// sort lengths to find the median one
 			a.sort(function(a, b) { return a - b;} );
-			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) + 1]) / 2;
+			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) - 1]) / 2;
 		}
 	},
 
@@ -894,7 +951,8 @@ Kekule.StrUtils = {
 		else  // assume is string
 		{
 			var reg = separator? new RegExp(separator, 'g'): /\s+/g;
-			return str.replace(reg, ' ').split(' ');
+			//return str.replace(reg, ' ').split(' ');
+			return str.split(reg);
 		}
 	},
 	/**

@@ -21,23 +21,6 @@ var AU = Kekule.ArrayUtils;
 var BT = Kekule.BondType;
 
 /**
- * Enumeration of comparation of chem structure.
- * @enum
- */
-Kekule.StructureComparationLevel = {
-	/** Compare only topological graph, atom/bond details are ignored. */
-	SKELETAL: 1,
-	/** Compare only constitution, ignore stereo factors and charge. */
-	CONSTITUTION: 2,
-	/** Compare with stereo factors but ignore atom mass number and charge. */
-	CONFIGURATION: 3,
-	/** Compare with stereo factors and mass number / charge. */
-	EXACT: 4,
-	/** Default comparation level. */
-	DEFAULT: 4
-};
-
-/**
  * A comparer to decide which chem structure object is "bigger" or "superior" than another one.
  * In the comparer, each structure object is turned to a int value with the fixed format.
  *
@@ -67,6 +50,8 @@ Kekule.StructureComparationLevel = {
  *   P: parity.
  *   NN: bond electron count. 02: single, 04: double, 06: triple, 03: aromatic, 00: other
  *   AA: connected object count.
+ *
+ * @deprecated
  */
 Kekule.UnivChemStructObjComparer = {
 	/** @private */
@@ -106,7 +91,7 @@ Kekule.UnivChemStructObjComparer = {
 	prepareCompareOptions: function(options)
 	{
 		var CL = Kekule.StructureComparationLevel;
-		var level = (options && options.level) || CL.DEFAULT;
+		var level = (options && options.level) || Kekule.globalOptions.structureComparation.structureComparationLevel; /*CL.DEFAULT*/
 		var result;
 		if (level === CL.SKELETAL)
 			result = {

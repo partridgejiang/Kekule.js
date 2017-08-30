@@ -21,6 +21,7 @@
 (function(){
 
 var DU = Kekule.DomUtils;
+var AU = Kekule.ArrayUtils;
 
 /**
  * Helper class to create and bind Kekule widgets while loading HTML page.
@@ -40,6 +41,8 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	WIDGET_ATTRIB: 'data-widget',
 	/** @private */
 	WIDGET_ATTRIB_ALT: 'data-kekule-widget',
+	/** @private */
+	FIELD_PARENT_WIDGET_ELEM: '__$kekule_parent_widget_elem$__',
 	/** @constructs */
 	initialize: function($super)
 	{
@@ -95,7 +98,7 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		var pendingElems = this._pendingWidgetRefMap.getKeys();
 		for (var i = 0, l = pendingElems.length; i < l; ++i)
 		{
-			var elem = pendingElems[i]
+			var elem = pendingElems[i];
 			var refWidget = Kekule.Widget.getWidgetOnElem(elem);
 			if (refWidget)
 			{
@@ -132,20 +135,28 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	execute: function(rootElem)
 	{
 		this.beginExec();
+		//var _tStart = Date.now();
 		try
 		{
-			this.executeOnElem(rootElem.ownerDocument, rootElem, null);
+			if (typeof(rootElem.querySelector) === 'function')  // support querySelector func, use fast approach
+				this.executeOnElemBySelector(rootElem.ownerDocument, rootElem, null);
+			else
+				this.executeOnElem(rootElem.ownerDocument, rootElem, null);
 		}
 		finally
 		{
 			this.endExec();
 		}
+		//var _tEnd = Date.now();
+		//console.log('Launch in ', _tEnd - _tStart, 'ms');
 	},
 	/**
 	 * Execute launch process on element and its children. Widget created will be set as child of parentWidget.
+	 * This method will use traditional element iterate method for heritage browsers that do not support querySelector.
 	 * @param {HTMLDocument} doc
 	 * @param {HTMLElement} elem
 	 * @param {Kekule.Widget.BaseWidget} parentWidget Can be null.
+	 * @private
 	 */
 	executeOnElem: function(doc, elem, parentWidget)
 	{
@@ -153,6 +164,7 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 			return;
 		var widget;
 		var currParent = parentWidget;
+		/*
 		// if elem already binded with a widget, do nothing
 		if (Kekule.Widget.getWidgetOnElem(elem))
 			return;
@@ -174,6 +186,10 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 				}
 			}
 		}
+		*/
+		widget = this.createWidgetOnElem(doc, elem, currParent);
+		if (widget)
+			currParent = widget;
 
 		if (!widget || Kekule.Widget.AutoLauncher.enableCascadeLaunch)
 		{
@@ -187,30 +203,125 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		}
 	},
 	/**
+	 * Execute launch process on element and its children. Widget created will be set as child of parentWidget.
+	 * This method will use querySelector method to perform a fast launch on supported browser.
+	 * @param {HTMLDocument} doc
+	 * @param {HTMLElement} rootElem
+	 * @param {Kekule.Widget.BaseWidget} parentWidget Can be null.
+	 */
+	executeOnElemBySelector: function(doc, rootElem, parentWidget)
+	{
+		//console.log('Using selector');
+		var selector = '[' + this.WIDGET_ATTRIB + '],[' + this.WIDGET_ATTRIB_ALT + ']';
+		//var selector = '[' + this.WIDGET_ATTRIB + ']';
+		var allElems = rootElem.querySelectorAll(selector);
+		if (allElems && allElems.length)
+		{
+			/*
+			// turn node list to array
+			if (Array.from)
+				allElems = Array.from(allElems);
+			else
+			{
+				var temp = [];
+				for (var i = 0, l = allElems.length; i < l; ++i)
+				{
+					temp.push(allElems[i]);
+				}
+				allElems = temp;
+			}
+			*/
+			//console.log(allElems, typeof(allElems));
+			// build tree relation of all those elements
+			for (var i = 0, l = allElems.length; i < l; ++i)
+			{
+				var elem = allElems[i];
+				//var candidateParentElems = allElems.slice(0, i - 1);
+				// only leading elems can be parent of curr one
+				var parentElem = this._findParentCandidateElem(elem, allElems, 0, i - 1);
+				if (parentElem)
+				{
+					elem[this.FIELD_PARENT_WIDGET_ELEM] = parentElem;
+					//console.log('Parent relation', elem.id + '/' + elem.getAttribute('data-widget'), parentElem.id + '/' + parentElem.getAttribute('data-widget'));
+				}
+			}
+			// then create corresponding widgets
+			for (var i = 0, l = allElems.length; i < l; ++i)
+			{
+				var elem = allElems[i];
+
+				if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+					continue;
+
+				var parentWidgetElem = elem[this.FIELD_PARENT_WIDGET_ELEM] || null;
+				// create widget only on top level elem when enableCascadeLaunch is false
+				if (Kekule.Widget.AutoLauncher.enableCascadeLaunch || !parentWidgetElem)
+				{
+					var pWidget = null;
+					if (parentWidgetElem)
+					{
+						// we can be sure that the parentWidgetElem is before this one in array
+						// and the widget on it has already been created
+						var pWidget = Kekule.Widget.getWidgetOnElem(parentWidgetElem);
+					}
+					this.createWidgetOnElem(doc, elem, pWidget);
+				}
+			}
+		}
+	},
+	/** @private */
+	_findParentCandidateElem: function(elem, candidateElems, fromIndex, toIndex)
+	{
+	  var result= null;
+		var parent = elem.parentNode;
+		while (parent && !result)
+		{
+			for (var i = toIndex; i >= fromIndex; --i)
+			{
+				if (parent === candidateElems[i])
+				{
+					result = candidateElems[i];
+					return result;
+				}
+			}
+			if (!result)
+				parent = parent.parentNode;
+		}
+		return result;
+	},
+	/**
 	 * Create new widget on an element.
 	 * @param {HTMLDocument} doc
 	 * @param {HTMLElement} elem
 	 * @param {Class} widgetClass
 	 * @returns {Kekule.Widget.BaseWidget}
+	 * @private
 	 */
-	createWidgetOnElem: function(doc, elem, widgetClass)
+	createWidgetOnElem: function(doc, elem, parentWidget)
 	{
-		var result = new widgetClass(elem);
-		/* No need to check data field here, as this job is done in widget.bindElement method.
-		// iterate data-XXX attribute to set widget properties
-		var dataset = DU.getDataset(elem);
-		for (var key in dataset)
+		var result = null;
+		// if elem already binded with a widget, do nothing
+		var old = Kekule.Widget.getWidgetOnElem(elem);
+		if (old)
+			return old;
+		//console.log('Create widget on elem', elem, parentWidget && parentWidget.getElement());
+		// check if elem has widget specified attribute.
+		var widgetName = elem.getAttribute(this.WIDGET_ATTRIB);
+		if (!widgetName)
+			widgetName = elem.getAttribute(this.WIDGET_ATTRIB_ALT);
+		if (widgetName)  // may be a widget
 		{
-			if (dataset.hasOwnProperty(key))
+			var widgetClass = this.getWidgetClass(widgetName);
+			if (widgetClass)
 			{
-				var value = dataset[key];
-				if (value)
+				result = new widgetClass(elem);
+				if (result)  // create successful
 				{
-					Kekule.Widget.Utils.setWidgetPropFromElemAttrib(result, key, value);
+					if (parentWidget)
+						result.setParent(parentWidget);
 				}
 			}
 		}
-		*/
 		return result;
 	},
 

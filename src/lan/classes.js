@@ -125,7 +125,7 @@ Class.Methods = {
 
 
 				for (var i = 0, length = properties.length; i < length; i++) {
-				    var property = properties[i]
+				    var property = properties[i];
 				    var value = source[property];
 
 						var isFunction = Object.isFunction(value);
@@ -825,6 +825,16 @@ var StringUtils = {
 		return true;
 	},
 	/**
+   * Check if str is in number format.
+   * @param {String} str
+   * @returns {Bool}
+   */
+  isNumbericStr: function(str)
+  {
+    var a = Number(str);
+    return !isNaN(a);
+  },
+	/**
 	 * Serialize a simple value and try to preserve value type info.
 	 * @param {Variant} value
 	 * @param {Array} unchangeTypes Name of types that need not to be special marked.
@@ -906,7 +916,7 @@ var StringUtils = {
 						case StringUtils.SNEGATIVE: // may be number
 							{
 								var s = str.substring(1);
-								if (StringUtils.isAllDigitalChar(s)) // really number
+								if (StringUtils.isNumbericStr(s)) // really number or number like 1e20
 									return parseFloat(str);
 								else
 									return str;
@@ -1622,7 +1632,7 @@ var ClassEx = {
 	{
 		if (!classObj)
 			return false;
-		return (classObj.superclass && classObj.subclasses);
+		return !!(classObj.superclass || classObj.subclasses);
 	},
 	/**
 	 * Return class object from class name. If this class is not found, null will be returned.
@@ -2433,7 +2443,7 @@ ObjectEx = Class.create(
 		//this.getPrototype()[getterName] = actualGetter;
 		this.getPrototype()[getterName] = function()
 		{
-			var args = Array.prototype.slice.call(arguments);
+			var args =arguments; // Array.prototype.slice.call(arguments);
 			return this[doGetterName].apply(this, args);
 		};
 
@@ -2539,7 +2549,7 @@ ObjectEx = Class.create(
 	isPropertySerializable: function(propName)
 	{
 		var info = this.getPropInfo(propName);
-		var s = info.serializable;
+		var s = info && info.serializable;
 		return (s === undefined) || (!!s);
 	},
   /**
@@ -3089,7 +3099,7 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
       if (this._childChangeEventSuppressed)
-        modifiedProps.push('[children]');
+        modifiedProps.push('[children]');  // TODO: special propName, indicating children has been changed
       this.doEndUpdate(modifiedProps);
       this._childChangeEventSuppressed = false;
 		}

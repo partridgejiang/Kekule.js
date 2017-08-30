@@ -188,6 +188,18 @@ Kekule.hasLocalRes = function()
 };
 
 /**
+ * An root object to store default options for many operations (e.g., ring search, stereo perception).
+ * User can modify concrete options to change the default action of some functions.
+ * @object
+ */
+Kekule.globalOptions = {
+	add: function(optionName, valueOrHash)
+	{
+		Object.setCascadeFieldValue(optionName, valueOrHash, Kekule.globalOptions, true);
+	}
+};
+
+/**
  * A class to implement str => variant mapping.
  * @class
  */
@@ -1596,13 +1608,159 @@ ClassEx.defineProp(ObjectEx, 'predefinedSetting', {'dataType': DataType.STRING,
 
 /**
  * Enumeration of interaction types of chem objects in editor.
- * @class
+ * @enum
  */
 Kekule.ChemObjInteractMode = {
 	/* A default object, can be selected and moved. */
 	DEFAULT: 0,
 	/** A uninteractive object */
 	HIDDEN: -1
+};
+
+/**
+ * Enumeration of comparison method for {@link Kekule.ChemObject.compare} method.
+ * @enum
+ */
+Kekule.ComparisonMethod = {
+	/** Use default behavior. Different object may have different behaviors. */
+	DEFAULT: 0,
+	/* Explicitly set comparing on object properties directly. */
+	PROPERTIES: 1,
+	/** Compare only chemistry structures. */
+	CHEM_STRUCTURE: 10
+};
+
+/**
+ *  A util class to compare Kekule objects through {@link Kekule.ChemObject.compare} method.
+ *  @class
+ */
+Kekule.ObjComparer = {
+
+	/**
+	 * Check if two objects are equivalent.
+	 * @param {Kekule.ChemObj} obj1
+	 * @param {Kekule.ChemObj} obj2
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Bool}
+	 */
+	equal: function(obj1, obj2, options)
+	{
+		return Kekule.ObjComparer.compare(obj1, obj2, options) === 0;
+	},
+	/**
+	 * Compare two objects.
+	 * @param {Kekule.ChemObj} obj1
+	 * @param {Kekule.ChemObj} obj2
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Int} Returns 0 when two objects are equivalent,
+	 *   or -1 for "inferior" to obj1 and +1 for "superior" to obj1.
+	 */
+	compare: function(obj1, obj2, options)
+	{
+		return Kekule.ObjComparer._compareValue(obj1, obj2, options);
+	},
+	/**
+	 * Compare on two values, used for object comparison.
+	 * @param {Variant} v1
+	 * @param {Variant} v2
+	 * @param {Hash} options
+	 * @returns {Int}
+	 * @private
+	 */
+	_compareValue: function(v1, v2, options)
+	{
+		var D = DataType;
+		if (v1 === v2)
+			return 0;
+		// the two following comparison handles same type simple values, such as number, bool, string and date
+		if (v1 < v2 && !(v1 > v2))
+			return -1;
+		else if (v1 > v2 && !(v1 < v2))
+			return 1;
+		else  // need more complex check
+		{
+			var result = null;  // not determinated
+			var type1 = D.getType(v1);
+			var type2 = D.getType(v2);
+			if (type1 !== type2)  // not same type
+			{
+				var typeIndexes = [
+					D.UNKNOWN, D.VARIANT, D.UNDEFINED, D.BOOL, D.NUMBER, D.INT, D.FLOAT,
+					D.STRING, D.ARRAY, D.FUNCTION, D.DATE, D.OBJECT, D.OBJECTEX, D.CLASS
+				];
+				var index1 = typeIndexes.indexOf(type1);
+				var index2 = typeIndexes.indexOf(type2);
+				if (index1 < 0 && index2 < 0)  // all unknown type
+					result = null;  // can not determinate, suspend
+				else
+					result = index1 - index2;
+			}
+			else // with the same type, usually function and objects
+			{
+				if (!v1 && v2)  // v1 is null, 0, false, undefined etc. but v2 not
+					result = -1;
+				else if (v1 && !v2)  // on the contrary, here there is no possiblity that !v1 && !v2
+					result = 1;
+				else  // v1 && v2
+				{
+					if (v1.doCompare)
+						result = v1.doCompare(v2, options);
+					else if (v2.doCompare)
+						result = -v2.doCompare(v1, options);
+					else // no compare method
+					{
+						if (type1 === DataType.ARRAY)  // compare array
+						{
+							result = v1.length - v2.length;
+							if (!result)
+							{
+								for (var i = 0, l = v1.length; i < l; ++i)
+								{
+									result = Kekule.ObjComparer._compareValue(v1[i], v2[i], options);
+									if (!!result)
+										break;
+								}
+							}
+						}
+						else if (type1 === DataType.OBJECT)  // two values are objects
+						{
+							// TODO: not very efficient, need to refine in future
+							var s1 = JSON.toString(v1);
+							var s2 = JSON.toString(v2);
+							result = (s1 < s2)? -1:
+									(s1 > s2)? 1: 0;
+						}
+						else
+							result = null;
+					}
+				}
+			}
+
+			if (result === null)  // undeterminated in above
+			{
+				var s1 = (v1.toString && v1.toString()) || '';
+				var s2 = (v2.toString && v2.toString()) || '';
+				result = (s1 < s2)? -1:
+						(s1 > s2)? 1: null;
+				// if s1 === s2, we still can not determinate, here we simply returns -1
+				if (result === null)
+					result = -1;
+			}
+			return result;
+		}
+	}
 };
 
 /**
@@ -1642,11 +1800,11 @@ Kekule.ChemObject = Class.create(ObjectEx,
 
 		// react on change (both on self and children)
 		// when object is modified,clear srcInfo information
-		/*
+
 		this.addEventListener('change', function(e)
 		{
 			var srcInfo = this.getPropStoreFieldValue('srcInfo');
-			if (srcInfo)
+			if (srcInfo && srcInfo.data)
 			{
 				var target = e.target;
 				var propNames = e.changedPropNames;
@@ -1654,7 +1812,12 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				for (var i = 0, l = propNames.length; i < l; ++i)
 				{
 					var name = propNames[i];
-					if (name !== 'srcInfo' && target.isPropertySerializable(name))
+					if (name && name !== 'srcInfo' && target.isPropertySerializable(name))
+					{
+						clearSrcInfo = true;
+						break;
+					}
+					else if (name === '[children]') // special prop name indicating children has been changed
 					{
 						clearSrcInfo = true;
 						break;
@@ -1662,12 +1825,13 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				}
 				if (clearSrcInfo)
 				{
-					this.setPropStoreFieldValue('srcInfo', undefined);
-					console.log('clear src info', propNames);
+					//this.setPropStoreFieldValue('srcInfo', undefined);
+					//console.log('clear src info', propNames);
+					srcInfo.data = null;
 				}
 			}
 		}, this);
-		*/
+
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -1892,6 +2056,36 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		return -1;
 	},
+	/**
+	 * Run a cascade function on all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascadeOnChildren: function(func)
+	{
+		if (!func)
+			return this;
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var obj = this.getChildAt(i);
+			if (obj.cascadeOnChildren)
+				obj.cascadeOnChildren(func);
+			func(obj);
+		}
+		return this;
+	},
+	/**
+	 * Run a cascade function on self and all children (and their sub children).
+	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
+	 */
+	cascade: function(func)
+	{
+		if (!func)
+			return this;
+		this.cascadeOnChildren(func);
+		func(this);
+		return this;
+
+	},
 
 	/**
 	 * Check if this object contains no data.
@@ -1908,7 +2102,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	clearIds: function()
 	{
-		this.setId(null);
+		this.setId(undefined);
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
 		{
 			var child = this.getChildAt(i);
@@ -2066,6 +2260,189 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	getContainerBox: function(coordMode, allowCoordBorrow)
 	{
 		return null;
+	},
+
+	/**
+	 * Check if this object is equivalent to targetObj.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Bool}
+	 */
+	equal: function(targetObj, options)
+	{
+		return this.compare(targetObj, options) === 0;
+	},
+	/**
+	 * Compare this object to a targetObj.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {Hash} options Comparison objects, different class may require different options. <br />
+	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
+	 *   data should be compared. <br />
+	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
+	 *   need to be compared. <br />
+	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
+	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
+	 * @returns {Int} Returns 0 when two objects are equivalent,
+	 *   or -1 for "inferior" to targetObj and +1 for "superior" to targetObj.
+	 */
+	compare: function(targetObj, options)
+	{
+		if (targetObj === this)  // same object, simply returns 0
+			return 0;
+		if (!targetObj)
+			return 1;
+		var actualOps = this.doGetActualCompareOptions(options);
+		//console.log(options, actualOps);
+		var result;
+		if (actualOps.customMethod)
+			result = actualOps.customMethod(this, targetObj, actualOps);
+		else
+			result = this.doCompare(targetObj, actualOps);
+		return (result === 0)? 0: (result < 0)? -1: 1;  // standardize result
+	},
+	/**
+	 * Handles input options for {@link Kekule.ChemObj.compare}.
+	 * Descendants may override this method.
+	 * @param {Hash} options
+	 * @returns {Hash}
+	 * @private
+	 */
+	doGetActualCompareOptions: function(options)
+	{
+		return options || {};
+	},
+	/**
+	 * Do actual work of {@link Kekule.ChemObj.compare}. Descendants should override this method.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {Hash} options Comparison objects, different class may require different options.
+	 * @returns {Int} Returns 0 when two objects are equivalent and non-zero value when they are not equivalent.
+	 *   (Usually -1 for "inferior" to targetObj and +1 for "superior" to targetObj).
+	 * @private
+	 */
+	doCompare: function(targetObj, options)
+	{
+		// here we use a simple approach
+		if (targetObj === this)
+			return 0;
+		else  // if not same, check if they are based on same class
+		{
+			var selfClass = this.getClass();
+			var targetClass = targetObj.getClass && targetObj.getClass();
+			if (selfClass !== targetClass)  // not same type of class
+			{
+				var selfClassName = this.getClassName();
+				var targetClassName = (targetObj.getClassName && targetObj.getClassName()) || '';
+				return (selfClassName < targetClassName)? -1: 1;
+			}
+			else  // same class, must compare details, here we use default approach, comparing properties
+			{
+				return this.doCompareOnProperties(targetObj, options);
+			}
+		}
+	},
+	/**
+	 * The default approach to compare two object based on properties.
+	 * This method will check essential properties of targetObj and this object,
+	 * comparing them one by one to get the result.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {Hash} options
+	 * @returns {Int}
+	 * @private
+	 */
+	doCompareOnProperties: function(targetObj, options)
+	{
+		var propNames;
+		if (options.properties)
+			propNames = options.properties;
+		else
+		{
+			// first extract all properties that should be compared
+			propNames = this.doGetComparisonPropNames(options);
+			if (!propNames)  // returns null, need to compare all public and published properties
+			{
+				propNames = this.doGetDefaultComparisonPropNames();
+			}
+		}
+		// then compare each property values
+		var result = 0;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			result = this.doCompareProperty(targetObj, propNames[i], options);
+			if (result !== 0)
+				return result;
+		}
+		// all properties returns 0 (equal), returns 0
+		return 0;
+	},
+	/**
+	 * Returns all essential property names that should be handled during object comparison.
+	 * Descendants may override this method.
+	 * @param {Hash} options
+	 * @returns {Array} Returns property names or null to indicating that all properties should be compared.
+	 * @private
+	 */
+	doGetComparisonPropNames: function(options)
+	{
+		return null;
+	},
+	/**
+	 * Returns all default property names that should be handled during object comparison.
+	 * Descendants may override this method.
+	 * @param {Hash} options
+	 * @returns {Array}
+	 * @private
+	 */
+	doGetDefaultComparisonPropNames: function()
+	{
+		var propNames = [];
+		var props = this.getPropListOfScopes([Class.PropertyScope.PUBLIC, Class.PropertyScope.PUBLISHED]);
+		for (var i = 0, l = props.getLength(); i < l; ++i)
+		{
+			var propInfo = props.getPropInfoAt(i);
+			propNames.push(propInfo.name);
+		}
+		return propNames;
+	},
+	/**
+	 * Compare property value of targetObj and this object, used for object comparison.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObj} targetObj
+	 * @param {String} propName
+	 * @param {Hash} options
+	 * @returns {Int}
+	 * @private
+	 */
+	doCompareProperty: function(targetObj, propName, options)
+	{
+		var v2 = targetObj.getPropValue && targetObj.getPropValue(propName);
+		var v1 = this.getPropValue(propName);
+		if (v1 === v2)  // simple data type equal, or same object (including null)
+			return 0;
+		else
+		{
+			var result = this.doCompareOnValue(v1, v2, options);
+			//console.log('compare', propName, v1, v2, result);
+			return result;
+		}
+	},
+	/**
+	 * Compare on two values, used for object comparison.
+	 * Descendants may override this method.
+	 * @param {Variant} v1
+	 * @param {Variant} v2
+	 * @param {Hash} options
+	 * @returns {Int}
+	 * @private
+	 */
+	doCompareOnValue: function(v1, v2, options)
+	{
+		return Kekule.ObjComparer._compareValue(v1, v2, options);
 	}
 });
 

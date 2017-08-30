@@ -607,7 +607,8 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						var satom = line.substr(7, 3).trim();
 						atomListInfo.atomIndex = parseInt(satom, 10) - 1;
 						result.atomIndex = atomListInfo.atomIndex;
-						var count = parseInt(Math.min(line.substr(10, 3), 16));
+						//var count = parseInt(Math.min(line.substr(10, 3), 16));
+						var count = parseInt(line.substr(10, 3));  // allow more than 16 (unstandard data)
 						var s = line.substr(14, 1);
 						atomListInfo.isAllowList = (s.toLowerCase() == 'f');
 						atomListInfo.symbols = [];
@@ -617,7 +618,19 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 							atomListInfo.symbols.push(s);
 						}
 						result.atomListInfo = atomListInfo;
-						atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+						// may be there is ALS line for atomIndex before...
+						var oldAtomListInfo = atomInfos[atomListInfo.atomIndex].atomListInfo;
+						if (!oldAtomListInfo)
+							atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+						else  // merge old and new
+						{
+							if (oldAtomListInfo.isAllowList !== atomListInfo.isAllowList)  // can not merge, overwrite
+								atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+							else  // merge
+							{
+								oldAtomListInfo.symbols = Kekule.ArrayUtils.pushUnique(oldAtomListInfo.symbols, atomListInfo.symbols);
+							}
+						}
 						break;
 					}
 				/*
@@ -658,14 +671,17 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						//var sgInfo = sgroupInfos[sgIndex];
 						if (sgInfo)
 						{
-							var atomCount = parseInt(Math.min(line.substr(10, 3), 15));
-							sgInfo.atomIndexes = [];
+							//var atomCount = parseInt(Math.min(line.substr(10, 3), 15));
+							var atomCount = parseInt(line.substr(10, 3));  // allow non-standard format (more than 15)
+							if (!sgInfo.atomIndexes) // maybe sg atomIndexes is already created when file has more than one SAL lines
+								sgInfo.atomIndexes = [];
 							for (var i = 0; i < atomCount; ++i)
 							{
 								var s = line.substr(14 + i * 4, 3);
 								var atomIndex = parseInt(s) - 1;
 								sgInfo.atomIndexes.push(atomIndex);
 							}
+							//console.log('SAL', atomCount, sgInfo.atomIndexes);
 						}
 						break;
 					}
@@ -675,8 +691,10 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						//var sgInfo = sgroupInfos[sgIndex];
 						if (sgInfo && (sgInfo.sgType == 'SUP'))
 						{
-							var bondCount = parseInt(Math.min(line.substr(10, 3), 15));
-							sgInfo.crossBondIndexes = [];
+							//var bondCount = parseInt(Math.min(line.substr(10, 3), 15));
+							var bondCount = parseInt(line.substr(10, 3));  // allow more than 15 one (unstandard when reading)
+							if (!sgInfo.crossBondIndexes) // maybe sg xbond indexes is already created when file has more than one SBL lines
+								sgInfo.crossBondIndexes = [];
 							for (var i = 0; i < bondCount; ++i)
 							{
 								var s = line.substr(14 + i * 4, 3);
@@ -1048,10 +1066,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		s = Kekule.IO.Mdl2kUtils.generateCtabPropLine([sIndex, sIndex], 'SLB', 1);
 		result.push(s);
 		// SMT, Sgroup Subscript, M  SMT sss m...
+		/*
 		var slabel = subGroup.getAbbr?
 			subGroup.getAbbr(): (
 				subGroup.getName? subGroup.getName(): null
 			);
+		*/
+		var slabel = (subGroup.getAbbr && subGroup.getAbbr())
+				|| (subGroup.getFormulaText && subGroup.getFormulaText())
+				|| (subGroup.getName && subGroup.getName());
 		if (slabel)
 		{
 			s = Kekule.IO.Mdl2kUtils.generateCtabPropLine([sIndex, slabel], 'SMT');
@@ -1067,9 +1090,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 				atomIndexes.push((index + 1).toString().lpad(3));
 		}
 		atomIndexes = atomIndexes.sort();
-		s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SAL') + ' '
-			+ sIndex + atomIndexes.length.toString().lpad(3) + ' ' + atomIndexes.join(' ');
-		result.push(s);
+		// maxium of 15 atoms are allowed in one line
+		var atomIndexGroups = Kekule.ArrayUtils.divide(atomIndexes, 15);
+		for (var i = 0, l = atomIndexGroups.length; i < l; ++i)
+		{
+			var subAtomIndexes = atomIndexGroups[i];
+			s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SAL') + ' '
+					+ sIndex + subAtomIndexes.length.toString().lpad(3) + ' ' + subAtomIndexes.join(' ');
+			result.push(s);
+		}
 		// SBL, Sgroup xbond List, M  SBL sssn15 bbb
 		// SBV, Abbreviation Sgroup Bond and Vector Information, M  SBV sss bb1 x1 y1
 		var xbonds = subGroup.getCrossConnectors();
@@ -1106,9 +1135,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		}
 		xbondIndexes = xbondIndexes.sort();
 		// SBL M  SBL sssn15 bbb
-		s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SBL') + ' '
-			+ sIndex + xbondIndexes.length.toString().lpad(3) + ' ' + xbondIndexes.join(' ');
-		result.push(s);
+		// maxium of 15 atoms are allowed in one line
+		var xbondIndexGroups = Kekule.ArrayUtils.divide(xbondIndexes, 15);
+		for (var i = 0, l = xbondIndexGroups.length; i < l; ++i)
+		{
+			var subXbondIndexes = xbondIndexGroups[i];
+			s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SBL') + ' '
+					+ sIndex + subXbondIndexes.length.toString().lpad(3) + ' ' + subXbondIndexes.join(' ');
+			result.push(s);
+		}
 		// SBV M  SBV sss bb1 x1 y1
 		for (var i = 0, l = xbondVectors.length; i < l; ++i)
 		{

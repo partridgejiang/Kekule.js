@@ -12,6 +12,14 @@
  * requires /core/kekule.common.js
  */
 
+/*
+ * Default options to read/write KCJ/KCX/JSON/XML format data.
+ * @object
+ */
+Kekule.globalOptions.add('IO.kekuleNative', {
+	prettyPrint: true
+});
+
 /**
  * Reader for KCJ JSON data.
  * Use KcjReader.readData() can retrieve a suitable Kekule object.
@@ -69,7 +77,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 	},
 	/** @private */
 	initProperties: function()
@@ -77,7 +85,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('prettyPrint', {'dataType': DataType.BOOL, 'defaultValue': true});
 	},
 	/** @private */
-	writeData: function($super, obj, dataType)
+	writeData: function($super, obj, dataType, format, options)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if ((dtype != Kekule.IO.ChemDataType.JSON) && (dtype != Kekule.IO.ChemDataType.TEXT))
@@ -93,11 +101,12 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
 		{
 			//console.log(JsonUtility.serializeToStr(result, {'prettyPrint': false}));
-			return JsonUtility.serializeToStr(result, {'prettyPrint': this.getPrettyPrint()});
+			var prettyPrint = (options && Kekule.ObjUtils.notUnset(options.prettyPrint))? options.prettyPrint: this.getPrettyPrint();
+			return JsonUtility.serializeToStr(result, {'prettyPrint': prettyPrint});
 		}
 	},
 	/** @private */
-	doWriteData: function(obj, dataType)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
@@ -171,7 +180,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 		this.setRootTag(op.rootTag || 'kcx');
 	},
 	/** @private */

@@ -223,10 +223,10 @@ var kekuleFiles = {
 			'core/kekule.chemUtils.js',
 
 			'chemdoc/kekule.glyph.base.js',
-			'chemdoc/kekule.textBlocks.js',
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
-			'chemdoc/kekule.glyph.chemGlyphs.js'
+			'chemdoc/kekule.glyph.chemGlyphs.js',
+			'chemdoc/kekule.contentBlocks.js'
 		],
 		'category': 'core'
 	},
@@ -359,7 +359,7 @@ var kekuleFiles = {
 		'files': [
 			'algorithm/kekule.graph.js',
 			'algorithm/kekule.structures.helpers.js',
-			'algorithm/kekule.structures.comparers.js',
+			//'algorithm/kekule.structures.comparers.js',
 			'algorithm/kekule.structures.canonicalizers.js',
 			'algorithm/kekule.structures.ringSearches.js',
 			'algorithm/kekule.structures.aromatics.js',

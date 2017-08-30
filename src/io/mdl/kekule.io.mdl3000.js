@@ -1347,8 +1347,11 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		atomIndexes = atomIndexes.sort();
 		values.push({'key': 'ATOMS', 'value': atomIndexes});
 		// LABEL: display label
-		if (subGroup.getAbbr() || subGroup.getName())
-			values.push({'key': 'LABEL', 'value': subGroup.getAbbr() || subGroup.getName()});
+		var slabel = (subGroup.getAbbr && subGroup.getAbbr())
+				|| (subGroup.getFormulaText && subGroup.getFormulaText())
+				|| (subGroup.getName && subGroup.getName());
+		if (slabel)
+			values.push({'key': 'LABEL', 'value': slabel});
 		// XBONDS: indexes of xbonds
 		// CSTATE: xbond vector
 		var xbonds = subGroup.getCrossConnectors();

@@ -357,7 +357,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 	 * @param {Int} inflation
 	 * @returns {Array}
 	 */
-	getIntersectionInfos: function(context, coord, refCoord, inflation)
+	getIntersectionInfos: function(context, coord, refCoord, inflation, filterFunc)
 	{
 		var result = [];
 		// TODO: now only handles 2D itersection
@@ -366,6 +366,11 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
 			var bound = infos[i].boundInfo;
+			if (filterFunc && !filterFunc(infos[i]))
+			{
+				//console.log('filtered out', infos[i]);
+				continue;
+			}
 			if (bound)
 			{
 				if (Kekule.Render.MetaShapeUtils.isCoordInside(coord, bound, inflation))

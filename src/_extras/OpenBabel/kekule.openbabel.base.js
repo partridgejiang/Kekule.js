@@ -21,26 +21,101 @@
 var EU = Kekule.EmscriptenUtils;
 
 /**
+ * Initialization options of OpenBabel js module.
+ * @private
+ * @ignore
+ */
+var obInitOptions = {
+	usingModulaize: true,  // whether using modularize option to build OpenBabel.js
+	moduleName: 'OpenBabelModule' // the name of OpenBabl module
+};
+
+/**
  * Namespace of OpenBabel related objects.
  * @namespace
  */
 Kekule.OpenBabel = {
+	/**
+	 * A flag, whether auto enable InChI function when find InChI lib is already loaded.
+	 */
+	_autoEnabled: true,
+	/** @private */
+	_module: null, // a variable to store created OpenBabel module object
 	/** Base URL of OpenBabel script file. */
 	SCRIPT_FILE: 'openbabel.js',
+	/** @private */
+	_enableFuncs: [],
 	/** OpenBabel Bond order constants. */
 	BondOrder: {
 		SINGLE: 1,
 		DOUBLE: 2,
 		TRIPLE: 3,
 		EXPLICIT_AROMATIC: 5
+	},
+	getObInitOptions: function()
+	{
+		return obInitOptions;
+	},
+	getModule: function()
+	{
+		if (!OB._module)
+		{
+			OB._module = EU.getRootModule(obInitOptions.moduleName);
+		}
+		return OB._module;
+	},
+	getClassCtor: function(className)
+	{
+		return EU.getClassCtor(className, OB.getModule());
+	},
+	isScriptLoaded: function()
+	{
+		return EU.isSupported(obInitOptions.moduleName);
+	},
+
+	/**
+	 * Load OpenBabel.js lib and enable all related functions
+	 */
+	enable: function(callback)
+	{
+		if (!OB.isScriptLoaded())  // OpenBabel not loaded?
+		{
+			OB.loadObScript(document, function(){
+				//Kekule.IO.registerAllInChIFormats();
+				OB._enableAllFunctions();
+				if (callback)
+					callback();
+			});
+		}
+		else
+		{
+			OB._enableAllFunctions();
+			if (callback)
+				callback();
+		}
+	},
+	_enableAllFunctions: function()
+	{
+		if (OB.isScriptLoaded())
+		{
+			var funcs = OB._enableFuncs;
+			for (var i = 0, l = funcs.length; i < l; ++i)
+			{
+				var func = funcs[i];
+				if (func)
+					func();
+			}
+		}
 	}
 };
+
+Kekule._registerAfterLoadProc(function() {if (OB._autoEnabled) OB._enableAllFunctions()} );
 
 /** @ignore */
 Kekule.OpenBabel.getObPath = function()
 {
 	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	var path = isMin? '': '_extras/OpenBabel/';
+	var path = isMin? 'extra/': '_extras/OpenBabel/';
 	path = Kekule.scriptSrcInfo.path + path;
 	return path;
 };
@@ -58,19 +133,22 @@ Kekule.OpenBabel.loadObScript = function(doc, callback)
 {
 	if (!doc)
 		doc = document;
-	if (!Kekule.OpenBabel._obScriptLoaded)
+	if (!OB._obScriptLoadedBySelf && !OB.isScriptLoaded())
 	{
 		//console.log('load');
 		var filePath = Kekule.OpenBabel.getObScriptUrl();
-		Kekule.ScriptFileUtils.appendScriptFile(doc, filePath, callback);
-		Kekule.OpenBabel._obScriptLoaded = true;
+		EU.loadScript(filePath, callback, doc);
+		OB._obScriptLoadedBySelf = true;
 	}
 	else
 	{
+		OB._obScriptLoadedBySelf = true;
 		if (callback)
 			callback();
 	}
 };
+
+var OB = Kekule.OpenBabel;
 
 /**
  * Util class to convert object between OpenBabel and Kekule.
@@ -92,7 +170,7 @@ Kekule.OpenBabel.AdaptUtils = {
 		if (!Kekule.OpenBabel._funcInited)
 		{
 			var funcs = {
-				//'obGetSupportedFormatsDetailStr': EU.cwrap('obGetSupportedFormatsDetailStr', 'string', ['string', 'string', 'string'])
+				//'obGetSupportedFormatsDetailStr': EU.cwrap('obGetSupportedFormatsDetailStr', 'string', ['string', 'string', 'string'], Kekule.OpenBabel.getModule())
 			};
 			Object.extend(Kekule.OpenBabel, funcs);
 			Kekule.OpenBabel._funcInited = true;
@@ -105,7 +183,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	isAvailable: function()
 	{
-		return typeof(EU.getClassCtor('ObBaseHelper')) !== 'undefined'; // || (Module && Module._obGetSupportedFormatsDetailStr);
+		return typeof(OB.getClassCtor('ObBaseHelper')) !== 'undefined'; // || (Module && Module._obGetSupportedFormatsDetailStr);
 	},
 
 	/*
@@ -160,9 +238,11 @@ Kekule.OpenBabel.AdaptUtils = {
 			(kChemObj instanceof Kekule.StructureFragment)? AU.kMolToOB:
 			(kChemObj instanceof Kekule.ChemStructureNode)? AU.kChemNodeToOB:
 			(kChemObj instanceof Kekule.ChemStructureConnector)? AU.kBondToOB:
-				AU.kChemNodeToOB;
-		return convFunc(kChemObj);
-
+				null;  // AU.kChemNodeToOB;
+		if (convFunc)
+			return convFunc(kChemObj);
+		else
+			return null;
 	},
 
 	/**
@@ -218,7 +298,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	obBaseToKekule: function(obBase, kChemObj)
 	{
 		var result = kChemObj || new Kekule.ChemObject();
-		var helper = new (EU.getClassCtor('ObBaseHelper'))(obBase);
+		var helper = new (OB.getClassCtor('ObBaseHelper'))(obBase);
 		// title
 		var title = helper.getTitle();
 		if (title && result.setName)
@@ -250,7 +330,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	kChemObjToOB: function(kChemObj, obBase)
 	{
-		var result = obBase || new (EU.getClassCtor('OBBase'))();
+		var result = obBase || new (OB.getClassCtor('OBBase'))();
 		if (kChemObj.getName && result.SetTitle)
 			result.SetTitle(kChemObj.getName());
 		var info = kChemObj.getInfo();
@@ -263,7 +343,7 @@ Kekule.OpenBabel.AdaptUtils = {
 				var value = info[key];
 				if (key && value)
 				{
-					var data = new (EU.getClassCtor('OBPairData'))();
+					var data = new (OB.getClassCtor('OBPairData'))();
 					data.SetAttribute('' + key);  // ensure string
 					data.SetValue('' + value);  // ensure string
 					result.SetData(data);
@@ -336,7 +416,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	kChemNodeToOB: function(kNode, obAtom, coordMode)
 	{
-		var result = obAtom || new (EU.getClassCtor('OBAtom'))();
+		var result = obAtom || new (OB.getClassCtor('OBAtom'))();
 		var v;
 		// id
 		v = kNode.getId();
@@ -456,7 +536,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	kBondToOB: function(kBond, obBond, atomMapping, obMol)
 	{
-		var result = obBond || new (EU.getClassCtor('OBBond'))();
+		var result = obBond || new (OB.getClassCtor('OBBond'))();
 		Kekule.OpenBabel.AdaptUtils.kChemObjToOB(kBond, result);
 
 		var v;
@@ -584,7 +664,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	kMolToOB: function(kMol, obMol)
 	{
 		var coordMode = kMol.nodesHasCoord3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
-		var result = obMol || new (EU.getClassCtor('OBMol'))();
+		var result = obMol || new (OB.getClassCtor('OBMol'))();
 		//Kekule.OpenBabel.AdaptUtils.kChemObjToOB(kMol, result);
 
 		if (obMol)  // not created new
@@ -666,7 +746,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	kReactionToOB: function(kReaction, obReaction)
 	{
-		var result = obReaction || new (EU.getClassCtor('OBReaction'))();
+		var result = obReaction || new (OB.getClassCtor('OBReaction'))();
 		result.Clear();
 
 		Kekule.OpenBabel.AdaptUtils.kChemObjToOB(kReaction, result);

@@ -20,6 +20,8 @@
  * Base repository item class.
  * @class
  * @augments ObjectEx
+ *
+ * @property {String} name The unique name of this repository item.
  */
 Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 /** @lends Kekule.Editor.AbstractRepositoryItem# */
@@ -35,6 +37,7 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		//this.defineProp('repository', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+		this.defineProp('name', {'dataType': DataType.STRING});
 	},
 
 	/**
@@ -65,10 +68,28 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 		// do nothing here
 	},
 	/**
+	 * Returns default scale level of this repository object when adding to editor.
+	 * @returns {Float}
+	 */
+	getScale: function()
+	{
+		return this.doGetScale() || 1;
+	},
+	/** @private */
+	doGetScale: function()
+	{
+		return 1;
+	},
+	/**
 	 * Returns ref length to adjust repository object coord and size in editor.
 	 * @returns {Float}
 	 */
 	getRefLength: function()
+	{
+		return this.doGetRefLength() / (this.getScale() || 1);
+	},
+	/** @private */
+	doGetRefLength: function()
 	{
 		// do nothing here
 	},
@@ -98,6 +119,16 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 	{
 		$super();
 	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('molScale', {'dataType': DataType.FLOAT});
+	},
+	/** @ignore */
+	doGetScale: function($super)
+	{
+		return this.getMolScale() || $super();
+	},
 	/** @ignore */
 	getAvailableCoordModes: function()
 	{
@@ -123,8 +154,10 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 					(targetObj instanceof Kekule.ChemStructureConnector)? this.doGetMergableConnector(mol, targetObj):
 							null;
 			if (mergeObj)
+			{
 				mergeDest = targetObj;
-			baseCoord = mergeObj.getAbsBaseCoord2D();
+				baseCoord = mergeObj.getAbsBaseCoord2D();
+			}
 		}
 		return {
 			'objects': [mol],
@@ -182,7 +215,7 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredStructFragmentRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat)
+	initialize: function($super, structData, dataFormat, defScale)
 	{
 		$super();
 		this.beginUpdate();
@@ -196,6 +229,8 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 			{
 				this.setStructData(structData);
 			}
+			if (defScale)
+				this.setMolScale(defScale);
 		}
 		finally
 		{
@@ -274,7 +309,7 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 	},
 
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		var mol = this.getStructureFragment();
 		return mol? mol.getConnectorLengthMedian(Kekule.CoordMode.COORD2D, true): 0;
@@ -315,9 +350,9 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.Stored
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredSubgroupRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat)
+	initialize: function($super, structData, dataFormat, defScale)
 	{
-		$super(structData, dataFormat);
+		$super(structData, dataFormat, defScale);
 	},
 	/** @private */
 	initProperties: function()
@@ -452,7 +487,7 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 	},
 	*/
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		return this.getBondLength();
 	},
@@ -602,7 +637,7 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
 		return Kekule.CoordMode.COORD2D;  // only support 2D
 	},
 	/** @ignore */
-	getRefLength: function()
+	doGetRefLength: function()
 	{
 		return this.getGlyphRefLength();
 	},
@@ -637,7 +672,9 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
  */
 Kekule.Editor.RepositoryItemManager = {
 	/** @private */
-	_itemMap: new Kekule.MapEx(true),
+	_itemClassMap: new Kekule.MapEx(true),
+	/** @private */
+	_itemNameMap: new Kekule.MapEx(true),
 	/**
 	 * Returns all repository items of a particular repository class.
 	 * @param {Class} repClass
@@ -645,7 +682,11 @@ Kekule.Editor.RepositoryItemManager = {
 	 */
 	getAllItems: function(repClass)
 	{
-		return RM._itemMap.get(repClass);
+		return RM._itemClassMap.get(repClass);
+	},
+	getItem: function(name)
+	{
+		return RM._itemNameMap.get(name);
 	},
 	/**
 	 * Register a repository item.
@@ -653,15 +694,28 @@ Kekule.Editor.RepositoryItemManager = {
 	 */
 	register: function(repItem)
 	{
+		var name = repItem.getName();
+		var replacedItem;
+		if (name)		// add to name map
+		{
+			replacedItem = RM.getItem();
+			RM._itemNameMap.set(name, repItem);
+		}
+		// add to class map
 		var repClass = repItem.getClass();
 		var items = RM.getAllItems(repClass);
 		if (!items)
 		{
 			items = [repItem];
-			RM._itemMap.set(repClass, items);
+			RM._itemClassMap.set(repClass, items);
 		}
 		else
-			Kekule.ArrayUtils.pushUnique(items, repItem);
+		{
+			if (replacedItem)  // replace old
+				Kekule.ArrayUtils.replace(items, replacedItem, repItem);
+			else  // add new
+				Kekule.ArrayUtils.pushUnique(items, repItem);
+		}
 	},
 	/**
 	 * Unregister a repository item.
@@ -670,10 +724,17 @@ Kekule.Editor.RepositoryItemManager = {
 	unregister: function(repItem)
 	{
 		var repClass = repItem.getClass();
+		// remove from class map
 		var items = RM.getAllItems(repClass);
 		if (items)
 		{
 			Kekule.ArrayUtils.remove(items, repItem);
+		}
+		// remove from name map
+		var name = repItem.getName();
+		if (name)
+		{
+			RM._itemNameMap.remove(name);
 		}
 	}
 };
@@ -681,19 +742,28 @@ var RM = Kekule.Editor.RepositoryItemManager;
 
 
 // register all predefined subgroup rep items
-(function (){
+Kekule._registerAfterLoadProc(function (){
 	if (Kekule.Editor.RepositoryData)
 	{
 		var data = Kekule.Editor.RepositoryData.subGroups || [];
 		for (var i = 0, l = data.length; i < l; ++i)
 		{
 			var detail = data[i];
-			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat);
-			repItem.setInputTexts(detail.inputTexts);
+			var repItem = new Kekule.Editor.StoredSubgroupRepositoryItem2D(detail.structData, detail.dataFormat, detail.scale);
+			repItem.setInputTexts(detail.inputTexts).setName(detail.name || detail.inputTexts[0]);
+			RM.register(repItem);
+			//console.log('reg', repItem);
+		}
+		var data = Kekule.Editor.RepositoryData.fragments || [];
+		for (var i = 0, l = data.length; i < l; ++i)
+		{
+			var detail = data[i];
+			var repItem = new Kekule.Editor.StoredStructFragmentRepositoryItem2D(detail.structData, detail.dataFormat, detail.scale);
+			repItem.setName(detail.name);
 			RM.register(repItem);
 			//console.log('reg', repItem);
 		}
 	}
-})();
+});
 
 })();

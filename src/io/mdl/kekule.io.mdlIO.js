@@ -19,6 +19,15 @@
  * requires /localization
  */
 
+/*
+ * Default options to read/write CML format data.
+ * @object
+ */
+Kekule.globalOptions.add('IO.mdl', {
+	mdlVersion: Kekule.IO.MdlVersion.V2000,
+	coordMode: Kekule.CoordMode.UNKNOWN
+});
+
 /**
  * Class to read and anaylsis MDL 2000 / 3000 Connection Table block.
  * @class
@@ -1125,8 +1134,8 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		$super(options);
 		if (!options)
 			options = {};
-		this.setMdlVersion(options.mdlVersion || Kekule.IO.MdlVersion.V2000);
-		this.setCoordMode(options.coordMode || Kekule.CoordMode.UNKNOWN);
+		this.setMdlVersion(options.mdlVersion || Kekule.globalOptions.IO.mdl.mdlVersion);
+		this.setCoordMode(options.coordMode || Kekule.globalOptions.IO.mdl.coordMode);
 	},
 	/** @private */
 	initProperties: function()
@@ -1335,8 +1344,8 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setMdlVersion(op.mdlVersion || Kekule.IO.MdlVersion.V2000);
-		this.setCoordMode(op.coordMode || Kekule.CoordMode.UNKNOWN);
+		this.setMdlVersion(op.mdlVersion || Kekule.globalOptions.IO.mdl.mdlVersion);
+		this.setCoordMode(op.coordMode || Kekule.globalOptions.IO.mdl.coordMode);
 	},
 	/** @private */
 	initProperties: function()

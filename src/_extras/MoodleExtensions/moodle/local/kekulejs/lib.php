@@ -76,7 +76,8 @@ class kekulejs_utils
         if (!isset($p))
             $p = $PAGE;
         $scriptDir = kekulejs_configs::getScriptDir();
-        $rootDir = kekulejs_configs::getKekuleDir();
+        // $rootDir = kekulejs_configs::getKekuleDir();
+        $adapterDir = kekulejs_configs::getAdapterDir();
 
         // params
         $params = '';
@@ -90,6 +91,7 @@ class kekulejs_utils
         $p->requires->js($scriptDir . 'raphael-min.js');
         $p->requires->js($scriptDir . 'Three.js');
         $p->requires->js($scriptDir . 'kekule/kekule.js?' . $params);
+        $p->requires->js($adapterDir . 'kekuleInitials.js');
     }
     static public function includeKekuleJsFiles($options = null, $page = null)
     {

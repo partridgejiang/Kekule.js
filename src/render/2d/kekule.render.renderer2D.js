@@ -552,12 +552,38 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	drawImage: function(context, src, baseCoord, size, options, callback)
 	{
 		var self = this;
+		// TODO: this approach need to be refined in the future
 		return this.getDrawBridge().drawImage(this.getActualTargetContext(context), src, baseCoord, size, options, callback,
 				function(){ return self.getActualTargetContext(context); });
 	},
 	drawImageElem: function(context, imgElem, baseCoord, size, options)
 	{
-		return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		if (imgElem.complete)  // image already been loaded, can draw now
+		{
+			//console.log('do actual draw');
+			return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		}
+		else  // need to bind to load event, try draw later
+		{
+			var XEvent = Kekule.X.Event;
+			if (XEvent)
+			{
+				var self = this;
+				var unlinkImgDrawProc = function()
+				{
+					XEvent.removeListener(imgElem, 'load', updateImgDrawing);
+				};
+				var updateImgDrawing = function()
+				{
+					//console.log('update draw', imgElem.complete);
+					unlinkImgDrawProc(imgElem, updateImgDrawing);
+					// force update the render, force redraw again
+					self.update(self.getActualTargetContext(context), [{'obj': self.getChemObj()}], Kekule.Render.ObjectUpdateType.MODIFY);
+				};
+				XEvent.addListener(imgElem, 'load', updateImgDrawing);
+				XEvent.addListener(imgElem, 'error', unlinkImgDrawProc);
+			}
+		}
 	},
 	createDrawGroup: function(context)
 	{
@@ -1257,6 +1283,10 @@ Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRendere
 		//this.setObjDrawElem(context, chemObj, result);
 
 		return result;
+	},
+	doDrawImgContent: function(imgElem)
+	{
+
 	}
 });
 Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
@@ -2803,9 +2833,29 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 		var coord1 = Object.extend({}, this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
 		var coord2 = Object.extend({}, this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
+		var nodes = [node1, node2];
+		var coords = [coord1, coord2];
+		var originDistance = CU.getDistance(coord1, coord2);
+		var shrinkedDistance = 0;
+
 		var unitLength = renderOptions.unitLength || 1;
 
 		var lineLength = Math.sqrt(Math.sqr(coord2.x - coord1.x) + Math.sqr(coord2.y - coord1.y));
+		var lineAdjustCoordDeltas = [];
+		// line length scale ratio
+		var doLineLengthScale = false, lineLengthScaleBaseNodeIndex;
+		var lineLengthScaleRatio = renderOptions.bondLengthScaleRatio;
+		if (Kekule.ObjUtils.notUnset(lineLengthScaleRatio))
+		{
+			var lineVector = CU.substract(coord2, coord1);
+			doLineLengthScale = true;
+			lineLengthScaleBaseNodeIndex = (lineLengthScaleRatio > 0)? 0: 1;
+			var shrinkRatio = 1 - (Math.abs(lineLengthScaleRatio || 1));
+			var sign = (lineLengthScaleBaseNodeIndex === 1)? -1: 1;
+			//var sign = 1;
+			lineAdjustCoordDeltas[lineLengthScaleBaseNodeIndex] = CU.multiply(lineVector, sign * shrinkRatio);
+		}
+		// node label eclipse line
 		if (this.getObjNeedDrawLabel(context, node1) || this.getObjNeedDrawLabel(context, node2)) // the connector should avoid overlap with node label
 		{
 			//var expandRatio = this.getRenderConfigs().getLengthConfigs().getAtomLabelBoxExpandRatio();
@@ -2824,10 +2874,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				crossOnVerticalEdge = true;
 			else  // cross in horizontal edge
 				crossOnVerticalEdge = false;
-			var nodes = [node1, node2];
-			var coords = [coord1, coord2];
-			var originDistance = CU.getDistance(coord1, coord2);
-			var shrinkedDistance = 0;
+
 			for (var i = 0, l = nodes.length; i < l; ++i)
 			{
 				var node = nodes[i];
@@ -2866,15 +2913,40 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 					}
 					if (coordDelta)
 					{
+						// compare with scale delta
+						var scaleCoordDelta = lineAdjustCoordDeltas[i];
+						if (scaleCoordDelta && (Math.abs(lineLengthScaleRatio) <= 1))  // if scale ratio > 1, the line will exceed atom label and must be cut
+						{
+							if (Math.abs(coordDelta.x) > Math.abs(scaleCoordDelta.x) || Math.abs(coordDelta.y) > Math.abs(scaleCoordDelta.y))
+							  lineAdjustCoordDeltas[i] = coordDelta;
+						}
+						else
+							lineAdjustCoordDeltas[i] = coordDelta;
+
+						/*
 						shrinkedDistance += CU.getDistance(coordDelta, {'x': 0, 'y': 0});
 						var newCoord = CU.add(coord, coordDelta);
 						coord.x = newCoord.x;
 						coord.y = newCoord.y;
+            */
 					}
 				}
-
 				xSign *= -1;
 				ySign *= -1;
+			}
+		}
+
+		//console.log(coords, lineAdjustCoordDeltas, lineLengthScaleBaseNodeIndex);
+		for (var i = 0, l = coords.length; i < l; ++i)
+		{
+			var coord = coords[i];
+			var coordDelta = lineAdjustCoordDeltas[i];
+			if (coordDelta)
+			{
+				shrinkedDistance += CU.getDistance(coordDelta, {'x': 0, 'y': 0});
+				var newCoord = CU.add(coord, coordDelta);
+				coord.x = newCoord.x;
+				coord.y = newCoord.y;
 			}
 		}
 

@@ -16,7 +16,15 @@
 "use strict";
 
 var AU = Kekule.ArrayUtils;
-var SC = Kekule.UnivChemStructObjComparer;
+//var SC = Kekule.UnivChemStructObjComparer;
+
+/*
+ * Default options to do sub structure search.
+ * @object
+ */
+Kekule.globalOptions.add('algorithm.structureSearch', {
+	doStandardize: true
+});
 
 /**
  * A util class to search sub structures in ctab based molecule.
@@ -38,12 +46,12 @@ Kekule.ChemStructureSearcher = {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
 	 *       default is true.
 	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
-	 *     level: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
-	 *     compareAtom: Bool, if false, all node will be regarded as same. Default is true.
-	 *     compareMass: Bool, whether mass number is compared. Default is false.
-	 *     compareCharge: Bool, whether charge of node is compared. Default is false.
-	 *     compareBondOrder: Bool, whether order of bond is compared. Default is true.
-	 *     compareStereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
+	 *     structureLevel: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
+	 *     atom: Bool, if false, all node will be regarded as same. Default is true.
+	 *     mass: Bool, whether mass number is compared. Default is false.
+	 *     charge: Bool, whether charge of node is compared. Default is false.
+	 *     bondOrder: Bool, whether order of bond is compared. Default is true.
+	 *     stereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
 	 *   }
 	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
 	 *   Otherwise false will be returned.
@@ -51,7 +59,7 @@ Kekule.ChemStructureSearcher = {
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
 		// TODO: configuration search need to be rechecked
-		var op = Object.extend({doStandardize: true}, options);
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.structureSearch), options);
 
 		if (op.exactMatch)
 		{
@@ -85,25 +93,42 @@ Kekule.ChemStructureSearcher = {
 		// initial options
 		op = Object.extend({level: Kekule.StructureComparationLevel.CONSTITUTION,
 			compareLinkedConnectorCount: false, compareHydrogenCount: false, compareConnectedObjCount: false}, op);
-		op = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		/*
+		var op1 = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		var op2 = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
+		op = op2;
+		console.log(op1);
+		console.log(op2);
+		console.log('===================');
+		*/
+		op = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
 		var objCompareOptions = op;
 
 		// standardize structures first, perceive aromatic rings
+		//console.log(op);
 		if (op.doStandardize)
 		{
 			var standardizeOps = {
-				unmarshalSubFragments: true,
+				unmarshalSubFragments: !true,
 				doCanonicalization: true,
 				doAromaticPerception: true
 			};
 			if (!op.compareStereo)  // do not need perceive stereo
-				op.doCanonicalization = false;
+				standardizeOps.doCanonicalization = false;
+			// here we ensure two structures are standardized (with their flattened shadows).
 			subStructure.standardize(standardizeOps);
 			sourceMol.standardize(standardizeOps);
 		}
+		var flattenedSrcMol = sourceMol.getFlattenedShadowFragment(true);
+		var flattenedSubStruct = subStructure.getFlattenedShadowFragment(true);
 
+		/*
 		var targetStartingNode = subStructure.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
 		var srcNodes = sourceMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+		*/
+		var targetStartingNode = flattenedSubStruct.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
+		var srcNodes = flattenedSrcMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+
 		var srcNodeCount = srcNodes.length;
 		var srcIndex = 0;
 
@@ -124,7 +149,10 @@ Kekule.ChemStructureSearcher = {
 			return false;
 		else
 		{
-			return AU.toUnique(compareResult);
+			var matchedObjs = AU.toUnique(compareResult);
+			// map back to original structure
+			var result = sourceMol.getFlatternedShadowSourceObjs(matchedObjs);
+			return result;
 		}
 	},
 
@@ -216,7 +244,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		//if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		if (targetNode.compareStructure(srcNode, compareOptions) !== 0)
 			return false;
 		else
 		{
@@ -307,7 +336,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		//if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		if (targetConn.compareStructure(srcConn, compareOptions) !== 0)
 			return false;
 		else
 		{

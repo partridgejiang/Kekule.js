@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Molecule Compare</title>
+
+	<script src="../../libs/raphael-min.2.0.1.js"></script>
+	<script src="../../src/kekule.js?min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+
+	<script  id="compareMol1" type="chemical/x-mdl-molfile">
+
+  Kekule  02071512262D
+
+ 12 12  0  0  0  0  0  0  0  0999 V2000
+    9.1791   35.1338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.8719   34.7338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.1791   35.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   34.7338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.8719   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   36.3338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.1791   33.5338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.5648   33.5338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   37.1338    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    7.7935   35.9338    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   11.2576   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  2  0  0  0  0
+  2  5  2  0  0  0  0
+  3  6  1  0  0  0  0
+  4  7  1  0  0  0  0
+  5  8  1  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  2  0  0  0  0
+  6 11  1  0  0  0  0
+  7  8  2  0  0  0  0
+  9 12  2  0  0  0  0
+M  END
+	</script>
+
+	<script  id="compareMol2" type="chemical/x-mdl-molfile">
+
+  Kekule  02071512292D
+
+ 12 12  0  0  0  0  0  0  0  0999 V2000
+    8.3706   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    7.6778   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.0634   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.3706   32.2804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.9850   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.7562   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    7.6778   32.6804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.9850   32.2804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.2921   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.7562   32.2804    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   10.4491   31.0804    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    5.5993   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  0  0  0  0
+  2  5  1  0  0  0  0
+  3  6  1  0  0  0  0
+  4  7  2  0  0  0  0
+  5  8  2  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  2  0  0  0  0
+  6 11  1  0  0  0  0
+  7  8  1  0  0  0  0
+  9 12  2  0  0  0  0
+M  END
+	</script>
+
+	<script>
+		var chemEditors = [];
+		var chemComposers = [];
+		function init()
+		{
+			for (var i = 0; i < 2; ++i)
+			{
+				var id = 'chemComposer' + i;
+				var composer = Kekule.Widget.getWidgetById(id);
+				chemComposers[i] = composer;
+			}
+
+			// adjust size
+			adjustSize();
+
+			window.onresize = adjustSize;
+			Kekule.X.Event.addListener(document.getElementById('btnCompare'), 'click', function(e)
+					{
+						compare();
+					}
+			);
+		}
+		function compare()
+		{
+			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
+			var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
+			//var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
+			var isSame = mol1 && mol2 && mol1.equalStructure(mol2);
+			var sResult = isSame? 'Same molecules': 'Different molecules';
+			var sClass = isSame? 'Same': 'Diff';
+			var elem = document.getElementById('labelResult');
+			elem.className = sClass;
+			elem.innerHTML = sResult;
+		}
+		function adjustSize()
+		{
+			var minWidth = 650;
+			var minHeight = 300;
+			var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+			var w = (dim.width - 50) / chemComposers.length;
+			var h = dim.height - 100;
+			if (w < minWidth)
+			{
+				w = minWidth;
+				h = h / 2;
+			}
+			if (h < minHeight)
+				h = minHeight;
+			/*
+			var w = Math.max((dim.width - 50) / chemComposers.length, minWidth);
+			var h = Math.max(dim.height - 100, minHeight);
+			*/
+			for (var i = 0, l = chemComposers.length; i < l; ++i)
+			{
+				chemComposers[i].setWidth(w + 'px').setHeight(h + 'px');
+			}
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+	<style>
+		.Editor { width: 650px; height: 400px; }
+		.Same { color: green; }
+		.Diff { color: red; }
+	</style>
+</head>
+<body>
+	<p>Draw or load molecules in both editors and click on "compare" button to check whether molecules are same.</p>
+	<div>
+		<button id="btnCompare" data-widget="Kekule.Widget.Button">Compare Molecules</button>
+		<span id="labelResult"></span>
+	</div>
+	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>
+	<div class="Editor" id="chemComposer1" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol2)"></div>
+</body>
+</html>
