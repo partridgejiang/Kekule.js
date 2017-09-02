@@ -25,6 +25,26 @@ function xmldb_qtype_kekule_chem_base_upgrade($oldversion) {
         // Kekule_chem_base savepoint reached.
         upgrade_plugin_savepoint(true, 2016091101, 'qtype', 'kekule_chem_base');
     }
+    if ($oldversion < 2017083100) {
+
+        $table = new xmldb_table('qtype_kekulechem_options');
+        $field = new xmldb_field('defcomparelevel', XMLDB_TYPE_INTEGER, '4', null, null, null, null, 'manualgraded');
+
+        // Conditionally launch add field defcomparelevel.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field comparelevel to be added to qtype_kekulechem_ans_ops.
+        $table = new xmldb_table('qtype_kekulechem_ans_ops');
+        $field = new xmldb_field('comparelevel', XMLDB_TYPE_INTEGER, '4', null, null, null, null, 'moldata');
+
+        // Conditionally launch add field comparelevel.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    }
+
 
     return true;
 }

@@ -144,7 +144,7 @@ function reactChemObjLoad(e)
 		var answerElem = ansRelElems.answer;
 		if (/*molDataElem && smilesElem &&*/ answerElem)
 		{
-			var molData = '', smiles = '';
+			var molData = '', smiles = '', smilesNoStereo = '';
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
 			{
@@ -152,7 +152,8 @@ function reactChemObjLoad(e)
 				try
 				{
 					molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
+					smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
 				}
 				catch(e)
 				{
@@ -160,6 +161,7 @@ function reactChemObjLoad(e)
 				}
 				var saveObj = {
 					'smiles': smiles,
+					'smilesNoStereo': smilesNoStereo,
 					'molDataType': Kekule.IO.MimeType.KEKULE_JSON,
 					'molData': molData
 				};

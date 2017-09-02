@@ -32,6 +32,30 @@ require_once($CFG->dirroot . '/question/type/kekule_chem_base/question.php');
 
 
 /**
+ * Class to represent a kekule_multianswer question answer, loaded from the question_answers table
+ * in the database.
+ */
+class qtype_kekule_chem_base_answer extends qtype_kekule_multianswer_answer {
+    public $comparelevel;
+    public $comparemethod;
+    /**
+     * Constructor.
+     * @param int $id the answer.
+     * @param string $answer the answer.
+     * @param int $answerformat the format of the answer.
+     * @param number $fraction the fraction this answer is worth.
+     * @param string $feedback the feedback for this answer.
+     * @param int $feedbackformat the format of the feedback.
+     * @param integer $blankindex
+     */
+    public function __construct($id, $answer, $fraction, $feedback, $feedbackformat, $blankindex, $comparelevel, $comparemethod) {
+        parent::__construct($id, $answer, $fraction, $feedback, $feedbackformat, $blankindex);
+        $this->comparelevel = $comparelevel;
+        $this->comparemethod = $comparemethod;
+    }
+}
+
+/**
  * The Kekule Chem question type.
  */
 class qtype_kekule_chem_base extends qtype_kekule_multianswer {
@@ -47,13 +71,22 @@ class qtype_kekule_chem_base extends qtype_kekule_multianswer {
 
     public function extra_question_fields()
     {
-        return array('qtype_kekulechem_options', 'manualgraded', 'defcomparemethod', 'inputtype');
+        return array('qtype_kekulechem_options', 'manualgraded', 'defcomparelevel', 'defcomparemethod', 'inputtype');
     }
     public function extra_answer_fields() {
-        return array('qtype_kekulechem_ans_ops', 'blankindex', /*'smiles', 'moldata',*/ 'comparemethod');
+        return array('qtype_kekulechem_ans_ops', 'blankindex', /*'smiles', 'moldata',*/ 'comparelevel', 'comparemethod');
     }
 
+    /*
     protected function initialise_question_instance(question_definition $question, $questiondata) {
         parent::initialise_question_instance($question, $questiondata);
+    }
+    */
+
+    protected function createAnswerInstance($initParam)
+    {
+        $a = $initParam;
+        return new qtype_kekule_chem_base_answer($a->id, $a->answer,
+            $a->fraction, $a->feedback, $a->feedbackformat, $a->blankindex, $a->comparelevel, $a->comparemethod);
     }
 }
