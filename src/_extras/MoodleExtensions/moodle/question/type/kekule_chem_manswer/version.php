@@ -24,5 +24,5 @@ $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = '0.1';
 
 $plugin->dependencies = array(
-    'qtype_kekule_chem_base' => 2016082500
+    'qtype_kekule_chem_base' => 2017090300
 );
