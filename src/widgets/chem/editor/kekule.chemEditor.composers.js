@@ -811,7 +811,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (!editor)
 			editor = this.createDefaultEditor();
 		*/
-		this.bindEditor();
+		this.bindEditor(editor);
 
 		// tool bars may already be created by setting buttons property
 		if (!this.getCommonBtnGroup())
