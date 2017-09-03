@@ -14,15 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Kekule Mol Naming question type backup handler
+ *
+ * @package    qtype_kekule_mol_naming
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017090300;
-$plugin->requires  = 2012062500;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_kekule_chem_manswer';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '0.1';
+require_once($CFG->dirroot .
+    '/question/type/kekule_chem_base/backup/moodle2/backup_qtype_kekule_chem_base_plugin.class.php');
 
-$plugin->dependencies = array(
-    'qtype_kekule_chem_base' => 2016082500
-);
+/**
+ * Provides the information to backup Kekule Mol Naming questions
+ */
+class backup_qtype_kekule_chem_manswer_plugin extends backup_qtype_kekule_chem_base_plugin {
+
+    // override methods
+    protected function _getPlugInElementConditionValue()
+    {
+        return 'kekule_chem_manswer';
+    }
+    protected function _getQuestionOptionNestedElemName()
+    {
+        return 'kekule_chem_manswer';
+    }
+}

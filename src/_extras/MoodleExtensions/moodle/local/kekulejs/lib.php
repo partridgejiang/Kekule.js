@@ -110,7 +110,13 @@ class kekulejs_utils
             $p = $PAGE;
 
         $scriptDir = kekulejs_configs::getScriptDir();
-        $p->requires->css($scriptDir . 'kekule/themes/default/kekule.css');
+        try {
+            $p->requires->css($scriptDir . 'kekule/themes/default/kekule.css');
+        }
+        catch(Exception $e)
+        {
+            // do nothing, just avoid exception
+        }
     }
 
     static public function includeAdapterJsFiles($page = null)
@@ -136,6 +142,12 @@ class kekulejs_utils
         if (!isset($p))
             $p = $PAGE;
         $dir = kekulejs_configs::getAdapterDir();
-        $p->requires->css($dir . 'kekuleMoodle.css');
+        try {
+            $p->requires->css($dir . 'kekuleMoodle.css');
+        }
+        catch(Exception $e)
+        {
+            // do nothing, just avoid exception
+        }
     }
 }

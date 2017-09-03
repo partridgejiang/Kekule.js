@@ -382,12 +382,16 @@ class quiz_kekulestatistics_report extends quiz_statistics_report {
         }
         foreach ($responseanalysis->get_subpart_ids($variantno) as $partid) {
             $subpart = $responseanalysis->get_analysis_for_subpart($variantno, $partid);
+            //var_dump($subpart);
             foreach ($subpart->get_response_class_ids() as $responseclassid) {
                 $responseclass = $subpart->get_response_class($responseclassid);
+                //var_dump($responseclass);
                 $tabledata = $responseclass->data_for_question_response_table($subpart->has_multiple_response_classes(), $partid);
+                //var_dump($tabledata);
                 foreach ($tabledata as $row) {
                     // transform possible Kekule responses strings
                     if ($isKekuleQuestion) {
+                        //var_dump($row);
                         if (!empty($row->responseclass))
                             $row->responseclass = $this->transformKekuleResponse($row->responseclass);
                         if (!empty($row->response))

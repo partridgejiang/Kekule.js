@@ -81,8 +81,8 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
             get_string('captionDefCompareLevel', 'qtype_kekule_chem_base'),
             array(
                 //qtype_kekule_chem_compare_levels::DEF_LEVEL => get_string('molCompareLevelDefault', 'qtype_kekule_chem_base'),
-                qtype_kekule_chem_compare_levels::CONSTITUTION => get_string('molCompareLevelConstitution', 'qtype_kekule_chem_base'),
-                qtype_kekule_chem_compare_levels::CONFIGURATION => get_string('molCompareLevelConfiguration', 'qtype_kekule_chem_base')
+                qtype_kekule_chem_compare_levels::CONFIGURATION => get_string('molCompareLevelConfiguration', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_levels::CONSTITUTION => get_string('molCompareLevelConstitution', 'qtype_kekule_chem_base')
             )
         );
 
