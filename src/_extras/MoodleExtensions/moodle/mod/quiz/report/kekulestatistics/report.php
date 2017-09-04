@@ -414,14 +414,20 @@ class quiz_kekulestatistics_report extends quiz_statistics_report {
         {
             try {
                 $jsonObj = json_decode($s);
-                if (isset($jsonObj) && !empty($jsonObj->molData))
+                if (isset($jsonObj) && isset($jsonObj->molData))
                 {
                     //$molDataType = $jsonObj->molDataType;
                     $molData = $jsonObj->molData;
-                    // replace all '"' to entity
-                    $molData = htmlentities($molData);
-                    $result = '<span data-widget="Kekule.ChemWidget.Viewer" data-predefined-setting="static" '
-                        . 'data-chem-obj="' . $molData . '"></span>';
+                    if (empty($molData))  // empty molecule
+                    {
+                        $result = '<span>' . get_string('emptyMolData', 'quiz_kekulestatistics') . '</span>';
+                    }
+                    else {
+                        // replace all '"' to entity
+                        $molData = htmlentities($molData);
+                        $result = '<span data-widget="Kekule.ChemWidget.Viewer" data-predefined-setting="static" '
+                            . 'data-chem-obj="' . $molData . '"></span>';
+                    }
                 }
             }
             catch(Exception $e)

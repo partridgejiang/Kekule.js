@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016091901;
+$plugin->version   = 2017090400;
 $plugin->requires  = 2016051900;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_kekulestatistics';
