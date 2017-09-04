@@ -56,8 +56,12 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
     // returns actual response string for classification process in static, override
     protected function getActualResponseForClassification($responseData)
     {
+        if (empty($responseData))
+            return '';
         $detail = $this->parseAnswerString($responseData);
-        if (isset($detail->smiles)) {
+        if (isset($detail->smiles) || isset($detail->molData)) {
+            if (empty($detail->smiles) && empty($detail->molData) && empty($detail->smilesNoStereo))
+                return '';
             $result = $detail;
             $molData = qtype_kekule_chem_base_question_static_cache::fetchMolDataOfSmiles($detail->smiles, $detail->molData);
             $result->molData = $molData;
@@ -82,11 +86,11 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
     protected function getAnsCompareLevel($answer)
     {
         if (isset($answer->comparelevel))
-            $result = $answer->comparelevel;
+            $result = (int)$answer->comparelevel;
         else
             $result = qtype_kekule_chem_compare_levels::DEF_LEVEL;
         if ($result == qtype_kekule_chem_compare_levels::DEF_LEVEL)  // use question setting
-            $result = $this->defcomparelevel;
+            $result = (int)$this->defcomparelevel;
 
         if (!isset($result))
             $result = qtype_kekule_chem_compare_levels::CONSTITUTION;
@@ -96,11 +100,11 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
     protected function getAnsCompareMethod($answer)
     {
         if (isset($answer->comparemethod))
-            $result = $answer->comparemethod;
+            $result = (int)$answer->comparemethod;
         else
             $result = qtype_kekule_chem_compare_methods::DEF_METHOD;
         if ($result == qtype_kekule_chem_compare_methods::DEF_METHOD)  // use question setting
-            $result = $this->defcomparemethod;
+            $result = (int)$this->defcomparemethod;
 
         if (!isset($result))
             $result = qtype_kekule_chem_compare_methods::SMILES;
@@ -134,15 +138,11 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
             // if compare on constitution, overwrite them
             if ($compareLevel == qtype_kekule_chem_compare_levels::CONSTITUTION)
             {
-                if (isset($srcDetail->smilesNoStereo))
+                if (!empty($srcDetail->smilesNoStereo))
                     $srcSmiles = $srcDetail->smilesNoStereo;
-                if (isset($targetDetail->smilesNoStereo))
+                if (!empty($targetDetail->smilesNoStereo))
                     $targetSmiles = $targetDetail->smilesNoStereo;
             }
-
-            //var_dump($compareLevel);
-            //var_dump($srcSmiles);
-            //var_dump($targetSmiles);
 
             if (!empty($srcSmiles) && !empty($targetSmiles))
                 return (strcmp($srcSmiles, $targetSmiles) == 0)? 1: 0;

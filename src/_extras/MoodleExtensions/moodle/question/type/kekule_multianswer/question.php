@@ -523,12 +523,16 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         {
             $resData = $response[$this->getAnswerFieldName($i)];
             $blank = $this->blanks[$i];
+            $actualResponseData = $this->getActualResponseForClassification($resData);
             if (isset($blank->matchAnswerKey))
                 $result[$i] = new question_classified_response($blank->matchAnswerKey->id,
-                    $this->getActualResponseForClassification($resData), $blank->matchAnswerKey->fraction * $blank->matchRatio);
+                    $actualResponseData, $blank->matchAnswerKey->fraction * $blank->matchRatio);
+            else if (empty($actualResponseData)) {
+                $result[$i] = question_classified_response::no_response();
+            }
             else
                 $result[$i] = new question_classified_response(0,
-                    $this->getActualResponseForClassification($resData), 0);
+                    $actualResponseData, 0);
 
         }
         //var_dump($result);
