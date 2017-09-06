@@ -23,4 +23,5 @@
 
 $string['pluginname'] = 'Kekule Statistics';
 $string['kekulestatistics'] = 'Kekule Statistics';
+$string['emptyMolData'] = '[Empty]';
 

@@ -41,6 +41,11 @@ class qtype_kekule_chem_compare_methods {
     const CHILDOF = 12;  // answer is sub structure of key molecule
     //const MANUAL = 10;  // manually compare, not grade automatically
 }
+class qtype_kekule_chem_compare_levels {
+    const DEF_LEVEL = 0;  // default
+    const CONSTITUTION = 1;  // match with Constitution, ingore steroe
+    const CONFIGURATION = 2;  // match with stereo
+}
 
 class qtype_kekule_chem_input_type {
     const MOLECULE = 0;

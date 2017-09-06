@@ -15,19 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz statistics report version information.
+ * Kekule Mol Naming question type backup handler
  *
- * @package   quiz_kekule_statistics
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    qtype_kekule_mol_naming
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017090400;
-$plugin->requires  = 2016051900;
-$plugin->cron      = 18000;
-$plugin->component = 'quiz_kekulestatistics';
+require_once($CFG->dirroot .
+    '/question/type/kekule_chem_base/backup/moodle2/backup_qtype_kekule_chem_base_plugin.class.php');
 
-$plugin->dependencies = array(
-    'quiz_statistics' => 2016052300
-);
+/**
+ * Provides the information to backup Kekule Mol Naming questions
+ */
+class backup_qtype_kekule_chem_manswer_plugin extends backup_qtype_kekule_chem_base_plugin {
+
+    // override methods
+    protected function _getPlugInElementConditionValue()
+    {
+        return 'kekule_chem_manswer';
+    }
+    protected function _getQuestionOptionNestedElemName()
+    {
+        return 'kekule_chem_manswer';
+    }
+}

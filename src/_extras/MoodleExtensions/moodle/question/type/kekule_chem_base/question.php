@@ -20,13 +20,56 @@ require_once($CFG->dirroot . '/question/type/questionbase.php');
 require_once($CFG->dirroot . '/question/type/kekule_multianswer/question.php');
 require_once($CFG->dirroot . '/question/type/kekule_chem_base/lib.php');
 
+class qtype_kekule_chem_base_question_static_cache
+{
+    static protected $molDataCache = array();
+    static public function getMolDataOfSmiles($smiles)
+    {
+        return self::$molDataCache[$smiles];
+    }
+    static public function setMolDataOfSmiles($smiles, $molData)
+    {
+        if (isset($molData))
+            self::$molDataCache[$smiles] = $molData;
+    }
+    static public function fetchMolDataOfSmiles($smiles, $newMolData)
+    {
+        $result = self::getMolDataOfSmiles($smiles);
+        if (!isset($result))
+        {
+            $result = $newMolData;
+            self::setMolDataOfSmiles($smiles, $result);
+        }
+        return $result;
+    }
+}
+
 
 /**
  * Represents a Kekule Chem question.
  */
 class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question {
     public $defcomparemethod;
+    public $defcomparelevel;
     public $inputtype;
+
+    // returns actual response string for classification process in static, override
+    protected function getActualResponseForClassification($responseData)
+    {
+        if (empty($responseData))
+            return '';
+        $detail = $this->parseAnswerString($responseData);
+        if (isset($detail->smiles) || isset($detail->molData)) {
+            if (empty($detail->smiles) && empty($detail->molData) && empty($detail->smilesNoStereo))
+                return '';
+            $result = $detail;
+            $molData = qtype_kekule_chem_base_question_static_cache::fetchMolDataOfSmiles($detail->smiles, $detail->molData);
+            $result->molData = $molData;
+            return json_encode($result);
+        }
+        else
+            return parent::getActualResponseForClassification($responseData);
+    }
 
     protected function isBasedOnSmiles($compareMethod)
     {
@@ -40,20 +83,37 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
         return $method == qtype_kekule_chem_compare_methods::SMILES;
     }
 
+    protected function getAnsCompareLevel($answer)
+    {
+        if (isset($answer->comparelevel))
+            $result = (int)$answer->comparelevel;
+        else
+            $result = qtype_kekule_chem_compare_levels::DEF_LEVEL;
+        if ($result == qtype_kekule_chem_compare_levels::DEF_LEVEL)  // use question setting
+            $result = (int)$this->defcomparelevel;
+
+        if (!isset($result))
+            $result = qtype_kekule_chem_compare_levels::CONSTITUTION;
+
+        return $result;
+    }
     protected function getAnsCompareMethod($answer)
     {
         if (isset($answer->comparemethod))
-            $result = $answer->comparemethod;
+            $result = (int)$answer->comparemethod;
         else
             $result = qtype_kekule_chem_compare_methods::DEF_METHOD;
-        if ($result === qtype_kekule_chem_compare_methods::DEF_METHOD)  // use question setting
-            $result = $this->defcomparemethod;
+        if ($result == qtype_kekule_chem_compare_methods::DEF_METHOD)  // use question setting
+            $result = (int)$this->defcomparemethod;
+
+        if (!isset($result))
+            $result = qtype_kekule_chem_compare_methods::SMILES;
 
         return $result;
     }
     protected function calcMatchingRatio($responseItem, $key)
     {
-        return $this->_compareMolAnsString($responseItem, $key->answer, $this->getAnsCompareMethod($key));
+        return $this->_compareMolAnsString($responseItem, $key->answer, $this->getAnsCompareMethod($key), $this->getAnsCompareLevel($key));
     }
     private function _getComparerPath($compareMethod)
     {
@@ -61,15 +121,31 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
             ($compareMethod == qtype_kekule_chem_compare_methods::CHILDOF)? qtype_kekule_chem_configs::PATH_CONTAIN:
             qtype_kekule_chem_configs::PATH_COMPARE;
     }
-    private function _compareMolAnsString($src, $target, $compareMethod)
+    private function _compareMolAnsString($src, $target, $compareMethod, $compareLevel)
     {
         $srcDetail = $this->parseAnswerString($src);
         $targetDetail = $this->parseAnswerString($target);
 
+        //var_dump($compareMethod);
+        //var_dump($compareLevel);
+
         if ($this->isBasedOnSmiles($compareMethod))
         {
-            if (!empty($srcDetail->smiles) && !empty($targetDetail->smiles))
-                return (strcmp($srcDetail->smiles, $targetDetail->smiles) == 0)? 1: 0;
+            // default, configuration
+            $srcSmiles = $srcDetail->smiles;
+            $targetSmiles = $targetDetail->smiles;
+
+            // if compare on constitution, overwrite them
+            if ($compareLevel == qtype_kekule_chem_compare_levels::CONSTITUTION)
+            {
+                if (!empty($srcDetail->smilesNoStereo))
+                    $srcSmiles = $srcDetail->smilesNoStereo;
+                if (!empty($targetDetail->smilesNoStereo))
+                    $targetSmiles = $targetDetail->smilesNoStereo;
+            }
+
+            if (!empty($srcSmiles) && !empty($targetSmiles))
+                return (strcmp($srcSmiles, $targetSmiles) == 0)? 1: 0;
             else
                 return 0;
         }
@@ -92,7 +168,10 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
                 $comparePath = $this->_getComparerPath($compareMethod);
                 $externalComparerUrl .= $comparePath;
                 $ops = new stdClass();
-                $ops->level = 3;  // Kekule.StructureComparationLevel.CONFIGURATION // TODO: now fixed
+                if ($compareLevel === qtype_kekule_chem_compare_levels::CONSTITUTION)
+                    $ops->level = 2;  // Kekule.StructureComparationLevel.CONSTITUTION
+                else
+                    $ops->level = 3;  // Kekule.StructureComparationLevel.CONFIGURATION
                 if ($compareMethod == qtype_kekule_chem_compare_methods::CHILDOF)
                     $ops->reversed = true;
                 $postData = array(
@@ -125,6 +204,8 @@ class qtype_kekule_chem_base_question extends qtype_kekule_multianswer_question 
             $result = new stdClass();
         if (!isset($result -> smiles))
             $result->smiles = '';
+        if (!isset($result -> smilesNoStereo))
+            $result->smilesNoStereo = '';
         if (!isset($result->molData))
             $result->molData = '';
         return $result;

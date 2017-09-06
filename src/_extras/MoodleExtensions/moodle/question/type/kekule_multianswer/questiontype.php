@@ -296,8 +296,11 @@ class qtype_kekule_multianswer extends question_type {
             return;
         }
         foreach ($questiondata->options->answers as $a) {
+            /*
             $question->answers[$a->id] = new qtype_kekule_multianswer_answer($a->id, $a->answer,
                 $a->fraction, $a->feedback, $a->feedbackformat, $a->blankindex);
+            */
+            $question->answers[$a->id] = $this->createAnswerInstance($a);
             if (!$forceplaintextanswers) {
                 $question->answers[$a->id]->answerformat = $a->answerformat;
             }
@@ -366,4 +369,10 @@ class qtype_kekule_multianswer extends question_type {
 
     }
     */
+    protected function createAnswerInstance($initParam)
+    {
+        $a = $initParam;
+        return new qtype_kekule_multianswer_answer($a->id, $a->answer,
+            $a->fraction, $a->feedback, $a->feedbackformat, $a->blankindex);
+    }
 }
