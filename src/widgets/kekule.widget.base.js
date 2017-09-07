@@ -1384,6 +1384,44 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		//console.log('Child index: ', index, this.getChildWidgets());
 		return (index >= 0);
 	},
+	/**
+	 * Returns child widget at index
+	 * @param {Int} index
+	 * @return {Kekule.Widget.BaseWidget}
+	 */
+	getChildAtIndex: function(index)
+	{
+		return this.getChildWidgets()[index];
+	},
+
+	/**
+	 * Returns previous sibling widget under the same parent widget.
+	 */
+	getPrevSibling: function()
+	{
+		var parent = this.getParent();
+		if (parent)
+		{
+			var index = parent.indexOfChild(this);
+			return this.getChildAtIndex(--index);
+		}
+		else
+			return null;
+	},
+	/**
+	 * Returns next sibling widget under the same parent widget.
+	 */
+	getNextSibling: function()
+	{
+		var parent = this.getParent();
+		if (parent)
+		{
+			var index = parent.indexOfChild(this);
+			return this.getChildAtIndex(++index);
+		}
+		else
+			return null;
+	},
 
 	/** @private */
 	_haltPrevShowHideProcess: function()
@@ -1588,7 +1626,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 			if (finalizeAfterHiding)
 				self.finalize();
-		}
+		};
 
 		this.widgetShowStateBeforeChanging(false);
 
@@ -3124,7 +3162,12 @@ Kekule.Widget.Utils = {
 	 */
 	getWidgetOnElem: function(element)
 	{
-		return element[widgetBindingField];
+		var result = element[widgetBindingField];
+		/*
+		if (result instanceof Kekule.Widget.PlaceHolder)
+			result = result.getTargetWidget();
+		*/
+		return result;
 	},
 	/**
 	 * Returns all widgets in element and its child elements.

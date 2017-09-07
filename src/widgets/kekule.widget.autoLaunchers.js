@@ -49,6 +49,11 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		$super();
 		this._executingFlag = 0;  // private
 		this._pendingWidgetRefMap = new Kekule.MapEx(true);  // non-weak, to get all keys
+		this._pendingElems = [];  // elements that need to be launched
+		this._handlingPendings = false;  // private flag
+
+		this._execOnPendingBind = this._execOnPending.bind(this);
+
 		var self = this;
 		// delegate Kekule.Widget.Util method for auto launch purpose
 		/** @ignore */
@@ -73,10 +78,67 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	/** @private */
 	finalize: function($super)
 	{
+		this._pendingElems = null;
 		this._pendingWidgetRefMap = null;
 		$super();
 	},
 
+	// Methods about lanuchingElems
+	/** @private */
+	getPendingElems: function()
+	{
+		return this._pendingElems;
+	},
+	/** @private */
+	addPendingElem: function(doc, elem, parent, widgetClass, execOnChildren)
+	{
+		//console.log('pending', elem, parent);
+		this._pendingElems.push({'doc': doc, 'elem': elem, 'parent': parent, 'widgetClass': widgetClass, 'execOnChildren': execOnChildren});
+	},
+	/** @private */
+	handlePendingElems: function(callback)
+	{
+		if (!this._handlingPendings)  // avoid duplicated call
+		{
+			this._handlingPendings = true;
+			if (callback)
+			{
+				var elemItems = this._pendingElems;
+				elemItems.push({'callback': callback});   // set callback to tail element item
+			}
+			this.beginExec();
+			//this._execOnPendingBind.defer();
+			setTimeout(this._execOnPendingBind, 0);
+		}
+	},
+	/** @private */
+	_execOnPending: function()
+	{
+		var currItem = this._pendingElems.shift();  // handle the first one
+		if (!currItem)  // sequence is empty
+		{
+			this._handlingPendings = false;
+			this.endExec();
+		}
+		else  // do actual create
+		{
+			try
+			{
+				if (currItem.elem)    // normal element lauch item
+					this.createWidgetOnElem(currItem.doc, currItem.elem, currItem.parent);
+				else if (currItem.callback)  // special callback item
+					setTimeout(currItem.callback, 0);
+			}
+			finally
+			{
+				//this._execOnPendingBind.defer();
+				setTimeout(this._execOnPendingBind, 0);
+			}
+		}
+	},
+
+
+	// Methods about pendingWidgetRefMap
 	/** @private */
 	getPendingWidgetRefMap: function()
 	{
@@ -105,12 +167,14 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 				var setting = this._pendingWidgetRefMap.get(elem);
 				setting.widget.setPropValue(setting.propName, refWidget);
 			}
+			this.removePendingWidgetRefItem(elem);
 		}
 	},
 	/** @private */
 	beginExec: function()
 	{
 		++this._executingFlag;
+		//this._startTime = Date.now();
 	},
 	/** @private */
 	endExec: function()
@@ -121,6 +185,10 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		{
 			this.handlePendingWidgetRef();
 		}
+		/*
+		this._endTime = Date.now();
+		console.log('elapse', this._endTime - this._startTime);
+		*/
 	},
 	/** @private */
 	isExecuting: function()
@@ -131,21 +199,33 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	/**
 	 * Launch all widgets inside element.
 	 * @param {HTMLElement} rootElem
+	 * @param {Bool} deferCreation
+	 * @param {Func} callback A callback function that will be called when the task is done (since deferCreation may be true).
 	 */
-	execute: function(rootElem)
+	execute: function(rootElem, deferCreation, callback)
 	{
-		this.beginExec();
+		var deferring = Kekule.ObjUtils.notUnset(deferCreation)? deferCreation: Kekule.Widget.AutoLauncher.deferring;
+		if (!deferring)
+			this.beginExec();
 		//var _tStart = Date.now();
 		try
 		{
 			if (typeof(rootElem.querySelector) === 'function')  // support querySelector func, use fast approach
-				this.executeOnElemBySelector(rootElem.ownerDocument, rootElem, null);
+				this.executeOnElemBySelector(rootElem.ownerDocument, rootElem, null, deferring);
 			else
-				this.executeOnElem(rootElem.ownerDocument, rootElem, null);
+				this.executeOnElem(rootElem.ownerDocument, rootElem, null, deferring);
+
+			if (deferring)
+				this.handlePendingElems(callback);
 		}
 		finally
 		{
-			this.endExec();
+			if (!deferring)
+			{
+				this.endExec();
+				if (callback)
+					callback();
+			}
 		}
 		//var _tEnd = Date.now();
 		//console.log('Launch in ', _tEnd - _tStart, 'ms');
@@ -155,15 +235,18 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	 * This method will use traditional element iterate method for heritage browsers that do not support querySelector.
 	 * @param {HTMLDocument} doc
 	 * @param {HTMLElement} elem
-	 * @param {Kekule.Widget.BaseWidget} parentWidget Can be null.
+	 * @param {Variant} parentWidgetOrElem Can be null.
 	 * @private
 	 */
-	executeOnElem: function(doc, elem, parentWidget)
+	executeOnElem: function(doc, elem, parentWidgetOrElem, deferring)
 	{
+		/*
 		if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
 			return;
-		var widget;
-		var currParent = parentWidget;
+		*/
+		if (!this.isElemLaunchable(elem))
+			return;
+
 		/*
 		// if elem already binded with a widget, do nothing
 		if (Kekule.Widget.getWidgetOnElem(elem))
@@ -187,18 +270,41 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 			}
 		}
 		*/
-		widget = this.createWidgetOnElem(doc, elem, currParent);
-		if (widget)
-			currParent = widget;
-
-		if (!widget || Kekule.Widget.AutoLauncher.enableCascadeLaunch)
+		var widget = null;
+		var widgetClass = this.getElemWidgetClass(elem);
+		var currParent = parentWidgetOrElem;
+		if (deferring)  // deferring creation on element
 		{
-			// check child elements further
-			var children = DU.getDirectChildElems(elem);
-			for (var i = 0, l = children.length; i < l; ++i)
+			if (widgetClass)
 			{
-				var child = children[i];
-				this.executeOnElem(doc, child, currParent);
+				this.addPendingElem(doc, elem, parentWidgetOrElem, widgetClass, false/*Kekule.Widget.AutoLauncher.enableCascadeLaunch*/);
+				currParent = elem;
+			}
+		}
+		else  // create directly on element
+		{
+			var parentWidget = parentWidgetOrElem;
+			if (parentWidget && !(parentWidget instanceof Kekule.Widget.BaseWidget))  // is element
+				parentWidget = Kekule.Widget.getWidgetOnElem(parentWidgetOrElem);
+
+			 widget = this.createWidgetOnElem(doc, elem, parentWidget, widgetClass);
+			if (widget)
+				currParent = widget;
+			else
+				currParent = elem;
+		}
+		{
+			var shouldCascade = (deferring && !widgetClass) || (!deferring && !widget) || Kekule.Widget.AutoLauncher.enableCascadeLaunch;
+			//if (!widget || Kekule.Widget.AutoLauncher.enableCascadeLaunch)
+			if (shouldCascade)
+			{
+				// check child elements further
+				var children = DU.getDirectChildElems(elem);
+				for (var i = 0, l = children.length; i < l; ++i)
+				{
+					var child = children[i];
+					this.executeOnElem(doc, child, currParent, deferring);
+				}
 			}
 		}
 	},
@@ -209,7 +315,7 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	 * @param {HTMLElement} rootElem
 	 * @param {Kekule.Widget.BaseWidget} parentWidget Can be null.
 	 */
-	executeOnElemBySelector: function(doc, rootElem, parentWidget)
+	executeOnElemBySelector: function(doc, rootElem, parentWidget, deferring)
 	{
 		//console.log('Using selector');
 		var selector = '[' + this.WIDGET_ATTRIB + '],[' + this.WIDGET_ATTRIB_ALT + ']';
@@ -250,13 +356,18 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 			{
 				var elem = allElems[i];
 
+				/*
 				if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+					continue;
+				*/
+				if (!this.isElemLaunchable(elem))
 					continue;
 
 				var parentWidgetElem = elem[this.FIELD_PARENT_WIDGET_ELEM] || null;
 				// create widget only on top level elem when enableCascadeLaunch is false
 				if (Kekule.Widget.AutoLauncher.enableCascadeLaunch || !parentWidgetElem)
 				{
+					/*
 					var pWidget = null;
 					if (parentWidgetElem)
 					{
@@ -265,6 +376,11 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 						var pWidget = Kekule.Widget.getWidgetOnElem(parentWidgetElem);
 					}
 					this.createWidgetOnElem(doc, elem, pWidget);
+					*/
+					if (deferring)  // deferring
+						this.addPendingElem(doc, elem, parentWidgetElem, null, false);
+					else  // create directly
+						this.createWidgetOnElem(doc, elem, parentWidgetElem);
 				}
 			}
 		}
@@ -297,30 +413,57 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	 * @returns {Kekule.Widget.BaseWidget}
 	 * @private
 	 */
-	createWidgetOnElem: function(doc, elem, parentWidget)
+	createWidgetOnElem: function(doc, elem, parentWidgetOrElem, widgetClass)
 	{
 		var result = null;
 		// if elem already binded with a widget, do nothing
 		var old = Kekule.Widget.getWidgetOnElem(elem);
 		if (old)
 			return old;
-		//console.log('Create widget on elem', elem, parentWidget && parentWidget.getElement());
+		//console.log('Create widget on elem', elem, parentWidgetOrElem && parentWidgetOrElem.getElement());
+
+		if (!widgetClass)
+			widgetClass = this.getElemWidgetClass(elem);
+		if (widgetClass)
+		{
+			result = new widgetClass(elem);
+			if (result)  // create successful
+			{
+				var parentWidget = parentWidgetOrElem;
+				if (parentWidget && !(parentWidget instanceof Kekule.Widget.BaseWidget))  // is element
+					parentWidget = Kekule.Widget.getWidgetOnElem(parentWidgetOrElem);
+
+				if (parentWidget)
+					result.setParent(parentWidget);
+			}
+		}
+
+		return result;
+	},
+
+	/**
+	 * Return whether the element should be launched as a widget.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isElemLaunchable: function(elem)
+	{
+		if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+			return false;
+		else
+			return true;
+	},
+	/** @private */
+	getElemWidgetClass: function(elem)
+	{
+		var result = null;
 		// check if elem has widget specified attribute.
 		var widgetName = elem.getAttribute(this.WIDGET_ATTRIB);
 		if (!widgetName)
 			widgetName = elem.getAttribute(this.WIDGET_ATTRIB_ALT);
 		if (widgetName)  // may be a widget
 		{
-			var widgetClass = this.getWidgetClass(widgetName);
-			if (widgetClass)
-			{
-				result = new widgetClass(elem);
-				if (result)  // create successful
-				{
-					if (parentWidget)
-						result.setParent(parentWidget);
-				}
-			}
+			result = this.getWidgetClass(widgetName);
 		}
 		return result;
 	},
@@ -343,6 +486,47 @@ Kekule.Widget.AutoLauncher.enableCascadeLaunch = true;
 Kekule.Widget.AutoLauncher.enableDynamicDomCheck = true;
 /** A flag to enable or disable launching widgets on element in HTML editor (usually should not). */
 Kekule.Widget.AutoLauncher.enableOnEditable = false;
+/** If true, the launch process on each element will be deferred, try not to block the UI. */
+Kekule.Widget.AutoLauncher.deferring = false;
+
+/**
+ * A helper class to notify widget system is ready.
+ * @class
+ */
+Kekule.Widget.WidgetsReady = {
+	isReady: false,
+	funcs: [],
+	ready: function(fn)
+	{
+		if (WR.isReady)
+		{
+			fn();
+		}
+		else
+		{
+			WR.funcs.push(fn);
+		}
+	},
+	fireReady: function()
+	{
+		if (WR.isReady)
+			return;
+		WR.isReady = true;
+		var funcs = WR.funcs;
+		while (funcs.length)
+		{
+			var fn = funcs.shift();
+			fn();
+		}
+	}
+};
+var WR = Kekule.Widget.WidgetsReady;
+/**
+ * Invoked when widget system is constructed.
+ * @param {Func} fn Callback function.
+ * @function
+ */
+Kekule.Widget.ready = WR.ready;
 
 
 var _doAutoLaunch = function()
@@ -357,18 +541,40 @@ var _doAutoLaunch = function()
 		return;
 	}
 
+	// if deferring launch, must intercept the DOM ready handlers, ensures they are called after widgets created (for compatibility)
+	var resumeDomReady = Kekule.Widget.AutoLauncher.deferring? function()
+	{
+		Kekule.X.DomReady.resume();
+	}: null;
+	var done = function()
+	{
+		try
+		{
+			WR.fireReady();
+		}
+		finally
+		{
+			if (resumeDomReady)
+				resumeDomReady();
+		}
+	};
+
 	if (Kekule.Widget.AutoLauncher.enabled)
 	{
 		//console.log('do autolaunch on body', document.body);
-		Kekule.Widget.autoLauncher.execute(document.body);
+		if (Kekule.Widget.AutoLauncher.deferring)
+			Kekule.X.DomReady.suspend();
+		Kekule.Widget.autoLauncher.execute(document.body, null, done);
 	}
+	else
+		done();
 	// add dynamic node inserting observer
 	if (Kekule.X.MutationObserver)
 	{
 		var observer = new Kekule.X.MutationObserver(
 			function(mutations)
 			{
-				if (Kekule.Widget.AutoLauncher.enableDynamicDomCheck)
+				if (Kekule.Widget.AutoLauncher.enableDynamicDomCheck && Kekule.Widget.AutoLauncher.enabled)
 				{
 					for (var i = 0, l = mutations.length; i < l; ++i)
 					{
@@ -398,7 +604,7 @@ var _doAutoLaunch = function()
 		Kekule.X.Event.addListener(document, 'DOMNodeInserted',
 			function(e)
 			{
-				if (Kekule.Widget.AutoLauncher.enableDynamicDomCheck)
+				if (Kekule.Widget.AutoLauncher.enableDynamicDomCheck && Kekule.Widget.AutoLauncher.enabled)
 				{
 					var target = e.getTarget();
 					if (target.nodeType === (Node.ELEMENT_NODE || 1))  // is element
