@@ -42,6 +42,8 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	/** @private */
 	WIDGET_ATTRIB_ALT: 'data-kekule-widget',
 	/** @private */
+	PLACEHOLDER_ATTRIB: 'data-placeholder',
+	/** @private */
 	FIELD_PARENT_WIDGET_ELEM: '__$kekule_parent_widget_elem$__',
 	/** @constructs */
 	initialize: function($super)
@@ -426,7 +428,24 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 			widgetClass = this.getElemWidgetClass(elem);
 		if (widgetClass)
 		{
-			result = new widgetClass(elem);
+			var AL = Kekule.Widget.AutoLauncher;
+
+			// check if using place holder
+			var usingPlaceHolder = false;
+			if (AL.placeHolderStrategy !== AL.PlaceHolderStrategies.DISABLED)
+			{
+				var attrPlaceholder = elem.getAttribute(this.PLACEHOLDER_ATTRIB) || '';
+				usingPlaceHolder = ((AL.placeHolderStrategy === AL.PlaceHolderStrategies.EXPLICIT) && Kekule.StrUtils.strToBool(attrPlaceholder))
+					|| (AL.placeHolderStrategy === AL.PlaceHolderStrategies.IMPLICIT);
+				usingPlaceHolder = usingPlaceHolder && ClassEx.getPrototype(widgetClass).canUsePlaceHolderOnElem(elem);
+			}
+			//usingPlaceHolder = true;
+			if (usingPlaceHolder)
+			{
+				result = new Kekule.Widget.PlaceHolder(elem, widgetClass);
+			}
+			else
+				result = new widgetClass(elem);
 			if (result)  // create successful
 			{
 				var parentWidget = parentWidgetOrElem;
@@ -478,6 +497,19 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.AutoLauncher);
 Kekule.Widget.autoLauncher = Kekule.Widget.AutoLauncher.getInstance();
 
+/**
+ * PlaceHolder creation strategy for autolauncher
+ * @enum
+ */
+Kekule.Widget.AutoLauncher.PlaceHolderStrategies = {
+	/** PlaceHolder will be totally disabled. */
+	DISABLED: 'disabled',
+	/** Placeholder will be created when possible. */
+	IMPLICIT: 'implicit',
+	/** Placeholder will only be created when attribute placeholder is explicitly set to true in element. */
+	EXPLICIT: 'explicit'
+};
+
 /** A flag to turn on or off auto launcher. */
 Kekule.Widget.AutoLauncher.enabled = true;
 /** A flag to enable or disable launching child widgets inside a widget element. */
@@ -486,8 +518,10 @@ Kekule.Widget.AutoLauncher.enableCascadeLaunch = true;
 Kekule.Widget.AutoLauncher.enableDynamicDomCheck = true;
 /** A flag to enable or disable launching widgets on element in HTML editor (usually should not). */
 Kekule.Widget.AutoLauncher.enableOnEditable = false;
+/** If true, Placeholder maybe created during auto launching. */
+Kekule.Widget.AutoLauncher.placeHolderStrategy = Kekule.Widget.AutoLauncher.PlaceHolderStrategies.EXPLICIT;
 /** If true, the launch process on each element will be deferred, try not to block the UI. */
-Kekule.Widget.AutoLauncher.deferring = false;
+Kekule.Widget.AutoLauncher.deferring = !false;
 
 /**
  * A helper class to notify widget system is ready.
