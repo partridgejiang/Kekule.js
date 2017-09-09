@@ -545,6 +545,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
+	canUsePlaceHolderOnElem: function(elem)
+	{
+		// When using a img element with src image, it may contains the figure of chem object
+		var imgSrc = elem.getAttribute('src');
+		return (elem.tagName.toLowerCase() === 'img') && (!!imgSrc);
+	},
+
+	/** @ignore */
 	doObjectChange: function($super, modifiedPropNames)
 	{
 		$super(modifiedPropNames);
@@ -589,8 +597,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	doGetWidgetClassName: function($super)
 	{
 		var result = $super() + ' ' + CCNS.VIEWER;
-		var additional = this._getRenderTypeSpecifiedHtmlClassName(this.getRenderType());
-		result += ' ' + additional;
+		try  // may raise exception when called with class prototype (required by placeholder related methods)
+		{
+			var renderType = this.getRenderType();
+			var additional = this._getRenderTypeSpecifiedHtmlClassName(renderType);
+			result += ' ' + additional;
+		}
+		catch(e)
+		{
+
+		}
 		return result;
 	},
 	/** @private */
