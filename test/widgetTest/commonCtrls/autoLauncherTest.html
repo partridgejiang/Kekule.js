@@ -52,7 +52,9 @@
       document.getElementById('dynInsertRegion').innerHTML += s;
     };
     Kekule.X.domReady(function()
+		//Kekule.Widget.ready(function()
       {
+				console.log('Widget ready');
         Kekule.Widget.globalManager.addEventListener('valueChange', function(e)
           {
             //console.log('change on', e.widget.getId());
@@ -82,7 +84,7 @@
 		A line of text.
     <button id="btn11" data-widget="Kekule.Widget.Button" data-text="Button 1" data-observe-element-attrib-changes="true"></button>
     <button id="btn12" data-widget="Kekule.Widget.Button" data-text="Button 2"></button>
-    <a id="btn13" data-widget="Kekule.Widget.Button" data-text="Button 3 On A"></a>
+    <a id="btn13" data-widget="Kekule.Widget.Button" data-text="Button 3 On A">A Text</a>
     <!--<div id="btn14" data-widget="Kekule.Widget.Button" data-text="Button 3 On div"></div>-->
 		<button id="btn15" data-widget="Kekule.Widget.Button">Button with <sup>sup</sup> and <sub>sub</sub></button>
 		<a id="btn16" data-widget="Kekule.Widget.Button">Button(A) with <sup>sup</sup> and <sub>sub</sub></a>
@@ -91,15 +93,15 @@
   <div id="dropDownGroupButtons" data-widget="Kekule.Widget.ButtonGroup" data-layout="2">
     <button id="btn31" data-widget="Kekule.Widget.RadioButton" data-text="Compact 1"></button>
     <button id="btn32" data-widget="Kekule.Widget.RadioButton" data-text="Compact 2"></button>
-    <a id="btn33" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A"></a>
+    <a id="btn33" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A">Compact On A</a>
   </div>
 
   <div id="groupedButtons" data-widget="Kekule.Widget.ButtonGroup"  data-layout="2">
     <button id="btn21" data-widget="Kekule.Widget.RadioButton" data-text="Radio 1"></button>
     <button id="btn22" data-widget="Kekule.Widget.RadioButton" data-text="Radio 2" data-checked="true"></button>
-    <a id="btn23" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On A"></a>
-    <a id="btn24" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithPrevWidget" data-drop-down-widget="#dropDownGroupButtons"></a>
-    <a id="btn25" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithNextWidget" data-drop-down-widget="#dropDownGroupButtons2"></a>
+    <a id="btn23" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On A">RRRR</a>
+    <a id="btn24" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithPrevWidget" data-drop-down-widget="#dropDownGroupButtons">RRRR</a>
+    <a id="btn25" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithNextWidget" data-drop-down-widget="#dropDownGroupButtons2">RRRR</a>
   </div>
 
   <div id="dropDownGroupButtons2" data-widget="Kekule.Widget.ButtonGroup">
