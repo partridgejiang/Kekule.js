@@ -3338,12 +3338,14 @@ Kekule.Widget.Utils = {
 	 * @param {HTMLElement} element
 	 * @returns {Kekule.Widget.BaseWidget}
 	 */
-	getWidgetOnElem: function(element)
+	getWidgetOnElem: function(element, retainPlaceholder)
 	{
 		var result = element[widgetBindingField];
 
-		if (result instanceof Kekule.Widget.PlaceHolder)
+		if (!retainPlaceholder && (result instanceof Kekule.Widget.PlaceHolder))
+		{
 			result = result.getTargetWidget();
+		}
 
 		return result;
 	},

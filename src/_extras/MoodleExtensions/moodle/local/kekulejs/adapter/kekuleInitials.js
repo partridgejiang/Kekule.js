@@ -1,7 +1,11 @@
 /**
  * Created by ginger on 2017/3/1.
  */
-
+if (Kekule.Widget.AutoLauncher)
+{
+	Kekule.Widget.AutoLauncher.deferring = true;
+	Kekule.Widget.AutoLauncher.placeHolderStrategy = Kekule.Widget.AutoLauncher.PlaceHolderStrategies.IMPLICIT;	
+}
 if (Kekule.globalOptions && Kekule.ChemWidget)
 {
 	var BNS = Kekule.ChemWidget.ComponentWidgetNames;
