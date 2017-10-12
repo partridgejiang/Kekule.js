@@ -521,7 +521,7 @@ Kekule.Widget.AutoLauncher.enableOnEditable = false;
 /** If true, Placeholder maybe created during auto launching. */
 Kekule.Widget.AutoLauncher.placeHolderStrategy = Kekule.Widget.AutoLauncher.PlaceHolderStrategies.EXPLICIT;
 /** If true, the launch process on each element will be deferred, try not to block the UI. */
-Kekule.Widget.AutoLauncher.deferring = !false;
+Kekule.Widget.AutoLauncher.deferring = false;
 
 /**
  * A helper class to notify widget system is ready.

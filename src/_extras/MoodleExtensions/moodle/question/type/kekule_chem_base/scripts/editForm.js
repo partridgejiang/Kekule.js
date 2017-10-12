@@ -89,12 +89,14 @@ function createChemViewer(placeHolder, molData, molDataType, className, inputTyp
 		}
 
 		var container = document.createElement('span');
+		var linebreak = document.createElement('br');
 		/*
 		if (molData)
 			container.setAttribute('data-chem-obj', molData);
 		*/
 		var parentElem = placeHolder.parentNode;
 		parentElem.insertBefore(container, placeHolder);
+		parentElem.insertBefore(linebreak, placeHolder);
 		//parentElem.removeChild(placeHolder);
 		hideElem(placeHolder);
 		var result = new Kekule.ChemWidget.Viewer(container);

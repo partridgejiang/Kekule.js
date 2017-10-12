@@ -43,7 +43,7 @@ router.post('/compare', function(req, res, next) {
   {
     result.error = e.message;
   }
-  console.log('Compare returns result', result);
+  console.log((new Date()).toLocaleString(), 'Compare returns result', result);
   // returns result as JSON
   res.json(result);
 });
@@ -68,7 +68,7 @@ router.post('/contain', function(req, res, next) {
   {
     result.error = e.message;
   }
-  console.log('Contain returns result', result);
+  console.log((new Date()).toLocaleString(), 'Contain returns result', result);
   // returns result as JSON
   res.json(result);
 });
