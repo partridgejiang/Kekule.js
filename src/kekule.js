@@ -620,7 +620,7 @@ function init()
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
-			'path': 'F:/Users/Ginger/Programer/Project/MolGraphics/WebBasedGraphics_Kekule/Kekule/project/src/', // fixed for debug  // __dirname + '/',
+			'path': __dirname + '/',
 			'modules': nodeModules,
 			'useMinFile': false  // for debug
 		};
