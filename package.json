@@ -1,11 +1,21 @@
 {
   "name": "kekule",
-  "version": "0.0.13",
+  "version": "0.7.5",
   "description": "Kekule.js library for Node",
+  "main": "dist/kekule.js",
   "author": {
-    "name": "Chen Jiang"
+    "name": "Chen Jiang",
+    "email": "partridge@cpu.edu.cn"
   },
-  "main": "src/kekule.js",
+  "contributors": [
+    {
+      "name": "Aaron Llanos",
+      "email": "aaronllanos93@gmail.com"
+    },
+    {
+      "name": "Joshua Williams"
+    }
+  ],
   "maintainers": [
     {
       "name": "Chen Jiang",
@@ -17,7 +27,7 @@
   },
   "licenses": [
     {
-      "type": "MIT",
+      "type": "MIT"
     }
   ],
   "engines": {
