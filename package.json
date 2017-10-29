@@ -33,5 +33,6 @@
   "engines": {
     "node": ">=0.10"
   },
-  "directories": {}
+  "directories": {},
+  "keywords": ["chemistry", "cheminformatics", "chemoinformatics", "molecule"]
 }
