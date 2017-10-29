@@ -1,6 +1,6 @@
 {
   "name": "kekule",
-  "version": "0.7.5.17102900",
+  "version": "0.7.5",
   "description": "Kekule.js library for Node",
   "main": "dist/kekule.js",
   "author": {
