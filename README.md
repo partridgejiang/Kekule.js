@@ -9,7 +9,7 @@ More details about this project can be found in [Kekule.js website](http://partr
 For web applications, Kekule.js can be simply included in HTML page by `<script>` tag:
 
 ```xml
-<script src="kekule.js?module=chemWidget,algorithm"></script>
+<script src="kekule.js?module=io,chemWidget,algorithm"></script>
 ```
 
 Note the module param after "?". In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.
@@ -43,11 +43,15 @@ var atomO2 = mol.appendAtom('O');
 mol.appendBond([atomC, atomO1], 2);
 mol.appendBond([atomC, atomO2], 2);
 
-// Output SMILES
+// Get formula
+var formula = mol.calcFormula();
+console.log('Formula: ', formula.getText());
+
+// Output SMILES (IO module should be loaded in web application)
 var smiles = Kekule.IO.saveFormatData(mol, 'smi');
 console.log('SMILES: ', smiles);
 
-// Output MOL2k
+// Output MOL2k (IO module should be loaded in web application)
 var mol2k = Kekule.IO.saveFormatData(mol, 'mol');
 console.log('MOL 2000: \n', mol2k);
 ```
