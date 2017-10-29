@@ -58,6 +58,6 @@ A set of [tutorials](http://partridgejiang.github.io/Kekule.js/documents/tutoria
 
 The full API documents can be found [here](http://partridgejiang.github.io/Kekule.js/documents/).
  
-##License
+## License
 
 The toolkit is released under [MIT](https://github.com/partridgejiang/Kekule.js/blob/master/LICENSE) license.
