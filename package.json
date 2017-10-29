@@ -5,7 +5,7 @@
   "author": {
     "name": "Chen Jiang"
   },
-  "main": "kekule.js",
+  "main": "src/kekule.js",
   "maintainers": [
     {
       "name": "Chen Jiang",
@@ -17,11 +17,11 @@
   },
   "licenses": [
     {
-      "type": "MIT",      
+      "type": "MIT",
     }
   ],
   "engines": {
     "node": ">=0.10"
-  },    
+  },
   "directories": {}
 }
