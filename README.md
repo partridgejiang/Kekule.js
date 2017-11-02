@@ -12,7 +12,7 @@ For web applications, Kekule.js can be simply included in HTML page by `<script>
 <script src="kekule.js?module=io,chemWidget,algorithm"></script>
 ```
 
-Note the module param after "?". In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.
+Note the module param after "?". In the example above, module io, chemWidget and algorithm, as well as other prerequisite modules will be loaded.
 
 If widget or chem widget modules are used, additional style sheet file also need to be linked in HTML page:
 
