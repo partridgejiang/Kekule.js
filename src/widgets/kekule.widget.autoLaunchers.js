@@ -323,6 +323,14 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		var selector = '[' + this.WIDGET_ATTRIB + '],[' + this.WIDGET_ATTRIB_ALT + ']';
 		//var selector = '[' + this.WIDGET_ATTRIB + ']';
 		var allElems = rootElem.querySelectorAll(selector);
+
+		var rootWidgetClass = this.getElemWidgetClass(rootElem);  // if root element is a widget, shift it into allElems
+		if (rootWidgetClass)
+		{
+			allElems = Array.prototype.slice.call(allElems);
+			allElems.unshift(rootElem);
+		}
+
 		if (allElems && allElems.length)
 		{
 			/*
