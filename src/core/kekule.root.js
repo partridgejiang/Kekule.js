@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.7.5.170624',
+	VERSION: '0.7.6.17110500',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore

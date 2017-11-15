@@ -436,7 +436,7 @@ var kekuleFiles = {
 
 var prequestModules = ['lan', 'root', 'localization', 'localizationData', 'common'];
 var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
-var allModules = usualModules.concat(['emscripten', 'openbabel']);
+var allModules = usualModules.concat(['emscripten', 'inchi', 'openbabel', 'indigo']);
 var nodeModules = prequestModules.concat(['core', 'io', 'algorithm', 'calculation', 'data']);
 var defaultLocals = [];
 
@@ -620,9 +620,10 @@ function init()
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
-			'path': 'F:/Users/Ginger/Programer/Project/MolGraphics/WebBasedGraphics_Kekule/Kekule/project/src/', // fixed for debug  // __dirname + '/',
+			'path': __dirname + '/',
 			'modules': nodeModules,
-			'useMinFile': false  // for debug
+			//'useMinFile': false  // for debug
+			'useMinFile': true
 		};
 	}
 	else  // in browser
@@ -636,7 +637,6 @@ function init()
 	var scriptUrls = [];
 	for (var i = 0, l = files.length; i < l; ++i)
 	{
-		//kekuleRequire(path + files[i]);
 		scriptUrls.push(path + files[i]);
 	}
 	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading

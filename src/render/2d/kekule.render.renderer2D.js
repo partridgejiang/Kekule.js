@@ -21,6 +21,7 @@
 var RT = Kekule.Render.BondRenderType;
 var D = Kekule.Render.TextDirection;
 var BU = Kekule.BoxUtils;
+var BO = Kekule.BondOrder;
 var oneOf = Kekule.oneOf;
 
 /**
@@ -2439,8 +2440,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				if (bonds.length === 2)
 				{
 					// we have two multiple bonds
-					if (bonds[0].getBondOrder() === bonds[1].getBondOrder() && bonds[0].getBondOrder() >= 2)
-						return true;
+					if (bonds[0].getBondOrder() === bonds[1].getBondOrder())
+					{
+						var bondOrder = bonds[0].getBondOrder();
+						return bondOrder >= BO.DOUBLE && bondOrder < BO.EXPLICIT_AROMATIC;
+					}
 				}
 			}
 			return false;

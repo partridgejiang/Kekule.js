@@ -191,7 +191,8 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 						var objs = connector.getConnectedObjs();
 						for (var j = 0, k = objs.length; j < k; ++j)
 						{
-							if (objs[j] !== this)
+							var currObj = objs[j];
+							if (currObj !== this && !(this.hasChildObj && this.hasChildObj(currObj)))
 								Kekule.ArrayUtils.pushUnique(result, objs[j]);
 						}
 					}
