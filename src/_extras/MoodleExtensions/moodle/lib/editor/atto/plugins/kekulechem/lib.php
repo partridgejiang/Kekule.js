@@ -25,7 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
 if (empty($kekulePluginsPath))
-    $kekulePluginsPath = self::DEF_KEKULE_DIR;
+    $kekulePluginsPath = '/local/kekulejs/';  // default location;
 require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
 
 class atto_kekulechem_configs
