@@ -343,13 +343,14 @@ class qtype_kekule_multianswer extends question_type {
         */
         foreach ($q->subGroups as $key => $group)
         {
+			$subResponses = array();
             $groupAnswers = array();
             foreach ($group as $key => $blankIndex)
             {
                 $groupAnswers = array_merge($groupAnswers, $q->answerKeyMap[$blankIndex]);
             }
             foreach ($group as $key => $blankIndex)
-            {
+            {				
                 foreach($groupAnswers as $answer)
                 {
                     $subResponses[$answer->id] = new question_possible_response($answer->answer, $answer->fraction);
