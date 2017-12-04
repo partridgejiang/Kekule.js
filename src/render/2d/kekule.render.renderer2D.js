@@ -1027,7 +1027,7 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	 * @returns {Object}
 	 * @private
 	 */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
 		return null;  // do nothing here
 	},
@@ -1067,7 +1067,7 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 
 		var chemObj = this.getChemObj();
 		var transformOptions = options.transformParams;
-		var richText = this.getRichText(this.getChemObj());
+		var richText = this.getRichText(this.getChemObj(), options);
 
 		if (!richText)
 			return null;
@@ -1108,7 +1108,7 @@ Kekule.Render.TextBlock2DRenderer = Class.create(Kekule.Render.RichTextBased2DRe
 	CLASS_NAME: 'Kekule.Render.TextBlock2DRenderer',
 
 	/** @private */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
 		var result = Kekule.Render.RichTextUtils.strToRichText(chemObj.getText());
 		return result;
@@ -1175,9 +1175,9 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 	},
 
 	/** @private */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
-		return chemObj.getDisplayRichText(true);  // show charge
+		return chemObj.getDisplayRichText(true, drawOptions.displayLabelConfigs, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);  // show charge
 	},
 
 	/** @private */
@@ -2287,7 +2287,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// if a label is drawn, all hydrogens should be marked
 			var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
 			//console.log(hdisplayLevel);
-			var label = node.getDisplayRichText(hdisplayLevel, true, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength);
+			var label = node.getDisplayRichText(hdisplayLevel, true, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength, nodeRenderOptions.chargeMarkType);
 
 			// decide charDirection
 			//label.charDirection = Kekule.ObjUtils.isUnset(nodeRenderOptions.charDirection) ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
