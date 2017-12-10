@@ -1318,6 +1318,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/**
+	 * Repaint the objects in editor.
+	 */
+	repaint: function(overrideOptions)
+	{
+		this.getEditor().repaint(overrideOptions);
+		return this;
+	},
+
+	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
 	 * @private
 	 */
