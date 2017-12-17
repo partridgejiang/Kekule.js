@@ -2888,9 +2888,17 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	getEventMouseRelCoord: function(e)
+	getEventMouseRelCoord: function(e, relElement)
 	{
-		return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
+		if (!relElement)
+			relElement = this.getCoreElement();  // defaultly base on client element, not widget element
+
+		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
+		var offset = {'x': relElement.getBoundingClientRect().left - relElement.scrollLeft, 'y': relElement.getBoundingClientRect().top - relElement.scrollTop};
+		var result = Kekule.CoordUtils.substract(coord, offset);
+		//console.log(result, elem.tagName);
+		return result;
+		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
 	},
 
 	/**
