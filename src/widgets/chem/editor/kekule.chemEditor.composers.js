@@ -252,6 +252,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			this.setPropStoreFieldValue('fontNameBox', null);
 		if (widget === this.getFontSizeBox())
 			this.setPropStoreFieldValue('fontSizeBox', null);
+		if (widget === this.getColorBox())
+			this.setPropStoreFieldValue('colorBox', null);
+		if (widget === this.getTextDirectionButtonSet())
+			this.setPropStoreFieldValue('textDirectionButtonSet', null);
+		if (widget === this.getTextHorizontalAlignButtonSet())
+			this.setPropStoreFieldValue('textHorizontalAlignButtonSet', null);
+		if (widget === this.getTextVerticalAlignButtonSet())
+			this.setPropStoreFieldValue('textVerticalAlignButtonSet', null);
 		$super(widget, doNotFinalize);
 	},
 

@@ -76,8 +76,9 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 * @param {Func} callback Callback function called when calculation is done.
 	 * @param {Func} errCallback Callback function called when error occurs.
 	 *   errCallback function should has param (err) where err is the possible error object (or string).
+	 * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
 	 */
-	execute: function(callback, errCallback)
+	execute: function(callback, errCallback, msgCallback)
 	{
 		var self = this;
 		/*
@@ -90,6 +91,7 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		*/
 		this._doneCallback = callback;  //done;
 		this._errCallback = errCallback;
+		this._msgCallback = msgCallback;
 		if (this.getAsync() && this.isWorkerSupported() && this.createWorker())  // try using worker
 		{
 			var w = this.getWorker();
@@ -167,6 +169,7 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		//this.done(Kekule.$L('ErrorMsg.CALC_TERMINATED_BY_USER'));
 	},
 
+
 	/**
 	 * Returns whether script worker can be used in current environment.
 	 * @returns {Bool}
@@ -222,6 +225,8 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	reactWorkerMessage: function(e)
 	{
+		if (this._msgCallback)
+			this._msgCallback(e.data);
 		return this.doReactWorkerMessage(e.data, e);
 	},
 	/**
@@ -384,9 +389,10 @@ Kekule.Calculator.Services = {
  * @param {Hash} options
  * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
  * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
+ * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
  * @returns {Object} Created calculation object.
  */
-Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallback)
+Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallback, msgCallback)
 {
 	var serviceName = Kekule.Calculator.Services.GEN3D;
 	var c = CS.getServiceClass(serviceName);
@@ -404,12 +410,17 @@ Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallbac
 			{
 				if (errCallback)
 					errCallback(err);
-			}
+			};
+			var onMsg = function(msgData)
+			{
+				if (msgCallback)
+					msgCallback(msgData);
+			};
 			try
 			{
 				o.setSourceMol(sourceMol);
 				o.setOptions(options);
-				o.execute(done, error);
+				o.execute(done, error, onMsg);
 			}
 			catch(e)
 			{
