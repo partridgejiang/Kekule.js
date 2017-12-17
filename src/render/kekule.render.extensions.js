@@ -62,6 +62,7 @@
 		 *   chargeMarkFontSize: Float.
 		 *   chargeMarkMargin: Float.
 		 *   chargeMarkCircleWidth: Float.
+		 *   distinguishSingletAndTripletRadical: bool,
 		 *   fontSize, fontFamily, supFontSizeRatio, subFontSizeRatio,
 		 *	 superscriptOverhang, subscriptOversink, textBoxXAlignment, textBoxYAlignment:
 		 *	   Those values can adjust the outlook of node labels.

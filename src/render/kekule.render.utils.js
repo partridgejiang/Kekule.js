@@ -775,16 +775,20 @@ Kekule.Render.RichTextUtils = {
  */
 Kekule.Render.ChemDisplayTextUtils = {
 	/** @private */
-	//RADICAL_LABEL: ['', '••', '•', '••'],
-	RADICAL_LABEL: ['', '\u2022\u2022', '\u2022', '\u2022\u2022'],
+	//RADICAL_LABELS: ['', '••', '•', '••'],
+	RADICAL_LABELS: ['', '\u2022\u2022', '\u2022', '\u2022\u2022'],
+	RADICAL_TRIPLET_ALTER_LABEL: '^^',
 	/**
 	 * Returns suitable text to indicate the radical.
 	 * @param {Int} radical
 	 * @returns {String}
 	 */
-	getRadicalDisplayText: function(radical)
+	getRadicalDisplayText: function(radical, useAlterTripletRadicalMark)
 	{
-		return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABEL[radical];
+		if (useAlterTripletRadicalMark && radical === Kekule.RadicalOrder.TRIPLET)
+			return Kekule.Render.ChemDisplayTextUtils.RADICAL_TRIPLET_ALTER_LABEL;
+		else
+			return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABELS[radical];
 	},
 	/**
 	 * Create a rich text section (usually superscript) to display atom charge and radical.
@@ -794,7 +798,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 	 * @param {Int} chargeMarkType
 	 * @returns {Object}
 	 */
-	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType)
+	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
 	{
 		var result = null;
 		var slabel = '';
@@ -817,7 +821,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 
 		if (radical)
 		{
-			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical) || '';
+			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, useAlterTripletRadicalMark) || '';
 		}
 
 		if (slabel)

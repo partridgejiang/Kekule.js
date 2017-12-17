@@ -2351,6 +2351,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				var elemEx = this.doDrawElectronStateMark(context, group, node,
 					nodeRenderOptions.chargeMarkType,
 					nodeRenderOptions.partialChargeDecimalsLength,
+					nodeRenderOptions.distinguishSingletAndTripletRadical,
 					nodeRenderOptions.fontFamily,
 					nodeRenderOptions.chargeMarkFontSize * nodeRenderOptions.unitLength,
 					nodeRenderOptions.chargeMarkMargin * nodeRenderOptions.unitLength,
@@ -2690,7 +2691,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 * Draw charge mark (such as +, 2-) and radical mark (./..) on node, especially on C atom in skeletal formula.
 	 * @private
 	 */
-	doDrawElectronStateMark: function(context, group, node, markType, partialChargeDecimalsLength, markFontFamily, markFontSize, markMargin, circleStrokeWidth, color, opacity, zoom)
+	doDrawElectronStateMark: function(context, group, node, markType, partialChargeDecimalsLength, distinguishSingletAndTripletRadical, markFontFamily, markFontSize, markMargin, circleStrokeWidth, color, opacity, zoom)
 	{
 		var charge = node.getCharge();
 		var radical = node.getRadical();
@@ -2725,7 +2726,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (radical)
 		{
 			//slabel += (radical === Kekule.RadicalOrder.DOUBLET)? '•': '••';
-			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical);
+			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, distinguishSingletAndTripletRadical);
 		}
 
 		if (!slabel)
