@@ -15,6 +15,15 @@ if (!Array.prototype.indexOf)
 	};
 }
 
+// avoid Node error
+var document = $root.document;
+if (!document)
+{
+	if (typeof(window) !== 'undefined')
+		document = window.document;
+}
+
+
 // check if is in Node.js environment
 var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
 
@@ -30,7 +39,6 @@ if (!isNode)
 	var docReady = (readyState === 'complete' || readyState === 'loaded' ||
 		(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
 }
-var document = $root.document;  // avoid Node error
 
 function directAppend(doc, libName)
 {
@@ -40,13 +48,35 @@ function nodeAppend(url)
 {
 	if (isNode)
 	{
-		var vm = require("vm");
-		var fs = require("fs");
-		var data = fs.readFileSync(url);
-		//console.log('[k] node append', url, data.length);
-		vm.runInThisContext(data, {'filename': url});
-		//vm.runInNewContext(data, __nodeContext, {'filename': url});
-		//eval(data);
+		try
+		{
+			var vm = require("vm");
+			var fs = require("fs");
+			var data = fs.readFileSync(url);
+			//console.log('[k] node append', url, data.length);
+			vm.runInThisContext(data, {'filename': url});
+			//vm.runInNewContext(data, __nodeContext, {'filename': url});
+			//eval(data);
+		}
+		catch(e)
+		{
+			// may be in webpack? Need further investigation
+			/*
+			if ($root.require)
+			{
+				var extPos = url.toLowerCase().lastIndexOf('.js');
+				var coreFileName;
+				if (extPos >= 0)
+				{
+					coreFileName = url.substr(0, extPos);
+				}
+				if (coreFileName)
+					require('./' + fileName + '.js');
+				else
+					require('./' + fileName);
+			}
+			*/
+		}
 	}
 }
 
@@ -610,7 +640,14 @@ function analysisEntranceScriptSrc(doc)
 			}
 		}
 	}
-	return null;
+	//return null;
+	return {
+		'src': '',
+		'path': '',
+		'modules': usualModules,
+		//'useMinFile': false  // for debug
+		'useMinFile': true
+	}; // return a default setting
 }
 
 function init()
@@ -628,7 +665,7 @@ function init()
 	}
 	else  // in browser
 	{
-		scriptInfo = analysisEntranceScriptSrc($root.document);
+		scriptInfo = analysisEntranceScriptSrc(document);
 	}
 
 	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
