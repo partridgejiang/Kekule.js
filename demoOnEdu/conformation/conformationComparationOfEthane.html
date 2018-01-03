@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Conformation Comparison</title>
+
+  <script src="../_libs/Three.js"></script>
+	<script src="../_libs/kekule/kekule.js?modules=chemWidget,algorithm"></script>
+	<script src="../_libs/kekule/localizationData.zh.min.js"></script>
+	<script src="../_libs/common.js"></script>
+	<link rel="stylesheet" type="text/css" href="../_libs/kekule/themes/default/kekule.css" />
+	<link rel="stylesheet" type="text/css" href="../_styles/common.css" />
+
+  <script id="mol1" type="chemical/x-kekule-json">
+{"info":{"generator":"Chem3D","date":{"__type__":"date","date":"Tue, 09 Sep 2008 09:30:48 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","coord3D":{"x":0.7615,"y":0,"z":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coord3D":{"x":-0.7615,"y":0,"z":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":0.9005,"z":0.5319,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":-0.9095,"z":0.5163,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":0.009,"z":-1.0458,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":-0.905,"z":0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":0.905,"z":0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":0,"z":-1.0459,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,4]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,6]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,7]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+	</script>
+  <script id="mol2" type="chemical/x-kekule-json">
+{"info":{"generator":"Chem3D C","date":{"__type__":"date","date":"Fri, 30 Dec 2011 16:04:48 GMT"},"__type__":"object"},"renderOptions":{"expanded":true,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","coord3D":{"x":0.7615,"y":0,"z":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coord3D":{"x":-0.7615,"y":0,"z":0,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":-0.905,"z":-0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":0.905,"z":-0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":1.1422,"y":0,"z":1.0459,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":-0.905,"z":0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":0.905,"z":0.5242,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"},{"__type__":"Kekule.Atom","coord3D":{"x":-1.1422,"y":0,"z":-1.0459,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,4]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,6]},{"__type__":"Kekule.Bond","parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,7]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+	</script>
+
+  <style>
+    html, body
+    {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #chemViewer1, #chemViewer2
+    {
+      border: none;
+      margin: 0;
+      float: left;
+    }
+  </style>
+
+  <script>
+    var viewerElemIds = ['chemViewer1', 'chemViewer2'];
+    var chemViewers = [];
+    function init()
+    {
+      var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+      for (var i = 0, l = viewerElemIds.length; i < l; ++i)
+      {
+        var elem = document.getElementById(viewerElemIds[i]);
+        chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+        chemViewer.setEnableToolbar(true)
+          .setToolButtons([
+            /* BNS.loadFile, BNS.saveFile,*/ BNS.molDisplayType, BNS.molHideHydrogens,
+            BNS.zoomIn, BNS.zoomOut,
+            /*BNS.rotateX, BNS.rotateY, BNS.rotateZ,*/ BNS.reset
+          ]);
+        chemViewer.setAutoSize(false).setPadding(20);
+        chemViewers.push(chemViewer);
+      }
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+    }
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      var width = (dim.width - 10) / chemViewers.length;
+      for (var i = 0, l = chemViewers.length; i < l; ++i)
+      {
+        chemViewers[i].setWidth(width + 'px').setHeight(dim.height + 'px');
+      }
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<div id="chemViewer1" style="width:100%;height:650px" data-chem-obj="url(#mol1)"></div>
+<div id="chemViewer2" style="width:100%;height:650px" data-chem-obj="url(#mol2)"></div>
+</body>
+</html>
