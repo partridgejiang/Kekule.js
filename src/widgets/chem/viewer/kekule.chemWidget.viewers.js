@@ -537,6 +537,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		/*
 		this.setEnableEdit(true);
 		*/
+		this.setUseNormalBackground(false);
 		this.setModalEdit(true);
 		this.setRestrainEditorWithCurrObj(true);
 		this.setRestraintRotation3DEdgeRatio(0.18);

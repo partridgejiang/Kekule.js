@@ -386,6 +386,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('selfStatic', false);
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
+		this.setPropStoreFieldValue('useNormalBackground', true);
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -643,6 +644,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					//console.log('setROund');
 					this.addClassName(CNS.CORNER_ALL);
+				}
+			}
+		});
+		this.defineProp('useNormalBackground', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('useNormalBackground', value);
+				if (!value)
+				{
+					this.removeClassName(CNS.NORMAL_BACKGROUND);
+				}
+				else
+				{
+					this.addClassName(CNS.NORMAL_BACKGROUND);
 				}
 			}
 		});
@@ -2114,7 +2129,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
-		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()))
+		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()) && !!this.getUseNormalBackground())
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
 		return result;
