@@ -1868,7 +1868,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							//actions.remove(unusedAction);
 							actionMap.remove(unusedAction.getClass());
 							//unusedAction.finalize();
-							console.log('remove action', unusedAction.getClassName(), unusedAction.getAttachedActions().getActions());
 						}
 					}
 				}
