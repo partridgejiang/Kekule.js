@@ -770,7 +770,7 @@ Kekule.ArrayUtils = {
 		{
 			// sort lengths to find the median one
 			a.sort(function(a, b) { return a - b;} );
-			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) + 1]) / 2;
+			return (l % 2)? a[(l + 1) >> 1]: (a[l >> 1] + a[(l >> 1) - 1]) / 2;
 		}
 	},
 
@@ -951,7 +951,8 @@ Kekule.StrUtils = {
 		else  // assume is string
 		{
 			var reg = separator? new RegExp(separator, 'g'): /\s+/g;
-			return str.replace(reg, ' ').split(' ');
+			//return str.replace(reg, ' ').split(' ');
+			return str.split(reg);
 		}
 	},
 	/**

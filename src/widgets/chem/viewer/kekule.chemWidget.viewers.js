@@ -537,11 +537,20 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		/*
 		this.setEnableEdit(true);
 		*/
+		this.setUseNormalBackground(false);
 		this.setModalEdit(true);
 		this.setRestrainEditorWithCurrObj(true);
 		this.setRestraintRotation3DEdgeRatio(0.18);
 		this.setEnableRestraintRotation3D(true);
 		this.setShareEditorInstance(true);
+	},
+
+	/** @ignore */
+	canUsePlaceHolderOnElem: function(elem)
+	{
+		// When using a img element with src image, it may contains the figure of chem object
+		var imgSrc = elem.getAttribute('src');
+		return (elem.tagName.toLowerCase() === 'img') && (!!imgSrc);
 	},
 
 	/** @ignore */
@@ -589,8 +598,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	doGetWidgetClassName: function($super)
 	{
 		var result = $super() + ' ' + CCNS.VIEWER;
-		var additional = this._getRenderTypeSpecifiedHtmlClassName(this.getRenderType());
-		result += ' ' + additional;
+		try  // may raise exception when called with class prototype (required by placeholder related methods)
+		{
+			var renderType = this.getRenderType();
+			var additional = this._getRenderTypeSpecifiedHtmlClassName(renderType);
+			result += ' ' + additional;
+		}
+		catch(e)
+		{
+
+		}
 		return result;
 	},
 	/** @private */
@@ -1308,7 +1325,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	getCompActionClass: function(compName)
 	{
 		//return this.getToolButtonNameMapping()[compName];
-		return this.getChildActionClass(compName, false);
+		return this.getChildActionClass(compName, true);
 	},
 
 	/** @private */

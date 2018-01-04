@@ -9,15 +9,15 @@
   <script src="../../src/_extras/OpenBabel/openbabel.js.O1"></script>
   -->
 
-  <!--
+
   <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel"></script>
-  -->
+
   <!--
   <script src="../../src/_compressed/kekule.js?min=true&modules=calculation,chemWidget,openbabel"></script>
   -->
-
+  <!--
   <script src="../../release/kekule.js?min=true&modules=calculation,chemWidget,openbabel"></script>
-
+  -->
 
   <!--
   <script src="../../src/_compressed/kekule.min.js"></script>
@@ -72,7 +72,7 @@ M  END
     function generate3D()
     {
       var mol = getCurrMol();
-
+      var msgs = [];
       /*
       var generator = new Kekule.Calculator.ObStructure3DGenerator();
       generator.setSourceMol(mol);
@@ -91,6 +91,14 @@ M  END
         {
           if (err)
             Kekule.error(err);
+        },
+        function (msgData)
+        {
+          if (msgData.type === 'print' || msgData.type === 'printErr')
+          {
+            msgs.push('[' + (new Date()).toLocaleTimeString() + '][' + msgData.type + ']' + msgData.data);
+            Kekule.Widget.getWidgetById('memoLog').setValue(msgs.join('\n'));
+          }
         }
       );
     }
@@ -123,6 +131,9 @@ M  END
 </div>
 <div id="chemEditorUi" style="width:900px;height:500px" data-chem-obj="url(#molSrc)"></div>
 <div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+<div id="logPanel">
+  <div id="memoLog" style="width:100em;height:40em" data-widget="Kekule.Widget.TextEditor"></div>
+</div>
 
 </body>
 </html>

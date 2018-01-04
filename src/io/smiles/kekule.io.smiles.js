@@ -178,7 +178,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.SmilesMolWriter',
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		/*
 		 if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -194,7 +194,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return writer.writeBlock(obj);
 			*/
 			var mol = this.getMolecule(obj);
-			return this.writeStructFragment(mol);
+			return this.writeStructFragment(mol, options);
 		}
 	},
 	/**
@@ -207,7 +207,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	},
 
 	/** @private */
-	writeStructFragment: function(mol)
+	writeStructFragment: function(mol, options)
 	{
 		if (mol.hasCtab())
 		{
@@ -254,7 +254,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				//var remainingVertexes = AU.clone(depthSpanningTree.vertexes);
 				//var remainingEdges = AU.clone(depthSpanningTree.edges);
 				var currVertex = mainChainPath.vertexes[0]; //startingVertex;
-				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges, ringEdgeRepo, aromaticNodes, aromaticConnectors);
+				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges, ringEdgeRepo, aromaticNodes, aromaticConnectors, options);
 
 				if (i === 0)
 					result = partResult;
@@ -267,7 +267,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return '';
 	},
 	/** @private */
-	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors)
+	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options)
 	{
 		var node = vertex.getData('object');
 		var edges = vertex.getEdges();
@@ -280,6 +280,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var ringedVertexes = [];
 		var connectorParity;
 		var nextBondStereoStr = '';
+		var ignoreBondStereo = options.ignoreStereoBond;
+		if (Kekule.ObjUtils.isUnset(ignoreBondStereo))
+			ignoreBondStereo = options.ignoreStereo || false;
 		for (var i = edges.length - 1; i >= 0; --i)
 		{
 			var edge = edges[i];
@@ -287,7 +290,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				continue;
 
 			var connector = edge.getData('object');
-			if (connector.getParity && connector.getParity())  // next is stereo double bond
+			if (!ignoreBondStereo && connector.getParity && connector.getParity())  // next is stereo double bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
 				if (keyNodes)
@@ -305,7 +308,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			if (spanningTreeEdges.indexOf(edge) >= 0)  // edge on spanning tree, not ring edge
 			{
 				var nextVertex = vertex.getNeighborOnEdge(edge);
-				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors);
+				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options);
 				if (mainChainEdges.indexOf(edge) >= 0)  // edge on main chain
 				{
 					mainChainVertex = nextVertex;
@@ -348,7 +351,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			prevNode = prevVertex.getData('object');
 			var prevConnector = prevEdge.getData('object');
 
-			if (prevConnector.getParity && prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
+			if (!ignoreBondStereo && prevConnector.getParity && prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(prevConnector);
 				if (keyNodes)
@@ -375,7 +378,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		if (mainChainVertex)
 			nextNodes.push(mainChainVertex.getData('object'));
-		result += this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0, prevNode, nextNodes);
+		result += this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0, prevNode, nextNodes, options);
 
 		for (var i = 0, l = ringStrs.length; i < l; ++i)
 		{
@@ -393,7 +396,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		return result;
 	},
 	/** @private */
-	_outputNodeStr: function(node, isAromatic, prevNode, nextNodes)
+	_outputNodeStr: function(node, isAromatic, prevNode, nextNodes, options)
 	{
 		var result;
 		var symbol;
@@ -411,8 +414,11 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 
 		// chiral?
+		var ignoreAtomStereo = options.ignoreStereoAtom;
+		if (Kekule.ObjUtils.isUnset(ignoreAtomStereo))
+			ignoreAtomStereo = options.ignoreStereo || false;
 		var schiralRot;
-		if (node.getParity && node.getParity())
+		if (!ignoreAtomStereo && node.getParity && node.getParity())
 		{
 			// calc rotation direction
 			if (nextNodes && nextNodes.length)
@@ -530,7 +536,7 @@ Kekule.IO.MimeType.SMILES = 'chemical/x-daylight-smiles';
 Kekule.IO.DataFormat.SMILES = 'smi';
 var smilesFmtId = 'smi';
 
-Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, 'smi',
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, ['smi', 'smiles'],
 	Kekule.IO.ChemDataType.TEXT, 'SMILES format');
 
 var suitableClasses = [Kekule.StructureFragment, Kekule.ChemObjList, Kekule.ChemStructureObjectGroup, Kekule.ChemSpaceElement, Kekule.ChemSpace];

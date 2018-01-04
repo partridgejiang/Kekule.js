@@ -9,15 +9,25 @@
 <meta name="viewport" content="user-scalable=no" />
 
 <title>Kekule ChemView Widget Basic Test</title>
+
 	<script src="../../_libs/Three.js"></script>
+
+	<!--
+	<script src="../../_libs/three_new/three.min.js"></script>
+	-->
 	<script src="../../_libs/raphael-min.2.0.1.js"></script>
 <script src="../../_libs/raphael.export.js"></script>
 
-	<!--
+<!--
 <script src="../../../src/_extras/OpenBabel/openbabel.js.dev"></script>
+<script src="../../../src/_extras/InChI/inchi.js.dev"></script>
+
+<script src="../../../src/_extras/Indigo/indigo.js.dev"></script>
+<script src="../../../src/_extras/Indigo/indigoAdapter.js"></script>
 -->
 
-<script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel&min=false"></script>
+
+<script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel,inchi,indigo&min=false"></script>
 
 	<!--
 	<script src="../../../release/kekule.js"></script>
@@ -258,7 +268,7 @@ M  END
 	function init()
 	{
     var elem = document.getElementById('chemViewer');
-    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
+    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
     chemViewer.setEnableToolbar(true);
     //chemViewer.setRenderType(Kekule.Render.RendererType.R3D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
@@ -287,10 +297,11 @@ M  END
 	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
 	<div id="report"></div>
     <div id="drawParent">
-      <div id="chemViewer" data-chem-obj="url('#externalRes')" data-toolbar-evoke-modes="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
+      <div id="chemViewer" data-chem-obj="url('#externalRes')" data-toolbar-evoke-modes1="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
 					 data-draw-options='{"autofitContextPadding":20,"zoom":1.5,"rotateX":0,"rotateY":0,"rotateZ":0,"rotateAngle":0.48869219055841223,"rotateAxisVector":null,"rotateMatrix":null,"autofit":false}'
 					 data-predefined-setting="fullFunc"
-					 style="width:600px;height:400px;border:1px solid #666"></div>
+					 data-molecule-display-type1="34"
+					 style="width:600px;height:400px;border1:1px solid #666"></div>
       <!--
       <div id="chemViewer" data-chem-obj="url(./../../_chemFiles/Mols2D/Radicals.cml)" data-toolbar-evoke-modes="[0]" style="width:40em;height:30em"></div>
       -->

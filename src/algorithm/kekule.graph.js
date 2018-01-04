@@ -460,10 +460,14 @@ Kekule.GraphAdaptUtils = {
 	 * @param {Kekule.Graph} graph If not set, a new graph will be created.
 	 * @param {Hash} options Options to convert to graph. Can include fields:
 	 *   {
+	 *     nodeClasses: array, only node instanceof those classes will be included in graph.
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
-	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom (on bond end) are converted into graph. Default is true.
+	 *
+	 *     nodeFilter: func(node, allCtabConnectors), returns bool, a custom function, if false returned, this node will be ignored
+	 *     connectorFilter: func(connector, allCtabNodes), returns bool, a custom function, if false returned, this connector will be ignored
 	 *   }
 	 * @returns {Kekule.Graph} Original node and connector can be retrieved by vertexOrEdge.getData('object').
 	 */
@@ -488,6 +492,47 @@ Kekule.GraphAdaptUtils = {
 
 		if (ctab)
 		{
+			var nodeFilter = op.nodeFilter || function(node, allConnectors) {  // default node filter
+						if (op.nodeClasses)
+						{
+							var nc = node.getClass();
+							if (!ClassEx.isOrIsDescendantOfClasses(nc, op.nodeClasses))
+								return false;
+						}
+						if (op.ignoreBondedHydrogen)
+						{
+							if (node.isHydrogenAtom && node.isHydrogenAtom())
+							{
+								var linkedConns = node.getLinkedConnectors();
+								if (allConnectors)
+									linkedConns = AU.intersect(linkedConns, allConnectors);
+								if (linkedConns.length <= 1)
+									return false;
+							}
+						}
+						return true;
+					};
+			var connectorFilter = op.connectorFilter || function(connector, allNodes) {  // default connector filter
+						if (op.connectorClasses)
+						{
+							var cc = connector.getClass();
+							if (!ClassEx.isOrIsDescendantOfClasses(cc, op.connectorClasses))
+								return false;
+						}
+						if (connector.getBondType && op.bondTypes)
+						{
+							if (op.bondTypes.indexOf(connector.getBondType()) < 0)
+								return false;
+						}
+						/*
+						if (op.ignoreBondedHydrogen && connector.isNormalConnectorToHydrogen && connector.isNormalConnectorToHydrogen())
+						{
+							return false;
+						}
+						*/
+						return true;
+					};
+
 			var result = graph || new Kekule.Graph();
 			var connectors = expandSub? ctab.getAllContainingConnectors(): ctab.getConnectors();
 			var nodes = expandSub? ctab.getLeafNodes(): ctab.getNodes();
@@ -497,18 +542,8 @@ Kekule.GraphAdaptUtils = {
 			for (var i = 0, l = connectors.length; i < l; ++i)
 			{
 				var connector = connectors[i];
-				if (op.connectorClasses)
-				{
-					var cc = connector.getClass();
-					if (!ClassEx.isOrIsDescendantOfClasses(cc, op.connectorClasses))
-						continue;
-				}
-				if (connector.getBondType && op.bondTypes)
-				{
-					if (op.bondTypes.indexOf(connector.getBondType()) < 0)
-						continue;
-				}
-				if (op.ignoreBondedHydrogen && connector.isNormalConnectorToHydrogen && connector.isNormalConnectorToHydrogen())
+
+				if (!connectorFilter(connector))
 					continue;
 
 				var connNodes = [];
@@ -516,9 +551,12 @@ Kekule.GraphAdaptUtils = {
 				for (var j = 0, k = connectedObjs.length; j < k; ++j)
 				{
 					var connObj = connectedObjs[j];
-					if (nodes.indexOf(connObj) >= 0)  // add nodes bypass connected connectors
+					if (nodes.indexOf(connObj) >= 0)  // add nodes, bypass connected connectors
 					{
-						connNodes.push(connObj);
+						if (nodeFilter(connObj, connectors))  // bypass ignored nodes
+							connNodes.push(connObj);
+						else
+							AU.pushUnique(addedNodes, connObj);
 						if (connNodes.length >= 2)
 						{
 							var newNodes = AU.exclude(connNodes, addedNodes);
@@ -538,6 +576,20 @@ Kekule.GraphAdaptUtils = {
 					}
 				}
 			}
+
+			// if there still unadded nodes
+			var remainingNodes = AU.exclude(nodes, addedNodes);
+			for (var i = 0, l = remainingNodes.length; i < l; ++i)
+			{
+				var node = remainingNodes[i];
+				if (nodeFilter(node, connectors))
+				{
+					var v = result.newVertex();
+					v.setData('object', node);
+					//vertexMap.set(newNodes[ii], v);
+				}
+			}
+
 			vertexMap.finalize();
 		}
 		return result;

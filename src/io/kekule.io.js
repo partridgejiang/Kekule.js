@@ -283,9 +283,10 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 	 * @param {Variant} data
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.ChemStructureDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to read data. Different reader may have different options.
 	 * @returns {Variant} Instance created by data.
 	 */
-	readData: function(data, dataType, format)
+	readData: function(data, dataType, format, options)
 	{
 		if (!dataType)  // auto detect
 		{
@@ -296,7 +297,7 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 					Kekule.IO.ChemDataType.TEXT:
 					(data.getElementsByTagName? Kekule.IO.ChemDataType.DOM: Kekule.IO.ChemDataType.BINARY );
 		}
-		var result = this.doReadData(data, dataType, format);
+		var result = this.doReadData(data, dataType, format, options || {});
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
 		{
 			var info = result.getSrcInfo();
@@ -318,9 +319,10 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 	 * @param {Variant} data
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to read data. Different reader may have different options.
 	 * @returns {Variant} Instance created by data.
 	 */
-	doReadData: function(data, dataType, format)
+	doReadData: function(data, dataType, format, options)
 	{
 		// do nothing here
 	}
@@ -373,9 +375,10 @@ Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
 	 * @param {Kekule.ChemObject} obj Object to write
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to write data. Different writer may have different options.
 	 * @returns {Variant} Data output, the type of data is decided by dataType param.
 	 */
-	writeData: function(obj, dataType, format)
+	writeData: function(obj, dataType, format, options)
 	{
 		//var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if (!dataType)  // auto detect
@@ -383,16 +386,18 @@ Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
 			var finfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
 			dataType = finfo? finfo.dataType: null;
 		}
-		return this.doWriteData(obj, dataType, format);
+		return this.doWriteData(obj, dataType, format, options || {});
 	},
 	/**
 	 * Do actual work for {@link Kekule.IO.ChemDataReader#writeData}. Descendants should override this method.
 	 * @param {Kekule.ChemObject} obj Object to write
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to write data. Different writer may have different options.
 	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 * @private
 	 */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		// do nothing here
 	}
@@ -1074,14 +1079,15 @@ Kekule.IO.ChemDataWriterManager = {
  * Load from content with certain format.
  * @param {String} content
  * @param {String} formatId
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadFormatData = function(content, formatId)
+Kekule.IO.loadFormatData = function(content, formatId, options)
 {
 	var reader = Kekule.IO.ChemDataReaderManager.getReaderByFormat(formatId);
 	if (reader)
 	{
-		var result = reader.readData(content, null, formatId);
+		var result = reader.readData(content, null, formatId, options);
 		/*
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
 		{
@@ -1109,9 +1115,10 @@ Kekule.IO.loadFormatData = function(content, formatId)
  * Load from content with mimeType and create a new chem object.
  * @param {String} content
  * @param {String} mimeType
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadMimeData = function(content, mimeType)
+Kekule.IO.loadMimeData = function(content, mimeType, options)
 {
 	/*
 	var reader = Kekule.IO.ChemDataReaderManager.getReaderByMimeType(mimeType);
@@ -1129,16 +1136,17 @@ Kekule.IO.loadMimeData = function(content, mimeType)
 		return null;
 	}
 	*/
-	return Kekule.IO.loadTypedData(content, mimeType, null);
+	return Kekule.IO.loadTypedData(content, mimeType, null, options);
 };
 /**
  * Load a typed content  and create a new chem object, the type is recognized by mimeType or the file extension.
  * @param {String} content
  * @param {String} mimeType
  * @param {String} url
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadTypedData = function(content, mimeType, url)
+Kekule.IO.loadTypedData = function(content, mimeType, url, options)
 {
 	//var reader;
 	var fileExt;
@@ -1182,7 +1190,7 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
 	var result;
 	if (formatId)
-		result = Kekule.IO.loadFormatData(content, formatId);
+		result = Kekule.IO.loadFormatData(content, formatId, options);
 	if (result)
 	{
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
@@ -1216,8 +1224,9 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
  * @param {File} file
  * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
  * @param {String} formatId If not set, format will be get from file name automatically.
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  */
-Kekule.IO.loadFileData = function(file, callback, formatId)
+Kekule.IO.loadFileData = function(file, callback, formatId, options)
 {
 	if (Kekule.BrowserFeature.fileapi)
 	{
@@ -1248,7 +1257,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 			reader.onload = function(e)
 			{
 				var content = reader.result;
-				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id);
+				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id, options);
 				var info = chemObj.getSrcInfo();
 				info.fileName = fileName;
 				var success = !!chemObj;
@@ -1281,8 +1290,9 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
  * @param {String} fileUrl
  * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
  * @param {String} formatId If not set, format will be get from file name automatically.
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  */
-Kekule.IO.loadUrlData = function(fileUrl, callback, formatId)
+Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
 {
 	if (Kekule.Ajax)
 	{
@@ -1310,7 +1320,7 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId)
 					return;
 				}
 
-				var chemObj = Kekule.IO.loadFormatData(data, formatInfo.id);
+				var chemObj = Kekule.IO.loadFormatData(data, formatInfo.id, options);
 				var info = chemObj.getSrcInfo();
 				info.fileName = fileUrl;
 				var success = !!chemObj;
@@ -1333,15 +1343,15 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId)
  * Save chemObj with certain format.
  * @param {String} content
  * @param {String} formatId
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.saveFormatData = function(chemObj, formatId)
+Kekule.IO.saveFormatData = function(chemObj, formatId, options)
 {
 	var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, chemObj);
 	if (writer)
 	{
-		//console.log(writer, writer.writeData);
-		var result = writer.writeData(chemObj, null, formatId);
+		var result = writer.writeData(chemObj, null, formatId, options);
 		return result;
 	}
 	else
@@ -1355,9 +1365,10 @@ Kekule.IO.saveFormatData = function(chemObj, formatId)
  * Save chemObj to string of mimeType.
  * @param {Kekule.ChemObject} chemObj
  * @param {String} mimeType
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {String}
  */
-Kekule.IO.saveMimeData = function(chemObj, mimeType)
+Kekule.IO.saveMimeData = function(chemObj, mimeType, options)
 {
 	/*
 	var writer = Kekule.IO.ChemDataWriterManager.getWriterByMimeType(mimeType);
@@ -1369,16 +1380,17 @@ Kekule.IO.saveMimeData = function(chemObj, mimeType)
 		return null;
 	}
 	*/
-	return Kekule.IO.saveTypedData(chemObj, mimeType, null);
+	return Kekule.IO.saveTypedData(chemObj, mimeType, null, options);
 };
 /**
  * Save chem object to a typed content. The type is recognized by mimeType or the file extension.
  * @param {Kekule.ChemObj} chemObj
  * @param {String} mimeType
  * @param {String} urlOrFileExt URL or file ext.
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {Variant}
  */
-Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
+Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt, options)
 {
 	var fileExt;
 	if (urlOrFileExt)
@@ -1397,7 +1409,7 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
 	var result;
 	if (formatId)
-		result = Kekule.IO.saveFormatData(chemObj, formatId);
+		result = Kekule.IO.saveFormatData(chemObj, formatId, options);
 	if (Kekule.ObjUtils.isUnset(result))
 	{
 		var msg = mimeType?

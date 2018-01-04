@@ -115,7 +115,10 @@ Kekule.Widget.HtmlClassNames = {
 	SHOW_TEXT: 'K-Text-Show',
 	SHOW_GLYPH: 'K-Glyph-Show',
 
-	MODAL_BACKGROUND: 'K-Modal-Background'
+	MODAL_BACKGROUND: 'K-Modal-Background',
+
+	DUMB_WIDGET: 'K-Dumb-Widget',
+	PLACEHOLDER: 'K-PlaceHolder'
 };
 
 var CNS = Kekule.Widget.HtmlClassNames;
@@ -383,6 +386,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('selfStatic', false);
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
+		this.setPropStoreFieldValue('useNormalBackground', true);
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -640,6 +644,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					//console.log('setROund');
 					this.addClassName(CNS.CORNER_ALL);
+				}
+			}
+		});
+		this.defineProp('useNormalBackground', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('useNormalBackground', value);
+				if (!value)
+				{
+					this.removeClassName(CNS.NORMAL_BACKGROUND);
+				}
+				else
+				{
+					this.addClassName(CNS.NORMAL_BACKGROUND);
 				}
 			}
 		});
@@ -979,6 +997,16 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		return false;
 	},
+	/**
+	 * Returns whether a placeholder widget can be bind to element to represent this widget.
+	 * This method is used when auto-launching widget on HTML element. Descendants can override this method.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	canUsePlaceHolderOnElem: function(elem)
+	{
+		return false;
+	},
 
 	/** @private */
 	doPropChanged: function(propName, newValue)
@@ -1255,16 +1283,17 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			return;
 		var ws = this.getChildWidgets();
 		var refIndex = refChild? ws.indexOf(refChild): ws.length;
-		if (refIndex < 0)
-			refIndex = ws.length;
 
 		if (ws.indexOf(child) >= 0)  // already in, adjust pos
 		{
-			this._moveChild(child, refIndex - 1);
+			if (refIndex >= 0)
+				this._moveChild(child, refIndex);
 		}
 		else  // new one
 		{
-			ws.splice(refIndex - 1, 0, child);
+			if (refIndex < 0)
+				refIndex = ws.length;
+			ws.splice(refIndex, 0, child);
 			/*
 			var refWidget = ws[refIndex];
 			var refElem = refWidget? refWidget.getElement(): null;
@@ -1383,6 +1412,44 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var index = this.indexOfChild(widget);
 		//console.log('Child index: ', index, this.getChildWidgets());
 		return (index >= 0);
+	},
+	/**
+	 * Returns child widget at index
+	 * @param {Int} index
+	 * @return {Kekule.Widget.BaseWidget}
+	 */
+	getChildAtIndex: function(index)
+	{
+		return this.getChildWidgets()[index];
+	},
+
+	/**
+	 * Returns previous sibling widget under the same parent widget.
+	 */
+	getPrevSibling: function()
+	{
+		var parent = this.getParent();
+		if (parent)
+		{
+			var index = parent.indexOfChild(this);
+			return this.getChildAtIndex(--index);
+		}
+		else
+			return null;
+	},
+	/**
+	 * Returns next sibling widget under the same parent widget.
+	 */
+	getNextSibling: function()
+	{
+		var parent = this.getParent();
+		if (parent)
+		{
+			var index = parent.indexOfChild(this);
+			return this.getChildAtIndex(++index);
+		}
+		else
+			return null;
 	},
 
 	/** @private */
@@ -1588,7 +1655,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 			if (finalizeAfterHiding)
 				self.finalize();
-		}
+		};
 
 		this.widgetShowStateBeforeChanging(false);
 
@@ -2062,7 +2129,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
-		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()))
+		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()) && !!this.getUseNormalBackground())
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
 		return result;
@@ -2836,9 +2903,17 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	getEventMouseRelCoord: function(e)
+	getEventMouseRelCoord: function(e, relElement)
 	{
-		return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
+		if (!relElement)
+			relElement = this.getCoreElement();  // defaultly base on client element, not widget element
+
+		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
+		var offset = {'x': relElement.getBoundingClientRect().left - relElement.scrollLeft, 'y': relElement.getBoundingClientRect().top - relElement.scrollTop};
+		var result = Kekule.CoordUtils.substract(coord, offset);
+		//console.log(result, elem.tagName);
+		return result;
+		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
 	},
 
 	/**
@@ -3105,10 +3180,174 @@ Kekule.Widget.DumbWidget = Class.create(Kekule.Widget.BaseWidget,
 		$super(parentOrElementOrDocument, true);
 	},
 	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CNS.DUMB_WIDGET;
+	},
+	/** @ignore */
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('span');
 		return result;
+	}
+});
+
+/**
+ * Placeholder is a special lightweight widget, helping to create real heavy weight widget on demand on an HTML element.
+ * This type of widget should not be created alone, but only can create on an existing element.
+ * @class
+ * @augments Kekule.Widget.BaseWidget
+ */
+Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
+/** @lends Kekule.Widget.PlaceHolder# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.PlaceHolder',
+	/** @constructs */
+	initialize: function($super, parentOrElementOrDocument, targetWidgetClass)
+	{
+		this.setPropStoreFieldValue('targetWidgetClass', targetWidgetClass);
+		$super(parentOrElementOrDocument, true);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('targetWidgetClass', {'dataType': DataType.CLASS, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('targetWidgetClass');
+				if (!result)
+				{
+					var name = this.getPropStoreFieldValue('targetWidgetClassName');
+					if (name)
+						result = ClassEx.findClass(name);
+				}
+				return result;
+			}
+		});
+		this.defineProp('targetWidgetClassName', {
+			'dataType': DataType.STRING,
+			'getter': function()
+			{
+				var c = this.getTargetWidgetClass();
+				var result = c? ClassEx.getClassName(C): this.getPropStoreFieldValue('targetWidgetClassName');
+				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('targetWidgetClassName', value);
+				this.setTargetWidgetClass(ClassEx.findClass(value));
+			}
+		});
+		// alias for targetWidgetClassName
+		this.defineProp('target', {
+			'dataType': DataType.STRING,
+			'getter': function()
+			{
+				return this.getTargetWidgetClassName();
+			},
+			'setter': function(value)
+			{
+				this.setTargetWidgetClassName(value);
+			}
+		});
+
+
+		this.defineProp('targetWidget', {
+			'dataType': 'Kekule.Widget.BaseWidget', serializable: 'false', 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('targetWidget');
+				if (!result)
+				{
+					result = this.createTargetWidget();
+				}
+				return result;
+			}
+		});
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		var result = $super() + ' ' + CNS.PLACEHOLDER;
+		var targetClass = this.getTargetWidgetClass();
+		if (targetClass)
+		{
+			var targetHtmlClassName = ClassEx.getPrototype(targetClass).getWidgetClassName();
+			result = Kekule.StrUtils.addTokens(result, targetHtmlClassName);
+			//console.log('HTML class name', this.getId(), targetHtmlClassName, result);
+		}
+		return result;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('img');
+		return result;
+	},
+	/**
+	 * For descendants override.
+	 * @private
+	 */
+	doReactUiEvent: function(e)
+	{
+		// when UI event occurs, create real widget
+		var widget = this.createTargetWidget();
+		//widget.reactUiEvent(e);
+	},
+	/**
+	 * Create real widget, replace this placeholder.
+	 * @returns {Kekule.Widget.BaseWidget}
+	 */
+	createTargetWidget: function()
+	{
+		var widgetClass = this.getTargetWidgetClass();
+		if (widgetClass)
+		{
+			try
+			{
+				var elem = this.getElement();
+				var parentWidget = this.getParent();
+				if (parentWidget && parentWidget instanceof Kekule.Widget.PlaceHolder)
+				{
+					// concrete parent first
+					parentWidget = parentWidget.createTargetWidget();
+				}
+				var children = AU.clone(this.getChildWidgets());
+				this.unbindElement(this.getElement());
+				this.setPropStoreFieldValue('element', null);  // avoid delete element when finalize self
+				var result = new widgetClass(elem);
+				if (result)
+				{
+					//result.setParent(parentWidget);
+					if (parentWidget)
+					{
+						var refChild = this.getNextSibling();
+						this.setParent(null);
+						result.setPropStoreFieldValue('parent', parentWidget);
+						parentWidget._insertChild(result, refChild);
+						//parentWidget._removeChild(this);
+					}
+					// move all children of self to new created widget
+					if (children)
+					{
+						for (var i = 0, l = children.length; i < l; ++i)
+						{
+							children[i].setParent(result);
+						}
+					}
+				}
+			}
+			finally
+			{
+				this.finalize();
+			}
+			return result;
+		}
+		else
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.WIDGET_UNAVAILABLE_FOR_PLACEHOLDER'));
+		}
 	}
 });
 
@@ -3122,9 +3361,16 @@ Kekule.Widget.Utils = {
 	 * @param {HTMLElement} element
 	 * @returns {Kekule.Widget.BaseWidget}
 	 */
-	getWidgetOnElem: function(element)
+	getWidgetOnElem: function(element, retainPlaceholder)
 	{
-		return element[widgetBindingField];
+		var result = element[widgetBindingField];
+
+		if (!retainPlaceholder && (result instanceof Kekule.Widget.PlaceHolder))
+		{
+			result = result.getTargetWidget();
+		}
+
+		return result;
 	},
 	/**
 	 * Returns all widgets in element and its child elements.

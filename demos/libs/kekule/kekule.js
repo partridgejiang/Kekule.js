@@ -405,6 +405,21 @@ var kekuleFiles = {
 		],
 		'category': 'extra'
 	},
+	'indigo': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/Indigo/kekule.indigo.base.js',
+			'_extras/Indigo/kekule.indigo.io.js'
+		],
+		'category': 'extra'
+	},
+	'inchi': {
+		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
+		'files': [
+			'_extras/InChI/kekule.inchi.js'
+		],
+		'category': 'extra'
+	},
 
 	// Localization resources
 	'localizationData.zh': {

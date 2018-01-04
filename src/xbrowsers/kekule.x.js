@@ -1173,6 +1173,7 @@ Kekule.Ajax = Kekule.X.Ajax;
 /** @ignore */
 Kekule.X.DomReady = {
 	isReady: false,
+	suspendFlag: 0,
 	funcs: [],
 	domReady: function(fn)
 	{
@@ -1201,15 +1202,48 @@ Kekule.X.DomReady = {
     if (DOM.isReady)
     	return;
     DOM.isReady = true;
+		/*
     for (var i = 0, l = DOM.funcs.length; i < l; ++i)
     {
       var fn = DOM.funcs[i];
       fn();
     }
     DOM.funcs.length = 0;//清空事件
- },
- initReady: function()
- {
+    */
+		DOM._execFuncs();
+  },
+	_execFuncs: function()
+	{
+		var funcs = DOM.funcs;
+		if (funcs && funcs.length)
+		{
+			while (funcs.length && !DOM.isSuspending())
+			{
+				var fn = funcs.shift();
+				if (fn)
+					fn();
+			}
+		}
+	},
+  suspend: function()
+  {
+	  ++DOM.suspendFlag;
+  },
+	resume: function()
+	{
+		if (DOM.suspendFlag > 0)
+			--DOM.suspendFlag;
+		if (!DOM.isSuspending())
+		{
+			DOM._execFuncs();
+		}
+	},
+	isSuspending: function()
+	{
+		return DOM.suspendFlag > 0;
+	},
+  initReady: function()
+  {
     if (document.addEventListener) {
       document.addEventListener( "DOMContentLoaded", function(){
         document.removeEventListener( "DOMContentLoaded", arguments.callee, false );//清除加载函数

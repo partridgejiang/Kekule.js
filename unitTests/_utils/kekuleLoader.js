@@ -9,9 +9,9 @@ function loadKekuleLib(doc, libMode, optionStr)
 	var actualMode = libMode || 'src';
 	var src;
 	if (actualMode === 'release')
-		src = '../release/kekule.js';
+		src = '../dist/kekule.js';
 	else if (actualMode === 'min')
-		src = '../release/kekule.min.js';
+		src = '../dist/kekule.min.js';
 	else  // 'src'
 	{
 		src = '../src/kekule.js';

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Only Viewer Test</title>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+  <script src="../../_libs/Three.js"></script>
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+  <script src="../../_libs/raphael.export.js"></script>
+  <script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel&min=false"></script>
+  <script>
+    Kekule.Widget.AutoLauncher.enabled = !false;
+    function launchViewer()
+    {
+      var elem = document.getElementById('viewer1');
+      Kekule.Widget.autoLauncher.executeOnElem(document, elem);
+    }
+    function setChemObj()
+    {
+      var viewer = Kekule.Widget.getWidgetById('viewer1');
+      //viewer.setChemObj();
+    }
+    function setImage()
+    {
+      imgElem.src = '../../../release/themes/default/sprite/defaultColor.png';
+      console.log('Image complete state right after change src', imgElem.complete);
+    }
+    function setImageData()
+    {
+      imgElem.src = 'data:image/gif;base64,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';
+      console.log('Image complete state right after change src data', imgElem.complete);
+      (function(){
+        console.log('Image complete state delay after change src data', imgElem.complete);
+      }).delay();
+    }
+    var viewer1, viewer2;
+    var imgElem;
+    Kekule.X.domReady(function(){
+      viewer1 = Kekule.Widget.getWidgetById('viewer1');
+      viewer2 = Kekule.Widget.getWidgetById('viewer2');
+
+      imgElem = document.getElementById('img1');
+      console.log('Image complete at DOM ready', imgElem.complete);
+      imgElem.onload = function()
+      {
+        console.log('Image loaded, complete state is', imgElem.complete);
+      }
+    });
+  </script>
+</head>
+<body>
+  <button onclick="launchViewer()">Launch</button>
+  <button onclick="setImage()">Change image</button>
+  <button onclick="setImageData()">Change image data</button>
+  <br />
+
+  <div id="viewer1" data-widget="Kekule.ChemWidget.Viewer2D"
+       data-auto-size="true" data-predefined-setting="basic"
+       data-chem-obj='{"id":"g1","coordPos2D":21,"coordPos3D":0,"coord2D":{"x":10.45493310546875,"y":41.57706689453125,"__type__":"object"},"size2D":{"x":4.576000000000022,"y":1.8239999999999839,"__type__":"object"},"src":"data:image/gif;base64,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","__type__":"Kekule.ImageBlock"}'></div>
+
+  <!--
+  <div id="viewer2" data-widget="Kekule.ChemWidget.Viewer2D"
+    data-auto-size="true"  data-predefined-setting="basic"
+    data-chem-obj='{"info":{"generator":"ChemDraw","date":{"__type__":"date","date":"Mon, 02 Jul 2012 05:38:46 GMT"},"__type__":"object"},"coordPos2D":0,"coordPos3D":0,"renderOptions":{"expanded":true,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":-0.5275,"y":0.2473,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":-0.8131,"y":-0.5266,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":-0.2856,"y":-1.161,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":0.5275,"y":-1.0213,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":0.8131,"y":-0.2473,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":0.2856,"y":0.387,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":0.5712,"y":1.161,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[1,2]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[2,3]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[3,4]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[4,5]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[5,0]},{"__type__":"Kekule.Bond","coordPos2D":0,"coordPos3D":0,"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedObjs":[5,6]}],"__type__":"Kekule.StructureConnectionTable"},"name":"cyclohextone.mol","__type__":"Kekule.Molecule"}'
+  ></div>
+  -->
+  <div id="viewer2" data-widget="Kekule.ChemWidget.Viewer2D"
+       data-auto-size="true" data-predefined-setting="basic"
+       data-chem-obj='{"id":"g1","coordPos2D":21,"coordPos3D":0,"coord2D":{"x":10.45493310546875,"y":41.57706689453125,"__type__":"object"},"size2D":{"x":4.576000000000022,"y":1.8239999999999839,"__type__":"object"},"src":"https://img.supmil.net/data/attachment/forum/201703/09/152427tqt5jvqkcqvivrcp.jpg","__type__":"Kekule.ImageBlock"}'></div>
+  <div>
+    <img id="img1" src="../../../release/themes/default/sprite/chemWidgetColor.png" />
+  </div>
+</body>
+</html>

@@ -952,13 +952,16 @@ Kekule.ActionManager = {
 	 */
 	getActionClassOfName: function(name, widgetOrClass, checkSupClasses)
 	{
-		var widgetClass = ClassEx.isClass(widgetOrClass)? widgetOrClass: widgetOrClass.getClass();
+		var widgetClass = ClassEx.isClass(widgetOrClass)? widgetOrClass:
+				(widgetOrClass.getClass && widgetOrClass.getClass());
+		if (!widgetClass)
+			return null;
 		var actions = AM.getRegisteredActionsOfClass(widgetClass, false);
 		var result = actions && actions[name];
 		if (!result && checkSupClasses)  // cascade
 		{
 			var supClass = ClassEx.getSuperClass(widgetClass);
-			result = supClass? AM.getActionOfName(name, supClass): null;
+			result = supClass? AM.getActionClassOfName(name, supClass, checkSupClasses): null;
 		}
 		return result;
 	}

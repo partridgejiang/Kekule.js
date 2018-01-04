@@ -130,16 +130,25 @@ function reactViewerChemObjLoad(e)
 		if (ansElem)
 		{
 			var sAnswer = '';
-			var molData = '', smiles = '';
+			var molData = '', smiles = '', smilesNoStereo = '';
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
 			{
-				molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-				smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+				try
+				{
+					molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
+					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
+					smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
+				}
+				catch(e)
+				{
+
+				}
 				var saveObj = {
-					'smiles': smiles,
-					'molData': molData
-					};
+					'smiles': smiles || '',
+					'smilesNoStereo': smilesNoStereo || '',
+					'molData': molData || ''
+				};
 				sAnswer = JSON.stringify(saveObj);
 			}
 			ansElem.value = sAnswer;

@@ -22,6 +22,8 @@
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;
 /** @ignore */
+var OB = Kekule.OpenBabel;
+/** @ignore */
 var AU = Kekule.OpenBabel.AdaptUtils;
 
 /**
@@ -38,7 +40,7 @@ Kekule.OpenBabel.StructUtils = {
 	 */
 	generate3DStructure: function(mol, forceFieldName)
 	{
-		var _obGen = new (EU.getClassCtor('OB3DGenWrapper'))();
+		var _obGen = new (OB.getClassCtor('OB3DGenWrapper'))();
 		try
 		{
 			//var obMol = AU.kObjToOB(mol);
@@ -93,6 +95,11 @@ if (Kekule.Calculator)
 		/** @private */
 		CLASS_NAME: 'Kekule.Calculator.ObStructure3DGenerator',
 		/** @private */
+		getObInitOptions: function()
+		{
+			return Kekule.OpenBabel.getObInitOptions();
+		},
+		/** @private */
 		getForceField: function()
 		{
 			return this.getOptions().forceField;
@@ -106,6 +113,12 @@ if (Kekule.Calculator)
 				//var url = Kekule.getScriptPath() + '_extras/OpenBabel/openbabel.js.O1';
 				var url = Kekule.OpenBabel.getObScriptUrl();
 				this.importWorkerScriptFile(url);
+				var initOps = this.getObInitOptions();
+				this.postWorkerMessage({
+					'type': 'obInit',
+					'usingModulaize': initOps.usingModulaize,
+					'moduleName': initOps.moduleName
+				});
 			}
 			return w;
 		},
@@ -113,11 +126,13 @@ if (Kekule.Calculator)
 		getWorkerScriptFile: function()
 		{
 			//return this.getWorkerBasePath() + 'kekule.worker.obStructure3DGenerator.js';
-			return Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
+			var result = Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
+			return result;
 		},
 		/** @ignore */
-		doReactWorkerMessage: function(data, e)
+		doReactWorkerMessage: function($super, data, e)
 		{
+			$super(data, e);
 			if (data.type === 'output3D')  // receive generated structure
 			{
 				var genData = data.molData;

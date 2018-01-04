@@ -122,13 +122,14 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Bool} resetAfterLoad Whether reset display (remove rotate, zoom and so on) after set a new chem obj.
  * @property {Object} renderConfigs Configuration for rendering.
  * @property {Int} moleculeDisplayType Display type of molecule in displayer. Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
- * @property {Hash} drawOptions
+ * @property {Hash} drawOptions A series of params to render chem object.
  * @property {Float} zoom Zoom ratio to draw chem object, equal to drawOptions.zoom.
  * @property {Bool} autoSize Whether the widget change its size to fit the dimension of chem object.
  * @property {Int} padding Padding between chem object and edge of widget, in px. Only works when autoSize is true.
  * @property {Hash} baseCoordOffset Usually displayer draw object at center of widget, use this property to make
  *   the drawing center moved from widget center.
  *   Note: this property is useless when autoSize == true.
+ * @property {Hash} transformParams A combination of (@link Kekule.ChemWidget.ChemObjDisplayer.drawOptions} and (@link Kekule.ChemWidget.ChemObjDisplayer.baseCoordOffset}.
  * @property {String} backgroundColor Get or set background color of displayer. Default is transparent.
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
  * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
@@ -243,6 +244,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				//this.setBackgroundColorOfType(value, this.getRenderType());
 				this._bgColorMap[this.getRenderType().toString()] = value;
 				this.backgroundColorChanged();
+			}
+		});
+		this.defineProp('transformParams', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
+			'getter': function()
+			{
+				var result = Object.extend({}, this.getDrawOptions());
+				result.screenCoordOffset = this.getBaseCoordOffset();
+				return result;
+			},
+			'setter': function(value)
+			{
+				var param = value || {};
+				this.setDrawOptions(param);
+				this.setBaseCoordOffset(param.baseCoordOffset);
+				this.drawOptionChanged();
 			}
 		});
 		this.defineProp('drawOptions', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,

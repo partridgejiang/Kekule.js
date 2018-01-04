@@ -410,4 +410,6 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	NOT_A_VALID_ATOM: 'Not a valid atom',
 	INVALID_ATOM_SYMBOL: 'Invalid atom symbol',
 	INVALID_OR_EMPTY_IMAGE: 'Image is empty or invalidate'
+
+	//WIDGET_UNAVAILABLE_FOR_PLACEHOLDER: 'Widget of this placeholder is unavailable'
 });

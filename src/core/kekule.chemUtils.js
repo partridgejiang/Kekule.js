@@ -48,7 +48,8 @@ Kekule.ChemStructureUtils = {
 			// sort lengths to find the median one
 			lengths.sort();
 			var count = lengths.length;
-			return (count % 2)? lengths[(count + 1) >> 1]: (lengths[count >> 1] + lengths[(count >> 1) + 1]) / 2;
+			var result = (count % 2)? lengths[(count + 1) >> 1]: (lengths[count >> 1] + lengths[(count >> 1) - 1]) / 2;
+			return result;
 		}
 	},
 	/**

@@ -548,12 +548,22 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	setClearColor: function(context, color)
 	{
 		var r = context.getRenderer();
-		if (r && r.setClearColorHex)
+		if (r)
 		{
-			if (color)
-				context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
-			else // color not set, transparent
-				context.getRenderer().setClearColorHex(null, 0);
+			if (r.setClearColorHex)
+			{
+				if (color)
+					context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColorHex(null, 0);
+			}
+			else if (r.setClearColor)   // in new version, setClearColorHex method has been removed
+			{
+				if (color)
+					context.getRenderer().setClearColor(this.colorStrToHex(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColor(null, 0);
+			}
 		}
 	},
 
@@ -636,9 +646,14 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 
 		if (quaternion)
 		{
-			result.useQuaternion = true;
-			result.quaternion = quaternion;
-			result.updateMatrix();
+			if (result.applyQuaternion)  // new version of THREE
+				result.applyQuaternion(quaternion);
+			else  // old version
+			{
+				result.useQuaternion = true;
+				result.quaternion = quaternion;
+				result.updateMatrix();
+			}
 		}
 
 		// adjust position

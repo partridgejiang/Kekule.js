@@ -76,7 +76,8 @@ class kekulejs_utils
         if (!isset($p))
             $p = $PAGE;
         $scriptDir = kekulejs_configs::getScriptDir();
-        $rootDir = kekulejs_configs::getKekuleDir();
+        // $rootDir = kekulejs_configs::getKekuleDir();
+        $adapterDir = kekulejs_configs::getAdapterDir();
 
         // params
         $params = '';
@@ -90,6 +91,7 @@ class kekulejs_utils
         $p->requires->js($scriptDir . 'raphael-min.js');
         $p->requires->js($scriptDir . 'Three.js');
         $p->requires->js($scriptDir . 'kekule/kekule.js?' . $params);
+        $p->requires->js($adapterDir . 'kekuleInitials.js');
     }
     static public function includeKekuleJsFiles($options = null, $page = null)
     {
@@ -108,7 +110,13 @@ class kekulejs_utils
             $p = $PAGE;
 
         $scriptDir = kekulejs_configs::getScriptDir();
-        $p->requires->css($scriptDir . 'kekule/themes/default/kekule.css');
+        try {
+            $p->requires->css($scriptDir . 'kekule/themes/default/kekule.css');
+        }
+        catch(Exception $e)
+        {
+            // do nothing, just avoid exception
+        }
     }
 
     static public function includeAdapterJsFiles($page = null)
@@ -134,6 +142,12 @@ class kekulejs_utils
         if (!isset($p))
             $p = $PAGE;
         $dir = kekulejs_configs::getAdapterDir();
-        $p->requires->css($dir . 'kekuleMoodle.css');
+        try {
+            $p->requires->css($dir . 'kekuleMoodle.css');
+        }
+        catch(Exception $e)
+        {
+            // do nothing, just avoid exception
+        }
     }
 }

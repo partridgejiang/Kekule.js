@@ -191,7 +191,8 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 						var objs = connector.getConnectedObjs();
 						for (var j = 0, k = objs.length; j < k; ++j)
 						{
-							if (objs[j] !== this)
+							var currObj = objs[j];
+							if (currObj !== this && !(this.hasChildObj && this.hasChildObj(currObj)))
 								Kekule.ArrayUtils.pushUnique(result, objs[j]);
 						}
 					}
@@ -712,7 +713,7 @@ Kekule.StereoParity = {
  * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {Float} charge Charge of atom. As there may be partial charge on atom, so a float value is used.
- * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalType}.
+ * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalOrder}.
  * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
  * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
  * @property {Bool} isAnchor Whether this node is among anchors in parent structure.
@@ -917,13 +918,16 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	}
 });
 
-
+/*
 Kekule.RadicalType = {
 	NONE: 0,
 	SINGLET: 1,
 	DOUBLET: 2,
 	TRIPLET: 3
 };
+*/
+/** @deprected */
+Kekule.RadicalType = Kekule.RadicalOrder;   /* A duplicate definition, for backward compatity. */
 
 /**
  * Represent an abstract atom, parent for dummy atom, concrete atom or variable atom.

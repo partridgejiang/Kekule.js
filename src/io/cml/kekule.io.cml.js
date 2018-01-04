@@ -3759,6 +3759,9 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 
 (function ()
 {
+	// extends mime type consts
+	Kekule.IO.MimeType.CML = 'chemical/x-cml';
+
 	// register default CML element readers and writers
 	var RF = Kekule.IO.CmlElementReaderFactory;
 	RF.register('name', Kekule.IO.CmlNameReader);
@@ -3781,7 +3784,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	WF.register('Kekule.ChemDocument', Kekule.IO.CmlRootWriter);
 
 	// register chem data formats
-	Kekule.IO.DataFormatsManager.register('cml', 'chemical/x-cml', 'cml', Kekule.IO.ChemDataType.TEXT, 'Chemical Markup Language');
+	Kekule.IO.DataFormatsManager.register('cml', Kekule.IO.MimeType.CML, 'cml', Kekule.IO.ChemDataType.TEXT, 'Chemical Markup Language');
 
 	// register ChemData reader and writer
 	/*
@@ -3799,7 +3802,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			'fileExt': 'cml'
 		});
 	*/
-	var cmdFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-cml');
+	var cmdFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.CML);
 
 	Kekule.IO.ChemDataReaderManager.register('cml', Kekule.IO.CmlReader, [cmdFmtId]);
 	Kekule.IO.ChemDataWriterManager.register('cml', Kekule.IO.CmlWriter,

@@ -11,7 +11,6 @@
  * requires /core/kekule.chemUtils.js
  * requires /_extras/OpenBabel/kekule.openbabel.adapters.js
  * requires /_extras/kekule.emscriptenUtils.js
- * requires /xbrowsers/kekule.x.js
  * requires /localization
  */
 
@@ -19,6 +18,8 @@
 
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;
+/** @ignore */
+var OB = Kekule.OpenBabel;
 /** @ignore */
 var AU = Kekule.OpenBabel.AdaptUtils;
 
@@ -37,7 +38,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 	initialize: function($super, options)
 	{
 		$super();
-		//this._obConv = new (EU.getClassCtor('ObConversionWrapper'))();
+		//this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 	},
 	/** @ignore */
 	finalize: function($super)
@@ -59,7 +60,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	doReadData: function(data, dataType, format)
 	{
-		this._obConv = new (EU.getClassCtor('ObConversionWrapper'))();
+		this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 		try
 		{
 			var fInfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
@@ -75,7 +76,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 			try
 			{
 				/*
-				var obObj = new (EU.getClassCtor(obClassName))();
+				var obObj = new (OB.getClassCtor(obClassName))();
 				this._obConv.readString(obObj, data);
 				var kObj = AU.obObjToKekule(obObj);
 				return kObj;
@@ -85,7 +86,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 				var kObjs = [];
 				this._obConv.setInStr(data);
 				//console.log(data);
-				var obObj = new (EU.getClassCtor(obClassName))();
+				var obObj = new (OB.getClassCtor(obClassName))();
 				//try
 				{
 					var hasObj = this._obConv.readFromInput(obObj);
@@ -193,7 +194,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 });
 
 /**
- * Writer utilizing OpenBabel library to read a huge amount of chem data formats.
+ * Writer utilizing OpenBabel library to write a huge amount of chem data formats.
  * @class
  * @augments Kekule.IO.ChemDataWriter
  */
@@ -206,7 +207,7 @@ Kekule.IO.OpenBabelWriter = Class.create(Kekule.IO.ChemDataWriter,
 	initialize: function($super, options)
 	{
 		$super(options);
-		//this._obConv = new (EU.getClassCtor('ObConversionWrapper'))();
+		//this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 	},
 	/** @ignore */
 	finalize: function($super)
@@ -217,7 +218,7 @@ Kekule.IO.OpenBabelWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	doWriteData: function(obj, dataType, format)
 	{
-		this._obConv = new (EU.getClassCtor('ObConversionWrapper'))();
+		this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 		try
 		{
 			var fInfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
@@ -411,7 +412,7 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 
 	registerAll: function()
 	{
-		var converter = new (EU.getClassCtor('ObConversionWrapper'))();
+		var converter = new (OB.getClassCtor('ObConversionWrapper'))();
 		try
 		{
 			//console.log(converter);
@@ -454,6 +455,7 @@ Kekule.IO.registerAllOpenBabelFormats = function()
 		}
 	}
 };
+Kekule.OpenBabel._enableFuncs.push(Kekule.IO.registerAllOpenBabelFormats);
 
 /**
  * A helper method to load open babel script library and register all I/O formats
@@ -494,10 +496,13 @@ Kekule.IO.enableOpenBabelFormats = function()
 	Kekule.IO.ChemDataWriterManager.register('OpenBabel-Rxn', Kekule.IO.OpenBabelWriter, [Kekule.Reaction],
 		['MDL-rxn']);
 	*/
-	Kekule.X.domReady(function()
+	//Kekule.X.domReady(function()
+	/*
+	Kekule._registerAfterLoadProc(function()
 	{
 		Kekule.IO.registerAllOpenBabelFormats();
 	});
+	*/
 })();
 
 })();

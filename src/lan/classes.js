@@ -1632,7 +1632,7 @@ var ClassEx = {
 	{
 		if (!classObj)
 			return false;
-		return (classObj.superclass && classObj.subclasses);
+		return !!(classObj.superclass || classObj.subclasses);
 	},
 	/**
 	 * Return class object from class name. If this class is not found, null will be returned.
@@ -2443,7 +2443,7 @@ ObjectEx = Class.create(
 		//this.getPrototype()[getterName] = actualGetter;
 		this.getPrototype()[getterName] = function()
 		{
-			var args = Array.prototype.slice.call(arguments);
+			var args =arguments; // Array.prototype.slice.call(arguments);
 			return this[doGetterName].apply(this, args);
 		};
 

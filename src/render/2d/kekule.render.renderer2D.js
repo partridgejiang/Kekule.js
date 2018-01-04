@@ -21,6 +21,7 @@
 var RT = Kekule.Render.BondRenderType;
 var D = Kekule.Render.TextDirection;
 var BU = Kekule.BoxUtils;
+var BO = Kekule.BondOrder;
 var oneOf = Kekule.oneOf;
 
 /**
@@ -552,12 +553,38 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	drawImage: function(context, src, baseCoord, size, options, callback)
 	{
 		var self = this;
+		// TODO: this approach need to be refined in the future
 		return this.getDrawBridge().drawImage(this.getActualTargetContext(context), src, baseCoord, size, options, callback,
 				function(){ return self.getActualTargetContext(context); });
 	},
 	drawImageElem: function(context, imgElem, baseCoord, size, options)
 	{
-		return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		if (imgElem.complete)  // image already been loaded, can draw now
+		{
+			//console.log('do actual draw');
+			return this.getDrawBridge().drawImageElem(this.getActualTargetContext(context), imgElem, baseCoord, size, options);
+		}
+		else  // need to bind to load event, try draw later
+		{
+			var XEvent = Kekule.X.Event;
+			if (XEvent)
+			{
+				var self = this;
+				var unlinkImgDrawProc = function()
+				{
+					XEvent.removeListener(imgElem, 'load', updateImgDrawing);
+				};
+				var updateImgDrawing = function()
+				{
+					//console.log('update draw', imgElem.complete);
+					unlinkImgDrawProc(imgElem, updateImgDrawing);
+					// force update the render, force redraw again
+					self.update(self.getActualTargetContext(context), [{'obj': self.getChemObj()}], Kekule.Render.ObjectUpdateType.MODIFY);
+				};
+				XEvent.addListener(imgElem, 'load', updateImgDrawing);
+				XEvent.addListener(imgElem, 'error', unlinkImgDrawProc);
+			}
+		}
 	},
 	createDrawGroup: function(context)
 	{
@@ -1000,7 +1027,7 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	 * @returns {Object}
 	 * @private
 	 */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
 		return null;  // do nothing here
 	},
@@ -1040,7 +1067,7 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 
 		var chemObj = this.getChemObj();
 		var transformOptions = options.transformParams;
-		var richText = this.getRichText(this.getChemObj());
+		var richText = this.getRichText(this.getChemObj(), options);
 
 		if (!richText)
 			return null;
@@ -1081,7 +1108,7 @@ Kekule.Render.TextBlock2DRenderer = Class.create(Kekule.Render.RichTextBased2DRe
 	CLASS_NAME: 'Kekule.Render.TextBlock2DRenderer',
 
 	/** @private */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
 		var result = Kekule.Render.RichTextUtils.strToRichText(chemObj.getText());
 		return result;
@@ -1148,9 +1175,9 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 	},
 
 	/** @private */
-	getRichText: function(chemObj)
+	getRichText: function(chemObj, drawOptions)
 	{
-		return chemObj.getDisplayRichText(true);  // show charge
+		return chemObj.getDisplayRichText(true, drawOptions.displayLabelConfigs, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);  // show charge
 	},
 
 	/** @private */
@@ -1257,6 +1284,10 @@ Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRendere
 		//this.setObjDrawElem(context, chemObj, result);
 
 		return result;
+	},
+	doDrawImgContent: function(imgElem)
+	{
+
 	}
 });
 Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
@@ -2256,7 +2287,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// if a label is drawn, all hydrogens should be marked
 			var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
 			//console.log(hdisplayLevel);
-			var label = node.getDisplayRichText(hdisplayLevel, true, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength);
+			var label = node.getDisplayRichText(hdisplayLevel, true, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength, nodeRenderOptions.chargeMarkType);
 
 			// decide charDirection
 			//label.charDirection = Kekule.ObjUtils.isUnset(nodeRenderOptions.charDirection) ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
@@ -2320,6 +2351,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				var elemEx = this.doDrawElectronStateMark(context, group, node,
 					nodeRenderOptions.chargeMarkType,
 					nodeRenderOptions.partialChargeDecimalsLength,
+					nodeRenderOptions.distinguishSingletAndTripletRadical,
 					nodeRenderOptions.fontFamily,
 					nodeRenderOptions.chargeMarkFontSize * nodeRenderOptions.unitLength,
 					nodeRenderOptions.chargeMarkMargin * nodeRenderOptions.unitLength,
@@ -2409,8 +2441,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				if (bonds.length === 2)
 				{
 					// we have two multiple bonds
-					if (bonds[0].getBondOrder() === bonds[1].getBondOrder() && bonds[0].getBondOrder() >= 2)
-						return true;
+					if (bonds[0].getBondOrder() === bonds[1].getBondOrder())
+					{
+						var bondOrder = bonds[0].getBondOrder();
+						return bondOrder >= BO.DOUBLE && bondOrder < BO.EXPLICIT_AROMATIC;
+					}
 				}
 			}
 			return false;
@@ -2656,7 +2691,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 * Draw charge mark (such as +, 2-) and radical mark (./..) on node, especially on C atom in skeletal formula.
 	 * @private
 	 */
-	doDrawElectronStateMark: function(context, group, node, markType, partialChargeDecimalsLength, markFontFamily, markFontSize, markMargin, circleStrokeWidth, color, opacity, zoom)
+	doDrawElectronStateMark: function(context, group, node, markType, partialChargeDecimalsLength, distinguishSingletAndTripletRadical, markFontFamily, markFontSize, markMargin, circleStrokeWidth, color, opacity, zoom)
 	{
 		var charge = node.getCharge();
 		var radical = node.getRadical();
@@ -2691,7 +2726,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (radical)
 		{
 			//slabel += (radical === Kekule.RadicalOrder.DOUBLET)? '•': '••';
-			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical);
+			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, distinguishSingletAndTripletRadical);
 		}
 
 		if (!slabel)
@@ -3873,19 +3908,24 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			return null;
 	},
 	/** @ignore */
-	transformCoordToObj: function(context, chemObj, coord)
+	transformCoordToObj: function($super, context, chemObj, coord)
 	{
+		return $super(context, chemObj, coord);
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
+		/*
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
 		var r = this.getConcreteRenderer();
 		if (r)
 			return r.transformCoordToObj(context, obj, coord);
 		else
 			return coord;
+		*/
 	},
 	/** @ignore */
-	transformCoordToContext: function(context, chemObj, coord)
+	transformCoordToContext: function($super, context, chemObj, coord)
 	{
+		return $super(context, chemObj, coord);
+		/*
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
 		var r = this.getConcreteRenderer();
@@ -3893,6 +3933,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			return r.transformCoordToContext(context, obj, coord);
 		else
 			return coord;
+		*/
 	}
 });
 

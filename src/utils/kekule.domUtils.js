@@ -1238,7 +1238,7 @@ Kekule.ScriptFileUtils = {
 	/**
 	 * Append script files to document. When the all scripts are loaded, callback is then called.
 	 * @param {HTMLDocument} doc
-	 * @param {String} url
+	 * @param {String} urls
 	 * @param {Func} callback
 	 */
 	appendScriptFiles: function(doc, urls, callback)

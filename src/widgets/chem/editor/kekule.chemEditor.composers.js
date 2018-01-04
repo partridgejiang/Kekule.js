@@ -252,6 +252,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			this.setPropStoreFieldValue('fontNameBox', null);
 		if (widget === this.getFontSizeBox())
 			this.setPropStoreFieldValue('fontSizeBox', null);
+		if (widget === this.getColorBox())
+			this.setPropStoreFieldValue('colorBox', null);
+		if (widget === this.getTextDirectionButtonSet())
+			this.setPropStoreFieldValue('textDirectionButtonSet', null);
+		if (widget === this.getTextHorizontalAlignButtonSet())
+			this.setPropStoreFieldValue('textHorizontalAlignButtonSet', null);
+		if (widget === this.getTextVerticalAlignButtonSet())
+			this.setPropStoreFieldValue('textVerticalAlignButtonSet', null);
 		$super(widget, doNotFinalize);
 	},
 
@@ -811,7 +819,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (!editor)
 			editor = this.createDefaultEditor();
 		*/
-		this.bindEditor();
+		this.bindEditor(editor);
 
 		// tool bars may already be created by setting buttons property
 		if (!this.getCommonBtnGroup())
@@ -1318,6 +1326,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/**
+	 * Repaint the objects in editor.
+	 */
+	repaint: function(overrideOptions)
+	{
+		this.getEditor().repaint(overrideOptions);
+		return this;
+	},
+
+	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
 	 * @private
 	 */
@@ -1655,7 +1672,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	getCompActionClass: function(btnName)
 	{
 		//return this.getToolButtonNameMapping()[btnName];
-		return this.getChildActionClass(btnName, false);
+		return this.getChildActionClass(btnName, true);
 	},
 	/** @private */
 	_getActionTargetWidget: function(actionClass)
@@ -1851,7 +1868,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							//actions.remove(unusedAction);
 							actionMap.remove(unusedAction.getClass());
 							//unusedAction.finalize();
-							console.log('remove action', unusedAction.getClassName(), unusedAction.getAttachedActions().getActions());
 						}
 					}
 				}
