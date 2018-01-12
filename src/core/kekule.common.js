@@ -2762,6 +2762,15 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		}
 	},
 	/**
+	 * Remove a child at index.
+	 * @param {Int} index
+	 * @returns {Variant} Child object removed.
+	 */
+	removeChildAt: function(index)
+	{
+		return this.removeAt(index);
+	},
+	/**
 	 * Remove obj from children array.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
@@ -3355,6 +3364,11 @@ Kekule.ChemDocument = Class.create(Kekule.ChemSpace,
 				}
 		});
 		*/
+	},
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'd';
 	}
 });
 

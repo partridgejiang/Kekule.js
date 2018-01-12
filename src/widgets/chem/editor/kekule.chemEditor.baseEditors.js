@@ -703,7 +703,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	repaint: function($super, overrideOptions)
 	{
 		var ops = overrideOptions;
-		//console.log('repaint called');
+		//console.log('repaint called', overrideOptions);
 		//console.log('repaint', this._initialRenderTransformParams);
 		/*
 		if (this._initialRenderTransformParams)
@@ -1311,7 +1311,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var oDetails = Kekule.ArrayUtils.clone(objDetails);
 		var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
-		//console.log('changed objects', updateObjs);
 
 		var additionalObjs = this._getAdditionalRenderRelatedObjs(updateObjs);
 
@@ -1326,10 +1325,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//updateObjs = updateObjs.concat(additionalObjs);
 		Kekule.ArrayUtils.pushUnique(updateObjs, additionalObjs);
 
+		//console.log('changed objects', updateObjs);
+
 		var operRenderers = this._operatingRenderers;
 		var updateOperContextOnly = operRenderers && this._isAllObjsRenderedByRenderers(this.getObjContext(), updateObjs, operRenderers);
 		var canDoPartialUpdate = this.canModifyPartialGraphic();
 
+		//console.log(updateObjs, operRenderers);
 		//console.log('object changed', updateOperContextOnly, canDoPartialUpdate);
 
 		if (canDoPartialUpdate)  // partial update
@@ -4412,6 +4414,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
 		var scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
 		var transformOps = {'center': scaleCenter, 'scaleX': scaleX, 'scaleY': scaleY};
+		//console.log(scaleX, scaleY);
 		// since we transform screen coord, it will always be in 2D mode
 		var is3D = false;  // this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D;
 		var transformMatrix = is3D? C.calcTransform3DMatrix(transformOps): C.calcTransform2DMatrix(transformOps);

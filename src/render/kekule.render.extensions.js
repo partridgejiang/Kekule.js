@@ -746,7 +746,7 @@
 	});
 
 	ClassEx.defineProps(Kekule.ChemObject, [
-		{'name': 'defAutoScaleRefLength', 'dataType': DataType.NUMBER}
+		{'name': 'defAutoScaleRefLength', 'dataType': DataType.NUMBER, 'scope': Class.PropertyScope.PUBLIC}
 	]);
 
 	ClassEx.extend(Kekule.BaseStructureConnector,

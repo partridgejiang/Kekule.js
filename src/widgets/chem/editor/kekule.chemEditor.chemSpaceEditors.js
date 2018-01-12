@@ -287,6 +287,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	/* @ignore */
 	objectChanged: function($super, obj, changedPropNames)
 	{
+		/*
 		if (this.getCoordMode() === Kekule.CoordMode.COORD2D)  // only works in 2D mode
 		{
 			if (obj instanceof Kekule.TextBlock)  // size need to be recalculated
@@ -297,6 +298,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				obj.__$needRecalcSize__ = true;  // special flag, indicating to recalculate size
 			}
 		}
+		*/
 		return $super(obj, changedPropNames);
 	},
 	/** @private */
@@ -309,12 +311,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		if (Kekule.ObjUtils.notUnset(oldSize.x) || Kekule.ObjUtils.notUnset(oldSize.y))  // size already set, by pass
 			return;
     */
-		if (!textBlock.__$needRecalcSize__)
+		//if (!textBlock.__$needRecalcSize__)
+		if (!textBlock.getNeedRecalcSize())
 			return;
 
 		var stype = boundInfo.shapeType;
 		if (stype === Kekule.Render.BoundShapeType.RECT)
 		{
+			/*
+			console.log('boundddddd', boundInfo);
 			var coords = boundInfo.coords;  // context coords
 			var objCoord1 = this.contextCoordToObj(coords[0]);
 			var objCoord2 = this.contextCoordToObj(coords[1]);
@@ -322,7 +327,9 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			// must not use setSize2D, otherwise a new object change event will be triggered and a new update process will be launched
 			textBlock.setPropStoreFieldValue('size2D', {'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
 			//textBlock.setSize2D({'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
-			delete textBlock.__$needRecalcSize__;
+			//delete textBlock.__$needRecalcSize__;
+			textBlock.setNeedRecalcSize(false);
+			*/
 		}
 	},
 

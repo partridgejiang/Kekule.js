@@ -2657,6 +2657,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				node.setParent(this.getParent());
 		}
 		this.notifyNodesChanged();
+		return index;
 	},
 	/**
 	 * Change index of node.

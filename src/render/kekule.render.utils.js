@@ -2318,6 +2318,10 @@ Kekule.Render.UpdateObjUtils = {
 
 /**
  * Helper class to define some common methods of renderer.
+ * Note: as the introducing of the base class {@link Kekule.Render.CompositeRenderer},
+ * almost all renderers support child renderers now, so this helper class should not be used again.
+ * @deprecated
+ * @ignore
  * @class
  */
 Kekule.Render.RendererDefineUtils = {
@@ -2506,6 +2510,12 @@ Kekule.Render.RendererDefineUtils = {
 			rendererMap.clear();
 		},
 
+		/** @private */
+		hasChild: function()
+		{
+			return !!(this.getTargetChildObjs() || []).length;
+		},
+
 		/**
 		 * Prepare child objects and renderers, a must have step before draw.
 		 * @private
@@ -2532,13 +2542,13 @@ Kekule.Render.RendererDefineUtils = {
 			// prepare, calc transform options and so on
 			//this.reset();
 			this.prepare();
-			$super(context, baseCoord, options);
-
-			// then draw each child objects by child renderers
-			return this.doDrawCore(context, options);
+			if (!this.hasChild())
+				return $super(context, baseCoord, options);
+			else  // then draw each child objects by child renderers
+				return this.doDrawChildrenAndSelf(context, baseCoord, options);
 		},
 		/** @private */
-		doDrawCore: function(context, options)
+		doDrawChildrenAndSelf: function(context, baseCoord, options)
 		{
 			var group = this.createDrawGroup(context);
 			var childRenderers = this.getChildRenderers();
@@ -2580,8 +2590,24 @@ Kekule.Render.RendererDefineUtils = {
 					this.addToDrawGroup(elem, group);
 			}
 			//console.log('drawn group', group);
+
+			// self
+			var selfElem = this.doDrawSelf(context, baseCoord, options);
+			if (selfElem)
+				 this.addToDrawGroup(selfElem, group);
+
 			return group;
 		},
+		/**
+		 * Draw only self, without child objects.
+		 * Descendants may override this method.
+		 * @private
+		 */
+		doDrawSelf: function($super, context, baseCoord, options)
+		{
+			return $super(context, baseCoord, options);
+		},
+
 		/* @private */
 		/*
 		doRedraw: function(context)
@@ -2609,21 +2635,38 @@ Kekule.Render.RendererDefineUtils = {
 		*/
 
 		/** @private */
-		doClear: function(context)
+		doClear: function($super, context)
 		{
-			var childRenderers = this.getChildRendererMap().getValues();
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
+			if (this.hasChild())
 			{
-				if (childRenderers[i])
+				var childRenderers = this.getChildRendererMap().getValues();
+				for (var i = 0, l = childRenderers.length; i < l; ++i)
 				{
-					childRenderers[i].clear(context);
+					if (childRenderers[i])
+					{
+						childRenderers[i].clear(context);
+					}
 				}
 			}
+			//this.doClearSelf(context);
+			$super(context);
 			return true;
 		},
-		/** @private */
-		doUpdate: function(context, updateObjDetails, updateType)
+		/**
+		 * Clear only self, without child objects.
+		 * Descendants may override this method.
+		 * @private
+		 */
+		doClearSelf: function($super, context)
 		{
+			return $super(context);
+		},
+		/** @private */
+		doUpdate: function($super, context, updateObjDetails, updateType)
+		{
+			//if (!this.hasChild())
+				return $super(context, updateObjDetails, updateType);
+
 			var updatedObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updateObjDetails);
 			//console.log(this.getClassName(), updateType, updateObjDetails);
 
@@ -2633,7 +2676,7 @@ Kekule.Render.RendererDefineUtils = {
 			//this.prepareChildObjs();  // update childObjs
 
 			//var directChildren = this.getChildObjs();
-			var directChildren = this.getTargetChildObjs();
+			var directChildren = this.getTargetChildObjs() || [];
 			var childRendererMap = this.getChildRendererMap();
 			var objs = Kekule.ArrayUtils.toArray(updatedObjs);
 			var objsMap = new Kekule.MapEx(false);
@@ -2791,6 +2834,9 @@ Kekule.Render.RendererDefineUtils = {
 
 			}
 			*/
+
+			//result = $super(context, updateObjDetails, updateType) && result;
+
 			if (!result)
 			{
 				result = true;
@@ -2799,6 +2845,11 @@ Kekule.Render.RendererDefineUtils = {
 			//console.log('update', updatedObjs[0].getClassName(), this.getChemObj().getClassName(), updatedObjs[0] === this.getChemObj(), renderers.length);
 
 			return result;
+		},
+		/** @private */
+		doUpdateSelf: function($super, context, updateObjDetails, updateType)
+		{
+			return $super(context, updateObjDetails, updateType);;
 		},
 		/** @private */
 		_getRenderersForChildObj: function(context, childObj)
