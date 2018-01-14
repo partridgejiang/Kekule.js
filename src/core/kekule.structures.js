@@ -3291,9 +3291,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**
@@ -4865,9 +4865,9 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**
@@ -6942,13 +6942,15 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 * Remove an object or attrib-object pair item from group.
 	 * @param {Variant} obj
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
+		var result;
 		var index = this.indexOfItem(obj);
 		if (index <= 0)
 			index = this.indexOfObj(obj);
 		if (index >= 0)
-			this.removeItemAt(index);
+			result = this.removeItemAt(index);
+		return result || $super(obj);
 	}
 });
 
@@ -7196,9 +7198,9 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getSubMolecules().removeChild(obj);
+		return this.getSubMolecules().removeChild(obj) || $super(obj);
 	}
 });
 

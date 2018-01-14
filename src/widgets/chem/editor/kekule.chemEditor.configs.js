@@ -193,6 +193,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} initialBondDirection When create a brand new bond (without any existed bond connected), which direction should the bond be.
  * @property {String} defIsotopeId Default isotope of atom.
  * @property {Array} primaryOrgChemAtoms Atom symbols of most often seen in organic chemistry.
+ * @property {Bool} enableChargeAndRadicalMarker If true, marker objects will be used in editor to represent charge and radical.
  */
 Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.StructureConfigs# */
@@ -219,6 +220,8 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('initialBondDirection', undefined, {'scope': PS.PUBLIC});
 		this.addStrConfigProp('defIsotopeId', 'C');
 		this.addConfigProp('primaryOrgChemAtoms', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
+
+		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
 	},
 	/** @private */
 	initPropValues: function($super)

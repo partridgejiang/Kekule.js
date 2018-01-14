@@ -323,6 +323,7 @@ Kekule.PropertyEditor.ChemRender2DOptionsEditor = Class.create(Kekule.PropertyEd
 		{'name': 'chargeMarkFontSize', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
 		{'name': 'chargeMarkMargin', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
 		{'name': 'chargeMarkCircleWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
+		{'name': 'distinguishSingletAndTripletRadical', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
 
 		{'name': 'fontSize', dataType: DataType.NUMBER},
 		//{'name': 'atomFontSize', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},

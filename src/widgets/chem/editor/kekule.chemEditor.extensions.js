@@ -141,6 +141,28 @@ ClassEx.extend(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns the stub object (e.g. the rotation center object in constraint bond rotation) in constraint manipulation.
+	 * Null means constraint manipulation is not available.
+	 * Descendants may override this method.
+	 * @returns {Object}
+	 * @private
+	 */
+	getConstraintManipulationBaseObj: function()
+	{
+		if (this.isAttachedMarker && this.isAttachedMarker())
+		{
+			var p = this.getParent();
+			if (p instanceof Kekule.StructureFragment) // molecule total charge will be be constrainted
+				return null;
+			else
+				return p;
+			//return p;
+		}
+		else
+			return null;
+	},
+
+	/**
 	 * Transform abs coord of object by transformMatrix.
 	 * @param {Array} transformMatrix
 	 * @param {Array} childTransformMatrix Usually this matrix exclude translate.
@@ -415,6 +437,17 @@ ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector,
 	setAbsBaseCoord3D: function(value)
 	{
 		this.setAbsCoordOfMode(value, Kekule.CoordMode.COORD3D);
+	}
+});
+
+ClassEx.extend(Kekule.ChemStructureNode,
+/** @lends Kekule.ChemStructureNode# */
+{
+	/** @ignore */
+	getConstraintManipulationBaseObj: function($super)
+	{
+		var linkedObjs = this.getLinkedObjs();
+		return (linkedObjs.length === 1)? linkedObjs[0]: $super();
 	}
 });
 

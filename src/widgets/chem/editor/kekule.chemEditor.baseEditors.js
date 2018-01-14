@@ -411,6 +411,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					// ui painter will always in 2D mode
 					var markers = this.getUiMarkers();
 					result = new Kekule.Render.ChemObjPainter(Kekule.Render.RendererType.R2D, markers, this.getUiDrawBridge());
+					result.setCanModifyTargetObj(true);
 					this.setPropStoreFieldValue('uiPainter', result);
 					return result;
 				}
@@ -974,6 +975,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = $super(chemObj);
 		if (result)
 		{
+			result.setCanModifyTargetObj(true);
 			this.installPainterEventHandlers(result);
 			// create new bound info recorder
 			this.createNewBoundInfoRecorder(this.getPainter());
@@ -1295,7 +1297,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		else
 		{
-			//console.log('do change job');
 			this.doObjectsChanged(a);
 			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
 		}

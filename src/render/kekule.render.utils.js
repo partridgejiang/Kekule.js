@@ -791,16 +791,15 @@ Kekule.Render.ChemDisplayTextUtils = {
 			return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABELS[radical];
 	},
 	/**
-	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * Returns text to represent atom charge and radical (e.g., 2+).
 	 * @param {Number} charge
 	 * @param {Int} radical
 	 * @param {Int} partialChargeDecimalsLength
 	 * @param {Int} chargeMarkType
-	 * @returns {Object}
+	 * @returns {String}
 	 */
-	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	getChargeDisplayText: function(charge, partialChargeDecimalsLength, chargeMarkType)
 	{
-		var result = null;
 		var slabel = '';
 		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
 		if (showCharge)
@@ -818,7 +817,42 @@ Kekule.Render.ChemDisplayTextUtils = {
 			}
 			slabel += chargeSign;
 		}
-
+		return slabel;
+	},
+	/**
+	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * @param {Number} charge
+	 * @param {Int} radical
+	 * @param {Int} partialChargeDecimalsLength
+	 * @param {Int} chargeMarkType
+	 * @returns {Object}
+	 */
+	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	{
+		var result = null;
+		var slabel = '';
+		/*
+		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
+		if (showCharge)
+		{
+			var chargeSign = (charge > 0)? '+': '-';
+			var chargeAmount = Math.abs(charge);
+			if (chargeAmount != 1)
+			{
+				slabel += partialChargeDecimalsLength? Kekule.NumUtils.toDecimals(chargeAmount, partialChargeDecimalsLength): chargeAmount.toString();
+			}
+			else  // +1 or -1, may use different charge sign char
+			{
+				if (chargeMarkType === Kekule.Render.ChargeMarkRenderType.CIRCLE_AROUND)
+					chargeSign = (charge > 0)? '\u2295': '\u2296';
+			}
+			slabel += chargeSign;
+		}
+		*/
+		if (charge)
+		{
+			slabel = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+		}
 		if (radical)
 		{
 			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, useAlterTripletRadicalMark) || '';
@@ -839,15 +873,15 @@ Kekule.Render.ChemDisplayTextUtils = {
 	 * @param {Int} partialChargeDecimalsLength
 	 * @returns {Object}
 	 */
-	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType)
+	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		//var result = Kekule.Render.RichTextUtils.create();
-		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType);
+		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical);
 		return result;
 	},
 
 	/** @private */
-	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType)
+	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		var result = Kekule.Render.RichTextUtils.createGroup();
 		var sections = formula.getSections();
@@ -885,7 +919,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 				// charge is draw after count
 				if (showCharge && charge)
 				{
-					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength, chargeMarkType);
+					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 					if (chargeSection)
 					{
 						Kekule.Render.RichTextUtils.append(subgroup, chargeSection);

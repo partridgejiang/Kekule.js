@@ -12,6 +12,7 @@
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.utils.js
  * requires /render/kekule.baseTextRender.js
+ * requires /chemdoc/kekule.commonChemMarkers.js
  * requires /localization/
  */
 
@@ -22,6 +23,7 @@ var RT = Kekule.Render.BondRenderType;
 var D = Kekule.Render.TextDirection;
 var BU = Kekule.BoxUtils;
 var BO = Kekule.BondOrder;
+var CU = Kekule.CoordUtils;
 var oneOf = Kekule.oneOf;
 
 /**
@@ -691,7 +693,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			var objCoord = obj.getAbsBaseCoord? obj.getAbsBaseCoord(Kekule.CoordMode.COORD2D):
 				obj.getAbsBaseCoord2D? obj.getAbsBaseCoord2D(): null;
 
-			//console.log('autoCoord', objCoord, transformParams);
+			// console.log('autoCoord', objCoord, transformParams);
 
 			if (objCoord)
 			{
@@ -704,6 +706,8 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	/** @ignore */
 	doDraw: function($super, context, baseCoord, options)
 	{
+		var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), options.allowCoordBorrow);
+		options.medianObjRefLength = medianObjRefLength || options.defScaleRefLength;
 		// since options passed by draw method is already protected, we are not worry about change it here.
 		this.prepareTransformParams(context, baseCoord, options);
 		this.prepareGeneralOptions(context, options);
@@ -830,7 +834,8 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			{
 				// auto determinate the scale by defBondLength and median of ctab bond length
 				var defDrawRefLength = oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1;
-				var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
+				//var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
+				var medianObjRefLength = drawOptions.medianObjRefLength;
 				if (Kekule.ObjUtils.isUnset(medianObjRefLength))
 				  medianObjRefLength = drawOptions.defScaleRefLength;
 				result.scaleX = result.scaleY = (defDrawRefLength / medianObjRefLength) || 1;  // medianObjRefLength may be NaN
@@ -1020,6 +1025,14 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	CLASS_NAME: 'Kekule.Render.RichTextBased2DRenderer',
 	/** @private */
 	DRAWN_OBJ_FIELD: '__$drawnObj__',
+	/** @constructs */
+	initialize: function($super, chemObj, drawBridge, parent)
+	{
+		$super(chemObj, drawBridge, parent);
+		// flags about size auto recalculation
+		this.__$alwaysRecalcSize__ = false;
+		this.__$isRecalculatingSize = false;
+	},
 	/** @private */
 	getDrawnObj: function(context)
 	{
@@ -1088,12 +1101,12 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 
 		var textCoord = this.getDrawTextCoord(context, baseCoord);
 
-		//console.log('draw text', this.getChemObj().getText(), baseCoord);
-
 		//console.log('draw text options', Kekule.Render.RichTextUtils.toText(richText), options, this.extractRichTextDrawOptions(options));
 
 		var result = this.drawRichText(context, textCoord, richText,
 			this.extractRichTextDrawOptions(options));
+
+		//console.log('draw text', textCoord, richText, this.extractRichTextDrawOptions(options));
 		//console.log(result);
 		var rect = result.boundRect;
 		var rectBoundInfo = this.createRectBoundInfo({x: rect.left, y: rect.top}, {x: rect.left + rect.width, y: rect.top + rect.height});
@@ -1105,7 +1118,7 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 		this.setDrawnObj(context, result.drawnObj);
 
 		// some chem object (e.g. text block) may need to set size automatically when drawing
-		if (chemObj.getNeedRecalcSize && chemObj.getNeedRecalcSize())
+		if (this.getCanModifyTargetObj() && (chemObj.getNeedRecalcSize && chemObj.getNeedRecalcSize()) || (this.__$alwaysRecalcSize__))
 		{
 			this._autosetObjSize(context, chemObj, rectBoundInfo);
 		}
@@ -1116,17 +1129,27 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	/** @private */
 	_autosetObjSize: function(context, chemObj, rectBoundInfo)
 	{
+		if (this.__$isRecalculatingSize)  // avoid recursion
+			return;
 		if (chemObj.hasProperty('size2D') && chemObj.setNeedRecalcSize)
 		{
-			var coords = rectBoundInfo.coords;  // context coords
-			var objCoord1 = this.transformCoordToObj(context, chemObj, coords[0]);
-			var objCoord2 = this.transformCoordToObj(context, chemObj, coords[1]);
-			var delta = Kekule.CoordUtils.substract(objCoord2, objCoord1);
-			// must not use setSize2D, otherwise a new object change event will be triggered and a new update process will be launched
-			chemObj.setPropStoreFieldValue('size2D', {'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
-			//textBlock.setSize2D({'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
-			//delete textBlock.__$needRecalcSize__;
-			chemObj.setNeedRecalcSize(false);
+			this.__$isRecalculatingSize = true;
+			try
+			{
+				var coords = rectBoundInfo.coords;  // context coords
+				var objCoord1 = this.transformCoordToObj(context, chemObj, coords[0]);
+				var objCoord2 = this.transformCoordToObj(context, chemObj, coords[1]);
+				var delta = Kekule.CoordUtils.substract(objCoord2, objCoord1);
+				// must not use setSize2D, otherwise a new object change event will be triggered and a new update process will be launched
+				chemObj.setPropStoreFieldValue('size2D', {'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
+				//textBlock.setSize2D({'x': Math.abs(delta.x), 'y': Math.abs(delta.y)});
+				//delete textBlock.__$needRecalcSize__;
+				chemObj.setNeedRecalcSize(false);
+			}
+			finally
+			{
+				this.__$isRecalculatingSize = false;
+			}
 		}
 	}
 });
@@ -1249,6 +1272,81 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 //Kekule.ClassDefineUtils.addExtraObjMapSupport(Kekule.Render.Formula2DRenderer);
 
 /**
+* A default class to render a some text based chem markers.
+* @class
+* @augments Kekule.Render.RichTextBased2DRenderer
+*/
+Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTextBased2DRenderer,
+/** @lends Kekule.Render.TextBasedChemMarker2DRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Render.TextBasedChemMarker2DRenderer',
+	/** @constructs */
+	initialize: function($super, chemObj, drawBridge, parent)
+	{
+		$super(chemObj, drawBridge, parent);
+		//this.__$alwaysRecalcSize__ = true;  // always recalc size of marker block
+	},
+	/** @private */
+	doDrawSelf: function($super, context, baseCoord, options)
+	{
+		return $super(context, baseCoord, options);
+
+		/* debug
+		if (!baseCoord)
+			baseCoord = this.getAutoBaseCoord(options);
+		var textCoord = this.getDrawTextCoord(context, baseCoord);
+		this.drawCircle(context, textCoord, 3, {'strokeColor': '#ff0000'});
+		*/
+	},
+	/** @private */
+	getRichText: function(chemObj, drawOptions)
+	{
+		var obj = this.getChemObj();
+		var text;
+		if (obj instanceof Kekule.ChemMarker.Charge)
+		{
+			var charge = obj.getValue();
+			text = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);
+			//var section = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, 0, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);
+			if (text)
+				return Kekule.Render.RichTextUtils.createSection(text,
+						{'charDirection': Kekule.Render.TextDirection.LTR});
+		}
+		else if (obj instanceof Kekule.ChemMarker.Radical)
+		{
+			var radical = obj.getValue();
+			text = Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, drawOptions.distinguishSingletAndTripletRadical);
+			if (text)
+				return Kekule.Render.RichTextUtils.createSection(text,
+						{'charDirection': Kekule.Render.TextDirection.LTR});
+		}
+		return null;
+	},
+
+	/** @private */
+	doEstimateSelfObjBox: function($super, context, options, allowCoordBorrow)
+	{
+		return $super(context, options, allowCoordBorrow);
+		//return this.getChemObj().getBox2D(allowCoordBorrow);
+	},
+
+	/** private */
+	extractRichTextDrawOptions: function($super, options)
+	{
+		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
+		var ops = $super(options);
+		ops.fontSize = oneOf(ops.fontSize, ops.chargeMarkFontSize, ops.atomFontSize);
+		ops.fontFamily = oneOf(ops.fontFamily, ops.atomFontFamily);
+		ops.color = oneOf(ops.color, ops.atomColor, ops.labelColor);
+		ops.textBoxXAlignment = Kekule.Render.BoxXAlignment.CENTER;
+		ops.textBoxYAlignment = Kekule.Render.BoxYAlignment.CENTER;
+
+		return ops;
+	}
+});
+
+/**
  * Class to render a image block object.
  * @class
  * @augments Kekule.Render.ChemObj2DRenderer
@@ -1319,16 +1417,146 @@ Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRendere
 		//this.setObjDrawElem(context, chemObj, result);
 
 		return result;
-	},
-	doDrawImgContent: function(imgElem)
-	{
-
 	}
 });
-Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
 
+/**
+ * Class to render a unbonded electron set marker.
+ * @class
+ * @augments Kekule.Render.ChemObj2DRenderer
+ */
+Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
+/** @lends Kekule.Render.UnbondedElectronSetRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Render.UnbondedElectronSetRenderer',
+	/** private */
+	_extractActualDrawOptions: function(options)
+	{
+		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
+		var ops = Object.create(options);
+		ops.fontSize = oneOf(ops.fontSize, ops.chargeMarkFontSize, ops.atomFontSize);
+		ops.color = oneOf(ops.color, ops.atomColor, ops.labelColor);
+		ops.strokeColor = ops.color;
+		ops.fillColor = ops.color;
+		ops.electronGap = ops.fontSize / 3 * (ops.unitLength || 1) * (ops.zoom || 1);  // TODO: currently fixed
+		ops.electronRadius = ops.fontSize / 20 * (ops.unitLength || 1) * (ops.zoom || 1);  // TODO: currently fixed
 
-	/**
+		return ops;
+	},
+	/** @private */
+	_drawSingleElectron: function(context, coord, radius, options)
+	{
+		return this.drawCircle(context, coord, radius, options);
+	},
+	/** @private */
+	_drawElectrons: function(context, electronCount, baseCoord, centerCoord, options)
+	{
+		//console.log('draw unbonded e', electronCount, baseCoord, centerCoord);
+		var baseVector = CU.substract(baseCoord, centerCoord);
+		var distance = CU.getDistance(baseVector);
+		var cosAngle;
+		var sinAngle;
+		if (distance === 0)  // avoid zero divided
+		{
+			var cosAngle = 0;
+			var sinAngle = 1;
+		}
+		else
+		{
+			var cosAngle = baseVector.x / distance;
+			var sinAngle = baseVector.y / distance;
+		}
+		var gap = options.electronGap;
+		var eRadius = options.electronRadius;
+		var deltaVector = {'x': gap * sinAngle, 'y': -gap * cosAngle};
+		var halfCount = (electronCount - 1) / 2;
+		var currCoord = CU.substract(baseCoord, CU.multiply(deltaVector, halfCount));
+		var electronCoords = [];
+		var group = (electronCount > 1)? this.createDrawGroup(context): null;
+		var drawElem;
+		for (var i = 0; i < electronCount; ++i)
+		{
+			//console.log('draw single e', currCoord, deltaVector);
+			electronCoords.push(currCoord);
+			drawElem = this._drawSingleElectron(context, currCoord, eRadius, options);
+			if (group)
+				this.addToDrawGroup(drawElem, group);
+			currCoord = CU.add(currCoord, deltaVector);
+		}
+		// boundInfo
+		var boundInfo;
+		if (electronCoords.length <= 1)  // circle bound
+			boundInfo = this.createCircleBoundInfo(electronCoords[0], eRadius);
+		else  // line bound
+		{
+			var adjustDelta = CU.multiply(deltaVector, eRadius * 2 / gap);
+			var c1 = CU.substract(electronCoords[0], adjustDelta);
+			var c2 = CU.add(electronCoords[electronCount - 1], adjustDelta);
+			boundInfo = this.createLineBoundInfo(c1, c2, eRadius);
+		}
+
+		return {'electronCoords': electronCoords, 'drawnElem': group || drawElem, 'electronRadius': eRadius, 'boundInfo': boundInfo};
+	},
+	_doGetParentCoord: function(context, parentObj, options)
+	{
+		var transformParams = options.transformParams;
+		if (transformParams)
+		{
+			var obj = parentObj;
+			var objCoord = obj.getAbsBaseCoord? obj.getAbsBaseCoord(Kekule.CoordMode.COORD2D):
+					obj.getAbsBaseCoord2D? obj.getAbsBaseCoord2D(): null;
+
+			if (objCoord)
+			{
+				return CU.transform2D(objCoord, transformParams);
+			}
+		}
+		return null;
+	},
+	/** @private */
+	doDrawSelf: function($super, context, baseCoord, options)
+	{
+		$super(context, baseCoord, options);
+
+		var ops = this._extractActualDrawOptions(options);
+
+		//console.log('draw text options', options);
+
+		var chemObj = this.getChemObj();
+		var parentObj = chemObj.getParent();
+		var transformOptions = options.transformParams;
+
+		if (!chemObj || !parentObj || !chemObj.getElectronCount || (chemObj.getElectronCount() || 0) <= 0)
+			return null;
+
+		if (!baseCoord)
+			baseCoord = this.getAutoBaseCoord(options);
+		var parentCoord = this._doGetParentCoord(context, parentObj, options);
+		if (!baseCoord || !parentCoord)
+			return null;
+
+		// do actual draw
+		var drawResult = this._drawElectrons(context, chemObj.getElectronCount(), baseCoord, parentCoord, ops);
+		var electronCoords = drawResult.electronCoords;
+		var radius = drawResult.electronRadius;
+		/*
+		var box = Kekule.CoordUtils.getContainerBox(electronCoords);
+
+		this.basicDrawObjectUpdated(context, chemObj, chemObj,
+				this.createRectBoundInfo({x: box.x1, y: box.y1}, {x: box.x2, y: box.y2}), Kekule.Render.ObjectUpdateType.ADD);
+		console.log(box);
+		*/
+		this.basicDrawObjectUpdated(context, chemObj, parentObj, drawResult.boundInfo, Kekule.Render.ObjectUpdateType.ADD);
+
+		//this.setObjDrawElem(context, chemObj, result);
+
+		var drawnElem = drawResult.drawnElem;
+		return drawnElem;
+	}
+});
+
+/**
  * A default implementation of 2D Ctab (in molecule or path glyph) renderer.
  * @class
  * @augments Kekule.Render.ChemObj2DRenderer
@@ -1787,16 +2015,22 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	doTransformCoordToObj: function(context, chemObj, coord)
+	doTransformCoordToObj: function($super, context, chemObj, coord)
 	{
 		var matrix = this.getExtraProp2(context, chemObj, this.INV_TRANSFORM_MATRIX_FIELD);
-		return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
+		if (matrix)
+			return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
+		else
+			return $super(context, chemObj, coord);
 	},
 	/** @private	 */
-	doTransformCoordToContext: function(context, chemObj, coord)
+	doTransformCoordToContext: function($super, context, chemObj, coord)
 	{
 		var matrix = this.getExtraProp2(context, chemObj, this.TRANSFORM_MATRIX_FIELD);
-		return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
+		if (matrix)
+			return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
+		else
+			return $super(context, chemObj, coord);
 	},
 
 	/**
@@ -2313,8 +2547,15 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		*/
 
 		//if (!this._needNodeDrawLabel(node))
-		if (this.getObjNeedDrawLabel(context, node))  // draw label and charge
+		//var autoCreateChargeAndRadicalMarker = nodeRenderOptions.autoCreateChargeAndRadicalMarker;
+		// TODO: charge and radical drawing are now handled togather, may be splitted in the future
+		var hasChargeOrRadical = node.getCharge() || node.getRadical();
+		var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
+		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
+		var nodeWithLabel = false;
+		if (this.getObjNeedDrawLabel(context, node))  // draw label
 		{
+			nodeWithLabel = true;
 			/*
 			 var localOptions = node.getRenderOptions() || {};
 			 var renderOptions = Object.extend(renderConfigs, localOptions);
@@ -2322,7 +2563,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// if a label is drawn, all hydrogens should be marked
 			var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
 			//console.log(hdisplayLevel);
-			var label = node.getDisplayRichText(hdisplayLevel, true, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength, nodeRenderOptions.chargeMarkType);
+			var needShowChargeInLabel = !!(needDrawCharge || needDrawRadical);
+			//console.log(node.getCharge(), node.getRadical(), needDrawCharge, needDrawRadical, needShowChargeInLabel);
+			var label = node.getDisplayRichText(hdisplayLevel, needShowChargeInLabel, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength, nodeRenderOptions.chargeMarkType, nodeRenderOptions.distinguishSingletAndTripletRadical);
 
 			// decide charDirection
 			//label.charDirection = Kekule.ObjUtils.isUnset(nodeRenderOptions.charDirection) ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
@@ -2368,7 +2611,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			}
 			else
 				boundInfo = this.createPointBoundInfo(coord);
-			if (node.getCharge() || node.getRadical()) // draw charge or radical
+			//if (node.getCharge() || node.getRadical()) // draw charge or radical
+			if (needDrawCharge || needDrawRadical)
 			{
 				/*
 				var chargeOptions = this.getRenderCache(context).chargeDrawOptions;
@@ -2383,17 +2627,20 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 					chargeOptions.chargeMarkCircleWidth * chargeOptions.unitLength,
 					chargeOptions.color, chargeOptions.opacity);
 				*/
-				var elemEx = this.doDrawElectronStateMark(context, group, node,
-					nodeRenderOptions.chargeMarkType,
-					nodeRenderOptions.partialChargeDecimalsLength,
-					nodeRenderOptions.distinguishSingletAndTripletRadical,
-					nodeRenderOptions.fontFamily,
-					nodeRenderOptions.chargeMarkFontSize * nodeRenderOptions.unitLength,
-					nodeRenderOptions.chargeMarkMargin * nodeRenderOptions.unitLength,
-					nodeRenderOptions.chargeMarkCircleWidth * nodeRenderOptions.unitLength,
-					nodeRenderOptions.color, nodeRenderOptions.opacity, nodeRenderOptions.zoom || 1);
-				if (elemEx)
-					chargeElem = elemEx.drawnObj;
+				//if (!autoCreateChargeAndRadicalMarker)
+				{
+					var elemEx = this.doDrawElectronStateMark(context, group, node,
+							nodeRenderOptions.chargeMarkType,
+							nodeRenderOptions.partialChargeDecimalsLength,
+							nodeRenderOptions.distinguishSingletAndTripletRadical,
+							nodeRenderOptions.fontFamily,
+							nodeRenderOptions.chargeMarkFontSize * nodeRenderOptions.unitLength,
+							nodeRenderOptions.chargeMarkMargin * nodeRenderOptions.unitLength,
+							nodeRenderOptions.chargeMarkCircleWidth * nodeRenderOptions.unitLength,
+							nodeRenderOptions.color, nodeRenderOptions.opacity, nodeRenderOptions.zoom || 1);
+					if (elemEx)
+						chargeElem = elemEx.drawnObj;
+				}
 			}
 			if (nodeCoreElem && chargeElem)
 			{
@@ -2403,6 +2650,46 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			}
 			else
 				result = nodeCoreElem || chargeElem;
+		}
+
+		//if (hasChargeOrRadical)  // if has charge or radical marker, adjust their position if needed
+		if (node.getUnplacedMarkers(this.getCoordMode()).length >= 0)
+		{
+			var nodeLabelDirAngle;
+			// calc margin
+			var margin = nodeRenderOptions.chemMarkerMargin;
+			// consider node label if exists
+			if (nodeWithLabel)
+			{
+				var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio ||*/ 1;
+				var fSize = this._getNodeFontSize(context, node) * (finalTransformOptions.zoom || 1);
+				var halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
+				margin += halfBoxWidth - margin / 2;  // shrink margin a little for better outlook
+				//console.log('expand', expandRatio, fSize, halfBoxWidth, margin);
+
+				// consider label direction
+				var D = Kekule.Render.TextDirection;
+				var directions = [D.LTR, D.RTL, D.TTB, D.BTT];
+				var labelVector = (labelCharDirection === D.LTR)? {x: 1, y: 0}:
+						(labelCharDirection === D.RTL)? {x: -1, y: 0}:
+						(labelCharDirection === D.TTB)? {x: 0, y: 1}:
+						(labelCharDirection === D.BTT)? {x: 0, y: -1}:
+						{x: 0, y: 0};
+				var revTransLabelVector = {
+					'x': labelVector.x * finalTransformOptions.scaleX,
+					'y': labelVector.y * finalTransformOptions.scaleY
+				};
+				nodeLabelDirAngle = (revTransLabelVector.x > 0)? 0:
+						(revTransLabelVector.x < 0)? Math.PI:
+						(revTransLabelVector.y > 0)? Math.PI / 2:
+						(revTransLabelVector.y < 0)? Math.PI * 3 / 2:
+						null;
+				//console.log(labelCharDirection, nodeLabelDirAngle * 180 / Math.PI, labelVector, revTransLabelVector);
+			}
+			var objMargin = margin / nodeRenderOptions.defBondLength * nodeRenderOptions.medianObjRefLength;
+
+			this.doAdjustChemPropMarkerPos(node, objMargin, finalTransformOptions.allowCoordBorrow,
+					Kekule.ObjUtils.notUnset(nodeLabelDirAngle)? [nodeLabelDirAngle]: []); // consider label direction
 		}
 
 		if (result)
@@ -2695,12 +2982,37 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 */
 	_getMostEmptyDirectionAngleOfNode: function(context, node)
 	{
+		/*
+		 var allowCoordBorrow = this.getRenderCache(context).options.transformParams.allowCoordBorrow;
+		 var angle = Kekule.ChemStructureUtils.getMostEmptyDirection2DAngleOfObj(node, null, allowCoordBorrow, true, false);
+
+		 var y = Math.tan(angle);
+		 var x = Math.sqrt(1 - y * y);
+		 var vector = {'x': x, 'y': y};
+		 var transformedVector;
+
+		 var ctab = this.getChemObj();
+		 var transformMatrix = this.getExtraProp2(context, ctab, this.TRANSFORM_MATRIX_FIELD);
+		 var childTransformMatrix = this.getExtraProp2(context, ctab, this.CHILD_TRANSFORM_MATRIX_FIELD);
+		 if (ctab && (ctab.hasNode(node, false) || ctab.hasConnector(node, false)))  // is direct child of ctab
+		 {
+		  transformedVector = Kekule.CoordUtils.transform2DByMatrix(vector, transformMatrix);
+		 }
+		 else  // is nested child
+		  transformedVector = Kekule.CoordUtils.transform2DByMatrix(vector, childTransformMatrix);
+		 var result = Math.atan(transformedVector.y, transformedVector.x);
+
+		 //console.log('angle method1', Math.round(angle * 180 / Math.PI), Math.round(result * 180 / Math.PI));
+    return result;
+		*/
+
+		var result;
 		var angles = this._calcConnectorAnglesOfNode(context, node);
 		var l = angles.length;
 		if (l === 0)
-			return 0;
+			result = 0;
 		else if (l === 1)  // only one connector
-			return -angles[0]
+			result = -angles[0];
 		else  // more than two connectors
 		{
 			var max = 0;
@@ -2718,7 +3030,48 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 					index = i;
 				}
 			}
-			return angles[index] + max / 2;
+			result = angles[index] + max / 2;
+		}
+		//console.log('angle method2', Math.round(result * 180 / Math.PI));
+		return result;
+	},
+
+	/**
+	 * Adjust marker pos, put at the emptiest direction of obj.
+	 * @private
+	 */
+	doAutoAdjustAttachedMarkerPos: function(obj, marker, markerMargin, allowCoordBorrow, avoidDirectionAngles)
+	{
+		if (marker && !marker.getCoordOfMode(this.getCoordMode()))  // has no 2D coord, do auto position
+		{
+			obj.autoSetMarker2DPos(marker, markerMargin, allowCoordBorrow, avoidDirectionAngles);
+		}
+	},
+	/**
+	 * Adjust charge or radical pos if needed.
+	 * @private
+	 */
+	doAdjustChemPropMarkerPos: function(obj, markMargin, allowCoordBorrow, avoidDirectionAngles)
+	{
+		obj.beginUpdate();
+		try
+		{
+			// charge
+			var chargeMarker = obj.getMarkerOfType(Kekule.ChemMarker.Charge);
+			this.doAutoAdjustAttachedMarkerPos(obj, chargeMarker, markMargin, allowCoordBorrow, avoidDirectionAngles);
+			// radical
+			var radicalMarker = obj.getMarkerOfType(Kekule.ChemMarker.Radical);
+			this.doAutoAdjustAttachedMarkerPos(obj, radicalMarker, markMargin, allowCoordBorrow, avoidDirectionAngles);
+			// the rest
+			var markers = obj.getUnplacedMarkers(this.getCoordMode());
+			for (var i = 0, l = markers.length; i < l; ++i)
+			{
+				this.doAutoAdjustAttachedMarkerPos(obj, markers[i], markMargin, allowCoordBorrow, avoidDirectionAngles);
+			}
+		}
+		finally
+		{
+			obj.endUpdate();
 		}
 	},
 
@@ -3896,6 +4249,58 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		return result;
 	},
 
+	/** @private */
+	_createChargeAndRadicalMarkerOnStructFragment: function(mol)
+	{
+		mol.beginUpdate();
+		try
+		{
+			if (mol.getCharge && mol.getCharge())
+				mol.fetchChargeMarker(true);
+			// then the children
+			var nodes = mol.getNodes();
+			for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+			{
+				var node = mol.getNodeAt(i);
+				node.beginUpdate();
+				try
+				{
+					if (node.getCharge())
+					{
+						node.fetchChargeMarker(true);
+					}
+					if (node.getRadical())
+						node.fetchRadicalMarker(true);
+					if (node.getNodeAt)  // is sub fragment
+						this._createChargeAndRadicalMarkerOnStructFragment(node);
+				}
+				finally
+				{
+					node.endUpdate();
+				}
+			}
+		}
+		finally
+		{
+			mol.endUpdate();
+		}
+	},
+
+	/** @ignore */
+	doDraw: function($super, context, baseCoord, options)
+	{
+		// do some initial jobs on struct fragment
+		var useChargeAndRadicalMarkers = !!options.autoCreateChargeAndRadicalMarker;
+		if (this.getCanModifyTargetObj() && useChargeAndRadicalMarkers)
+		{
+			//console.log(options.autoCreateChargeAndRadicalMarker, options);
+			var mol = this.getChemObj();
+			this._createChargeAndRadicalMarkerOnStructFragment(mol);
+		}
+		//console.log('draw molecule', this.getChemObj().getId());
+		$super(context, baseCoord, options);
+	},
+
 	/** @ignore */
 	doDrawSelf: function($super, context, baseCoord, options)
 	{
@@ -4252,7 +4657,11 @@ Kekule.Render.ChemSpace2DRenderer = Class.create(Kekule.Render.CompositeObj2DRen
 });
 
 // register renderers
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemMarker.Charge, Kekule.Render.TextBasedChemMarker2DRenderer);
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemMarker.Radical, Kekule.Render.TextBasedChemMarker2DRenderer);
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemMarker.UnbondedElectronSet, Kekule.Render.UnbondedElectronSetRenderer);
 Kekule.Render.Renderer2DFactory.register(Kekule.TextBlock, Kekule.Render.TextBlock2DRenderer);
+Kekule.Render.Renderer2DFactory.register(Kekule.ImageBlock, Kekule.Render.ImageBlock2DRenderer);
 Kekule.Render.Renderer2DFactory.register(Kekule.StructureFragment, Kekule.Render.StructFragment2DRenderer);
 Kekule.Render.Renderer2DFactory.register(Kekule.CompositeMolecule, Kekule.Render.CompositeMolecule2DRenderer);
 Kekule.Render.Renderer2DFactory.register(Kekule.Reaction, Kekule.Render.Reaction2DRenderer);

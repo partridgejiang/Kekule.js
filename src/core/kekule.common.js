@@ -2057,6 +2057,15 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return -1;
 	},
 	/**
+	 * Remove obj from children.
+	 * @param {Variant} obj
+	 * @returns {Variant} Child object removed.
+	 */
+	removeChild: function(obj)
+	{
+		// do nothing here
+	},
+	/**
 	 * Run a cascade function on all children (and their sub children).
 	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
 	 */
@@ -2796,9 +2805,9 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.remove(obj);
+		return this.remove(obj) || $super(obj);
 	},
 
 	/**
@@ -2986,9 +2995,9 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getChildren().removeChild(obj);
+		return this.getChildren().removeChild(obj) || $super(obj);
 	}
 });
 
@@ -3166,9 +3175,9 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getRoot().removeChild(obj);
+		return this.getRoot().removeChild(obj) || $super(obj);
 	},
 
 	/**

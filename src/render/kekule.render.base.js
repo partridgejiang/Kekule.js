@@ -464,6 +464,8 @@ Kekule.Render.ObjectUpdateType = {
  * @property {Kekule.ObjectEx} parent Parent object of this renderer, usually another renderer or an instance of {@link Kekule.Render.ChemObjPainter}.
  * @property {Kekule.Render.AbstractRenderer} parentRenderer Parent renderer that calls this one.
  *
+ * @property {Bool} canModifyTargetObj If set to true, renderer may change the rendered object (e.g., add charge markers, change block sizes...).
+ *   This property can inherit value from parent.
  * @property {Object} redirectContext If this property is set, renderer will draw on this one instead if the context in drawXXX methods.
  *   This property is used by editor. User should utilize this property with caution.
  */
@@ -572,6 +574,19 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			});
 
 		this.defineProp('redirectContext', {'dataType': DataType.OBJECT, 'serializable': false});
+		this.defineProp('canModifyTargetObj', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('canModifyTargetObj');
+				if (Kekule.ObjUtils.isUnset(result))
+				{
+					var p = this.getParent();
+					if (p && p.getCanModifyTargetObj)
+						result = p.getCanModifyTargetObj();
+				}
+				return result;
+			}
+		});
 
 		this.defineEvent('clear');
 		this.defineEvent('updateBasicDrawObject');
@@ -598,6 +613,15 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	getRendererType: function()
 	{
 		return Kekule.Render.RendererType.R2D;  // default is 2D renderer
+	},
+	/**
+	 * Report coord mode of this renderer.
+	 * @returns {Int} Value from {@link Kekule.CoordMode}.
+	 */
+	getCoordMode: function()
+	{
+		var rType = this.getRendererType();
+		return (rType === Kekule.Render.RendererType.R3D)? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 	},
 
 	/**
@@ -735,70 +759,77 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 
 		//console.log('baseDraw', baseCoord, p);
 		//this.updateDrawInfoInCache(this.getChemObj(), context, baseCoord, options);
-
-		var ops = {};
-		// actual draw options should also inherited from parent renderer
-		var parentOps;
-		var parent = this.getParentRenderer();
-		if (parent)
+		try
 		{
-			var parentOps = parent.getRenderCache().options;
-			/*
+			this.__isDrawing = true;  // flag avoid duplicated draw
+			var ops = {};
+			// actual draw options should also inherited from parent renderer
+			var parentOps;
+			var parent = this.getParentRenderer();
+			if (parent)
+			{
+				var parentOps = parent.getRenderCache().options;
+				/*
+				 if (parentOps)
+				 ops = Object.create(parentOps);
+				 */
+			}
 			if (parentOps)
+			{
 				ops = Object.create(parentOps);
-			*/
+				ops = Object.extend(ops, options);  // self options should override parent one
+			}
+			else
+				ops = Object.create(options || null);
+
+			var chemObj = this.getChemObj();
+
+			var partialDrawObjs = ops.partialDrawObjs;
+
+			/*
+			 if ((this instanceof Kekule.Render.Ctab2DRenderer))
+			 console.log(this.getClassName(), partialDrawObjs, !partialDrawObjs || this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context));
+			 */
+
+			if (partialDrawObjs && (!this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context)))
+			{
+				//console.log('no need partial draw', this.getClassName(), chemObj, partialDrawObjs);
+				return null;
+			}
+			/*
+			 else if (partialDrawObjs)
+			 console.log('partial draw objects', this.getClassName(), partialDrawObjs);
+			 */
+			//p.options = ops;
+
+			var renderOptionsGetter = (this.getRendererType() === Kekule.Render.RendererType.R3D) ?
+					'getOverriddenRender3DOptions' : 'getOverriddenRenderOptions';
+
+			var localOps = chemObj[renderOptionsGetter] ? chemObj[renderOptionsGetter]() : null;
+
+			ops = Kekule.Render.RenderOptionUtils.mergeRenderOptions(localOps || {}, ops);
+
+			this.updateDrawInfoInCache(this.getChemObj(), context, baseCoord, options, ops);
+
+			var isRoot = this.isRootRenderer();
+
+			this.invokeEvent('prepareDrawing', {'context': context, 'obj': this.getChemObj()});
+
+			//console.log('DRAW', isRoot);
+			if (isRoot)
+				this.beginDraw(context, baseCoord, ops);
+
+			var result = this.doDraw(context, baseCoord, ops);
+			this.getRenderCache(context).drawnElem = result;
+			if (isRoot)
+				this.endDraw(context, baseCoord, ops);
+
+			this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj()});
 		}
-		if (parentOps)
+		finally
 		{
-			ops = Object.create(parentOps);
-			ops = Object.extend(ops, options);  // self options should override parent one
+			this.__isDrawing = false;
 		}
-		else
-			ops = Object.create(options || null);
-
-		var chemObj = this.getChemObj();
-
-		var partialDrawObjs = ops.partialDrawObjs;
-
-		/*
-		if ((this instanceof Kekule.Render.Ctab2DRenderer))
-			console.log(this.getClassName(), partialDrawObjs, !partialDrawObjs || this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context));
-    */
-
-		if (partialDrawObjs && (!this._isCurrChemObjNeedToBeDrawn(partialDrawObjs, context)))
-		{
-			//console.log('no need partial draw', this.getClassName(), chemObj, partialDrawObjs);
-			return null;
-		}
-		/*
-		else if (partialDrawObjs)
-			console.log('partial draw objects', this.getClassName(), partialDrawObjs);
-    */
-		//p.options = ops;
-
-		var renderOptionsGetter = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-			'getOverriddenRender3DOptions': 'getOverriddenRenderOptions';
-
-		var localOps = chemObj[renderOptionsGetter]? chemObj[renderOptionsGetter](): null;
-
-		ops = Kekule.Render.RenderOptionUtils.mergeRenderOptions(localOps || {}, ops);
-
-		this.updateDrawInfoInCache(this.getChemObj(), context, baseCoord, options, ops);
-
-		var isRoot = this.isRootRenderer();
-
-		this.invokeEvent('prepareDrawing', {'context': context, 'obj': this.getChemObj()});
-
-		//console.log('DRAW', isRoot);
-		if (isRoot)
-			this.beginDraw(context, baseCoord, ops);
-
-		var result = this.doDraw(context, baseCoord, ops);
-		this.getRenderCache(context).drawnElem = result;
-		if (isRoot)
-			this.endDraw(context, baseCoord, ops);
-
-		this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj()});
 
 		return result;
 	},
@@ -1797,9 +1828,9 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 			return $super(context, baseCoord, op);
 		else  // then draw each child objects by child renderers
 		{
+			var selfElem = this.doDrawSelf(context, baseCoord, op);
 			var group = this.doDrawChildren(context, baseCoord, op);
 			// self
-			var selfElem = this.doDrawSelf(context, baseCoord, op);
 			if (selfElem)
 				this.addToDrawGroup(selfElem, group);
 			return group;
@@ -1851,12 +1882,12 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	/** @private */
 	doUpdate: function($super, context, updateObjDetails, updateType)
 	{
+		// update self
+		$super(context, updateObjDetails, updateType);
 		if (this.hasChildRenderers())
 		{
 			this.doUpdateChildren(context, updateObjDetails, updateType);
 		}
-		// update self
-		$super(context, updateObjDetails, updateType);
 		return true;
 	},
 	/** @private */

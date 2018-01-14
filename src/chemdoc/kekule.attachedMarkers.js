@@ -8,6 +8,7 @@
  * requires /lan/classes.js
  * requires /core/kekule.common.js
  * requires /core/kekule.structures.js
+ * requires /core/kekule.chemUtils.js
  */
 
 (function(){
@@ -15,12 +16,26 @@
 
 var AU = Kekule.ArrayUtils;
 
+/**
+ * A recommended namespace for all attach marker classes
+ * @namespace
+ */
+Kekule.ChemMarker = {};
 
 // extend chemObject, enable associate descriptive glyphs to it
 /** @ignore */
 ClassEx.extend(Kekule.ChemObject,
 /** @lends Kekule.ChemObject# */
 {
+	/**
+	 * Returns whether current object is an attachedMarker of parent object.
+	 * @returns {Bool}
+	 */
+	isAttachedMarker: function()
+	{
+		var p = this.getParent();
+		return (p && p.hasMarker(this));
+	},
 	/**
 	 * Notify {@link Kekule.ChemObject#attachedMarkers} property has been changed
 	 * @private
@@ -48,6 +63,78 @@ ClassEx.extend(Kekule.ChemObject,
 		return this.getAttachedMarkers()[index];
 	},
 	/**
+	 * Returns the first child marker of a specified class type.
+	 * @param {Class} classType
+	 * @param {Bool} exactMatch If true, only marker of classType (not its descendants) should be returned.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getMarkerOfType: function(classType, exactMatch)
+	{
+		for (var i = 0, l = this.getMarkerCount(); i < l; ++i)
+		{
+			var marker = this.getMarkerAt(i);
+			if ((exactMatch && marker.getClass() === classType) || (marker instanceof classType))
+				return marker;
+		}
+		return null;
+	},
+	/**
+	 * Returns all child markers of a specified class type.
+	 * @param {Class} classType
+	 * @param {Bool} exactMatch If true, only markers of classType (not its descendants) should be returned.
+	 * @returns {Array}
+	 */
+	getMarkersOfType: function(classType, exactMatch)
+	{
+		var result = [];
+		for (var i = 0, l = this.getMarkerCount(); i < l; ++i)
+		{
+			var marker = this.getMarkerAt(i);
+			if ((exactMatch && marker.getClass() === classType) || (marker instanceof classType))
+				result.push(marker);
+		}
+		return result;
+	},
+	/**
+	 * Get attached marker of classType. If no such a marker currently and canCreate is true, a new marker will be created.
+	 * @param {Class} classType
+	 * @param {Bool} canCreate
+	 * @param {Bool} exactMatch If true, only marker of classType (not its descendants) should be returned.
+	 * @param {Hash} defProps If create a new marker, those prop values will be applied.
+	 * @returns {Kekule.ChemObject}
+	 */
+	fetchMarkerOfType: function(classType, canCreate, exactMatch, defProps)
+	{
+		var result = this.getMarkerOfType(classType, exactMatch);
+		if (!result && canCreate)
+		{
+			result = new classType();
+			if (defProps)
+			{
+				result.setPropValues(defProps);
+			}
+			//console.log('fetch create on', this.getId());
+			this.appendMarker(result);
+		}
+		return result;
+	},
+	/**
+	 * Returns markers that has no coord on coordMode
+	 * @param {Int} coordMode
+	 * @return {Array}
+	 */
+	getUnplacedMarkers: function(coordMode)
+	{
+		var result = [];
+		for (var i = 0, l = this.getMarkerCount(); i < l; ++i)
+		{
+			var marker = this.getMarkerAt(i);
+			if (!marker.getCoordOfMode(coordMode))
+				result.push(marker);
+		}
+		return result;
+	},
+	/**
 	 * Get index of attached marker in marker array.
 	 * @param {Kekule.ChemObject} marker
 	 * @returns {Int}
@@ -64,6 +151,16 @@ ClassEx.extend(Kekule.ChemObject,
 	hasMarker: function(marker)
 	{
 		return this.indexOfMarker(marker) >= 0;
+	},
+	/**
+	 * Returns whether there exists child markers of a specified class type.
+	 * @param {Class} classType
+	 * @param {Bool} exactMatch If true, only markers of classType (not its descendants) should be considered.
+	 * @returns {Bool}
+	 */
+	hasMarkerOfType: function(classType, exactMatch)
+	{
+		return !!this.getMarkerOfType(classType, exactMatch);
 	},
 	/**
 	 * Attach a marker to this object. If marker already exists, nothing will be done.
@@ -136,12 +233,13 @@ ClassEx.extend(Kekule.ChemObject,
 		var marker = this.getMarkerAt(index);
 		if (marker)
 		{
-			this.getAttachedMarkers().splice(index, 1);
+			var result = this.getAttachedMarkers().splice(index, 1);
 			if (marker.setOwner)
 				marker.setOwner(null);
 			if (marker.setParent)
 				marker.setParent(null);
 			this.notifyAttachedMarkersChanged();
+			return result;
 		}
 	},
 	/**
@@ -152,7 +250,7 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		var index = this.getMarkerAt(marker);
 		if (index >= 0)
-			this.removeMarkerAt(index);
+			return this.removeMarkerAt(index);
 	},
 	/**
 	 * Replace oldMarker with new one.
@@ -194,6 +292,17 @@ ClassEx.extend(Kekule.ChemObject,
 		return this;
 	},
 
+	autoSetMarker2DPos: function(marker, offset, allowCoordBorrow, avoidDirectionAngles)
+	{
+		if (this.hasMarker(marker))
+		{
+			var angle = Kekule.ChemStructureUtils.getMostEmptyDirection2DAngleOfObj(this, [marker], allowCoordBorrow, true, false, avoidDirectionAngles);
+			var coord = {'x': offset * Math.cos(angle), 'y': offset * Math.sin(angle)};
+			//console.log('angle2', coord);
+			marker.setCoord2D(coord);
+		}
+	},
+
 	/** @private */
 	_updateAttachedMarkersOwner: function(owner)
 	{
@@ -227,6 +336,9 @@ ClassEx.extendMethod(Kekule.ChemObject, 'ownerChanged', function($origin, newOwn
 	$origin(newOwner);
 	this._updateAttachedMarkersOwner(newOwner);
 });
+ClassEx.extendMethod(Kekule.ChemObject, 'removeChild', function($origin, child){
+	return this.removeMarker(child) || $origin(child);
+});
 
 ClassEx.defineProp(Kekule.ChemObject, 'attachedMarkers',
 {
@@ -251,6 +363,13 @@ ClassEx.defineProp(Kekule.ChemObject, 'attachedMarkers',
 		//console.log('after set', this.getAttachedMarkers());
 	}
 });
+/*
+// if true, position of newly added marker will be set automatically
+ClassEx.defineProp(Kekule.ChemObject, 'autoSetAttachedMarkerPos',
+{
+	'dataType': DataType.BOOL, 'scope':  Class.PropertyScope.PUBLISHED
+});
+*/
 
 
 })();

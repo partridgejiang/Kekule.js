@@ -983,10 +983,13 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			var selection = this.getEditor().getSelection();
 			if (selection && (selection.indexOf(obj) < 0))
 			{
+				/*
 				if (obj instanceof Kekule.ChemStructureNode)
 				{
 					return (obj.getLinkedObjs().length === 1);
 				}
+				*/
+				return obj.getConstraintManipulationBaseObj && obj.getConstraintManipulationBaseObj();
 			}
 		}
 		return false;
@@ -1019,18 +1022,24 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var isConstrained = this.isConstrainedMove();
 		if (isConstrained)  // constrained move, store connector length into info
 		{
+			/*
 			var connector = obj.getLinkedConnectors()[0];
 			var connectedNode = obj.getLinkedObjs()[0];
-			if (connector && connectedNode)
+			*/
+			var stubObj = obj.getConstraintManipulationBaseObj();
+			//if (connector && connectedNode)
+			if (stubObj)
 			{
 				info.isConstrained = true;
 				if (!info.hasNoCoord)
 				{
 					info.originScreenCoord = editor.getObjectScreenCoord(obj);
-					info.refScreenCoord = editor.getObjectScreenCoord(connectedNode);
+					//info.refScreenCoord = editor.getObjectScreenCoord(connectedNode);
+					info.refScreenCoord = editor.getObjectScreenCoord(stubObj);
 
 					info.connectorScreenLength = Kekule.CoordUtils.getDistance(info.screenCoord, info.refScreenCoord);
-					info.connectorObjLength = connector.getLength(this.getEditor().getCoordMode(), this.getEditor().getAllowCoordBorrow());
+					//info.connectorObjLength = connector.getLength(this.getEditor().getCoordMode(), this.getEditor().getAllowCoordBorrow());
+					info.connectorObjLength = Kekule.CoordUtils.getDistance(editor.getObjCoord(obj), editor.getObjCoord(stubObj));
 					var delta = Kekule.CoordUtils.substract(info.originScreenCoord, info.refScreenCoord);
 					info.originBondDirectionAngle = Math.atan2(delta.y, delta.x);
 					//console.log('create Info', info.screenCoord, info.refScreenCoord, info.connectorScreenLength);
