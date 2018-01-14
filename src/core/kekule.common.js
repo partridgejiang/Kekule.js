@@ -2064,6 +2064,29 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	removeChild: function(obj)
 	{
 		// do nothing here
+		return null;
+	},
+	/**
+	 * Insert obj before refChild in children list.
+	 * If refChild is null or does not exists, obj will be append to tail of list.
+	 * Descendants may override this method.
+	 * @param {Variant} obj
+	 * @param {Variant} refChildr
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertBefore: function(obj, refChild)
+	{
+		// do nothing here
+		return -1;
+	},
+	/**
+	 * Add obj to the tail of children list.
+	 * @param {Variant} obj
+	 * @return {Int} Index of obj after appending.
+	 */
+	appendChild: function(obj)
+	{
+		return this.insertBefore(obj, null);
 	},
 	/**
 	 * Run a cascade function on all children (and their sub children).

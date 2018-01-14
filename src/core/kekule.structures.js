@@ -3356,6 +3356,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			var refIndex = this.indexOfConnector(refChild);
 			return this.insertConnectorAt(obj, refIndex);
 		}
+		else
+			return -1;
 	},
 
 	/**
@@ -4830,11 +4832,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * @param {Variant} refChild Ref node or connector
 	 * @return {Int} Index of obj after inserting.
 	 */
-	insertBefore: function(obj, refChild)
+	insertBefore: function($super, obj, refChild)
 	{
-		if (this.hasCtab())
-			return this.getCtab().insertBefore(obj, refChild);
+		var result = -1;
+		if (this.hasCtab()
+				&& (obj instanceof Kekule.ChemStructureObject) && (!refChild || refChild instanceof Kekule.ChemStructureObject))
+			result = this.getCtab().insertBefore(obj, refChild);
+		if (result < 0)
+			result = $super(obj, refChild);
+		return result;
 	},
+
 
 	/**
 	 * Returns nodes or connectors that should be removed cascadely with childObj.
@@ -6914,7 +6922,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		if (obj instanceof Kekule.ChemObject)
 			return this.insertObj(obj, index);
 		else  // item
-			return this.insertItem(obj);
+			return this.insertItem(obj, index);
 	},
 	/**
 	 * Insert attrib-object pair item before refChild in group.
@@ -6927,7 +6935,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		var refIndex = this.indexOfItem(refChild);
 		if (refIndex < 0)
 			refIndex = this.indexOfObj(refChild);
-		return this.insertChild(item, refChild);
+		return this.insertChild(item, refIndex);
 	},
 	/**
 	 * Remove a child at index.
@@ -7160,9 +7168,10 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Object} obj
 	 * @returns {Int} Index of obj after appending.
 	 */
-	appendChild: function(obj)
+	appendChild: function($super, obj)
 	{
-		return this.getSubMolecules().appendChild(obj);
+		return $super(obj);
+		//return this.getSubMolecules().appendChild(obj);
 	},
 	/**
 	 * Insert obj to index of children list of root. If obj already inside, its position will be changed.
@@ -7180,9 +7189,12 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
-	insertBefore: function(obj, refChild)
+	insertBefore: function($super, obj, refChild)
 	{
-		return this.getSubMolecules().insertBefore(obj, refChild);
+		if (obj instanceof Kekule.StructureFragment)
+			return this.getSubMolecules().insertBefore(obj, refChild);
+		else
+			return $super(obj, refChild);
 	},
 	/**
 	 * Remove a child at index.

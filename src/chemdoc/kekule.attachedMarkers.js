@@ -183,6 +183,17 @@ ClassEx.extend(Kekule.ChemObject,
 		}
 	},
 	/**
+	 * Insert marker before refMarker in marker list. If refMarker is null or does not exists, marker will be append to tail of list.
+	 * @param {Kekule.ChemObject} marker
+	 * @param {Kekule.ChemObject} refMarker
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertMarkerBefore: function(marker, refMarker)
+	{
+		var refIndex = this.indexOfMarker(refMarker);
+		return this.insertMarkerAt(marker, refIndex);
+	},
+	/**
 	 * Insert marker to index. If index is not set, marker will be inserted to the tail of the marker array.
 	 * @param {Kekule.ChemObject} marker
 	 * @param {Int} index
@@ -248,7 +259,7 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	removeMarker: function(marker)
 	{
-		var index = this.getMarkerAt(marker);
+		var index = this.indexOfMarker(marker);
 		if (index >= 0)
 			return this.removeMarkerAt(index);
 	},
@@ -337,7 +348,20 @@ ClassEx.extendMethod(Kekule.ChemObject, 'ownerChanged', function($origin, newOwn
 	this._updateAttachedMarkersOwner(newOwner);
 });
 ClassEx.extendMethod(Kekule.ChemObject, 'removeChild', function($origin, child){
-	return this.removeMarker(child) || $origin(child);
+	//console.log('remove child', child.getClassName(), child.getId());
+	var result = $origin(child);
+	if (!result)
+		result = this.removeMarker(child) || $origin(child);
+	return result;
+});
+ClassEx.extendMethod(Kekule.ChemObject, 'insertBefore', function($origin, child, refChild){
+	var result = $origin(child, refChild);
+	if (result < 0)
+	{
+		if (refChild && this.hasMarker(refChild) || child instanceof Kekule.ChemMarker.BaseMarker)
+			result = this.insertMarkerBefore(child, refChild);
+	}
+	return result;
 });
 
 ClassEx.defineProp(Kekule.ChemObject, 'attachedMarkers',
