@@ -3099,9 +3099,12 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
       if (this._childChangeEventSuppressed)
+      {
         modifiedProps.push('[children]');  // TODO: special propName, indicating children has been changed
+        this._childChangeEventSuppressed = false;
+      }
       this.doEndUpdate(modifiedProps);
-      this._childChangeEventSuppressed = false;
+      //this._childChangeEventSuppressed = false;
 		}
 	},
 	/**
@@ -3121,6 +3124,7 @@ ObjectEx = Class.create(
 				}
 			}
 			/*this.invokeEvent('change after update', modifiedPropNames);*/
+      //console.log('class end update', this.getClassName(), modifiedPropNames);
 			this.objectChange(modifiedPropNames);
 		}
 	},
