@@ -426,6 +426,11 @@
     background-image: url("images/slice/iconsSmall/radical2.gif");
 }
 
+.K-Chem-AttachedMarkerIaController-LonePair > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/lonePair.gif");
+}
+
 .K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/ring3.gif");

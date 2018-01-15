@@ -60,6 +60,7 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	molRadicalSinglet: 'radicalSinglet',
 	molRadicalTriplet: 'radicalTriplet',
 	molRadicalDoublet: 'radicalDoublet',
+	molElectronLonePair: 'electronLonePair',
 
 	molRing3: 'ring3',
 	molRing4: 'ring4',
@@ -1217,6 +1218,21 @@ Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerI
 	BNS.molFormula
 );
 
+// Attached markers
+Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ELECTRON_LONEPAIR'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ELECTRON_LONEPAIR'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET,
+	'AttachedMarkerIaController',
+	'AttachedMarkerIaController-LonePair',
+	{
+		'markerClassName': 'Kekule.ChemMarker.UnbondedElectronSet',
+		'targetClassName': 'Kekule.AbstractAtom'
+	},
+	null, null,
+	BNS.molElectronLonePair
+);
+
 // Charge and its variations
 Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerClear',
@@ -1316,7 +1332,8 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetNodeChargeControllerNegative,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet,
-		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet
+		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet,
+		Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair
 	],
 	null,
 	BNS.molCharge
