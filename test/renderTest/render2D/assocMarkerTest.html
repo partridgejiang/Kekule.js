@@ -23,6 +23,25 @@ Untitled Document-2
   5  1  2  0
 M  END
 	</script>
+  <script name="cyclohexane" id="cyclohexane" type="chemical/x-mdl-molfile">
+未命名
+  Kekule  00131821022D
+
+  6  6  0  0  0  0  0  0  0  0999 V2000
+   10.1349   43.1771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.8278   42.7771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4421   42.7771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.8278   41.9771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.4421   41.9771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.1349   41.5771    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  2  4  1  0  0  0  0
+  3  5  1  0  0  0  0
+  4  6  1  0  0  0  0
+  5  6  1  0  0  0  0
+M  END
+  </script>
 
   <script>
     function getMol()
@@ -35,15 +54,35 @@ M  END
       var result = new Kekule.TextBlock(null, text || 'M', coord2D || {'x': 0, 'y': 0});
       return result;
     }
+    function createChargeMarker(coord2D)
+    {
+      return new Kekule.ChemMarker.Charge(null, coord2D/* || {'x': 0, 'y': 0}*/);
+    }
+    function createRadicalMarker(coord2D)
+    {
+      return new Kekule.ChemMarker.Radical(null, coord2D);
+    }
 
     function addAttachedMarkers()
     {
       var viewer = Kekule.Widget.getWidgetById('chemViewer');
       var mol = viewer.getChemObj();
-      mol.appendMarker(createTextMarker('Mol'));
+      //mol.appendMarker(createTextMarker('Mol'));
+      mol.setRenderOption('distinguishSingletAndTripletRadical', true);
 
       mol.getNodes().forEach(function(node){
-        node.appendMarker(createTextMarker('A'));
+        //var marker = createTextMarker('A');
+
+        node.setCharge(2);
+        //node.setRadical(3);
+        var marker = createChargeMarker();
+        //marker.setValue(3);
+        node.appendMarker(marker);
+        //node.autoSetMarker2DPos(marker, 1, true);
+        //var marker = createRadicalMarker();
+        //node.appendMarker(marker);
+        //node.autoSetMarker2DPos(marker, 1, true);
+        //node.appendMarker(new Kekule.ChemMarker.UnbondedElectronSet());
       });
 
       viewer.repaint();
