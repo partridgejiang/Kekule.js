@@ -1664,7 +1664,10 @@ var ClassEx = {
 	 */
 	getClassName: function(aClass)
 	{
-		return aClass.prototype.CLASS_NAME;
+    if (aClass)
+		  return aClass.prototype.CLASS_NAME;
+    else
+      return null;
 	},
   /**
    * Get last part of class name of this class.
