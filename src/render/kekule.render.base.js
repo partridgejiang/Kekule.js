@@ -769,6 +769,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			if (parent)
 			{
 				var parentOps = parent.getRenderCache().options;
+				//console.log('parent', this.getClassName(), parentOps);
 				/*
 				 if (parentOps)
 				 ops = Object.create(parentOps);
@@ -803,11 +804,17 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			//p.options = ops;
 
 			var renderOptionsGetter = (this.getRendererType() === Kekule.Render.RendererType.R3D) ?
-					'getOverriddenRender3DOptions' : 'getOverriddenRenderOptions';
-
+					'getRender3DOptions' : 'getRenderOptions';
 			var localOps = chemObj[renderOptionsGetter] ? chemObj[renderOptionsGetter]() : null;
 
+			renderOptionsGetter = (this.getRendererType() === Kekule.Render.RendererType.R3D) ?
+					'getOverriddenRender3DOptions' : 'getOverriddenRenderOptions';
+			var localOverrideOps = chemObj[renderOptionsGetter] ? chemObj[renderOptionsGetter]() : null;
+
 			ops = Kekule.Render.RenderOptionUtils.mergeRenderOptions(localOps || {}, ops);
+			this.getRenderCache().options = ops;
+			ops = Kekule.Render.RenderOptionUtils.mergeRenderOptions(localOverrideOps || {}, ops);
+			//console.log('draw ops', this.getClassName(), localOps, ops);
 
 			this.updateDrawInfoInCache(this.getChemObj(), context, baseCoord, options, ops);
 
@@ -1335,8 +1342,10 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	estimateObjBox: function(context, options, allowCoordBorrow)
 	{
 		var box = this.doEstimateObjBox(context, options, allowCoordBorrow);
+		//console.log('get box', this.getClassName(), box);
 		// if box has some field which is undefined or null, set it to 0
-		box = this._fillBoxDefaultValue(box, this.getRendererType());
+		if (box)
+			box = this._fillBoxDefaultValue(box, this.getRendererType());
 		return box;
 	},
 	/**

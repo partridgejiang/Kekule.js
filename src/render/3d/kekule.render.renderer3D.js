@@ -459,6 +459,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 	/** @private */
 	doEstimateSelfObjBox: function(context, options, allowCoordBorrow)
 	{
+		/*
 		var o = this.getChemObj();
 		if (o.getExposedContainerBox3D)
 			return o.getExposedContainerBox3D(allowCoordBorrow);
@@ -466,6 +467,8 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 			return o.getContainerBox3D(allowCoordBorrow);
 		else
 			return null;
+		*/
+		return Kekule.Render.ObjUtils.getContainerBox(this.getChemObj(), this.getCoordMode(), allowCoordBorrow);
 	},
 
 	/** @private */
@@ -574,6 +577,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		this.getRenderCache(context).invTransformMatrix = invTransformMatrix;
 
 		this.getRenderCache(context).transformParams = result;
+
 		return result;
 	},
 
@@ -1870,7 +1874,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 			for (var i = 0, l = partialDrawObjs.length; i < l; ++i)
 			{
 				var pObj = partialDrawObjs[i];
-				if ((pObj.getParent() === chemObj) && (pObj instanceof Kekule.ChemStructureObject))
+				if (pObj.isChildOf(chemObj) /* && (pObj instanceof Kekule.ChemStructureObject)*/)  // child attachers also need redraw whole
 				{
 					hasStructObjs = true;
 					break;

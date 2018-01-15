@@ -665,7 +665,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 
 		return box;
 		*/
-		return Kekule.Render.ObjUtils.getContainerBox(this.getChemObj(), Kekule.CoordMode.COORD2D, allowCoordBorrow);
+		return Kekule.Render.ObjUtils.getContainerBox(this.getChemObj(), this.getCoordMode(), allowCoordBorrow);
 	},
 
 	/** @private */
@@ -758,6 +758,9 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		this.getRenderCache(context).transformParams = result;
 		this.getRenderCache(context).transformMatrix = transformMatrix;
 		this.getRenderCache(context).invTransformMatrix = invTransformMatrix;
+
+		//console.log('transform params', drawOptions.transformParams);
+
 		return result;
 	},
 
@@ -1336,7 +1339,8 @@ Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTex
 	{
 		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
 		var ops = $super(options);
-		ops.fontSize = oneOf(ops.fontSize, ops.chargeMarkFontSize, ops.atomFontSize);
+		var obj = this.getChemObj();
+		ops.fontSize = oneOf(obj.getRenderOption('fontSize'), ops.chemMarkerFontSize, ops.fontSize, ops.atomFontSize);
 		ops.fontFamily = oneOf(ops.fontFamily, ops.atomFontFamily);
 		ops.color = oneOf(ops.color, ops.atomColor, ops.labelColor);
 		ops.textBoxXAlignment = Kekule.Render.BoxXAlignment.CENTER;
@@ -1435,12 +1439,14 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 	{
 		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
 		var ops = Object.create(options);
-		ops.fontSize = oneOf(ops.fontSize, ops.chargeMarkFontSize, ops.atomFontSize);
+		//console.log(ops);
+		var obj = this.getChemObj();
+		ops.fontSize = oneOf(obj.getRenderOption('fontSize'), ops.chargeMarkFontSize, ops.fontSize, ops.atomFontSize);
 		ops.color = oneOf(ops.color, ops.atomColor, ops.labelColor);
 		ops.strokeColor = ops.color;
 		ops.fillColor = ops.color;
 		ops.electronGap = ops.fontSize / 3 * (ops.unitLength || 1) * (ops.zoom || 1);  // TODO: currently fixed
-		ops.electronRadius = ops.fontSize / 20 * (ops.unitLength || 1) * (ops.zoom || 1);  // TODO: currently fixed
+		ops.electronRadius = ops.fontSize / 12 * (ops.unitLength || 1) * (ops.zoom || 1);  // TODO: currently fixed
 
 		return ops;
 	},
@@ -4238,7 +4244,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			for (var i = 0, l = partialDrawObjs.length; i < l; ++i)
 			{
 				var pObj = partialDrawObjs[i];
-				if ((pObj.getParent() === chemObj) && (pObj instanceof Kekule.ChemStructureObject))
+				if (pObj.isChildOf(chemObj) /* && (pObj instanceof Kekule.ChemStructureObject)*/)  // child attachers also need redraw whole
 				{
 					hasStructObjs = true;
 					break;
