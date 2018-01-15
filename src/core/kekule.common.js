@@ -2291,7 +2291,30 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	getContainerBox: function(coordMode, allowCoordBorrow)
 	{
-		return null;
+		// defaultly returns coord and size
+		if (this.getAbsCoordOfMode)
+		{
+			var coord1 = this.getAbsCoordOfMode(coordMode, allowCoordBorrow) || {};
+			var coord2 = coord1;
+			if (this.getSizeOfMode)
+			{
+				var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
+				if (coordMode === Kekule.CoordMode.COORD3D)
+					var coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
+				else // 2D
+				{
+					coord2 = {
+						x: coord1.x + size.x,
+						y: coord1.y - size.y
+					};
+				}
+			}
+			var result = Kekule.BoxUtils.createBox(coord1, coord2);
+			//console.log('get box', this.getClassName(), result, coord1, coord2);
+			return result;
+		}
+		else
+			return null;
 	},
 
 	/**
