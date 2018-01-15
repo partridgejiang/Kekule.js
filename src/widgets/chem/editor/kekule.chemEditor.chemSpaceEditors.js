@@ -4239,4 +4239,115 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 // register
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.ImageBlockIaController, Kekule.Editor.ChemSpaceEditor);
 
+/**
+ * Controller to explicitly create attached markers to a existing object.
+ * @class
+ * @augments Kekule.Editor.BaseEditorIaController
+ *
+ * @property {Class} markerClass Class of marker that should be created.
+ * @property {Class} targetClass Class of the legal parent object of newly create marker.
+ * @property {Hash} initialPropValues Property values set to newly created marker.
+ */
+Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.AttachedMarkerIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.AttachedMarkerIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('markerClass', {'dataType': DataType.CLASS, 'serializable': false});
+		this.defineProp('targetClass', {'dataType': DataType.CLASS, 'serializable': false});
+		this.defineProp('markerClassName', {'dataType': DataType.STRING,
+			'getter': function() { return ClassEx.getClassName(this.getMarkerClass()); },
+			'setter': function(value) { this.setMarkerClass(ClassEx.findClass(value)); }
+		});
+		this.defineProp('targetClassName', {'dataType': DataType.STRING,
+			'getter': function() { return ClassEx.getClassName(this.getTargetClass()); },
+			'setter': function(value) { this.setTargetClass(ClassEx.findClass(value)); }
+		});
+		this.defineProp('initialPropValues', {'dataType': DataType.HASH});
+	},
+
+	/** @ignore */
+	canInteractWithObj: function($super, obj)
+	{
+		return this.isValidTarget(obj);
+	},
+
+	/**
+	 * Check if obj is a valid object to add marker.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	isValidTarget: function(obj)
+	{
+		var targetClass = this.getTargetClass();
+		return (obj instanceof targetClass) || !targetClass;
+	},
+
+	/** @private */
+	createMarker: function()
+	{
+		var result;
+		var markerClass = this.getMarkerClass();
+		if (markerClass)
+		{
+			result = new markerClass();
+		}
+		return result;
+	},
+
+	/**
+	 * Execute on the target object, add a new marker.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @private
+	 */
+	apply: function(targetObj)
+	{
+		var marker = this.createMarker();
+		if (marker)  // add to target object
+		{
+			var oper = new Kekule.ChemObjOperation.Add(marker, targetObj);
+			oper.execute();
+			var editor = this.getEditor();
+			if (editor && editor.getEnableOperHistory())
+			{
+				editor.pushOperation(oper);
+			}
+		}
+	},
+
+	/** @private */
+	react_mouseup: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		{
+			//this.getEditor().setSelection(null);
+			var coord = this._getEventMouseCoord(e);
+			{
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				if (boundItem)
+				{
+					var obj = boundItem.obj;
+					if (this.isValidTarget(obj))  // can add marker to this object
+					{
+						this.apply(obj);
+						e.preventDefault();
+						e.stopPropagation();
+					}
+					return true;  // important
+				}
+			}
+		}
+	}
+});
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.AttachedMarkerIaController, Kekule.Editor.ChemSpaceEditor);
+
 })();

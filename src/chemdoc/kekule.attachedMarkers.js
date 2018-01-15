@@ -44,6 +44,16 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		this.notifyPropSet('attachedMarkers', this.getPropStoreFieldValue('attachedMarkers'));
 	},
+	/** @private */
+	_attachedMarkerAdded: function(marker)
+	{
+		// do nothing here
+	},
+	/** @private */
+	_attachedMarkerRemoved: function(marker)
+	{
+		// do nothing here
+	},
 
 	/**
 	 * Return count of attached markers.
@@ -178,6 +188,7 @@ ClassEx.extend(Kekule.ChemObject,
 				marker.setOwner(this.getOwner());
 			if (marker.setParent)
 				marker.setParent(this);
+			this._attachedMarkerAdded(marker);
 			this.notifyAttachedMarkersChanged();
 			return result;
 		}
@@ -216,6 +227,7 @@ ClassEx.extend(Kekule.ChemObject,
 				marker.setOwner(this.getOwner());
 			if (marker.setParent)
 				marker.setParent(this);
+			this._attachedMarkerAdded(marker);
 		}
 		this.notifyAttachedMarkersChanged();
 		return index;
@@ -249,6 +261,7 @@ ClassEx.extend(Kekule.ChemObject,
 				marker.setOwner(null);
 			if (marker.setParent)
 				marker.setParent(null);
+			this._attachedMarkerRemoved(marker);
 			this.notifyAttachedMarkersChanged();
 			return result;
 		}
@@ -297,6 +310,7 @@ ClassEx.extend(Kekule.ChemObject,
 				marker.setOwner(null);
 			if (marker.setParent)
 				marker.setParent(null);
+			this._attachedMarkerRemoved(marker);
 		}
 
 		this.notifyAttachedMarkersChanged();

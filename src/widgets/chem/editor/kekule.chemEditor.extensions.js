@@ -26,7 +26,8 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	isStandalone: function()
 	{
-		return true;
+		//return true;
+		return !this.getIsAttachedToParent();
 	},
 	/**
 	 * If this object is standalone, this method will return this directly.
@@ -227,9 +228,23 @@ ClassEx.extend(Kekule.ChemObject,
 		}
 	}
 });
+ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerAdded', function($origin, marker){
+	var result = $origin(marker);
+	if (marker)
+		marker.setIsAttachedToParent(true);
+	return result;
+});
+ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerRemoved', function($origin, marker){
+	var result = $origin(marker);
+	if (marker)
+		marker.setIsAttachedToParent(false);
+	return result;
+});
 ClassEx.defineProps(Kekule.ChemObject, [
 	// If this value is true, on cascade deleting, this object will not be deleted even if it is empty (without any children and data).
-	{'name': 'keepEmptyEvenOnCascadeRemove', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC}
+	{'name': 'keepEmptyEvenOnCascadeRemove', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC},
+	// Explicit whether this object is attached to another one as an attached marker
+	{'name': 'isAttachedToParent', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC}
 ]);
 
 ClassEx.extend(Kekule.ChemStructureObject,
@@ -254,7 +269,7 @@ ClassEx.extend(Kekule.ChemStructureObject,
 		return result;
 	},
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
 		return false;  // structure object usually is child of struct fragment
 	},
@@ -484,7 +499,7 @@ ClassEx.extend(Kekule.StructureFragment,
 /** @lends Kekule.StructureFragment# */
 {
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
 		return !this.getCrossConnectors().length;  // cross connector means this fragment is child of another fragment
 	},
@@ -563,9 +578,9 @@ ClassEx.extend(Kekule.Glyph.Base,
 /** @lends Kekule.Glyph.Base# */
 {
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
-		return true;
+		return /*true && */ $super();
 	}
 });
 

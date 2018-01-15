@@ -88,16 +88,26 @@ Kekule.ChemMarker.ChemPropertyMarker = Class.create(Kekule.ChemMarker.BaseMarker
 	initProperties: function()
 	{
 		this.defineProp('value', {'dataType': DataType.VARIANT, 'serializable': false,
-			'getter': function() {
+			'getter': function()
+			{
+				var result;
 				var p = this.getParent();
 				var propName = this.getPropertyName();
-				return propName && p && p.getPropValue(propName);
+				if (p && propName)
+				{
+					result = p.getPropValue(propName);
+					this.setPropStoreFieldValue('value', result);  // update cached value when possible
+				}
+				else
+				{
+					result = this.getPropStoreFieldValue('value');
+				}
+				return result;
 			},
-			'setter': function(value) {
-				var p = getParent();
-				var propName = this.getPropertyName();
-				if (propName && p)
-					p.setPropValue(propName, value);
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('value', value);
+				this.setParentPropValue(value);
 			}
 		});
 	},
@@ -110,13 +120,23 @@ Kekule.ChemMarker.ChemPropertyMarker = Class.create(Kekule.ChemMarker.BaseMarker
 		this.setSize2D({'x': 0, 'y': 0});
 		*/
 	},
-	/** @ignore */
-	/*
-	doGetNeedRecalcSize: function()
+	/** @private */
+	setParentPropValue: function(value)
 	{
-		return true;  // always need to recalc size
+		var p = this.getParent();
+		if (p)
+		{
+			var propName = this.getPropertyName();
+			if (propName && p)
+				p.setPropValue(propName, value);
+		}
+		return this;
 	},
-	*/
+	/** @private */
+	resetParentPropValue: function()
+	{
+		return this.setParentPropValue(undefined);
+	},
 	/* @ignore */
 	/*
 	doObjectChange: function($super, modifiedPropNames)
@@ -134,6 +154,27 @@ Kekule.ChemMarker.ChemPropertyMarker = Class.create(Kekule.ChemMarker.BaseMarker
 	getPropertyName: function()
 	{
 		return null;
+	},
+
+	// editor related methods
+	/** @ignore */
+	beforAddingByEditor: function(newParent, refSibling)
+	{
+		if (newParent) // when adding to new parent, update value of parent
+		{
+			var value = this.getPropStoreFieldValue('value');
+			if (Kekule.ObjUtils.notUnset(value))
+				this.setParentPropValue(value);  // update to parent
+		}
+		$super();
+	},
+	/** @ignore */
+	beforeRemovingByEditor: function(parent)
+	{
+		// when removing from editor, usually we should reset the value of property
+		// ensure cached the property value
+		this.setPropStoreFieldValue('value', this.getValue());
+		this.resetParentPropValue();
 	}
 });
 

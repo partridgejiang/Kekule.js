@@ -48,6 +48,43 @@ Kekule.ChemObjOperation.Base = Class.create(Kekule.Operation,
 	{
 		this.defineProp('target', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('allowCoordBorrow', {'dataType': DataType.BOOL});
+	},
+	// A series of notification method to target object
+	/** @private */
+	notifyBeforeAddingByEditor: function(obj, parent, refSibling)
+	{
+		if (obj.beforeAddingByEditor)  // if this special notification method exists, call it first
+			obj.beforeAddingByEditor(parent, refSibling);
+	},
+	/** @private */
+	notifyBeforeRemovingByEditor: function(obj, parent)
+	{
+		if (obj.beforeRemovingByEditor)  // if this special notification method exists, call it first
+			obj.beforeRemovingByEditor(parent);
+	},
+	/** @private */
+	notifyBeforeModifyingByEditor: function(obj, propValues)
+	{
+		if (obj.beforeModifyingByEditor)  // if this special notification method exists, call it first
+			obj.beforeModifyingByEditor(propValues);
+	},
+	/** @private */
+	notifyAfterAddingByEditor: function(obj, parent, refSibling)
+	{
+		if (obj.afterAddingByEditor)  // if this special notification method exists, call it first
+			obj.afterAddingByEditor(parent, refSibling);
+	},
+	/** @private */
+	notifyAfterRemovingByEditor: function(obj, parent)
+	{
+		if (obj.afterRemovingByEditor)  // if this special notification method exists, call it first
+			obj.afterRemovingByEditor(parent);
+	},
+	/** @private */
+	notifyAfterModifyingByEditor: function(obj, propValues)
+	{
+		if (obj.afterModifyingByEditor)  // if this special notification method exists, call it first
+			obj.afterModifyingByEditor(propValues);
 	}
 });
 
@@ -88,6 +125,7 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 		obj.beginUpdate();
 		try
 		{
+			this.notifyBeforeModifyingByEditor(obj, map);
 			for (var prop in map)
 			{
 				var value = map[prop];
@@ -96,6 +134,7 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 				// set new value
 				obj.setPropValue(prop, value);
 			}
+			this.notifyAfterModifyingByEditor(obj, map);
 		}
 		finally
 		{
@@ -108,11 +147,21 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 	{
 		var map = this.getOldPropValues();
 		var obj = this.getTarget();
-		for (var prop in map)
+		obj.beginUpdate();
+		try
 		{
-			var value = map[prop];
-			// restore old value
-			obj.setPropValue(prop, value);
+			this.notifyBeforeModifyingByEditor(obj, map);
+			for (var prop in map)
+			{
+				var value = map[prop];
+				// restore old value
+				obj.setPropValue(prop, value);
+			}
+			this.notifyAfterModifyingByEditor(obj, map);
+		}
+		finally
+		{
+			obj.endUpdate();
 		}
 	}
 });
@@ -342,7 +391,9 @@ Kekule.ChemObjOperation.Add = Class.create(Kekule.ChemObjOperation.Base,
 		if (parent && obj)
 		{
 			var sibling = this.getRefSibling() || null;
+			this.notifyBeforeAddingByEditor(obj, parent, sibling);
 			parent.insertBefore(obj, sibling);
+			this.notifyAfterAddingByEditor(obj, parent, sibling);
 		}
 	},
 	/** @private */
@@ -365,7 +416,9 @@ Kekule.ChemObjOperation.Add = Class.create(Kekule.ChemObjOperation.Base,
 				sibling = obj.getNextSibling();
 				this.setRefSibling(sibling);
 			}
+			this.notifyBeforeRemovingByEditor(obj, parent);
 			parent.removeChild(obj);
+			this.notifyAfterRemovingByEditor(obj, parent);
 		}
 	}
 });
@@ -427,7 +480,9 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 				this.setRefSibling(sibling);
 			}
 			//console.log('remove child', parent.getClassName(), obj.getClassName());
-			parent.removeChild(obj)
+			this.notifyBeforeRemovingByEditor(obj, parent);
+			parent.removeChild(obj);
+			this.notifyAfterRemovingByEditor(obj, parent);
 		}
 	},
 	/** @private */
@@ -441,7 +496,9 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 			var sibling = this.getRefSibling();
 			if (owner)
 				obj.setOwner(owner);
+			this.notifyBeforeAddingByEditor(obj, parent, sibling);
 			parent.insertBefore(obj, sibling);
+			this.notifyAfterAddingByEditor(obj, parent, sibling);
 		}
 	}
 });

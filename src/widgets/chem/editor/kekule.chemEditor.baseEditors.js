@@ -1332,7 +1332,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var updateOperContextOnly = operRenderers && this._isAllObjsRenderedByRenderers(this.getObjContext(), updateObjs, operRenderers);
 		var canDoPartialUpdate = this.canModifyPartialGraphic();
 
-		//console.log(updateObjs, operRenderers);
+		//console.log('update objs and operRenderers', updateObjs, operRenderers);
 		//console.log('object changed', updateOperContextOnly, canDoPartialUpdate);
 
 		if (canDoPartialUpdate)  // partial update
@@ -1341,7 +1341,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getRootRenderer().modify(this.getObjContext(),/* updateObjDetails*/oDetails);
 			// always repaint UI markers
 			this.recalcUiMarkers();
-			//console.log('partial update');
+			//console.log('partial update', oDetails);
 		}
 		else  // update whole context
 		{
@@ -1419,6 +1419,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			// prepare operating renderers
 			this._prepareRenderObjsInOperContext(objs);
 			this._operatingObjs = objs;
+			//console.log('oper objs', this._operatingObjs);
 			//console.log('oper renderers', this._operatingRenderers);
 		}
 		// finally force repaint the whole client area, both objContext and operContext
