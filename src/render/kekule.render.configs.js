@@ -311,7 +311,8 @@ Kekule.Render.TextFontConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} chargeMarkFontSize Size of font to draw charge and radical mark.
  * @property {Float} chargeMarkMargin Gap between charge/radical mark center and node point.
  * //@property {Float} chargeMarkCircleWidth Width of circle stroke around charge mark. Not used yet.
- * @property {Float} chemMarkerMargin Default gap between chem marker obvject center and node point.
+ * @property {Float} chemMarkerFontSize Default size of font to draw chem marker.
+ * @property {Float} chemMarkerMargin Default gap between chem marker object center and node point.
  * @property {Float} allenCenterAtomRadius Radius of dot drawn in allen center carbon. 0 for do not draw explicit dot.
  * @property {Float} defBondLength Default length of a chem bond.
  * @property {Float} bondLineWidth Line width to draw a general bond.
@@ -346,7 +347,9 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('atomLabelBoxExpandRatio', 1.2 /*1.3*/, {'scope': PS.PUBLIC});
 		this.addFloatConfigProp('chargeMarkFontSize', /*7*/10);
 		this.addFloatConfigProp('chargeMarkMargin', 5);
+		this.addFloatConfigProp('chemMarkerFontSize', /*7*/10);
 		this.addFloatConfigProp('chemMarkerMargin', 5);
+
 		//this.addFloatConfigProp('chargeMarkCircleWidth', 1);
 
 
