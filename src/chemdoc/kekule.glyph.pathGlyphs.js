@@ -657,8 +657,10 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	{
 		if (this.hasCtab())
 			return this.getCtab().insertBefore(obj, refChild);
+		/*
 		else
 			console.log('no ctab');
+		*/
 	},
 
 	/**

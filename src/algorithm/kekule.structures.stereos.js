@@ -95,7 +95,7 @@ Kekule.MolStereoUtils = {
 							var zFactors = [1, -1, -1, 1];
 							var distance = CU.getDistance(result, centerCoord);
 							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
-							console.log(node.getId(), result);
+							//console.log(node.getId(), result);
 							/*
 							if (axisIsDoubleBond)
 								result.y = 0;
