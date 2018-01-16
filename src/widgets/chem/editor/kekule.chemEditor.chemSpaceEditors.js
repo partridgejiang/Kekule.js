@@ -218,6 +218,13 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	},
 
 	/** @private */
+	doLoad: function($super, chemObj)
+	{
+		// supply essential charge and radical markers
+		this._supplyChemMarkersOnObj(chemObj);
+		$super(chemObj);
+	},
+	/** @private */
 	doLoadEnd: function($super, chemObj)
 	{
 		var result = $super(chemObj);
@@ -768,6 +775,59 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		}
 		//coordOffset = this.translateCoord(coordOffset, Kekule.Editor.CoordSys.SCREEN, Kekule.Editor.CoordSys.OBJ);
 		return coordOffset;
+	},
+
+	/**
+	 * Supply essential charge and radical markers when loading a new chemObj.
+	 * @private
+	 */
+	_supplyChemMarkersOnObj: function(chemObj)
+	{
+		if (chemObj)
+		{
+			var structFragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj, true);
+			if (structFragments || structFragments.length)
+			{
+				for (var i = 0, l = structFragments.length; i < l; ++i)
+				{
+					this._createLosingChemMarkerOnStructFragment(structFragments[i]);
+				}
+			}
+		}
+	},
+	/** @private */
+	_createLosingChemMarkerOnStructFragment: function(mol)
+	{
+		mol.beginUpdate();
+		try
+		{
+			if (mol.getCharge && mol.getCharge())
+				mol.fetchChargeMarker(true);
+			// then the children
+			var nodes = mol.getNodes();
+			for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+			{
+				var node = mol.getNodeAt(i);
+				node.beginUpdate();
+				try
+				{
+					if (node.getCharge())
+						node.fetchChargeMarker(true);
+					if (node.getRadical())
+						node.fetchRadicalMarker(true);
+					if (node.getNodeAt)  // is sub fragment
+						this._createChargeAndRadicalMarkerOnStructFragment(node);
+				}
+				finally
+				{
+					node.endUpdate();
+				}
+			}
+		}
+		finally
+		{
+			mol.endUpdate();
+		}
 	}
 });
 
@@ -2971,127 +3031,6 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 // register
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolAtomIaController, Kekule.Editor.ChemSpaceEditor);
 
-/**
- * Controller to set atom/group charge and radical.
- * @class
- * @augments Kekule.Editor.BaseEditorIaController
- *
- * @property {Number} chargeInc The node's charge will become charge + chargeInc after execution of controller.
- * @property {Number} charge The node's charge will become this value after execution of controller.
- * @property {Int} radical Radical type set to node
- */
-Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.BaseEditorIaController,
-/** @lends Kekule.Editor.MolNodeChargeIaController# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Editor.MolNodeChargeIaController',
-	/** @construct */
-	initialize: function($super, editor)
-	{
-		$super(editor);
-		this.setChargeInc(1);  // default is +1
-	},
-	/** @private */
-	initProperties: function()
-	{
-		this.defineProp('chargeInc', {'dataType': DataType.NUMBER, 'serializable': false});
-		this.defineProp('charge', {'dataType': DataType.NUMBER, 'serializable': false});
-		this.defineProp('radical', {'dataType': DataType.INT, 'serializable': false});
-		this.defineProp('currNode', {'dataType': DataType.OBJECT, 'serializable': false});  // private
-	},
-
-	/** @private */
-	canInteractWithObj: function($super, obj)
-	{
-		if (this.isValidNode(obj))
-			return true;
-		else
-			return false;
-	},
-
-	/**
-	 * Check if obj is a valid chem node and can be edited.
-	 * @param {Kekule.ChemObject} obj
-	 * @returns {Bool}
-	 * @private
-	 */
-	isValidNode: function(obj)
-	{
-		return obj instanceof Kekule.ChemStructureNode;
-	},
-
-	/**
-	 * Execute on the node.
-	 * @param node
-	 * @private
-	 */
-	apply: function(node)
-	{
-		var modified = false;
-		var modifiedData = {};
-		var charge = node.getCharge();
-		if (Kekule.ObjUtils.notUnset(this.getCharge()))
-		{
-			if (charge !== this.getCharge())
-			{
-				modifiedData.charge = this.getCharge();
-				modified = true;
-			}
-		}
-		else if (this.getChargeInc())
-		{
-			charge += this.getChargeInc();
-			modifiedData.charge = charge;
-			modified = true;
-		}
-		var radical = node.getRadical();
-		if (this.getRadical() !== radical)
-		{
-			//console.log(radical, this.getRadical());
-			modifiedData.radical = this.getRadical();
-			modified = true;
-		}
-
-		if (modified)
-		{
-			var oper = new Kekule.ChemObjOperation.Modify(node, modifiedData);
-			oper.execute();
-			//console.log(modifiedData, node.getRadical());
-			var editor = this.getEditor();
-			if (editor && editor.getEnableOperHistory())
-			{
-				editor.pushOperation(oper);
-			}
-		}
-	},
-
-	/** @private */
-	react_mouseup: function(e)
-	{
-		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
-		{
-			//this.getEditor().setSelection(null);
-			var coord = this._getEventMouseCoord(e);
-			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
-				if (boundItem)
-				{
-					var obj = boundItem.obj;
-					if (this.isValidNode(obj))  // can modify atom of this object
-					{
-						this.apply(obj);
-						e.preventDefault();
-						e.stopPropagation();
-					}
-					return true;  // important
-				}
-			}
-		}
-	}
-});
-
-// register
-Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolNodeChargeIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
  * Controller to add repository structure fragments or other objects into chem space.
@@ -4304,6 +4243,18 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 		return result;
 	},
 
+	/** @private */
+	createOperations: function(targetObj)
+	{
+		var result;
+		var marker = this.createMarker();
+		if (marker)  // add to target object
+		{
+			result = new Kekule.ChemObjOperation.Add(marker, targetObj);
+		}
+		return [result];
+	},
+
 	/**
 	 * Execute on the target object, add a new marker.
 	 * @param {Kekule.ChemObject} targetObj
@@ -4311,10 +4262,12 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 	 */
 	apply: function(targetObj)
 	{
-		var marker = this.createMarker();
-		if (marker)  // add to target object
+		var operations = this.createOperations(targetObj);
+		var oper = (operations.length <= 0)? null:
+				(operations.length === 1)? operations[0]:
+				new Kekule.MacroOperation(operations);
+		if (oper)
 		{
-			var oper = new Kekule.ChemObjOperation.Add(marker, targetObj);
 			oper.execute();
 			var editor = this.getEditor();
 			if (editor && editor.getEnableOperHistory())
@@ -4349,5 +4302,119 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 	}
 });
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.AttachedMarkerIaController, Kekule.Editor.ChemSpaceEditor);
+
+/**
+ * Controller to set atom/group charge and radical.
+ * @class
+ * @augments Kekule.Editor.AttachedMarkerIaController
+ *
+ * @property {Number} chargeInc The node's charge will become charge + chargeInc after execution of controller.
+ * @property {Number} charge The node's charge will become this value after execution of controller.
+ * @property {Int} radical Radical type set to node
+ */
+Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMarkerIaController,
+/** @lends Kekule.Editor.MolNodeChargeIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolNodeChargeIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this.setChargeInc(1);  // default is +1
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('chargeInc', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('charge', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('radical', {'dataType': DataType.INT, 'serializable': false});
+		this.defineProp('currNode', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+	},
+	initPropValues: function($super)
+	{
+		$super();
+		this.setTargetClass(Kekule.ChemStructureNode);
+	},
+
+	/** @private */
+	createOperations: function(node)
+	{
+		var result;
+		// check charge
+		var chargeModified = false;
+		var radicalModified = false;
+		var modifiedData = {};
+		var charge = node.getCharge();
+		if (Kekule.ObjUtils.notUnset(this.getCharge()))
+		{
+			if (charge !== this.getCharge())
+			{
+				modifiedData.charge = this.getCharge();
+				chargeModified = true;
+			}
+		}
+		else if (this.getChargeInc())
+		{
+			charge += this.getChargeInc();
+			modifiedData.charge = charge;
+			chargeModified = true;
+		}
+		var radical = node.getRadical();
+		if (this.getRadical() !== radical)
+		{
+			//console.log(radical, this.getRadical());
+			modifiedData.radical = this.getRadical();
+			radicalModified = true;
+		}
+
+		var result = [];
+		// add or remove marker operation
+		var markerOperations = [];
+		if (chargeModified)
+		{
+			var chargeMarker = node.fetchChargeMarker(false);  // do not auto create
+			if (modifiedData.charge !== 0 && !chargeMarker)
+			{
+				// need add new charge marker
+				markerOperations.push(new Kekule.ChemObjOperation.Add(new Kekule.ChemMarker.Charge(), node));
+			}
+			if (modifiedData.charge === 0 && chargeMarker)
+			{
+				// need remove existing charge marker
+				markerOperations.push(new Kekule.ChemObjOperation.Remove(chargeMarker));
+			}
+		}
+		if (radicalModified)
+		{
+			var radicalMarker = node.fetchRadicalMarker(false);  // do not auto create
+			if (modifiedData.radical !== 0 && !radicalMarker)
+			{
+				// need add new radical marker
+				markerOperations.push(new Kekule.ChemObjOperation.Add(new Kekule.ChemMarker.Radical(), node));
+			}
+			if (modifiedData.radical === 0 && radicalMarker)
+			{
+				// need remove existing radical marker
+				markerOperations.push(new Kekule.ChemObjOperation.Remove(radicalMarker));
+			}
+		}
+		result = result.concat(markerOperations);
+
+		// modifcation operation
+		var propModifyOper;
+		if (chargeModified || radicalModified)
+		{
+			propModifyOper = new Kekule.ChemObjOperation.Modify(node, modifiedData);
+			result.push(propModifyOper);
+		}
+
+		return result;
+	}
+});
+
+// register
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolNodeChargeIaController, Kekule.Editor.ChemSpaceEditor);
+
 
 })();

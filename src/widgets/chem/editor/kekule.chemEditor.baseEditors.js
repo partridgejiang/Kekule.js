@@ -1313,6 +1313,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var oDetails = Kekule.ArrayUtils.clone(objDetails);
 		var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
 
+		//console.log('origin updateObjs', updateObjs);
+
 		var additionalObjs = this._getAdditionalRenderRelatedObjs(updateObjs);
 
 		// also push related objects into changed objs list

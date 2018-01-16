@@ -4272,9 +4272,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 				try
 				{
 					if (node.getCharge())
-					{
 						node.fetchChargeMarker(true);
-					}
 					if (node.getRadical())
 						node.fetchRadicalMarker(true);
 					if (node.getNodeAt)  // is sub fragment
@@ -4288,6 +4286,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		}
 		finally
 		{
+			//console.log('<done add marker>');
 			mol.endUpdate();
 		}
 	},
@@ -4303,7 +4302,6 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			var mol = this.getChemObj();
 			this._createChargeAndRadicalMarkerOnStructFragment(mol);
 		}
-		//console.log('draw molecule', this.getChemObj().getId());
 		$super(context, baseCoord, options);
 	},
 
