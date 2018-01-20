@@ -309,7 +309,7 @@ var FunctionUtils = {
 	argumentNames: function(f) {
 		var names = ((f.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/) || [])[1] || '').replace(/\s+/g, '').split(',');
 		return names.length == 1 && !names[0] ? [] : names;
-	},
+	}
 	/*
 	wrap: function(f, wrapper) {
 		var __method = f;

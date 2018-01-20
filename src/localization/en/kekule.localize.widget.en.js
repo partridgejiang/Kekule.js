@@ -87,7 +87,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	TITLE_IMG_FORMAT_PNG: 'PNG format image',
 	TITLE_IMG_FORMAT_JPG: 'Jpeg format image',
 	TITLE_IMG_FORMAT_GIF: 'GIF format image',
-	TITLE_IMG_FORMAT_SVG: 'SVG format image',
+	TITLE_IMG_FORMAT_SVG: 'SVG format image'
 });
 
 /* @ignore */
