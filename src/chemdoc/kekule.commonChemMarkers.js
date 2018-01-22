@@ -240,4 +240,35 @@ ClassEx.extend(Kekule.ChemStructureNode,
 	}
 });
 
+ClassEx.defineProp(Kekule.AbstractAtom, 'lonePairCount', {
+	'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED, 'serializable': false,
+	'setter': null,  // currently disable setter
+	'getter': function()
+	{
+		var result = 0;
+		var unbondedESets = this.getMarkersOfType(Kekule.ChemMarker.UnbondedElectronSet);
+		for (var i = 0, l = unbondedESets.length; i < l; ++i)
+		{
+			var eSet = unbondedESets[i];
+			if (eSet.getElectronCount() === 2)  // a lone pair
+				++result;
+		}
+		return result;
+	}
+});
+ClassEx.extendMethod(Kekule.AbstractAtom, 'doCompare', function($origin, targetObj, options)
+	{
+		var result = $origin(targetObj, options);
+		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in origin method
+		{
+			if (this._getComparisonOptionFlagValue(options, 'lonePair'))  // parity null/0 should be regard as one in comparison
+			{
+				var c1 = this.getLonePairCount() || 0;
+				var c2 = (targetObj.getLonePairCount && targetObj.getLonePairCount()) || 0;
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+		}
+		return result;
+	});
+
 })();
