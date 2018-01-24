@@ -4371,13 +4371,16 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 		var result = [];
 		// add or remove marker operation
 		var markerOperations = [];
+		var marker;
 		if (chargeModified)
 		{
 			var chargeMarker = node.fetchChargeMarker(false);  // do not auto create
 			if (modifiedData.charge !== 0 && !chargeMarker)
 			{
 				// need add new charge marker
-				markerOperations.push(new Kekule.ChemObjOperation.Add(new Kekule.ChemMarker.Charge(), node));
+				marker = new Kekule.ChemMarker.Charge();
+				marker.setValue(modifiedData.charge);
+				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node));
 			}
 			if (modifiedData.charge === 0 && chargeMarker)
 			{
@@ -4391,7 +4394,9 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 			if (modifiedData.radical !== 0 && !radicalMarker)
 			{
 				// need add new radical marker
-				markerOperations.push(new Kekule.ChemObjOperation.Add(new Kekule.ChemMarker.Radical(), node));
+				marker = new Kekule.ChemMarker.Radical();
+				marker.setValue(modifiedData.radical);
+				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node));
 			}
 			if (modifiedData.radical === 0 && radicalMarker)
 			{
