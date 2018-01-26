@@ -261,11 +261,32 @@ ClassEx.extendMethod(Kekule.AbstractAtom, 'doCompare', function($origin, targetO
 		var result = $origin(targetObj, options);
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in origin method
 		{
-			if (this._getComparisonOptionFlagValue(options, 'lonePair'))  // parity null/0 should be regard as one in comparison
+			if (this._getComparisonOptionFlagValue(options, 'lonePair') ||
+					this._getComparisonOptionFlagValue(options, 'unbondedElectron'))  // parity null/0 should be regard as one in comparison
 			{
-				var c1 = this.getLonePairCount() || 0;
-				var c2 = (targetObj.getLonePairCount && targetObj.getLonePairCount()) || 0;
-				result = this.doCompareOnValue(c1, c2, options);
+				/*
+				 var c1 = this.getLonePairCount() || 0;
+				 var c2 = (targetObj.getLonePairCount && targetObj.getLonePairCount()) || 0;
+				 result = this.doCompareOnValue(c1, c2, options);
+				 */
+				var _getUnbondedElectronArray = function(atom)
+				{
+					var result = [];
+					if (atom.getMarkersOfType)
+					{
+						var unbondedESets = atom.getMarkersOfType(Kekule.ChemMarker.UnbondedElectronSet);
+						for (var i = 0, l = unbondedESets.length; i < l; ++i)
+						{
+							var eSet = unbondedESets[i];
+							result.push(eSet.getElectronCount())
+						}
+					}
+					result.sort();
+					return result;
+				};
+				var a1 = _getUnbondedElectronArray(this);
+				var a2 = _getUnbondedElectronArray(targetObj);
+				return Kekule.ArrayUtils.compare(a1, a2);
 			}
 		}
 		return result;
