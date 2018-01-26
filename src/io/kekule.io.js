@@ -1193,7 +1193,7 @@ Kekule.IO.loadTypedData = function(content, mimeType, url, options)
 	if (formatId)
 		result = Kekule.IO.loadFormatData(content, formatId, options);
 	//if (result)
-	if (result === false)  // read data failed
+	if (result !== false)  // read data success
 	{
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
 		{
