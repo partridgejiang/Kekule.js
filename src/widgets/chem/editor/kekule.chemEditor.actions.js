@@ -1227,7 +1227,8 @@ Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair = Kekule.Edito
 	'AttachedMarkerIaController-LonePair',
 	{
 		'markerClassName': 'Kekule.ChemMarker.UnbondedElectronSet',
-		'targetClassName': 'Kekule.AbstractAtom'
+		'targetClassName': 'Kekule.AbstractAtom',
+		'initialPropValues': {'electronCount': 2}
 	},
 	null, null,
 	BNS.molElectronLonePair

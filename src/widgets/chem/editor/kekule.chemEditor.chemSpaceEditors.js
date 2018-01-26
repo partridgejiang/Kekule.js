@@ -4239,6 +4239,11 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 		if (markerClass)
 		{
 			result = new markerClass();
+			var initValues = this.getInitialPropValues();
+			if (initValues && result && result.setPropValues)
+			{
+				result.setPropValues(initValues);
+			}
 		}
 		return result;
 	},
