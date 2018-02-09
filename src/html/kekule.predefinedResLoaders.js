@@ -384,28 +384,30 @@ Kekule.PredefinedResReferer = {
 };
 
 // extend Kekule.IO method to load predefined resource
-if (Kekule.IO)
-{
-	/**
-	 * Load chem object from a predefined resource.
-	 * When the loading process is done, callback will be called.
-	 * @param {String} refStr
-	 * @param {Function} callback Called after chem object is loaded.
-	 *   The callback Has two params (chemObj, success).
-	 * @param {String} Manually set the resource type.
-	 *   If not set, the type will be generated automatically.
-	 * @param {DOcument} doc Root HTML document. If not set, current document will be used.
-	 */
-	Kekule.IO.loadResourceData = function(refStr, callback, resType, doc)
+Kekule._registerAfterLoadProc(function(){
+	if (Kekule.IO)
 	{
-		Kekule.PredefinedResReferer.loadResource(refStr, function(resData, success){
-			var chemObj;
-			if (success)
-			{
-				chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
-			}
-			if (callback)
-				callback(chemObj, success);
-		}, resType, doc);
+		/**
+		 * Load chem object from a predefined resource.
+		 * When the loading process is done, callback will be called.
+		 * @param {String} refStr
+		 * @param {Function} callback Called after chem object is loaded.
+		 *   The callback Has two params (chemObj, success).
+		 * @param {String} resType set the resource type.
+		 *   If not set, the type will be generated automatically.
+		 * @param {Document} doc Root HTML document. If not set, current document will be used.
+		 */
+		Kekule.IO.loadResourceData = function(refStr, callback, resType, doc)
+		{
+			Kekule.PredefinedResReferer.loadResource(refStr, function(resData, success){
+				var chemObj;
+				if (success)
+				{
+					chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
+				}
+				if (callback)
+					callback(chemObj, success);
+			}, resType, doc);
+		}
 	}
-}
+});

@@ -70,7 +70,7 @@ Kekule.IO.Mdl2kUtils = {
 	atomLineChargeToRadical: function(value)
 	{
 		if (value == 4)
-			return Kekule.RadicalType.DOUBLET;  // doublet radical
+			return Kekule.RadicalOrder.DOUBLET;  // doublet radical
 		else
 			return 0;
 	},
@@ -82,7 +82,7 @@ Kekule.IO.Mdl2kUtils = {
 	 */
 	radicalToMdlAtomLineValue: function(value)
 	{
-		return (value == Kekule.RadicalType.DOUBLET)? 4: 0;
+		return (value == Kekule.RadicalOrder.DOUBLET)? 4: 0;
 	},
 	/**
 	 * Convert charge and radical to a suitable CHG value in MDL 2k atom line.

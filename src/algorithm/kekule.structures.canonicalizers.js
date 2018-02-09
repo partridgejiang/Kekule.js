@@ -429,21 +429,95 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 	/** @private */
 	_sortNodeByEcMapping: function(graph, ecMapping)
 	{
-		var sortedNodes = [];
+		var sortedNodes1st = [];
 		var vertexGroups = this._groupVertexesByEcValue(graph, ecMapping);
+		// 1st pass, from top to bottom
 		for (var i = 0, l = vertexGroups.length; i < l; ++i)
 		{
 			var vertexGroup = vertexGroups[i];
 			var nodes = this._vertexesToNodes(vertexGroup.vertexes);
 			if (nodes.length === 1)
-				AU.pushUnique(sortedNodes, nodes[0]);
+				AU.pushUnique(sortedNodes1st, nodes[0]);
 			else
 			{
-				var groups = this._groupNodesWithSameEcValue(nodes, sortedNodes);
-				sortedNodes = sortedNodes.concat(groups);
+				var groups = this._groupNodesWithSameEcValue(nodes, sortedNodes1st);
+				sortedNodes1st = sortedNodes1st.concat(groups);
 			}
 		}
-		return sortedNodes;
+
+		// 2nd pass, from top to bottom
+		var sortedNodes = [];
+		var handledNodes = [];
+		for (var i = 0, l = sortedNodes1st.length; i < l; ++i)
+		{
+			var currNodes = sortedNodes1st[i];
+			if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
+			{
+				sortedNodes.push([currNodes]);
+				handledNodes.push(currNodes);
+			}
+			else  // need compare
+			{
+				var _getSortLevel = function(node)
+				{
+					for (var i = 0, l = sortedNodes.length; i < l; ++i)
+					{
+						if (!AU.isArray(sortedNodes[i]))
+						{
+							if (sortedNodes[i] === node)
+								return i;
+						}
+						else if (sortedNodes[i].indexOf(node) >= 0)
+							return i;
+					}
+					return -1;
+				};
+				var _getSortLevels = function(centerNode, connectedNodes)
+				{
+					var result = [];
+					for (var i = 0, l = connectedNodes.length; i < l; ++i)
+					{
+						result.push(_getSortLevel(connectedNodes[i]));
+					}
+					result.sort(function(a,b){ return b-a; });
+					//console.log(result);
+					return result;
+				};
+				var _compFunc = function(n1, n2)
+				{
+					var connNodes1 = AU.intersect(n1.getLinkedObjs(), handledNodes);
+					var connNodes2 = AU.intersect(n2.getLinkedObjs(), handledNodes);
+					// compare connected node count
+					var result = connNodes1.length - connNodes2.length;
+					// compare connected node sorted level
+					if (result === 0 && connNodes1.length > 0)
+					{
+						var sortLevels1 = _getSortLevels(n1, connNodes1);
+						var sortLevels2 = _getSortLevels(n2, connNodes2);
+						result = AU.compare(sortLevels1, sortLevels2);
+					}
+					return result;
+				};
+				var groupedCurrNodes = AU.group(currNodes, _compFunc);
+				sortedNodes = sortedNodes.concat(groupedCurrNodes);
+			}
+			handledNodes = handledNodes.concat(currNodes);
+		}
+
+		// at last, standardize array
+		var result = [];
+		for (var i = 0, l = sortedNodes.length; i < l; ++i)
+		{
+			var currNodes = sortedNodes[i];
+			if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
+				result.push(currNodes);
+			else if (currNodes.length === 1)
+				result.push(currNodes[0]);
+			else
+				result.push(currNodes);
+		}
+
+		return result;
 	},
 
 	/** @private */
@@ -729,6 +803,14 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 					//result = Kekule.UnivChemStructObjComparer.compare(connector1, connector2);
 					result = connector1.compareStructure(connector2);
 				}
+				/*
+				if (result === 0)  // same, check other connected objects of n1/n2
+				{
+					var neighborNodesOfN1 = n1.getLinkedObjs();
+					var neighborNodesOfN2 = n2.getLinkedObjs();
+					//if ()
+				}
+				*/
 				if (result === 0) // still same, compare coord if possible
 				{
 					if (n1.hasCoord3D(true) && n2.hasCoord3D(true))  // allow borrow from 2D

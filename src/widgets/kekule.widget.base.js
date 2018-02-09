@@ -386,6 +386,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('selfStatic', false);
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
+		this.setPropStoreFieldValue('useNormalBackground', true);
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -643,6 +644,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					//console.log('setROund');
 					this.addClassName(CNS.CORNER_ALL);
+				}
+			}
+		});
+		this.defineProp('useNormalBackground', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('useNormalBackground', value);
+				if (!value)
+				{
+					this.removeClassName(CNS.NORMAL_BACKGROUND);
+				}
+				else
+				{
+					this.addClassName(CNS.NORMAL_BACKGROUND);
 				}
 			}
 		});
@@ -2114,7 +2129,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
-		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()))
+		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()) && !!this.getUseNormalBackground())
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
 		return result;
@@ -2888,9 +2903,17 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	getEventMouseRelCoord: function(e)
+	getEventMouseRelCoord: function(e, relElement)
 	{
-		return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
+		if (!relElement)
+			relElement = this.getCoreElement();  // defaultly base on client element, not widget element
+
+		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
+		var offset = {'x': relElement.getBoundingClientRect().left - relElement.scrollLeft, 'y': relElement.getBoundingClientRect().top - relElement.scrollTop};
+		var result = Kekule.CoordUtils.substract(coord, offset);
+		//console.log(result, elem.tagName);
+		return result;
+		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
 	},
 
 	/**

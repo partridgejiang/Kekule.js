@@ -122,6 +122,7 @@ Kekule.Render.getRender2DConfigs = function()
  * @property {Int} defHydrogenDisplayLevel Value from {@link Kekule.Render.HydrogenDisplayLevel}.
  * @property {Int} defChargeMarkType Value from {@link Kekule.Render.ChargeMarkRenderType}.
  * @property {Int} partialChargeDecimalsLength Show how many decimal places of partial charge.
+ * @property {Bool} distinguishSingletAndTripletRadical Use different mark to distinguish singlet(..) and triplet(^^) radical.
  */
 Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Render.MoleculeDisplayConfigs# */
@@ -135,6 +136,7 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('defNodeDisplayMode', Kekule.Render.NodeLabelDisplayMode.SMART, {'enumSource': Kekule.Render.NodeLabelDisplayMode});
 		this.addIntConfigProp('defHydrogenDisplayLevel', Kekule.Render.HydrogenDisplayLevel.EXPLICIT, {'enumSource': Kekule.Render.HydrogenDisplayLevel});
 		this.addIntConfigProp('defChargeMarkType', Kekule.Render.ChargeMarkRenderType.DEFAULT, {'enumSource': Kekule.Render.ChargeMarkRenderType});
+		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);
 	}
 });

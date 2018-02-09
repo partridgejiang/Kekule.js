@@ -316,7 +316,7 @@ Kekule.Render.Molecule3DDisplayType = {
 	SPACE_FILL: 34,
 	/** Default is ball and stick */
 	DEFAULT: 33
-}
+};
 
 /**
  * Enumeration of types to render a bond in 3D.

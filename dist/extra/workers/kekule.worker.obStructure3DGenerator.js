@@ -23,9 +23,22 @@ function initEnv()
 		if (initOps.usingModulaize && typeof(module) === 'function')
 		{
 			module = module();
+			initModule(module);
 		}
 		Module = module;
 	}
+}
+
+function initModule(module)
+{
+	module.print = function(data) {
+		postMessage({'type': 'print', 'data': data});
+		console.log(data);
+	};
+	module.printErr = function(data) {
+		postMessage({'type': 'printErr', 'data': data});
+		console.log(data);
+	};
 }
 
 addEventListener('message', function(e)

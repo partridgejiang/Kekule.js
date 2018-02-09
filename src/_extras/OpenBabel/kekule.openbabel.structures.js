@@ -130,8 +130,9 @@ if (Kekule.Calculator)
 			return result;
 		},
 		/** @ignore */
-		doReactWorkerMessage: function(data, e)
+		doReactWorkerMessage: function($super, data, e)
 		{
+			$super(data, e);
 			if (data.type === 'output3D')  // receive generated structure
 			{
 				var genData = data.molData;
