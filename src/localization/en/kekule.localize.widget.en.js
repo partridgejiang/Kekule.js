@@ -87,7 +87,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	TITLE_IMG_FORMAT_PNG: 'PNG format image',
 	TITLE_IMG_FORMAT_JPG: 'Jpeg format image',
 	TITLE_IMG_FORMAT_GIF: 'GIF format image',
-	TITLE_IMG_FORMAT_SVG: 'SVG format image',
+	TITLE_IMG_FORMAT_SVG: 'SVG format image'
 });
 
 /* @ignore */
@@ -174,8 +174,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_CHARGE_POSITIVE: 'Positive charge',
 	CAPTION_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	CAPTION_MOL_CHARGE_SINGLET: 'Singlet radical',
-	CAPTION_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	CAPTION_MOL_CHARGE_DOUBLET: 'Monoradical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
+	CAPTION_MOL_ELECTRON_LONEPAIR: 'Lone pair',
 	CAPTION_TEXT_BLOCK: 'Text Block',
 	CAPTION_IMAGE_BLOCK: 'Image Block',
 	CAPTION_TEXT_IMAGE: 'Text and Image',
@@ -263,8 +264,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_CHARGE_POSITIVE: 'Positive charge',
 	HINT_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	HINT_MOL_CHARGE_SINGLET: 'Singlet radical',
-	HINT_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	HINT_MOL_CHARGE_DOUBLET: 'Monoradical',
 	HINT_MOL_CHARGE_TRIPLET: 'Triplet radical',
+	HINT_MOL_ELECTRON_LONEPAIR: 'Lone pair electrons',
 	HINT_TEXT_BLOCK: 'Text block tool',
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',

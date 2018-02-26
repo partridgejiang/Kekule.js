@@ -411,6 +411,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					// ui painter will always in 2D mode
 					var markers = this.getUiMarkers();
 					result = new Kekule.Render.ChemObjPainter(Kekule.Render.RendererType.R2D, markers, this.getUiDrawBridge());
+					result.setCanModifyTargetObj(true);
 					this.setPropStoreFieldValue('uiPainter', result);
 					return result;
 				}
@@ -703,7 +704,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	repaint: function($super, overrideOptions)
 	{
 		var ops = overrideOptions;
-		//console.log('repaint called');
+		//console.log('repaint called', overrideOptions);
 		//console.log('repaint', this._initialRenderTransformParams);
 		/*
 		if (this._initialRenderTransformParams)
@@ -974,6 +975,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = $super(chemObj);
 		if (result)
 		{
+			result.setCanModifyTargetObj(true);
 			this.installPainterEventHandlers(result);
 			// create new bound info recorder
 			this.createNewBoundInfoRecorder(this.getPainter());
@@ -1295,7 +1297,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		else
 		{
-			//console.log('do change job');
 			this.doObjectsChanged(a);
 			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
 		}
@@ -1311,7 +1312,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var oDetails = Kekule.ArrayUtils.clone(objDetails);
 		var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
-		//console.log('changed objects', updateObjs);
+
+		//console.log('origin updateObjs', updateObjs);
 
 		var additionalObjs = this._getAdditionalRenderRelatedObjs(updateObjs);
 
@@ -1326,10 +1328,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//updateObjs = updateObjs.concat(additionalObjs);
 		Kekule.ArrayUtils.pushUnique(updateObjs, additionalObjs);
 
+		//console.log('changed objects', updateObjs);
+
 		var operRenderers = this._operatingRenderers;
 		var updateOperContextOnly = operRenderers && this._isAllObjsRenderedByRenderers(this.getObjContext(), updateObjs, operRenderers);
 		var canDoPartialUpdate = this.canModifyPartialGraphic();
 
+		//console.log('update objs and operRenderers', updateObjs, operRenderers);
 		//console.log('object changed', updateOperContextOnly, canDoPartialUpdate);
 
 		if (canDoPartialUpdate)  // partial update
@@ -1338,7 +1343,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getRootRenderer().modify(this.getObjContext(),/* updateObjDetails*/oDetails);
 			// always repaint UI markers
 			this.recalcUiMarkers();
-			//console.log('partial update');
+			//console.log('partial update', oDetails);
 		}
 		else  // update whole context
 		{
@@ -1416,6 +1421,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			// prepare operating renderers
 			this._prepareRenderObjsInOperContext(objs);
 			this._operatingObjs = objs;
+			//console.log('oper objs', this._operatingObjs);
 			//console.log('oper renderers', this._operatingRenderers);
 		}
 		// finally force repaint the whole client area, both objContext and operContext
@@ -4412,6 +4418,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
 		var scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
 		var transformOps = {'center': scaleCenter, 'scaleX': scaleX, 'scaleY': scaleY};
+		//console.log(scaleX, scaleY);
 		// since we transform screen coord, it will always be in 2D mode
 		var is3D = false;  // this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D;
 		var transformMatrix = is3D? C.calcTransform3DMatrix(transformOps): C.calcTransform2DMatrix(transformOps);

@@ -1698,7 +1698,7 @@ Kekule.CoordUtils = {
 	standardize: function(coord)
 	{
 		var len = Math.sqrt(Math.sqr(coord.x || 0) + Math.sqr(coord.y || 0) + Math.sqr(coord.z || 0));
-		return Kekule.CoordUtils.divide(coord, len);
+		return Kekule.CoordUtils.divide(coord, len || 1);  // if len is 0, returns {0, 0, 0}
 	},
 	/**
 	 * Convert coord to a 2D or 3D array of values

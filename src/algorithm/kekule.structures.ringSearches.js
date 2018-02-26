@@ -380,7 +380,7 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 			}
 			// hack
 			shadowFragment.setPropStoreFieldValue('ringInfo', shadowRingInfo);
-			console.log('set ringInfo', srcRingInfo, shadowRingInfo);
+			//console.log('set ringInfo', srcRingInfo, shadowRingInfo);
 		}
 	});
 }

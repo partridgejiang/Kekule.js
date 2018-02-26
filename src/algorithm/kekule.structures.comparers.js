@@ -2,6 +2,7 @@
  * @fileoverview
  * Contains utility class and methods to compare node or connectors in chem structure.
  * @author Partridge Jiang
+ * @deprecated
  */
 
 
@@ -24,7 +25,7 @@ var BT = Kekule.BondType;
  * A comparer to decide which chem structure object is "bigger" or "superior" than another one.
  * In the comparer, each structure object is turned to a int value with the fixed format.
  *
- * For node, the value will be 0xTNAAABBBLLCPH  (13 digitals)
+ * For node, the value will be 0xTNAAABBBLLCPHE  (14 digitals)
  *   [Atom]:
  *   T: 0-F, object major type, always be 1 to a node.
  *   N: object class, 1: Atom, 2: Pseudoatom, 3: VariableAtom, E: unspecified atom (atom not the in the previous three types), 0: other node.
@@ -43,6 +44,7 @@ var BT = Kekule.BondType;
  *   C: charge. 7 for a neutral node, 8 for +1, 9 for +2, 6 for -1, 5 for -2 and so on.
  *   P: parity. Stereo parity, 0 for no stereo, 1 for odd and 2 for even.
  *   H: Hydrogen count, usually 0.
+ *   E: lone pair count, usually 0.
  * For connector the value will be 0xTCBPNNAA  (8 digitals)
  *   T: 0-F, object major type, always be 0 to a connector.
  *   C: connector type. 1 for bond and 0 for other types of connector.
@@ -63,9 +65,15 @@ Kekule.UnivChemStructObjComparer = {
 	/** @private */
 	_P32: Math.pow(2, 32),
 	/** @private */
+	_P36: Math.pow(2, 36),
+	/** @private */
 	_P44: Math.pow(2, 44),
 	/** @private */
+	_P48: Math.pow(2, 48),
+	/** @private */
 	_P20: Math.pow(2, 20),
+	/** @private */
+	_P24: Math.pow(2, 24),
 
 	/**
 	 * Analysis input options and forms a detail option object for other comparation methods.
@@ -79,6 +87,7 @@ Kekule.UnivChemStructObjComparer = {
 	 *     compareCharge: Bool,
 	 *     compareStereo: Bool,
 	 *     compareHydrogenCount: Bool,
+	 *     compareLonePair: Bool,
 	 *     (for connector)
 	 *     compareConnectedObjCount: Bool,
 	 *     compareBondType: Bool,
@@ -270,7 +279,7 @@ Kekule.UnivChemStructObjComparer = {
 	getNodeCompareValue: function(node, options)
 	{
 		var U = K.UnivChemStructObjComparer;
-		var result = 0x1000000000000;  // node always start with 1
+		var result = 0x10000000000000;  // node always start with 1
 		// object class
 		if (options.compareAtom)
 		{
@@ -303,7 +312,7 @@ Kekule.UnivChemStructObjComparer = {
 		else
 		  var vclass = 0;
 		detailValue = K.UnivChemStructObjComparer.getAtomDetailCompareValue(node, options);
-		result += vclass * U._P44; //(vclass << (12 * 4));
+		result += vclass * U._P48; // U._P44; //(vclass << (12 * 4));
 		result += detailValue;
 
 		// Linked conector count
@@ -329,7 +338,13 @@ Kekule.UnivChemStructObjComparer = {
 		if (options.compareHydrogenCount)
 		{
 			var vhydrogen = node.getHydrogenCount? node.getHydrogenCount(true) || 0: 0;
-			result += vhydrogen;
+			result += vhydrogen << (1 * 4);
+		}
+		// lone pair
+		if (options.compareLonePair)
+		{
+			var vLonePairCount = node.getLonePairCount? node.getLonePairCount() || 0: 0;
+			result += vLonePairCount;
 		}
 
 		return result;
@@ -356,7 +371,8 @@ Kekule.UnivChemStructObjComparer = {
 				vmajorProp = 0xFFF;
 			else
 				vmajorProp = 0;
-			result += vmajorProp * U._P32 + vmass * U._P20; //(vmajorProp << (9 * 4)) | (vmass << (6 * 4));
+			//result += vmajorProp * U._P32 + vmass * U._P20; //(vmajorProp << (9 * 4)) | (vmass << (6 * 4));
+			result += vmajorProp * U._P36 + vmass * U._P24; //(vmajorProp << (9 * 4)) | (vmass << (6 * 4));
 		}
 		return result;
 	},

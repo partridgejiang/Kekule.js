@@ -131,7 +131,8 @@ Class.Methods = {
 						var isFunction = Object.isFunction(value);
 
 				    //if (ancestor && isFunction && value.argumentNames().first() == "$super")
-					if (ancestor && isFunction && FunctionUtils.argumentNames(value).first() == "$super")
+					//if (ancestor && isFunction && FunctionUtils.argumentNames(value).first() == "$super")
+          if (ancestor && isFunction && FunctionUtils.argumentNames(value)[0] === "$super")
 						{
 				        var method = value;
 				        /** @inner */
@@ -179,7 +180,7 @@ Object.extendEx = function(destination, source, options)
     var oldProto = oldValue && oldValue.constructor && oldValue.constructor.prototype;
     var newProto = value && value.constructor && value.constructor.prototype;
     if (oldValue && typeof(oldValue) === 'object' && oldProto === newProto)
-      Object.extend(oldValue, value);
+      Object.extendEx(oldValue, value, options);
     else
       destination[property] = value;
   }
@@ -309,7 +310,7 @@ var FunctionUtils = {
 	argumentNames: function(f) {
 		var names = ((f.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/) || [])[1] || '').replace(/\s+/g, '').split(',');
 		return names.length == 1 && !names[0] ? [] : names;
-	},
+	}
 	/*
 	wrap: function(f, wrapper) {
 		var __method = f;
@@ -414,6 +415,7 @@ Object._extendSupportMethods(Function.prototype, {
 
 
 /** @ignore */
+/*
 Object._extendSupportMethods(Array.prototype, {
   first: function() {
       return this[0];
@@ -433,13 +435,6 @@ Object._extendSupportMethods(Array.prototype, {
   },
   removeAt: function(index)
   {
-    /*
-    for (var i = index, l = this.length - 1; i < l - 1; ++i)
-    {
-      this[i] = this[i + 1];
-    }
-    delete this[length - 1];
-    */
     this.splice(index, 1);
   },
   remove: function(item)
@@ -458,6 +453,7 @@ Object._extendSupportMethods(Array.prototype, {
     }
   }
 });
+*/
 if (!Array.prototype.indexOf)
 {
 	/** @ignore */
@@ -1664,7 +1660,10 @@ var ClassEx = {
 	 */
 	getClassName: function(aClass)
 	{
-		return aClass.prototype.CLASS_NAME;
+    if (aClass)
+		  return aClass.prototype.CLASS_NAME;
+    else
+      return null;
 	},
   /**
    * Get last part of class name of this class.
@@ -2035,7 +2034,7 @@ var ClassEx = {
 				{
 					//var args = value.argumentNames();
 					var args = FunctionUtils.argumentNames(value);
-					var first = args.first();
+					var first = args[0];  //args.first();
 
 					if (first == '$origin')
 					{
@@ -3099,9 +3098,12 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
       if (this._childChangeEventSuppressed)
+      {
         modifiedProps.push('[children]');  // TODO: special propName, indicating children has been changed
+        this._childChangeEventSuppressed = false;
+      }
       this.doEndUpdate(modifiedProps);
-      this._childChangeEventSuppressed = false;
+      //this._childChangeEventSuppressed = false;
 		}
 	},
 	/**
@@ -3121,6 +3123,7 @@ ObjectEx = Class.create(
 				}
 			}
 			/*this.invokeEvent('change after update', modifiedPropNames);*/
+      //console.log('class end update', this.getClassName(), modifiedPropNames);
 			this.objectChange(modifiedPropNames);
 		}
 	},

@@ -123,6 +123,8 @@ Kekule.Render.getRender2DConfigs = function()
  * @property {Int} defChargeMarkType Value from {@link Kekule.Render.ChargeMarkRenderType}.
  * @property {Int} partialChargeDecimalsLength Show how many decimal places of partial charge.
  * @property {Bool} distinguishSingletAndTripletRadical Use different mark to distinguish singlet(..) and triplet(^^) radical.
+ * @property {Bool} autoCreateChargeAndRadicalMarker If true, charge or radical attached markers will be created automatically.
+ *   Note: This setting will take effect only if the canModifyTargetObj property of renderer is set to true.
  */
 Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Render.MoleculeDisplayConfigs# */
@@ -138,6 +140,7 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('defChargeMarkType', Kekule.Render.ChargeMarkRenderType.DEFAULT, {'enumSource': Kekule.Render.ChargeMarkRenderType});
 		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);
+		this.addBoolConfigProp('autoCreateChargeAndRadicalMarker', true);
 	}
 });
 
@@ -308,6 +311,8 @@ Kekule.Render.TextFontConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} chargeMarkFontSize Size of font to draw charge and radical mark.
  * @property {Float} chargeMarkMargin Gap between charge/radical mark center and node point.
  * //@property {Float} chargeMarkCircleWidth Width of circle stroke around charge mark. Not used yet.
+ * @property {Float} chemMarkerFontSize Default size of font to draw chem marker.
+ * @property {Float} chemMarkerMargin Default gap between chem marker object center and node point.
  * @property {Float} allenCenterAtomRadius Radius of dot drawn in allen center carbon. 0 for do not draw explicit dot.
  * @property {Float} defBondLength Default length of a chem bond.
  * @property {Float} bondLineWidth Line width to draw a general bond.
@@ -342,6 +347,9 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('atomLabelBoxExpandRatio', 1.2 /*1.3*/, {'scope': PS.PUBLIC});
 		this.addFloatConfigProp('chargeMarkFontSize', /*7*/10);
 		this.addFloatConfigProp('chargeMarkMargin', 5);
+		this.addFloatConfigProp('chemMarkerFontSize', /*7*/10);
+		this.addFloatConfigProp('chemMarkerMargin', 5);
+
 		//this.addFloatConfigProp('chargeMarkCircleWidth', 1);
 
 

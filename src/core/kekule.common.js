@@ -2057,6 +2057,38 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return -1;
 	},
 	/**
+	 * Remove obj from children.
+	 * @param {Variant} obj
+	 * @returns {Variant} Child object removed.
+	 */
+	removeChild: function(obj)
+	{
+		// do nothing here
+		return null;
+	},
+	/**
+	 * Insert obj before refChild in children list.
+	 * If refChild is null or does not exists, obj will be append to tail of list.
+	 * Descendants may override this method.
+	 * @param {Variant} obj
+	 * @param {Variant} refChildr
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertBefore: function(obj, refChild)
+	{
+		// do nothing here
+		return -1;
+	},
+	/**
+	 * Add obj to the tail of children list.
+	 * @param {Variant} obj
+	 * @return {Int} Index of obj after appending.
+	 */
+	appendChild: function(obj)
+	{
+		return this.insertBefore(obj, null);
+	},
+	/**
 	 * Run a cascade function on all children (and their sub children).
 	 * @param {Function} func The function has one param: obj. It should not modify the children structure of this object.
 	 */
@@ -2259,7 +2291,30 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	getContainerBox: function(coordMode, allowCoordBorrow)
 	{
-		return null;
+		// defaultly returns coord and size
+		if (this.getAbsCoordOfMode)
+		{
+			var coord1 = this.getAbsCoordOfMode(coordMode, allowCoordBorrow) || {};
+			var coord2 = coord1;
+			if (this.getSizeOfMode)
+			{
+				var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
+				if (coordMode === Kekule.CoordMode.COORD3D)
+					var coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
+				else // 2D
+				{
+					coord2 = {
+						x: coord1.x + size.x,
+						y: coord1.y - size.y
+					};
+				}
+			}
+			var result = Kekule.BoxUtils.createBox(coord1, coord2);
+			//console.log('get box', this.getClassName(), result, coord1, coord2);
+			return result;
+		}
+		else
+			return null;
 	},
 
 	/**
@@ -2762,6 +2817,15 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		}
 	},
 	/**
+	 * Remove a child at index.
+	 * @param {Int} index
+	 * @returns {Variant} Child object removed.
+	 */
+	removeChildAt: function(index)
+	{
+		return this.removeAt(index);
+	},
+	/**
 	 * Remove obj from children array.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
@@ -2787,9 +2851,9 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.remove(obj);
+		return this.remove(obj) || $super(obj);
 	},
 
 	/**
@@ -2977,9 +3041,9 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getChildren().removeChild(obj);
+		return this.getChildren().removeChild(obj) || $super(obj);
 	}
 });
 
@@ -3157,9 +3221,9 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getRoot().removeChild(obj);
+		return this.getRoot().removeChild(obj) || $super(obj);
 	},
 
 	/**
@@ -3355,6 +3419,11 @@ Kekule.ChemDocument = Class.create(Kekule.ChemSpace,
 				}
 		});
 		*/
+	},
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'd';
 	}
 });
 
