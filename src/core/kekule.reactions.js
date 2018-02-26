@@ -34,7 +34,7 @@ Kekule.ReactionRole = {
 	// for conditions
 	TEMPERATURE: 'temperature',
 	DURATION: 'duration'
-}
+};
 
 /**
  * Enumeration of reaction direction.
@@ -892,7 +892,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 				var item = this.getMapItemAt(comp, j);
 				if (item.getAllContainingConnectors)
 				{
-					var a = mols[i].getAllContainingConnectors();
+					var a = item.getAllContainingConnectors();
 					if (a && a.length)
 						result = result.concat(a);
 				}
