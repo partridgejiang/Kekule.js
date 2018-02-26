@@ -750,6 +750,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	draw: function(context, baseCoord, options)
 	{
+		//console.log('[Draw]', this.getClassName(), this.getChemObj().getId? this.getChemObj().getId(): null);
 		/*
 		var p = this.getRenderCache(context);
 		p.context = context;
@@ -874,6 +875,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	{
 		var isRoot = this.isRootRenderer();
 
+		//console.log('[Redraw]', isRoot, this.getClassName(), this.getChemObj().getId? this.getChemObj().getId(): null);
 		//console.log('REDRAW', this.getClassName(), isRoot);
 		if (isRoot)
 		{
@@ -1104,6 +1106,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	doUpdate: function(context, updateObjDetails, updateType)
 	{
+		//console.log('do update', this.getClassName(), updateObjDetails);
 		return this.doUpdateSelf(context, updateObjDetails, updateType);
 	},
 	/**
@@ -1116,6 +1119,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	doUpdateSelf: function(context, updatedObjDetails, updateType)
 	{
+		//console.log('[doUpdateSelf]', this.getClassName(), updatedObjDetails);
 		var r = false;
 		if (this.canModifyGraphic(context))
 		{
@@ -1144,6 +1148,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 				var detail = updatedObjDetails[i];
 				if (detail.obj === chemObj)
 				{
+					//console.log('update self detail', this.getClassName(), detail.obj.getId());
 					redrawSelf = true;
 					break;
 				}
@@ -1154,7 +1159,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 					return this.doClear(context);
 				else
 				{
-					//console.log('update by redraw', this.getClassName(), updatedObjs);
+					//console.log('<update by redraw>', this.getClassName(), updatedObjDetails);
 					// simpliest method to update is to redraw the whole chemObj
 					this.doClear(context);
 					var p = this.getRenderCache(context);
@@ -1284,6 +1289,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	clear: function(context)
 	{
+		//console.log('[Clear]', this.getClassName(), this.getChemObj().getId? this.getChemObj().getId(): null);
 		//return this.update(context, Kekule.Render.UpdateObjUtils._createUpdateObjDetailsFromObjs([this.getChemObj()]), Kekule.Render.ObjectUpdateType.CLEAR);
 		var result = this.doClear(context);
 		this.invokeEvent('clear', {'context': context, 'obj': this.getChemObj()});
@@ -1826,15 +1832,19 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	doDraw: function($super, context, baseCoord, options)
 	{
 		//this.reset();
+		/*
 		this.setTargetChildObjs(null);  // refresh child objects first
 		this.prepare();
 		//console.log('draw', this.getClassName(), options.partialDrawObjs, baseCoord);
+		*/
+		this.refreshChildObjs();  // refresh child objects first
 
 		var op = Object.create(options);
 		if (options.partialDrawObjs && this._needWholelyDraw(options.partialDrawObjs, context))
 			op.partialDrawObjs = null;  // if self need to be draw, all child renderers should be repainted as well
 
-		if (!this.hasChildRenderers())
+		//if (!this.hasChildRenderers())
+		if (!this.getTargetChildObjs().length)
 			return $super(context, baseCoord, op);
 		else  // then draw each child objects by child renderers
 		{
@@ -1892,10 +1902,14 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	/** @private */
 	doUpdate: function($super, context, updateObjDetails, updateType)
 	{
+		this.refreshChildObjs();  // refresh child objects first
+		//this.prepare();
 		// update self
 		$super(context, updateObjDetails, updateType);
-		if (this.hasChildRenderers())
+		//if (this.hasChildRenderers())
+		if (this.getTargetChildObjs().length)
 		{
+			//console.log('do update children of ', this.getClassName());
 			this.doUpdateChildren(context, updateObjDetails, updateType);
 		}
 		return true;
@@ -1904,6 +1918,8 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	doUpdateChildren: function(context, updateObjDetails, updateType)
 	{
 		var updatedObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updateObjDetails);
+
+		//console.log('update Objs', this.getClassName(), updatedObjs);
 
 		var directChildren = this.getTargetChildObjs() || [];
 		var childRendererMap = this.getChildRendererMap();
@@ -1996,6 +2012,7 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 			var renderer = renderers[i];
 			var o = objsMap.get(renderer);
 			var details = Kekule.Render.UpdateObjUtils._createUpdateObjDetailsFromObjs(o);
+			//console.log('child renderer update', renderer.getClassName(), details);
 			var r = renderer.update(context, details, updateType);
 			result = result && r;
 		}
