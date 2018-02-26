@@ -954,7 +954,7 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('explicitHydrogenCount', {'dataType': DataType.INT});
+		this.defineProp('explicitHydrogenCount', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
 	},
 	/** @private */
 	getAutoIdPrefix: function()

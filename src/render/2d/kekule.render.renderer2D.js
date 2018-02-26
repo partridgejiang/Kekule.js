@@ -1527,8 +1527,6 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 
 		var ops = this._extractActualDrawOptions(options);
 
-		//console.log('draw text options', options);
-
 		var chemObj = this.getChemObj();
 		var parentObj = chemObj.getParent();
 		var transformOptions = options.transformParams;
@@ -1539,6 +1537,9 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 		if (!baseCoord)
 			baseCoord = this.getAutoBaseCoord(options);
 		var parentCoord = this._doGetParentCoord(context, parentObj, options);
+
+		//console.log('draw lone pair', baseCoord, parentCoord, options);
+
 		if (!baseCoord || !parentCoord)
 			return null;
 
