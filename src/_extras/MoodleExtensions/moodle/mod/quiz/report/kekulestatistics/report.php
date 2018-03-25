@@ -425,7 +425,7 @@ class quiz_kekulestatistics_report extends quiz_statistics_report {
                     else {
                         // replace all '"' to entity
                         $molData = htmlentities($molData);
-                        $result = '<span data-widget="Kekule.ChemWidget.Viewer" data-predefined-setting="static" '
+                        $result = '<span data-widget="Kekule.ChemWidget.Viewer" data-predefined-setting="basic" '
                             . 'data-chem-obj="' . $molData . '"></span>';
                     }
                 }
