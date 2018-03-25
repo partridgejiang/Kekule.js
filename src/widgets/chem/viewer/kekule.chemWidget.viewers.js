@@ -31,7 +31,6 @@ var PS = Class.PropertyScope;
 var ZU = Kekule.ZoomUtils;
 var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 var CW = Kekule.ChemWidget;
-//var CWT = Kekule.ChemWidgetTexts;
 var EM = Kekule.Widget.EvokeMode;
 
 Kekule.globalOptions.add('chemWidget.viewer', {
@@ -1545,34 +1544,35 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		*/
 	},
 	/** @private */
-	prepareMenuItems: function(items)
+	prepareMenuItems: function(itemDefs)
 	{
+		var items = [];
 		var sSeparator = Kekule.Widget.MenuItem.SEPARATOR_TEXT;
-		for (var i = 0, l = items.length; i < l; ++i)
+		for (var i = 0, l = itemDefs.length; i < l; ++i)
 		{
-			var item = items[i];
-			if (typeof(item) === 'string')  // not hash, but a predefined comp name or separator
+			var itemDef = itemDefs[i];
+			if (typeof(itemDef) === 'string')  // not hash, but a predefined comp name or separator
 			{
-				if (item !== sSeparator)
+				if (itemDef !== sSeparator)
 				{
-					var defHash = this.createPredefinedMenuItemDefHash(item);
+					var defHash = this.createPredefinedMenuItemDefHash(itemDef);
 					if (defHash)
-						items[i] = defHash;
+						items.push(defHash);
 				}
 			}
 			else  // hash definition
 			{
-				if (!item.widget && !item.widgetClass)
+				var newItem = Object.extend({}, itemDef);
+				if (!itemDef.widget && !itemDef.widgetClass)
 				{
-					var newItem = Object.extend({}, item);
 					newItem.widget = Kekule.Widget.MenuItem;
-					item = newItem;
-					items[i] = newItem;
 				}
-				if (item.children && item.children.length)
+				if (itemDef.children && itemDef.children.length)
 				{
-					this.prepareMenuItems(item.children);
+					var childItems = this.prepareMenuItems(itemDef.children);
+					newItem.children = childItems;
 				}
+				items.push(newItem);
 			}
 		}
 		return items;
@@ -1596,6 +1596,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var action = this._getActionOfComp(compName, true);
 		if (action)
 		{
+			//console.log('menu item', action.getClassName(), action.getDisplayer? action.getDisplayer().getElement().id: '-', this.getElement().id);
 			result = {
 				'widget': itemClass,
 				'action': action
@@ -1659,6 +1660,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			result.clearMenuItems();
 		}
 		var items = this.getMenuItems() || this.getDefaultMenuItems();
+		//console.log('create menu', this.getId(), items);
 		items = this.prepareMenuItems(items);
 		/*
 		for (var i = 0, l = items.length; i < l; ++i)
