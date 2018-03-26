@@ -816,7 +816,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					if (node.getRadical())
 						node.fetchRadicalMarker(true);
 					if (node.getNodeAt)  // is sub fragment
-						this._createChargeAndRadicalMarkerOnStructFragment(node);
+						this._createLosingChemMarkerOnStructFragment(node);
 				}
 				finally
 				{
