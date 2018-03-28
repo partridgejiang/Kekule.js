@@ -713,8 +713,10 @@ Kekule.MolStereoUtils = {
 			else  // coord 2D, add z value, consider wedge bonds and special "zIndex2D" property expliciting z stack of 2D sketch
 			{
 				var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
+				var defCoordZ;
 				if (centerNode && centerCoord)
 				{
+					defCoordZ = centerCoord.z;
 					var connector = node.getConnectorTo(centerNode);
 					if (connector.getStereo)
 					{
@@ -741,9 +743,11 @@ Kekule.MolStereoUtils = {
 							return null;  // return a special mark, can determinate angle calculation
 					}
 				}
-				if (!result.z && node.getZIndex2D)  // check zIndex2D property of node
+				if (Kekule.ObjUtils.isUnset(result.z) && node.getZIndex2D)  // check zIndex2D property of node
 				{
 					result.z = node.getZIndex2D();
+					if (Kekule.ObjUtils.isUnset(result.z))
+						result.z = defCoordZ;
 				}
 				result.z = result.z || 0;
 				return result;
