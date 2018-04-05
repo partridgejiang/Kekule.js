@@ -37,7 +37,9 @@ class qtype_kekule_mol_naming_configs
 （=(
 ）=)
 【=[
+［=[
 】=]
+］=]
 ‘='
 ’='
 “="

@@ -527,6 +527,7 @@ Kekule.MolStereoUtils = {
 	 *     allowedError: the allowed error when checking vertical and horizontal line, default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree).
 	 *     reversedDirection: If true, the node on vertical line will be toward observer instead,
 	 *     allowExplicitHydrogen: Whether the simplification in saccharide chain form is allowed (H is omitted from structure).
+	 *     allowExplicitVerticalHydrogen: Whether the implicit hydrogen on vertical direction is allowed (used in SMILES generation).
 	 *     ignoreStructure: Whether structure information should not be checked.
 	 *   }
 	 * @returns {Hash} The information about this Fischer projection, including:
@@ -619,7 +620,7 @@ Kekule.MolStereoUtils = {
 		}
 
 		// check that must be two vertical nodes (even when H is implicited in saccharide)
-		if (verticalNodeCount !== 2)
+		if (verticalNodeCount !== 2 && !ops.allowExplicitVerticalHydrogen)
 			return null;
 
 		// sum up, returns successful result
@@ -659,6 +660,7 @@ Kekule.MolStereoUtils = {
 	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
 	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure).
 	 *       Default is true.
+	 *     allowExplicitVerticalHydrogen: Whether the implicit hydrogen on vertical direction is allowed (used in SMILES generation).
 	 *   }
 	 * @returns {Int} Value from {@link Kekule.RotationDir}, clockwise, anti-clockwise or unknown.
 	 */
@@ -711,8 +713,10 @@ Kekule.MolStereoUtils = {
 			else  // coord 2D, add z value, consider wedge bonds and special "zIndex2D" property expliciting z stack of 2D sketch
 			{
 				var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
+				var defCoordZ;
 				if (centerNode && centerCoord)
 				{
+					defCoordZ = centerCoord.z;
 					var connector = node.getConnectorTo(centerNode);
 					if (connector.getStereo)
 					{
@@ -739,9 +743,11 @@ Kekule.MolStereoUtils = {
 							return null;  // return a special mark, can determinate angle calculation
 					}
 				}
-				if (!result.z && node.getZIndex2D)  // check zIndex2D property of node
+				if (Kekule.ObjUtils.isUnset(result.z) && node.getZIndex2D)  // check zIndex2D property of node
 				{
 					result.z = node.getZIndex2D();
+					if (Kekule.ObjUtils.isUnset(result.z))
+						result.z = defCoordZ;
 				}
 				result.z = result.z || 0;
 				return result;
@@ -753,7 +759,8 @@ Kekule.MolStereoUtils = {
 		var fischerOptions = {
 			'allowedError': ops.fischerAllowedError,
 			'reversedDirection': ops.reversedFischer,
-			'allowExplicitHydrogen': ops.allowExplicitHydrogenInFischer
+			'allowExplicitHydrogen': ops.allowExplicitHydrogenInFischer,
+			'allowExplicitVerticalHydrogen': ops.allowExplicitVerticalHydrogen
 		};
 		var allAroundSiblings = [].concat(siblings);
 		if (refSibling)
@@ -831,16 +838,18 @@ Kekule.MolStereoUtils = {
 	 * @param {Bool} withImplicitSibling Whether there is a implicit sibling (e.g., implicit H atom). Coord of implicit node will be calculated from other sibling nodes.
 	 *   If this param is true and param refSibling is null, this implicit node will be regarded as refSibling, otherwise the
 	 *   implicit node will be regarded as the last one of siblings.
+	 * @param {Hash} additionalOptions
 	 * @param {Bool} refSiblingBehind Whether put refCoord behide center coord.
 	 * @returns {Int} Value from {@link Kekule.RotationDir}, clockwise, anti-clockwise or unknown.
 	 */
-	calcTetrahedronChiralCenterRotationDirection: function(coordMode, centerNode, refSibling, siblings, withImplicitSibling, refSiblingBehind)
+	calcTetrahedronChiralCenterRotationDirection: function(coordMode, centerNode, refSibling, siblings, withImplicitSibling, refSiblingBehind, additionalOptions)
 	{
-		return Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirectionEx(centerNode, refSibling, siblings, {
+		var ops = Object.create(additionalOptions);
+		return Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirectionEx(centerNode, refSibling, siblings, Object.extend(ops, {
 			'coordMode': coordMode,
 			'withImplicitSibling': withImplicitSibling,
 			'refSiblingBehind': refSiblingBehind
-		});
+		}));
 	},
 
 	/**

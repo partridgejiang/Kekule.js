@@ -1053,7 +1053,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	clearObjContext: function()
 	{
-		//console.log('clear obj context');
+		//console.log('clear obj context', this.getObjContext() === this.getDrawContext());
 		this._clearSpecContext(this.getObjContext(), this.getDrawBridge());
 		if (this.getBoundInfoRecorder())
 			this.getBoundInfoRecorder().clear(this.getObjContext());
@@ -1268,6 +1268,41 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		return (this._objectUpdateFlag < 0);
 	},
+	/** @private */
+	_mergeObjUpdatedDetails: function(dest, target)
+	{
+		for (var i = 0, l = target.length; i < l; ++i)
+		{
+			this._mergeObjUpdatedDetailItem(dest, target[i]);
+		}
+	},
+	/** @private */
+	_mergeObjUpdatedDetailItem: function(dest, targetItem)
+	{
+		for (var i = 0, l = dest.length; i < l; ++i)
+		{
+			var destItem = dest[i];
+			// can merge
+			if (destItem.obj === targetItem.obj)
+			{
+				Kekule.ArrayUtils.pushUnique(destItem.propNames, targetItem.propNames);
+				return;
+			}
+		}
+		// can not merge
+		dest.push(targetItem);
+	},
+	/** @private */
+	_logUpdatedDetail: function(details)
+	{
+		var msg = '';
+		details.forEach(function(d){
+			msg += 'Obj: ' + d.obj.getId() + '[' + d.obj.getClassName() + ']     ';
+			msg += 'Props: [' + d.propNames.join(', ') + ']';
+			msg += '\n';
+		});
+		console.log(msg);
+	},
 	/**
 	 * Notify the object(s) property has been changed and need to be updated.
 	 * @param {Variant} obj An object or a object array.
@@ -1277,7 +1312,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	objectChanged: function(obj, changedPropNames)
 	{
 		var data = {'obj': obj, 'propNames': changedPropNames};
-		//console.log('obj changed', obj.getClassName(), changedPropNames);
+		//console.log('obj changed', obj.getClassName(), obj.getId(), changedPropNames);
 		var result = this.objectsChanged(data);
 		this.invokeEvent('editObjChanged', Object.extend({}, data));  // avoid change data
 		return result;
@@ -1292,11 +1327,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var a = DataType.isArrayValue(objDetails)? objDetails: [objDetails];
 		if (this.isUpdatingObject())  // suspend notification, just push objs in cache
 		{
-			Kekule.ArrayUtils.pushUnique(this._updatedObjectDetails, a);
-			//console.log('updating objects, suspending...')
+			//Kekule.ArrayUtils.pushUnique(this._updatedObjectDetails, a);
+			this._mergeObjUpdatedDetails(this._updatedObjectDetails, a);
+			//console.log('updating objects, suspending...', this._updatedObjectDetails);
+			//this._logUpdatedDetail(this._updatedObjectDetails);
 		}
 		else
 		{
+			//console.log('object changed');
 			this.doObjectsChanged(a);
 			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
 		}
@@ -1356,6 +1394,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				//console.log('[repaint whole]');
 				this.repaint();
+				/*
+				var self = this;
+				(function(){ self.repaint(); }).defer();
+				*/
 			}
 		}
 	},
@@ -4704,17 +4746,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	notifyCoordChangeOfObjects: function(objs)
 	{
-		var changedObjs = [];
+		var changedDetails = [];
 		var editor = this.getEditor();
+		var coordPropName = this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D? 'coord3D': 'coord2D';
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			Kekule.ArrayUtils.pushUnique(changedObjs, obj);
+			Kekule.ArrayUtils.pushUnique(changedDetails, {'obj': obj, 'propNames': [coordPropName]});
 			var relatedObjs = obj.getCoordDeterminateObjects? obj.getCoordDeterminateObjects(): [obj];
-			Kekule.ArrayUtils.pushUnique(changedObjs, relatedObjs);
+			for (var j = 0, k = relatedObjs.length; j < k; ++j)
+				Kekule.ArrayUtils.pushUnique(changedDetails, {'obj': relatedObjs[j], 'propNames': [coordPropName]});
 		}
 		// notify
-		editor.objectsChanged(changedObjs);
+		editor.objectsChanged(changedDetails);
 	},
 
 	/** @private */

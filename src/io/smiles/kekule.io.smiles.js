@@ -194,7 +194,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return writer.writeBlock(obj);
 			*/
 			var mol = this.getMolecule(obj);
-			return this.writeStructFragment(mol, options);
+			return mol? this.writeStructFragment(mol, options): '';
 		}
 	},
 	/**
@@ -209,7 +209,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	writeStructFragment: function(mol, options)
 	{
-		if (mol.hasCtab())
+		if (mol.hasCtab() && !mol.isEmpty())
 		{
 			// standardize molecule and mark the aromatic rings
 			var dupMol = mol.clone();
@@ -425,7 +425,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			{
 				var hcount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
 				// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
-				var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false);
+				var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitVerticalHydrogen: true});
 				var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE)? SMI.ROTATION_DIR_CLOCKWISE:
 					(dir === Kekule.RotationDir.ANTICLOCKWISE)? SMI.ROTATION_DIR_ANTICLOCKWISE:
 						'';

@@ -816,7 +816,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					if (node.getRadical())
 						node.fetchRadicalMarker(true);
 					if (node.getNodeAt)  // is sub fragment
-						this._createChargeAndRadicalMarkerOnStructFragment(node);
+						this._createLosingChemMarkerOnStructFragment(node);
 				}
 				finally
 				{
@@ -2252,7 +2252,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 
 				if (notifyEditor)
 				{
-					this.getEditor().objectsChanged([bond, node]);
+					this.getEditor().objectsChanged([{'obj': bond}, {'obj': node}]);
 				}
 				result = endCoord;
 			}
@@ -2415,7 +2415,10 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 				editor.pushOperation(oper);
 				// notify editor, the connected objecs should be redrawn too
 				var changedObjs = [bond].concat(bond.getConnectedObjs());
-				this.getEditor().objectsChanged(changedObjs);
+				var changedDetails = [];
+				for (var i = 0, l = changedObjs.length; i < l; ++i)
+					changedDetails.push({'obj':changedObjs[i]});
+				this.getEditor().objectsChanged(changedDetails);
 			}
 			finally
 			{

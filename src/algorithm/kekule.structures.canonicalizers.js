@@ -394,6 +394,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		// calc EC values of graph
 		var ecResult = this._calcGraphFinalECs(graph);
 		var ecMapping = ecResult.ecMapping;
+		var vertexGroup = ecResult.vertexGroup;
 		/*
 		if (ecResult.ecCount < graph.getVertexes().length)  // some vertexes has same ec value, need to index it further
 		{
@@ -421,16 +422,16 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			}
 		}
 		*/
-		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping);
+		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping, vertexGroup);
 		// at last assign indexes
 		this._setCanonicalizationIndexToNodeGroups(sortedNodes);
 	},
 
 	/** @private */
-	_sortNodeByEcMapping: function(graph, ecMapping)
+	_sortNodeByEcMapping: function(graph, ecMapping, ecVertexGroup)
 	{
 		var sortedNodes1st = [];
-		var vertexGroups = this._groupVertexesByEcValue(graph, ecMapping);
+		var vertexGroups = ecVertexGroup;  // || this._groupVertexesByEcValue(graph, ecMapping);
 		// 1st pass, from top to bottom
 		for (var i = 0, l = vertexGroups.length; i < l; ++i)
 		{
@@ -587,6 +588,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			newECMapping.set(vertex, sum);
 			AU.pushUnique(ecValues, sum);
 		}
+		//console.log('ECs: ', ecValues);
 		return ecValues.length;
 	},
 
@@ -606,17 +608,34 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			var index = 0;
 			var currECMapping = ecMappings[0];
 			var oldECMapping = ecMappings[0];
-			var ecMemberCount = this._processECs(graph, currECMapping, oldECMapping, true);
 			var oldEcMemberCount = 0;
-			while (ecMemberCount > oldEcMemberCount)
+			var oldVertexGroup, currVertexGroup;
+			var ecMemberCount = this._processECs(graph, currECMapping, oldECMapping, true);
+			//var currVertexGroup = this._groupVertexesByEcValue(graph, currECMapping);
+			var doProcess = true;
+			//while (ecMemberCount >= oldEcMemberCount)
+			while (doProcess)
 			{
 				oldEcMemberCount = ecMemberCount;
+				oldVertexGroup = currVertexGroup;
+				oldECMapping = currECMapping;
 				++index;
 				//var j = index % 2;
-				oldECMapping = currECMapping;
 				currECMapping = ecMappings[index % 2];
 				//oldECMapping = ecMappings[(index + 1) % 2];
 				ecMemberCount = this._processECs(graph, currECMapping, oldECMapping);
+				currVertexGroup = null;
+
+				doProcess = ecMemberCount > oldEcMemberCount;  // if ec count arises, continue process
+				if (ecMemberCount === oldEcMemberCount)  // some times occurs
+				{
+					currVertexGroup = this._groupVertexesByEcValue(graph, currECMapping);
+					if (!oldVertexGroup && oldECMapping)  // calculate only when needed
+					{
+						oldVertexGroup = this._groupVertexesByEcValue(graph, oldECMapping);
+					}
+					doProcess = this._compareEcVertexGroup(currVertexGroup, oldVertexGroup) !== 0;
+				}
 			}
 
 			//console.log(oldECMapping);
@@ -639,7 +658,8 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 
 		// finally get actual ec values
 		//var actualEcMapping = oldEcMapping;
-		return {ecMapping: oldECMapping, ecCount: oldEcMemberCount};
+		return {ecMapping: oldECMapping, ecCount: oldEcMemberCount,
+			vertexGroup: oldVertexGroup || this._groupVertexesByEcValue(graph, oldECMapping)};
 	},
 
 	/** @private */
@@ -658,7 +678,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			groups[ecValue].push(v);
 		}
 		ecValues.sort(function(a, b) { return a - b; } );
-		//console.log(ecValues);
 		var result = [];
 		for (var i = 0, l = ecValues.length; i < l; ++i)
 		{
@@ -668,6 +687,25 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				vertexes: vs,
 				vertexesCount: vs.length
 			});
+		}
+		return result;
+	},
+	/** @private */
+	_compareEcVertexGroup: function(group1, group2)
+	{
+		var count = group1.length;
+		var result = count - group2.length;
+		if (result === 0)  // further check
+		{
+			var vSame;
+			for (var i = 0; i < count; ++i)
+			{
+				result = group1[i].vertexes.length - group2[i].vertexes.length;
+				if (result === 0)
+					result = AU.exclude(group1[i].vertexes, group2[i].vertexes).length;
+				if (result !== 0)
+					break;
+			}
 		}
 		return result;
 	},
@@ -1242,7 +1280,7 @@ ClassEx.extend(Kekule.StructureFragment,
 });
 
 // A special property to store cano-label of atoms or bonds
-ClassEx.defineProp(Kekule.ChemStructureObject, 'canonicalizationIndex', {'dataType': DataType.INT, 'serializable': false/*, 'scope': Class.PropertyScope.PUBLISHED*/});
+ClassEx.defineProp(Kekule.ChemStructureObject, 'canonicalizationIndex', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PUBLISHED});
 
 
 // register morgan as default

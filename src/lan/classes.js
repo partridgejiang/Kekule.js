@@ -1614,6 +1614,10 @@ var DataType = {
 	}
 };
 
+// Wether has full support of Object/defineProperty method (IE8 has partial support and will return false)
+var __definePropertyAvailable__ = Object.defineProperty &&
+  (function () { try { Object.defineProperty({}, 'x', {}); return true; } catch (e) { return false; } } ())
+
 
 /**
  * A pack of utility methods to modify a existing class.
@@ -2402,13 +2406,46 @@ ObjectEx = Class.create(
 		//options.storeField = this.getDefPropStoreFieldName(propName);
 		var list = this.getOwnPropList();
 		var prop = list.addProperty(propName, options);
-		if (options.getter !== null)
-			prop.getter = this.createPropGetter(prop, options.getter);
-		if (options.setter !== null)
-			prop.setter = this.createPropSetter(prop, options.setter);
+    var propGetterInfo, propSetterInfo;
+		if (options.getter !== null && options.getter !== false)
+    {
+      propGetterInfo = this.createPropGetter(prop, options.getter);
+      prop.getter = propGetterInfo.doGetterName;
+    }
+		if (options.setter !== null && options.setter !== false)
+    {
+      propSetterInfo = this.createPropSetter(prop, options.setter);
+      prop.setter = propSetterInfo.doSetterName;
+    }
 
 		// to accelerate property access, add a hash key here
 		this[this.getPropInfoHashKey(propName)] = prop;
+
+    // Add property to object in supported browsers
+    if (__definePropertyAvailable__)
+    {
+      var descs = {
+        'enumerable': options.enumerable,
+        'configurable': false
+      };
+      if (descs.enumerable === undefined)
+        descs.enumerable = true;
+      if (propGetterInfo)
+        descs.get = this[propGetterInfo.getterName];
+      if (propSetterInfo)
+        descs.set = this[propSetterInfo.setterName];
+
+      try
+      {
+        Object.defineProperty(this, propName, descs);
+      }
+      catch(e)
+      {
+        console.log(this.getClassName(), propName);
+        throw e;
+      }
+    }
+
 		return prop;
   },
   /** @private */
@@ -2446,7 +2483,10 @@ ObjectEx = Class.create(
 			return this[doGetterName].apply(this, args);
 		};
 
-  	return doGetterName; //actualGetter; //this[getterName];
+  	return {
+      'getterName': getterName,
+      'doGetterName': doGetterName   // actual method to retrieve value
+    };
   },
   /** @private */
   createPropSetter: function(prop, setter)
@@ -2489,7 +2529,11 @@ ObjectEx = Class.create(
 			};
 
   	//this.getPrototype()[setterName] = actualSetter;
-  	return doSetterName; // actualSetter; //this[setterName];
+  	//return doSetterName; // actualSetter; //this[setterName];
+    return {
+      'setterName': setterName,
+      'doSetterName': doSetterName   // actual method to set value
+    };
   },
   /**
    * Check if property exists in current class.
