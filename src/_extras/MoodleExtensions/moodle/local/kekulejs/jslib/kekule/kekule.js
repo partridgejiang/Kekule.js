@@ -256,7 +256,9 @@ var kekuleFiles = {
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js',
-			'chemdoc/kekule.contentBlocks.js'
+			'chemdoc/kekule.contentBlocks.js',
+			'chemdoc/kekule.attachedMarkers.js',
+			'chemdoc/kekule.commonChemMarkers.js'
 		],
 		'category': 'core'
 	},
