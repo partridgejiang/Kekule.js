@@ -202,7 +202,7 @@ Object.getCascadeFieldValue = function(fieldName, root)
   else
     cascadeNames = fieldName.split('.');
   if (!root)
-    var root = this;
+    var root = $jsRoot || this;
   for (var i = 0, l = cascadeNames.length; i < l; ++i)
   {
     result = root[cascadeNames[i]];
