@@ -354,7 +354,8 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 				var info = cylinderInfos[i];
 				var obj = this.drawCylinderEx(context, info.coord1, info.coord2, info.radius,
 					{'color': info.color, 'withEndCaps': drawEndCaps});
-				this.addToDrawGroup(obj, result);
+				if (obj)
+					this.addToDrawGroup(obj, result);
 			}
 			return result;
 		}
@@ -397,7 +398,7 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 			}
 			else*/
 			{
-				var result = [];  //this.createDrawGroup(context);
+				var lines = [];  //this.createDrawGroup(context);
 				for (var i = 0; i < count; ++i)
 				{
 					var info = lineInfos[i];
@@ -408,7 +409,19 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 							'opacity': info.opacity
 						});
 					//this.addToDrawGroup(elem, result);
-					result.push(elem);
+					if (elem)
+						lines.push(elem);
+				}
+				var result;
+				if (lines.length <= 1)
+					result = lines[0];
+				else
+				{
+					result = this.createDrawGroup(context);
+					for (var i = 0, l = lines.length; i < l; ++i)
+					{
+						this.addToDrawGroup(lines[i], result);
+					}
 				}
 				return result;
 			}
