@@ -1406,7 +1406,11 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	{
 		var invokerWidget = event.widget;
 		if ((invokerWidget === this.getTextBox()) || (invokerWidget === this.getSelectBox()))
+		{
 			event.widget = this;
+			if (eventName === 'valueChange')  // avoid call value change twice
+				return;
+		}
 		return $super(eventName, event);
 	},
 
