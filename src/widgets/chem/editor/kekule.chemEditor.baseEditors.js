@@ -566,8 +566,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('div');
-		result.style.width = '100%';
-		result.style.height = '100%';
 		return result;
 	},
 	/** @ignore */
@@ -575,8 +573,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var elem = doc.createElement('div');
 		elem.className = CCNS.EDITOR_CLIENT;
-		elem.style.width = '100%';
-		elem.style.height = '100%';
 		rootElem.appendChild(elem);
 		this._editClientElem = elem;
 		return [elem];
@@ -953,9 +949,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var parent = this.getCoreElement();
 		if (parent)
 		{
-			parent.style.marginTop = '32px';
-			parent.style.width = '100%';
-			parent.style.height = '100%';
 			var doc = parent.ownerDocument;
 			this._createContextParentElem(doc, parent, 'objContextParentElem');
 			this._createContextParentElem(doc, parent, 'operContextParentElem');
