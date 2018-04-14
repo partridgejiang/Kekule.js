@@ -1524,6 +1524,7 @@ Kekule.MatrixUtils = {
 			for (var j = 0; j < colCount; ++j)
 				r[j] = -(m[j] || 0);
 		}
+		return result;
 	},
 	/**
 	 * Add two matrix.
