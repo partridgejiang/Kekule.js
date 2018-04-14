@@ -181,6 +181,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_IMAGE_BLOCK: 'Image Block',
 	CAPTION_TEXT_IMAGE: 'Text and Image',
 
+	CAPTION_MOL_CHAIN: 'Chain',
+
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
 	CAPTION_REPOSITORY_RING_4: 'Cyclobutane',
@@ -219,7 +221,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	CAPTION_TEXT_FORMAT: 'Text format',
 	CAPTION_PICK_COLOR: 'Color',
+	CAPTION_FONTNAME: 'Font name',
+	CAPTION_FONTSIZE: 'Font size',
 	CAPTION_TEXT_DIRECTION: 'Text direction',
 	CAPTION_TEXT_DIRECTION_DEFAULT: 'Default',
 	CAPTION_TEXT_DIRECTION_LTR: 'Left to right',
@@ -271,6 +276,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',
 
+	HINT_MOL_CHAIN: 'Carbon chain',
+
 	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',
 	HINT_REPOSITORY_RING_4: 'Cyclobutane',
@@ -308,12 +315,15 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	HINT_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	HINT_TEXT_FORMAT: 'Set text format',
 	HINT_FONTNAME: 'Set font name',
 	HINT_FONTSIZE: 'Set font size',
 	HINT_PICK_COLOR: 'Select color',
 	HINT_TEXT_DIRECTION: 'Set text direction',
 	HINT_TEXT_HORIZONTAL_ALIGN: 'Set text horizontal alignment',
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
+
+	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
 
 	// load data dialog
 	CAPTION_LOADDATA_DIALOG: 'Load data',

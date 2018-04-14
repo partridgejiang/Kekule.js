@@ -3227,9 +3227,21 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			r = h.pop(operation);
 			if (autoReverse)
 				r.reverse();
+			return r;
 		}
 		else
 			return null;
+	},
+	/**
+	 * Execute an operation in editor.
+	 * @param {Kekule.Operation} operation
+	 */
+	execOperation: function(operation)
+	{
+		operation.execute();
+		if (this.getEnableOperHistory())
+			this.pushOperation(operation, false);  // push but not execute
+		return this;
 	},
 
 	/**
@@ -3838,6 +3850,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('startBox', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('endBox', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('lastRotateAngle', {'dataType': DataType.FLOAT, 'serializable': false});  // private
+		// private, such as {x: 1, y: 0}, plays as the initial base direction of rotation
+		this.defineProp('rotateRefCoord', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('rotateCenter', {'dataType': DataType.HASH, 'serializable': false,
 			'getter': function()
 			{
@@ -4158,7 +4172,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 * @param {Hash} rotateCenter
 	 * @private
 	 */
-	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter)
+	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
 	{
 		this.setManipulationType(manipulationType);
 		var actualObjs = this.getActualManipulatingObjects(manipulatingObjs);
@@ -4167,7 +4181,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setManipulateObjs(actualObjs);
 		var map = this.getManipulateObjInfoMap();
 		map.clear();
-		this.getManipulateObjCurrInfoMap().clear();
+		//this.getManipulateObjCurrInfoMap().clear();
 		var editor = this.getEditor();
 		// store original objs coords info into map
 		for (var i = 0, l = actualObjs.length; i < l; ++i)
@@ -4178,6 +4192,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		this.setStartBox(startBox);
 		this.setRotateCenter(rotateCenter);
+		this.setRotateRefCoord(rotateRefCoord);
 		this.setLastRotateAngle(null);
 		this.createManipulateOperation();
 
@@ -4267,24 +4282,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	_calcActualRotateAngle: function(objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
-	{
-		return newDeltaAngle;
-	},
-
-	/** @private */
-	_calcManipulateObjsRotationInfo: function(manipulatingObjs, endScreenCoord)
+	_calcRotateAngle: function(endScreenCoord)
 	{
 		var C = Kekule.CoordUtils;
-
-		/*
-		var box = this.getStartBox();
-		var rotateCenter = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
-		*/
 		var angle;
 		var angleCalculated = false;
 		var rotateCenter = this.getRotateCenter();
-		var startCoord = this.getStartCoord();
+		var startCoord = this.getRotateRefCoord() || this.getStartCoord();
 
 		// ensure startCoord large than threshold
 		var threshold = this.getEditorConfigs().getInteractionConfigs().getRotationLocationPointDistanceThreshold();
@@ -4315,16 +4319,49 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			vector = C.substract(startCoord, rotateCenter);
 			var startAngle = Math.atan2(vector.y, vector.x);
 			angle = endAngle - startAngle;
-			angle = this._calcActualRotateAngle(manipulatingObjs, angle, startAngle, endAngle);
-			var lastAngle = this.getLastRotateAngle();
-			if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 1e-5))
-				return false;  // no angle change, do not rotate
-			this.setLastRotateAngle(angle);
 		}
 
+		return {'angle': angle, 'startAngle': startAngle, 'endAngle': endAngle};
+	},
+	/** @private */
+	_calcActualRotateAngle: function(objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
+	{
+		return newDeltaAngle;
+	},
+	/** @private */
+	_calcManipulateObjsRotationParams: function(manipulatingObjs, endScreenCoord)
+	{
+		var rotateCenter = this.getRotateCenter();
+
+		var angleInfo = this._calcRotateAngle(endScreenCoord);
+		if (!angleInfo)  // need not to rotate
+			return false;
+
+		// get actual rotation angle
+		var angle = this._calcActualRotateAngle(manipulatingObjs, angleInfo.angle, angleInfo.startAngle, angleInfo.endAngle);
+
+		var lastAngle = this.getLastRotateAngle();
+		if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 1e-5))
+		{
+			return false;  // no angle change, do not rotate
+		}
+		//console.log('rotateAngle', angle, lastAngle);
+		this.setLastRotateAngle(angle);
+
+		return {'center': rotateCenter, 'angle': angle};
+	},
+
+	/** @private */
+	_calcManipulateObjsRotationInfo: function(manipulatingObjs, rotateCenter, rotateAngle)
+	{
+		var C = Kekule.CoordUtils;
+		/*
+		var box = this.getStartBox();
+		var rotateCenter = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
+		*/
 		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({
 			'center': rotateCenter,
-			'rotateAngle': angle
+			'rotateAngle': rotateAngle
 		});
 
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
@@ -4345,20 +4382,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		return true;
 	},
-
-	/**
-	 * Rotate manupulatedObjs according to endScreenCoord.
-	 * @private
-	 */
-	rotateManipulatedObjs: function(endScreenCoord)
+	/** @private */
+	doRotateManipulatedObjs: function(endScreenCoord, rotateParams)
 	{
-		var R = Kekule.Editor.BoxRegion;
-		var C = Kekule.CoordUtils;
-		var editor = this.getEditor();
-		var objs = this.getManipulateObjs();
-		var changedObjs = [];
-		//console.log('rotate', this.getRotateCenter(), endScreenCoord);
-		var byPassRotate = !this._calcManipulateObjsRotationInfo(objs, endScreenCoord);
+		var byPassRotate = !this._calcManipulateObjsRotationInfo(this.getManipulateObjs(), rotateParams.center, rotateParams.angle);
 		if (byPassRotate)  // need not to rotate
 		{
 			//console.log('bypass rotate');
@@ -4368,6 +4395,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var objNewInfo = this.getManipulateObjCurrInfoMap();
 
+		var editor = this.getEditor();
 		editor.beginUpdateObject();
 		try
 		{
@@ -4395,6 +4423,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			 this.doMoveManipulatedObj(i, obj, newInfo.coord, endScreenCoord);
 			 }
 			 */
+			var objs = this.getManipulateObjs();
 			this.applyManipulatingObjsInfo(endScreenCoord);
 			this._maniplateObjsFrameEnd(objs);
 			this.notifyCoordChangeOfObjects(objs);
@@ -4404,6 +4433,24 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			editor.endUpdateObject();
 			this.manipulateStepDone();
 		}
+	},
+
+	/**
+	 * Rotate manupulatedObjs according to endScreenCoord.
+	 * @private
+	 */
+	rotateManipulatedObjs: function(endScreenCoord)
+	{
+		var R = Kekule.Editor.BoxRegion;
+		var C = Kekule.CoordUtils;
+		//var editor = this.getEditor();
+		var changedObjs = [];
+		//console.log('rotate', this.getRotateCenter(), endScreenCoord);
+		var rotateParams = this._calcManipulateObjsRotationParams(this.getManipulateObjs(), endScreenCoord);
+		if (!rotateParams)
+			return;
+
+		this.doRotateManipulatedObjs(endScreenCoord, rotateParams);
 	},
 
 	/** @private */
@@ -4693,14 +4740,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 * Click on a object or objects and manipulate it directly.
 	 * @private
 	 */
-	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter)
+	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord)
 	{
 		var objs = Kekule.ArrayUtils.toArray(objOrObjs);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.MANIPULATING);
 		this.setStartCoord(startCoord);
+		this.setRotateRefCoord(rotateRefCoord);
 		this.setIsManipulatingSelection(false);
 		//console.log('call prepareManipulating', startCoord, manipulateType, objOrObjs);
-		this.prepareManipulating(manipulateType || Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE, objs, startCoord, startBox, rotateCenter);
+		this.prepareManipulating(manipulateType || Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE, objs, startCoord, startBox, rotateCenter, rotateRefCoord);
 	},
 	/**
 	 * Called when a manipulation is applied and the changes has been reflected in editor (editor redrawn done).
@@ -4819,6 +4867,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			return true;
 		}
 
+		var S = Kekule.Editor.BasicManipulationIaController.State;
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var state = this.getState();
+
 		var coord = this._getEventMouseCoord(e);
 
 		if (this._lastMouseMoveCoord)
@@ -4831,9 +4883,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		this._lastMouseMoveCoord = coord;
 
-		var S = Kekule.Editor.BasicManipulationIaController.State;
-		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
-		var state = this.getState();
 		/*
 		if (state !== S.NORMAL)
 			this.getEditor().hideHotTrack();
