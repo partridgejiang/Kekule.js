@@ -1077,6 +1077,36 @@ Kekule.StrUtils = {
 			result = Math.max(line.length, result);
 		}
 		return result;
+	},
+
+	/**
+	 * Check if str is in number format.
+	 * @param {String} str
+	 * @returns {Bool}
+	 */
+	isNumbericStr: function(str)
+	{
+		var a = Number(str);
+		return !isNaN(a);
+	},
+	/**
+	 * Split a number ending string (e.g. 'str3') to two part, a prefix and an index.
+	 * If the str is not ending with number, null will be returned.
+	 * @param {String} str
+	 * @returns {Object} A object of {prefix, index}
+	 */
+	splitIndexEndingStr: function(str)
+	{
+		var pos = str.length - 1;
+		var c = str.charAt(pos);
+		var indexStr = '';
+		while (c && Kekule.StrUtils.isNumbericStr(c))
+		{
+			--pos;
+			indexStr = c + indexStr;
+			c = str.charAt(pos);
+		}
+		return indexStr? {'prefix': str.substring(0, pos + 1), 'index': parseInt(indexStr)}: null;
 	}
 };
 
