@@ -259,6 +259,10 @@
     background-image: url("images/slice/icons/inspect.png");
 }
 
+.K-Chem-Composer-TextFormat-Button > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons16/fontSize.png");
+}
 .K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons16/textDirectionTtb.png");
@@ -370,6 +374,14 @@
 .K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");
+}
+.K-Chem-MolFlexChainIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/carbonChainVariable.gif");
+}
+.K-Chem-MolFlexRingIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/carbonRingVariable.gif");
 }
 
 .K-Chem-RepositoryStructureFragmentIaController-SubBondMark > .K-Pri-Glyph-Content
