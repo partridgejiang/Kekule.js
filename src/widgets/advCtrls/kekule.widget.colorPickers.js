@@ -103,7 +103,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 			{
 				this.setPropStoreFieldValue('value', value);
 				this.getHexBox().innerHTML = value || '&nbsp;';
-				this.getPreviewer().style.backgroundColor = value;
+				this.getPreviewer().style.backgroundColor = value || 'transparent';
 				if (this.getColorInput())
 				{
 					this.getColorInput().value = value;
@@ -731,6 +731,9 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 			{
 				this.setText(value);
 				this.updateColorPreview(value);
+				var colorPicker = this.getPropStoreFieldValue('colorPicker');
+				if (colorPicker)
+					colorPicker.setValue(value);
 			}
 		});
 		this.defineProp('colorClassName', {'dataType': DataType.STRING,

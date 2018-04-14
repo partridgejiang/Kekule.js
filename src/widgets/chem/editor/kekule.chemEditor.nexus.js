@@ -27,10 +27,10 @@
  * @property {Bool} enableLiveUpdate If set to true, the tree view will automatically updated when chem objects changed.
  */
 Kekule.Editor.EditorNexus = Class.create(ObjectEx,
-/** @lends Kekule.ChemWidget.StructureTreeView# */
+/** @lends Kekule.Editor.EditorNexus# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemWidget.StructureTreeView',
+	CLASS_NAME: 'Kekule.Editor.EditorNexus',
 	/** @construct */
 	initialize: function($super, components)
 	{
