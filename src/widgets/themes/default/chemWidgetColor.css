@@ -375,9 +375,13 @@
 {
     background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");
 }
-.K-Chem-MolChainIaController .K-Pri-Glyph-Content
+.K-Chem-MolFlexChainIaController .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/carbonChainVariable.gif");
+}
+.K-Chem-MolFlexRingIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/carbonRingVariable.gif");
 }
 
 .K-Chem-RepositoryStructureFragmentIaController-SubBondMark > .K-Pri-Glyph-Content

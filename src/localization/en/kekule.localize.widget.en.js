@@ -177,11 +177,12 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_CHARGE_DOUBLET: 'Monoradical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
 	CAPTION_MOL_ELECTRON_LONEPAIR: 'Lone pair',
-	CAPTION_TEXT_BLOCK: 'Text Block',
-	CAPTION_IMAGE_BLOCK: 'Image Block',
-	CAPTION_TEXT_IMAGE: 'Text and Image',
+	CAPTION_TEXT_BLOCK: 'Text block',
+	CAPTION_IMAGE_BLOCK: 'Image block',
+	CAPTION_TEXT_IMAGE: 'Text and image',
 
-	CAPTION_MOL_CHAIN: 'Chain',
+	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
+	CAPTION_MOL_FLEXRING: 'Flex ring',
 
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
@@ -276,7 +277,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',
 
-	HINT_MOL_CHAIN: 'Carbon chain',
+	HINT_MOL_FLEXCHAIN: 'Flex carbon chain',
+	HINT_MOL_FLEXRING: 'Flex carbon ring',
 
 	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',

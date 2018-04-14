@@ -3364,15 +3364,15 @@ Kekule.Editor.RepositoryStructureFragmentIaController = Class.create(Kekule.Edit
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.RepositoryStructureFragmentIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
- * Controller to add repository structure fragments or other objects into chem space.
+ * Controller to add a flex carbon chain into chem space.
  * @class
- * @augments Kekule.Editor.BasicMolManipulationIaController
+ * @augments Kekule.Editor.RepositoryIaController
  */
-Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaController,
-/** @lends Kekule.Editor.MolChainIaController# */
+Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIaController,
+/** @lends Kekule.Editor.MolFlexChainIaController# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.MolChainIaController',
+	CLASS_NAME: 'Kekule.Editor.MolFlexChainIaController',
 	/** @construct */
 	initialize: function($super, editor)
 	{
@@ -3386,6 +3386,11 @@ Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaCont
 		this._isForceReversedChainDirection = false;
 
 		this.setRepositoryItem(new Kekule.Editor.MolChainRepositoryItem2D(2));
+	},
+	/** @private */
+	getChainMaxAtomCount: function()
+	{
+		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexChainAtomCount(), 0);
 	},
 	/** @private */
 	_calcStepDeltaDistance: function()
@@ -3477,13 +3482,11 @@ Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaCont
 		try
 		{
 			var prevOperation = this.getActiveOperation();
-			//var prevOperation = this.getAddRepObjsOper();
 			if (prevOperation)
 			{
 
 				prevOperation.reverse();
 			}
-			//this.getRepositoryItem().setAtomCount(bondCount + 1);
 			var insertResult = this.insertRepositoryObjToEditor(this._repObjStartingScreenCoord, this._initialStartingObj, true);
 			if (insertResult)
 			{
@@ -3503,8 +3506,8 @@ Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaCont
 		var state = this.getState();
 		if (state ===  Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
 		{
-			//var endCoord = this._getEventMouseCoord(e);
-			var startCoord = this.getStartCoord();
+			//var startCoord = this.getRotateCenter();
+			var startCoord = this.getBaseCoord();
 			if (startCoord)
 			{
 				// check chain length
@@ -3516,9 +3519,13 @@ Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaCont
 				{
 					this._deltaCount = deltaCount;
 					// need recreate repository
-					this._repObjNeedUpdate = true;
-					this.getRepositoryItem().setAtomCount(deltaCount + 1);
-					//this._updateChain();
+					var maxAtomCount = this.getChainMaxAtomCount();
+					var atomCount = maxAtomCount? Math.min(maxAtomCount, deltaCount + 1): deltaCount + 1;
+					if (this.getRepositoryItem().getAtomCount() !== atomCount)
+					{
+						this.getRepositoryItem().setAtomCount(atomCount);
+						this._repObjNeedUpdate = true;
+					}
 					this._lastDeltaCount = deltaCount;
 				}
 				// console.log('dynamic', startCoord, coord, this._deltaDistance, deltaCount);
@@ -3567,7 +3574,143 @@ Kekule.Editor.MolChainIaController = Class.create(Kekule.Editor.RepositoryIaCont
 		return $super(e);
 	}
 });
-Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolChainIaController, Kekule.Editor.ChemSpaceEditor);
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexChainIaController, Kekule.Editor.ChemSpaceEditor);
+
+/**
+ * Controller to add a flex ring structure to chem space.
+ * @class
+ * @augments Kekule.Editor.RepositoryIaController
+ */
+Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaController,
+/** @lends Kekule.Editor.MolFlexRingIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolFlexRingIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		// private
+		this._deltaDistance = null;
+		this._lastDeltaCount = 1;
+		this._repObjStartingScreenCoord = null;
+		this._repObjNeedUpdate = false;
+
+		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D(3));
+	},
+	/** @private */
+	getRingMaxAtomCount: function()
+	{
+		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexRingAtomCount(), 0);
+	},
+	/** @private */
+	_calcStepDeltaDistance: function()
+	{
+		var bondLength = this.getRepositoryItem().getBondLength();
+		var transformParams = this.getInitialTransformParams();
+		//console.log('repository item bond length', bondLength, transformParams);
+		var editor = this.getEditor();
+		var coord1 = editor.objCoordToScreen(Kekule.CoordUtils.transform2D({x: 0, y: 0}, transformParams));
+		var coord2 = editor.objCoordToScreen(Kekule.CoordUtils.transform2D({x: bondLength, y: 0}, transformParams));
+		// TODO: 1/3 bond length, currently fixed
+		var result = Kekule.CoordUtils.getDistance(coord1, coord2) / 3;
+		return result;
+	},
+	/** @ignore */
+	addRepositoryObj: function($super, targetObj, screenCoord)
+	{
+		var result = $super(targetObj, screenCoord);
+		// save bond length
+		this._deltaDistance = this._calcStepDeltaDistance();
+		this._repObjStartingScreenCoord = screenCoord;
+		this._repObjNeedUpdate = false;
+		return result;
+	},
+	/** @ignore */
+	insertRepositoryObjToEditor: function($super, startingCoord, startingObj, isUpdate)
+	{
+		if (!isUpdate)
+		{
+			this._initialStartingObj = startingObj;
+			this._deltaDistance = null;
+			this._lastDeltaCount = 1;
+			this._repObjStartingScreenCoord = null;
+			this.getRepositoryItem().setRingAtomCount(3);
+		}
+		var result = $super(startingCoord, startingObj);
+		if (result && isUpdate)
+		{
+			this.prepareManipulating(result.manipulateType, result.objects, result.coord, result.box,
+					result.rotateCenter, result.rotateRefCoord);
+		}
+		return result;
+	},
+	/** @private */
+	_updateRing: function()
+	{
+		// reverse prev operation (and removes it from editor) first
+		var editor = this.getEditor();
+		editor.beginUpdateObject();
+		try
+		{
+			var prevOperation = this.getActiveOperation();
+			if (prevOperation)
+			{
+
+				prevOperation.reverse();
+			}
+			var insertResult = this.insertRepositoryObjToEditor(this._repObjStartingScreenCoord, this._initialStartingObj, true);
+			if (insertResult)
+			{
+				this.moveManipulatedObjs(this._repObjStartingScreenCoord);  // force a "move" action, to apply possible merge
+			}
+			this._repObjNeedUpdate = false;
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+	},
+	/** @ignore */
+	rotateManipulatedObjs: function($super, endScreenCoord)
+	{
+		var endCoord = endScreenCoord;
+		var state = this.getState();
+		if (state ===  Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+		{
+			//var startCoord = this.getRotateCenter();
+			var startCoord = this.getBaseCoord();
+			if (startCoord)
+			{
+				// check ring atom count
+				var dis = Kekule.CoordUtils.getDistance(endCoord, startCoord);
+				var deltaCount = Math.round(dis / this._deltaDistance) + 3;  // min ring is 3 atoms
+				//console.log(dis, this._deltaDistance, deltaCount);
+				if (!this._lastDeltaCount || deltaCount !== this._lastDeltaCount)
+				{
+					// need recreate repository
+					var maxAtomCount = this.getRingMaxAtomCount();
+					var atomCount = maxAtomCount? Math.min(maxAtomCount, deltaCount): deltaCount;
+					if (this.getRepositoryItem().getRingAtomCount() !== atomCount)
+					{
+						this.getRepositoryItem().setRingAtomCount(atomCount);
+						this._repObjNeedUpdate = true;
+					}
+					//this._updateChain();
+					this._lastDeltaCount = deltaCount;
+				}
+				// console.log('dynamic', startCoord, coord, this._deltaDistance, deltaCount);
+			}
+		}
+
+		if (this._repObjNeedUpdate)
+			this._updateRing();
+
+		var result = $super(endScreenCoord);
+		return result;
+	}
+});
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexRingIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
  * Controller to add arrow/line into chem space.
