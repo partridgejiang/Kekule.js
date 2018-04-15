@@ -3074,6 +3074,21 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		// Always show pointer cursor
 		return '';
 	},
+	/** @private */
+	canInteractWithObj: function($super, obj)
+	{
+		return $super(obj);
+	},
+	/**
+	 * Returns if obj is a valid starting point of creating repository item.
+	 * Descendants may override this method.
+	 * @param obj
+	 * @returns {boolean}
+	 */
+	isValidStartingObj: function(obj)
+	{
+		return true;
+	},
 
 	/** @private */
 	calcInitialTransformParams: function(repItem, repResult, destObj, targetCoord)
@@ -3129,10 +3144,10 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 
 			repResult.objects = addedObjs;
 			//repResult.centerObj = repItem.getMolManipulationCenterObj();
-			var manCenterCoord = repItem.getMolManipulationCenterCoord();
+			var manCenterCoord = repItem.getMolManipulationCenterCoord && repItem.getMolManipulationCenterCoord();
 			if (manCenterCoord)
 				repResult.manipulationCenterCoord = Kekule.CoordUtils.transform2D(manCenterCoord, transformParams);
-			var defDirectionCoord = repItem.getMolManipulationDefDirectionCoord();
+			var defDirectionCoord = repItem.getMolManipulationDefDirectionCoord && repItem.getMolManipulationDefDirectionCoord();
 			if (defDirectionCoord)
 				repResult.manipulationDefDirectionCoord = Kekule.CoordUtils.transform2D(defDirectionCoord, transformParams);
 		}
@@ -3386,6 +3401,11 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		this._isForceReversedChainDirection = false;
 
 		this.setRepositoryItem(new Kekule.Editor.MolChainRepositoryItem2D(2));
+	},
+	/** @ignore */
+	canInteractWithObj: function($super, obj)
+	{
+		return $super(obj) && (obj instanceof Kekule.ChemStructureNode);
 	},
 	/** @private */
 	getChainMaxAtomCount: function()

@@ -654,7 +654,8 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 	/** @ignore */
 	doGetMergableConnector: function(mol, targetNode)
 	{
-		return mol.getConnectorAt(0);
+		//return mol.getConnectorAt(0);
+		return null;  // TODO: now has bugs when flex chain is created on an existing bond
 	},
 	/**
 	 * Generate a ring structure fragment either in targetMol
