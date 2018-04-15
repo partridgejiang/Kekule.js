@@ -218,14 +218,15 @@ Kekule.Widget.ShowHideType = {
 Kekule.Widget.UiEvents = [
 	/*'blur', 'focus',*/ 'click', 'dblclick', 'mousedown',/*'mouseenter', 'mouseleave',*/ 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'mousewheel',
 	'keydown', 'keyup', 'keypress',
-	'touchstart', 'touchend', 'touchcancel', 'touchleave', 'touchmove'
+	'touchstart', 'touchend', 'touchcancel', 'touchmove',
+	'pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'
 ];
 /**
  * A series of interactive events that must be listened on local element.
  * @ignore
  */
 Kekule.Widget.UiLocalEvents = [
-	'blur', 'focus', 'mouseenter', 'mouseleave'
+	'blur', 'focus', 'mouseenter', 'mouseleave', 'pointerenter', 'pointerleave'
 ];
 
 /**
@@ -283,6 +284,8 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {String} htmlClassName HTML class of current binding element. This property will include all values in element's class attribute.
  * @property {String} customHtmlClassName HTML class set by user. This property will exclude some predefined class names.
  * //@property {Array} outlookStyleClassNames Classes used to control the outlook of widget. Usually user do not need to access this value.
+ * @property {String} touchAction Touch action style value of widget element.
+ *   You should set this value (e.g., to 'none') to enable pointer event on touch.
  * @property {Bool} useCornerDecoration
  * @property {Int} layout Layout of child widgets. Value from {@link Kekule.Widget.Layout}.
  * @property {Bool} allowTextWrap
@@ -387,6 +390,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
+		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none to receive touch pointer events
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -458,6 +462,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		});
 		this.defineProp('bubbleUiEvents', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('inheritBubbleUiEvents', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('touchAction', {'dataType': DataType.STRING,  'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value)
+			{
+				var elem = this.getElement();
+				if (elem)
+				{
+					elem.setAttribute('touch-action', value);  // for polyfill pep lib (PointerEvent)
+					elem.style.touchAction = value;
+				}
+			}
+		});
+
 		this.defineProp('parent', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false,
 			'scope': Class.PropertyScope.PUBLISHED,
 			'setter': function(value)
@@ -2354,6 +2370,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this._pendingHtmlClassNames = '';
 			}
 
+			// ensure touch action value applied to element
+			var touchAction = this.getTouchAction();
+			if (Kekule.ObjUtils.notUnset(touchAction))
+				this.setTouchAction(touchAction);
+
 			if (!this.getIsDumb())
 				this.installUiEventHandlers(element);
 
@@ -2799,7 +2820,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	reactTouchGesture: function(e)
 	{
-		var funcName = Kekule.Widget.getTouchGestureHandleFuncName(e.getType());
+		var funcName = Kekule.Widget.getTouchGestureHandleFuncName((e.getType && e.getType()) || e.type);
 
 		if (this[funcName])  // has own handler
 		{
@@ -3661,7 +3682,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 
 		/*
-		this.react_mousedown_binding = this.react_mousedown.bind(this);
+		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
 		this.react_keydown_binding = this.react_keydown.bind(this);
 		this.react_touchstart_binding = this.react_touchstart.bind(this);
 		*/
@@ -4120,9 +4141,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	reactTouchGesture: function(e)
 	{
-		var funcName = Kekule.Widget.getTouchGestureHandleFuncName(e.getType());
+		var funcName = Kekule.Widget.getTouchGestureHandleFuncName((e.getType && e.getType()) || e.type);
 
-		//console.log('gesture', funcName, e.target);
+		//console.log('gesture', funcName, e.target, e);
 
 		if (this[funcName])
 			this[funcName](e);
@@ -4140,7 +4161,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (this.hasPopupWidgets() && !e.ghostMouseEvent)
 		{

@@ -10,7 +10,7 @@
  * require /utils/kekule.utils.js
  */
 
-(function ()
+(function (window, document)
 {
 
 var $root = window;
@@ -91,7 +91,9 @@ Kekule.BrowserFeature = {
 				return result;
 			}
 	},
-	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver
+	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
+	touchEvent: !!window.touchEvent,
+	pointerEvent: !!window.PointerEvent
 };
 
 /**
@@ -163,7 +165,7 @@ X.Event.MouseButton = {
 	RIGHT: 2,
 	MID: 1,
 	LR: 3
-}
+};
 
 /**
  * A serials of constants of key codes
@@ -218,6 +220,11 @@ X.Event.isSupported = (function()
 	var cache = {};
 
 	return function(eventName) {
+		if (eventName.indexOf('touch') === 0)  // touch events
+			return Kekule.BrowserFeature.touchEvent;
+		if (eventName.indexOf('pointer') === 0)  // pointer events
+			return Kekule.BrowserFeature.pointerEvent;
+
 		var TAGNAMES = {
 				'select': 'input',
 				'change': 'input',
@@ -644,7 +651,7 @@ X.Event._MouseEventEx = {
 					}
           */
 				}
-			}
+			};
 			handler.__$mouseExListenerWrapper__ = wrapper;
 			var newType = (eventType === 'mouseenter')? 'mouseover': 'mouseout';
 			//return X.Event.addListener(element, newType, wrapper, useCapture);
@@ -759,7 +766,7 @@ X.Event._Gecko = {
 					e.wheelDeltaY = e.wheelDelta = -e.detail * 40;  // detail usually be 3 while delta be 120, direction is opposed
 					e.__$type__ = 'mousewheel';  // e.type can not be changed, so use another field to save the new type
 					handler.call(element, e);
-				}
+				};
 			handler.__$mousewheelListenerWrapper__ = wrapper;
 			element.addEventListener('DOMMouseScroll', wrapper, useCapture);
 		}
@@ -969,7 +976,7 @@ X.Event._IEMethods = {
 	{
 		event.returnValue = false;
 	}
-}
+};
 
 if (document.addEventListener)  // W3C browser
 {
@@ -1275,4 +1282,4 @@ var DOM = Kekule.X.DomReady
  */
 Kekule.X.domReady = DOM.domReady;
 
-})();
+})(window, document);
