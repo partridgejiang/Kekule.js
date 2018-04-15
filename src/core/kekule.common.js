@@ -308,13 +308,25 @@ Kekule.MapEx = Class.create(
 		this.isWeak = !nonWeak;
 		if (!Kekule.MapEx._inited)
 			Kekule.MapEx._init();
+		// try use built in
+		var _implClass = nonWeak? Kekule.MapEx._implementationNonWeak: Kekule.MapEx._implementationWeak;
+		if (!_implClass)  // fall back to JavaScript implementation
+		{
+			this._keys = [];
+			this._values = [];
+		}
+		else
+			this._implementation = new _implClass();
+		/*
 		if ((!Kekule.MapEx._implementation) || (!this.isWeak))  // use JavaScript implementation
+		if (!this._implementation)
 		{
 			this.keys = [];
 			this.values = [];
 		}
 		else  // use built-in implementation
 			this._implementation = new Kekule.MapEx._implementation();
+		*/
 	},
 	/**
 	 * Free resources.
@@ -323,8 +335,8 @@ Kekule.MapEx = Class.create(
 	{
 		if (!this._implementation)
 		{
-			this.keys = null;
-			this.values = null;
+			this._keys = null;
+			this._values = null;
 		}
 	},
 	/**
@@ -338,13 +350,13 @@ Kekule.MapEx = Class.create(
 			this._implementation.set(key, value);
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
-				this.values[index] = value;
+				this._values[index] = value;
 			else
 			{
-				this.keys.push(key);
-				this.values.push(value);
+				this._keys.push(key);
+				this._values.push(value);
 			}
 		}
 		//console.log(key, value, this.get(key));
@@ -359,12 +371,15 @@ Kekule.MapEx = Class.create(
 	get: function(key, defaultValue)
 	{
 		if (this._implementation)
-			return this._implementation.get(key, defaultValue);
+		{
+			var result = this._implementation.has(key)? this._implementation.get(key): defaultValue;
+			return result;
+		}
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
-				return this.values[index];
+				return this._values[index];
 			else  // not found
 				return defaultValue;
 		}
@@ -380,7 +395,7 @@ Kekule.MapEx = Class.create(
 			return this._implementation.has(key);
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			return index >= 0;
 		}
 	},
@@ -394,11 +409,11 @@ Kekule.MapEx = Class.create(
 			return this._implementation['delete'](key);  // avoid IE regard delete as a reserved word
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
 			{
-				this.keys.splice(index, 1);
-				this.values.splice(index, 1);
+				this._keys.splice(index, 1);
+				this._values.splice(index, 1);
 			}
 		}
 		return this;
@@ -408,14 +423,18 @@ Kekule.MapEx = Class.create(
 	 */
 	clear: function()
 	{
-		if (!this._implementation)
+		if (!this._implementation || this._debug)
 		{
-			this.keys = [];
-			this.values = [];
+			this._keys = [];
+			this._values = [];
 		}
-		else
+		//else
+		if (this._implementation)
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_CLEAR_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP*/);
+			if (this.isWeak)
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_CLEAR_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP*/);
+			else
+				this._implementation.clear();
 		}
 		return this;
 	},
@@ -426,11 +445,31 @@ Kekule.MapEx = Class.create(
 	getKeys: function()
 	{
 		if (!this._implementation)
-			return [].concat(this.keys);  // clone the array, avoid modification
-		else  // weak map, can not return keys
+			return [].concat(this._keys);  // clone the array, avoid modification
+		else
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP*/);
-			return [];
+			if (this.isWeak)
+			{
+				// weak map, can not return keys
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP*/);
+				return [];
+			}
+			else
+			{
+				var iter = this._implementation.keys();
+				var result;
+				if (Array.from)
+					result = Array.from(iter);
+				else
+				{
+					result = [];
+					for (var item in iter)
+					{
+						result.push(item);
+					}
+				}
+				return result;
+			}
 		}
 	},
 	/**
@@ -440,21 +479,52 @@ Kekule.MapEx = Class.create(
 	getValues: function()
 	{
 		if (!this._implementation)
-			return this.values;
-		else  // weak map, can not return keys
+			return this._values;
+		else
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP*/);
-			return [];
+			if (this.isWeak)
+			{
+				// weak map, can not return keys
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP*/);
+				return [];
+			}
+			else
+			{
+				var iter = this._implementation.values();
+				var result;
+				if (Array.from)
+					result = Array.from(iter);
+				else
+				{
+					result = [];
+					for (var item in iter)
+					{
+						result.push(item);
+					}
+				}
+				return result;
+			}
 		}
+	},
+	/**
+	 * Return count all map items.
+	 * @returns {Int}
+	 */
+	getLength: function()
+	{
+		return this.getKeys().length;
 	}
 });
 /** @private */
 Kekule.MapEx._init = function()
 {
+	Kekule.MapEx._implementationWeak = null;  // use JavaScript implementation
+	Kekule.MapEx._implementationNonWeak = null;  // use JavaScript implementation
 	if (Kekule.$jsRoot.WeakMap)  // Fx6 and above, use built-in WeakMap object
-		Kekule.MapEx._implementation = Kekule.$jsRoot.WeakMap;
-	else
-		Kekule.MapEx._implementation = null;  // use JavaScript implementation
+		Kekule.MapEx._implementationWeak = Kekule.$jsRoot.WeakMap;
+	if (Kekule.$jsRoot.Map && Kekule.$jsRoot.Map.prototype.keys)  // the implementation of Map in IE does not support keys() and values()
+		Kekule.MapEx._implementationNonWeak = Kekule.$jsRoot.Map;
+
 	Kekule.MapEx._inited = true;
 };
 Kekule.MapEx._inited = false;
