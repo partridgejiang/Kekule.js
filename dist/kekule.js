@@ -377,9 +377,7 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.repositoryData.js',
 			'widgets/chem/editor/kekule.chemEditor.repositories.js',
 			'widgets/chem/editor/kekule.chemEditor.chemSpaceEditors.js',
-			'widgets/chem/editor/kekule.chemEditor.nexus.js',
-			'widgets/chem/editor/kekule.chemEditor.objModifiers.js',
-			'widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js',
+			'widgets/chem/editor/kekule.chemEditor.nexus.js',			
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 
