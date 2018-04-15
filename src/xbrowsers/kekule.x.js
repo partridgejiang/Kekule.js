@@ -1005,7 +1005,7 @@ if (!eproto)
 var hasEventPrototype = !!eproto;
 var eventObjMethods = {};
 var methods = X.Event.Methods;
-for (name in methods)
+for (var name in methods)
 {
 	if (methods.hasOwnProperty(name) && (typeof(methods[name]) === 'function'))
 	{
