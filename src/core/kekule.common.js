@@ -1420,7 +1420,8 @@ Kekule.ClassDefineUtils = {
 						return Kekule.CoordUtils.add(c, p.getAbsCoord2D(allowCoordBorrow) || {});
 					}
 					else
-						return Object.extend({}, c);
+						//return Object.extend({}, c);
+						return {'x': c.x, 'y': c.y};
 				},
 				'setter': function(value){
 					var c = value;
@@ -1442,7 +1443,8 @@ Kekule.ClassDefineUtils = {
 					if (p && p.getAbsCoord3D)
 						return Kekule.CoordUtils.add(c, p.getAbsCoord3D(allowCoordBorrow) || {});
 					else
-						return Object.extend({}, c);
+						//return Object.extend({}, c);
+						return {'x': c.x, 'y': c.y, 'z': c.z};
 				},
 				'setter': function(value){
 					var c = value;
@@ -2970,7 +2972,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 			if (box)
 			{
 				if (!result)
-					result = Object.extend({}, box);
+					result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 				else
 					result = Kekule.BoxUtils.getContainerBox(result, box);
 			}

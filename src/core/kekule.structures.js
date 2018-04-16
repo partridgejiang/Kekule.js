@@ -7110,7 +7110,7 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 				if (box)
 				{
 					if (!result)
-						result = Object.extend({}, box);
+						result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 					else
 						result = Kekule.BoxUtils.getContainerBox(result, box);
 				}

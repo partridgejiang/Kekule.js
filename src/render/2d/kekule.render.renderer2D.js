@@ -3231,8 +3231,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			renderOptions = Object.extend(renderOptions, localOptions);
 		*/
 
+		var c1 = this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow);
+		var c2 = this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow);
+		/*
 		var coord1 = Object.extend({}, this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
 		var coord2 = Object.extend({}, this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
+		*/
+		var coord1 = {'x': c1.x, 'y': c1.y};
+		var coord2 = {'x': c2.x, 'y': c2.y};
 		var nodes = [node1, node2];
 		var coords = [coord1, coord2];
 		var originDistance = CU.getDistance(coord1, coord2);
