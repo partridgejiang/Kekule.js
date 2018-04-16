@@ -150,18 +150,20 @@ Class.Methods = {
 };
 
 /** @ignore */
-Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString) {
-    for (var property in source)
-		{
-			var value = source[property];
-			if (ignoreUnsetValue && ((value === undefined) || (value === null)))
-				continue;
-			if (ignoreEmptyString && (value === ''))
-				continue;
-      destination[property] = value;
-		}
-    return destination;
+Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString)
+{
+  for (var property in source)
+  {
+    var value = source[property];
+    if (ignoreUnsetValue && ((value === undefined) || (value === null)))
+      continue;
+    if (ignoreEmptyString && (value === ''))
+      continue;
+    destination[property] = value;
+  }
+  return destination;
 };
+
 /** @ignore */
 Object.extendEx = function(destination, source, options)
 {
@@ -2397,24 +2399,27 @@ ObjectEx = Class.create(
 	 */
   defineProp: function(propName, options)
   {
+    var ops;
 		if (!options)
-			options = {};
-		if (options.serializable === undefined)
-			options.serializable = true;
-		if (!options.storeField)  // use default store field
-			options.storeField = this.getDefPropStoreFieldName(propName); //'f' + propName;
+			ops = {};
+    else
+      ops = Object.extend({}, options);
+		if (ops.serializable === undefined)
+			ops.serializable = true;
+		//if (!options.storeField)  // use default store field
+		ops.storeField = this.getDefPropStoreFieldName(propName);  // always use default store field name for performance
 		//options.storeField = this.getDefPropStoreFieldName(propName);
 		var list = this.getOwnPropList();
-		var prop = list.addProperty(propName, options);
+		var prop = list.addProperty(propName, ops);
     var propGetterInfo, propSetterInfo;
-		if (options.getter !== null && options.getter !== false)
+		if (ops.getter !== null && ops.getter !== false)
     {
-      propGetterInfo = this.createPropGetter(prop, options.getter);
+      propGetterInfo = this.createPropGetter(prop, ops.getter);
       prop.getter = propGetterInfo.doGetterName;
     }
-		if (options.setter !== null && options.setter !== false)
+		if (ops.setter !== null && ops.setter !== false)
     {
-      propSetterInfo = this.createPropSetter(prop, options.setter);
+      propSetterInfo = this.createPropSetter(prop, ops.setter);
       prop.setter = propSetterInfo.doSetterName;
     }
 
@@ -2425,7 +2430,7 @@ ObjectEx = Class.create(
     if (__definePropertyAvailable__)
     {
       var descs = {
-        'enumerable': options.enumerable,
+        'enumerable': ops.enumerable,
         'configurable': false
       };
       if (descs.enumerable === undefined)
@@ -2441,7 +2446,7 @@ ObjectEx = Class.create(
       }
       catch(e)
       {
-        console.log(this.getClassName(), propName);
+        //console.log(this.getClassName(), propName);
         throw e;
       }
     }
@@ -2479,7 +2484,7 @@ ObjectEx = Class.create(
 		//this.getPrototype()[getterName] = actualGetter;
 		this.getPrototype()[getterName] = function()
 		{
-			var args =arguments; // Array.prototype.slice.call(arguments);
+			var args = arguments; // Array.prototype.slice.call(arguments);
 			return this[doGetterName].apply(this, args);
 		};
 
@@ -2509,8 +2514,12 @@ ObjectEx = Class.create(
   	*/
 		this.getPrototype()[setterName] = function()
 			{
+        /*
 				var args = Array.prototype.slice.call(arguments);
 				var value = args[0];
+				*/
+        var args = arguments;
+        var value = args[0];
 
 				/*
 				args.unshift(prop.name);
@@ -2604,15 +2613,20 @@ ObjectEx = Class.create(
    */
   getPropStoreFieldValue: function(propName)
   {
-  	var info = this.getPropInfo(propName);
-  	if (info.storeField)
-  		return this[info.storeField];
-  	else
-  		return undefined;
-  	/*
-		var storeFieldName = this.getDefPropStoreFieldName(propName);
-		return this[storeFieldName];
-		*/
+    //var storeFieldName = this.getDefPropStoreFieldName(propName);
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    //if (this.hasOwnProperty(defFieldName))
+    return this[defFieldName];
+    /*
+    else
+    {
+      var info = this.getPropInfo(propName);
+      if (info.storeField)
+        return this[info.storeField];
+      else
+        return undefined;
+    }
+    */
   },
   /**
    * Get value of a property.
@@ -2677,10 +2691,13 @@ ObjectEx = Class.create(
    */
   setPropStoreFieldValue: function(propName, value)
   {
-		var pname;
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    this[defFieldName] = value;
+    /*
   	var info = this.getPropInfo(propName);
   	if (info.storeField)
   		this[info.storeField] = value;
+  	*/
   },
   /**
    * Set value of a property.
@@ -3007,10 +3024,18 @@ ObjectEx = Class.create(
   invokeEvent: function(eventName, event)
   {
   	if (!event)
-  		event = {};
-  	event.name = eventName;
-	  event.target = this;
-	  event.stopPropagation = function() { event.cancelBubble = true; };
+    {
+      event = {
+        'name': eventName, 'target': this
+      };
+    }
+    else
+    {
+      event.name = eventName;
+      event.target = this;
+    }
+    if (!event.stopPropagation)
+      event.stopPropagation = function() { event.cancelBubble = true; };
   	this.dispatchEvent(eventName, event);
   },
   /**
@@ -3049,10 +3074,9 @@ ObjectEx = Class.create(
       //console.log(eventName, this.getClassName(), handlerList._$flag_);
     }
   	var higherObj = this.getHigherLevelObj();
-  	if (!event.cancelBubble && this.getBubbleEvent() && higherObj)
+  	if (higherObj && higherObj.relayEvent && !event.cancelBubble && this.getBubbleEvent())
   	{
-  		if (higherObj.relayEvent)
-  			higherObj.relayEvent(eventName, event);
+  		higherObj.relayEvent(eventName, event);
   	}
   },
   /**
@@ -3217,7 +3241,7 @@ ObjectEx = Class.create(
 });
 /** @private */
 ObjectEx._PROPINFO_HASHKEY_PREFIX = '__$propInfo__';
-ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
+ObjectEx._PROP_STOREFIELD_PREFIX = '__$__k__p__';
 
 // Export to root name space
 $jsRoot.Class = Class;
