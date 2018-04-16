@@ -344,7 +344,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	{
 		var context = this.getOperatingContext(ctx);
 
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.moveTo(coord1.x, coord1.y);
 		context.lineTo(coord2.x, coord2.y);
