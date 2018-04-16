@@ -2356,18 +2356,30 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	_addSelectRenderOptions: function(chemObj)
 	{
-		//console.log('_addSelectRenderOptions', chemObj);
-		var method = this._getObjRenderOptionItemAppendMethod(chemObj);
-		//if (!method)
-		//console.log(chemObj.getClassName());
-		return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		var selOps = this.getObjSelectedRenderOptions();
+		if (selOps)
+		{
+			//console.log('_addSelectRenderOptions', chemObj);
+			var method = this._getObjRenderOptionItemAppendMethod(chemObj);
+			//if (!method)
+			//console.log(chemObj.getClassName());
+			return method.apply(chemObj, [selOps]);
+		}
+		else
+			return null;
 	},
 	/** @private */
 	_removeSelectRenderOptions: function(chemObj)
 	{
-		//console.log('_removeSelectRenderOptions', chemObj);
-		var method = this._getObjRenderOptionItemRemoveMethod(chemObj);
-		return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		var selOps = this.getObjSelectedRenderOptions();
+		if (selOps)
+		{
+			//console.log('_removeSelectRenderOptions', chemObj);
+			var method = this._getObjRenderOptionItemRemoveMethod(chemObj);
+			return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		}
+		else
+			return null;
 	},
 
 	/** Notify that a continuous selection update is underway. UI need not to be changed. */

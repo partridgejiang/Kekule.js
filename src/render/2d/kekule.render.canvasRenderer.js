@@ -206,6 +206,11 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		if (clearColor)
 		{
 			context.save();
+			/*
+			var oldFillColor = context.fillStyle;
+			var oldStrokeColor = context.strokeStyle;
+			console.log(oldFillColor, oldStrokeColor);
+			*/
 			try
 			{
 				var dim = this.getContextDimension(context);
@@ -214,6 +219,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			finally
 			{
 				context.restore();
+				/*
+				context.fillStyle = oldFillColor;
+				context.strokeStyle = oldStrokeColor;
+				*/
 			}
 		}
 	},
@@ -221,7 +230,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	setClearColor: function(context, color)
 	{
 		if (context)
+		{
+			//console.log('set clear color', color);
 			context.__$clearColor__ = color;
+		}
 	},
 
 	renderContext: function(context)
@@ -459,16 +471,27 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	/** @private */
 	isLineDashSupported: function(context)
 	{
-		return (context.setLineDash && (typeof(context.lineDashOffset) == "number"));
+		// using cached value
+		if (Kekule.ObjUtils.isUnset(this.isLineDashSupported._cachedValue))
+		{
+			this.isLineDashSupported._cachedValue = (context.setLineDash && (typeof(context.lineDashOffset) == "number"));
+		}
+		return this.isLineDashSupported._cachedValue;
 	},
 
 	setDrawStyle: function(context, options)
 	{
 		if (Kekule.ObjUtils.notUnset(options.strokeWidth))
+		{
+			//if (context.lineWidth !== options.strokeWidth)
 			context.lineWidth = options.strokeWidth;
+		}
 		else  // default
+		{
+			//if (context.lineWidth !== 1)
 			context.lineWidth = 1;
-		if (options.strokeColor)
+		}
+		if (options.strokeColor /* && context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
 
 		//console.log('draw style', options, context.strokeStyle);

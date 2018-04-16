@@ -1668,6 +1668,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
 		var result = Object.create(parentOptions);
+		//var result = Object.extend({}, parentOptions);
 		result = Object.extend(result, localOptions);
 		return result;
 	},

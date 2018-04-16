@@ -1345,9 +1345,11 @@ Kekule.Render.MetaShapeUtils = {
 	createShapeInfo: function(shapeType, coords, additionalInfos)
 	//createBoundInfo: function(boundType, coords, additionalInfos)
 	{
-		var result = {};
+		var result = {'shapeType': shapeType, 'coords': coords};
+		/*
 		result.shapeType = shapeType;
 		result.coords = coords;
+		*/
 		if (additionalInfos)
 			result = Object.extend(result, additionalInfos);
 		return result;
