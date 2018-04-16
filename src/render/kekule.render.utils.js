@@ -1345,9 +1345,11 @@ Kekule.Render.MetaShapeUtils = {
 	createShapeInfo: function(shapeType, coords, additionalInfos)
 	//createBoundInfo: function(boundType, coords, additionalInfos)
 	{
-		var result = {};
+		var result = {'shapeType': shapeType, 'coords': coords};
+		/*
 		result.shapeType = shapeType;
 		result.coords = coords;
+		*/
 		if (additionalInfos)
 			result = Object.extend(result, additionalInfos);
 		return result;
@@ -2394,7 +2396,7 @@ Kekule.Render.RendererDefineUtils = {
 					if (b)
 					{
 						if (!result)
-							result = Object.extend({}, b);
+							result = BU.clone(b); //Object.extend({}, b);
 						else
 							result = BU.getContainerBox(result, b);
 					}

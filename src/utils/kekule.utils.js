@@ -1606,6 +1606,18 @@ Kekule.CoordUtils = {
 		return result;
 	},
 	/**
+	 * Clone a coord.
+	 * @param {Hash} coord
+	 * @returns {Hash}
+	 */
+	clone: function(coord)
+	{
+		var result = {'x': coord.x, 'y': coord.y};
+		if (coord.z || (coord.z === 0))
+			result.z = coord.z;
+		return result;
+	},
+	/**
 	 * Check if the coord is a 3D one (has z value)
 	 * @param {Object} coord
 	 * @returns {Bool}
@@ -2094,7 +2106,8 @@ Kekule.CoordUtils = {
 	calcRotate3DMatrix: function(options)
 	{
 		var M = Kekule.MatrixUtils;
-		var op = Object.extend({}, options || {});
+		//var op = Object.extend({}, options || {});
+		var op = Object.create(options || {});
 
 		var rotateMatrix;
 		if (op.rotateMatrix)
@@ -2489,8 +2502,8 @@ Kekule.CoordUtils = {
 		var l = coords.length;
 		if (l > 0)
 		{
-			minCoord = Object.extend({}, coords[0]);
-			maxCoord = Object.extend({}, coords[0]);
+			minCoord = Kekule.CoordUtils.clone(coords[0]); //Object.extend({}, coords[0]);
+			maxCoord = Kekule.CoordUtils.clone(coords[0]); // Object.extend({}, coords[0]);
 		}
 		else
 			return null;
@@ -2698,6 +2711,24 @@ Kekule.BoxUtils = {
 		}
 		return result;
 	},
+	/**
+	 * Clone a box.
+	 * @param {Hash} box
+	 * @returns {Hash}
+	 */
+	clone: function(box)
+	{
+		var result = {
+			'x1': box.x1, 'y1': box.y1,
+			'x2': box.x2, 'y2': box.y2
+		};
+		if (Kekule.ObjUtils.notUnset(box.z1) && Kekule.ObjUtils.notUnset(box.z2))
+		{
+			result.z1 = box.z1;
+			result.z2 = box.z2;
+		}
+		return result;
+	},
 
 	/**
 	 * Convert a box to a rect defined by left, top, width and height.
@@ -2789,9 +2820,9 @@ Kekule.BoxUtils = {
 	getContainerBox: function(box1, box2)
 	{
 		if (!box1)
-			return Object.extend({}, box2);
+			return Kekule.BoxUtils.clone(box2); //Object.extend({}, box2);
 		else if (!box2)
-			return Object.extend({}, box1);
+			return Kekule.BoxUtils.clone(box1); //Object.extend({}, box1);
 		var b1 = Kekule.BoxUtils.normalize(box1);
 		var b2 = Kekule.BoxUtils.normalize(box2);
 		var result = {
@@ -3008,6 +3039,20 @@ Kekule.RectUtils = {
 	{
 		var result = {'left': left, 'top': top, 'width': width, 'height': height};
 		return result;
+	},
+	/**
+	 * Clone a rect object.
+	 * @param {Hash} rect
+	 * @returns {Hash}
+	 */
+	clone: function(rect)
+	{
+		return {
+			'left': rect.left,
+			'top': rect.top,
+			'width': rect.width,
+			'height': rect.height
+		};
 	},
 	/**
 	 * Returns if the width/height of rect is zero

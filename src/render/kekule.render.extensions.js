@@ -220,8 +220,11 @@
 		 */
 		getOverriddenRenderOptions: function()
 		{
-			var result = Object.create(this.getRenderOptions() || null);
+			//var result = Object.create(this.getRenderOptions() || null);
+			var renderOptions = this.getRenderOptions();
+			var result = renderOptions? Object.extend({}, renderOptions): {};
 			var overrideOptions = this.getOverrideRenderOptions(this.getOverrideRenderOptionItems());
+			//console.log('override options', this.getRenderOptions(), overrideOptions, this.getOverrideRenderOptionItems());
 			if (overrideOptions)
 			{
 				result = Object.extend(result, overrideOptions);
@@ -437,7 +440,8 @@
 		setAbsBaseCoord: function(value, coordMode, allowCoordBorrow)
 		{
 			var coordPos = this.getCoordPos(coordMode);
-			var coord = Object.extend({}, value);
+			//var coord = Object.extend({}, value);
+			var coord = Kekule.CoordUtils.clone(value);
 			if (value && coordPos !== Kekule.Render.CoordPos.CENTER)
 			{
 				if (coordPos === Kekule.Render.CoordPos.CORNER_TL)  // now only handles 2D situation
@@ -695,7 +699,7 @@
 				if (box)
 				{
 					if (!result)
-						result = Object.extend({}, box);
+						result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 					else
 						result = Kekule.BoxUtils.getContainerBox(result, box);
 				}
@@ -1741,7 +1745,7 @@
 					if (box)
 					{
 						if (!result)
-							result = Object.extend({}, box);
+							result = Kekule.BoxUtils.clone(box); // Object.extend({}, box);
 						else
 							result = Kekule.BoxUtils.getContainerBox(result, box);
 					}

@@ -1668,6 +1668,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
 		var result = Object.create(parentOptions);
+		//var result = Object.extend({}, parentOptions);
 		result = Object.extend(result, localOptions);
 		return result;
 	},
@@ -1950,6 +1951,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	 */
 	transformObjCoord2DToContext: function(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow)
 	{
+		var result;
 		//if (node && node.getBaseCoord2D)
 		if (obj && obj.getAbsBaseCoord2D)
 		{
@@ -1959,6 +1961,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				var newCoord = Kekule.CoordUtils.transform2DByMatrix(coord, transformMatrix);
 				this.setTransformedCoord2D(context, obj, newCoord);
+				result = newCoord;
 				//console.log(node[this.TRANSFORM_COORD_FIELD]);
 			}
 			if (obj.getNodes)  // has child nodes
@@ -1968,6 +1971,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					this.transformObjCoord2DToContext(context, obj.getNodeAt(i), childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 		}
+		return result;
 	},
 	/**
 	 * Get transformed coord.
@@ -1999,14 +2003,17 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var childTransformMatrix = this.getExtraProp2(context, ctab, this.CHILD_TRANSFORM_MATRIX_FIELD);
 			if (ctab && (ctab.hasNode(obj, false) || ctab.hasConnector(obj, false)))  // is direct child of ctab
 			{
-				this.transformObjCoord2DToContext(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord2DToContext(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 			else  // is nested child
-				this.transformObjCoord2DToContext(context, obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+			{
+				result = this.transformObjCoord2DToContext(context, obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+			}
 		}
 		//console.log('transformed: ', obj[this.TRANSFORM_COORD_FIELD]);
 		//return obj[this.TRANSFORM_COORD_FIELD];
-		return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		//return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		return result;
 	},
 	/**
 	 * Set transformed coord.
@@ -3231,8 +3238,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			renderOptions = Object.extend(renderOptions, localOptions);
 		*/
 
+		var c1 = this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow);
+		var c2 = this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow);
+		/*
 		var coord1 = Object.extend({}, this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
 		var coord2 = Object.extend({}, this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
+		*/
+		var coord1 = {'x': c1.x, 'y': c1.y};
+		var coord2 = {'x': c2.x, 'y': c2.y};
 		var nodes = [node1, node2];
 		var coords = [coord1, coord2];
 		var originDistance = CU.getDistance(coord1, coord2);
