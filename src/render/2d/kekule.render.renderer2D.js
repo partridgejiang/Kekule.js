@@ -2075,7 +2075,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
 			var node = nodes[i];
-			var ops = this.handleNodeSpecifiedRenderOptions(nodes[i], options);
+			var ops = this.handleNodeSpecifiedRenderOptions(node, options);
 			var elem = this.doDrawNode(context, group, node, ctab, ops, finalTransformOptions);
 			/*
 			 if (elem && group)
@@ -2117,12 +2117,13 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		 ops.color = options.bondColor || options.color;  // use atomColor to override color settings
 		 ops.bondColor = null;
 		 */
-		var ops = this.handleConnectorSpecifiedRenderOptions(ctab, options);
+		//var ctabOps = this.handleConnectorSpecifiedRenderOptions(ctab, options);
 
 		var connectors = ctab.getExposedConnectors();
 		for (var i = 0, l = connectors.length; i < l; ++i)
 		{
 			var connector = connectors[i];
+			var ops = this.handleConnectorSpecifiedRenderOptions(connector, options);
 			var elem = this.doDrawConnector(context, group, connector, ctab, ops, finalTransformOptions);
 		}
 	},
@@ -2160,7 +2161,8 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		 var renderOptions = Kekule.Render.RenderOptionUtils.mergeObjLocalRenderOptions(connector, options);
 		 renderOptions.color = renderOptions.bondColor || renderOptions.color;
 		 */
-		var renderOptions = this.handleConnectorSpecifiedRenderOptions(connector, options);
+		//var renderOptions = this.handleConnectorSpecifiedRenderOptions(connector, options);
+		var renderOptions = options;
 
 		for (var i = 0; i < objCount; ++i)
 		{
@@ -2410,6 +2412,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	handleNodeSpecifiedRenderOptions: function($super, currObj, parentOptions)
 	{
 		var result = $super(currObj, parentOptions);
+		/*
 		// color
 		//result.atomColor = oneOf(localOptions.atomColor, localOptions.color, result.atomColor, result.color);
 		//result.atomColor = oneOf(localOptions.atomColor, result.atomColor);
@@ -2426,6 +2429,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//result.fontSize = result.atomFontSize || result.fontSize;
 		result.fontSize = result.fontSize || result.atomFontSize;
 		//console.log(result.atomFontSize, result.fontSize, localOptions, parentOptions);
+		*/
+		if (!result.color && result.atomColor)
+			result.color = result.atomColor;
+		if (!result.fontFamily && result.atomFontFamily)
+			result.fontFamily = result.atomFontFamily;
+		if (!result.fontSize && result.atomFontSize)
+			result.fontSize = result.atomFontSize;
+
 		return result;
 	},
 	/** @private */
@@ -2441,7 +2452,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//result.bondColor = oneOf(localOptions.bondColor, localOptions.color, result.bondColor, result.color);
 		//result.bondColor = oneOf(localOptions.bondColor, result.bondColor);
 		//result.color = result.bondColor;
-		result.color = result.color || result.bondColor;
+		//result.color = result.color || result.bondColor;
+		if (!result.color && result.bondColor)
+		{
+			result.color = result.bondColor;
+		}
 		return result;
 	},
 
@@ -2524,7 +2539,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var coord = this.getTransformedCoord2D(context, node, finalTransformOptions.allowCoordBorrow);
 		//var renderConfigs = this.getRenderConfigs();
 
-		var nodeRenderOptions = this.handleNodeSpecifiedRenderOptions(node, options);
+		//var nodeRenderOptions = this.handleNodeSpecifiedRenderOptions(node, options);
+		var nodeRenderOptions = options;
 
 		//var nodeRenderOptions = Kekule.Render.RenderOptionUtils.mergeObjLocalRenderOptions(node, options);
 
@@ -2534,18 +2550,31 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var localOptions = node.getOverriddenRenderOptions() || {};
 		//var localColor = localOptions.atomColor || localOptions.color;
 		var localColor = localOptions.color || localOptions.atomColor;
-		var atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType());
-		if (atomicNumber <= 0)  // not a real atom, may be subgroup or peseudo atom, etc.
+		if (localColor)
+			nodeRenderOptions.color = localColor;
+		else
 		{
-			var atomTypeName = node.getClassLocalName();
-			atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomTypeName, this.getRendererType());
+			if (nodeRenderOptions.useAtomSpecifiedColor)
+			{
+				var atomSpecifiedColor;
+				if (atomicNumber <= 0)  // not a real atom, may be subgroup or peseudo atom, etc.
+				{
+					var atomTypeName = node.getClassLocalName();
+					atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomTypeName, this.getRendererType());
+				}
+				else
+					atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType());
+				nodeRenderOptions.color = atomSpecifiedColor;
+			}
 		}
+		/*
 		var defColor = localColor ||
 			(nodeRenderOptions.useAtomSpecifiedColor?
 					atomSpecifiedColor:
 				nodeRenderOptions.color);
 		//console.log(defColor);
 		nodeRenderOptions.color = defColor;
+		*/
 		/*
 		nodeRenderOptions.fontFamily = nodeRenderOptions.atomFontFamily || nodeRenderOptions.fontFamily;
 		nodeRenderOptions.fontSize = nodeRenderOptions.atomFontSize || nodeRenderOptions.fontSize;
@@ -4233,14 +4262,15 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	getChildObjs: function($super)
 	{
 		var chemObj = this.getChemObj();
-		if (chemObj && chemObj.getAttachedMarkers)
+		if (chemObj)
 		{
 			var r = [];
 			var childObjs = (chemObj.getExposedNodes() || []).concat(chemObj.getExposedConnectors() || []);
 			for (var i = 0, l = childObjs.length; i < l; ++i)
 			{
 				var obj = childObjs[i];
-				r = r.concat(obj.getAttachedMarkers());
+				if (obj.getAttachedMarkers)
+					r = r.concat(obj.getAttachedMarkers() || []);
 			}
 			return r.concat($super());
 		}

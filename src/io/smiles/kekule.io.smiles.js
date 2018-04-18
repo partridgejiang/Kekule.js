@@ -423,12 +423,26 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			// calc rotation direction
 			if (nextNodes && nextNodes.length)
 			{
-				var hcount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
-				// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
-				var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitVerticalHydrogen: true});
-				var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE)? SMI.ROTATION_DIR_CLOCKWISE:
-					(dir === Kekule.RotationDir.ANTICLOCKWISE)? SMI.ROTATION_DIR_ANTICLOCKWISE:
-						'';
+				// check if there is a bonded H atom, as it may affects the stereo and are ignored in vertex graph
+				var bondedHAtoms = node.getLinkedHydrogenAtoms();
+				if (bondedHAtoms && bondedHAtoms.length === 1 && nextNodes.indexOf(bondedHAtoms[0]) < 0)
+				{
+					nextNodes.push(bondedHAtoms[0]);
+				}
+				//var hcount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
+				var hcount = node.getHydrogenCount? (node.getHydrogenCount(false) || 0): 0;  // calc implicit Hs, as they are excluded from graph
+
+				if (bondedHAtoms.length && hcount)  // has both implicit and explicit H, this should not be a chiral center
+					schiralRot = '';
+				else
+				{
+
+					// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
+					var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitVerticalHydrogen: true});
+					var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE) ? SMI.ROTATION_DIR_CLOCKWISE :
+							(dir === Kekule.RotationDir.ANTICLOCKWISE) ? SMI.ROTATION_DIR_ANTICLOCKWISE :
+									'';
+				}
 				if (schiralRot)
 				{
 					result += schiralRot;
