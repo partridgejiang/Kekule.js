@@ -4262,14 +4262,15 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	getChildObjs: function($super)
 	{
 		var chemObj = this.getChemObj();
-		if (chemObj && chemObj.getAttachedMarkers)
+		if (chemObj)
 		{
 			var r = [];
 			var childObjs = (chemObj.getExposedNodes() || []).concat(chemObj.getExposedConnectors() || []);
 			for (var i = 0, l = childObjs.length; i < l; ++i)
 			{
 				var obj = childObjs[i];
-				r = r.concat(obj.getAttachedMarkers());
+				if (obj.getAttachedMarkers)
+					r = r.concat(obj.getAttachedMarkers() || []);
 			}
 			return r.concat($super());
 		}

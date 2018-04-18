@@ -1873,7 +1873,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 			for (var i = 0, l = childObjs.length; i < l; ++i)
 			{
 				var obj = childObjs[i];
-				r = r.concat(obj.getAttachedMarkers());
+				r = r.concat(obj.getAttachedMarkers() || []);
 			}
 			return r.concat($super());
 		}

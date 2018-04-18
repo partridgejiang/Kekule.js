@@ -414,7 +414,7 @@ Kekule.ChemStructureUtils = {
 
 		if (includeAttachedMarkers && baseObj.getAttachedMarkers)
 		{
-			linkedObjs = linkedObjs.concat(baseObj.getAttachedMarkers());
+			linkedObjs = linkedObjs.concat(baseObj.getAttachedMarkers() || []);
 		}
 
 		if (excludeObjs && excludeObjs.length)
