@@ -2136,6 +2136,8 @@ ObjectEx = Class.create(
 	CLASS_NAME: 'ObjectEx',
 	//* @private */
 	//PROPINFO_HASHKEY_PREFIX: '__$propInfo__',
+  /** @private */
+  EVENT_HANDLERS_FIELD: '__$__k__eventhandlers__$__',
 	/**
 	 * @constructs
 	 */
@@ -2166,7 +2168,8 @@ ObjectEx = Class.create(
 			this.doFinalize();
 			this.invokeEvent('finalize', {'obj': this});
       // free all event objects
-      this.setPropStoreFieldValue('eventHandlers', null);
+      //this.setPropStoreFieldValue('eventHandlers', null);
+      this[this.EVENT_HANDLERS_FIELD] = null;
 			this._finalized = true;
 		}
 	},
@@ -2191,14 +2194,16 @@ ObjectEx = Class.create(
 		this.defineProp('bubbleEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
     this.defineProp('suppressChildChangeEventInUpdating', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		// private, event storer
-		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE,
+		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE, 'setter': null,
 			'getter': function()
 				{
-					var r = this.getPropStoreFieldValue('eventHandlers');
+					//var r = this.getPropStoreFieldValue('eventHandlers');
+          var r = this[this.EVENT_HANDLERS_FIELD];  // direct access, for speed
 					if (!r)
 					{
 						r = {};
-						this.setPropStoreFieldValue('eventHandlers', r);
+						//this.setPropStoreFieldValue('eventHandlers', r);
+            this[this.EVENT_HANDLERS_FIELD] = r;
 					}
 					return r;
 				}
@@ -3058,7 +3063,7 @@ ObjectEx = Class.create(
   dispatchEvent: function(eventName, event)
   {
   	var handlerList = this.getEventHandlerList(eventName);
-  	if (this.isEventHandlerList(handlerList))
+  	//if (this.isEventHandlerList(handlerList))
   	{
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
@@ -3069,15 +3074,14 @@ ObjectEx = Class.create(
         }
 	  	}
   	}
-    else
+    if (!event.cancelBubble && this.getBubbleEvent())
     {
-      //console.log(eventName, this.getClassName(), handlerList._$flag_);
+      var higherObj = this.getHigherLevelObj();
+      if (higherObj && higherObj.relayEvent)
+      {
+        higherObj.relayEvent(eventName, event);
+      }
     }
-  	var higherObj = this.getHigherLevelObj();
-  	if (higherObj && higherObj.relayEvent && !event.cancelBubble && this.getBubbleEvent())
-  	{
-  		higherObj.relayEvent(eventName, event);
-  	}
   },
   /**
    * Stop propagation of event, disallow it to bubble to higher level.
