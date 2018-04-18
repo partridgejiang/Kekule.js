@@ -49,9 +49,14 @@
   </script>
 
   <link rel="stylesheet" href="../../src/widgets/themes/default/kekule.css" />
+  <!--
+  <script src="../../dist/kekule.js?min=true"></script>
+  -->
+
   <script src="../../src/kekule.js?min=false"></script>
+
   <script>
-    var LOOPCOUNT = 50;
+    var LOOPCOUNT = 100;
     var renderType = Kekule.Render.RendererType.R2D;
     var molIds = [/*'pyrrole', 'caffeine', 'mannitol', 'morphine', 'oxylate3D', 'cyclodextrin3D',*/ 'largeChain2D'];
 
@@ -102,12 +107,16 @@
       var dim = Kekule.HtmlElementUtils.getElemOffsetDimension(drawElem); // get width/height of parent element
       var context = painter.createContext(drawElem, dim.width, dim.height); // create context fulfill parent element
 
+      painter.draw(context, {'x': dim.width / 2, 'y': dim.height / 2});  // initial draw, create essential classes
+      painter.finalize();
+
       var profileId = molId;
       console.profile(profileId);
       var startTime = Date.now();
       // at last, draw the molecule at the center of context
       for (var i = 0; i < loopCount; ++i)
       {
+        var painter = new Kekule.Render.ChemObjPainter(renderType, mol);
         painter.draw(context, {'x': dim.width / 2, 'y': dim.height / 2});
       }
       var endTime = Date.now();

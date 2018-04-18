@@ -61,7 +61,8 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	getMarkerCount: function()
 	{
-		return this.getAttachedMarkers().length;
+		var markers = this.getPropStoreFieldValue('attachMarkers');
+		return markers? markers.length: 0;
 	},
 	/**
 	 * Get attached marker at index.
@@ -70,7 +71,8 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	getMarkerAt: function(index)
 	{
-		return this.getAttachedMarkers()[index];
+		var markers = this.getPropStoreFieldValue('attachMarkers');
+		return markers? markers[index]: null;
 	},
 	/**
 	 * Returns the first child marker of a specified class type.
@@ -151,7 +153,8 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	indexOfMarker: function(marker)
 	{
-		return this.getAttachedMarkers().indexOf(marker);
+		var markers = this.getPropStoreFieldValue('attachMarkers');
+		return markers? markers.indexOf(marker): -1;
 	},
 	/**
 	 * Check if a marker has been attached to this object.
@@ -183,7 +186,7 @@ ClassEx.extend(Kekule.ChemObject,
 			return index;// do nothing
 		else
 		{
-			var result = this.getAttachedMarkers().push(marker);
+			var result = this.getAttachedMarkers(true).push(marker);
 			if (marker.setOwner)
 				marker.setOwner(this.getOwner());
 			if (marker.setParent)
@@ -212,7 +215,7 @@ ClassEx.extend(Kekule.ChemObject,
 	insertMarkerAt: function(marker, index)
 	{
 		var i = this.indexOfMarker(marker);
-		var markers = this.getAttachedMarkers();
+		var markers = this.getAttachedMarkers(true);
 		if (Kekule.ObjUtils.isUnset(index) || (index < 0))
 			index = markers.length;
 		if (i >= 0)  // already inside, adjust position
@@ -239,10 +242,10 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	setMarkerIndex: function(marker, index)
 	{
-		var markers = this.getAttachedMarkers();
 		var i = this.indexOfMarker(marker);
 		if (i >= 0)  // already inside, adjust position
 		{
+			var markers = this.getPropStoreFieldValue('attachedMarkers'); // this.getAttachedMarkers();
 			markers.splice(i, 1);
 			markers.splice(index, 0, marker);
 		}
@@ -256,7 +259,7 @@ ClassEx.extend(Kekule.ChemObject,
 		var marker = this.getMarkerAt(index);
 		if (marker)
 		{
-			var result = this.getAttachedMarkers().splice(index, 1);
+			var result = this.getAttachedMarkers(true).splice(index, 1);
 			if (marker.setOwner)
 				marker.setOwner(null);
 			if (marker.setParent)
@@ -300,17 +303,24 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	clearMarkers: function()
 	{
-		var oldMarkers = AU.clone(this.getAttachedMarkers());
-		this.setPropStoreFieldValue('attachedMarkers', []);
+		//var oldMarkers = AU.clone(this.getAttachedMarkers());
+		var oldMarkers = this.getPropStoreFieldValue('attachedMarkers')
+		if (oldMarkers)
+			oldMarkers = AU.clone(oldMarkers);
 
-		for (var i = 0, l = oldMarkers.length; i < l; ++i)
+		this.setPropStoreFieldValue('attachedMarkers', null);
+
+		if (oldMarkers)
 		{
-			var marker = oldMarkers[i];
-			if (marker.setOwner)
-				marker.setOwner(null);
-			if (marker.setParent)
-				marker.setParent(null);
-			this._attachedMarkerRemoved(marker);
+			for (var i = 0, l = oldMarkers.length; i < l; ++i)
+			{
+				var marker = oldMarkers[i];
+				if (marker.setOwner)
+					marker.setOwner(null);
+				if (marker.setParent)
+					marker.setParent(null);
+				this._attachedMarkerRemoved(marker);
+			}
 		}
 
 		this.notifyAttachedMarkersChanged();
@@ -381,10 +391,10 @@ ClassEx.extendMethod(Kekule.ChemObject, 'insertBefore', function($origin, child,
 ClassEx.defineProp(Kekule.ChemObject, 'attachedMarkers',
 {
 	'dataType': DataType.ARRAY, 'scope':  Class.PropertyScope.PUBLISHED,
-	'getter': function()
+	'getter': function(autoCreate)
 	{
 		var result = this.getPropStoreFieldValue('attachedMarkers');
-		if (!result)
+		if (!result && autoCreate)
 		{
 			result = [];
 			this.setPropStoreFieldValue('attachedMarkers', result);

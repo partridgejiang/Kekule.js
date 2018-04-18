@@ -220,13 +220,14 @@
 		 */
 		getOverriddenRenderOptions: function()
 		{
+			var renderOptions = this.getRenderOptions() || {};
+			var result = renderOptions;
 			//var result = Object.create(this.getRenderOptions() || null);
-			var renderOptions = this.getRenderOptions();
-			var result = renderOptions? Object.extend({}, renderOptions): {};
 			var overrideOptions = this.getOverrideRenderOptions(this.getOverrideRenderOptionItems());
 			//console.log('override options', this.getRenderOptions(), overrideOptions, this.getOverrideRenderOptionItems());
 			if (overrideOptions)
 			{
+				//result = renderOptions? Object.extend({}, renderOptions): {};
 				result = Object.extend(result, overrideOptions);
 			}
 			return result;
