@@ -4202,7 +4202,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		for (var i = 0, l = actualObjs.length; i < l; ++i)
 		{
 			var obj = actualObjs[i];
-			var info = this.createManipulateObjInfo(obj, startScreenCoord);
+			var info = this.createManipulateObjInfo(obj, i, startScreenCoord);
 			map.set(obj, info);
 		}
 		this.setStartBox(startBox);
@@ -4791,7 +4791,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setManipulateObjs(this.getManipulateObjs());
 	},
 	/** @private */
-	createManipulateObjInfo: function(obj, startScreenCoord)
+	createManipulateObjInfo: function(obj, objIndex, startScreenCoord)
 	{
 		var editor = this.getEditor();
 		var info = {
