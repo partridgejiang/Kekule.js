@@ -558,52 +558,61 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 		var lastAtom;
 		var lastAtomIndex;
 		var firstAtom;
-		// generate atoms and bonds
-		for (var i = 0; i < atomCount; ++i)
+
+		mol.beginUpdate();
+		try
 		{
-			var atom = this._generateAtom(i);
-			var atomCoord;
-			if (hasCoordCache)
+			// generate atoms and bonds
+			for (var i = 0; i < atomCount; ++i)
 			{
-				atomCoord = this._getCachedCoord(atomCount, i);
-			}
-			else
-			{
-				var angle = startingAngle + centerAngle * i;
-				// set atom coord
-				var x = centerAtomLength * Math.cos(angle);
-				var y = centerAtomLength * Math.sin(angle);
-				atomCoord = {'x': x, 'y': y};
-				if (coordCacheEnabled)
+				var atom = this._generateAtom(i);
+				var atomCoord;
+				if (hasCoordCache)
 				{
-					this._setCoordToCache(atomCoord, atomCount, i);
+					atomCoord = this._getCachedCoord(atomCount, i);
 				}
-			}
-			atom.setCoord2D(atomCoord);
-			mol.appendNode(atom);
-			//children.push(atom);
+				else
+				{
+					var angle = startingAngle + centerAngle * i;
+					// set atom coord
+					var x = centerAtomLength * Math.cos(angle);
+					var y = centerAtomLength * Math.sin(angle);
+					atomCoord = {'x': x, 'y': y};
+					if (coordCacheEnabled)
+					{
+						this._setCoordToCache(atomCoord, atomCount, i);
+					}
+				}
+				atom.setCoord2D(atomCoord);
+				mol.appendNode(atom);
+				//children.push(atom);
 
-			if (i === 0)
-				firstAtom = atom;
+				if (i === 0)
+					firstAtom = atom;
 
-			// connect with bond
-			if (lastAtom)
-			{
-				var bond = this._generateBond(lastAtomIndex, i);
-				mol.appendConnector(bond);
-				bond.appendConnectedObj(lastAtom);
-				bond.appendConnectedObj(atom);
-				//children.push(bond);
+				// connect with bond
+				if (lastAtom)
+				{
+					var bond = this._generateBond(lastAtomIndex, i);
+					mol.appendConnector(bond);
+					bond.appendConnectedObj(lastAtom);
+					bond.appendConnectedObj(atom);
+					//children.push(bond);
+				}
+				lastAtom = atom;
+				lastAtomIndex = i;
 			}
-			lastAtom = atom;
-			lastAtomIndex = i;
+			// seal the last bond
+			var bond = this._generateBond(atomCount - 1, 0);
+			mol.appendConnector(bond);
+			bond.appendConnectedObj(lastAtom);
+			bond.appendConnectedObj(firstAtom);
+			//children.push(bond);
 		}
-		// seal the last bond
-		var bond = this._generateBond(atomCount - 1, 0);
-		mol.appendConnector(bond);
-		bond.appendConnectedObj(lastAtom);
-		bond.appendConnectedObj(firstAtom);
-		//children.push(bond);
+		finally
+		{
+			mol.endUpdate();
+		}
 
 		/*
 		if (!targetMol)
@@ -737,24 +746,32 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 		if (this.getNegativeDirection())
 			deltaCoord.y = -deltaCoord.y;
 
-		var currCoord = {'x': 0, 'y': 0};
-		var ySign = 1;
-		var lastAtom, currAtom, bond;
-		for (var i = 0, l = atomCount; i < l; ++i)
+		mol.beginUpdate();
+		try
 		{
-			lastAtom = currAtom;
-			currAtom = this._generateAtom(i);
-			currAtom.setCoord2D(currCoord);
-			mol.appendNode(currAtom);
-			if (lastAtom)
+			var currCoord = {'x': 0, 'y': 0};
+			var ySign = 1;
+			var lastAtom, currAtom, bond;
+			for (var i = 0, l = atomCount; i < l; ++i)
 			{
-				bond = this._generateBond(i - 1, i);
-				mol.appendConnector(bond);
-				bond.appendConnectedObj(lastAtom);
-				bond.appendConnectedObj(currAtom);
+				lastAtom = currAtom;
+				currAtom = this._generateAtom(i);
+				currAtom.setCoord2D(currCoord);
+				mol.appendNode(currAtom);
+				if (lastAtom)
+				{
+					bond = this._generateBond(i - 1, i);
+					mol.appendConnector(bond);
+					bond.appendConnectedObj(lastAtom);
+					bond.appendConnectedObj(currAtom);
+				}
+				currCoord = {'x': currCoord.x + deltaCoord.x, 'y': currCoord.y + deltaCoord.y * ySign};
+				ySign = -ySign;
 			}
-			currCoord = {'x': currCoord.x + deltaCoord.x, 'y': currCoord.y + deltaCoord.y * ySign};
-			ySign = -ySign;
+		}
+		finally
+		{
+			mol.endUpdate();
 		}
 		// set manipulate center object
 		//this.setMolManipulationCenterObj(mol.getNodeAt(0));
