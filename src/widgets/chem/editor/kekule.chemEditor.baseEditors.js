@@ -5064,6 +5064,20 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			}
 		}
 		return true;
+	},
+	/** @private */
+	react_mousewheel: function($super, e)
+	{
+		if (e.getCtrlKey())
+		{
+			var state = this.getState();
+			if (state === Kekule.Editor.BasicManipulationIaController.State.NORMAL)
+			{
+				// disallow mouse zoom during manipulation
+				return $super(e);
+			}
+			e.preventDefault();
+		}
 	}
 
 	/* @private */
