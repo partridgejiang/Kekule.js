@@ -3065,6 +3065,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		this.defineProp('repositoryItem', {'dataType': 'Kekule.AbstractRepositoryItem', 'serializable': false});
 		this.defineProp('addRepObjsOper', {'dataType': 'Kekule.MacroOperation', 'serializable': false});
 		this.defineProp('initialTransformParams', {'dataType': DataType.HASH, 'serializable': false});
+		this.defineProp('currRepositoryObjects', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 	},
 
 	/** @ignore */
@@ -3111,6 +3112,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 
 			repResult = repItem.createObjects(targetObj) || {};
 			var repObjects = repResult.objects;
+			this.setCurrRepositoryObjects(repObjects);
 
 			var isOneStructItem = repItem.isOneStructureFragmentObj();
 			var addToBlankMol = false;
@@ -3323,6 +3325,15 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.RepositoryIaContr
 		$super(editor);
 		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D());
 	},
+	/** @ignore */
+	getActualManipulatingObjects: function(objs)
+	{
+		// since we are sure that the manipulated objects is carbon chain itself,
+		// we can return all its atoms as the actual manipulating objects / coord dependent objects
+		var mol = this.getCurrRepositoryObjects()[0];
+		//console.log(mol);
+		return mol? AU.clone(mol.getNodes()): [];
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -3406,6 +3417,15 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	canInteractWithObj: function($super, obj)
 	{
 		return $super(obj) && (obj instanceof Kekule.ChemStructureNode);
+	},
+	/** @ignore */
+	getActualManipulatingObjects: function(objs)
+	{
+		// since we are sure that the manipulated objects is carbon chain itself,
+		// we can return all its atoms as the actual manipulating objects / coord dependent objects
+		var mol = this.getCurrRepositoryObjects()[0];
+		//console.log(mol);
+		return mol? AU.clone(mol.getNodes()): [];
 	},
 	/** @private */
 	getChainMaxAtomCount: function()
@@ -3616,7 +3636,18 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		this._repObjStartingScreenCoord = null;
 		this._repObjNeedUpdate = false;
 
-		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D(3));
+		var rep = new Kekule.Editor.MolRingRepositoryItem2D(3);
+		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
+		this.setRepositoryItem(rep);
+	},
+	/** @ignore */
+	getActualManipulatingObjects: function(objs)
+	{
+		// since we are sure that the manipulated objects is carbon ring itself,
+		// we can return all its atoms as the actual manipulating objects / coord dependent objects
+		var mol = this.getCurrRepositoryObjects()[0];
+		//console.log(mol);
+		return mol? AU.clone(mol.getNodes()): [];
 	},
 	/** @private */
 	getRingMaxAtomCount: function()
