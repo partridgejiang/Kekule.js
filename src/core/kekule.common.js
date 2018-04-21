@@ -2051,6 +2051,12 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			}
 		});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setEnableObjectChangeEvent(true);
+	},
 
 	/** @private */
 	getHigherLevelObj: function()

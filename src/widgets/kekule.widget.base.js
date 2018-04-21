@@ -942,6 +942,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setEnableObjectChangeEvent(true);
+	},
+
+	/** @ignore */
 	invokeEvent: function($super, eventName, event)
 	{
 		if (!event)
