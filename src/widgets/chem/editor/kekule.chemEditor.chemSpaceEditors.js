@@ -3616,7 +3616,9 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		this._repObjStartingScreenCoord = null;
 		this._repObjNeedUpdate = false;
 
-		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D(3));
+		var rep = new Kekule.Editor.MolRingRepositoryItem2D(3);
+		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
+		this.setRepositoryItem(rep);
 	},
 	/** @private */
 	getRingMaxAtomCount: function()
