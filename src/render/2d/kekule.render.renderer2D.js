@@ -4210,16 +4210,6 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	},
 	*/
 
-	/** @ignore */
-	getRenderCache: function($super, context)
-	{
-		return $super(context);
-		/*
-		var r = this.getConcreteRenderer();
-		return r? r.getRenderCache(context): {};
-		*/
-	},
-
 	/** @private */
 	_getConcreteRendererDrawOptions: function(options)
 	{

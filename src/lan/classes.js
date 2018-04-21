@@ -2492,8 +2492,8 @@ ObjectEx = Class.create(
 		//this.getPrototype()[getterName] = actualGetter;
 		this.getPrototype()[getterName] = function()
 		{
-			var args = arguments; // Array.prototype.slice.call(arguments);
-			return this[doGetterName].apply(this, args);
+			//var args = Array.prototype.slice.call(arguments);
+			return this[doGetterName].apply(this, arguments);
 		};
 
   	return {
