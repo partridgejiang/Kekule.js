@@ -1101,10 +1101,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @private */
-	createManipulateObjInfo: function($super, obj, startContextCoord)
+	createManipulateObjInfo: function($super, obj, objIndex, startContextCoord)
 	{
 		var editor = this.getEditor();
-		var info = $super(obj, startContextCoord);
+		var info = $super(obj, objIndex, startContextCoord);
 		var isConstrained = this.isConstrainedMove();
 		if (isConstrained)  // constrained move, store connector length into info
 		{
@@ -3497,7 +3497,38 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		this._repObjNeedUpdate = false;
 		this._isForceReversedChainDirection = false;
 
+		this._manipulateObjInfoCache = [];
+
 		this.setRepositoryItem(new Kekule.Editor.MolChainRepositoryItem2D(2));
+	},
+	/** @private */
+	getChainMaxAtomCount: function()
+	{
+		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexChainAtomCount(), 0);
+	},
+	/** @ignore */
+	stopManipulate: function($super)
+	{
+		this._clearManipulateObjInfoCache();
+		$super();
+	},
+	/** @ignore */
+	createManipulateObjInfo: function($super, obj, objIndex, startContextCoord)
+	{
+		// try use cached info first
+		var negative = this.getRepositoryItem().getNegativeDirection();
+		var cachedInfo = this._getCachedManipulateObjInfo(objIndex, negative);
+		if (cachedInfo)
+		{
+			//console.log('use cached info', objIndex, cachedInfo);
+			return cachedInfo;
+		}
+		else  // calculate and save to cache
+		{
+			var info = $super(obj, objIndex, startContextCoord);
+			this._setCachedManipulateObjInfo(info, objIndex, negative);
+			return info;
+		}
 	},
 	/** @ignore */
 	canInteractWithObj: function($super, obj)
@@ -3514,9 +3545,28 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		return mol? AU.clone(mol.getNodes()): [];
 	},
 	/** @private */
-	getChainMaxAtomCount: function()
+	_setCachedManipulateObjInfo: function(info, atomIndex, isNegativeChain)
 	{
-		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexChainAtomCount(), 0);
+		var cacheIndex = isNegativeChain? 1: 0;
+		var cache = this._manipulateObjInfoCache[cacheIndex];
+		if (!cache)
+		{
+			cache = [];
+			this._manipulateObjInfoCache[cacheIndex] = cache;
+		}
+		cache[atomIndex] = info;
+	},
+	/** @private */
+	_getCachedManipulateObjInfo: function(atomIndex, isNegativeChain)
+	{
+		var cacheIndex = isNegativeChain? 1: 0;
+		var cache = this._manipulateObjInfoCache[cacheIndex];
+		return cache && cache[atomIndex];
+	},
+	/** @private */
+	_clearManipulateObjInfoCache: function()
+	{
+		this._manipulateObjInfoCache = [];
 	},
 	/** @private */
 	_calcStepDeltaDistance: function()
@@ -3722,9 +3772,16 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		this._repObjStartingScreenCoord = null;
 		this._repObjNeedUpdate = false;
 
+		this._manipulateObjInfoCache = [];
+
 		var rep = new Kekule.Editor.MolRingRepositoryItem2D(3);
 		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
 		this.setRepositoryItem(rep);
+	},
+	/** @private */
+	getRingMaxAtomCount: function()
+	{
+		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexRingAtomCount(), 0);
 	},
 	/** @ignore */
 	getActualManipulatingObjects: function(objs)
@@ -3735,11 +3792,53 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		//console.log(mol);
 		return mol? AU.clone(mol.getNodes()): [];
 	},
-	/** @private */
-	getRingMaxAtomCount: function()
+	/** @ignore */
+	stopManipulate: function($super)
 	{
-		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexRingAtomCount(), 0);
+		this._clearManipulateObjInfoCache();
+		$super();
 	},
+	/** @ignore */
+	createManipulateObjInfo: function($super, obj, objIndex, startContextCoord)
+	{
+		// try use cached info first
+		var atomCount = this.getRepositoryItem().getRingAtomCount();
+		var cachedInfo = this._getCachedManipulateObjInfo(objIndex, atomCount);
+		if (cachedInfo)
+		{
+			//console.log('use cached info', objIndex, cachedInfo);
+			return cachedInfo;
+		}
+		else  // calculate and save to cache
+		{
+			var info = $super(obj, objIndex, startContextCoord);
+			this._setCachedManipulateObjInfo(info, objIndex, atomCount);
+			return info;
+		}
+	},
+	/** @private */
+	_setCachedManipulateObjInfo: function(info, atomIndex, atomCount)
+	{
+		var cache = this._manipulateObjInfoCache[atomCount];
+		if (!cache)
+		{
+			cache = [];
+			this._manipulateObjInfoCache[atomCount] = cache;
+		}
+		cache[atomIndex] = info;
+	},
+	/** @private */
+	_getCachedManipulateObjInfo: function(atomIndex, atomCount)
+	{
+		var cache = this._manipulateObjInfoCache[atomCount];
+		return cache && cache[atomIndex];
+	},
+	/** @private */
+	_clearManipulateObjInfoCache: function()
+	{
+		this._manipulateObjInfoCache = [];
+	},
+
 	/** @private */
 	_calcStepDeltaDistance: function()
 	{
