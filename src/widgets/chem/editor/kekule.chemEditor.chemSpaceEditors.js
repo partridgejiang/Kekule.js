@@ -1234,19 +1234,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @ignore */
-	stopManipulate: function($super)
-	{
-		/*
-		if (this.getMergeOperations().length)
-			this.executeMergeOpers();
-		*/
-		//this.setMergeOperations([])
-		$super();
-		this.setManuallyHotTrack(false);
-		//console.log('stop', this.getManuallyHotTrack());
-	},
-	/** @ignore */
-	cancelManipulatingObjs: function($super)
+	manipulateEnd: function($super)
 	{
 		$super();
 		this.setManuallyHotTrack(false);
@@ -3507,7 +3495,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexChainAtomCount(), 0);
 	},
 	/** @ignore */
-	stopManipulate: function($super)
+	manipulateEnd: function($super)
 	{
 		this._clearManipulateObjInfoCache();
 		$super();
@@ -3793,7 +3781,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		return mol? AU.clone(mol.getNodes()): [];
 	},
 	/** @ignore */
-	stopManipulate: function($super)
+	manipulateEnd: function($super)
 	{
 		this._clearManipulateObjInfoCache();
 		$super();

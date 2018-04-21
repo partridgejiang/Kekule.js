@@ -2090,8 +2090,10 @@ var
  *
  * //@property {Bool} enablePropValueGetEvent Whether propValueGet event should
  * //  be fired when a property value is read.
+ * @property {Bool} enableObjectChangeEvent Whether event "change" will be automatically fired when the object is changed.
  * @property {Bool} enablePropValueSetEvent Whether propValueSet event should
  *   be fired when a property value is written.
+ * //  Note, if property {@link ObjectEx#enableObjectChangeEvent} is false, this event will never be fired.
  * @property {Bool} bubbleEvent Whether event evoked can be relayed to higher level object.
  * @property {Bool} suppressChildChangeEventInUpdating If this property is true, when object is updating
  *   (calling obj.beginUpdate()), received "change" event will always not be bubbled. Instead, when updating
@@ -2190,7 +2192,8 @@ ObjectEx = Class.create(
 	{
 		// define properties
 		this.defineProp('enablePropValueGetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
-		this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+    this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('enableObjectChangeEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('bubbleEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
     this.defineProp('suppressChildChangeEventInUpdating', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		// private, event storer
@@ -2827,7 +2830,8 @@ ObjectEx = Class.create(
 	objectChange: function(modifiedPropNames)
 	{
 		this.doObjectChange(modifiedPropNames);
-		this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
+    if (this.getEnableObjectChangeEvent())
+		  this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
 	},
 	/** @private */
 	doObjectChange: function(modifiedPropNames)
@@ -2945,6 +2949,10 @@ ObjectEx = Class.create(
   	var handlerList = this.getEventHandlerList(eventName);
   	if (this.isEventHandlerList(handlerList))
   	{
+      if (eventName === 'change')  // automatically turn on object change monitor
+      {
+        this.setEnableObjectChangeEvent(true);
+      }
   		return handlerList.add(listener, thisArg);
   	}
   	else

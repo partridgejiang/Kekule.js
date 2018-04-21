@@ -4284,7 +4284,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 * Cancel the moving process and set objects to its original position.
 	 * @private
 	 */
-	cancelManipulatingObjs: function()
+	cancelManipulate: function()
 	{
 		var editor = this.getEditor();
 		var objs = this.getManipulateObjs();
@@ -4296,6 +4296,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//this.setActiveOperation(null);
 		//this.clearActiveOperation();
 		//this.setManuallyHotTrack(false);
+		this.manipulateEnd();
 	},
 	/**
 	 * Returns center coord of manipulate objs.
@@ -4843,6 +4844,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		// do nothing here
 	},
 	/**
+	 * Called when a manipulation is ended (stopped or cancelled).
+	 * Descendants may override this method.
+	 * @private
+	 */
+	manipulateEnd: function()
+	{
+		// do nothing here
+	},
+	/**
 	 * Stop manipulate of objects.
 	 * @private
 	 */
@@ -4851,6 +4861,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setManipulateObjs(null);
 		this.getManipulateObjInfoMap().clear();
 		this.getObjOperationMap().clear();
+		this.manipulateEnd();
 	},
 	/** @private */
 	refreshManipulateObjs: function()
@@ -5087,7 +5098,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				if (this.getState() === S.MANIPULATING) // when click right button on manipulating, just cancel it.
 				{
-					this.cancelManipulatingObjs();
+					this.cancelManipulate();
 					this.setState(S.NORMAL);
 					e.stopPropagation();
 					e.preventDefault();
