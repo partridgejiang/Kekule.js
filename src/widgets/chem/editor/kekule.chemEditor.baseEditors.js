@@ -102,6 +102,7 @@ Kekule.Editor.BoxRegion = {
  * @property {Object} objDrawBridge Bridge to draw chem objects. Alias of property drawBridge.
  * @property {Object} uiDrawBridge Bridge to draw UI markers.
  * @property {Array} selection An array of selected basic object.
+ * @property {Hash} zoomCenter The center coord (based on client element) when zooming editor.
  * //@property {Bool} standardizeObjectsBeforeSaving Whether standardize molecules (and other possible objects) before saving them.
  */
 
@@ -485,6 +486,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 		// private object to record all bound infos
 		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
+
+		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
 	},
 
 	/** @private */
@@ -603,6 +606,30 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this.createContextParentElems();
 		this.createUiEventReceiverElem();
+	},
+
+	/** @ignore */
+	zoomTo: function($super, value, suspendRendering)
+	{
+		var CU = Kekule.CoordUtils;
+		var currZoomLevel = this.getCurrZoom();
+		var zoomLevel = value;
+		var result = $super(value, suspendRendering);
+		// adjust zoom center
+		var selfElem = this.getElement();
+		var currScrollCoord = {'x': selfElem.scrollLeft, 'y': selfElem.scrollTop};
+		var zoomCenterCoord = this.getZoomCenter();
+		if (!zoomCenterCoord )  // use the center of client as the zoom center
+		{
+			zoomCenterCoord = CU.add(currScrollCoord, {'x': selfElem.clientWidth / 2, 'y': selfElem.clientHeight / 2});
+		}
+		//if (zoomCenterCoord)
+		{
+			var scrollDelta = CU.multiply(zoomCenterCoord, zoomLevel / currZoomLevel - 1);
+			selfElem.scrollLeft += scrollDelta.x;
+			selfElem.scrollTop += scrollDelta.y;
+		}
+		return result;
 	},
 
 	/**
@@ -3655,6 +3682,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			{
 				this.getEditor().hotTrackOnObj(null);
 			}
+			e.preventDefault();
 		}
 		return true;
 	},
@@ -3663,10 +3691,20 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		if (e.getCtrlKey())
 		{
-			var delta = e.wheelDeltaY || e.wheelDelta;
-			if (delta)
-				delta /= 120;
-			this.zoomEditor(delta);
+			var currScreenCoord = this._getEventMouseCoord(e);
+			this.getEditor().setZoomCenter(currScreenCoord);
+			try
+			{
+				var delta = e.wheelDeltaY || e.wheelDelta;
+				if (delta)
+					delta /= 120;
+				//console.log('zoom', this.getEditor().getZoomCenter())
+				this.zoomEditor(delta);
+			}
+			finally
+			{
+				this.getEditor().setZoomCenter(null);
+			}
 			e.preventDefault();
 			return true;
 		}
@@ -3786,15 +3824,22 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 			this.startRemove();
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		else if (e.getButton() === Kekule.X.Event.MOUSE_BTN_RIGHT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	react_mousemove: function($super, e)
@@ -3804,6 +3849,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		return true;
 	}
@@ -4927,6 +4973,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			if (this.getEnableSelect())
 				this.getEditor().dragSelectingBoxToCoord(coord);
+			e.preventDefault();
 		}
 		else if (state === S.MANIPULATING)  // move or resize objects
 		{
@@ -4952,6 +4999,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				this._isBusy = false;
 			}
+			e.preventDefault();
 		}
 		return true;
 	},
@@ -5022,6 +5070,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 						}
 					}
 				}
+				e.preventDefault();
 			}
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
@@ -5033,6 +5082,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 					this.cancelManipulate();
 					this.setState(S.NORMAL);
 					e.stopPropagation();
+					e.preventDefault();
 				}
 			}
 		}
@@ -5055,6 +5105,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				this.getEditor().endSelectingBoxDrag(coord, shifted);
 				this.setState(S.NORMAL);
+				e.preventDefault();
 			}
 			else if (state === S.MANIPULATING)
 			{
@@ -5075,6 +5126,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 				this.stopManipulate();
 				this.setState(S.NORMAL);
+				e.preventDefault();
 			}
 		}
 		return true;
