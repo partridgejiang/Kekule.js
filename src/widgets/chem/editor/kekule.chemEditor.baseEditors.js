@@ -1271,6 +1271,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	beginUpdateObject: function()
 	{
+		if (this._objectUpdateFlag >= 0)
+		{
+			this.invokeEvent('beginUpdateObject');
+		}
 		--this._objectUpdateFlag;
 	},
 	/**
@@ -1286,6 +1290,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.objectsChanged(this._updatedObjectDetails);
 				this._updatedObjectDetails = [];
 			}
+			this.invokeEvent('endUpdateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
 	},
 	/**
@@ -1366,11 +1371,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			//console.log('object changed');
 			this.doObjectsChanged(a);
-			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
+			this.invokeEvent('editObjsUpdated', {'details': Object.extend({}, objDetails)});
 		}
 
 		this._objChanged = true;  // mark object changed
-		this.invokeEvent('editObjsChanged', Object.extend({}, objDetails));
+		this.invokeEvent('editObjsChanged', {'details': Object.extend({}, objDetails)});
 	},
 	/**
 	 * Do actual job of objectsChanged. Descendants should override this method.
