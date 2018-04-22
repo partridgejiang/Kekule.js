@@ -3079,10 +3079,7 @@ ObjectEx = Class.create(
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
-	  		if (handlerInfo.handler)
-        {
-          handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
-        }
+        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
     if (!event.cancelBubble && this.getBubbleEvent())
