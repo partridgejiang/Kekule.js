@@ -443,7 +443,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	//react_mousedown: function($super, e)
+	//react_pointerdown: function($super, e)
 	doReactActiviting: function($super, e)
 	{
 		$super(e);
@@ -460,7 +460,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		//return $super(e);
 	},
 	/** @private */
-	//react_mouseup: function($super, e)
+	//react_pointerup: function($super, e)
 	doReactDeactiviting: function($super, e)
 	{
 		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
@@ -479,7 +479,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		//return $super(e);
 	},
 	/** @private */
-	//react_mousemove: function($super, e)
+	//react_pointermove: function($super, e)
 	reactPointerMoving: function($super, e)
 	{
 		$super(e);
