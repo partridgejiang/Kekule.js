@@ -799,7 +799,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 
 	// event handlers
 	/*
-	react_pointerdown: function(e)
+	react_mousedown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -813,7 +813,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 			}
 		}
 	},
-	react_pointerup: function(e)
+	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -825,7 +825,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 			this._isActivitingRow = false;
 		}
 	},
-	react_pointermove: function(e)
+	react_mousemove: function(e)
 	{
 		var target = e.getTarget();
 		// get nearest row

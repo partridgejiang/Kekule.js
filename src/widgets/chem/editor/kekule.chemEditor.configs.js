@@ -97,8 +97,6 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  *   (too small distance will cause very sharp rotation).
  * @property {Int} directedMoveDistanceThreshold Directed moving will only be done if moved distance large than this value.
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
- * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
- *   Set this value to true will improve the performance of chem editor.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
@@ -124,7 +122,6 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15, {'scope': PS.PUBLIC});  // 15 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
-		this.addBoolConfigProp('enableMergePreview', true);
 
 		this.addIntConfigProp('clonedObjectScreenOffset', 10);
 

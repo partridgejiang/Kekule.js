@@ -266,7 +266,6 @@ var kekuleFiles = {
 	'html': {
 		'requires': ['lan', 'root', 'common'],
 		'files': [
-			'lib/polyfill/Points.min.js',
 			'xbrowsers/kekule.x.js',
 			'html/kekule.nativeServices.js',
 			'html/kekule.predefinedResLoaders.js',
@@ -379,8 +378,6 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.repositories.js',
 			'widgets/chem/editor/kekule.chemEditor.chemSpaceEditors.js',
 			'widgets/chem/editor/kekule.chemEditor.nexus.js',
-			'widgets/chem/editor/kekule.chemEditor.objModifiers.js',
-			'widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js',
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 

@@ -993,8 +993,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.defineProp('enableDirectedMove', {'dataType': DataType.BOOL, 'serializable': false});
 
 		this.defineProp('mergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging
-		this.defineProp('mergePreviewOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store preview operations of merging
-		//this.defineProp('mergeOperationsInManipulating', {'dataType': DataType.ARRAY, 'serializable': false});  // one of the actual or preview operations of merging
 		//this.defineProp('prevMergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging of last phrase
 		this.defineProp('mergingDests', {'dataType': DataType.ARRAY, 'serializable': false});  // private
 	},
@@ -1012,7 +1010,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		// space temporily, add dest mol to operating objs avoid the disappearing of
 		// mol in editor when using operContext
 		var objs = value? AU.clone(value): [];
-		if (this.getMergingDests() && !this.useMergePreview())
+		if (this.getMergingDests())
 		{
 			AU.pushUnique(objs, this.getMergingDests());
 		}
@@ -1082,22 +1080,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	isDirectedMove: function()
 	{
 		return (this.getEnableDirectedMove() && (!this.isConstrainedMove()) && this._isInDirectedMoving);
-	},
-
-	/** @private */
-	useMergePreview: function()
-	{
-		return this._useMergePreview;
-	},
-	/** @private */
-	setUseMergePreview: function(value)
-	{
-		this._useMergePreview = value;
-	},
-	/** @private */
-	getMergeOperationsInManipulating: function()
-	{
-		return this._useMergePreview? this.getMergePreviewOperations(): this.getMergeOperations();
 	},
 
 	/** @private */
@@ -1221,10 +1203,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.setIsMergeDone(false);
 		this.setMergeOperation(null);
 		*/
-		this.setUseMergePreview(this.getEditorConfigs().getInteractionConfigs().getEnableMergePreview());
 		this.setMergeOperations([]);
-		this.setMergePreviewOperations([]);
-		//console.log('set merge oper in man', this.getMergeOperationsInManipulating() === this.getMergeOperations());
 		//this.setPrevMergeOperations([]);
 		$super(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		//this._mergeReversed = false;  // internal flag
@@ -1245,7 +1224,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	{
 		$super();
 		this.setMergeOperations([]);
-		this.setMergePreviewOperations([]);
 	},
 
 	/** @ignore */
@@ -1265,37 +1243,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		}
 		return result;
 		*/
-		// if use merge preview, we should do the actual merging when the manipulation is done
-		if (this.useMergePreview())
-		{
-			var previewOpers = this.getMergePreviewOperations();
-			if (previewOpers && previewOpers.length)
-			{
-				//console.log('preview opers', previewOpers);
-				var opers = this.getMergeOperations();
-				for (var i = 0, l = previewOpers.length; i < l; ++i)
-				{
-					var previewOper = previewOpers[i];
-					if (previewOper)  // may be empty slot in operations
-					{
-						var mergeConnector = (previewOper instanceof Kekule.ChemStructOperation.MergeConnectorsBase);
-						/*
-						 Kekule.ChemStructOperation.MergeConnectors:
-						 Kekule.ChemStructOperation.MergeNodes;
-						 */
-						var oper = mergeConnector ?
-								this.createConnectorMergeOperation(previewOper.getTarget(), previewOper.getDest()) :
-								this.createNodeMergeOperation(previewOper.getTarget(), previewOper.getDest());
-						opers.push(oper);
-					}
-				}
-				this.executeMergeOpers(opers);
-			}
-		}
-
 		var result = $super() || [];
 		var mergeOpers = this.getMergeOperations();
-		//console.log('put operations', mergeOpers, this.getMergePreviewOperations());
 		if (mergeOpers && mergeOpers.length)
 			Kekule.ArrayUtils.pushUnique(result, mergeOpers);
 		return result;
@@ -1421,10 +1370,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	applyManipulatingObjsInfo: function($super, endScreenCoord)
 	{
 		this.setAllManipulateObjsMerged(false);
-		var useMergePreview = this.useMergePreview();
-
-		//console.log('useMergePreview', useMergePreview);
-
 		var editor = this.getEditor();
 		editor.hotTrackOnObj(null);  // clear old hot track objects
 
@@ -1435,10 +1380,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 		var excludedObjs = [].concat(originManipulatedObjs);
 		Kekule.ArrayUtils.pushUnique(excludedObjs, manipulatedObjs);
-		//var oldMergeOpers = this.getMergeOperations();
-		var oldMergeOpers = this.getMergeOperationsInManipulating();
-
-		//console.log(this.getMergeOperationsInManipulating() === this.getMergeOperations());
+		var oldMergeOpers = this.getMergeOperations();
 		//var allowMolMerge = this.getEnableStructFragmentMerge();
 		var self = this;
 
@@ -1528,8 +1470,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 				if (needCreateNewMerge)
 				{
-					// console.log('reverse old merge', mergedObjCount);
-					this.reverseMergeOpers(this.getMergeOperationsInManipulating());
+					this.reverseMergeOpers();
 
 					// also need to adjust position of rest manipulatedObjs
 					var CU = Kekule.CoordUtils;
@@ -1658,19 +1599,11 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						var obj = magneticMergeObjs[i];
 						var dest = magneticMergeDests[i];
 						var index = magneticMergeObjIndexes[i];
-						if (useMergePreview)
-						{
-							var mergePreviewOper = this.createNodeMergeOperation(obj, dest, true);
-							this.getMergePreviewOperations()[index] = mergePreviewOper;
-						}
-						else
-						{
-							var mergeOper = this.createNodeMergeOperation(obj, dest);
-							this.getMergeOperations()[index] = mergeOper;
-						}
+						var mergeOper = this.createNodeMergeOperation(obj, dest);
+						this.getMergeOperations()[index] = mergeOper;
 					}
 					//console.log('execute merge on', mergedObjCount);
-					this.executeMergeOpers(this.getMergeOperationsInManipulating());
+					this.executeMergeOpers();
 				}
 
 				//console.log('hot track on', magneticMergeDests.length, mergedObjCount, magneticMergeObjs.length);
@@ -1726,26 +1659,16 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						{
 							if (oldMergeOper)
 							{
-								this.reverseMergeOpers(this.getMergeOperationsInManipulating());
+								this.reverseMergeOpers();
 							}
 
-							if (useMergePreview)
-							{
-								var mergeOper = isMovingOneBond?
-										this.createConnectorMergeOperation(targetObj, destObj, useMergePreview):
-										this.createNodeMergeOperation(targetObj, destObj, useMergePreview);
-								this.getMergePreviewOperations()[0] = mergeOper;
-							}
-							else
-							{
-								var mergeOper = isMovingOneBond?
-										this.createConnectorMergeOperation(targetObj, destObj):
-										this.createNodeMergeOperation(targetObj, destObj);
-								this.getMergeOperations()[0] = mergeOper;
-							}
+							var mergeOper = isMovingOneBond?
+								this.createConnectorMergeOperation(targetObj, destObj):
+								this.createNodeMergeOperation(targetObj, destObj);
+							this.getMergeOperations()[0] = mergeOper;
 
 							//mergeOper.execute();
-							this.executeMergeOpers(this.getMergeOperationsInManipulating());
+							this.executeMergeOpers();
 							return;
 						}
 					}
@@ -1754,7 +1677,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		}
 
 		// no merge, just reverse old one and do normal move
-		this.reverseMergeOpers(this.getMergeOperationsInManipulating());
+		this.reverseMergeOpers();
 
 		$super(endScreenCoord);
 	},
@@ -1994,7 +1917,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	*/
 
 	/** @private */
-	createNodeMergeOperation: function(fromNode, toNode, usePreview)
+	createNodeMergeOperation: function(fromNode, toNode)
 	{
 		var allowMolMerge = this.getEnableStructFragmentMerge();
 		/*
@@ -2007,14 +1930,12 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		else
 		{
 			//var op = new Kekule.EditorOperation.OpMergeNodes(this.getEditor(), parent, fromNode, toNode);
-			var op = usePreview?
-					(new Kekule.ChemStructOperation.MergeNodesPreview(fromNode, toNode, allowMolMerge)):
-					(new Kekule.ChemStructOperation.MergeNodes(fromNode, toNode, allowMolMerge));
+			var op = new Kekule.ChemStructOperation.MergeNodes(fromNode, toNode, allowMolMerge);
 			return op;
 		}
 	},
 	/** @private */
-	createConnectorMergeOperation: function(fromConnector, toConnector, useMergePreview)
+	createConnectorMergeOperation: function(fromConnector, toConnector)
 	{
 		var allowMolMerge = this.getEnableStructFragmentMerge();
 		if (!Kekule.ChemStructOperation.MergeConnectors.canMerge(fromConnector, toConnector, allowMolMerge))
@@ -2022,8 +1943,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		else
 		{
 			//var op = new Kekule.EditorOperation.OpMergeNodes(this.getEditor(), parent, fromNode, toNode);
-			var mergeClass = useMergePreview? Kekule.ChemStructOperation.MergeConnectorsPreview: Kekule.ChemStructOperation.MergeConnectors;
-			var op = new mergeClass(fromConnector, toConnector, this.getEditor().getCoordMode(), allowMolMerge);
+			var op = new Kekule.ChemStructOperation.MergeConnectors(fromConnector, toConnector, this.getEditor().getCoordMode(), allowMolMerge);
 			return op;
 		}
 	},
@@ -2031,22 +1951,21 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	/** @private */
 	isSameConnectorMerge: function(mergeOper, fromConnector, toConnector)
 	{
-		return mergeOper && (mergeOper instanceof Kekule.ChemStructOperation.MergeConnectorsBase)
+		return mergeOper && (mergeOper instanceof Kekule.ChemStructOperation.MergeConnectors)
 				&& (fromConnector === mergeOper.getTarget()) && (toConnector === mergeOper.getDest());
 	},
 	/** @private */
 	isSameNodeMerge: function(mergeOper, fromNode, toNode)
 	{
 		//console.log('check same', fromNode.getId(), toNode.getId(), mergeOper.getTarget().getId(), mergeOper.getDest().getId());
-		return mergeOper && (mergeOper instanceof Kekule.ChemStructOperation.MergeNodesBase)
+		return mergeOper && (mergeOper instanceof Kekule.ChemStructOperation.MergeNodes)
 			&& (fromNode === mergeOper.getTarget()) && (toNode === mergeOper.getDest());
 	},
 
 	/** @private */
-	executeMergeOpers: function(mergeOpers)
+	executeMergeOpers: function()
 	{
-		//var opers = Kekule.ArrayUtils.toUnique(this.getMergeOperations());
-		var opers = Kekule.ArrayUtils.toUnique(mergeOpers || this.getMergeOperationsInManipulating());
+		var opers = Kekule.ArrayUtils.toUnique(this.getMergeOperations());
 		var mergingDests = [];
 		for (var i = 0, l = opers.length; i < l; ++i)
 		{
@@ -2065,17 +1984,18 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this._mergeJustReversed = false;
 	},
 	/** @private */
-	reverseMergeOpers: function(mergeOperations)
+	reverseMergeOpers: function(utilIndex)
 	{
 		this.setMergingDests(null);
-		var originOpers = mergeOperations || this.getMergeOperationsInManipulating();
-		var opers = Kekule.ArrayUtils.toUnique(originOpers);
-		//var opers = Kekule.ArrayUtils.toUnique(mergeOperations || this.getMergeOperations());
+		var opers = Kekule.ArrayUtils.toUnique(this.getMergeOperations());
 		if (!opers || !opers.length)
 			;  // do nothing
 		else
 		{
-			for (var i = opers.length - 1; i >= 0; --i)
+			if (!utilIndex)
+				utilIndex = 0;
+
+			for (var i = opers.length - 1; i >= utilIndex; --i)
 			{
 				if (opers[i])
 				{
@@ -2087,8 +2007,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			//this._mergeReversed = true;
 			//this.setMergeOperations([]);
 			//console.log('reverse merge oper', opers);
-			//this.getMergeOperations().length = utilIndex;
-			originOpers.length = 0;
+			this.getMergeOperations().length = utilIndex;
 			this._mergeJustReversed = true;   // a special flag
 			//console.log('reverse', this.getManipulateObjs());
 			this.refreshManipulateObjs();
@@ -2096,7 +2015,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @private */
-	react_pointermove: function($super, e)
+	react_mousemove: function($super, e)
 	{
 		// check if ALT key is pressed, if so, constrained move/rotate mode should be disabled
 		this._suppressConstrainedMoving = e.getAltKey();
@@ -2508,7 +2427,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 	},
 
 	/** @private */
-	react_pointerdown: function(e)
+	react_mousedown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -2538,7 +2457,6 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 						this.modifyBond(obj);
 						return true;
 					}
-					e.preventDefault();
 				}
 				else if (this.getEditor().canAddUnconnectedStructFragment()) // click on a blank area, add new molecule if needed
 				{
@@ -2560,14 +2478,13 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 					{
 						this.startDirectManipulate(null, this.getEndingObj(), coord);
 					}
-					e.preventDefault();
 					return true; // important
 				}
 			}
 		}
 	},
 	/** @private */
-	react_pointerup: function($super, e)
+	react_mouseup: function($super, e)
 	{
 		var state = this.getState();
 		var startCoord = this.getStartCoord();
@@ -2575,7 +2492,6 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		if ((state === S.MANIPULATING) && (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT))
 		{
-			e.preventDefault();
 			if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // click
 			{
 				// wrap up, add bond and append operation
@@ -3086,7 +3002,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	},
 
 	/** @private */
-	react_pointerup: function(e)
+	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -3335,7 +3251,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	},
 
 	/** @private */
-	react_pointerdown: function(e)
+	react_mousedown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -3354,13 +3270,12 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
 					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
 				}
-				e.preventDefault();
 				return true; // important
 			}
 		}
 	},
 	/** @private */
-	react_pointerup: function($super, e)
+	react_mouseup: function($super, e)
 	{
 		var state = this.getState();
 		var startCoord = this.getStartCoord();
@@ -3373,7 +3288,6 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 				this.addOperationToEditor();
 				this.stopManipulate();
 				this.setState(S.NORMAL);
-				e.preventDefault();
 				return true;
 			}
 		}
@@ -3734,7 +3648,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		return result;
 	},
 	/** @ignore */
-	react_pointermove: function($super, e)
+	react_mousemove: function($super, e)
 	{
 		this._isForceReversedChainDirection = !!e.getShiftKey();
 		return $super(e);
@@ -4238,7 +4152,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	},
 
 	/** @private */
-	react_pointerup: function(e)
+	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -4340,7 +4254,7 @@ Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIa
 	},
 
 	/** @private */
-	react_pointerdown: function(e)
+	react_mousedown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -4904,7 +4818,7 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 	},
 
 	/** @private */
-	react_pointerup: function(e)
+	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
