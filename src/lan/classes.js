@@ -152,14 +152,24 @@ Class.Methods = {
 /** @ignore */
 Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString)
 {
-  for (var property in source)
+  if (!ignoreUnsetValue && !ignoreEmptyString)  // normal situation, extract out for performance
   {
-    var value = source[property];
-    if (ignoreUnsetValue && ((value === undefined) || (value === null)))
-      continue;
-    if (ignoreEmptyString && (value === ''))
-      continue;
-    destination[property] = value;
+    for (var property in source)
+    {
+      destination[property] = source[property];
+    }
+  }
+  else
+  {
+    for (var property in source)
+    {
+      var value = source[property];
+      if (ignoreUnsetValue && ((value === undefined) || (value === null)))
+        continue;
+      if (ignoreEmptyString && (value === ''))
+        continue;
+      destination[property] = value;
+    }
   }
   return destination;
 };
@@ -2490,11 +2500,14 @@ ObjectEx = Class.create(
 			};
 			*/
 		//this.getPrototype()[getterName] = actualGetter;
+    /*
 		this.getPrototype()[getterName] = function()
 		{
 			//var args = Array.prototype.slice.call(arguments);
 			return this[doGetterName].apply(this, arguments);
 		};
+		*/
+    this.getPrototype()[getterName] = this.getPrototype()[doGetterName];
 
   	return {
       'getterName': getterName,
@@ -2526,14 +2539,14 @@ ObjectEx = Class.create(
 				var args = Array.prototype.slice.call(arguments);
 				var value = args[0];
 				*/
-        var args = arguments;
-        var value = args[0];
+        //var args = arguments;
+        var value = arguments[0];
 
 				/*
 				args.unshift(prop.name);
 				return this.setPropValueX.apply(this, args);
 				*/
-				this[doSetterName].apply(this, args);
+				this[doSetterName].apply(this, arguments);
 				this.notifyPropSet(propName, value);
 				/*
 				// NOTE: here we call actualSetter directly instead of call setPropValue
@@ -3048,8 +3061,14 @@ ObjectEx = Class.create(
       event.target = this;
     }
     if (!event.stopPropagation)
-      event.stopPropagation = function() { event.cancelBubble = true; };
+      event.stopPropagation = this._eventCancelBubble;  // function() { event.cancelBubble = true; };
   	this.dispatchEvent(eventName, event);
+  },
+  /** @private */
+  _eventCancelBubble: function()
+  {
+    // called with event.stopPropagation, so this here is the event object
+    this.cancelBubble = true;
   },
   /**
    * Relay event from child of this object.
@@ -3076,10 +3095,7 @@ ObjectEx = Class.create(
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
-	  		if (handlerInfo.handler)
-        {
-          handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
-        }
+        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
     if (!event.cancelBubble && this.getBubbleEvent())
