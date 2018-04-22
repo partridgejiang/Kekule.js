@@ -3824,15 +3824,22 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 			this.startRemove();
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		else if (e.getButton() === Kekule.X.Event.MOUSE_BTN_RIGHT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	react_mouseup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
 	react_mousemove: function($super, e)
@@ -3842,6 +3849,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		return true;
 	}
@@ -4965,6 +4973,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			if (this.getEnableSelect())
 				this.getEditor().dragSelectingBoxToCoord(coord);
+			e.preventDefault();
 		}
 		else if (state === S.MANIPULATING)  // move or resize objects
 		{
@@ -4990,6 +4999,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				this._isBusy = false;
 			}
+			e.preventDefault();
 		}
 		return true;
 	},
@@ -5060,6 +5070,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 						}
 					}
 				}
+				e.preventDefault();
 			}
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
@@ -5071,6 +5082,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 					this.cancelManipulate();
 					this.setState(S.NORMAL);
 					e.stopPropagation();
+					e.preventDefault();
 				}
 			}
 		}
@@ -5093,6 +5105,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				this.getEditor().endSelectingBoxDrag(coord, shifted);
 				this.setState(S.NORMAL);
+				e.preventDefault();
 			}
 			else if (state === S.MANIPULATING)
 			{
@@ -5113,6 +5126,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 				this.stopManipulate();
 				this.setState(S.NORMAL);
+				e.preventDefault();
 			}
 		}
 		return true;
