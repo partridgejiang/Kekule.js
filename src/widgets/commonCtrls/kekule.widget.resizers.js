@@ -302,7 +302,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	//react_mousedown: function(e)
+	//react_pointerdown: function(e)
 	doReactActiviting: function($super, e)
 	{
 		$super(e);
@@ -313,7 +313,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		}
 	}
 	/** @ignore */
-	//react_mouseup: function(e)
+	//react_pointerup: function(e)
 	/*
 	doReactDeactiviting: function($super, e)
 	{
@@ -324,7 +324,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	*/
 	/** @ignore */
 	/*
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		if (this.getIsUnderResizing())
 		{
