@@ -1447,12 +1447,17 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				 if (this.getAllManipulateObjsMerged())
 				 console.log('all merged!', mergedObjCount);
 				 */
+				var mergeSingleObj = (mergedObjCount <= 1);  // merge only one node
+				/*
 				// If merge on only one node, other node position may also be changed
 				// e.g. add repository ring structure to another node
 				var needCreateNewMerge = (mergedObjCount <= 1); // false;
+				*/
+				var needCreateNewMerge = false;
 				// check if need create new merge operation
 				if (!needCreateNewMerge)
 				{
+					var sameMergeOpers = [];
 					for (var i = 0, l = magneticMergeObjs.length; i < l; ++i)
 					{
 						var obj = magneticMergeObjs[i];
@@ -1465,12 +1470,30 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							needCreateNewMerge = true;
 							break;
 						}
+						else
+							sameMergeOpers.push(oldMergeOper);
+					}
+					for (var i = 0, l = oldMergeOpers.length; i < l; ++i)
+					{
+						var oldMergeOper = oldMergeOpers[i];
+						if (oldMergeOper)
+						{
+							var index = sameMergeOpers.indexOf(oldMergeOper);
+							if (index <= 0)   // old merge has more nodes than current, need to recreate new merge
+							{
+								needCreateNewMerge = true;
+								break;
+							}
+							else
+								sameMergeOpers.splice(index, 1);
+						}
 					}
 				}
 
-				if (needCreateNewMerge)
+				if (needCreateNewMerge || mergeSingleObj)
 				{
-					this.reverseMergeOpers();
+					if (needCreateNewMerge)
+						this.reverseMergeOpers();
 
 					// also need to adjust position of rest manipulatedObjs
 					var CU = Kekule.CoordUtils;
@@ -1594,16 +1617,20 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						}
 					}
 
-					for (var i = 0, l = mergedObjCount; i < l; ++i)
+					if (needCreateNewMerge)
 					{
-						var obj = magneticMergeObjs[i];
-						var dest = magneticMergeDests[i];
-						var index = magneticMergeObjIndexes[i];
-						var mergeOper = this.createNodeMergeOperation(obj, dest);
-						this.getMergeOperations()[index] = mergeOper;
+						for (var i = 0, l = mergedObjCount; i < l; ++i)
+						{
+							var obj = magneticMergeObjs[i];
+							var dest = magneticMergeDests[i];
+							var index = magneticMergeObjIndexes[i];
+							var mergeOper = this.createNodeMergeOperation(obj, dest);
+							this.getMergeOperations()[index] = mergeOper;
+						}
+						//console.log('execute merge on', mergedObjCount);
+
+						this.executeMergeOpers();
 					}
-					//console.log('execute merge on', mergedObjCount);
-					this.executeMergeOpers();
 				}
 
 				//console.log('hot track on', magneticMergeDests.length, mergedObjCount, magneticMergeObjs.length);
@@ -3644,7 +3671,16 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		if (this._repObjNeedUpdate)
 			this._updateChain();
 
-		var result = $super(endScreenCoord);
+		var mol = this.getCurrRepositoryObjects()[0];
+		mol.beginUpdate();
+		try
+		{
+			var result = $super(endScreenCoord);
+		}
+		finally
+		{
+			mol.endUpdate();
+		}
 		return result;
 	},
 	/** @ignore */
@@ -3846,7 +3882,16 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		if (this._repObjNeedUpdate)
 			this._updateRing();
 
-		var result = $super(endScreenCoord);
+		var mol = this.getCurrRepositoryObjects()[0];
+		mol.beginUpdate();
+		try
+		{
+			var result = $super(endScreenCoord);
+		}
+		finally
+		{
+			mol.endUpdate();
+		}
 		return result;
 	}
 });
