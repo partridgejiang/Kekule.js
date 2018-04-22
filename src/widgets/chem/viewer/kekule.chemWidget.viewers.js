@@ -1934,7 +1934,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (!this.needReactEvent(e))
 			return;
@@ -1959,7 +1959,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
-	react_mouseleave: function(e)
+	react_pointerleave: function(e)
 	{
 		this._transformInfo.isTransforming = false;
 	},
@@ -1974,7 +1974,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		this._transformInfo.isTransforming = false;
 	},
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 			this._transformInfo.isTransforming = false;
@@ -1985,7 +1985,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		this._transformInfo.isTransforming = false;
 	},
 	/** @private */
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		if (!this.needReactEvent(e))
 			return;

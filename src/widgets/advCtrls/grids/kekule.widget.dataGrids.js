@@ -1104,7 +1104,7 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	react_mouseover: function($super, e)
+	react_pointerover: function($super, e)
 	{
 		$super(e);
 		var elem = e.getTarget();
@@ -1118,7 +1118,7 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	react_mouseleave: function($super, e)
+	react_pointerleave: function($super, e)
 	{
 		$super(e);
 		var elem = e.getTarget();

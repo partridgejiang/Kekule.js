@@ -3663,7 +3663,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	},
 
 	/** @private */
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
@@ -3817,7 +3817,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	},
 
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -3833,7 +3833,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		}
 	},
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
@@ -3842,7 +3842,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		}
 	},
 	/** @private */
-	react_mousemove: function($super, e)
+	react_pointermove: function($super, e)
 	{
 		$super(e);
 		if (this.isRemoving())
@@ -4935,7 +4935,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 	// event handle methods
 	/** @private */
-	react_mousemove: function($super, e)
+	react_pointermove: function($super, e)
 	{
 		$super(e);
 		if (this._isBusy)
@@ -5004,7 +5004,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		return true;
 	},
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
@@ -5089,7 +5089,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		return true;
 	},
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{

@@ -3688,7 +3688,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 
 		/*
-		this.react_mousedown_binding = this.react_mousedown.bind(this);
+		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
 		this.react_keydown_binding = this.react_keydown.bind(this);
 		this.react_touchstart_binding = this.react_touchstart.bind(this);
 		*/
@@ -4167,7 +4167,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (this.hasPopupWidgets() && !e.ghostMouseEvent)
 		{
