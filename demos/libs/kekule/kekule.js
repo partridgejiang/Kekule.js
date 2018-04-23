@@ -15,6 +15,15 @@ if (!Array.prototype.indexOf)
 	};
 }
 
+// avoid Node error
+var document = $root.document;
+if (!document)
+{
+	if (typeof(window) !== 'undefined')
+		document = window.document;
+}
+
+
 // check if is in Node.js environment
 var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
 
@@ -30,7 +39,6 @@ if (!isNode)
 	var docReady = (readyState === 'complete' || readyState === 'loaded' ||
 		(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
 }
-var document = $root.document;  // avoid Node error
 
 function directAppend(doc, libName)
 {
@@ -40,13 +48,35 @@ function nodeAppend(url)
 {
 	if (isNode)
 	{
-		var vm = require("vm");
-		var fs = require("fs");
-		var data = fs.readFileSync(url);
-		//console.log('[k] node append', url, data.length);
-		vm.runInThisContext(data, {'filename': url});
-		//vm.runInNewContext(data, __nodeContext, {'filename': url});
-		//eval(data);
+		try
+		{
+			var vm = require("vm");
+			var fs = require("fs");
+			var data = fs.readFileSync(url);
+			//console.log('[k] node append', url, data.length);
+			vm.runInThisContext(data, {'filename': url});
+			//vm.runInNewContext(data, __nodeContext, {'filename': url});
+			//eval(data);
+		}
+		catch(e)
+		{
+			// may be in webpack? Need further investigation
+			/*
+			if ($root.require)
+			{
+				var extPos = url.toLowerCase().lastIndexOf('.js');
+				var coreFileName;
+				if (extPos >= 0)
+				{
+					coreFileName = url.substr(0, extPos);
+				}
+				if (coreFileName)
+					require('./' + fileName + '.js');
+				else
+					require('./' + fileName);
+			}
+			*/
+		}
 	}
 }
 
@@ -226,7 +256,9 @@ var kekuleFiles = {
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js',
-			'chemdoc/kekule.contentBlocks.js'
+			'chemdoc/kekule.contentBlocks.js',
+			'chemdoc/kekule.attachedMarkers.js',
+			'chemdoc/kekule.commonChemMarkers.js'
 		],
 		'category': 'core'
 	},
@@ -436,7 +468,7 @@ var kekuleFiles = {
 
 var prequestModules = ['lan', 'root', 'localization', 'localizationData', 'common'];
 var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
-var allModules = usualModules.concat(['emscripten', 'openbabel']);
+var allModules = usualModules.concat(['emscripten', 'inchi', 'openbabel', 'indigo']);
 var nodeModules = prequestModules.concat(['core', 'io', 'algorithm', 'calculation', 'data']);
 var defaultLocals = [];
 
@@ -610,7 +642,14 @@ function analysisEntranceScriptSrc(doc)
 			}
 		}
 	}
-	return null;
+	//return null;
+	return {
+		'src': '',
+		'path': '',
+		'modules': usualModules,
+		//'useMinFile': false  // for debug
+		'useMinFile': true
+	}; // return a default setting
 }
 
 function init()
@@ -620,14 +659,15 @@ function init()
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
-			'path': 'F:/Users/Ginger/Programer/Project/MolGraphics/WebBasedGraphics_Kekule/Kekule/project/src/', // fixed for debug  // __dirname + '/',
+			'path': __dirname + '/',
 			'modules': nodeModules,
-			'useMinFile': false  // for debug
+			//'useMinFile': false  // for debug
+			'useMinFile': true
 		};
 	}
 	else  // in browser
 	{
-		scriptInfo = analysisEntranceScriptSrc($root.document);
+		scriptInfo = analysisEntranceScriptSrc(document);
 	}
 
 	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
@@ -636,7 +676,6 @@ function init()
 	var scriptUrls = [];
 	for (var i = 0, l = files.length; i < l; ++i)
 	{
-		//kekuleRequire(path + files[i]);
 		scriptUrls.push(path + files[i]);
 	}
 	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading

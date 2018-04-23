@@ -220,10 +220,14 @@
 		 */
 		getOverriddenRenderOptions: function()
 		{
-			var result = Object.create(this.getRenderOptions() || null);
+			var renderOptions = this.getRenderOptions() || {};
+			var result = renderOptions;
+			//var result = Object.create(this.getRenderOptions() || null);
 			var overrideOptions = this.getOverrideRenderOptions(this.getOverrideRenderOptionItems());
+			//console.log('override options', this.getRenderOptions(), overrideOptions, this.getOverrideRenderOptionItems());
 			if (overrideOptions)
 			{
+				//result = renderOptions? Object.extend({}, renderOptions): {};
 				result = Object.extend(result, overrideOptions);
 			}
 			return result;
@@ -437,7 +441,8 @@
 		setAbsBaseCoord: function(value, coordMode, allowCoordBorrow)
 		{
 			var coordPos = this.getCoordPos(coordMode);
-			var coord = Object.extend({}, value);
+			//var coord = Object.extend({}, value);
+			var coord = Kekule.CoordUtils.clone(value);
 			if (value && coordPos !== Kekule.Render.CoordPos.CENTER)
 			{
 				if (coordPos === Kekule.Render.CoordPos.CORNER_TL)  // now only handles 2D situation
@@ -554,6 +559,7 @@
 			//this.setRenderOption('expanded', value);
 			// do nothing with normal atoms or connectors
 		},
+
 		/**
 		 * Similiar to getLinkedObjs, but only with exposed ones.
 		 * @returns {Array}
@@ -694,7 +700,7 @@
 				if (box)
 				{
 					if (!result)
-						result = Object.extend({}, box);
+						result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 					else
 						result = Kekule.BoxUtils.getContainerBox(result, box);
 				}
@@ -746,7 +752,7 @@
 	});
 
 	ClassEx.defineProps(Kekule.ChemObject, [
-		{'name': 'defAutoScaleRefLength', 'dataType': DataType.NUMBER}
+		{'name': 'defAutoScaleRefLength', 'dataType': DataType.NUMBER, 'scope': Class.PropertyScope.PUBLIC}
 	]);
 
 	ClassEx.extend(Kekule.BaseStructureConnector,
@@ -937,7 +943,7 @@
 		 * @param {Bool} showCharge Whether display charge of node.
 		 * @param {Kekule.Render.DisplayLabelConfigs} displayLabelConfigs
 		 */
-		getDisplayRichText: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType)
+		getDisplayRichText: function(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
 			if (Kekule.ObjUtils.isUnset(showCharge))
@@ -959,7 +965,7 @@
 				//var coreAnchorItem = coreItem.anchorItem;  // preserve previous core anchor
 				if (showCharge)
 				{
-					coreItem = this.appendElectronStateDisplayText(coreItem, partialChargeDecimalsLength, chargeMarkType);
+					coreItem = this.appendElectronStateDisplayText(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 				}
 				if (coreItem)
 				{
@@ -998,12 +1004,12 @@
 			return null;
 		},
 
-		appendElectronStateDisplayText: function(coreItem, partialChargeDecimalsLength, chargeMarkType)
+		appendElectronStateDisplayText: function(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
 			var charge = this.getCharge();
 			var radical = this.getRadical();
-			var section = R.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, radical, partialChargeDecimalsLength, chargeMarkType);
+			var section = R.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, radical, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 			if (section)
 			{
 				//richText = R.RichTextUtils.append(richText, section);
@@ -1027,7 +1033,7 @@
 		 * @param {Int} hydrogenDisplayLevel Value from {@link Kekule.Render.HydrogenDisplayLevel}.
 		 * @param {Bool} showCharge Whether display charge of node.
 		 */
-		getDisplayRichText: function($super, hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType)
+		getDisplayRichText: function($super, hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
 			if (!hydrogenDisplayLevel)
@@ -1042,7 +1048,7 @@
 				result.anchorItem = coreGroup.anchorItem || coreGroup;
 			}
 			*/
-			var result = $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType);
+			var result = $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 
 			var hcount = 0;
 			switch (hydrogenDisplayLevel)
@@ -1387,6 +1393,17 @@
 		}
 	});
 
+	ClassEx.extend(Kekule.ChemMarker.ChemPropertyMarker, {
+		/** @ignore */
+		getDefCoordPos: function($super, coordMode)
+		{
+			if (coordMode !== CM.COORD3D)
+				return Kekule.Render.CoordPos.CENTER;
+			else
+				return $super(coordMode);
+		}
+	});
+
 	ClassEx.extend(Kekule.StructureFragment,
 	/** @lends Kekule.StructureFragment# */
 	{
@@ -1673,12 +1690,12 @@
 	ClassEx.extend(Kekule.MolecularFormula,
 	/** @lends Kekule.MolecularFormula# */
 	{
-		getDisplayRichText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType)
+		getDisplayRichText: function(showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
 			if (Kekule.ObjUtils.isUnset(showCharge))
 				showCharge = true;
-			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength, displayLabelConfigs, chargeMarkType);
+			return R.ChemDisplayTextUtils.formulaToRichText(this, showCharge, null, partialChargeDecimalsLength, displayLabelConfigs, chargeMarkType, distinguishSingletAndTripletRadical);
 		},
 		/**
 		 * Return plain text to represent formula.
@@ -1729,7 +1746,7 @@
 					if (box)
 					{
 						if (!result)
-							result = Object.extend({}, box);
+							result = Kekule.BoxUtils.clone(box); // Object.extend({}, box);
 						else
 							result = Kekule.BoxUtils.getContainerBox(result, box);
 					}

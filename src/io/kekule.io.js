@@ -1097,7 +1097,8 @@ Kekule.IO.loadFormatData = function(content, formatId, options)
 			info.url = url;
 		}
 		*/
-		if (!result)
+		//if (!result)
+		if (result === false)  // read data failed
 		{
 			var msg = Kekule.$L('ErrorMsg.FAIL_TO_READ_FORMAT') + formatId;
 			Kekule.raise(msg);
@@ -1191,7 +1192,8 @@ Kekule.IO.loadTypedData = function(content, mimeType, url, options)
 	var result;
 	if (formatId)
 		result = Kekule.IO.loadFormatData(content, formatId, options);
-	if (result)
+	//if (result)
+	if (result !== false)  // read data success
 	{
 		if ((result instanceof Kekule.ChemObject) && (result.getSrcInfo))
 		{
@@ -1260,7 +1262,8 @@ Kekule.IO.loadFileData = function(file, callback, formatId, options)
 				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id, options);
 				var info = chemObj.getSrcInfo();
 				info.fileName = fileName;
-				var success = !!chemObj;
+				//var success = !!chemObj;
+				var success = (chemObj !== false);
 				callback(chemObj, success);
 			};
 
@@ -1323,7 +1326,8 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
 				var chemObj = Kekule.IO.loadFormatData(data, formatInfo.id, options);
 				var info = chemObj.getSrcInfo();
 				info.fileName = fileUrl;
-				var success = !!chemObj;
+				//var success = !!chemObj;
+				var success = (chemObj !== false);
 				callback(chemObj, success);
 			}
 			else

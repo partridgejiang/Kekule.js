@@ -102,7 +102,7 @@ M  END
 			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
 			var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
 			//var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
-			var isSame = mol1 && mol2 && mol1.equalStructure(mol2);
+			var isSame = mol1 && mol2 && mol1.equalStructure(mol2, {'lonePair': true});
 			var sResult = isSame? 'Same molecules': 'Different molecules';
 			var sClass = isSame? 'Same': 'Diff';
 			var elem = document.getElementById('labelResult');

@@ -791,16 +791,15 @@ Kekule.Render.ChemDisplayTextUtils = {
 			return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABELS[radical];
 	},
 	/**
-	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * Returns text to represent atom charge and radical (e.g., 2+).
 	 * @param {Number} charge
 	 * @param {Int} radical
 	 * @param {Int} partialChargeDecimalsLength
 	 * @param {Int} chargeMarkType
-	 * @returns {Object}
+	 * @returns {String}
 	 */
-	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	getChargeDisplayText: function(charge, partialChargeDecimalsLength, chargeMarkType)
 	{
-		var result = null;
 		var slabel = '';
 		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
 		if (showCharge)
@@ -818,7 +817,42 @@ Kekule.Render.ChemDisplayTextUtils = {
 			}
 			slabel += chargeSign;
 		}
-
+		return slabel;
+	},
+	/**
+	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * @param {Number} charge
+	 * @param {Int} radical
+	 * @param {Int} partialChargeDecimalsLength
+	 * @param {Int} chargeMarkType
+	 * @returns {Object}
+	 */
+	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	{
+		var result = null;
+		var slabel = '';
+		/*
+		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
+		if (showCharge)
+		{
+			var chargeSign = (charge > 0)? '+': '-';
+			var chargeAmount = Math.abs(charge);
+			if (chargeAmount != 1)
+			{
+				slabel += partialChargeDecimalsLength? Kekule.NumUtils.toDecimals(chargeAmount, partialChargeDecimalsLength): chargeAmount.toString();
+			}
+			else  // +1 or -1, may use different charge sign char
+			{
+				if (chargeMarkType === Kekule.Render.ChargeMarkRenderType.CIRCLE_AROUND)
+					chargeSign = (charge > 0)? '\u2295': '\u2296';
+			}
+			slabel += chargeSign;
+		}
+		*/
+		if (charge)
+		{
+			slabel = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+		}
 		if (radical)
 		{
 			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, useAlterTripletRadicalMark) || '';
@@ -839,15 +873,15 @@ Kekule.Render.ChemDisplayTextUtils = {
 	 * @param {Int} partialChargeDecimalsLength
 	 * @returns {Object}
 	 */
-	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType)
+	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		//var result = Kekule.Render.RichTextUtils.create();
-		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType);
+		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical);
 		return result;
 	},
 
 	/** @private */
-	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType)
+	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		var result = Kekule.Render.RichTextUtils.createGroup();
 		var sections = formula.getSections();
@@ -885,7 +919,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 				// charge is draw after count
 				if (showCharge && charge)
 				{
-					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength, chargeMarkType);
+					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 					if (chargeSection)
 					{
 						Kekule.Render.RichTextUtils.append(subgroup, chargeSection);
@@ -1311,9 +1345,11 @@ Kekule.Render.MetaShapeUtils = {
 	createShapeInfo: function(shapeType, coords, additionalInfos)
 	//createBoundInfo: function(boundType, coords, additionalInfos)
 	{
-		var result = {};
+		var result = {'shapeType': shapeType, 'coords': coords};
+		/*
 		result.shapeType = shapeType;
 		result.coords = coords;
+		*/
 		if (additionalInfos)
 			result = Object.extend(result, additionalInfos);
 		return result;
@@ -2318,6 +2354,10 @@ Kekule.Render.UpdateObjUtils = {
 
 /**
  * Helper class to define some common methods of renderer.
+ * Note: as the introducing of the base class {@link Kekule.Render.CompositeRenderer},
+ * almost all renderers support child renderers now, so this helper class should not be used again.
+ * @deprecated
+ * @ignore
  * @class
  */
 Kekule.Render.RendererDefineUtils = {
@@ -2356,7 +2396,7 @@ Kekule.Render.RendererDefineUtils = {
 					if (b)
 					{
 						if (!result)
-							result = Object.extend({}, b);
+							result = BU.clone(b); //Object.extend({}, b);
 						else
 							result = BU.getContainerBox(result, b);
 					}
@@ -2506,6 +2546,12 @@ Kekule.Render.RendererDefineUtils = {
 			rendererMap.clear();
 		},
 
+		/** @private */
+		hasChild: function()
+		{
+			return !!(this.getTargetChildObjs() || []).length;
+		},
+
 		/**
 		 * Prepare child objects and renderers, a must have step before draw.
 		 * @private
@@ -2532,13 +2578,13 @@ Kekule.Render.RendererDefineUtils = {
 			// prepare, calc transform options and so on
 			//this.reset();
 			this.prepare();
-			$super(context, baseCoord, options);
-
-			// then draw each child objects by child renderers
-			return this.doDrawCore(context, options);
+			if (!this.hasChild())
+				return $super(context, baseCoord, options);
+			else  // then draw each child objects by child renderers
+				return this.doDrawChildrenAndSelf(context, baseCoord, options);
 		},
 		/** @private */
-		doDrawCore: function(context, options)
+		doDrawChildrenAndSelf: function(context, baseCoord, options)
 		{
 			var group = this.createDrawGroup(context);
 			var childRenderers = this.getChildRenderers();
@@ -2580,8 +2626,24 @@ Kekule.Render.RendererDefineUtils = {
 					this.addToDrawGroup(elem, group);
 			}
 			//console.log('drawn group', group);
+
+			// self
+			var selfElem = this.doDrawSelf(context, baseCoord, options);
+			if (selfElem)
+				 this.addToDrawGroup(selfElem, group);
+
 			return group;
 		},
+		/**
+		 * Draw only self, without child objects.
+		 * Descendants may override this method.
+		 * @private
+		 */
+		doDrawSelf: function($super, context, baseCoord, options)
+		{
+			return $super(context, baseCoord, options);
+		},
+
 		/* @private */
 		/*
 		doRedraw: function(context)
@@ -2609,21 +2671,38 @@ Kekule.Render.RendererDefineUtils = {
 		*/
 
 		/** @private */
-		doClear: function(context)
+		doClear: function($super, context)
 		{
-			var childRenderers = this.getChildRendererMap().getValues();
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
+			if (this.hasChild())
 			{
-				if (childRenderers[i])
+				var childRenderers = this.getChildRendererMap().getValues();
+				for (var i = 0, l = childRenderers.length; i < l; ++i)
 				{
-					childRenderers[i].clear(context);
+					if (childRenderers[i])
+					{
+						childRenderers[i].clear(context);
+					}
 				}
 			}
+			//this.doClearSelf(context);
+			$super(context);
 			return true;
 		},
-		/** @private */
-		doUpdate: function(context, updateObjDetails, updateType)
+		/**
+		 * Clear only self, without child objects.
+		 * Descendants may override this method.
+		 * @private
+		 */
+		doClearSelf: function($super, context)
 		{
+			return $super(context);
+		},
+		/** @private */
+		doUpdate: function($super, context, updateObjDetails, updateType)
+		{
+			//if (!this.hasChild())
+				return $super(context, updateObjDetails, updateType);
+
 			var updatedObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updateObjDetails);
 			//console.log(this.getClassName(), updateType, updateObjDetails);
 
@@ -2633,7 +2712,7 @@ Kekule.Render.RendererDefineUtils = {
 			//this.prepareChildObjs();  // update childObjs
 
 			//var directChildren = this.getChildObjs();
-			var directChildren = this.getTargetChildObjs();
+			var directChildren = this.getTargetChildObjs() || [];
 			var childRendererMap = this.getChildRendererMap();
 			var objs = Kekule.ArrayUtils.toArray(updatedObjs);
 			var objsMap = new Kekule.MapEx(false);
@@ -2791,6 +2870,9 @@ Kekule.Render.RendererDefineUtils = {
 
 			}
 			*/
+
+			//result = $super(context, updateObjDetails, updateType) && result;
+
 			if (!result)
 			{
 				result = true;
@@ -2799,6 +2881,11 @@ Kekule.Render.RendererDefineUtils = {
 			//console.log('update', updatedObjs[0].getClassName(), this.getChemObj().getClassName(), updatedObjs[0] === this.getChemObj(), renderers.length);
 
 			return result;
+		},
+		/** @private */
+		doUpdateSelf: function($super, context, updateObjDetails, updateType)
+		{
+			return $super(context, updateObjDetails, updateType);;
 		},
 		/** @private */
 		_getRenderersForChildObj: function(context, childObj)

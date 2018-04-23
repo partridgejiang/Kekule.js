@@ -2142,8 +2142,8 @@ Kekule.RingVectorUtils = {
 					}
 					if ((overlapedVectorGroups.length === 4)/* && (selVectors.length === 5)*/)
 					{
-						console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
-						console.log(selVectors);
+						//console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
+						//console.log(selVectors);
 					}
 					var combineVector = RU.ringVectorXorAll(selVectors);
 					if (!RU.vectorNotNull(RU.ringVectorXor(combineVector, vector)))  // found
@@ -2157,7 +2157,7 @@ Kekule.RingVectorUtils = {
 						break;
 					}
 				}
-				console.log('tried ', count, result);
+				//console.log('tried ', count, result);
 				return result;
 			}
 			finally

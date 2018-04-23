@@ -657,8 +657,10 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	{
 		if (this.hasCtab())
 			return this.getCtab().insertBefore(obj, refChild);
+		/*
 		else
 			console.log('no ctab');
+		*/
 	},
 
 	/**
@@ -690,9 +692,9 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**

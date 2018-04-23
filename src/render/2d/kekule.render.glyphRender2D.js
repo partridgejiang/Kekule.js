@@ -87,8 +87,13 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	/** @private */
 	doDrawConnectorShape: function(context, connector, node1, node2, renderOptions, finalTransformOptions)
 	{
+		/*
 		var coord1 = Object.extend({}, this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
 		var coord2 = Object.extend({}, this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
+		*/
+		var CU = Kekule.CoordUtils;
+		var coord1 = CU.clone(this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
+		var coord2 = CU.clone(this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
 		var drawOptions = this.extractGlyphDrawOptions(renderOptions);
 
 		var pathType = connector.getPathType();

@@ -75,10 +75,10 @@
 .K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Region{display:block}
 .K-Chem-Obj-Setter-Configurator .K-Chem-Obj-Setter-Region-Label{margin-left:-1em;padding-top:.5em;padding-bottom:.2em}
 .K-Chem-Obj-Setter-Configurator .K-Assoc-Text-Content{margin-left:1em;font-size:90%}
-.K-Chem-ComposerDialog .K-Chem-Composer{width:550px;height:400px}
+.K-Chem-ComposerDialog .K-Chem-Composer{width:650px;height:400px}
 .K-Chem-Dialog-Choose-File-Format,.K-Chem-Dialog-LoadData{min-width:30em}
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-FormatBox,.K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-Previewer,.K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-FormatBox,.K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-SrcEditor{display:block;width:100%}
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client div,.K-Chem-Dialog-LoadData .K-Dialog-Client div{margin:.5em 0}
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client textarea,.K-Chem-Dialog-LoadData .K-Dialog-Client textarea{height:150px}
 .K-Chem-Dialog-LoadData .K-Chem-Dialog-LoadData-Btn-LoadFromFile{float:left;white-space:nowrap}
-#CssGaga{content:"170228204135,swt,334"}
+#CssGaga{content:"180115205044,swt,334"}

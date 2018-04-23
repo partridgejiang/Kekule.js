@@ -942,6 +942,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setEnableObjectChangeEvent(true);
+	},
+
+	/** @ignore */
 	invokeEvent: function($super, eventName, event)
 	{
 		if (!event)
@@ -3517,7 +3524,7 @@ Kekule.Widget.Utils = {
 	 * When binding to element, properties of widget can be set by element attribute values.
 	 * This method helps to turn string type attribute values to proper type and set it to widget.
 	 * @param {Kekule.Widget.BaseWidget} widget
-	 * @param {String} propName
+	 * @param {String} attribName
 	 * @param {String} attribValue
 	 */
 	setWidgetPropFromElemAttrib: function(widget, attribName, attribValue)

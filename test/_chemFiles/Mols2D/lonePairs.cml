@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<molecule xmlns="http://www.xml-cml.org/schema">
+<atomArray>
+<atom elementType="H" hydrogenCount="0" id="a2" x2="10.4249" y2="-5.9397"/>
+<atom elementType="O" hydrogenCount="2" id="a4" x2="11.896" y2="-6.33388"/>
+<atom elementType="H" hydrogenCount="0" id="a6" x2="13.3671" y2="-5.9397"/>
+</atomArray>
+<bondArray>
+<bond atomRefs2="a2 a4" id="b5" order="1"/>
+<bond atomRefs2="a4 a6" id="b7" order="1"/>
+</bondArray>
+</molecule>

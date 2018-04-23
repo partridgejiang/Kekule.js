@@ -1239,10 +1239,6 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 				return propEditor? propEditor.setOperHistory(value): null;
 			}
 		});
-		this.defineProp('sortField', {'dataType': DataType.STRING,
-			'getter': function() { return this.getPropEditor().getSortField(); },
-			'setter': function(value) { this.getPropEditor().setSortField(value); }
-		});
 	},
 	doFinalize: function($super)
 	{

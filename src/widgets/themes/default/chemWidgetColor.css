@@ -259,6 +259,10 @@
     background-image: url("images/slice/icons/inspect.png");
 }
 
+.K-Chem-Composer-TextFormat-Button > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons16/fontSize.png");
+}
 .K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons16/textDirectionTtb.png");
@@ -371,6 +375,14 @@
 {
     background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");
 }
+.K-Chem-MolFlexChainIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/carbonChainVariable.gif");
+}
+.K-Chem-MolFlexRingIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/carbonRingVariable.gif");
+}
 
 .K-Chem-RepositoryStructureFragmentIaController-SubBondMark > .K-Pri-Glyph-Content
 {
@@ -424,6 +436,11 @@
 .K-Chem-MolNodeChargeIaController-Doublet > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/radical2.gif");
+}
+
+.K-Chem-AttachedMarkerIaController-LonePair > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/lonePair.gif");
 }
 
 .K-Chem-MolRingIaController-3 > .K-Pri-Glyph-Content

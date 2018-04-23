@@ -34,6 +34,8 @@
  * @property {Object} renderConfigs Configuration for rendering.
  *   This property should be an instance of {@link Kekule.Render.Render2DConfigs} or {@link Kekule.Render.Render3DConfigs}
  * @propety {Kekule.Render.AbstractRenderer} renderer Renderer to draw the chem object.
+ *
+ * @property {Bool} canModifyTargetObj If set to true, renderer may change the rendered object (e.g., add charge markers, change block sizes...).
  * @class
  */
 Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
@@ -90,6 +92,7 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 
 		this.defineProp('renderer', {'dateType': 'Kekule.Render.AbstractRenderer', 'serializable': false, 'setter': null});
 
+		this.defineProp('canModifyTargetObj', {'dataType': DataType.BOOL});
 		// private property
 		//this.defineProp('boundInfoRecorder', {'dateType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null });
 	},

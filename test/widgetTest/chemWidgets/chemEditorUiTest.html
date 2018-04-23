@@ -83,6 +83,8 @@
       var chemObj = chemEditor.getSavingTargetObj();
       if (chemObj)
       {
+        console.log(chemObj.getClassName());
+        console.log(Kekule.Render.ObjUtils.getContainerBox(chemObj, Kekule.CoordMode.COORD2D, true));
         var viewer = Kekule.Widget.getWidgetById('chemViewer');
         viewer.setAutoSize(true).setChemObj(chemObj);
       }

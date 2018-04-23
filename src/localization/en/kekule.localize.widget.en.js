@@ -87,7 +87,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	TITLE_IMG_FORMAT_PNG: 'PNG format image',
 	TITLE_IMG_FORMAT_JPG: 'Jpeg format image',
 	TITLE_IMG_FORMAT_GIF: 'GIF format image',
-	TITLE_IMG_FORMAT_SVG: 'SVG format image',
+	TITLE_IMG_FORMAT_SVG: 'SVG format image'
 });
 
 /* @ignore */
@@ -174,11 +174,15 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_CHARGE_POSITIVE: 'Positive charge',
 	CAPTION_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	CAPTION_MOL_CHARGE_SINGLET: 'Singlet radical',
-	CAPTION_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	CAPTION_MOL_CHARGE_DOUBLET: 'Monoradical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
-	CAPTION_TEXT_BLOCK: 'Text Block',
-	CAPTION_IMAGE_BLOCK: 'Image Block',
-	CAPTION_TEXT_IMAGE: 'Text and Image',
+	CAPTION_MOL_ELECTRON_LONEPAIR: 'Lone pair',
+	CAPTION_TEXT_BLOCK: 'Text block',
+	CAPTION_IMAGE_BLOCK: 'Image block',
+	CAPTION_TEXT_IMAGE: 'Text and image',
+
+	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
+	CAPTION_MOL_FLEXRING: 'Flex ring',
 
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
@@ -218,7 +222,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	CAPTION_TEXT_FORMAT: 'Text format',
 	CAPTION_PICK_COLOR: 'Color',
+	CAPTION_FONTNAME: 'Font name',
+	CAPTION_FONTSIZE: 'Font size',
 	CAPTION_TEXT_DIRECTION: 'Text direction',
 	CAPTION_TEXT_DIRECTION_DEFAULT: 'Default',
 	CAPTION_TEXT_DIRECTION_LTR: 'Left to right',
@@ -263,11 +270,15 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_CHARGE_POSITIVE: 'Positive charge',
 	HINT_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	HINT_MOL_CHARGE_SINGLET: 'Singlet radical',
-	HINT_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	HINT_MOL_CHARGE_DOUBLET: 'Monoradical',
 	HINT_MOL_CHARGE_TRIPLET: 'Triplet radical',
+	HINT_MOL_ELECTRON_LONEPAIR: 'Lone pair electrons',
 	HINT_TEXT_BLOCK: 'Text block tool',
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',
+
+	HINT_MOL_FLEXCHAIN: 'Flex carbon chain',
+	HINT_MOL_FLEXRING: 'Flex carbon ring',
 
 	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',
@@ -306,12 +317,15 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	HINT_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	HINT_TEXT_FORMAT: 'Set text format',
 	HINT_FONTNAME: 'Set font name',
 	HINT_FONTSIZE: 'Set font size',
 	HINT_PICK_COLOR: 'Select color',
 	HINT_TEXT_DIRECTION: 'Set text direction',
 	HINT_TEXT_HORIZONTAL_ALIGN: 'Set text horizontal alignment',
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
+
+	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
 
 	// load data dialog
 	CAPTION_LOADDATA_DIALOG: 'Load data',
