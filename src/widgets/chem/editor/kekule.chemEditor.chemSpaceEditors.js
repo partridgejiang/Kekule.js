@@ -3527,7 +3527,9 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 
 		this._manipulateObjInfoCache = [];
 
-		this.setRepositoryItem(new Kekule.Editor.MolChainRepositoryItem2D(2));
+		var rep = new Kekule.Editor.MolChainRepositoryItem2D(2);
+		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
+		this.setRepositoryItem(rep);
 	},
 	/** @private */
 	getChainMaxAtomCount: function()
@@ -3783,8 +3785,12 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	/** @ignore */
 	react_pointermove: function($super, e)
 	{
+		//var tStart = Date.now();
 		this._isForceReversedChainDirection = !!e.getShiftKey();
-		return $super(e);
+		var result = $super(e);
+		//var tEnd = Date.now();
+		//console.log('duration', tEnd - tStart);
+		return result;
 	}
 });
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexChainIaController, Kekule.Editor.ChemSpaceEditor);

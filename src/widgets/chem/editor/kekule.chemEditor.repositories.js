@@ -459,7 +459,6 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 		$super();
 		this.setRingAtomCount(ringAtomCount);
 		this.setBondLength(bondLength || 1);
-		this._initCoordCache();
 	},
 	/** @private */
 	initProperties: function()
@@ -471,12 +470,23 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 				if (value !== this.getBondLength())
 				{
 					this.setPropStoreFieldValue('bondLength', value);
-					this._clearCoordCache();
+					//this._clearCoordCache();
 				}
 			}
 		});
 		this.defineProp('isAromatic', {'dataType': DataType.BOOL});
-		this.defineProp('enableCoordCache', {'dataType': DataType.BOOL});
+		this.defineProp('enableCoordCache', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getEnableCoordCache())
+				{
+					this.setPropStoreFieldValue('enableCoordCache', value);
+					//console.log('set cache', value, this._coordCache);
+					if (value && !this._coordCache)
+						this._initCoordCache();
+				}
+			}
+		});
 		/*
 		this.defineProp('ring', {'dataType': 'Kekule.StructureFragment', 'serializable': false,
 			'setter': null,
@@ -544,8 +554,12 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 		var coordCacheEnabled = this.getEnableCoordCache();
 		var hasCoordCache = coordCacheEnabled && this._hasCoordCache(atomCount);
 
+		//console.log(atomCount, this._hasCoordCache(atomCount), coordCacheEnabled, this._coordCache[atomCount]);
+
+		var atomCoords;
 		if (!hasCoordCache)  // has no cache, need to calculate
 		{
+			/*
 			var bondLength = this.getBondLength();
 			var halfCenterAngle = Math.PI / atomCount;
 			var sinHalfCenterAngle = Math.sin(halfCenterAngle);
@@ -554,7 +568,15 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 			//var bondAngle = Math.PI - centerAngle;
 			var centerAtomLength = bondLength / 2 / sinHalfCenterAngle;
 			var startingAngle = ((atomCount === 4) || (atomCount === 8)) ? -Math.PI / 2 - centerAngle / 2 : -Math.PI / 2;
+			*/
+			atomCoords = this._calcAtomCoords(atomCount);
+			//console.log(atomCount, atomCoords, this._coordCache);
 		}
+		else
+			atomCoords = this._getCachedCoords(atomCount);
+
+		var bondLength = this.getBondLength();
+
 		var lastAtom;
 		var lastAtomIndex;
 		var firstAtom;
@@ -567,6 +589,7 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 			{
 				var atom = this._generateAtom(i);
 				var atomCoord;
+				/*
 				if (hasCoordCache)
 				{
 					atomCoord = this._getCachedCoord(atomCount, i);
@@ -584,6 +607,11 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 					}
 				}
 				atom.setCoord2D(atomCoord);
+				*/
+				var coord = atomCoords[i];
+				if (bondLength !== 1)
+					coord = Kekule.CoordUtils.multiply(coord);
+				atom.setCoord2D(coord);
 				mol.appendNode(atom);
 				//children.push(atom);
 
@@ -639,9 +667,48 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 		return new Kekule.Bond(null, null, bondOrder);
 	},
 	/** @private */
+	_calcAtomCoords: function(atomCount)
+	{
+		var bondLength = 1;
+
+		var coordCacheEnabled = this.getEnableCoordCache();
+
+		var halfCenterAngle = Math.PI / atomCount;
+		var sinHalfCenterAngle = Math.sin(halfCenterAngle);
+		//var cosHalfCenterAngle = Math.sin(halfCenterAngle);
+		var centerAngle = 2 * halfCenterAngle;
+		//var bondAngle = Math.PI - centerAngle;
+		var centerAtomLength = bondLength / 2 / sinHalfCenterAngle;
+		var startingAngle = ((atomCount === 4) || (atomCount === 8)) ? -Math.PI / 2 - centerAngle / 2 : -Math.PI / 2;
+		var currAngle = startingAngle;
+
+		var result = [];
+		for (var i = 0; i < atomCount; ++i)
+		{
+			// set atom coord
+			var x = centerAtomLength * Math.cos(currAngle);
+			var y = centerAtomLength * Math.sin(currAngle);
+			var coord = {'x': x, 'y': y};
+			result.push(coord);
+			if (coordCacheEnabled)
+			{
+				this._setCoordToCache(coord, atomCount, i);
+			}
+			currAngle += centerAngle;
+		}
+		return result;
+	},
+	/** @private */
 	_initCoordCache: function()
 	{
+		//console.log('init cache');
 		this._coordCache = [];
+		// fill some common ring caches
+		for (var i = 3; i < 13; ++i)
+		{
+			//console.log('pre calc', i);
+			this._calcAtomCoords(i);
+		}
 	},
 	/** @private */
 	_clearCoordCache: function()
@@ -651,6 +718,7 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 	/** @private */
 	_setCoordToCache: function(coord, atomCount, atomIndex)
 	{
+		//console.log('')
 		var cache = this._coordCache[atomCount];
 		if (!cache)
 		{
@@ -660,15 +728,20 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 		cache[atomIndex] = coord;
 	},
 	/** @private */
-	_getCachedCoord: function(atomCount, atomIndex)
+	_getCachedCoords: function(atomCount, atomIndex)
 	{
 		var cache = this._coordCache[atomCount];
 		return cache && cache[atomIndex] ;
 	},
 	/** @private */
+	_getCachedCoord: function(atomCount)
+	{
+		return this._coordCache[atomCount];
+	},
+	/** @private */
 	_hasCoordCache: function(atomCount)
 	{
-		return !!this._coordCache[atomCount];
+		return !!(this._coordCache && this._coordCache[atomCount]);
 	}
 });
 
@@ -705,6 +778,18 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 		this.defineProp('atomCount', {'dataType': DataType.INT});
 		this.defineProp('bondLength', {'dataType': DataType.FLOAT});
 		this.defineProp('negativeDirection', {'dataType': DataType.BOOL});
+		this.defineProp('enableCoordCache', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (value !== this.getEnableCoordCache())
+				{
+					this.setPropStoreFieldValue('enableCoordCache', value);
+					//console.log('set cache', value, this._coordCache);
+					if (value && !this._coordCache)
+						this._initCoordCache();
+				}
+			}
+		});
 	},
 	/** @ignore */
 	doGetRefLength: function()
@@ -741,22 +826,48 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 		var mol = targetMol || new newStructFragmentClass();
 
 		var atomCount = this.getAtomCount();
-		var bondLength = this.getBondLength();
+		var bondLength = this.getBondLength() || 1;
+
+		/*
+		var atomCoords = this._getCachedCoord(atomCount);
+		if (!atomCoords)  // has no cache, need to calculate
+		{
+			atomCoords = this._calcAtomCoords(atomCount);
+		}
+		*/
+
+		//console.log('fetch atom coords', atomCoords);
+
+		/*
 		var deltaCoord = {'x': this.STEP_X_INC * bondLength, 'y': this.STEP_Y_INC * bondLength};
 		if (this.getNegativeDirection())
 			deltaCoord.y = -deltaCoord.y;
+		*/
+		var negativeDirection = this.getNegativeDirection();
 
 		mol.beginUpdate();
 		try
 		{
+			/*
 			var currCoord = {'x': 0, 'y': 0};
 			var ySign = 1;
+			*/
 			var lastAtom, currAtom, bond;
 			for (var i = 0, l = atomCount; i < l; ++i)
 			{
 				lastAtom = currAtom;
 				currAtom = this._generateAtom(i);
-				currAtom.setCoord2D(currCoord);
+				//currAtom.setCoord2D(currCoord);
+				var coord = this._getCachedCoord(i);
+				if (!coord)
+				{
+					coord = this._calcAtomCoord(i);
+				}
+				if (bondLength !== 1)
+					coord = Kekule.CoordUtils.multiply(coord, bondLength);
+				if (negativeDirection)
+					coord = {'x': coord.x, 'y': -coord.y};  // avoid change cached coord directly
+				currAtom.setCoord2D(coord);
 				mol.appendNode(currAtom);
 				if (lastAtom)
 				{
@@ -765,8 +876,10 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 					bond.appendConnectedObj(lastAtom);
 					bond.appendConnectedObj(currAtom);
 				}
+				/*
 				currCoord = {'x': currCoord.x + deltaCoord.x, 'y': currCoord.y + deltaCoord.y * ySign};
 				ySign = -ySign;
+				*/
 			}
 		}
 		finally
@@ -797,6 +910,61 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 		}
 		*/
 		return new Kekule.Bond(null, null, bondOrder);
+	},
+	/** @private */
+	_calcAtomSetCoords: function(atomCount)
+	{
+		var coordCacheEnabled = this.getEnableCoordCache();
+		var bondLength = 1;
+		var deltaCoord = {'x': this.STEP_X_INC * bondLength, 'y': this.STEP_Y_INC * bondLength};
+
+		var result = [];
+		var currCoord = {'x': 0, 'y': 0};
+		result.push(currCoord);
+		this._coordCache[0] = currCoord;
+		var lastAtom, currAtom, bond;
+		for (var i = 1, l = atomCount; i < l; ++i)
+		{
+			currCoord = {'x': currCoord.x + deltaCoord.x, 'y': (i % 2)? deltaCoord.y: 0};
+			result.push(currCoord);
+			if (coordCacheEnabled)
+				this._coordCache[i] = currCoord;
+		}
+
+		//console.log(atomCount, result);
+		return result;
+	},
+	/** @private */
+	_calcAtomCoord: function(atomIndex)
+	{
+		var bondLength = 1;
+		var deltaCoord = {'x': this.STEP_X_INC * bondLength, 'y': this.STEP_Y_INC * bondLength};
+		var result = {
+			'x': deltaCoord.x * atomIndex,
+			'y': (atomIndex % 2)? deltaCoord.y: 0
+		};
+		if (this._coordCache)
+			this._coordCache[atomIndex] = result;
+		return result;
+	},
+
+	/** @private */
+	_initCoordCache: function()
+	{
+		//console.log('init cache');
+		this._coordCache = [];
+		// fill some common chain caches
+		var coords = this._calcAtomSetCoords(30);
+	},
+	/** @private */
+	_clearCoordCache: function()
+	{
+		this._coordCache = [];
+	},
+	/** @private */
+	_getCachedCoord: function(atomIndex)
+	{
+		return this._coordCache && this._coordCache[atomIndex];
 	}
 });
 
