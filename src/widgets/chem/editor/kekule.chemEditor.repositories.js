@@ -570,7 +570,6 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 			var startingAngle = ((atomCount === 4) || (atomCount === 8)) ? -Math.PI / 2 - centerAngle / 2 : -Math.PI / 2;
 			*/
 			atomCoords = this._calcAtomCoords(atomCount);
-			console.log(atomCount, atomCoords, this._coordCache);
 		}
 		else
 			atomCoords = this._getCachedCoords(atomCount);
