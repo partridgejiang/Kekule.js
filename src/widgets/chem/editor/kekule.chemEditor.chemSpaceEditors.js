@@ -1235,6 +1235,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	manipulateEnd: function($super)
 	{
 		$super();
+		this.getEditor().hideHotTrack();
 		this.setManuallyHotTrack(false);
 	},
 
