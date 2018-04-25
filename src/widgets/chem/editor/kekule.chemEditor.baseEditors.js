@@ -4140,7 +4140,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	getAllObjOperations: function()
+	getAllObjOperations: function(isTheFinalOperationToEditor)
 	{
 		//var opers = this.getObjOperationMap().getValues();
 		var opers = this.getMoveOperations();
@@ -4148,9 +4148,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	getActiveOperation: function()
+	getActiveOperation: function(isTheFinalOperationToEditor)
 	{
-		var opers = this.getAllObjOperations();
+		console.log('get active operation', isTheFinalOperationToEditor);
+		var opers = this.getAllObjOperations(isTheFinalOperationToEditor);
 		opers = Kekule.ArrayUtils.toUnique(opers);
 		if (opers.length <= 0)
 			return null;
@@ -4165,7 +4166,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	reverseActiveOperation: function()
 	{
-		return this.getActiveOperation().reverse();
+		var oper = this.getActiveOperation();
+		return oper.reverse();
 	},
 	/* @private */
 	/*
@@ -4188,7 +4190,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var macro = new Kekule.MacroOperation(opers);
 			editor.pushOperation(macro);
 			*/
-			editor.pushOperation(this.getActiveOperation());
+			editor.pushOperation(this.getActiveOperation(true));
 		}
 	},
 
