@@ -1265,7 +1265,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		return result;
 		*/
 
-		console.log('getAllObjOperations', isTheFinalOperationToEditor, this.useMergePreview());
+		//console.log('getAllObjOperations', isTheFinalOperationToEditor, this.useMergePreview());
 		var mergeOpers;
 		// if use merge preview, we should do the actual merging when the manipulation is done
 		if (isTheFinalOperationToEditor && this.useMergePreview())
@@ -2091,27 +2091,37 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	executeMergeOpers: function(mergeOpers)
 	{
 		//var opers = Kekule.ArrayUtils.toUnique(this.getMergeOperations());
+		var editor = this.getEditor();
 		var opers = Kekule.ArrayUtils.toUnique(mergeOpers || this.getMergeOperationsInManipulating());
 		var mergingDests = [];
-		for (var i = 0, l = opers.length; i < l; ++i)
+		editor.beginUpdateObject();
+		try
 		{
-			if (opers[i])
+			for (var i = 0, l = opers.length; i < l; ++i)
 			{
-				opers[i].execute();
-				var dest = opers[i].getDest? opers[i].getDest(): null;
-				if (dest)
-					AU.pushUnique(mergingDests, dest);
+				if (opers[i])
+				{
+					opers[i].execute();
+					var dest = opers[i].getDest ? opers[i].getDest() : null;
+					if (dest)
+						AU.pushUnique(mergingDests, dest);
+				}
 			}
-		}
-		this.setMergingDests(mergingDests.length? mergingDests: null);
+			this.setMergingDests(mergingDests.length ? mergingDests : null);
 
-		//console.log('[merge!!!!!]');
-		this.refreshManipulateObjs();
-		this._mergeJustReversed = false;
+			//console.log('[merge!!!!!]');
+			this.refreshManipulateObjs();
+			this._mergeJustReversed = false;
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
 	},
 	/** @private */
 	reverseMergeOpers: function(mergeOperations)
 	{
+		var editor = this.getEditor();
 		this.setMergingDests(null);
 		var originOpers = mergeOperations || this.getMergeOperationsInManipulating();
 		var opers = Kekule.ArrayUtils.toUnique(originOpers);
@@ -2120,23 +2130,31 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			;  // do nothing
 		else
 		{
-			for (var i = opers.length - 1; i >= 0; --i)
+			editor.beginUpdateObject();
+			try
 			{
-				if (opers[i])
+				for (var i = opers.length - 1; i >= 0; --i)
 				{
-					//console.log('reverse at', i, opers.length);
-					opers[i].reverse();
-					//delete opers[i];
+					if (opers[i])
+					{
+						//console.log('reverse at', i, opers.length);
+						opers[i].reverse();
+						//delete opers[i];
+					}
 				}
+				//this._mergeReversed = true;
+				//this.setMergeOperations([]);
+				//console.log('reverse merge oper', opers);
+				//this.getMergeOperations().length = utilIndex;
+				originOpers.length = 0;
+				this._mergeJustReversed = true;   // a special flag
+				//console.log('reverse', this.getManipulateObjs());
+				this.refreshManipulateObjs();
 			}
-			//this._mergeReversed = true;
-			//this.setMergeOperations([]);
-			//console.log('reverse merge oper', opers);
-			//this.getMergeOperations().length = utilIndex;
-			originOpers.length = 0;
-			this._mergeJustReversed = true;   // a special flag
-			//console.log('reverse', this.getManipulateObjs());
-			this.refreshManipulateObjs();
+			finally
+			{
+				editor.endUpdateObject();
+			}
 		}
 	},
 

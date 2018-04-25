@@ -4150,7 +4150,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	getActiveOperation: function(isTheFinalOperationToEditor)
 	{
-		console.log('get active operation', isTheFinalOperationToEditor);
+		//console.log('get active operation', isTheFinalOperationToEditor);
 		var opers = this.getAllObjOperations(isTheFinalOperationToEditor);
 		opers = Kekule.ArrayUtils.toUnique(opers);
 		if (opers.length <= 0)
