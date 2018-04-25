@@ -928,7 +928,9 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 			}
 		}
 
-		operGroup.execute();
+		//operGroup.execute();
+		editor.execOperation(operGroup);
+
 		// add to history
 		if (editor && editor.getEnableOperHistory())
 		{

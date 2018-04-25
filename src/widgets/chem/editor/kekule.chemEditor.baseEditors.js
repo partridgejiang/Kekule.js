@@ -3258,7 +3258,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			h.push(operation);
 		}
 		if (autoExec)
-			operation.execute();
+		{
+			this.beginUpdateObject();
+			try
+			{
+				operation.execute();
+			}
+			finally
+			{
+				this.endUpdateObject();
+			}
+		}
 	},
 	/**
 	 * Manually pop an operation from the tail of operation history.
@@ -3273,7 +3283,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			r = h.pop(operation);
 			if (autoReverse)
-				r.reverse();
+			{
+				this.beginUpdateObject();
+				try
+				{
+					r.reverse();
+				}
+				finally
+				{
+					this.endUpdateObject();
+				}
+			}
 			return r;
 		}
 		else
@@ -3285,7 +3305,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	execOperation: function(operation)
 	{
-		operation.execute();
+		this.beginUpdateObject();
+		try
+		{
+			operation.execute();
+		}
+		finally
+		{
+			this.endUpdateObject();
+		}
 		if (this.getEnableOperHistory())
 			this.pushOperation(operation, false);  // push but not execute
 		return this;
@@ -4985,6 +5013,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		else if (state === S.MANIPULATING)  // move or resize objects
 		{
 			var manipulateType = this.getManipulationType();
+			var editor = this.getEditor();
+			editor.beginUpdateObject();
 			try
 			{
 				this._isBusy = true;
@@ -5004,6 +5034,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			}
 			finally
 			{
+				editor.endUpdateObject();
 				this._isBusy = false;
 			}
 			e.preventDefault();
