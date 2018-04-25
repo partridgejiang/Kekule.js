@@ -1523,6 +1523,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				if (!needCreateNewMerge)
 				{
 					var sameMergeOpers = [];
+					//console.log('oldMergeOpers', oldMergeOpers, magneticMergeObjIndexes);
 					for (var i = 0, l = magneticMergeObjs.length; i < l; ++i)
 					{
 						var obj = magneticMergeObjs[i];
@@ -1544,7 +1545,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						if (oldMergeOper)
 						{
 							var index = sameMergeOpers.indexOf(oldMergeOper);
-							if (index <= 0)   // old merge has more nodes than current, need to recreate new merge
+							if (index < 0)   // old merge has more nodes than current, need to recreate new merge
 							{
 								needCreateNewMerge = true;
 								break;
@@ -1686,6 +1687,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 					if (needCreateNewMerge)
 					{
+						//console.log('here');
 						for (var i = 0, l = mergedObjCount; i < l; ++i)
 						{
 							var obj = magneticMergeObjs[i];
@@ -1703,6 +1705,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							}
 						}
 						//console.log('execute merge on', mergedObjCount);
+						//console.log('create new', magneticMergeObjIndexes, this.getMergeOperationsInManipulating());
 
 						//this.executeMergeOpers();
 						this.executeMergeOpers(this.getMergeOperationsInManipulating());
