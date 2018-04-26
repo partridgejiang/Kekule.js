@@ -4105,6 +4105,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	createManipulateOperation: function()
 	{
+		return this.doCreateManipulateMoveAndResizeOperation();
+	},
+	/** @private */
+	doCreateManipulateMoveAndResizeOperation: function()
+	{
 		//var oper = new Kekule.MacroOperation();
 		var opers = [];
 		this.setMoveOperations(opers);
@@ -4265,18 +4270,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 	*/
 
-	/**
-	 * Prepare to move movingObjs.
-	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
-	 * @param {Hash} startContextCoord Mouse position when starting to move objects. This coord is based on context.
-	 * @param {Array} manipulatingObjs Objects about to be moved or resized.
-	 * @param {Hash} startBox
-	 * @param {Hash} rotateCenter
-	 * @private
-	 */
-	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	/** @private */
+	doPrepareManipulatingObjects: function(manipulatingObjs, startScreenCoord)
 	{
-		this.setManipulationType(manipulationType);
 		var actualObjs = this.getActualManipulatingObjects(manipulatingObjs);
 		//console.log(manipulatingObjs, actualObjs);
 		this.setManipulateOriginObjs(manipulatingObjs);
@@ -4292,15 +4288,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var info = this.createManipulateObjInfo(obj, i, startScreenCoord);
 			map.set(obj, info);
 		}
+	},
+	/** @private */
+	doPrepareManipulatingStartingCoords: function(startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
 		this.setStartBox(startBox);
 		this.setRotateCenter(rotateCenter);
 		this.setRotateRefCoord(rotateRefCoord);
 		this.setLastRotateAngle(null);
+	}, /**
+	 * Prepare to move movingObjs.
+	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
+	 * @param {Hash} startContextCoord Mouse position when starting to move objects. This coord is based on context.
+	 * @param {Array} manipulatingObjs Objects about to be moved or resized.
+	 * @param {Hash} startBox
+	 * @param {Hash} rotateCenter
+	 * @private
+	 */
+	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
+		this.setManipulationType(manipulationType);
+		this.doPrepareManipulatingObjects(manipulatingObjs, startScreenCoord);
+		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
 		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
+
 	/**
 	 * Cancel the moving process and set objects to its original position.
 	 * @private
