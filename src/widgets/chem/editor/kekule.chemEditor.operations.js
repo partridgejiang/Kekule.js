@@ -978,6 +978,7 @@ Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOpe
 	initialize: function($super, target, dest, enableStructFragmentMerge)
 	{
 		$super(target, dest, enableStructFragmentMerge);
+		this._nodeParent = null;
 	},
 	/** @ignore */
 	doExecute: function()
@@ -998,6 +999,7 @@ Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOpe
 				oper.execute();
 				this._moveNodeOperations.push(oper);
 			}
+			this._nodeParent = structFragment;
 		}
 		finally
 		{
@@ -1007,8 +1009,7 @@ Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOpe
 	/** @ignore */
 	doReverse: function()
 	{
-		var fromNode = this.getTarget();
-		var structFragment = fromNode.getParentFragment();
+		var structFragment = this._nodeParent;
 		structFragment.beginUpdate();
 		try
 		{
@@ -1020,7 +1021,8 @@ Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOpe
 		}
 		finally
 		{
-			structFragment.endUpdate();
+			if (structFragment)
+				structFragment.endUpdate();
 		}
 		this._moveNodeOperations = null;
 	}

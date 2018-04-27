@@ -4004,8 +4004,6 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 	/** @ignore */
 	getRepObjCreationOptions: function()
 	{
-		return null;  // TODO: currently must create new structure each time to avoid merge problems
-		/*
 		if (this._isUpdateRepObj)  // just update ring, can reuse the old structure to avoid unnecessary merge operation
 		{
 			var oldMol = this.getCurrRepositoryObjects()[0];
@@ -4013,7 +4011,6 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		}
 		else
 			return null;
-		*/
 	},
 	/** @ignore */
 	addRepositoryObj: function($super, targetObj, screenCoord)
