@@ -3654,6 +3654,7 @@ Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
  * @property {Bool} preserveWidgetList Whether the manager keep a list of all widgets on document.
  * @property {Array} widgets An array of all widgets on document.
  *   This property is only available when property preserveWidgetList is true.
+ * @property {Bool} enableMouseEventToPointerPolyfill If true, mouseXXXX event will also evoke react_pointerXXXX handlers on browsers that do not support pointer events directly.
  * @private
  */
 /**
@@ -3686,6 +3687,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('modalWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
+		//this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
 
 		/*
 		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
@@ -3736,6 +3738,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 
 		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+
+		this.defineProp('enableMouseEventToPointerPolyfill', {'dataType': DataType.BOOL, 'serializable': false});
 	},
 
 	/** @private */
@@ -4142,6 +4146,20 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			//console.log('event', e.getTarget().tagName, widget.getClassName());
 			targetWidget.reactUiEvent(e);
+		}
+
+		if (this.getEnableMouseEventToPointerPolyfill() && !Kekule.BrowserFeature.pointerEvent)
+		{
+			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
+			var pointerEvents = ['pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'];
+			var index = mouseEvents.indexOf(evType);
+			if (index >= 0)
+			{
+				e.setType(pointerEvents[index]);
+				e.pointerType = 'mouse';
+				//console.log('map', e.getType());
+				this.reactUiEvent(e);
+			}
 		}
 	},
 	/** @private */
