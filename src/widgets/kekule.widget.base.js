@@ -4093,6 +4093,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		return eventName.startsWith('touch');
 	},
+	/** @private */
+	isPointerEvent: function(eventName)
+	{
+		return eventName.startsWith('pointer');
+	},
 
 	/** @private */
 	reactUiEvent: function(e)
@@ -4102,7 +4107,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		// get target widget to dispatch event
 		var targetWidget;
 		var mouseCaptured;
-		if (this.getMouseCaptureWidget() && (this.isMouseEvent(evType) || this.isTouchEvent(evType)))  // may be captured
+		if (this.getMouseCaptureWidget() && (this.isMouseEvent(evType) || this.isTouchEvent(evType) || this.isPointerEvent(evType)))  // may be captured
 		{
 			targetWidget = this.getMouseCaptureWidget();
 			mouseCaptured = true;
