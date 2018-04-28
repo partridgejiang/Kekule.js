@@ -291,6 +291,19 @@ X.Event.Methods = {
 	{
 		return event.__$type__ || event.type;
 	},
+	/** @ignore */
+	setType: function(event, value)
+	{
+		event.__$type__ = value;
+		try
+		{
+			event.type = value;
+		}
+		catch(e)
+		{
+
+		}
+	},
 	/**
 	 * Get event.target element.
 	 * @param {Object} event
