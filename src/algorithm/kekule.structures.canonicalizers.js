@@ -567,13 +567,61 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 	 */
 	_processECs: function(graph, newECMapping, oldECMapping, isInitialRun)
 	{
+		if (isInitialRun)
+			return this._initECs(graph, newECMapping);
+
+		var ecValues = [];
+		var ecTable = [];
+		var vertexes = graph.getVertexes();
+		for (var i = 0, l = vertexes.length; i < l; ++i)
+		{
+			var vertex = vertexes[i];
+			var newEC = this._usePrimeECs? 1: 0;
+			if (this._usePrimeECs)
+				var primes = this._getPrimeArray();
+			var neighbors = vertex.getNeighbors();
+			for (var j = 0, k = neighbors.length; j < k; ++j)
+			{
+				if (this._usePrimeECs)
+				{
+					newEC *= primes[(oldECMapping.get(neighbors[j]) - 1) || 0];
+				}
+				else
+					newEC += oldECMapping.get(neighbors[j]) || 0;
+			}
+			AU.pushUnique(ecValues, newEC);
+			if (!ecTable[newEC])
+				ecTable[newEC] = [vertex];
+			else
+				ecTable[newEC].push(vertex);
+		}
+		//console.log('ecValues-Old', ecValues);
+		ecValues.sort(function(a, b){ return a - b; });
+		//console.log('ecValues-New', ecValues);
+		var vertexGroup = [];
+		for (var i = 0, l = ecValues.length; i <l; ++i)
+		{
+			var ecValue = ecValues[i];
+			if (ecTable[ecValue])
+				vertexGroup.push(ecTable[ecValue]);
+		}
+		this._setECValueByVertexGroup(vertexGroup, newECMapping);
+		//console.log('ECs: ', ecValues);
+		return vertexGroup.length;
+	},
+	/*
+	_processECs_OLD: function(graph, newECMapping, oldECMapping, isInitialRun)
+	{
+		if (isInitialRun)
+			return this._initECs(graph, newECMapping);
+
 		var ecValues = [];
 		var vertexes = graph.getVertexes();
 		for (var i = 0, l = vertexes.length; i < l; ++i)
 		{
 			var vertex = vertexes[i];
 			var sum = 0;
-			if (!isInitialRun)
+			//if (!isInitialRun)
 			{
 				var neighbors = vertex.getNeighbors();
 				for (var j = 0, k = neighbors.length; j < k; ++j)
@@ -581,15 +629,88 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 					sum += oldECMapping.get(neighbors[j]) || 0;
 				}
 			}
-			else
-			{
-				sum = vertex.getEdgeCount();
-			}
 			newECMapping.set(vertex, sum);
 			AU.pushUnique(ecValues, sum);
 		}
 		//console.log('ECs: ', ecValues);
 		return ecValues.length;
+	},
+	*/
+	/** @private */
+	_initECs: function(graph, newECMapping)
+	{
+		// using Unique SMILES method to group EC
+		var ecValueTable = [];
+		var vertexes = graph.getVertexes();
+		// calc connection count first
+		for (var i = 0, l = vertexes.length; i < l; ++i)
+		{
+			var vertex = vertexes[i];
+			var edgeCount = vertex.getEdgeCount();
+			if (!ecValueTable[edgeCount])
+			{
+				ecValueTable[edgeCount] = [vertex];
+			}
+			else
+				ecValueTable[edgeCount].push(vertex);
+		}
+		//console.log(ecValueTable.length, ecValueTable);
+		// then consider the difference of atoms
+		var vertexGroup = [];
+		for (var i = 0, l = ecValueTable.length; i < l; ++i)
+		{
+			var vertexes = ecValueTable[i];
+			//console.log(vertexes);
+			if (vertexes)
+			{
+				if (vertexes.length === 1)  // single vertex, put in directly
+					vertexGroup.push(vertexes);
+				else  // a group of same edge count, need group them further by atoms
+				{
+					var subGroups = AU.group(vertexes, function(v1, v2){
+						var node1 = v1.getData('object');
+						var node2 = v2.getData('object');
+						var result = node1.getLinkedConnectorCount() - node2.getLinkedConnectorCount();
+						if (!result)
+						{
+							result = node1.compareStructure(node2);
+							if (!result)
+								result = (node1.getHydrogenCount? node1.getHydrogenCount(true): 0) - (node2.getHydrogenCount? node2.getHydrogenCount(true): 0);
+						}
+						return result;
+					});
+					//console.log(vertexes, subGroups);
+					for (var j = 0, k = subGroups.length; j < k; ++j)
+					{
+						vertexGroup.push(AU.toArray(subGroups[j]));
+					}
+				}
+			}
+		}
+		//console.log(vertexGroup);
+		// at last assign EC values to each vertexes
+		this._setECValueByVertexGroup(vertexGroup, newECMapping);
+		return vertexGroup.length;
+	},
+	/** @private */
+	_setECValueByVertexGroup: function(vertexGroup, ECMapping)
+	{
+		for (var i = 0, l = vertexGroup.length; i < l; ++i)
+		{
+			var vertexes = vertexGroup[i];
+			for (var j = 0, k = vertexes.length; j < k; ++j)
+			{
+				ECMapping.set(vertexes[j], i + 1);
+			}
+		}
+	},
+	/** @private */
+	_getPrimeArray: function()
+	{
+		//return [];
+		if (!Kekule.CanonicalizationMorganIndexer.primes)
+			Kekule.CanonicalizationMorganIndexer.primes = Kekule.NumUtils.getPrimes(10000);
+		return Kekule.CanonicalizationMorganIndexer.primes;
 	},
 
 	/**
@@ -605,11 +726,17 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		];
 		try
 		{
+			if (graph.getVertexes().length < this._getPrimeArray().length)  // can use prime EC values
+				this._usePrimeECs = true;
+			else
+				this._usePrimeECs = false;
+
 			var index = 0;
 			var currECMapping = ecMappings[0];
 			var oldECMapping = ecMappings[0];
 			var oldEcMemberCount = 0;
-			var oldVertexGroup, currVertexGroup;
+			var lastVertexGroup, currVertexGroup;
+			var storedVertexGroups = [];  // stores vertex groups of all same EC length
 			var ecMemberCount = this._processECs(graph, currECMapping, oldECMapping, true);
 			//var currVertexGroup = this._groupVertexesByEcValue(graph, currECMapping);
 			var doProcess = true;
@@ -617,7 +744,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			while (doProcess)
 			{
 				oldEcMemberCount = ecMemberCount;
-				oldVertexGroup = currVertexGroup;
+				lastVertexGroup = currVertexGroup;
 				oldECMapping = currECMapping;
 				++index;
 				//var j = index % 2;
@@ -627,14 +754,21 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				currVertexGroup = null;
 
 				doProcess = ecMemberCount > oldEcMemberCount;  // if ec count arises, continue process
+
 				if (ecMemberCount === oldEcMemberCount)  // some times occurs
 				{
 					currVertexGroup = this._groupVertexesByEcValue(graph, currECMapping);
-					if (!oldVertexGroup && oldECMapping)  // calculate only when needed
+					if (!lastVertexGroup && oldECMapping)  // calculate only when needed
 					{
-						oldVertexGroup = this._groupVertexesByEcValue(graph, oldECMapping);
+						lastVertexGroup = this._groupVertexesByEcValue(graph, oldECMapping);
 					}
-					doProcess = this._compareEcVertexGroup(currVertexGroup, oldVertexGroup) !== 0;
+					storedVertexGroups.push(lastVertexGroup);
+					//doProcess = this._compareEcVertexGroup(currVertexGroup, lastVertexGroup) !== 0;
+					doProcess = !this._hasVertexGroup(currVertexGroup, storedVertexGroups);
+				}
+				else  // new group count differs from last, clear stored vertex groups
+				{
+					storedVertexGroups = [];
 				}
 			}
 
@@ -659,7 +793,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		// finally get actual ec values
 		//var actualEcMapping = oldEcMapping;
 		return {ecMapping: oldECMapping, ecCount: oldEcMemberCount,
-			vertexGroup: oldVertexGroup || this._groupVertexesByEcValue(graph, oldECMapping)};
+			vertexGroup: lastVertexGroup || this._groupVertexesByEcValue(graph, oldECMapping)};
 	},
 
 	/** @private */
@@ -689,6 +823,16 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			});
 		}
 		return result;
+	},
+	/** @private */
+	_hasVertexGroup: function(group, groups)
+	{
+		for (var i = 0, l = groups.length; i < l; ++i)
+		{
+			if (this._compareEcVertexGroup(group, groups[i]) === 0)
+				return true;
+		}
+		return false;
 	},
 	/** @private */
 	_compareEcVertexGroup: function(group1, group2)
