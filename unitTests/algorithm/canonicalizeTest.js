@@ -129,7 +129,7 @@ describe('Test of canonicalization of molecule', function(){
 	};
 
 	var srcUrls = [
-
+		'mdl/canoTest1.mol', 'mdl/canoTest2.mol',
 		'mdl/aromatic1.mol', 'mdl/aromatic2.mol', 'mdl/aromatic3.mol', 'mdl/aromatic4.mol', 'mdl/aromatic5.mol', 'mdl/aromatic6.mol', 'mdl/aromatic7.mol',
 		'mdl/azulene.mol', 'mdl/benzene.mol', 'mdl/choloylcoa.mol', 'mdl/dative.mol', 'mdl/github112_qry.mol', 'mdl/github112_tgt.mol',
 		'mdl/linear.mol', 'mdl/monomer.mol', 'mdl/napthalene.mol', 'mdl/porphyrin.mol', 'mdl/quinone.mol', /*, 'mdl/ring_03419.mol' */
