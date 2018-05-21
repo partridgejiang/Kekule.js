@@ -56,16 +56,19 @@ Kekule.MolStandardizer = {
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)
 			mol.unmarshalAllSubFragments(true);
-		if (op.doCanonicalization)
+		if (op.doStereoPerception)
+			mol.perceiveStereos(null);  // stereo detection should do canonicalization first
+		else if (op.doCanonicalization)
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
 		if (op.doAromaticPerception)
 		{
 			mol.perceiveAromaticRings();
 			//console.log('perceive aromatics');
 		}
+		/*
 		if (op.doStereoPerception)
 			mol.perceiveStereos(null, true);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
-
+    */
 		return mol;
 	}
 };
