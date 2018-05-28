@@ -16,8 +16,11 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 			{'name': BNS.molBond, 'attached': [
 				BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple,
 				BNS.molBondCloser, BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+				BNS.molChain,
+				/*
 				BNS.molRepSubBondMark,
 				BNS.molRepMethane,
+				*/
 				BNS.molRepFischer1, BNS.molRepFischer2,
 				BNS.molRepSawhorseStaggered, BNS.molRepSawhorseEclipsed
 			]},
@@ -51,8 +54,11 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 				{'name': BNS.molBond, 'attached': [
 					BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple,
 					BNS.molBondCloser, BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+					BNS.molChain,
+					/*
 					BNS.molRepSubBondMark,
 					BNS.molRepMethane,
+					*/
 					BNS.molRepFischer1, BNS.molRepFischer2,
 					BNS.molRepSawhorseStaggered, BNS.molRepSawhorseEclipsed
 				]},
