@@ -4528,7 +4528,7 @@ Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIa
 	},
 
 	/** @private */
-	react_pointerdown: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -4792,8 +4792,12 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		style.marginLeft = -posAdjust + 'px';
 		*/
 		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
-		setter.selectAll();
-		setter.focus();
+
+		(function()
+		{
+			setter.selectAll();
+			setter.focus();
+		}).defer();
 	}
 });
 // register
