@@ -49,6 +49,9 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 		this.setEnableLiveUpdate(true);
 		this.setEnableMultiSelected(true);
 		this.setRootObj(rootObj);
+
+		this._pauseLiveUpdateFlag = 0;
+		this._changedObjects = [];
 	},
 	/** @private */
 	initProperties: function()
@@ -84,6 +87,42 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 			this._installRootEventHandler(newValue);
 		}
 	},
+
+	/**
+	 * Pause the live update process.
+	 * Changed objects will be stored and the corresponding tree items will be refreshed
+	 * after the live update is resumed.
+	 */
+	pauseLiveUpdate: function()
+	{
+		if (this._pauseLiveUpdateFlag >= 0)
+		{
+			this._pauseLiveUpdateFlag = 0;
+			this._changedObjects = [];
+		}
+		--this._pauseLiveUpdateFlag;
+		return this;
+	},
+	/**
+	 * Resume the live update process.
+	 */
+	resumeLiveUpdate: function()
+	{
+		++this._pauseLiveUpdateFlag;
+		if (this._pauseLiveUpdateFlag >= 0)  // do actual resume
+		{
+			this._pauseLiveUpdateFlag = 0;
+			for (var i = 0, l = this._changedObjects.length; i < l; ++i)
+			{
+				this.refreshObject(this._changedObjects[i]);
+			}
+		}
+	},
+	isLiveUpdatePaused: function()
+	{
+		return (this._pauseLiveUpdateFlag < 0);
+	},
+
 	/** @private */
 	_installRootEventHandler: function(root)
 	{
@@ -99,15 +138,30 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 	{
 		if (this.getEnableLiveUpdate())
 		{
-			var obj = e.target;
-			// get corresponding tree node
-			var treeItem = this.getObjMap().get(obj);
-			if (treeItem)
+			if (this.isLiveUpdatePaused())
 			{
-				//console.log(e, obj.getClassName(), treeItem);
-				this._updateTreeItem(treeItem, obj);
+				if (this.getObjMap().get(e.target))
+					Kekule.ArrayUtils.pushUnique(this._changedObjects, e.target);
+			}
+			else
+			{
+				this.refreshObject(e.target);
 			}
 		}
+	},
+	/**
+	 * Refresh tree item on chemObj.
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	refreshObject: function(chemObj)
+	{
+		// get corresponding tree node
+		var treeItem = this.getObjMap().get(chemObj);
+		if (treeItem)
+		{
+			this._updateTreeItem(treeItem, chemObj);
+		}
+		return this;
 	},
 
 	/**
@@ -131,6 +185,7 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 	 */
 	_updateTreeItem: function(treeItem, chemObj)
 	{
+		//console.log('update tree', chemObj.getClassName());
 		var title = this._getChemObjDisplayTitle(chemObj);
 		var data = {'text': title, 'obj': chemObj};
 		this.setItemData(treeItem, data);

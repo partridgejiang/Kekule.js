@@ -928,7 +928,9 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 			}
 		}
 
-		operGroup.execute();
+		//operGroup.execute();
+		editor.execOperation(operGroup);
+
 		// add to history
 		if (editor && editor.getEnableOperHistory())
 		{
@@ -1235,6 +1237,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	manipulateEnd: function($super)
 	{
 		$super();
+		this.getEditor().hideHotTrack();
 		this.setManuallyHotTrack(false);
 	},
 
@@ -1247,7 +1250,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @ignore */
-	getAllObjOperations: function($super)
+	getAllObjOperations: function($super, isTheFinalOperationToEditor)
 	{
 		/*
 		var moveOpers = this.getMoveOperations();
@@ -1264,8 +1267,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		return result;
 		*/
 
+		//console.log('getAllObjOperations', isTheFinalOperationToEditor, this.useMergePreview());
+		var mergeOpers;
 		// if use merge preview, we should do the actual merging when the manipulation is done
-		if (this.useMergePreview())
+		if (isTheFinalOperationToEditor && this.useMergePreview())
 		{
 			var previewOpers = this.getMergePreviewOperations();
 			if (previewOpers && previewOpers.length)
@@ -1290,10 +1295,16 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				}
 				this.executeMergeOpers(opers);
 			}
+			mergeOpers = opers;  // this.getMergeOperations();
+		}
+		else
+		{
+			mergeOpers = this.getMergeOperationsInManipulating();
 		}
 
+		//console.log('merge operations', mergeOpers);
+
 		var result = $super() || [];
-		var mergeOpers = this.getMergeOperations();
 		if (mergeOpers && mergeOpers.length)
 			Kekule.ArrayUtils.pushUnique(result, mergeOpers);
 		return result;
@@ -1500,9 +1511,9 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				var mergedObjCount = magneticMergeObjs.length;
 				this.setAllManipulateObjsMerged(mergedObjCount === manipulatedObjs.length);
 				/*
-				 if (this.getAllManipulateObjsMerged())
-				 console.log('all merged!', mergedObjCount);
-				 */
+				if (this.getAllManipulateObjsMerged())
+					console.log('all merged!', mergedObjCount);
+        */
 				var mergeSingleObj = (mergedObjCount <= 1);  // merge only one node
 				/*
 				// If merge on only one node, other node position may also be changed
@@ -1514,6 +1525,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				if (!needCreateNewMerge)
 				{
 					var sameMergeOpers = [];
+					//console.log('oldMergeOpers', oldMergeOpers, magneticMergeObjIndexes);
 					for (var i = 0, l = magneticMergeObjs.length; i < l; ++i)
 					{
 						var obj = magneticMergeObjs[i];
@@ -1535,7 +1547,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						if (oldMergeOper)
 						{
 							var index = sameMergeOpers.indexOf(oldMergeOper);
-							if (index <= 0)   // old merge has more nodes than current, need to recreate new merge
+							if (index < 0)   // old merge has more nodes than current, need to recreate new merge
 							{
 								needCreateNewMerge = true;
 								break;
@@ -1550,6 +1562,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				{
 					if (needCreateNewMerge)
 					{
+						//console.log('need new');
 						//this.reverseMergeOpers();
 						this.reverseMergeOpers(this.getMergeOperationsInManipulating());
 					}
@@ -1677,6 +1690,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 					if (needCreateNewMerge)
 					{
+						//console.log('here');
 						for (var i = 0, l = mergedObjCount; i < l; ++i)
 						{
 							var obj = magneticMergeObjs[i];
@@ -1694,6 +1708,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							}
 						}
 						//console.log('execute merge on', mergedObjCount);
+						//console.log('create new', magneticMergeObjIndexes, this.getMergeOperationsInManipulating());
 
 						//this.executeMergeOpers();
 						this.executeMergeOpers(this.getMergeOperationsInManipulating());
@@ -2084,27 +2099,37 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	executeMergeOpers: function(mergeOpers)
 	{
 		//var opers = Kekule.ArrayUtils.toUnique(this.getMergeOperations());
+		var editor = this.getEditor();
 		var opers = Kekule.ArrayUtils.toUnique(mergeOpers || this.getMergeOperationsInManipulating());
 		var mergingDests = [];
-		for (var i = 0, l = opers.length; i < l; ++i)
+		editor.beginUpdateObject();
+		try
 		{
-			if (opers[i])
+			for (var i = 0, l = opers.length; i < l; ++i)
 			{
-				opers[i].execute();
-				var dest = opers[i].getDest? opers[i].getDest(): null;
-				if (dest)
-					AU.pushUnique(mergingDests, dest);
+				if (opers[i])
+				{
+					opers[i].execute();
+					var dest = opers[i].getDest ? opers[i].getDest() : null;
+					if (dest)
+						AU.pushUnique(mergingDests, dest);
+				}
 			}
-		}
-		this.setMergingDests(mergingDests.length? mergingDests: null);
+			this.setMergingDests(mergingDests.length ? mergingDests : null);
 
-		//console.log('[merge!!!!!]');
-		this.refreshManipulateObjs();
-		this._mergeJustReversed = false;
+			//console.log('[merge!!!!!]');
+			this.refreshManipulateObjs();
+			this._mergeJustReversed = false;
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
 	},
 	/** @private */
 	reverseMergeOpers: function(mergeOperations)
 	{
+		var editor = this.getEditor();
 		this.setMergingDests(null);
 		var originOpers = mergeOperations || this.getMergeOperationsInManipulating();
 		var opers = Kekule.ArrayUtils.toUnique(originOpers);
@@ -2113,23 +2138,31 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			;  // do nothing
 		else
 		{
-			for (var i = opers.length - 1; i >= 0; --i)
+			editor.beginUpdateObject();
+			try
 			{
-				if (opers[i])
+				for (var i = opers.length - 1; i >= 0; --i)
 				{
-					//console.log('reverse at', i, opers.length);
-					opers[i].reverse();
-					//delete opers[i];
+					if (opers[i])
+					{
+						//console.log('reverse at', i, opers.length);
+						opers[i].reverse();
+						//delete opers[i];
+					}
 				}
+				//this._mergeReversed = true;
+				//this.setMergeOperations([]);
+				//console.log('reverse merge oper', opers);
+				//this.getMergeOperations().length = utilIndex;
+				originOpers.length = 0;
+				this._mergeJustReversed = true;   // a special flag
+				//console.log('reverse', this.getManipulateObjs());
+				this.refreshManipulateObjs();
 			}
-			//this._mergeReversed = true;
-			//this.setMergeOperations([]);
-			//console.log('reverse merge oper', opers);
-			//this.getMergeOperations().length = utilIndex;
-			originOpers.length = 0;
-			this._mergeJustReversed = true;   // a special flag
-			//console.log('reverse', this.getManipulateObjs());
-			this.refreshManipulateObjs();
+			finally
+			{
+				editor.endUpdateObject();
+			}
 		}
 	},
 
@@ -2395,9 +2428,9 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 		return $super();
 	},
 	/** @ignore */
-	getAllObjOperations: function($super)
+	getAllObjOperations: function($super, isTheFinalOperationToEditor)
 	{
-		var result = $super() || [];
+		var result = $super(isTheFinalOperationToEditor) || [];
 		var op = this.getAddBondOperation();
 		if (op)
 			result.unshift(op);
@@ -2568,6 +2601,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 						{
 							// then manipulate the bond
 							this.startDirectManipulate(null, this.getEndingObj(), coord);
+							this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
 						}
 						return true; // important
 					}
@@ -2597,6 +2631,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 					if (endCoord)  // add successfully
 					{
 						this.startDirectManipulate(null, this.getEndingObj(), coord);
+						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
 					}
 					e.preventDefault();
 					return true; // important
@@ -3170,6 +3205,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this._repObjStartingScreenCoord = null;
 	},
 	/** @private */
 	initProperties: function()
@@ -3210,6 +3246,19 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	},
 
 	/** @private */
+	getRepObjCreationOptions: function()
+	{
+		return null;
+	},
+
+	/** @private */
+	createObjFromRepositoryItem: function(targetObj, repItem)
+	{
+		var repResult = repItem.createObjects(targetObj, this.getRepObjCreationOptions()) || {};
+		return repResult;
+	},
+
+	/** @private */
 	addRepositoryObj: function(targetObj, screenCoord)
 	{
 		var editor = this.getEditor();
@@ -3221,17 +3270,19 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		{
 			var chemSpace = editor.getChemSpace();
 			var repItem = this.getRepositoryItem();
-
+			/*
 			repResult = repItem.createObjects(targetObj) || {};
+			*/
+			var repResult = this.createObjFromRepositoryItem(targetObj, repItem);
 			var repObjects = repResult.objects;
 			this.setCurrRepositoryObjects(repObjects);
 
 			var isOneStructItem = repItem.isOneStructureFragmentObj();
 			var addToBlankMol = false;
 			var blankMol = this.getEditor().getOnlyOneBlankStructFragment();
-			if (!this.getEditor().canCreateNewChild() && !repResult.mergeObj)  // can not create a standalone child
+			if (!editor.canCreateNewChild() && !repResult.mergeObj)  // can not create a standalone child
 			{
-				if (!isOneStructItem || !this.getEditor().canAddUnconnectedStructFragment())
+				if (!isOneStructItem || !editor.canAddUnconnectedStructFragment())
 					return null;
 				else
 					addToBlankMol = true;
@@ -3273,6 +3324,18 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		//this.addOperationToEditor();
 		return repResult;
 	},
+	/**
+	 * Change the inserted repository structures in editor.
+	 * Note, the atoms and bonds in the structure can be changed, but the structure itself should not be replaced.
+	 * @private
+	 */
+	doRefreshRepositoryObj: function(manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
+		this.doPrepareManipulatingObjects(manipulatingObjs, startScreenCoord);
+		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
+		//this.createManipulateOperation();
+		this.doCreateManipulateMoveAndResizeOperation();  // only recreate move operations, but retain merge ones
+	},
 
 	/** @private */
 	_transformObjectsCoordAndSize: function(objects, transformParams)
@@ -3305,9 +3368,9 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	},
 
 	/** @ignore */
-	getAllObjOperations: function($super)
+	getAllObjOperations: function($super, isTheFinalOperationToEditor)
 	{
-		var result = $super() || [];
+		var result = $super(isTheFinalOperationToEditor) || [];
 		var repOper = this.getAddRepObjsOper();
 		if (repOper)
 			result.unshift(repOper);
@@ -3316,10 +3379,13 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	/** @private */
 	addOperationToEditor: function($super)
 	{
+		/*
 		if (this.getAllManipulateObjsMerged())
 			return null;
 		else
-			return $super();
+		*/
+		// even all nodes are merged, bond may be added as well
+		return $super();
 	},
 
 	/**
@@ -3333,9 +3399,17 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 		return Kekule.Editor.BasicManipulationIaController.ManipulationType.ROTATE;
 	},
 
-	insertRepositoryObjToEditor: function(startingCoord, startingObj)
+	/** @private */
+	doInsertRepositoryObjToEditor: function(addedRepObjsResult, startingCoord, startingObj, isUpdate)
 	{
-		var addedResult = this.addRepositoryObj(startingObj, startingCoord);
+		if (!isUpdate)
+		{
+			// save new insertion params
+			this._initialStartingObj = startingObj;
+			this._repObjStartingScreenCoord = startingCoord;
+		}
+		//var addedResult = this.addRepositoryObj(startingObj, startingCoord);
+		var addedResult = addedRepObjsResult;
 		if (addedResult)
 		{
 			var addedObjects = addedResult.objects;
@@ -3370,6 +3444,65 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 			// not added, do nothing
 			return null;
 		}
+	},
+	/** @private */
+	insertRepositoryObjToEditor: function(startingCoord, startingObj, isUpdate)
+	{
+		var addedResult = this.addRepositoryObj(startingObj, startingCoord);
+		return this.doInsertRepositoryObjToEditor(addedResult, startingCoord, startingObj, isUpdate);
+	},
+	/**
+	 * Update (and change) the inserted structure in editor.
+	 * You must ensure that the returned structures of method insertRepositoryObjToEditor
+	 * returns all the same old inserted structures.
+	 * @private
+	 */
+	updateRepositoryObjInEditor: function()
+	{
+		var editor = this.getEditor();
+		editor.beginUpdateObject();
+		try
+		{
+			// when merge preview is not used in editor, the merge operation may be messed up when change curr manipulation objects,
+			// so empty them first
+			if (!this.useMergePreview())
+			{
+				this.reverseActiveOperation();
+			}
+			//console.log(this._initialStartingObj, this._repObjStartingScreenCoord);
+			//var result = this.insertRepositoryObjToEditor(this._repObjStartingScreenCoord, this._initialStartingObj, true);
+			var oldObjects = this.getCurrRepositoryObjects();
+			var addedRepObjResult = this.addRepositoryObj(this._initialStartingObj, this._repObjStartingScreenCoord);
+			var unneedObjs = AU.exclude(oldObjects, (addedRepObjResult || {}).objects);  // objects should be removed
+			for (var i = 0, l = unneedObjs.length; i < l; ++i)
+			{
+				var obj = unneedObjs[i];
+				var parent = obj.getParent();
+				if (parent)
+					parent.removeChild(obj);
+			}
+			//console.log('unnedded', unneedObjs);
+			// when merge preview is not used in editor, the merge operation may be messed up when change curr manipulation objects,
+			// so empty them first
+			if (!this.useMergePreview() || unneedObjs.length)
+			{
+				this.setMergeOperations([]);
+				this.setMergePreviewOperations([]);
+			}
+
+			var result = this.doInsertRepositoryObjToEditor(addedRepObjResult, this._repObjStartingScreenCoord, this._initialStartingObj, true);
+			if (result)
+			{
+				this.doRefreshRepositoryObj(result.objects, result.coord, result.box,
+						result.rotateCenter, result.rotateRefCoord);
+				this.moveManipulatedObjs(this._repObjStartingScreenCoord);  // force a "move" action, to apply possible merge
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+		return result;
 	},
 
 	/** @private */
@@ -3527,7 +3660,9 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 
 		this._manipulateObjInfoCache = [];
 
-		this.setRepositoryItem(new Kekule.Editor.MolChainRepositoryItem2D(2));
+		var rep = new Kekule.Editor.MolChainRepositoryItem2D(2);
+		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
+		this.setRepositoryItem(rep);
 	},
 	/** @private */
 	getChainMaxAtomCount: function()
@@ -3615,12 +3750,32 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		return result;
 	},
 	/** @ignore */
+	getRepObjCreationOptions: function()
+	{
+		//return null;
+		if (this._isUpdateRepObj)  // just update chain, can reuse the old structure to avoid unnecessary merge operation
+		{
+			var oldMol = this.getCurrRepositoryObjects()[0];
+			//console.log(oldMol);
+			return {'originalStructFragment': oldMol};
+		}
+		else
+			return null;
+	},
+	/** @ignore */
 	addRepositoryObj: function($super, targetObj, screenCoord)
 	{
 		var result = $super(targetObj, screenCoord);
+		/*
+		// debug
+		var mol = result.objects[0];
+		var coords = [];
+		mol.getNodes().forEach(function(n) {coords.push(n.getCoord2D());} );
+		console.log(coords);
+		*/
 		// save bond length
 		this._deltaDistance = this._calcStepDeltaDistance();
-		this._repObjStartingScreenCoord = screenCoord;
+		//this._repObjStartingScreenCoord = screenCoord;
 		this._repObjNeedUpdate = false;
 		return result;
 	},
@@ -3629,79 +3784,32 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	{
 		if (!isUpdate)
 		{
-			this._initialStartingObj = startingObj;
+			//this._initialStartingObj = startingObj;
+			//this._repObjStartingScreenCoord = null;
 			this._deltaDistance = null;
 			this._deltaCount = 0;
 			this._lastDeltaCount = 1;
-			this._repObjStartingScreenCoord = null;
 			this.getRepositoryItem().setAtomCount(2);
 		}
-		var result = $super(startingCoord, startingObj);
+		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update chain
+		var result = $super(startingCoord, startingObj, isUpdate);
+		/*
 		if (result && isUpdate)
 		{
-			this.prepareManipulating(result.manipulateType, result.objects, result.coord, result.box,
+			this.refreshRepositoryObj(result.objects, result.coord, result.box,
 					result.rotateCenter, result.rotateRefCoord);
 		}
+		*/
 		return result;
 	},
-	/** @ignore */
-	_calcActualRotateAngle: function($super, objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
-	{
-		/*
-		var isConstrained = this.isInActualConstrainedRotation();
-		if (isConstrained)
-		{
-			var angleStep = isConstrained ?
-					this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep() : null;
-			// calc base angle
-			//var rotateRefCoord = this.getRotateRefCoord() || this.getStartCoord();
-			//var centerCoord = this.getRotateCenter();
-			//var baseCoord = Kekule.CoordUtils.substract(rotateRefCoord, centerCoord);
-			//var baseAngle = Math.atan2(baseCoord.x, baseCoord.y);
 
-			//var times = (newAbsAngle - baseAngle) / angleStep;
-			//var result = baseAngle + Math.round(times) * angleStep;
-			var times = Math.round(newDeltaAngle / angleStep);
-			var tailNum = times * angleStep - newDeltaAngle;
-			var negativeDirection = tailNum < 0;
-			if (!!this.getRepositoryItem().getNegativeDirection() !== negativeDirection)
-			{
-				this.getRepositoryItem().setNegativeDirection(negativeDirection);
-				this._repObjNeedUpdate = true;
-			}
-		}
-
-		if (this._repObjNeedUpdate)
-			this._updateChain();
-		*/
-
-		return $super(objs, newDeltaAngle, oldAbsAngle, newAbsAngle);
-	},
 	/** @private */
 	_updateChain: function()
 	{
-		// reverse prev operation (and removes it from editor) first
-		var editor = this.getEditor();
-		editor.beginUpdateObject();
-		try
-		{
-			var prevOperation = this.getActiveOperation();
-			if (prevOperation)
-			{
-
-				prevOperation.reverse();
-			}
-			var insertResult = this.insertRepositoryObjToEditor(this._repObjStartingScreenCoord, this._initialStartingObj, true);
-			if (insertResult)
-			{
-				this.moveManipulatedObjs(this._repObjStartingScreenCoord);  // force a "move" action, to apply possible merge
-			}
-			this._repObjNeedUpdate = false;
-		}
-		finally
-		{
-			editor.endUpdateObject();
-		}
+		this._isUpdateRepObj = true;
+		var result = this.updateRepositoryObjInEditor();
+		this._repObjNeedUpdate = false;
+		return result;
 	},
 	/** @ignore */
 	rotateManipulatedObjs: function($super, endScreenCoord)
@@ -3783,8 +3891,12 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	/** @ignore */
 	react_mousemove: function($super, e)
 	{
+		//var tStart = Date.now();
 		this._isForceReversedChainDirection = !!e.getShiftKey();
-		return $super(e);
+		var result = $super(e);
+		//var tEnd = Date.now();
+		//console.log('duration', tEnd - tStart);
+		return result;
 	}
 });
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexChainIaController, Kekule.Editor.ChemSpaceEditor);
@@ -3890,12 +4002,23 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		return result;
 	},
 	/** @ignore */
+	getRepObjCreationOptions: function()
+	{
+		if (this._isUpdateRepObj)  // just update ring, can reuse the old structure to avoid unnecessary merge operation
+		{
+			var oldMol = this.getCurrRepositoryObjects()[0];
+			return {'originalStructFragment': oldMol};
+		}
+		else
+			return null;
+	},
+	/** @ignore */
 	addRepositoryObj: function($super, targetObj, screenCoord)
 	{
 		var result = $super(targetObj, screenCoord);
 		// save bond length
 		this._deltaDistance = this._calcStepDeltaDistance();
-		this._repObjStartingScreenCoord = screenCoord;
+		//this._repObjStartingScreenCoord = screenCoord;
 		this._repObjNeedUpdate = false;
 		return result;
 	},
@@ -3904,23 +4027,27 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 	{
 		if (!isUpdate)
 		{
-			this._initialStartingObj = startingObj;
+			//this._initialStartingObj = startingObj;
+			//this._repObjStartingScreenCoord = null;
 			this._deltaDistance = null;
 			this._lastDeltaCount = 1;
-			this._repObjStartingScreenCoord = null;
 			this.getRepositoryItem().setRingAtomCount(3);
 		}
+		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update ring
 		var result = $super(startingCoord, startingObj);
+		/*
 		if (result && isUpdate)
 		{
 			this.prepareManipulating(result.manipulateType, result.objects, result.coord, result.box,
 					result.rotateCenter, result.rotateRefCoord);
 		}
+		*/
 		return result;
 	},
 	/** @private */
 	_updateRing: function()
 	{
+		/*
 		// reverse prev operation (and removes it from editor) first
 		var editor = this.getEditor();
 		editor.beginUpdateObject();
@@ -3943,6 +4070,11 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		{
 			editor.endUpdateObject();
 		}
+		*/
+		this._isUpdateRepObj = true;
+		var result = this.updateRepositoryObjInEditor();
+		this._repObjNeedUpdate = false;
+		return result;
 	},
 	/** @ignore */
 	rotateManipulatedObjs: function($super, endScreenCoord)
