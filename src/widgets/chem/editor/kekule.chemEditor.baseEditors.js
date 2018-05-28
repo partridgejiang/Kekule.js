@@ -9,6 +9,7 @@
  * requires /widgets/operation/kekule.operations.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.boundInfoRecorder.js
+ * requires /html/xbrowsers/kekule.x.js
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
  * requires /widgets/chem/editor/kekule.chemEditor.extensions.js
@@ -1271,6 +1272,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	beginUpdateObject: function()
 	{
+		if (this._objectUpdateFlag >= 0)
+		{
+			this.invokeEvent('beginUpdateObject');
+		}
 		--this._objectUpdateFlag;
 	},
 	/**
@@ -1286,6 +1291,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.objectsChanged(this._updatedObjectDetails);
 				this._updatedObjectDetails = [];
 			}
+			this.invokeEvent('endUpdateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
 	},
 	/**
@@ -1366,11 +1372,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			//console.log('object changed');
 			this.doObjectsChanged(a);
-			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
+			this.invokeEvent('editObjsUpdated', {'details': Object.extend({}, objDetails)});
 		}
 
 		this._objChanged = true;  // mark object changed
-		this.invokeEvent('editObjsChanged', Object.extend({}, objDetails));
+		this.invokeEvent('editObjsChanged', {'details': Object.extend({}, objDetails)});
 	},
 	/**
 	 * Do actual job of objectsChanged. Descendants should override this method.
@@ -3253,7 +3259,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			h.push(operation);
 		}
 		if (autoExec)
-			operation.execute();
+		{
+			this.beginUpdateObject();
+			try
+			{
+				operation.execute();
+			}
+			finally
+			{
+				this.endUpdateObject();
+			}
+		}
 	},
 	/**
 	 * Manually pop an operation from the tail of operation history.
@@ -3268,7 +3284,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			r = h.pop(operation);
 			if (autoReverse)
-				r.reverse();
+			{
+				this.beginUpdateObject();
+				try
+				{
+					r.reverse();
+				}
+				finally
+				{
+					this.endUpdateObject();
+				}
+			}
 			return r;
 		}
 		else
@@ -3280,7 +3306,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	execOperation: function(operation)
 	{
-		operation.execute();
+		this.beginUpdateObject();
+		try
+		{
+			operation.execute();
+		}
+		finally
+		{
+			this.endUpdateObject();
+		}
 		if (this.getEnableOperHistory())
 			this.pushOperation(operation, false);  // push but not execute
 		return this;
@@ -3889,6 +3923,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setEnableRotate(true);
 
 		this._suppressConstrainedResize = false;
+		this._manipulationStepBuffer = {};
+		this.execManipulationStepBind = this.execManipulationStep.bind(this);
 	},
 	/** @private */
 	initProperties: function()
@@ -4069,6 +4105,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	createManipulateOperation: function()
 	{
+		return this.doCreateManipulateMoveAndResizeOperation();
+	},
+	/** @private */
+	doCreateManipulateMoveAndResizeOperation: function()
+	{
 		//var oper = new Kekule.MacroOperation();
 		var opers = [];
 		this.setMoveOperations(opers);
@@ -4135,7 +4176,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	getAllObjOperations: function()
+	getAllObjOperations: function(isTheFinalOperationToEditor)
 	{
 		//var opers = this.getObjOperationMap().getValues();
 		var opers = this.getMoveOperations();
@@ -4143,9 +4184,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	getActiveOperation: function()
+	getActiveOperation: function(isTheFinalOperationToEditor)
 	{
-		var opers = this.getAllObjOperations();
+		//console.log('get active operation', isTheFinalOperationToEditor);
+		var opers = this.getAllObjOperations(isTheFinalOperationToEditor);
 		opers = Kekule.ArrayUtils.toUnique(opers);
 		if (opers.length <= 0)
 			return null;
@@ -4160,7 +4202,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	reverseActiveOperation: function()
 	{
-		return this.getActiveOperation().reverse();
+		var oper = this.getActiveOperation();
+		return oper.reverse();
 	},
 	/* @private */
 	/*
@@ -4183,7 +4226,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var macro = new Kekule.MacroOperation(opers);
 			editor.pushOperation(macro);
 			*/
-			editor.pushOperation(this.getActiveOperation());
+			editor.pushOperation(this.getActiveOperation(true));
 		}
 	},
 
@@ -4227,18 +4270,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 	*/
 
-	/**
-	 * Prepare to move movingObjs.
-	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
-	 * @param {Hash} startContextCoord Mouse position when starting to move objects. This coord is based on context.
-	 * @param {Array} manipulatingObjs Objects about to be moved or resized.
-	 * @param {Hash} startBox
-	 * @param {Hash} rotateCenter
-	 * @private
-	 */
-	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	/** @private */
+	doPrepareManipulatingObjects: function(manipulatingObjs, startScreenCoord)
 	{
-		this.setManipulationType(manipulationType);
 		var actualObjs = this.getActualManipulatingObjects(manipulatingObjs);
 		//console.log(manipulatingObjs, actualObjs);
 		this.setManipulateOriginObjs(manipulatingObjs);
@@ -4254,14 +4288,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var info = this.createManipulateObjInfo(obj, i, startScreenCoord);
 			map.set(obj, info);
 		}
+	},
+	/** @private */
+	doPrepareManipulatingStartingCoords: function(startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
 		this.setStartBox(startBox);
 		this.setRotateCenter(rotateCenter);
 		this.setRotateRefCoord(rotateRefCoord);
 		this.setLastRotateAngle(null);
+	}, /**
+	 * Prepare to move movingObjs.
+	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
+	 * @param {Hash} startContextCoord Mouse position when starting to move objects. This coord is based on context.
+	 * @param {Array} manipulatingObjs Objects about to be moved or resized.
+	 * @param {Hash} startBox
+	 * @param {Hash} rotateCenter
+	 * @private
+	 */
+	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
+		this.setManipulationType(manipulationType);
+		this.doPrepareManipulatingObjects(manipulatingObjs, startScreenCoord);
+		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
+		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
+
 	/**
 	 * Cancel the moving process and set objects to its original position.
 	 * @private
@@ -4406,7 +4460,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var angle = this._calcActualRotateAngle(manipulatingObjs, angleInfo.angle, angleInfo.startAngle, angleInfo.endAngle);
 
 		var lastAngle = this.getLastRotateAngle();
-		if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 1e-5))
+		if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 0.0175))  // ignore angle change under 1 degree
 		{
 			return false;  // no angle change, do not rotate
 		}
@@ -4832,7 +4886,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	manipulateEnd: function()
 	{
-		// do nothing here
+		if (this._runManipulationStepId)
+		{
+			window.cancelAnimationFrame(this._runManipulationStepId);
+			this._runManipulationStepId = null;
+		}
 	},
 	/**
 	 * Stop manipulate of objects.
@@ -4933,8 +4991,153 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		return result;
 	},
 
+	/**
+	 * Begin a manipulation.
+	 * Descendants may override this method.
+	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	doBeginManipulation: function(currCoord, e)
+	{
+		var S = Kekule.Editor.BasicManipulationIaController.State;
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+
+		this.setBaseCoord(currCoord);
+		this.setStartCoord(currCoord);
+		var coordRegion = this.getEditor().getCoordRegionInSelectionMarker(currCoord);
+		var R = Kekule.Editor.BoxRegion;
+		var isResize = this.getEnableResize() && (coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE);
+		var isMove = !isResize && this.getEnableMove() && (coordRegion !== R.OUTSIDE);
+		var rotateRegion = this.getCoordOnSelectionRotationRegion(currCoord);
+		var isRotate = !isResize && !isMove && this.getEnableRotate() && !!rotateRegion;
+		// check if already has selection and mouse in selection rect first
+		//if (this.getEditor().isCoordInSelectionMarkerBound(coord))
+		if (isResize)
+		{
+			this.setState(S.MANIPULATING);
+			this.setIsManipulatingSelection(true);
+			this.setResizeStartingRegion(/*this.getEditor().getCoordRegionInSelectionMarker(coord)*/coordRegion);
+			//console.log('box', this.getEditor().getUiSelectionAreaContainerBox());
+			this.prepareManipulating(T.RESIZE, this.getEditor().getSelection(), currCoord, this.getEditor().getSelectionContainerBox());
+			//console.log('Resize');
+		}
+		else if (isMove)
+		{
+			//if (this.getEnableMove())
+			{
+				this.setState(S.MANIPULATING);
+				this.setIsManipulatingSelection(true);
+				this.prepareManipulating(T.MOVE, this.getEditor().getSelection(), currCoord);
+			}
+		}
+		else if (isRotate)
+		{
+			this.setState(S.MANIPULATING);
+			this.setIsManipulatingSelection(true);
+			this.setRotateStartingRegion(rotateRegion);
+			this.prepareManipulating(T.ROTATE, this.getEditor().getSelection(), currCoord, this.getEditor().getSelectionContainerBox());
+		}
+		else
+		{
+			var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord);
+			if (obj)  // mouse down directly on a object
+			{
+				obj = obj.getNearestSelectableObject();
+				// only mouse down and moved will cause manupulating
+				if (this.getEnableMove())
+					this.startDirectManipulate(null, obj, currCoord);
+			}
+			else  // mouse down on empty region, deselect old selection and prepare for new rect selecting
+			{
+				if (this.getEnableSelect())
+				{
+					var shifted = e.getShiftKey();
+					this.getEditor().startSelectingBoxDrag(currCoord, shifted);
+					this.setState(S.SELECTING);
+				}
+			}
+		}
+	},
+	/**
+	 * Do manipulation based on mouse/touch move step.
+	 * //@param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * //@param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	execManipulationStep: function(/*currCoord, e*/timeStamp)
+	{
+		if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			return false;
+
+		var	currCoord = this._manipulationStepBuffer.coord;
+		var	e = this._manipulationStepBuffer.event;
+
+		if (currCoord && e)
+		{
+			//console.log('do actual manipulate');
+			this.doExecManipulationStep(currCoord, e, this._manipulationStepBuffer);
+			// empty buffer, indicating that the event has been handled
+			this._manipulationStepBuffer.coord = null;
+			this._manipulationStepBuffer.event = null;
+		}
+
+		/*
+		if (this._lastTimeStamp)
+			console.log('elpase', timeStamp - this._lastTimeStamp);
+		this._lastTimeStamp = timeStamp;
+		*/
+
+		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
+	},
+	/**
+	 * Do actual manipulation based on mouse/touch move step.
+	 * Descendants may override this method.
+	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	doExecManipulationStep: function(currCoord, e, manipulationStepBuffer)
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var manipulateType = this.getManipulationType();
+
+		var editor = this.getEditor();
+		editor.beginUpdateObject();
+		try
+		{
+			this._isBusy = true;
+			if (manipulateType === T.MOVE)
+			{
+				this.moveManipulatedObjs(currCoord);
+			}
+			else if (manipulateType === T.RESIZE)
+			{
+				this._suppressConstrainedResize = e.getAltKey();
+				this.resizeManipulatedObjs(currCoord);
+			}
+			else if (manipulateType === T.ROTATE)
+			{
+				this.rotateManipulatedObjs(currCoord);
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
+			this._isBusy = false;
+		}
+	},
+	/**
+	 * Refill the manipulationStepBuffer.
+	 * Descendants may override this method.
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 * @private
+	 */
+	updateManipulationStepBuffer: function(buffer, coord, e)
+	{
+		buffer.coord = coord;
+		buffer.event = e;
+	},
+
 	// event handle methods
-	/** @private */
+	/** @ignore */
 	react_mousemove: function($super, e)
 	{
 		$super(e);
@@ -4977,28 +5180,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else if (state === S.MANIPULATING)  // move or resize objects
 		{
-			var manipulateType = this.getManipulationType();
-			try
-			{
-				this._isBusy = true;
-				if (manipulateType === T.MOVE)
-				{
-					this.moveManipulatedObjs(coord);
-				}
-				else if (manipulateType === T.RESIZE)
-				{
-					this._suppressConstrainedResize = e.getAltKey();
-					this.resizeManipulatedObjs(coord);
-				}
-				else if (manipulateType === T.ROTATE)
-				{
-					this.rotateManipulatedObjs(coord);
-				}
-			}
-			finally
-			{
-				this._isBusy = false;
-			}
+			//console.log('mouse move', coord);
+			this.updateManipulationStepBuffer(this._manipulationStepBuffer, coord, e);
+			//this.execManipulationStep(coord, e);
 			e.preventDefault();
 		}
 		return true;
@@ -5007,7 +5191,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	react_mousedown: function(e)
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
-		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		//var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			this._lastMouseMoveCoord = null;
@@ -5015,61 +5199,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var coord = this._getEventMouseCoord(e);
 			if ((this.getState() === S.NORMAL)/* && (this.getEditor().getMouseLBtnDown()) */)
 			{
-				this.setBaseCoord(coord);
-				this.setStartCoord(coord);
-				var coordRegion = this.getEditor().getCoordRegionInSelectionMarker(coord);
-				var R = Kekule.Editor.BoxRegion;
-				var isResize = this.getEnableResize() && (coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE);
-				var isMove = !isResize && this.getEnableMove() && (coordRegion !== R.OUTSIDE);
-				var rotateRegion = this.getCoordOnSelectionRotationRegion(coord);
-				var isRotate = !isResize && !isMove && this.getEnableRotate() && !!rotateRegion;
-				// check if already has selection and mouse in selection rect first
-				//if (this.getEditor().isCoordInSelectionMarkerBound(coord))
-				if (isResize)
-				{
-					this.setState(S.MANIPULATING);
-					this.setIsManipulatingSelection(true);
-					this.setResizeStartingRegion(/*this.getEditor().getCoordRegionInSelectionMarker(coord)*/coordRegion);
-					//console.log('box', this.getEditor().getUiSelectionAreaContainerBox());
-					this.prepareManipulating(T.RESIZE, this.getEditor().getSelection(), coord, this.getEditor().getSelectionContainerBox());
-					//console.log('Resize');
-				}
-				else if (isMove)
-				{
-					//if (this.getEnableMove())
-					{
-						this.setState(S.MANIPULATING);
-						this.setIsManipulatingSelection(true);
-						this.prepareManipulating(T.MOVE, this.getEditor().getSelection(), coord);
-					}
-				}
-				else if (isRotate)
-				{
-					this.setState(S.MANIPULATING);
-					this.setIsManipulatingSelection(true);
-					this.setRotateStartingRegion(rotateRegion);
-					this.prepareManipulating(T.ROTATE, this.getEditor().getSelection(), coord, this.getEditor().getSelectionContainerBox());
-				}
-				else
-				{
-					var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
-					if (obj)  // mouse down directly on a object
-					{
-						obj = obj.getNearestSelectableObject();
-						// only mouse down and moved will cause manupulating
-						if (this.getEnableMove())
-							this.startDirectManipulate(null, obj, coord);
-					}
-					else  // mouse down on empty region, deselect old selection and prepare for new rect selecting
-					{
-						if (this.getEnableSelect())
-						{
-							var shifted = e.getShiftKey();
-							this.getEditor().startSelectingBoxDrag(coord, shifted);
-							this.setState(S.SELECTING);
-						}
-					}
-				}
+				this.doBeginManipulation(coord, e);
 				e.preventDefault();
 			}
 		}
