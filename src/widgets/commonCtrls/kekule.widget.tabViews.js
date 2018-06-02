@@ -469,7 +469,8 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		var doc = this.getDocument();
 		var result = new Kekule.Widget.TabPage(doc);
 		result.setText(title);
-		result.setHint(hint);
+		if (hint)
+			result.setHint(hint);
 		result.appendToWidget(this);
 		// adjust index
 		if (refPage)
