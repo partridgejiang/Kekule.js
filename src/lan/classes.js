@@ -318,6 +318,20 @@ Object._extendSupportMethods(Object, {
   }
 });
 
+if (!Object.getOwnPropertyNames)
+{
+  Object.getOwnPropertyNames = function(obj)
+  {
+    var result = [];
+    for (var k in obj)
+    {
+      if (obj.hasOwnProperty(k))
+        result.push(k);
+    }
+    return result;
+  }
+}
+
 var FunctionUtils = {
 	argumentNames: function(f) {
 		var names = ((f.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/) || [])[1] || '').replace(/\s+/g, '').split(',');
@@ -1823,6 +1837,48 @@ var ClassEx = {
 		if (!ClassEx.getPrototype(aClass).hasOwnProperty('properties'))
 			ClassEx.getPrototype(aClass).properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function(aClass, availableFieldNames)
+  {
+    var proto = ClassEx.getPrototype(aClass);
+    var fieldNames = availableFieldNames || Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i < l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 && fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (proto.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = ClassEx.getPropInfo(aClass, propName);
+          if (propInfo && propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+  },
 	/**
 	 * Get own property list of this aClass, excluding inherited properties.
 	 * @returns {Class.PropList}
@@ -1955,11 +2011,12 @@ var ClassEx = {
   /**
    * Get property info object from the property list of aClass.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(aClass, propName)
+  getPropInfo: function(aClass, propName, ownPropertyOnly)
   {
-  	return ClassEx.getPrototype(aClass).getPropInfo(propName);
+  	return ClassEx.getPrototype(aClass).getPropInfo(propName, ownPropertyOnly);
   },
   /**
    * Define an event in aClass. Event is actually a special property with type {@link Class.EventHandlerList}
@@ -2089,6 +2146,9 @@ var ClassEx = {
 
 		    proto[property] = value;
 		}
+
+    ClassEx._remapPropGetters(aClass, properties);
+
 		return aClass;
 	}
 };
@@ -2266,11 +2326,16 @@ ObjectEx = Class.create(
 	{
 		if (!this.getPrototype().hasOwnProperty('properties'))
 		{
+      //console.log('init prop system', this.getClassName());
 			// ensure super class's property list is created
 			var parent = this.getSuperClassPrototype();
 			if (parent)
 				parent._initPropertySystem.apply(parent);
+
 			this._createPropertyList();
+
+      this._remapPropGetters();  // override before self property list created, avoid override method of self
+
 			if (this.getPrototype().hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				this.getPrototype().initProperties.apply(this.getPrototype());
 		}
@@ -2281,6 +2346,52 @@ ObjectEx = Class.create(
 		if (!this.getPrototype().hasOwnProperty('properties'))
 			this.getPrototype().properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function()
+  {
+    ClassEx._remapPropGetters(this.getClass());
+    /*
+    var proto = this.getPrototype();
+    var fieldNames = Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i < l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 && fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (this.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = this.getPropInfo(propName);
+          if (propInfo && propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+    */
+  },
 	/**
 	 * Get class of this object.
 	 * @return {Object} Class object.
@@ -2458,6 +2569,7 @@ ObjectEx = Class.create(
       if (propSetterInfo)
         descs.set = this[propSetterInfo.setterName];
 
+      prop.descriptor = descs;
       try
       {
         Object.defineProperty(this, propName, descs);
@@ -2499,13 +2611,14 @@ ObjectEx = Class.create(
 				return this.getPropValue.apply(this, args);
 			};
 			*/
-		//this.getPrototype()[getterName] = actualGetter;
-
+		this.getPrototype()[getterName] = actualGetter;
+    /*
 		this.getPrototype()[getterName] = function()
 		{
 			//var args = Array.prototype.slice.call(arguments);
 			return this[doGetterName].apply(this, arguments);
 		};
+		*/
 
     //this.getPrototype()[getterName] = this.getPrototype()[doGetterName];
 
@@ -2575,20 +2688,35 @@ ObjectEx = Class.create(
   	return (this.getPropInfo(propName) != null);
   },
   /**
+   * Check if property is defined in current class (not inherited from super class).
+   * @param {String} propName Name of property.
+   * @return {Boolean}
+   */
+  hasDirectProperty: function(propName)
+  {
+    return (this.getPropInfo(propName, true) != null);
+  },
+  /**
    * Get property info object from the property list of current class.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(propName)
+  getPropInfo: function(propName, ownPropertyOnly)
   {
-		var pname = propName || '';
-		var hashKey = this.getPropInfoHashKey(pname) || '';
-		var result = this[hashKey];
+    var pname = propName || '';
+    var result;
+
+    if (!ownPropertyOnly)  // check hashkey for a quich search, but it should be disabled when ownPropertyOnly is true
+    {
+      var hashKey = this.getPropInfoHashKey(pname) || '';
+      result = this[hashKey];
+    }
 
 		if (!result)
 		{
 			result = this.getOwnPropList().getPropInfo(pname);
-			if (!result)  // check parent
+			if (!result && !ownPropertyOnly)  // check parent
 			{
 				var parent = this.getSuperClassPrototype();
 				if (parent && parent.getPropInfo)
