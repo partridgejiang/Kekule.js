@@ -435,6 +435,10 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D.getRepItemOfInputText = function(in
 	}
 	return null;
 };
+Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems = function()
+{
+	return Kekule.Editor.RepositoryItemManager.getAllItems(Kekule.Editor.StoredSubgroupRepositoryItem2D) || [];
+};
 
 
 /**
