@@ -174,7 +174,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0; i < 2; ++i)
 				{
 					var node = endNodes[i];
-					var hydroCount = node.getHydrogenCount();
+					var hydroCount = node.getHydrogenCount(true);  // include explicit bonded H atoms
 					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
 					if ((hydroCount >= 2) || (!sideObjs.length))
 					{
