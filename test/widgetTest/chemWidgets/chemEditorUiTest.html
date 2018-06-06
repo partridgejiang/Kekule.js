@@ -5,13 +5,13 @@
   <title>Chem Editor UI Test</title>
   <script src="../../_libs/raphael-min.2.0.1.js"></script>
 
-  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh"></script>
-
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
 
   <!--
-	<script src="../../../src/_compressed/kekule.compressed.js"></script>
-	-->
-  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script src="../../../dist/kekule.js?locals=en,zh&language=zh"></script>
+  <link rel="stylesheet" type="text/css" href="../../../dist/themes/default/kekule.css" />
+  -->
   <!--
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/default.css" />
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/release/defaultColor.css" />
@@ -138,7 +138,7 @@
   </script>
 </head>
 <body onload="init()" onpageshow="console.log('chem editor page show');">
-  <div id="chemEditorUi" style="width:800px;height:600px" data-resizable="true"></div>
+  <div id="chemEditorUi" style="width:800px;height:400px" data-resizable="true"></div>
   <div id="operHis" style="width:400px;height:600px;float:right"></div>
   <div id="chemViewer" style="border: 1px solid #ccc;float:right" data-widget="Kekule.ChemWidget.Viewer2D"></div>
 </body>

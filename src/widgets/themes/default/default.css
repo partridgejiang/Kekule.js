@@ -130,6 +130,12 @@ table.K-Widget
     font-size: 1em; /* solve the tiny font size problem in nested widgets */
 }
 
+.K-Widget .K-Section
+{
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
 /* Container */
 .K-Container .K-Widget
 {
