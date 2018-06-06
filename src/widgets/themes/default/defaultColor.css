@@ -204,6 +204,10 @@
 {
     background-image: url("images/slice/icons16/pencil.png");
 }
+.K-Button.K-Button-Kinded.K-Kind-Enter .K-Assoc-Glyph-Content
+{
+    background-image: url("images/slice/icons16/wrap.png");
+}
 
 .K-Compact-Mark
 {

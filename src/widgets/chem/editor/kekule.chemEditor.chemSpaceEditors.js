@@ -20,6 +20,7 @@
  * requires /widgets/chem/editor/kekule.chemEditor.operations.js
  * requires /widgets/chem/editor/kekule.chemEditor.baseEditors.js
  * requires /widgets/chem/editor/kekule.chemEditor.repositories.js
+ * requires /widgets/chem/editor/kekule.chemEditor.utilWidgets.js
  */
 
 (function(){
@@ -36,6 +37,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMSPACE_EDITOR2D: 'K-Chem-Space-Editor2D',
 	CHEMSPACE_EDITOR3D: 'K-Chem-Space-Editor3D',
 
+	CHEMEDITOR_ATOM_SETTER: 'K-ChemEditor-Atom-Setter',
 	CHEMEDITOR_TEXT_SETTER: 'K-ChemEditor-Text-Setter',
 	CHEMEDITOR_FORMULA_SETTER: 'K-ChemEditor-Formula-Setter'
 });
@@ -931,11 +933,13 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 		//operGroup.execute();
 		editor.execOperation(operGroup);
 
+		/* Do not need to add to history, since it has been done in editor.execOperation
 		// add to history
 		if (editor && editor.getEnableOperHistory())
 		{
 			editor.pushOperation(operGroup);
 		}
+		*/
 	}
 });
 /** @ignore */
@@ -2687,11 +2691,11 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolBondIaController, Ke
  * @class
  * @augments Kekule.Editor.BaseEditorIaController
  */
-Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaController,
-/** @lends Kekule.Editor.MolAtomIaController# */
+Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.MolAtomIaController_OLD# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.MolAtomIaController',
+	CLASS_NAME: 'Kekule.Editor.MolAtomIaController_OLD',
 	/** @construct */
 	initialize: function($super, editor)
 	{
@@ -3085,6 +3089,400 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 						{};
 			}
 		}
+
+		if (!nodeClass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.INVALID_ATOM_SYMBOL'));
+		}
+		else
+		{
+			this.applyModification(atom, newNode, nodeClass, modifiedProps);
+			setter._applied = true;
+		}
+	},
+
+	/**
+	 * Save changes to current edited node.
+	 * @param node
+	 * @param newNodeClass
+	 * @param modifiedProps
+	 * @private
+	 */
+	applyModification: function(node, newNode, newNodeClass, modifiedProps)
+	{
+		var newNode;
+		var operGroup, oper;
+		var oldNodeClass = node.getClass();
+		if (newNode && !newNodeClass)
+			newNodeClass = newNode.getClass();
+		if (newNode || newNodeClass !== oldNodeClass)  // need to replace node
+		{
+			operGroup = new Kekule.MacroOperation();
+			if (!newNode)
+				newNode = new newNodeClass();
+			var tempNode = new Kekule.ChemStructureNode();
+			tempNode.assign(node);
+			newNode.assign(tempNode);  // copy some basic info of old node
+			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode);
+			operGroup.add(operReplace);
+		}
+		else  // no need to replace
+			newNode = node;
+
+		if (modifiedProps)
+		{
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps);
+			if (operGroup)
+				operGroup.add(oper);
+		}
+
+		var operation = operGroup || oper;
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.beginUpdateObject();
+			try
+			{
+				operation.execute();
+			}
+			catch (e)
+			{
+				//Kekule.error(/*Kekule.ErrorMsg.NOT_A_VALID_ATOM*/Kekule.$L('ErrorMsg.NOT_A_VALID_ATOM'));
+				throw(e);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
+
+			if (editor && editor.getEnableOperHistory() && operation)
+			{
+				editor.pushOperation(operation);
+			}
+		}
+	},
+
+	/** @private */
+	react_mouseup: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		{
+			this.getEditor().setSelection(null);
+			var coord = this._getEventMouseCoord(e);
+			{
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				if (boundItem)
+				{
+					var obj = boundItem.obj;
+					if (this.isValidNode(obj))  // can modify atom of this object
+					{
+						var baseCoord = this.getEditor().getObjectScreenCoord(obj);
+						e.preventDefault();
+						e.stopPropagation();
+						// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
+						//  and the atom setter will be closed immediately.
+						this.openSetterUi(baseCoord, obj);
+						this.getEditor().setSelection([obj]);
+					}
+					return true;  // important
+				}
+			}
+		}
+	}
+});
+
+/**
+ * Controller to set atom property.
+ * @class
+ * @augments Kekule.Editor.BaseEditorIaController
+ */
+Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.MolAtomIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolAtomIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._createNonAtomLabelInfos();
+		this._setterShown = false;  // user internally
+	},
+	finalize: function($super)
+	{
+		if (this.getAtomSetter())
+			this.getAtomSetter().finalize();
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('currAtom', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+		this.defineProp('atomSetter', {'dataType': DataType.OBJECT, 'serializable': false});  // private
+		this.defineProp('nonAtomLabelInfos', {'dataType': DataType.ARRAY, 'serializable': false});  // private
+	},
+
+	/** @private */
+	canInteractWithObj: function($super, obj)
+	{
+		if (this.isValidNode(obj))
+			return true;
+		else
+			return false;
+	},
+
+	/**
+	 * Check if obj is a valid chem node and can be edited.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	isValidNode: function(obj)
+	{
+		return obj instanceof Kekule.ChemStructureNode;
+	},
+
+	/** @private */
+	_getVarAtomListLabel: function()
+	{
+		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
+		return labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM;
+	},
+	_getVarAtomNotListLabel: function()
+	{
+		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
+		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
+	},
+	/** @private */
+	_createNonAtomLabelInfos: function()
+	{
+		var result = [];
+		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
+		// R group
+		result.push({
+			'text': labelConfigs.getRgroup(), 'nodeClass': Kekule.RGroup,
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_RGROUP') //Kekule.ChemWidgetTexts.CAPTION_RGROUP
+		});
+		// Kekule.Pseudoatom
+		result.push({
+			'text': labelConfigs.getDummyAtom(), 'nodeClass': Kekule.Pseudoatom,
+			'props': {'atomType': Kekule.PseudoatomType.DUMMY},
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_DUMMY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
+		});
+		result.push({
+			'text': labelConfigs.getHeteroAtom(), 'nodeClass': Kekule.Pseudoatom,
+			'props': {'atomType': Kekule.PseudoatomType.HETERO},
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_HETERO_ATOM') //Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
+		});
+		result.push({
+			'text': labelConfigs.getAnyAtom(), 'nodeClass': Kekule.Pseudoatom,
+			'props': {'atomType': Kekule.PseudoatomType.ANY},
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_ANY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
+		});
+		// Kekule.VariableAtom List and Not List
+		result.push({
+			'text': this._getVarAtomListLabel(), 'nodeClass': Kekule.VariableAtom, 'isVarList': true,
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
+		});
+		result.push({
+			'text': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom, 'isVarNotList': true,
+			'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
+		});
+		this.setNonAtomLabelInfos(result);
+		return result;
+	},
+	/** @private */
+	_indexOfNonAtomLabel: function(nodeLabel)
+	{
+		var infos = this.getNonAtomLabelInfos();
+		for (var i = 0, l = infos.length; i < l; ++i)
+		{
+			var info = infos[i];
+			if (info.nodeLabel === nodeLabel)
+				return i;
+		}
+		return -1;
+	},
+	/** @private */
+	_getNonAtomInfo: function(nodeLabel)
+	{
+		var index = this._indexOfNonAtomLabel(nodeLabel);
+		return (index < 0)? null: this.getNonAtomLabelInfos()[index];
+	},
+
+	/** @private */
+	getAtomSetterWidget: function(canCreate)
+	{
+		var result = this.getAtomSetter();
+		if (!result && canCreate)  // create new one
+		{
+			var parentElem = this.getEditor().getCoreElement();
+			var doc = parentElem.ownerDocument;
+			result = this._createAtomSetterWidget(doc, parentElem);
+			this.setAtomSetter(result);
+		}
+		return result;
+	},
+	/** @private */
+	_createAtomSetterWidget: function(doc, parentElem)
+	{
+		var result = new Kekule.ChemWidget.StructureNodeSetter(doc);
+		result.setUseDropDownSelectPanel(true);
+		result.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
+
+		var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
+		listAtoms.push('...');  // add periodic table item
+		//result.setSelectableElementSymbols(listAtoms);
+		// non-atom nodes
+		var nonAtomLabelInfos = this.getNonAtomLabelInfos();
+		//result.setSelectableNonElementInfos(nonAtomLabelInfos);
+		// subgroups
+		//result.setSelectableSubGroupRepItems(Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems());
+
+		result.setSelectableInfos({
+			'elementSymbols': listAtoms,
+			'nonElementInfos': nonAtomLabelInfos,
+			'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
+		});
+
+		// react to value change of setter
+		var self = this;
+		result.addEventListener('valueChange', function(e){
+			//var data = e.value;
+			//console.log(e.target, e.currentTarget);
+			if (self.getAtomSetter() && self.getAtomSetter().isShown())
+			{
+				self.applySetter(result);
+				result.dismiss();  // avoid call apply setter twice
+			}
+		});
+		/*
+		result.addEventListener('showStateChange', function(e)
+			{
+				if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+				{
+					if (self.getAtomSetter() && self.getAtomSetter().isShown())
+						self.applySetter(result);
+				}
+			}
+		);
+		*/
+
+		result.appendToElem(parentElem);
+
+		return result;
+	},
+
+	/** @private */
+	getPeriodicTableDialogWidget: function(canCreate)
+	{
+		var result = this.getPeriodicTableDialog();
+		if (!result && canCreate)  // create new one
+		{
+			var parentElem = this.getEditor().getCoreElement();
+			var doc = parentElem.ownerDocument;
+			result = this._createPeriodicTableDialogWidget(doc, parentElem);
+			this.setPeriodicTableDialog(result);
+		}
+		//console.log(result);
+		return result;
+	},
+	/** @private */
+	_createPeriodicTableDialogWidget: function(doc, parentElem)
+	{
+		var dialog = new Kekule.Widget.Dialog(doc, Kekule.$L('ChemWidgetTexts.CAPTION_PERIODIC_TABLE_DIALOG') /*CWT.CAPTION_PERIODIC_TABLE_DIALOG*/,
+			[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]
+		);
+		var table = new Kekule.ChemWidget.PeriodicTable(doc);
+		table.setUseMiniMode(true);
+		table.setEnableSelect(true);
+		table.appendToElem(dialog.getClientElem());
+		this.setPeriodicTable(table);
+		return dialog;
+	},
+
+	/**
+	 * Open atom edit box for obj in coord.
+	 * @param {Hash} coord
+	 * @param {Object} obj
+	 */
+	openSetterUi: function(coord, obj)
+	{
+		var oldSetter = this.getAtomSetter();
+		/*
+		if (oldSetter && oldSetter.isShown())  // has a old setter
+		{
+			this.applySetter(oldSetter, this.getCurrAtom());
+		}
+		*/
+
+		if (!this.isValidNode(obj))
+			return;
+		this.setCurrAtom(obj);
+
+		var fontSize = this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize() || 0;
+		var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
+		var setter = this.getAtomSetterWidget(true);
+		//setter.setEditor(this.getEditor());
+		setter.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+		setter.setNodes([obj]);
+
+		var inputBox = setter.getNodeInputBox();
+
+		//setter.setIsDirty(false);
+		//setter.setIsPopup(true);
+		var style = setter.getElement().style;
+		style.position = 'absolute';
+		style.left = (coord.x - posAdjust) + 'px';
+		style.top = (coord.y - posAdjust) + 'px';
+		inputBox.getElement().style.fontSize = fontSize;
+		/*
+		 style.marginTop = -posAdjust + 'px';
+		 style.marginLeft = -posAdjust + 'px';
+		 */
+		//setter.show();
+		setter._applied = false;
+		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
+
+		(function(){
+			inputBox.focus();
+			inputBox.selectAll();
+		}).defer();
+
+		//result.selectAll.bind(result).defer();
+		/*
+		setter.selectAll();
+		setter.focus();
+		*/
+	},
+	/** @private */
+	applySetter: function(setter, atom)
+	{
+		if (setter._applied)  // avoid called twice
+			return;
+		if (!atom)
+			atom = this.getCurrAtom();
+		var newData = setter.getValue();
+		if (!newData)
+			return;
+
+		var nodeClass = newData.nodeClass;
+		var modifiedProps = newData.props;
+		var repItem = newData.repositoryItem;
+		var newNode;
+
+		if (repItem)  // need to apply structure repository item
+		{
+			var repResult = repItem.createObjects(atom) || {};
+			var repObjects = repResult.objects;
+			var transformParams = Kekule.Editor.RepositoryStructureUtils.calcRepObjInitialTransformParams(this.getEditor(), repItem, repResult, atom, null);
+			this.getEditor().transformCoordAndSizeOfObjects(repObjects, transformParams);
+			newNode = repObjects[0];
+			nodeClass = newNode.getClass();
+		}
+
+		if (newData.isUnknownPseudoatom && !this.getEditorConfigs().getInteractionConfigs().getAllowUnknownAtomSymbol())
+			nodeClass = null;
 
 		if (!nodeClass)
 		{
