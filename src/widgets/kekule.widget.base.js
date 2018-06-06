@@ -72,6 +72,9 @@ Kekule.Widget.HtmlClassNames = {
 	SHOW_DIALOG: 'K-Show-Dialog',
 	SHOW_ACTIVE_MODAL: 'K-Show-ActiveModal',
 
+	// section
+	SECTION: 'K-Section',
+
 	// parts
 	PART_CONTENT: 'K-Content',
 	PART_TEXT_CONTENT: 'K-Text-Content',
@@ -1540,7 +1543,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		this.widgetShowStateBeforeChanging(true);
 
-		if (showType === Kekule.Widget.ShowHideType.DROPDOWN)  // prepare
+		if (showType === Kekule.Widget.ShowHideType.DROPDOWN || showType === Kekule.Widget.ShowHideType.POPUP)  // prepare
 		{
 			Kekule.Widget.globalManager.preparePopupWidget(this, caller, showType);
 		}
@@ -2046,6 +2049,17 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		parentElem.insertBefore(this.getElement(), refElem);
 		//this.insertedToDom();
 		return this;
+	},
+
+	/**
+	 * Remove current widget from DOM temporarily.
+	 */
+	removeFromDom: function()
+	{
+		var elem = this.getElement();
+		var parent = elem.parentNode;
+		if (parent)
+			parent.removeChild(elem);
 	},
 
 	/**
@@ -4203,6 +4217,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 */
 	preparePopupWidget: function(popupWidget, invokerWidget, showType)
 	{
+		//console.log('prepare popup', popupWidget.getClassName(), 'called by', invokerWidget && invokerWidget.getClassName());
 		popupWidget.setPopupCaller(invokerWidget);
 		var popupElem = popupWidget.getElement();
 		var doc = popupElem.ownerDocument;
@@ -4212,7 +4227,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// calc widget position
 		var ST = Kekule.Widget.ShowHideType;
+
+		// TODO: currently disable position recalculation of popup widget, since some popup widgets position is directly set
+		// (e.g., atom setter in composer).
+		if (showType !== ST.DROPDOWN)
+			return;
+
 		var posInfo;
+
 		if ((showType === ST.DROPDOWN) && invokerWidget)  // need to calc position on invokerWidget
 		{
 			posInfo = this._calcDropDownWidgetPosInfo(popupWidget, invokerWidget);
@@ -4407,6 +4429,33 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return result;
 	},
 
+	/** @private */
+	_fillPersistentPopupWidgetsInHidden: function(activateWidget, allPopupWidgets, persistPopups, checkedWidgets)
+	{
+		checkedWidgets.push(activateWidget);
+		var activateElem = activateWidget.getElement();
+		for (var i = 0, l = allPopupWidgets.length; i < l; ++i)
+		{
+			var w = allPopupWidgets[i];
+			if (w === activateWidget)
+			{
+				persistPopups.push(w);
+			}
+			else
+			{
+				var elem = w.getElement();
+				if (Kekule.DomUtils.isDescendantOf(activateElem, elem))
+					persistPopups.push(w);
+			}
+		}
+		var parent = activateWidget.getParent();
+		if (parent && checkedWidgets.indexOf(parent) <= 0)
+			this._fillPersistentPopupWidgetsInHidden(parent, allPopupWidgets, persistPopups, checkedWidgets);
+		var caller = activateWidget.getPopupCaller();
+		if (caller && checkedWidgets.indexOf(caller) <= 0)
+			this._fillPersistentPopupWidgetsInHidden(caller, allPopupWidgets, persistPopups, checkedWidgets);
+	},
+
 	/**
 	 * When use activate an element outside the popups, all popped widget should be hidden.
 	 * @param {HTMLElement} activateElement
@@ -4416,16 +4465,24 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		var widgets = this.getPopupWidgets();
 		var activateWidget = Kekule.Widget.getBelongedWidget(activateElement);
+		/*
 		var activateWidgetCaller = activateWidget? activateWidget.getPopupCaller(): null;
 		var activateWidgetCallerElem = activateWidgetCaller? activateWidgetCaller.getElement(): null;
-
+    */
+		var persistPopups = [];
+		if (activateWidget)
+			this._fillPersistentPopupWidgetsInHidden(activateWidget, widgets, persistPopups, []);
 		for (var i = widgets.length - 1; i >= 0; --i)
 		{
 			var widget = widgets[i];
 			var elem = widget.getElement();
 			if (elem)
 			{
+				/*
 				if (elem === activateWidgetCallerElem || Kekule.DomUtils.isDescendantOf(activateWidgetCallerElem, elem))
+					continue;
+				*/
+				if (persistPopups.indexOf(widget) >= 0)
 					continue;
 				if ((!activateElement) ||
 					((elem !== activateElement) && (!Kekule.DomUtils.isDescendantOf(activateElement, elem))))  // active outside this widget, this widget need to hide
