@@ -1794,6 +1794,10 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		previewTextArea.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER);
 		previewTextArea.appendToElem(elem);
 		result._previewTextArea = previewTextArea;
+
+		if (result.setResizable)
+			result.setResizable(true);
+
 		return result;
 	},
 	/** @private */
