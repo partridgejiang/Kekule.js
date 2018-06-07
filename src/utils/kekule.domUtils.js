@@ -1130,8 +1130,8 @@ Kekule.DocumentUtils = {
 		var result = {};
 		result.left = result.x1 = offset.left;
 		result.top = result.y1 = offset.top;
-		result.right = result.x2 = dim.width;
-		result.bottom = result.y2 = dim.height;
+		result.right = result.x2 = dim.width + offset.left;
+		result.bottom = result.y2 = dim.height + offset.top;
 		return result;
 	},
 	/**
