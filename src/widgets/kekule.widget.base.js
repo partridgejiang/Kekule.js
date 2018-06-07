@@ -4303,7 +4303,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem);
-		var viewPortDim = EU.getViewportDimension(invokerElem);
+		//var viewPortDim = EU.getViewportDimension(invokerElem);
+		var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(invokerWidget.getDocument());
 		var dropElem = dropDownWidget.getElement();
 		// add the dropdown element to DOM tree first, else the offsetDimension will always return 0
 		dropElem.style.visible = 'hidden';
@@ -4336,8 +4337,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			pos = 0;
 			if (layout === Kekule.Widget.Layout.VERTICAL)  // check left or right
 			{
-				var left = invokerClientRect.x;
-				var right = viewPortDim.width - left - invokerClientRect.width;
+				//var left = invokerClientRect.x;
+				var left = invokerClientRect.x - viewPortBox.left;
+				//var right = viewPortDim.width - left - invokerClientRect.width;
+				var right = viewPortBox.right - left - invokerClientRect.width;
 				// we prefer right, check if right can display drop down widget
 				if (right >= dropOffsetDim.width)
 					pos |= D.RIGHT;
@@ -4346,8 +4349,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			}
 			else  // check top or bottom
 			{
-				var top = invokerClientRect.y;
-				var bottom = viewPortDim.height - top - invokerClientRect.height;
+				//var top = invokerClientRect.y;
+				var top = invokerClientRect.y - viewPortBox.top;
+				//var bottom = viewPortDim.height - top - invokerClientRect.height;
+				var bottom = viewPortBox.bottom - top - invokerClientRect.height;
 				// we prefer bottom
 				if (bottom >= dropOffsetDim.height)
 					pos |= D.BOTTOM;
@@ -4382,12 +4387,20 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			x = invokerClientRect.right;
 		else  // not appointed, decide automatically
 		{
+			/*
 			var leftDistance = viewPortDim.width - invokerClientRect.right;
 			var rightDistance = viewPortDim.width - invokerClientRect.left;
+			*/
+			var leftDistance = invokerClientRect.right - viewPortBox.left;
+			var rightDistance = viewPortBox.right - viewPortBox.left - invokerClientRect.left;
 			if (rightDistance >= dropClientRect.width)  // default, can drop left align to left edge of invoker
 				x = invokerClientRect.left;
-			else  // must drop right align to right edge of invoker
+			else if (leftDistance >= dropClientRect.width) // must drop right align to right edge of invoker
 				x = invokerClientRect.right - dropClientRect.width;
+			else  // left or right size are all not suffient
+			{
+				x = Math.max(viewPortBox.left, viewPortBox.right - dropClientRect.width);
+			}
 		}
 		/*
 		var y = (pos & D.TOP)? invokerClientRect.top - dropClientRect.height:
@@ -4401,12 +4414,20 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			y = invokerClientRect.bottom;
 		else  // not appointed, calc
 		{
+			/*
 			var topDistance = viewPortDim.height - invokerClientRect.bottom;
 			var bottomDistance = viewPortDim.height - invokerClientRect.top;
+			*/
+			var topDistance = invokerClientRect.bottom - viewPortBox.top;
+			var bottomDistance = viewPortBox.bottom - viewPortBox.top - invokerClientRect.top;
 			if (bottomDistance >= dropClientRect.height)
 				y = invokerClientRect.bottom;
-			else  // must drop right align to right edge of invoker
+			else if (topDistance >= dropClientRect.height)  // must drop right align to right edge of invoker
 				y = invokerClientRect.bottom - dropClientRect.height;
+			else  // top or bottom size are all not suffient
+			{
+				y = Math.max(viewPortBox.top, viewPortBox.bottom - dropClientRect.height);
+			}
 		}
 
 		//console.log(pos, invokerClientRect, y, h, dropClientRect.height);
