@@ -3426,6 +3426,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		//setter.setEditor(this.getEditor());
 		setter.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		setter.setNodes([obj]);
+		var parentElem = this.getEditor().getCoreElement();
+		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time
 
 		var inputBox = setter.getNodeInputBox();
 
