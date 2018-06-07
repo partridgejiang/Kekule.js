@@ -4228,10 +4228,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		// calc widget position
 		var ST = Kekule.Widget.ShowHideType;
 
-		// TODO: currently disable position recalculation of popup widget, since some popup widgets position is directly set
+		// DONE: currently disable position recalculation of popup widget, since some popup widgets position is directly set
 		// (e.g., atom setter in composer).
+		/*
 		if (showType !== ST.DROPDOWN)
 			return;
+		*/
 
 		var posInfo;
 
@@ -4278,8 +4280,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		var isShown = widget.isShown();
 		if (!isShown)
 		{
-			dropElem.style.visible = 'hidden';
-			dropElem.style.display = '';
+			elem.style.visible = 'hidden';
+			elem.style.display = '';
 		}
 
 		var clientRect = EU.getElemBoundingClientRect(elem);
