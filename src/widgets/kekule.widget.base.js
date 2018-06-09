@@ -4275,7 +4275,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			return;
 		*/
 
-		var autoAdjustSize = true; // !!popupWidget.getAutoAdjustSizeOnPopup();
+		var autoAdjustSize = popupWidget.getAutoAdjustSizeOnPopup();
 
 		var posInfo;
 
