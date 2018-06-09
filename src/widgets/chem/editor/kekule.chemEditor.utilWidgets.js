@@ -368,7 +368,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 			var data;
 			if (elementSymbols[i] === '...')  // a special periodic table symbol
 				data = {
-					'text': elementSymbols[i],
+					'text': '\u2026',  //elementSymbols[i],
 					'nodeClass': null,
 					'hint': Kekule.$L('ChemWidgetTexts.CAPTION_ATOMLIST_PERIODIC_TABLE'),
 					'isPeriodicTable': true
