@@ -1306,6 +1306,7 @@ button.K-Button::-moz-focus-inner {
 
 }
 
+/*
 .K-Show-Dialog
 {
     z-index: 10000;
@@ -1319,7 +1320,15 @@ button.K-Button::-moz-focus-inner {
 {
     z-index: 20500;
 }
-
+*/
+.K-Show-Popup
+{
+    position: absolute;
+}
+.K-Show-Dialog, .K-Show-Popup, .K-Show-ActiveModal
+{
+    z-index: 20000;
+}
 
 
 /* Corner radius */

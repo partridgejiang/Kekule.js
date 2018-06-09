@@ -88,6 +88,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	initPropValues: function($super)
 	{
 		$super();
+		this.setAutoAdjustSizeOnPopup(true);
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 

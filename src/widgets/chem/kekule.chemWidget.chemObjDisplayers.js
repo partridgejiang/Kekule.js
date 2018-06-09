@@ -1768,6 +1768,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		var doc = this.getDisplayer().getDocument();
 		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_SAVEDATA_DIALOG'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		result.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT);
+		result.setAutoAdjustSizeOnPopup(true);
 		// label
 		var elem = doc.createElement('div');
 		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_FORMAT'); //CWT.CAPTION_SELECT_FORMAT;

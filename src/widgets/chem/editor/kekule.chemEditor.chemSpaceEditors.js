@@ -3408,17 +3408,20 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 */
 	openSetterUi: function(coord, obj)
 	{
-		var oldSetter = this.getAtomSetter();
-		/*
+		var oldSetter = this.getAtomSetter();  // check if there is old already created setter
 		if (oldSetter && oldSetter.isShown())  // has a old setter
 		{
-			this.applySetter(oldSetter, this.getCurrAtom());
+			//this.applySetter(oldSetter, this.getCurrAtom());
+			oldSetter.hide();
+			// IMPORTANT: ensure the hide process done quickly
+			// and the unprepare process of popup atom setter do not imfluence the prepare process of it
+			oldSetter._haltPrevShowHideProcess();
 		}
-		*/
 
 		if (!this.isValidNode(obj))
 			return;
 		this.setCurrAtom(obj);
+
 
 		var fontSize = this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize() || 0;
 		var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
@@ -3426,6 +3429,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		//setter.setEditor(this.getEditor());
 		setter.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		setter.setNodes([obj]);
+		var parentElem = this.getEditor().getCoreElement();
+		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time
 
 		var inputBox = setter.getNodeInputBox();
 
@@ -4709,10 +4714,15 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		);
 		result.addEventListener('showStateChange', function(e)
 			{
-				//console.log('show state change', e.isShown, e.isDismissed);
-				if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+				//console.log('show state change', e.isShown, e.isDismissed, e.byDomChange);
+				if (!e.byDomChange)
 				{
-					self.applySetter(result);
+					if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+					{
+						self.applySetter(result);
+					}
+					if (e.isShown)  // set applied to false on newly shown widget
+						result._applied = false;
 				}
 			}
 		);
@@ -4784,6 +4794,8 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		if (oldSetter && oldSetter.isShown())  // has a old setter
 		{
 			this.applySetter(oldSetter, this.getCurrMol());
+			oldSetter.hide();
+			oldSetter._haltPrevShowHideProcess();
 		}
 
 		if (!mol)  // need create new
@@ -4802,7 +4814,12 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		//var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
 		var text = this.getFormulaText(mol);
 		var setter = this.getTextSetterWidget(true);
-		setter._applied = false;
+
+		var parentElem = this.getEditor().getCoreElement();
+		//setter._setEnableShowHideEvents(false);
+		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time
+		//setter._setEnableShowHideEvents(true);
+
 		var slabel = text || '';
 		//console.log(block, text, slabel);
 		setter.setValue(slabel);
@@ -4818,6 +4835,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		 style.marginTop = -posAdjust + 'px';
 		 style.marginLeft = -posAdjust + 'px';
 		 */
+		setter._applied = false;
 		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
 		setter.selectAll();
 		setter.focus();
@@ -5054,6 +5072,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		var result = new Kekule.Widget.TextArea(doc);
 		result.setAutoSizeX(true);
 		result.setAutoSizeY(true);
+		result.setDisplayed(false);
 		result.addClassName(CCNS.CHEMEDITOR_TEXT_SETTER);
 		result.appendToElem(parentElem);
 
@@ -5077,10 +5096,14 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		);
 		result.addEventListener('showStateChange', function(e)
 			{
-				//console.log('show state change', e.isShown, e.isDismissed);
-				if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+				if (!e.byDomChange)
 				{
-					self.applySetter(result);
+					if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+					{
+						self.applySetter(result);
+					}
+					if (e.isShown)  // set applied to false on newly shown widget
+						result._applied = false;
 				}
 			}
 		);
@@ -5150,6 +5173,8 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		if (oldSetter && oldSetter.isShown())  // has a old setter
 		{
 			this.applySetter(oldSetter, this.getCurrBlock());
+			//oldSetter.dismiss();
+			oldSetter._haltPrevShowHideProcess();
 		}
 
 		if (!block)  // need create new
@@ -5174,9 +5199,15 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		var text = this.getBlockText(block);
 		var setter = this.getTextSetterWidget(true);
 		setter._applied = false;
-		var slabel = text || Kekule.$L('ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT'); //Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
+
 		//console.log(block, text, slabel);
-		setter.setValue(slabel);
+		setter.setValue(text);
+		var slabel = text || Kekule.$L('ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT'); //Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
+		setter.setPlaceholder(slabel);
+
+		var parentElem = this.getEditor().getCoreElement();
+		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time
+
 		//setter.setValue('hehr');
 		//setter.setIsPopup(true);
 		var style = setter.getElement().style;
@@ -5192,6 +5223,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		setter.show(null, null, Kekule.Widget.ShowHideType.POPUP);
 		setter.selectAll();
 		setter.focus();
+		this._isShown = true;
 	}
 });
 // register
