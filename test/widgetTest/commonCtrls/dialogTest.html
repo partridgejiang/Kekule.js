@@ -21,6 +21,23 @@
       max-width: 500px;
       max-height: 500px;
     }
+    p
+    {
+      min-width: 40em;
+    }
+    #toolbar
+    {
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: yellow;
+    }
+    #toolbar a
+    {
+      color: blue;
+      text-decoration: underline;
+      cursor: pointer;
+    }
   </style>
   <script>
     var dialog;
@@ -47,13 +64,15 @@
   </script>
 </head>
 <body onload="init()">
-  <a onclick="dialog.open()" href="#">Reopen it</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.Default); dialog.open(callback, this)" href="#">Default</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.open(callback, this)" href="#">Center</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.FULLFILL); dialog.open(callback, this)" href="#">Full</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER_OR_FULLFILL); dialog.open(callback, this)" href="#">Center or full</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.openModal(callback, this)" href="#">Modal</a>
-  <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.openPopup(callback, this)" href="#">Popup</a>
+  <div id="toolbar">
+    <a onclick="dialog.open()" href="#">Reopen it</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.Default); dialog.open(callback, this)">Default</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.open(callback, this)">Center</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.FULLFILL); dialog.open(callback, this)">Full</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER_OR_FULLFILL); dialog.open(callback, this)">Center or full</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.openModal(callback, this)">Modal</a>
+    <a onclick="dialog.setLocation(Kekule.Widget.Location.CENTER); dialog.openPopup(callback, this)">Popup</a>
+  </div>
 
   <p>
     Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
