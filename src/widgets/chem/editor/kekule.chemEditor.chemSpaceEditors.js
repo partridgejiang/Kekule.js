@@ -4816,9 +4816,9 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		var setter = this.getTextSetterWidget(true);
 
 		var parentElem = this.getEditor().getCoreElement();
-		setter._setEnableShowHideEvents(false);
+		//setter._setEnableShowHideEvents(false);
 		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time
-		setter._setEnableShowHideEvents(true);
+		//setter._setEnableShowHideEvents(true);
 
 		var slabel = text || '';
 		//console.log(block, text, slabel);
@@ -5200,9 +5200,10 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		var setter = this.getTextSetterWidget(true);
 		setter._applied = false;
 
-		var slabel = text || Kekule.$L('ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT'); //Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
 		//console.log(block, text, slabel);
-		setter.setValue(slabel);
+		setter.setValue(text);
+		var slabel = text || Kekule.$L('ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT'); //Kekule.ChemWidgetTexts.CAPTION_TEXTBLOCK_INIT;
+		setter.setPlaceholder(slabel);
 
 		var parentElem = this.getEditor().getCoreElement();
 		setter.appendToElem(parentElem);  // ensure setter widget is a child of parentElem, since popup show may change the parent each time

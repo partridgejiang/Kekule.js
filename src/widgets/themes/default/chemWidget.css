@@ -677,7 +677,7 @@
 .K-Chem-Dialog-Choose-File-Format,
 .K-Chem-Dialog-LoadData
 {
-    min-width: 23em;
+    min-width: 25em;
 }
 
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-FormatBox,
