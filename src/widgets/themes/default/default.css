@@ -130,6 +130,12 @@ table.K-Widget
     font-size: 1em; /* solve the tiny font size problem in nested widgets */
 }
 
+.K-Widget .K-Section
+{
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
 /* Container */
 .K-Container .K-Widget
 {
@@ -1300,6 +1306,7 @@ button.K-Button::-moz-focus-inner {
 
 }
 
+/*
 .K-Show-Dialog
 {
     z-index: 10000;
@@ -1313,7 +1320,15 @@ button.K-Button::-moz-focus-inner {
 {
     z-index: 20500;
 }
-
+*/
+.K-Show-Popup
+{
+    position: absolute;
+}
+.K-Show-Dialog, .K-Show-Popup, .K-Show-ActiveModal
+{
+    z-index: 20000;
+}
 
 
 /* Corner radius */

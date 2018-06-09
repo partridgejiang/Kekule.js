@@ -414,7 +414,8 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				 var selfWidth = this.getOffsetWidth();
 				 var selfHeight = this.getOffsetHeight();
 				 */
-				var viewPortDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+				//var viewPortDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+				var viewPortDim = Kekule.DocumentUtils.getInnerClientDimension(this.getDocument());
 				var selfBoundingRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
 				var selfWidth = selfBoundingRect.right - selfBoundingRect.left;
 				var selfHeight = selfBoundingRect.bottom - selfBoundingRect.top;
@@ -433,6 +434,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			{
 				if (overflow)
 				{
+					var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(this.getDocument());
 					//location = L.FULLFILL;
 					if (selfWidth >= viewPortDim.width)
 					{
@@ -479,6 +481,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				//console.log('center', l, t);
 			}
 
+			//overflow = true;  // debug
 			if (overflow)  // use absolute position
 			{
 				this.removeClassName(CNS.DIALOG_INSIDE);

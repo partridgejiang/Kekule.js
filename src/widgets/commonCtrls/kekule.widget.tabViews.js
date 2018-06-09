@@ -290,6 +290,7 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	doCreateTabbar: function(doc, parentElem)
 	{
 		var result = new Kekule.Widget.TabButtonGroup(doc);
+		result.setParent(this);
 		result.appendToElem(parentElem);
 		result.addEventListener('switch', function(e){
 			var btn = e.button;
@@ -468,8 +469,11 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	{
 		var doc = this.getDocument();
 		var result = new Kekule.Widget.TabPage(doc);
+		//var result = new Kekule.Widget.TabPage(this);
 		result.setText(title);
-		result.setHint(hint);
+		if (hint)
+			result.setHint(hint);
+		//result.setParent(this);
 		result.appendToWidget(this);
 		// adjust index
 		if (refPage)

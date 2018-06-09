@@ -61,6 +61,9 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 
 		$super(parentOrElementOrDocument, caption || /*CWT.CAPTION_LOADDATA*/ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG'),
 			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+
+		if (this.setResizable)
+			this.setResizable(true);
 	},
 	/** @ignore */
 	finalize: function($super)
@@ -85,6 +88,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	initPropValues: function($super)
 	{
 		$super();
+		this.setAutoAdjustSizeOnPopup(true);
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 
@@ -321,5 +325,6 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		return $super(result);
 	}
 });
+
 
 })();
