@@ -310,6 +310,7 @@ var widgetBindingField = '__$kekule_widget__';
  *   Available only when enablePeriodicalExec property is true.
  * @property {Int} periodicalExecInterval Milliseconds between two execution in periodical mode.
  *   Available only when enablePeriodicalExec property is true.
+ * @property {Bool} autoAdjustSizeOnPopup Whether shrink to browser visible client size when popping up or dropping down.
  * @property {Bool} isPopup Whether this is a "popup" widget, when click elsewhere on window, the widget will automatically hide itself.
  * @property {Bool} isDialog Whether this is a "dialog" widget, when press ESC key, the widget will automatically hide itself.
  * @property {Kekule.HashEx} iaControllerMap Interaction controller map (id= > controller) linked to this component. Read only.
@@ -869,6 +870,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('autoAdjustSizeOnPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isDialog', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('popupCaller', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE}); // private, record who calls this popup
@@ -1474,13 +1476,21 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
+	/** @private */
+	_setEnableShowHideEvents: function(enabled)
+	{
+		this._enableShowHideEvents = enabled;
+	},
+
 	/**
 	 * Make widget visible.
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the show method and make this widget visible.
 	 * @param {Func} callback This callback function will be called when the widget is totally shown.
 	 * @param {Int} showType, value from {@link Kekule.Widget.ShowHideType}.
+	 * @param {Hash} extraOptions Extra transition options.
+	 *   It may contains a field "instantly". If this field is set to true, the showing process will be executed without transition.
 	 */
-	show: function(caller, callback, showType)
+	show: function(caller, callback, showType, extraOptions)
 	{
 		if (!this.getElement())
 			return;
@@ -1501,12 +1511,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		setTimeout(showProc, 0);
 		*/
 
-		this.doShow(caller, callback, showType);
+		this.doShow(caller, callback, showType, extraOptions);
 
 		return this;
 	},
 	/** @private */
-	doShow: function(caller, callback, showType)
+	doShow: function(caller, callback, showType, extraOptions)
 	{
 		//console.log('do show', this.getClassName());
 		this.__$isShowing = true;
@@ -1550,7 +1560,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		//console.log('show', this.getClassName(), this.getElement(), this.getElement().parentNode);
 
-		if (Kekule.Widget.showHideManager)
+		if (Kekule.Widget.showHideManager && !(extraOptions && extraOptions.instantly))
 		{
 			/*
 			 if (this.__$showHideTransInfo)  // has prev transition not finished yet
@@ -1563,7 +1573,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			{
 				//console.log('show', this.__$isShowHiding);
 				//this.__$isShowHiding = true;
-				this.__$showHideTransInfo = Kekule.Widget.showHideManager.show(this, caller, done, showType);
+				this.__$showHideTransInfo = Kekule.Widget.showHideManager.show(this, caller, done, showType, extraOptions);
 			}
 		}
 		else
@@ -1607,9 +1617,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the hide method and make this widget invisible.
 	 * @param {Func} callback This callback function will be called when the widget is totally hidden.
 	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType}.
-	 * @param {Bool} useVisible If true, set visible property to false, else set displayed property to false.
+	 * @param {Hash} extraOptions Extra transition options.
+	 *   It may contains two special fields. One is "instantly". If this field is set to true, the showing process will be executed without transition.
+	 *   The other is "useVisible", if true, when hiding the widget, visible property will be setted to false, otherwise the displayed property will be setted to false.
 	 */
-	hide: function(caller, callback, hideType, useVisible)
+	hide: function(caller, callback, hideType, extraOptions)
 	{
 		if (!this.getElement())
 			return;
@@ -1636,13 +1648,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		};
 		setTimeout(hideProc, 0);
 		*/
-		this.doHide(caller, callback, hideType, useVisible);
+		this.doHide(caller, callback, hideType, extraOptions);
 
 		return this;
 	},
 	/** @private */
-	doHide: function(caller, callback, hideType, useVisible)
+	doHide: function(caller, callback, hideType, extraOptions)
 	{
+		var hideOptions = Object.extend({'callerPageRect': this.getShowHideCallerPageRect()}, extraOptions);
+		var useVisible = hideOptions.useVisible;
 		var self = this;
 		var finalizeAfterHiding = this.getFinalizeAfterHiding();
 		var done = function()
@@ -1652,7 +1666,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			self.__$showHideTransInfo = null;
 			self.widgetShowStateDone(false);
 
-			if (hideType === Kekule.Widget.ShowHideType.DROPDOWN)  // unprepare
+			if (hideType === Kekule.Widget.ShowHideType.DROPDOWN || hideType === Kekule.Widget.ShowHideType.POPUP)  // unprepare
 			{
 				//console.log('unprepare');
 				Kekule.Widget.globalManager.unpreparePopupWidget(self);
@@ -1669,7 +1683,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		this.widgetShowStateBeforeChanging(false);
 
-		if (Kekule.Widget.showHideManager)
+		if (Kekule.Widget.showHideManager && !hideOptions.instantly)
 		{
 			if (this.__$showHideTransInfo)
 				this.__$showHideTransInfo.halt();
@@ -1679,8 +1693,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				//console.log('hide', this.__$isShowHiding);
 				//this.__$isShowHiding = true;
 				//console.log('Hide by manager');
+
 				this.__$showHideTransInfo = Kekule.Widget.showHideManager.hide(this, caller, done, hideType,
-					false, {'callerPageRect': this.getShowHideCallerPageRect()});
+					false, hideOptions);
 			}
 		}
 		else
@@ -1711,12 +1726,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * @param {Kekule.Widget.BaseWidget} caller Who calls the hide method and make this widget invisible.
 	 * @param {Func} callback This callback function will be called when the widget is totally hidden.
 	 * @param {Int} hideType, value from {@link Kekule.Widget.ShowHideType}.
-	 * @param useVisible If true, set visible property to false, else set displayed property to false.
+	 * * @param {Hash} extraOptions Extra transition options.
+	 *   It may contains two special fields. One is "instantly". If this field is set to true, the showing process will be executed without transition.
+	 *   The other is "useVisible", if true, when hiding the widget, visible property will be setted to false, otherwise the displayed property will be setted to false.
 	 */
-	dismiss: function(caller, callback, hideType, useVisible)
+	dismiss: function(caller, callback, hideType, extraOptions)
 	{
 		this._isDismissed = true;
-		return this.hide(caller, callback, hideType, useVisible);
+		return this.hide(caller, callback, hideType, extraOptions);
 	},
 	/**
 	 * Check if widget element is visible to user.
@@ -1741,9 +1758,10 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/**
 	 * Called immediately after show or hide, even if transition is still underway.
 	 * @param {Bool} isShown
+	 * @param {Bool} byDomChange Whether the show state change is caused by inserting to or removing widget from DOM.
 	 * @private
 	 */
-	widgetShowStateChanged: function(isShown)
+	widgetShowStateChanged: function(isShown, byDomChange)
 	{
 		if (Kekule.ObjUtils.isUnset(isShown))
 			isShown = this.isShown();
@@ -1773,7 +1791,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				Kekule.Widget.globalManager.unregisterDialogWidget(this);
 		}
 		this.doWidgetShowStateChanged(isShown);
-		this.invokeEvent('showStateChange', {'widget': this, 'isShown': isShown, 'isDismissed': this._isDismissed});
+		if (this._enableShowHideEvents)
+			this.invokeEvent('showStateChange', {'widget': this, 'isShown': isShown, 'isDismissed': this._isDismissed, 'byDomChange': byDomChange});
 	},
 	/**
 	 * Descendant can override this method.
@@ -2094,7 +2113,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	insertedToDom: function()
 	{
-		this.widgetShowStateChanged(this.isShown());
+		this.widgetDomStateChanged(true);
+		this.widgetShowStateChanged(this.isShown(), true);
 		return this.doInsertedToDom();
 	},
 	/** @private */
@@ -2107,11 +2127,27 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	removedFromDom: function()
 	{
-		this.widgetShowStateChanged(false);  // removed from dom, alway a hidden action
+		this.widgetDomStateChanged(false);
+		this.widgetShowStateChanged(false, true);  // removed from dom, alway a hidden action
 		return this.doRemovedFromDom();
 	},
 	/** @private */
 	doRemovedFromDom: function()
+	{
+		// do nothing here
+	},
+
+	/**
+	 * Called when widget is inserted in or removed from HTML page DOM.
+	 * @param {Bool} isInDom
+	 */
+	widgetDomStateChanged: function(isInDom)
+	{
+		this.doWidgetDomStateChanged(isInDom)
+		this.invokeEvent('domStateChange', {'widget': this, 'isInDom': isInDom});
+	},
+	/** @private */
+	doWidgetDomStateChanged: function(isInDom)
 	{
 		// do nothing here
 	},
@@ -2142,6 +2178,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		// do nothing here
 	},
+
+
 
 	/**
 	 * Returns widget identity class name(s) need to add to HTML element.
@@ -4220,6 +4258,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		//console.log('prepare popup', popupWidget.getClassName(), 'called by', invokerWidget && invokerWidget.getClassName());
 		popupWidget.setPopupCaller(invokerWidget);
 		var popupElem = popupWidget.getElement();
+		//this.restoreElem(popupElem);  // restore possible changed styles in last popping
+
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
 		var topmostLayer = this.getTopmostLayer(doc, true);
@@ -4235,8 +4275,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			return;
 		*/
 
+		var autoAdjustSize = true; // !!popupWidget.getAutoAdjustSizeOnPopup();
+
 		var posInfo;
 
+		/*
 		if ((showType === ST.DROPDOWN) && invokerWidget)  // need to calc position on invokerWidget
 		{
 			posInfo = this._calcDropDownWidgetPosInfo(popupWidget, invokerWidget);
@@ -4245,10 +4288,36 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			posInfo = this._calcPopupWidgetPosInfo(popupWidget);
 		}
+		*/
+		if (showType === ST.DROPDOWN)  // need to calc position on invokerWidget
+		{
+			posInfo = this._calcDropDownWidgetPosInfo(popupWidget, invokerWidget, autoAdjustSize);
+		}
+		else  // if (showType === ST.POPUP)
+		{
+			posInfo = this._calcPopupWidgetPosInfo(popupWidget, isOnTopLayer, autoAdjustSize);
+		}
+
+		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
+		{
+			var viewPortVisibleBox = Kekule.DocumentUtils.getClientVisibleBox((invokerWidget || popupWidget).getDocument());
+			var visibleWidth = viewPortVisibleBox.right - viewPortVisibleBox.left;
+			var visibleHeight = viewPortVisibleBox.bottom - viewPortVisibleBox.top;
+			var widgetBox = posInfo.rect;
+			if (widgetBox.left + widgetBox.width > visibleWidth)  // need to shrink
+			{
+				posInfo.width = (viewPortVisibleBox.right - widgetBox.left) + 'px';
+				//posInfo.right = '0px';
+			}
+			if (widgetBox.top + widgetBox.height > visibleHeight)  // need to shrink
+			{
+				//posInfo.bottom = '0px';
+				posInfo.height = (viewPortVisibleBox.bottom - widgetBox.top) + 'px';
+			}
+		}
 
 		if (!isOnTopLayer)
 		{
-			//topmostLayer.appendChild(popupElem);
 			this.moveElemToTopmostLayer(popupElem);
 		}
 		if (posInfo)
@@ -4268,13 +4337,15 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 					style[name] = value;
 				}
 			}
+
 			var info = this._getElemStoredInfo(popupElem);
 			info.styles = oldStyle;
 		}
 	},
 	/** @private */
-	_calcPopupWidgetPosInfo: function(widget)
+	_calcPopupWidgetPosInfo: function(widget, isOnTopLayer)
 	{
+		var result;
 		var EU = Kekule.HtmlElementUtils;
 		var elem = widget.getElement();
 		var isShown = widget.isShown();
@@ -4284,12 +4355,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			elem.style.display = '';
 		}
 
-		var clientRect = EU.getElemBoundingClientRect(elem);
-		//var offsetDim = EU.getElemOffsetDimension(elem);
-		return {
-			'top': clientRect.top + 'px',
-			'left': clientRect.left + 'px'
+		var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
+		result = {
+			'rect': clientRect
+		};
+
+		if (!isOnTopLayer)  // if not on top layer, need to adjust element position
+		{
+			result.top = clientRect.top + 'px';
+			result.left = clientRect.left + 'px';
 		}
+		return result;
 	},
 	/** @private */
 	_calcDropDownWidgetPosInfo: function(dropDownWidget, invokerWidget)
@@ -4371,8 +4447,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		//console.log(invokerClientRect);
 		var SU = Kekule.StyleUtils;
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);  // refetch, with document scroll considered
-		var w = SU.getComputedStyle(dropElem, 'width') || dropScrollDim.width;
-		var h = SU.getComputedStyle(dropElem, 'height') || dropScrollDim.height;
+		var w = /*SU.getComputedStyle(dropElem, 'width') ||*/ dropScrollDim.width;
+		var h = /*SU.getComputedStyle(dropElem, 'height') ||*/ dropScrollDim.height;
 		/*
 		var x = (pos & D.LEFT) || (pos & D.RIGHT)? invokerClientRect.left - w: invokerClientRect.left;
 		var y = (pos & D.BOTTOM) || (pos & D.TOP)? invokerClientRect.top - h: invokerClientRect.top;
@@ -4382,6 +4458,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			(pos & D.RIGHT)? invokerClientRect.right:
 			invokerClientRect.left;  // not appointed, decide automatically
 		*/
+
 		var x;
 		if (pos & D.LEFT)
 			x = invokerClientRect.left - dropClientRect.width;
@@ -4402,6 +4479,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			else  // left or right size are all not suffient
 			{
 				x = Math.max(viewPortBox.left, viewPortBox.right - dropClientRect.width);
+				/*
+				var preferredX = viewPortBox.right - dropClientRect.width;
+				if (preferredX < viewPortBox.left)  // width larger than viewPortBox, show widget at the left edge of view box
+				{
+					x = viewPortBox.left;
+					if (autoAdjustSize)
+						w = viewPortBox.right - viewPortBox.left;
+				}
+				else
+					x = preferredX;
+				*/
 			}
 		}
 		/*
@@ -4429,17 +4517,30 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			else  // top or bottom size are all not suffient
 			{
 				y = Math.max(viewPortBox.top, viewPortBox.bottom - dropClientRect.height);
+				/*
+				var preferredY = viewPortBox.bottom - dropClientRect.height;
+				if (preferredY < viewPortBox.top)  // width larger than viewPortBox, show widget at the left edge of view box
+				{
+					y = viewPortBox.top;
+					if (autoAdjustSize)
+						h = viewPortBox.bottom - viewPortBox.top;
+				}
+				else
+					y = preferredY;
+				*/
 			}
 		}
 
 		//console.log(pos, invokerClientRect, y, h, dropClientRect.height);
+
+		var result = {};
+		result.rect = {'left': x, 'top': y, 'width': w, 'height': h};
 
 		x += 'px';
 		y += 'px';
 		w += 'px';
 		h += 'px';
 		//console.log(xprop, x, yprop, y);
-		var result = {};
 
 
 		result.left = x;
