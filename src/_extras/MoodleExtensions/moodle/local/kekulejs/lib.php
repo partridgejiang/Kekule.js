@@ -53,7 +53,7 @@ class kekulejs_configs
      */
     static public function getKekuleScriptDir()
     {
-        return self::getScriptDir() . 'kekule.js/';
+        return self::getScriptDir() . 'kekule.js.0.7.9.18061000/';
     }
     static public function getAdapterDir()
     {
@@ -77,6 +77,7 @@ class kekulejs_utils
             $p = $PAGE;
         $scriptDir = kekulejs_configs::getScriptDir();
         // $rootDir = kekulejs_configs::getKekuleDir();
+		$kekuleScriptDir = kekulejs_configs::getKekuleScriptDir();
         $adapterDir = kekulejs_configs::getAdapterDir();
 
         // params
@@ -90,7 +91,7 @@ class kekulejs_utils
 
         $p->requires->js($scriptDir . 'raphael-min.js');
         $p->requires->js($scriptDir . 'Three.js');
-        $p->requires->js($scriptDir . 'kekule.js/kekule.js?' . $params);
+        $p->requires->js($kekuleScriptDir . 'kekule.js?' . $params);
         $p->requires->js($adapterDir . 'kekuleInitials.js');
     }
     static public function includeKekuleJsFiles($options = null, $page = null)
@@ -110,8 +111,9 @@ class kekulejs_utils
             $p = $PAGE;
 
         $scriptDir = kekulejs_configs::getScriptDir();
+		$kekuleScriptDir = kekulejs_configs::getKekuleScriptDir();
         try {
-            $p->requires->css($scriptDir . 'kekule.js/themes/default/kekule.css');
+            $p->requires->css($kekuleScriptDir . 'themes/default/kekule.css');
         }
         catch(Exception $e)
         {
