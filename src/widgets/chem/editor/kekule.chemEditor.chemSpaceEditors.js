@@ -3347,7 +3347,18 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 
 		// react to value change of setter
 		var self = this;
-		result.addEventListener('valueChange', function(e){
+		result.addEventListener('keyup', function(e)
+			{
+				var ev = e.htmlEvent;
+				if (ev.getKeyCode() === Kekule.X.Event.KeyCode.ENTER)
+				{
+					self.applySetter(result);
+					result.dismiss();  // avoid call apply setter twice
+				}
+			}
+		);
+
+		result.addEventListener('valueSelect', function(e){
 			//var data = e.value;
 			//console.log(e.target, e.currentTarget);
 			if (self.getAtomSetter() && self.getAtomSetter().isShown())
@@ -3356,17 +3367,21 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 				result.dismiss();  // avoid call apply setter twice
 			}
 		});
-		/*
+
 		result.addEventListener('showStateChange', function(e)
 			{
-				if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+				if (e.target === result && !e.byDomChange)
 				{
-					if (self.getAtomSetter() && self.getAtomSetter().isShown())
-						self.applySetter(result);
+					//console.log('show state change', e);
+					if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+					{
+						if (self.getAtomSetter() && self.getAtomSetter().isShown())
+							self.applySetter(result);
+					}
 				}
 			}
 		);
-		*/
+
 
 		result.appendToElem(parentElem);
 
@@ -3470,6 +3485,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		var newData = setter.getValue();
 		if (!newData)
 			return;
+
+		//console.log('apply setter', newData);
 
 		var nodeClass = newData.nodeClass;
 		var modifiedProps = newData.props;
