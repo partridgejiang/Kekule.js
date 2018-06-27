@@ -4340,13 +4340,15 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			posInfo = this._calcPopupWidgetPosInfo(popupWidget);
 		}
 		*/
+		var parentFixedPosition;
 		if (showType === ST.DROPDOWN)  // need to calc position on invokerWidget
 		{
-			posInfo = this._calcDropDownWidgetPosInfo(popupWidget, invokerWidget, autoAdjustSize);
+			parentFixedPosition = Kekule.StyleUtils.isSelfOrAncestorPositionFixed(invokerWidget.getElement());
+			posInfo = this._calcDropDownWidgetPosInfo(popupWidget, invokerWidget, parentFixedPosition);
 		}
 		else  // if (showType === ST.POPUP)
 		{
-			posInfo = this._calcPopupWidgetPosInfo(popupWidget, isOnTopLayer, autoAdjustSize);
+			posInfo = this._calcPopupWidgetPosInfo(popupWidget, isOnTopLayer);
 		}
 
 		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
@@ -4355,12 +4357,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var visibleWidth = viewPortVisibleBox.right - viewPortVisibleBox.left;
 			var visibleHeight = viewPortVisibleBox.bottom - viewPortVisibleBox.top;
 			var widgetBox = posInfo.rect;
-			if (widgetBox.left + widgetBox.width > visibleWidth)  // need to shrink
+			if (widgetBox.left + widgetBox.width > visibleWidth + viewPortVisibleBox.left)  // need to shrink
 			{
 				posInfo.width = (viewPortVisibleBox.right - widgetBox.left) + 'px';
 				//posInfo.right = '0px';
 			}
-			if (widgetBox.top + widgetBox.height > visibleHeight)  // need to shrink
+			if (widgetBox.top + widgetBox.height > visibleHeight + viewPortVisibleBox.top)  // need to shrink
 			{
 				//posInfo.bottom = '0px';
 				posInfo.height = (viewPortVisibleBox.bottom - widgetBox.top) + 'px';
@@ -4377,7 +4379,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var stylePropNames = ['left', 'top', 'right', 'bottom', 'width', 'height'];
 			var oldStyle = {};
 			var style = popupElem.style;
-			style.position = 'absolute';
+
+			if (showType === ST.DROPDOWN && parentFixedPosition)
+				style.position = 'fixed';  // drop down widget should use the same position style to parent
+			else if (!Kekule.StyleUtils.isAbsOrFixPositioned(popupElem))
+			{
+				style.position = 'absolute';
+			}
+
 			for (var i = 0, l = stylePropNames.length; i < l; ++i)
 			{
 				var name = stylePropNames[i];
@@ -4419,7 +4428,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return result;
 	},
 	/** @private */
-	_calcDropDownWidgetPosInfo: function(dropDownWidget, invokerWidget)
+	_calcDropDownWidgetPosInfo: function(dropDownWidget, invokerWidget, parentFixedPosition)
 	{
 		var EU = Kekule.HtmlElementUtils;
 		var D = Kekule.Widget.Position;
@@ -4431,7 +4440,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
-		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem);
+		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
 		var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(invokerWidget.getDocument());
 		var dropElem = dropDownWidget.getElement();
@@ -4469,7 +4478,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				//var left = invokerClientRect.x;
 				var left = invokerClientRect.x - viewPortBox.left;
 				//var right = viewPortDim.width - left - invokerClientRect.width;
-				var right = viewPortBox.right - left - invokerClientRect.width;
+				var right = viewPortBox.right - invokerClientRect.x - invokerClientRect.width;
 				// we prefer right, check if right can display drop down widget
 				if (right >= dropOffsetDim.width)
 					pos |= D.RIGHT;
@@ -4481,7 +4490,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				//var top = invokerClientRect.y;
 				var top = invokerClientRect.y - viewPortBox.top;
 				//var bottom = viewPortDim.height - top - invokerClientRect.height;
-				var bottom = viewPortBox.bottom - top - invokerClientRect.height;
+				var bottom = viewPortBox.bottom - invokerClientRect.y - invokerClientRect.height;
 				// we prefer bottom
 				if (bottom >= dropOffsetDim.height)
 					pos |= D.BOTTOM;
@@ -4497,7 +4506,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
 		//console.log(invokerClientRect);
 		var SU = Kekule.StyleUtils;
-		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);  // refetch, with document scroll considered
+		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);  // refetch, with document scroll considered
+		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, !parentFixedPosition);  // refetch, with document scroll considered
 		var w = /*SU.getComputedStyle(dropElem, 'width') ||*/ dropScrollDim.width;
 		var h = /*SU.getComputedStyle(dropElem, 'height') ||*/ dropScrollDim.height;
 		/*
@@ -4608,7 +4618,27 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	_fillPersistentPopupWidgetsInHidden: function(activateWidget, allPopupWidgets, persistPopups, checkedWidgets)
 	{
 		checkedWidgets.push(activateWidget);
-		var activateElem = activateWidget.getElement();
+		var activateElem, parentWidget, callerWidget;
+		try
+		{
+			if (activateWidget && activateWidget instanceof Kekule.Widget.BaseWidget)
+			{
+				activateElem = activateWidget.getElement();
+				parentWidget = activateWidget.getParent();
+				callerWidget = activateWidget.getPopupCaller();
+			}
+			else if (activateWidget instanceof HTMLElement)  // maybe invoke directly by an element
+				activateElem = activateWidget;
+			else
+				activateElem = null;
+		}
+		catch(e)
+		{
+			// do nothing
+			activateElem = null;
+		}
+		if (!activateElem)
+			return;
 		for (var i = 0, l = allPopupWidgets.length; i < l; ++i)
 		{
 			var w = allPopupWidgets[i];
@@ -4623,12 +4653,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 					persistPopups.push(w);
 			}
 		}
-		var parent = activateWidget.getParent();
-		if (parent && checkedWidgets.indexOf(parent) <= 0)
-			this._fillPersistentPopupWidgetsInHidden(parent, allPopupWidgets, persistPopups, checkedWidgets);
-		var caller = activateWidget.getPopupCaller();
-		if (caller && checkedWidgets.indexOf(caller) <= 0)
-			this._fillPersistentPopupWidgetsInHidden(caller, allPopupWidgets, persistPopups, checkedWidgets);
+		if (parentWidget && checkedWidgets.indexOf(parentWidget) <= 0)
+			this._fillPersistentPopupWidgetsInHidden(parentWidget, allPopupWidgets, persistPopups, checkedWidgets);
+		if (callerWidget && checkedWidgets.indexOf(callerWidget) <= 0)
+			this._fillPersistentPopupWidgetsInHidden(callerWidget, allPopupWidgets, persistPopups, checkedWidgets);
 	},
 
 	/**

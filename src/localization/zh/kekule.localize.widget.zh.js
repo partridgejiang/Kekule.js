@@ -1,4 +1,3 @@
-/** @ignore */
 Kekule.Localization.setCurrModule("widget");
 
 Kekule.Localization.addResource("zh", "WidgetTexts",
@@ -270,6 +269,7 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 			"HINT_TEXT_VERTICAL_ALIGN": "设置文字水平垂直方式",
 			"HINT_USE_ATOM_CUSTOM_COLOR": "(使用原子特征颜色)",
 			"CAPTION_LOADDATA_DIALOG": "载入数据",
+			"CAPTION_SAVEDATA_DIALOG": "保存数据",
 			"CAPTION_DATA_FORMAT": "数据格式：",
 			"CAPTION_DATA_SRC": "在下方输入或粘贴数据：",
 			"CAPTION_LOADDATA_FROM_FILE": "载入文件",
@@ -285,6 +285,8 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 			"CAPTION_DUMMY_ATOM": "虚原子(Dummy atom)",
 			"CAPTION_HETERO_ATOM": "杂原子",
 			"CAPTION_ANY_ATOM": "任意原子",
+			"CAPTION_ATOM": "原子",
+			"CAPTION_SUBGROUP": "基团",
 			"CAPTION_PERIODIC_TABLE_DIALOG": "元素周期表",
 			"CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM": "选择元素",
 			"CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEMS": "选择多个元素",

@@ -618,7 +618,10 @@ Kekule.StyleUtils = {
 	getComputedStyle: function(elem, propName)
 	{
 		var styles;
-		var view = elem.ownerDocument.defaultView;
+		var doc = elem.ownerDocument;
+		if (!doc)
+			return null;
+		var view = doc.defaultView;
 		if (view && view.getComputedStyle)
 		{
 			styles = view.getComputedStyle(elem, null);
@@ -726,6 +729,67 @@ Kekule.StyleUtils = {
 	{
 		var display = Kekule.StyleUtils.getComputedStyle(elem, 'display');
 		return ['block', 'list-item', 'table', 'flex', 'grid'].indexOf(display) >= 0;
+	},
+
+	/**
+	 * Check if an element is set with absolute or fixed position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAbsOrFixPositioned: function(elem)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		return (position === 'absolute') || (position === 'fixed');
+	},
+	/** @private */
+	_fillAbsOrFixedPositionStyleStack: function(elem, stack)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		if ((position === 'absolute') || (position === 'fixed'))
+		{
+			stack.push(position.toLocaleLowerCase());
+		}
+		var parent = elem.parentNode;
+		if (parent && parent.ownerDocument)
+			Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(parent, stack);
+		return stack;
+	},
+	/**
+	 * Check the ancestors of elem, if one is set to absolute or fixed position,
+	 * returns its position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAncestorPositionFixed: function(elem)
+	{
+		var parent = elem.parentNode;
+		if (parent)
+		{
+			return Kekule.StyleUtils.isSelfOrAncestorPositionFixed(elem);
+		}
+		else
+			return false;
+	},
+	/**
+	 * Check the elem and its ancestor, if one is set to fixed position, result is true.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isSelfOrAncestorPositionFixed: function(elem)
+	{
+		var positionStack = [];
+		Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(elem, positionStack);
+		if (!positionStack.length)
+			return null;
+		for (var i = positionStack.length - 1; i >= 0; --i)
+		{
+			var p = positionStack[i];
+			if (p === 'fixed')
+				return true;
+		}
+		return false;
 	}
 };
 
