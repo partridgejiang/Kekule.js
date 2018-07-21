@@ -383,6 +383,7 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.nexus.js',
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
+			'widgets/chem/editor/kekule.chemEditor.trackParser.js',
 
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
 		],

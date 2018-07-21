@@ -945,6 +945,19 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 	BNS.erase
 );
 
+// Erase
+Kekule.Editor.ActionComposerSetTrackController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetTrackController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_TRACK_INPUT'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.$L('ChemWidgetTexts.HINT_TRACK_INPUT'), //Kekule.ChemWidgetTexts.HINT_ERASE,
+	'TrackInputIaController',
+	null,
+	null,
+	null,
+	null,
+	BNS.trackInput
+);
+
 // Bond and its variations
 Kekule.Editor.ActionComposerSetBondControllerSingle = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetBondControllerSingle',

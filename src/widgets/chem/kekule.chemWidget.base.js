@@ -61,6 +61,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	cloneSelection: 'cloneSelection',
 	erase: 'erase',
 	manipulate: 'manipulate',
+	trackInput: 'trackInput',
 	molBond: 'bond',
 	molAtom: 'atom',
 	molFormula: 'formula',

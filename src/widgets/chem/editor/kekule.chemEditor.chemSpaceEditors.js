@@ -1562,6 +1562,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					}
 				}
 
+				//console.log('need new', needCreateNewMerge, mergeSingleObj);
 				if (needCreateNewMerge || mergeSingleObj)
 				{
 					if (needCreateNewMerge)
@@ -1580,8 +1581,12 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						var coordTranslate = CU.substract(destCoord, currCoord);
 						// change all currInfo coord, and redo apply job
 						var needReApply = false;
-						if (coordTranslate.x || coordTranslate.y)  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
+
+						var fequal = Kekule.NumUtils.isFloatEqual;
+						var threshold = 1e-10; //{x: Math.abs(currCoord.x) * 1e-8, y: Math.abs(currCoord.y) * 1e-8}
+						if (!fequal(coordTranslate.x, 0, threshold) || !fequal(coordTranslate.y, 0, threshold))  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
 						{
+							//console.log('here', coordTranslate, currCoord, destCoord);
 							for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 							{
 								var obj = manipulatedObjs[i];
@@ -1608,7 +1613,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 							{
 								var obj = manipulatedObjs[i];
-								if (obj !== magneticMergeObjs[0])
+								//if (obj !== magneticMergeObjs[0])
 								{
 									var info = currManipulateInfoMap.get(obj);
 									this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);

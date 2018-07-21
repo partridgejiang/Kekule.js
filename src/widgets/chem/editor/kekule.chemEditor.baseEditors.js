@@ -4179,7 +4179,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	getAllObjOperations: function(isTheFinalOperationToEditor)
 	{
 		//var opers = this.getObjOperationMap().getValues();
-		var opers = this.getMoveOperations();
+		var opers = Kekule.ArrayUtils.clone(this.getMoveOperations());
 		return opers;
 	},
 

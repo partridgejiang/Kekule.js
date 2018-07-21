@@ -412,6 +412,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		else  // simple shape
 		{
 			var coords = shape.coords;
+			//console.log('do draw shape', shape.shapeType, options, coords);
 			switch (shape.shapeType)
 			{
 				// TODO: Point and circle currently does not support stroke dash
@@ -453,7 +454,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 					result = this.drawRect(context, coords[0], coords[1], options);
 					break;
 				}
-				case T.POLYGON:
+				case T.POLYGON: case T.POLYLINE:
 				{
 					var args = [];
 					for (var i = 0, l = coords.length; i < l; ++i)
@@ -464,9 +465,12 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 						args.push(coordArray);
 					}
 					// close
-					args.push('L');
-					coordArray = [coords[0].x, coords[0].y];
-					args.push(coordArray);
+					if (shape.shapeType === T.POLYGON)
+					{
+						args.push('L');
+						coordArray = [coords[0].x, coords[0].y];
+						args.push(coordArray);
+					}
 					var path = Kekule.Render.DrawPathUtils.makePath.apply(this, args);
 					result = this.drawPath(context, path, options);
 					break;

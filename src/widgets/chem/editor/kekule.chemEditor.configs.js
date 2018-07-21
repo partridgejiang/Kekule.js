@@ -102,6 +102,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
+ * @property {Int} trackSimplifierDistanceThreshold
  */
 Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.InteractionConfigs# */
@@ -130,6 +131,19 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addIntConfigProp('atomSetterFontSize', 14);
 		this.addBoolConfigProp('allowUnknownAtomSymbol', true);
+
+		this.addIntConfigProp('trackSimplifierDistanceThreshold', 8);
+		this.addIntConfigProp('trackSimplifierIgnoreSegmentThreshold', 10);
+		this.addIntConfigProp('trackMergeDistanceThreshold', 20);
+		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30, {'scope': PS.PUBLIC});  // 30 degree
+		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
+		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setTrackOptimizationDistanceConstraints([0.5, 1, 3, 4, 5]);
 	}
 });
 
@@ -175,6 +189,11 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('selectingMarkerStrokeDash', true);
 		this.addStrConfigProp('selectingMarkerFillColor', null);
 		this.addFloatConfigProp('selectingMarkerOpacity', 0.7);
+
+		this.addStrConfigProp('trackMarkerStrokeColor', '#0000AA');
+		this.addFloatConfigProp('trackMarkerStrokeWidth', 2);
+		this.addStrConfigProp('trackMarkerStrokeDash', false);
+		this.addFloatConfigProp('trackMarkerOpacity', 0.5);
 	}
 });
 

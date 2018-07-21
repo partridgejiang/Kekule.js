@@ -415,6 +415,8 @@ Kekule.Render.MetaShapeType = {
 	LINE: 2,
 	/** A rectangle on context, determinated by two coords ({[coord1, coord2]}). */
 	RECT: 3,
+	/** Unclosed polyline, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
+	POLYLINE: 11,
 	/** Polygon, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
 	POLYGON: 10,
 	// 3D shapes

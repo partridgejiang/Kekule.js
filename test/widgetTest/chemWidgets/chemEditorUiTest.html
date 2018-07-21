@@ -20,8 +20,9 @@
   -->
 
   <script>
-    /*
+
     BNS = Kekule.ChemWidget.ComponentWidgetNames;
+    /*
     Kekule.globalOptions.chemWidget.composer.commonToolButtons = [
       BNS.newDoc,
       BNS.loadData,
@@ -53,6 +54,20 @@
       toolButtons.push({'text': 'Set Btn', 'showText': true, '#execute': setCustomChemButtons});
       toolButtons.push({'text': 'Set Btn2', 'showText': true, '#execute': setCustomChemButtons2});
       chemEditorUi.setCommonToolButtons(toolButtons);
+
+      chemEditorUi.setChemToolButtons([
+        BNS.manipulate,
+        BNS.erase,
+        BNS.trackInput,
+        BNS.molBond,
+        BNS.molAtom,
+        BNS.molFormula,
+        BNS.molRing,
+        BNS.molCharge,
+        BNS.glyph,
+        BNS.textImage
+      ]);
+
 
       // debug
 			/*
