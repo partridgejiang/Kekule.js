@@ -4179,7 +4179,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	getAllObjOperations: function(isTheFinalOperationToEditor)
 	{
 		//var opers = this.getObjOperationMap().getValues();
-		var opers = Kekule.ArrayUtils.clone(this.getMoveOperations());
+		var op = this.getMoveOperations();
+		var opers = op? Kekule.ArrayUtils.clone(op): [];
 		return opers;
 	},
 
@@ -4226,7 +4227,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var macro = new Kekule.MacroOperation(opers);
 			editor.pushOperation(macro);
 			*/
-			editor.pushOperation(this.getActiveOperation(true));
+			var op = this.getActiveOperation(true);
+			if (op)
+				editor.pushOperation(op);
 		}
 	},
 
