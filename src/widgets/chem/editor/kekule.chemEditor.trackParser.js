@@ -1318,7 +1318,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 
 		var tracks = this.refineTrackCoords(this.getTrackCoords());
 		//console.log('tracks', tracks);
-		if (tracks.length)
+		if (tracks.length > 1)
 		{
 			var mol = this.convertTracksToStructure(tracks, defIsotopeId);
 			if (mol)
