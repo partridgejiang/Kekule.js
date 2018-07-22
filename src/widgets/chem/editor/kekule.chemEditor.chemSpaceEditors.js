@@ -830,6 +830,69 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		{
 			mol.endUpdate();
 		}
+	},
+
+	/**
+	 * A helper function returning the available non-atom settings used by atom setter widget.
+	 * @returns {Array}
+	 */
+	getNonAtomSettingInfos: function()
+	{
+		var result = [];
+		var labelConfigs = this.getRenderConfigs().getDisplayLabelConfigs();
+		var nonAtomSetting = this.getEditorConfigs().getStructureConfigs().getNonAtomNodeInputSetting();
+
+		// R group
+		if (nonAtomSetting.enableRGroup)
+			result.push({
+				'text': labelConfigs.getRgroup(), 'nodeClass': Kekule.RGroup,
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_RGROUP') //Kekule.ChemWidgetTexts.CAPTION_RGROUP
+			});
+		// Kekule.Pseudoatom
+		if (nonAtomSetting.enablePseudoatomDummy)
+			result.push({
+				'text': labelConfigs.getDummyAtom(), 'nodeClass': Kekule.Pseudoatom,
+				'props': {'atomType': Kekule.PseudoatomType.DUMMY},
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_DUMMY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
+			});
+		if (nonAtomSetting.enablePseudoatomHetero)
+			result.push({
+				'text': labelConfigs.getHeteroAtom(), 'nodeClass': Kekule.Pseudoatom,
+				'props': {'atomType': Kekule.PseudoatomType.HETERO},
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_HETERO_ATOM') //Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
+			});
+		if (nonAtomSetting.enablePseudoatomAny)
+			result.push({
+				'text': labelConfigs.getAnyAtom(), 'nodeClass': Kekule.Pseudoatom,
+				'props': {'atomType': Kekule.PseudoatomType.ANY},
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_ANY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
+			});
+		// Kekule.VariableAtom List and Not List
+		if (nonAtomSetting.enableVariableAtomList)
+			result.push({
+				'text': this._getVarAtomListLabel(), 'nodeClass': Kekule.VariableAtom,
+				'isVarList': true,
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
+			});
+		if (nonAtomSetting.enableVariableAtomNotList)
+			result.push({
+				'text': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom,
+				'isNotVarList': true,
+				'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
+			});
+		return result;
+	},
+	/** @private */
+	_getVarAtomListLabel: function()
+	{
+		var labelConfigs = this.getRenderConfigs().getDisplayLabelConfigs();
+		return labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM;
+	},
+	/** @private */
+	_getVarAtomNotListLabel: function()
+	{
+		var labelConfigs = this.getRenderConfigs().getDisplayLabelConfigs();
+		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
 	}
 });
 
@@ -3128,7 +3191,7 @@ Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaC
 			var tempNode = new Kekule.ChemStructureNode();
 			tempNode.assign(node);
 			newNode.assign(tempNode);  // copy some basic info of old node
-			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode);
+			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode, null, this.getEditor());
 			operGroup.add(operReplace);
 		}
 		else  // no need to replace
@@ -3248,6 +3311,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	},
 
 	/** @private */
+	/*
 	_getVarAtomListLabel: function()
 	{
 		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
@@ -3258,9 +3322,11 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
 		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
 	},
+	*/
 	/** @private */
 	_createNonAtomLabelInfos: function()
 	{
+		/*
 		var result = [];
 		var labelConfigs = this.getEditor().getRenderConfigs().getDisplayLabelConfigs();
 		// R group
@@ -3293,6 +3359,9 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			'text': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom, 'isVarNotList': true,
 			'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
 		});
+    */
+		var editor = this.getEditor();
+		var result = editor && editor.getNonAtomSettingInfos && editor.getNonAtomSettingInfos();
 		this.setNonAtomLabelInfos(result);
 		return result;
 	},
@@ -3544,7 +3613,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			var tempNode = new Kekule.ChemStructureNode();
 			tempNode.assign(node);
 			newNode.assign(tempNode);  // copy some basic info of old node
-			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode);
+			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode, null, this.getEditor());
 			operGroup.add(operReplace);
 		}
 		else  // no need to replace

@@ -218,6 +218,8 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Bool} enableChargeAndRadicalMarker If true, marker objects will be used in editor to represent charge and radical.
  * @property {Int}  The max atom count when creating carbon chain using flex chain tool. 0 means no restricts.
  * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon chain using flex ring tool. 0 means no restricts.
+ *
+ * @property {Hash} nonAtomNodeInputSetting Settings to restrict the input types of non-atom node.
  */
 Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.StructureConfigs# */
@@ -248,6 +250,15 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('maxFlexRingAtomCount', 18);  // too large ring cause performance problem
 
 		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
+
+		this.addHashConfigProp('nonAtomNodeInputSetting', {
+			'enableRGroup': true,
+			'enablePseudoatomDummy': true,
+			'enablePseudoatomHetero': true,
+			'enablePseudoatomAny': true,
+			'enableVariableAtomList': true,
+			'enableVariableAtomNotList': true
+		});
 	},
 	/** @private */
 	initPropValues: function($super)
