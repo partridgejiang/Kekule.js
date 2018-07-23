@@ -772,7 +772,7 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 			if (!this._isApplying)
 				this.updateModifierValues();
 		}, this);
-		composer.addEventListener('editObjChanged', function(e){
+		composer.addEventListener('selectedObjsUpdated', function(e){
 			/*
 			var propNames = e.propNames;
 			if (!propNames || !propNames.length || !Kekule.ArrayUtils.intersect(this._relatedPropNames, propNames).length)  // not changing render options
@@ -781,7 +781,22 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 			}
 			*/
 			if (!this._isApplying)
+			{
+				if (composer.getEditor().isManipulatingObject())
+					this._suppressUpdateModifierValuesInManipulation = true;
+				else
+				{
+					//console.log('selectedObjsUpdated', composer.getEditor()._objectManipulateFlag, e);
+					this.updateModifierValues();
+				}
+			}
+		}, this);
+		composer.addEventListener('endManipulateObject', function(e){
+			if (this._suppressUpdateModifierValuesInManipulation)
+			{
 				this.updateModifierValues();
+				this._suppressUpdateModifierValuesInManipulation = false;
+			}
 		}, this);
 
 		this._isApplying = false;  // private
@@ -995,11 +1010,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, editor)
 	{
+		/*
 		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
 		this.updateObjModifierToolbarStateBind = this.updateObjModifierToolbarState.bind(this);
+		*/
+		this.updateSelectionAssocToolbarStateBind = this.updateSelectionAssocToolbarState.bind(this);
 
 		this.setPropStoreFieldValue('enableStyleToolbar', true);
-		this.setPropStoreFieldValue('enableObjModifierToolbar', !true);
+		this.setPropStoreFieldValue('enableObjModifierToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
 		$super(parentOrElementOrDocument);
@@ -1652,22 +1670,35 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var chemToolbarElem = this.getChemBtnGroup().getElement();
 		//var commonRect= Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem)
 		var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
-		// assoc and style toolbar
+		// assoc toolbar
 		if (this.isAssocToolbarShown())
 		{
 			var elem = this.getAssocBtnGroup().getElement();
 			elem.style.left = chemRect.width + 'px';
 			//elem.style.top = commonRect.height + 'px';
 		}
+		this.adjustStyleAndObjModifierToolbarPosition();
+	},
+	/** @private */
+	adjustStyleAndObjModifierToolbarPosition: function()
+	{
+		var chemToolbarElem = this.getChemBtnGroup().getElement();
+		var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
+		var assocRect;
+		if (this.isAssocToolbarShown())
+		{
+			assocRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getAssocBtnGroup().getElement());
+		}
+		//console.log('adjust pos', assocRect);
 		if (this.isStyleToolbarShown())
 		{
 			var elem = this.getStyleToolbar().getElement();
-			elem.style.left = chemRect.width + 'px';
+			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
 		}
 		if (this.isObjModifierToolbarShown())
 		{
 			var elem = this.getObjModifierToolbar().getElement();
-			elem.style.left = chemRect.width + 'px';
+			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
 		}
 	},
 
@@ -2273,8 +2304,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			self.uiLayoutChanged();
 			//self.updateStyleToolbarState();
-			setTimeout(self.updateObjModifierToolbarStateBind, 0);
-			setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+			//setTimeout(self.updateObjModifierToolbarStateBind, 0);
+			//setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+			setTimeout(self.updateSelectionAssocToolbarStateBind, 0);
 		});
 		return this;
 	},
@@ -2291,8 +2323,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				{
 					self.uiLayoutChanged();
 					//self.updateStyleToolbarState(); // may need to reopen style toolbar
-					setTimeout(self.updateObjModifierToolbarStateBind, 0);
-					setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+					//setTimeout(self.updateObjModifierToolbarStateBind, 0);
+					//setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+					setTimeout(self.updateSelectionAssocToolbarStateBind, 0);
 				}
 			);
 		}
@@ -2354,7 +2387,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	showObjModifierToolbar: function()
 	{
-		console.log('show');
+		//console.log('show');
 		if (this.getEnableObjModifierToolbar())
 		{
 			var toolbar = this.getObjModifierToolbar();
@@ -2370,7 +2403,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this;
 	},
 	/**
-	 * Hide style tool bar.
+	 * Hide obj modifier tool bar.
 	 */
 	hideObjModifierToolbar: function()
 	{
@@ -2509,7 +2542,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	needShowSelectionAssocToolbar: function()
 	{
 		var editor = this.getEditor();
-		return editor && editor.hasSelection() && (!this.isAssocToolbarShown());
+		return editor && editor.hasSelection(); // && (!this.isAssocToolbarShown());
 	},
 	/**
 	 * Update style & obj modifier toolbar show/hide state according to editor's state.
@@ -2517,6 +2550,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	updateSelectionAssocToolbarState: function()
 	{
+		this.adjustStyleAndObjModifierToolbarPosition();
 		this.updateStyleToolbarState();
 		this.updateObjModifierToolbarState();
 	},

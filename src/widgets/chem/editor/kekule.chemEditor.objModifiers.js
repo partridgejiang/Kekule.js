@@ -165,7 +165,7 @@ Kekule.Editor.ObjModifier.Base = Class.create(ObjectEx,
 	 */
 	applyToTargets: function()
 	{
-		console.log('applyToTargets');
+		//console.log('applyToTargets');
 		var editor = this.getEditor();
 		if (editor)
 		{
