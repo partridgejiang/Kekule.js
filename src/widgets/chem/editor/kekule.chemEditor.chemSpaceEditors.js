@@ -1573,7 +1573,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		};
 		if (nodeScreenCoord)
 		{
-			var boundInfos = editor.getBoundInfosAtCoord(nodeScreenCoord, filterFunc);
+			var boundInfos = editor.getBoundInfosAtCoord(nodeScreenCoord, filterFunc, this.getCurrBoundInflation());
 			//console.log('boundInfos', boundInfos);
 			/*
 			var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, Kekule.ChemStructureNode,
@@ -1683,7 +1683,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				var currCoord = currInfo.screenCoord;
 				if (currCoord)
 				{
-					var boundInfos = editor.getBoundInfosAtCoord(currCoord);
+					var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
 					/*
 					 var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, Kekule.ChemStructureNode,
 					 function(destObj)
@@ -1939,7 +1939,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			{
 				// check if endScreenCoord (mouse position) overlap with an existing object
 				var overlapedObj;
-				var boundInfos = editor.getBoundInfosAtCoord(endScreenCoord);
+				var boundInfos = editor.getBoundInfosAtCoord(endScreenCoord, null, this.getCurrBoundInflation());
 				var targetClass = isMovingOneBond? Kekule.ChemStructureConnector: Kekule.ChemStructureNode;
 				var targetObj = isMovingOneBond? originManipulatedObjs[0]: manipulatedObjs[0];
 				var checkFunc = isMovingOneBond?
@@ -2794,7 +2794,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 			var state = this.getState();
 			if (state === S.INITIAL)
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
@@ -3372,7 +3372,7 @@ Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaC
 			this.getEditor().setSelection(null);
 			var coord = this._getEventMouseCoord(e);
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
@@ -3794,7 +3794,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			this.getEditor().setSelection(null);
 			var coord = this._getEventMouseCoord(e);
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
@@ -4143,7 +4143,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 			var state = this.getState();
 			if (state === S.INITIAL)
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				var boundObj = boundItem? boundItem.obj: null;
 
 				var insertResult = this.insertRepositoryObjToEditor(coord, boundObj);
@@ -5075,7 +5075,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			var coord = this._getEventMouseCoord(e);
 			{
 				var mol;
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
@@ -5177,7 +5177,7 @@ Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIa
 			var coord = this._getEventMouseCoord(e);
 			{
 				var block;
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
@@ -5757,7 +5757,7 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 			//this.getEditor().setSelection(null);
 			var coord = this._getEventMouseCoord(e);
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord);
+				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
 					var obj = boundItem.obj;

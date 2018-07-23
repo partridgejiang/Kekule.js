@@ -118,6 +118,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addBoolConfigProp('enableHotTrack', true);
 		this.addIntConfigProp('objBoundTrackInflation', 5);
+		this.addIntConfigProp('objBoundTrackInflationMouse', null);
+		this.addIntConfigProp('objBoundTrackInflationPen', null);
+		this.addIntConfigProp('objBoundTrackInflationTouch', 10);
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
 		this.addIntConfigProp('selectionMarkerInflation', 5, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('selectionMarkerEdgeInflation', 5, {'scope': PS.PUBLIC});

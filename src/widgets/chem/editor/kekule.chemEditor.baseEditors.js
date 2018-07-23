@@ -222,6 +222,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getDisplayerConfigs(); },
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
 		});
+		// Different pointer event (mouse, touch) has different bound inflation settings, stores here
+		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false});
 
 		//this.defineProp('standardizeObjectsBeforeSaving', {'dataType': DataType.BOOL});
 
@@ -1728,10 +1730,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @returns {Array}
 	 * @private
 	 */
-	getBoundInfosAtCoord: function(screenCoord, filterFunc)
+	getBoundInfosAtCoord: function(screenCoord, filterFunc, boundInflation)
 	{
+		/*
+		if (!boundInflation)
+			throw 'boundInflation not set!';
+		*/
 		var boundRecorder = this.getBoundInfoRecorder();
-		var delta = this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
 		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), screenCoord);
 		var coord = this.screenCoordToContext(screenCoord);
 		var refCoord = (this.getRenderType() === Kekule.Render.RendererType.R3D)? {'x': 0, 'y': 0}: null;
@@ -1746,15 +1752,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Array} excludeObjs Objects in this array will not be returned.
 	 * @returns {Object}
 	 */
-	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs)
+	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs, boundInflation)
 	{
 		var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
 		if (!enableTrackNearest)
-			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord), excludeObjs);
+			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
 		// else, track on nearest
 		// new approach, find nearest boundInfo at coord
 		var SU = Kekule.Render.MetaShapeUtils;
-		var boundInfos = this.getBoundInfosAtCoord(screenCoord);
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
 		//var filteredBoundInfos = [];
 		var result, lastShapeInfo, lastDistance;
 		var setResult = function(boundInfo, shapeInfo, distance)
@@ -1797,10 +1803,37 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation)
 	{
-		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord);
+		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
+	},
+
+	/**
+	 * Returns geometry bounds of a obj in editor.
+	 * @param {Kekule.ChemObject} obj
+	 * @param {Number} boundInflation
+	 * @returns {Array}
+	 */
+	getChemObjBounds: function(obj, boundInflation)
+	{
+		var bounds = [];
+		var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getObjContext(), obj);
+		if (infos && infos.length)
+		{
+			for (var j = 0, k = infos.length; j < k; ++j)
+			{
+				var info = infos[j];
+				var bound = info.boundInfo;
+				if (bound)
+				{
+					// inflate
+					bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, boundInflation);
+					bounds.push(bound);
+				}
+			}
+		}
+		return bounds;
 	},
 
 	//////////////////// methods about UI markers ///////////////////////////////
@@ -1958,7 +1991,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'color': styleConfigs.getHotTrackerColor(),
 			'opacity': styleConfigs.getHotTrackerOpacity()
 		};
-		var inflation = this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var inflation = this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
 		var bounds = [];
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
@@ -2028,7 +2061,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 			*/
 			//console.log('hot track here');
-			this.setHotTrackedObj(this.getTopmostBasicObjectAtCoord(screenCoord));
+			this.setHotTrackedObj(this.getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation()));
 		}
 		return this;
 	},
@@ -2043,11 +2076,21 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 	/**
 	 * Remove all hot track markers.
+	 * @param {Bool} doNotClearHotTrackedObjs If false, the hotTrackedObjs property will also be set to empty.
 	 */
-	hideHotTrack: function()
+	hideHotTrack: function(doNotClearHotTrackedObjs)
 	{
 		this.hideHotTrackMarker();
+		if (!doNotClearHotTrackedObjs)
+			this.clearHotTrackedObjs();
 		return this;
+	},
+	/**
+	 * Set hot tracked objects to empty.
+	 */
+	clearHotTrackedObjs: function()
+	{
+		this.setHotTrackedObjs([]);
 	},
 	/**
 	 * Add a obj to hot tracked objects.
@@ -2227,7 +2270,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	selectOnCoord: function(coord, toggleFlag)
 	{
 		//console.log('select on coord');
-		var obj = this.getTopmostBasicObjectAtCoord(coord);
+		var obj = this.getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
 		if (obj)
 		{
 			if (toggleFlag)
@@ -3673,6 +3716,11 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	initProperties: function()
 	{
 		this.defineProp('manuallyHotTrack', {'dataType': DataType.BOOL, 'serializable': false});
+		// in mouse or touch interaction, we may have different bound inflation
+		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false,
+			'getter': function() { return this.getEditor().getCurrBoundInflation(); },
+			'setter': function(value) { return this.getEditor().setCurrBoundInflation(value); }
+		});
 	},
 	/**
 	 * Returns the preferred id for this controller.
@@ -3750,11 +3798,36 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	},
 
 	/** @private */
+	updateCurrBoundInflation: function(evt)
+	{
+		var pointerType = evt && evt.pointerType;
+		var iaConfigs = this.getEditorConfigs().getInteractionConfigs();
+		var defValue = iaConfigs.getObjBoundTrackInflation();
+		var currValue;
+		if (pointerType === 'mouse')
+			currValue = iaConfigs.getObjBoundTrackInflationMouse();
+		else if (pointerType === 'pen')
+			currValue = iaConfigs.getObjBoundTrackInflationPen();
+		else if (pointerType === 'touch')
+			currValue =	iaConfigs.getObjBoundTrackInflationTouch();
+		this.setCurrBoundInflation(currValue || defValue);
+		//console.log('update bound inflation', pointerType, this.getCurrBoundInflation());
+	},
+
+	/** @private */
+	react_pointerdown: function(e)
+	{
+		this.updateCurrBoundInflation(e);
+	},
+	/** @private */
 	react_pointermove: function(e)
 	{
+		if (!this.getCurrBoundInflation())
+			this.updateCurrBoundInflation(e);
+
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
+		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
 		if (!this.getManuallyHotTrack())
 		{
 			/*
@@ -5100,7 +5173,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		{
-			var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord);
+			var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
 			if (obj)  // mouse down directly on a object
 			{
 				obj = obj.getNearestSelectableObject();
@@ -5249,8 +5322,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		return true;
 	},
 	/** @private */
-	react_pointerdown: function(e)
+	react_pointerdown: function($super, e)
 	{
+		$super(e);
+		//console.log('pointerdown', e);
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		//var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
