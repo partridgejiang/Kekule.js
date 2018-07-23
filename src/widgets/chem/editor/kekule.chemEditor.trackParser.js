@@ -1066,11 +1066,20 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	{
 		this._trackLayoutOptimizer.finalize();
 		this._trackParser.finalize();
+		var trackMarker = this.getPropStoreFieldValue('trackMarker');
+		if (trackMarker)
+			trackMarker.finalize();
+		/*
+		var boundMarkers = this.getBoundChemObjMarkers();
+		for (var i = boundMarkers.length - 1; i >= 0; --i)
+			boundMarkers[i].finalize();
+		*/
 		$super();
 	},
 	/** @private */
 	initProperties: function()
 	{
+		// marker to display the track path
 		this.defineProp('trackMarker', {'dataType': DataType.OBJECT, 'serializable': false,
 			'setter': null,
 			'getter': function()
@@ -1085,6 +1094,16 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 				return result;
 			}
 		});
+		/*
+		// markers to display the bound chem nodes in track
+		this.defineProp('boundChemObjMarkers', {'dataType': DataType.ARRAY, 'serializable': false,'setter': null});
+		*/
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		//this.setPropStoreFieldValue('boundChemObjMarkers', []);
 	},
 
 	/** @private */
@@ -1199,7 +1218,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 				trackParts.push(trackCoords.slice(boundRecs[length - 1].coordIndex));
 			}
 
-			console.log('here', trackParts);
+			//console.log('here', trackParts);
 			// Put to result
 			var lastPart = [];
 			var result = [];
@@ -1220,7 +1239,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 					}
 				}
 			}
-			console.log('split', result);
+			//console.log('split', result);
 			return result;
 		}
 		else
@@ -1279,6 +1298,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	{
 		var marker = this.getTrackMarker();
 		marker.getShapeInfo().coords = [];
+		//this.setPropStoreFieldValue('boundChemObjMarkers', []);
 	},
 	/** @private */
 	startTracking: function(startScreenCoord)
@@ -1289,6 +1309,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		var marker = this.getTrackMarker();
 		marker.getShapeInfo().coords = [];
 		*/
+		this.setManuallyHotTrack(true);  // manually use hot track to mark mergable nodes
 		this.clearTrackCoords();
 		//console.log('before add', this.getEditorUiMarkers().getMarkerCount());
 		var marker = this.getTrackMarker();
@@ -1331,14 +1352,21 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 			}
 		}
 
-		this.clearTrackCoords();
-		this.repaintMarker();
+		this.doneTracking();
 	},
 	/** @private */
 	cancelTracking: function()
 	{
 		this._isTracking = false;
 		this.getEditorUiMarkers().removeMarker(this.getTrackMarker());
+
+		this.doneTracking();
+	},
+	/** @private */
+	doneTracking: function()
+	{
+		this.setManuallyHotTrack(false);
+		this.getEditor().hideHotTrack();
 		this.clearTrackCoords();
 		this.repaintMarker();
 	},
@@ -1354,11 +1382,12 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 			return;
 		}
 
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(screenCoord);
+		var obj = this.getEditor().getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation());
 		if (this.isValidMergeDestObj(obj))
 		{
 			// bind coord to obj
 			this._trackCoordToObjBindings.push({'coord': screenCoord, 'obj': obj, 'coordIndex': this.getTrackCoords().length});
+			this.getEditor().addHotTrackedObj(obj);
 		}
 
 		// coords.push(objCoord);
@@ -1400,8 +1429,11 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	},
 
 	/** @private */
-	react_pointerdown: function(e)
+	react_pointerdown: function($super, e)
 	{
+		//$super(e);
+		// important, since we did not call $super, a bound inflation should be done manually here
+		this.updateCurrBoundInflation(e);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);
@@ -1413,8 +1445,9 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		}
 	},
 	/** @private */
-	react_pointerup: function(e)
+	react_pointerup: function($super, e)
 	{
+		//$super(e);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);
