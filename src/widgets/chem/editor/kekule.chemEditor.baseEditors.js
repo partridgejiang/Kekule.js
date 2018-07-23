@@ -134,6 +134,13 @@ Kekule.Editor.BoxRegion = {
  * @event
  */
 /**
+ * Invoked when the selected objects in editor has been changed.
+ * When beginUpdateObj is called, selectedObjsUpdated event will be suppressed.
+ *   event param of it has one fields: {objs}.
+ * @name Kekule.Editor.BaseEditor#selectedObjsUpdated
+ * @event
+ */
+/**
  * Invoked when the selection in editor has been changed.
  * @name Kekule.Editor.BaseEditor#selectionChange
  * @event
@@ -185,6 +192,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this._objSelectFlag = 0;  // used internally
 		this._objectUpdateFlag = 0;  // used internally
+		this._objectManipulateFlag = 0;  // used internally
 		this._uiMarkerUpdateFlag = 0;  // used internally
 		this._updatedObjectDetails = []; // used internally
 		this._operatingObjs = [];  // used internally
@@ -1371,21 +1379,31 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		else
 		{
 			//console.log('object changed');
-			this.doObjectsChanged(a);
+			var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(a);
+			this.doObjectsChanged(a, updateObjs);
 			this.invokeEvent('editObjsUpdated', {'details': Object.extend({}, objDetails)});
 		}
 
 		this._objChanged = true;  // mark object changed
 		this.invokeEvent('editObjsChanged', {'details': Object.extend({}, objDetails)});
+
+		var selectedObjs = this.getSelection();
+		if (selectedObjs && updateObjs)
+		{
+			var changedSelectedObjs = AU.intersect(selectedObjs, updateObjs);
+			if (changedSelectedObjs.length)
+				this.invokeEvent('selectedObjsUpdated', {'objs': changedSelectedObjs});
+		}
 	},
 	/**
 	 * Do actual job of objectsChanged. Descendants should override this method.
 	 * @private
 	 */
-	doObjectsChanged: function(objDetails)
+	doObjectsChanged: function(objDetails, updateObjs)
 	{
 		var oDetails = Kekule.ArrayUtils.clone(objDetails);
-		var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
+		if (!updateObjs)
+			updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
 
 		//console.log('origin updateObjs', updateObjs);
 
@@ -1436,6 +1454,41 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				*/
 			}
 		}
+	},
+
+	/**
+	 * Call this method to indicate a continuous manipulation operation is doing (e.g. moving or rotating objects).
+	 */
+	beginManipulateObject: function()
+	{
+		//console.log('[Call begin update]', this._objectManipulateFlag);
+		if (this._objectManipulateFlag >= 0)
+		{
+			//console.log('[BEGIN MANIPULATE]');
+			this.invokeEvent('beginManipulateObject');
+		}
+		--this._objectManipulateFlag;
+	},
+	/**
+	 * Call this method to indicate the update process is over and objectChanged will be immediately called.
+	 */
+	endManipulateObject: function()
+	{
+		++this._objectManipulateFlag;
+		//console.log('[END MANIPULATE]');
+		if (!this.isManipulatingObject())
+		{
+			this._objectManipulateFlag = 0;
+			//console.log('[MANIPULATE DONE]');
+			this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+		}
+	},
+	/**
+	 * Check if beginUpdateObject is called and should not send object change notification immediately.
+	 */
+	isManipulatingObject: function()
+	{
+		return (this._objectManipulateFlag < 0);
 	},
 
 	/** @private */
@@ -4894,6 +4947,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			window.cancelAnimationFrame(this._runManipulationStepId);
 			this._runManipulationStepId = null;
 		}
+		var editor = this.getEditor();
+		editor.endManipulateObject();
 	},
 	/**
 	 * Stop manipulate of objects.
@@ -5004,6 +5059,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+
+		var editor = this.getEditor();
+		editor.beginManipulateObject();
 
 		this.setBaseCoord(currCoord);
 		this.setStartCoord(currCoord);
@@ -5239,6 +5297,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				this.getEditor().endSelectingBoxDrag(coord, shifted);
 				this.setState(S.NORMAL);
 				e.preventDefault();
+				var editor = this.getEditor();
+				editor.endManipulateObject();
 			}
 			else if (state === S.MANIPULATING)
 			{
