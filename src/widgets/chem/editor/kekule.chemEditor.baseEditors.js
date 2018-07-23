@@ -1227,7 +1227,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var target = e.target;
 		var propNames = e.changedPropNames || [];
-		var bypassPropNames = ['owner', 'ownedObjs'];  // these properties do not affect rendering
+		var bypassPropNames = ['id', 'owner', 'ownedObjs'];  // these properties do not affect rendering
 		propNames = Kekule.ArrayUtils.exclude(propNames, bypassPropNames);
 		if (propNames.length || !e.changedPropNames)  // when changedPropNames is not set, may be change event invoked by parent when suppressing child objects
 		{
