@@ -251,13 +251,34 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
 
-		this.addHashConfigProp('nonAtomNodeInputSetting', {
-			'enableRGroup': true,
-			'enablePseudoatomDummy': true,
-			'enablePseudoatomHetero': true,
-			'enablePseudoatomAny': true,
-			'enableVariableAtomList': true,
-			'enableVariableAtomNotList': true
+		this.addHashConfigProp('enabledNonAtomNodeTypes', {
+			'RGroup': true,
+			'pseudoatomDummy': true,
+			'pseudoatomHetero': true,
+			'pseudoatomAny': true,
+			'variableAtomList': true,
+			'variableAtomNotList': true
+		});
+		this.addHashConfigProp('enabledBondForms', {
+			// covalent bond types
+			'single': true,
+			'double': true,
+			'triple': true,
+			'quad': true,
+			'explicitAromatic': true,
+			// stereo bond types
+			'up': true,
+			'upInverted': true,
+			'down': true,
+			'downInverted': true,
+			'upOrDown': true,
+			'eOrZ': true,
+			'closer': true,
+			// other types
+			'ionic': false,
+			'coordinate': false,
+			'metallic': false,
+			'hydrogen': true
 		});
 	},
 	/** @private */

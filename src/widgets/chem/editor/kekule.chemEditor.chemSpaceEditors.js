@@ -836,45 +836,45 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	 * A helper function returning the available non-atom settings used by atom setter widget.
 	 * @returns {Array}
 	 */
-	getNonAtomSettingInfos: function()
+	getEnabledNonAtomInputData: function()
 	{
 		var result = [];
 		var labelConfigs = this.getRenderConfigs().getDisplayLabelConfigs();
-		var nonAtomSetting = this.getEditorConfigs().getStructureConfigs().getNonAtomNodeInputSetting();
+		var nonAtomSetting = this.getEditorConfigs().getStructureConfigs().getEnabledNonAtomNodeTypes();
 
 		// R group
-		if (nonAtomSetting.enableRGroup)
+		if (nonAtomSetting.RGroup)
 			result.push({
 				'text': labelConfigs.getRgroup(), 'nodeClass': Kekule.RGroup,
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_RGROUP') //Kekule.ChemWidgetTexts.CAPTION_RGROUP
 			});
 		// Kekule.Pseudoatom
-		if (nonAtomSetting.enablePseudoatomDummy)
+		if (nonAtomSetting.pseudoatomDummy)
 			result.push({
 				'text': labelConfigs.getDummyAtom(), 'nodeClass': Kekule.Pseudoatom,
 				'props': {'atomType': Kekule.PseudoatomType.DUMMY},
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_DUMMY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
 			});
-		if (nonAtomSetting.enablePseudoatomHetero)
+		if (nonAtomSetting.pseudoatomHetero)
 			result.push({
 				'text': labelConfigs.getHeteroAtom(), 'nodeClass': Kekule.Pseudoatom,
 				'props': {'atomType': Kekule.PseudoatomType.HETERO},
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_HETERO_ATOM') //Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
 			});
-		if (nonAtomSetting.enablePseudoatomAny)
+		if (nonAtomSetting.pseudoatomAny)
 			result.push({
 				'text': labelConfigs.getAnyAtom(), 'nodeClass': Kekule.Pseudoatom,
 				'props': {'atomType': Kekule.PseudoatomType.ANY},
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_ANY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
 			});
 		// Kekule.VariableAtom List and Not List
-		if (nonAtomSetting.enableVariableAtomList)
+		if (nonAtomSetting.variableAtomList)
 			result.push({
 				'text': this._getVarAtomListLabel(), 'nodeClass': Kekule.VariableAtom,
 				'isVarList': true,
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
 			});
-		if (nonAtomSetting.enableVariableAtomNotList)
+		if (nonAtomSetting.variableAtomNotList)
 			result.push({
 				'text': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom,
 				'isNotVarList': true,
@@ -893,6 +893,140 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	{
 		var labelConfigs = this.getRenderConfigs().getDisplayLabelConfigs();
 		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
+	},
+
+	/**
+	 * A helper function returning the available bond form data used by bond setter widget.
+	 * @returns {Array}
+	 */
+	getEnabledBondFormData: function()
+	{
+		var BT = Kekule.BondType;
+		var BO = Kekule.BondOrder;
+		var BS = Kekule.BondStereo;
+		var $L = Kekule.$L;
+		var HTMLCLASS_PREFIX = 'K-Chem-MolBondIaController-';
+		var predefinedBondData = {
+			// covalent bond types
+			'single': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_SINGLE'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_SINGLE'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Single',
+				'isDefault': true,   // the default bond type
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
+			},
+			'double': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Double',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.DOUBLE,	'stereo': BS.NONE}
+			},
+			'triple': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_TRIPLE'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_TRIPLE'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Triple',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.TRIPLE, 'stereo': BS.NONE}
+			},
+			'quad': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_QUAD'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_QUAD'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Quad',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.QUAD,	'stereo': BS.NONE}
+			},
+			'explicitAromatic': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_EXPLICIT_AROMATIC'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_EXPLICIT_AROMATIC'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Aromatic',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.EXPLICIT_AROMATIC,	'stereo': BS.NONE}
+			},
+			// stereo bond types
+			'up': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP'),
+				'htmlClass': HTMLCLASS_PREFIX + 'WedgeUp',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.UP}
+			},
+			'upInverted': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEUP_INVERTED'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEUP_INVERTED'),
+				'htmlClass': HTMLCLASS_PREFIX + 'WedgeUpInverted',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.UP_INVERTED}
+			},
+			'down': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN'),
+				'htmlClass': HTMLCLASS_PREFIX + 'WedgeDown',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.DOWN}
+			},
+			'downInverted': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_WEDGEDOWN_INVERTED'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_WEDGEDOWN_INVERTED'),
+				'htmlClass': HTMLCLASS_PREFIX + 'WedgeDownInverted',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.DOWN_INVERTED}
+			},
+			'upOrDown': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_WAVY'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_WAVY'),
+				'htmlClass': HTMLCLASS_PREFIX + 'WedgeUpOrDown',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.UP_OR_DOWN}
+			},
+			'closer': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_CLOSER'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_CLOSER'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Closer',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.CLOSER}
+			},
+			'eOrZ': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE_EITHER'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE_EITHER'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Double-Either',
+				'bondProps': {'bondType': BT.COVALENT, 'bondOrder': BO.DOUBLE,	'stereo': BS.E_OR_Z}
+			},
+			// other types
+			'ionic': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_IONIC'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_IONIC'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Ionic',
+				'bondProps': {'bondType': BT.IONIC}
+			},
+			'coordinate': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_COORDINATE'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_COORDINATE'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Coordinate',
+				'bondProps': {'bondType': BT.COORDINATE}
+			},
+			'metallic': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_METALLIC'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_METALLIC'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Metallic',
+				'bondProps': {'bondType': BT.METALLIC}
+			},
+			'hydrogen': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_HYDROGEN'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_HYDROGEN'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Hydrogen',
+				'bondProps': {'bondType': BT.HYDROGEN}
+			}
+		};
+		var predefinedExtraData = {
+			'single': {},
+			'double': {'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE'), 'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE')},
+		};
+		var bondForms = this.getEditorConfigs().getStructureConfigs().getEnabledBondForms();
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(bondForms, false);
+		var result = [];
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			if (bondForms[key]) // this form should be available
+			{
+				if (DataType.isObjectValue(bondForms[key]))  // a custom bond form
+					result.push(bondForms[key]);
+				else if (predefinedBondData[key])
+					result.push(predefinedBondData[key]);
+			}
+		}
+		return result;
 	}
 });
 
@@ -3361,7 +3495,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		});
     */
 		var editor = this.getEditor();
-		var result = editor && editor.getNonAtomSettingInfos && editor.getNonAtomSettingInfos();
+		var result = editor && editor.getEnabledNonAtomInputData && editor.getEnabledNonAtomInputData();
 		this.setNonAtomLabelInfos(result);
 		return result;
 	},

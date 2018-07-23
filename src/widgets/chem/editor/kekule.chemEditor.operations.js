@@ -579,12 +579,13 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.ReplaceNode',
 	/** @constructs */
-	initialize: function($super, oldNode, newNode, parentObj)
+	initialize: function($super, oldNode, newNode, parentObj, editor)
 	{
 		$super();
 		this.setOldNode(oldNode);
 		this.setNewNode(newNode);
 		this.setParentObj(parentObj);
+		this.setEditor(editor);
 	},
 	/** @private */
 	initProperties: function()
@@ -592,6 +593,13 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 		this.defineProp('oldNode', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
 		this.defineProp('newNode', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
 		this.defineProp('parentObj', {'dataType': 'Kekule.ChemStructureFragment', 'serializable': false});
+		this.defineProp('editor', {'dataType': 'Kekule.Editor.BaseEditor', 'serializable': false});
+	},
+	/** @private */
+	_isInEditorSelection: function(node)
+	{
+		var editor = this.getEditor();
+		return ((editor && editor.getSelection && editor.getSelection()) || []).indexOf(node) >= 0;
 	},
 	/** @private */
 	doExecute: function()
@@ -607,7 +615,19 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 				this.setParentObj(parent);
 			}
 			if (parent.replaceNode)
+			{
+				var editor = this.getEditor();
+				var needModifySelection = this._isInEditorSelection(oldNode);
+				if (needModifySelection)
+					editor.beginUpdateSelection();
 				parent.replaceNode(oldNode, newNode);
+				if (needModifySelection)
+				{
+					editor.removeFromSelection(oldNode);
+					editor.addObjToSelection(newNode);
+					editor.endUpdateSelection();
+				}
+			}
 		}
 	},
 	/** @private */
@@ -621,7 +641,17 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 			if (parent.replaceNode)
 			{
 				//console.log('reverse!');
+				var editor = this.getEditor();
+				var needModifySelection = this._isInEditorSelection(newNode);
+				if (needModifySelection)
+					editor.beginUpdateSelection();
 				parent.replaceNode(newNode, oldNode);
+				if (needModifySelection)
+				{
+					editor.removeFromSelection(newNode)
+					editor.addObjToSelection(oldNode);
+					editor.endUpdateSelection();
+				}
 			}
 		}
 	}

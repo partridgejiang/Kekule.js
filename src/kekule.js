@@ -385,6 +385,10 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 			'widgets/chem/editor/kekule.chemEditor.trackParser.js',
 
+			'widgets/chem/editor/kekule.chemEditor.objModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
+
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
 		],
 		'category': 'chemWidget'

@@ -102,7 +102,8 @@
     height: 24px;
     background-repeat: no-repeat;
 }
-.K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content
+.K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content
 {
     width: 21px;
     height: 21px;
@@ -355,6 +356,14 @@
 {
     background-image: url("images/slice/iconsSmall/bondTriple.gif");
 }
+.K-Chem-MolBondIaController-Quad .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondQuad.gif");
+}
+.K-Chem-MolBondIaController-Aromatic .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondAromatic.gif");
+}
 .K-Chem-MolBondIaController-Closer .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/bondOuter.gif");
@@ -363,13 +372,29 @@
 {
     background-image: url("images/slice/iconsSmall/bondWedge.gif");
 }
+.K-Chem-MolBondIaController-WedgeUpInverted .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondWedge2.gif");
+}
 .K-Chem-MolBondIaController-WedgeDown .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/bondWedgeHash.gif");
 }
+.K-Chem-MolBondIaController-WedgeDownInverted .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondWedgeHash2.gif");
+}
 .K-Chem-MolBondIaController-WedgeUpOrDown .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/bondWavy.gif");
+}
+.K-Chem-MolBondIaController-Coordinate .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondCoord.gif");
+}
+.K-Chem-MolBondIaController-Hydrogen .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/bondHydrogen.gif");
 }
 .K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
 {
