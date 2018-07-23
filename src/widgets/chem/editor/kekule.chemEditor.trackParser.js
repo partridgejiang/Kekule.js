@@ -425,13 +425,13 @@ Kekule.Editor.TrackParser = Class.create(ObjectEx,
 	{
 		var result = this.simplifyCurveToLineSegments(trackCoords, simplifyDistanceThreshold);
 		result = this.addLineCrossPoints(result);
-		console.log('1', result);
+		//console.log('1', result);
 		result = this.addVertexToLineMergePoint(result, mergeDistanceThreshold);
-		console.log('2', result);
+		//console.log('2', result);
 		result = this.mergeNearbyTrackPoints(result, mergeDistanceThreshold);
-		console.log('3', result);
+		//console.log('3', result);
 		result = this.removeRepetitivePoints(result);
-		console.log('4', result);
+		//console.log('4', result);
 		return result;
 	},
 
@@ -696,7 +696,7 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 				(constraint === C.BOTH)? this.doOptimizeOnBothConstraint(currTrack, op):
 				this.doOptimizeOnLeadingConstraint(currTrack, op);
 
-		console.log('optimized track', newTrack);
+		//console.log('optimized track', newTrack);
 		return newTrack;
 	},
 	/**
@@ -1317,8 +1317,8 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		//this.getEditorUiMarkers().removeMarker(this.getTrackMarker());
 
 		var tracks = this.refineTrackCoords(this.getTrackCoords());
-		//console.log('tracks', tracks);
-		if (tracks.length > 1)
+		//console.log('tracks', tracks.length, tracks);
+		if (tracks.length)
 		{
 			var mol = this.convertTracksToStructure(tracks, defIsotopeId);
 			if (mol)
