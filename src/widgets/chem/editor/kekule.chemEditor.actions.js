@@ -45,6 +45,9 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 });
 
 Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
+	manipulateMarquee: 'manipulateMarquee',
+	manipulateLasso: 'manipulateLasso',
+	manipulateBrush: 'manipulateBrush',
 	molBondSingle: 'bondSingle',
 	molBondDouble: 'bondDouble',
 	molBondTriple: 'bondTriple',
@@ -913,16 +916,59 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 
 ////////////// create ia controller actions ///////////////////////////
 
-// Select
+// Select and variantions
+Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerMarquee',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_MARQUEE'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_MARQUEE'),
+	'BasicMolManipulationIaController',
+	'BasicMolManipulationIaController-Marquee',
+	{
+		'selectMode': Kekule.Editor.SelectMode.RECT
+	},
+	null, null,
+	BNS.manipulateMarquee
+);
+Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerLasso',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_LASSO'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_LASSO'),
+	'BasicMolManipulationIaController',
+	'BasicMolManipulationIaController-Lasso',
+	{
+		'selectMode': Kekule.Editor.SelectMode.POLYGON
+	},
+	null, null,
+	BNS.manipulateLasso
+);
+Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerBrush',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_BRUSH'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_BRUSH'),
+	'BasicMolManipulationIaController',
+	'BasicMolManipulationIaController-Brush',
+	{
+		'selectMode': Kekule.Editor.SelectMode.POLYLINE
+	},
+	null, null,
+	BNS.manipulateBrush
+);
 Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetManipulateController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE'), //Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE'), //Kekule.ChemWidgetTexts.HINT_MANIPULATE,
 	'BasicMolManipulationIaController',
 	null,
-	null, null, null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetManipulateControllerMarquee,
+		Kekule.Editor.ActionComposerSetManipulateControllerLasso,
+		Kekule.Editor.ActionComposerSetManipulateControllerBrush
+	],
+	null,
 	BNS.manipulate
 );
+
 
 // Erase
 Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIaControllerActionClass(

@@ -76,7 +76,19 @@ Kekule.Editor.BoxRegion = {
 	INSIDE: 20
 };
 
-
+/**
+ * Enumeration of mode in selecting object in editor.
+ * @enum
+ * @ignore
+ */
+Kekule.Editor.SelectMode = {
+	/** Draw a box in editor when selecting, select all object inside a box. **/
+	RECT: 0,
+	/** Draw a curve in editor when selecting, select all object inside this curve polygon. **/
+	POLYGON: 1,
+	/** Draw a curve in editor when selecting, select all object intersecting this curve. **/
+	POLYLINE: 2
+};
 
 /**
  * A base chem editor.
@@ -102,6 +114,7 @@ Kekule.Editor.BoxRegion = {
  * @property {Object} uiContext Context to draw UI marks. Usually this is a 2D context.
  * @property {Object} objDrawBridge Bridge to draw chem objects. Alias of property drawBridge.
  * @property {Object} uiDrawBridge Bridge to draw UI markers.
+ * @property {Int} selectMode Value from Kekule.Editor.SelectMode, set the mode of selecting operation in editor.
  * @property {Array} selection An array of selected basic object.
  * @property {Hash} zoomCenter The center coord (based on client element) when zooming editor.
  * //@property {Bool} standardizeObjectsBeforeSaving Whether standardize molecules (and other possible objects) before saving them.
@@ -206,6 +219,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('enableOperContext', true);
 		this.setPropStoreFieldValue('initOnNewDoc', true);
 
+		//this.setPropStoreFieldValue('selectMode', Kekule.Editor.SelectMode.POLYGON);  // debug
+
 		$super(parentOrElementOrDocument, chemObj, renderType);
 		//this.initEventHandlers();
 
@@ -271,6 +286,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				this.setPropStoreFieldValue('selection', value);
 				this.selectionChanged();
+			}
+		});
+		this.defineProp('selectMode', {'dataType': DataType.INT,
+			'setter': function(value)
+			{
+				if (this.getSelectMode() !== value)
+				{
+					this.setPropStoreFieldValue('selectMode', value);
+					this.hideSelectingMarker();
+				}
 			}
 		});
 
@@ -2218,6 +2243,88 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 
+
+	///////////////////////// Methods about selecting region ////////////////////////////////////
+	/**
+	 * Start a selecting operation from coord.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the selecting region will toggle selecting state inside it rather than select them directly.
+	 */
+	startSelecting: function(screenCoord, toggleFlag)
+	{
+		if (!toggleFlag)
+			this.deselectAll();
+
+		var M = Kekule.Editor.SelectMode;
+		var mode = this.getSelectMode();
+		this._currSelectMode = mode;
+
+		return (mode === M.POLYLINE || mode === M.POLYGON)?
+				this.startSelectingCurveDrag(screenCoord, toggleFlag):
+				this.startSelectingBoxDrag(screenCoord, toggleFlag);
+	},
+	/**
+	 * Add a new anchor coord of selecting region.
+	 * This method is called when pointer device moving in selecting.
+	 * @param {Hash} screenCoord
+	 */
+	addSelectingAnchorCoord: function(screenCoord)
+	{
+		var M = Kekule.Editor.SelectMode;
+		var mode = this._currSelectMode;
+		return (mode === M.POLYLINE || mode === M.POLYGON)?
+				this.dragSelectingCurveToCoord(screenCoord):
+				this.dragSelectingBoxToCoord(screenCoord);
+	},
+	/**
+	 * Selecting operation end.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the selecting region will toggle selecting state inside it rather than select them directly.
+	 */
+	endSelecting: function(screenCoord, toggleFlag)
+	{
+		var M = Kekule.Editor.SelectMode;
+		var mode = this._currSelectMode;
+		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
+		var objs;
+		if (mode === M.POLYLINE || mode === M.POLYGON)
+		{
+			var polygonCoords = this._selectingCurveCoords;
+			// simplify the polygon first
+			var threshold = this.getEditorConfigs().getInteractionConfigs().getSelectingCurveSimplificationDistanceThreshold();
+			var simpilfiedCoords = Kekule.GeometryUtils.simplifyCurveToLineSegments(polygonCoords, threshold);
+			//console.log('simplify selection', polygonCoords.length, simpilfiedCoords.length);
+
+			this.endSelectingCurveDrag(screenCoord, toggleFlag);
+
+			if (mode === M.POLYLINE)
+			{
+				var lineWidth = this.getEditorConfigs().getInteractionConfigs().getSelectingBrushWidth();
+				objs = this.getObjectsIntersetExtendedPolyline(simpilfiedCoords, lineWidth);
+			}
+			else  // if (mode === M.POLYGON)
+			{
+				objs = this.getObjectsInPolygon(simpilfiedCoords, enablePartial);
+				this.endSelectingCurveDrag(screenCoord, toggleFlag);
+			}
+		}
+		else
+		{
+			var startCoord = this._selectingBoxStartCoord;
+			var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
+			objs = this.getObjectsInScreenBox(box, enablePartial);
+			this.endSelectingBoxDrag(screenCoord, toggleFlag);
+		}
+		if (objs && objs.length)
+		{
+			if (toggleFlag)
+				this.toggleSelectingState(objs);
+			else
+				this.select(objs);
+		}
+		this.hideSelectingMarker();
+	},
+
 	/**
 	 * Start to drag a selecting box from coord.
 	 * @param {Hash} coord
@@ -2227,8 +2334,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		//this.setInteractionStartCoord(screenCoord);
 		this._selectingBoxStartCoord = screenCoord;
+		/*
 		if (!toggleFlag)
 			this.deselectAll();
+		*/
 		//this.setEditorState(Kekule.Editor.EditorState.SELECTING);
 	},
 	/**
@@ -2253,7 +2362,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var startCoord = this._selectingBoxStartCoord;
 		//this.setInteractionEndCoord(coord);
 		this._selectingBoxEndCoord = screenCoord;
-
+		/*
 		var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
 		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
 		if (toggleFlag)
@@ -2261,7 +2370,50 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		else
 			this.selectObjectsInScreenBox(box, enablePartial);
 		this.hideSelectingMarker();
+		*/
 	},
+
+	/**
+	 * Start to drag a selecting curve from coord.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the box will toggle selecting state inside it rather than select them directly.
+	 */
+	startSelectingCurveDrag: function(screenCoord, toggleFlag)
+	{
+		//this.setInteractionStartCoord(screenCoord);
+		this._selectingCurveCoords = [screenCoord];
+		//this.setEditorState(Kekule.Editor.EditorState.SELECTING);
+	},
+	/**
+	 * Drag selecting curve to a new coord.
+	 * @param {Hash} screenCoord
+	 */
+	dragSelectingCurveToCoord: function(screenCoord)
+	{
+		//var startCoord = this.getInteractionStartCoord();
+		this._selectingCurveCoords.push(screenCoord);
+		this.changeSelectingMarkerCurve(this._selectingCurveCoords, this._currSelectMode === Kekule.Editor.SelectMode.POLYGON);
+	},
+	/**
+	 * Selecting curve drag end.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the box will toggle selecting state inside it rather than select them directly.
+	 */
+	endSelectingCurveDrag: function(screenCoord, toggleFlag)
+	{
+		this._selectingCurveCoords.push(screenCoord);
+
+		/*
+		var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
+		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
+		if (toggleFlag)
+			this.toggleSelectingStateOfObjectsInScreenBox(box, enablePartial);
+		else
+			this.selectObjectsInScreenBox(box, enablePartial);
+		this.hideSelectingMarker();
+		*/
+	},
+
 	/**
 	 * Try select a object on coord directly.
 	 * @param {Hash} coord
@@ -2285,21 +2437,49 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Modify hot track marker to bind to newBoundInfo.
 	 * @private
 	 */
-	changeSelectingMarkerBound: function(newBoundInfo)
+	changeSelectingMarkerBound: function(newBoundInfo, drawStyles)
 	{
 		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
-		var drawStyles = {
-			'strokeColor': styleConfigs.getSelectingMarkerStrokeColor(),
-			'strokeWidth': styleConfigs.getSelectingMarkerStrokeWidth(),
-			'strokeDash':  styleConfigs.getSelectingMarkerStrokeDash(),
-			'fillColor': styleConfigs.getSelectingMarkerFillColor(),
-			'opacity': styleConfigs.getSelectingMarkerOpacity()
-		};
+		if (!drawStyles)  // use the default one
+			drawStyles = {
+				'strokeColor': styleConfigs.getSelectingMarkerStrokeColor(),
+				'strokeWidth': styleConfigs.getSelectingMarkerStrokeWidth(),
+				'strokeDash':  styleConfigs.getSelectingMarkerStrokeDash(),
+				'fillColor': styleConfigs.getSelectingMarkerFillColor(),
+				'opacity': styleConfigs.getSelectingMarkerOpacity()
+			};
 		var marker = this.getUiSelectingMarker();
 		marker.setVisible(true);
 		//console.log('change hot track', bound, drawStyles);
 		this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
 		return this;
+	},
+	changeSelectingMarkerCurve: function(screenCoords, isPolygon)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = screenCoords.length - 1; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(screenCoords[i]));
+		}
+		var shapeInfo = Kekule.Render.MetaShapeUtils.createShapeInfo(
+				isPolygon? Kekule.Render.MetaShapeType.POLYGON: Kekule.Render.MetaShapeType.POLYLINE,
+				ctxCoords
+		);
+		var drawStyle;
+		if (!isPolygon)
+		{
+			var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+			drawStyle = {
+				'strokeColor': styleConfigs.getSelectingBrushMarkerStrokeColor(),
+				'strokeWidth': this.getEditorConfigs().getInteractionConfigs().getSelectingBrushWidth(),
+				'strokeDash':  styleConfigs.getSelectingBrushMarkerStrokeDash(),
+				//'fillColor': styleConfigs.getSelectingMarkerFillColor(),
+				'lineCap': styleConfigs.getSelectingBrushMarkerStrokeLineCap(),
+				'lineJoin': styleConfigs.getSelectingBrushMarkerStrokeLineJoin(),
+				'opacity': styleConfigs.getSelectingBrushMarkerOpacity()
+			};
+		}
+		return this.changeSelectingMarkerBound(shapeInfo, drawStyle);
 	},
 	/**
 	 * Change the rect box of selection marker.
@@ -2754,6 +2934,72 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Get all objects interset a polyline defined by a set of screen coords.
+	 * Here Object partial in the polyline width range will also be put in result.
+	 * @param {Array} polylineScreenCoords
+	 * @param {Number} lineWidth
+	 * @returns {Array} All interseting objects.
+	 */
+	getObjectsIntersetExtendedPolyline: function(polylineScreenCoords, lineWidth)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = polylineScreenCoords.length; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(polylineScreenCoords[i]));
+		}
+
+		var objs = [];
+		var boundInfos = this.getBoundInfoRecorder().getAllRecordedInfoOfContext(this.getObjContext());
+		var compareFunc = Kekule.Render.MetaShapeUtils.isIntersectingPolyline;
+		for (var i = 0, l = boundInfos.length; i < l; ++i)
+		{
+			var boundInfo = boundInfos[i];
+			var shapeInfo = boundInfo.boundInfo;
+			/*
+			 if (!shapeInfo)
+			 console.log(boundInfo);
+			 */
+			if (shapeInfo)
+				if (compareFunc(shapeInfo, ctxCoords, lineWidth))
+					objs.push(boundInfo.obj);
+		}
+		//console.log('selected', objs);
+		return objs;
+	},
+	/**
+	 * Get all objects inside a polygon defined by a set of screen coords.
+	 * @param {Array} polygonScreenCoords
+	 * @param {Bool} allowPartialAreaSelecting If this value is true, object partial in the box will also be selected.
+	 * @returns {Array} All inside objects.
+	 */
+	getObjectsInPolygon: function(polygonScreenCoords, allowPartialAreaSelecting)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = polygonScreenCoords.length; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(polygonScreenCoords[i]));
+		}
+
+		var objs = [];
+		var boundInfos = this.getBoundInfoRecorder().getAllRecordedInfoOfContext(this.getObjContext());
+		var compareFunc = allowPartialAreaSelecting? Kekule.Render.MetaShapeUtils.isIntersectingPolygon: Kekule.Render.MetaShapeUtils.isInsidePolygon;
+		for (var i = 0, l = boundInfos.length; i < l; ++i)
+		{
+			var boundInfo = boundInfos[i];
+			var shapeInfo = boundInfo.boundInfo;
+			/*
+			 if (!shapeInfo)
+			 console.log(boundInfo);
+			 */
+			if (shapeInfo)
+				if (compareFunc(shapeInfo, ctxCoords))
+					objs.push(boundInfo.obj);
+		}
+		//console.log('selected', objs);
+		return objs;
+	},
+
+	/**
 	 * Get all objects inside a screen box.
 	 * @param {Hash} screenBox
 	 * @param {Bool} allowPartialAreaSelecting If this value is true, object partial in the box will also be selected.
@@ -2780,6 +3026,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log('selected', objs);
 		return objs;
 	},
+
 	/**
 	 * Select all objects inside a screen box.
 	 * @param {Hash} box
@@ -4018,13 +4265,14 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 /** @ignore */
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicEraserIaController, Kekule.Editor.BaseEditor);
 
-		/**
+/**
  * Controller for selecting, moving or rotating objects in editor.
  * @class
  * @augments Kekule.Widget.BaseEditorIaController
  *
  * @param {Kekule.Editor.BaseEditor} widget Editor of current object being installed to.
  *
+ * @property {Int} selectMode Set the selectMode property of editor.
  * @property {Bool} enableSelect Whether select function is enabled.
  * @property {Bool} enableMove Whether move function is enabled.
  * //@property {Bool} enableRemove Whether remove function is enabled.
@@ -4055,6 +4303,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('selectMode', {'dataType': DataType.INT, 'serializable': false});
 		this.defineProp('enableSelect', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableMove', {'dataType': DataType.BOOL, 'serializable': false});
 		//this.defineProp('enableRemove', {'dataType': DataType.BOOL, 'serializable': false});
@@ -5186,7 +5435,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				if (this.getEnableSelect())
 				{
 					var shifted = e.getShiftKey();
-					this.getEditor().startSelectingBoxDrag(currCoord, shifted);
+					//this.getEditor().startSelectingBoxDrag(currCoord, shifted);
+					this.getEditor().setSelectMode(this.getSelectMode());
+					this.getEditor().startSelecting(currCoord, shifted);
 					this.setState(S.SELECTING);
 				}
 			}
@@ -5309,7 +5560,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		if (state === S.SELECTING)
 		{
 			if (this.getEnableSelect())
-				this.getEditor().dragSelectingBoxToCoord(coord);
+			{
+				//this.getEditor().dragSelectingBoxToCoord(coord);
+				this.getEditor().addSelectingAnchorCoord(coord);
+			}
 			e.preventDefault();
 		}
 		else if (state === S.MANIPULATING)  // move or resize objects
@@ -5369,7 +5623,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 			if (state === S.SELECTING)  // mouse up, end selecting
 			{
-				this.getEditor().endSelectingBoxDrag(coord, shifted);
+				//this.getEditor().endSelectingBoxDrag(coord, shifted);
+				this.getEditor().endSelecting(coord, shifted);
 				this.setState(S.NORMAL);
 				e.preventDefault();
 				var editor = this.getEditor();

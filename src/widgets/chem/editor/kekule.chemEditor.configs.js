@@ -91,6 +91,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Int} objBoundTrackInflation The bound of object will usually be inflated to make it easier to select. This value controls the inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
+ * @property {Int} selectionCurveSimplificationDistanceThreshold Distance threshold to simplify the selecting curve.
  * @property {Int} rotationRegionInflation A circle with this ratio outside selection area marker will be regarded as rotation region.
  * @property {Float} constrainedRotateStep In constrained rotate mode, rotation angle will only be times of this value.
  * @property {Int} rotationLocationPointDistanceThreshold Rotate will occur only when mouse point distance (from rotation center) larger than this value
@@ -102,7 +103,10 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
- * @property {Int} trackSimplifierDistanceThreshold
+ * @property {Int} trackSimplifierDistanceThreshold Distance threshold to simplify curves in track structure input.
+ * @property {Int} selectingCurveSimplificationDistanceThreshold Distance threshold to simplify curves in selecting marker.
+ * @property {Float} selectingBrushWidth The selecting brush width.
+ * //@property {Int} selectingBrushMinWidth Min width of selecting brush.
  */
 Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.InteractionConfigs# */
@@ -122,6 +126,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('objBoundTrackInflationPen', null);
 		this.addIntConfigProp('objBoundTrackInflationTouch', 10);
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
+		this.addFloatConfigProp('selectingBrushWidth', 12);
+		//this.addFloatConfigProp('selectingBrushMinWidth', 5);
+		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('selectionMarkerInflation', 5, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('selectionMarkerEdgeInflation', 5, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('rotationRegionInflation', 10, {'scope': PS.PUBLIC});
@@ -168,6 +175,12 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {String} selectingMarkerStrokeDash Dash style of selecting marker.
  * @property {String} selectingMarkerFillColor Fill color of selecting marker. Usually this value should be set to null (not filled).
  * @property {Float} selectingMarkerOpacity Opacity of selecting marker.
+ * @property {String} selectingBrushMarkerStrokeColor Stroke color of selecting brush marker.
+ * @property {String} selectingBrushMarkerStrokeDash Dash style of selecting brush marker.
+ * @property {Float} selectingBrushMarkerOpacity Opacity of selecting brush marker.
+ * @property {String} selectingBrushMarkerStrokeLineCap
+ * @property {String} selectingBrushMarkerStrokeLineJoin
+ *
  */
 Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.UiMarkerConfigs# */
@@ -192,6 +205,12 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('selectingMarkerStrokeDash', true);
 		this.addStrConfigProp('selectingMarkerFillColor', null);
 		this.addFloatConfigProp('selectingMarkerOpacity', 0.7);
+
+		this.addStrConfigProp('selectingBrushMarkerStrokeColor', '#0000FF');
+		this.addStrConfigProp('selectingBrushMarkerStrokeDash', false);
+		this.addFloatConfigProp('selectingBrushMarkerStrokeLineCap', 'round');
+		this.addFloatConfigProp('selectingBrushMarkerStrokeLineJoin', 'round');
+		this.addFloatConfigProp('selectingBrushMarkerOpacity', 0.3);
 
 		this.addStrConfigProp('trackMarkerStrokeColor', '#0000AA');
 		this.addFloatConfigProp('trackMarkerStrokeWidth', 2);
