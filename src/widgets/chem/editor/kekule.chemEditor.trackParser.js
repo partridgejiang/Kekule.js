@@ -55,6 +55,8 @@ Kekule.Editor.TrackParser = Class.create(ObjectEx,
 	 */
 	simplifyCurveToLineSegments: function(curvePoints, distanceThreshold)
 	{
+		return Kekule.GeometryUtils.simplifyCurveToLineSegments(curvePoints, distanceThreshold);
+		/*
 		//distanceThreshold = distanceThreshold || this.getLineSimplificationDistanceThreshold();
 		if (!distanceThreshold)
 			return curvePoints;
@@ -62,8 +64,10 @@ Kekule.Editor.TrackParser = Class.create(ObjectEx,
 		if (curvePoints.length <= 2)
 			return AU.clone(curvePoints);
 		return this._simplifyCurvePartToLineSegments(curvePoints, 0, curvePoints.length - 1, distanceThreshold);
+		*/
 	},
-	/** @private */
+	/* @private */
+	/*
 	_simplifyCurvePartToLineSegments: function(curvePoints, startIndex, endIndex, distanceThreshold)
 	{
 		var startCoord = curvePoints[startIndex];
@@ -97,6 +101,7 @@ Kekule.Editor.TrackParser = Class.create(ObjectEx,
 			return result;
 		}
 	},
+	*/
 
 	/**
 	 * Add cross points of line segments. Those points should be regarded as node in structure.

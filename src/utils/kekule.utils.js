@@ -2840,6 +2840,59 @@ Kekule.GeometryUtils = {
 		var dx= t*(line1Coord2.x - line1Coord1.x),
 				dy= t*(line1Coord2.y - line1Coord1.y);
 		return { x: line1Coord1.x + dx , y: line1Coord1.y + dy };
+	},
+
+	/**
+	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
+	 * @param {Array} curvePoints Array of {x, y} coords to define a curve.
+	 * @param {Float} distanceThreshold
+	 * @returns {Array} Array of {x, y} coords, every two points define a line segment.
+	 * @private
+	 */
+	simplifyCurveToLineSegments: function(curvePoints, distanceThreshold)
+	{
+		//distanceThreshold = distanceThreshold || this.getLineSimplificationDistanceThreshold();
+		if (!distanceThreshold)
+			return curvePoints;
+
+		if (curvePoints.length <= 2)
+			return Kekule.ArrayUtils.clone(curvePoints);
+		return Kekule.GeometryUtils._simplifyCurvePartToLineSegments(curvePoints, 0, curvePoints.length - 1, distanceThreshold);
+	},
+	/** @private */
+	_simplifyCurvePartToLineSegments: function(curvePoints, startIndex, endIndex, distanceThreshold)
+	{
+		var GU = Kekule.GeometryUtils;
+		var startCoord = curvePoints[startIndex];
+		var endCoord = curvePoints[endIndex];
+
+		if (endIndex - startIndex <= 1)
+		{
+			return [startCoord, endCoord];
+		}
+
+		var maxDistance = distanceThreshold, maxIndex = null;
+		for (var i = startIndex + 1; i < endIndex; ++i)
+		{
+			var d = Kekule.GeometryUtils.getDistanceFromPointToLine(curvePoints[i], startCoord, endCoord);
+			if (d > maxDistance)
+			{
+				maxDistance = d;
+				maxIndex = i;
+			}
+		}
+		if (maxIndex === null)  // no max distance point
+		{
+			return [startCoord, endCoord];
+		}
+		else  // split track to two
+		{
+			var lines1 = GU._simplifyCurvePartToLineSegments(curvePoints, startIndex, maxIndex, distanceThreshold);
+			var lines2 = GU._simplifyCurvePartToLineSegments(curvePoints, maxIndex, endIndex, distanceThreshold);
+			lines2.shift();  // remove the common point between lines1 and lines2
+			var result = [].concat(lines1).concat(lines2);
+			return result;
+		}
 	}
 };
 
