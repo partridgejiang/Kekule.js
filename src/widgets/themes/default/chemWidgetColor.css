@@ -335,6 +335,19 @@
     background-image: url("images/slice/icons/arrow.png");
 }
 
+.K-Chem-BasicMolManipulationIaController-Marquee > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/selectMarquee.gif");
+}
+.K-Chem-BasicMolManipulationIaController-Lasso > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/selectLasso.gif");
+}
+.K-Chem-BasicMolManipulationIaController-Brush > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/selectBrush.gif");
+}
+
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/text.gif");

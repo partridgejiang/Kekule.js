@@ -329,6 +329,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 		if (options.lineCap)
 			elem.attr('stroke-linecap', options.linecap);
 		if (options.lineJoin)
+			elem.attr('stroke-linejoin', options.linejoin);
 	},
 
 	/** @private */
