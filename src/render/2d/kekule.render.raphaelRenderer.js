@@ -326,6 +326,9 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 				'fill-opacity': options.opacity
 			});
 		}
+		if (options.lineCap)
+			elem.attr('stroke-linecap', options.linecap);
+		if (options.lineJoin)
 	},
 
 	/** @private */
