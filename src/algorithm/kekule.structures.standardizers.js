@@ -56,8 +56,16 @@ Kekule.MolStandardizer = {
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)
 			mol.unmarshalAllSubFragments(true);
-		if (op.doCanonicalization)
+
+		/*
+		if (op.doStereoPerception)
+		{
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+			mol.perceiveStereos(null, true);  // stereo detection should do canonicalization first
+		}
+		else*/ if (op.doCanonicalization)
+			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+
 		if (op.doAromaticPerception)
 		{
 			mol.perceiveAromaticRings();

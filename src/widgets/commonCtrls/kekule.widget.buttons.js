@@ -365,7 +365,8 @@ Kekule.Widget.Button.Kinds = {
 	DROPDOWN: 'K-Kind-DropDown',
 	POPUP: 'K-Kind-Popup',
 	SEARCH: 'K-Kind-Search',
-	EDIT: 'K-Kind-Edit'
+	EDIT: 'K-Kind-Edit',
+	ENTER: 'K-Kind-Enter'
 	/*
 	ELLIPSIS: 'K-Kind-Ellipsis'
 	*/

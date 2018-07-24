@@ -618,7 +618,10 @@ Kekule.StyleUtils = {
 	getComputedStyle: function(elem, propName)
 	{
 		var styles;
-		var view = elem.ownerDocument.defaultView;
+		var doc = elem.ownerDocument;
+		if (!doc)
+			return null;
+		var view = doc.defaultView;
 		if (view && view.getComputedStyle)
 		{
 			styles = view.getComputedStyle(elem, null);
@@ -726,6 +729,67 @@ Kekule.StyleUtils = {
 	{
 		var display = Kekule.StyleUtils.getComputedStyle(elem, 'display');
 		return ['block', 'list-item', 'table', 'flex', 'grid'].indexOf(display) >= 0;
+	},
+
+	/**
+	 * Check if an element is set with absolute or fixed position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAbsOrFixPositioned: function(elem)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		return (position === 'absolute') || (position === 'fixed');
+	},
+	/** @private */
+	_fillAbsOrFixedPositionStyleStack: function(elem, stack)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		if ((position === 'absolute') || (position === 'fixed'))
+		{
+			stack.push(position.toLocaleLowerCase());
+		}
+		var parent = elem.parentNode;
+		if (parent && parent.ownerDocument)
+			Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(parent, stack);
+		return stack;
+	},
+	/**
+	 * Check the ancestors of elem, if one is set to absolute or fixed position,
+	 * returns its position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAncestorPositionFixed: function(elem)
+	{
+		var parent = elem.parentNode;
+		if (parent)
+		{
+			return Kekule.StyleUtils.isSelfOrAncestorPositionFixed(elem);
+		}
+		else
+			return false;
+	},
+	/**
+	 * Check the elem and its ancestor, if one is set to fixed position, result is true.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isSelfOrAncestorPositionFixed: function(elem)
+	{
+		var positionStack = [];
+		Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(elem, positionStack);
+		if (!positionStack.length)
+			return null;
+		for (var i = positionStack.length - 1; i >= 0; --i)
+		{
+			var p = positionStack[i];
+			if (p === 'fixed')
+				return true;
+		}
+		return false;
 	}
 };
 
@@ -894,7 +958,7 @@ Kekule.HtmlElementUtils = {
 
 	/**
 	 * Get size of view port.
-	 * @param {Variant} elemOrViewport
+	 * @param {Variant} elemOrDocOrViewport
 	 * @returns {Hash}
 	 */
 	getViewportDimension: function(elemOrDocOrViewport)
@@ -923,6 +987,38 @@ Kekule.HtmlElementUtils = {
 
 		// For browsers in Quirks mode
 		return { 'width': d.body.clientWidth, 'height': d.body.clientHeight };
+	},
+
+	/**
+	 * Returns coord of top-left and bottom-right of visible viewport part in browser window.
+	 * @param {Variant} elemOrDocOrViewport
+	 * @returns {Hash}
+	 */
+	getViewportVisibleBox: function(elemOrDocOrViewport)
+	{
+		// Use the specified window or the current window if no argument
+		var w;
+		if (elemOrDocOrViewport)
+		{
+			if (elemOrDocOrViewport.ownerDocument)
+				w = elemOrDocOrViewport.ownerDocument.defaultView;
+			else if (elemOrDocOrViewport.defaultView)
+				w = elemOrDocOrViewport.defaultView;
+			else
+				w = elemOrDocOrViewport;
+		}
+		w = w || window;
+		var doc = w.document;
+
+		var dim = Kekule.HtmlElementUtils.getViewportDimension(w);
+		var offset = Kekule.DocumentUtils.getScrollPosition(doc);
+
+		var result = {'x1': offset.left, 'y1': offset.top, 'x2': dim.width, 'y2': dim.height};
+		result.left = result.x1;
+		result.top = result.y1;
+		result.right = result.x2;
+		result.bottom = result.y2;
+		return result;
 	},
 
 	/**
@@ -1045,6 +1141,26 @@ Kekule.HtmlElementUtils = {
  */
 Kekule.DocumentUtils = {
 	/**
+	 * Returns scroll top/left of document element.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {left, top}
+	 */
+	getScrollPosition: function(document)
+	{
+		var win = document.defaultView;
+		var result = {
+			'left': ((win.pageXOffset !== undefined)?
+					win.pageXOffset:
+					(document.documentElement || document.body.parentNode || document.body).scrollLeft) || 0,
+			'top': ((win.pageYOffset !== undefined)?
+					win.pageYOffset:
+					(document.documentElement || document.body.parentNode || document.body).scrollTop) || 0
+		};
+		result.x = result.left;
+		result.y = result.top;
+		return result;
+	},
+	/**
 	 * Returns dimension of viewport visible client.
 	 * @param {HTMLDocument} document
 	 * @returns {Hash} {width, height}
@@ -1067,21 +1183,47 @@ Kekule.DocumentUtils = {
 		}
 	},
 	/**
-	 * Returns scroll top/left of document element.
+	 * Returns top-left and bottom-right coord of viewport visible client.
 	 * @param {HTMLDocument} document
-	 * @returns {Hash} {left, top}
+	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2}
 	 */
-	getScrollPosition: function(document)
+	getClientVisibleBox: function(document)
 	{
-		var result = {
-			'left': document.documentElement.scrollLeft || document.body.scrollLeft || 0,
-			'top': document.documentElement.scrollTop || document.body.scrollTop || 0
-		};
-		result.x = result.left;
-		result.y = result.top;
+		var offset = Kekule.DocumentUtils.getScrollPosition(document);
+		var dim = Kekule.DocumentUtils.getInnerClientDimension(document);
+		var result = {};
+		result.left = result.x1 = offset.left;
+		result.top = result.y1 = offset.top;
+		result.right = result.x2 = dim.width + offset.left;
+		result.bottom = result.y2 = dim.height + offset.top;
 		return result;
+	},
+	/**
+	 * Returns innerWidth and innerHeight property of a window.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
+	 */
+	getWindowInnerDimension: function(document)
+	{
+		var win = document.defaultView;
+		return {'width': Math.min(win.innerWidth, win.outerWidth), 'height': Math.min(win.innerHeight, win.outerHeight)};
+	},
+	/**
+	 * Returns the visible viewport dimension (on mobile device) or the dimension of whole viewport client (ondesktop).
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
+	 */
+	getInnerClientDimension: function(document)
+	{
+		var clientDim = Kekule.DocumentUtils.getClientDimension(document);
+		var innerDim = Kekule.DocumentUtils.getWindowInnerDimension(document);
+		return {
+			'width': innerDim.width? Math.min(innerDim.width, clientDim.width): clientDim.width,
+			'height': innerDim.height? Math.min(innerDim.height, clientDim.height): clientDim.height
+		};
 	}
 };
+
 
 /**
  * Utils to handle 'url(XXXX)' type of attribute value.

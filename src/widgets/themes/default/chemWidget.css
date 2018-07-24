@@ -245,6 +245,119 @@
     padding: 0.3em 0.6em;
 }
 
+.K-Chem-StructureNodeSelectPanel
+{
+    width: 22em;
+    /*height: 30em;*/
+}
+
+.K-Chem-StructureNodeSelectPanel .K-TabView
+{
+
+}
+
+.K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container
+{
+    height: 25em;
+    overflow-y: auto;
+}
+.K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page
+{
+
+}
+
+.K-Chem-StructureNodeSelectPanel .K-Chem-StructureNodeSelectPanel-SetButton
+{
+    min-width: 3em;
+}
+
+@supports (display: -webkit-flex) or
+          (display: -moz-flex) or
+          (display: -ms-flex) or
+          (display: flex) {
+    .K-Chem-StructureNodeSelectPanel
+    {
+        display: inline-block;
+        position: relative;
+        height: 25em;
+        /*
+        display: -webkit-flex;
+        display: -moz-flex;
+        display:flex;
+        -webkit-flex-direction: column;
+        -moz-flex-direction: column;
+        flex-direction: column;
+        */
+    }
+
+    .K-Chem-StructureNodeSelectPanel .K-TabView
+    {
+        /*
+        -webkit-flex: auto;
+        -moz-flex: auto;
+        flex: auto;
+        */
+        height: 100%;
+        /*
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        */
+        display: -webkit-flex;
+        display: -moz-flex;
+        display:flex;
+        -webkit-flex-direction: column;
+        -moz-flex-direction: column;
+        flex-direction: column;
+    }
+
+    .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container
+    {
+        /*position: relative;*/
+        /*
+        width: 100%;
+        height: 100%;
+        */
+        /*width: 100%;*/
+        height: auto;
+        -webkit-flex: auto;
+        -moz-flex: auto;
+        flex: auto;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display:flex;
+    }
+    .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page
+    {
+        /*min-height: 10em;*/
+
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        overflow-y: auto;
+        /*
+        -webkit-flex: auto;
+        -moz-flex: auto;
+        flex: auto;
+        */
+    }
+}
+
+.K-Chem-StructureNodeSetter.K-ChemEditor-Atom-Setter
+{
+    margin: 0;
+}
+
+.K-Chem-StructureNodeSetter .K-Chem-StructureNodeSetter-InputBox,
+.K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel
+{
+    display: block;
+}
+
 .K-Chem-Editor
 {
     overflow: auto;
@@ -270,7 +383,7 @@
     height: 100%;
 }
 
-.K-Chem-Editor .K-ChemEditor-Text-Setter
+.K-ChemEditor-Text-Setter
 {
     min-width: 8em;
     min-height: 1em;
@@ -280,6 +393,11 @@
     margin-left: -3px;  /* consider the border(1px) and padding */
     margin-top: -3px;
     /*background: transparent;*/
+}
+
+.K-ChemEditor-Atom-Setter
+{
+    width: 8em;
 }
 
 .K-Chem-Composer
@@ -354,7 +472,8 @@
     padding: 4px 5px;
 }
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar,
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar
+.K-Chem-Composer .K-Chem-Composer-Style-Toolbar,
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar
 {
     position: absolute;
     left: 48px;
@@ -363,7 +482,8 @@
 
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button,
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar .K-Button,
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Button
+.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Button,
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Button
 {
     height: 32px;
 }
@@ -380,31 +500,34 @@
     white-space: nowrap;
 }
 
-.K-Chem-Composer-Style-Toolbar .K-Button
+.K-Chem-Composer-Style-Toolbar .K-Button,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Button
 {
     text-align: left;
     padding: 0.2em 0.4em;
     white-space: nowrap;
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content
+.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
 {
     width: 16px;
     height: 16px;
     /*display: inherit;*/
 }
-.K-Chem-Composer-Style-Toolbar .K-Button .K-Content
+.K-Chem-Composer-Style-Toolbar .K-Button .K-Content,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Button .K-Content
 {
     /*margin: 0;*/
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Chem-Composer-FontName-Box
+/*.K-Chem-Composer .K-Chem-Composer-Style-Toolbar*/ .K-Chem-Composer-FontName-Box
 {
     width: 13em;
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Chem-Composer-FontSize-Box
+/*.K-Chem-Composer .K-Chem-Composer-Style-Toolbar*/ .K-Chem-Composer-FontSize-Box
 {
     width: 6em;
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Chem-Composer-Color-Box
+.K-Chem-Composer /*.K-Chem-Composer-Style-Toolbar*/ .K-Chem-Composer-Color-Box
 {
 
 }
@@ -449,6 +572,23 @@
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
 {
     width: 10em;
+}
+
+.K-Chem-Composer-Modifier-RichText-Panel
+{
+    /*min-width: 20em;*/
+}
+.K-Chem-Composer-Modifier-RichText-Panel td
+{
+    white-space: nowrap;
+}
+.K-Chem-Composer-Modifier-RichText-Panel .K-Chem-Composer-Modifier-RichText-Panel-Group-LabelCell
+{
+    text-align: right;
+}
+.K-Chem-Composer-Modifier-RichText-Panel .K-Chem-Composer-Modifier-RichText-Panel-Group-CtrlCell
+{
+    text-align: left;
 }
 
 .K-Chem-Obj-Setter
@@ -537,7 +677,7 @@
 .K-Chem-Dialog-Choose-File-Format,
 .K-Chem-Dialog-LoadData
 {
-    min-width: 30em;
+    min-width: 25em;
 }
 
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-FormatBox,
