@@ -48,6 +48,7 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	manipulateMarquee: 'manipulateMarquee',
 	manipulateLasso: 'manipulateLasso',
 	manipulateBrush: 'manipulateBrush',
+	manipulateAncestor: 'manipulateAncestor',
 	molBondSingle: 'bondSingle',
 	molBondDouble: 'bondDouble',
 	molBondTriple: 'bondTriple',
@@ -871,8 +872,15 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 				this.initAttachedActions();
 		}
 	};
+	if (methods)
+	{
+		data = Object.extend(data, methods);
+	}
 	if (specifiedProps)
 	{
+		var oldDoExecute;
+		if (data.doExecute)  // has set a doExecute in methods
+		  oldDoExecute = data.doExecute;
 		data.doExecute = function($super)
 		{
 			var editor = this.getEditor();
@@ -882,12 +890,11 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 				controller.setPropValues(specifiedProps);
 			}
 			//console.log('execute self', this.getClassName());
-			$super();
+			if (oldDoExecute)
+				oldDoExecute.apply(this, [$super]);
+			else
+				$super();
 		}
-	}
-	if (methods)
-	{
-		data = Object.extend(data, methods);
 	}
 	if (attachedActionClasses)
 	{
@@ -924,9 +931,18 @@ Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.creat
 	'BasicMolManipulationIaController',
 	'BasicMolManipulationIaController-Marquee',
 	{
+		'enableSelect': true,
 		'selectMode': Kekule.Editor.SelectMode.RECT
 	},
-	null, null,
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.RECT);
+		}
+	},
 	BNS.manipulateMarquee
 );
 Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createComposerIaControllerActionClass(
@@ -936,9 +952,18 @@ Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createC
 	'BasicMolManipulationIaController',
 	'BasicMolManipulationIaController-Lasso',
 	{
+		'enableSelect': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYGON
 	},
-	null, null,
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.POLYGON);
+		}
+	},
 	BNS.manipulateLasso
 );
 Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createComposerIaControllerActionClass(
@@ -948,10 +973,40 @@ Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createC
 	'BasicMolManipulationIaController',
 	'BasicMolManipulationIaController-Brush',
 	{
+		'enableSelect': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYLINE
 	},
-	null, null,
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.POLYLINE);
+		}
+	},
 	BNS.manipulateBrush
+);
+Kekule.Editor.ActionComposerSetManipulateControllerAncestor = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerAncestor',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_ANCESTOR'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_ANCESTOR'),
+	'BasicMolManipulationIaController',
+	'BasicMolManipulationIaController-Ancestor',
+	{
+		'enableSelect': true,
+		'selectMode': Kekule.Editor.SelectMode.ANCESTOR
+	},
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.ANCESTOR);
+		}
+	},
+	BNS.manipulateAncestor
 );
 Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetManipulateController',
@@ -963,7 +1018,8 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 	[
 		Kekule.Editor.ActionComposerSetManipulateControllerMarquee,
 		Kekule.Editor.ActionComposerSetManipulateControllerLasso,
-		Kekule.Editor.ActionComposerSetManipulateControllerBrush
+		Kekule.Editor.ActionComposerSetManipulateControllerBrush,
+		Kekule.Editor.ActionComposerSetManipulateControllerAncestor
 	],
 	null,
 	BNS.manipulate

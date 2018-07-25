@@ -3833,6 +3833,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this.setEnableSelect(false);
 		this._repObjStartingScreenCoord = null;
 	},
 	/** @private */
@@ -4278,6 +4279,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this.setEnableSelect(false);
 		// private
 		this._deltaDistance = null;
 		this._deltaCount = 0;
@@ -4543,6 +4545,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this.setEnableSelect(false);
 		// private
 		this._deltaDistance = null;
 		this._lastDeltaCount = 1;

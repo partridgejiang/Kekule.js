@@ -87,7 +87,9 @@ Kekule.Editor.SelectMode = {
 	/** Draw a curve in editor when selecting, select all object inside this curve polygon. **/
 	POLYGON: 1,
 	/** Draw a curve in editor when selecting, select all object intersecting this curve. **/
-	POLYLINE: 2
+	POLYLINE: 2,
+	/** Click on a child object to select the whole standalone ancestor. **/
+	ANCESTOR: 10
 };
 
 /**
@@ -289,10 +291,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		this.defineProp('selectMode', {'dataType': DataType.INT,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('selectMode');
+				if (Kekule.ObjUtils.isUnset(result))
+					result = Kekule.Editor.SelectMode.RECT;  // default value
+				return result;
+			},
 			'setter': function(value)
 			{
 				if (this.getSelectMode() !== value)
 				{
+					//console.log('set select mode', value);
 					this.setPropStoreFieldValue('selectMode', value);
 					this.hideSelectingMarker();
 				}
@@ -2308,22 +2318,82 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.endSelectingCurveDrag(screenCoord, toggleFlag);
 			}
 		}
-		else
+		else // M.RECT or M.ANCESTOR
 		{
 			var startCoord = this._selectingBoxStartCoord;
 			var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
 			objs = this.getObjectsInScreenBox(box, enablePartial);
 			this.endSelectingBoxDrag(screenCoord, toggleFlag);
 		}
+		/*
 		if (objs && objs.length)
 		{
+			if (this._isInAncestorSelectMode())  // need to change to select standalone ancestors
+			{
+				objs = this._getAllStandaloneAncestorObjs(objs);  // get standalone ancestors (e.g. molecule)
+				//objs = this._getAllCoordDependantObjs(objs);  // but select there coord dependant children (e.g. atoms and bonds)
+			}
 			if (toggleFlag)
 				this.toggleSelectingState(objs);
 			else
 				this.select(objs);
 		}
+		*/
+		objs = this._getActualSelectedObjsInSelecting(objs);
+		if (toggleFlag)
+			this.toggleSelectingState(objs);
+		else
+			this.select(objs);
 		this.hideSelectingMarker();
 	},
+
+	/** @private */
+	_getActualSelectedObjsInSelecting: function(objs)
+	{
+		if (objs && objs.length)
+		{
+			if (this._isInAncestorSelectMode())  // need to change to select standalone ancestors
+			{
+				objs = this._getAllStandaloneAncestorObjs(objs);  // get standalone ancestors (e.g. molecule)
+				//objs = this._getAllCoordDependantObjs(objs);  // but select there coord dependant children (e.g. atoms and bonds)
+			}
+			return objs;
+		}
+		else
+			return [];
+	},
+	/** @private */
+	_isInAncestorSelectMode: function()
+	{
+		return this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR;
+	},
+	/** @private */
+	_getAllStandaloneAncestorObjs: function(objs)
+	{
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj && obj.getStandaloneAncestor)
+				obj = obj.getStandaloneAncestor();
+			AU.pushUnique(result, obj);
+		}
+		return result;
+	},
+	/* @private */
+	/*
+	_getAllCoordDependantObjs: function(objs)
+	{
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj && obj.getCoordDependentObjects)
+				AU.pushUnique(result, obj.getCoordDependentObjects());
+		}
+		return result;
+	},
+	*/
 
 	/**
 	 * Start to drag a selecting box from coord.
@@ -2423,12 +2493,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		//console.log('select on coord');
 		var obj = this.getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
-		if (obj)
+		var objs = this._getActualSelectedObjsInSelecting([obj]);
+		if (objs)
 		{
 			if (toggleFlag)
-				this.toggleSelectingState(obj);
+				this.toggleSelectingState(objs);
 			else
-				this.select(obj);
+				this.select(objs);
 		}
 	},
 
@@ -4034,6 +4105,15 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		return !!obj;
 	},
 
+	/**
+	 * Show a hot track marker on obj in editor.
+	 * @param {Kekule.ChemObject} obj
+	 */
+	hotTrackOnObj: function(obj)
+	{
+		this.getEditor().hotTrackOnObj(obj);
+	},
+
 	// zoom functions
 	/** @private */
 	zoomEditor: function(zoomLevel)
@@ -4083,11 +4163,11 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			*/
 			if (obj && this.canInteractWithObj(obj))
 			{
-				this.getEditor().hotTrackOnObj(obj);
+				this.hotTrackOnObj(obj);
 			}
 			else
 			{
-				this.getEditor().hotTrackOnObj(null);
+				this.hotTrackOnObj(null);
 			}
 			e.preventDefault();
 		}
@@ -4289,8 +4369,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		$super(widget);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
-		// debug
-		this.setEnableSelect(true);
+
+		this.setEnableSelect(!true);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
 		this.setEnableConstrainedResize(true);
@@ -4421,6 +4501,41 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		if (map)
 			map.clear();
 		$super();
+	},
+
+	/* @ignore */
+	/*
+	activated: function($super, widget)
+	{
+		$super(widget);
+		//console.log('activated', this.getSelectMode());
+		// set select mode when be activated
+		if (this.getEnableSelect())
+			this.getEditor().setSelectMode(this.getSelectMode());
+	},
+	*/
+
+	/** @ignore */
+	hotTrackOnObj: function($super, obj)
+	{
+		// override parent method, is selectMode is ANCESTOR, hot track the whole ancestor object
+		if (this.getEnableSelect() && this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR)
+		{
+			var concreteObj = this.getStandaloneAncestor(obj); (obj && obj.getStandaloneAncestor) ? obj.getStandaloneAncestor() : obj;
+			return $super(concreteObj);
+		}
+		else
+			return $super(obj);
+	},
+	/** @private */
+	getStandaloneAncestor: function(obj)
+	{
+		return (obj && obj.getStandaloneAncestor) ? obj.getStandaloneAncestor() : obj;
+	},
+	/** @private */
+	isInAncestorSelectMode: function()
+	{
+		return this.getEnableSelect() && (this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR);
 	},
 
 	/** @private */
@@ -5426,6 +5541,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (obj)  // mouse down directly on a object
 			{
 				obj = obj.getNearestSelectableObject();
+				if (this.isInAncestorSelectMode())
+					obj = this.getStandaloneAncestor(obj);
 				// only mouse down and moved will cause manupulating
 				if (this.getEnableMove())
 					this.startDirectManipulate(null, obj, currCoord);
@@ -5436,7 +5553,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				{
 					var shifted = e.getShiftKey();
 					//this.getEditor().startSelectingBoxDrag(currCoord, shifted);
-					this.getEditor().setSelectMode(this.getSelectMode());
+					//this.getEditor().setSelectMode(this.getSelectMode());
 					this.getEditor().startSelecting(currCoord, shifted);
 					this.setState(S.SELECTING);
 				}

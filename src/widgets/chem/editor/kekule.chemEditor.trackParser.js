@@ -1058,6 +1058,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this.setEnableSelect(false);
 		this._isTracking  = false;
 		this._trackCoordToObjBindings = null;
 		this._trackParser = new Kekule.Editor.TrackParser();
