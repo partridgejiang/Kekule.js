@@ -939,8 +939,21 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'scope': Class.PropertyScope.PUBLIC,
 			'setter': null,
 			'getter': function() { return this.getIaControllerMap().get(this.getDefIaControllerId()); } });
-		this.defineProp('activeIaControllerId', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
-		this.defineProp('activeIaController', {'dataType': DataType.STRING, 'serializable': false,
+		this.defineProp('activeIaControllerId', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value)
+			{
+				if (value !== this.getActiveIaControllerId())
+				{
+					this.setPropStoreFieldValue('activeIaControllerId', value);
+					var currController = this.getActiveIaController();
+					if (currController && currController.activated)  // call some init method of controller
+					{
+						currController.activated(this);
+					}
+				}
+			}
+		});
+		this.defineProp('activeIaController', {'dataType': DataType.OBJECT, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
 			'setter': null,
 			'getter': function() { return this.getIaControllerMap().get(this.getActiveIaControllerId()); }});
@@ -3196,6 +3209,17 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		this.defineProp('widget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+	},
+
+	/**
+	 * This util method will be called when this ia controller is set to be the active one in widget.
+	 * Descendants may override this method to do some initialization jobs.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @private
+	 */
+	activated: function(widget)
+	{
+		// do nothing here
 	},
 
 	/**
