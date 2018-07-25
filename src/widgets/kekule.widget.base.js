@@ -2722,7 +2722,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 				var KC = Kekule.X.Event.KeyCode;
 				var keyCode;
-				if (evType === 'mousemove')  // test mouse cursor
+				if (evType === 'mousemove' || evType === 'pointermove')  // test mouse cursor
 				{
 					this.reactPointerMoving(e);
 					var coord = this.getEventMouseRelCoord(e);
