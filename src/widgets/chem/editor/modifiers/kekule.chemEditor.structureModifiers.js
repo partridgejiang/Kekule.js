@@ -141,19 +141,41 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 			var target = targets[i];
 			if (target instanceof Kekule.ChemStructureNode)
 			{
+				/*
 				if (target instanceof Kekule.StructureFragment && target.isExpanded())  // expanded group can not be modified
 					;
 				else
-					nodes.push(target);
+				*/
+				nodes.push(target);
 			}
 		}
 		return nodes;
+	},
+	/** @private */
+	_getActualModificationNodes: function(nodes, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			if (node instanceof Kekule.StructureFragment && node.isExpanded())  // actually modify children node in expanded group
+			{
+				var children = this._getActualModificationNodes(node.getNodes(), true);
+				AU.pushUnique(result, children);
+			}
+			else
+				result.push(node);
+		}
+		if (!byPassfilter)
+			result = this._filterStructureNodes(result);
+		return result;
 	},
 	/** @ignore */
 	doLoadFromTargets: function(editor, targets)
 	{
 		// filter chem nodes from targets
-		var nodes = this._filterStructureNodes(targets);
+		//var nodes = this._filterStructureNodes(targets);
+		var nodes = this._getActualModificationNodes(targets);
 		this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		this.getAtomSetter().setNodes(nodes);
 		if (nodes.length)
@@ -169,7 +191,8 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 	{
 		var data = this.getAtomSetter().getValue();
 		var opers = [];
-		var nodes = this._filterStructureNodes(targets);
+		//var nodes = this._filterStructureNodes(targets);
+		var nodes = this._getActualModificationNodes(targets);
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
 			var target = nodes[i];
@@ -309,6 +332,42 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 
 		return result;
 	},
+
+	/** @private */
+	_filterBond: function(targets)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.Bond)
+			{
+				result.push(target);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getActualModificationBonds: function(targets, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.StructureFragment && target.isExpanded())  // actually modify children bond in expanded group
+			{
+				var children = this._getActualModificationBonds(target.getNodes(), true);  // cascade child expanded groups
+				AU.pushUnique(result, children);
+				AU.pushUnique(result, target.getConnectors())
+			}
+			else if (target instanceof Kekule.Bond)
+				result.push(target);
+		}
+		if (!byPassfilter)
+			result = this._filterBond(result);
+		return result;
+	},
+
 	/** @private */
 	_createBondSelector: function(parentWidget)
 	{
@@ -356,6 +415,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 	doLoadFromTargets: function(editor, targets)
 	{
 		// filter chem connectors from targets
+		/*
 		var connectors = [];
 		for (var i = 0, l = targets.length; i < l; ++i)
 		{
@@ -363,6 +423,8 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 			if (target instanceof Kekule.ChemStructureConnector)
 				connectors.push(target);
 		}
+		*/
+		var connectors = this._getActualModificationBonds(targets);
 
 		var comparedPropNames = this.getBondSelector().getBondPropNames();
 		var bondPropValues, currPropValues;
@@ -388,6 +450,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 		var data = this.getBondSelector().getActiveBondPropValues();
 		//console.log('modify data', data);
 		var opers = [];
+		/*
 		for (var i = 0, l = targets.length; i < l; ++i)
 		{
 			var target = targets[i];
@@ -397,6 +460,15 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 				if (op)
 					opers.push(op);
 			}
+		}
+		*/
+		var bonds = this._getActualModificationBonds(targets);
+		for (var i = 0, l = bonds.length; i < l; ++i)
+		{
+			var bond = bonds[i];
+			var op = this._createBondModificationOperation(data, bond);
+			if (op)
+				opers.push(op);
 		}
 		var operation;
 		if (opers.length > 1)
@@ -422,6 +494,6 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 
 var OMM = Kekule.Editor.ObjModifierManager;
 OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Atom]);
-OMM.register(Kekule.Bond, [Kekule.Editor.ObjModifier.Bond]);
+OMM.register([Kekule.Bond, Kekule.StructureFragment], [Kekule.Editor.ObjModifier.Bond]); // can change child bonds of structure fragment
 
 })();
