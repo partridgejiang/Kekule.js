@@ -830,7 +830,18 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
-		this.defineElemStyleMappingProp('cursor', 'cursor');
+		//this.defineElemStyleMappingProp('cursor', 'cursor');
+		this.defineProp('cursor', {
+			'dataType': DataType.VARIANT,
+			'serializable': false,
+			'getter': function() { return this.getStyleProperty('cursor'); },
+			'setter': function(value) {
+				if (DataType.isArrayValue(value))  // try each cursor keywords
+					Kekule.StyleUtils.setCursor(this.getElement(), value);
+				else  // normal string value
+					this.setStyleProperty('cursor', value);
+			}
+		});
 
 		this.defineProp('isHover', {'dataType': DataType.BOOL, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
@@ -2730,6 +2741,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					if (Kekule.ObjUtils.notUnset(cursor) && this.getElement())
 					{
 						//this.getElement().style.cursor = cursor;
+
 						this.setCursor(cursor);
 						handled = true;
 					}
@@ -3021,7 +3033,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * Component can implement this function, or dispatch it to controllers.
 	 * @param {Hash} coord 2D mouse coord
 	 * @param {Object} e event arg passed from mouse move event
-	 * @return {String} CSS cursor property value. Return '' to use default one.
+	 * @return {Variant} CSS cursor property value. Return '' to use default one.
+	 *   The return value can also be a array of cursor key words, the first legal one in current browser will be used.
 	 */
 	testMouseCursor: function(coord, e)
 	{

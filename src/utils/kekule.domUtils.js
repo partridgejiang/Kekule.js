@@ -790,6 +790,33 @@ Kekule.StyleUtils = {
 				return true;
 		}
 		return false;
+	},
+
+	/**
+	 * Set cursor style of an element.
+	 * @param {HTMLElement} elem
+	 * @param {Variant} cursor A string CSS cursor value or an array of cursor keywords.
+	 *   If this param is an array, the first cursor keywords available in current browser will actually be used.
+	 * @returns {String} The actually used cursor value.
+	 */
+	setCursor: function(elem, cursor)
+	{
+		if (DataType.isArrayValue(cursor))
+		{
+			for (var i = 0, l = cursor.length; i < l; ++i)
+			{
+				var currCursor = cursor[i];
+				elem.style.cursor = currCursor;
+				if (elem.style.cursor === currCursor)  // successfully setted
+					return currCursor;
+			}
+			return elem.style.cursor;
+		}
+		else // normal string
+		{
+			elem.style.cursor = cursor;
+			return elem.style.cursor;
+		}
 	}
 };
 
