@@ -250,7 +250,7 @@ Kekule.Editor.ObjModifier.Base = Class.create(ObjectEx,
 	 */
 	createModificationOperation: function(targetObj, newPropValues)
 	{
-		return new Kekule.ChemObjOperation.Modify(targetObj, newPropValues);
+		return new Kekule.ChemObjOperation.Modify(targetObj, newPropValues, this.getEditor());
 	}
 });
 

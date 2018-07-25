@@ -671,7 +671,7 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 			if (boundTailing)  // if bound on tailing, just reverse the track to put it on head
 			{
 				currTrack = AU.reverse(track);
-				console.log('REVERSE TRACK', currTrack);
+				//console.log('REVERSE TRACK', currTrack);
 			}
 		}
 		else // !boundLeading && !boundTailing, no bound, but keep the leading coord unchanged
@@ -1277,7 +1277,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		try
 		{
 			var chemSpace = editor.getChemSpace();
-			var oper = new Kekule.ChemObjOperation.Add(structure, chemSpace);
+			var oper = new Kekule.ChemObjOperation.Add(structure, chemSpace, null, this.getEditor());
 			oper.execute();
 			this._addStructureOperation = oper;
 		}

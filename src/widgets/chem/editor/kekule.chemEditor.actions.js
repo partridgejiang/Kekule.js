@@ -126,7 +126,7 @@ Kekule.Editor.ActionOperUtils = {
 				for (var i = 0, l = objs.length; i < l; ++i)
 				{
 					var obj = objs[i];
-					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace);
+					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace, null, editor);
 					marcoOper.add(oper);
 				}
 				marcoOper.execute();

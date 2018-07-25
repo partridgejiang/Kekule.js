@@ -277,7 +277,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 
 		if (modifiedProps)
 		{
-			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps);
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, this.getEditor());
 			if (operGroup)
 				operGroup.add(oper);
 		}
@@ -487,7 +487,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 	/** @private */
 	_createBondModificationOperation: function(data, bond)
 	{
-		var op = new Kekule.ChemObjOperation.Modify(bond, data);
+		var op = new Kekule.ChemObjOperation.Modify(bond, data, this.getEditor());
 		return op;
 	}
 });

@@ -1100,17 +1100,17 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 			var oper;
 			if (obj instanceof /*Kekule.ChemStructureNode*/Kekule.BaseStructureNode)
 			{
-				oper = new Kekule.ChemStructOperation.RemoveNode(obj);
+				oper = new Kekule.ChemStructOperation.RemoveNode(obj, null, null, editor);
 				Kekule.ArrayUtils.pushUnique(molParents, obj.getParent());
 			}
 			else if (obj instanceof /*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector)
 			{
-				oper = new Kekule.ChemStructOperation.RemoveConnector(obj);
+				oper = new Kekule.ChemStructOperation.RemoveConnector(obj, null, null, editor);
 				Kekule.ArrayUtils.pushUnique(molParents, obj.getParent());
 			}
 			else
 			{
-				oper = new Kekule.ChemObjOperation.Remove(obj);
+				oper = new Kekule.ChemObjOperation.Remove(obj, null, null, editor);
 			}
 			if (oper)
 				operGroup.add(oper);
@@ -1121,7 +1121,7 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 			var mol = molParents[i];
 			if (mol && (mol instanceof Kekule.StructureFragment))
 			{
-				var standardizeOper = new Kekule.ChemStructOperation.StandardizeStructFragment(mol);
+				var standardizeOper = new Kekule.ChemStructOperation.StandardizeStructFragment(mol, editor);
 				standardizeOper.setEnableSplit(this.getEditor().canCreateNewChild());  // if can not create new child, split is disabled.
 				operGroup.add(standardizeOper);
 			}
@@ -2266,8 +2266,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			//var op = new Kekule.EditorOperation.OpMergeNodes(this.getEditor(), parent, fromNode, toNode);
 			//var op = new Kekule.ChemStructOperation.MergeNodes(fromNode, toNode, allowMolMerge);
 			var op = useMergePreview?
-					(new Kekule.ChemStructOperation.MergeNodesPreview(fromNode, toNode, allowMolMerge)):
-					(new Kekule.ChemStructOperation.MergeNodes(fromNode, toNode, allowMolMerge));
+					(new Kekule.ChemStructOperation.MergeNodesPreview(fromNode, toNode, allowMolMerge, this.getEditor())):
+					(new Kekule.ChemStructOperation.MergeNodes(fromNode, toNode, allowMolMerge, this.getEditor()));
 			return op;
 		}
 	},
@@ -2282,7 +2282,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			//var op = new Kekule.EditorOperation.OpMergeNodes(this.getEditor(), parent, fromNode, toNode);
 			//var op = new Kekule.ChemStructOperation.MergeConnectors(fromConnector, toConnector, this.getEditor().getCoordMode(), allowMolMerge);
 			var mergeClass = useMergePreview? Kekule.ChemStructOperation.MergeConnectorsPreview: Kekule.ChemStructOperation.MergeConnectors;
-			var op = new mergeClass(fromConnector, toConnector, this.getEditor().getCoordMode(), allowMolMerge);
+			var op = new mergeClass(fromConnector, toConnector, this.getEditor().getCoordMode(), allowMolMerge, this.getEditor());
 			return op;
 		}
 	},
@@ -2652,7 +2652,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 		var mol = this.getAutoCreatedStructFragment();
 		if (mol)
 		{
-			var addMolOperation = new Kekule.ChemObjOperation.Add(mol, this.getEditor().getChemObj(), null);
+			var addMolOperation = new Kekule.ChemObjOperation.Add(mol, this.getEditor().getChemObj(), null, this.getEditor());
 			group.add(addMolOperation);
 		}
 		var startObj = this.getStartingObj();
@@ -2660,17 +2660,18 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 		var bond = this.getBond();
 		//var parent = startObj.getParent();
 		var parent = this.getStructFragment();
+		var editor = this.getEditor();
 
 		var node = this.getAutoCreatedStartingObj();
 		if (node)
 		{
-			var addNodeOperation = new Kekule.ChemStructOperation.AddNode(node, parent);
+			var addNodeOperation = new Kekule.ChemStructOperation.AddNode(node, parent, null, editor);
 			group.add(addNodeOperation);
 		}
 
-		var addNodeOperation = new Kekule.ChemStructOperation.AddNode(endObj, parent);
+		var addNodeOperation = new Kekule.ChemStructOperation.AddNode(endObj, parent, null, editor);
 		group.add(addNodeOperation);
-		var addConnectorOperation = new Kekule.ChemStructOperation.AddConnector(bond, parent, null, [startObj, endObj]);
+		var addConnectorOperation = new Kekule.ChemStructOperation.AddConnector(bond, parent, null, [startObj, endObj], editor);
 		group.add(addConnectorOperation);
 
 		return group;
@@ -2767,7 +2768,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 			{
 				// create operation
 				//var oper = new Kekule.EditorOperation.OpModifyConnector(this.getEditor(), bond.getParent(), bond, newPropValues);
-				var oper = new Kekule.ChemObjOperation.Modify(bond, newPropValues);
+				var oper = new Kekule.ChemObjOperation.Modify(bond, newPropValues, this.getEditor());
 				oper.execute();
 				editor.pushOperation(oper);
 				// notify editor, the connected objecs should be redrawn too
@@ -3333,7 +3334,7 @@ Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaC
 
 		if (modifiedProps)
 		{
-			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps);
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, this.getEditor());
 			if (operGroup)
 				operGroup.add(oper);
 		}
@@ -3755,7 +3756,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 
 		if (modifiedProps)
 		{
-			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps);
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, this.getEditor());
 			if (operGroup)
 				operGroup.add(oper);
 		}
@@ -3923,9 +3924,9 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipu
 				var obj = repObjects[i];
 				var oper;
 				if (addToBlankMol)
-					oper = new Kekule.ChemStructOperation.MergeStructFragment(obj, blankMol);
+					oper = new Kekule.ChemStructOperation.MergeStructFragment(obj, blankMol, editor);
 				else
-					oper = new Kekule.ChemObjOperation.Add(obj, chemSpace);
+					oper = new Kekule.ChemObjOperation.Add(obj, chemSpace, null, editor);
 				macroOper.add(oper);
 			}
 			macroOper.execute();
@@ -4888,7 +4889,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			mol.getFormula(true);  // create a forumla
 			chemSpace.appendChild(mol);
 			editor.setObjectScreenCoord(mol, coord);
-			var addOperation = new Kekule.ChemObjOperation.Add(mol, chemSpace, null);
+			var addOperation = new Kekule.ChemObjOperation.Add(mol, chemSpace, null, editor);
 			this._operAddBlock = addOperation;
 		}
 		finally
@@ -4982,12 +4983,12 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 				this.cancelSetter();
 			else  // old one, delete it
 			{
-				oper = new Kekule.ChemObjOperation.Remove(mol, mol.getParent());
+				oper = new Kekule.ChemObjOperation.Remove(mol, mol.getParent(), null, this.getEditor());
 			}
 		}
 		else
 		{
-			var oper = new Kekule.ChemObjOperation.Modify(mol.getFormula(), {'text': text});
+			var oper = new Kekule.ChemObjOperation.Modify(mol.getFormula(), {'text': text}, this.getEditor());
 		}
 		if (oper)
 		{
@@ -5253,7 +5254,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 				chemSpace.appendChild(block);
 				editor.setObjectScreenCoord(block, coord, Kekule.Render.CoordPos.CORNER_TL);
 				//console.log('set text block cord', coord, block.getSize2D());
-				var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+				var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null, editor);
 				this._operAddBlock = addOperation;
 			}
 		}
@@ -5363,10 +5364,10 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 			if (this._operAddBlock)  // just added text block
 				this.cancelSetter();
 			else
-				oper = new Kekule.ChemObjOperation.Remove(block, block.getParent());
+				oper = new Kekule.ChemObjOperation.Remove(block, block.getParent(), null, this.getEditor());
 		}
 		else
-			oper = new Kekule.ChemObjOperation.Modify(block, {'text': text});
+			oper = new Kekule.ChemObjOperation.Modify(block, {'text': text}, this.getEditor());
 
 		if (oper)
 		{
@@ -5518,7 +5519,7 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 				block.setSize2D(size);
 			//chemSpace.appendChild(block);
 			editor.setObjectScreenCoord(block, coord, Kekule.Render.CoordPos.CORNER_TL);
-			var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+			var addOperation = new Kekule.ChemObjOperation.Add(block, chemSpace, null, editor);
 			this._operAddBlock = addOperation;
 		}
 		finally
@@ -5605,7 +5606,7 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 					{
 						var block = self.createNewBlock(self.getEditor().getChemObj(), self._currCoord, size, reader.result);
 						self.setCurrBlock(block);
-						oper = new Kekule.ChemObjOperation.Add(block, chemSpace, null);
+						oper = new Kekule.ChemObjOperation.Add(block, chemSpace, null, editor);
 					}
 					if (oper)
 					{
@@ -5725,7 +5726,7 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 		var marker = this.createMarker();
 		if (marker)  // add to target object
 		{
-			result = new Kekule.ChemObjOperation.Add(marker, targetObj);
+			result = new Kekule.ChemObjOperation.Add(marker, targetObj, null, this.getEditor());
 		}
 		return [result];
 	},
@@ -5847,6 +5848,7 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 		// add or remove marker operation
 		var markerOperations = [];
 		var marker;
+		var editor = this.getEditor();
 		if (chargeModified)
 		{
 			var chargeMarker = node.fetchChargeMarker(false);  // do not auto create
@@ -5855,12 +5857,12 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 				// need add new charge marker
 				marker = new Kekule.ChemMarker.Charge();
 				marker.setValue(modifiedData.charge);
-				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node));
+				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node, null, editor));
 			}
 			if (modifiedData.charge === 0 && chargeMarker)
 			{
 				// need remove existing charge marker
-				markerOperations.push(new Kekule.ChemObjOperation.Remove(chargeMarker));
+				markerOperations.push(new Kekule.ChemObjOperation.Remove(chargeMarker, null, null, editor));
 			}
 		}
 		if (radicalModified)
@@ -5871,12 +5873,12 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 				// need add new radical marker
 				marker = new Kekule.ChemMarker.Radical();
 				marker.setValue(modifiedData.radical);
-				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node));
+				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node, null, editor));
 			}
 			if (modifiedData.radical === 0 && radicalMarker)
 			{
 				// need remove existing radical marker
-				markerOperations.push(new Kekule.ChemObjOperation.Remove(radicalMarker));
+				markerOperations.push(new Kekule.ChemObjOperation.Remove(radicalMarker, null, null, editor));
 			}
 		}
 		result = result.concat(markerOperations);
@@ -5885,7 +5887,7 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 		var propModifyOper;
 		if (chargeModified || radicalModified)
 		{
-			propModifyOper = new Kekule.ChemObjOperation.Modify(node, modifiedData);
+			propModifyOper = new Kekule.ChemObjOperation.Modify(node, modifiedData, this.getEditor());
 			result.push(propModifyOper);
 		}
 

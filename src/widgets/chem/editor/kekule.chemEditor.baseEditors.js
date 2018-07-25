@@ -3835,7 +3835,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = objs.length; i < l; ++i)
 			{
 				var obj = objs[i];
-				var oper = new Kekule.ChemObjOperation.Modify(obj, modifiedPropInfos);
+				var oper = new Kekule.ChemObjOperation.Modify(obj, modifiedPropInfos, this);
 				macro.add(oper);
 			}
 			macro.execute();
@@ -3873,7 +3873,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					newOps = Object.extend(newOps, modifiedValues);
 					var hash = {};
 					hash[renderPropName] = newOps;
-					var oper = new Kekule.ChemObjOperation.Modify(obj, hash);
+					var oper = new Kekule.ChemObjOperation.Modify(obj, hash, this);
 					//oper.execute();
 					macro.add(oper);
 				}
@@ -4726,7 +4726,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var item = map.get(obj);
 			//var sub = new Kekule.EditorOperation.OpSetObjCoord(this.getEditor(), obj, null, item.objCoord, Kekule.Editor.CoordSys.OBJ);
 			//var sub = new Kekule.ChemObjOperation.MoveTo(obj, null, this.getEditor().getCoordMode());
-			var sub = new Kekule.ChemObjOperation.MoveAndResize(obj, null, null, this.getEditor().getCoordMode(), true);  // use abs coord
+			var sub = new Kekule.ChemObjOperation.MoveAndResize(obj, null, null, this.getEditor().getCoordMode(), true, this.getEditor());  // use abs coord
 			sub.setAllowCoordBorrow(this.getEditor().getAllowCoordBorrow());
 			sub.setOldCoord(item.objCoord);
 			sub.setOldDimension(item.size);
