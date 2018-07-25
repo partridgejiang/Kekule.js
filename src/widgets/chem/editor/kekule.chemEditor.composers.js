@@ -921,6 +921,15 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 		}
 		this.setPropStoreFieldValue('modifiers', modifiers);
 		this.updateModifierValues();
+
+		if (this._isAllModifierWidgetButtons(modifiers))  // if all modifiers are buttons, use btnGroup style rather than toolbar
+		{
+			this.removeClassName(CNS.TOOLBAR).addClassName(CNS.BUTTON_GROUP);
+		}
+		else
+		{
+			this.removeClassName(CNS.BUTTON_GROUP).addClassName(CNS.TOOLBAR);
+		}
 	},
 	/**
 	 * Update toolbar and child widget outlook and other settings according to editor's state.
@@ -940,6 +949,21 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 		{
 			modifiers[i].loadFromTargets();
 		}
+	},
+
+	/** @private */
+	_isAllModifierWidgetButtons: function(modifiers)
+	{
+		for (var i = 0, l = modifiers.length; i < l; ++i)
+		{
+			var m = modifiers[i];
+			var w = m && m.getWidget();
+			if (!w || !w.getDisplayed() || w instanceof Kekule.Widget.Button)
+				continue;
+			else
+				return false
+		}
+		return true;
 	}
 });
 
@@ -1690,12 +1714,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			assocRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getAssocBtnGroup().getElement());
 		}
 		//console.log('adjust pos', assocRect);
-		if (this.isStyleToolbarShown())
+		//if (this.isStyleToolbarShown())
+		if (this.getPropStoreFieldValue('styleToolbar'))  // stylebar created
 		{
 			var elem = this.getStyleToolbar().getElement();
 			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
 		}
-		if (this.isObjModifierToolbarShown())
+		//if (this.isObjModifierToolbarShown())
+		if (this.getPropStoreFieldValue('objModifierToolbar'))  // modifier toolbar created
 		{
 			var elem = this.getObjModifierToolbar().getElement();
 			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
@@ -2437,7 +2463,25 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	updateObjModifierToolbarState: function()
 	{
+		var showToolbar = false;
 		if (this.getEnableObjModifierToolbar() && this.needShowSelectionAssocToolbar())
+		{
+			// further check if currently is select series IA controllers
+			var iaController = this.getEditor().getActiveIaController();
+			showToolbar = ((iaController instanceof Kekule.Editor.BasicManipulationIaController) && (iaController.getEnableSelect()))
+					|| (iaController instanceof Kekule.Editor.ClientDragScrollIaController);
+			/*
+			// check if currently the space can fullfill a modifier toolbar
+			var toolbar = this.getObjModifierToolbar();
+			var modifierRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(toolbar.getElement());
+			var zoomBar = this.getZoomBtnGroup();
+			var zoomBarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(zoomBar.getElement());
+			var gap = 50;  // TODO: current fixed, gap between modifier bar and zoom bar
+			showToolbar = (modifierRect.left + modifierRect.width + gap < zoomBarRect.left);  // if can fullfill, just show it
+			console.log(showToolbar, modifierRect, zoomBarRect);
+			*/
+		}
+		if (showToolbar)
 		{
 			this.showObjModifierToolbar();
 			this.getObjModifierToolbar().updateState();
@@ -2542,7 +2586,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	needShowSelectionAssocToolbar: function()
 	{
 		var editor = this.getEditor();
-		return editor && editor.hasSelection(); // && (!this.isAssocToolbarShown());
+		return editor && editor.hasSelection();
 	},
 	/**
 	 * Update style & obj modifier toolbar show/hide state according to editor's state.
