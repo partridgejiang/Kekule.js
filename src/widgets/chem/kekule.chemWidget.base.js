@@ -59,6 +59,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	cut: 'cut',
 	paste: 'paste',
 	cloneSelection: 'cloneSelection',
+	dragScroll: 'dragScroll',
 	erase: 'erase',
 	manipulate: 'manipulate',
 	trackInput: 'trackInput',

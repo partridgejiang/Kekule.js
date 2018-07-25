@@ -4206,6 +4206,119 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 });
 
 /**
+ * Controller for drag and scroll (by mouse, touch...) client element in editor.
+ * @class
+ * @augments Kekule.Widget.BaseEditorIaController
+ *
+ * @param {Kekule.Editor.BaseEditor} widget Editor of current object being installed to.
+ */
+Kekule.Editor.ClientDragScrollIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.ClientDragScrollIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ClientDragScrollIaController',
+	/** @constructs */
+	initialize: function($super, widget)
+	{
+		$super(widget);
+		this._isExecuting = false;
+	},
+	/** @ignore */
+	canInteractWithObj: function(obj)
+	{
+		return false;  // do not interact directly with objects in editor
+	},
+	/** @ignore */
+	doTestMouseCursor: function(coord, e)
+	{
+		//console.log(this.isExecuting(), coord);
+		return this.isExecuting()?
+				['grabbing', '-webkit-grabbing', '-moz-grabbing', 'move']:
+				['grab', '-webkit-grab', '-moz-grab', 'pointer'];
+		//return this.isExecuting()? '-webkit-grabbing': '-webkit-grab';
+	},
+
+	/** @private */
+	isExecuting: function()
+	{
+		return this._isExecuting;
+	},
+	/** @private */
+	startScroll: function(screenCoord)
+	{
+		this._startCoord = screenCoord;
+		this._originalScrollPos = this.getEditor().getClientScrollPosition();
+		this._isExecuting = true;
+	},
+	/** @private */
+	endScroll: function()
+	{
+		this._isExecuting = false;
+		this._startCoord = null;
+		this._originalScrollPos = null;
+	},
+	/** @private */
+	scrollTo: function(screenCoord)
+	{
+		if (this.isExecuting())
+		{
+			var startCoord = this._startCoord;
+			var delta = Kekule.CoordUtils.substract(startCoord, screenCoord);
+			var newScrollPos = Kekule.CoordUtils.add(this._originalScrollPos, delta);
+			this.getEditor().scrollClientTo(newScrollPos.y, newScrollPos.x);  // note the params of this method is y, x
+		}
+	},
+
+	/** @private */
+	react_pointerdown: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)  // begin scroll
+		{
+			if (!this.isExecuting())
+			{
+				var coord = {x: e.getScreenX(), y: e.getScreenY()};
+				this.startScroll(coord);
+				e.preventDefault();
+			}
+		}
+		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
+		{
+			if (this.isExecuting())
+			{
+				this.endScroll();
+				e.preventDefault();
+			}
+		}
+	},
+	/** @private */
+	react_pointerup: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		{
+			if (this.isExecuting())
+			{
+				this.endScroll();
+				e.preventDefault();
+			}
+		}
+	},
+	/** @private */
+	react_pointermove: function($super, e)
+	{
+		$super(e);
+		if (this.isExecuting())
+		{
+			var coord = {x: e.getScreenX(), y: e.getScreenY()};
+			this.scrollTo(coord);
+			e.preventDefault();
+		}
+		return true;
+	}
+});
+/** @ignore */
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.ClientDragScrollIaController, Kekule.Editor.BaseEditor);
+
+/**
  * Controller for deleting objects in editor.
  * @class
  * @augments Kekule.Widget.BaseEditorIaController

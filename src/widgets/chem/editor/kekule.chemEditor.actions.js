@@ -923,6 +923,19 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 
 ////////////// create ia controller actions ///////////////////////////
 
+// Client drag and scroll
+Kekule.Editor.ActionComposerClientDragScrollController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerClientDragScrollController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_CLIENT_DRAGSCROLL'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.$L('ChemWidgetTexts.HINT_CLIENT_DRAGSCROLL'), //Kekule.ChemWidgetTexts.HINT_ERASE,
+	'ClientDragScrollIaController',
+	null,
+	null,
+	null,
+	null,
+	BNS.dragScroll
+);
+
 // Select and variantions
 Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetManipulateControllerMarquee',
@@ -1019,7 +1032,8 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetManipulateControllerMarquee,
 		Kekule.Editor.ActionComposerSetManipulateControllerLasso,
 		Kekule.Editor.ActionComposerSetManipulateControllerBrush,
-		Kekule.Editor.ActionComposerSetManipulateControllerAncestor
+		Kekule.Editor.ActionComposerSetManipulateControllerAncestor,
+		Kekule.Editor.ActionComposerClientDragScrollController
 	],
 	null,
 	BNS.manipulate
@@ -1047,7 +1061,7 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 	BNS.erase
 );
 
-// Erase
+// Track input
 Kekule.Editor.ActionComposerSetTrackController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetTrackController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_TRACK_INPUT'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,

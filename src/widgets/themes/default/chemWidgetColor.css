@@ -351,6 +351,10 @@
 {
     background-image: url("images/slice/iconsSmall/selectMolecule.gif");
 }
+.K-Chem-ClientDragScrollIaController > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/hand.gif");
+}
 
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
 {
