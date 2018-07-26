@@ -921,6 +921,7 @@ table.K-Widget
 .K-ColorPicker .K-ColorPicker-Palette
 {
     min-width: 180px;
+    touch-action: none;
 }
 .K-ColorPicker .K-ColorPicker-Palette-Line
 {

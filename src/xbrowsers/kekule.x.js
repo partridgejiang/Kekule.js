@@ -411,7 +411,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientX;
 		}
-		else
+		if (result === undefined)
 			result = event.clientX;
 		return result;
 	},
@@ -428,7 +428,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientY;
 		}
-		else
+		if (result === undefined)
 			result = event.clientY;
 		return result;
 	},
@@ -445,7 +445,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenX;
 		}
-		else
+		if (result === undefined)
 			result = event.screenX;
 		return result;
 	},
@@ -462,7 +462,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenY;
 		}
-		else
+		if (result === undefined)
 			result = event.screenY;
 		return result;
 	},
@@ -473,20 +473,23 @@ X.Event.Methods = {
 	 */
 	getPageX: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageX))
-				return touch.pageX;
+				result = touch.pageX;
 		}
-		else if (notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
-			return event.pageX;
+		if (result === undefined && notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
+			result = event.pageX;
 		//else  // fallback
+		if (result === undefined)
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
+			result = X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
 		}
+		return result;
 	},
 	/**
 	 * Get Y coordinate related to document page.
@@ -495,20 +498,22 @@ X.Event.Methods = {
 	 */
 	getPageY: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageY))
 				return touch.pageY;
 		}
-		else if (notUnset(event.pageY))
+		else if (result === undefined && notUnset(event.pageY))
 			return event.pageY;
-		//else  // fallback
+		if (result === undefined)  // fallback
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+			result = X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
 		}
+		return result;
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the event's target.

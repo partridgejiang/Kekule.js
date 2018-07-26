@@ -395,7 +395,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
-		this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none to receive touch pointer events
+		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none to receive touch pointer events
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -2776,10 +2776,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						handled = true;
 					}
 				}
-				else if (evType === 'mouseover')
+				//else if (evType === 'mouseover')
+				else if (evType === 'pointerover')
 				{
-					//console.log('OVER');
-					this.setIsHover(true);
+					//console.log('OVER', this.getElement(), e);
+					if (e.pointerType !== 'touch' && !e.ghostMouseEvent)
+						this.setIsHover(true);
 					handled = true;
 				}
 				else if (evType === 'mouseout' || evType === 'touchleave')
@@ -2803,10 +2805,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						}
 					}
 				}
-				else if ((evType === 'mousedown' && e.getButton() === Kekule.X.Event.MouseButton.LEFT) || (evType === 'touchstart'))
+				//else if ((evType === 'mousedown' && e.getButton() === Kekule.X.Event.MouseButton.LEFT) || (evType === 'touchstart'))
+				else if (evType === 'pointerdown' && e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 				{
 					if (eventOnSelf && !e.ghostMouseEvent)
 					{
+						//console.log('activating', this.getElement(), e);
 						this.reactActiviting(e);
 					}
 					handled = true;
@@ -2821,13 +2825,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					//console.log('MOUSE ENTER');
 				}
 				*/
-				else if ((evType === 'mouseup' && e.getButton() === Kekule.X.Event.MouseButton.LEFT)
-					|| (evType === 'touchend') || (evType === 'touchcancel'))
-					{
+
+				//else if ((evType === 'mouseup' && e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+				//	|| (evType === 'touchend') || (evType === 'touchcancel'))
+				else if ((evType === 'pointerup' && e.getButton() === Kekule.X.Event.MouseButton.LEFT) || (evType === 'touchcancel'))
+				{
 					if (eventOnSelf && !e.ghostMouseEvent)
 					{
 						this.reactDeactiviting(e);
+						/*
+						if (evType === 'touchend' || evType === 'touchCancel')
+							this.setIsHover(false);
+						*/
 					}
+
 					handled = true;
 				}
 				else if (evType === 'keydown')
@@ -3283,7 +3294,6 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 		var elem = clientElem || this.getWidget().getElement();
 		var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
 		var result = Kekule.CoordUtils.substract(coord, offset);
-		//console.log(result, elem.tagName);
 		return result;
 	}
 });
@@ -3784,7 +3794,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('modalWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
-		//this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
+		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
 
 		/*
 		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
@@ -4196,6 +4206,80 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return eventName.startsWith('pointer');
 	},
 
+	/**
+	 * Convert a touch event to corresponding pointer event, useful for browsers that does not support pointer events.
+	 * @param {Object} e
+	 */
+	mapTouchToPointerEvent: function(e)
+	{
+		var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
+		var pointerEvents = ['pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'];
+
+		var evType = e.getType();
+		var newEventObj = e; //Object.create(e);
+		newEventObj.pointerType = 'touch';
+		var newEventType;
+		if (evType === 'touchstart')  // map to pointerdown
+			newEventType = 'pointerdown';
+		else if (evType === 'touchmove')
+			newEventType = 'pointermove';
+		else if (evType === 'touchleave')
+			newEventType = 'pointerout';
+		else if (evType === 'touchend')
+			newEventType = 'pointerup';
+		else if (evType === 'touchcancel')  // has no corresponding pointer event
+			;  // do nothing
+
+		if (newEventType)
+		{
+			newEventObj.setType(newEventType);
+			newEventObj.button = Kekule.X.Event.MouseButton.LEFT;  // simulate mouse button
+			// map touch coordinate to clientX/Y, offsetX/Y, pageX/Y, screenX/Y
+			var touchPosition = e.touches[0];
+			var positionFieldNames = [
+				'clientX', 'clientY',
+				'pageX', 'pageY',
+				'screenX', 'screenY'
+			];
+			if (touchPosition)
+			{
+				var positionCache = {};
+				for (var i = 0, l = positionFieldNames.length; i < l; ++i)
+				{
+					var fname = positionFieldNames[i];
+					newEventObj[fname] = touchPosition[fname];
+					positionCache[fname] = touchPosition[fname];
+				}
+				// all event type (except touchstart), currentTarget is always the touch evoker,
+				// should be transformed to element under touch pos
+				if (evType !== 'touchstart')
+				{
+					var doc = this._document;
+					var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
+					newEventObj.target = currElement;
+				}
+				this._touchPointerMapData = {'positionCache': positionCache, 'targetCache': newEventObj.target};
+			}
+			else  // touch end event, may has no position info, use the cache of last touch event to fulfill it
+			{
+				if (this._touchPointerMapData)
+				{
+					for (var i = 0, l = positionFieldNames.length; i < l; ++i)
+					{
+						var fname = positionFieldNames[i];
+						newEventObj[fname] = this._touchPointerMapData.positionCache[fname];
+					}
+				}
+				newEventObj.target = this._touchPointerMapData.targetCache;
+			}
+
+			//console.log('map', evType, newEventObj.getType());
+			return newEventObj;
+		}
+
+		return null;  // no mapping event, returns null
+	},
+
 	/** @private */
 	reactUiEvent: function(e)
 	{
@@ -4218,11 +4302,16 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (evType === 'touchstart' || evType === 'touchend')
 		{
 			//console.log('[Global touch event]', evType, e.getTarget());
+			if (evType === 'touchstart')
+				e.preventDefault();  // prevent ghost mouse events
+
 			this._touchJustStart = true;  // a flag to avoid "ghost mouse event" after touch
+			if (this._ghostMouseCheckId)
+				clearTimeout(this._ghostMouseCheckId);
 			var self = this;
-			setTimeout(function(){ self._touchJustStart = false; }, 500);
+			this._ghostMouseCheckId = setTimeout(function(){ self._touchJustStart = false; }, 500);
 		}
-		else if (['mousedown', 'mouseup', 'mouseout', 'click'].indexOf(evType) >= 0)
+		else if (['mousedown', 'mouseup', 'mouseover', 'mouseout', 'click'].indexOf(evType) >= 0)
 		{
 			if (this._touchJustStart)  // mark ghost mouse event
 				e.ghostMouseEvent = true;
@@ -4253,14 +4342,21 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this.getEnableMouseEventToPointerPolyfill() && !Kekule.BrowserFeature.pointerEvent)
 		{
 			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
+			var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
 			var pointerEvents = ['pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'];
 			var index = mouseEvents.indexOf(evType);
 			if (index >= 0)
 			{
 				e.setType(pointerEvents[index]);
 				e.pointerType = 'mouse';
-				//console.log('map', e.getType());
 				this.reactUiEvent(e);
+			}
+			else if (touchEvents.indexOf(evType) >= 0)  // touch events, need further polyfill
+			{
+				//console.log('prepare map', evType);
+				var newEvent = this.mapTouchToPointerEvent(e);
+				if (newEvent)
+					this.reactUiEvent(newEvent);
 			}
 		}
 	},

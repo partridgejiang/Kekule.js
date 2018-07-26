@@ -423,6 +423,13 @@
     margin: 0;
 }
 
+.K-Chem-Composer .K-Chem-Composer-Editor-Stage,
+.K-Chem-Composer .K-Chem-Editor,
+.K-Chem-Composer .K-Chem-Editor .K-Chem-Editor-Client
+{
+    touch-action: none;  /* disable default touch actions, for we have own ones */
+}
+
 .K-Chem-Composer .K-Chem-Composer-Toolbar
 {
     z-index: 100;

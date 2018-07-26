@@ -266,8 +266,6 @@ var kekuleFiles = {
 	'html': {
 		'requires': ['lan', 'root', 'common'],
 		'files': [
-			//'lib/polyfill/Points.min.js',
-			'lib/polyfill/pep.js',
 			'xbrowsers/kekule.x.js',
 			'html/kekule.nativeServices.js',
 			'html/kekule.predefinedResLoaders.js',

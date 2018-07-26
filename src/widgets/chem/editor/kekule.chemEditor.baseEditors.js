@@ -4145,6 +4145,8 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	react_pointerdown: function(e)
 	{
 		this.updateCurrBoundInflation(e);
+		e.preventDefault();
+		return true;
 	},
 	/** @private */
 	react_pointermove: function(e)
@@ -4169,8 +4171,9 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			{
 				this.hotTrackOnObj(null);
 			}
-			e.preventDefault();
+			//e.preventDefault();
 		}
+		e.preventDefault();
 		return true;
 	},
 	/** @private */
@@ -5812,7 +5815,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//console.log('pointerdown', e);
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		//var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
-		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			this._lastMouseMoveCoord = null;
 

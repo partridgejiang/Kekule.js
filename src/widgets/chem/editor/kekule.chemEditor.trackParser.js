@@ -1379,6 +1379,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	/** @private */
 	addTrackCoord: function(screenCoord)
 	{
+		console.log('add track coord', screenCoord);
 		// var objCoord = this.getEditor().screenCoordToObj(screenCoord);
 		var coords = this.getTrackCoords();
 		var lastCoord = coords && coords[coords.length - 1];
@@ -1444,10 +1445,12 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.startTracking(coord);
+			e.preventDefault();
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
 		{
 			this.cancelTracking();
+			e.preventDefault();
 		}
 	},
 	/** @private */
@@ -1461,6 +1464,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 			this.endTracking(coord);
 			this.addOperationToEditor();
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+			e.preventDefault();
 		}
 	},
 	/** @private */
@@ -1471,6 +1475,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.addTrackCoord(coord);
+			e.preventDefault();
 		}
 	}
 });

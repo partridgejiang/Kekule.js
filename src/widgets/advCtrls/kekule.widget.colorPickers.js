@@ -485,19 +485,21 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		$super(e);
 		if (this.getIsPicking())
 		{
-			var target = e.getTarget();;
+			var target = e.getTarget();
 			if (e.getTouches())  // is touch, touch target always equal to the target invoke touchstart event, so need extra code
 			{
-				var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
+				//var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
+				var coord = {'x': e.getClientX(), 'y': e.getClientY()};
 				var doc = this.getDocument();
+				//console.log('moving', this.getIsPicking(), coord, e.getPageX(), e.getPageY(), e.touches[0].pageX, target, e);
 				target = (doc.elementFromPoint && doc.elementFromPoint(coord.x, coord.y)) || target;
-				//console.log('moving', this.getIsPicking(), coord, e.getPageY(), target, e);
 				e.preventDefault();
 			}
 			if (target && this._isPaletteCellElem(target))
 			{
 				this.applyColor(target);
 			}
+			e.preventDefault();
 			return true;
 		}
 		//return $super(e);
