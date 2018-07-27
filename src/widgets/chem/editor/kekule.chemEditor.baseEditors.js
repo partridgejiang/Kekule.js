@@ -4074,10 +4074,10 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	},
 
 	/** @ignore */
-	handleUiEvent: function($super, e)
+	handleUiEvent: function($super, e, category)
 	{
 		var handle = false;
-		var targetElem = e.getTarget();
+		var targetElem = (e.getTarget && e.getTarget()) || e.target;  // hammer event does not have getTarget method
 		var uiElem = this.getEditor().getUiEventReceiverElem();
 		if (uiElem)
 		{
@@ -4089,7 +4089,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		else
 			handle = true;
 		if (handle)
-			$super(e);
+			$super(e, category);
 	},
 
 	/**

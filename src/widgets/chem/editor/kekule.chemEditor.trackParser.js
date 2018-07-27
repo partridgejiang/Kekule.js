@@ -1379,7 +1379,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	/** @private */
 	addTrackCoord: function(screenCoord)
 	{
-		console.log('add track coord', screenCoord);
+		//console.log('add track coord', screenCoord);
 		// var objCoord = this.getEditor().screenCoordToObj(screenCoord);
 		var coords = this.getTrackCoords();
 		var lastCoord = coords && coords[coords.length - 1];
