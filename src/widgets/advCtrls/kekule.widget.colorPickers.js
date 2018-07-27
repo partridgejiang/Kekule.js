@@ -94,6 +94,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		$super(parentOrElementOrDocument);
 		this.setUseCornerDecoration(true);
 		this.setValue('#000000');  // default
+		this.setTouchAction('none');  // disable touch scroll, we need touch move on palette
 	},
 	/** @private */
 	initProperties: function()
@@ -491,7 +492,6 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 				//var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
 				var coord = {'x': e.getClientX(), 'y': e.getClientY()};
 				var doc = this.getDocument();
-				//console.log('moving', this.getIsPicking(), coord, e.getPageX(), e.getPageY(), e.touches[0].pageX, target, e);
 				target = (doc.elementFromPoint && doc.elementFromPoint(coord.x, coord.y)) || target;
 				e.preventDefault();
 			}

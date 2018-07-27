@@ -1736,6 +1736,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			editor = this.getEditor();
 		else
 			editor.setParent(this);
+
+		editor.setTouchAction('none');  // disable default touch scroll on editor
+
 		var self = this;
 		var commonActions = this.getCommonActions();
 		var chemActions = this.getChemActions();
