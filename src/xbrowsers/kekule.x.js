@@ -314,10 +314,27 @@ X.Event.Methods = {
 	 */
 	getTarget: function(event)
 	{
-		var target = event.target || event.srcElement;
+		var target = event.__$target__ || event.target || event.srcElement;
 		if (target.nodeType == 3) // defeat Safari bug
 			target = target.parentNode;
 		return target;
+	},
+	/**
+	 * Some times we may need to overwrite the target of event (e.g., in mapping touch event to pointer).
+	 * Writing directly to event.target often does not change the actual value, so we use a special field to store it.
+	 * @param {Object} event
+	 */
+	setTarget: function(event, newTarget)
+	{
+		event.__$target__ = newTarget;
+		try
+		{
+			event.target = newTarget;
+		}
+		catch(e)
+		{
+
+		}
 	},
 	/*
 	 * Get event.currTarget element.
@@ -729,28 +746,28 @@ X.Event._W3C =
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Hash} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	addListener: function(element, eventType, handler, useCapture)
+	addListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType))
-			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, useCapture);
+			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, options);
 		else
-			return element.addEventListener(eventType, handler, useCapture);
+			return element.addEventListener(eventType, handler, options);
 	},
 	/**
 	 * Remove an event listener from element.
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Bool} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	removeListener: function(element, eventType, handler, useCapture)
+	removeListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType) && handler.__$listenerWrapper__)
 			return X.Event._MouseEventEx.removeMouseEnterLeaveListener(element, eventType, handler.__$listenerWrapper__);
 		else
-			return element.removeEventListener(eventType, handler, useCapture);
+			return element.removeEventListener(eventType, handler, options);
 	},
 	/**
 	 * Stop the propagation of event.
