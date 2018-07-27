@@ -237,12 +237,13 @@ Kekule.Widget.UiLocalEvents = [
  * @ignore
  */
 Kekule.Widget.TouchGestures = [
+	//'press', 'pressup'
 	'hold', 'tap', 'doubletap',
 	'swipe', 'swipeup', 'swipedown', 'swipeleft', 'swiperight',
 	'transform', 'transformstart', 'transformend',
-	'rotate',
-	'pinch', 'pinchin', 'pinchout',
-	'touch', 'release'
+	'rotate', 'rotatestart', 'rotatemove', 'rotateend', 'rotatecancel',
+	'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout',
+	'pan', 'panstart', 'panmove', 'panend', 'pancancel', 'panleft', 'panright', 'panup', 'pandown'
 ];
 
 /** @ignore */
@@ -395,7 +396,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
-		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none to receive touch pointer events
+		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none disable default touch actions
+
+		this._touchActionNoneTouchStartHandlerBind = this._touchActionNoneTouchStartHandler.bind(this);
 
 		$super();
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
@@ -470,11 +473,23 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.defineProp('touchAction', {'dataType': DataType.STRING,  'scope': Class.PropertyScope.PUBLIC,
 			'setter': function(value)
 			{
-				var elem = this.getElement();
+				//var elem = this.getElement();
+				var elem = this.getCoreElement();
 				if (elem)
 				{
-					elem.setAttribute('touch-action', value);  // for polyfill pep.js lib (PointerEvent)
-					elem.style.touchAction = value;
+					//elem.setAttribute('touch-action', value);  // for polyfill pep.js lib (PointerEvent)
+					elem.style.touchAction = value;  // CSS touch-action
+					if (value === 'none')
+					{
+						//console.log('add none handler', this.getClassName());
+						// Add a dummy touchstart handler to prevent default action
+						Kekule.X.Event.addListener(elem, 'touchstart', this._touchActionNoneTouchStartHandlerBind, {passive: false});
+					}
+					else
+					{
+						// remove the dummy touchstart handler to prevent default action
+						Kekule.X.Event.removeListener(elem, 'touchstart', this._touchActionNoneTouchStartHandlerBind, {passive: false});
+					}
 				}
 			}
 		});
@@ -2655,6 +2670,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 	*/
 
+	/** @private */
+	_touchActionNoneTouchStartHandler: function(e)
+	{
+		e.preventDefault();
+	},
+
 	/**
 	 * Install UI event (mousemove, click...) handlers to element.
 	 * @param {HTMLElement} element
@@ -2931,7 +2952,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		else  // check for controller
 		{
 			// dispatch event to interaction controllers
-			this.dispatchEventToIaControllers(e);
+			this.dispatchEventToIaControllers(e, 'hammer');
 		}
 	},
 
@@ -3006,20 +3027,26 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	dispatchEventToIaControllers: function(e)
+	dispatchEventToIaControllers: function(e, eventCategory)
 	{
 		var handled = false;
 		var controller = this.getActiveIaController();
 		if (controller)
 		{
-			handled = controller.handleUiEvent(e);
+			if (eventCategory === 'hammer')
+				handled = controller.handleGestureEvent(e);
+			else
+				handled = controller.handleUiEvent(e);
 		}
 		if (!handled)
 		{
 			controller = this.getDefIaController();
 			if (controller)
 			{
-				handled = controller.handleUiEvent(e);
+				if (eventCategory === 'hammer')
+					handled = controller.handerGestureEvent(e);
+				else
+					handled = controller.handleUiEvent(e);
 			}
 		}
 		return handled;
@@ -3253,6 +3280,23 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	handleUiEvent: function(e)
 	{
 		var eventName = e.getType();
+		var funcName = Kekule.Widget.getEventHandleFuncName(eventName);
+		if (this[funcName])
+		{
+			return this[funcName](e);
+		}
+		else
+		{
+			return false;
+		}
+	},
+	/**
+	 * Handle and dispatch gesture (hammer) event.
+	 * @param {Object} e Hammer event object.
+	 */
+	handleGestureEvent: function(e)
+	{
+		var eventName = e.type;
 		var funcName = Kekule.Widget.getEventHandleFuncName(eventName);
 		if (this[funcName])
 		{
@@ -3761,7 +3805,8 @@ Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
  * @property {Bool} preserveWidgetList Whether the manager keep a list of all widgets on document.
  * @property {Array} widgets An array of all widgets on document.
  *   This property is only available when property preserveWidgetList is true.
- * @property {Bool} enableMouseEventToPointerPolyfill If true, mouseXXXX event will also evoke react_pointerXXXX handlers on browsers that do not support pointer events directly.
+ * @property {Bool} enableMouseEventToPointerPolyfill If true, mouseXXXX/touchXXXX event will also evoke react_pointerXXXX handlers on browsers that do not support pointer events directly.
+ *   Currently this property should always be set to true.
  * @private
  */
 /**
@@ -3788,6 +3833,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		$super();
 		this._document = doc || document;
+		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
@@ -3795,6 +3841,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
+		this.setPropStoreFieldValue('enableHammerGesture', !true);
 
 		/*
 		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
@@ -3815,7 +3862,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	finalize: function($super)
 	{
 		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
-		//this.uninstallGlobalTouchHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
@@ -3846,6 +3893,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
+		this.defineProp('enableHammerGesture', {'dataType': DataType.BOOL, 'serializable': false});
+		// should always set to be true
 		this.defineProp('enableMouseEventToPointerPolyfill', {'dataType': DataType.BOOL, 'serializable': false});
 	},
 
@@ -3853,7 +3902,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	domReadyInit: function()
 	{
 		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
-		//this._hammertime = this.installGlobalTouchHandlers(this._document.body);
+		if (this.getEnableHammerGesture())
+			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 	},
 
@@ -4033,6 +4083,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var events = Kekule.Widget.UiEvents;
 			for (var i = 0, l = events.length; i < l; ++i)
 			{
+				if (events[i] === 'touchstart' || events[i] === 'touchmove' || events[i] === 'touchend')  // explicit set passive to true for scroll performance on mobile devices
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind, {passive: true});
+				else
 				Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
 			}
 			this._globalEventInstalled = true;
@@ -4058,14 +4111,18 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 * @param {HTMLElement} element
 	 * @private
 	 */
-	installGlobalTouchHandlers: function(target)
+	installGlobalHammerTouchHandlers: function(target)
 	{
-		if (typeof(Hammer) !== 'undefined')
+		if (typeof(Kekule.$jsRoot.Hammer) !== 'undefined')
 		{
-			var result = Hammer(target).on(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
+			var hammertime = new Hammer(target);  // Hammer(target).on(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
+			hammertime.get('pinch').set({ enable: true });
+			hammertime.get('rotate').set({ enable: true });
+			hammertime.on(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
+			this._hammertime = hammertime;
 			//console.log(result);
 			//result.stop_browser_behavior.touchAction = 'none';
-			return result;
+			return hammertime;
 		}
 	},
 	/**
@@ -4074,7 +4131,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 * @param {HTMLElement} element
 	 * @private
 	 */
-	uninstallGlobalTouchHandlers: function(target)
+	uninstallGlobalHammerTouchHandlers: function(target)
 	{
 		if (this._hammertime)
 			this._hammertime.off(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
@@ -4256,9 +4313,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				{
 					var doc = this._document;
 					var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
-					newEventObj.target = currElement;
+					newEventObj.setTarget(currElement);
+					//console.log('save touch data 1', currElement, newEventObj.getTarget());
 				}
-				this._touchPointerMapData = {'positionCache': positionCache, 'targetCache': newEventObj.target};
+				this._touchPointerMapData = {'positionCache': positionCache, 'targetCache': newEventObj.getTarget()};
+				//console.log('save touch data 2', currElement, newEventObj.getTarget());
 			}
 			else  // touch end event, may has no position info, use the cache of last touch event to fulfill it
 			{
@@ -4270,7 +4329,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 						newEventObj[fname] = this._touchPointerMapData.positionCache[fname];
 					}
 				}
-				newEventObj.target = this._touchPointerMapData.targetCache;
+				newEventObj.setTarget(this._touchPointerMapData.targetCache);
+				//console.log('fetch touch cache', newEventObj.getTarget());
 			}
 
 			//console.log('map', evType, newEventObj.getType());
@@ -4299,23 +4359,71 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			targetWidget = this.getBelongedResponsiveWidget(elem);
 		}
 
+
+		// detect and mark ghost mouse event
+		/*
+		if (this.isTouchEvent(evType) && evType !== 'touchmove')
+		{
+			console.log('touch event', evType);
+		}
+		*/
+		if (evType === 'touchstart')  // begin the sequence check
+		{
+			this._touchEventSeq = ['touchstart'];
+			this._touchDoneTimeStamp = null;
+		}
+		else if (evType === 'touchcancel')  // touch cancelled, should not evoke mouse events
+			this._touchEventSeq = [];
+		else if (evType === 'touchend')
+		{
+			if (this._touchEventSeq[0] === 'touchstart')  // a normal sequence, may cause mouse simulation
+			{
+				this._touchEventSeq.push('touchend');
+				this._touchDoneTimeStamp = Date.now();
+				/*
+				if (this._ghostMouseCheckId)
+					clearTimeout(this._ghostMouseCheckId);
+				var self = this;
+				this._ghostMouseCheckId = setTimeout(function(){ self._touchDoneTimeStamp = false; }, 5000);
+				*/
+			}
+		}
+		/*
 		if (evType === 'touchstart' || evType === 'touchend')
 		{
-			//console.log('[Global touch event]', evType, e.getTarget());
-			if (evType === 'touchstart')
-				e.preventDefault();  // prevent ghost mouse events
-
-			this._touchJustStart = true;  // a flag to avoid "ghost mouse event" after touch
+			console.log('[Global touch event]', evType);
+			//if (evType === 'touchstart')
+			//	e.preventDefault();  // prevent ghost mouse events, but also prevent page scroll
+			this._touchDoneTimeStamp = true;  // a flag to avoid "ghost mouse event" after touch
 			if (this._ghostMouseCheckId)
 				clearTimeout(this._ghostMouseCheckId);
 			var self = this;
-			this._ghostMouseCheckId = setTimeout(function(){ self._touchJustStart = false; }, 500);
+			this._ghostMouseCheckId = setTimeout(function(){ self._touchDoneTimeStamp = false; }, 1000);
 		}
+		*/
 		else if (['mousedown', 'mouseup', 'mouseover', 'mouseout', 'click'].indexOf(evType) >= 0)
 		{
-			if (this._touchJustStart)  // mark ghost mouse event
+			if (this._touchEventSeq[0] === 'touchstart' && this._touchEventSeq[1] === 'touchend') // match the touch seq
+			{
 				e.ghostMouseEvent = true;
-				//return;
+				if (evType === 'click')  // the last mouse simulation event, release the ghost check
+				{
+					this._touchEventSeq = [];
+					this._touchDoneTimeStamp = Date.now(); // some times mouse simulation will be evoked twice, so preserve a time check, eliminate the second round
+				}
+			}
+			else if (this._touchDoneTimeStamp)  // mark ghost mouse event
+			{
+				var timeStamp = Date.now();
+				if (timeStamp - this._touchDoneTimeStamp < 1000)  // event fires less in 1 sec, should be a ghost one
+					e.ghostMouseEvent = true;
+			}
+			/*
+			if (e.ghostMouseEvent)
+			{
+				console.log('receice mouse event', evType, e.ghostMouseEvent, this._touchEventSeq);
+			}
+			*/
 		}
 
 		/*
@@ -4339,7 +4447,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			targetWidget.reactUiEvent(e);
 		}
 
-		if (this.getEnableMouseEventToPointerPolyfill() && !Kekule.BrowserFeature.pointerEvent)
+		if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
 		{
 			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
 			var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
@@ -4364,8 +4472,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	reactTouchGesture: function(e)
 	{
 		var funcName = Kekule.Widget.getTouchGestureHandleFuncName((e.getType && e.getType()) || e.type);
-
-		//console.log('gesture', funcName, e.target);
+		//console.log('gesture', e.type, funcName, e.target);
 
 		if (this[funcName])
 			this[funcName](e);
