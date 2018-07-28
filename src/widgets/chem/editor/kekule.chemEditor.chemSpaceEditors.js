@@ -4443,7 +4443,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		return result;
 	},
 	/** @ignore */
-	rotateManipulatedObjs: function($super, endScreenCoord)
+	doTransformManipulatedObjs: function($super, manipulateType, endScreenCoord, explicitTransformParams)
 	{
 		var endCoord = endScreenCoord;
 		var state = this.getState();
@@ -4511,7 +4511,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		mol.beginUpdate();
 		try
 		{
-			var result = $super(endScreenCoord);
+			var result = $super(manipulateType, endScreenCoord, explicitTransformParams);
 		}
 		finally
 		{
@@ -4709,7 +4709,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		return result;
 	},
 	/** @ignore */
-	rotateManipulatedObjs: function($super, endScreenCoord)
+	doTransformManipulatedObjs: function($super, manipulateType, endScreenCoord, explicitTransformParams)
 	{
 		var endCoord = endScreenCoord;
 		var state = this.getState();
@@ -4747,7 +4747,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		mol.beginUpdate();
 		try
 		{
-			var result = $super(endScreenCoord);
+			var result = $super(manipulateType, endScreenCoord, explicitTransformParams);
 		}
 		finally
 		{
