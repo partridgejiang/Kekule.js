@@ -388,6 +388,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this._pendingHtmlClassNames = '';
 		this._enableShowHideEvents = true;
 		this._reactElemAttribMutationBind = this._reactElemAttribMutation.bind(this);
+		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
 
 		this.setPropStoreFieldValue('inheritEnabled', true);
 		this.setPropStoreFieldValue('inheritStatic', true);
@@ -983,6 +984,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'scope': Class.PropertyScope.PUBLIC,
 			'setter': null,
 			'getter': function() { return this.getIaControllerMap().get(this.getActiveIaControllerId()); }});
+
+		this.defineProp('observingGestureEvents', {'dataType': DataType.ARRAY, 'serializable': false,
+					'scope': Class.PropertyScope.PUBLIC,
+					'setter': null
+		});
 	},
 
 	/** @private */
@@ -2704,6 +2710,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
+
+
 	/** @private */
 	reactUiEvent: function(e)
 	{
@@ -2940,6 +2948,87 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		// do nothing here
 	},
 
+	/**
+	 * Check if gesture event observing is usable.
+	 * @private
+	 */
+	_supportGestureEvent: function()
+	{
+		return typeof(Kekule.$jsRoot.Hammer) !== 'undefined';
+	},
+	/**
+	 * Start observing gesture events.
+	 * @param {Array} eventNames Events need to be observed.
+	 */
+	startObservingGestureEvents: function(eventNames)
+	{
+		if (this._supportGestureEvent())
+		{
+			if (!eventNames)
+				eventNames = Kekule.Widget.TouchGestures;
+			//console.log('observe gesture events', eventNames);
+			var newEvents = AU.exclude(eventNames, this.getObservingGestureEvents() || []);
+			if (newEvents.length)
+				this.installHammerTouchHandlers(newEvents);
+		}
+	},
+	/**
+	 * Stop observing gesture events.
+	 * @param {Array} eventNames Events need to be stopped.
+	 */
+	stopObservingGestureEvents: function(eventNames)
+	{
+		if (this._supportGestureEvent() &&  this.getObservingGestureEvents())
+		{
+			if (!eventNames)
+				eventNames = Kekule.Widget.TouchGestures;
+			var events = AU.intersect(eventNames, this.getObservingGestureEvents());
+			if (events.length)
+				this.uninstallHammerTouchHandlers(events);
+		}
+	},
+
+	/**
+	 * Install touch gesture event (touch, swipe, pinch...) handlers to element.
+	 * Currently hammer.js is used.
+	 * @param {Array} observingEvents An array of event names that need to be observed.
+	 * @private
+	 */
+	installHammerTouchHandlers: function(observingEvents)
+	{
+		if (this._supportGestureEvent())
+		{
+			if (!observingEvents)
+				observingEvents = Kekule.Widget.TouchGestures;
+			var elem = this.getCoreElement();
+			var hammertime = new Hammer(elem);  // Hammer(target).on(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
+			if (observingEvents.indexOf('pinch') >= 0)
+				hammertime.get('pinch').set({ enable: true });
+			if (observingEvents.indexOf('rotate') >= 0)
+				hammertime.get('rotate').set({ enable: true });
+			hammertime.on(observingEvents.join(' '), this.reactTouchGestureBind);
+			this._hammertime = hammertime;
+			this.setPropStoreFieldValue('observingGestureEvents', observingEvents);
+			//console.log('observe', observingEvents);
+			return hammertime;
+		}
+	},
+	/**
+	 * Uninstall gesture event (touch, swipe, pinch...) handlers to element.
+	 * Currently hammer.js is used.
+	 * @param {Array} observingEvents An array of event names that need to be uninstalled.
+	 * @private
+	 */
+	uninstallHammerTouchHandlers: function(observingEvents)
+	{
+		if (this._hammertime)
+		{
+			if (!observingEvents)
+				observingEvents = this.getObservingGestureEvents();  //Kekule.Widget.TouchGestures;
+			this._hammertime.off(observingEvents.join(' '), this.reactTouchGestureBind);
+		}
+	},
+
 	/** @private */
 	reactTouchGesture: function(e)
 	{
@@ -2954,6 +3043,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			// dispatch event to interaction controllers
 			this.dispatchEventToIaControllers(e, 'hammer');
 		}
+	},
+
+	/** @private */
+	observingGestureEventsChanged: function(eventNames)
+	{
+		if (enabled)
+			this.installHammerTouchHandlers();
 	},
 
 	/**

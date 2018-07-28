@@ -315,6 +315,8 @@ var kekuleFiles = {
 	'widget': {
 		'requires': ['lan', 'root', 'common', 'html'],
 		'files': [
+			'lib/hammer.js/hammer.min.js',
+
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
 

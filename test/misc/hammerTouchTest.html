@@ -2,36 +2,60 @@
 <html>
 <head>
   <title>Hammer.js Test</title>
+  <!--
   <script src="../../src/kekule.js"></script>
+  -->
+  <script src="../../../libs/hammer.js/hammer.js"></script>
 </head>
 <body>
 
 <div id="div1" style="width:1000px;height:1000px;background-color:green;border:1px solid red">DIV</div>
 
 <script>
-  var elem = document.getElementById('div1');
+  var elem = document.body; //document.getElementById('div1');
   var hammertime = Hammer(elem);
+
+  hammertime.get('pinch').set({ enable: true });
+  hammertime.get('rotate').set({ enable: true });
+
   hammertime.on('touch', function(e)
     {
       console.log('touch', e);
     }
   );
+  /*
   hammertime.on('pinch', function(e)
     {
       console.log('pinch', e);
-      e.gesture.preventDefault();
+      //e.gesture.preventDefault();
+    }
+  );
+  */
+  hammertime.on('rotate', function(e)
+    {
+      console.log('rotate', e);
+    }
+  );
+  hammertime.on('rotatestart', function(e)
+    {
+      console.log('rotatestart', e);
+    }
+  );
+  hammertime.on('rotateend', function(e)
+    {
+      console.log('rotateend', e);
     }
   );
   hammertime.on('drag', function(e)
     {
       console.log('drag', e);
-      e.gesture.preventDefault();
+      //e.gesture.preventDefault();
     }
   );
   hammertime.on('tap swipe', function(e)
     {
       console.log('swipe or tap on', e);
-      e.gesture.preventDefault();
+      //e.gesture.preventDefault();
     }
   );
 </script>
