@@ -91,6 +91,8 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Int} objBoundTrackInflation The bound of object will usually be inflated to make it easier to select. This value controls the inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
+ * @property {Int} selectionMarkerDefPulseDuration
+ * @property {Int} selectionMarkerDefPulseCount
  * @property {Int} selectionCurveSimplificationDistanceThreshold Distance threshold to simplify the selecting curve.
  * @property {Int} rotationRegionInflation A circle with this ratio outside selection area marker will be regarded as rotation region.
  * @property {Float} constrainedRotateStep In constrained rotate mode, rotation angle will only be times of this value.
@@ -100,6 +102,11 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
  *   Set this value to true will improve the performance of chem editor.
+ * @property {Bool} enableOffSelectionManipulation If true, holding pointer down outside selection region for a while
+ *   will enter the manipulation state to move the selected objects.
+ * @property {Int} OffSelectionManipulationActivatingTimeThreshold Holding pointer down longer then this time (in ms) may
+ *   invoker off selection manipulation.
+ * @property {Float} unmovePointerDistanceThreshold When moving less than this distance, pointer will be regarded as still.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
@@ -127,12 +134,17 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('objBoundTrackInflationTouch', 10);
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
 		this.addFloatConfigProp('selectingBrushWidth', 12);
+		this.addBoolConfigProp('enableOffSelectionManipulation', true);
+		this.addIntConfigProp('offSelectionManipulationActivatingTimeThreshold', 800);
+		this.addFloatConfigProp('unmovePointerDistanceThreshold', 5);
 		//this.addFloatConfigProp('selectingBrushMinWidth', 5);
-		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2, {'scope': PS.PUBLIC});
-		this.addIntConfigProp('selectionMarkerInflation', 5, {'scope': PS.PUBLIC});
-		this.addIntConfigProp('selectionMarkerEdgeInflation', 5, {'scope': PS.PUBLIC});
-		this.addIntConfigProp('rotationRegionInflation', 10, {'scope': PS.PUBLIC});
-		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15, {'scope': PS.PUBLIC});  // 15 degree
+		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2);
+		this.addIntConfigProp('selectionMarkerInflation', 5);
+		this.addIntConfigProp('selectionMarkerEdgeInflation', 5);
+		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
+		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
+		this.addIntConfigProp('rotationRegionInflation', 10);
+		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15);  // 15 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
 		this.addBoolConfigProp('enableMergePreview', true);
@@ -145,7 +157,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('trackSimplifierDistanceThreshold', 8);
 		this.addIntConfigProp('trackSimplifierIgnoreSegmentThreshold', 10);
 		this.addIntConfigProp('trackMergeDistanceThreshold', 20);
-		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30, {'scope': PS.PUBLIC});  // 30 degree
+		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30);  // 30 degree
 		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
 	},
@@ -168,6 +180,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} selectionMarkerStrokeWidth Width of selection marker stroke.
  * @property {String} selectionMarkerFillColor Fill color of selection marker. Usually this value should be set to null (not filled).
  * @property {Float} selectionMarkerOpacity Opacity of selection marker.
+ * @property {Float} selectionMarkerEmphasisOpacity Opacity of a highlighted selection marker.
  * @property {Number} selectionTransformMarkerSize Width/height of selection transform handler box, in px.
  * @property {Float} selectionTransformMarkerOpacity Opacity of selection transform marker.
  * @property {String} selectingMarkerStrokeColor Stroke color of selecting marker.
@@ -197,6 +210,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('selectionMarkerStrokeWidth', 2);
 		this.addStrConfigProp('selectionMarkerFillColor', '#0000FF');
 		this.addFloatConfigProp('selectionMarkerOpacity', 0.2);
+		this.addFloatConfigProp('selectionMarkerEmphasisOpacity', 0.4);
 		this.addFloatConfigProp('selectionTransformMarkerSize', 8, {'scope': PS.PUBLIC});  // currently not used?
 		this.addFloatConfigProp('selectionTransformMarkerOpacity', 0.4, {'scope': PS.PUBLIC});  // currently not used?
 

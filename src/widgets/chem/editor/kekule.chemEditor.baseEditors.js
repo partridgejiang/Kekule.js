@@ -1972,7 +1972,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	modifyShapeBasedMarker: function(marker, newShapeInfo, drawStyles, updateRenderer)
 	{
 		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
-		marker.setShapeInfo(newShapeInfo);
+		if (newShapeInfo)
+			marker.setShapeInfo(newShapeInfo);
 		if (drawStyles)
 			marker.setDrawStyles(drawStyles);
 		// notify change and update renderer
@@ -2173,19 +2174,23 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Modify hot track marker to bind to newBoundInfo.
 	 * @private
 	 */
-	changeSelectionAreaMarkerBound: function(newBoundInfo)
+	changeSelectionAreaMarkerBound: function(newBoundInfo, drawStyles)
 	{
 		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
-		var drawStyles = {
-			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
-			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
-			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
-			'opacity': styleConfigs.getSelectionMarkerOpacity()
-		};
+		if (!drawStyles)
+			drawStyles = {
+				'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+				'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+				'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+				'opacity': styleConfigs.getSelectionMarkerOpacity()
+			};
 		//console.log(drawStyles);
 		var marker = this.getUiSelectionAreaMarker();
-		marker.setVisible(true);
-		this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
+		if (marker)
+		{
+			marker.setVisible(true);
+			this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
+		}
 		return this;
 	},
 	/** @private */
@@ -2274,6 +2279,60 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			this.endUpdateUiMarkers();
 		}
+	},
+	/** @private */
+	_highlightSelectionAreaMarker: function()
+	{
+		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+		var highlightStyles = {
+			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+			'opacity': styleConfigs.getSelectionMarkerEmphasisOpacity()
+		};
+		this.changeSelectionAreaMarkerBound(null, highlightStyles);  // change draw styles without the modification of bound
+	},
+	/** @private */
+	_restoreSelectionAreaMarker: function()
+	{
+		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+		var highlightStyles = {
+			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+			'opacity': styleConfigs.getSelectionMarkerOpacity()
+		};
+		this.changeSelectionAreaMarkerBound(null, highlightStyles);  // change draw styles without the modification of bound
+	},
+	/**
+	 * Pulse selection marker several times to get the attention of user.
+	 * @param {Int} duration Duration of the whole process, in ms.
+	 * @param {Int} pulseCount The times of highlighting marker.
+	 */
+	pulseSelectionAreaMarker: function(duration, pulseCount)
+	{
+		if (this.getUiSelectionAreaMarker())
+		{
+			if (!duration)
+				duration = this.getEditorConfigs().getInteractionConfigs().getSelectionMarkerDefPulseDuration() || 0;
+			if (!pulseCount)
+				pulseCount = this.getEditorConfigs().getInteractionConfigs().getSelectionMarkerDefPulseCount() || 1;
+			if (!duration)
+				return;
+
+			var interval = duration / pulseCount;
+			this.doPulseSelectionAreaMarker(interval, pulseCount);
+		}
+		return this;
+	},
+	/** @private */
+	doPulseSelectionAreaMarker: function(interval, pulseCount)
+	{
+		this._highlightSelectionAreaMarker();
+		//if (pulseCount <= 1)
+		setTimeout(this._restoreSelectionAreaMarker.bind(this), interval);
+		if (pulseCount > 1)
+			setTimeout(this.doPulseSelectionAreaMarker.bind(this, interval, pulseCount - 1), interval * 2);
 	},
 
 
@@ -2516,13 +2575,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		//console.log('select on coord');
 		var obj = this.getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
-		var objs = this._getActualSelectedObjsInSelecting([obj]);
-		if (objs)
+		if (obj)
 		{
-			if (toggleFlag)
-				this.toggleSelectingState(objs);
-			else
-				this.select(objs);
+			var objs = this._getActualSelectedObjsInSelecting([obj]);
+			if (objs)
+			{
+				if (toggleFlag)
+					this.toggleSelectingState(objs);
+				else
+					this.select(objs);
+			}
 		}
 	},
 
@@ -3175,7 +3237,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
-	 * Returns a minimal box containing all objects' bounds in editor.
+	 * Returns a minimal box (in screen coord system) containing all objects' bounds in editor.
 	 * @param {Array} objects
 	 * @param {Float} objBoundInflation Inflation of each object's bound.
 	 * @returns {Hash}
@@ -3211,13 +3273,35 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return containerBox;
 	},
 	/**
-	 * Returns container box that contains all objects in selection.
+	 * Returns container box (in screen coord system) that contains all objects in selection.
 	 * @param {Number} objBoundInflation
 	 * @returns {Hash}
 	 */
 	getSelectionContainerBox: function(objBoundInflation)
 	{
 		return this.getObjectsContainerBox(this.getSelection(), objBoundInflation);
+	},
+
+	/**
+	 * Returns whether current selected objects can be seen from screen (not all of them
+	 * are in hidden scroll area).
+	 */
+	isSelectionVisible: function()
+	{
+		var selectionBox = this.getSelectionContainerBox();
+		if (selectionBox)
+		{
+			var editorDim = this.getClientDimension();
+			var editorOffset = this.getClientScrollPosition();
+			var editorBox = {
+				'x1': editorOffset.x, 'y1': editorOffset.y,
+				'x2': editorOffset.x + editorDim.width, 'y2': editorOffset.y + editorDim.height
+			};
+			//console.log(selectionBox, editorBox, Kekule.BoxUtils.getIntersection(selectionBox, editorBox));
+			return Kekule.BoxUtils.hasIntersection(selectionBox, editorBox);
+		}
+		else
+			return false;
 	},
 
 	/////////// methods about object manipulations  /////////////////////////////
@@ -3912,6 +3996,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Returns the dimension of current visible client area of editor.
+	 */
+	getClientDimension: function()
+	{
+		var elem = this.getElement();
+		return {
+			'width': elem.clientWidth,
+			'height': elem.clientHeight
+		};
+	},
+	/**
 	 * Returns current scroll position of edit client element.
 	 * @returns {Hash} {x, y}
 	 */
@@ -4519,6 +4614,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this._suppressConstrainedResize = false;
 		this._manipulationStepBuffer = {};
+		this._suspendedOperations = null;
 		this.execManipulationStepBind = this.execManipulationStep.bind(this);
 	},
 	/** @private */
@@ -5583,6 +5679,83 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/**
+	 * Set operations in suspended state.
+	 * @param {Func} immediateOper
+	 * @param {Func} delayedOper
+	 * @param {Int} delay In ms.
+	 * @private
+	 */
+	setSuspendedOperations: function(immediateOper, delayedOper, delay)
+	{
+		var self = this;
+		this._suspendedOperations = {
+			'immediate': immediateOper,
+			'delayed': delayedOper,
+			'delayExecId': setTimeout(this.execSuspendedDelayOperation.bind(this), delay)
+		};
+		return this._suspendedOperations;
+	},
+	/**
+	 * Execute the immediate operation in suspended operations, cancelling the delayed one.
+	 * @private
+	 */
+	execSuspendedImmediateOperation: function()
+	{
+		if (this._suspendedOperations)
+		{
+			console.log('exec immediate');
+			clearTimeout(this._suspendedOperations.delayExecId);
+			var oper = this._suspendedOperations.immediate;
+			this._suspendedOperations = null;  // clear old
+			return oper.apply(this);
+		}
+	},
+	/**
+	 * Execute the delayed operation in suspended operations, cancelling the immediate one.
+	 * @private
+	 */
+	execSuspendedDelayOperation: function()
+	{
+		if (this._suspendedOperations)
+		{
+			//console.log('exec delayed');
+			clearTimeout(this._suspendedOperations.delayExecId);
+			var oper = this._suspendedOperations.delayed;
+			this._suspendedOperations = null;  // clear old
+			return oper.apply(this);
+		}
+	},
+	/**
+	 * Halt all suspend operations.
+	 * @private
+	 */
+	haltSuspendedOperations: function()
+	{
+		if (this._suspendedOperations)
+		{
+			clearTimeout(this._suspendedOperations.delayExecId);
+			this._suspendedOperations = null;  // clear old
+		}
+	},
+
+	/** @private */
+	_startNewSelecting: function(startCoord, shifted)
+	{
+		if (this.getEnableSelect())
+		{
+			this.getEditor().startSelecting(startCoord, shifted);
+			this.setState(Kekule.Editor.BasicManipulationIaController.State.SELECTING);
+		}
+	},
+	/** @private */
+	_startOffSelectionManipulation: function(currCoord)
+	{
+		//console.log('off selection!');
+		this.beginManipulation(currCoord, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE);
+		this.getEditor().pulseSelectionAreaMarker();  // pulse selection, reach the user's attention
+	},
+
+	/**
 	 * Begin a manipulation.
 	 * Descendants may override this method.
 	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
@@ -5592,6 +5765,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+
+		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
 
 		var editor = this.getEditor();
 		editor.beginManipulateObject();
@@ -5607,12 +5782,12 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
 		if (!isTransform)
 		{
-			var isResize = this.getEnableResize()
+			var isResize = !evokedByTouch && this.getEnableResize()
 					&& ((explicitManipulationType === T.RESIZE) || ((coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE)));
 			var isMove = !isResize && this.getEnableMove()
-					&& ((explicitManipulationType === T.RESIZE) || (coordRegion !== R.OUTSIDE));
-			var isRotate = !isResize && !isMove && this.getEnableRotate()
-					&& ((explicitManipulationType === T.RESIZE) || !!rotateRegion);
+					&& ((explicitManipulationType === T.MOVE) || (coordRegion !== R.OUTSIDE));
+			var isRotate = !evokedByTouch && !isResize && !isMove && this.getEnableRotate()
+					&& ((explicitManipulationType === T.ROTATE) || !!rotateRegion);
 		}
 
 
@@ -5663,15 +5838,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				if (this.getEnableMove())
 					this.startDirectManipulate(null, obj, currCoord);
 			}
-			else  // mouse down on empty region, deselect old selection and prepare for new rect selecting
+			else  // mouse down on empty region, deselect old selection and prepare for new selecting
 			{
-				if (this.getEnableSelect())
+				if (this.getEnableMove() && this.getEnableSelect()
+						&& this.getEditorConfigs().getInteractionConfigs().getEnableOffSelectionManipulation()
+						&& this.getEditor().hasSelection() && this.getEditor().isSelectionVisible())
+				{
+					//console.log('enter suspend');
+					this.setState(S.SUSPENDING);
+					// need wait for a while to determinate the actual operation
+					var delay = this.getEditorConfigs().getInteractionConfigs().getOffSelectionManipulationActivatingTimeThreshold();
+					var shifted = e && e.getShiftKey();
+					this.setSuspendedOperations(
+					  this._startNewSelecting.bind(this, currCoord, shifted),
+						this._startOffSelectionManipulation.bind(this, currCoord),
+						delay
+					);
+					//this._startOffSelectionManipulation(currCoord);
+				}
+				else if (this.getEnableSelect())
 				{
 					var shifted = e && e.getShiftKey();
+					/*
 					//this.getEditor().startSelectingBoxDrag(currCoord, shifted);
 					//this.getEditor().setSelectMode(this.getSelectMode());
 					this.getEditor().startSelecting(currCoord, shifted);
 					this.setState(S.SELECTING);
+					*/
+					this._startNewSelecting(currCoord, shifted);
 				}
 			}
 		}
@@ -5808,9 +6002,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var coord = this._getEventMouseCoord(e);
 
+		var distanceFromLast;
 		if (this._lastMouseMoveCoord)
 		{
 			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
+			distanceFromLast = dis;
 			if (dis < 2)  // less than 2 px, too tiny to react
 			{
 				return true;
@@ -5828,7 +6024,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		*/
-		if (state === S.SELECTING)
+		if (this.getState() === S.SUSPENDING)
+		{
+			var disThreshold = this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold() || 0;
+			if (Kekule.ObjUtils.notUnset(distanceFromLast) && (distanceFromLast > disThreshold))
+				this.execSuspendedImmediateOperation();
+		}
+		else if (state === S.SELECTING)
 		{
 			if (this.getEnableSelect())
 			{
@@ -5875,6 +6077,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 					e.stopPropagation();
 					e.preventDefault();
 				}
+				else if (this.getState() === S.SUSPENDING)
+					this.haltSuspendedOperations();
 			}
 		}
 		return true;
@@ -5892,7 +6096,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var state = this.getState();
 			var S = Kekule.Editor.BasicManipulationIaController.State;
 
-			if (state === S.SELECTING)  // mouse up, end selecting
+			if (this.getState() === S.SUSPENDING)
+				this.execSuspendedImmediateOperation();
+			else if (state === S.SELECTING)  // mouse up, end selecting
 			{
 				//this.getEditor().endSelectingBoxDrag(coord, shifted);
 				this.getEditor().endSelecting(coord, shifted);
@@ -5903,6 +6109,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			}
 			else if (state === S.MANIPULATING)
 			{
+				//var dis = Kekule.CoordUtils.getDistance(startCoord, endCoord);
+				//if (dis <= this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold())
 				if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // mouse down and up in same point, not manupulate, just select a object
 				{
 					if (this.getEnableSelect())
@@ -6089,7 +6297,12 @@ Kekule.Editor.BasicManipulationIaController.State = {
 	/** Is selecting objects. */
 	SELECTING: 1,
 	/** Is manipulating objects (e.g. changing object position). */
-	MANIPULATING: 2
+	MANIPULATING: 2,
+	/**
+	 * Just put down pointer, if move the pointer immediately, selecting state will be open.
+	 * But if hold down still for a while, it may turn to manipulating state to move current selected objects.
+	 */
+	SUSPENDING: 11
 };
 /**
  * Enumeration of manipulation types of a {@link Kekule.Editor.BasicManipulationIaController}.
