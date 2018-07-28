@@ -5703,7 +5703,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		if (this._suspendedOperations)
 		{
-			console.log('exec immediate');
+			//console.log('exec immediate');
 			clearTimeout(this._suspendedOperations.delayExecId);
 			var oper = this._suspendedOperations.immediate;
 			this._suspendedOperations = null;  // clear old
@@ -5998,7 +5998,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
-		var state = this.getState();
 
 		var coord = this._getEventMouseCoord(e);
 
@@ -6030,7 +6029,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (Kekule.ObjUtils.notUnset(distanceFromLast) && (distanceFromLast > disThreshold))
 				this.execSuspendedImmediateOperation();
 		}
-		else if (state === S.SELECTING)
+
+		var state = this.getState();
+
+		if (state === S.SELECTING)
 		{
 			if (this.getEnableSelect())
 			{
@@ -6093,12 +6095,14 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var startCoord = this.getStartCoord();
 			var endCoord = coord;
 			var shifted = e.getShiftKey();
-			var state = this.getState();
 			var S = Kekule.Editor.BasicManipulationIaController.State;
 
-			if (this.getState() === S.SUSPENDING)
+			if (this.getState() === S.SUSPENDING)   // done suspended first, then finish the operation
 				this.execSuspendedImmediateOperation();
-			else if (state === S.SELECTING)  // mouse up, end selecting
+
+			var state = this.getState();
+
+			if (state === S.SELECTING)  // mouse up, end selecting
 			{
 				//this.getEditor().endSelectingBoxDrag(coord, shifted);
 				this.getEditor().endSelecting(coord, shifted);
