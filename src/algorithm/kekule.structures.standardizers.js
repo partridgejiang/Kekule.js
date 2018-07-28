@@ -93,12 +93,16 @@ Object.extend(Kekule.ChemStructureUtils,
 		// clone the structure to avoid change original molecule objects
 		var m1 = mol1.clone(false);
 		var m2 = mol2.clone(false);
+		// set cano index of two root molecules to null, avoid affect the following comparison
+		m1.setCanonicalizationIndex(null);
+		m2.setCanonicalizationIndex(null);
 		// standardize each
 		m1 = Kekule.MolStandardizer.standardize(m1);
 		m2 = Kekule.MolStandardizer.standardize(m2);
 		// compare options
 		var op = Object.create(compareOptions || {}); //Object.extend(compareOptions || {});
 		op.doStandardize = false;  // flag that notify the molecule do not do standardize again (that will invoke recursion)
+		op.extraComparisonProperties = ['canonicalizationIndex'];  // flag that indicate the cano step has been done and the canoIndex can be used in comparison
 		// compare
 		//return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
 		return m1.compareStructure(m2, op);
