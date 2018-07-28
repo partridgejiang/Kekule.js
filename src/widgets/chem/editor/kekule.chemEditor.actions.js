@@ -945,6 +945,7 @@ Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.creat
 	'BasicMolManipulationIaController-Marquee',
 	{
 		'enableSelect': true,
+		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.RECT
 	},
 	null,
@@ -966,6 +967,7 @@ Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createC
 	'BasicMolManipulationIaController-Lasso',
 	{
 		'enableSelect': true,
+		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYGON
 	},
 	null,
@@ -987,6 +989,7 @@ Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createC
 	'BasicMolManipulationIaController-Brush',
 	{
 		'enableSelect': true,
+		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYLINE
 	},
 	null,
@@ -1008,6 +1011,7 @@ Kekule.Editor.ActionComposerSetManipulateControllerAncestor = Kekule.Editor.crea
 	'BasicMolManipulationIaController-Ancestor',
 	{
 		'enableSelect': true,
+		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.ANCESTOR
 	},
 	null,

@@ -4497,6 +4497,7 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicEraserIaController
  * //@property {Bool} enableRemove Whether remove function is enabled.
  * @property {Bool} enableResize Whether resize of selection is allowed.
  * @property {Bool} enableRotate Whether rotate of selection is allowed.
+ * @property {Bool} enableGestureManipulation Whether rotate and resize by touch gestures are allowed.
  */
 Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEditorIaController,
 /** @lends Kekule.Editor.BasicManipulationIaController# */
@@ -4509,7 +4510,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		$super(widget);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 
-		this.setEnableSelect(!true);
+		this.setEnableSelect(false);
+		this.setEnableGestureManipulation(false);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
 		this.setEnableConstrainedResize(true);
@@ -4528,6 +4530,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//this.defineProp('enableRemove', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableResize', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableRotate', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableGestureManipulation', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('state', {'dataType': DataType.INT, 'serializable': false});
 		// the screen coord that start this manipulation, since startCoord may be changed during rotation, use this
 		// to get the inital coord of mouse down
@@ -4746,6 +4749,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var map = this.getManipulateObjInfoMap();
 		var operMap = this.getObjOperationMap();
 		operMap.clear();
+		//console.log('init operations');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
@@ -5335,7 +5339,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				transformParams = this._calcManipulateObjsRotationParams(objs, endScreenCoord);
 		}
 
-		console.log('do transform', transformParams);
+		//console.log('do transform', transformParams);
 
 		var doConcreteTransform = transformParams && this._calcManipulateObjsTransformInfo(objs, transformParams);
 		if (!doConcreteTransform)
@@ -5956,26 +5960,33 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	*/
 
 	//////////////////// Hammer Gesture event handlers ///////////////////////////
+	/**
+	 * Starts a gesture transform.
+	 * @param {Object} event
+	 * @private
+	 */
 	beginGestureTransform: function(event)
 	{
 		if (this.getEditor().hasSelection())
 		{
-			/*
-			if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)  // stop prev manipulation first
-			{
-				this.addOperationToEditor();
-				this.stopManipulate();
-			}
-			*/
-
 			// stores initial gesture transform params
 			this._initialGestureTransformParams = {
 				'angle': (event.rotation * Math.PI / 180) || 0
 			};
 			// start a brand new one
-			this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+			if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+				this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+			else
+			{
+				if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
+					this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+			}
 		}
 	},
+	/**
+	 * Ends a gesture transform.
+	 * @private
+	 */
 	endGestureTransform: function()
 	{
 		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)  // stop prev manipulation first
@@ -5985,9 +5996,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 		}
 	},
+	/**
+	 * Do a new transform step according to received event.
+	 * @param {Object} e Gesture event received.
+	 * @private
+	 */
 	doGestureTransformStep: function(e)
 	{
-		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+		if ((this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			&& (this.getManipulationType() === Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM))
 		{
 			// get transform params from event directly
 			var center = this.getRotateCenter();  // use the center of current editor selection
@@ -6011,37 +6028,53 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 	},
 
+	/** @ignore */
 	react_rotatestart: function(e)
 	{
-		this.beginGestureTransform(e);
+		if (this.getEnableGestureManipulation())
+			this.beginGestureTransform(e);
 	},
+	/** @ignore */
 	react_rotate: function(e)
 	{
-		this.doGestureTransformStep(e);
+		if (this.getEnableGestureManipulation())
+			this.doGestureTransformStep(e);
 	},
+	/** @ignore */
 	react_rotateend: function(e)
 	{
-		this.endGestureTransform();
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
 	},
+	/** @ignore */
 	react_rotatecancel: function(e)
 	{
-		this.endGestureTransform();
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
 	},
+	/** @ignore */
 	react_pinchstart: function(e)
 	{
-		this.beginGestureTransform(e);
+		if (this.getEnableGestureManipulation())
+			this.beginGestureTransform(e);
 	},
+	/** @ignore */
 	react_pinchmove: function(e)
 	{
-		this.doGestureTransformStep(e);
+		if (this.getEnableGestureManipulation())
+			this.doGestureTransformStep(e);
 	},
+	/** @ignore */
 	react_pinchend: function(e)
 	{
-		this.endGestureTransform();
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
 	},
+	/** @ignore */
 	react_pinchcancel: function(e)
 	{
-		this.endGestureTransform();
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
 	}
 });
 
