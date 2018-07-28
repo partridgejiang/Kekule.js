@@ -3072,7 +3072,7 @@ Kekule.BoxUtils = {
 			'x1': Math.max(b1.x1, b2.x1),
 			'y1': Math.max(b1.y1, b2.y1),
 			'x2': Math.min(b1.x2, b2.x2),
-			'y2': Math.max(b1.y2, b2.y2)
+			'y2': Math.min(b1.y2, b2.y2)
 		};
 		if ((r.x1 >= r.x2) || (r.y1 >= r.y2))
 			return null;
