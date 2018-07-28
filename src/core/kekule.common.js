@@ -2496,12 +2496,14 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		if (!targetObj)
 			return 1;
 		var actualOps = this.doGetActualCompareOptions(options);
-		//console.log(options, actualOps);
+		//console.log(this.getClassName(), options, actualOps);
 		var result;
 		if (actualOps.customMethod)
 			result = actualOps.customMethod(this, targetObj, actualOps);
 		else
+		{
 			result = this.doCompare(targetObj, actualOps);
+		}
 		return (result === 0)? 0: (result < 0)? -1: 1;  // standardize result
 	},
 	/**
@@ -2540,7 +2542,24 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			}
 			else  // same class, must compare details, here we use default approach, comparing properties
 			{
-				return this.doCompareOnProperties(targetObj, options);
+				var result = this.doCompareOnProperties(targetObj, options);
+				if (!result && options.extraComparisonProperties)
+				{
+					for (var i = 0, l = options.extraComparisonProperties.length; i < l; ++i)
+					{
+						var propName = options.extraComparisonProperties[i];
+						if (this.hasProperty(propName) && targetObj.hasProperty && targetObj.hasProperty(propName))
+						{
+							var v1 = this.getPropValue(propName);
+							var v2 = targetObj.getPropValue(propName);
+							//console.log('compare extra', this.getClassName(), propName, v1, v2);
+							result = this.doCompareOnValue(v1, v2, options);
+							if (!result)
+								break;
+						}
+					}
+				}
+				return result;
 			}
 		}
 	},
