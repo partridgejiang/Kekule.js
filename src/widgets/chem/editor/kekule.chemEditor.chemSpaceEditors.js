@@ -1413,7 +1413,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			return times * angleStep;
 		}
 		else
-			return $super(objs, newDeltaAngle, oldAbsAngle, newAbsAngle);
+			return $super(objs, newDeltaAngle/*, oldAbsAngle, newAbsAngle*/);
 	},
 
 	/** @private */
