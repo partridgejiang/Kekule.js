@@ -54,10 +54,19 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.RichText',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._valueStorage = {};
+	},
 	/** @private */
 	initProperties: function()
 	{
 		// private
+		this.defineProp('fontPanel', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
 		this.defineProp('fontNameBox', {
 			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
 		});
@@ -97,16 +106,9 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 
 		return result;
 	},
-	/** @ignore */
-	doCreateWidget: function()
+	/** @private */
+	_doCreateDropDownPanel: function()
 	{
-		var result = new Kekule.Widget.DropDownButton(this.getEditor());
-		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_TEXT_FORMAT'));
-		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_FORMAT'));
-		result.setShowText(false);
-		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
-		result.addClassName(CCNS.COMPOSER_TEXTFORMAT_BUTTON);
-
 		var panel = new Kekule.Widget.Panel(this.getEditor());
 		panel.addClassName(CCNS.COMPOSER_MODIFIER_RICHTEXT_PANEL);
 		var compNames = Kekule.globalOptions.chemWidget.composer.objModifier.richText.componentNames;
@@ -209,10 +211,37 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			this.setPropStoreFieldValue('textVerticalAlignBox', selBox);
 			this._createCtrlGroup(doc, rootElem, Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_VERTICAL_ALIGN'), selBox);
 		}
+		this.setPropStoreFieldValue('fontPanel', panel);
 
+		// set stored field values
+		var valueStorage = this._valueStorage;
+		if (valueStorage)
+		{
+			this.getFontNameBox().setValue(valueStorage.fontName);
+			this.getFontSizeBox().setValue(valueStorage.fontSize);
+
+			this.getTextDirectionBox().setValue(valueStorage.textDirection);
+			this.getTextHorizontalAlignBox().setValue(valueStorage.textHAlign);
+			this.getTextVerticalAlignBox().setValue(valueStorage.textVAlign);
+		}
+
+		return panel;
+	},
+	/** @ignore */
+	doCreateWidget: function()
+	{
+		var result = new Kekule.Widget.DropDownButton(this.getEditor());
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_TEXT_FORMAT'));
+		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_FORMAT'));
+		result.setShowText(false);
+		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
+		result.addClassName(CCNS.COMPOSER_TEXTFORMAT_BUTTON);
+
+		//var panel = this._doCreateDropDownPanel();
 		//panel.on('valueChange', function(){ this.applyToTargets(); }, this);
 
-		result.setDropDownWidget(panel);
+		//result.setDropDownWidget(panel);
+		result.setDropDownWidgetGetter(this._doCreateDropDownPanel.bind(this));
 		return result;
 	},
 	/** @ignore */
@@ -220,14 +249,23 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 	{
 		if (targets && targets.length)
 		{
-			var fontName = this.getRenderOptionValue(targets, 'fontFamily') || '';  // TODO: atom font family?
-			this.getFontNameBox().setValue(fontName);
-			var fontSize = this.getRenderOptionValue(targets, 'fontSize') || undefined;
-			this.getFontSizeBox().setValue(fontSize);
+			var valueStorage = this._valueStorage;
+			valueStorage.fontName = this.getRenderOptionValue(targets, 'fontFamily') || '';  // TODO: atom font family?
+			valueStorage.fontSize = this.getRenderOptionValue(targets, 'fontSize') || undefined;
+			valueStorage.textDirection = this.getRenderOptionValue(targets, 'charDirection') || Kekule.Render.TextDirection.DEFAULT;
+			valueStorage.textHAlign = this.getRenderOptionValue(targets, 'horizontalAlign') || Kekule.Render.TextAlign.DEFAULT;
+			valueStorage.textVAlign = this.getRenderOptionValue(targets, 'verticalAlign') || Kekule.Render.TextAlign.DEFAULT;
 
-			this.getTextDirectionBox().setValue(this.getRenderOptionValue(targets, 'charDirection') || Kekule.Render.TextDirection.DEFAULT);
-			this.getTextHorizontalAlignBox().setValue(this.getRenderOptionValue(targets, 'horizontalAlign') || Kekule.Render.TextAlign.DEFAULT);
-			this.getTextVerticalAlignBox().setValue(this.getRenderOptionValue(targets, 'verticalAlign') || Kekule.Render.TextAlign.DEFAULT);
+			if (this.getFontPanel())
+			{
+				//console.log('do load from target');
+				this.getFontNameBox().setValue(fontName);
+				this.getFontSizeBox().setValue(fontSize);
+
+				this.getTextDirectionBox().setValue(textDirection);
+				this.getTextHorizontalAlignBox().setValue(textHAlign);
+				this.getTextVerticalAlignBox().setValue(textVAlign);
+			}
 		}
 	},
 	/** @ignore */
