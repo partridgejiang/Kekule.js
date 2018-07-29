@@ -14,6 +14,7 @@
  * requires /widgets/commonCtrls/kekule.widget.formControls.js
  * requires /widgets/commonCtrls/kekule.widget.dialogs.js
  * requires /widgets/chem/periodicTable/kekule.chemWidget.periodicTables.js
+ * requires /widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js
  * requires /widgets/chem/editor/kekule.chemEditor.extensions.js
  * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  * requires /widgets/chem/editor/kekule.chemEditor.configs.js
@@ -4267,11 +4268,95 @@ Kekule.Editor.RepositoryStructureFragmentIaController = Class.create(Kekule.Edit
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.RepositoryStructureFragmentIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
- * Controller to add a flex carbon chain into chem space.
+ * Base controller to add a flex structure into chem space.
  * @class
  * @augments Kekule.Editor.RepositoryIaController
  */
-Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIaController,
+Kekule.Editor.MolFlexStructureIaController = Class.create(Kekule.Editor.RepositoryIaController,
+/** @lends Kekule.Editor.MolFlexStructureIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolFlexStructureIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this.setEnableSelect(false);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// marker to display the ring atom count
+		this.defineProp('assocMarker', {'dataType': DataType.OBJECT, 'serializable': false,
+			'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('assocMarker');
+				if (!result)
+				{
+					result = new Kekule.ChemWidget.TextUiMarker();
+					this.setPropStoreFieldValue('assocMarker', result);
+				}
+				return result;
+			}
+		});
+	},
+
+	/** @private */
+	initAssocMarker: function()
+	{
+		var marker = this.getAssocMarker();
+		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+		var drawStyles = {
+			'color': styleConfigs.getFlexStructureAssocMarkerColor(),
+			'opacity': styleConfigs.getFlexStructureAssocMarkerOpacity(),
+			'fontSize': styleConfigs.getFlexStructureAssocMarkerFontSize(),
+			'fontFamily': styleConfigs.getFlexStructureAssocMarkerFontFamily(),
+			'textBoxXAlignment': Kekule.Render.BoxXAlignment.CENTER,
+			'textBoxYAlignment': Kekule.Render.BoxYAlignment.CENTER
+		};
+		//console.log('draw styles', drawStyles);
+		marker.setDrawStyles(drawStyles);
+		marker.setVisible(true);
+		this.getEditor().getUiMarkers().addMarker(marker);
+		return marker;
+	},
+	/** @private */
+	hideAssocMarker: function()
+	{
+		var marker = this.getPropStoreFieldValue('assocMarker');
+		if (marker)
+		{
+			this.getEditor().getUiMarkers().removeMarker(marker);
+			this.repaintMarker();
+		}
+	},
+	/** @private */
+	updateAssocMarker: function(coord, props)
+	{
+		var marker = this.getAssocMarker();
+		if (coord)
+			marker.setCoord(coord);
+		if (props)
+			marker.setPropValues(props);
+
+		// request a repaint
+		this.repaintMarker();
+	},
+	/** @private */
+	repaintMarker: function()
+	{
+		//console.log(this.getEditor().isUpdatingUiMarkers());
+		this.getEditor().repaintUiMarker();
+	}
+});
+
+/**
+ * Controller to add a flex carbon chain into chem space.
+ * @class
+ * @augments Kekule.Editor.MolFlexStructureIaController
+ */
+Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.MolFlexStructureIaController,
 /** @lends Kekule.Editor.MolFlexChainIaController# */
 {
 	/** @private */
@@ -4288,12 +4373,45 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 		this._repObjStartingScreenCoord = null;
 		this._repObjNeedUpdate = false;
 		this._isForceReversedChainDirection = false;
+		this._assocMarkerInitCoord = null;
 
 		this._manipulateObjInfoCache = [];
 
 		var rep = new Kekule.Editor.MolChainRepositoryItem2D(2);
 		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
 		this.setRepositoryItem(rep);
+	},
+	/** @ignore */
+	updateAssocMarker: function($super, coord, props, manipulationDirectionVector)
+	{
+		// update draw position
+		var currCoord = coord || this._assocMarkerInitCoord;
+		var style = this.getAssocMarker().getDrawStyles();
+		var v = manipulationDirectionVector;
+		if (v)
+		{
+			var fontSize = style.fontSize || 10;
+			var gap = fontSize / 5;  // TODO: currently fixed
+			var deltaCoord = {x: 0, y: 0};
+			if (currCoord)
+			{
+				if (Math.abs(v.x) >= Math.abs(v.y))
+				{
+					style.textBoxYAlignment = Kekule.Render.BoxYAlignment.CENTER;
+					style.textBoxXAlignment = (v.x >= 0) ? Kekule.Render.BoxXAlignment.RIGHT : Kekule.Render.BoxXAlignment.LEFT;
+					deltaCoord.x = gap * (Math.sign(v.x) || 1) * -1;
+				}
+				else
+				{
+					style.textBoxXAlignment = Kekule.Render.BoxXAlignment.CENTER;
+					style.textBoxYAlignment = (v.y >= 0) ? Kekule.Render.BoxYAlignment.BOTTOM : Kekule.Render.BoxYAlignment.TOP;
+					deltaCoord.y = gap * (Math.sign(v.y) || 1) * -1;
+				}
+				currCoord = Kekule.CoordUtils.add(currCoord, deltaCoord);
+			}
+		}
+		// then call $super, and repaint the marker
+		$super(currCoord, props);
 	},
 	/** @private */
 	getChainMaxAtomCount: function()
@@ -4305,6 +4423,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 	{
 		this._clearManipulateObjInfoCache();
 		$super();
+		this.hideAssocMarker();
 	},
 	/** @ignore */
 	createManipulateObjInfo: function($super, obj, objIndex, startContextCoord)
@@ -4420,7 +4539,12 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 			this._deltaDistance = null;
 			this._deltaCount = 0;
 			this._lastDeltaCount = 1;
-			this.getRepositoryItem().setAtomCount(2);
+			var initialAtomCount = 2;
+			this.getRepositoryItem().setAtomCount(initialAtomCount);
+
+			var marker = this.initAssocMarker();
+			this._assocMarkerInitCoord = startingCoord;
+			this.updateAssocMarker(startingCoord, {'text': '' + initialAtomCount}, {'x': 0, 'y': 0});  // the marker will restain in starting coord
 		}
 		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update chain
 		var result = $super(startingCoord, startingObj, isUpdate);
@@ -4468,6 +4592,8 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.RepositoryIa
 					{
 						this.getRepositoryItem().setAtomCount(atomCount);
 						this._repObjNeedUpdate = true;
+						var manipulationDirectionVector = Kekule.CoordUtils.substract(endScreenCoord, startCoord);
+						this.updateAssocMarker(this._assocMarkerInitCoord, {'text': '' + atomCount}, manipulationDirectionVector);
 					}
 					this._lastDeltaCount = deltaCount;
 				}
@@ -4535,9 +4661,9 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexChainIaControlle
 /**
  * Controller to add a flex ring structure to chem space.
  * @class
- * @augments Kekule.Editor.RepositoryIaController
+ * @augments Kekule.Editor.MolFlexStructureIaController
  */
-Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaController,
+Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.MolFlexStructureIaController,
 /** @lends Kekule.Editor.MolFlexRingIaController# */
 {
 	/** @private */
@@ -4559,6 +4685,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 		rep.setEnableCoordCache(true);  // use cache to reduce dynamic coord calculation time
 		this.setRepositoryItem(rep);
 	},
+
 	/** @private */
 	getRingMaxAtomCount: function()
 	{
@@ -4583,6 +4710,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 	{
 		this._clearManipulateObjInfoCache();
 		$super();
+		this.hideAssocMarker();
 	},
 	/** @ignore */
 	createManipulateObjInfo: function($super, obj, objIndex, startContextCoord)
@@ -4670,6 +4798,9 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 			this._lastDeltaCount = 1;
 			var initialAtomCount = this.getEditorConfigs().getStructureConfigs().getMinFlexRingAtomCount();
 			this.getRepositoryItem().setRingAtomCount(initialAtomCount);
+
+			var marker = this.initAssocMarker();
+			this.updateAssocMarker(startingCoord, {'text': '' + initialAtomCount});  // the marker will restain in starting coord
 		}
 		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update ring
 		var result = $super(startingCoord, startingObj);
@@ -4740,6 +4871,7 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 					{
 						this.getRepositoryItem().setRingAtomCount(atomCount);
 						this._repObjNeedUpdate = true;
+						this.updateAssocMarker(null, {'text': '' + atomCount});
 					}
 					//this._updateChain();
 					this._lastDeltaCount = deltaCount;

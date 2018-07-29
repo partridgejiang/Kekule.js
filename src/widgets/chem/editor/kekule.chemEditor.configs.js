@@ -193,6 +193,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} selectingBrushMarkerOpacity Opacity of selecting brush marker.
  * @property {String} selectingBrushMarkerStrokeLineCap
  * @property {String} selectingBrushMarkerStrokeLineJoin
+ * @property {String} flexStructureAssocMarkerColor Color of marker displaying atom count in flex ring/chain controller.
+ * @property {Float} flexStructureAssocMarkerOpacity Opacity of marker displaying atom count in flex ring/chain controller.
+ * @property {Int} flexStructureAssocMarkerFontSize Font size of marker displaying atom count in flex ring/chain controller.
  *
  */
 Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
@@ -230,6 +233,11 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('trackMarkerStrokeWidth', 2);
 		this.addStrConfigProp('trackMarkerStrokeDash', false);
 		this.addFloatConfigProp('trackMarkerOpacity', 0.5);
+
+		this.addStrConfigProp('flexStructureAssocMarkerColor', '#0000AA');
+		this.addFloatConfigProp('flexStructureAssocMarkerOpacity', 0.5);
+		this.addIntConfigProp('flexStructureAssocMarkerFontSize', 14);
+		this.addStrConfigProp('flexStructureAssocMarkerFontFamily', "Arial, Helvetica, sans-serif");
 	}
 });
 
