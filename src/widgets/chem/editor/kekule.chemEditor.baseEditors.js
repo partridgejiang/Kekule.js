@@ -5644,33 +5644,41 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var c = this._getEventMouseCoord(e, this.getEditor().getEditClientElem());
 		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.NORMAL)
 		{
-			if (this.getEnableResize())
+			var R = Kekule.Editor.BoxRegion;
+			var region = this.getEditor().getCoordRegionInSelectionMarker(c);
+			var result;
+			if (this.getEnableSelect())   // show move/rotate/resize marker in select ia controller only
 			{
-				var R = Kekule.Editor.BoxRegion;
-				var region = this.getEditor().getCoordRegionInSelectionMarker(c);
-				var result = (region === R.INSIDE)? 'move':
-					(region === R.CORNER_TL)? 'nwse-resize':
-					(region === R.CORNER_TR)? 'nesw-resize':
-					(region === R.CORNER_BL)? 'nesw-resize':
-					(region === R.CORNER_BR)? 'nwse-resize':
-					(region === R.EDGE_TOP) || (region === R.EDGE_BOTTOM)? 'ns-resize':
-					(region === R.EDGE_LEFT) || (region === R.EDGE_RIGHT)? 'ew-resize':
-					'';
-			}
-			if (!result)
-			{
-				if (this.getEnableRotate())
+				if (this.getEnableMove())
 				{
-					var region = this.getCoordOnSelectionRotationRegion(c);
-					if (!!region)
+					result = (region === R.INSIDE)? 'move': '';
+				}
+				if (!result && this.getEnableResize())
+				{
+					var result =
+						(region === R.CORNER_TL)? 'nwse-resize':
+						(region === R.CORNER_TR)? 'nesw-resize':
+						(region === R.CORNER_BL)? 'nesw-resize':
+						(region === R.CORNER_BR)? 'nwse-resize':
+						(region === R.EDGE_TOP) || (region === R.EDGE_BOTTOM)? 'ns-resize':
+						(region === R.EDGE_LEFT) || (region === R.EDGE_RIGHT)? 'ew-resize':
+						'';
+				}
+				if (!result)
+				{
+					if (this.getEnableRotate())
 					{
-						var SN = Kekule.Widget.StyleResourceNames;
-						result = (region === R.CORNER_TL)? SN.CURSOR_ROTATE_NW:
-							(region === R.CORNER_TR)? SN.CURSOR_ROTATE_NE:
-							(region === R.CORNER_BL)? SN.CURSOR_ROTATE_SW:
-							(region === R.CORNER_BR)? SN.CURSOR_ROTATE_SE:
-							SN.CURSOR_ROTATE;
-						//console.log('rotate cursor', result);
+						var region = this.getCoordOnSelectionRotationRegion(c);
+						if (!!region)
+						{
+							var SN = Kekule.Widget.StyleResourceNames;
+							result = (region === R.CORNER_TL)? SN.CURSOR_ROTATE_NW:
+								(region === R.CORNER_TR)? SN.CURSOR_ROTATE_NE:
+								(region === R.CORNER_BL)? SN.CURSOR_ROTATE_SW:
+								(region === R.CORNER_BR)? SN.CURSOR_ROTATE_SE:
+								SN.CURSOR_ROTATE;
+							//console.log('rotate cursor', result);
+						}
 					}
 				}
 			}
