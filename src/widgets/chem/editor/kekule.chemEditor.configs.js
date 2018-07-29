@@ -253,7 +253,9 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Array} primaryOrgChemAtoms Atom symbols of most often seen in organic chemistry.
  * @property {Bool} enableChargeAndRadicalMarker If true, marker objects will be used in editor to represent charge and radical.
  * @property {Int}  The max atom count when creating carbon chain using flex chain tool. 0 means no restricts.
- * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon chain using flex ring tool. 0 means no restricts.
+ * @property {Int} minFlexRingAtomCount The min atom count when creating carbon ring using flex ring tool.
+ * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon ring using flex ring tool. 0 means no restricts.
+ * //@property {Int} initialFlexRingAtomCount The initial atom count when creating carbon ring using flex ring tool.
  *
  * @property {Hash} nonAtomNodeInputSetting Settings to restrict the input types of non-atom node.
  */
@@ -283,7 +285,9 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('defIsotopeId', 'C');
 		this.addConfigProp('primaryOrgChemAtoms', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('maxFlexChainAtomCount', 0);  // no limits on flex chain
+		this.addIntConfigProp('minFlexRingAtomCount', 3);
 		this.addIntConfigProp('maxFlexRingAtomCount', 18);  // too large ring cause performance problem
+		//this.addIntConfigProp('initialFlexRingAtomCount', 3);
 
 		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
 

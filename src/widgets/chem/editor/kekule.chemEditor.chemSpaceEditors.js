@@ -4564,6 +4564,11 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 	{
 		return Math.max(this.getEditorConfigs().getStructureConfigs().getMaxFlexRingAtomCount(), 0);
 	},
+	/** @private */
+	getRingMinAtomCount: function()
+	{
+		return Math.max(this.getEditorConfigs().getStructureConfigs().getMinFlexRingAtomCount(), 3);
+	},
 	/** @ignore */
 	getActualManipulatingObjects: function(objs)
 	{
@@ -4663,7 +4668,8 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 			//this._repObjStartingScreenCoord = null;
 			this._deltaDistance = null;
 			this._lastDeltaCount = 1;
-			this.getRepositoryItem().setRingAtomCount(3);
+			var initialAtomCount = this.getEditorConfigs().getStructureConfigs().getMinFlexRingAtomCount();
+			this.getRepositoryItem().setRingAtomCount(initialAtomCount);
 		}
 		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update ring
 		var result = $super(startingCoord, startingObj);
@@ -4720,14 +4726,16 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.RepositoryIaC
 			if (startCoord)
 			{
 				// check ring atom count
+				var minAtomCount = this.getRingMinAtomCount();
 				var dis = Kekule.CoordUtils.getDistance(endCoord, startCoord);
-				var deltaCount = Math.round(dis / this._deltaDistance) + 3;  // min ring is 3 atoms
+				var deltaCount = Math.round(dis / this._deltaDistance) + minAtomCount;  // min ring is 3 atoms
 				//console.log(dis, this._deltaDistance, deltaCount);
 				if (!this._lastDeltaCount || deltaCount !== this._lastDeltaCount)
 				{
 					// need recreate repository
 					var maxAtomCount = this.getRingMaxAtomCount();
 					var atomCount = maxAtomCount? Math.min(maxAtomCount, deltaCount): deltaCount;
+					atomCount = minAtomCount? Math.max(atomCount, minAtomCount): atomCount;
 					if (this.getRepositoryItem().getRingAtomCount() !== atomCount)
 					{
 						this.getRepositoryItem().setRingAtomCount(atomCount);
