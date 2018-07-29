@@ -45,6 +45,22 @@
         'drawStyles': {'strokeDash': [10, 2, 5, 2]}
       }
     ];
+    var textMarkerInfos = [
+      {
+        'text': 'marker 1',
+        'coord': {x: 100, y: 100},
+        'drawStyles': {
+          'color': '#cc0000',
+          'fontFamily': 'Times New Roman',
+          'fontSize': 20
+        }
+      },
+      {
+        'text': 'marker 2\nwith line break',
+        'coord': {x: 250, y: 200},
+        'drawStyles': {'color': '#00cc00'}
+      }
+    ];
     function createMarkers()
     {
       var result = new Kekule.ChemWidget.UiMarkerCollection();
@@ -52,6 +68,16 @@
       {
         var info = markerInfos[i];
         var marker = new Kekule.ChemWidget.MetaShapeUIMarker(info);
+        if (info.drawStyles)
+        {
+          marker.setDrawStyles(info.drawStyles);
+        }
+        result.addMarker(marker);
+      }
+      for (var i = 0, l = textMarkerInfos.length; i < l; ++i)
+      {
+        var info = textMarkerInfos[i];
+        var marker = new Kekule.ChemWidget.TextUiMarker(info.text, info.coord);
         if (info.drawStyles)
         {
           marker.setDrawStyles(info.drawStyles);
@@ -80,7 +106,8 @@
     function drawMarkers()
     {
       var markers = createMarkers();
-      var renderer = new Kekule.ChemWidget.UiMarkersRenderer(markers, getDrawBridge());
+      //var renderer = new Kekule.ChemWidget.UiMarkersRenderer(markers, getDrawBridge());
+      var renderer = new Kekule.ChemWidget.UiMarkerCollection2DRenderer(markers, getDrawBridge());
       renderer.draw(getContext(), null, {'strokeColor': '#000000'});
     }
 
