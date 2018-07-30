@@ -9,6 +9,7 @@
  * requires /utils/kekule.utils.js
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/commonCtrls/kekule.widget.buttons.js
+ * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  * requires /widgets/chem/editor/kekule.chemEditor.baseEditor.js
  * requires /widgets/chem/editor/kekule.chemEditor.objModifiers.js
  * requires /widgets/chem/editor/kekule.chemEditor.utilWidgets.js
@@ -41,6 +42,12 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Atom',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._valueStorage = {};
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -59,20 +66,22 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 		result.addClassName(CCNS.COMPOSER_ATOM_MODIFIER_BUTTON);
 
-		var atomSetter = this._createAtomSetter(this.getEditor());
-		this.setPropStoreFieldValue('atomSetter', atomSetter);
-
-		result.setDropDownWidget(atomSetter);
+		//var atomSetter = this._createAtomSetter(this.getEditor());
+		//result.setDropDownWidget(atomSetter);
+		result.setDropDownWidgetGetter(this._createAtomSetter.bind(this));
 
 		return result;
 	},
 	/** @private */
 	_createAtomSetter: function(parentWidget)
 	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
 		var editor = this.getEditor();
 		var result = new Kekule.ChemWidget.StructureNodeSetter(parentWidget);
 		//result.setUseDropDownSelectPanel(true);
 		result.addClassName([CNS.PANEL, CCNS.COMPOSER_ATOM_MODIFIER_DROPDOWN, CNS.CORNER_ALL]); // simulate panel outlook
+		result.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		/*
 		if (result.setResizable)
 			result.setResizable(true);
@@ -130,6 +139,11 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 			}
 		);
 		*/
+		this.setPropStoreFieldValue('atomSetter', result);
+
+		if (this._valueStorage.nodes)
+			result.setNodes(this._valueStorage.nodes);
+
 		return result;
 	},
 	/** @private */
@@ -175,13 +189,23 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 	{
 		// filter chem nodes from targets
 		//var nodes = this._filterStructureNodes(targets);
+		var nodeLabel;
 		var nodes = this._getActualModificationNodes(targets);
-		this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
-		this.getAtomSetter().setNodes(nodes);
-		if (nodes.length)
+		this._valueStorage.nodes = nodes;
+
+		if (this.getAtomSetter())
 		{
-			var nodeLabel = this.getAtomSetter().getNodeLabel();
-			//console.log('update node label', nodeLabel);
+			this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+			this.getAtomSetter().setNodes(nodes);
+			if (nodes.length)
+			{
+				nodeLabel = this.getAtomSetter().getNodeLabel();
+				//console.log('update node label', nodeLabel);
+			}
+		}
+		else
+		{
+			nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		}
 		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_SETTER_MIXED'))
 				.setShowText(true).setDisplayed(!!nodes.length);
@@ -303,6 +327,10 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 		$super(editor);
 		this._activeSelBtnHtmlClass = null;
 		this._defaultBondTypeData = null;
+		this._valueStorage = {};
+
+		var bondTypeData = this.getEditor().getEnabledBondFormData();
+		this._defaultBondTypeData = bondTypeData[0];  // regard the first one as default
 	},
 	/** @private */
 	initProperties: function()
@@ -322,10 +350,9 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_BUTTON);
 
-		var bondSelector = this._createBondSelector(this.getEditor());
-		this.setPropStoreFieldValue('bondSelector', bondSelector);
-
-		result.setDropDownWidget(bondSelector);
+		//var bondSelector = this._createBondSelector(this.getEditor());
+		//result.setDropDownWidget(bondSelector);
+		result.setDropDownWidgetGetter(this._createBondSelector.bind(this));
 
 		if (this._defaultBondTypeData.htmlClass)
 			result.addClassName(this._defaultBondTypeData.htmlClass);  // initialize default bond html class name, for button icon
@@ -371,14 +398,23 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 	/** @private */
 	_createBondSelector: function(parentWidget)
 	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
 		var result = new Kekule.ChemWidget.StructureConnectorSelectPanel(parentWidget);
 		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_DROPDOWN);
 		if (this.getEditor().getEnabledBondFormData)
 		{
 			var bondTypeData = this.getEditor().getEnabledBondFormData();
+			result.setBondPropNames(this._getBondComparePropNames(bondTypeData));
 			result.setBondData(bondTypeData);
-			this._defaultBondTypeData = bondTypeData[0];  // regard the first one as default
 		}
+
+		if (this._valueStorage.bondsPropValues)
+		{
+			result.setActiveBondPropValues(this._valueStorage.bondsPropValues);
+		}
+
+		this.setPropStoreFieldValue('bondSelector', result);
 
 		// react to value change of setter
 		var self = this;
@@ -405,10 +441,53 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 	/** @private */
 	_extractBondPropValues: function(bond, propNames)
 	{
-		if (!propNames)
-			propNames = this.getBondSelector().getBondPropNames();
-		//console.log('get prop names', propNames, bond.getPropValues(propNames));
 		return bond.getPropValues(propNames);
+	},
+	/** @private */
+	_extractBondsPropValues: function(bonds, propNames)
+	{
+		var result;
+		var currPropValues;
+		for (var i = 0, l = bonds.length; i < l; ++i)
+		{
+			currPropValues = this._extractBondPropValues(bonds[i], propNames);
+			if (!result)
+				result = currPropValues;
+			else if (!Kekule.Editor.StructureUtils.isBondPropsMatch(result, currPropValues, propNames))
+			{
+				result = null;
+				break;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getBondComparePropNames: function(bondData)
+	{
+		var result = [];
+		for (var i = 0, l = bondData.length; i < l; ++i)
+		{
+			var data = bondData[i];
+			var propData = data.bondProps;
+			if (propData)
+				AU.pushUnique(result, Kekule.ObjUtils.getOwnedFieldNames(propData));
+		}
+		return result;
+	},
+	/** @private */
+	_getMatchedBondData: function(bondPropValues, bondData, bondPropNames)
+	{
+		if (!bondPropValues)
+			return null;
+		for (var i = 0, l = bondData.length; i < l; ++i)
+		{
+			var data = bondData[i];
+			if (data && Kekule.Editor.StructureUtils.isBondPropsMatch(bondPropValues, data.bondProps, bondPropNames))
+			{
+				return data;
+			}
+		}
+		return null;
 	},
 
 	/** @ignore */
@@ -424,25 +503,31 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 				connectors.push(target);
 		}
 		*/
-		var connectors = this._getActualModificationBonds(targets);
+		// update bond data retrieved from editor
+		var bondTypeData = this.getEditor().getEnabledBondFormData();
+		this._defaultBondTypeData = bondTypeData[0];  // regard the first one as default
 
-		var comparedPropNames = this.getBondSelector().getBondPropNames();
-		var bondPropValues, currPropValues;
-		for (var i = 0, l = connectors.length; i < l; ++i)
+		var connectors = this._getActualModificationBonds(targets);
+		this._valueStorage.connectors = connectors;
+
+		if (this.getBondSelector())
 		{
-			currPropValues = this._extractBondPropValues(connectors[i]);
-			if (!bondPropValues)
-				bondPropValues = currPropValues;
-			else if (!Kekule.Editor.StructureUtils.isBondPropsMatch(bondPropValues, currPropValues, comparedPropNames))
-			{
-				bondPropValues = null;
-				break;
-			}
+			this.getBondSelector().setBondData(bondTypeData);
+			var comparedPropNames = this.getBondSelector().getBondPropNames();
+			var bondPropValues = this._extractBondsPropValues(connectors, comparedPropNames);
+			//console.log('set value', bondPropValues);
+			this.getBondSelector().setActiveBondPropValues(bondPropValues);
+			// copy html class
+			this._setActiveBondHtmlClass(this.getBondSelector().getActiveBondHtmlClass());
 		}
-		//console.log('set value', bondPropValues);
-		this.getBondSelector().setActiveBondPropValues(bondPropValues);
-		// copy html class
-		this._setActiveBondHtmlClass(this.getBondSelector().getActiveBondHtmlClass());
+		else
+		{
+			this._valueStorage.bondPropNames = this._getBondComparePropNames(bondTypeData);
+			this._valueStorage.bondsPropValues = this._extractBondsPropValues(connectors, this._valueStorage.bondPropNames);
+			var matchedBondData = this._getMatchedBondData(this._valueStorage.bondsPropValues, bondTypeData, this._valueStorage.bondPropNames);
+
+			this._setActiveBondHtmlClass(matchedBondData && matchedBondData.htmlClass);
+		}
 	},
 	/** @ignore */
 	doApplyToTargets: function($super, editor, targets)

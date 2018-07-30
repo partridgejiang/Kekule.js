@@ -13,6 +13,7 @@
  * requires /widgets/commonCtrls/kekule.widget.tabViews.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/editor/kekule.chemEditor.configs.js
+ * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  */
 
 (function(){
@@ -868,12 +869,13 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 		var labelConfigs = this.getLabelConfigs();
 		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
 	},
-	/**
+	/*
 	 * Returns label that shows in node edit.
 	 * @param {Kekule.ChemStructureNode} node
 	 * @returns {String}
 	 * @private
 	 */
+	/*
 	_getNodeLabel: function(node)
 	{
 		var labelConfigs = this.getLabelConfigs();
@@ -884,25 +886,18 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			var groupLabel = node.getAbbr() || node.getFormulaText();
 			return groupLabel || labelConfigs.getRgroup();
 		}
-		/*
-		else if (node instanceof Kekule.VariableAtom)
-		{
-			var allowedIds = node.getAllowedIsotopeIds();
-			var disallowedIds = node.getDisallowedIsotopeIds();
-			return (allowedIds && allowedIds.length)? this._getVarAtomListLabel():
-					(disallowedIds && disallowedIds.length)? this._getVarAtomNotListLabel():
-							this._getVarAtomListLabel();
-		}
-		*/
 		else
 		{
 			var ri = node.getCoreDisplayRichTextItem(null, null, labelConfigs);
 			return Kekule.Render.RichTextUtils.toText(ri);
 		}
 	},
+	*/
 	/** @private */
 	_getAllNodeLabels: function(nodes)
 	{
+		return Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getLabelConfigs());
+		/*
 		var nodeLabel;
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
@@ -919,6 +914,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			}
 		}
 		return nodeLabel;
+		*/
 	},
 
 	/**
@@ -1073,7 +1069,7 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 				return null;
 			}
 		});
-		this.defineProp('bondPropNames', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null})
+		this.defineProp('bondPropNames', {'dataType': DataType.ARRAY, 'serializable': false})
 	},
 
 	/** @ignore */
@@ -1198,7 +1194,8 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 				  AU.pushUnique(propNames, Kekule.ObjUtils.getOwnedFieldNames(propData));
 			}
 		}
-		this.setPropStoreFieldValue('bondPropNames', propNames);
+		if (!this.getBondPropNames())
+			this.setPropStoreFieldValue('bondPropNames', propNames);
 	},
 	/** @private */
 	_createBondSelButton: function(doc, data)
