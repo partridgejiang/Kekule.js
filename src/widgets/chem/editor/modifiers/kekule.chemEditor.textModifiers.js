@@ -11,6 +11,7 @@
  * requires /widgets/commonCtrls/kekule.widget.buttons.js
  * requires /widgets/chem/editor/kekule.chemEditor.baseEditor.js
  * requires /widgets/chem/editor/kekule.chemEditor.objModifiers.js
+ * requires /widgets/chem/editor/modifiers/kekule.chemEditor.styleModifiers.js
  */
 
 (function(){
