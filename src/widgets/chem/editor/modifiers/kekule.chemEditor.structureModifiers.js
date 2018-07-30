@@ -86,7 +86,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 		// simulate a panel caption
 		var captionElem = parentWidget.getDocument().createElement('div');
 		captionElem.className = CNS.PANEL_CAPTION;
-		captionElem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER');
+		DU.setElementText(captionElem, Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
 		var parentElem = result.getElement();
 		parentElem.insertBefore(captionElem, Kekule.DomUtils.getFirstChildElem(parentElem));
 		/*
