@@ -350,7 +350,6 @@ Kekule.Editor.ObjModifierManager = {
 					result.push(modifierClasses[i]);
 			}
 		}
-		console.log('get modifier classes', allowedCategories, result);
 		return result;
 	}
 };
