@@ -4868,7 +4868,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var rightDistance = viewPortDim.width - invokerClientRect.left;
 			*/
 			var leftDistance = invokerClientRect.right - viewPortBox.left;
-			var rightDistance = viewPortBox.right - viewPortBox.left - invokerClientRect.left;
+			var rightDistance = viewPortBox.right - /* viewPortBox.left - */ invokerClientRect.left;
 			if (rightDistance >= dropClientRect.width)  // default, can drop left align to left edge of invoker
 				x = invokerClientRect.left;
 			else if (leftDistance >= dropClientRect.width) // must drop right align to right edge of invoker
@@ -4906,7 +4906,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var bottomDistance = viewPortDim.height - invokerClientRect.top;
 			*/
 			var topDistance = invokerClientRect.bottom - viewPortBox.top;
-			var bottomDistance = viewPortBox.bottom - viewPortBox.top - invokerClientRect.top;
+			var bottomDistance = viewPortBox.bottom - /*viewPortBox.top - */ invokerClientRect.top;
 			if (bottomDistance >= dropClientRect.height)
 				y = invokerClientRect.bottom;
 			else if (topDistance >= dropClientRect.height)  // must drop right align to right edge of invoker
