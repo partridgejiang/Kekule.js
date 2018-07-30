@@ -253,6 +253,10 @@ Kekule.MolStereoUtils = {
 						var index2 = sideObjs[1].getCanonicalizationIndex() || -1;
 						refNodes.push((index2 > index1)? sideObjs[1]: sideObjs[0]);
 					}
+					else // too many sideObjs number, maybe a incorrect structure?
+					{
+						return null;
+					}
 				}
 				result = [refNodes[0], endNodes[0], endNodes[1], refNodes[1]];
 			}
