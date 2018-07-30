@@ -29,6 +29,17 @@ var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 Kekule.Editor.ObjModifier = {};
 
 /**
+ * Enumeration of obj modifier type.
+ * Each obj modifier class should have a class method getCategories returns an array of these types.
+ * @enum
+ */
+Kekule.Editor.ObjModifier.Category = {
+	CHEM_STRUCTURE: 'chemStruct',
+	STYLE: 'style',
+	MISC: 'misc'
+};
+
+/**
  * A special object to create widget to modify an chem object in a user friendly way in chem editor.
  * @class
  * @augments ObjectEx
@@ -255,121 +266,17 @@ Kekule.Editor.ObjModifier.Base = Class.create(ObjectEx,
 });
 
 /**
- * Base modifier class to change render options in editor.
- * @class
- * @augments Kekule.Editor.ObjModifier.Base
- *
- * @property {Array} targetObjs Objects that selected in editor and can be modified by this modifier.
- * @property {Kekule.Widget.BaseWidget} widget The concrete modifier widget.
- */
-Kekule.Editor.ObjModifier.BaseRenderOptionModifier = Class.create(Kekule.Editor.ObjModifier.Base,
-/** @lends Kekule.Editor.ObjModifier.BaseRenderOptionModifier# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Editor.ObjModifier.BaseRenderOptionModifier',
-	/**
-	 * Returns common render option or render 3D option value of chemObjs.
-	 * If values in objects are not same, null will be returned.
-	 * @param {Array} chemObjs
-	 * @param {String} stylePropName
-	 * @param {Bool} is3DOption
-	 * @returns {Variant}
-	 * @private
-	 */
-	getRenderOptionValue: function(chemObjs, stylePropName, is3DOption)
-	{
-		return Kekule.Render.RenderOptionUtils.getCascadeRenderOptionValueOfObjs(chemObjs, stylePropName, is3DOption);
-	}
-});
-
-/**
- * A coor modifier to change the render color of chem object.
- * @class
- * @augments Kekule.Editor.ObjModifier.BaseRenderOptionModifier
- */
-Kekule.Editor.ObjModifier.Color = Class.create(Kekule.Editor.ObjModifier.BaseRenderOptionModifier,
-/** @lends Kekule.Editor.ObjModifier.Color# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Editor.ObjModifier.Color',
-	/**
-	 * @private
-	 * @ignore
-	 */
-	ATOM_COLOR_SPECIAL_VALUE_INFO: {
-		text: Kekule.$L('ChemWidgetTexts.HINT_USE_ATOM_CUSTOM_COLOR'),
-		value: 'Atom',
-		className: CNS.COLORPICKER_SPEC_COLOR_MIXED
-	},
-	/** @private */
-	initProperties: function()
-	{
-		// private
-		this.defineProp('colorBox', {
-			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
-		});
-	},
-	/** @ignore */
-	doCreateWidget: function()
-	{
-		var colorBox = new Kekule.Widget.ColorDropButton(this.getEditor());
-		colorBox.setHint(Kekule.$L('ChemWidgetTexts.HINT_PICK_COLOR'));
-		colorBox.setShowText(false);
-		colorBox.setSpecialColors([Kekule.Widget.ColorPicker.SpecialColors.UNSET, this.ATOM_COLOR_SPECIAL_VALUE_INFO]);
-		colorBox.addClassName(CCNS.COMPOSER_COLOR_BOX);
-		this.setPropStoreFieldValue('colorBox', colorBox);
-		return colorBox;
-	},
-	/** @ignore */
-	doLoadFromTargets: function(editor, targets)
-	{
-		if (targets && targets.length)
-		{
-			var colorBox = this.getColorBox();
-			if (colorBox)
-			{
-				var color;
-				var useAtomSpecified = this.getRenderOptionValue(targets, 'useAtomSpecifiedColor');
-				var color = this.getRenderOptionValue(targets, 'color');
-				//console.log('load value', useAtomSpecified, color);
-				if (useAtomSpecified)
-				{
-					color = this.ATOM_COLOR_SPECIAL_VALUE_INFO.value;
-					colorBox.setColorClassName(this.ATOM_COLOR_SPECIAL_VALUE_INFO.className);
-					colorBox.setValue(color);
-				}
-				else  //if (color)
-				{
-					colorBox.setColorClassName(null);
-					colorBox.setValue(color);
-				}
-			}
-		}
-	},
-	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
-	{
-		// do not use operation, as we can call editor.modifyObjectsRenderOptions directly
-		var color = this.getWidget().getValue();
-		if (color === this.ATOM_COLOR_SPECIAL_VALUE_INFO.value)
-		{
-			editor.modifyObjectsRenderOptions(targets, {'useAtomSpecifiedColor': true, 'color': undefined}, false, true);
-		}
-		else
-		{
-			if (color == Kekule.Widget.ColorPicker.SpecialColors.UNSET)
-				color = undefined;
-			editor.modifyObjectsRenderOptions(targets, {'useAtomSpecifiedColor': false, 'color': color}, false, true);
-		}
-	}
-});
-
-/**
  * Manager Object of All obj modifiers.
  * @type {Object}
  */
 Kekule.Editor.ObjModifierManager = {
+	/** @private */
 	_modifierMap: new Kekule.MapEx(true),
+	/**
+	 * Register new modifier class(es).
+	 * @param {Array} objClasses Classes of object these modifiers can be applied.
+	 * @param {Variant} modifierClasses Registered modifier class or classes.
+	 */
 	register: function(objClasses, modifierClasses)
 	{
 		if (!modifierClasses || !objClasses)
@@ -389,6 +296,10 @@ Kekule.Editor.ObjModifierManager = {
 				AU.pushUnique(mapItem, mClasses);
 		}
 	},
+	/**
+	 * Unregister modifier class(es).
+	 * @param {Variant} modifierClasses Unregistered modifier class or classes.
+	 */
 	unregister: function(modifierClasses)
 	{
 		if (!modifierClasses)
@@ -404,19 +315,46 @@ Kekule.Editor.ObjModifierManager = {
 			}
 		}
 	},
-	getModifierClasses: function(objClass)
+	/**
+	 * Returns the categores of a modifier class (and its ancestors).
+	 * @param {Class} modifierClass
+	 */
+	getModifierCategories: function(modifierClass)
+	{
+		var result = (modifierClass.getCategories && modifierClass.getCategories()) || [];
+		var superClass = ClassEx.getSuperClass(modifierClass);
+		if (superClass)
+			AU.pushUnique(result, OMM.getModifierCategories(superClass));
+		return result;
+	},
+	/**
+	 * Returns available modifier classes for objClass.
+	 * @param {Class} objClass
+	 * @param {Array} allowedCategories Optional, if set, only modifiers of thoses categories will be returned.
+	 * @returns {Array}
+	 */
+	getModifierClasses: function(objClass, allowedCategories)
 	{
 		var result = OMM._modifierMap.get(objClass) || [];
 		var superClass = ClassEx.getSuperClass(objClass);
 		if (superClass)
-			AU.pushUnique(result, OMM.getModifierClasses(superClass));
+			AU.pushUnique(result, OMM.getModifierClasses(superClass, allowedCategories));
+		if (allowedCategories && allowedCategories.length)  // check categories
+		{
+			var modifierClasses = result;
+			result = [];
+			for (var i = 0, l = modifierClasses.length; i < l; ++i)
+			{
+				var modifierCategories = OMM.getModifierCategories(modifierClasses[i]);
+				if (AU.intersect(modifierCategories, allowedCategories).length)
+					result.push(modifierClasses[i]);
+			}
+		}
+		console.log('get modifier classes', allowedCategories, result);
 		return result;
 	}
 };
 
-// register existed modifiers
 var OMM = Kekule.Editor.ObjModifierManager;
-OMM.register(Kekule.ChemObject, [Kekule.Editor.ObjModifier.Color]);
-
 
 })();

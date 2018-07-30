@@ -33,11 +33,28 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 });
 
 /**
- * A atom modifier to change the atom property of chem nodes.
+ * Base modifier class to change the chem structure in editor.
  * @class
  * @augments Kekule.Editor.ObjModifier.Base
  */
-Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
+Kekule.Editor.ObjModifier.ChemStructureModifier = Class.create(Kekule.Editor.ObjModifier.Base,
+/** @lends Kekule.Editor.ObjModifier.ChemStructureModifier# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.ChemStructureModifier'
+});
+/** @ignore */
+Kekule.Editor.ObjModifier.ChemStructureModifier.getCategories = function()
+{
+	return [Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE];
+};
+
+/**
+ * A atom modifier to change the atom property of chem nodes.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
+ */
+Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
 /** @lends Kekule.Editor.ObjModifier.Atom# */
 {
 	/** @private */
@@ -321,9 +338,9 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 /**
  * A modifier to change the bond property of chem connectors.
  * @class
- * @augments Kekule.Editor.ObjModifier.Base
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
  */
-Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
+Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
 /** @lends Kekule.Editor.ObjModifier.Bond# */
 {
 	/** @private */

@@ -842,6 +842,12 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 	{
 		return this.getEditor().getEditorConfigs();
 	},
+	/** @private */
+	getAllowedModifierCategories: function()
+	{
+		var c = this.getComposer();
+		return c && c.getAllowedObjModifierCategories();
+	},
 	/**
 	 * Returns selection of editor.
 	 * @returns {Array}
@@ -866,9 +872,10 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 				AU.pushUnique(targetClasses, targets[i].getClass());
 		}
 		var result = [];
+		var allowedCategories = this.getAllowedModifierCategories();
 		for (var i = 0, l = targetClasses.length; i < l; ++i)
 		{
-			var modifierClasses = Kekule.Editor.ObjModifierManager.getModifierClasses(targetClasses[i]);
+			var modifierClasses = Kekule.Editor.ObjModifierManager.getModifierClasses(targetClasses[i], allowedCategories);
 			if (modifierClasses)
 				AU.pushUnique(result, modifierClasses);
 		}
@@ -1001,6 +1008,7 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Array} styleToolComponentNames Array of component names that shows in style tool bar.
  * @property {Bool} enableStyleToolbar
  * @property {Bool} enableObjModifierToolbar
+ * @property {Array} allowedObjModifierCategories
  * @property {Bool} showInspector Whether show advanced object inspector and structure view.
  *
  * @property {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
@@ -1188,6 +1196,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			}
 		});
 
+		this.defineProp('allowedObjModifierCategories', {'dataType': DataType.ARRAY});
 
 		this.defineProp('commonToolButtons', {'dataType': DataType.HASH, 'serializable': false,
 			'getter': function()
@@ -2737,7 +2746,8 @@ SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
 	allowCreateNewChild: true,
 	commonToolButtons: null,   // create all default common tool buttons
 	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null  // create all default style components
+	styleToolComponentNames: null,  // create all default style components
+	allowedObjModifierCategories: null  // allow modifiers of all categories
 });
 SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
 	enableStyleToolbar: true,
@@ -2755,7 +2765,8 @@ SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit 
 		BNS.molRing,
 		BNS.molCharge
 	],   // create only chem tool buttons related with molecule
-	styleToolComponentNames: null  // create all default style components
+	styleToolComponentNames: null,  // create all default style components
+	allowedObjModifierCategories: [Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE]  // only all chem structure modifiers
 });
 SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
 	enableStyleToolbar: false,
@@ -2767,7 +2778,8 @@ SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool butt
 		BNS.redo
 	],
 	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null  // create all default style components
+	styleToolComponentNames: null,  // create all default style components
+	allowedObjModifierCategories: null  // allow modifiers of all categories
 });
 SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
 	allowCreateNewChild: false
