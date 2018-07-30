@@ -243,6 +243,56 @@ Kekule.Editor.StructureUtils = {
 		if (result)
 			result = Kekule.ObjUtils.equal(src, target, specialFields);
 		return result;
+	},
+
+	/**
+	 * Returns label represents the chem node situation.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Object} labelConfigs
+	 * @returns {String}
+	 */
+	getChemStructureNodeLabel: function(node, labelConfigs)
+	{
+		//var labelConfigs = this.getLabelConfigs();
+		if (node.getIsotopeId)  // atom
+			return node.getIsotopeId();
+		else if (node instanceof Kekule.SubGroup)
+		{
+			var groupLabel = node.getAbbr() || node.getFormulaText();
+			if (labelConfigs)
+				groupLabel = groupLabel || labelConfigs.getRgroup();
+			return groupLabel;
+		}
+		else
+		{
+			var ri = node.getCoreDisplayRichTextItem(null, null, labelConfigs);
+			return Kekule.Render.RichTextUtils.toText(ri);
+		}
+	},
+	/**
+	 * Returns label represents all the chem nodes situation.
+	 * @param {Array} nodes
+	 * @param {Object} labelConfigs
+	 * @returns {String}
+	 */
+	getAllChemStructureNodesLabel: function(nodes, labelConfigs)
+	{
+		var nodeLabel;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			var currLabel = Kekule.Editor.StructureUtils.getChemStructureNodeLabel(node, labelConfigs);
+			if (!nodeLabel)
+				nodeLabel = currLabel;
+			else
+			{
+				if (nodeLabel !== currLabel)  // different label, currently has different nodes
+				{
+					return null;
+				}
+			}
+		}
+		return nodeLabel;
 	}
 };
 
