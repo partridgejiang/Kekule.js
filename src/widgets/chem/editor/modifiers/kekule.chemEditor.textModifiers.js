@@ -110,7 +110,8 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 	_doCreateDropDownPanel: function()
 	{
 		var panel = new Kekule.Widget.Panel(this.getEditor());
-		panel.addClassName(CCNS.COMPOSER_MODIFIER_RICHTEXT_PANEL);
+		panel.addClassName(CCNS.COMPOSER_MODIFIER_RICHTEXT_PANEL)
+				.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_FORMAT'));
 		var compNames = Kekule.globalOptions.chemWidget.composer.objModifier.richText.componentNames;
 		var comboBox, selBox;
 		var doc = this.getEditor().getDocument();
@@ -259,12 +260,12 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			if (this.getFontPanel())
 			{
 				//console.log('do load from target');
-				this.getFontNameBox().setValue(fontName);
-				this.getFontSizeBox().setValue(fontSize);
+				this.getFontNameBox().setValue(valueStorage.fontName);
+				this.getFontSizeBox().setValue(valueStorage.fontSize);
 
-				this.getTextDirectionBox().setValue(textDirection);
-				this.getTextHorizontalAlignBox().setValue(textHAlign);
-				this.getTextVerticalAlignBox().setValue(textVAlign);
+				this.getTextDirectionBox().setValue(valueStorage.textDirection);
+				this.getTextHorizontalAlignBox().setValue(valueStorage.textHAlign);
+				this.getTextVerticalAlignBox().setValue(valueStorage.textVAlign);
 			}
 		}
 	},

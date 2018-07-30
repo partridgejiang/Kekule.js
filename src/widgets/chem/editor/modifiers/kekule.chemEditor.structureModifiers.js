@@ -60,8 +60,8 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 	doCreateWidget: function()
 	{
 		var result = new Kekule.Widget.DropDownButton(this.getEditor());
-		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_ATOM_SETTER'));
-		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_SETTER'));
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_ATOM_MODIFIER'));
+		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
 		result.setShowText(true);
 		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 		result.addClassName(CCNS.COMPOSER_ATOM_MODIFIER_BUTTON);
@@ -80,8 +80,15 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 		var editor = this.getEditor();
 		var result = new Kekule.ChemWidget.StructureNodeSetter(parentWidget);
 		//result.setUseDropDownSelectPanel(true);
+		//result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
 		result.addClassName([CNS.PANEL, CCNS.COMPOSER_ATOM_MODIFIER_DROPDOWN, CNS.CORNER_ALL]); // simulate panel outlook
 		result.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+		// simulate a panel caption
+		var captionElem = parentWidget.getDocument().createElement('div');
+		captionElem.className = CNS.PANEL_CAPTION;
+		captionElem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER');
+		var parentElem = result.getElement();
+		parentElem.insertBefore(captionElem, Kekule.DomUtils.getFirstChildElem(parentElem));
 		/*
 		if (result.setResizable)
 			result.setResizable(true);
@@ -207,7 +214,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.Base,
 		{
 			nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		}
-		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_SETTER_MIXED'))
+		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER_MIXED'))
 				.setShowText(true).setDisplayed(!!nodes.length);
 	},
 	/** @ignore */
@@ -401,6 +408,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.Base,
 		if (!parentWidget)
 			parentWidget = this.getEditor();
 		var result = new Kekule.ChemWidget.StructureConnectorSelectPanel(parentWidget);
+		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_BOND_MODIFIER'));
 		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_DROPDOWN);
 		if (this.getEditor().getEnabledBondFormData)
 		{

@@ -1179,7 +1179,7 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 		}
 		var propNames = [];
 		this._selButtons = [];
-		Kekule.DomUtils.clearChildContent(rootElem);
+		//Kekule.DomUtils.clearChildContent(rootElem);
 		var bondData = this.getBondData();
 		if (bondData)
 		{

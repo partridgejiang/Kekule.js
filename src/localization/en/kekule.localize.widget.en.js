@@ -258,9 +258,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_TEXT_ALIGN_TOP: 'Top',
 	CAPTION_TEXT_ALIGN_BOTTOM: 'Bottom',
 
-	CAPTION_ATOM_SETTER: 'Atom',
-	CAPTION_ATOM_SETTER_MIXED: '[A]',
-	CAPTION_BOND_MODIFIER: 'Set bond',
+	CAPTION_ATOM_MODIFIER: 'Atom',
+	CAPTION_ATOM_MODIFIER_MIXED: '[A]',
+	CAPTION_BOND_MODIFIER: 'Bond',
 
 	HINT_NEWDOC: 'Create new document',
 	HINT_UNDO: 'Undo',
@@ -357,7 +357,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_TEXT_HORIZONTAL_ALIGN: 'Set text horizontal alignment',
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
 
-	HINT_ATOM_SETTER: 'Set atom',
+	HINT_ATOM_MODIFIER: 'Set atom',
 	HINT_BOND_MODIFIER: 'Set bond',
 
 	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
