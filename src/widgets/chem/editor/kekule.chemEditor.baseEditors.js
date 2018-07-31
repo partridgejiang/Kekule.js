@@ -223,6 +223,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('enableOperHistory', true);
 		this.setPropStoreFieldValue('enableOperContext', true);
 		this.setPropStoreFieldValue('initOnNewDoc', true);
+		//this.setPropStoreFieldValue('initialZoom', 1.5);
 
 		//this.setPropStoreFieldValue('selectMode', Kekule.Editor.SelectMode.POLYGON);  // debug
 
@@ -678,7 +679,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
-	zoomTo: function($super, value, suspendRendering)
+	zoomTo: function($super, value, suspendRendering, zoomCenterCoord)
 	{
 		var CU = Kekule.CoordUtils;
 		var currZoomLevel = this.getCurrZoom();
@@ -687,11 +688,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// adjust zoom center
 		var selfElem = this.getElement();
 		var currScrollCoord = {'x': selfElem.scrollLeft, 'y': selfElem.scrollTop};
-		var zoomCenterCoord = this.getZoomCenter();
+		if (!zoomCenterCoord)
+			zoomCenterCoord = this.getZoomCenter();
 		if (!zoomCenterCoord )  // use the center of client as the zoom center
 		{
 			zoomCenterCoord = CU.add(currScrollCoord, {'x': selfElem.clientWidth / 2, 'y': selfElem.clientHeight / 2});
 		}
+		//console.log('zoom center info', this.getZoomCenter(), zoomCenterCoord);
 		//if (zoomCenterCoord)
 		{
 			var scrollDelta = CU.multiply(zoomCenterCoord, zoomLevel / currZoomLevel - 1);
@@ -699,6 +702,31 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			selfElem.scrollTop += scrollDelta.y;
 		}
 		return result;
+	},
+	/**
+	 * Zoom in.
+	 */
+	zoomIn: function(step, zoomCenterCoord)
+	{
+		var curr = this.getCurrZoom();
+		var ratio = Kekule.ZoomUtils.getNextZoomInRatio(curr, step || 1);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
+	},
+	/**
+	 * Zoom out.
+	 */
+	zoomOut: function(step, zoomCenterCoord)
+	{
+		var curr = this.getCurrZoom();
+		var ratio = Kekule.ZoomUtils.getNextZoomOutRatio(curr, step || 1);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
+	},
+	/**
+	 * Reset to normal size.
+	 */
+	resetZoom: function(zoomCenterCoord)
+	{
+		return this.zoomTo(this.getInitialZoom() || 1, null, zoomCenterCoord);
 	},
 
 	/**
@@ -4248,12 +4276,12 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 
 	// zoom functions
 	/** @private */
-	zoomEditor: function(zoomLevel)
+	zoomEditor: function(zoomLevel, zoomCenterCoord)
 	{
 		if (zoomLevel > 0)
-			this.getEditor().zoomIn(zoomLevel);
+			this.getEditor().zoomIn(zoomLevel, zoomCenterCoord);
 		else if (zoomLevel < 0)
-			this.getEditor().zoomOut(-zoomLevel);
+			this.getEditor().zoomOut(-zoomLevel, zoomCenterCoord);
 	},
 
 	/** @private */
@@ -4314,18 +4342,18 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		if (e.getCtrlKey())
 		{
 			var currScreenCoord = this._getEventMouseCoord(e);
-			this.getEditor().setZoomCenter(currScreenCoord);
+			//this.getEditor().setZoomCenter(currScreenCoord);
 			try
 			{
 				var delta = e.wheelDeltaY || e.wheelDelta;
 				if (delta)
 					delta /= 120;
 				//console.log('zoom', this.getEditor().getZoomCenter())
-				this.zoomEditor(delta);
+				this.zoomEditor(delta, currScreenCoord);
 			}
 			finally
 			{
-				this.getEditor().setZoomCenter(null);
+				//this.getEditor().setZoomCenter(null);
 			}
 			e.preventDefault();
 			return true;

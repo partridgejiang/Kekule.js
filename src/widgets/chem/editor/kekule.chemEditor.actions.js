@@ -1951,6 +1951,7 @@ Kekule._registerAfterLoadProc(function(){
 	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
 	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
 	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);
+	reg(BNS.resetZoom, CW.ActionDisplayerResetZoom, widgetClass);
 	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
 	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 	reg(BNS.undo, CE.ActionEditorUndo, widgetClass);

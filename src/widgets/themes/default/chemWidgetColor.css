@@ -208,7 +208,8 @@
 {
     background-image: url("images/slice/icons/zoomOut.png");
 }
-.K-Chem-Reset > .K-Pri-Glyph-Content
+.K-Chem-Reset > .K-Pri-Glyph-Content,
+.K-Chem-ResetZoom > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/reset.png");
 }

@@ -84,7 +84,8 @@ Kekule.globalOptions.add('chemWidget.composer', {
 		BNS.paste,
 		//BNS.cloneSelection,
 		BNS.zoomIn,
-		BNS.reset,
+		//BNS.reset,
+		BNS.resetZoom,
 		BNS.zoomOut,
 		BNS.config,
 		BNS.objInspector
@@ -1936,7 +1937,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return [
 			BNS.zoomIn,
 			BNS.zoomOut,
-			BNS.reset
+			BNS.reset,
+			BNS.resetZoom
 		];
 	},
 	/** @private */
@@ -2766,7 +2768,7 @@ SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit 
 		BNS.molCharge
 	],   // create only chem tool buttons related with molecule
 	styleToolComponentNames: null,  // create all default style components
-	allowedObjModifierCategories: [Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE]  // only all chem structure modifiers
+	allowedObjModifierCategories: ['chemStruct']  // only all chem structure modifiers
 });
 SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
 	enableStyleToolbar: false,

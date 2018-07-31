@@ -246,6 +246,13 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		}
 		this.setDefBondLength(defBondLength);
 
+		return result;
+	},
+	/** @ignore */
+	resetDisplay: function($super)
+	{
+		// called after loading a new chemObj, or creating a new doc
+		$super();
 		// adjust editor size
 		var space = this.getChemObj();
 		if (space)
@@ -256,10 +263,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			// scroll to top center
 			var elem = this.getEditClientElem().parentNode;
 			var visibleClientSize = Kekule.HtmlElementUtils.getElemClientDimension(elem);
-			this.scrollClientTo(0, (screenSize.x - visibleClientSize.width) / 2);
+			this.scrollClientTo(0, (screenSize.x * this.getCurrZoom() - visibleClientSize.width) / 2);
 		}
-
-		return result;
 	},
 
 	/** @ignore */

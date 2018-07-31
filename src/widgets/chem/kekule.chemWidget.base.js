@@ -35,6 +35,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	saveData: 'saveData',
 	zoomIn: 'zoomIn',
 	zoomOut: 'zoomOut',
+	resetZoom: 'resetZoom',
 	rotateRight: 'rotateRight',
 	rotateLeft: 'rotateLeft',
 	rotateX: 'rotateX',
