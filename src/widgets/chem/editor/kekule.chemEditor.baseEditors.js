@@ -2456,6 +2456,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.select(objs);
 		this.hideSelectingMarker();
 	},
+	/**
+	 * Cancel current selecting operation.
+	 */
+	cancelSelecting: function()
+	{
+		this.hideSelectingMarker();
+	},
 
 	/** @private */
 	_getActualSelectedObjsInSelecting: function(objs)
@@ -6222,6 +6229,26 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	*/
 
 	//////////////////// Hammer Gesture event handlers ///////////////////////////
+	/** @private */
+	_isGestureManipulationEnabled: function()
+	{
+		return this.getEditorConfigs().getInteractionConfigs().getEnableGestureManipulation();
+	},
+	/** @private */
+	_isGestureZoomOnEditorEnabled: function()
+	{
+		return this.getEditorConfigs().getInteractionConfigs().getEnableGestureZoomOnEditor();
+	},
+	/** @private */
+	_isInGestureManipulation: function()
+	{
+		return !!this._initialGestureTransformParams;
+	},
+	/** @private */
+	_isGestureZoomOnEditor: function()
+	{
+		return !!this._initialGestureZoomLevel;
+	},
 	/**
 	 * Starts a gesture transform.
 	 * @param {Object} event
@@ -6231,18 +6258,30 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		if (this.getEditor().hasSelection())
 		{
-			// stores initial gesture transform params
-			this._initialGestureTransformParams = {
-				'angle': (event.rotation * Math.PI / 180) || 0
-			};
-			// start a brand new one
-			if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
-				this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
-			else
+			this._initialGestureZoomLevel = null;
+			if (this._isGestureManipulationEnabled())
 			{
-				if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
-					this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				// stores initial gesture transform params
+				this._initialGestureTransformParams = {
+					'angle': (event.rotation * Math.PI / 180) || 0
+				};
+				// start a brand new one
+				if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+					this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				else
+				{
+					if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
+						this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				}
 			}
+			else
+				this._initialGestureTransformParams = null;
+		}
+		else if (this._isGestureZoomOnEditorEnabled())  // zoom on editor
+		{
+			this.getEditor().cancelSelecting();   // force store the selecting
+			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+			this._initialGestureZoomLevel = this.getEditor().getZoom();
 		}
 	},
 	/**
@@ -6253,9 +6292,17 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)  // stop prev manipulation first
 		{
-			this.addOperationToEditor();
-			this.stopManipulate();
-			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+			if (this._isInGestureManipulation())
+			{
+				this.addOperationToEditor();
+				this.stopManipulate();
+				this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+				this._initialGestureTransformParams = null;
+			}
+		}
+		if (this._isGestureZoomOnEditor())
+		{
+			this._initialGestureZoomLevel = null;
 		}
 	},
 	/**
@@ -6266,7 +6313,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	doGestureTransformStep: function(e)
 	{
 		if ((this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
-			&& (this.getManipulationType() === Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM))
+			&& (this.getManipulationType() === Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
+			&& (this._isInGestureManipulation()))
 		{
 			// get transform params from event directly
 			var center = this.getRotateCenter();  // use the center of current editor selection
@@ -6287,6 +6335,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 			});
 			e.preventDefault();
+		}
+		else if (this._isGestureZoomOnEditor())
+		{
+			var editor = this.getEditor();
+			var scale = e.scale;
+			var initZoom = this._initialGestureZoomLevel;
+			editor.zoomTo(initZoom * scale, null, e.center);
 		}
 	},
 

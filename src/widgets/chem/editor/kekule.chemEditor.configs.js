@@ -106,6 +106,8 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  *   will enter the manipulation state to move the selected objects.
  * @property {Int} OffSelectionManipulationActivatingTimeThreshold Holding pointer down longer then this time (in ms) may
  *   invoker off selection manipulation.
+ * @property {Bool} enableGestureManipulation Whether using pinch/rotate gesture to manipulate selected objects is allowed.
+ * @property {Bool} enableGestureZoomOnEditor Whether using pinch gesture change the zoom level of editor is allowed.
  * @property {Float} unmovePointerDistanceThreshold When moving less than this distance, pointer will be regarded as still.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
@@ -149,6 +151,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
 		this.addBoolConfigProp('enableMergePreview', true);
 
+		this.addBoolConfigProp('enableGestureManipulation', true);
+		this.addBoolConfigProp('enableGestureZoomOnEditor', true);
+
 		this.addIntConfigProp('clonedObjectScreenOffset', 10);
 
 		this.addIntConfigProp('atomSetterFontSize', 14);
@@ -160,6 +165,11 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30);  // 30 degree
 		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
+
+		//this.addFloatConfigProp('editorIntialZoom', 1);
+
+		//this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', true);
+		//this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', true);
 	},
 	/** @ignore */
 	initPropValues: function($super)
