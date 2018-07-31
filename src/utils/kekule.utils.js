@@ -3074,7 +3074,7 @@ Kekule.BoxUtils = {
 			'x2': Math.min(b1.x2, b2.x2),
 			'y2': Math.min(b1.y2, b2.y2)
 		};
-		if ((r.x1 >= r.x2) || (r.y1 >= r.y2))
+		if ((r.x1 > r.x2) || (r.y1 > r.y2))
 			return null;
 
 		if (Kekule.ObjUtils.notUnset(b1.z1) && Kekule.ObjUtils.notUnset(b1.z2)
@@ -3082,7 +3082,7 @@ Kekule.BoxUtils = {
 		{
 			r.z1 = Math.max(b1.z1, b2.z1);
 			r.z2 = Math.min(b1.z2, b2.z2);
-			if (r.z1 >= r.z2)
+			if (r.z1 > r.z2)
 				return null;
 		}
 		return r;
