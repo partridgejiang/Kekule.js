@@ -293,6 +293,31 @@ Kekule.Editor.StructureUtils = {
 			}
 		}
 		return nodeLabel;
+	},
+
+	/**
+	 * Returns center abs base coord of a structure.
+	 * @param {Kekule.StructureFragment} structureFragment
+	 * @param {Int} coordMode
+	 * @param {Bool} allowCoordBorrow
+	 * @returns {Hash}
+	 */
+	getStructureCenterAbsBaseCoord: function(structureFragment, coordMode, allowCoordBorrow)
+	{
+		var result = null;
+		var add = Kekule.CoordUtils.add;
+		var nodeCount = structureFragment.getNodeCount();
+		for (var i = 0; i < nodeCount; ++i)
+		{
+			var n = structureFragment.getNodeAt(i);
+			var coord = n.getAbsBaseCoord(coordMode, allowCoordBorrow);
+			if (!result)
+				result = coord;
+			else
+				result = add(result, coord);
+		}
+		result = Kekule.CoordUtils.divide(result, nodeCount);
+		return result;
 	}
 };
 
