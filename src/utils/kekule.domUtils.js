@@ -1248,6 +1248,70 @@ Kekule.DocumentUtils = {
 			'width': innerDim.width? Math.min(innerDim.width, clientDim.width): clientDim.width,
 			'height': innerDim.height? Math.min(innerDim.height, clientDim.height): clientDim.height
 		};
+	},
+
+	/**
+	 * Returns the scale level of current page in mobile browser.
+	 * @param {HTMLDocument} document
+	 * @returns {Float}
+	 */
+	getClientScaleLevel: function(document)
+	{
+		return (document.compatMode == "BackCompat")?
+			document.body.clientWidth / window.innerWidth:
+			document.documentElement.clientWidth / window.innerWidth;
+	},
+	/**
+	 * Returns the ratio of actual device pixel to CSS 1px.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getPixelZoomLevel: function(document)
+	{
+		var scale = Kekule.DocumentUtils.getClientScaleLevel(document);
+		return scale * (document.defaultView.devicePixelRatio || 1);
+	},
+
+	/**
+	 * Returns PPI of current device.
+	 * The algorithm is from https://jsfiddle.net/pgLo6273/2/.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getDevicePPI: function(document)
+	{
+		var win = document.defaultView;
+		if (win.matchMedia)
+		{
+			var minRes = 0;
+			var maxRes = 0;
+			var curRes = 200;
+			var trc = [];
+			while (!maxRes || ((maxRes - minRes) > 1))
+			{
+				if (win.matchMedia('(min-resolution: ' + curRes + 'dpi)').matches)
+				{ // ppi >= curRes
+					if (maxRes)
+					{
+						minRes = curRes;
+						curRes = Math.round((minRes + maxRes) / 2);
+					}
+					else
+					{
+						minRes = curRes;
+						curRes = 2 * curRes;
+					}
+				}
+				else
+				{ // ppi < curRes
+					maxRes = curRes;
+					curRes = Math.round((minRes + maxRes) / 2);
+				}
+			}
+			return curRes;
+		}
+		else
+			return 96;  // old device, assume to be a fixed one
 	}
 };
 
