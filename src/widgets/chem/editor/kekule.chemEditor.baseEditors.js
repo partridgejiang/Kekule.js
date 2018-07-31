@@ -3605,6 +3605,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return coord;
 		}
 	},
+	/**
+	 * Translate a distance value to a distance in another coord system.
+	 * @param {Hash} coord
+	 * @param {Int} fromSys
+	 * @param {Int} toSys
+	 */
+	translateDistance: function(distance, fromSys, toSys)
+	{
+		var coord0 = {'x': 0, 'y': 0, 'z': 0};
+		var coord1 = {'x': distance, 'y': 0, 'z': 0};
+		var transCoord0 = this.translateCoord(coord0, fromSys, toSys);
+		var transCoord1 = this.translateCoord(coord1, fromSys, toSys);
+		return Kekule.CoordUtils.getDistance(transCoord0, transCoord1);
+	},
 
 	/**
 	 * Transform sizes and coords of objects based on coord sys of current editor.
