@@ -3004,15 +3004,22 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return this;
 	},
 	/**
-	 * Remove an object from selection.
+	 * Remove an object (and all its child objects) from selection.
 	 * Descendants can override this method.
 	 * @param {Kekule.ChemObject} obj
 	 */
-	removeObjFromSelection: function(obj)
+	removeObjFromSelection: function(obj, doNotNotifySelectionChange)
 	{
 		var selection = this.getSelection();
 		Kekule.ArrayUtils.remove(selection, obj);
 		this._removeSelectRenderOptions(obj);
+		// remove possible child objects
+		for (var i = selection.length - 1; i >= 0; --i)
+		{
+			var remainObj = selection[i];
+			if (remainObj.isChildOf && remainObj.isChildOf(obj))
+				this.removeObjFromSelection(remainObj, true);
+		}
 		this.selectionChanged();
 		return this;
 	},
