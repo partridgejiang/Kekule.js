@@ -313,6 +313,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 		});
+		// private, whether defaultly select in toggle mode
+		this.defineProp('isToggleSelectOn', {'dataType': DataType.BOOL});
+
 
 		this.defineProp('hotTrackedObjs', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
@@ -2372,6 +2375,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	startSelecting: function(screenCoord, toggleFlag)
 	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
+
 		if (!toggleFlag)
 			this.deselectAll();
 
@@ -2403,6 +2409,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	endSelecting: function(screenCoord, toggleFlag)
 	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
+
 		var M = Kekule.Editor.SelectMode;
 		var mode = this._currSelectMode;
 		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
@@ -2608,6 +2617,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	selectOnCoord: function(coord, toggleFlag)
 	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
 		//console.log('select on coord');
 		var obj = this.getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
 		if (obj)
@@ -5800,7 +5811,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		if (this.getEnableSelect())
 		{
-			this.getEditor().startSelecting(startCoord, shifted);
+			this.getEditor().startSelecting(startCoord, shifted || this.getEditor().getIsToggleSelectOn());
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.SELECTING);
 		}
 	},
@@ -6162,7 +6173,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (state === S.SELECTING)  // mouse up, end selecting
 			{
 				//this.getEditor().endSelectingBoxDrag(coord, shifted);
-				this.getEditor().endSelecting(coord, shifted);
+				this.getEditor().endSelecting(coord, shifted || this.getEditor().getIsToggleSelectOn());
 				this.setState(S.NORMAL);
 				e.preventDefault();
 				var editor = this.getEditor();
@@ -6175,7 +6186,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // mouse down and up in same point, not manupulate, just select a object
 				{
 					if (this.getEnableSelect())
-						this.getEditor().selectOnCoord(startCoord, shifted);
+						this.getEditor().selectOnCoord(startCoord, shifted || this.getEditor().getIsToggleSelectOn());
 				}
 				else  // move objects to new pos
 				{
