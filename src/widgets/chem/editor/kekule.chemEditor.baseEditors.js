@@ -218,6 +218,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._initialRenderTransformParams = null;  // used internally, must init before $super
 		  // as in $super, chemObj may be loaded and _initialRenderTransformParams will be set at that time
 		this._objChanged = false;   // used internally, mark whether some changes has been made to chem object
+		this._lengthCaches = {};  // used internally, stores some value related to distance and length
 
 		this.setPropStoreFieldValue('enableCreateNewDoc', true);
 		this.setPropStoreFieldValue('enableOperHistory', true);
@@ -244,8 +245,48 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getDisplayerConfigs(); },
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
 		});
+		this.defineProp('defBondLength', {'dataType': DataType.FLOAT, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('defBondLength');
+				if (!result)
+					result = this.getEditorConfigs().getStructureConfigs().getDefBondLength();
+				return result;
+			}
+		});
+		this.defineProp('defBondScreenLength', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				/*
+				var result = this.getPropStoreFieldValue('defBondScreenLength');
+				if (!result)
+				{
+					var bLength = this.getDefBondLength();
+					result = this.translateDistance(bLength, Kekule.Render.CoordSys.CHEM, Kekule.Render.CoordSys.SCREEN);
+				}
+				return result;
+				*/
+				var cached = this._lengthCaches.defBondScreenLength;
+				if (cached)
+					return cached;
+				else
+				{
+					var bLength = this.getDefBondLength() || 0;
+					var result = this.translateDistance(bLength, Kekule.Render.CoordSystem.CHEM, Kekule.Render.CoordSystem.SCREEN);
+					this._lengthCaches.defBondScreenLength = result;
+					return result;
+				}
+			}
+		});
 		// Different pointer event (mouse, touch) has different bound inflation settings, stores here
-		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false, 'setter': null,
+			'getter': function(){
+				var pType = this.getCurrPointerType();
+				return this.getInteractionBoundInflation(pType);
+			}
+		});
+		// The recent pointer device interacted with this editor
+		this.defineProp('currPointerType', {'dataType': DataType.STRING, 'serializable': false});
 
 		//this.defineProp('standardizeObjectsBeforeSaving', {'dataType': DataType.BOOL});
 
@@ -1002,6 +1043,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var zoom = this.getDrawOptions().zoom;
 		this.zoomChanged(zoom);
+		// clear some length related caches
+		this._clearLengthCaches();
 		$super();
 	},
 
@@ -1009,6 +1052,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	zoomChanged: function(zoomLevel)
 	{
 		// do nothing here
+	},
+
+	/** @private */
+	_clearLengthCaches: function()
+	{
+		this._lengthCaches = {};
 	},
 
 	/**
@@ -1783,6 +1832,60 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////// methods about bound maps ////////////////////////////
+	/**
+	 * Returns bound inflation for interaction with a certain pointer device (mouse, touch, etc.)
+	 * @param {String} pointerType
+	 */
+	getInteractionBoundInflation: function(pointerType)
+	{
+		var cache = this._lengthCaches.interactionBoundInflations;
+		var cacheKey = pointerType || 'default';
+		if (cache)
+		{
+			if (cache[cacheKey])
+			{
+				//console.log('cached!')
+				return cache[cacheKey];
+			}
+		}
+
+		// no cache, calculate
+		var iaConfigs = this.getEditorConfigs().getInteractionConfigs();
+		var defRatioPropName = 'objBoundTrackInflationRatio';
+		var typedRatio, defRatio = iaConfigs.getPropValue(defRatioPropName);
+		if (pointerType)
+		{
+			var sPointerType = pointerType.upperFirst();
+			var typedRatioPropName = defRatioPropName + sPointerType;
+			if (iaConfigs.hasProperty(typedRatioPropName))
+				typedRatio = iaConfigs.getPropValue(typedRatioPropName);
+		}
+		var actualRatio = typedRatio || defRatio;
+		var ratioValue = actualRatio && this.getDefBondScreenLength() * actualRatio;
+
+		var minValuePropName = 'objBoundTrackMinInflation';
+		var typedMinValue, defMinValue = iaConfigs.getPropValue(minValuePropName);
+		if (pointerType)
+		{
+			var typedMinValuePropName = minValuePropName + sPointerType;
+			if (iaConfigs.hasProperty(typedMinValuePropName))
+				typedMinValue = iaConfigs.getPropValue(typedMinValuePropName);
+		}
+		var actualMinValue = typedMinValue || defMinValue;
+
+		var actualValue = Math.max(ratioValue || 0, actualMinValue);
+
+		// stores to cache
+		if (!cache)
+		{
+			cache = {};
+			this._lengthCaches.interactionBoundInflations = cache;
+		}
+		cache[cacheKey] = actualValue;
+		//console.log('to cache');
+
+		return actualValue;
+	},
 	/** @private */
 	clearBoundMap: function()
 	{
@@ -1826,7 +1929,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			throw 'boundInflation not set!';
 		*/
 		var boundRecorder = this.getBoundInfoRecorder();
-		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
 		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), screenCoord);
 		var coord = this.screenCoordToContext(screenCoord);
 		var refCoord = (this.getRenderType() === Kekule.Render.RendererType.R3D)? {'x': 0, 'y': 0}: null;
@@ -2081,7 +2184,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'color': styleConfigs.getHotTrackerColor(),
 			'opacity': styleConfigs.getHotTrackerOpacity()
 		};
-		var inflation = this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var inflation = this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
 		var bounds = [];
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
@@ -4219,10 +4322,11 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	initProperties: function()
 	{
 		this.defineProp('manuallyHotTrack', {'dataType': DataType.BOOL, 'serializable': false});
+
 		// in mouse or touch interaction, we may have different bound inflation
 		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false,
 			'getter': function() { return this.getEditor().getCurrBoundInflation(); },
-			'setter': function(value) { return this.getEditor().setCurrBoundInflation(value); }
+			'setter': null  // function(value) { return this.getEditor().setCurrBoundInflation(value); }
 		});
 	},
 	/**
@@ -4256,6 +4360,11 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		var editor = this.getEditor();
 		return editor? editor.getEditorConfigs(): null;
+	},
+	/** @private */
+	getInteractionBoundInflation: function(pointerType)
+	{
+		return this.getEditor().getInteractionBoundInflation(pointerType);
 	},
 
 	/** @ignore */
@@ -4310,34 +4419,63 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	},
 
 	/** @private */
+	/*
 	updateCurrBoundInflation: function(evt)
 	{
+	*/
+		/*
+		var editor = this.getEditor();
 		var pointerType = evt && evt.pointerType;
 		var iaConfigs = this.getEditorConfigs().getInteractionConfigs();
-		var defValue = iaConfigs.getObjBoundTrackInflation();
-		var currValue;
+		var defRatio = iaConfigs.getObjBoundTrackInflationRatio();
+		var currRatio, ratioValue;
 		if (pointerType === 'mouse')
-			currValue = iaConfigs.getObjBoundTrackInflationMouse();
+			currRatio = iaConfigs.getObjBoundTrackInflationRatioMouse();
 		else if (pointerType === 'pen')
-			currValue = iaConfigs.getObjBoundTrackInflationPen();
+			currRatio = iaConfigs.getObjBoundTrackInflationRatioPen();
 		else if (pointerType === 'touch')
-			currValue =	iaConfigs.getObjBoundTrackInflationTouch();
-		this.setCurrBoundInflation(currValue || defValue);
+			currRatio =	iaConfigs.getObjBoundTrackInflationRatioTouch();
+		currRatio = currRatio || defRatio;
+		if (currRatio)
+		{
+			var bondScreenLength = editor.getDefBondScreenLength();
+			ratioValue = bondScreenLength * currRatio;
+		}
+
+		var defMinValue = iaConfigs.getObjBoundTrackMinInflation();
+		var currMinValue;
+		if (pointerType === 'mouse')
+			currMinValue = iaConfigs.getObjBoundTrackMinInflationMouse();
+		else if (pointerType === 'pen')
+			currMinValue = iaConfigs.getObjBoundTrackMinInflationPen();
+		else if (pointerType === 'touch')
+			currMinValue =	iaConfigs.getObjBoundTrackMinInflationTouch();
+		currMinValue = currMinValue || defMinValue;
+
+		var actualValue = Math.max(ratioValue || 0, currMinValue);
+		*/
+	  /*
+		//this.setCurrBoundInflation(actualValue);
+		var value = this.getEditor().getInteractionBoundInflation(evt && evt.pointerType);
+		this.setCurrBoundInflation(value);
 		//console.log('update bound inflation', pointerType, this.getCurrBoundInflation());
 	},
+	*/
 
 	/** @private */
 	react_pointerdown: function(e)
 	{
-		this.updateCurrBoundInflation(e);
+		//this.updateCurrBoundInflation(e);
+		this.getEditor().setCurrPointerType(e.pointerType);
 		e.preventDefault();
 		return true;
 	},
 	/** @private */
 	react_pointermove: function(e)
 	{
-		if (!this.getCurrBoundInflation())
-			this.updateCurrBoundInflation(e);
+		//if (!this.getCurrBoundInflation())
+		//this.updateCurrBoundInflation(e);
+		this.getEditor().setCurrPointerType(e.pointerType);
 
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
