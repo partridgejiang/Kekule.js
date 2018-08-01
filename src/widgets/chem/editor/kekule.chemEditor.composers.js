@@ -38,6 +38,9 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER: 'K-Chem-Composer',
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
+	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
+	COMPOSER_LEFT_REGION: 'K-Chem-Composer-Left-Region',
+	COMPOSER_BOTTOM_REGION: 'K-Chem-Composer-Bottom-Region',
 	COMPOSER_TOOLBAR: 'K-Chem-Composer-Toolbar',
 	COMPOSER_COMMON_TOOLBAR: 'K-Chem-Composer-Common-Toolbar',
 	COMPOSER_ZOOM_TOOLBAR: 'K-Chem-Composer-Zoom-Toolbar',
@@ -1117,6 +1120,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		// private property
 		this.defineProp('editorStageElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('advPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('topRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('leftRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('bottomRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
 		this.defineProp('editorNexus', {'dataType': 'Kekule.Editor.EditorNexus', 'serializable': false, 'setter': null});
 		this.defineProp('objInspector', {'dataType': 'Kekule.Widget.ObjectInspector', 'serializable': false, 'setter': null});
@@ -1437,16 +1443,27 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	doCreateSubElements: function(doc, rootElem)
 	{
 		var result = [];
-		var elem = doc.createElement('div');
-		elem.className = CCNS.COMPOSER_EDITOR_STAGE;
-		rootElem.appendChild(elem);
-		this.setPropStoreFieldValue('editorStageElem', elem);
+		var elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_EDITOR_STAGE, 'editorStageElem');
 		result.push(elem);
-		var elem = doc.createElement('div');
-		elem.className = CCNS.COMPOSER_ADV_PANEL;
-		rootElem.appendChild(elem);
-		this.setPropStoreFieldValue('advPanelElem', elem);
+
+		elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_ADV_PANEL, 'advPanelElem');
 		result.push(elem);
+
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_TOP_REGION, 'topRegionElem'));
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_LEFT_REGION, 'leftRegionElem'));
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_BOTTOM_REGION, 'bottomRegionElem'));
+
+		return result;
+	},
+	/** @private */
+	_doCreateSubElement: function(doc, parentElem, tagName, htmlClass, propStoreFieldName)
+	{
+		var result = doc.createElement(tagName);
+		result.className = htmlClass;
+		if (parentElem)
+			parentElem.appendChild(result);
+		if (propStoreFieldName)
+			this.setPropStoreFieldValue(propStoreFieldName, result);
 		return result;
 	},
 	/** @ignore */
@@ -1636,13 +1653,47 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (!commonRect.width || !chemRect.width)  // rect is zero, the widget may not be displayed
 			return;
 
+		/*
 		var style = commonToolbarElem.style;
 		style.top = '0px';
 		style.left = chemRect.width + 'px';
 		style = chemToolbarElem.style;
 		style.top = commonRect.height + 'px';
 		style.left = '0px';
+		*/
 
+		var topRegionHeight = commonRect.height;
+		var leftRegionWidth = chemRect.width;
+		var bottomRegionHeight = zoomRect.height || topRegionHeight;  // zoom toolbar may be invisible
+
+		// top region
+		var elem = this.getTopRegionElem();
+		var style = elem.style;
+		style.top = '0px';
+		style.left = leftRegionWidth + 'px';
+		style.right = '0px';
+		style.height = topRegionHeight + 'px';
+
+		// bottom region
+		elem = this.getBottomRegionElem();
+		style = elem.style;
+		style.bottom = '0px';
+		style.height = bottomRegionHeight + 'px';
+		style.left = leftRegionWidth + 'px';
+		style.right = '0px';
+
+		// left region
+		elem = this.getLeftRegionElem();
+		style = elem.style;
+		style.left = '0px';
+		style.top = topRegionHeight + 'px';
+		style.bottom = '0px';
+		style.width = leftRegionWidth + 'px';
+		//style.top =
+
+		// editor stage
+		var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
+		/*
 		// editor
 		var top, left, right, bottom;
 		// calc top
@@ -1655,6 +1706,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		left = rect.width;
 		// calc bottom
 		var bottom = zoomRect? zoomRect.height: 0;
+		*/
 
 		/*
 		if (this.isAssocToolbarShown())
@@ -1700,6 +1752,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	adjustAssocToolbarPositions: function()
 	{
+		/*
 		//var commonToolbarElem = this.getCommonBtnGroup().getElement();
 		var chemToolbarElem = this.getChemBtnGroup().getElement();
 		//var commonRect= Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem)
@@ -1711,11 +1764,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			elem.style.left = chemRect.width + 'px';
 			//elem.style.top = commonRect.height + 'px';
 		}
+		*/
 		this.adjustStyleAndObjModifierToolbarPosition();
 	},
 	/** @private */
 	adjustStyleAndObjModifierToolbarPosition: function()
 	{
+		/*
 		var chemToolbarElem = this.getChemBtnGroup().getElement();
 		var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
 		var assocRect;
@@ -1736,6 +1791,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			var elem = this.getObjModifierToolbar().getElement();
 			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
 		}
+		*/
 	},
 
 	////////////////// methods about inner editor  ///////////////////////
@@ -2205,7 +2261,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 * @returns {Kekule.Widget.ButtonGroup}
 	 * @private
 	 */
-	createInnerToolbar: function()
+	createInnerToolbar: function(parentElem)
 	{
 		var toolBar = new Kekule.Widget.ButtonGroup(this);
 		toolBar.addClassName(CCNS.COMPOSER_TOOLBAR);
@@ -2213,7 +2269,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		toolBar.addClassName(CNS.DYN_CREATED);
 		toolBar.setShowText(false);
 		toolBar.doSetShowGlyph(true);
-		toolBar.appendToElem(this.getElement());
+		toolBar.appendToElem(parentElem || this.getElement());
 		return toolBar;
 	},
 	/**
@@ -2223,7 +2279,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createCommonToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getTopRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem);
 		toolbar.addClassName(CCNS.COMPOSER_COMMON_TOOLBAR);
 		// add buttons
 		var btns = this.getCommonToolButtons();
@@ -2255,7 +2312,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var btns = Kekule.ArrayUtils.intersect(this.getCommonToolButtons(), this.getZoomButtonNames());
 		if (btns.length)
 		{
-			var toolbar = this.createInnerToolbar();
+			var parentElem = this.getBottomRegionElem();
+			var toolbar = this.createInnerToolbar(parentElem);
 			toolbar.addClassName(CCNS.COMPOSER_ZOOM_TOOLBAR);
 			var actions = this.getZoomActions();
 			var editor = this.getEditor();
@@ -2305,7 +2363,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createChemToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getLeftRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem);
 		toolbar.addClassName(CCNS.COMPOSER_CHEM_TOOLBAR);
 		toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
 		// add buttons
@@ -2344,7 +2403,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createAssocToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getBottomRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem);
 		//toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
 		toolbar.addClassName(CCNS.COMPOSER_ASSOC_TOOLBAR);
 		this.setAssocBtnGroup(toolbar);
@@ -2447,6 +2507,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (this.getEnableObjModifierToolbar())
 		{
 			var toolbar = new Kekule.Editor.ComposerObjModifierToolbar(this);
+			toolbar.appendToElem(this.getBottomRegionElem());
 			this.setObjModifierToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
 			this.updateObjModifierToolbarState();
@@ -2489,7 +2550,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				toolbar.hide(null, function()
 						{
 							self.uiLayoutChanged();
-						}
+						}, null, {instantly: true}
 				);
 			}
 		}
@@ -2513,10 +2574,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var showToolbar = false;
 		if (this.getEnableObjModifierToolbar() && this.needShowSelectionAssocToolbar())
 		{
+			/*
 			// further check if currently is select series IA controllers
 			var iaController = this.getEditor().getActiveIaController();
 			showToolbar = ((iaController instanceof Kekule.Editor.BasicManipulationIaController) && (iaController.getEnableSelect()))
 					|| (iaController instanceof Kekule.Editor.ClientDragScrollIaController);
+			*/
+			showToolbar = true;
 			/*
 			// check if currently the space can fullfill a modifier toolbar
 			var toolbar = this.getObjModifierToolbar();
@@ -2550,6 +2614,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var toolbar = new Kekule.Editor.ComposerStyleToolbar(this);
 			toolbar.setComponentNames(this.getStyleBarComponents());
+			toolbar.appendToElem(this.getBottomRegionElem());
 			this.setStyleToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
 			this.updateStyleToolbarState();

@@ -1365,7 +1365,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerSingle,
 		Kekule.Editor.ActionComposerSetBondControllerDouble,
 		Kekule.Editor.ActionComposerSetBondControllerTriple,
-		Kekule.Editor.ActionComposerSetBondControllerCloser,
+		//Kekule.Editor.ActionComposerSetBondControllerCloser,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
@@ -1375,7 +1375,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		//Kekule.Editor.ActionComposerSetRepositorySubBondMarkController,
 		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
 		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
-		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
 		Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController,
 		Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController
 	]

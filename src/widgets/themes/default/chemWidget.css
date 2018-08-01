@@ -430,6 +430,34 @@
     touch-action: none;  /* disable default touch actions, for we have own ones */
 }
 
+.K-Chem-Composer .K-Chem-Composer-Top-Region,
+.K-Chem-Composer .K-Chem-Composer-Left-Region,
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    position: absolute;
+    padding: 0;
+    margin: 0;
+}
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    overflow: hidden;
+}
+.K-Chem-Composer .K-Chem-Composer-Top-Region
+{
+    left: 48px;
+    height: 37px;
+}
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    left: 48px;
+    height: 32px;
+}
+.K-Chem-Composer .K-Chem-Composer-Left-Region
+{
+    top: 37px;
+    width: 48px;
+}
+
 .K-Chem-Composer .K-Chem-Composer-Toolbar
 {
     z-index: 100;
@@ -450,19 +478,25 @@
 {
     position: absolute;
     top: 0;
-    left: 47px;
+    /*left: 47px;*/
 }
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar
 {
+    /*
     position: absolute;
     bottom: 0;
     right: 0;
+    */
+    float: right;
 }
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar
 {
+    /*
     position: absolute;
     top: 37px;
     left: 0;
+    */
+    float: right;
 }
 .K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button
@@ -483,9 +517,13 @@
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar,
 .K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar
 {
+    /*
     position: absolute;
     left: 48px;
     bottom: 0px;
+    */
+    float: left;
+    margin-right: 20px;
 }
 
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button,
