@@ -88,7 +88,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
- * @property {Int} objBoundTrackInflation The bound of object will usually be inflated to make it easier to select. This value controls the inflating degree.
+ * @property {Int} objBoundTrackMinInflation The bound of object will usually be inflated to make it easier to select. This value controls the minimal inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
  * @property {Int} selectionMarkerDefPulseDuration
@@ -112,10 +112,11 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
- * @property {Int} trackSimplifierDistanceThreshold Distance threshold to simplify curves in track structure input.
  * @property {Int} selectingCurveSimplificationDistanceThreshold Distance threshold to simplify curves in selecting marker.
  * @property {Float} selectingBrushWidth The selecting brush width.
  * //@property {Int} selectingBrushMinWidth Min width of selecting brush.
+ * @property {Int} trackSimplifierDistanceThreshold Distance threshold to simplify curves in track structure input.
+ * @property {Float} trackTouchRefLength In touch track input, the editor may be zoomed in to ensure the default bond screen level is this value (in inch).
  */
 Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.InteractionConfigs# */
@@ -130,10 +131,17 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableTrackOnNearest', true);
 
 		this.addBoolConfigProp('enableHotTrack', true);
-		this.addIntConfigProp('objBoundTrackInflation', 5);
-		this.addIntConfigProp('objBoundTrackInflationMouse', null);
-		this.addIntConfigProp('objBoundTrackInflationPen', null);
-		this.addIntConfigProp('objBoundTrackInflationTouch', 10);
+
+		this.addIntConfigProp('objBoundTrackMinInflation', 5);
+		this.addIntConfigProp('objBoundTrackMinInflationMouse', null);
+		this.addIntConfigProp('objBoundTrackMinInflationPen', null);
+		this.addIntConfigProp('objBoundTrackMinInflationTouch', 10);
+
+		this.addIntConfigProp('objBoundTrackInflationRatio', 0.2);
+		this.addIntConfigProp('objBoundTrackInflationRatioMouse', null);
+		this.addIntConfigProp('objBoundTrackInflationRatioPen', null);
+		this.addIntConfigProp('objBoundTrackInflationRatioTouch', 0.4);
+
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
 		this.addFloatConfigProp('selectingBrushWidth', 12);
 		this.addBoolConfigProp('enableOffSelectionManipulation', true);
@@ -165,11 +173,11 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30);  // 30 degree
 		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
+		this.addFloatConfigProp('trackTouchRefLength', 0.5);  // 0.5 inchi
 
 		//this.addFloatConfigProp('editorIntialZoom', 1);
 
-		//this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', true);
-		//this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', true);
+		this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', true);
 	},
 	/** @ignore */
 	initPropValues: function($super)

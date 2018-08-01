@@ -84,15 +84,6 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			'getter': function() { return this.getChemObj(); },
 			'setter': function(value) { this.setChemObj(value); }
 		});
-		this.defineProp('defBondLength', {'dataType': DataType.FLOAT, 'serializable': false,
-			'getter': function()
-			{
-				var result = this.getPropStoreFieldValue('defBondLength');
-				if (!result)
-					result = this.getEditorConfigs().getStructureConfigs().getDefBondLength();
-				return result;
-			}
-		});
 		this.defineProp('autoCreateNewStructFragment', {'dataType': DataType.BOOL,
 			'getter': function()
 			{

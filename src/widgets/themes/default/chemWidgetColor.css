@@ -453,6 +453,10 @@
 {
     background-image: url("images/slice/iconsSmall/carbonRingVariable.gif");
 }
+.K-Chem-TrackInputIaController .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/trackInput.gif");
+}
 
 .K-Chem-RepositoryStructureFragmentIaController-SubBondMark > .K-Pri-Glyph-Content
 {

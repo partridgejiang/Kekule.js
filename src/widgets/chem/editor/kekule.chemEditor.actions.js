@@ -1371,6 +1371,7 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
 		//Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
 		Kekule.Editor.ActionComposerSetRepositoryMolFlexChainController,
+		Kekule.Editor.ActionComposerSetTrackController,
 		//Kekule.Editor.ActionComposerSetRepositoryMethaneController,
 		//Kekule.Editor.ActionComposerSetRepositorySubBondMarkController,
 		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
