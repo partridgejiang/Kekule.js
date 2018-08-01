@@ -2044,13 +2044,30 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		else  // predefined names
 		{
-			var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
+			var preferredWidgetClass = action.getPreferredWidgetClass && action.getPreferredWidgetClass();
+			//console.log(action.getClassName(), preferredWidgetClass);
+			var btnClass =
+					preferredWidgetClass? preferredWidgetClass:
+					(btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
 					(!!checkGroup) ? Kekule.Widget.RadioButton :
 					Kekule.Widget.Button;
 			result = new btnClass(parentGroup);
 		}
 		if (action)
 			result.setAction(action);
+	},
+	/** @private */
+	_createActionButton: function(action, parentWidget)
+	{
+		var checkGroup = action.getCheckGroup();
+		var preferredClass = action.getPreferredWidgetClass && action.getPreferredWidgetClass();
+		var btnClass =
+				preferredClass? preferredClass:
+				(!!checkGroup) ? Kekule.Widget.RadioButton:
+						Kekule.Widget.Button;
+		var btn = new btnClass(parentWidget);
+		btn.setAction(action);
+		return btn;
 	},
 	/** @private */
 	_createToolButtonAction: function(actionNameOrHash, defActions, checkGroup)
@@ -2084,8 +2101,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				//this.getActions().add(action);
 				actionMap.set(actionClass, result);
 			}
-			if (checkGroup)
-				result.setCheckGroup(checkGroup);
+			var actualGroup = checkGroup || '';
+			var actionExplicitGroup = result.getExplicitGroup && result.getExplicitGroup();
+			if (Kekule.ObjUtils.notUnset(actionExplicitGroup))
+			{
+				actualGroup = actionExplicitGroup;
+			}
+			if (actualGroup)
+				result.setCheckGroup(actualGroup);
 
 			if (result && defActions)
 				defActions.add(result);
@@ -2132,7 +2155,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							if (!childAction)
 							{
 								childAction = new aClass(this._getActionTargetWidget(aClass));
-								childAction.setCheckGroup(subGroupName);
+								var childExplicitGroup = (childAction.getExplicitGroup && childAction.getExplicitGroup());
+								if (Kekule.ObjUtils.notUnset(childExplicitGroup))
+								{
+									childAction.setCheckGroup(childExplicitGroup);
+									// console.log('set check group', childAction.getClassName(), childExplicitGroup);
+								}
+								else
+									childAction.setCheckGroup(subGroupName);
 								actionMap.set(aClass, childAction);
 							}
 							/*
@@ -2396,10 +2426,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			for (var i = 0, l = actions.getActionCount(); i < l; ++i)
 			{
 				var action = actions.getActionAt(i);
+				/*
 				var checkGroup = action.getCheckGroup();
 				var btnClass = (!!checkGroup) ? Kekule.Widget.RadioButton : Kekule.Widget.Button;
 				var btn = new btnClass(toolbar);
 				btn.setAction(action);
+				*/
+				var btn = this._createActionButton(action, toolbar);
 			}
 		}
 	},

@@ -356,6 +356,10 @@
 {
     background-image: url("images/slice/iconsSmall/hand.gif");
 }
+.K-Chem-Toggle-Select-State > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/selectToggle.gif");
+}
 
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content
 {

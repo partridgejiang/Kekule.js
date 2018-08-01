@@ -41,6 +41,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_COPY: 'K-Chem-Copy',
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
+	ACTION_TOGGLE_SELECT: 'K-Chem-Toggle-Select-State',
 	ACTION_TOGGLE_INSPECTOR: 'K-Chem-Toggle-Inspector'
 });
 
@@ -161,6 +162,7 @@ Kekule.Editor.ActionOperUtils = {
  * @param {Kekule.Editor.BaseEditor} editor Target editor object.
  * @param {String} caption
  * @param {String} hint
+ * @param {String} explicitGroup Use this property to explicitly set child actions to different group.
  */
 Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 /** @lends Kekule.Editor.ActionOnEditor# */
@@ -171,6 +173,21 @@ Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 	initialize: function($super, editor, caption, hint)
 	{
 		$super(editor, caption, hint);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('explicitGroup', {'dataType': DataType.STRING});
+	},
+
+	/**
+	 * Returns the widget class that best fit this action.
+	 * Descendants may override this method.
+	 * @returns {null}
+	 */
+	getPreferredWidgetClass: function()
+	{
+		return null;
 	},
 	/** @private */
 	doUpdate: function()
@@ -586,6 +603,54 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 			}
 		}
 		*/
+	}
+});
+
+/**
+ * Set isToggleSelectionOn property to editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionToggleSelectState# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionToggleSelectState',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SELECT,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT'));
+		this.setExplicitGroup('');  // force no check group
+	},
+	/** @ignore */
+	getPreferredWidgetClass: function()
+	{
+		return Kekule.Widget.CheckButton;
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		this.setChecked(this.getEditor().getIsToggleSelectOn());
+	},
+	/** @ignore */
+	checkedChanged: function($super)
+	{
+		$super();
+
+	},
+	/** @ignore */
+	doExecute: function($super, target, htmlEvent)
+	{
+		$super(target, htmlEvent);
+		var oldChecked = this.getChecked();
+		var editor = this.getEditor();
+		editor.setIsToggleSelectOn(!oldChecked);
+		this.setChecked(!oldChecked);
 	}
 });
 
@@ -1037,7 +1102,8 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetManipulateControllerLasso,
 		Kekule.Editor.ActionComposerSetManipulateControllerBrush,
 		Kekule.Editor.ActionComposerSetManipulateControllerAncestor,
-		Kekule.Editor.ActionComposerClientDragScrollController
+		Kekule.Editor.ActionComposerClientDragScrollController,
+		Kekule.Editor.ActionToggleSelectState
 	],
 	null,
 	BNS.manipulate
