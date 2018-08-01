@@ -553,6 +553,8 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 
 			this._setActiveBondHtmlClass(matchedBondData && matchedBondData.htmlClass);
 		}
+
+		this.getWidget().setDisplayed(!!connectors.length);
 	},
 	/** @ignore */
 	doApplyToTargets: function($super, editor, targets)
