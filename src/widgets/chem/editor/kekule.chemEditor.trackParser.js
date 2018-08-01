@@ -1064,6 +1064,11 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		this._trackParser = new Kekule.Editor.TrackParser();
 		this._trackLayoutOptimizer = new Kekule.Editor.TrackLayoutOptimizer();
 		this._addStructureOperation = null;
+
+		this._editorScaled = false;
+		this._editorOriginalZoomLevel = 1;
+
+		this._lastRenderedMarkerCoord = null;
 		// debug
 		this._debugMarkers = {};
 	},
@@ -1307,7 +1312,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		//this.setPropStoreFieldValue('boundChemObjMarkers', []);
 	},
 	/** @private */
-	startTracking: function(startScreenCoord)
+	startTracking: function(event, startScreenCoord)
 	{
 		this._isTracking = true;
 		this._trackCoordToObjBindings = [];
@@ -1332,7 +1337,50 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		marker.setDrawStyles(drawStyles);
 		marker.setVisible(true);
 
-		this.addTrackCoord(startScreenCoord);
+		// save the first coord and the possible merge target obj
+		// If autoscale, the merge obj may be disconnected after enlarge, so save it here first
+		this.addTrackCoord(startScreenCoord, false);  // do not repaint marker
+
+		if (this.getEditorConfigs().getInteractionConfigs().getAutoAdjustZoomLevelOnTrackTouching())
+		{
+			var editor = this.getEditor();
+			var refLengthRatio = this.getEditorConfigs().getInteractionConfigs().getTrackTouchRefLength();
+			if (refLengthRatio)
+			{
+				var doc = editor.getDocument();
+				var bondScreenLength = editor.getDefBondScreenLength();
+				var minLength = Kekule.DocumentUtils.getDevicePPI(doc) * refLengthRatio / Kekule.DocumentUtils.getClientScaleLevel(doc);
+				var scaleRatio = minLength / bondScreenLength;
+				//console.log(bondScreenLength, scaleRatio);
+				if (scaleRatio > 0.9)  // TODO: current fixed
+				{
+					var currZoomLevel = editor.getCurrZoom();
+					editor.setZoomCenter(startScreenCoord);
+					editor.zoomTo(currZoomLevel * scaleRatio);
+
+					// since we change the zoom, coord should be recalculated
+					var coord = this._getEventMouseCoord(event);
+					// and update the coord info prev added to coords array
+					var coords = this.getTrackCoords();
+					var recCoord = coords[coords.length - 1];
+					startScreenCoord = coord;
+					Object.extend(recCoord, coord);
+
+					this._editorScaled = true;
+					this._editorOriginalZoomLevel = currZoomLevel;
+					this._autoScaleStartCoord = coord;
+					// repaint hot track marker in editor
+					// editor.recalcHotTrackMarker();
+				}
+				else
+				{
+					this._editorScaled = false;
+					this._editorOriginalZoomLevel = null;
+				}
+			}
+		}
+		this.repaintMarker();
+		this._lastRenderedMarkerCoord = startScreenCoord;
 	},
 	/** @private */
 	endTracking: function(endScreenCoord)
@@ -1371,13 +1419,25 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	/** @private */
 	doneTracking: function()
 	{
+
+		if (this._editorScaled)
+		{
+			var coords = this.getTrackCoords();
+			var lastCoord = coords[coords.length - 1];
+			this._editorScaled = false;
+			//this.getEditor().setZoomCenter(lastCoord);
+			this.getEditor().zoomTo(this._editorOriginalZoomLevel, null, this._autoScaleStartCoord);
+			this._editorOriginalZoomLevel = null;
+			this._autoScaleStartCoord = null;
+		}
+
 		this.setManuallyHotTrack(false);
 		this.getEditor().hideHotTrack();
 		this.clearTrackCoords();
 		this.repaintMarker();
 	},
 	/** @private */
-	addTrackCoord: function(screenCoord)
+	addTrackCoord: function(screenCoord, doNotRepaint)
 	{
 		//console.log('add track coord', screenCoord);
 		// var objCoord = this.getEditor().screenCoordToObj(screenCoord);
@@ -1401,7 +1461,28 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		coords.push(screenCoord);
 
 		// console.log(this.getTrackMarker(), this.getEditor().getUiMarkers());
-		this.repaintMarker();
+		if (!doNotRepaint)
+		{
+			var distance;
+			if (this._lastRenderedMarkerCoord)
+			{
+				distance = Kekule.CoordUtils.getDistance(this._lastRenderedMarkerCoord, screenCoord);
+				if (distance > 5)  // reduce the repaint count
+				{
+					this.repaintMarker();
+					this._lastRenderedMarkerCoord = screenCoord;
+				}
+				/*
+				else
+					console.log('bypass');
+				*/
+			}
+			else
+			{
+				this.repaintMarker();
+				this._lastRenderedMarkerCoord = screenCoord;
+			}
+		}
 	},
 
 	/** @private */
@@ -1440,11 +1521,12 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 	{
 		//$super(e);
 		// important, since we did not call $super, a bound inflation should be done manually here
-		this.updateCurrBoundInflation(e);
+		//this.updateCurrBoundInflation(e);
+		this.getEditor().setCurrPointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);
-			this.startTracking(coord);
+			this.startTracking(e, coord);
 			e.preventDefault();
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
