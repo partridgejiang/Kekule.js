@@ -3449,7 +3449,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 */
 	isValidNode: function(obj)
 	{
-		return obj instanceof Kekule.ChemStructureNode;
+		return (obj instanceof Kekule.ChemStructureNode) && !(obj instanceof Kekule.StructureFragment && obj.isStandalone());
 	},
 
 	/** @private */

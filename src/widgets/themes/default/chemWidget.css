@@ -553,16 +553,7 @@
     padding: 0.2em 0.4em;
     white-space: nowrap;
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
-.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
-{
-    width: 16px;
-    height: 16px;
-    -webkit-background-size: 100% 100%;
-    -moz-background-size: 100% 100%;
-    background-size: 100% 100%;
-    /*display: inherit;*/
-}
+
 .K-Chem-Composer-Style-Toolbar .K-Button .K-Content,
 .K-Chem-Composer-ObjModifier-Toolbar .K-Button .K-Content
 {

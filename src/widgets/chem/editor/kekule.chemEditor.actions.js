@@ -1431,6 +1431,21 @@ Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerI
 	BNS.molFormula
 );
 
+Kekule.Editor.ActionComposerSetAtomAndFormulaController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetAtomAndFormulaController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ATOM_AND_FORMULA'),
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ATOM_AND_FORMULA'),
+	'MolAtomIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetAtomController,
+		Kekule.Editor.ActionComposerSetFormulaController
+	]
+	,null,
+	BNS.molAtomAndFormula
+);
+
 // Attached markers
 Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair',
@@ -1796,8 +1811,8 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryRing4Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing5Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing6Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
 		Kekule.Editor.ActionComposerSetRepositoryMolFlexRingController,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
 		//Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller,

@@ -97,8 +97,9 @@ Kekule.globalOptions.add('chemWidget.composer', {
 		BNS.manipulate,
 		BNS.erase,
 		BNS.molBond,
-		BNS.molAtom,
-		BNS.molFormula,
+		//BNS.molAtom,
+		//BNS.molFormula,
+		BNS.molAtomAndFormula,
 		BNS.molRing,
 		BNS.molCharge,
 		BNS.glyph,
@@ -2861,7 +2862,7 @@ SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit 
 		BNS.erase,
 		BNS.molBond,
 		BNS.molAtom,
-		BNS.molFormula,
+		// BNS.molFormula,
 		BNS.molRing,
 		BNS.molCharge
 	],   // create only chem tool buttons related with molecule

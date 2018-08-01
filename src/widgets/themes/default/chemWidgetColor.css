@@ -109,6 +109,24 @@
     height: 21px;
     background-repeat: no-repeat;
 }
+.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
+{
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+
+.K-Chem-InnerToolbar .K-Pri-Glyph-Content,
+.K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
+{
+    -webkit-background-size: 100% 100%;
+    -moz-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
 
 .K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,
 .K-Chem-Obj-Setter .K-Chem-Obj-Setter-Client
@@ -296,7 +314,8 @@
 {
     background-image: url("images/slice/icons/eraser.png");
 }
-.K-Chem-MolAtomIaController > .K-Pri-Glyph-Content
+.K-Chem-MolAtomIaController > .K-Pri-Glyph-Content,
+.K-Chem-MolAtomAndFormulaIaController > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/atom.png");
 }
