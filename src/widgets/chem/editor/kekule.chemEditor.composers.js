@@ -88,7 +88,7 @@ Kekule.globalOptions.add('chemWidget.composer', {
 		//BNS.cloneSelection,
 		BNS.zoomIn,
 		//BNS.reset,
-		BNS.resetZoom,
+		//BNS.resetZoom,
 		BNS.zoomOut,
 		BNS.config,
 		BNS.objInspector
@@ -1629,6 +1629,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		this.adjustComponentPositions();
 	},
+	/** @ignore */
+	doResize: function($super)
+	{
+		this.adjustComponentPositions();
+	},
 
 	/**
 	 * Change child components' position and dimension to fit current UI widget status.
@@ -1682,6 +1687,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		style.height = bottomRegionHeight + 'px';
 		style.left = leftRegionWidth + 'px';
 		style.right = '0px';
+		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var bottomFreeWidth = bottomRect.width - zoomRect.width;
 
 		// left region
 		elem = this.getLeftRegionElem();
@@ -1690,39 +1697,23 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		style.top = topRegionHeight + 'px';
 		style.bottom = '0px';
 		style.width = leftRegionWidth + 'px';
-		//style.top =
+		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var leftFreeHeight = leftRect.height - chemRect.height;
+
+		// now we can decide whether shown assoc toolbar on bottom or left side
+		if (leftFreeHeight / bottomFreeWidth > 0.9)  // TODO: now fixed
+		{
+			// assoc bar shown in left
+			this.changeAssocToolbarRegion(true);
+		}
+		else
+		{
+			// assoc bar shown in bottom
+			this.changeAssocToolbarRegion(false);
+		}
 
 		// editor stage
 		var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
-		/*
-		// editor
-		var top, left, right, bottom;
-		// calc top
-		//var elem = this.getCommonBtnGroup().getElement();
-		var rect = commonRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-		top = rect.height;
-		// calc left
-		//var elem = this.getChemBtnGroup().getElement();
-		var rect = chemRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-		left = rect.width;
-		// calc bottom
-		var bottom = zoomRect? zoomRect.height: 0;
-		*/
-
-		/*
-		if (this.isAssocToolbarShown())
-		{
-			var elem = this.getAssocBtnGroup().getElement();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-			bottom += rect.height;
-		}
-		if (this.isStyleToolbarShown())
-		{
-			var elem = this.getStyleToolbar().getElement();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-			bottom += rect.height;
-		}
-		*/
 
 		// calc right
 		if (!this.getShowInspector())
@@ -2412,6 +2403,28 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.adjustAssocToolbarPositions();
 		toolbar.addClassName(CNS.DYN_CREATED);
 		return toolbar;
+	},
+	/** @private */
+	changeAssocToolbarRegion: function(toLeftRegion)
+	{
+		var toolbar = this.getAssocBtnGroup();
+		if (!toolbar)
+			toolbar = this.createAssocToolbar();
+		var parent;
+		if (toLeftRegion)
+		{
+			toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
+			parent = this.getLeftRegionElem();
+			toolbar.appendToElem(parent);
+		}
+		else // to bottom region
+		{
+			toolbar.setLayout(Kekule.Widget.Layout.HORIZONTAL);
+			parent = this.getBottomRegionElem();
+			var refElem = Kekule.DomUtils.getFirstChildElem(parent);
+			// insert as the first elem
+			parent.insertBefore(toolbar.getElement(), refElem);
+		}
 	},
 	/**
 	 * Show assoc chem tool bar.
