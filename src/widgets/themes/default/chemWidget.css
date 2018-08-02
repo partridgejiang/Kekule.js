@@ -496,6 +496,7 @@
     top: 37px;
     left: 0;
     */
+    display: block;
     float: right;
 }
 .K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,
@@ -513,7 +514,7 @@
     */
     padding: 4px 5px;
 }
-.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar,
+.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-H,
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar,
 .K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar
 {
@@ -524,6 +525,12 @@
     */
     float: left;
     margin-right: 20px;
+}
+.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-V
+{
+    float: right;
+    margin-top: 20px;
+    margin-right: 0;
 }
 
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button,
