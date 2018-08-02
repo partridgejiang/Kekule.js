@@ -352,13 +352,17 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 */
 	adjustChildrenSizes: function()
 	{
-		var selfRect = this.getBoundingClientRect();
-		var toolbarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this._toolbarParentElem);
+		//var selfRect = this.getBoundingClientRect();
+		var selfRect = this.getPageRect();
+		//var toolbarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this._toolbarParentElem);
+		var toolbarRect = Kekule.HtmlElementUtils.getElemPageRect(this._toolbarParentElem);
 		var tabs = this.getTabs();
-		var tabRect = tabs && tabs.getBoundingClientRect();
+		//var tabRect = tabs && tabs.getBoundingClientRect();
+		var tabRect = tabs && tabs.getPageRect();
 		var h = tabRect.top - toolbarRect.bottom;
 		//console.log(selfRect.height, toolbarRect.height, tabRect.height, h);
 		this.getClientPanel().setHeight(h + 'px');
+		console.log('set height', h, tabRect, toolbarRect);
 		this.getViewer().resized();
 		//var clientRect = this.getClientPanel().getBoundingClientRect();
 		/*
@@ -682,7 +686,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 */
 	importFromElem: function(element)
 	{
-		var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
+		//var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
+		var dim = Kekule.HtmlElementUtils.getElemPageRect(element);
 		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
 		if (!attribs.width)
 			attribs.width = dim.width;

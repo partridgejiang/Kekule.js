@@ -131,7 +131,8 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		if (this.targetIsWidget(target))
 			return target.getDimension();
 		else
-			return Kekule.HtmlElementUtils.getElemBoundingClientRect(target, false);
+			//return Kekule.HtmlElementUtils.getElemBoundingClientRect(target, false);
+			return Kekule.HtmlElementUtils.getElemPageRect(target, true);
 	},
 	/**
 	 * Set dimension (in px) of target object.

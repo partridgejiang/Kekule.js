@@ -628,7 +628,8 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 			var layout = p? p.getLayout(): Kekule.Widget.Layout.HORIZONTAL;
 
 			// check which direction can display all part of widget and drop dropdown widget to that direction
-			var selfClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+			//var selfClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+			var selfClientRect = Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), true);
 			var viewPortDim = Kekule.HtmlElementUtils.getViewportDimension(this.getElement());
 			var dropElem = this.getDropDownWidget().getElement();
 			// add the dropdown element to DOM tree first, else the offsetDimension will always return 0

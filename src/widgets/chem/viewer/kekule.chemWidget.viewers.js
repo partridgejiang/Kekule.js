@@ -1202,8 +1202,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			//if (toolbar)
 			{
 				var WP = Kekule.Widget.Position;
-				var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
-				var toolbarClientRect = toolbar.getBoundingClientRect();
+				//var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
+				var viewerClientRect = Kekule.HtmlElementUtils.getElemPageRect(this.getDrawContextParentElem());
+				//var toolbarClientRect = toolbar.getBoundingClientRect();
+				var toolbarClientRect = Kekule.HtmlElementUtils.getElemPageRect(toolbar);
 				var pos = this.getToolbarPos();
 				var hMargin = this.getToolbarMarginHorizontal();
 				var vMargin = this.getToolbarMarginVertical();
@@ -1832,7 +1834,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (restraintRotateEdgeSize > 0)
 		{
 			var elem = viewer.getInteractionReceiverElem();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
+			//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
+			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
 			var x1 = clientX - rect.left;
 			var y1 = clientY - rect.top;
 			var x2 = rect.right - clientX; //rect.right - screenX;

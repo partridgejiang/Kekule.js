@@ -553,7 +553,8 @@ X.Event.Methods = {
 			else
 			{
 				var clientX = X.Event.getClientX(event);
-				return Math.round(clientX - elem.getBoundingClientRect().left);
+				//return Math.round(clientX - elem.getBoundingClientRect().left);
+				return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).left);
 			}
 		}
 	},
@@ -578,7 +579,8 @@ X.Event.Methods = {
 			else
 			{
 				var clientY = X.Event.getClientY(event);
-				return Math.round(clientY - elem.getBoundingClientRect().top);
+				//return Math.round(clientY - elem.getBoundingClientRect().top);
+				return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).top);
 			}
 		}
 	},
@@ -619,7 +621,8 @@ X.Event.Methods = {
 		if (elem.defaultView && elem.body)  // is document
 			elem = elem.body;
 		var clientX = X.Event.getClientX(event);
-		return Math.round(clientX - elem.getBoundingClientRect().left);
+		//return Math.round(clientX - elem.getBoundingClientRect().left);
+		return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).left);
 	},
 	/**
 	 * Returns the mouse Y coordinates relative to the event's currTarget.
@@ -633,7 +636,8 @@ X.Event.Methods = {
 			elem = elem.body;
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);
-		return Math.round(clientY - elem.getBoundingClientRect().top);
+		//return Math.round(clientY - elem.getBoundingClientRect().top);
+		return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).top);
 	},
 	/**
 	 * Returns touches array of event in touch.

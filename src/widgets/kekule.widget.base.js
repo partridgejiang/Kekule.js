@@ -1926,6 +1926,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this.setVisible('hidden');
 				this.setDisplayed('');
 				var result = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement(), includeScroll);
+				//var result = Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), !includeScroll);
 			}
 			finally
 			{
@@ -1936,6 +1937,38 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 		else
 			return Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement(), includeScroll);
+			//return Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), !includeScroll);
+	},
+	/**
+	 * Returns rectangle of widget in HTML page.
+	 * @param {HTMLElement} elem
+	 * @param {Bool} relToViewport If this value is true, scrollTop/Left of documentElement will be substracted from result.
+	 * @returns {Hash} {top, left, bottom, right, width, height}
+	 */
+	getPageRect: function(relToViewport)
+	{
+		// if widget is not displayed, display it first, otherwise width and height may returns 0
+		if (!this.getDisplayed())
+		{
+			var d = Kekule.StyleUtils.getDisplayed(this.getElement());
+			var v = Kekule.StyleUtils.getVisibility(this.getElement());
+			try
+			{
+				this.setVisible('hidden');
+				this.setDisplayed('');
+				//var result = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement(), includeScroll);
+				var result = Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), relToViewport);
+			}
+			finally
+			{
+				this.setDisplayed(d);
+				this.setVisible(v);
+			}
+			return result;
+		}
+		else
+			//return Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement(), includeScroll);
+			return Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), relToViewport);
 	},
 	/**
 	 * Returns dimension in px of this widget.
@@ -1943,7 +1976,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	getDimension: function()
 	{
-		return this.getBoundingClientRect(false);
+		//return this.getBoundingClientRect(false);
+		return this.getPageRect();
 	},
 	/**
 	 * Set width and height of current widget. Width and height value can be number (how many pixels)
@@ -3167,7 +3201,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			relElement = this.getCoreElement();  // defaultly base on client element, not widget element
 
 		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
-		var offset = {'x': relElement.getBoundingClientRect().left - relElement.scrollLeft, 'y': relElement.getBoundingClientRect().top - relElement.scrollTop};
+		//var offset = {'x': relElement.getBoundingClientRect().left - relElement.scrollLeft, 'y': relElement.getBoundingClientRect().top - relElement.scrollTop};
+		var rect = Kekule.HtmlElementUtils.getElemPageRect(relElement, true);
+		var offset = {
+			'x': rect.left - relElement.scrollLeft,
+			'y': rect.top - relElement.scrollTop};
 		var result = Kekule.CoordUtils.substract(coord, offset);
 		//console.log(result, elem.tagName);
 		return result;
@@ -3444,7 +3482,12 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
 		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
 		var elem = clientElem || this.getWidget().getElement();
-		var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
+		//var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
+		var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
+		var offset = {
+			'x': rect.left - elem.scrollLeft,
+			'y': rect.top - elem.scrollTop
+		};
 		var result = Kekule.CoordUtils.substract(coord, offset);
 		return result;
 	}
@@ -3971,7 +4014,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
-		this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
+		this.uninstallGlobalEventHandlers(this._document.body);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
@@ -4009,7 +4053,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	domReadyInit: function()
 	{
-		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
@@ -4763,7 +4808,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			elem.style.display = '';
 		}
 
-		var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
+		//var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
+		var clientRect = EU.getElemPageRect(elem, false);  // include scroll offset
 		result = {
 			'rect': clientRect
 		};
@@ -4788,7 +4834,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
-		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
+		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
+		var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
 		var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(invokerWidget.getDocument());
 		var dropElem = dropDownWidget.getElement();
@@ -4808,7 +4855,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		var dropOffsetDim = EU.getElemOffsetDimension(dropElem);
 		var dropScrollDim = EU.getElemScrollDimension(dropElem);
-		var dropClientRect = EU.getElemBoundingClientRect(dropElem);
+		//var dropClientRect = EU.getElemBoundingClientRect(dropElem);
+		var dropClientRect = EU.getElemPageRect(dropElem, true);
 
 		dropElem.style.position = 'absolute';  // restore
 
@@ -4855,7 +4903,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		//console.log(invokerClientRect);
 		var SU = Kekule.StyleUtils;
 		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);  // refetch, with document scroll considered
-		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, !parentFixedPosition);  // refetch, with document scroll considered
+		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, !parentFixedPosition);  // refetch, with document scroll considered
+		var invokerClientRect = EU.getElemPageRect(invokerElem, !!parentFixedPosition);  // refetch, with document scroll considered
 		var w = /*SU.getComputedStyle(dropElem, 'width') ||*/ dropScrollDim.width;
 		var h = /*SU.getComputedStyle(dropElem, 'height') ||*/ dropScrollDim.height;
 		/*

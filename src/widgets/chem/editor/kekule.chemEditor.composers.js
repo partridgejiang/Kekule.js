@@ -1645,11 +1645,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			return;
 
 		if (commonToolbarElem)
-			var commonRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem);
+			var commonRect = Kekule.HtmlElementUtils.getElemPageRect(commonToolbarElem);
 		if (zoomToolbarElem)
-			var zoomRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(zoomToolbarElem);
+			var zoomRect = Kekule.HtmlElementUtils.getElemPageRect(zoomToolbarElem);
 		if (chemToolbarElem)
-			var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
+			var chemRect = Kekule.HtmlElementUtils.getElemPageRect(chemToolbarElem);
 
 		if (!commonRect.width || !chemRect.width)  // rect is zero, the widget may not be displayed
 			return;
@@ -1730,7 +1730,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		else
 		{
 			var elem = this.getAdvPanelElem();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 			right = rect.width;
 		}
 

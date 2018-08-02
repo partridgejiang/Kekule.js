@@ -1080,16 +1080,18 @@ Kekule.HtmlElementUtils = {
 		return result;
 	},
 	/**
-	 * Get position relative to top-left corner of HTML page.
+	 * Get position relative to top-left corner of HTML page or current viewport (if includeDocScroll is true).
 	 * @param {HTMLElement} elem
+	 * @param {Bool} relToViewport
 	 * @returns {Hash}
 	 */
-	getElemPagePos: function(elem)
+	getElemPagePos: function(elem, relToViewport)
 	{
 
 		var xPosition = 0;
 		var yPosition = 0;
 
+		/*
 		if (elem.getBoundingClientRect)
 		{
 			var box = elem.getBoundingClientRect();
@@ -1102,13 +1104,23 @@ Kekule.HtmlElementUtils = {
 			xPosition = box.left + (window && window.pageXOffset || docElem && docElem.scrollLeft || body.scrollLeft) - clientLeft;
 		}
 		else
+		*/
 		{
-			while(elem)
+			var currElem = elem;
+			while(currElem)
 			{
 				// TODO: Here Chrome report body.scrollLeft unavailable in strict mode warning
-				xPosition += (elem.offsetLeft - elem.scrollLeft + elem.clientLeft);
-				yPosition += (elem.offsetTop - elem.scrollTop + elem.clientTop);
-				elem = elem.offsetParent;
+				xPosition += (currElem.offsetLeft - currElem.scrollLeft + currElem.clientLeft);
+				yPosition += (currElem.offsetTop - currElem.scrollTop + currElem.clientTop);
+				currElem = currElem.offsetParent;
+			}
+			if (relToViewport)
+			{
+				var doc = elem.ownerDocument;
+				var scrollTop = doc.documentElement.scrollTop || doc.body.scrollTop || 0;
+				var scrollLeft = doc.documentElement.scrollLeft || doc.body.scrollLeft || 0;
+				xPosition -= scrollLeft;
+				yPosition -= scrollTop;
 			}
 		}
 		return { x: xPosition, y: yPosition };
@@ -1116,14 +1128,16 @@ Kekule.HtmlElementUtils = {
 	/**
 	 * Get position relative to top-left corner of HTML page togather with width/height of elem.
 	 * @param {HTMLElement} elem
-	 * @returns {Hash} {x, y, width, height}
+	 * @param {Bool} relToViewport
+	 * @returns {Hash} {x, y, top, left, bottom, right, width, height}
 	 */
-	getElemPageRect: function(elem)
+	getElemPageRect: function(elem, relToViewport)
 	{
-		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem, relToViewport);
 		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
 		return {
 			'x': pos.x, 'y': pos.y, 'left': pos.x, 'top': pos.y,
+			'right': pos.x + dim.width, 'bottom': pos.y + dim.height,
 			'width': dim.width, 'height': dim.height
 		};
 	},
@@ -1134,7 +1148,8 @@ Kekule.HtmlElementUtils = {
 	 */
 	getElemViewportPos: function(elem)
 	{
-		var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		var rect = Kekule.HtmlElementUtils.getElemPagePos(elem, true);
 		return {'x': rect.left, 'y': left.top};
 	},
 
