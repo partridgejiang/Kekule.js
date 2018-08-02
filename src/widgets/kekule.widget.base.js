@@ -2893,6 +2893,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					}
 				}
 
+				this.doBeforeDispatchUiEvent(e);
+
 				// check first if the component has event handler itself
 				var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
 
@@ -2941,9 +2943,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 	/**
 	 * For descendants override.
+	 * Called after event being dispatched to IA controllers.
 	 * @private
 	 */
 	doReactUiEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * For descendants override.
+	 * Called before event being dispatched to IA controllers.
+	 * @private
+	 */
+	doBeforeDispatchUiEvent: function(e)
 	{
 		// do nothing here
 	},

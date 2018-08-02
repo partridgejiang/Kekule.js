@@ -4208,6 +4208,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	scrollClientToTop: function()
 	{
 		return this.scrollClientTo(0, null);
+	},
+
+	/////// Event handle  //////////////////////
+
+	doBeforeDispatchUiEvent: function($super, e)
+	{
+		// get pointer type information here
+		var evType = e.getType();
+		if (['pointerdown', 'pointermove', 'pointerup'].indexOf(evType) >= 0)
+		{
+			this.setCurrPointerType(e.pointerType);
+		}
+		return $super(e);
 	}
 });
 
@@ -4466,7 +4479,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	react_pointerdown: function(e)
 	{
 		//this.updateCurrBoundInflation(e);
-		this.getEditor().setCurrPointerType(e.pointerType);
+		//this.getEditor().setCurrPointerType(e.pointerType);
 		e.preventDefault();
 		return true;
 	},
@@ -4475,7 +4488,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		//if (!this.getCurrBoundInflation())
 		//this.updateCurrBoundInflation(e);
-		this.getEditor().setCurrPointerType(e.pointerType);
+		//this.getEditor().setCurrPointerType(e.pointerType);
 
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
