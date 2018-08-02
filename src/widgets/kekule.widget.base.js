@@ -4053,8 +4053,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @private */
 	domReadyInit: function()
 	{
-		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
-		this.installGlobalEventHandlers(this._document.body);
+		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		//this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
