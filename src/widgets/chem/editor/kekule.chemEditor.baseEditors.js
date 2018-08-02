@@ -6430,6 +6430,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			this._initialGestureZoomLevel = null;
 			if (this._isGestureManipulationEnabled())
 			{
+				this.haltSuspendedOperations(); // halt possible touch hold manipulations
 				// stores initial gesture transform params
 				this._initialGestureTransformParams = {
 					'angle': (event.rotation * Math.PI / 180) || 0
