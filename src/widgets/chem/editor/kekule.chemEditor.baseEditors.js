@@ -722,6 +722,27 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.createUiEventReceiverElem();
 	},
 
+	// override getter and setter of intialZoom property
+	/** @ignore */
+	doGetInitialZoom: function($super)
+	{
+		var result;
+		var config = this.getEditorConfigs();
+		if (config)
+			result = config.getInteractionConfigs().getEditorIntialZoom();
+		if (!result)
+			result = $super();
+		return result;
+	},
+	/** @ignore */
+	doSetInitialZoom: function($super, value)
+	{
+		var config = this.getEditorConfigs();
+		if (config)
+			config.getInteractionConfigs().setEditorIntialZoom(value);
+		$super(value);
+	},
+
 	/** @ignore */
 	zoomTo: function($super, value, suspendRendering, zoomCenterCoord)
 	{
