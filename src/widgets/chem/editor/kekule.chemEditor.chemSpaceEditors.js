@@ -3704,6 +3704,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 
 
 		var fontSize = this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize() || 0;
+		fontSize *= this.getEditor().getZoom() || 1;
 		var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
 		var setter = this.getAtomSetterWidget(true);
 		//setter.setEditor(this.getEditor());
@@ -3720,7 +3721,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		style.position = 'absolute';
 		style.left = (coord.x - posAdjust) + 'px';
 		style.top = (coord.y - posAdjust) + 'px';
-		inputBox.getElement().style.fontSize = fontSize;
+		inputBox.getElement().style.fontSize = fontSize + 'px';
 		/*
 		 style.marginTop = -posAdjust + 'px';
 		 style.marginLeft = -posAdjust + 'px';
