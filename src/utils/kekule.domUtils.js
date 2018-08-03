@@ -1173,6 +1173,25 @@ Kekule.HtmlElementUtils = {
 		var formCtrlTags = ['input', 'button', 'textarea', 'select'];
 		var tagName = elem.tagName.toLowerCase();
 		return formCtrlTags.indexOf(tagName) >= 0;
+	},
+
+	/**
+	 * Issues an asynchronous request to make the element be displayed full-screen.
+	 * @param {HTMLElement} elem
+	 */
+	requestFullScreen: function(elem)
+	{
+		var func = elem.requestFullScreen || elem.mozRequestFullScreen || elem.webkitRequestFullScreen || elem.msRequestFullScreen;
+		return func? func.apply(elem): null;
+	},
+	/**
+	 * Issues an asynchronous request to make the element exit full-screen mode.
+	 * @param {HTMLElement} elem
+	 */
+	exitFullScreen: function(elem)
+	{
+		var func = elem.exitFullScreen || elem.mozExitFullScreen || elem.webkitExitFullScreen || elem.msExitFullScreen;
+		return func? func.apply(elem): null;
 	}
 };
 
