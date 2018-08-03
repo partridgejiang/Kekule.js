@@ -2385,9 +2385,66 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicMolManipulationIaC
 
 
 /**
- * Controller to add bond or change bond property.
+ * Base IA Controller to insert structure objects (bonds, structure fragments...) into editor.
  * @class
  * @augments Kekule.Editor.BasicMolManipulationIaController
+ */
+Kekule.Editor.StructureInsertIaController = Class.create(Kekule.Editor.BasicMolManipulationIaController,
+/** @lends Kekule.Editor.StructureInsertIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.StructureInsertIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._manipulatedBasicObjs = null;  // used internally
+	},
+	/** @ignore */
+	doSetManipulateOriginObjs: function($super, objs)
+	{
+		this._manipulatedBasicObjs = this._getManipulatedBasicObjects(objs);
+		return $super(objs);
+	},
+	/** @private */
+	_getManipulatedBasicObjects: function(manipulatingObjs)
+	{
+		var result = [];
+		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
+		{
+			var obj = manipulatingObjs[i];
+			if (obj instanceof Kekule.ChemStructureObject)
+			{
+				if (obj instanceof Kekule.StructureFragment && obj.isExpanded())
+				{
+					var children = [].concat(obj.getNodes()).concat(obj.getConnectors());
+					AU.pushUnique(result, children);
+				}
+				else
+					AU.pushUnique(result, obj);
+			}
+			else
+				AU.pushUniqueEx(result, obj);
+		}
+		return result;
+	},
+	/** @ignore */
+	stopManipulate: function($super)
+	{
+		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
+		{
+			var basicObjs = this._manipulatedBasicObjs;
+			this.doneInsertOrModifyBasicObjects(basicObjs);
+			//console.log(basicObjs.length, filteredObjs.length);
+		}
+		return $super();
+	}
+});
+
+/**
+ * Controller to add bond or change bond property.
+ * @class
+ * @augments Kekule.Editor.StructureInsertIaController
  *
  * @property {Bool} allowBondingToBond Whether bond-bond connection (e.g., in Zeise salt) is allowed.
  * @property {Bool} enableBondModification Whether modification existing bond is enabled.
@@ -2399,7 +2456,7 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicMolManipulationIaC
  * @property {Int} bondStereo
  * //@property {Bool} autoCreateNewStructFragment Whether a new molecule is created when a bond appointed to a blank space in editor.
  */
-Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulationIaController,
+Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIaController,
 /** @lends Kekule.Editor.MolBondIaController# */
 {
 	/** @private */
@@ -2835,6 +2892,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.BasicMolManipulat
 					var endCoord = this.addDefBond(coord, null, true);
 					if (endCoord)  // add successfully
 					{
+						//this.setManipulateOriginObjs(obj);
 						this.startDirectManipulate(null, this.getEndingObj(), coord);
 						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
 					}
@@ -3805,7 +3863,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 						// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
 						//  and the atom setter will be closed immediately.
 						this.openSetterUi(baseCoord, obj);
-						this.getEditor().setSelection([obj]);
+						this.doneInsertOrModifyBasicObjects([obj]);
+						//this.getEditor().setSelection([obj]);
 					}
 					return true;  // important
 				}
@@ -3821,9 +3880,9 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolAtomIaController, Ke
 /**
  * Controller to add repository structure fragments or other objects into chem space.
  * @class
- * @augments Kekule.Editor.BasicMolManipulationIaController
+ * @augments Kekule.Editor.StructureInsertIaController
  */
-Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.BasicMolManipulationIaController,
+Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInsertIaController,
 /** @lends Kekule.Editor.RepositoryIaController# */
 {
 	/** @private */
@@ -5210,6 +5269,8 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 				}
 				else
 					editor.pushOperation(oper);
+
+				this.doneInsertOrModifyBasicObjects([mol]);
 			}
 		}
 
@@ -5242,6 +5303,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		//console.log(block.getCascadedRenderOption('fontSize'));
 
 		var fontSize = mol.getCascadedRenderOption('fontSize') || this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize();
+		fontSize *= this.getEditor().getZoom() || 1;
 		var fontName = mol.getCascadedRenderOption('fontFamily') || '';
 		//var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
 		var text = this.getFormulaText(mol);
@@ -5590,6 +5652,8 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 				else
 					editor.pushOperation(oper);
 			}
+
+			this.doneInsertOrModifyBasicObjects([block]);
 		}
 
 		setter._applied = true;
@@ -5618,7 +5682,8 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 			return;
 		this.setCurrBlock(block);
 
-		this.getEditor().setSelection([block]);
+		//this.doneInsertOrModifyBasicObjects([block]);
+		//this.getEditor().setSelection([block]);
 
 		// calculate the top-left position of block
 		var setterCoord = this.getEditor().getObjectScreenCoord(block, Kekule.Render.CoordPos.CORNER_TL);
@@ -5626,6 +5691,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		//console.log(block.getCascadedRenderOption('fontSize'));
 
 		var fontSize = block.getCascadedRenderOption('fontSize') || this.getEditor().getEditorConfigs().getInteractionConfigs().getAtomSetterFontSize();
+		fontSize *= (this.getEditor().getZoom() || 1);
 		var fontName = block.getCascadedRenderOption('fontFamily') || '';
 		//var posAdjust = fontSize / 1.5;  // adjust position to align to atom center
 		var text = this.getBlockText(block);
@@ -5819,6 +5885,8 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 							oper.execute();
 							if (editor && editor.getEnableOperHistory())
 								editor.pushOperation(oper);
+
+							self.doneInsertOrModifyBasicObjects([self.getCurrBlock()]);
 						}
 						finally
 						{

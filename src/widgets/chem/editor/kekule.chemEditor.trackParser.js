@@ -1046,10 +1046,10 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 /**
  * Controller to input chem structure by touch or mouse track.
  * @class
- * @augments Kekule.Editor.BasicMolManipulationIaController
+ * @augments Kekule.Editor.StructureInsertIaController
  *
  */
-Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipulationIaController,
+Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInsertIaController,
 /** @lends Kekule.Editor.TrackInputIaController# */
 {
 	/** @private */
@@ -1271,6 +1271,11 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 		else
 			return result;
 	},
+	/** @private */
+	getStructureSelectableChildren: function(structure)
+	{
+		return [].concat(structure.getNodes()).concat(structure.getConnectors());
+	},
 
 	/** @private */
 	addStructureToEditor: function(structure)
@@ -1399,10 +1404,16 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.BasicMolManipu
 			if (mol)
 			{
 				this.addStructureToEditor(mol);
-
+				/*
+				var children = this.getStructureSelectableChildren(mol);
+				this.getEditor().select(children);
+				*/
 				this.startDirectManipulate(null, mol, endScreenCoord);
 				this.moveManipulatedObjs(endScreenCoord);  // force a "move" action, to apply possible merge
 				this.stopManipulate();
+
+				var children = this.getStructureSelectableChildren(mol);
+				this.doneInsertOrModifyBasicObjects(children);
 			}
 		}
 

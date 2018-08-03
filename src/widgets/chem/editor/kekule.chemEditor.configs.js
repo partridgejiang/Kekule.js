@@ -89,6 +89,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
+ * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted into editor by IA controllers autimatically.
  * @property {Int} objBoundTrackMinInflation The bound of object will usually be inflated to make it easier to select. This value controls the minimal inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
@@ -133,6 +134,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addBoolConfigProp('enableHotTrack', true);
 
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', true);
+
 		this.addIntConfigProp('objBoundTrackMinInflation', 5);
 		this.addIntConfigProp('objBoundTrackMinInflationMouse', null);
 		this.addIntConfigProp('objBoundTrackMinInflationPen', null);
@@ -147,9 +150,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('selectingBrushWidth', 12);
 		this.addBoolConfigProp('enableOffSelectionManipulation', true);
 		this.addIntConfigProp('offSelectionManipulationActivatingTimeThreshold', 800);
-		this.addFloatConfigProp('unmovePointerDistanceThreshold', 5);
+		this.addFloatConfigProp('unmovePointerDistanceThreshold', 5, {'scope': PS.PUBLIC}); // hidden to object inspector
 		//this.addFloatConfigProp('selectingBrushMinWidth', 5);
-		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2);
+		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2, {'scope': PS.PUBLIC}); // hidden to object inspector
 		this.addIntConfigProp('selectionMarkerInflation', 5);
 		this.addIntConfigProp('selectionMarkerEdgeInflation', 5);
 		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
@@ -174,11 +177,10 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30);  // 30 degree
 		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
-		this.addFloatConfigProp('trackTouchRefLength', 0.5);  // 0.5 inchi
+		this.addFloatConfigProp('trackTouchRefLength', 0.5, {'scope': PS.PUBLIC});  // 0.5 inchi
+		this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', !true, {'scope': PS.PUBLIC});  // currently has some problems, disable it
 
 		this.addFloatConfigProp('editorIntialZoom', 1.5);
-
-		this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', !true);
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -316,7 +318,7 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('maxFlexRingAtomCount', 18);  // too large ring cause performance problem
 		//this.addIntConfigProp('initialFlexRingAtomCount', 3);
 
-		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
+		//this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
 
 		this.addHashConfigProp('enabledNonAtomNodeTypes', {
 			'RGroup': true,

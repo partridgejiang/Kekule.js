@@ -4497,6 +4497,36 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	*/
 
 	/** @private */
+	_filterBasicObjectsInEditor: function(objs)
+	{
+		var editor = this.getEditor();
+		var rootObj = editor.getChemObj();
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj.isChildOf(rootObj))
+				result.push(obj);
+		}
+		return result;
+	},
+	/**
+	 * Notify the manipulation is done and objs are inserted into or modified in editor.
+	 * This method should be called by descendants at the end of their manipulation.
+	 * Objs will be automatically selected if autoSelectNewlyInsertedObjects option is true.
+	 * @param {Array} objs
+	 * @private
+	 */
+	doneInsertOrModifyBasicObjects: function(objs)
+	{
+		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
+		{
+			var filteredObjs = this._filterBasicObjectsInEditor(objs);
+			this.getEditor().select(filteredObjs);
+		}
+	},
+
+	/** @private */
 	react_pointerdown: function(e)
 	{
 		//this.updateCurrBoundInflation(e);
