@@ -4379,11 +4379,18 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			var w = widgets[i];
 			w.insertedToDom();
+			//console.log('dom inserted', w.getClassName(), elem);
 		}
 
 		var w = Kekule.Widget.Utils.getBelongedWidget(elem);
 		if (w)
-			w.domElemAdded(elem);
+		{
+			if (w.getElement() === elem)
+				w.insertedToDom();
+			else
+				w.domElemAdded(elem);
+			//console.log('dom add', w.getClassName(), elem);
+		}
 	},
 	/** @private */
 	_handleDomRemovedElem: function(elem)
