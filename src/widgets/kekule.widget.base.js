@@ -445,8 +445,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setInheritBubbleUiEvents(true);
 		this.stateChanged();
 
+		/*
 		if (Kekule.Widget.globalManager)
 			Kekule.Widget.globalManager.notifyWidgetCreated(this);
+		*/
+		var gm = this.getGlobalManager();
+		if (gm)
+			gm.notifyWidgetCreated(this);
 	},
 	/** @private */
 	initProperties: function()
@@ -1024,7 +1029,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			event.widget = this;
 		$super(eventName, event);
 		// notify global manager when a widget event occurs
-		var m = Kekule.Widget.globalManager;
+		var m = this.getGlobalManager();  // Kekule.Widget.globalManager;
 		if (m)
 		{
 			m.notifyWidgetEventFired(this, eventName, event);
@@ -1037,7 +1042,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	getGlobalManager: function()
 	{
-		return Kekule.Widget.globalManager;
+		//return Kekule.Widget.globalManager;
+		var doc = this.getDocument();
+		var kekuleRoot = doc && doc.defaultView && doc.defaultView.Kekule;
+		if (!kekuleRoot)
+			kekuleRoot = Kekule;
+		return kekuleRoot.Widget.globalManager;
 	},
 
 	/**
@@ -1613,10 +1623,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 
 		this.widgetShowStateBeforeChanging(true);
+		var gm = this.getGlobalManager();
 
 		if (showType === Kekule.Widget.ShowHideType.DROPDOWN || showType === Kekule.Widget.ShowHideType.POPUP)  // prepare
 		{
-			Kekule.Widget.globalManager.preparePopupWidget(this, caller, showType);
+			gm.preparePopupWidget(this, caller, showType);
 		}
 
 		//console.log('show', this.getClassName(), this.getElement(), this.getElement().parentNode);
@@ -1727,10 +1738,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			self.__$showHideTransInfo = null;
 			self.widgetShowStateDone(false);
 
+			var gm = self.getGlobalManager();
 			if (hideType === Kekule.Widget.ShowHideType.DROPDOWN || hideType === Kekule.Widget.ShowHideType.POPUP)  // unprepare
 			{
 				//console.log('unprepare');
-				Kekule.Widget.globalManager.unpreparePopupWidget(self);
+				//Kekule.Widget.globalManager.unpreparePopupWidget(self);
+				gm.unpreparePopupWidget(self);
 			}
 			self.__$isHiding = false;
 			//self.__$isShowing = false;
@@ -1832,24 +1845,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (isShown)
 			this._isDismissed = false;
 
+		var gm = this.getGlobalManager();
 		if (this.getIsPopup())
 		{
 			if (isShown)
 			{
 				//console.log('register');
-				Kekule.Widget.globalManager.registerPopupWidget(this);
+				//Kekule.Widget.globalManager.registerPopupWidget(this);
+				gm.registerPopupWidget(this);
 			}
 			else
 			{
-				Kekule.Widget.globalManager.unregisterPopupWidget(this);
+				//Kekule.Widget.globalManager.unregisterPopupWidget(this);
+				gm.unregisterPopupWidget(this);
 			}
 		}
 		if (this.getIsDialog())
 		{
 			if (isShown)
-				Kekule.Widget.globalManager.registerDialogWidget(this);
+				//Kekule.Widget.globalManager.registerDialogWidget(this);
+				gm.registerDialogWidget(this);
 			else
-				Kekule.Widget.globalManager.unregisterDialogWidget(this);
+				//Kekule.Widget.globalManager.unregisterDialogWidget(this);
+				gm.unregisterDialogWidget(this);
 		}
 		this.doWidgetShowStateChanged(isShown);
 		if (this._enableShowHideEvents)
@@ -3251,10 +3269,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	setMouseCapture: function(capture)
 	{
+		var gm = this.getGlobalManager();
 		if (capture)
-			Kekule.Widget.globalManager.setMouseCaptureWidget(this);
+			gm.setMouseCaptureWidget(this);
 		else if (this.isCaptureMouse())
-			Kekule.Widget.globalManager.setMouseCaptureWidget(null);
+			gm.setMouseCaptureWidget(null);
 	},
 	/**
 	 * Returns whether this widget is currently capturing mouse/touch event.
@@ -3262,7 +3281,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	isCaptureMouse: function()
 	{
-		return Kekule.Widget.globalManager.getMouseCaptureWidget() === this;
+		var gm = this.getGlobalManager();
+		return gm.getMouseCaptureWidget() === this;
 	},
 
 	/**
