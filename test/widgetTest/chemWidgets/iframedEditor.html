@@ -15,6 +15,10 @@
             border: 1px solid dotted;
             background: yellow;
         }
+        #f2
+        {
+            transform: scale(0.8);
+        }
     </style>
     <script>
         /*
@@ -33,9 +37,10 @@
 </head>
 <body onpageshow="console.log('page show')">
     <button id="btnShowStage" onclick="showStage()">Show Stage</button>
-    <div id="stage" style="display:none">
-        <iframe src="chemEditorUiTest.html"></iframe>
-        <iframe src="chemEditorUiTest.html"></iframe>
+    <div id="stage" style="display1:none">
+        <iframe id="f1" src="chemEditorUiTest.html"></iframe>
+        <iframe id="f2" src="chemEditorUiTest.html"></iframe>
+        <!--
         <iframe src="about:blank"></iframe>
         <!--
         <iframe src="chemEditorUiTest.html"></iframe>

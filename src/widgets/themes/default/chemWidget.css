@@ -772,3 +772,24 @@
     float: left;
     white-space: nowrap;
 }
+
+.K-Chem-ComposerFrame
+{
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+.K-Chem-ComposerFrame-ContentDoc, .K-Chem-ComposerFrame-ContentBody
+{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.K-Chem-ComposerFrame-ContentBody .K-Chem-Composer
+{
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}

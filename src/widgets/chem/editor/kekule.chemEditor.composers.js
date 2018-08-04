@@ -71,7 +71,11 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_TEXTALIGN_BUTTON_TOP: 'K-Chem-Composer-TextAlign-Top',
 	COMPOSER_TEXTALIGN_BUTTON_BOTTOM: 'K-Chem-Composer-TextAlign-Bottom',
 
-	COMPOSER_DIALOG: 'K-Chem-ComposerDialog'  //'K-Chem-Viewer-Assoc-Editor'
+	COMPOSER_DIALOG: 'K-Chem-ComposerDialog',  //'K-Chem-Viewer-Assoc-Editor'
+
+	COMPOSER_FRAME: 'K-Chem-ComposerFrame',
+	COMPOSER_FRAME_CONTENT_DOC: 'K-Chem-ComposerFrame-ContentDoc',
+	COMPOSER_FRAME_CONTENT_BODY: 'K-Chem-ComposerFrame-ContentBody'
 });
 
 Kekule.globalOptions.add('chemWidget.composer', {
@@ -2988,6 +2992,214 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		*/
 		editor.addClassName(CNS.DYN_CREATED);
 		return result;
+	}
+});
+
+/**
+ * An iframe containing a composer widget.
+ * @class
+ * @augments Kekule.ChemWidget.AbstractWidget
+ *
+ * @property {Kekule.Editor.Composer} composer Composer widget in frame.
+ * @property {Hash} minDimension A {width, height} hash defines the min size of widget.
+ * @property {Bool} enableDimensionTransform If true, when setting size of widget by setDimension method
+ *   and the size is less than minDimension, CSS3 transform scale will be used.
+ *
+ */
+Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
+/** @lends Kekule.Editor.ComposerFrame# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ComposerFrame',
+	/** @private */
+	BINDABLE_TAG_NAMES: ['iframe'],
+	initialize: function($super, parentOrElementOrDocument)
+	{
+		$super(parentOrElementOrDocument);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer',
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null
+		});
+		this.defineProp('minDimension', {'dataType': DataType.HASH});
+		this.defineProp('enableDimensionTransform', {'dataType': DataType.BOOL});
+
+		// private
+		this.defineProp('frameDocument', {'dataType': DataType.OBJECT,
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null,
+			'getter': function(){
+				return this.getElement().contentDocument;
+			}
+		});
+		this.defineProp('frameWindow', {'dataType': DataType.OBJECT,
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null,
+			'getter': function(){
+				return this.getFrameDocument().defaultView;
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setMinDimension({'width': 550, height: 350});
+		this.setEnableDimensionTransform(true);
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.COMPOSER_FRAME;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('iframe');
+		return result;
+	},
+	/** @ignore */
+	doBindElement: function($super, element)
+	{
+		$super(element);
+
+		this._createComposerWidgetInFrame();
+	},
+	/** @ignore */
+	setDimension: function($super, width, height, suppressResize)
+	{
+		var notUnset = Kekule.ObjUtils.notUnset;
+		var minDim = this.getMinDimension();
+		var minWidth = minDim && minDim.width;
+		var minHeight = minDim && minDim.height;
+
+		if (!this.getEnableDimensionTransform())
+		{
+			var actualWidth = notUnset(width)?
+					(minWidth? Math.max(width, minWidth): width):	null;
+			var actualHeight = notUnset(height)?
+					(minHeight? Math.max(height, minHeight): height):	null;
+			this._setTransformScale(1);
+			return $super(actualWidth, actualHeight, suppressResize);
+		}
+		else  // may scale
+		{
+			var ratioWidth = (notUnset(width) && minWidth) ? width / minWidth : null;
+			var ratioHeight = (notUnset(height) && minHeight) ? height / minHeight : null;
+			var actualRatio;
+			if (!ratioWidth || !ratioHeight)
+				actualRatio = ratioWidth || ratioHeight;
+			else
+				actualRatio = Math.min(ratioWidth, ratioHeight);
+
+			if (actualRatio >= 1)
+			{
+				this._setTransformScale(1);
+				return $super(width, height, suppressResize);
+			}
+			else
+			{
+				var actualWidth, actualHeight;
+				if (!ratioHeight || ratioWidth <= ratioHeight)
+				{
+					actualWidth = minWidth;
+					actualHeight = height && (height / actualRatio);
+				}
+				else  // ratioHeight < ratioWidth
+				{
+					actualHeight = minHeight;
+					actualWidth = width && (width / actualRatio);
+				}
+				this._setTransformScale(actualRatio);
+				return $super(actualWidth, actualHeight, suppressResize);
+			}
+		}
+	},
+	/** @private */
+	_setTransformScale: function(scale)
+	{
+		var elem = this.getElement();
+		if (scale !== 1)
+		{
+			elem.style.transformOrigin = '0 0';
+			elem.style.transform = 'scale(' + scale + ')';
+		}
+		else
+		{
+			Kekule.StyleUtils.removeStyleProperty(elem.style, 'transform');
+		}
+	},
+
+	/** @private */
+	_initFrame: function()
+	{
+		var content = '<!DOCTYPE html><html><head></head><body></body></html>';
+		var doc = this.getFrameDocument();
+		doc.open('text/htmlreplace');
+		doc.write(content);
+		doc.close();
+	},
+	/** @private */
+	_createComposerWidgetInFrame: function(callback)
+	{
+		this._initFrame();  // replace the quirk mode empty document with a standard one
+
+		var self = this;
+		var doc = this.getFrameDocument();
+
+		doc.documentElement.className = CCNS.COMPOSER_FRAME_CONTENT_DOC;
+		doc.body.className = CCNS.COMPOSER_FRAME_CONTENT_BODY;
+		// doc type
+		/*
+		if (doc.implementation && doc.implementation.createDocumentType)
+		{
+			var nodeDoctype = doc.implementation.createDocumentType('html', '', '');
+			if (doc.doctype)
+			{
+				doc.replaceChild(nodeDoctype, doc.doctype);
+			}
+			else
+			{
+				doc.insertBefore(nodeDoctype, doc.childNodes[0]);
+			}
+		}
+		// <meta charset="UTF-8">
+		var metaElem = doc.createElement('meta');
+		metaElem.setAttribute('charset', 'UTF-8');
+		doc.head.insertBefore(metaElem, Kekule.DomUtils.getFirstChildElem(doc.head));
+    */
+		Kekule.X.Event.addListener(doc.body, 'kekuleload', function(e){
+			var composer = new Kekule.Editor.Composer(doc);
+			/*
+			var style = composer.getElement().style;
+			style.width = '100%';
+			style.height = '100%';
+			*/
+			composer.appendToElem(doc.body);
+			self.setPropStoreFieldValue('composer', composer);
+			if (callback)
+				callback(composer);
+		});
+		// assume element is an iframe, and insert Kekule.js script/css files into it
+		this._insertKekuleScriptAndStyleSheetFiles(doc);
+	},
+	/** @private */
+	_insertKekuleScriptAndStyleSheetFiles: function(frameDoc, callback)
+	{
+		var srcInfo = Kekule.scriptSrcInfo;
+		var headElem = frameDoc.head;
+
+		var cssLinkElem = frameDoc.createElement('link');
+		cssLinkElem.setAttribute('rel', 'stylesheet');
+		cssLinkElem.setAttribute('type', 'text/css');
+		cssLinkElem.setAttribute('href', Kekule.getStyleSheetUrl());
+		headElem.appendChild(cssLinkElem);
+
+		Kekule.ScriptFileUtils.appendScriptFile(frameDoc, Kekule.getScriptSrc(), callback);
 	}
 });
 
