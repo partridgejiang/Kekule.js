@@ -2615,7 +2615,7 @@ Kekule.ChemWidget.Viewer.molDisplayType3DActionClasses = [
 ];
 
 // register actions to viewer widget
-Kekule._registerAfterLoadProc(function(){
+Kekule._registerAfterLoadSysProc(function(){
 	var AM = Kekule.ActionManager;
 	var CW = Kekule.ChemWidget;
 	var widgetClass = Kekule.ChemWidget.Viewer;

@@ -384,7 +384,7 @@ Kekule.PredefinedResReferer = {
 };
 
 // extend Kekule.IO method to load predefined resource
-Kekule._registerAfterLoadProc(function(){
+Kekule._registerAfterLoadSysProc(function(){
 	if (Kekule.IO)
 	{
 		/**

@@ -2020,7 +2020,7 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 );
 
 // register actions to editor/composer widget
-Kekule._registerAfterLoadProc(function(){
+Kekule._registerAfterLoadSysProc(function(){
 	var AM = Kekule.ActionManager;
 	var CW = Kekule.ChemWidget;
 	var CE = Kekule.Editor;
