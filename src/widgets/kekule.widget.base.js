@@ -1660,7 +1660,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setShowHideCaller(caller);
 		if (caller)  // also save the page rect of caller, avoid caller to be hidden afterward
 		{
-			this.setShowHideCallerPageRect(EU.getElemPageRect((caller.getElement && caller.getElement()) || caller));
+			//this.setShowHideCallerPageRect(EU.getElemPageRect((caller.getElement && caller.getElement()) || caller));
+			this.setShowHideCallerPageRect(EU.getElemBoundingClientRect((caller.getElement && caller.getElement()) || caller));
 		}
 
 		this.widgetShowStateChanged(true);
@@ -4877,8 +4878,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
-		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
-		var invokerClientRect = EU.getElemPageRect(invokerElem, false);
+		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
+		//var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
 		var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(invokerWidget.getDocument());
 		var dropElem = dropDownWidget.getElement();
@@ -4946,8 +4947,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		//console.log(invokerClientRect);
 		var SU = Kekule.StyleUtils;
 		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);  // refetch, with document scroll considered
-		//var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, !parentFixedPosition);  // refetch, with document scroll considered
-		var invokerClientRect = EU.getElemPageRect(invokerElem, !!parentFixedPosition);  // refetch, with document scroll considered
+		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, !parentFixedPosition);  // refetch, with document scroll considered
+		//var invokerClientRect = EU.getElemPageRect(invokerElem, !!parentFixedPosition);  // refetch, with document scroll considered
 		var w = /*SU.getComputedStyle(dropElem, 'width') ||*/ dropScrollDim.width;
 		var h = /*SU.getComputedStyle(dropElem, 'height') ||*/ dropScrollDim.height;
 		/*
