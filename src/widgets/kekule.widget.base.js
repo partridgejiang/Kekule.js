@@ -290,6 +290,9 @@ var widgetBindingField = '__$kekule_widget__';
  * //@property {Array} outlookStyleClassNames Classes used to control the outlook of widget. Usually user do not need to access this value.
  * @property {String} touchAction Touch action style value of widget element.
  *   You should set this value (e.g., to 'none') to enable pointer event on touch as describle by pep.js.
+ * @property {Hash} minDimension A {width, height} hash defines the min size of widget.
+ * @property {Bool} enableDimensionTransform If true, when setting size of widget by setDimension method
+ *   and the size is less than minDimension, CSS3 transform scale will be used.
  * @property {Bool} useCornerDecoration
  * @property {Int} layout Layout of child widgets. Value from {@link Kekule.Widget.Layout}.
  * @property {Bool} allowTextWrap
@@ -314,6 +317,8 @@ var widgetBindingField = '__$kekule_widget__';
  *   Available only when enablePeriodicalExec property is true.
  * @property {Int} periodicalExecInterval Milliseconds between two execution in periodical mode.
  *   Available only when enablePeriodicalExec property is true.
+ * @property {Hash} autoResizeConstraints A hash of {width, height}, each value from 0-1 indicating the ratio of widget width/height to client.
+ *   If this property is set, widget will automatically adjust its size when the browser window is resized.
  * @property {Bool} autoAdjustSizeOnPopup Whether shrink to browser visible client size when popping up or dropping down.
  * @property {Bool} isPopup Whether this is a "popup" widget, when click elsewhere on window, the widget will automatically hide itself.
  * @property {Bool} isDialog Whether this is a "dialog" widget, when press ESC key, the widget will automatically hide itself.
@@ -915,6 +920,23 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						elem.blur();
 				}
 				this.stateChanged();
+			}
+		});
+
+		this.defineProp('minDimension', {'dataType': DataType.HASH});
+		this.defineProp('enableDimensionTransform', {'dataType': DataType.BOOL});
+
+		this.defineProp('autoResizeConstraints', {'dataType': DataType.HASH,
+			'setter': function(value){
+				this.setPropStoreFieldValue('autoResizeConstraints', value);
+				var gm = this.getGlobalManager() || Kekule.Widget.globalManager;
+				if (value)
+				{
+					this.autoResizeToClient();
+					gm.registerAutoResizeWidget(this);
+				}
+				else
+					gm.unregisterAutoResizeWidget(this);
 			}
 		});
 
@@ -1828,7 +1850,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	widgetShowStateBeforeChanging: function(isShown)
 	{
-		// do nothing here
+		if (isShown)
+			this.autoResizeToClient();  // if set autosize, recalculate size before showing
 	},
 	/**
 	 * Called immediately after show or hide, even if transition is still underway.
@@ -2007,6 +2030,56 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	setDimension: function(width, height, suppressResize)
 	{
+		var notUnset = Kekule.ObjUtils.notUnset;
+		var minDim = this.getMinDimension();
+		var minWidth = minDim && minDim.width;
+		var minHeight = minDim && minDim.height;
+
+		if (!this.getEnableDimensionTransform())
+		{
+			var actualWidth = notUnset(width)?
+					(minWidth? Math.max(width, minWidth): width):	null;
+			var actualHeight = notUnset(height)?
+					(minHeight? Math.max(height, minHeight): height):	null;
+			this._setTransformScale(1);
+			return this.doSetDimension(actualWidth, actualHeight, suppressResize);
+		}
+		else  // may scale
+		{
+			var ratioWidth = (notUnset(width) && minWidth) ? width / minWidth : null;
+			var ratioHeight = (notUnset(height) && minHeight) ? height / minHeight : null;
+			var actualRatio;
+			if (!ratioWidth || !ratioHeight)
+				actualRatio = ratioWidth || ratioHeight;
+			else
+				actualRatio = Math.min(ratioWidth, ratioHeight);
+
+			if (actualRatio >= 1)
+			{
+				this._setTransformScale(1);
+				return this.doSetDimension(width, height, suppressResize);
+			}
+			else
+			{
+				var actualWidth, actualHeight;
+				if (!ratioHeight || ratioWidth <= ratioHeight)
+				{
+					actualWidth = minWidth;
+					actualHeight = height && (height / actualRatio);
+				}
+				else  // ratioHeight < ratioWidth
+				{
+					actualHeight = minHeight;
+					actualWidth = width && (width / actualRatio);
+				}
+				this._setTransformScale(actualRatio);
+				return this.doSetDimension(actualWidth, actualHeight, suppressResize);
+			}
+		}
+	},
+	/** @private */
+	doSetDimension: function(width, height, suppressResize)
+	{
 		var doResize = false;
 		var notUnset = Kekule.ObjUtils.notUnset;
 		if (notUnset(width))
@@ -2023,6 +2096,39 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			this.resized();
 		this.objectChange(['width', 'height']);
 		return this;
+	},
+	/** @private */
+	_setTransformScale: function(scale)
+	{
+		var elem = this.getElement();
+		if (scale !== 1)
+		{
+			elem.style.transformOrigin = '0 0';
+			elem.style.transform = 'scale(' + scale + ')';
+		}
+		else
+		{
+			Kekule.StyleUtils.removeStyleProperty(elem.style, 'transform');
+		}
+	},
+
+	/**
+	 * Auto resize the widget itself when the window client size changes.
+	 * @private
+	 */
+	autoResizeToClient: function()
+	{
+		//if (this.isShown())
+		{
+			var constraints = this.getAutoResizeConstraints();
+			if (constraints)
+			{
+				var clientDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+				var newWidth = clientDim.width * constraints.width;
+				var newHeight = clientDim.height * constraints.height;
+				this.setDimension(newWidth, newHeight);
+			}
+		}
 	},
 
 	/**
@@ -4026,6 +4132,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
 		this.setPropStoreFieldValue('modalWidgets', []);
+		this.setPropStoreFieldValue('autoResizeWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
@@ -4038,6 +4145,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
 		this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
+		this.reactWindowResizeBind = this.reactWindowResize.bind(this);
 		/*
 		this.reactPageShowBind = this.reactPageShow.bind(this);
 
@@ -4049,6 +4157,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @ignore */
 	finalize: function($super)
 	{
+		this.uninstallWindowEventHandlers(this._document.defaultView);
 		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
@@ -4065,6 +4174,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('popupWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('dialogWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('modalWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('autoResizeWidgets', {'dataType': DataType.ARRAY, 'serializable': false}); // widgets resize itself when client size changing
 		this.defineProp('preserveWidgetList', {'dataType': DataType.BOOL, 'serializable': false,
 			'setter': function(value)
 			{
@@ -4095,6 +4205,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		this.installWindowEventHandlers(this._document.defaultView);
 	},
 
 	/**
@@ -4121,6 +4232,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
 		if (this.getDialogWidgets())
 			Kekule.ArrayUtils.remove(this.getDialogWidgets(), widget);
+		if (this.getAutoResizeWidgets())
+			Kekule.ArrayUtils.remove(this.getAutoResizeWidgets(), widget);
 		if (widget === this.getCurrActiveWidget())
 			this.setCurrActiveWidget(null);
 		if (widget === this.getCurrFocusedWidget())
@@ -4293,6 +4406,22 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
 		}
+	},
+	/**
+	 * Install event handlers on window object.
+	 * @param {Window} win
+	 */
+	installWindowEventHandlers: function(win)
+	{
+		Kekule.X.Event.addListener(win, 'resize', this.reactWindowResizeBind);
+	},
+	/**
+	 * Uninstall event handlers on window object.
+	 * @param {Window} win
+	 */
+	uninstallWindowEventHandlers: function(win)
+	{
+		Kekule.X.Event.removeListener(win, 'resize', this.reactWindowResizeBind);
 	},
 
 	/**
@@ -4683,6 +4812,16 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		else
 		{
 			//console.log('not captured ', e.target, e);
+		}
+	},
+	/** @private */
+	reactWindowResize: function(e)
+	{
+		var widgets = this.getAutoResizeWidgets();
+		for (var i = 0, l = widgets.length; i < l; ++i)
+		{
+			if (widgets[i].isShown())
+				widgets[i].autoResizeToClient();
 		}
 	},
 
@@ -5325,6 +5464,23 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				}
 			}
 		}
+	},
+
+	/**
+	 * Register an auto-resize widget.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 */
+	registerAutoResizeWidget: function(widget)
+	{
+		Kekule.ArrayUtils.pushUnique(this.getAutoResizeWidgets(), widget);
+	},
+	/**
+	 * Unregister an auto-resize widget.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 */
+	unregisterAutoResizeWidget: function(widget)
+	{
+		Kekule.ArrayUtils.remove(this.getAutoResizeWidgets(), widget);
 	},
 
 	/**
