@@ -3499,9 +3499,24 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	/** @private */
 	_getEventMouseCoord: function(e, clientElem)
 	{
+		var elem = clientElem || this.getWidget().getElement();
+		var targetElem = e.getTarget();
+		var coord = {'x': e.getOffsetX(), 'y': e.getOffsetY()};
+		if (targetElem === elem)
+			return coord;
+		else
+		{
+			var elemPos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+			var targetPos = Kekule.HtmlElementUtils.getElemPagePos(targetElem);
+			var offset = {'x': targetPos.x - elemPos.x, 'y': targetPos.y - elemPos.y};
+			coord = Kekule.CoordUtils.substract(coord, offset);
+			return coord;
+		}
+
+		/*
 		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
 		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
-		var elem = clientElem || this.getWidget().getElement();
+
 		//var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
 		var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
 		var offset = {
@@ -3510,6 +3525,7 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 		};
 		var result = Kekule.CoordUtils.substract(coord, offset);
 		return result;
+		*/
 	}
 });
 
