@@ -5028,8 +5028,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			elem.style.display = '';
 		}
 
-		//var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
-		var clientRect = EU.getElemPageRect(elem, false);  // include scroll offset
+		var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
+		//var clientRect = EU.getElemPageRect(elem, false);  // include scroll offset
 		result = {
 			'rect': clientRect
 		};
