@@ -722,7 +722,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			*/
 			// restore 100% height setting
 			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'top');
-			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
+			//Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
+			drawParentElem.style.height = dimParent.height + 'px';  // explicit set height, or the height may not be updated in some mobile browsers
 		}
 
 		//this.refitDrawContext();
@@ -907,7 +908,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 			var clientDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
 			var minComposerDim = Kekule.Editor.Composer.getMinPreferredDimension();
-			if (clientDim.width <= minComposerDim.width || clientDim.height < minComposerDim.height)
+			if (clientDim.width <= minComposerDim.width + 50 || clientDim.height < minComposerDim.height + 100)
 			{
 				this._openEditComposer(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty);
 			}
@@ -1040,6 +1041,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._prepareEditComposer(composer, restrainObj, editFromVoid, editFromEmpty);
 		//composer.newDoc();
 
+
 		if (!editFromVoid && !editFromEmpty)
 		{
 			//composer.updateDimensionTransform();
@@ -1056,13 +1058,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			self._feedbackEditResult(composer, chemObj, editFromVoid);
 		};
 		composer.show(callerWidget, function(){
-			var cloneObj;
+			//var cloneObj;
 			if (!editFromVoid && !editFromEmpty)
 			{
-				return;
 				//composer.updateDimensionTransform();
-				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
-				composer.setChemObj(cloneObj);
+				//cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+				composer.setChemObj(cloneObj); // set chemObj again, or it will not be displayed in some mobile browsers
 			}
 			else
 			{
