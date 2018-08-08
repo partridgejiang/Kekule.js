@@ -817,6 +817,147 @@ Kekule.StyleUtils = {
 			elem.style.cursor = cursor;
 			return elem.style.cursor;
 		}
+	},
+
+	/** @private */
+	_cssTransformValuesToMatrix: function(cssTransformValues)
+	{
+		var matrix = Kekule.MatrixUtils.create(3, 3, 0);
+		matrix[0][0] = cssTransformValues.a;
+		matrix[1][0] = cssTransformValues.b;
+		matrix[0][1] = cssTransformValues.c;
+		matrix[1][1] = cssTransformValues.d;
+		matrix[0][2] = cssTransformValues.tx;
+		matrix[1][2] = cssTransformValues.ty;
+		return matrix;
+	},
+	/** @private */
+	_matrixToCssTransformValues: function(matrix)
+	{
+		var result = {
+			'a': matrix[0][0],
+			'b': matrix[1][0],
+			'c': matrix[0][1],
+			'd': matrix[1][1],
+			'tx': matrix[0][2],
+			'ty': matrix[1][2]
+		};
+		return result;
+	},
+
+	/**
+	 * Check if an element has a CSS transform.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	hasTransform: function(elem)
+	{
+		var transform = Kekule.StyleUtils.getComputedStyle(elem, 'transform');
+		return transform && (transform !== 'none');
+	},
+	/**
+	 * Returns matrix function values of CSS transform property.
+	 * @param {HTMLElement} elem
+	 * @returns {Hash} {a, b, c, d, tx, ty}
+	 */
+	getTransformMatrixValues: function(elem)
+	{
+		var matrix = Kekule.StyleUtils.getComputedStyle(elem, 'transform') || '';
+		var values = matrix.match(/-?[\d\.]+/g);
+		if (values)
+			return {'a': values[0], 'b': values[1], 'c': values[2], 'd': values[3], 'tx': values[4], 'ty': values[5]};
+		else
+			return null;
+	},
+	/**
+	 * Set the matrix values of CSS transform.
+	 * @param {HTMLElement} elem
+	 * @param {Array} values
+	 */
+	setTransformMatrixArrayValues: function(elem, values)
+	{
+		if (values)
+		{
+			var sMatrix = 'matrix(' + values.join(',') + ')';
+			elem.style.transform = sMatrix;
+		}
+	},
+	/**
+	 * Returns a matrix object that represent the 2D transform of element.
+	 * @param {HTMLElement} elem
+	 * @returns {Array}
+	 */
+	getTransformMatrix: function(elem)
+	{
+		var values = Kekule.StyleUtils.getTransformMatrixValues(elem);
+		if (values)
+		{
+			return Kekule.StyleUtils._cssTransformValuesToMatrix(values);
+		}
+		else
+			return null;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns all the transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getCascadeTranformMatrixes: function(elem)
+	{
+		var result = [];
+		var currElem = elem;
+		while (currElem)
+		{
+			var m = Kekule.StyleUtils.getTransformMatrix(currElem);
+			if (m)
+				result.unshift(m);
+			currElem = currElem.parentNode;
+		}
+		return result;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns product of all those transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getTotalTransformMatrix: function(elem)
+	{
+		var matrixes = Kekule.StyleUtils.getCascadeTranformMatrixes(elem);
+		var result = null;
+		// child on left, parent on right
+		for (var i = matrixes.length - 1; i >= 0; --i)
+		{
+			var m = matrixes[i];
+			if (!result)
+				result = m;
+			else
+				result = Kekule.MatrixUtils.multiply(result, m);
+		}
+		return result;
+	},
+	calcInvertTransformMatrix: function(matrix)
+	{
+		var transValues = Kekule.StyleUtils._matrixToCssTransformValues(matrix);
+		var v = transValues;
+
+		// calc inverted values, algorithm from https://blog.csdn.net/qq_17429661/article/details/51985344
+		var det = v.a * v.d - v.b * v.c;
+		if (Math.abs(det) < 0.000001)  // Singular Matrix
+			return false;  // can not calculate
+
+		var v1 = {
+			a: v.d / det,
+			b: -v.b / det,
+			c: -v.c / det,
+			d: v.a / det,
+			tx: (v.c * v.ty - v.d * v.tx) / det,
+			ty: (v.b * v.tx - v.a * v.ty) / det
+		};
+		var result = Kekule.StyleUtils._cssTransformValuesToMatrix(v1);
+
+		return result;
 	}
 };
 
