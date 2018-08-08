@@ -2945,6 +2945,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				else if (evType === 'touchmove')
 				{
 					this.reactPointerMoving(e);
+
+					if (this.getIsActive() && !this.isCaptureMouse())
+					{
+						var touchPosition = e.touches[0];
+						if (touchPosition)
+						{
+							var doc = this.getDocument();
+							var currElement = doc.elementFromPoint(touchPosition.clientX, touchPosition.clientY);
+							if (!Kekule.DomUtils.isOrIsDescendantOf(currElement, this.getElement()))  // move out of this widget, deactivate
+							{
+								//this.setIsFocused(false);
+								this.setIsHover(false);
+								this.setIsActive(false);  // do not use reactDeactivating, otherwise an execute event may be invoked
+							}
+						}
+						else
+						{
+							//this.setIsFocused(false);
+							this.setIsHover(false);
+							this.setIsActive(false);
+						}
+					}
+
 					handled = true;
 				}
 				else if (evType === 'focus')
