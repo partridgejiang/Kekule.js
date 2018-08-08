@@ -8,6 +8,7 @@
  * requires /lan/classes.js
  * require /core/kekule.root.js
  * require /utils/kekule.utils.js
+ * require /utils/kekule.domUtils.js
  */
 
 (function (window, document)
@@ -554,7 +555,7 @@ X.Event.Methods = {
 			{
 				var clientX = X.Event.getClientX(event);
 				//return Math.round(clientX - elem.getBoundingClientRect().left);
-				return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).left);
+				return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).x);
 			}
 		}
 	},
@@ -580,9 +581,47 @@ X.Event.Methods = {
 			{
 				var clientY = X.Event.getClientY(event);
 				//return Math.round(clientY - elem.getBoundingClientRect().top);
-				return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).top);
+				return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).y);
 			}
 		}
+	},
+	/**
+	 * Returns x/y coord of event.
+	 * @param {Object} event
+	 * @param {Bool} considerCssTransform
+	 */
+	getOffsetCoord: function(event, considerCssTransform)
+	{
+		var elem = X.Event.getTarget(event);
+		var transformMatrix;
+		if (considerCssTransform && Kekule.ObjUtils.isUnset(event.offsetX)) // has no native offsetX, may need calculation
+		{
+			transformMatrix = Kekule.StyleUtils.getTotalTransformMatrix(elem);
+		}
+		if (transformMatrix)   // elem has transform, calculate
+		{
+			// calculation
+			var clientX = X.Event.getClientX(event);
+			var clientY = X.Event.getClientY(event);
+			var coord = {
+				x: clientX - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).x,
+				y: clientY - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).y
+			};
+			var invertMatrix = Kekule.StyleUtils.calcInvertTransformMatrix(transformMatrix);
+			if (invertMatrix)
+			{
+				var vector = Kekule.MatrixUtils.create(3, 1);
+				vector[0][0] = coord.x;
+				vector[1][0] = coord.y;
+				vector[2][0] = 1;
+				var result = Kekule.MatrixUtils.multiply(invertMatrix, vector);
+				coord.x = result[0][0];
+				coord.y = result[1][0];
+				return coord;
+			}
+		}
+		// when calculation fails or has no transform
+		return {'x': X.Event.getOffsetX(event), 'y': X.Event.getOffsetY(event)};
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the top-left of window.
