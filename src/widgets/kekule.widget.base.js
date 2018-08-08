@@ -2111,6 +2111,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			Kekule.StyleUtils.removeStyleProperty(elem.style, 'transform');
 		}
 	},
+	/**
+	 * Update widget transform based on current dimension.
+	 */
+	updateDimensionTransform: function()
+	{
+		var dim = this.getDimension();
+		this.setDimension(dim.width, dim.height, true);
+	},
 
 	/**
 	 * Auto resize the widget itself when the window client size changes.
@@ -2124,8 +2132,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (constraints)
 			{
 				var clientDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
-				var newWidth = clientDim.width * constraints.width;
-				var newHeight = clientDim.height * constraints.height;
+				var newWidth = constraints.width? clientDim.width * constraints.width: null;
+				var newHeight = constraints.height? clientDim.height * constraints.height: null;
 				this.setDimension(newWidth, newHeight);
 			}
 		}
@@ -3608,7 +3616,10 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	{
 		var elem = clientElem || this.getWidget().getElement();
 		var targetElem = e.getTarget();
-		var coord = {'x': e.getOffsetX(), 'y': e.getOffsetY()};
+		//var coord = {'x': e.getOffsetX(), 'y': e.getOffsetY()};
+
+		var coord = e.getOffsetCoord(true);  // consider CSS transform
+
 		if (targetElem === elem)
 			return coord;
 		else
@@ -3617,6 +3628,9 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 			var targetPos = Kekule.HtmlElementUtils.getElemPagePos(targetElem);
 			var offset = {'x': targetPos.x - elemPos.x, 'y': targetPos.y - elemPos.y};
 			coord = Kekule.CoordUtils.substract(coord, offset);
+
+			//console.log('mouse coord', e.getOffsetX(), e.getOffsetY(), e.layerX, e.layerY, offset, coord);
+
 			return coord;
 		}
 
