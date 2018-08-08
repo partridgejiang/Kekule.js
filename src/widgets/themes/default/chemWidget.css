@@ -245,6 +245,13 @@
     padding: 0.3em 0.6em;
 }
 
+.K-Chem-Viewer-Editor-FullClient
+{
+    position: fixed !important;
+    top: 0px;
+    left: 0px;
+}
+
 .K-Chem-StructureNodeSelectPanel, .K-Chem-StructureConnectorSelectPanel
 {
     width: 22em;
@@ -345,6 +352,20 @@
         -moz-flex: auto;
         flex: auto;
         */
+    }
+
+    .K-Chem-StructureNodeSetter
+    {
+        width: 22em;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display:flex;
+        flex-direction: column;
+    }
+    .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel
+    {
+        width: auto;
+        flex: auto;
     }
 }
 
@@ -503,8 +524,10 @@
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button
 {
     /* a default size for easy layout */
+    /*
     width: 48px;
     height: 37px;
+    */
 }
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button
 {
@@ -524,7 +547,7 @@
     bottom: 0px;
     */
     float: left;
-    margin-right: 20px;
+    margin-right: 10px;
 }
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-V
 {
@@ -591,6 +614,7 @@
 .K-Chem-Composer-AtomModifier-DropDown
 {
     width: 22em;
+    max-height: 90%;
 }
 .K-Chem-Composer-AtomModifier-DropDown .K-Chem-StructureNodeSelectPanel
 {
@@ -776,8 +800,10 @@
 .K-Chem-ComposerFrame
 {
     border: none;
+    /*
     width: 100%;
     height: 100%;
+    */
 }
 .K-Chem-ComposerFrame-ContentDoc, .K-Chem-ComposerFrame-ContentBody
 {
