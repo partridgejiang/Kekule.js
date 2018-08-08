@@ -120,6 +120,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_SPACEFILL: 'Space Fill',
 	CAPTION_HIDEHYDROGENS: 'Show/hide hydrogens',
 	CAPTION_OPENEDITOR: 'Edit...',
+	CAPTION_EDITOR_DONE: 'Done',
+	CAPTION_EDITOR_CANCEL: 'Cancel',
 
 	CAPTION_EDIT_OBJ: 'Edit',
 
@@ -146,6 +148,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_SPACEFILL: 'Show molecule in space-fill style',
 	HINT_HIDEHYDROGENS: 'Show/hide hydrogen atoms in model',
 	HINT_OPENEDITOR: 'Open an editor to modify displayed object',
+	HINT_EDITOR_DONE: 'Save the modification',
+	HINT_EDITOR_CANCEL: 'Discard the modification',
 
 	// chem editor
 	CAPTION_NEWDOC: 'New',
