@@ -1019,6 +1019,7 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Bool} enableObjModifierToolbar
  * @property {Array} allowedObjModifierCategories
  * @property {Bool} showInspector Whether show advanced object inspector and structure view.
+ * @property {Bool} autoSetMinDimension
  *
  * @property {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
  * @property {Bool} enableOperHistory Whether undo/redo is enabled.
@@ -1121,6 +1122,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 					this.showInspectorChanged();
 				}
 			}});
+
+		this.defineProp('autoSetMinDimension', {'dataType': DataType.BOOL});
 
 		// private property
 		this.defineProp('editorStageElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
@@ -1743,6 +1746,21 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		style.position = 'absolute';
 		style.top = top + 'px';
 		style.bottom = bottom + 'px';
+
+		if (this.getAutoSetMinDimension())
+		{
+			var minDim = {
+				'width': leftRegionWidth + commonRect.width,
+				'height': topRegionHeight + chemRect.height
+			};
+			//console.log('get minDim', minDim);
+			if (minDim.width && minDim.height)
+				this.setMinDimension(minDim);
+			/*
+			var currDim = this.getDimension();
+			this.setDimension(currDim.width, currDim.height, true);  // update size, but do not need to adjust component position again
+			*/
+		}
 	},
 
 	/** @private */
@@ -2761,6 +2779,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	}
 });
+/**
+ * A class method to returns the preferred min dimension of composer widget.
+ */
+Kekule.Editor.Composer.getMinPreferredDimension = function()
+{
+	return {width: 630, height: 350};  // current fixed
+};
+
 
 /**
  * A special class to give a setting facade for Chem Composer.
@@ -2903,6 +2929,7 @@ SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one obj
 	allowCreateNewChild: false
 });
 
+
 /**
  * A dialog with a composer, executed to edit or create new chem object.
  * @class
@@ -3001,9 +3028,6 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
  * @augments Kekule.ChemWidget.AbstractWidget
  *
  * @property {Kekule.Editor.Composer} composer Composer widget in frame.
- * @property {Hash} minDimension A {width, height} hash defines the min size of widget.
- * @property {Bool} enableDimensionTransform If true, when setting size of widget by setDimension method
- *   and the size is less than minDimension, CSS3 transform scale will be used.
  *
  */
 Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
@@ -3024,8 +3048,6 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
 			'setter': null
 		});
-		this.defineProp('minDimension', {'dataType': DataType.HASH});
-		this.defineProp('enableDimensionTransform', {'dataType': DataType.BOOL});
 
 		// private
 		this.defineProp('frameDocument', {'dataType': DataType.OBJECT,
@@ -3067,71 +3089,15 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		$super(element);
 
+		var notInDom = !element.parentNode;
+		if (notInDom) // add to DOM first, otherwise the frame document will be null
+		{
+			this.setDisplayed(false);
+			var doc = element.ownerDocument;
+			doc.body.appendChild(element);
+		}
+		//console.log(this.getElement(), this.getElement().contentDocument);
 		this._createComposerWidgetInFrame();
-	},
-	/** @ignore */
-	setDimension: function($super, width, height, suppressResize)
-	{
-		var notUnset = Kekule.ObjUtils.notUnset;
-		var minDim = this.getMinDimension();
-		var minWidth = minDim && minDim.width;
-		var minHeight = minDim && minDim.height;
-
-		if (!this.getEnableDimensionTransform())
-		{
-			var actualWidth = notUnset(width)?
-					(minWidth? Math.max(width, minWidth): width):	null;
-			var actualHeight = notUnset(height)?
-					(minHeight? Math.max(height, minHeight): height):	null;
-			this._setTransformScale(1);
-			return $super(actualWidth, actualHeight, suppressResize);
-		}
-		else  // may scale
-		{
-			var ratioWidth = (notUnset(width) && minWidth) ? width / minWidth : null;
-			var ratioHeight = (notUnset(height) && minHeight) ? height / minHeight : null;
-			var actualRatio;
-			if (!ratioWidth || !ratioHeight)
-				actualRatio = ratioWidth || ratioHeight;
-			else
-				actualRatio = Math.min(ratioWidth, ratioHeight);
-
-			if (actualRatio >= 1)
-			{
-				this._setTransformScale(1);
-				return $super(width, height, suppressResize);
-			}
-			else
-			{
-				var actualWidth, actualHeight;
-				if (!ratioHeight || ratioWidth <= ratioHeight)
-				{
-					actualWidth = minWidth;
-					actualHeight = height && (height / actualRatio);
-				}
-				else  // ratioHeight < ratioWidth
-				{
-					actualHeight = minHeight;
-					actualWidth = width && (width / actualRatio);
-				}
-				this._setTransformScale(actualRatio);
-				return $super(actualWidth, actualHeight, suppressResize);
-			}
-		}
-	},
-	/** @private */
-	_setTransformScale: function(scale)
-	{
-		var elem = this.getElement();
-		if (scale !== 1)
-		{
-			elem.style.transformOrigin = '0 0';
-			elem.style.transform = 'scale(' + scale + ')';
-		}
-		else
-		{
-			Kekule.StyleUtils.removeStyleProperty(elem.style, 'transform');
-		}
 	},
 
 	/** @private */
