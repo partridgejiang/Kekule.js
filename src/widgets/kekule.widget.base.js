@@ -25,8 +25,6 @@ Kekule.Widget = {
 	/** @private */
 	DEF_EVENT_HANDLER_PREFIX: 'react_',
 	/** @private */
-	DEF_TOUCH_GESTURE_HANDLER_PREFIX: 'react_touch_',
-	/** @private */
 	getEventHandleFuncName: function(eventName)
 	{
 		return Kekule.Widget.DEF_EVENT_HANDLER_PREFIX + eventName;
@@ -245,6 +243,12 @@ Kekule.Widget.TouchGestures = [
 	'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout',
 	'pan', 'panstart', 'panmove', 'panend', 'pancancel', 'panleft', 'panright', 'panup', 'pandown'
 ];
+
+/** @private */
+Kekule.Widget._PointerHoldParams = {
+	DURATION_THRESHOLD: 1000,  // ms
+	MOVEMENT_THRESHOLD: 10     // px
+};
 
 /** @ignore */
 var widgetBindingField = '__$kekule_widget__';
@@ -4863,14 +4867,70 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
+	_startPointerHolderTimer: function(e)
+	{
+		var self = this;
+		this._pointerHolderTimer = {
+			pointerType: e.pointerType,
+			button: e.getButton(),
+			coord: {'x': e.getClientX(), 'y': e.getClientY()},
+			target: e.getTarget(),
+			_timeoutId: setTimeout(function(){
+				var newEvent = e;
+				newEvent.setType('pointerhold');
+				self._pointerHolderTimer = null;
+				self.reactUiEvent(newEvent);
+			}, Kekule.Widget._PointerHoldParams.DURATION_THRESHOLD),
+			cancel: function()
+			{
+				clearTimeout(self._pointerHolderTimer._timeoutId);
+				self._pointerHolderTimer = null;
+			}
+		};
+		return this._pointerHolderTimer;
+	},
+	/** @private */
 	react_pointerdown: function(e)
 	{
 		if (this.hasPopupWidgets() && !e.ghostMouseEvent)
 		{
-			var elem = e.getTarget();
-			this.hidePopupWidgets(elem);
+			if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+			{
+				var elem = e.getTarget();
+				this.hidePopupWidgets(elem);
+			}
+		}
+		if (!this._pointerHolderTimer)
+			this._startPointerHolderTimer(e);
+		else
+		{
+			if (e.pointerType !== this._pointerHolderTimer.pointerType || e.getButton() !== this._pointerHolderTimer.button)
+				this._pointerHolderTimer.cancel();
 		}
 	},
+	/** @private */
+	react_pointerup: function(e)
+	{
+		if (this._pointerHolderTimer)
+			this._pointerHolderTimer.cancel();
+	},
+	/** @private */
+	react_pointermove: function(e)
+	{
+		if (this._pointerHolderTimer)
+		{
+			if (e.getTarget() !== this._pointerHolderTimer.target)
+				this._pointerHolderTimer.cancel();
+			else
+			{
+				var oldCoord = this._pointerHolderTimer.coord;
+				var newCoord = {x: e.getClientX(), y: e.getClientY()};
+				if (Kekule.CoordUtils.getDistance(oldCoord, newCoord) > Kekule.Widget._PointerHoldParams.MOVEMENT_THRESHOLD)
+					this._pointerHolderTimer.cancel();
+			}
+		}
+	},
+
 	/** @private */
 	react_keydown: function(e)
 	{
