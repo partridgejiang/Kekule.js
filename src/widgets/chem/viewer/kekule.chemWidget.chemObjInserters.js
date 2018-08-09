@@ -362,7 +362,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		var h = tabRect.top - toolbarRect.bottom;
 		//console.log(selfRect.height, toolbarRect.height, tabRect.height, h);
 		this.getClientPanel().setHeight(h + 'px');
-		console.log('set height', h, tabRect, toolbarRect);
+		//console.log('set height', h, tabRect, toolbarRect);
 		this.getViewer().resized();
 		//var clientRect = this.getClientPanel().getBoundingClientRect();
 		/*
