@@ -3368,16 +3368,47 @@ Kekule.ZoomUtils = {
 	/** @private */
 	PREDEFINED_ZOOM_RATIOS: [0.1, 0.3, 0.5, 0.66, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 7, 10, 15, 20],
 	/**
+	 * Returns nearest zoom level to current ratio.
+	 * @param {Float} currRatio
+	 * @param {Array} constraintZoomLevels
+	 * @returns {Float}
+	 */
+	getNearestZoomLevel: function(currRatio, constraintZoomLevels)
+	{
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var len = rs.length;
+		if (currRatio > rs[len - 1])  // larger than the max one
+			return rs[len - 1];
+		else if (currRatio < rs[0])  // smaller than one of predefined ones
+			return rs[0];
+		else
+		{
+			for (var i = 0; i < len - 1; ++i)
+			{
+				var ps0 = rs[i];
+				var ps1 = rs[i + 1];
+				if (currRatio >= ps0 && currRatio <= ps1)
+				{
+					if (ps0 === 1 || ps1 === 1)
+						return 1;
+					var r = (currRatio - ps0) / (ps1 - ps0);
+					return (r <= 0.5)? ps0: ps1;
+				}
+			}
+		}
+	},
+	/**
 	 * Get a predefined ratio that bigger than currRatio, which can be used in usual zoom in function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomInRatio: function(currRatio, step)
+	getNextZoomInRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio < rs[len - 1])  // smaller than one of predefined ones
 		{
@@ -3396,13 +3427,14 @@ Kekule.ZoomUtils = {
 	 * Get a predefined ratio that smaller than currRatio, which can be used in usual zoom out function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomOutRatio: function(currRatio, step)
+	getNextZoomOutRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio > rs[0])  // smaller than one of predefined ones
 		{
