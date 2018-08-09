@@ -1153,6 +1153,7 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicMolEraserIaControl
  * @property {Bool} enableStructFragmentMerge Whether node or connector merging between different molecule is allowed.
  * @property {Bool} enableConstrainedMove
  * @property {Bool} enableConstrainedRotate
+ * @property {Bool} enableConstrainedResize
  * @property {Bool} enableDirectedMove When true, pres shift key during moving will cause object moves only at X or Y direction.
  */
 Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.BasicManipulationIaController,
@@ -1171,6 +1172,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.setEnableStructFragmentMerge(true);
 		this.setEnableConstrainedMove(true);
 		this.setEnableConstrainedRotate(true);
+		this.setEnableConstrainedResize(true);
 		this.setEnableDirectedMove(true);
 		this._suppressConstrainedMoving = false;  // used internally
 		this._suppressConstrainedRotating = false;  // used internally
@@ -1191,6 +1193,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.defineProp('isMergeDone', {'dataType': DataType.BOOL, 'serializable': false});  // store whether a merge operation is done
 		this.defineProp('enableConstrainedMove', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableConstrainedRotate', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableConstrainedResize', {'dataType': DataType.BOOL, 'serializable': false});
+
 		this.defineProp('enableDirectedMove', {'dataType': DataType.BOOL, 'serializable': false});
 
 		this.defineProp('mergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging
@@ -1224,6 +1228,26 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/**
+	 * Check if currently is in constrained rotate mode.
+	 * In that mode, objects can only be rotate to some certain angle.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isConstrainedRotate: function()
+	{
+		return this.getEnableConstrainedMove();
+	},
+	/**
+	 * Check if currently is in constrained resize mode.
+	 * In that mode, objects can only be rotate to some certain angle.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isConstrainedResize: function()
+	{
+		return this.getEnableConstrainedResize();
+	},
+	/**
 	 * Check if currently is in constrained move mode.
 	 * That is to say, have not select any object, directly move a node and the node has only one connector connected.
 	 * In that case, original connector length should be retained.
@@ -1255,16 +1279,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			}
 		}
 		return false;
-	},
-	/**
-	 * Check if currently is in constrained rotate mode.
-	 * In that mode, objects can only be rotate to some certain angle.
-	 * @returns {Bool}
-	 * @private
-	 */
-	isConstrainedRotate: function()
-	{
-		return this.getEnableConstrainedMove();
 	},
 	/**
 	 * Check if currently in real constrained rotation and the constrains are not suppressed (e.g., pressing the Alt key).
@@ -1412,6 +1426,29 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		}
 		else
 			return $super(objs, newDeltaAngle/*, oldAbsAngle, newAbsAngle*/);
+	},
+	/** @private */
+	_calcActualResizeScales: function(objs, newScales)
+	{
+		var isConstrained = (this.isConstrainedResize() && (!this._suppressConstrainedResize));
+		if (!isConstrained)
+			return newScales;
+		else  // constrained scale calculation
+		{
+			var scaleStep = this.getEditorConfigs().getInteractionConfigs().getConstrainedResizeStep();
+			if (scaleStep)
+			{
+				var sx = (Math.round(newScales.scaleX / scaleStep) || 1) * scaleStep;  // do not scale to 0
+				var sy = (Math.round(newScales.scaleY / scaleStep) || 1) * scaleStep;
+				var actualScales = {
+					'scaleX': sx,
+					'scaleY': sy
+				};
+				return actualScales;
+			}
+			else
+				return newScales;
+		}
 	},
 
 	/** @private */

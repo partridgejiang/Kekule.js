@@ -4878,7 +4878,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setEnableGestureManipulation(false);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
-		this.setEnableConstrainedResize(true);
+		this.setEnableAspectRatioLockedResize(true);
 		this.setEnableRotate(true);
 
 		this._suppressConstrainedResize = false;
@@ -4934,7 +4934,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		});
 
 		this.defineProp('resizeStartingRegion', {'dataType': DataType.INT, 'serializable': false});  // private
-		this.defineProp('enableConstrainedResize', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableAspectRatioLockedResize', {'dataType': DataType.BOOL, 'serializable': false});
 
 		this.defineProp('rotateStartingRegion', {'dataType': DataType.INT, 'serializable': false});  // private
 
@@ -5046,9 +5046,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	isConstrainedResize: function()
+	isAspectRatioLockedResize: function()
 	{
-		return this.getEnableConstrainedResize() && (!this._suppressConstrainedResize);
+		return this.getEnableAspectRatioLockedResize() && (!this._suppressConstrainedResize);
 	},
 
 	/**
@@ -5525,6 +5525,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.doRotateManipulatedObjs(endScreenCoord, rotateParams);
 	},
 	*/
+	/** @private */
+	_calcActualResizeScales: function(objs, newScales)
+	{
+		return newScales;
+	},
 
 	/** @private */
 	_calcManipulateObjsResizeParams: function(manipulatingObjs, startingRegion, endScreenCoord)
@@ -5562,7 +5567,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else // resize from corner
 		{
-			if (this.isConstrainedResize())
+			if (this.isAspectRatioLockedResize())
 			{
 				doConstraint = true;
 				/*
@@ -5597,13 +5602,16 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			else
 				scaleX = (Math.sign(scaleX) || 1) * absY;
 		}
-		var transformParams = {'center': scaleCenter, 'scaleX': scaleX, 'scaleY': scaleY};
-		//console.log(this.isConstrainedResize(), scaleX, scaleY);
+
+		var actualScales = this._calcActualResizeScales(manipulatingObjs, {'scaleX': scaleX, 'scaleY': scaleY});
+		var transformParams = {'center': scaleCenter, 'scaleX': actualScales.scaleX, 'scaleY': actualScales.scaleY};
+		//console.log(this.isAspectRatioLockedResize(), scaleX, scaleY);
 
 		return transformParams;
 	},
 
-	/** @private */
+	/* @private */
+	/*
 	_calcManipulateObjsResizeInfo: function(manipulatingObjs, startingRegion, endScreenCoord)
 	{
 		var R = Kekule.Editor.BoxRegion;
@@ -5616,6 +5624,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		return true;
 	},
+	*/
 
 	/** @private */
 	_calcManipulateObjsTransformInfo: function(manipulatingObjs, transformParams)
@@ -6540,6 +6549,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			// get transform params from event directly
 			var center = this.getRotateCenter();  // use the center of current editor selection
 			var scale = e.scale;
+			var resizeScales = this._calcActualResizeScales(this.getManipulateObjs(), {'scaleX': scale, 'scaleY': scale});
+
 			var absAngle = e.rotation  * Math.PI / 180;
 			var rotateAngle = absAngle - this._initialGestureTransformParams.angle;
 
@@ -6549,7 +6560,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			this.updateManipulationStepBuffer(this._manipulationStepBuffer, {
 				'explicitTransformParams': {
 					'center': center,
-					'scaleX': scale, 'scaleY': scale,
+					'scaleX': resizeScales.scaleX, 'scaleY': resizeScales.scaleY,
 					'rotateAngle': rotateAngle
 					//'rotateDegree': e.rotation,
 					//'event': e

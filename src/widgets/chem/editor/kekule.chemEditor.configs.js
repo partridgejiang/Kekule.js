@@ -157,6 +157,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('selectionMarkerEdgeInflation', 5);
 		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
 		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
+
+		//this.addConfigProp('constrainedResizeLevels', DataType.ARRAY, undefined);
+		this.addFloatConfigProp('constrainedResizeStep', 0.25);
 		this.addIntConfigProp('rotationRegionInflation', 10);
 		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15);  // 15 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
