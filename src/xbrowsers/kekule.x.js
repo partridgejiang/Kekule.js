@@ -188,6 +188,15 @@ X.Event = {
 };
 
 /**
+ * A serials of constants of pointer types.
+ */
+X.Event.PointerType = {
+	MOUSE: 'mouse',
+	TOUCH: 'touch',
+	PEN: 'pen'
+};
+
+/**
  * A serials of constants of mouse button flags.
  */
 X.Event.MouseButton = {
@@ -307,6 +316,10 @@ X.Event.Methods = {
 		{
 
 		}
+	},
+	getPointerType: function(event)
+	{
+		return event.pointerType;
 	},
 	/**
 	 * Get event.target element.
