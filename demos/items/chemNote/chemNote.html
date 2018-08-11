@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control"content="no-cache"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Chem Notebook</title>
+
+  <script src="../../../src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+  <script src="res/chemNote.js"></script>
+  <link rel="stylesheet" type="text/css" href="res/chemNote.css" />
+
+  <script>
+    var STORAGE_KEY = 'chemNoteData';
+    var dataSet, noteListView, noteEditor, composer;
+
+    function getInitData()
+    {
+      var result = [
+        {'title': 'Title1', 'text': 'text1', 'modifiedTime': Date.now()},
+        {'title': 'Title2', 'text': 'text2', 'modifiedTime': Date.now()},
+        {'title': 'Title3', 'text': 'text3', 'modifiedTime': Date.now()},
+        {'title': 'Title4', 'text': 'text4', 'modifiedTime': Date.now()},
+        /*
+         {'title': 'Title5', 'text': 'text5', 'modifiedTime': Date.now()},
+         {'title': 'Title6', 'text': 'text6', 'modifiedTime': Date.now()},
+         {'title': 'Title7', 'text': 'text7', 'modifiedTime': Date.now()}
+         */
+      ];
+      return result;
+    }
+
+    function init()
+    {
+      dataSet = new ChemNote.NoteDataSet();
+      dataSet.loadFromStorage(STORAGE_KEY);
+      if (!dataSet.getData() || !dataSet.getData().length)
+        dataSet.setData(getInitData());
+
+      var panelSwitcher = new ChemNote.PanelSwitcher();
+      panelSwitcher.setPanels([$('noteListPanel'), $('noteEditPanel')]);
+
+      noteListView = Kekule.Widget.getWidgetById('noteListView');
+      noteListView.setDataSet(dataSet);
+
+      noteEditor = Kekule.Widget.getWidgetById('noteEditor');
+
+      noteListView.on('select', function(e){
+        var note = e.note;
+        noteEditor.setNote(note);
+        panelSwitcher.setActivePanelIndex(1);
+      });
+
+      var btnCreateNote = Kekule.Widget.getWidgetById('btnCreateNote');
+      btnCreateNote.on('execute', function(e){
+        var note = {};
+        noteEditor.setNote(note);
+        panelSwitcher.setActivePanelIndex(1);
+      });
+
+      var btnDoneEdit = Kekule.Widget.getWidgetById('btnDoneEditNote');
+      btnDoneEdit.setShowText(false);
+      btnDoneEdit.on('execute', function(e){
+        var note = noteEditor.getNote();
+        if (note)
+        {
+          noteEditor.saveToNote(note);
+          if (noteListView.hasItem(note))
+            noteListView.modifyNote(note);
+          else
+            noteListView.addNote(note);
+          panelSwitcher.setActivePanelIndex(0);
+          dataSet.saveToStorage(STORAGE_KEY);
+        }
+      });
+      var btnCancelEdit = Kekule.Widget.getWidgetById('btnCancelEditNote');
+      btnCancelEdit.setShowText(false);
+      btnCancelEdit.on('execute', function(e){
+        panelSwitcher.setActivePanelIndex(0);
+      });
+      var btnRemoveNote = Kekule.Widget.getWidgetById('btnRemoveEditNote');
+      btnRemoveNote.setShowText(false);
+      btnRemoveNote.on('execute', function(e){
+        var handled = true;
+        var note = noteEditor.getNote();
+        if (note)
+        {
+          if (noteListView.hasItem(note))
+          {
+            if (window.confirm('Are you sure to delete this note?'))
+            {
+              noteListView.removeNote(note);
+              dataSet.saveToStorage(STORAGE_KEY);
+              handled = true;
+            }
+            else
+              handled = false;
+          }
+          if (handled)
+          {
+            panelSwitcher.setActivePanelIndex(0);
+          }
+        }
+      });
+    }
+    Kekule.X.domReady(init);
+  </script>
+
+  <style>
+    #noteListPanel, #noteEditPanel
+    {
+      float: left;
+    }
+  </style>
+</head>
+<body>
+  <section class="Panel" id="noteListPanel" data-widget="Kekule.Widget.DumbWidget" style="z-index: 2">
+    <h1 class="SectionTitle">
+      <span class="Caption">Notes</span>
+        <span class="TitleToolbar" data-widget="Kekule.Widget.ButtonGroup">
+          <a id="btnCreateNote" class="ToolButton" data-widget="Kekule.Widget.Button">&#10010;</a>
+        </span>
+    </h1>
+    <ul id="noteListView" class="SectionContent" data-widget="ChemNote.NoteListView"></ul>
+  </section>
+  <section class="Panel" id="noteEditPanel" data-widget="Kekule.Widget.DumbWidget">
+    <h1 class="SectionTitle">
+      <span class="Caption">Edit Note</span>
+        <span class="TitleToolbar" data-widget="Kekule.Widget.ButtonGroup">
+          <a id="btnDoneEditNote" class="ToolButton K-Res-Button-YesOk" data-widget="Kekule.Widget.Button">&#10004;</a>
+          <a id="btnCancelEditNote" class="ToolButton K-Res-Button-NoCancel" data-widget="Kekule.Widget.Button">&#10006;</a>
+          <a id="btnRemoveEditNote" class="ToolButton K-Res-Icon-Remove" data-widget="Kekule.Widget.Button">&#10006;</a>
+        </span>
+    </h1>
+    <div id="noteEditor" class="SectionContent" data-widget="ChemNote.NoteEditor"></div>
+  </section>
+</body>
+</html>
