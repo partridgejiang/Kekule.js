@@ -5096,8 +5096,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		if (!isOnTopLayer)  // if not on top layer, need to adjust element position
 		{
-			result.top = clientRect.top + 'px';
-			result.left = clientRect.left + 'px';
+			if (Kekule.StyleUtils.getComputedStyle(elem, 'position') !== 'fixed')
+			{
+				result.top = clientRect.top + 'px';
+				result.left = clientRect.left + 'px';
+			}
 		}
 		return result;
 	},
