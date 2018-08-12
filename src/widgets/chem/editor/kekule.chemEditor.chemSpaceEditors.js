@@ -3628,7 +3628,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	/** @private */
 	_createAtomSetterWidget: function(doc, parentElem)
 	{
-		var result = new Kekule.ChemWidget.StructureNodeSetter(doc);
+		var result = new Kekule.ChemWidget.StructureNodeSetter(this.getEditor());
 		result.setUseDropDownSelectPanel(true);
 		result.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
 
@@ -5215,7 +5215,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	/** @private */
 	_createTextSetterWidget: function(doc, parentElem)
 	{
-		var result = new Kekule.Widget.TextBox(doc);
+		var result = new Kekule.Widget.TextBox(this.getEditor());
 		/*
 		result.setAutoSizeX(true);
 		result.setAutoSizeY(true);
@@ -5601,7 +5601,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 	/** @private */
 	_createTextSetterWidget: function(doc, parentElem)
 	{
-		var result = new Kekule.Widget.TextArea(doc);
+		var result = new Kekule.Widget.TextArea(this.getEditor());
 		result.setAutoSizeX(true);
 		result.setAutoSizeY(true);
 		result.setDisplayed(false);
