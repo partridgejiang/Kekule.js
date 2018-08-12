@@ -2262,11 +2262,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 * This method is used by bindElement when create a widget based on an existing root element.
 	 * Descendants may override this method.
 	 * @param {HTMLDocument} doc
-	 * @param {HTMLElement} rootElem
+	 * @param {HTMLDocumentFragment} docFragment
 	 * @returns {Array} Created sub elements.
 	 * @private
 	 */
-	doCreateSubElements: function(doc, rootElem)
+	doCreateSubElements: function(doc, docFragment)
 	{
 		// do nothing here
 		return [];
@@ -2595,7 +2595,10 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			clearDynElements(element);
 
 			// create essential sub elements
-			var subElems = this.doCreateSubElements(this.getDocument(), element);
+			var doc = this.getDocument();
+			var docFrag = doc.createDocumentFragment();
+			//var subElems = this.doCreateSubElements(this.getDocument(), element);
+			var subElems = this.doCreateSubElements(this.getDocument(), docFrag);
 			if (subElems && subElems.length)
 			{
 				for (var i = 0, l = subElems.length; i < l; ++i)
@@ -2604,6 +2607,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					HU.addClass(elem, CNS.DYN_CREATED);
 				}
 			}
+			element.appendChild(docFrag);
 
 			this.doBindElement(element);
 
@@ -5033,12 +5037,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			if (widgetBox.left + widgetBox.width > visibleWidth + viewPortVisibleBox.left)  // need to shrink
 			{
 				posInfo.width = (viewPortVisibleBox.right - widgetBox.left) + 'px';
+				posInfo.widthChanged = true;
 				//posInfo.right = '0px';
 			}
 			if (widgetBox.top + widgetBox.height > visibleHeight + viewPortVisibleBox.top)  // need to shrink
 			{
 				//posInfo.bottom = '0px';
 				posInfo.height = (viewPortVisibleBox.bottom - widgetBox.top) + 'px';
+				posInfo.heightChanged = true;
 			}
 		}
 
@@ -5049,7 +5055,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (posInfo)
 		{
 			// set style
-			var stylePropNames = ['left', 'top', 'right', 'bottom', 'width', 'height'];
+			var stylePropNames = ['left', 'top', 'right', 'bottom'];  //, 'width', 'height'];
+			if (posInfo.widthChanged)
+				stylePropNames.push('width');
+			if (posInfo.heightChanged)
+				stylePropNames.push('height');
 			var oldStyle = {};
 			var style = popupElem.style;
 
