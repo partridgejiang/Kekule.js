@@ -1385,9 +1385,9 @@ Kekule.DocumentUtils = {
 		}
 	},
 	/**
-	 * Returns top-left and bottom-right coord of viewport visible client.
+	 * Returns top-left and bottom-right coords and width/height of viewport visible client.
 	 * @param {HTMLDocument} document
-	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2}
+	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2, width, height}
 	 */
 	getClientVisibleBox: function(document)
 	{
@@ -1398,6 +1398,8 @@ Kekule.DocumentUtils = {
 		result.top = result.y1 = offset.top;
 		result.right = result.x2 = dim.width + offset.left;
 		result.bottom = result.y2 = dim.height + offset.top;
+		result.width = dim.width;
+		result.height = dim.height;
 		return result;
 	},
 	/**
