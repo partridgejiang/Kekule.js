@@ -918,7 +918,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				var elem = this.getCoreElement();
 				if (elem)
 				{
-					if (elem.focus && value)
+					// TODO: currently restrict focus element to form controls, avoid normal element IE focused on auto scrolling to top-left
+					if (elem.focus && value && Kekule.HtmlElementUtils.isFormCtrlElement(elem))
 						elem.focus();
 					if (elem.blur && (!value))
 						elem.blur();
