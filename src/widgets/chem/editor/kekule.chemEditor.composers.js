@@ -2435,17 +2435,23 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var parent;
 		if (toLeftRegion)
 		{
-			toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
 			parent = this.getLeftRegionElem();
-			toolbar.appendToElem(parent);
+			if (toolbar.getElement().parentNode !== parent)
+			{
+				toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
+				toolbar.appendToElem(parent);
+			}
 		}
 		else // to bottom region
 		{
-			toolbar.setLayout(Kekule.Widget.Layout.HORIZONTAL);
 			parent = this.getBottomRegionElem();
-			var refElem = Kekule.DomUtils.getFirstChildElem(parent);
-			// insert as the first elem
-			parent.insertBefore(toolbar.getElement(), refElem);
+			if (toolbar.getElement().parentNode !== parent)
+			{
+				toolbar.setLayout(Kekule.Widget.Layout.HORIZONTAL);
+				var refElem = Kekule.DomUtils.getFirstChildElem(parent);
+				// insert as the first elem
+				parent.insertBefore(toolbar.getElement(), refElem);
+			}
 		}
 	},
 	/**
