@@ -855,36 +855,43 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 		}
 		*/
 
+
 		var startCoord = track[0];
 		var deltaOld = CU.substract(endCoordOld, startCoord);
 		var angleOld = Math.atan2(deltaOld.y, deltaOld.x);
 		var delta1 = CU.substract(endCoord1, startCoord);
 		var angle1 = Math.atan2(delta1.y, delta1.x);
 		var scale = CU.getDistance(deltaOld) / CU.getDistance(delta1);
-		// rotate track1 to x axis, then scale, then rotate to angleOld
-		var transformMatrix1 = CU.calcTransform2DMatrix({'rotateAngle': -angle1, 'center': startCoord});
-		var transformMatrix2 = CU.calcTransform2DMatrix({'scale': scale, 'center': startCoord});
-		var transformMatrix3 = CU.calcTransform2DMatrix({'rotateAngle': angleOld, 'center': startCoord});
-		var transformMatrix = Kekule.MatrixUtils.multiply(transformMatrix1, transformMatrix2);
-		transformMatrix = Kekule.MatrixUtils.multiply(transformMatrix, transformMatrix3);
-		var result = [track1[0]]; // track1[0] need not to be changed
-		for (var i = 1; i < trackLength - 1; ++i)
+		if (scale <= 2)  // Too large scale will cause layout error, todo: this threshold is currently fixed
 		{
-			result.push(CU.transform2DByMatrix(track1[i], transformMatrix));
+			// rotate track1 to x axis, then scale, then rotate to angleOld
+			var transformMatrix1 = CU.calcTransform2DMatrix({'rotateAngle': -angle1, 'center': startCoord});
+			var transformMatrix2 = CU.calcTransform2DMatrix({'scale': scale, 'center': startCoord});
+			var transformMatrix3 = CU.calcTransform2DMatrix({'rotateAngle': angleOld, 'center': startCoord});
+			var transformMatrix = Kekule.MatrixUtils.multiply(transformMatrix1, transformMatrix2);
+			transformMatrix = Kekule.MatrixUtils.multiply(transformMatrix, transformMatrix3);
+			var result = [track1[0]]; // track1[0] need not to be changed
+			for (var i = 1; i < trackLength - 1; ++i)
+			{
+				result.push(CU.transform2DByMatrix(track1[i], transformMatrix));
+			}
+			result.push(track[trackLength - 1]);
 		}
-		result.push(track[trackLength - 1]);
-		/*
-		var deltaStep = CU.divide(CU.substract(endCoordOld, endCoord1), trackLength - 1);
-		var result = [track1[0]]; // track1[0] need not to be changed
-		//var result = [];
-		var currDelta = {'x': 0, 'y': 0};
-		for (var i = 0; i < trackLength - 1; ++i)
+		else
 		{
-			currDelta = CU.add(currDelta, deltaStep);
-			result.push(CU.add(track1[i], currDelta));
+
+			var deltaStep = CU.divide(CU.substract(endCoordOld, endCoord1), trackLength - 1);
+			var result = [track1[0]]; // track1[0] need not to be changed
+			//var result = [];
+			var currDelta = {'x': 0, 'y': 0};
+			for (var i = 0; i < trackLength - 1; ++i)
+			{
+				currDelta = CU.add(currDelta, deltaStep);
+				result.push(CU.add(track1[i], currDelta));
+			}
+			result.push(track[trackLength - 1]);
 		}
-		result.push(track[trackLength - 1]);
-    */
+
 		return result; //.concat(track1);
 	},
 	/** @private */
