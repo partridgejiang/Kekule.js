@@ -3164,7 +3164,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	_supportGestureEvent: function()
 	{
-		return typeof(Kekule.$jsRoot.Hammer) !== 'undefined';
+		return (typeof(Kekule.$jsRoot.Hammer) !== 'undefined') && (document && document.addEventListener);  // hammer need addEventListener to install event handlers
 	},
 	/**
 	 * Start observing gesture events.
