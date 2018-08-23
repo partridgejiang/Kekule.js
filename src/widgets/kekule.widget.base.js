@@ -1071,7 +1071,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		//return Kekule.Widget.globalManager;
 		var doc = this.getDocument();
-		var kekuleRoot = doc && doc.defaultView && doc.defaultView.Kekule;
+		var win = doc && Kekule.DocumentUtils.getDefaultView(doc);
+		var kekuleRoot = win && win.Kekule;
 		if (!kekuleRoot)
 			kekuleRoot = Kekule;
 		return kekuleRoot.Widget.globalManager;
@@ -2608,7 +2609,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					HU.addClass(elem, CNS.DYN_CREATED);
 				}
 			}
-			element.appendChild(docFrag);
+
+			if ((subElems && subElems.length) || (docFrag.children && docFrag.children.length))
+				element.appendChild(docFrag);
 
 			this.doBindElement(element);
 
@@ -4203,7 +4206,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @ignore */
 	finalize: function($super)
 	{
-		this.uninstallWindowEventHandlers(this._document.defaultView);
+		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
 		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
@@ -4251,7 +4254,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
-		this.installWindowEventHandlers(this._document.defaultView);
+		this.installWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
 	},
 
 	/**

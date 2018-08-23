@@ -1136,9 +1136,11 @@ Kekule.HtmlElementUtils = {
 		if (elemOrDocOrViewport)
 		{
 			if (elemOrDocOrViewport.ownerDocument)
-				w = elemOrDocOrViewport.ownerDocument.defaultView;
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
 			else if (elemOrDocOrViewport.defaultView)
 				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
 			else
 				w = elemOrDocOrViewport;
 		}
@@ -1169,9 +1171,11 @@ Kekule.HtmlElementUtils = {
 		if (elemOrDocOrViewport)
 		{
 			if (elemOrDocOrViewport.ownerDocument)
-				w = elemOrDocOrViewport.ownerDocument.defaultView;
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
 			else if (elemOrDocOrViewport.defaultView)
 				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
 			else
 				w = elemOrDocOrViewport;
 		}
@@ -1312,8 +1316,8 @@ Kekule.HtmlElementUtils = {
 	isFormCtrlElement: function(elem)
 	{
 		var formCtrlTags = ['input', 'button', 'textarea', 'select'];
-		var tagName = elem.tagName.toLowerCase();
-		return formCtrlTags.indexOf(tagName) >= 0;
+		var tagName = elem && elem.tagName.toLowerCase();
+		return !!tagName && formCtrlTags.indexOf(tagName) >= 0;
 	},
 
 	/**
@@ -1343,13 +1347,22 @@ Kekule.HtmlElementUtils = {
  */
 Kekule.DocumentUtils = {
 	/**
+	 * Returns the default view (window) of current document.
+	 * @param {HTMLDocument} document
+	 * @returns {Object}
+	 */
+	getDefaultView: function(document)
+	{
+		return document.defaultView || document.parentWindow;
+	},
+	/**
 	 * Returns scroll top/left of document element.
 	 * @param {HTMLDocument} document
 	 * @returns {Hash} {left, top}
 	 */
 	getScrollPosition: function(document)
 	{
-		var win = document.defaultView;
+		var win = Kekule.DocumentUtils.getDefaultView(document);
 		var result = {
 			'left': ((win.pageXOffset !== undefined)?
 					win.pageXOffset:
@@ -1409,7 +1422,7 @@ Kekule.DocumentUtils = {
 	 */
 	getWindowInnerDimension: function(document)
 	{
-		var win = document.defaultView;
+		var win = Kekule.DocumentUtils.getDefaultView(document);
 		return {'width': Math.min(win.innerWidth, win.outerWidth), 'height': Math.min(win.innerHeight, win.outerHeight)};
 	},
 	/**
@@ -1446,7 +1459,7 @@ Kekule.DocumentUtils = {
 	getPixelZoomLevel: function(document)
 	{
 		var scale = Kekule.DocumentUtils.getClientScaleLevel(document);
-		return scale * (document.defaultView.devicePixelRatio || 1);
+		return scale * (Kekule.DocumentUtils.getDefaultView(document).devicePixelRatio || 1);
 	},
 
 	/**
@@ -1457,7 +1470,7 @@ Kekule.DocumentUtils = {
 	 */
 	getDevicePPI: function(document)
 	{
-		var win = document.defaultView;
+		var win = Kekule.DocumentUtils.getDefaultView(document);
 		if (win.matchMedia)
 		{
 			var minRes = 0;

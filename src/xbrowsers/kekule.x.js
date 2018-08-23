@@ -558,7 +558,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerX) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -584,7 +584,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerY) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -645,7 +645,7 @@ X.Event.Methods = {
 	{
 		var x = X.Event.getPageX(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollX) || 0;
 		return x - delta;
 	},
@@ -658,7 +658,7 @@ X.Event.Methods = {
 	{
 		var y = X.Event.getPageY(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollY) || 0;
 		return y - delta;
 	},
@@ -670,7 +670,7 @@ X.Event.Methods = {
 	getRelXToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientX = X.Event.getClientX(event);
 		//return Math.round(clientX - elem.getBoundingClientRect().left);
@@ -684,7 +684,7 @@ X.Event.Methods = {
 	getRelYToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);

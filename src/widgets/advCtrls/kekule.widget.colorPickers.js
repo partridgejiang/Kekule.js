@@ -724,7 +724,14 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 		this.defineProp('showPreview', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
-				this.getPreviewElem().style.display = value? 'inherit': '';
+				try
+				{
+					this.getPreviewElem().style.display = value ? 'inherit' : '';
+				}
+				catch(e)
+				{
+
+				}
 			}
 		});
 		this.defineProp('value', {'dataType': DataType.STRING,

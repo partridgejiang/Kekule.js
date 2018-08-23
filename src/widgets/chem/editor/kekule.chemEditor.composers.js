@@ -3067,7 +3067,7 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
 			'setter': null,
 			'getter': function(){
-				return this.getFrameDocument().defaultView;
+				return Kekule.DocumentUtils.getDefaultView(this.getFrameDocument());
 			}
 		});
 	},

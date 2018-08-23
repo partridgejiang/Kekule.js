@@ -1008,7 +1008,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		};
 		var predefinedExtraData = {
 			'single': {},
-			'double': {'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE'), 'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE')},
+			'double': {'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_DOUBLE'), 'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_DOUBLE')}
 		};
 		var bondForms = this.getEditorConfigs().getStructureConfigs().getEnabledBondForms();
 		var keys = Kekule.ObjUtils.getOwnedFieldNames(bondForms, false);

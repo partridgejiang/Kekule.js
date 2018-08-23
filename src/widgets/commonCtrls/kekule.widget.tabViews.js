@@ -272,18 +272,18 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function(doc, rootElem)
+	doCreateSubElements: function(doc, docFragment)
 	{
-		var result = [];
 		var tabBtnContainer = doc.createElement('div');
 		tabBtnContainer.className = CNS.TABVIEW_TABBUTTON_CONTAINER;
 		var pageContainer = doc.createElement('div');
 		pageContainer.className = CNS.TABVIEW_PAGE_CONTAINER;
 		this._tabBtnContainer = tabBtnContainer;
 		this._pageContainer = pageContainer;
-		rootElem.appendChild(tabBtnContainer);
-		rootElem.appendChild(pageContainer);
+		docFragment.appendChild(tabBtnContainer);
+		docFragment.appendChild(pageContainer);
 		this.setPropStoreFieldValue('tabGroup', this.doCreateTabbar(doc, tabBtnContainer));
+		var result = [tabBtnContainer, pageContainer];
 		return result;
 	},
 	/** @private */
