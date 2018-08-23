@@ -254,7 +254,7 @@
 
 .K-Chem-StructureNodeSelectPanel, .K-Chem-StructureConnectorSelectPanel
 {
-    width: 22em;
+    width: 20em;
     /*height: 30em;*/
 }
 
@@ -265,7 +265,7 @@
 
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container
 {
-    height: 25em;
+    height: 22em;
     overflow-y: auto;
 }
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page
@@ -287,7 +287,7 @@
     {
         display: inline-block;
         position: relative;
-        height: 25em;
+        height: 22em;
         /*
         display: -webkit-flex;
         display: -moz-flex;
