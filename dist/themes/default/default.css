@@ -19,6 +19,7 @@ table.K-Widget{display:table}
 .K-Widget .K-Section{padding-top:.2em;padding-bottom:.2em}
 .K-Container .K-Widget{}
 .K-Panel{padding:.7em}
+.K-Panel .K-Panel-Caption{display:block;margin:-0.3em;margin-bottom:.7em;padding:.3em;padding-top:0;border-bottom:1px solid;font-size:1.1em;font-family:Verdana,Arial;font-weight:bold}
 .K-Panel,.K-Toolbar{border:1px solid}
 .K-Toolbar.K-Button-Group{border:none}
 .K-Button-Group .K-Widget{margin:0}
@@ -129,7 +130,7 @@ table.K-Widget{display:table}
 .K-ColorPicker .K-ColorPicker-Spec-Color-Palette{padding:0;margin:0;margin-right:.3em}
 .K-ColorPicker .K-ColorPicker-Spec-Color-Palette .K-ColorPicker-Palette-Cell{float:left;height:1.4em;width:1.4em}
 .K-ColorPicker .K-ColorPicker-Palette,.K-ColorPicker .K-ColorPicker-Spec-Color-Palette{float:left;border-right:1px solid;border-bottom:1px solid;cursor:pointer}
-.K-ColorPicker .K-ColorPicker-Palette{min-width:180px}
+.K-ColorPicker .K-ColorPicker-Palette{min-width:180px;touch-action:none}
 .K-ColorPicker .K-ColorPicker-Palette-Line{font-size:0}
 .K-ColorPicker .K-ColorPicker-Palette-Line,.K-ColorPicker .K-ColorPicker-Palette-Cell{margin:0;padding:0;line-height:1}
 .K-ColorPicker .K-ColorPicker-Palette-Cell{display:inline-block;width:9px;height:9px;border-top:1px solid;border-left:1px solid}
@@ -185,4 +186,4 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"180610131225,swt,334"}
+#CssGaga{content:"180827134810,swt,334"}
