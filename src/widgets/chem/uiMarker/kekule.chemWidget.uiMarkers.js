@@ -61,11 +61,11 @@ Kekule.ChemWidget.AbstractUIMarker = Class.create(ObjectEx,
  * @property {Hash} shapeInfo Meta shape object.
  * @property {Int} shapeType Type of shape.
  */
-Kekule.ChemWidget.MetaShapeUIMarker = Class.create(Kekule.ChemWidget.AbstractUIMarker,
-/** @lends Kekule.ChemWidget.MetaShapeUIMarker# */
+Kekule.ChemWidget.MetaShapeUiMarker = Class.create(Kekule.ChemWidget.AbstractUIMarker,
+/** @lends Kekule.ChemWidget.MetaShapeUiMarker# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemWidget.MetaShapeUIMarker',
+	CLASS_NAME: 'Kekule.ChemWidget.MetaShapeUiMarker',
 	/** @constructs */
 	initialize: function($super, shapeInfo)
 	{
@@ -84,6 +84,41 @@ Kekule.ChemWidget.MetaShapeUIMarker = Class.create(Kekule.ChemWidget.AbstractUIM
 					return info? info.shapeType: null;
 				}
 		});
+	}
+});
+/** @ignore */
+Kekule.ChemWidget.MetaShapeUIMarker = Kekule.ChemWidget.MetaShapeUiMarker;  // an alias for backward compatible
+
+/**
+ * A marker based on text.
+ * @class
+ * @augments Kekule.ChemWidget.AbstractUIMarker
+ *
+ * @property {Hash} coord Coord of text marker.
+ * @property {String} text.
+ *
+ * @params {String} text
+ * @params {Hash} coord
+ */
+Kekule.ChemWidget.TextUiMarker = Class.create(Kekule.ChemWidget.AbstractUIMarker,
+/** @lends Kekule.ChemWidget.TextUiMarker# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.TextUiMarker',
+	/** @constructs */
+	initialize: function($super, text, coord)
+	{
+		$super();
+		if (text)
+			this.setText(text);
+		if (coord)
+			this.setCoord(coord);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('text', {'dataType': DataType.STRING});
+		this.defineProp('coord', {'dataType': DataType.HASH});
 	}
 });
 
@@ -173,9 +208,214 @@ Kekule.ChemWidget.UiMarkerCollection = Class.create(ObjectEx,
 
 
 /**
+ * Base Render for UI marker.
+ * @class
+ * @augments Kekule.Render.Base2DRenderer
+ */
+Kekule.ChemWidget.UiMarker2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
+/** @lends Kekule.ChemWidget.UiMarkerRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.UiMarkerRenderer'
+});
+
+/**
+ * Render for {@link Kekule.ChemWidget.MetaShapeUiMarker}.
+ * @class
+ * @augments Kekule.Render.UiMarker2DRenderer
+ */
+Kekule.ChemWidget.MetaShapeUiMarker2DRenderer = Class.create(Kekule.ChemWidget.UiMarker2DRenderer,
+/** @lends Kekule.ChemWidget.MetaShapeUiMarker2DRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.MetaShapeUiMarker2DRenderer',
+	/** @private */
+	doDrawSelf: function($super, context, baseCoord, options)
+	{
+		var marker = this.getChemObj();
+		var shapeInfo = marker.getShapeInfo();
+		if (!shapeInfo)
+			return null;
+
+		/* ignore baseCoord, since UI marker is not inhertied from ChemObject and do not has coord2D property
+		if (!baseCoord)
+			baseCoord = this.getAutoBaseCoord(options);
+		*/
+
+		var ops = Object.create(options);
+		ops = Object.extend(ops, marker.getDrawStyles() || {});
+
+		// set stroke & fill color and so on
+		if (ops.color)
+		{
+			if (!ops.strokeColor)
+				ops.strokeColor = ops.color;
+			if (!ops.fillColor)
+				ops.fillColor = ops.color;
+		}
+
+		var result;
+		if (Kekule.Render.MetaShapeUtils.isCompositeShape(shapeInfo))  // composite shapes
+		{
+			if (shapeInfo.length > 1)  // more than one shape, need draw group
+			{
+				result = this.createDrawGroup(context);
+				for (var i = 0, l = shapeInfo.length; i < l; ++i)
+				{
+					var shape = shapeInfo[i];
+					this.doDrawShape(context, result, shape, ops);
+				}
+			}
+			else if (shapeInfo.length === 1)  // only one shape, no need of group
+			{
+				result = this.doDrawShape(context, null, shapeInfo[0], ops);
+			}
+			else  // no actual shapes
+				return null;
+		}
+		else
+			result = this.doDrawShape(context, null, shapeInfo, ops);
+
+		return result;
+	},
+
+	/** @private */
+	doDrawShape: function(context, markerGroup, shape, options)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var result;
+
+		if (Kekule.Render.MetaShapeUtils.isCompositeShape(shape))  // complex shape
+		{
+			result = this.createDrawGroup(context);
+			for (var i = 0, l = shape.length; i < l; ++i)
+			{
+				var childResult = this.doDrawShape(context, result, shape[i], options);
+			}
+		}
+		else  // simple shape
+		{
+			var coords = shape.coords;
+			//console.log('do draw shape', shape.shapeType, options, coords);
+			switch (shape.shapeType)
+			{
+				// TODO: Point and circle currently does not support stroke dash
+				case T.POINT:
+					result = this.drawCircle(context, coords[0], 1, options); break;
+				case T.CIRCLE:
+					result = this.drawCircle(context, coords[0], shape.radius, options); break;
+				case T.LINE:
+				{
+					var ops = options;
+					if (shape.width)
+					{
+						ops = Object.create(options);
+						ops.strokeWidth = shape.width;
+					}
+					result = this.drawLine(context, coords[0], coords[1], ops); break;
+				}
+				case T.RECT:
+				{
+					result = this.drawRect(context, coords[0], coords[1], options);
+					break;
+				}
+				case T.POLYGON: case T.POLYLINE:
+				{
+					var args = [];
+					for (var i = 0, l = coords.length; i < l; ++i)
+					{
+						var sMethod = (i === 0)? 'M': 'L';
+						args.push(sMethod);
+						var coordArray = [coords[i].x, coords[i].y];
+						args.push(coordArray);
+					}
+					// close
+					if (shape.shapeType === T.POLYGON)
+					{
+						args.push('L');
+						coordArray = [coords[0].x, coords[0].y];
+						args.push(coordArray);
+					}
+					var path = Kekule.Render.DrawPathUtils.makePath.apply(this, args);
+					result = this.drawPath(context, path, options);
+					break;
+				}
+			}
+		}
+		if (markerGroup)
+			this.addToDrawGroup(result, markerGroup);
+		return result;
+	}
+});
+
+/**
+ * Render for {@link Kekule.ChemWidget.TextUiMarker}.
+ * @class
+ * @augments Kekule.Render.UiMarker2DRenderer
+ */
+Kekule.ChemWidget.TextUiMarker2DRenderer = Class.create(Kekule.ChemWidget.UiMarker2DRenderer,
+/** @lends Kekule.ChemWidget.TextUiMarker2DRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.TextUiMarker2DRenderer',
+	/** @private */
+	doDrawSelf: function($super, context, baseCoord, options)
+	{
+		var marker = this.getChemObj();
+		var ops = {
+			textBoxXAlignment: Kekule.Render.BoxXAlignment.CENTER,
+			textBoxYAlignment: Kekule.Render.BoxYAlignment.CENTER
+		};  // default aligment
+		ops = Object.extend(ops, options);
+
+		ops = Object.extend(ops, marker.getDrawStyles() || {});
+		var coord = marker.getCoord();
+		var text = marker.getText();
+
+		if (text && coord)
+			return this.drawText(context, coord, marker.getText(), ops);
+		else
+			return null;
+	}
+});
+
+
+/**
+ * Render for {@link Kekule.ChemWidget.UiMarkerCollection}.
+ * @class
+ * @augments Kekule.Render.UiMarker2DRenderer
+ */
+Kekule.ChemWidget.UiMarkerCollection2DRenderer = Class.create(Kekule.ChemWidget.UiMarker2DRenderer,
+/** @lends Kekule.ChemWidget.UiMarkerCollection2DRenderer# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.UiMarkerCollection2DRenderer',
+
+	/** @ignore */
+	getChildObjs: function($super)
+	{
+		var collection = this.getChemObj();
+		var markers = collection.getMarkers();
+		var result = [];
+		for (var i = 0, l = markers.length; i < l; ++i)
+		{
+			if (markers[i].getVisible())
+				result.push(markers[i]);
+		}
+		//result = (result || []).concat($super());
+		return result;
+	}
+});
+
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemWidget.MetaShapeUiMarker , Kekule.ChemWidget.MetaShapeUiMarker2DRenderer);
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemWidget.TextUiMarker , Kekule.ChemWidget.TextUiMarker2DRenderer);
+Kekule.Render.Renderer2DFactory.register(Kekule.ChemWidget.UiMarkerCollection, Kekule.ChemWidget.UiMarkerCollection2DRenderer);
+
+/**
  * Render to draw markers of a {@link Kekule.ChemWidget.UIElementCollection}
  * @class
  * @augments Kekule.Render.Base2DRenderer
+ * @deprecate
  */
 Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 /** @lends Kekule.ChemWidget.UiMarkersRenderer# */
@@ -193,7 +433,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('dummy', {'dataType': DataType.OBJECT, 'serializable': false});
+		//this.defineProp('dummy', {'dataType': DataType.OBJECT, 'serializable': false});
 	},
 	/** @private */
 	getObjDrawElem: function(context, obj)
@@ -227,7 +467,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	},
 
 	/** @private */
-	doUpdate: function($super, context, updatedObjDetails, updateType)
+	doUpdate1: function($super, context, updatedObjDetails, updateType)
 	{
 		if (this.canModifyGraphic(context))
 		{
@@ -328,23 +568,6 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		if (!shapeInfo)
 			return null;
 
-		/*
-		var ops = options || {};
-		var styles = marker.getDrawStyles() || {};
-		var strokeWidth = oneOf(styles.strokeWidth, ops.strokeWidth, 1);
-		var strokeColor = oneOf(styles.strokeColor, ops.strokeColor, styles.color, ops.color);
-		var fillColor = oneOf(styles.fillColor, ops.fillColor, styles.color, ops.color);
-		var opacity = oneOf(styles.opacity, ops.opacity, 1);
-		var strokeDash = oneOf(styles.strokeDash, ops.strokeDash, null);
-
-		var drawOptions = {
-			'strokeWidth': strokeWidth,
-			'strokeColor': strokeColor,
-			'fillColor': fillColor,
-			'opacity': opacity,
-			'strokeDash': strokeDash
-		};
-		*/
 		var ops = Object.create(options);
 		ops = Object.extend(marker.getDrawStyles() || {});
 
@@ -412,6 +635,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		else  // simple shape
 		{
 			var coords = shape.coords;
+			//console.log('do draw shape', shape.shapeType, options, coords);
 			switch (shape.shapeType)
 			{
 				// TODO: Point and circle currently does not support stroke dash
@@ -453,7 +677,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 					result = this.drawRect(context, coords[0], coords[1], options);
 					break;
 				}
-				case T.POLYGON:
+				case T.POLYGON: case T.POLYLINE:
 				{
 					var args = [];
 					for (var i = 0, l = coords.length; i < l; ++i)
@@ -464,9 +688,12 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 						args.push(coordArray);
 					}
 					// close
-					args.push('L');
-					coordArray = [coords[0].x, coords[0].y];
-					args.push(coordArray);
+					if (shape.shapeType === T.POLYGON)
+					{
+						args.push('L');
+						coordArray = [coords[0].x, coords[0].y];
+						args.push(coordArray);
+					}
 					var path = Kekule.Render.DrawPathUtils.makePath.apply(this, args);
 					result = this.drawPath(context, path, options);
 					break;
@@ -478,10 +705,9 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		return result;
 	}
 });
-//Kekule.ClassDefineUtils.addExtraObjMapSupport(Kekule.ChemWidget.UIElementsRenderer);
 Kekule.ClassDefineUtils.addExtraTwoTupleObjMapSupport(Kekule.ChemWidget.UiMarkersRenderer);
 
 // register renderers
-Kekule.Render.Renderer2DFactory.register(Kekule.ChemWidget.UiMarkerCollection, Kekule.ChemWidget.UiMarkersRenderer);
+//Kekule.Render.Renderer2DFactory.register(Kekule.ChemWidget.UiMarkerCollection, Kekule.ChemWidget.UiMarkersRenderer);
 
 })();

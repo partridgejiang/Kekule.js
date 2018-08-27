@@ -35,6 +35,11 @@ var Class = {
 		 */
     createCore: function() {
         var parent = null, properties = __$A__(arguments);
+        if (!properties[0])
+        {
+          if (properties.length > 1)
+            throw 'Can not create new class, base class not found';
+        }
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
 

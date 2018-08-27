@@ -579,7 +579,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 		var textElem = this.getTextBox().getElement();
 		if (!textElem)  // textbox disposed, may be in finalize phase, no need to adjust
 			return;
-		var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		//var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		var textRect = Kekule.HtmlElementUtils.getElemPageRect(textElem);
 
 		// heading
 		var widget = this.getHeadingWidget();
@@ -590,7 +591,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.left = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';
@@ -618,7 +620,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.right = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';

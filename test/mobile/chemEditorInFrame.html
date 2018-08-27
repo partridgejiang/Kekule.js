@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Composer in Frame Test</title>
+  <style>
+    #frameComposer
+    {
+      width: 800px;
+      height: 600px;
+      border: 1px solid red;
+    }
+  </style>
+  <script src="../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+  <script>
+    function getFrameDoc(frameId)
+    {
+      var elem = document.getElementById(frameId);
+      return elem.contentDocument;
+    }
+    function insertKekuleScripts(doc, callback)
+    {
+      var srcInfo = Kekule.scriptSrcInfo;
+      var headElem = doc.head;
+
+      var cssLinkElem = doc.createElement('link');
+      cssLinkElem.setAttribute('rel', 'stylesheet');
+      cssLinkElem.setAttribute('type', 'text/css');
+      cssLinkElem.setAttribute('href', Kekule.getStyleSheetUrl());
+      headElem.appendChild(cssLinkElem);
+
+      /*
+      var scriptElem = doc.createElement('script');
+      scriptElem.setAttribute('src', Kekule.getScriptSrc());
+      */
+
+      Kekule.ScriptFileUtils.appendScriptFile(doc, Kekule.getScriptSrc(), function(){
+        callback();
+      });
+
+    }
+    function createComposer()
+    {
+      var doc = getFrameDoc('frameComposer');
+      doc.documentElement.style.width = '100%';
+      doc.documentElement.style.height = '100%';
+      doc.body.style.width = '100%';
+      doc.body.style.height = '100%';
+
+      Kekule.X.Event.addListener(doc.body, 'kekuleload', function(e){
+        /*
+        console.log(doc.defaultView.Kekule, e);
+        var elem = doc.createElement('div');
+        elem.setAttribute('data-widget', 'Kekule.Editor.Composer');
+        doc.body.appendChild(elem);
+        */
+        var composer = new Kekule.Editor.Composer(doc);
+        var style = composer.getElement().style;
+        style.width = '100%';
+        style.height = '100%';
+        composer.appendToElem(doc.body);
+      });
+
+      insertKekuleScripts(doc, function(){
+
+        /*
+        doc.defaultView.Kekule.ready(function(){
+
+          //var composer = new Kekule.Editor.Composer(doc);
+          //composer.appendToElem(doc.body);
+
+          console.log('Kekule loaded', Kekule.scriptSrcInfo.files);
+          var elem = doc.createElement('div');
+          elem.setAttribute('data-widget', 'Kekule.Editor.Composer');
+          doc.body.appendChild(elem);
+        });
+        */
+      });
+    }
+
+    function init()
+    {
+
+
+      createComposer();
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <p>A line of text.</p>
+  <iframe id="frameComposer"></iframe>
+</body>
+</html>

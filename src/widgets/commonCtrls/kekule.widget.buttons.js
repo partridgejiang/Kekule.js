@@ -551,6 +551,7 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
  * //@property {Bool} dropDownOnHover Whether shows drop down widget on mouse hover and hide it on mouse leave.
  * @property {Int} dropPosition Value from {@link Kekule.Widget.Position}, position of top-left corner of drop widget (based on current button).
  *   Set it to null means automatically.
+ * @property {Func} dropDownWidgetGetter An external function to return drop down widget. Useful to create drop down widget on demand.
  */
 /**
  * Invoked when the drop down widget is invoked by button.
@@ -577,6 +578,20 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	initProperties: function()
 	{
 		this.defineProp('dropDownWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('dropDownWidget');
+				if (!result)
+				{
+					var getter = this.getDropDownWidgetGetter();
+					if (getter)
+					{
+						result = getter(this);
+						this.setPropStoreFieldValue('dropDownWidget', result);
+					}
+				}
+				return result;
+			},
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('dropDownWidget', value);
@@ -586,6 +601,7 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 				}
 			}
 		});
+		this.defineProp('dropDownWidgetGetter', {'dataType': DataType.FUNCTION, 'serializable': false});
 		//this.defineProp('dropDownOnHover', {'dataType': DataType.BOOL});
 		this.defineProp('dropPosition', {'dataType': DataType.INT});
 	},
@@ -612,7 +628,8 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 			var layout = p? p.getLayout(): Kekule.Widget.Layout.HORIZONTAL;
 
 			// check which direction can display all part of widget and drop dropdown widget to that direction
-			var selfClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+			//var selfClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+			var selfClientRect = Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), true);
 			var viewPortDim = Kekule.HtmlElementUtils.getViewportDimension(this.getElement());
 			var dropElem = this.getDropDownWidget().getElement();
 			// add the dropdown element to DOM tree first, else the offsetDimension will always return 0

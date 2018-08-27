@@ -214,6 +214,110 @@ Kekule.Editor.StructureUtils = {
 		*/
 		var direction = Kekule.Editor.StructureUtils.calcPreferred2DBondGrowingDirection(startingObj, defAngle, allowCoordBorrow);
 		return Kekule.CoordUtils.add(startingCoord, {'x': bondLength * Math.cos(direction), 'y': bondLength * Math.sin(direction)});
+	},
+
+	/**
+	 * Check if two hash object that stores bond properties (type, order, stereo) is same in chemical means.
+	 * @param {Hash} src
+	 * @param {Hash} target
+	 * @param {Array} propNames Property names to be compared
+	 * @returns {boolean}
+	 */
+	isBondPropsMatch: function(src, target, propNames)
+	{
+		var specialFields = ['bondType', 'bondOrder', 'stereo'];  // these three fields should be compared specially, since they may bave default null/undefined values
+		//var normalFields = AU.exclude(propNames, specialFields);
+		var result = true;
+		// compare special fields, regard null/undefined/0 as same
+		if (result && propNames.indexOf('bondType') >= 0)
+			result = (src.bondType == target.bondType || (!src.bondType && !target.bondType));
+		if (result && src.bondType === Kekule.BondType.COVALENT)  // order/stereo only works in covalent bond
+		{
+			if (result && propNames.indexOf('bondOrder') >= 0 || (!src.bondOrder && !target.bondOrder))
+				result = (src.bondOrder == target.bondOrder);
+			if (result && propNames.indexOf('stereo') >= 0)
+			{
+				result = (src.stereo == target.stereo || (!src.stereo && !target.stereo));
+			}
+		}
+		if (result)
+			result = Kekule.ObjUtils.equal(src, target, specialFields);
+		return result;
+	},
+
+	/**
+	 * Returns label represents the chem node situation.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Object} labelConfigs
+	 * @returns {String}
+	 */
+	getChemStructureNodeLabel: function(node, labelConfigs)
+	{
+		//var labelConfigs = this.getLabelConfigs();
+		if (node.getIsotopeId)  // atom
+			return node.getIsotopeId();
+		else if (node instanceof Kekule.SubGroup)
+		{
+			var groupLabel = node.getAbbr() || node.getFormulaText();
+			if (labelConfigs)
+				groupLabel = groupLabel || labelConfigs.getRgroup();
+			return groupLabel;
+		}
+		else
+		{
+			var ri = node.getCoreDisplayRichTextItem(null, null, labelConfigs);
+			return Kekule.Render.RichTextUtils.toText(ri);
+		}
+	},
+	/**
+	 * Returns label represents all the chem nodes situation.
+	 * @param {Array} nodes
+	 * @param {Object} labelConfigs
+	 * @returns {String}
+	 */
+	getAllChemStructureNodesLabel: function(nodes, labelConfigs)
+	{
+		var nodeLabel;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			var currLabel = Kekule.Editor.StructureUtils.getChemStructureNodeLabel(node, labelConfigs);
+			if (!nodeLabel)
+				nodeLabel = currLabel;
+			else
+			{
+				if (nodeLabel !== currLabel)  // different label, currently has different nodes
+				{
+					return null;
+				}
+			}
+		}
+		return nodeLabel;
+	},
+
+	/**
+	 * Returns center abs base coord of a structure.
+	 * @param {Kekule.StructureFragment} structureFragment
+	 * @param {Int} coordMode
+	 * @param {Bool} allowCoordBorrow
+	 * @returns {Hash}
+	 */
+	getStructureCenterAbsBaseCoord: function(structureFragment, coordMode, allowCoordBorrow)
+	{
+		var result = null;
+		var add = Kekule.CoordUtils.add;
+		var nodeCount = structureFragment.getNodeCount();
+		for (var i = 0; i < nodeCount; ++i)
+		{
+			var n = structureFragment.getNodeAt(i);
+			var coord = n.getAbsBaseCoord(coordMode, allowCoordBorrow);
+			if (!result)
+				result = coord;
+			else
+				result = add(result, coord);
+		}
+		result = Kekule.CoordUtils.divide(result, nodeCount);
+		return result;
 	}
 };
 

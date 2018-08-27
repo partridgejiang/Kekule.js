@@ -147,6 +147,19 @@ table.K-Widget
 {
     padding: 0.7em;
 }
+.K-Panel .K-Panel-Caption
+{
+    display: block;
+    margin: -0.3em; /* for padding: 0.7em in .K-Panel */
+    margin-bottom: 0.7em;
+    /*padding: 0.4em 1em;*/
+    padding: 0.3em;
+    padding-top: 0;
+    border-bottom: 1px solid;
+    font-size: 1.1em;
+    font-family: Verdana,Arial,sans-serif;
+    font-weight: bold;
+}
 /* Toolbar */
 .K-Panel, .K-Toolbar
 {
@@ -921,6 +934,7 @@ table.K-Widget
 .K-ColorPicker .K-ColorPicker-Palette
 {
     min-width: 180px;
+    touch-action: none;
 }
 .K-ColorPicker .K-ColorPicker-Palette-Line
 {

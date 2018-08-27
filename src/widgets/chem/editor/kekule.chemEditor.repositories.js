@@ -1127,7 +1127,7 @@ var RM = Kekule.Editor.RepositoryItemManager;
 
 
 // register all predefined subgroup rep items
-Kekule._registerAfterLoadProc(function (){
+Kekule._registerAfterLoadSysProc(function (){
 	if (Kekule.Editor.RepositoryData)
 	{
 		var data = Kekule.Editor.RepositoryData.subGroups || [];
