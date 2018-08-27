@@ -7,6 +7,7 @@
 /*
  * requires /lan/classes.js
  * requires /utils/kekule.utils.js
+ * requires /core/kekule.structures.js
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/commonCtrls/kekule.widget.buttons.js
  * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
