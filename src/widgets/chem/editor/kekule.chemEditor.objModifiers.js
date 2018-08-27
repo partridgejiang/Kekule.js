@@ -35,6 +35,7 @@ Kekule.Editor.ObjModifier = {};
  */
 Kekule.Editor.ObjModifier.Category = {
 	CHEM_STRUCTURE: 'chemStruct',
+	GLYPH: 'glyph',
 	STYLE: 'style',
 	MISC: 'misc'
 };
