@@ -215,6 +215,25 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	{
 		//this.defineProp('data', {'dataType': DataType.HASH});
 		this.defineProp('vertexes', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+	},
+	/**
+	 * Replace a linked vertex
+	 * @param {Kekule.GraphVertex} oldVertex
+	 * @param {Kekule.GraphVertex} newVertex
+	 */
+	replaceVertex: function(oldVertex, newVertex)
+	{
+		var vs = this.getVertexes();
+		var oldIndex = vs.indexOf(oldVertex);
+		var newIndex = vs.indexOf(newVertex);
+		if (oldIndex < 0 || newIndex >= 0)
+			return;
+		else
+		{
+			vs.splice(oldIndex, 1, newVertex);
+		}
+		oldVertex.doRemoveEdge(this);
+		newVertex.doAppendEdge(this);
 	}
 });
 
@@ -285,7 +304,7 @@ Kekule.Graph = Class.create(ObjectEx,
 	{
 		if (Kekule.ArrayUtils.remove(this.getVertexes(), vertex))  // remove successful
 		{
-			var edges = vertex.getEdges();
+			var edges = Kekule.ArrayUtils.clone(vertex.getEdges());
 			for (var i = 0, l = edges.length; i < l; ++i)
 				this.removeEdge(edges[i]);
 		}

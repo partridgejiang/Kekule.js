@@ -94,6 +94,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		$super(parentOrElementOrDocument);
 		this.setUseCornerDecoration(true);
 		this.setValue('#000000');  // default
+		this.setTouchAction('none');  // disable touch scroll, we need touch move on palette
 	},
 	/** @private */
 	initProperties: function()
@@ -443,7 +444,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	//react_mousedown: function($super, e)
+	//react_pointerdown: function($super, e)
 	doReactActiviting: function($super, e)
 	{
 		$super(e);
@@ -460,7 +461,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		//return $super(e);
 	},
 	/** @private */
-	//react_mouseup: function($super, e)
+	//react_pointerup: function($super, e)
 	doReactDeactiviting: function($super, e)
 	{
 		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
@@ -479,25 +480,26 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 		//return $super(e);
 	},
 	/** @private */
-	//react_mousemove: function($super, e)
+	//react_pointermove: function($super, e)
 	reactPointerMoving: function($super, e)
 	{
 		$super(e);
 		if (this.getIsPicking())
 		{
-			var target = e.getTarget();;
+			var target = e.getTarget();
 			if (e.getTouches())  // is touch, touch target always equal to the target invoke touchstart event, so need extra code
 			{
-				var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
+				//var coord = {'x': e.getWindowX(), 'y': e.getWindowY()};
+				var coord = {'x': e.getClientX(), 'y': e.getClientY()};
 				var doc = this.getDocument();
 				target = (doc.elementFromPoint && doc.elementFromPoint(coord.x, coord.y)) || target;
-				//console.log('moving', this.getIsPicking(), coord, e.getPageY(), target, e);
 				e.preventDefault();
 			}
 			if (target && this._isPaletteCellElem(target))
 			{
 				this.applyColor(target);
 			}
+			e.preventDefault();
 			return true;
 		}
 		//return $super(e);
@@ -722,7 +724,14 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 		this.defineProp('showPreview', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
-				this.getPreviewElem().style.display = value? 'inherit': '';
+				try
+				{
+					this.getPreviewElem().style.display = value ? 'inherit' : '';
+				}
+				catch(e)
+				{
+
+				}
 			}
 		});
 		this.defineProp('value', {'dataType': DataType.STRING,

@@ -494,6 +494,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		if (options.strokeColor /* && context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
 
+		// line cap and line join, has default value
+		context.lineCap = options.lineCap || 'butt';
+		context.lineJoin = options.lineJoin || 'miter';
+
 		//console.log('draw style', options, context.strokeStyle);
 
 		if (this.isLineDashSupported(context))

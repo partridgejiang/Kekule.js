@@ -790,6 +790,174 @@ Kekule.StyleUtils = {
 				return true;
 		}
 		return false;
+	},
+
+	/**
+	 * Set cursor style of an element.
+	 * @param {HTMLElement} elem
+	 * @param {Variant} cursor A string CSS cursor value or an array of cursor keywords.
+	 *   If this param is an array, the first cursor keywords available in current browser will actually be used.
+	 * @returns {String} The actually used cursor value.
+	 */
+	setCursor: function(elem, cursor)
+	{
+		if (DataType.isArrayValue(cursor))
+		{
+			for (var i = 0, l = cursor.length; i < l; ++i)
+			{
+				var currCursor = cursor[i];
+				elem.style.cursor = currCursor;
+				if (elem.style.cursor === currCursor)  // successfully setted
+					return currCursor;
+			}
+			return elem.style.cursor;
+		}
+		else // normal string
+		{
+			elem.style.cursor = cursor;
+			return elem.style.cursor;
+		}
+	},
+
+	/** @private */
+	_cssTransformValuesToMatrix: function(cssTransformValues)
+	{
+		var matrix = Kekule.MatrixUtils.create(3, 3, 0);
+		matrix[0][0] = cssTransformValues.a;
+		matrix[1][0] = cssTransformValues.b;
+		matrix[0][1] = cssTransformValues.c;
+		matrix[1][1] = cssTransformValues.d;
+		matrix[0][2] = cssTransformValues.tx;
+		matrix[1][2] = cssTransformValues.ty;
+		return matrix;
+	},
+	/** @private */
+	_matrixToCssTransformValues: function(matrix)
+	{
+		var result = {
+			'a': matrix[0][0],
+			'b': matrix[1][0],
+			'c': matrix[0][1],
+			'd': matrix[1][1],
+			'tx': matrix[0][2],
+			'ty': matrix[1][2]
+		};
+		return result;
+	},
+
+	/**
+	 * Check if an element has a CSS transform.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	hasTransform: function(elem)
+	{
+		var transform = Kekule.StyleUtils.getComputedStyle(elem, 'transform');
+		return transform && (transform !== 'none');
+	},
+	/**
+	 * Returns matrix function values of CSS transform property.
+	 * @param {HTMLElement} elem
+	 * @returns {Hash} {a, b, c, d, tx, ty}
+	 */
+	getTransformMatrixValues: function(elem)
+	{
+		var matrix = Kekule.StyleUtils.getComputedStyle(elem, 'transform') || '';
+		var values = matrix.match(/-?[\d\.]+/g);
+		if (values)
+			return {'a': values[0], 'b': values[1], 'c': values[2], 'd': values[3], 'tx': values[4], 'ty': values[5]};
+		else
+			return null;
+	},
+	/**
+	 * Set the matrix values of CSS transform.
+	 * @param {HTMLElement} elem
+	 * @param {Array} values
+	 */
+	setTransformMatrixArrayValues: function(elem, values)
+	{
+		if (values)
+		{
+			var sMatrix = 'matrix(' + values.join(',') + ')';
+			elem.style.transform = sMatrix;
+		}
+	},
+	/**
+	 * Returns a matrix object that represent the 2D transform of element.
+	 * @param {HTMLElement} elem
+	 * @returns {Array}
+	 */
+	getTransformMatrix: function(elem)
+	{
+		var values = Kekule.StyleUtils.getTransformMatrixValues(elem);
+		if (values)
+		{
+			return Kekule.StyleUtils._cssTransformValuesToMatrix(values);
+		}
+		else
+			return null;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns all the transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getCascadeTranformMatrixes: function(elem)
+	{
+		var result = [];
+		var currElem = elem;
+		while (currElem)
+		{
+			var m = Kekule.StyleUtils.getTransformMatrix(currElem);
+			if (m)
+				result.unshift(m);
+			currElem = currElem.parentNode;
+		}
+		return result;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns product of all those transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getTotalTransformMatrix: function(elem)
+	{
+		var matrixes = Kekule.StyleUtils.getCascadeTranformMatrixes(elem);
+		var result = null;
+		// child on left, parent on right
+		for (var i = matrixes.length - 1; i >= 0; --i)
+		{
+			var m = matrixes[i];
+			if (!result)
+				result = m;
+			else
+				result = Kekule.MatrixUtils.multiply(result, m);
+		}
+		return result;
+	},
+	calcInvertTransformMatrix: function(matrix)
+	{
+		var transValues = Kekule.StyleUtils._matrixToCssTransformValues(matrix);
+		var v = transValues;
+
+		// calc inverted values, algorithm from https://blog.csdn.net/qq_17429661/article/details/51985344
+		var det = v.a * v.d - v.b * v.c;
+		if (Math.abs(det) < 0.000001)  // Singular Matrix
+			return false;  // can not calculate
+
+		var v1 = {
+			a: v.d / det,
+			b: -v.b / det,
+			c: -v.c / det,
+			d: v.a / det,
+			tx: (v.c * v.ty - v.d * v.tx) / det,
+			ty: (v.b * v.tx - v.a * v.ty) / det
+		};
+		var result = Kekule.StyleUtils._cssTransformValuesToMatrix(v1);
+
+		return result;
 	}
 };
 
@@ -968,9 +1136,11 @@ Kekule.HtmlElementUtils = {
 		if (elemOrDocOrViewport)
 		{
 			if (elemOrDocOrViewport.ownerDocument)
-				w = elemOrDocOrViewport.ownerDocument.defaultView;
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
 			else if (elemOrDocOrViewport.defaultView)
 				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
 			else
 				w = elemOrDocOrViewport;
 		}
@@ -1001,9 +1171,11 @@ Kekule.HtmlElementUtils = {
 		if (elemOrDocOrViewport)
 		{
 			if (elemOrDocOrViewport.ownerDocument)
-				w = elemOrDocOrViewport.ownerDocument.defaultView;
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
 			else if (elemOrDocOrViewport.defaultView)
 				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
 			else
 				w = elemOrDocOrViewport;
 		}
@@ -1053,16 +1225,18 @@ Kekule.HtmlElementUtils = {
 		return result;
 	},
 	/**
-	 * Get position relative to top-left corner of HTML page.
+	 * Get position relative to top-left corner of HTML page or current viewport (if includeDocScroll is true).
 	 * @param {HTMLElement} elem
+	 * @param {Bool} relToViewport
 	 * @returns {Hash}
 	 */
-	getElemPagePos: function(elem)
+	getElemPagePos: function(elem, relToViewport)
 	{
 
 		var xPosition = 0;
 		var yPosition = 0;
 
+		/*
 		if (elem.getBoundingClientRect)
 		{
 			var box = elem.getBoundingClientRect();
@@ -1075,13 +1249,23 @@ Kekule.HtmlElementUtils = {
 			xPosition = box.left + (window && window.pageXOffset || docElem && docElem.scrollLeft || body.scrollLeft) - clientLeft;
 		}
 		else
+		*/
 		{
-			while(elem)
+			var currElem = elem;
+			while(currElem)
 			{
 				// TODO: Here Chrome report body.scrollLeft unavailable in strict mode warning
-				xPosition += (elem.offsetLeft - elem.scrollLeft + elem.clientLeft);
-				yPosition += (elem.offsetTop - elem.scrollTop + elem.clientTop);
-				elem = elem.offsetParent;
+				xPosition += (currElem.offsetLeft - currElem.scrollLeft + currElem.clientLeft);
+				yPosition += (currElem.offsetTop - currElem.scrollTop + currElem.clientTop);
+				currElem = currElem.offsetParent;
+			}
+			if (relToViewport)
+			{
+				var doc = elem.ownerDocument;
+				var scrollTop = doc.documentElement.scrollTop || doc.body.scrollTop || 0;
+				var scrollLeft = doc.documentElement.scrollLeft || doc.body.scrollLeft || 0;
+				xPosition -= scrollLeft;
+				yPosition -= scrollTop;
 			}
 		}
 		return { x: xPosition, y: yPosition };
@@ -1089,14 +1273,16 @@ Kekule.HtmlElementUtils = {
 	/**
 	 * Get position relative to top-left corner of HTML page togather with width/height of elem.
 	 * @param {HTMLElement} elem
-	 * @returns {Hash} {x, y, width, height}
+	 * @param {Bool} relToViewport
+	 * @returns {Hash} {x, y, top, left, bottom, right, width, height}
 	 */
-	getElemPageRect: function(elem)
+	getElemPageRect: function(elem, relToViewport)
 	{
-		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem, relToViewport);
 		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
 		return {
 			'x': pos.x, 'y': pos.y, 'left': pos.x, 'top': pos.y,
+			'right': pos.x + dim.width, 'bottom': pos.y + dim.height,
 			'width': dim.width, 'height': dim.height
 		};
 	},
@@ -1107,7 +1293,8 @@ Kekule.HtmlElementUtils = {
 	 */
 	getElemViewportPos: function(elem)
 	{
-		var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		var rect = Kekule.HtmlElementUtils.getElemPagePos(elem, true);
 		return {'x': rect.left, 'y': left.top};
 	},
 
@@ -1129,8 +1316,27 @@ Kekule.HtmlElementUtils = {
 	isFormCtrlElement: function(elem)
 	{
 		var formCtrlTags = ['input', 'button', 'textarea', 'select'];
-		var tagName = elem.tagName.toLowerCase();
-		return formCtrlTags.indexOf(tagName) >= 0;
+		var tagName = elem && elem.tagName.toLowerCase();
+		return !!tagName && formCtrlTags.indexOf(tagName) >= 0;
+	},
+
+	/**
+	 * Issues an asynchronous request to make the element be displayed full-screen.
+	 * @param {HTMLElement} elem
+	 */
+	requestFullScreen: function(elem)
+	{
+		var func = elem.requestFullScreen || elem.mozRequestFullScreen || elem.webkitRequestFullScreen || elem.msRequestFullScreen;
+		return func? func.apply(elem): null;
+	},
+	/**
+	 * Issues an asynchronous request to make the element exit full-screen mode.
+	 * @param {HTMLElement} elem
+	 */
+	exitFullScreen: function(elem)
+	{
+		var func = elem.exitFullScreen || elem.mozExitFullScreen || elem.webkitExitFullScreen || elem.msExitFullScreen;
+		return func? func.apply(elem): null;
 	}
 };
 
@@ -1141,13 +1347,22 @@ Kekule.HtmlElementUtils = {
  */
 Kekule.DocumentUtils = {
 	/**
+	 * Returns the default view (window) of current document.
+	 * @param {HTMLDocument} document
+	 * @returns {Object}
+	 */
+	getDefaultView: function(document)
+	{
+		return document.defaultView || document.parentWindow;
+	},
+	/**
 	 * Returns scroll top/left of document element.
 	 * @param {HTMLDocument} document
 	 * @returns {Hash} {left, top}
 	 */
 	getScrollPosition: function(document)
 	{
-		var win = document.defaultView;
+		var win = Kekule.DocumentUtils.getDefaultView(document);
 		var result = {
 			'left': ((win.pageXOffset !== undefined)?
 					win.pageXOffset:
@@ -1183,9 +1398,9 @@ Kekule.DocumentUtils = {
 		}
 	},
 	/**
-	 * Returns top-left and bottom-right coord of viewport visible client.
+	 * Returns top-left and bottom-right coords and width/height of viewport visible client.
 	 * @param {HTMLDocument} document
-	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2}
+	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2, width, height}
 	 */
 	getClientVisibleBox: function(document)
 	{
@@ -1196,6 +1411,8 @@ Kekule.DocumentUtils = {
 		result.top = result.y1 = offset.top;
 		result.right = result.x2 = dim.width + offset.left;
 		result.bottom = result.y2 = dim.height + offset.top;
+		result.width = dim.width;
+		result.height = dim.height;
 		return result;
 	},
 	/**
@@ -1205,7 +1422,7 @@ Kekule.DocumentUtils = {
 	 */
 	getWindowInnerDimension: function(document)
 	{
-		var win = document.defaultView;
+		var win = Kekule.DocumentUtils.getDefaultView(document);
 		return {'width': Math.min(win.innerWidth, win.outerWidth), 'height': Math.min(win.innerHeight, win.outerHeight)};
 	},
 	/**
@@ -1221,6 +1438,70 @@ Kekule.DocumentUtils = {
 			'width': innerDim.width? Math.min(innerDim.width, clientDim.width): clientDim.width,
 			'height': innerDim.height? Math.min(innerDim.height, clientDim.height): clientDim.height
 		};
+	},
+
+	/**
+	 * Returns the scale level of current page in mobile browser.
+	 * @param {HTMLDocument} document
+	 * @returns {Float}
+	 */
+	getClientScaleLevel: function(document)
+	{
+		return (document.compatMode == "BackCompat")?
+			document.body.clientWidth / window.innerWidth:
+			document.documentElement.clientWidth / window.innerWidth;
+	},
+	/**
+	 * Returns the ratio of actual device pixel to CSS 1px.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getPixelZoomLevel: function(document)
+	{
+		var scale = Kekule.DocumentUtils.getClientScaleLevel(document);
+		return scale * (Kekule.DocumentUtils.getDefaultView(document).devicePixelRatio || 1);
+	},
+
+	/**
+	 * Returns PPI of current device.
+	 * The algorithm is from https://jsfiddle.net/pgLo6273/2/.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getDevicePPI: function(document)
+	{
+		var win = Kekule.DocumentUtils.getDefaultView(document);
+		if (win.matchMedia)
+		{
+			var minRes = 0;
+			var maxRes = 0;
+			var curRes = 200;
+			var trc = [];
+			while (!maxRes || ((maxRes - minRes) > 1))
+			{
+				if (win.matchMedia('(min-resolution: ' + curRes + 'dpi)').matches)
+				{ // ppi >= curRes
+					if (maxRes)
+					{
+						minRes = curRes;
+						curRes = Math.round((minRes + maxRes) / 2);
+					}
+					else
+					{
+						minRes = curRes;
+						curRes = 2 * curRes;
+					}
+				}
+				else
+				{ // ppi < curRes
+					maxRes = curRes;
+					curRes = Math.round((minRes + maxRes) / 2);
+				}
+			}
+			return curRes;
+		}
+		else
+			return 96;  // old device, assume to be a fixed one
 	}
 };
 

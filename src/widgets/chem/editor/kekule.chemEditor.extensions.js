@@ -533,7 +533,7 @@ ClassEx.extend(Kekule.StructureFragment,
 			return $super();
 		else
 		{
-			var result = $super();
+			var result = []; // $super();
 			var childCount = this.getChildCount();
 			for (var i = 0; i < childCount; ++i)
 			{

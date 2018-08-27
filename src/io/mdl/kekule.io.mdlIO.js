@@ -602,15 +602,22 @@ Kekule.IO.MdlStructDataWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		{
 			var mol = mols[i];
 			// write molecule
-			var text = molWriter.writeBlock(mol);
-			textBuffer.writeText(text);
+			try
+			{
+				var text = molWriter.writeBlock(mol);
+				textBuffer.writeText(text);
 
-			// write data information
-			var data = this.getMolData(mol);
-			this.doWriteDataBlock(data, textBuffer);
+				// write data information
+				var data = this.getMolData(mol);
+				this.doWriteDataBlock(data, textBuffer);
 
-			// then molecule delimiter
-			textBuffer.writeLine(Kekule.IO.MDL.MOL_DELIMITER);
+				// then molecule delimiter
+				textBuffer.writeLine(Kekule.IO.MDL.MOL_DELIMITER);
+			}
+			catch(e)
+			{
+				// emit the error when meet a formula molecule
+			}
 		}
 	},
 	/** @private */

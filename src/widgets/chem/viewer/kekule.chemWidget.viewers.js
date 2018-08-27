@@ -28,6 +28,7 @@
 "use strict";
 
 var PS = Class.PropertyScope;
+var AU = Kekule.ArrayUtils;
 var ZU = Kekule.ZoomUtils;
 var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 var CW = Kekule.ChemWidget;
@@ -78,6 +79,8 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER_EMBEDDED_TOOLBAR: 'K-Chem-Viewer-Embedded-Toolbar',
 
 	VIEWER_MENU_BUTTON: 'K-Chem-Viewer-Menu-Button',
+
+	VIEWER_EDITOR_FULLCLIENT: 'K-Chem-Viewer-Editor-FullClient',
 
 	// predefined actions
 	ACTION_ROTATE_LEFT: 'K-Chem-RotateLeft',
@@ -189,7 +192,6 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarEvokeModes', this.DEF_TOOLBAR_EVOKE_MODES);
 		this.setPropStoreFieldValue('toolbarRevokeModes', this.DEF_TOOLBAR_REVOKE_MODES);
 		this.setPropStoreFieldValue('enableDirectInteraction', true);
-		this.setPropStoreFieldValue('enableTouchInteraction', true);
 		this.setPropStoreFieldValue('toolbarPos', Kekule.Widget.Position.AUTO);
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
@@ -527,7 +529,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 
 		this.defineProp('enableDirectInteraction', {'dataType': DataType.BOOL});
-		this.defineProp('enableTouchInteraction', {'dataType': DataType.BOOL});
+		this.defineProp('enableTouchInteraction', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('enableTouchInteraction', !!value);
+				this.setTouchAction(value? 'none': null);
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -542,6 +550,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setRestraintRotation3DEdgeRatio(0.18);
 		this.setEnableRestraintRotation3D(true);
 		this.setShareEditorInstance(true);
+		this.setEnableTouchInteraction(!true);
 	},
 
 	/** @ignore */
@@ -719,7 +728,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			*/
 			// restore 100% height setting
 			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'top');
-			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
+			//Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
+			drawParentElem.style.height = dimParent.height + 'px';  // explicit set height, or the height may not be updated in some mobile browsers
 		}
 
 		//this.refitDrawContext();
@@ -837,6 +847,61 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this._composerDialog = result;
 		return result;
 	},
+	/** @private */
+	getComposerPanel: function()
+	{
+		var result;
+		if (this.getShareEditorInstance())
+			result = Kekule.ChemWidget.Viewer._composerPanel;
+		else
+			result = this._composerPanel;
+		if (!result)  // create new
+		{
+			if (Kekule.Editor.Composer/* && Kekule.Editor.ComposerFrame*/)
+			{
+				result = new Kekule.Editor.Composer(this);
+				//result = new Kekule.Editor.ComposerFrame(this.getDocument());
+				result.addClassName(CCNS.VIEWER_EDITOR_FULLCLIENT);
+				result.setUseNormalBackground(true);
+				//result.setAutoAdjustSizeOnPopup(true);
+				var minDim = Kekule.Editor.Composer.getMinPreferredDimension();
+				result.setMinDimension(minDim);
+				//result.setAutoSetMinDimension(true);
+				result.setEnableDimensionTransform(true);
+				result.setAutoResizeConstraints({'width': 1, 'height': 1});
+				// set toolbar buttons, remove config and inspector to save place
+				var btns = Kekule.globalOptions.chemWidget.composer.commonToolButtons;
+				btns = AU.exclude(btns, [BNS.cut, BNS.config, BNS.objInspector]);
+				result.setCommonToolButtons(btns);
+
+				// two custom buttons to save or discard edits
+				var customButtons = [
+					{
+						'text': Kekule.$L('ChemWidgetTexts.CAPTION_EDITOR_DONE'),
+						'hint': Kekule.$L('ChemWidgetTexts.HINT_EDITOR_DONE'),
+						'htmlClass': 'K-Res-Button-YesOk',
+						'showText': true,
+						'#execute': function() { result._doneEditCallback(); result.hide(); }
+					},
+					{
+						'text': Kekule.$L('ChemWidgetTexts.CAPTION_EDITOR_CANCEL'),
+						'hint': Kekule.$L('ChemWidgetTexts.HINT_EDITOR_CANCEL'),
+						'htmlClass': 'K-Res-Button-NoCancel',
+						'showText': true,
+						'#execute': function() { result.hide(); }
+					}
+				];
+				result._customEndEditButtons = customButtons;  // use a special field to store in composer
+			}
+		}
+		if (this.getShareEditorInstance())
+			Kekule.ChemWidget.Viewer._composerPanel = result;
+		else
+			this._composerPanel = result;
+		result._invokerViewer = this;
+		result._doneEditCallback = null;
+		return result;
+	},
 	/**
 	 * Open a popup editor to modify displayed object.
 	 * @param {Kekule.Widget.BaseWidget} callerWidget Who invokes edit action, default is the viewer itself.
@@ -848,115 +913,193 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			// load object in editor
 			var chemObj = this.getChemObj();
-			var cloneObj;
 			var editFromVoid = !chemObj;
 			var editFromEmpty =  chemObj && chemObj.isEmpty && chemObj.isEmpty(); // has chem object but obj is empty (e.g., mol with no atom and bond)
 			var restrainObj = this.getRestrainEditorWithCurrObj();
 
-			var dialog = this.getComposerDialog();
-			if (!dialog)  // can not invoke composer dialog
+			var clientDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+			//var clientDim = Kekule.DocumentUtils.getClientVisibleBox(this.getDocument());
+			//console.log(clientDim);
+			var minComposerDim = Kekule.Editor.Composer.getMinPreferredDimension();
+			if (clientDim.width <= minComposerDim.width + 50 || clientDim.height < minComposerDim.height + 100)
 			{
-				Kekule.error(Kekule.$L('ErrorMsg.CAN_NOT_CREATE_EDITOR'));
-				return;
+				this._openEditComposer(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty);
 			}
+			else
+			{
+				this._openEditComposerDialog(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty);
+			}
+		}
+	},
+	/** @private */
+	_prepareEditComposer: function(composer, restrainObj, editFromVoid, editFromEmpty)
+	{
+		composer.setEnableCreateNewDoc(editFromVoid || !restrainObj);
+		composer.setEnableLoadNewFile(editFromVoid || !restrainObj);
+		composer.setAllowCreateNewChild(editFromVoid || !restrainObj);
 
-			var composer = dialog.getComposer();
-			composer.setEnableCreateNewDoc(editFromVoid || !restrainObj);
-			composer.setEnableLoadNewFile(editFromVoid || !restrainObj);
-			composer.setAllowCreateNewChild(editFromVoid || !restrainObj);
+		var editorProperties = this.getEditorProperties();
+		if (editorProperties)
+			composer.setPropValues(editorProperties);
 
-			var editorProperties = this.getEditorProperties();
-			if (editorProperties)
-				composer.setPropValues(editorProperties);
+		//composer.updateAllActions();
+		//console.log(composer.getEnableLoadNewFile(), editFromVoid);
+	},
+	/** @private */
+	_feedbackEditResult: function(composer, chemObj, editFromVoid)
+	{
+		if (!composer.isDirty())
+			return;
+		var newObj = composer.getSavingTargetObj();
+		if (editFromVoid)
+		{
+			this.setChemObj(newObj.clone());
+		}
+		else
+		{
+			if (this.getRestrainEditorWithCurrObj())
+			{
+				if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
+					chemObj.assign(newObj.clone());
+				else  // preserve old object type in viewer
+					chemObj.assign(cloneObj);
+				// clear src info data
+				chemObj.setSrcInfo(null);
+				//self.repaint();
+				this.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+			}
+			else // not restrain, load object in composer directy into viewer
+			{
+				//console.log(newObj);
+				this.setChemObj(newObj);
+			}
+		}
+	},
+	/** @private */
+	_openEditComposerDialog: function(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty)
+	{
+		var dialog = this.getComposerDialog();
+		if (!dialog)  // can not invoke composer dialog
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.CAN_NOT_CREATE_EDITOR'));
+			return;
+		}
 
-			//composer.updateAllActions();
-			//console.log(composer.getEnableLoadNewFile(), editFromVoid);
+		var composer = dialog.getComposer();
+		this._prepareEditComposer(composer, restrainObj, editFromVoid, editFromEmpty);
 
+		var cloneObj;
+		if (!editFromVoid && !editFromEmpty)
+		{
+			cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+			dialog.setChemObj(cloneObj);
+		}
+		else
+		{
+			//dialog.setChemObj(null);
+			dialog.getComposer().newDoc();
+		}
+
+		var self = this;
+		var callback = function(dialogResult)
+		{
+			if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
+			{
+				/*
+				var newObj = dialog.getSavingTargetObj();
+				if (editFromVoid)
+				{
+					self.setChemObj(newObj.clone());
+				}
+				else
+				{
+					if (self.getRestrainEditorWithCurrObj())
+					{
+						if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
+							chemObj.assign(newObj.clone());
+						else  // preserve old object type in viewer
+							chemObj.assign(cloneObj);
+						// clear src info data
+						chemObj.setSrcInfo(null);
+						//self.repaint();
+						self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+					}
+					else // not restrain, load object in composer directy into viewer
+					{
+						//console.log(newObj);
+						self.setChemObj(newObj);
+					}
+				}
+				*/
+				self._feedbackEditResult(dialog.getComposer(), chemObj, editFromVoid);
+			}
+			//dialog.finalize();
+		};
+		if (this.getModalEdit())
+			dialog.openModal(callback, callerWidget || this);
+		else
+			dialog.openPopup(callback, callerWidget || this);
+	},
+	/** @private */
+	_openEditComposer: function(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty)
+	{
+		var composer = this.getComposerPanel();
+		if (!composer)  // can not invoke composer
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.CAN_NOT_CREATE_EDITOR'));
+			return;
+		}
+
+		//var composer = composerFrame.getComposer();
+		this._prepareEditComposer(composer, restrainObj, editFromVoid, editFromEmpty);
+		//composer.newDoc();
+
+		// ensure save & cancel buttons are in toolbar
+		var customButtons = composer._customEndEditButtons;
+		var toolbtns = composer.getCommonToolButtons() || [];
+		var btnModified = false;
+		for (var i = 0, l = customButtons.length; i < l; ++i)
+		{
+			var btn = customButtons[i];
+			if (toolbtns.indexOf(btn) < 0)
+			{
+				toolbtns.push(btn);
+				btnModified = true;
+			}
+		}
+		if (btnModified)
+			composer.setCommonToolButtons(toolbtns);
+
+
+		if (!editFromVoid && !editFromEmpty)
+		{
+			//composer.updateDimensionTransform();
+			var cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+			composer.setChemObj(cloneObj);
+		}
+		else
+		{
+			composer.newDoc();
+		}
+
+		var self = this;
+		composer._doneEditCallback = function(){
+			self._feedbackEditResult(composer, chemObj, editFromVoid);
+		};
+		composer.show(callerWidget, function(){
+			//var cloneObj;
 			if (!editFromVoid && !editFromEmpty)
 			{
-				cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
-				dialog.setChemObj(cloneObj);
+				//composer.updateDimensionTransform();
+				//cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
+				composer.setChemObj(cloneObj); // set chemObj again, or it will not be displayed in some mobile browsers
 			}
 			else
 			{
 				//dialog.setChemObj(null);
-				dialog.getComposer().newDoc();
+				//composer.newDoc();
 			}
-
-			var self = this;
-			var callback = function(dialogResult)
-			{
-				if (dialogResult === Kekule.Widget.DialogButtons.OK && dialog.getComposer().isDirty())  // feedback result
-				{
-					var newObj = dialog.getSavingTargetObj();
-					if (editFromVoid)
-					{
-						self.setChemObj(newObj.clone());
-					}
-					else
-					{
-						if (self.getRestrainEditorWithCurrObj())
-						{
-							if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
-								chemObj.assign(newObj.clone());
-							else  // preserve old object type in viewer
-								chemObj.assign(cloneObj);
-							// clear src info data
-							chemObj.setSrcInfo(null);
-							//self.repaint();
-							self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
-						}
-						else // not restrain, load object in composer directy into viewer
-						{
-							//console.log(newObj);
-							self.setChemObj(newObj);
-						}
-					}
-				}
-				//dialog.finalize();
-			};
-			if (this.getModalEdit())
-				dialog.openModal(callback, callerWidget || this);
-			else
-				dialog.openPopup(callback, callerWidget || this);
-			/*
-			var editor = this.createEditorWidget();
-			if (editor)
-			{
-				editor.addClassName(CCNS.VIEWER_ASSOC_EDITOR);
-				// load object in editor
-				var chemObj = this.getChemObj();
-				var cloneObj = chemObj.clone();  // edit this cloned one, avoid affect chemObj directly
-				editor.setChemObj(cloneObj);
-				// popup the editor in dialog
-				var dialog = new Kekule.Widget.Dialog(this.getDocument(), CWT.CAPTION_EDIT_OBJ,
-					[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]
-				);
-				editor.appendToWidget(dialog);
-				var self = this;
-				var callback = function(dialogResult)
-					{
-						if (dialogResult === Kekule.Widget.DialogButtons.OK && editor.isDirty())  // feedback result
-						{
-							chemObj.assign(cloneObj);
-							// clear src info data
-							chemObj.setSrcInfo(null);
-							//self.repaint();
-							self.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
-						}
-						//console.log('done', dialogResult);
-						editor.finalize();
-						dialog.finalize();
-					}
-				if (this.getModalEdit())
-					dialog.openModal(callback, callerWidget || this);
-				else
-					dialog.openPopup(callback, callerWidget || this);
-
-				//editor.setChemObj(cloneObj);  // load obj in editor at last, as editor can not decide obj position when its not shown
-			}
-			*/
-		}
+		}, Kekule.Widget.ShowHideType.POPUP);
 	},
 	/*
 	 * Returns a new widget to edit object in viewer.
@@ -1202,8 +1345,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			//if (toolbar)
 			{
 				var WP = Kekule.Widget.Position;
-				var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
-				var toolbarClientRect = toolbar.getBoundingClientRect();
+				//var viewerClientRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getDrawContextParentElem()); //this.getBoundingClientRect();
+				var viewerClientRect = Kekule.HtmlElementUtils.getElemPageRect(this.getDrawContextParentElem());
+				//var toolbarClientRect = toolbar.getBoundingClientRect();
+				var toolbarClientRect = Kekule.HtmlElementUtils.getElemPageRect(toolbar);
 				var pos = this.getToolbarPos();
 				var hMargin = this.getToolbarMarginHorizontal();
 				var vMargin = this.getToolbarMarginVertical();
@@ -1722,6 +1867,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			'lastZoom': null
 		};
 		this._restraintCoord = null;
+		this._doInteractiveTransformStepBind = this._doInteractiveTransformStep.bind(this);
 		/*
 		this._zoomInfo = {
 			'isTransforming': false,
@@ -1819,8 +1965,18 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 				this._restraintCoord = this._calcRestraintRotateCoord(clientX, clientY);
 
 				this._initTransform();
+				this.getViewer().setTouchAction('none');
+
+				this._requestInteractiveTransform(screenX, screenY);
 			}
 		}
+	},
+	/** @private */
+	_endInteractTransform: function()
+	{
+		this._transformInfo.isTransforming = false;
+		this.getViewer().setTouchAction(null);
+		this._doInteractiveTransformEnd();
 	},
 	/** @private */
 	_calcRestraintRotateCoord: function(clientX, clientY)
@@ -1832,7 +1988,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (restraintRotateEdgeSize > 0)
 		{
 			var elem = viewer.getInteractionReceiverElem();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
+			//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
+			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
 			var x1 = clientX - rect.left;
 			var y1 = clientY - rect.top;
 			var x2 = rect.right - clientX; //rect.right - screenX;
@@ -1883,10 +2040,52 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	_interactTransformAtCoord: function(screenX, screenY)
 	{
-		if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
-			this.rotateByXYDistance(screenX, screenY);
-		else
-			this.moveByXYDistance(screenX, screenY);
+		var lastCoord = this._transformInfo.lastCoord;
+		if (lastCoord)
+		{
+			var currCoord = {'x': screenX, 'y': screenY};
+			var distance = Kekule.CoordUtils.getDistance(lastCoord, currCoord);
+			if (distance < 5)  // moves too little to react
+				return;
+		}
+		this._requestInteractiveTransform(screenX, screenY);
+	},
+	/** @private */
+	_requestInteractiveTransform: function(screenX, screenY)
+	{
+		/*
+		if (!this._transformInfo)
+		{
+			this._transformInfo = {};
+		}
+		*/
+		this._transformInfo.interactScreenCoord = {x: screenX, y: screenY};
+
+		if (!this._interactiveTransformStepId)
+			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+	},
+	/** @private */
+	_doInteractiveTransformStep: function()
+	{
+		if (this._transformInfo && this._transformInfo.isTransforming)
+		{
+			var screenCoord = this._transformInfo.interactScreenCoord;
+			if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
+				this.rotateByXYDistance(screenCoord.x, screenCoord.y);
+			else
+				this.moveByXYDistance(screenCoord.x, screenCoord.y);
+
+			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+		}
+	},
+	/** @private */
+	_doInteractiveTransformEnd: function()
+	{
+		if (this._interactiveTransformStepId)
+		{
+			window.cancelAnimationFrame(this._interactiveTransformStepId);
+			this._interactiveTransformStepId = null;
+		}
 	},
 	/** @private */
 	_getRestraintRotate3DEdgeSize: function()
@@ -1906,12 +2105,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		return this.getEnableInteraction() && this.isEventFromInteractionArea(e);
 	},
-	/** @private */
+	/* @private */
+	/*
 	needReactToTouchEvent: function(e)
 	{
 		var touches = e.getTouches();
 		return this.getEnableTouchInteraction() && touches && touches.length > 1;
 	},
+	*/
 	/** @private */
 	react_dblclick: function(e)
 	{
@@ -1934,17 +2135,39 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (!this.needReactEvent(e))
 			return;
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
-			// start mouse drag rotation in 3D render mode
-			this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
+			if (e.getPointerType() !== XEvent.PointerType.TOUCH || this.getEnableTouchInteraction())
+			{
+				// start mouse drag rotation in 3D render mode
+				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
+			}
 		}
 	},
 	/** @private */
+	react_pointerhold: function(e)
+	{
+		if (!this.needReactEvent(e))
+			return;
+		if (e.getPointerType() === XEvent.PointerType.TOUCH && e.getButton() === XEvent.MouseButton.LEFT)
+		{
+			this.getViewer().setEnableTouchInteraction(!this.getViewer().getEnableTouchInteraction());
+			/*
+			if (!this._transformInfo.isTransforming)
+			{
+				// start mouse drag rotation in 3D render mode
+				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
+				e.preventDefault();
+			}
+      */
+		}
+	},
+	/** @private */
+	/*
 	react_touchstart: function(e)
 	{
 		if (!this.needReactEvent(e) || !this.needReactToTouchEvent(e))
@@ -1958,34 +2181,45 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			e.preventDefault();
 		}
 	},
+	*/
 	/** @private */
-	react_mouseleave: function(e)
+	react_pointerleave: function(e)
 	{
-		this._transformInfo.isTransforming = false;
+		//this._transformInfo.isTransforming = false;
+		this._endInteractTransform();
 	},
 	/** @private */
+	/*
 	react_touchleave: function(e)
 	{
 		this._transformInfo.isTransforming = false;
 	},
+	*/
 	/** @private */
+	/*
 	react_touchcancel: function(e)
 	{
 		this._transformInfo.isTransforming = false;
 	},
+	*/
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === XEvent.MouseButton.LEFT)
-			this._transformInfo.isTransforming = false;
+		{
+			//this._transformInfo.isTransforming = false;
+			this._endInteractTransform();
+		}
 	},
 	/** @private */
+	/*
 	react_touchend: function(e)
 	{
 		this._transformInfo.isTransforming = false;
 	},
+	*/
 	/** @private */
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		if (!this.needReactEvent(e))
 			return;
@@ -1996,9 +2230,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		else
 			this.moveByXYDistance(e.getScreenX(), e.getScreenY());
 		*/
-		this._interactTransformAtCoord(e.getScreenX(), e.getScreenY());
+		if (this._transformInfo.isTransforming)
+		{
+			this._interactTransformAtCoord(e.getScreenX(), e.getScreenY());
+			e.preventDefault();
+		}
 	},
 	/** @private */
+	/*
 	react_touchmove: function(e)
 	{
 		if (!this.needReactEvent(e) || !this.needReactToTouchEvent(e))
@@ -2013,6 +2252,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			e.preventDefault();
 		}
 	},
+	*/
 	/** @private */
 	moveByXYDistance: function(currX, currY)
 	{
@@ -2612,7 +2852,7 @@ Kekule.ChemWidget.Viewer.molDisplayType3DActionClasses = [
 ];
 
 // register actions to viewer widget
-Kekule._registerAfterLoadProc(function(){
+Kekule._registerAfterLoadSysProc(function(){
 	var AM = Kekule.ActionManager;
 	var CW = Kekule.ChemWidget;
 	var widgetClass = Kekule.ChemWidget.Viewer;
