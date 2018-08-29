@@ -377,7 +377,7 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.setBondConstrainedDirectionAngleThreshold(degreeStep * 3);
 		this.setInitialBondDirection(30 * degreeStep);
 
-		this.setPrimaryOrgChemAtoms(['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I']);
+		this.setPrimaryOrgChemAtoms(['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'Si', 'D', 'C13']);
 	},
 
 	/**

@@ -356,8 +356,19 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 	/** @private */
 	generateSelectableDataFromElementSymbol: function(symbol)
 	{
+		var caption = symbol;
+		var isotopeInfo = Kekule.IsotopesDataUtil.getIsotopeInfoById(symbol);
+		if (isotopeInfo)
+		{
+			if (isotopeInfo.isotopeAlias)
+				caption = isotopeInfo.isotopeAlias;
+			else
+			{
+				caption = '<sup>' + isotopeInfo.massNumber + '</sup>' + isotopeInfo.elementSymbol;
+			}
+		}
 		return {
-			'text': symbol,
+			'text': caption,
 			'nodeClass': Kekule.Atom,
 			'props': {'isotopeId': symbol}
 		};
