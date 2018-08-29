@@ -488,7 +488,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 			this._periodicTable.setSelectedSymbol(node.getSymbol());
 		}
 
-		dialog.openModal(callback, this || caller);
+		dialog.openPopup(callback, this || caller);
 	}
 });
 
