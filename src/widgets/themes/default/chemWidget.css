@@ -278,7 +278,6 @@
     min-width: 3em;
 }
 
-
 @supports (display: -webkit-flex) or
           (display: -moz-flex) or
           (display: -ms-flex) or
@@ -378,6 +377,18 @@
 .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel
 {
     display: block;
+}
+
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup
+{
+    display: block;
+    margin: 0.5em auto;
+    background-color: transparent;
+    text-align: left;
+}
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn
+{
+    min-width: 4em;
 }
 
 .K-Chem-Editor
@@ -602,12 +613,26 @@
 
 }
 
-.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button
+.K-Chem-Composer-ObjModifier-Toolbar
 {
-    font-family: Georgia, "Times New Roman", Times, serif;
-    font-size: 1.2em;
+    vertical-align: top;
 }
-.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Pri-Glyph-Content
+
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button
+{
+    font-family: /*Georgia,*/ "Times New Roman", Times, serif;
+    font-size: 1.2em;
+    line-height: 0.833em;
+    vertical-align: bottom;  /* solve the align problem of modifier buttons in Chrome */
+}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Text-Content,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Text-Content
+{
+    /*vertical-align: top;*/
+}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Pri-Glyph-Content,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Pri-Glyph-Content
 {
     display: none;
 }

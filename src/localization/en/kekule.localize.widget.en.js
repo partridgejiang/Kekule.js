@@ -267,6 +267,12 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ATOM_MODIFIER: 'Atom',
 	CAPTION_ATOM_MODIFIER_MIXED: '[A]',
 	CAPTION_BOND_MODIFIER: 'Bond',
+	CAPTION_CHARGE_MODIFIER: 'Charge',
+
+	TEXT_CHARGE_POSITIVE: '+',
+	TEXT_CHARGE_NEGATIVE: '-',
+	TEXT_CHARGE_UNKNOWN: '<sup>+</sup>/<sub>-</sub>', //'&#x207a;&#x2044;&#x208b;',  // '+/-',
+	TEXT_CHARGE_NONE: '&#8709;',
 
 	HINT_NEWDOC: 'Create new document',
 	HINT_UNDO: 'Undo',
@@ -365,8 +371,11 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_TEXT_HORIZONTAL_ALIGN: 'Set text horizontal alignment',
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
 
+	HINT_CHARGE_NONE: 'No charge',
+
 	HINT_ATOM_MODIFIER: 'Set atom',
 	HINT_BOND_MODIFIER: 'Set bond',
+	HINT_CHARGE_MODIFIER: 'Set charge',
 
 	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
 
