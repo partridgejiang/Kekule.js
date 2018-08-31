@@ -618,6 +618,12 @@
     vertical-align: top;
 }
 
+.K-Chem-Composer-ObjModifier-Toolbar .K-Button
+{
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+
 .K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button,
 .K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button
 {
