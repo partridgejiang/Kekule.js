@@ -658,7 +658,7 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_CHARGE_MODIFIER'));
 		result.addClassName(CCNS.COMPOSER_CHARGE_MODIFIER_DROPDOWN);
 
-		if (this._valueStorage.charge)
+		if (Kekule.ObjUtils.notUnset(this._valueStorage.charge))
 		{
 			result.setValue(this._valueStorage.charge);
 		}
@@ -682,7 +682,7 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 		for (var i = 0, l = targets.length; i < l; ++i)
 		{
 			var target = targets[i];
-			if (target instanceof Kekule.ChemStructureNode)
+			if (target instanceof Kekule.ChemStructureNode && target.getCharge)
 			{
 				nodes.push(target);
 			}
