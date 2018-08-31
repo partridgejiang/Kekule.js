@@ -2125,6 +2125,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		if (action)
 			result.setAction(action);
+
+		return result;
 	},
 	/** @private */
 	_createActionButton: function(action, parentWidget)
@@ -2386,16 +2388,35 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var actions = this.getChemActions();
 		actions.clear();
 		var checkGroup = 'chemTools';
+		var firstBtn;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
 			var name = btns[i];
 			var btn = this.createToolButton(name, toolbar, actions, checkGroup);
+			if (i === 0)
+				firstBtn = btn;
 		}
 		this.setChemBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
-		// TODO: when change chem toolbar, associate toolbar should also change. Now we only simply clear it.
-		this.bindAssocActions(null);
+
 		this.adjustComponentPositions();
+		if (firstBtn)
+		{
+			var action = firstBtn.getAction();
+			if (action)
+			{
+				action.setChecked(true);
+				var attachedActions = action.getAttachedActions && action.getAttachedActions();
+				this.bindAssocActions(attachedActions || null);
+				/*
+				// force update the assoc actions
+				if (!action.getChecked())
+					action.setChecked(true);
+				else
+					action.setChecked(false).setChecked(true);
+				*/
+			}
+		}
 		return toolbar;
 	},
 	/**
