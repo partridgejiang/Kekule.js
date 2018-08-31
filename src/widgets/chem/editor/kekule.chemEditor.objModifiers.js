@@ -34,9 +34,15 @@ Kekule.Editor.ObjModifier = {};
  * @enum
  */
 Kekule.Editor.ObjModifier.Category = {
+	/** Gneral popurse modifiers. **/
+	GENERAL: 'general',
+	/** Modifiers related to chem structure (e.g., bond, atom). **/
 	CHEM_STRUCTURE: 'chemStruct',
+	/** Modifiers related to chem document glyphs. **/
 	GLYPH: 'glyph',
+	/** Modifiers related to render styles. **/
 	STYLE: 'style',
+	/** Misc modifiers. **/
 	MISC: 'misc'
 };
 
