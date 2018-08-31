@@ -558,7 +558,7 @@
     bottom: 0px;
     */
     float: left;
-    margin-right: 10px;
+    margin-right: 5px;
 }
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-V
 {
@@ -620,8 +620,8 @@
 
 .K-Chem-Composer-ObjModifier-Toolbar .K-Button
 {
-    padding-left: 0.3em;
-    padding-right: 0.3em;
+    padding-left: 0.22em;
+    padding-right: 0.22em;
 }
 
 .K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button,
