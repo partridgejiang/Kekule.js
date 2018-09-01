@@ -378,6 +378,10 @@
 {
     display: block;
 }
+.K-Chem-StructureNodeSetter-InputBox .K-ComboTextBox-Assoc-Widget .K-Pri-Glyph-Content
+{
+    display: none;
+}
 
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup
 {

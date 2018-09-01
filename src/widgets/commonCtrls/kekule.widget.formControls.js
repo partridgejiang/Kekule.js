@@ -680,7 +680,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 		});
 		this.defineProp('buttonText', {'dataType': DataType.STRING,
 			'getter': function() { return this.getButton().getText(); },
-			'setter': function(value) { this.getButton().setText(value); }
+			'setter': function(value) { this.getButton().setText(value).setShowText(!!value); }
 		});
 	},
 	/** @ignore */
@@ -703,6 +703,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	createAssocButton: function()
 	{
 		var btn = new Kekule.Widget.Button(this);
+		btn.setShowText(false);
 		this.setTailingWidget(btn);
 		btn.addEventListener('change', this.adjustWidgetsSize, this);
 		btn.addEventListener('execute', function(e)
