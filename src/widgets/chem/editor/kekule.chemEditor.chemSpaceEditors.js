@@ -3984,7 +3984,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 	},
 
 	/** @private */
-	addRepositoryObj: function(targetObj, screenCoord)
+	addRepositoryObj: function(targetObj, screenCoord, ignoreUnconnectedStructCheck)
 	{
 		var editor = this.getEditor();
 		this.setAddRepObjsOper(null);
@@ -4005,7 +4005,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 			var isOneStructItem = repItem.isOneStructureFragmentObj();
 			var addToBlankMol = false;
 			var blankMol = this.getEditor().getOnlyOneBlankStructFragment();
-			if (!editor.canCreateNewChild() && !repResult.mergeObj)  // can not create a standalone child
+			if (!editor.canCreateNewChild() && !repResult.mergeObj && !ignoreUnconnectedStructCheck)  // can not create a standalone child
 			{
 				if (!isOneStructItem || !editor.canAddUnconnectedStructFragment())
 					return null;
@@ -4197,7 +4197,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 			//console.log(this._initialStartingObj, this._repObjStartingScreenCoord);
 			//var result = this.insertRepositoryObjToEditor(this._repObjStartingScreenCoord, this._initialStartingObj, true);
 			var oldObjects = this.getCurrRepositoryObjects();
-			var addedRepObjResult = this.addRepositoryObj(this._initialStartingObj, this._repObjStartingScreenCoord);
+			var addedRepObjResult = this.addRepositoryObj(this._initialStartingObj, this._repObjStartingScreenCoord, true);
 			var unneedObjs = AU.exclude(oldObjects, (addedRepObjResult || {}).objects);  // objects should be removed
 			for (var i = 0, l = unneedObjs.length; i < l; ++i)
 			{
@@ -4636,9 +4636,9 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.MolFlexStruc
 			return null;
 	},
 	/** @ignore */
-	addRepositoryObj: function($super, targetObj, screenCoord)
+	addRepositoryObj: function($super, targetObj, screenCoord, ignoreUnconnectedStructCheck)
 	{
-		var result = $super(targetObj, screenCoord);
+		var result = $super(targetObj, screenCoord, ignoreUnconnectedStructCheck);
 		/*
 		// debug
 		var mol = result.objects[0];
@@ -4667,7 +4667,7 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.MolFlexStruc
 		}
 		this._isUpdateRepObj = isUpdate;  // a flag indicaing whether is update chain
 		var result = $super(startingCoord, startingObj, isUpdate);
-		this._chain = result.objects[0];
+		this._chain = result && result.objects[0];
 
 		if (result && !isUpdate)
 		{
@@ -4900,9 +4900,9 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.MolFlexStruct
 			return null;
 	},
 	/** @ignore */
-	addRepositoryObj: function($super, targetObj, screenCoord)
+	addRepositoryObj: function($super, targetObj, screenCoord, ignoreUnconnectedStructCheck)
 	{
-		var result = $super(targetObj, screenCoord);
+		var result = $super(targetObj, screenCoord, ignoreUnconnectedStructCheck);
 		// save bond length
 		this._deltaDistance = this._calcStepDeltaDistance();
 		//this._repObjStartingScreenCoord = screenCoord;
@@ -5106,11 +5106,11 @@ Kekule.Editor.ArrowLineIaController = Class.create(Kekule.Editor.RepositoryIaCon
 		return Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE;
 	},
 	/** @ignore */
-	addRepositoryObj: function($super, targetObj, screenCoord)
+	addRepositoryObj: function($super, targetObj, screenCoord, ignoreUnconnectedStructCheck)
 	{
 		// set ref length before adding new object
 		this.getRepositoryItem().setGlyphRefLength(this.getEditor().getChemSpace().getDefAutoScaleRefLength());
-		return $super(targetObj, screenCoord);
+		return $super(targetObj, screenCoord, ignoreUnconnectedStructCheck);
 	}
 });
 // register
