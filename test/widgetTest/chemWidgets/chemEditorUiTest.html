@@ -100,6 +100,17 @@
       var elem = document.getElementById('operHis');
       operHistoryView = new Kekule.Widget.OperHistoryTreeView(elem, chemEditor.getOperHistory());
       operHistoryView.setItemInitialExpanded(true);
+
+      var selBox = Kekule.Widget.getWidgetById('selPredefineSettings');
+      selBox.setItems([
+        {'text': 'fullFunc', 'value': 'fullFunc'},
+        {'text': 'molOnly', 'value': 'molOnly'},
+        {'text': 'compact', 'value': 'compact'}
+      ]);
+      selBox.on('valueChange', function(e){
+        var v = selBox.getValue();
+        chemEditorUi.setPredefinedSetting(v);
+      });
     }
 
     function requestFullScreen()
@@ -170,6 +181,9 @@
   </script>
 </head>
 <body onload="init()" onpageshow="console.log('chem editor page show');">
+  <div>
+    <select id="selPredefineSettings" data-widget="Kekule.Widget.SelectBox"></select>
+  </div>
   <div id="chemEditorUi" style="width:800px;height:400px;transform1:scale(0.8) skewX(20deg);transform-origin:0 0" data-resizable="true"></div>
   <div id="operHis" style="width:400px;height:600px;float:right"></div>
   <div id="chemViewer" style="border: 1px solid #ccc;float:right" data-widget="Kekule.ChemWidget.Viewer2D"></div>

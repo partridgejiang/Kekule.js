@@ -1677,7 +1677,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		var topRegionHeight = commonRect.height;
 		var leftRegionWidth = chemRect.width;
-		var bottomRegionHeight = zoomRect.height || topRegionHeight;  // zoom toolbar may be invisible
+		var bottomRegionHeight = (zoomRect && zoomRect.height) || topRegionHeight;  // zoom toolbar may be invisible
 
 		// top region
 		var elem = this.getTopRegionElem();
@@ -1695,7 +1695,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		style.left = leftRegionWidth + 'px';
 		style.right = '0px';
 		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
-		var bottomFreeWidth = bottomRect.width - zoomRect.width;
+		var bottomFreeWidth = bottomRect.width - (zoomRect? zoomRect.width: 0);
 
 		// left region
 		elem = this.getLeftRegionElem();
@@ -2125,6 +2125,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		if (action)
 			result.setAction(action);
+
+		return result;
 	},
 	/** @private */
 	_createActionButton: function(action, parentWidget)
@@ -2386,16 +2388,35 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var actions = this.getChemActions();
 		actions.clear();
 		var checkGroup = 'chemTools';
+		var firstBtn;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
 			var name = btns[i];
 			var btn = this.createToolButton(name, toolbar, actions, checkGroup);
+			if (i === 0)
+				firstBtn = btn;
 		}
 		this.setChemBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
-		// TODO: when change chem toolbar, associate toolbar should also change. Now we only simply clear it.
-		this.bindAssocActions(null);
+
 		this.adjustComponentPositions();
+		if (firstBtn)
+		{
+			var action = firstBtn.getAction();
+			if (action)
+			{
+				action.setChecked(true);
+				var attachedActions = action.getAttachedActions && action.getAttachedActions();
+				this.bindAssocActions(attachedActions || null);
+				/*
+				// force update the assoc actions
+				if (!action.getChecked())
+					action.setChecked(true);
+				else
+					action.setChecked(false).setChecked(true);
+				*/
+			}
+		}
 		return toolbar;
 	},
 	/**
@@ -2887,52 +2908,57 @@ Kekule.Editor.Composer.Configurator = Class.create(Kekule.Widget.Configurator,
 });
 
 // register predefined settings of viewer
-var SM = Kekule.ObjPropSettingManager;
-SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
-	enableStyleToolbar: true,
-	enableOperHistory: true,
-	enableLoadNewFile: true,
-	enableCreateNewDoc: true,
-	allowCreateNewChild: true,
-	commonToolButtons: null,   // create all default common tool buttons
-	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null,  // create all default style components
-	allowedObjModifierCategories: null  // allow modifiers of all categories
-});
-SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
-	enableStyleToolbar: true,
-	enableOperHistor: true,
-	enableLoadNewFile: true,
-	enableCreateNewDoc: true,
-	allowCreateNewChild: true,
-	commonToolButtons: null,   // create all default common tool buttons
-	chemToolButtons: [
-		BNS.manipulate,
-		BNS.erase,
-		BNS.molBond,
-		BNS.molAtom,
-		// BNS.molFormula,
-		BNS.molRing,
-		BNS.molCharge
-	],   // create only chem tool buttons related with molecule
-	styleToolComponentNames: null,  // create all default style components
-	allowedObjModifierCategories: ['chemStruct']  // only all chem structure modifiers
-});
-SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
-	enableStyleToolbar: false,
-	commonToolButtons: [
-		BNS.newDoc,
-		BNS.loadData,
-		BNS.saveData,
-		BNS.undo,
-		BNS.redo
-	],
-	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null,  // create all default style components
-	allowedObjModifierCategories: null  // allow modifiers of all categories
-});
-SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
-	allowCreateNewChild: false
+Kekule._registerAfterLoadSysProc(function(){
+	var EMC = Kekule.Editor.ObjModifier.Category;
+	var SM = Kekule.ObjPropSettingManager;
+	SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
+		enableStyleToolbar: true,
+		enableOperHistory: true,
+		enableLoadNewFile: true,
+		enableCreateNewDoc: true,
+		allowCreateNewChild: true,
+		commonToolButtons: null,   // create all default common tool buttons
+		chemToolButtons: null,   // create all default chem tool buttons
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: null  // allow modifiers of all categories
+	});
+	SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
+		enableStyleToolbar: true,
+		enableOperHistor: true,
+		enableLoadNewFile: true,
+		enableCreateNewDoc: true,
+		allowCreateNewChild: true,
+		commonToolButtons: null,   // create all default common tool buttons
+		chemToolButtons: [
+			BNS.manipulate,
+			BNS.erase,
+			BNS.molBond,
+			BNS.molAtom,
+			// BNS.molFormula,
+			BNS.molRing,
+			BNS.molCharge
+		],   // create only chem tool buttons related with molecule
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: [EMC.GENERAL, EMC.CHEM_STRUCTURE]  // only all chem structure modifiers
+	});
+	SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
+		enableStyleToolbar: false,
+		commonToolButtons: [
+			BNS.newDoc,
+			BNS.loadData,
+			BNS.saveData,
+			BNS.undo,
+			BNS.redo,
+			BNS.zoomIn,
+			BNS.zoomOut
+		],
+		chemToolButtons: null,   // create all default chem tool buttons
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: null  // allow modifiers of all categories
+	});
+	SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
+		allowCreateNewChild: false
+	});
 });
 
 

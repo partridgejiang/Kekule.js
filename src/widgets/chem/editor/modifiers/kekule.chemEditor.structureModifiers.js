@@ -30,7 +30,9 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_ATOM_MODIFIER_BUTTON: 'K-Chem-Composer-AtomModifier-Button',
 	COMPOSER_ATOM_MODIFIER_DROPDOWN: 'K-Chem-Composer-AtomModifier-DropDown',
 	COMPOSER_BOND_MODIFIER_BUTTON: 'K-Chem-Composer-BondModifier-Button',
-	COMPOSER_BOND_MODIFIER_DROPDOWN: 'K-Chem-Composer-BondModifier-DropDown'
+	COMPOSER_BOND_MODIFIER_DROPDOWN: 'K-Chem-Composer-BondModifier-DropDown',
+	COMPOSER_CHARGE_MODIFIER_BUTTON: 'K-Chem-Composer-ChargeModifier-Button',
+	COMPOSER_CHARGE_MODIFIER_DROPDOWN: 'K-Chem-Composer-ChargeModifier-DropDown'
 });
 
 /**
@@ -42,7 +44,12 @@ Kekule.Editor.ObjModifier.ChemStructureModifier = Class.create(Kekule.Editor.Obj
 /** @lends Kekule.Editor.ObjModifier.ChemStructureModifier# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.ObjModifier.ChemStructureModifier'
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.ChemStructureModifier',
+	/** @ignore */
+	installValueChangeEventHandler: function(widget)
+	{
+		// do nothing, use our own value change event handlers
+	}
 });
 /** @ignore */
 Kekule.Editor.ObjModifier.ChemStructureModifier.getCategories = function()
@@ -222,16 +229,21 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		{
 			this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 			this.getAtomSetter().setNodes(nodes);
+			/*
 			if (nodes.length)
 			{
 				nodeLabel = this.getAtomSetter().getNodeLabel();
 				//console.log('update node label', nodeLabel);
 			}
+			*/
 		}
+		/*
 		else
 		{
 			nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		}
+		*/
+		nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesHtmlCode(nodes, null, null, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER_MIXED'))
 				.setShowText(true).setDisplayed(!!nodes.length);
 	},
@@ -605,8 +617,182 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	}
 });
 
+/**
+ * A modifier to change the charge property of chem nodes.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
+ */
+Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
+/** @lends Kekule.Editor.ObjModifier.Charge# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.Charge',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._valueStorage = {};
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// private
+		this.defineProp('chargeSelector', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
+	},
+	/** @ignore */
+	doCreateWidget: function()
+	{
+		var result = new Kekule.Widget.DropDownButton(this.getEditor());
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_CHARGE_MODIFIER'))
+			.setText(Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN'))
+			.setShowText(true)
+			.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
+		result.addClassName(CCNS.COMPOSER_CHARGE_MODIFIER_BUTTON);
+
+		result.setDropDownWidgetGetter(this._createChargeSelector.bind(this));
+		return result;
+	},
+	/** @private */
+	_createChargeSelector: function(parentWidget)
+	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
+		var result = new Kekule.ChemWidget.ChargeSelectPanel(parentWidget);
+		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_CHARGE_MODIFIER'));
+		result.addClassName(CCNS.COMPOSER_CHARGE_MODIFIER_DROPDOWN);
+
+		if (Kekule.ObjUtils.notUnset(this._valueStorage.charge))
+		{
+			result.setValue(this._valueStorage.charge);
+		}
+
+		this.setPropStoreFieldValue('chargeSelector', result);
+
+		// react to value change of setter
+		var self = this;
+		result.addEventListener('valueChange', function(e){
+			self.applyToTargets();
+			result.dismiss();
+		});
+
+		return result;
+	},
+
+	/** @private */
+	_filterStructureNodes: function(targets)
+	{
+		var nodes = [];
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.ChemStructureNode && target.getCharge)
+			{
+				nodes.push(target);
+			}
+		}
+		return nodes;
+	},
+	/** @private */
+	_getActualModificationNodes: function(nodes, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			if (node instanceof Kekule.StructureFragment && node.isExpanded())  // actually modify children node in expanded group
+			{
+				var children = this._getActualModificationNodes(node.getNodes(), true);
+				AU.pushUnique(result, children);
+			}
+			else
+				result.push(node);
+		}
+		if (!byPassfilter)
+			result = this._filterStructureNodes(result);
+		return result;
+	},
+
+	/** @private */
+	_getChargeOfNodes: function(nodes)
+	{
+		var result = null;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var n = nodes[i];
+			if (n.getCharge)
+			{
+				var c = n.getCharge() || 0;
+				if (result === null)
+					result = c;
+				else if (result !== c)
+					return null;
+			}
+		}
+		return result;
+	},
+
+	/** @ignore */
+	doLoadFromTargets: function(editor, targets)
+	{
+		// filter chem nodes from targets
+		//var nodes = this._filterStructureNodes(targets);
+		var nodeLabel;
+		var nodes = this._getActualModificationNodes(targets);
+		var charge = this._getChargeOfNodes(nodes);
+		this._valueStorage.charge = charge;
+
+		if (this.getChargeSelector())
+		{
+			this.getChargeSelector().setValue(charge);
+		}
+
+		var caption;
+		if (charge)
+		{
+			var sSign = (charge > 0)? Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_POSITIVE'): Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NEGATIVE');
+			var c = Kekule.NumUtils.toDecimals(charge, 1);  // reserve 1 digit after point if it is not a integer charge
+			caption =  Math.abs(c) + sSign;
+		}
+		else
+			caption = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN');
+		this.getWidget().setText(caption).setShowText(true);
+	},
+	/** @ignore */
+	doApplyToTargets: function($super, editor, targets)
+	{
+		var charge = this.getChargeSelector().getValue();
+		var opers = [];
+		var nodes = this._getActualModificationNodes(targets);
+		var editor = this.getEditor();
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var target = nodes[i];
+			if (target instanceof Kekule.ChemStructureNode)
+			{
+				var op = new Kekule.ChemObjOperation.Modify(target, {'charge': charge}, editor);
+				if (op)
+					opers.push(op);
+			}
+		}
+		var operation;
+		if (opers.length > 1)
+			operation = new Kekule.MacroOperation(opers);
+		else
+			operation = opers[0];
+
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.execOperation(operation);
+		}
+	}
+});
+
 var OMM = Kekule.Editor.ObjModifierManager;
 OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Atom]);
+OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Charge]);
 OMM.register([Kekule.Bond, Kekule.StructureFragment], [Kekule.Editor.ObjModifier.Bond]); // can change child bonds of structure fragment
 
 })();
