@@ -286,7 +286,7 @@
     {
         display: inline-block;
         position: relative;
-        height: 22em;
+        height: 20em;
         /*
         display: -webkit-flex;
         display: -moz-flex;
@@ -618,6 +618,12 @@
     vertical-align: top;
 }
 
+.K-Chem-Composer-ObjModifier-Toolbar sup,
+.K-Chem-Composer-ObjModifier-Toolbar sub
+{
+    font-size: 0.7em;
+}
+
 .K-Chem-Composer-ObjModifier-Toolbar .K-Button
 {
     padding-left: 0.22em;
@@ -629,8 +635,8 @@
 {
     font-family: /*Georgia,*/ "Times New Roman", Times, serif;
     font-size: 1.2em;
-    line-height: 0.833em;
-    vertical-align: bottom;  /* solve the align problem of modifier buttons in Chrome */
+    /*line-height: 0.833em;*/
+    vertical-align: middle;  /* solve the align problem of modifier buttons in Chrome */
 }
 .K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Text-Content,
 .K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Text-Content
