@@ -499,8 +499,11 @@ Kekule.Render.RichTextUtils = {
 		return result;
 	},
 
+	/** @private */
 	_toDebugHtml: function(richText)
 	{
+		if (!richText.items)  // only one text part
+			return richText.text;
 		var result = '';
 		for (var i = 0, l = richText.items.length; i < l; ++i)
 		{
@@ -523,6 +526,16 @@ Kekule.Render.RichTextUtils = {
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Convert rich text to HTML code in a simple way.
+	 * @param {Object} richText
+	 * @returns {HTMLElement}
+	 */
+	toSimpleHtmlCode: function(richText)
+	{
+		return Kekule.Render.RichTextUtils._toDebugHtml(richText);
 	},
 
 	/**
