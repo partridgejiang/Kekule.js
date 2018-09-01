@@ -42,7 +42,7 @@
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container{height:22em;overflow-y:auto}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page{}
 .K-Chem-StructureNodeSelectPanel .K-Chem-StructureNodeSelectPanel-SetButton{min-width:3em}
-@supports(display:-webkit-flex) or(display:-moz-flex) or(display:-ms-flex) or(display:flex){.K-Chem-StructureNodeSelectPanel{display:inline-block;position:relative;height:22em}
+@supports(display:-webkit-flex) or(display:-moz-flex) or(display:-ms-flex) or(display:flex){.K-Chem-StructureNodeSelectPanel{display:inline-block;position:relative;height:20em}
 .K-Chem-StructureNodeSelectPanel .K-TabView{height:100%;display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container{height:auto;-webkit-flex:auto;-moz-flex:auto;flex:auto;display:-webkit-flex;display:-moz-flex;display:flex}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page{position:absolute;top:0;left:0;bottom:0;right:0;overflow-y:auto}
@@ -50,6 +50,9 @@
 .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel{width:auto;flex:auto}}
 .K-Chem-StructureNodeSetter.K-ChemEditor-Atom-Setter{margin:0}
 .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSetter-InputBox,.K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel{display:block}
+.K-Chem-StructureNodeSetter-InputBox .K-ComboTextBox-Assoc-Widget .K-Pri-Glyph-Content{display:none}
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup{display:block;margin:.5em auto;background-color:transparent;text-align:left}
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn{min-width:4em}
 .K-Chem-Editor{overflow:auto}
 .K-Chem-Editor .K-Chem-Editor-Client{position:relative;width:100%;height:100%;margin:0 auto}
 .K-Chem-Editor .K-Chem-Editor-UiEvent-Receiver{background:#fff;opacity:0;filter:Alpha(Opacity=0);position:absolute;left:0;top:0;width:100%;height:100%}
@@ -69,7 +72,7 @@
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar{display:block;float:right}
 .K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,.K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button{}
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button{padding:4px 5px}
-.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-H,.K-Chem-Composer .K-Chem-Composer-Style-Toolbar,.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar{float:left;margin-right:10px}
+.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-H,.K-Chem-Composer .K-Chem-Composer-Style-Toolbar,.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar{float:left;margin-right:5px}
 .K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-V{float:right;margin-top:20px;margin-right:0}
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button,.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar .K-Button,.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Button,.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Button{height:32px}
 .K-Chem-Composer-Toolbar{white-space:nowrap}
@@ -78,8 +81,12 @@
 .K-Chem-Composer-FontName-Box{width:13em}
 .K-Chem-Composer-FontSize-Box{width:6em}
 .K-Chem-Composer .K-Chem-Composer-Color-Box{}
-.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button{font-family:Georgia,"Times New Roman",Times,serif;font-size:1.2em}
-.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Pri-Glyph-Content{display:none}
+.K-Chem-Composer-ObjModifier-Toolbar{vertical-align:top}
+.K-Chem-Composer-ObjModifier-Toolbar sup,.K-Chem-Composer-ObjModifier-Toolbar sub{font-size:.7em}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Button{padding-left:.22em;padding-right:.22em}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button,.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button{font-family:"Times New Roman",Times,serif;font-size:1.2em;vertical-align:middle}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Text-Content,.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Text-Content{}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Pri-Glyph-Content,.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Pri-Glyph-Content{display:none}
 .K-Chem-Composer-AtomModifier-DropDown{width:22em;max-height:90%}
 .K-Chem-Composer-AtomModifier-DropDown .K-Chem-StructureNodeSelectPanel{padding:0;border:none;width:auto}
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel{position:absolute;width:22em;top:0;right:0;bottom:0;overflow:hidden;display:none}
@@ -113,4 +120,4 @@
 .K-Chem-ComposerFrame{border:none}
 .K-Chem-ComposerFrame-ContentDoc,.K-Chem-ComposerFrame-ContentBody{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .K-Chem-ComposerFrame-ContentBody .K-Chem-Composer{margin:0;width:100%;height:100%}
-#CssGaga{content:"180827134805,swt,334"}
+#CssGaga{content:"180901215335,swt,334"}
