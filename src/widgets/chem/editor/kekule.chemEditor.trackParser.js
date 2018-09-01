@@ -1293,8 +1293,15 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		editor.beginUpdateObject();
 		try
 		{
+			var oper;
 			var chemSpace = editor.getChemSpace();
-			var oper = new Kekule.ChemObjOperation.Add(structure, chemSpace, null, this.getEditor());
+			if (this._targetMol)
+			{
+				oper = new Kekule.ChemStructOperation.MergeStructFragment(structure, this._targetMol, editor);
+				this._targetMol = null;
+			}
+			else
+				oper = new Kekule.ChemObjOperation.Add(structure, chemSpace, null, editor);
 			oper.execute();
 			this._addStructureOperation = oper;
 		}
@@ -1326,8 +1333,25 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 	/** @private */
 	startTracking: function(event, startScreenCoord)
 	{
+		this._targetMol = null;
+		var editor = this.getEditor();
+
+		var startObj = this._getMergeDestObjAtCoord(startScreenCoord);
+
+		if (!editor.canCreateNewChild() && !startObj)  // can not create a standalone child
+		{
+			if (!editor.canAddUnconnectedStructFragment())
+				return null;
+			else
+			{
+				var blankMol = editor.getOnlyOneBlankStructFragment();
+				this._targetMol = blankMol;
+			}
+		}
+
 		this._isTracking = true;
 		this._trackCoordToObjBindings = [];
+
 		/*
 		var marker = this.getTrackMarker();
 		marker.getShapeInfo().coords = [];
@@ -1455,6 +1479,15 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		this.repaintMarker();
 	},
 	/** @private */
+	_getMergeDestObjAtCoord: function(screenCoord)
+	{
+		var obj = this.getEditor().getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation());
+		if (this.isValidMergeDestObj(obj))
+			return obj;
+		else
+			return null;
+	},
+	/** @private */
 	addTrackCoord: function(screenCoord, doNotRepaint)
 	{
 		//console.log('add track coord', screenCoord);
@@ -1467,8 +1500,12 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 			return;
 		}
 
+		/*
 		var obj = this.getEditor().getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation());
 		if (this.isValidMergeDestObj(obj))
+		*/
+		var obj = this._getMergeDestObjAtCoord(screenCoord);
+		if (obj)
 		{
 			// bind coord to obj
 			this._trackCoordToObjBindings.push({'coord': screenCoord, 'obj': obj, 'coordIndex': this.getTrackCoords().length});
@@ -1544,6 +1581,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);
+
 			this.startTracking(e, coord);
 			e.preventDefault();
 		}
@@ -1559,10 +1597,13 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		//$super(e);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
-			var coord = this._getEventMouseCoord(e);
-			// console.log(this._trackCoordToObjBindings);
-			this.endTracking(coord);
-			this.addOperationToEditor();
+			if (this._isTracking)
+			{
+				var coord = this._getEventMouseCoord(e);
+				// console.log(this._trackCoordToObjBindings);
+				this.endTracking(coord);
+				this.addOperationToEditor();
+			}
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 			e.preventDefault();
 		}
