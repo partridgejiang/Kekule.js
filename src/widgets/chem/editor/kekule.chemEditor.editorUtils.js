@@ -294,6 +294,32 @@ Kekule.Editor.StructureUtils = {
 		}
 		return nodeLabel;
 	},
+	/**
+	 * Returns HTML code represents all the chem nodes situation.
+	 * @param {Array} nodes
+	 * @param {Object} labelConfigs
+	 * @returns {String}
+	 */
+	getAllChemStructureNodesHtmlCode: function(nodes, hydrogenDisplayLevel, showCharge, labelConfigs)
+	{
+		var result;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			var currRichText = node.getCoreDisplayRichTextItem(hydrogenDisplayLevel, showCharge, labelConfigs);
+			var currHtmlCode = Kekule.Render.RichTextUtils.toSimpleHtmlCode(currRichText);
+			if (!result)
+				result = currHtmlCode;
+			else
+			{
+				if (result !== currHtmlCode)  // different label, currently has different nodes
+				{
+					return null;
+				}
+			}
+		}
+		return result;
+	},
 
 	/**
 	 * Returns center abs base coord of a structure.

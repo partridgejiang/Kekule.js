@@ -229,16 +229,21 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		{
 			this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 			this.getAtomSetter().setNodes(nodes);
+			/*
 			if (nodes.length)
 			{
 				nodeLabel = this.getAtomSetter().getNodeLabel();
 				//console.log('update node label', nodeLabel);
 			}
+			*/
 		}
+		/*
 		else
 		{
 			nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		}
+		*/
+		nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesHtmlCode(nodes, null, null, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
 		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER_MIXED'))
 				.setShowText(true).setDisplayed(!!nodes.length);
 	},
