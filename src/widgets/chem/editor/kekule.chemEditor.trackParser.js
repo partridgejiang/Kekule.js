@@ -480,6 +480,7 @@ Kekule.Editor.TrackParser = Class.create(ObjectEx,
 				if (!node.getConnectorTo(lastNode))
 				{
 					var connector = new Kekule.Bond(null, [lastNode, node]);
+					connector.setBondOrder(1);
 					result.appendConnector(connector);
 				}
 			}
