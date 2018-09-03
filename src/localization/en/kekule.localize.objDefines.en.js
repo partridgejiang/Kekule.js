@@ -320,8 +320,8 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_autoAdjustZoomLevelOnTrackTouching: null,
 			DES_autoAdjustZoomLevelOnTrackTouching: null,
 
-			TITLE_editorIntialZoom: 'Editor initial zoom level',
-			DES_editorIntialZoom: 'The initial zoom level of editor',
+			TITLE_editorInitialZoom: 'Editor initial zoom level',
+			DES_editorInitialZoom: 'The initial zoom level of editor',
 
 			TITLE_atomSetterFontSize: 'Atom setter font size',
 			DES_atomSetterFontSize: 'Font size of atom setter',

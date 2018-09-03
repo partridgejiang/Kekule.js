@@ -85,7 +85,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @class
  * @augments Kekule.AbstractConfigs
  *
- * @property {Float} editorIntialZoom Initial zoom level of chem editor.
+ * @property {Float} editorInitialZoom Initial zoom level of chem editor.
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
@@ -183,7 +183,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('trackTouchRefLength', 0.5, {'scope': PS.PUBLIC});  // 0.5 inchi
 		this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', !true, {'scope': PS.PUBLIC});  // currently has some problems, disable it
 
-		this.addFloatConfigProp('editorIntialZoom', 1.5);
+		this.addFloatConfigProp('editorInitialZoom', 1.5);
 	},
 	/** @ignore */
 	initPropValues: function($super)

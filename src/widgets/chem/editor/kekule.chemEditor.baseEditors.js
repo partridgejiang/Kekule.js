@@ -729,7 +729,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result;
 		var config = this.getEditorConfigs();
 		if (config)
-			result = config.getInteractionConfigs().getEditorIntialZoom();
+			result = config.getInteractionConfigs().getEditorInitialZoom();
 		if (!result)
 			result = $super();
 		return result;
@@ -739,7 +739,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var config = this.getEditorConfigs();
 		if (config)
-			config.getInteractionConfigs().setEditorIntialZoom(value);
+			config.getInteractionConfigs().setEditorInitialZoom(value);
 		$super(value);
 	},
 
