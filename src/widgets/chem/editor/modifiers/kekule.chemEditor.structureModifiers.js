@@ -740,24 +740,30 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 		//var nodes = this._filterStructureNodes(targets);
 		var nodeLabel;
 		var nodes = this._getActualModificationNodes(targets);
-		var charge = this._getChargeOfNodes(nodes);
-		this._valueStorage.charge = charge;
+		var showModifier = (nodes.length >= 0) && (nodes.length <= 1);  // display modifier when only one node is selected
 
-		if (this.getChargeSelector())
+		if (showModifier)
 		{
-			this.getChargeSelector().setValue(charge);
-		}
+			var charge = this._getChargeOfNodes(nodes);
+			this._valueStorage.charge = charge;
 
-		var caption;
-		if (charge)
-		{
-			var sSign = (charge > 0)? Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_POSITIVE'): Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NEGATIVE');
-			var c = Kekule.NumUtils.toDecimals(charge, 1);  // reserve 1 digit after point if it is not a integer charge
-			caption =  Math.abs(c) + sSign;
+			if (this.getChargeSelector())
+			{
+				this.getChargeSelector().setValue(charge);
+			}
+
+			var caption;
+			if (charge)
+			{
+				var sSign = (charge > 0) ? Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_POSITIVE') : Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NEGATIVE');
+				var c = Kekule.NumUtils.toDecimals(charge, 1);  // reserve 1 digit after point if it is not a integer charge
+				caption = Math.abs(c) + sSign;
+			}
+			else
+				caption = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN');
+			this.getWidget().setText(caption).setShowText(true);
 		}
-		else
-			caption = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN');
-		this.getWidget().setText(caption).setShowText(true);
+		this.getWidget().setDisplayed(showModifier);
 	},
 	/** @ignore */
 	doApplyToTargets: function($super, editor, targets)
