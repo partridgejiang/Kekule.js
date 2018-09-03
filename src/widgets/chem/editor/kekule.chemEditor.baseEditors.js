@@ -5233,6 +5233,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 	// methods about object move / resize
 	/** @private */
+	getCurrAvailableManipulationTypes: function()
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var box = this.getEditor().getSelectionContainerBox();
+		if (!box)
+		{
+			return [];
+		}
+		else
+		{
+			var result = [];
+			if (this.getEnableMove())
+				result.push(T.MOVE);
+			// if box is a single point, can not resize or rotate
+			if (!Kekule.NumUtils.isFloatEqual(box.x1, box.x2, 1e-10) || !Kekule.NumUtils.isFloatEqual(box.y1, box.y2, 1e-10))
+			{
+				if (this.getEnableResize())
+					result.push(T.RESIZE);
+				if (this.getEnableRotate())
+					result.push(T.ROTATE);
+				if (this.getEnableResize() || this.getEnableRotate())
+					result.push(T.TRANSFORM);
+			}
+			return result;
+		}
+	},
+
+	/** @private */
 	getActualManipulatingObjects: function(objs)
 	{
 		var result = [];
@@ -5591,8 +5619,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var reversedY = (startingRegion === R.CORNER_TL) || (startingRegion === R.CORNER_TR) || (startingRegion === R.EDGE_TOP);
 
 		// calc transform matrix
-		var scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
-		var scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
+		var scaleX, scaleY;
+		if (Kekule.NumUtils.isFloatEqual(box.x1, box.x2, 1e-10))  // box has no x size, can not scale on x
+			scaleX = 1;
+		else
+			scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
+		if (Kekule.NumUtils.isFloatEqual(box.y1, box.y2, 1e-10))   // box has no y size, can not scale on y
+			scaleY = 1;
+		else
+			scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
 
 		if (doConstraint)
 		{
@@ -5606,6 +5641,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var actualScales = this._calcActualResizeScales(manipulatingObjs, {'scaleX': scaleX, 'scaleY': scaleY});
 		var transformParams = {'center': scaleCenter, 'scaleX': actualScales.scaleX, 'scaleY': actualScales.scaleY};
 		//console.log(this.isAspectRatioLockedResize(), scaleX, scaleY);
+		//console.log('startBox', box);
+		//console.log('transformParams', transformParams);
 
 		return transformParams;
 	},
@@ -5927,11 +5964,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var result;
 			if (this.getEnableSelect())   // show move/rotate/resize marker in select ia controller only
 			{
-				if (this.getEnableMove())
+				var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+				var availManipulationTypes = this.getCurrAvailableManipulationTypes();
+				//if (this.getEnableMove())
+				if (availManipulationTypes.indexOf(T.MOVE) >= 0)
 				{
 					result = (region === R.INSIDE)? 'move': '';
 				}
-				if (!result && this.getEnableResize())
+				//if (!result && this.getEnableResize())
+				if (!result && (availManipulationTypes.indexOf(T.RESIZE) >= 0))
 				{
 					var result =
 						(region === R.CORNER_TL)? 'nwse-resize':
@@ -5944,7 +5985,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 				if (!result)
 				{
-					if (this.getEnableRotate())
+					//if (this.getEnableRotate())
+					if (availManipulationTypes.indexOf(T.ROTATE) >= 0)
 					{
 						var region = this.getCoordOnSelectionRotationRegion(c);
 						if (!!region)
@@ -6051,6 +6093,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
 
@@ -6064,16 +6107,24 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var rotateRegion = currCoord && this.getCoordOnSelectionRotationRegion(currCoord);
 
 		// test manipulate type
+		/*
 		var isTransform = (this.getEnableResize() || this.getEnableRotate())
+				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
+		*/
+		var isTransform = (availManipulationTypes.indexOf(T.TRANSFORM) >= 0)
 				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
 		if (!isTransform)
 		{
-			var isResize = !evokedByTouch && this.getEnableResize()
+			var isResize = !evokedByTouch && (availManipulationTypes.indexOf(T.RESIZE) >= 0) //&& this.getEnableResize()
 					&& ((explicitManipulationType === T.RESIZE) || ((coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE)));
-			var isMove = !isResize && this.getEnableMove()
+			var isMove = !isResize && (availManipulationTypes.indexOf(T.MOVE) >= 0) // this.getEnableMove()
 					&& ((explicitManipulationType === T.MOVE) || (coordRegion !== R.OUTSIDE));
-			var isRotate = !evokedByTouch && !isResize && !isMove && this.getEnableRotate()
+			var isRotate = !evokedByTouch && !isResize && !isMove && (availManipulationTypes.indexOf(T.ROTATE) >= 0)//this.getEnableRotate()
 					&& ((explicitManipulationType === T.ROTATE) || !!rotateRegion);
+		}
+		else // transform
+		{
+			this._availTransformTypes = availManipulationTypes;  // stores the available transform types
 		}
 
 
@@ -6542,20 +6593,35 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	doGestureTransformStep: function(e)
 	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
 		if ((this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
-			&& (this.getManipulationType() === Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
+			&& (this.getManipulationType() === T.TRANSFORM)
 			&& (this._isInGestureManipulation()))
 		{
+			var availTransformTypes = this._availTransformTypes || [];
 			// get transform params from event directly
 			var center = this.getRotateCenter();  // use the center of current editor selection
-			var scale = e.scale;
-			var resizeScales = this._calcActualResizeScales(this.getManipulateObjs(), {'scaleX': scale, 'scaleY': scale});
 
-			var absAngle = e.rotation  * Math.PI / 180;
-			var rotateAngle = absAngle - this._initialGestureTransformParams.angle;
+			var resizeScales, rotateAngle;
+			if (availTransformTypes.indexOf(T.RESIZE) >= 0)
+			{
+				var scale = e.scale;
+				resizeScales = this._calcActualResizeScales(this.getManipulateObjs(), {'scaleX': scale, 'scaleY': scale});
+			}
+			else
+				resizeScales = {'scaleX': 1, 'scaleY': 1};
+			if (availTransformTypes.indexOf(T.ROTATE) >= 0)
+			{
+				var absAngle = e.rotation * Math.PI / 180;
+				var rotateAngle = absAngle - this._initialGestureTransformParams.angle;
 
-			// get actual rotation angle
-			var rotateAngle = this._calcActualRotateAngle(this.getManipulateObjs(), rotateAngle, this._initialGestureTransformParams.angle, absAngle);
+				// get actual rotation angle
+				rotateAngle = this._calcActualRotateAngle(this.getManipulateObjs(), rotateAngle, this._initialGestureTransformParams.angle, absAngle);
+			}
+			else
+			{
+				rotateAngle = 0;
+			}
 
 			this.updateManipulationStepBuffer(this._manipulationStepBuffer, {
 				'explicitTransformParams': {
