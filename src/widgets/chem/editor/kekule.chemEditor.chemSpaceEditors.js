@@ -2437,6 +2437,15 @@ Kekule.Editor.StructureInsertIaController = Class.create(Kekule.Editor.BasicMolM
 		$super(editor);
 		this._manipulatedBasicObjs = null;  // used internally
 	},
+	/**
+	 * Returns newly inserted objects to editor.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	getInsertedObjs: function()
+	{
+		return this._manipulatedBasicObjs;
+	},
 	/** @ignore */
 	doSetManipulateOriginObjs: function($super, objs)
 	{
@@ -2470,7 +2479,7 @@ Kekule.Editor.StructureInsertIaController = Class.create(Kekule.Editor.BasicMolM
 	{
 		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
 		{
-			var basicObjs = this._manipulatedBasicObjs;
+			var basicObjs = this.getInsertedObjs();
 			this.doneInsertOrModifyBasicObjects(basicObjs);
 			//console.log(basicObjs.length, filteredObjs.length);
 		}
@@ -2583,6 +2592,13 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 	doTestMouseCursor: function(coord, e)
 	{
 			return '';  // do not change mouse cursor
+	},
+
+	/** @ignore */
+	getInsertedObjs: function($super)
+	{
+		var bond = this.getBond();
+		return bond? [bond]: $super();
 	},
 
 	/**
