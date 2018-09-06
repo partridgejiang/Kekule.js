@@ -2192,18 +2192,23 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				// result.clearAttachedActions();
 				var oldAttachedActions = Kekule.ArrayUtils.clone(result.getAttachedActions().getActions() || []);
 
-				var attachChildAction = function(action, childAction, oldAttachedActions, asDefault)
+				var attachChildAction = function(action, childAction, oldAttachedActions, asDefault, childIndex)
 				{
 					if (!childAction)
 						return null;
 					var oldIndex = oldAttachedActions.indexOf(childAction);
-					if (oldIndex >= 0)  // action already attached, bypass
+					if (oldIndex >= 0)  // action already attached, change position
 					{
-						oldAttachedActions[oldIndex] = null;
+						oldAttachedActions[oldIndex] = null;  // indicating this action has been used
 						//console.log('use old action', oldIndex, childAction.getClassName());
 					}
 					else
 						action.addAttachedAction(childAction, asDefault);
+
+					if (Kekule.ObjUtils.notUnset(childIndex))  // change position
+					{
+						action.setAttachedActionIndex(childAction, childIndex);
+					}
 				};
 
 				if (children)  // has custom defined chem tool children buttons
@@ -2212,7 +2217,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 					{
 						var child = children[i];
 						var childAction = this._createToolButtonAction(child, null, subGroupName); // do not add to default action list
-						attachChildAction(result, childAction, oldAttachedActions, i === 0);
+						attachChildAction(result, childAction, oldAttachedActions, i === 0, i);
 					}
 				}
 				else  // use default attached classes
@@ -2246,7 +2251,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							}
 							*/
 							//result.addAttachedAction(childAction, i === 0);
-							attachChildAction(result, childAction, oldAttachedActions, i === 0);
+							attachChildAction(result, childAction, oldAttachedActions, i === 0, i);
 						}
 					}
 				}
