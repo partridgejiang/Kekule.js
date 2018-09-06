@@ -795,6 +795,20 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 		return !!this.getAttachedActions().getActionCount();
 	},
 	/**
+	 * Set a new position of attached child action.
+	 * @param {Kekule.Action} action
+	 * @param {Int} index
+	 */
+	setAttachedActionIndex: function(action, index)
+	{
+		var actions = this.getAttachedActions();
+		if (actions)
+		{
+			actions.setActionIndex(action, index);
+		}
+		return this;
+	},
+	/**
 	 * Add an attached actions.
 	 */
 	addAttachedAction: function(action, asDefault)
