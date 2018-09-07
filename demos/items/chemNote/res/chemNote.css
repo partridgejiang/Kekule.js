@@ -114,7 +114,6 @@ section.Panel .SectionContent
 {
   /* float: left; */
   flex: auto;
-
 }
 .ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemRegion
 {
@@ -151,7 +150,7 @@ section.Panel .SectionContent
 }
 .ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextContent
 {
-  max-height: 4.5em;
+  max-height: 5em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
