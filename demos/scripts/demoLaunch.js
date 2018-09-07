@@ -21,11 +21,13 @@ Kekule.DemoUtils = {
 		Kekule.DemoUtils.DEMO_INFOS.push(result);
 		return result;
 	},
-	newConcreteDemo: function(id, title, shortDesc, url, introUrl)
+	newConcreteDemo: function(id, title, shortDesc, url, introUrl, extraOptions)
 	{
 		var result = DU.newDemoItem(id, title, shortDesc);
 		result.url = url;
 		result.introUrl = introUrl;
+		if (extraOptions)
+			result.options = extraOptions;
 		return result;
 	},
 
@@ -58,7 +60,8 @@ DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistr
 	DU.newConcreteDemo('chemViewer3D', 'Chem Viewer 3D', 'Demonstrates function of 3D chem viewer widget.', 'chemViewer/chemViewer3D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('embeddedViewer', 'Embedded Chem Object', 'Demonstrates display molecules using embedded chem viewer and pure HTML code (without JavaScript).', 'chemViewer/embeddedChemViewer.html'),
 	DU.newConcreteDemo('moleculeViewer', 'Molecule Viewer', 'Demonstrates variety forms of chem viewer widge to display molecule.', 'chemViewer/moleculeViewer.html'),
-	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html')
+	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html', null, {'newWindow': false}),
+	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
 ]);
 DU.newRootCategory('extra', 'Extra', 'Demos some extra functions of Kekule.js', [
 	DU.newConcreteDemo('ckEditorPlugins', 'Plugins for CKEditor', 'Demonstrates the integration of Kekule.js with web rich text editor.', 'CKEditor/ckeditorDemo.html', 'CKEditor/ckeditorDemo_intro.html'),
@@ -70,9 +73,17 @@ Kekule.Demos = {};
 
 Kekule.Demos.LaunchUtils = {
 	DEMO_ITEM_BASE_PATH: 'items/',
-	_getDemoLaunchHref: function(demoId)
+	_getDemoLaunchHrefInfo: function(demoId)
 	{
-		return 'demoLauncher.html?id=' + demoId;
+		var demoInfo = DU.getInfoById(demoId);
+		var options = demoInfo.options || {};		
+		if (options.newWindow)  // open demo in new window
+		{
+			var url = ILU.DEMO_ITEM_BASE_PATH + demoInfo.url;
+			return {'url': url, 'target': '_blank'};
+		}
+		else  // default, use demoLauncher.html to load demo in frame
+			return {url: 'demoLauncher.html?id=' + demoId};
 	},
 	fillDemoListHtml: function(navElem, contentElem)
 	{
@@ -133,7 +144,10 @@ Kekule.Demos.LaunchUtils = {
 			var elem = doc.createElement('li');
 			var aElem = doc.createElement('a');
 			aElem.innerHTML = item.title;
-			aElem.href = ILU._getDemoLaunchHref(item.id);
+			var hrefInfo = ILU._getDemoLaunchHrefInfo(item.id);
+			aElem.href = hrefInfo.url;
+			if (hrefInfo.target)
+				aElem.target = hrefInfo.target;
 			elem.appendChild(aElem);
 			parentNavElem.appendChild(elem);
 		}
@@ -141,7 +155,11 @@ Kekule.Demos.LaunchUtils = {
 		{
 			var aElem = doc.createElement('a');
 			aElem.innerHTML = item.title;
-			aElem.href = ILU._getDemoLaunchHref(item.id);
+			var hrefInfo = ILU._getDemoLaunchHrefInfo(item.id);
+			aElem.href = hrefInfo.url;
+			if (hrefInfo.target)
+				aElem.target = hrefInfo.target;
+			
 			var elem = doc.createElement('h3');
 			elem.appendChild(aElem);
 			var sElem = doc.createElement('section');
@@ -202,21 +220,29 @@ Kekule.Demos.LaunchUtils = {
 	{
 		var demoInfo = DU.getInfoById(demoId);
 		var url = demoInfo.url;
-		demoFrameElem.src = ILU.DEMO_ITEM_BASE_PATH + url;
-		demoFrameElem.ownerDocument.title = demoInfo.title + ' - Kekule.js Demo';
-		var rootElem = demoFrameElem.ownerDocument.documentElement;
-		/*
-		if (rootElem)  // add offline manifest		
+		var options = demoInfo.options || {};
+		if (options.newWindow)  // open demo in new window
 		{
-			var manifestUrl = ILU.DEMO_ITEM_BASE_PATH + url.replace('.html', '.manifest'); 
-			rootElem.setAttribute('manifest', manifestUrl);
+			// this should be already handled by the link URL
 		}
-		*/
-
-		url = demoInfo.introUrl;
-		if (url)
+		else
 		{
-			introFrameElem.src = ILU.DEMO_ITEM_BASE_PATH + url;
+			demoFrameElem.src = ILU.DEMO_ITEM_BASE_PATH + url;
+			demoFrameElem.ownerDocument.title = demoInfo.title + ' - Kekule.js Demo';
+			var rootElem = demoFrameElem.ownerDocument.documentElement;
+			/*
+			if (rootElem)  // add offline manifest		
+			{
+				var manifestUrl = ILU.DEMO_ITEM_BASE_PATH + url.replace('.html', '.manifest'); 
+				rootElem.setAttribute('manifest', manifestUrl);
+			}
+			*/
+
+			url = demoInfo.introUrl;
+			if (url)
+			{
+				introFrameElem.src = ILU.DEMO_ITEM_BASE_PATH + url;
+			}
 		}
 	},
 	loadDemoByPageParam: function(demoFrameElem, introFrameElem)
