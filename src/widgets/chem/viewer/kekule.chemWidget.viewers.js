@@ -226,9 +226,13 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		//this.getPainter().finalize();
 		var toolBar = this.getToolbar();
+		$super();
 		if (toolBar)
 			toolBar.finalize();
-		$super();
+		if (this._composerDialog)
+			this._composerDialog.finalize();
+		if (this._composerPanel)
+			this._composerPanel.finalize();
 	},
 	/** @private */
 	initProperties: function()
@@ -837,7 +841,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			if (Kekule.Editor.ComposerDialog)
 			{
-				result = new Kekule.Editor.ComposerDialog(this, Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
+				result = new Kekule.Editor.ComposerDialog(this.getDocument(), Kekule.$L('ChemWidgetTexts.CAPTION_EDIT_OBJ'), //CWT.CAPTION_EDIT_OBJ,
 						[Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 			}
 		}
@@ -859,7 +863,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			if (Kekule.Editor.Composer/* && Kekule.Editor.ComposerFrame*/)
 			{
-				result = new Kekule.Editor.Composer(this);
+				result = new Kekule.Editor.Composer(this.getDocument());
 				//result = new Kekule.Editor.ComposerFrame(this.getDocument());
 				result.addClassName(CCNS.VIEWER_EDITOR_FULLCLIENT);
 				result.setUseNormalBackground(true);

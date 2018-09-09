@@ -169,13 +169,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.setChemObj(null);
+		//this.setChemObj(null);
+		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
 		var b = this.getPropStoreFieldValue('drawBridge');
 		var ctx = this.getPropStoreFieldValue('drawContext');
 		if (ctx && b)
 			b.releaseContext(ctx);
-		if (b.finalize)
+		if (b && b.finalize)
 			b.finalize();
 		this.setPropStoreFieldValue('drawBridge', null);
 		this.setPropStoreFieldValue('drawContext', null);
