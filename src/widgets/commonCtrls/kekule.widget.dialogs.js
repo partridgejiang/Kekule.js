@@ -121,7 +121,11 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
+		//this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
+		if (this.getModalInfo())
+		{
+			this.getGlobalManager().unprepareModalWidget(this);
+		}
 		$super();
 	},
 	/** @private */
