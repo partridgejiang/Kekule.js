@@ -190,9 +190,11 @@
       ];
       chemEditorUi.setChemToolButtons(chemButtons);
     }
+
+    Kekule.X.domReady(init);
   </script>
 </head>
-<body onload="init()" onpageshow="console.log('chem editor page show');">
+<body onload1="init()" onpageshow="console.log('chem editor page show');">
   <div>
     <select id="selPredefineSettings" data-widget="Kekule.Widget.SelectBox"></select>
   </div>
