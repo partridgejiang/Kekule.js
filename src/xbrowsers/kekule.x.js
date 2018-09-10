@@ -1073,7 +1073,11 @@ X.Event._IE = {
 X.Event._IEMethods = {
 	getRelatedTarget: function(event)
 	{
-		return event.fromElement || event.toElement;
+		var etype = event.type;
+		if (['focusin', 'mouseenter', 'mouseover', 'pointerenter', 'pointerover', 'dragenter'].indexOf(etype) >= 0)
+			return event.fromElement || event.toElement;
+		else
+			return event.toElement || event.fromElement;
 	},
 	// methods to get mouse event information
 	getButton: function(event)
