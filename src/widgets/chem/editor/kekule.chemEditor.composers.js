@@ -1069,6 +1069,10 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			editor = this.createDefaultEditor();
 		*/
 		this.bindEditor(editor);
+		var ed = this.getEditor();
+		if (ed)  // editor is newly created
+			ed.setChemObj(ed.getChemObj());  // a force readjust size, otherwise there will be size problem in IE8
+
 
 		// tool bars may already be created by setting buttons property
 		if (!this.getCommonBtnGroup())
@@ -1859,6 +1863,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		*/
 		editor.appendToElem(this.getEditorStageElem());
 		this.getEditorNexus().setEditor(editor);
+		//this.newDoc();
 	},
 	/** @private */
 	createDefaultEditor: function()
