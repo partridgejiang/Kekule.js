@@ -31,6 +31,10 @@ Kekule.Browser = {
   MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
 	language: navigator.language || navigator.browserLanguage  // language of broweser
 };
+Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
+	var agent = navigator.userAgent.toLowerCase();
+	return (agent.indexOf('msie') !== -1) ? parseInt(agent.split('msie')[1]) : false
+})();
 
 /**
  * Browser HTML5 feature check.
