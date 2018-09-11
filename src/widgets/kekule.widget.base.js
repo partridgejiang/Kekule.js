@@ -2610,7 +2610,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 
-			if ((subElems && subElems.length) || (docFrag.children && docFrag.children.length))
+			if ((subElems && subElems.length)
+					|| (docFrag.children && docFrag.children.length)
+					|| (docFrag.childNodes && docFrag.childNodes.length))
 				element.appendChild(docFrag);
 
 			this.doBindElement(element);
