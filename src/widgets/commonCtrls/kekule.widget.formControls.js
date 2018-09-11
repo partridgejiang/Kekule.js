@@ -104,8 +104,18 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		var coreElem = this.getCoreElement();
 		if (coreElem)
 		{
+			var ie8Fix = Kekule.Browser.IE && (Kekule.Browser.IEVersion === 8);
+
 			Kekule.X.Event.addListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.addListener(coreElem, 'input', this.reactInputBind);
+
+			if (ie8Fix)  // for IE 8, change or input event can not evoked on input, so we use keyup to detect
+			{
+				this._bindKeyupEvent = true;
+				Kekule.X.Event.addListener(coreElem, 'keyup', this.reactInputBind);
+			}
+			else
+				this._bindKeyupEvent = false;
 		}
 	},
 	/** @ignore */
@@ -116,6 +126,8 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		{
 			Kekule.X.Event.removeListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.removeListener(coreElem, 'input', this.reactInputBind);
+			if (this._bindKeyupEvent)
+				Kekule.X.Event.removeListener(coreElem, 'keyup', this.reactInputBind);  // for IE6-8
 		}
 		$super(element);
 	},
@@ -141,9 +153,8 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		this.notifyValueChanged();
 	},
 	/** @private */
-	reactInput: function()
+	reactInput: function(e)
 	{
-		//console.log('value input', this.getClassName());
 		this.setIsDirty(true);
 	}
 });
