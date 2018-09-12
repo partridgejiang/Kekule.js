@@ -204,7 +204,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @private */
 	OBSERVING_GESTURES: ['rotate', 'rotatestart', 'rotatemove', 'rotateend', 'rotatecancel',
-		'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout',],
+		'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout'],
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, editorConfigs)
 	{
