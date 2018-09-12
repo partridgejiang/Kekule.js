@@ -99,7 +99,8 @@
   background-image: url("images/slice/icons16/text_align_center_v.png");
 }
 
-.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content
+.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content,
+.K-Chem-SelectIaController > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/icons/cursorArrow.png");
 }
@@ -157,19 +158,23 @@
   background-image: url("images/slice/icons/arrow.png");
 }
 
-.K-Chem-BasicMolManipulationIaController-Marquee > .K-Pri-Glyph-Content
+.K-Chem-BasicMolManipulationIaController-Marquee > .K-Pri-Glyph-Content,
+.K-Chem-SelectIaController-Marquee > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/selectMarquee.gif");
 }
-.K-Chem-BasicMolManipulationIaController-Lasso > .K-Pri-Glyph-Content
+.K-Chem-BasicMolManipulationIaController-Lasso > .K-Pri-Glyph-Content,
+.K-Chem-SelectIaController-Lasso > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/selectLasso.gif");
 }
-.K-Chem-BasicMolManipulationIaController-Brush > .K-Pri-Glyph-Content
+.K-Chem-BasicMolManipulationIaController-Brush > .K-Pri-Glyph-Content,
+.K-Chem-SelectIaController-Brush > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/selectBrush.gif");
 }
-.K-Chem-BasicMolManipulationIaController-Ancestor > .K-Pri-Glyph-Content
+.K-Chem-BasicMolManipulationIaController-Ancestor > .K-Pri-Glyph-Content,
+.K-Chem-SelectIaController-Ancestor > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/selectMolecule.gif");
 }

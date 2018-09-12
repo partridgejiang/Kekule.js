@@ -13,7 +13,7 @@
 .K-Chem-Composer-TextDirection-Button > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-446px -18px}
 .K-Chem-Composer-TextAlign-Button-Horizontal > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-446px -36px}
 .K-Chem-Composer-TextAlign-Button-Vertical > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-446px -54px}
-.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:0 0}
+.K-Chem-BasicMolManipulationIaController > .K-Pri-Glyph-Content,.K-Chem-SelectIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:0 0}
 .K-Chem-BasicMolEraserIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:0 -26px}
 .K-Chem-MolAtomIaController > .K-Pri-Glyph-Content,.K-Chem-MolAtomAndFormulaIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:0 -52px}
 .K-Chem-Composer-Assoc-Toolbar .K-Chem-MolAtomIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-78px 0}
@@ -24,10 +24,10 @@
 .K-Chem-TextImageIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-52px 0}
 .K-Chem-MolRingIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-52px -26px}
 .K-Chem-ArrowLineIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-52px -52px}
-.K-Chem-BasicMolManipulationIaController-Marquee > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-78px -46px}
-.K-Chem-BasicMolManipulationIaController-Lasso > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-78px -69px}
-.K-Chem-BasicMolManipulationIaController-Brush > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px 0}
-.K-Chem-BasicMolManipulationIaController-Ancestor > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px -23px}
+.K-Chem-BasicMolManipulationIaController-Marquee > .K-Pri-Glyph-Content,.K-Chem-SelectIaController-Marquee > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-78px -46px}
+.K-Chem-BasicMolManipulationIaController-Lasso > .K-Pri-Glyph-Content,.K-Chem-SelectIaController-Lasso > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-78px -69px}
+.K-Chem-BasicMolManipulationIaController-Brush > .K-Pri-Glyph-Content,.K-Chem-SelectIaController-Brush > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px 0}
+.K-Chem-BasicMolManipulationIaController-Ancestor > .K-Pri-Glyph-Content,.K-Chem-SelectIaController-Ancestor > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px -23px}
 .K-Chem-ClientDragScrollIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px -46px}
 .K-Chem-Toggle-Select-State > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-101px -69px}
 .K-Chem-TextBlockIaController > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-124px 0}
@@ -86,4 +86,4 @@
 .K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-423px -23px}
 .K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-423px -46px}
 .K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content{background-image:url(sprite/chemEditorColor.png);background-position:-423px -69px}
-#CssGaga{content:"180901215335,swt,334"}
+#CssGaga{content:"180912214644,swt,334"}

@@ -2420,6 +2420,25 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 // register
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicMolManipulationIaController, Kekule.Editor.ChemSpaceEditor);
 
+/**
+ * IA Controller to select and manipulate objects in editor.
+ * @class
+ * @augments Kekule.Editor.BasicMolManipulationIaController
+ */
+Kekule.Editor.SelectIaController = Class.create(Kekule.Editor.BasicMolManipulationIaController,
+/** @lends Kekule.Editor.SelectIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.SelectIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this.setEnableSelect(true);
+	}
+});
+// register
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.SelectIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
  * Base IA Controller to insert structure objects (bonds, structure fragments...) into editor.

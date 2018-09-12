@@ -1020,10 +1020,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.creat
 	'Kekule.Editor.ActionComposerSetManipulateControllerMarquee',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_MARQUEE'),
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_MARQUEE'),
-	'BasicMolManipulationIaController',
-	'BasicMolManipulationIaController-Marquee',
+	'SelectIaController',
+	'SelectIaController-Marquee',
 	{
-		'enableSelect': true,
 		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.RECT
 	},
@@ -1042,10 +1041,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createC
 	'Kekule.Editor.ActionComposerSetManipulateControllerLasso',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_LASSO'),
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_LASSO'),
-	'BasicMolManipulationIaController',
-	'BasicMolManipulationIaController-Lasso',
+	'SelectIaController',
+	'SelectIaController-Lasso',
 	{
-		'enableSelect': true,
 		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYGON
 	},
@@ -1064,10 +1062,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createC
 	'Kekule.Editor.ActionComposerSetManipulateControllerBrush',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_BRUSH'),
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_BRUSH'),
-	'BasicMolManipulationIaController',
-	'BasicMolManipulationIaController-Brush',
+	'SelectIaController',
+	'SelectIaController-Brush',
 	{
-		'enableSelect': true,
 		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.POLYLINE
 	},
@@ -1086,10 +1083,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerAncestor = Kekule.Editor.crea
 	'Kekule.Editor.ActionComposerSetManipulateControllerAncestor',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_ANCESTOR'),
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_ANCESTOR'),
-	'BasicMolManipulationIaController',
-	'BasicMolManipulationIaController-Ancestor',
+	'SelectIaController',
+	'SelectIaController-Ancestor',
 	{
-		'enableSelect': true,
 		'enableGestureManipulation': true,
 		'selectMode': Kekule.Editor.SelectMode.ANCESTOR
 	},
@@ -1108,7 +1104,7 @@ Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createCompos
 	'Kekule.Editor.ActionComposerSetManipulateController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE'), //Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE'), //Kekule.ChemWidgetTexts.HINT_MANIPULATE,
-	'BasicMolManipulationIaController',
+	'SelectIaController',
 	null,
 	null,
 	[
