@@ -237,6 +237,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 						Kekule.Render.Render3DConfigs.getInstance():
 						Kekule.Render.Render2DConfigs.getInstance();
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('renderConfigs', value);
+				var painter = this.getPropStoreFieldValue('painter');
+				if (painter)
+					painter.setRenderConfigs(this.getRenderConfigs());
 			}
 		});
 		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
