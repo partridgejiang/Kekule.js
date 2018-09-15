@@ -6102,6 +6102,22 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this.setBaseCoord(currCoord);
 		this.setStartCoord(currCoord);
+
+		// check if mouse just on an object, if so, direct manipulation mode
+		var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
+		if (obj)  // mouse down directly on a object
+		{
+			obj = obj.getNearestSelectableObject();
+			if (this.isInAncestorSelectMode())
+				obj = this.getStandaloneAncestor(obj);
+			// only mouse down and moved will cause manupulating
+			if (this.getEnableMove())
+			{
+				this.startDirectManipulate(null, obj, currCoord);
+				return;
+			}
+		}
+
 		var coordRegion = currCoord && this.getEditor().getCoordRegionInSelectionMarker(currCoord);
 		var R = Kekule.Editor.BoxRegion;
 		var rotateRegion = currCoord && this.getCoordOnSelectionRotationRegion(currCoord);
@@ -6126,7 +6142,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			this._availTransformTypes = availManipulationTypes;  // stores the available transform types
 		}
-
 
 		// check if already has selection and mouse in selection rect first
 		//if (this.getEditor().isCoordInSelectionMarkerBound(coord))
@@ -6165,6 +6180,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		{
+			/*
 			var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
 			if (obj)  // mouse down directly on a object
 			{
@@ -6175,7 +6191,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				if (this.getEnableMove())
 					this.startDirectManipulate(null, obj, currCoord);
 			}
-			else  // mouse down on empty region, deselect old selection and prepare for new selecting
+			else */  // mouse down on empty region, deselect old selection and prepare for new selecting
 			{
 				if (this.getEnableMove() && this.getEnableSelect()
 						&& this.getEditorConfigs().getInteractionConfigs().getEnableOffSelectionManipulation()
