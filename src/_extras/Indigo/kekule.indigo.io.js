@@ -81,6 +81,6 @@ Kekule.IO.enableIndigoFormats = function()
 };
 KI._enableFuncs.push(Kekule.IO.registerAllIndigoFormats);
 
-//Kekule._registerAfterLoadProc(Kekule.IO.registerAllIndigoFormats);
+//Kekule._registerAfterLoadSysProc(Kekule.IO.registerAllIndigoFormats);
 
 })();

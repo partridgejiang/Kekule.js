@@ -499,8 +499,11 @@ Kekule.Render.RichTextUtils = {
 		return result;
 	},
 
+	/** @private */
 	_toDebugHtml: function(richText)
 	{
+		if (!richText.items)  // only one text part
+			return richText.text;
 		var result = '';
 		for (var i = 0, l = richText.items.length; i < l; ++i)
 		{
@@ -523,6 +526,16 @@ Kekule.Render.RichTextUtils = {
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Convert rich text to HTML code in a simple way.
+	 * @param {Object} richText
+	 * @returns {HTMLElement}
+	 */
+	toSimpleHtmlCode: function(richText)
+	{
+		return Kekule.Render.RichTextUtils._toDebugHtml(richText);
 	},
 
 	/**
@@ -1345,9 +1358,11 @@ Kekule.Render.MetaShapeUtils = {
 	createShapeInfo: function(shapeType, coords, additionalInfos)
 	//createBoundInfo: function(boundType, coords, additionalInfos)
 	{
-		var result = {};
+		var result = {'shapeType': shapeType, 'coords': coords};
+		/*
 		result.shapeType = shapeType;
 		result.coords = coords;
+		*/
 		if (additionalInfos)
 			result = Object.extend(result, additionalInfos);
 		return result;
@@ -1612,6 +1627,20 @@ Kekule.Render.MetaShapeUtils = {
 			distance = -distance;
 		return distance;
 	},
+	/** @private */
+	_getDistanceOfTwoLines: function(lineCoords1, lineCoords2)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var GU = Kekule.GeometryUtils;
+		// distance is 0 if two line segments cross
+		if (GU.getCrossPointOfLines(lineCoords1[0], lineCoords1[1], lineCoords2[0], lineCoords2[1]))
+			return 0;
+		var d1 = GU.getDistanceFromPointToLine(lineCoords1[0], lineCoords2[0], lineCoords2[1]);
+		var d2 = GU.getDistanceFromPointToLine(lineCoords1[1], lineCoords2[0], lineCoords2[1]);
+		var d3 = GU.getDistanceFromPointToLine(lineCoords2[0], lineCoords1[0], lineCoords1[1]);
+		var d4 = GU.getDistanceFromPointToLine(lineCoords2[1], lineCoords1[0], lineCoords1[1]);
+		return Math.min(d1, d2, d3, d4);
+	},
 
 	/**
 	 * Check if a point is inside a bound.
@@ -1865,6 +1894,71 @@ Kekule.Render.MetaShapeUtils = {
 	},
 
 	/**
+	 * Check if a shape is intersecting with a line with a certain stroke width.
+	 * @param {Object} shapeInfo
+	 * @param {Array} lineCoords
+	 * @param {Number} lineWidth
+	 * @returns {Bool}
+	 */
+	isIntersectingLine: function(shapeInfo, lineCoords, lineWidth)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		if (U.isCompositeShape(shapeInfo))
+		{
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				if (U.isIntersectingLine(childShape, lineCoords, lineWidth))
+					return true;
+			}
+			return false;
+		}
+		else
+		{
+			var lineShape = U.createShapeInfo(T.LINE, lineCoords);
+			var halfWidth = lineWidth / 2;
+			var shapeCoords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
+					return d <= halfWidth;
+				}
+				case T.CIRCLE:
+				{
+					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
+					return d <= halfWidth + (lineShape.radius || 0);
+				}
+				case T.LINE:
+				{
+					var d = U._getDistanceOfTwoLines(shapeCoords, lineCoords);
+					return d <= halfWidth + (lineShape.width || 0);
+				}
+				case T.RECT:
+				case T.POLYGON:
+				{
+					var coords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+					// calc min distance of each polygon edge to line
+					var d = null;
+					var j = coords.length - 1;
+					for (var i = 0, l = coords.length; i < l; ++i)
+					{
+						var edgeCoords = [coords[i], coords[j]];
+						var currDistance = U._getDistanceOfTwoLines(edgeCoords, lineCoords);
+						if (d === null || currDistance < d)
+							d = currDistance;
+						j = i;
+					}
+					return d <= halfWidth;
+				}
+			}
+			return false;
+		}
+	},
+	/**
 	 * Check if a shape is inside a rect box.
 	 * @param {Object} shapeInfo
 	 * @param {Hash} box
@@ -1904,6 +1998,150 @@ Kekule.Render.MetaShapeUtils = {
 					return true;
 			}
 			return false;
+		}
+	},
+	/**
+	 * Check if a 2D point inside a polygon.
+	 * The algorithm is from https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
+	 * @param {Hash} pointCoord
+	 * @param {Array} polygonCoords
+	 */
+	isPointInsidePolygon: function(pointCoord, polygonCoords)
+	{
+		var result = false;
+		var length = polygonCoords.length;
+		var j = length - 1;
+		for (var i = 0; i < length; ++i)
+		{
+			if (((polygonCoords[i].y > pointCoord.y) !== (polygonCoords[j].y > pointCoord.y)) &&
+					(pointCoord.x < (polygonCoords[j].x - polygonCoords[i].x) * (pointCoord.y - polygonCoords[i].y) / (polygonCoords[j].y - polygonCoords[i].y) + polygonCoords[i].x))
+			  result = !result;
+			j = i;
+		}
+		return result;
+	},
+	/**
+	 * Check if a shape is inside a polygon defined by polygonCoords.
+	 * @param {Object} shapeInfo
+	 * @param {Array} polygonCoords
+	 * @returns {Bool}
+	 */
+	isInsidePolygon: function(shapeInfo, polygonCoords)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var testCoords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+		if (!testCoords)
+			return false;
+		// every test coords should be in polygon
+		for (var i = 0, l = testCoords.length; i < l; ++i)
+		{
+			var c = testCoords[i];
+			if (!U.isPointInsidePolygon(c, polygonCoords))
+				return false;
+		}
+		return true;
+	},
+	/**
+	 * Check if a shape is intersecting with a polygon defined by polygonCoords.
+	 * @param {Object} shapeInfo
+	 * @param {Array} polygonCoords
+	 * @returns {Bool}
+	 */
+	isIntersectingPolygon: function(shapeInfo, polygonCoords)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var testCoords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+		if (!testCoords)
+			return false;
+		// at least one test coord should be in polygon
+		for (var i = 0, l = testCoords.length; i < l; ++i)
+		{
+			var c = testCoords[i];
+			if (U.isPointInsidePolygon(c, polygonCoords))
+				return true;
+		}
+		return false;
+	},
+	/**
+	 * Check if a shape is intersecting with a polyline with a certain stroke width.
+	 * @param {Object} shapeInfo
+	 * @param {Array} lineCoords
+	 * @param {Number} lineWidth
+	 * @returns {Bool}
+	 */
+	isIntersectingPolyline: function(shapeInfo, polylineCoords, lineWidth)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		for (var i = 0, l = polylineCoords.length - 1; i < l; ++i)
+		{
+			var lineCoords = [polylineCoords[i], polylineCoords[i + 1]];
+			if (U.isIntersectingLine(shapeInfo, lineCoords, lineWidth))
+				return true;
+		}
+		return false;
+	},
+	/** @private */
+	_getCoordsForShapeInComparingWithPolygon: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result;
+		if (U.isCompositeShape(shapeInfo))
+		{
+			result = [];
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childCoords = U._getCoordsForShapeInComparingWithPolygon(childShape);
+				result = result.concat(childCoords);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result = [coords[0]];
+					break;
+				}
+				case T.CIRCLE:
+				{
+					var radius = shapeInfo.radius || 0;
+					if (!radius)
+						result = [coords[0]];
+					else // create a octagon to simulate the circle
+					{
+						var r = radius;
+						var a = r / Math.sqrt(2);
+						result = [{x: r, y: 0}, {x: a, y: a}, {x: 0, y: r}, {x: -a, y: a}, {x: -r, y: 0}, {x: -a, y: -a}, {
+							x: 0,
+							y: -r
+						}, {x: a, y: -a}];
+					}
+					break;
+				}
+				case T.LINE:
+				{
+					result = [coords[0], coords[1]];
+					break;
+				}
+				case T.RECT:
+				{
+					var c0 = coords[0], c1 = coords[1];
+					result = [c0, {x: c1.x, y: c0.y}, c1, {x: c0.x, y: c1.y}];
+					break;
+				}
+				case T.POLYGON:
+				{
+					result = coords;
+					break;
+				}
+			}
+			return result;
 		}
 	}
 };
@@ -2394,7 +2632,7 @@ Kekule.Render.RendererDefineUtils = {
 					if (b)
 					{
 						if (!result)
-							result = Object.extend({}, b);
+							result = BU.clone(b); //Object.extend({}, b);
 						else
 							result = BU.getContainerBox(result, b);
 					}

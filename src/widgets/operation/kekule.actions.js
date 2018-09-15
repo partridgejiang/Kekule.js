@@ -535,6 +535,27 @@ Kekule.ActionList = Class.create(ObjectEx,
 		return this.getActions().indexOf(action);
 	},
 	/**
+	 * Change the position of action in list.
+	 * @param {Kekule.Action} action
+	 * @param {Int} index
+	 */
+	setActionIndex: function(action, index)
+	{
+		var actions = this.getActions();
+		if (actions)
+		{
+			var oldIndex = actions.indexOf(action);
+			if (oldIndex >= 0 && oldIndex !== index)
+			{
+				// remove from old position
+				actions.splice(oldIndex, 1);
+				// insert to new
+				actions.splice(index, 0, action);
+			}
+		}
+		return this;
+	},
+	/**
 	 * Check whether an action is in this list.
 	 * @param {Kekule.Action} action
 	 * @returns {Bool}

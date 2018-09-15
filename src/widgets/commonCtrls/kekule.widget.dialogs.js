@@ -121,7 +121,11 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
+		//this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
+		if (this.getModalInfo())
+		{
+			this.getGlobalManager().unprepareModalWidget(this);
+		}
 		$super();
 	},
 	/** @private */
@@ -414,12 +418,15 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				 var selfWidth = this.getOffsetWidth();
 				 var selfHeight = this.getOffsetHeight();
 				 */
-				var viewPortDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
-				var selfBoundingRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+				//var viewPortDim = Kekule.DocumentUtils.getClientDimension(this.getDocument());
+				var viewPortDim = Kekule.DocumentUtils.getInnerClientDimension(this.getDocument());
+				//var selfBoundingRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getElement());
+				var selfBoundingRect = Kekule.HtmlElementUtils.getElemPageRect(this.getElement(), true);
 				var selfWidth = selfBoundingRect.right - selfBoundingRect.left;
 				var selfHeight = selfBoundingRect.bottom - selfBoundingRect.top;
 				var parent = this.getOffsetParent();
-				var parentBoundingRect = parent? Kekule.HtmlElementUtils.getElemBoundingClientRect(parent):
+				//var parentBoundingRect = parent? Kekule.HtmlElementUtils.getElemBoundingClientRect(parent):
+				var parentBoundingRect = parent? Kekule.HtmlElementUtils.getElemPageRect(parent, true):
 					{'left': 0, 'top': 0, 'width': 0, 'height': 0};
 				overflow = (selfWidth >= viewPortDim.width) || (selfHeight >= viewPortDim.height);
 			}
@@ -433,6 +440,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 			{
 				if (overflow)
 				{
+					var viewPortBox = Kekule.DocumentUtils.getClientVisibleBox(this.getDocument());
 					//location = L.FULLFILL;
 					if (selfWidth >= viewPortDim.width)
 					{
@@ -479,6 +487,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				//console.log('center', l, t);
 			}
 
+			//overflow = true;  // debug
 			if (overflow)  // use absolute position
 			{
 				this.removeClassName(CNS.DIALOG_INSIDE);

@@ -174,7 +174,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0; i < 2; ++i)
 				{
 					var node = endNodes[i];
-					var hydroCount = node.getHydrogenCount();
+					var hydroCount = node.getHydrogenCount(true);  // include explicit bonded H atoms
 					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
 					if ((hydroCount >= 2) || (!sideObjs.length))
 					{
@@ -249,9 +249,13 @@ Kekule.MolStereoUtils = {
 					}
 					else if (sideObjs.length === 2)
 					{
-						var index1 = sideObjs[0].getCanonicalizationIndex();
-						var index2 = sideObjs[1].getCanonicalizationIndex();
+						var index1 = sideObjs[0].getCanonicalizationIndex() || -1;  // cano index maybe undefined to explicit H atom
+						var index2 = sideObjs[1].getCanonicalizationIndex() || -1;
 						refNodes.push((index2 > index1)? sideObjs[1]: sideObjs[0]);
+					}
+					else // too many sideObjs number, maybe a incorrect structure?
+					{
+						return null;
 					}
 				}
 				result = [refNodes[0], endNodes[0], endNodes[1], refNodes[1]];
@@ -1003,7 +1007,9 @@ Kekule.MolStereoUtils = {
 
 		// Canonicalize first
 		if (!ignoreCanonicalization)
+		{
 			Kekule.canonicalizer.canonicalize(targetFragment, 'morganEx');
+		}
 
 		targetFragment.beginUpdate();
 		try

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control"content="no-cache"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Chem Editor Demo</title>
+  <style>
+    html, body
+    {
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+    }
+    iframe
+    {
+      /*
+      width: 100%;
+      height: 100%;
+      */
+      margin: 0;
+      border: none;
+      touch-action: none;
+    }
+  </style>
+  <script>
+    var MIN_WIDTH = 510;
+    var MIN_HEIGHT = 350;
+    var editorFrame;
+    function getClientDimension(document)
+    {
+      if (document.compatMode == "BackCompat")
+      {
+        return {
+          'width': document.body.clientWidth,
+          'height': document.body.clientHeight
+        }
+      }
+      else
+      {
+        return	{
+          'width': document.documentElement.clientWidth,
+          'height': document.documentElement.clientHeight
+        }
+      }
+    }
+    function adjustSize()
+    {
+      var dim = getClientDimension(document);
+
+      var ratioWidth = dim.width / MIN_WIDTH, ratioHeight = dim.height / MIN_HEIGHT;
+      var scale = (ratioWidth <= ratioHeight)? ratioWidth: ratioHeight;
+      var editorWidth, editorHeight, transformScale;
+      if (scale >= 1)
+      {
+        editorWidth = dim.width;
+        editorHeight = dim.height;
+        transformScale = 1;
+      }
+      else
+      {
+        editorWidth = dim.width / scale;
+        editorHeight = dim.height / scale;
+        transformScale = scale;
+      }
+
+      var style = editorFrame.style;
+      style.width = editorWidth + 'px';
+      style.height = editorHeight + 'px';
+      style.transformOrigin = '0 0';
+      style.transform = 'scale(' + transformScale + ')';
+      console.log('zoom: ', editorWidth + ' : ', editorHeight);
+      console.log(dim);
+    }
+    function init()
+    {
+      editorFrame = document.getElementById('editorFrame');
+      adjustSize();
+      window.onresize = adjustSize;
+    }
+  </script>
+</head>
+<body onload="init()">
+  <iframe id="editorFrame" src="chemEditorCore.html"></iframe>
+</body>
+</html>

@@ -303,18 +303,32 @@ Kekule.MapEx = Class.create(
 	/** @private */
 	CLASS_NAME: 'Kekule.MapEx',
 	/** @constructs */
-	initialize: function(nonWeak)
+	initialize: function(nonWeak, enableCache)
 	{
 		this.isWeak = !nonWeak;
 		if (!Kekule.MapEx._inited)
 			Kekule.MapEx._init();
+		// try use built in
+		var _implClass = nonWeak? Kekule.MapEx._implementationNonWeak: Kekule.MapEx._implementationWeak;
+		if (!_implClass)  // fall back to JavaScript implementation
+		{
+			this._keys = [];
+			this._values = [];
+		}
+		else
+			this._implementation = new _implClass();
+		if (enableCache)
+			this._cache = {};  // cache enabled for performance
+		/*
 		if ((!Kekule.MapEx._implementation) || (!this.isWeak))  // use JavaScript implementation
+		if (!this._implementation)
 		{
 			this.keys = [];
 			this.values = [];
 		}
 		else  // use built-in implementation
 			this._implementation = new Kekule.MapEx._implementation();
+		*/
 	},
 	/**
 	 * Free resources.
@@ -323,8 +337,9 @@ Kekule.MapEx = Class.create(
 	{
 		if (!this._implementation)
 		{
-			this.keys = null;
-			this.values = null;
+			this._keys = null;
+			this._values = null;
+			this._cache = null;
 		}
 	},
 	/**
@@ -338,14 +353,18 @@ Kekule.MapEx = Class.create(
 			this._implementation.set(key, value);
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
-				this.values[index] = value;
+				this._values[index] = value;
 			else
 			{
-				this.keys.push(key);
-				this.values.push(value);
+				this._keys.push(key);
+				this._values.push(value);
 			}
+		}
+		if (this._cache && this._cache.key === key)
+		{
+			this._cache.value = value;
 		}
 		//console.log(key, value, this.get(key));
 		return this;
@@ -358,16 +377,35 @@ Kekule.MapEx = Class.create(
 	 */
 	get: function(key, defaultValue)
 	{
+		if (this._cache && this._cache.key === key)  // has cache, return directly
+			return this._cache.value;
+
+		var result;
+		var found = false;
 		if (this._implementation)
-			return this._implementation.get(key, defaultValue);
+		{
+			if (this._implementation.has(key))
+			{
+				result = this._implementation.get(key);
+				found = true;
+			}
+		}
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
-				return this.values[index];
-			else  // not found
-				return defaultValue;
+			{
+				result = this._values[index];
+				found = true;
+			}
 		}
+
+		if (found && this._cache)  // set cache
+		{
+			this._cache.key = key;
+			this._cache.value = result;
+		}
+		return found? result: defaultValue;
 	},
 	/**
 	 * Check whether a value has been associated to the key object.
@@ -380,7 +418,7 @@ Kekule.MapEx = Class.create(
 			return this._implementation.has(key);
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			return index >= 0;
 		}
 	},
@@ -390,15 +428,18 @@ Kekule.MapEx = Class.create(
 	 */
 	remove: function(key)
 	{
+		if (this._cache && this._cache.key === key)  // clear cache
+			this._cache = {};
+
 		if (this._implementation)
 			return this._implementation['delete'](key);  // avoid IE regard delete as a reserved word
 		else
 		{
-			var index = this.keys.indexOf(key);
+			var index = this._keys.indexOf(key);
 			if (index >= 0)
 			{
-				this.keys.splice(index, 1);
-				this.values.splice(index, 1);
+				this._keys.splice(index, 1);
+				this._values.splice(index, 1);
 			}
 		}
 		return this;
@@ -408,14 +449,21 @@ Kekule.MapEx = Class.create(
 	 */
 	clear: function()
 	{
-		if (!this._implementation)
+		if (this._cache)  // clear cache
+			this._cache = {};
+
+		if (!this._implementation || this._debug)
 		{
-			this.keys = [];
-			this.values = [];
+			this._keys = [];
+			this._values = [];
 		}
-		else
+		//else
+		if (this._implementation)
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_CLEAR_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP*/);
+			if (this.isWeak)
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_CLEAR_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_CLEAR_WEAKMAP*/);
+			else
+				this._implementation.clear();
 		}
 		return this;
 	},
@@ -426,11 +474,31 @@ Kekule.MapEx = Class.create(
 	getKeys: function()
 	{
 		if (!this._implementation)
-			return [].concat(this.keys);  // clone the array, avoid modification
-		else  // weak map, can not return keys
+			return [].concat(this._keys);  // clone the array, avoid modification
+		else
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP*/);
-			return [];
+			if (this.isWeak)
+			{
+				// weak map, can not return keys
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_KEY_LIST_IN_WEAKMAP*/);
+				return [];
+			}
+			else
+			{
+				var iter = this._implementation.keys();
+				var result;
+				if (Array.from)
+					result = Array.from(iter);
+				else
+				{
+					result = [];
+					for (var item in iter)
+					{
+						result.push(item);
+					}
+				}
+				return result;
+			}
 		}
 	},
 	/**
@@ -440,21 +508,52 @@ Kekule.MapEx = Class.create(
 	getValues: function()
 	{
 		if (!this._implementation)
-			return this.values;
-		else  // weak map, can not return keys
+			return this._values;
+		else
 		{
-			Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP*/);
-			return [];
+			if (this.isWeak)
+			{
+				// weak map, can not return keys
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP')/*Kekule.ErrorMsg.CANNOT_GET_VALUE_LIST_IN_WEAKMAP*/);
+				return [];
+			}
+			else
+			{
+				var iter = this._implementation.values();
+				var result;
+				if (Array.from)
+					result = Array.from(iter);
+				else
+				{
+					result = [];
+					for (var item in iter)
+					{
+						result.push(item);
+					}
+				}
+				return result;
+			}
 		}
+	},
+	/**
+	 * Return count all map items.
+	 * @returns {Int}
+	 */
+	getLength: function()
+	{
+		return this.getKeys().length;
 	}
 });
 /** @private */
 Kekule.MapEx._init = function()
 {
+	Kekule.MapEx._implementationWeak = null;  // use JavaScript implementation
+	Kekule.MapEx._implementationNonWeak = null;  // use JavaScript implementation
 	if (Kekule.$jsRoot.WeakMap)  // Fx6 and above, use built-in WeakMap object
-		Kekule.MapEx._implementation = Kekule.$jsRoot.WeakMap;
-	else
-		Kekule.MapEx._implementation = null;  // use JavaScript implementation
+		Kekule.MapEx._implementationWeak = Kekule.$jsRoot.WeakMap;
+	if (Kekule.$jsRoot.Map && Kekule.$jsRoot.Map.prototype.keys)  // the implementation of Map in IE does not support keys() and values()
+		Kekule.MapEx._implementationNonWeak = Kekule.$jsRoot.Map;
+
 	Kekule.MapEx._inited = true;
 };
 Kekule.MapEx._inited = false;
@@ -472,28 +571,45 @@ Kekule.TwoTupleMapEx = Class.create(
 	/** @private */
 	CLASS_NAME: 'Kekule.TwoTupleMapEx',
 	/** @constructs */
-	initialize: function(nonWeak)
+	initialize: function(nonWeak, enableCache)
 	{
 		this.nonWeak = nonWeak;
-		this.map = new Kekule.MapEx(nonWeak);
+		this.map = new Kekule.MapEx(nonWeak, enableCache);
+
+		if (enableCache)
+			this._level1Cache = {};  // a cache for quickly find level 1 map
 	},
 	/**
 	 * Free resources.
 	 */
 	finalize: function()
 	{
+		this._level1Cache = null;
 		this.map.finalize();
 	},
 	/** @private */
 	getSecondLevelMap: function(key1, allowCreate)
 	{
-		var result = this.map.get(key1);
-		if ((!result) && allowCreate)
+
+		if (key1 && this._level1Cache && (key1 === this._level1Cache.key) && this._level1Cache.value)
 		{
-			result = new Kekule.MapEx(this.nonWeak);
-			this.map.set(key1, result);
+			return this._level1Cache.value;
 		}
-		return result;
+		else
+		{
+			var result = this.map.get(key1);
+			if ((!result) && allowCreate)
+			{
+				result = new Kekule.MapEx(this.nonWeak);
+				this.map.set(key1, result);
+			}
+			/*
+			// set to cache
+			this._level1Cache.key = key1;
+			this._level1Cache.value = result;
+			*/
+			return result;
+		}
 	},
 
 	/**
@@ -554,6 +670,8 @@ Kekule.TwoTupleMapEx = Class.create(
 	clear: function()
 	{
 		this.map.clear();
+		if (this._level1Cache)
+			this._level1Cache = {};
 	}
 });
 
@@ -1350,7 +1468,8 @@ Kekule.ClassDefineUtils = {
 						return Kekule.CoordUtils.add(c, p.getAbsCoord2D(allowCoordBorrow) || {});
 					}
 					else
-						return Object.extend({}, c);
+						//return Object.extend({}, c);
+						return {'x': c.x, 'y': c.y};
 				},
 				'setter': function(value){
 					var c = value;
@@ -1372,7 +1491,8 @@ Kekule.ClassDefineUtils = {
 					if (p && p.getAbsCoord3D)
 						return Kekule.CoordUtils.add(c, p.getAbsCoord3D(allowCoordBorrow) || {});
 					else
-						return Object.extend({}, c);
+						//return Object.extend({}, c);
+						return {'x': c.x, 'y': c.y, 'z': c.z};
 				},
 				'setter': function(value){
 					var c = value;
@@ -1458,7 +1578,7 @@ Kekule.ClassDefineUtils = {
 				var result = this.getPropStoreFieldValue(mapName);
 				if (!result)
 				{
-					result = new Kekule.MapEx(true);
+					result = new Kekule.MapEx(true, true);  // enable cache
 					this.setPropStoreFieldValue(mapName, result);
 				}
 				return result;
@@ -1482,7 +1602,7 @@ Kekule.ClassDefineUtils = {
 		 */
 		getExtraProp2: function(obj1, obj2, propName)
 		{
-			var info = this.getExtraTwoTupleObjMap().get(obj1, obj2);
+			var info = (this.__$__k__extraTwoTupleObjMap__$__ || this.getExtraTwoTupleObjMap()).get(obj1, obj2);
 			if (info)
 				return propName? info[propName]: info;
 			else
@@ -1505,7 +1625,7 @@ Kekule.ClassDefineUtils = {
 			{
 				var info = {};
 				info[propName] = propValue;
-				this.getExtraTwoTupleObjMap().set(obj1, obj2, info);
+				(this.__$__k__extraTwoTupleObjMap__$__ || this.getExtraTwoTupleObjMap()).set(obj1, obj2, info);
 			}
 		},
 		/**
@@ -1537,8 +1657,9 @@ Kekule.ClassDefineUtils = {
 				var result = this.getPropStoreFieldValue(mapName);
 				if (!result)
 				{
-					result = new Kekule.TwoTupleMapEx(true);
+					result = new Kekule.TwoTupleMapEx(true, true);  // enable cache
 					this.setPropStoreFieldValue(mapName, result);
+					this.__$__k__extraTwoTupleObjMap__$__ = result;  // a field to store the map, for performance
 				}
 				return result;
 			}
@@ -1929,6 +2050,12 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				return result;
 			}
 		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setEnableObjectChangeEvent(true);
 	},
 
 	/** @private */
@@ -2369,12 +2496,14 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		if (!targetObj)
 			return 1;
 		var actualOps = this.doGetActualCompareOptions(options);
-		//console.log(options, actualOps);
+		//console.log(this.getClassName(), options, actualOps);
 		var result;
 		if (actualOps.customMethod)
 			result = actualOps.customMethod(this, targetObj, actualOps);
 		else
+		{
 			result = this.doCompare(targetObj, actualOps);
+		}
 		return (result === 0)? 0: (result < 0)? -1: 1;  // standardize result
 	},
 	/**
@@ -2413,7 +2542,24 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			}
 			else  // same class, must compare details, here we use default approach, comparing properties
 			{
-				return this.doCompareOnProperties(targetObj, options);
+				var result = this.doCompareOnProperties(targetObj, options);
+				if (!result && options.extraComparisonProperties)
+				{
+					for (var i = 0, l = options.extraComparisonProperties.length; i < l; ++i)
+					{
+						var propName = options.extraComparisonProperties[i];
+						if (this.hasProperty(propName) && targetObj.hasProperty && targetObj.hasProperty(propName))
+						{
+							var v1 = this.getPropValue(propName);
+							var v2 = targetObj.getPropValue(propName);
+							//console.log('compare extra', this.getClassName(), propName, v1, v2);
+							result = this.doCompareOnValue(v1, v2, options);
+							if (!result)
+								break;
+						}
+					}
+				}
+				return result;
 			}
 		}
 	},
@@ -2900,7 +3046,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 			if (box)
 			{
 				if (!result)
-					result = Object.extend({}, box);
+					result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 				else
 					result = Kekule.BoxUtils.getContainerBox(result, box);
 			}

@@ -18,6 +18,8 @@
 (function() {
 "use strict";
 
+var AU = Kekule.ArrayUtils;
+
 /**
  * Enumeration of comparation of chem structure.
  * @enum
@@ -47,6 +49,12 @@ Kekule.globalOptions.structureComparation = {
 
 Kekule.globalOptions.add('algorithm.structureComparation', {
 	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
+});
+Kekule.globalOptions.add('algorithm.structureClean', {
+	structureCleanOptions: {
+		'orphanChemNode': true,
+		'hangingChemConnector': true
+	}
 });
 
 // extend method to Kekule.ObjComparer
@@ -169,13 +177,15 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			'dataType': DataType.ARRAY,
 			'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
-			'setter': null,
+			'setter': null
+			/*
 			'getter': function()
 				{
 					if (!this.getPropStoreFieldValue('linkedConnectors'))
 						this.setPropStoreFieldValue('linkedConnectors', []);
 					return this.getPropStoreFieldValue('linkedConnectors');
 				}
+			*/
 		});
 		this.defineProp('linkedObjs', {
 			'dataType': DataType.ARRAY,
@@ -248,7 +258,14 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	doGetActualCompareOptions: function($super, options)
 	{
 		if (options && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
-			return Kekule.ObjComparer.getStructureComparisonDetailOptions(options);
+		{
+			var result = Kekule.ObjComparer.getStructureComparisonDetailOptions(options);
+			if (options.customMethod)
+				result.customMethod = options.customMethod;
+			if (options.extraComparisonProperties)
+				result.extraComparisonProperties = options.extraComparisonProperties;
+			return result;
+		}
 		else
 			return $super(options);
 	},
@@ -2083,6 +2100,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.StructureConnectionTable',
+	/** @private */
+	TRAVERS_VISITED_KEY: '__$ctabTraversVisited__',
 	/**
 	 * @constructs
 	 */
@@ -2143,8 +2162,15 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				for (var i = 0, l = this.getNodeCount(); i < l; ++i)
 				{
 					var node = this.getNodeAt(i);
+					/*
 					if (!node.isHydrogenAtom || !node.isHydrogenAtom())
 						result.push(node);
+					*/
+					if (node instanceof Kekule.ChemStructureNode)
+					{
+						if (!node.isHydrogenAtom || !node.isHydrogenAtom())
+							result.push(node);
+					}
 				}
 				return result;
 			}
@@ -3755,6 +3781,119 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		result.deltaY = result.y2 - result.y1;
 		result.deltaZ = result.z2 - result.z1;
 		return result;
+	},
+
+	/**
+	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
+	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
+	 * @param {Bool} breadthFirst Set to true to use breadth first algorithm or false to use depth first algorithm.
+	 * @param {Array} partialNodes If this param is set, only part of the structure will be traversed.
+	 * @returns {Hash} A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.
+	 *   Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.
+	 */
+	traverse: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		var result = {'nodes': [], 'connectors': []};
+		var VISITED_KEY = '__$ctabTraverseVisited__';
+
+		var remainingNodes = AU.clone(partialNodes || this.getNodes());
+		// init
+		for (var i = 0, l = remainingNodes.length; i < l; ++i)
+		{
+			remainingNodes[i][this.TRAVERS_VISITED_KEY] = false;
+		}
+
+		while (remainingNodes.length)
+		{
+			var currNode;
+			if (startingNode && (remainingNodes.indexOf(startingNode) >= 0))
+				currNode = startingNode;
+			else
+				currNode = remainingNodes[0];
+
+			var partialResult = this._doTravers(callback, currNode, breadthFirst, partialNodes);
+			result.nodes = result.nodes.concat(partialResult.nodes);
+			result.connectors = result.connectors.concat(partialResult.connectors);
+			remainingNodes = AU.exclude(remainingNodes, partialResult.nodes);
+		}
+		return result;
+	},
+	/** @private */
+	_doTravers: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		var result = {
+			nodes: [],
+			connectors: []
+		};
+		var node = startingNode;
+
+		if (!node[this.TRAVERS_VISITED_KEY])
+		{
+			result.nodes.push(node);
+			node[this.TRAVERS_VISITED_KEY] = true;
+			if (callback)
+				callback(node, false);
+		}
+
+		var connectors = AU.clone(node.getLinkedConnectors());
+		var allConnectors = this.getConnectors();
+		connectors.sort(function(c1, c2){
+			return allConnectors.indexOf(c1) - allConnectors.indexOf(c2);
+		});
+
+		var unvisitedNodes = [];
+
+		for (var i = 0, l = connectors.length; i < l; ++i)
+		{
+			var connector = connectors[i];
+			var neighborNodes = node.getLinkedObjsOnConnector(connector);
+			if (partialNodes)
+			  neighborNodes = AU.intersect(neighborNodes, partialNodes);
+
+			for (var j = 0, k = neighborNodes.length; j <k; ++j)  // filter out the first node
+			{
+				var neighborNode = neighborNodes[j];  // TODO: only the normal molecule with two-end bond can be traversed
+				if (neighborNode instanceof Kekule.BaseStructureNode)
+					break;
+			}
+
+			if (!neighborNode)
+				continue;
+
+			if (!neighborNode[this.TRAVERS_VISITED_KEY])
+			{
+				result.nodes.push(neighborNode);
+				result.connectors.push(connector);
+				neighborNode[this.TRAVERS_VISITED_KEY] = true;
+				if (callback)
+				{
+					callback(connector, true);
+					callback(neighborNode, false);
+				}
+
+				if (breadthFirst)
+					unvisitedNodes.push(neighborNode);
+				else // depth first
+				{
+					var nextResult = this._doTravers(callback, neighborNode, breadthFirst, partialNodes);
+					result.nodes = result.nodes.concat(nextResult.nodes);
+					result.connectors = result.connectors.concat(nextResult.connectors);
+				}
+			}
+		}
+
+		if (breadthFirst)
+		{
+			for (var i = 0, l = unvisitedNodes.length; i < l; ++i)
+			{
+				var n = unvisitedNodes[i];
+				var nextResult = this._doTravers(callback, n, breadthFirst, partialNodes);
+				result.nodes = result.nodes.concat(nextResult.nodes);
+				result.connectors = result.connectors.concat(nextResult.connectors);
+			}
+		}
+		return result;
 	}
 });
 
@@ -4041,6 +4180,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/** @ignore */
 	doCompare: function($super, targetObj, options)
 	{
+		//console.log('do compare structure', options);
 		var result = $super(targetObj, options);
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
@@ -4085,6 +4225,39 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							for (var i = 0, l = connectors1.length; i < l; ++i)
 							{
 								result = this.doCompareOnValue(connectors1[i], connectors2[i], options);
+								if (result !== 0)
+									break;
+							}
+						}
+					}
+
+					// The node/connector sequence check can distinguish most molecules
+					// but a few of them (e.g. issue#74 https://github.com/partridgejiang/Kekule.js/issues/74)
+					// still need a spanning tree check
+					if (result === 0)
+					{
+						//console.log('spanning tree compare');
+						// traverse from the last node, with all non hydrongen nodes
+						var nonHydrogenNodesThis = this.getNonHydrogenNodes();
+						var nonHydrogenNodesTarget = targetObj.getNonHydrogenNodes();
+						var traversedObjsThis = this.traverse(null, nonHydrogenNodesThis[nonHydrogenNodesThis.length - 1], true, nonHydrogenNodesThis);
+						var traversedObjsTarget = targetObj.traverse(null, nonHydrogenNodesTarget[nonHydrogenNodesTarget.length - 1], true, nonHydrogenNodesTarget);
+						//console.log(traversedObjsThis.nodes, traversedObjsTarget.nodes);
+						for (var i = 0, l = traversedObjsThis.nodes.length; i < l; ++i)
+						{
+							var nodeThis = traversedObjsThis.nodes[i];
+							var nodeTarget = traversedObjsTarget.nodes[i];
+							result = this.doCompareOnValue(nodeThis, nodeTarget, options);
+							if (result !== 0)
+								break;
+						}
+						if (result === 0)
+						{
+							for (var i = 0, l = traversedObjsThis.connectors.length; i < l; ++i)
+							{
+								var connectorThis = traversedObjsThis.connectors[i];
+								var connectorTarget = traversedObjsTarget.connectors[i];
+								result = this.doCompareOnValue(connectorThis, connectorTarget, options);
 								if (result !== 0)
 									break;
 							}
@@ -5044,6 +5217,61 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Clean the structure in ctab, removing illegal nodes and connectors.
+	 * @param {Hash} options An option hash, can including fields: {orphanChemNode, hangingChemConnector}.
+	 */
+	clean: function(options)
+	{
+		var op = Object.extend({}, Kekule.globalOptions.algorithm.structureClean.structureCleanOptions);
+		op = Object.extend(op, options || {});
+
+		return this.doClean(op);
+	},
+	/** @private */
+	doClean: function(options)
+	{
+		if (options.hangingChemConnector)
+		{
+			for (var i = this.getConnectorCount() - 1; i >= 0; --i)
+			{
+				var conn = this.getConnectorAt(i);
+				if (conn instanceof Kekule.ChemStructureConnector)
+				{
+					if (conn.getConnectedObjCount() < 2)
+					{
+						this.removeConnectorAt(i);
+					}
+				}
+			}
+		}
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) && node.doClean)
+				{
+					node.doClean(options);
+				}
+				else
+				{
+					if (options.orphanChemNode)
+					{
+						if (node.getLinkedConnectorCount() < 1 && nodeCount > 1)  // if only one node in structure, do not clean it
+						{
+							this.removeNodeAt(i);
+						}
+					}
+				}
+			}
+		}
+
+		return this;
+	},
+
+	/**
 	 * Calculate molecular formula from this connection table.
 	 * @returns {Kekule.MolecularFormula}
 	 */
@@ -5392,6 +5620,24 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			}
 			return result;
 		}
+	},
+
+	/**
+	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
+	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
+	 * @param {Bool} breadthFirst Set to true to use breadth first algorithm or false to use depth first algorithm.
+	 * @param {Array} partialNodes If this param is set, only part of the structure will be traversed.
+	 * @returns {Hash} A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.
+	 *   Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.
+	 *   If the structure has no ctab, null will be returned.
+	 */
+	traverse: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		if (this.hasCtab())
+			return this.getCtab().traverse(callback, startingNode, breadthFirst);
+		else
+			return null;
 	}
 });
 
@@ -7110,7 +7356,7 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 				if (box)
 				{
 					if (!result)
-						result = Object.extend({}, box);
+						result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 					else
 						result = Kekule.BoxUtils.getContainerBox(result, box);
 				}

@@ -1292,6 +1292,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 */
 	transformObjCoord3DToContext: function(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow)
 	{
+		var result;
 		if (obj && obj.getAbsBaseCoord3D)
 		{
 			coord = obj.getAbsBaseCoord3D(allowCoordBorrow);
@@ -1299,6 +1300,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 			{
 				var newCoord = Kekule.CoordUtils.transform3DByMatrix(coord, transformMatrix);
 				this.setTransformedCoord3D(context, obj, newCoord);
+				result = newCoord;
 			}
 			if (obj.getNodes)  // has child nodes
 			{
@@ -1307,6 +1309,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 					this.transformObjCoord3DToContext(context, obj.getNodeAt(i), childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 		}
+		return result;
 	},
 
 	/**
@@ -1331,12 +1334,13 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 			//this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix);
 			if (ctab && (ctab.hasNode(obj, false) || ctab.hasConnector(obj, false)))  // is direct child of ctab
 			{
-				this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 			else  // is nested child
-				this.transformObjCoord3DToContext(obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord3DToContext(obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 		}
-		return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		//return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		return result;
 	},
 	/**
 	 * Set transformed coord.
@@ -1869,7 +1873,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 			for (var i = 0, l = childObjs.length; i < l; ++i)
 			{
 				var obj = childObjs[i];
-				r = r.concat(obj.getAttachedMarkers());
+				r = r.concat(obj.getAttachedMarkers() || []);
 			}
 			return r.concat($super());
 		}

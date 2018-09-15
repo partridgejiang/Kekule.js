@@ -41,10 +41,15 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_COPY: 'K-Chem-Copy',
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
+	ACTION_TOGGLE_SELECT: 'K-Chem-Toggle-Select-State',
 	ACTION_TOGGLE_INSPECTOR: 'K-Chem-Toggle-Inspector'
 });
 
 Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
+	manipulateMarquee: 'manipulateMarquee',
+	manipulateLasso: 'manipulateLasso',
+	manipulateBrush: 'manipulateBrush',
+	manipulateAncestor: 'manipulateAncestor',
 	molBondSingle: 'bondSingle',
 	molBondDouble: 'bondDouble',
 	molBondTriple: 'bondTriple',
@@ -122,7 +127,7 @@ Kekule.Editor.ActionOperUtils = {
 				for (var i = 0, l = objs.length; i < l; ++i)
 				{
 					var obj = objs[i];
-					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace);
+					var oper = new Kekule.ChemObjOperation.Add(objs[i], chemSpace, null, editor);
 					marcoOper.add(oper);
 				}
 				marcoOper.execute();
@@ -157,6 +162,7 @@ Kekule.Editor.ActionOperUtils = {
  * @param {Kekule.Editor.BaseEditor} editor Target editor object.
  * @param {String} caption
  * @param {String} hint
+ * @param {String} explicitGroup Use this property to explicitly set child actions to different group.
  */
 Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 /** @lends Kekule.Editor.ActionOnEditor# */
@@ -167,6 +173,21 @@ Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 	initialize: function($super, editor, caption, hint)
 	{
 		$super(editor, caption, hint);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('explicitGroup', {'dataType': DataType.STRING});
+	},
+
+	/**
+	 * Returns the widget class that best fit this action.
+	 * Descendants may override this method.
+	 * @returns {null}
+	 */
+	getPreferredWidgetClass: function()
+	{
+		return null;
 	},
 	/** @private */
 	doUpdate: function()
@@ -586,6 +607,54 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 });
 
 /**
+ * Set isToggleSelectionOn property to editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionToggleSelectState# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionToggleSelectState',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SELECT,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT'));
+		this.setExplicitGroup('');  // force no check group
+	},
+	/** @ignore */
+	getPreferredWidgetClass: function()
+	{
+		return Kekule.Widget.CheckButton;
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		this.setChecked(this.getEditor().getIsToggleSelectOn());
+	},
+	/** @ignore */
+	checkedChanged: function($super)
+	{
+		$super();
+
+	},
+	/** @ignore */
+	doExecute: function($super, target, htmlEvent)
+	{
+		$super(target, htmlEvent);
+		var oldChecked = this.getChecked();
+		var editor = this.getEditor();
+		editor.setIsToggleSelectOn(!oldChecked);
+		this.setChecked(!oldChecked);
+	}
+});
+
+/**
  * Base class for actions for chem composer.
  * @class
  * @augments Kekule.Action
@@ -724,6 +793,20 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	hasAttachedActions: function()
 	{
 		return !!this.getAttachedActions().getActionCount();
+	},
+	/**
+	 * Set a new position of attached child action.
+	 * @param {Kekule.Action} action
+	 * @param {Int} index
+	 */
+	setAttachedActionIndex: function(action, index)
+	{
+		var actions = this.getAttachedActions();
+		if (actions)
+		{
+			actions.setActionIndex(action, index);
+		}
+		return this;
 	},
 	/**
 	 * Add an attached actions.
@@ -868,8 +951,15 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 				this.initAttachedActions();
 		}
 	};
+	if (methods)
+	{
+		data = Object.extend(data, methods);
+	}
 	if (specifiedProps)
 	{
+		var oldDoExecute;
+		if (data.doExecute)  // has set a doExecute in methods
+		  oldDoExecute = data.doExecute;
 		data.doExecute = function($super)
 		{
 			var editor = this.getEditor();
@@ -879,12 +969,11 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 				controller.setPropValues(specifiedProps);
 			}
 			//console.log('execute self', this.getClassName());
-			$super();
+			if (oldDoExecute)
+				oldDoExecute.apply(this, [$super]);
+			else
+				$super();
 		}
-	}
-	if (methods)
-	{
-		data = Object.extend(data, methods);
 	}
 	if (attachedActionClasses)
 	{
@@ -913,16 +1002,123 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 
 ////////////// create ia controller actions ///////////////////////////
 
-// Select
+// Client drag and scroll
+Kekule.Editor.ActionComposerClientDragScrollController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerClientDragScrollController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_CLIENT_DRAGSCROLL'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.$L('ChemWidgetTexts.HINT_CLIENT_DRAGSCROLL'), //Kekule.ChemWidgetTexts.HINT_ERASE,
+	'ClientDragScrollIaController',
+	null,
+	null,
+	null,
+	null,
+	BNS.dragScroll
+);
+
+// Select and variantions
+Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerMarquee',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_MARQUEE'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_MARQUEE'),
+	'SelectIaController',
+	'SelectIaController-Marquee',
+	{
+		'enableGestureManipulation': true,
+		'selectMode': Kekule.Editor.SelectMode.RECT
+	},
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.RECT);
+		}
+	},
+	BNS.manipulateMarquee
+);
+Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerLasso',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_LASSO'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_LASSO'),
+	'SelectIaController',
+	'SelectIaController-Lasso',
+	{
+		'enableGestureManipulation': true,
+		'selectMode': Kekule.Editor.SelectMode.POLYGON
+	},
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.POLYGON);
+		}
+	},
+	BNS.manipulateLasso
+);
+Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerBrush',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_BRUSH'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_BRUSH'),
+	'SelectIaController',
+	'SelectIaController-Brush',
+	{
+		'enableGestureManipulation': true,
+		'selectMode': Kekule.Editor.SelectMode.POLYLINE
+	},
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.POLYLINE);
+		}
+	},
+	BNS.manipulateBrush
+);
+Kekule.Editor.ActionComposerSetManipulateControllerAncestor = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetManipulateControllerAncestor',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE_ANCESTOR'),
+	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE_ANCESTOR'),
+	'SelectIaController',
+	'SelectIaController-Ancestor',
+	{
+		'enableGestureManipulation': true,
+		'selectMode': Kekule.Editor.SelectMode.ANCESTOR
+	},
+	null,
+	{
+		doExecute: function($super)
+		{
+			$super();
+			var editor = this.getEditor();
+			editor.setSelectMode(Kekule.Editor.SelectMode.ANCESTOR);
+		}
+	},
+	BNS.manipulateAncestor
+);
 Kekule.Editor.ActionComposerSetManipulateController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetManipulateController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_MANIPULATE'), //Kekule.ChemWidgetTexts.CAPTION_MANIPULATE,
 	Kekule.$L('ChemWidgetTexts.HINT_MANIPULATE'), //Kekule.ChemWidgetTexts.HINT_MANIPULATE,
-	'BasicMolManipulationIaController',
+	'SelectIaController',
 	null,
-	null, null, null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetManipulateControllerMarquee,
+		Kekule.Editor.ActionComposerSetManipulateControllerLasso,
+		Kekule.Editor.ActionComposerSetManipulateControllerBrush,
+		Kekule.Editor.ActionComposerSetManipulateControllerAncestor,
+		Kekule.Editor.ActionComposerClientDragScrollController,
+		Kekule.Editor.ActionToggleSelectState
+	],
+	null,
 	BNS.manipulate
 );
+
 
 // Erase
 Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIaControllerActionClass(
@@ -943,6 +1139,19 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 		}
 	},
 	BNS.erase
+);
+
+// Track input
+Kekule.Editor.ActionComposerSetTrackController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetTrackController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_TRACK_INPUT'), //Kekule.ChemWidgetTexts.CAPTION_ERASE,
+	Kekule.$L('ChemWidgetTexts.HINT_TRACK_INPUT'), //Kekule.ChemWidgetTexts.HINT_ERASE,
+	'TrackInputIaController',
+	null,
+	null,
+	null,
+	null,
+	BNS.trackInput
 );
 
 // Bond and its variations
@@ -1166,17 +1375,18 @@ Kekule.Editor.ActionComposerSetBondController = Kekule.Editor.createComposerIaCo
 		Kekule.Editor.ActionComposerSetBondControllerSingle,
 		Kekule.Editor.ActionComposerSetBondControllerDouble,
 		Kekule.Editor.ActionComposerSetBondControllerTriple,
-		Kekule.Editor.ActionComposerSetBondControllerCloser,
+		//Kekule.Editor.ActionComposerSetBondControllerCloser,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeUp,
 		Kekule.Editor.ActionComposerSetBondControllerWedgeDown,
-		Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
+		//Kekule.Editor.ActionComposerSetBondControllerWedgeUpOrDown,
 		//Kekule.Editor.ActionComposerSetBondControllerDoubleEither,
 		Kekule.Editor.ActionComposerSetRepositoryMolFlexChainController,
+		Kekule.Editor.ActionComposerSetTrackController,
 		//Kekule.Editor.ActionComposerSetRepositoryMethaneController,
 		//Kekule.Editor.ActionComposerSetRepositorySubBondMarkController,
 		Kekule.Editor.ActionComposerSetRepositoryFischer1Controller,
-		Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
-		Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryFischer2Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryFischer3Controller,
 		Kekule.Editor.ActionComposerSetRepositorySawhorseStaggeredController,
 		Kekule.Editor.ActionComposerSetRepositorySawhorseEclipsedController
 	]
@@ -1230,6 +1440,21 @@ Kekule.Editor.ActionComposerSetFormulaController = Kekule.Editor.createComposerI
 	null,
 	null, null,
 	BNS.molFormula
+);
+
+Kekule.Editor.ActionComposerSetAtomAndFormulaController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetAtomAndFormulaController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ATOM_AND_FORMULA'),
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ATOM_AND_FORMULA'),
+	'MolAtomIaController',
+	null,
+	null,
+	[
+		Kekule.Editor.ActionComposerSetAtomController,
+		Kekule.Editor.ActionComposerSetFormulaController
+	]
+	,null,
+	BNS.molAtomAndFormula
 );
 
 // Attached markers
@@ -1597,15 +1822,15 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryRing4Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing5Controller,
 		Kekule.Editor.ActionComposerSetRepositoryRing6Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
-		Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryRing7Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryRing8Controller,
 		Kekule.Editor.ActionComposerSetRepositoryMolFlexRingController,
 		Kekule.Editor.ActionComposerSetRepositoryRingAr6Controller,
 		//Kekule.Editor.ActionComposerSetRepositoryRingAr5Controller,
 		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth1Controller,
-		Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryCyclopentaneHaworth2Controller,
 		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth1Controller,
-		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller,
+		//Kekule.Editor.ActionComposerSetRepositoryCyclohexaneHaworth2Controller,
 		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair1Controller,
 		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller
 	],
@@ -1805,7 +2030,7 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 );
 
 // register actions to editor/composer widget
-Kekule._registerAfterLoadProc(function(){
+Kekule._registerAfterLoadSysProc(function(){
 	var AM = Kekule.ActionManager;
 	var CW = Kekule.ChemWidget;
 	var CE = Kekule.Editor;
@@ -1818,6 +2043,7 @@ Kekule._registerAfterLoadProc(function(){
 	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
 	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
 	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);
+	reg(BNS.resetZoom, CW.ActionDisplayerResetZoom, widgetClass);
 	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
 	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 	reg(BNS.undo, CE.ActionEditorUndo, widgetClass);

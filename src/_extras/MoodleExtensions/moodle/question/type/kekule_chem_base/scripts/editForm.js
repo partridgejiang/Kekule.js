@@ -149,7 +149,7 @@ function reactChemObjLoad(e)
 			var molData = '', smiles = '', smilesNoStereo = '';
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
-			{
+			{				
 				var sAnswer = '';
 				try
 				{

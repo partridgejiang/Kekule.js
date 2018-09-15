@@ -415,6 +415,8 @@ Kekule.Render.MetaShapeType = {
 	LINE: 2,
 	/** A rectangle on context, determinated by two coords ({[coord1, coord2]}). */
 	RECT: 3,
+	/** Unclosed polyline, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
+	POLYLINE: 11,
 	/** Polygon, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
 	POLYGON: 10,
 	// 3D shapes
@@ -1636,7 +1638,7 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 				if (b)
 				{
 					if (!result)
-						result = Object.extend({}, b);
+						result = BU.clone(b); //Object.extend({}, b);
 					else
 						result = BU.getContainerBox(result, b);
 				}
@@ -1700,7 +1702,7 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	{
 		var chemObj = this.getChemObj();
 		if (chemObj && chemObj.getAttachedMarkers)
-			return [].concat(chemObj.getAttachedMarkers());
+			return [].concat(chemObj.getAttachedMarkers() || []);
 		else
 			return [];
 	},

@@ -8,9 +8,10 @@
  * requires /lan/classes.js
  * require /core/kekule.root.js
  * require /utils/kekule.utils.js
+ * require /utils/kekule.domUtils.js
  */
 
-(function ()
+(function (window, document)
 {
 
 var $root = window;
@@ -30,6 +31,10 @@ Kekule.Browser = {
   MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
 	language: navigator.language || navigator.browserLanguage  // language of broweser
 };
+Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
+	var agent = navigator.userAgent.toLowerCase();
+	return (agent.indexOf('msie') !== -1) ? parseInt(agent.split('msie')[1]) : false
+})();
 
 /**
  * Browser HTML5 feature check.
@@ -74,6 +79,9 @@ Kekule.BrowserFeature = {
 	cssTranform: (function(s) {
 		return 'transform' in s || 'WebkitTransform' in s || 'MozTransform' in s || 'msTransform' in s || 'OTransform' in s;
 	})(document.createElement('div').style),
+	cssFlex: (function(s) {
+		return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
+	})(document.createElement('div').style),
 	html5Form: {
 		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
 		supportType: function(typeName)
@@ -91,8 +99,36 @@ Kekule.BrowserFeature = {
 				return result;
 			}
 	},
-	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver
+	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
+	touchEvent: !!window.touchEvent,
+	pointerEvent: !!window.PointerEvent
 };
+
+// polyfill of requestAnimationFrame / cancelAnimationFrame
+(function() {
+	var lastTime = 0;
+	var vendors = ['ms', 'moz', 'webkit', 'o'];
+	for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+		window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+		window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+				|| window[vendors[x]+'CancelRequestAnimationFrame'];
+	}
+
+	if (!window.requestAnimationFrame)
+		window.requestAnimationFrame = function(callback, element) {
+			var currTime = new Date().getTime();
+			var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+			var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+					timeToCall);
+			lastTime = currTime + timeToCall;
+			return id;
+		};
+
+	if (!window.cancelAnimationFrame)
+		window.cancelAnimationFrame = function(id) {
+			clearTimeout(id);
+		};
+}());
 
 /**
  * Namespace for XBrowser lib.
@@ -156,6 +192,15 @@ X.Event = {
 };
 
 /**
+ * A serials of constants of pointer types.
+ */
+X.Event.PointerType = {
+	MOUSE: 'mouse',
+	TOUCH: 'touch',
+	PEN: 'pen'
+};
+
+/**
  * A serials of constants of mouse button flags.
  */
 X.Event.MouseButton = {
@@ -163,7 +208,7 @@ X.Event.MouseButton = {
 	RIGHT: 2,
 	MID: 1,
 	LR: 3
-}
+};
 
 /**
  * A serials of constants of key codes
@@ -218,6 +263,11 @@ X.Event.isSupported = (function()
 	var cache = {};
 
 	return function(eventName) {
+		if (eventName.indexOf('touch') === 0)  // touch events
+			return Kekule.BrowserFeature.touchEvent;
+		if (eventName.indexOf('pointer') === 0)  // pointer events
+			return Kekule.BrowserFeature.pointerEvent;
+
 		var TAGNAMES = {
 				'select': 'input',
 				'change': 'input',
@@ -258,6 +308,23 @@ X.Event.Methods = {
 	{
 		return event.__$type__ || event.type;
 	},
+	/** @ignore */
+	setType: function(event, value)
+	{
+		event.__$type__ = value;
+		try
+		{
+			event.type = value;
+		}
+		catch(e)
+		{
+
+		}
+	},
+	getPointerType: function(event)
+	{
+		return event.pointerType;
+	},
 	/**
 	 * Get event.target element.
 	 * @param {Object} event
@@ -265,10 +332,27 @@ X.Event.Methods = {
 	 */
 	getTarget: function(event)
 	{
-		var target = event.target || event.srcElement;
+		var target = event.__$target__ || event.target || event.srcElement;
 		if (target.nodeType == 3) // defeat Safari bug
 			target = target.parentNode;
 		return target;
+	},
+	/**
+	 * Some times we may need to overwrite the target of event (e.g., in mapping touch event to pointer).
+	 * Writing directly to event.target often does not change the actual value, so we use a special field to store it.
+	 * @param {Object} event
+	 */
+	setTarget: function(event, newTarget)
+	{
+		event.__$target__ = newTarget;
+		try
+		{
+			event.target = newTarget;
+		}
+		catch(e)
+		{
+
+		}
 	},
 	/*
 	 * Get event.currTarget element.
@@ -362,7 +446,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientX;
 		}
-		else
+		if (result === undefined)
 			result = event.clientX;
 		return result;
 	},
@@ -379,7 +463,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientY;
 		}
-		else
+		if (result === undefined)
 			result = event.clientY;
 		return result;
 	},
@@ -396,7 +480,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenX;
 		}
-		else
+		if (result === undefined)
 			result = event.screenX;
 		return result;
 	},
@@ -413,7 +497,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenY;
 		}
-		else
+		if (result === undefined)
 			result = event.screenY;
 		return result;
 	},
@@ -424,20 +508,23 @@ X.Event.Methods = {
 	 */
 	getPageX: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageX))
-				return touch.pageX;
+				result = touch.pageX;
 		}
-		else if (notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
-			return event.pageX;
+		if (result === undefined && notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
+			result = event.pageX;
 		//else  // fallback
+		if (result === undefined)
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
+			result = X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
 		}
+		return result;
 	},
 	/**
 	 * Get Y coordinate related to document page.
@@ -446,20 +533,22 @@ X.Event.Methods = {
 	 */
 	getPageY: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageY))
 				return touch.pageY;
 		}
-		else if (notUnset(event.pageY))
+		else if (result === undefined && notUnset(event.pageY))
 			return event.pageY;
-		//else  // fallback
+		if (result === undefined)  // fallback
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+			result = X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
 		}
+		return result;
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the event's target.
@@ -473,7 +562,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerX) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -482,7 +571,8 @@ X.Event.Methods = {
 			else
 			{
 				var clientX = X.Event.getClientX(event);
-				return Math.round(clientX - elem.getBoundingClientRect().left);
+				//return Math.round(clientX - elem.getBoundingClientRect().left);
+				return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).x);
 			}
 		}
 	},
@@ -498,7 +588,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerY) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -507,9 +597,48 @@ X.Event.Methods = {
 			else
 			{
 				var clientY = X.Event.getClientY(event);
-				return Math.round(clientY - elem.getBoundingClientRect().top);
+				//return Math.round(clientY - elem.getBoundingClientRect().top);
+				return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).y);
 			}
 		}
+	},
+	/**
+	 * Returns x/y coord of event.
+	 * @param {Object} event
+	 * @param {Bool} considerCssTransform
+	 */
+	getOffsetCoord: function(event, considerCssTransform)
+	{
+		var elem = X.Event.getTarget(event);
+		var transformMatrix;
+		if (considerCssTransform && Kekule.ObjUtils.isUnset(event.offsetX)) // has no native offsetX, may need calculation
+		{
+			transformMatrix = Kekule.StyleUtils.getTotalTransformMatrix(elem);
+		}
+		if (transformMatrix)   // elem has transform, calculate
+		{
+			// calculation
+			var clientX = X.Event.getClientX(event);
+			var clientY = X.Event.getClientY(event);
+			var coord = {
+				x: clientX - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).x,
+				y: clientY - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).y
+			};
+			var invertMatrix = Kekule.StyleUtils.calcInvertTransformMatrix(transformMatrix);
+			if (invertMatrix)
+			{
+				var vector = Kekule.MatrixUtils.create(3, 1);
+				vector[0][0] = coord.x;
+				vector[1][0] = coord.y;
+				vector[2][0] = 1;
+				var result = Kekule.MatrixUtils.multiply(invertMatrix, vector);
+				coord.x = result[0][0];
+				coord.y = result[1][0];
+				return coord;
+			}
+		}
+		// when calculation fails or has no transform
+		return {'x': X.Event.getOffsetX(event), 'y': X.Event.getOffsetY(event)};
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the top-left of window.
@@ -520,7 +649,7 @@ X.Event.Methods = {
 	{
 		var x = X.Event.getPageX(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollX) || 0;
 		return x - delta;
 	},
@@ -533,7 +662,7 @@ X.Event.Methods = {
 	{
 		var y = X.Event.getPageY(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollY) || 0;
 		return y - delta;
 	},
@@ -545,10 +674,11 @@ X.Event.Methods = {
 	getRelXToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientX = X.Event.getClientX(event);
-		return Math.round(clientX - elem.getBoundingClientRect().left);
+		//return Math.round(clientX - elem.getBoundingClientRect().left);
+		return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).left);
 	},
 	/**
 	 * Returns the mouse Y coordinates relative to the event's currTarget.
@@ -558,11 +688,12 @@ X.Event.Methods = {
 	getRelYToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);
-		return Math.round(clientY - elem.getBoundingClientRect().top);
+		//return Math.round(clientY - elem.getBoundingClientRect().top);
+		return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).top);
 	},
 	/**
 	 * Returns touches array of event in touch.
@@ -644,7 +775,7 @@ X.Event._MouseEventEx = {
 					}
           */
 				}
-			}
+			};
 			handler.__$mouseExListenerWrapper__ = wrapper;
 			var newType = (eventType === 'mouseenter')? 'mouseover': 'mouseout';
 			//return X.Event.addListener(element, newType, wrapper, useCapture);
@@ -675,28 +806,28 @@ X.Event._W3C =
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Hash} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	addListener: function(element, eventType, handler, useCapture)
+	addListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType))
-			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, useCapture);
+			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, options);
 		else
-			return element.addEventListener(eventType, handler, useCapture);
+			return element.addEventListener(eventType, handler, options);
 	},
 	/**
 	 * Remove an event listener from element.
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Bool} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	removeListener: function(element, eventType, handler, useCapture)
+	removeListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType) && handler.__$listenerWrapper__)
 			return X.Event._MouseEventEx.removeMouseEnterLeaveListener(element, eventType, handler.__$listenerWrapper__);
 		else
-			return element.removeEventListener(eventType, handler, useCapture);
+			return element.removeEventListener(eventType, handler, options);
 	},
 	/**
 	 * Stop the propagation of event.
@@ -759,7 +890,7 @@ X.Event._Gecko = {
 					e.wheelDeltaY = e.wheelDelta = -e.detail * 40;  // detail usually be 3 while delta be 120, direction is opposed
 					e.__$type__ = 'mousewheel';  // e.type can not be changed, so use another field to save the new type
 					handler.call(element, e);
-				}
+				};
 			handler.__$mousewheelListenerWrapper__ = wrapper;
 			element.addEventListener('DOMMouseScroll', wrapper, useCapture);
 		}
@@ -946,7 +1077,11 @@ X.Event._IE = {
 X.Event._IEMethods = {
 	getRelatedTarget: function(event)
 	{
-		return event.fromElement || event.toElement;
+		var etype = event.type;
+		if (['focusin', 'mouseenter', 'mouseover', 'pointerenter', 'pointerover', 'dragenter'].indexOf(etype) >= 0)
+			return event.fromElement || event.toElement;
+		else
+			return event.toElement || event.fromElement;
 	},
 	// methods to get mouse event information
 	getButton: function(event)
@@ -969,7 +1104,7 @@ X.Event._IEMethods = {
 	{
 		event.returnValue = false;
 	}
-}
+};
 
 if (document.addEventListener)  // W3C browser
 {
@@ -1005,7 +1140,7 @@ if (!eproto)
 var hasEventPrototype = !!eproto;
 var eventObjMethods = {};
 var methods = X.Event.Methods;
-for (name in methods)
+for (var name in methods)
 {
 	if (methods.hasOwnProperty(name) && (typeof(methods[name]) === 'function'))
 	{
@@ -1275,4 +1410,4 @@ var DOM = Kekule.X.DomReady
  */
 Kekule.X.domReady = DOM.domReady;
 
-})();
+})(window, document);

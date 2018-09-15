@@ -104,8 +104,18 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		var coreElem = this.getCoreElement();
 		if (coreElem)
 		{
+			var ie8Fix = Kekule.Browser.IE && (Kekule.Browser.IEVersion === 8);
+
 			Kekule.X.Event.addListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.addListener(coreElem, 'input', this.reactInputBind);
+
+			if (ie8Fix)  // for IE 8, change or input event can not evoked on input, so we use keyup to detect
+			{
+				this._bindKeyupEvent = true;
+				Kekule.X.Event.addListener(coreElem, 'keyup', this.reactInputBind);
+			}
+			else
+				this._bindKeyupEvent = false;
 		}
 	},
 	/** @ignore */
@@ -116,6 +126,8 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		{
 			Kekule.X.Event.removeListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.removeListener(coreElem, 'input', this.reactInputBind);
+			if (this._bindKeyupEvent)
+				Kekule.X.Event.removeListener(coreElem, 'keyup', this.reactInputBind);  // for IE6-8
 		}
 		$super(element);
 	},
@@ -141,9 +153,8 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		this.notifyValueChanged();
 	},
 	/** @private */
-	reactInput: function()
+	reactInput: function(e)
 	{
-		//console.log('value input', this.getClassName());
 		this.setIsDirty(true);
 	}
 });
@@ -549,9 +560,9 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown)
+	widgetShowStateChanged: function($super, isShown, byDomChange)
 	{
-		$super(isShown);
+		$super(isShown, byDomChange);
 		if (isShown)
 			this.adjustWidgetsSize();
 	},
@@ -579,7 +590,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 		var textElem = this.getTextBox().getElement();
 		if (!textElem)  // textbox disposed, may be in finalize phase, no need to adjust
 			return;
-		var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		//var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		var textRect = Kekule.HtmlElementUtils.getElemPageRect(textElem);
 
 		// heading
 		var widget = this.getHeadingWidget();
@@ -590,7 +602,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.left = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';
@@ -618,7 +631,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.right = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';
@@ -677,7 +691,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 		});
 		this.defineProp('buttonText', {'dataType': DataType.STRING,
 			'getter': function() { return this.getButton().getText(); },
-			'setter': function(value) { this.getButton().setText(value); }
+			'setter': function(value) { this.getButton().setText(value).setShowText(!!value); }
 		});
 	},
 	/** @ignore */
@@ -700,6 +714,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	createAssocButton: function()
 	{
 		var btn = new Kekule.Widget.Button(this);
+		btn.setShowText(false);
 		this.setTailingWidget(btn);
 		btn.addEventListener('change', this.adjustWidgetsSize, this);
 		btn.addEventListener('execute', function(e)
@@ -849,9 +864,9 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown)
+	widgetShowStateChanged: function($super, isShown, byDomChange)
 	{
-		$super(isShown);
+		$super(isShown, byDomChange);
 		if (isShown)
 			this.adjustAutoSize();
 	},

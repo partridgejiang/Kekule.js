@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ComposerFrame Test</title>
+
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script>
+    var composerFrame;
+
+    function adjustSize(e)
+    {
+      console.log(e);
+      var dim = Kekule.DocumentUtils.getClientDimension(document);
+      composerFrame.setDimension(dim.width, dim.height);
+      //console.log('adjust', dim);
+    }
+
+    Kekule.X.domReady(function(){
+      composerFrame = Kekule.Widget.getWidgetById('composerFrame');
+      composerFrame.setAutoResizeConstraints({'width': 0.75, 'height': 0.75});
+      //window.onresize = adjustSize;
+      //Kekule.X.Event.addListener(window, 'resize', adjustSize);
+      //adjustSize();
+    });
+
+  </script>
+</head>
+<body>
+  <!--
+  <p>A line of text.</p>
+  -->
+  <iframe id="composerFrame" style="width:800px;height:400px;border:1px solid red" data-widget="Kekule.Editor.ComposerFrame" data-resizable="true"></iframe>
+</body>
+</html>

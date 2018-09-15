@@ -123,7 +123,7 @@ ClassEx.extend(Kekule.ChemObject,
 		var result = [];
 		if (this.getAttachedMarkers)
 		{
-			var markers = this.getAttachedMarkers();
+			var markers = this.getAttachedMarkers() || [];
 			for (var i = 0, l = markers.length; i < l; ++i)
 			{
 				result = result.concat(markers[i].getCoordDependentObjects());
@@ -533,7 +533,7 @@ ClassEx.extend(Kekule.StructureFragment,
 			return $super();
 		else
 		{
-			var result = $super();
+			var result = []; // $super();
 			var childCount = this.getChildCount();
 			for (var i = 0; i < childCount; ++i)
 			{

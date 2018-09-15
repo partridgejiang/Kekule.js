@@ -1668,6 +1668,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
 		var result = Object.create(parentOptions);
+		//var result = Object.extend({}, parentOptions);
 		result = Object.extend(result, localOptions);
 		return result;
 	},
@@ -1950,6 +1951,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	 */
 	transformObjCoord2DToContext: function(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow)
 	{
+		var result;
 		//if (node && node.getBaseCoord2D)
 		if (obj && obj.getAbsBaseCoord2D)
 		{
@@ -1959,6 +1961,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				var newCoord = Kekule.CoordUtils.transform2DByMatrix(coord, transformMatrix);
 				this.setTransformedCoord2D(context, obj, newCoord);
+				result = newCoord;
 				//console.log(node[this.TRANSFORM_COORD_FIELD]);
 			}
 			if (obj.getNodes)  // has child nodes
@@ -1968,6 +1971,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					this.transformObjCoord2DToContext(context, obj.getNodeAt(i), childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 		}
+		return result;
 	},
 	/**
 	 * Get transformed coord.
@@ -1999,14 +2003,17 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var childTransformMatrix = this.getExtraProp2(context, ctab, this.CHILD_TRANSFORM_MATRIX_FIELD);
 			if (ctab && (ctab.hasNode(obj, false) || ctab.hasConnector(obj, false)))  // is direct child of ctab
 			{
-				this.transformObjCoord2DToContext(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord2DToContext(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 			else  // is nested child
-				this.transformObjCoord2DToContext(context, obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+			{
+				result = this.transformObjCoord2DToContext(context, obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+			}
 		}
 		//console.log('transformed: ', obj[this.TRANSFORM_COORD_FIELD]);
 		//return obj[this.TRANSFORM_COORD_FIELD];
-		return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		//return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		return result;
 	},
 	/**
 	 * Set transformed coord.
@@ -2068,7 +2075,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
 			var node = nodes[i];
-			var ops = this.handleNodeSpecifiedRenderOptions(nodes[i], options);
+			var ops = this.handleNodeSpecifiedRenderOptions(node, options);
 			var elem = this.doDrawNode(context, group, node, ctab, ops, finalTransformOptions);
 			/*
 			 if (elem && group)
@@ -2110,12 +2117,13 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		 ops.color = options.bondColor || options.color;  // use atomColor to override color settings
 		 ops.bondColor = null;
 		 */
-		var ops = this.handleConnectorSpecifiedRenderOptions(ctab, options);
+		//var ctabOps = this.handleConnectorSpecifiedRenderOptions(ctab, options);
 
 		var connectors = ctab.getExposedConnectors();
 		for (var i = 0, l = connectors.length; i < l; ++i)
 		{
 			var connector = connectors[i];
+			var ops = this.handleConnectorSpecifiedRenderOptions(connector, options);
 			var elem = this.doDrawConnector(context, group, connector, ctab, ops, finalTransformOptions);
 		}
 	},
@@ -2153,7 +2161,8 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		 var renderOptions = Kekule.Render.RenderOptionUtils.mergeObjLocalRenderOptions(connector, options);
 		 renderOptions.color = renderOptions.bondColor || renderOptions.color;
 		 */
-		var renderOptions = this.handleConnectorSpecifiedRenderOptions(connector, options);
+		//var renderOptions = this.handleConnectorSpecifiedRenderOptions(connector, options);
+		var renderOptions = options;
 
 		for (var i = 0; i < objCount; ++i)
 		{
@@ -2403,6 +2412,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	handleNodeSpecifiedRenderOptions: function($super, currObj, parentOptions)
 	{
 		var result = $super(currObj, parentOptions);
+		/*
 		// color
 		//result.atomColor = oneOf(localOptions.atomColor, localOptions.color, result.atomColor, result.color);
 		//result.atomColor = oneOf(localOptions.atomColor, result.atomColor);
@@ -2419,6 +2429,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//result.fontSize = result.atomFontSize || result.fontSize;
 		result.fontSize = result.fontSize || result.atomFontSize;
 		//console.log(result.atomFontSize, result.fontSize, localOptions, parentOptions);
+		*/
+		if (!result.color && result.atomColor)
+			result.color = result.atomColor;
+		if (!result.fontFamily && result.atomFontFamily)
+			result.fontFamily = result.atomFontFamily;
+		if (!result.fontSize && result.atomFontSize)
+			result.fontSize = result.atomFontSize;
+
 		return result;
 	},
 	/** @private */
@@ -2434,7 +2452,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//result.bondColor = oneOf(localOptions.bondColor, localOptions.color, result.bondColor, result.color);
 		//result.bondColor = oneOf(localOptions.bondColor, result.bondColor);
 		//result.color = result.bondColor;
-		result.color = result.color || result.bondColor;
+		//result.color = result.color || result.bondColor;
+		if (!result.color && result.bondColor)
+		{
+			result.color = result.bondColor;
+		}
 		return result;
 	},
 
@@ -2517,7 +2539,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var coord = this.getTransformedCoord2D(context, node, finalTransformOptions.allowCoordBorrow);
 		//var renderConfigs = this.getRenderConfigs();
 
-		var nodeRenderOptions = this.handleNodeSpecifiedRenderOptions(node, options);
+		//var nodeRenderOptions = this.handleNodeSpecifiedRenderOptions(node, options);
+		var nodeRenderOptions = options;
 
 		//var nodeRenderOptions = Kekule.Render.RenderOptionUtils.mergeObjLocalRenderOptions(node, options);
 
@@ -2527,18 +2550,31 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var localOptions = node.getOverriddenRenderOptions() || {};
 		//var localColor = localOptions.atomColor || localOptions.color;
 		var localColor = localOptions.color || localOptions.atomColor;
-		var atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType());
-		if (atomicNumber <= 0)  // not a real atom, may be subgroup or peseudo atom, etc.
+		if (localColor)
+			nodeRenderOptions.color = localColor;
+		else
 		{
-			var atomTypeName = node.getClassLocalName();
-			atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomTypeName, this.getRendererType());
+			if (nodeRenderOptions.useAtomSpecifiedColor)
+			{
+				var atomSpecifiedColor;
+				if (atomicNumber <= 0)  // not a real atom, may be subgroup or peseudo atom, etc.
+				{
+					var atomTypeName = node.getClassLocalName();
+					atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomTypeName, this.getRendererType());
+				}
+				else
+					atomSpecifiedColor = Kekule.Render.RenderColorUtils.getColor(atomicNumber, this.getRendererType());
+				nodeRenderOptions.color = atomSpecifiedColor;
+			}
 		}
+		/*
 		var defColor = localColor ||
 			(nodeRenderOptions.useAtomSpecifiedColor?
 					atomSpecifiedColor:
 				nodeRenderOptions.color);
 		//console.log(defColor);
 		nodeRenderOptions.color = defColor;
+		*/
 		/*
 		nodeRenderOptions.fontFamily = nodeRenderOptions.atomFontFamily || nodeRenderOptions.fontFamily;
 		nodeRenderOptions.fontSize = nodeRenderOptions.atomFontSize || nodeRenderOptions.fontSize;
@@ -3231,8 +3267,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			renderOptions = Object.extend(renderOptions, localOptions);
 		*/
 
+		var c1 = this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow);
+		var c2 = this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow);
+		/*
 		var coord1 = Object.extend({}, this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow));
 		var coord2 = Object.extend({}, this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow));
+		*/
+		var coord1 = {'x': c1.x, 'y': c1.y};
+		var coord2 = {'x': c2.x, 'y': c2.y};
 		var nodes = [node1, node2];
 		var coords = [coord1, coord2];
 		var originDistance = CU.getDistance(coord1, coord2);
@@ -4168,16 +4210,6 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	},
 	*/
 
-	/** @ignore */
-	getRenderCache: function($super, context)
-	{
-		return $super(context);
-		/*
-		var r = this.getConcreteRenderer();
-		return r? r.getRenderCache(context): {};
-		*/
-	},
-
 	/** @private */
 	_getConcreteRendererDrawOptions: function(options)
 	{
@@ -4220,14 +4252,15 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	getChildObjs: function($super)
 	{
 		var chemObj = this.getChemObj();
-		if (chemObj && chemObj.getAttachedMarkers)
+		if (chemObj)
 		{
 			var r = [];
 			var childObjs = (chemObj.getExposedNodes() || []).concat(chemObj.getExposedConnectors() || []);
 			for (var i = 0, l = childObjs.length; i < l; ++i)
 			{
 				var obj = childObjs[i];
-				r = r.concat(obj.getAttachedMarkers());
+				if (obj.getAttachedMarkers)
+					r = r.concat(obj.getAttachedMarkers() || []);
 			}
 			return r.concat($super());
 		}

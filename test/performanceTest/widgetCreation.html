@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Widget Creation Performance Benchmark</title>
+  <link rel="stylesheet" href="../../src/widgets/themes/default/kekule.css" />
+  <script src="../../src/kekule.js?min=false"></script>
+  <script>
+    function createWidget(parentElem, loopCount)
+    {
+      var startTime = Date.now();
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < loopCount; ++i)
+      {
+        var w = new Kekule.Editor.Composer(document);
+        frag.appendChild(w.getElement());
+      }
+      parentElem.appendChild(frag);
+      var endTime = Date.now();
+      var duration = endTime - startTime;
+      document.getElementById('report').innerHTML = duration;
+    }
+    function exec()
+    {
+      console.profile('create widget');
+      createWidget(document.getElementById('stage'), 50);
+      setTimeout(function(){console.profileEnd('create widget');}, 500);
+    }
+    Kekule.X.domReady(function(){
+      var btnCreate = Kekule.Widget.getWidgetById('btnCreate');
+      btnCreate.on('execute', function(){
+        exec();
+      });
+    });
+  </script>
+</head>
+<body>
+  <div>
+    <button id="btnCreate" data-widget="Kekule.Widget.Button">Create Widgets</button>
+    <span id="report"></span>
+  </div>
+  <div id="stage"></div>
+</body>
+</html>

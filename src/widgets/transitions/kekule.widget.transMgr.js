@@ -43,9 +43,9 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 	initialize: function($super)
 	{
 		$super();
-		this.setEnableTransition(true);  // debug setting
-		this.setShowDuration(300);
-		this.setHideDuration(300);
+		this.setEnableTransition(true);
+		this.setShowDuration(450);
+		this.setHideDuration(450);
 	},
 	/** @private */
 	initProperties: function()
@@ -309,8 +309,11 @@ defSelector.setPopupTransitionClass(Kekule.Widget.Css3GrowTransition);
 var SHT = Kekule.Widget.ShowHideType;
 defSelector.addTransitionClass(SHT.DEFAULT, Kekule.Widget.Css3OpacityTrans);
 defSelector.addTransitionClass(SHT.DROPDOWN, Kekule.Widget.Css3SlideTransition);
-defSelector.addTransitionClass(SHT.POPUP, Kekule.Widget.Css3GrowTransition);
-defSelector.addTransitionClass(SHT.DIALOG, Kekule.Widget.Css3GrowTransition);
+
+//defSelector.addTransitionClass(SHT.POPUP, Kekule.Widget.Css3GrowTransition);
+//defSelector.addTransitionClass(SHT.DIALOG, Kekule.Widget.Css3GrowTransition);
+defSelector.addTransitionClass(SHT.POPUP, Kekule.Widget.Css3TransformGrowTransition || Kekule.Widget.Css3GrowTransition);
+defSelector.addTransitionClass(SHT.DIALOG, Kekule.Widget.Css3TransformGrowTransition || Kekule.Widget.Css3GrowTransition);
 
 Kekule.Widget.showHideManager.setTransitionSelector(defSelector);
 

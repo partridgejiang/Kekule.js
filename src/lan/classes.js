@@ -35,6 +35,11 @@ var Class = {
 		 */
     createCore: function() {
         var parent = null, properties = __$A__(arguments);
+        if (!properties[0])
+        {
+          if (properties.length > 1)
+            throw 'Can not create new class, base class not found';
+        }
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
 
@@ -150,18 +155,30 @@ Class.Methods = {
 };
 
 /** @ignore */
-Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString) {
+Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString)
+{
+  if (!ignoreUnsetValue && !ignoreEmptyString)  // normal situation, extract out for performance
+  {
     for (var property in source)
-		{
-			var value = source[property];
-			if (ignoreUnsetValue && ((value === undefined) || (value === null)))
-				continue;
-			if (ignoreEmptyString && (value === ''))
-				continue;
+    {
+      destination[property] = source[property];
+    }
+  }
+  else
+  {
+    for (var property in source)
+    {
+      var value = source[property];
+      if (ignoreUnsetValue && ((value === undefined) || (value === null)))
+        continue;
+      if (ignoreEmptyString && (value === ''))
+        continue;
       destination[property] = value;
-		}
-    return destination;
+    }
+  }
+  return destination;
 };
+
 /** @ignore */
 Object.extendEx = function(destination, source, options)
 {
@@ -305,6 +322,20 @@ Object._extendSupportMethods(Object, {
       return typeof object == "undefined";
   }
 });
+
+if (!Object.getOwnPropertyNames)
+{
+  Object.getOwnPropertyNames = function(obj)
+  {
+    var result = [];
+    for (var k in obj)
+    {
+      if (obj.hasOwnProperty(k))
+        result.push(k);
+    }
+    return result;
+  }
+}
 
 var FunctionUtils = {
 	argumentNames: function(f) {
@@ -1811,6 +1842,48 @@ var ClassEx = {
 		if (!ClassEx.getPrototype(aClass).hasOwnProperty('properties'))
 			ClassEx.getPrototype(aClass).properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function(aClass, availableFieldNames)
+  {
+    var proto = ClassEx.getPrototype(aClass);
+    var fieldNames = availableFieldNames || Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i < l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 && fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (proto.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = ClassEx.getPropInfo(aClass, propName);
+          if (propInfo && propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+  },
 	/**
 	 * Get own property list of this aClass, excluding inherited properties.
 	 * @returns {Class.PropList}
@@ -1943,11 +2016,12 @@ var ClassEx = {
   /**
    * Get property info object from the property list of aClass.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(aClass, propName)
+  getPropInfo: function(aClass, propName, ownPropertyOnly)
   {
-  	return ClassEx.getPrototype(aClass).getPropInfo(propName);
+  	return ClassEx.getPrototype(aClass).getPropInfo(propName, ownPropertyOnly);
   },
   /**
    * Define an event in aClass. Event is actually a special property with type {@link Class.EventHandlerList}
@@ -2077,6 +2151,9 @@ var ClassEx = {
 
 		    proto[property] = value;
 		}
+
+    ClassEx._remapPropGetters(aClass, properties);
+
 		return aClass;
 	}
 };
@@ -2088,8 +2165,10 @@ var
  *
  * //@property {Bool} enablePropValueGetEvent Whether propValueGet event should
  * //  be fired when a property value is read.
+ * @property {Bool} enableObjectChangeEvent Whether event "change" will be automatically fired when the object is changed.
  * @property {Bool} enablePropValueSetEvent Whether propValueSet event should
  *   be fired when a property value is written.
+ * //  Note, if property {@link ObjectEx#enableObjectChangeEvent} is false, this event will never be fired.
  * @property {Bool} bubbleEvent Whether event evoked can be relayed to higher level object.
  * @property {Bool} suppressChildChangeEventInUpdating If this property is true, when object is updating
  *   (calling obj.beginUpdate()), received "change" event will always not be bubbled. Instead, when updating
@@ -2134,6 +2213,8 @@ ObjectEx = Class.create(
 	CLASS_NAME: 'ObjectEx',
 	//* @private */
 	//PROPINFO_HASHKEY_PREFIX: '__$propInfo__',
+  /** @private */
+  EVENT_HANDLERS_FIELD: '__$__k__eventhandlers__$__',
 	/**
 	 * @constructs
 	 */
@@ -2164,7 +2245,8 @@ ObjectEx = Class.create(
 			this.doFinalize();
 			this.invokeEvent('finalize', {'obj': this});
       // free all event objects
-      this.setPropStoreFieldValue('eventHandlers', null);
+      //this.setPropStoreFieldValue('eventHandlers', null);
+      this[this.EVENT_HANDLERS_FIELD] = null;
 			this._finalized = true;
 		}
 	},
@@ -2185,18 +2267,21 @@ ObjectEx = Class.create(
 	{
 		// define properties
 		this.defineProp('enablePropValueGetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
-		this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+    this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('enableObjectChangeEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('bubbleEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
     this.defineProp('suppressChildChangeEventInUpdating', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		// private, event storer
-		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE,
+		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE, 'setter': null,
 			'getter': function()
 				{
-					var r = this.getPropStoreFieldValue('eventHandlers');
+					//var r = this.getPropStoreFieldValue('eventHandlers');
+          var r = this[this.EVENT_HANDLERS_FIELD];  // direct access, for speed
 					if (!r)
 					{
 						r = {};
-						this.setPropStoreFieldValue('eventHandlers', r);
+						//this.setPropStoreFieldValue('eventHandlers', r);
+            this[this.EVENT_HANDLERS_FIELD] = r;
 					}
 					return r;
 				}
@@ -2246,11 +2331,16 @@ ObjectEx = Class.create(
 	{
 		if (!this.getPrototype().hasOwnProperty('properties'))
 		{
+      //console.log('init prop system', this.getClassName());
 			// ensure super class's property list is created
 			var parent = this.getSuperClassPrototype();
 			if (parent)
 				parent._initPropertySystem.apply(parent);
+
 			this._createPropertyList();
+
+      this._remapPropGetters();  // override before self property list created, avoid override method of self
+
 			if (this.getPrototype().hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				this.getPrototype().initProperties.apply(this.getPrototype());
 		}
@@ -2261,6 +2351,52 @@ ObjectEx = Class.create(
 		if (!this.getPrototype().hasOwnProperty('properties'))
 			this.getPrototype().properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function()
+  {
+    ClassEx._remapPropGetters(this.getClass());
+    /*
+    var proto = this.getPrototype();
+    var fieldNames = Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i < l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 && fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (this.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = this.getPropInfo(propName);
+          if (propInfo && propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+    */
+  },
 	/**
 	 * Get class of this object.
 	 * @return {Object} Class object.
@@ -2397,24 +2533,27 @@ ObjectEx = Class.create(
 	 */
   defineProp: function(propName, options)
   {
+    var ops;
 		if (!options)
-			options = {};
-		if (options.serializable === undefined)
-			options.serializable = true;
-		if (!options.storeField)  // use default store field
-			options.storeField = this.getDefPropStoreFieldName(propName); //'f' + propName;
+			ops = {};
+    else
+      ops = Object.extend({}, options);
+		if (ops.serializable === undefined)
+			ops.serializable = true;
+		//if (!options.storeField)  // use default store field
+		ops.storeField = this.getDefPropStoreFieldName(propName);  // always use default store field name for performance
 		//options.storeField = this.getDefPropStoreFieldName(propName);
 		var list = this.getOwnPropList();
-		var prop = list.addProperty(propName, options);
+		var prop = list.addProperty(propName, ops);
     var propGetterInfo, propSetterInfo;
-		if (options.getter !== null && options.getter !== false)
+		if (ops.getter !== null && ops.getter !== false)
     {
-      propGetterInfo = this.createPropGetter(prop, options.getter);
+      propGetterInfo = this.createPropGetter(prop, ops.getter);
       prop.getter = propGetterInfo.doGetterName;
     }
-		if (options.setter !== null && options.setter !== false)
+		if (ops.setter !== null && ops.setter !== false)
     {
-      propSetterInfo = this.createPropSetter(prop, options.setter);
+      propSetterInfo = this.createPropSetter(prop, ops.setter);
       prop.setter = propSetterInfo.doSetterName;
     }
 
@@ -2425,7 +2564,7 @@ ObjectEx = Class.create(
     if (__definePropertyAvailable__)
     {
       var descs = {
-        'enumerable': options.enumerable,
+        'enumerable': ops.enumerable,
         'configurable': false
       };
       if (descs.enumerable === undefined)
@@ -2435,13 +2574,14 @@ ObjectEx = Class.create(
       if (propSetterInfo)
         descs.set = this[propSetterInfo.setterName];
 
+      prop.descriptor = descs;
       try
       {
         Object.defineProperty(this, propName, descs);
       }
       catch(e)
       {
-        console.log(this.getClassName(), propName);
+        //console.log(this.getClassName(), propName);
         throw e;
       }
     }
@@ -2476,12 +2616,16 @@ ObjectEx = Class.create(
 				return this.getPropValue.apply(this, args);
 			};
 			*/
-		//this.getPrototype()[getterName] = actualGetter;
+		this.getPrototype()[getterName] = actualGetter;
+    /*
 		this.getPrototype()[getterName] = function()
 		{
-			var args =arguments; // Array.prototype.slice.call(arguments);
-			return this[doGetterName].apply(this, args);
+			//var args = Array.prototype.slice.call(arguments);
+			return this[doGetterName].apply(this, arguments);
 		};
+		*/
+
+    //this.getPrototype()[getterName] = this.getPrototype()[doGetterName];
 
   	return {
       'getterName': getterName,
@@ -2509,14 +2653,18 @@ ObjectEx = Class.create(
   	*/
 		this.getPrototype()[setterName] = function()
 			{
+        /*
 				var args = Array.prototype.slice.call(arguments);
 				var value = args[0];
+				*/
+        //var args = arguments;
+        var value = arguments[0];
 
 				/*
 				args.unshift(prop.name);
 				return this.setPropValueX.apply(this, args);
 				*/
-				this[doSetterName].apply(this, args);
+				this[doSetterName].apply(this, arguments);
 				this.notifyPropSet(propName, value);
 				/*
 				// NOTE: here we call actualSetter directly instead of call setPropValue
@@ -2545,20 +2693,35 @@ ObjectEx = Class.create(
   	return (this.getPropInfo(propName) != null);
   },
   /**
+   * Check if property is defined in current class (not inherited from super class).
+   * @param {String} propName Name of property.
+   * @return {Boolean}
+   */
+  hasDirectProperty: function(propName)
+  {
+    return (this.getPropInfo(propName, true) != null);
+  },
+  /**
    * Get property info object from the property list of current class.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(propName)
+  getPropInfo: function(propName, ownPropertyOnly)
   {
-		var pname = propName || '';
-		var hashKey = this.getPropInfoHashKey(pname) || '';
-		var result = this[hashKey];
+    var pname = propName || '';
+    var result;
+
+    if (!ownPropertyOnly)  // check hashkey for a quich search, but it should be disabled when ownPropertyOnly is true
+    {
+      var hashKey = this.getPropInfoHashKey(pname) || '';
+      result = this[hashKey];
+    }
 
 		if (!result)
 		{
 			result = this.getOwnPropList().getPropInfo(pname);
-			if (!result)  // check parent
+			if (!result && !ownPropertyOnly)  // check parent
 			{
 				var parent = this.getSuperClassPrototype();
 				if (parent && parent.getPropInfo)
@@ -2604,15 +2767,20 @@ ObjectEx = Class.create(
    */
   getPropStoreFieldValue: function(propName)
   {
-  	var info = this.getPropInfo(propName);
-  	if (info.storeField)
-  		return this[info.storeField];
-  	else
-  		return undefined;
-  	/*
-		var storeFieldName = this.getDefPropStoreFieldName(propName);
-		return this[storeFieldName];
-		*/
+    //var storeFieldName = this.getDefPropStoreFieldName(propName);
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    //if (this.hasOwnProperty(defFieldName))
+    return this[defFieldName];
+    /*
+    else
+    {
+      var info = this.getPropInfo(propName);
+      if (info.storeField)
+        return this[info.storeField];
+      else
+        return undefined;
+    }
+    */
   },
   /**
    * Get value of a property.
@@ -2677,10 +2845,13 @@ ObjectEx = Class.create(
    */
   setPropStoreFieldValue: function(propName, value)
   {
-		var pname;
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    this[defFieldName] = value;
+    /*
   	var info = this.getPropInfo(propName);
   	if (info.storeField)
   		this[info.storeField] = value;
+  	*/
   },
   /**
    * Set value of a property.
@@ -2805,7 +2976,8 @@ ObjectEx = Class.create(
 	objectChange: function(modifiedPropNames)
 	{
 		this.doObjectChange(modifiedPropNames);
-		this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
+    if (this.getEnableObjectChangeEvent())
+		  this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
 	},
 	/** @private */
 	doObjectChange: function(modifiedPropNames)
@@ -2923,6 +3095,10 @@ ObjectEx = Class.create(
   	var handlerList = this.getEventHandlerList(eventName);
   	if (this.isEventHandlerList(handlerList))
   	{
+      if (eventName === 'change')  // automatically turn on object change monitor
+      {
+        this.setEnableObjectChangeEvent(true);
+      }
   		return handlerList.add(listener, thisArg);
   	}
   	else
@@ -3007,11 +3183,25 @@ ObjectEx = Class.create(
   invokeEvent: function(eventName, event)
   {
   	if (!event)
-  		event = {};
-  	event.name = eventName;
-	  event.target = this;
-	  event.stopPropagation = function() { event.cancelBubble = true; };
+    {
+      event = {
+        'name': eventName, 'target': this
+      };
+    }
+    else
+    {
+      event.name = eventName;
+      event.target = this;
+    }
+    if (!event.stopPropagation)
+      event.stopPropagation = this._eventCancelBubble;  // function() { event.cancelBubble = true; };
   	this.dispatchEvent(eventName, event);
+  },
+  /** @private */
+  _eventCancelBubble: function()
+  {
+    // called with event.stopPropagation, so this here is the event object
+    this.cancelBubble = true;
   },
   /**
    * Relay event from child of this object.
@@ -3033,27 +3223,22 @@ ObjectEx = Class.create(
   dispatchEvent: function(eventName, event)
   {
   	var handlerList = this.getEventHandlerList(eventName);
-  	if (this.isEventHandlerList(handlerList))
+  	//if (this.isEventHandlerList(handlerList))
   	{
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
-	  		if (handlerInfo.handler)
-        {
-          handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
-        }
+        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
-    else
+    if (!event.cancelBubble && this.getBubbleEvent())
     {
-      //console.log(eventName, this.getClassName(), handlerList._$flag_);
+      var higherObj = this.getHigherLevelObj();
+      if (higherObj && higherObj.relayEvent)
+      {
+        higherObj.relayEvent(eventName, event);
+      }
     }
-  	var higherObj = this.getHigherLevelObj();
-  	if (!event.cancelBubble && this.getBubbleEvent() && higherObj)
-  	{
-  		if (higherObj.relayEvent)
-  			higherObj.relayEvent(eventName, event);
-  	}
   },
   /**
    * Stop propagation of event, disallow it to bubble to higher level.
@@ -3217,7 +3402,7 @@ ObjectEx = Class.create(
 });
 /** @private */
 ObjectEx._PROPINFO_HASHKEY_PREFIX = '__$propInfo__';
-ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
+ObjectEx._PROP_STOREFIELD_PREFIX = '__$__k__p__';
 
 // Export to root name space
 $jsRoot.Class = Class;
