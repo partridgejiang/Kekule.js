@@ -543,4 +543,4 @@ Kekule.Render.RaphaelRendererBridge.isSupported = function()
 
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.RaphaelRendererBridge);
 
-Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 1000);
+Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 10);
