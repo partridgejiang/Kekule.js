@@ -395,6 +395,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		context.arc(baseCoord.x, baseCoord.y, radius, 0, 2 * Math.PI, false);
 		this.doneDraw(context, options);
 	},
+	drawArc: function(ctx, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		context.beginPath();
+		this.setDrawStyle(context, options);
+		context.arc(centerCoord.x, centerCoord.y, radius, startAngle, endAngle, anticlockwise);
+		this.doneDraw(context, options);
+	},
 
 	_PATH_CMDS: ['M', 'Z', 'L', 'C', 'Q'],
 	_PATH_METHODS: ['moveTo', 'closePath', 'lineTo', 'bezierCurveTo', 'quadraticCurveTo'],
