@@ -319,6 +319,14 @@ Kekule.ChemWidget.MetaShapeUiMarker2DRenderer = Class.create(Kekule.ChemWidget.U
 					result = this.drawRect(context, coords[0], coords[1], options);
 					break;
 				}
+				case T.ARC:
+				{
+					var ops = Object.extend({}, options);
+					ops.strokeWidth = shape.width;
+					ops.fillColor = null;  // do not fill
+					result = this.drawArc(context, coords[0], shape.radius, shape.startAngle, shape.endAngle, shape.anticlockwise, ops);
+					break;
+				}
 				case T.POLYGON: case T.POLYLINE:
 				{
 					var args = [];

@@ -2563,6 +2563,21 @@ Kekule.GeometryUtils = {
 		return angle - times * Math.PI * 2;
 	},
 	/**
+	 * Convert a polar coord to cartesian one.
+	 * @param {Float} centerX
+	 * @param {Float} centerY
+	 * @param {Float} radius
+	 * @param {Float} angle
+	 * @returns {Hash}
+	 */
+	polarToCartesian: function(centerX, centerY, radius, angle)
+	{
+		return {
+			x: centerX + (radius * Math.cos(angle)),
+			y: centerY + (radius * Math.sin(angle))
+		};
+	},
+	/**
 	 * Returns the cross product (v1.v2) of two vectors represented by coord1 and coord2.
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2

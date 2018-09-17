@@ -320,7 +320,7 @@ ClassEx.extend(Kekule.ChemObject,
 	clearMarkers: function()
 	{
 		//var oldMarkers = AU.clone(this.getAttachedMarkers());
-		var oldMarkers = this.getPropStoreFieldValue('attachedMarkers')
+		var oldMarkers = this.getPropStoreFieldValue('attachedMarkers');
 		if (oldMarkers)
 			oldMarkers = AU.clone(oldMarkers);
 

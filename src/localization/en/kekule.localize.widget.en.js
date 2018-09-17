@@ -238,6 +238,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: 'Reversible arrow line',
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
@@ -360,6 +362,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	HINT_REPOSITORY_GLYPH_REV_ARROW_LINE: 'Reversible arrow line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
+	HINT_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	HINT_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 	HINT_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	HINT_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
