@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chem Editor Mobile Test</title>
+
+  <meta name="viewport" id="viewportSetting" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <script src="../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+  <script>
+    function getClientDimension(document)
+    {
+      if (document.compatMode == "BackCompat")
+      {
+        return {
+          'width': document.body.clientWidth,
+          'height': document.body.clientHeight
+        }
+      }
+      else
+      {
+        return	{
+          'width': document.documentElement.clientWidth,
+          'height': document.documentElement.clientHeight
+        }
+      }
+    }
+    function getMetaElem()
+    {
+      //return document.head.getElementsByTagName('meta')[1];
+      return document.getElementById('viewportSetting');
+    }
+    function setViewportWidth(width)
+    {
+      var meta = getMetaElem();
+      var contentValue = 'width=' + width + ', user-scalable=no';
+      meta.setAttribute('content', contentValue);
+      console.log('set content', contentValue);
+    }
+    function setViewportHeight(height)
+    {
+      var meta = getMetaElem();
+      meta.setAttribute('content', 'height=' + height +', user-scalable=no');
+    }
+    function adjustSize()
+    {
+      var MIN_WIDTH = 510;
+      var MIN_HEIGHT = 350;
+
+      var dim = getClientDimension(document);
+      //var dim = Kekule.DocumentUtils.getClientVisibleBox(document);
+
+      var ratioWidth = dim.width / MIN_WIDTH, ratioHeight = dim.height / MIN_HEIGHT;
+      //var scale = (ratioWidth <= ratioHeight)? ratioWidth: ratioHeight;
+      if (ratioWidth < ratioHeight)
+      {
+        setViewportWidth(MIN_WIDTH);
+      }
+      else
+        setViewportHeight(MIN_HEIGHT);
+    }
+    function init()
+    {
+      adjustSize();
+      window.onresize = adjustSize();
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="composer" style="width:510px;height:350px" data-widget="Kekule.Editor.Composer" data-resizable="true"></div>
+</body>
+</html>

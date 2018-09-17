@@ -85,12 +85,17 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @class
  * @augments Kekule.AbstractConfigs
  *
+ * @property {Float} editorInitialZoom Initial zoom level of chem editor.
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
- * @property {Int} objBoundTrackInflation The bound of object will usually be inflated to make it easier to select. This value controls the inflating degree.
+ * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted into editor by IA controllers autimatically.
+ * @property {Int} objBoundTrackMinInflation The bound of object will usually be inflated to make it easier to select. This value controls the minimal inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
+ * @property {Int} selectionMarkerDefPulseDuration
+ * @property {Int} selectionMarkerDefPulseCount
+ * @property {Int} selectionCurveSimplificationDistanceThreshold Distance threshold to simplify the selecting curve.
  * @property {Int} rotationRegionInflation A circle with this ratio outside selection area marker will be regarded as rotation region.
  * @property {Float} constrainedRotateStep In constrained rotate mode, rotation angle will only be times of this value.
  * @property {Int} rotationLocationPointDistanceThreshold Rotate will occur only when mouse point distance (from rotation center) larger than this value
@@ -99,9 +104,21 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
  *   Set this value to true will improve the performance of chem editor.
+ * @property {Bool} enableOffSelectionManipulation If true, holding pointer down outside selection region for a while
+ *   will enter the manipulation state to move the selected objects.
+ * @property {Int} OffSelectionManipulationActivatingTimeThreshold Holding pointer down longer then this time (in ms) may
+ *   invoker off selection manipulation.
+ * @property {Bool} enableGestureManipulation Whether using pinch/rotate gesture to manipulate selected objects is allowed.
+ * @property {Bool} enableGestureZoomOnEditor Whether using pinch gesture change the zoom level of editor is allowed.
+ * @property {Float} unmovePointerDistanceThreshold When moving less than this distance, pointer will be regarded as still.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
+ * @property {Int} selectingCurveSimplificationDistanceThreshold Distance threshold to simplify curves in selecting marker.
+ * @property {Float} selectingBrushWidth The selecting brush width.
+ * //@property {Int} selectingBrushMinWidth Min width of selecting brush.
+ * @property {Int} trackSimplifierDistanceThreshold Distance threshold to simplify curves in track structure input.
+ * @property {Float} trackTouchRefLength In touch track input, the editor may be zoomed in to ensure the default bond screen level is this value (in inch).
  */
 Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.InteractionConfigs# */
@@ -116,20 +133,63 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableTrackOnNearest', true);
 
 		this.addBoolConfigProp('enableHotTrack', true);
-		this.addIntConfigProp('objBoundTrackInflation', 5);
+
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', true);
+
+		this.addIntConfigProp('objBoundTrackMinInflation', 5);
+		this.addIntConfigProp('objBoundTrackMinInflationMouse', null);
+		this.addIntConfigProp('objBoundTrackMinInflationPen', null);
+		this.addIntConfigProp('objBoundTrackMinInflationTouch', 10);
+
+		this.addIntConfigProp('objBoundTrackInflationRatio', 0.2);
+		this.addIntConfigProp('objBoundTrackInflationRatioMouse', null);
+		this.addIntConfigProp('objBoundTrackInflationRatioPen', null);
+		this.addIntConfigProp('objBoundTrackInflationRatioTouch', 0.33);
+
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
-		this.addIntConfigProp('selectionMarkerInflation', 5, {'scope': PS.PUBLIC});
-		this.addIntConfigProp('selectionMarkerEdgeInflation', 5, {'scope': PS.PUBLIC});
-		this.addIntConfigProp('rotationRegionInflation', 10, {'scope': PS.PUBLIC});
-		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15, {'scope': PS.PUBLIC});  // 15 degree
+		this.addFloatConfigProp('selectingBrushWidth', 12);
+		this.addBoolConfigProp('enableOffSelectionManipulation', true);
+		this.addIntConfigProp('offSelectionManipulationActivatingTimeThreshold', 800);
+		this.addFloatConfigProp('unmovePointerDistanceThreshold', 5, {'scope': PS.PUBLIC}); // hidden to object inspector
+		//this.addFloatConfigProp('selectingBrushMinWidth', 5);
+		this.addIntConfigProp('selectingCurveSimplificationDistanceThreshold', 2, {'scope': PS.PUBLIC}); // hidden to object inspector
+		this.addIntConfigProp('selectionMarkerInflation', 5);
+		this.addIntConfigProp('selectionMarkerEdgeInflation', 5);
+		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
+		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
+
+		//this.addConfigProp('constrainedResizeLevels', DataType.ARRAY, undefined);
+		this.addFloatConfigProp('constrainedResizeStep', 0.25);
+		this.addIntConfigProp('rotationRegionInflation', 10);
+		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 15);  // 15 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
 		this.addBoolConfigProp('enableMergePreview', true);
+
+		this.addBoolConfigProp('enableGestureManipulation', true);
+		this.addBoolConfigProp('enableGestureZoomOnEditor', true);
 
 		this.addIntConfigProp('clonedObjectScreenOffset', 10);
 
 		this.addIntConfigProp('atomSetterFontSize', 14);
 		this.addBoolConfigProp('allowUnknownAtomSymbol', true);
+
+		this.addIntConfigProp('trackSimplifierDistanceThreshold', 8);
+		this.addIntConfigProp('trackSimplifierIgnoreSegmentThreshold', 10);
+		this.addIntConfigProp('trackMergeDistanceThreshold', 20);
+		this.addFloatConfigProp('trackOptimizationAngleConstraint', degreeStep * 30);  // 30 degree
+		this.addConfigProp('trackOptimizationDistanceConstraints', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
+		this.addIntConfigProp('trackOptimizationPrimaryDistanceConstraint', 1);
+		this.addFloatConfigProp('trackTouchRefLength', 0.5, {'scope': PS.PUBLIC});  // 0.5 inchi
+		this.addBoolConfigProp('autoAdjustZoomLevelOnTrackTouching', !true, {'scope': PS.PUBLIC});  // currently has some problems, disable it
+
+		this.addFloatConfigProp('editorInitialZoom', 1.5);
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setTrackOptimizationDistanceConstraints([0.5, 1, 3, 4, 5]);
 	}
 });
 
@@ -144,6 +204,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Float} selectionMarkerStrokeWidth Width of selection marker stroke.
  * @property {String} selectionMarkerFillColor Fill color of selection marker. Usually this value should be set to null (not filled).
  * @property {Float} selectionMarkerOpacity Opacity of selection marker.
+ * @property {Float} selectionMarkerEmphasisOpacity Opacity of a highlighted selection marker.
  * @property {Number} selectionTransformMarkerSize Width/height of selection transform handler box, in px.
  * @property {Float} selectionTransformMarkerOpacity Opacity of selection transform marker.
  * @property {String} selectingMarkerStrokeColor Stroke color of selecting marker.
@@ -151,6 +212,15 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {String} selectingMarkerStrokeDash Dash style of selecting marker.
  * @property {String} selectingMarkerFillColor Fill color of selecting marker. Usually this value should be set to null (not filled).
  * @property {Float} selectingMarkerOpacity Opacity of selecting marker.
+ * @property {String} selectingBrushMarkerStrokeColor Stroke color of selecting brush marker.
+ * @property {String} selectingBrushMarkerStrokeDash Dash style of selecting brush marker.
+ * @property {Float} selectingBrushMarkerOpacity Opacity of selecting brush marker.
+ * @property {String} selectingBrushMarkerStrokeLineCap
+ * @property {String} selectingBrushMarkerStrokeLineJoin
+ * @property {String} flexStructureAssocMarkerColor Color of marker displaying atom count in flex ring/chain controller.
+ * @property {Float} flexStructureAssocMarkerOpacity Opacity of marker displaying atom count in flex ring/chain controller.
+ * @property {Int} flexStructureAssocMarkerFontSize Font size of marker displaying atom count in flex ring/chain controller.
+ *
  */
 Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.UiMarkerConfigs# */
@@ -167,6 +237,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('selectionMarkerStrokeWidth', 2);
 		this.addStrConfigProp('selectionMarkerFillColor', '#0000FF');
 		this.addFloatConfigProp('selectionMarkerOpacity', 0.2);
+		this.addFloatConfigProp('selectionMarkerEmphasisOpacity', 0.4);
 		this.addFloatConfigProp('selectionTransformMarkerSize', 8, {'scope': PS.PUBLIC});  // currently not used?
 		this.addFloatConfigProp('selectionTransformMarkerOpacity', 0.4, {'scope': PS.PUBLIC});  // currently not used?
 
@@ -175,6 +246,22 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('selectingMarkerStrokeDash', true);
 		this.addStrConfigProp('selectingMarkerFillColor', null);
 		this.addFloatConfigProp('selectingMarkerOpacity', 0.7);
+
+		this.addStrConfigProp('selectingBrushMarkerStrokeColor', '#0000FF');
+		this.addStrConfigProp('selectingBrushMarkerStrokeDash', false);
+		this.addFloatConfigProp('selectingBrushMarkerStrokeLineCap', 'round');
+		this.addFloatConfigProp('selectingBrushMarkerStrokeLineJoin', 'round');
+		this.addFloatConfigProp('selectingBrushMarkerOpacity', 0.3);
+
+		this.addStrConfigProp('trackMarkerStrokeColor', '#0000AA');
+		this.addFloatConfigProp('trackMarkerStrokeWidth', 2);
+		this.addStrConfigProp('trackMarkerStrokeDash', false);
+		this.addFloatConfigProp('trackMarkerOpacity', 0.5);
+
+		this.addStrConfigProp('flexStructureAssocMarkerColor', '#0000AA');
+		this.addFloatConfigProp('flexStructureAssocMarkerOpacity', 0.5);
+		this.addIntConfigProp('flexStructureAssocMarkerFontSize', 14);
+		this.addStrConfigProp('flexStructureAssocMarkerFontFamily', "Arial, Helvetica, sans-serif");
 	}
 });
 
@@ -198,7 +285,11 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {Array} primaryOrgChemAtoms Atom symbols of most often seen in organic chemistry.
  * @property {Bool} enableChargeAndRadicalMarker If true, marker objects will be used in editor to represent charge and radical.
  * @property {Int}  The max atom count when creating carbon chain using flex chain tool. 0 means no restricts.
- * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon chain using flex ring tool. 0 means no restricts.
+ * @property {Int} minFlexRingAtomCount The min atom count when creating carbon ring using flex ring tool.
+ * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon ring using flex ring tool. 0 means no restricts.
+ * //@property {Int} initialFlexRingAtomCount The initial atom count when creating carbon ring using flex ring tool.
+ *
+ * @property {Hash} nonAtomNodeInputSetting Settings to restrict the input types of non-atom node.
  */
 Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Editor.StructureConfigs# */
@@ -226,9 +317,41 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('defIsotopeId', 'C');
 		this.addConfigProp('primaryOrgChemAtoms', DataType.ARRAY, undefined, {'scope': PS.PUBLIC});
 		this.addIntConfigProp('maxFlexChainAtomCount', 0);  // no limits on flex chain
+		this.addIntConfigProp('minFlexRingAtomCount', 3);
 		this.addIntConfigProp('maxFlexRingAtomCount', 18);  // too large ring cause performance problem
+		//this.addIntConfigProp('initialFlexRingAtomCount', 3);
 
-		this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
+		//this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
+
+		this.addHashConfigProp('enabledNonAtomNodeTypes', {
+			'RGroup': true,
+			'pseudoatomDummy': true,
+			'pseudoatomHetero': true,
+			'pseudoatomAny': true,
+			'variableAtomList': true,
+			'variableAtomNotList': true
+		});
+		this.addHashConfigProp('enabledBondForms', {
+			// covalent bond types
+			'single': true,
+			'double': true,
+			'triple': true,
+			'quad': true,
+			'explicitAromatic': true,
+			// stereo bond types
+			'up': true,
+			'upInverted': true,
+			'down': true,
+			'downInverted': true,
+			'upOrDown': true,
+			'eOrZ': true,
+			'closer': true,
+			// other types
+			'ionic': false,
+			'coordinate': false,
+			'metallic': false,
+			'hydrogen': true
+		});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -254,7 +377,7 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		this.setBondConstrainedDirectionAngleThreshold(degreeStep * 3);
 		this.setInitialBondDirection(30 * degreeStep);
 
-		this.setPrimaryOrgChemAtoms(['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I']);
+		this.setPrimaryOrgChemAtoms(['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'Si', 'D', 'C13']);
 	},
 
 	/**

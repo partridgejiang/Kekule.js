@@ -124,6 +124,7 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Int} moleculeDisplayType Display type of molecule in displayer. Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
  * @property {Hash} drawOptions A series of params to render chem object.
  * @property {Float} zoom Zoom ratio to draw chem object, equal to drawOptions.zoom.
+ * @property {Float} initialZoom Initial zoom when just loading a chem object. Default is 1.
  * @property {Bool} autoSize Whether the widget change its size to fit the dimension of chem object.
  * @property {Int} padding Padding between chem object and edge of widget, in px. Only works when autoSize is true.
  * @property {Hash} baseCoordOffset Usually displayer draw object at center of widget, use this property to make
@@ -168,13 +169,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.setChemObj(null);
+		//this.setChemObj(null);
+		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
 		var b = this.getPropStoreFieldValue('drawBridge');
 		var ctx = this.getPropStoreFieldValue('drawContext');
 		if (ctx && b)
 			b.releaseContext(ctx);
-		if (b.finalize)
+		if (b && b.finalize)
 			b.finalize();
 		this.setPropStoreFieldValue('drawBridge', null);
 		this.setPropStoreFieldValue('drawContext', null);
@@ -235,6 +237,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 						Kekule.Render.Render3DConfigs.getInstance():
 						Kekule.Render.Render2DConfigs.getInstance();
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('renderConfigs', value);
+				var painter = this.getPropStoreFieldValue('painter');
+				if (painter)
+					painter.setRenderConfigs(this.getRenderConfigs());
 			}
 		});
 		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
@@ -290,6 +299,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return this;
 			}
 		});
+		this.defineProp('initialZoom', {'dataType': DataType.FLOAT});
 		this.defineProp('autofit', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function()
 			{
@@ -1242,7 +1252,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	resetDisplay: function()
 	{
 		var op = this.getDrawOptions();
-		op.zoom = 1;
+		op.zoom = this.getInitialZoom() || 1;
 		op.rotateX = 0;
 		op.rotateY = 0;
 		op.rotateZ = 0;
@@ -1299,7 +1309,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	resetZoom: function()
 	{
-		return this.zoomTo(1);
+		return this.zoomTo(this.getInitialZoom() || 1);
 	},
 
 	/**
@@ -2103,7 +2113,7 @@ Kekule.ChemWidget.ActionDisplayerResetZoom = Class.create(Kekule.ChemWidget.Acti
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerResetZoom',
 	/** @private */
-	HTML_CLASSNAME: CCNS.ACTION_RESETZOOM,
+	HTML_CLASSNAME: CCNS.ACTION_RESET_ZOOM,
 	/** @constructs */
 	initialize: function($super, displayer)
 	{

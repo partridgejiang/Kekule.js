@@ -181,6 +181,6 @@ var KI = Kekule.Indigo;
 Kekule.Indigo.AdaptUtils = {
 };
 
-Kekule._registerAfterLoadProc(function() {if (KI._autoEnabled) KI._enableAllFunctions()} );
+Kekule._registerAfterLoadSysProc(function() {if (KI._autoEnabled) KI._enableAllFunctions()} );
 
 })(this);

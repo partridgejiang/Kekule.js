@@ -480,6 +480,37 @@ ClassEx.extend(Kekule.Glyph.PathGlyphNode,
 		return result;
 	}
 });
+ClassEx.extend(Kekule.Glyph.PathGlyphConnectorControlNode,
+/** @lends Kekule.Glyph.PathGlyphConnectorControlNode# */
+{
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 */
+	/*
+	getCoordDependentObjects: function($super)
+	{
+		var result = $super();  // []
+		var connector = this.getParentConnector();
+		if (connector)
+			result = (result || []).concat([connector]);
+		return result;
+	}
+	*/
+	/**
+	 * If this object determinate other object's coord, this method should returns them.
+	 * @return {Array}
+	 * @ignore
+	 */
+	getCoordDeterminateObjects: function($super)
+	{
+		var result = $super();  // []
+		var connector = this.getParentConnector();
+		if (connector)
+			result = (result || []).concat([connector]);
+		return result;
+	},
+});
 ClassEx.extend(Kekule.Glyph.PathGlyphConnector,
 /** @lends Kekule.Glyph.PathGlyphConnector# */
 {
@@ -491,6 +522,21 @@ ClassEx.extend(Kekule.Glyph.PathGlyphConnector,
 		result.push(this.getParent());
 		*/
 		var result = [this.getParent()];
+		return result;
+	},
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 * @ignore
+	 */
+	getCoordDependentObjects: function($super)
+	{
+		var result = $super();  // []
+		var controlPoints = this.getControlPoints && this.getControlPoints();
+		if (controlPoints && controlPoints.length)
+		{
+			result = (result || []).concat(controlPoints);
+		}
 		return result;
 	}
 });
@@ -533,7 +579,7 @@ ClassEx.extend(Kekule.StructureFragment,
 			return $super();
 		else
 		{
-			var result = $super();
+			var result = []; // $super();
 			var childCount = this.getChildCount();
 			for (var i = 0; i < childCount; ++i)
 			{

@@ -1,6 +1,6 @@
 Kekule.Localization.setCurrModule("objDefines");
 
-Kekule.Localization.addResource("zh", "OBJDEF_TEXTS", 
+Kekule.Localization.addResource("zh", "OBJDEF_TEXTS",
 {
 	"TITLE_PREFIX": "TITLE_",
 	"DESCRIPTION_PREFIX": "DES_",
@@ -226,8 +226,8 @@ Kekule.Localization.addResource("zh", "OBJDEF_TEXTS",
 		"InteractionConfigs": {
 			"TITLE_enableHotTrack": "Enable hot track",
 			"DES_enableHotTrack": "Whether highlighting objects under mouse position",
-			"TITLE_objBoundTrackInflation": "Object bound inflation",
-			"DES_objBoundTrackInflation": "Inflates the bound of object to make it easier to select",
+			"TITLE_objBoundTrackMinInflation": "Object bound inflation",
+			"DES_objBoundTrackMinInflation": "Inflates the bound of object to make it easier to select",
 			"TITLE_selectionMarkerInflation": "Selection marker inflation",
 			"DES_selectionMarkerInflation": "Inflation of object selection mark, makes it easier to see the containing objects",
 			"TITLE_selectionMarkerEdgeInflation": "Selection edge inflation",

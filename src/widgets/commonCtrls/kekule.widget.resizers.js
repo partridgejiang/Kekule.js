@@ -131,7 +131,8 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		if (this.targetIsWidget(target))
 			return target.getDimension();
 		else
-			return Kekule.HtmlElementUtils.getElemBoundingClientRect(target, false);
+			//return Kekule.HtmlElementUtils.getElemBoundingClientRect(target, false);
+			return Kekule.HtmlElementUtils.getElemPageRect(target, true);
 	},
 	/**
 	 * Set dimension (in px) of target object.
@@ -156,14 +157,14 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	 * Prepare to resize.
 	 * @private
 	 */
-	prepareResizing: function(startingCoord)
+	prepareResizing: function(startingCoord, event)
 	{
 		if (!this.getIsUnderResizing())
 		{
 			var eventReceiver = this._getMoveEventReceiverElem(this.getElement());
 			this._installEventHandlers(eventReceiver);
 
-			this._setMouseCapture(this.getElement(), true);
+			this._setMouseCapture(this.getElement(), true, event);
 
 			this.setBaseCoord(startingCoord);
 			var dim = this.getTargetDimension();
@@ -177,9 +178,9 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	/**
 	 * Resizing process is over.
 	 */
-	doneResizing: function()
+	doneResizing: function(event)
 	{
-		this._setMouseCapture(this.getElement(), false);
+		this._setMouseCapture(this.getElement(), false, event);
 
 		var eventReceiver = this._getMoveEventReceiverElem(this.getElement());
 		this._uninstallEventHandlers(eventReceiver);
@@ -230,7 +231,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		{
 			if (this.getIsUnderResizing())
 			{
-				this.doneResizing();
+				this.doneResizing(e);
 				e.preventDefault();
 			}
 		}
@@ -251,7 +252,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	{
 		if (this.getIsUnderResizing())
 		{
-			this.doneResizing();
+			this.doneResizing(e);
 			e.preventDefault();
 		}
 	},
@@ -262,7 +263,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		return !!elem.setCapture;
 	},
 	/** @private */
-	_setMouseCapture: function(elem, capture)
+	_setMouseCapture: function(elem, capture, event)
 	{
 		if (elem)
 		{
@@ -270,11 +271,21 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 			{
 				if (elem.setCapture)
 					elem.setCapture(true);
+				if (elem.setPointerCapture)
+				{
+					if (Kekule.ObjUtils.notUnset(event.pointerId))
+						elem.setPointerCapture(event.pointerId)
+				}
 			}
 			else
 			{
 				if (elem.releaseCapture)
 					elem.releaseCapture();
+				if (elem.releasePointerCapture)
+				{
+					if (Kekule.ObjUtils.notUnset(event.pointerId))
+						elem.releasePointerCapture(event.pointerId)
+				}
 			}
 		}
 	},
@@ -302,18 +313,18 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	//react_mousedown: function(e)
+	//react_pointerdown: function(e)
 	doReactActiviting: function($super, e)
 	{
 		$super(e);
 		//var evType = e.getType();
 		{
 			var coord = {'x': e.getScreenX(), 'y': e.getScreenY()};
-			this.prepareResizing(coord);
+			this.prepareResizing(coord, e);
 		}
 	}
 	/** @ignore */
-	//react_mouseup: function(e)
+	//react_pointerup: function(e)
 	/*
 	doReactDeactiviting: function($super, e)
 	{
@@ -324,7 +335,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	*/
 	/** @ignore */
 	/*
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		if (this.getIsUnderResizing())
 		{

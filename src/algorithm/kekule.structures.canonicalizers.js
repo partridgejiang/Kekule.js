@@ -1042,7 +1042,8 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 			var sortedNodes = [];
 			var sortedUnindexedNodes = [];  // sorted hydrogen atom that has no cannonicalization index
 
-			sortedNodes.push(currNode);
+			if (currNode)
+				sortedNodes.push(currNode);
 			//nodeIndexMap.set(currNode, 0);
 
 			for (var i = 0; i < sortedNodes.length; ++i)
@@ -1195,8 +1196,8 @@ Kekule.Canonicalizer = Class.create(
 					return structFragmentOrCtab;
 				}
 				var ctab = structFragmentOrCtab.getCtab? structFragmentOrCtab.getCtab(): structFragmentOrCtab;
-				if (!ctab)  // empty structure
-					return;
+				if (!ctab || ctab.isEmpty())  // empty structure
+					return structFragmentOrCtab;
 				var structFragment = ctab.getParent();
 				if (executor.customExecutor)
 					executor.customExecutor.execute(ctab);

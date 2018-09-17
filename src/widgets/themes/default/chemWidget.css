@@ -245,9 +245,16 @@
     padding: 0.3em 0.6em;
 }
 
-.K-Chem-StructureNodeSelectPanel
+.K-Chem-Viewer-Editor-FullClient
 {
-    width: 22em;
+    position: fixed !important;
+    top: 0px;
+    left: 0px;
+}
+
+.K-Chem-StructureNodeSelectPanel, .K-Chem-StructureConnectorSelectPanel
+{
+    width: 20em;
     /*height: 30em;*/
 }
 
@@ -258,7 +265,7 @@
 
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container
 {
-    height: 25em;
+    height: 22em;
     overflow-y: auto;
 }
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page
@@ -279,7 +286,7 @@
     {
         display: inline-block;
         position: relative;
-        height: 25em;
+        height: 20em;
         /*
         display: -webkit-flex;
         display: -moz-flex;
@@ -345,6 +352,20 @@
         flex: auto;
         */
     }
+
+    .K-Chem-StructureNodeSetter
+    {
+        width: 22em;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display:flex;
+        flex-direction: column;
+    }
+    .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel
+    {
+        width: auto;
+        flex: auto;
+    }
 }
 
 .K-Chem-StructureNodeSetter.K-ChemEditor-Atom-Setter
@@ -356,6 +377,22 @@
 .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel
 {
     display: block;
+}
+.K-Chem-StructureNodeSetter-InputBox .K-ComboTextBox-Assoc-Widget .K-Pri-Glyph-Content
+{
+    display: none;
+}
+
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup
+{
+    display: block;
+    margin: 0.5em auto;
+    background-color: transparent;
+    text-align: left;
+}
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn
+{
+    min-width: 4em;
 }
 
 .K-Chem-Editor
@@ -422,6 +459,41 @@
     margin: 0;
 }
 
+.K-Chem-Composer .K-Chem-Composer-Editor-Stage,
+.K-Chem-Composer .K-Chem-Editor,
+.K-Chem-Composer .K-Chem-Editor .K-Chem-Editor-Client
+{
+    touch-action: none;  /* disable default touch actions, for we have own ones */
+}
+
+.K-Chem-Composer .K-Chem-Composer-Top-Region,
+.K-Chem-Composer .K-Chem-Composer-Left-Region,
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    position: absolute;
+    padding: 0;
+    margin: 0;
+}
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    overflow: hidden;
+}
+.K-Chem-Composer .K-Chem-Composer-Top-Region
+{
+    left: 48px;
+    height: 37px;
+}
+.K-Chem-Composer .K-Chem-Composer-Bottom-Region
+{
+    left: 48px;
+    height: 32px;
+}
+.K-Chem-Composer .K-Chem-Composer-Left-Region
+{
+    top: 37px;
+    width: 48px;
+}
+
 .K-Chem-Composer .K-Chem-Composer-Toolbar
 {
     z-index: 100;
@@ -442,26 +514,35 @@
 {
     position: absolute;
     top: 0;
-    left: 47px;
+    /*left: 47px;*/
 }
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar
 {
+    /*
     position: absolute;
     bottom: 0;
     right: 0;
+    */
+    float: right;
 }
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar
 {
+    /*
     position: absolute;
     top: 37px;
     left: 0;
+    */
+    display: block;
+    float: right;
 }
 .K-Chem-Composer .K-Chem-Composer-Common-Toolbar .K-Button,
 .K-Chem-Composer .K-Chem-Composer-Chem-Toolbar .K-Button
 {
     /* a default size for easy layout */
+    /*
     width: 48px;
     height: 37px;
+    */
 }
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button
 {
@@ -471,13 +552,23 @@
     */
     padding: 4px 5px;
 }
-.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar,
+.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-H,
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar,
 .K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar
 {
+    /*
     position: absolute;
     left: 48px;
     bottom: 0px;
+    */
+    float: left;
+    margin-right: 5px;
+}
+.K-Chem-Composer .K-Chem-Composer-Assoc-Toolbar.K-Layout-V
+{
+    float: right;
+    margin-top: 20px;
+    margin-right: 0;
 }
 
 .K-Chem-Composer .K-Chem-Composer-Zoom-Toolbar .K-Button,
@@ -507,13 +598,7 @@
     padding: 0.2em 0.4em;
     white-space: nowrap;
 }
-.K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
-.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
-{
-    width: 16px;
-    height: 16px;
-    /*display: inherit;*/
-}
+
 .K-Chem-Composer-Style-Toolbar .K-Button .K-Content,
 .K-Chem-Composer-ObjModifier-Toolbar .K-Button .K-Content
 {
@@ -531,6 +616,54 @@
 {
 
 }
+
+.K-Chem-Composer-ObjModifier-Toolbar
+{
+    vertical-align: top;
+}
+
+.K-Chem-Composer-ObjModifier-Toolbar sup,
+.K-Chem-Composer-ObjModifier-Toolbar sub
+{
+    font-size: 0.7em;
+}
+
+.K-Chem-Composer-ObjModifier-Toolbar .K-Button
+{
+    padding-left: 0.22em;
+    padding-right: 0.22em;
+}
+
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button
+{
+    font-family: /*Georgia,*/ "Times New Roman", Times, serif;
+    font-size: 1.2em;
+    /*line-height: 0.833em;*/
+    vertical-align: middle;  /* solve the align problem of modifier buttons in Chrome */
+}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Text-Content,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Text-Content
+{
+    /*vertical-align: top;*/
+}
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-AtomModifier-Button .K-Pri-Glyph-Content,
+.K-Chem-Composer-ObjModifier-Toolbar .K-Chem-Composer-ChargeModifier-Button .K-Pri-Glyph-Content
+{
+    display: none;
+}
+.K-Chem-Composer-AtomModifier-DropDown
+{
+    width: 22em;
+    max-height: 90%;
+}
+.K-Chem-Composer-AtomModifier-DropDown .K-Chem-StructureNodeSelectPanel
+{
+    padding: 0;
+    border: none;
+    width: auto;
+}
+
 
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel
 {
@@ -703,4 +836,27 @@
 {
     float: left;
     white-space: nowrap;
+}
+
+.K-Chem-ComposerFrame
+{
+    border: none;
+    /*
+    width: 100%;
+    height: 100%;
+    */
+}
+.K-Chem-ComposerFrame-ContentDoc, .K-Chem-ComposerFrame-ContentBody
+{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.K-Chem-ComposerFrame-ContentBody .K-Chem-Composer
+{
+    margin: 0;
+    width: 100%;
+    height: 100%;
 }

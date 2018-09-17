@@ -50,6 +50,12 @@ Kekule.globalOptions.structureComparation = {
 Kekule.globalOptions.add('algorithm.structureComparation', {
 	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
 });
+Kekule.globalOptions.add('algorithm.structureClean', {
+	structureCleanOptions: {
+		'orphanChemNode': true,
+		'hangingChemConnector': true
+	}
+});
 
 // extend method to Kekule.ObjComparer
 Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
@@ -5208,6 +5214,61 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			this.setCtab(undefined);
 		if (this.hasFormula())
 			this.setFormula(undefined);
+	},
+
+	/**
+	 * Clean the structure in ctab, removing illegal nodes and connectors.
+	 * @param {Hash} options An option hash, can including fields: {orphanChemNode, hangingChemConnector}.
+	 */
+	clean: function(options)
+	{
+		var op = Object.extend({}, Kekule.globalOptions.algorithm.structureClean.structureCleanOptions);
+		op = Object.extend(op, options || {});
+
+		return this.doClean(op);
+	},
+	/** @private */
+	doClean: function(options)
+	{
+		if (options.hangingChemConnector)
+		{
+			for (var i = this.getConnectorCount() - 1; i >= 0; --i)
+			{
+				var conn = this.getConnectorAt(i);
+				if (conn instanceof Kekule.ChemStructureConnector)
+				{
+					if (conn.getConnectedObjCount() < 2)
+					{
+						this.removeConnectorAt(i);
+					}
+				}
+			}
+		}
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) && node.doClean)
+				{
+					node.doClean(options);
+				}
+				else
+				{
+					if (options.orphanChemNode)
+					{
+						if (node.getLinkedConnectorCount() < 1 && nodeCount > 1)  // if only one node in structure, do not clean it
+						{
+							this.removeNodeAt(i);
+						}
+					}
+				}
+			}
+		}
+
+		return this;
 	},
 
 	/**

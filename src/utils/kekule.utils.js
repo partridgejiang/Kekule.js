@@ -2551,6 +2551,33 @@ Kekule.CoordUtils = {
  */
 Kekule.GeometryUtils = {
 	/**
+	 * Add or substract 2Pi to angle, ensure the angle in range rangeMin to rangeMin + 2Pi
+	 * @param {Float} angle
+	 * @param {Float} rangeMin Default is 0.
+	 */
+	standardizeAngle: function(angle, rangeMin, rangeMax)
+	{
+		rangeMin = rangeMin || 0;
+		var rangeMax = rangeMin + Math.PI * 2;
+		var times = Math.floor((angle - rangeMin) / Math.PI / 2);
+		return angle - times * Math.PI * 2;
+	},
+	/**
+	 * Convert a polar coord to cartesian one.
+	 * @param {Float} centerX
+	 * @param {Float} centerY
+	 * @param {Float} radius
+	 * @param {Float} angle
+	 * @returns {Hash}
+	 */
+	polarToCartesian: function(centerX, centerY, radius, angle)
+	{
+		return {
+			x: centerX + (radius * Math.cos(angle)),
+			y: centerY + (radius * Math.sin(angle))
+		};
+	},
+	/**
 	 * Returns the cross product (v1.v2) of two vectors represented by coord1 and coord2.
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2
@@ -2578,17 +2605,18 @@ Kekule.GeometryUtils = {
 		return result;
 	},
 	/**
-	 * Returns included angle of two vectors represented by coord1 and coord2.
-	 * @param {Hash} coord1
-	 * @param {Hash} coord2
+	 * Returns included angle of two vectors represented by vector1 and vector2.
+	 * Note this method always returns result less than Math.PI / 2.
+	 * @param {Hash} vector1
+	 * @param {Hash} vector2
 	 * @returns {Number}
 	 */
-	getVectorIncludedAngle: function(coord1, coord2)
+	getVectorIncludedAngle: function(vector1, vector2)
 	{
 		var CU = Kekule.CoordUtils;
-		var cross = Kekule.GeometryUtils.getVectorCrossProduct(coord1, coord2);
+		var cross = Kekule.GeometryUtils.getVectorCrossProduct(vector1, vector2);
 		var zeroCoord = {'x': 0, 'y': 0, 'z': 0};
-		var divV = (CU.getDistance(coord1, zeroCoord) * CU.getDistance(coord2, zeroCoord));
+		var divV = (CU.getDistance(vector1, zeroCoord) * CU.getDistance(vector2, zeroCoord));
 		var sinAngleV = CU.getDistance(cross, zeroCoord) / divV;
 		//var cosAngleV = Kekule.GeometryUtils.getVectorScalarProduct(coord1, coord2) / divV;
 		var result = Math.asin(sinAngleV);  // asin always returns value between -Pi/2 ~ Pi / 2
@@ -2599,7 +2627,17 @@ Kekule.GeometryUtils = {
 		*/
 		return result;
 	},
-
+	/**
+	 * Returns included angle of two vectors represented by vector1 and vector2.
+	 * Note this method always returns result between 0 to 2pi.
+	 * @param {Hash} vector1
+	 * @param {Hash} vector2
+	 * @returns {Number}
+	 */
+	getVectorIncludedAngle2: function(vector1, vector2)
+	{
+		return Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector2.y, vector2.x) - Math.atan2(vector1.y, vector1.x));
+	},
 	/*
 	 * Returns sin and cos value of dihedral angle of plane (c1, c2, c3) and (c2, c3, c4) while c1-4 are coords of 3D.
 	 * This method is based on formula (when A1, A2, A3 and B1, B2, B3 are three points in each plane):
@@ -2694,6 +2732,182 @@ Kekule.GeometryUtils = {
 		var v2 = CU.substract(c3, c2);
 		var v3 = CU.substract(c4, c3);
 		return Kekule.GeometryUtils.getDihedralAngleOfVectors(v1, v2, v3);
+	},
+
+	/**
+	 * Returns the cross point of a vertical line from coord to a existing line (lineCoord1-lineCoord2)
+	 * @param {Hash} coord
+	 * @param {Hash} lineCoord1
+	 * @param {Hash} lineCoord2
+	 * @param {Bool} isUnlimitedLine If true, the line length will not be considered.
+	 * @returns {Hash}
+	 */
+	getPerpendicularCrossPointFromCoordToLine: function(coord, lineCoord1, lineCoord2, isUnlimitedLine)
+	{
+		// method from http://blog.sina.com.cn/s/blog_4bf793ad0100gudn.html
+		var result = {};
+		if (Math.abs(lineCoord1.x - lineCoord2.x) < 1e-10)  // a vertical line or near vertical line
+		{
+			result.x = lineCoord1.x;
+			result.y = coord.y;
+		}
+		else
+		{
+			var k = (lineCoord2.y - lineCoord1.y) / (lineCoord2.x - lineCoord1.x);
+			// 垂线的斜率为 - 1 / k，垂线方程为：y = (-1/k) * (x - coord.x) + coord.y
+			// calc cross point
+			// x = ( k^2 * pt1.x + k * (point.y - pt1.y ) + point.x ) / ( k^2 + 1) ，y = k * ( x - pt1.x) + pt1.y
+			result.x = (k * k * lineCoord1.x + k * (coord.y - lineCoord1.y) + coord.x) / (k * k + 1);
+			result.y = k * (result.x - lineCoord1.x) + lineCoord1.y;
+		}
+
+		// check if cross point is between two coords of line
+		var betweenFlag;
+		if (isUnlimitedLine)
+			betweenFlag = true;
+		else
+		{
+			var vector = {'x': lineCoord1.x - lineCoord2.x, 'y': lineCoord1.y - lineCoord2.y};
+			if (Math.abs(vector.y) > Math.abs(vector.x))
+				betweenFlag = (Math.sign(result.y - lineCoord1.y) * Math.sign(result.y - lineCoord2.y) <= 0);
+			else
+				betweenFlag = (Math.sign(result.x - lineCoord1.x) * Math.sign(result.x - lineCoord2.x) <= 0);
+		}
+		if (!betweenFlag)  // not inside with limited line
+			return null;
+		else
+			return result;
+	},
+
+	/**
+	 * Returns the minial distance from point (coord) to line (lineCoord1, lineCoord2)
+	 * @param {Hash} coord
+	 * @param {Hash} lineCoord1
+	 * @param {Hash}lineCoord2
+	 * @param {Bool} isUnlimitedLine If true, the line length will not be considered.
+	 * @returns {Hash}
+	 */
+	getDistanceFromPointToLine: function(coord, lineCoord1, lineCoord2, isUnlimitedLine)
+	{
+		var crossPoint = Kekule.GeometryUtils.getPerpendicularCrossPointFromCoordToLine(coord, lineCoord1, lineCoord2, isUnlimitedLine);
+		/*
+		// check if cross point is between two coords of line
+		var betweenFlag;
+
+		var vector = {'x': lineCoord1.x - lineCoord2.x, 'y': lineCoord1.y - lineCoord2.y};
+		if (isUnlimitedLine)
+			betweenFlag = true;
+		else
+		{
+			if (Math.abs(vector.y) > Math.abs(vector.x))
+				betweenFlag = (Math.sign(crossPoint.y - lineCoord1.y) * Math.sign(crossPoint.y - lineCoord2.y) <= 0);
+			else
+				betweenFlag = (Math.sign(crossPoint.x - lineCoord1.x) * Math.sign(crossPoint.x - lineCoord2.x) <= 0);
+		}
+		*/
+
+		if (!crossPoint)  // not inside
+		{
+			var d0 = Kekule.CoordUtils.getDistance(coord, lineCoord1);
+			var d1 = Kekule.CoordUtils.getDistance(coord, lineCoord2);
+			return Math.min(d0, d1);
+		}
+		else  // inside line
+		{
+			var distance = Kekule.CoordUtils.getDistance(coord, crossPoint);
+			return distance;
+		}
+	},
+
+	/**
+	 * Returns the cross point coord of line1 and line2. If no cross point or the point out of lines, null will be returned.
+	 * The algorithm is explained in https://www.jb51.net/article/90104.htm.
+	 * @param {Hash} line1Coord1
+	 * @param {Hash} line1Coord2
+	 * @param {Hash} line2Coord1
+	 * @param {Hash} line2Coord2
+	 * @returns {Hash}
+	 */
+	getCrossPointOfLines: function(line1Coord1, line1Coord2, line2Coord1, line2Coord2)
+	{
+		// 三角形abc 面积的2倍
+		var area_abc = (line1Coord1.x - line2Coord1.x) * (line1Coord2.y - line2Coord1.y) - (line1Coord1.y - line2Coord1.y) * (line1Coord2.x - line2Coord1.x);
+
+		// 三角形abd 面积的2倍
+		var area_abd = (line1Coord1.x - line2Coord2.x) * (line1Coord2.y - line2Coord2.y) - (line1Coord1.y - line2Coord2.y) * (line1Coord2.x - line2Coord2.x);
+
+		// 面积符号相同则两点在线段同侧,不相交 (对点在线段上的情况,本例当作不相交处理);
+		if ( area_abc*area_abd>=0 ) {
+			return null;
+		}
+
+		// 三角形cda 面积的2倍
+		var area_cda = (line2Coord1.x - line1Coord1.x) * (line2Coord2.y - line1Coord1.y) - (line2Coord1.y - line1Coord1.y) * (line2Coord2.x - line1Coord1.x);
+		// 三角形cdb 面积的2倍
+		// 注意: 这里有一个小优化.不需要再用公式计算面积,而是通过已知的三个面积加减得出.
+		var area_cdb = area_cda + area_abc - area_abd ;
+		if ( area_cda * area_cdb >= 0 ) {
+			return null;
+		}
+
+		//计算交点坐标
+		var t = area_cda / ( area_abd - area_abc );
+		var dx= t*(line1Coord2.x - line1Coord1.x),
+				dy= t*(line1Coord2.y - line1Coord1.y);
+		return { x: line1Coord1.x + dx , y: line1Coord1.y + dy };
+	},
+
+	/**
+	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
+	 * @param {Array} curvePoints Array of {x, y} coords to define a curve.
+	 * @param {Float} distanceThreshold
+	 * @returns {Array} Array of {x, y} coords, every two points define a line segment.
+	 * @private
+	 */
+	simplifyCurveToLineSegments: function(curvePoints, distanceThreshold)
+	{
+		//distanceThreshold = distanceThreshold || this.getLineSimplificationDistanceThreshold();
+		if (!distanceThreshold)
+			return curvePoints;
+
+		if (curvePoints.length <= 2)
+			return Kekule.ArrayUtils.clone(curvePoints);
+		return Kekule.GeometryUtils._simplifyCurvePartToLineSegments(curvePoints, 0, curvePoints.length - 1, distanceThreshold);
+	},
+	/** @private */
+	_simplifyCurvePartToLineSegments: function(curvePoints, startIndex, endIndex, distanceThreshold)
+	{
+		var GU = Kekule.GeometryUtils;
+		var startCoord = curvePoints[startIndex];
+		var endCoord = curvePoints[endIndex];
+
+		if (endIndex - startIndex <= 1)
+		{
+			return [startCoord, endCoord];
+		}
+
+		var maxDistance = distanceThreshold, maxIndex = null;
+		for (var i = startIndex + 1; i < endIndex; ++i)
+		{
+			var d = Kekule.GeometryUtils.getDistanceFromPointToLine(curvePoints[i], startCoord, endCoord);
+			if (d > maxDistance)
+			{
+				maxDistance = d;
+				maxIndex = i;
+			}
+		}
+		if (maxIndex === null)  // no max distance point
+		{
+			return [startCoord, endCoord];
+		}
+		else  // split track to two
+		{
+			var lines1 = GU._simplifyCurvePartToLineSegments(curvePoints, startIndex, maxIndex, distanceThreshold);
+			var lines2 = GU._simplifyCurvePartToLineSegments(curvePoints, maxIndex, endIndex, distanceThreshold);
+			lines2.shift();  // remove the common point between lines1 and lines2
+			var result = [].concat(lines1).concat(lines2);
+			return result;
+		}
 	}
 };
 
@@ -2873,9 +3087,9 @@ Kekule.BoxUtils = {
 			'x1': Math.max(b1.x1, b2.x1),
 			'y1': Math.max(b1.y1, b2.y1),
 			'x2': Math.min(b1.x2, b2.x2),
-			'y2': Math.max(b1.y2, b2.y2)
+			'y2': Math.min(b1.y2, b2.y2)
 		};
-		if ((r.x1 >= r.x2) || (r.y1 >= r.y2))
+		if ((r.x1 > r.x2) || (r.y1 > r.y2))
 			return null;
 
 		if (Kekule.ObjUtils.notUnset(b1.z1) && Kekule.ObjUtils.notUnset(b1.z2)
@@ -2883,7 +3097,7 @@ Kekule.BoxUtils = {
 		{
 			r.z1 = Math.max(b1.z1, b2.z1);
 			r.z2 = Math.min(b1.z2, b2.z2);
-			if (r.z1 >= r.z2)
+			if (r.z1 > r.z2)
 				return null;
 		}
 		return r;
@@ -3169,16 +3383,47 @@ Kekule.ZoomUtils = {
 	/** @private */
 	PREDEFINED_ZOOM_RATIOS: [0.1, 0.3, 0.5, 0.66, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 7, 10, 15, 20],
 	/**
+	 * Returns nearest zoom level to current ratio.
+	 * @param {Float} currRatio
+	 * @param {Array} constraintZoomLevels
+	 * @returns {Float}
+	 */
+	getNearestZoomLevel: function(currRatio, constraintZoomLevels)
+	{
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var len = rs.length;
+		if (currRatio > rs[len - 1])  // larger than the max one
+			return rs[len - 1];
+		else if (currRatio < rs[0])  // smaller than one of predefined ones
+			return rs[0];
+		else
+		{
+			for (var i = 0; i < len - 1; ++i)
+			{
+				var ps0 = rs[i];
+				var ps1 = rs[i + 1];
+				if (currRatio >= ps0 && currRatio <= ps1)
+				{
+					if (ps0 === 1 || ps1 === 1)
+						return 1;
+					var r = (currRatio - ps0) / (ps1 - ps0);
+					return (r <= 0.5)? ps0: ps1;
+				}
+			}
+		}
+	},
+	/**
 	 * Get a predefined ratio that bigger than currRatio, which can be used in usual zoom in function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomInRatio: function(currRatio, step)
+	getNextZoomInRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio < rs[len - 1])  // smaller than one of predefined ones
 		{
@@ -3197,13 +3442,14 @@ Kekule.ZoomUtils = {
 	 * Get a predefined ratio that smaller than currRatio, which can be used in usual zoom out function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomOutRatio: function(currRatio, step)
+	getNextZoomOutRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio > rs[0])  // smaller than one of predefined ones
 		{

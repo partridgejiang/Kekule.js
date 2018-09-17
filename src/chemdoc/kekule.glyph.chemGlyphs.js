@@ -44,8 +44,8 @@ Kekule.Glyph.HeatSymbol = Class.create(Kekule.Glyph.Polygon,
 	doCreateDefaultStructure: function($super, refLength, initialParams)
 	{
 		initialParams.edgeCount = 3;
-		initialParams.nodeProps = Object.extend(initialParams.nodeProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN})
-		initialParams.connectorProps = Object.extend(initialParams.connectorProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN})
+		initialParams.nodeProps = Object.extend(initialParams.nodeProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN});
+		initialParams.connectorProps = Object.extend(initialParams.connectorProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN});
 		return $super(refLength, initialParams);
 	},
 	/** @private */

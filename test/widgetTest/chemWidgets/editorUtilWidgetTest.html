@@ -6,7 +6,7 @@
   <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
   <script>
-    var objInspector, nodeSelectPanel, nodeSetter;
+    var objInspector, nodeSelectPanel, nodeSetter, bondSelectPanel, chargeSelectPanel;
 
     function refreshWidgetList()
     {
@@ -82,14 +82,40 @@
         });
 
       nodeSetter = Kekule.Widget.getWidgetById('nodeSetter');
-      nodeSetter.setUseDropDownSelectPanel(true);
+      nodeSetter.setUseDropDownSelectPanel(!true);
       nodeSetter
         .setSelectableElementSymbols(elementSymbols)
         .setSelectableNonElementInfos(nonElementInfos)
         .setSelectableSubGroupRepItems(subGroupRepItems)
+        .setResizable(true)
         .on('valueChange', function(e){
           console.log('setter', e.value);
         });
+
+      bondSelectPanel = Kekule.Widget.getWidgetById('bondSelectPanel');
+      var bondData = (new Kekule.Editor.ChemSpaceEditor(document)).getEnabledBondFormData();
+      console.log(bondData);
+      /*
+      bondSelectPanel.setBondData([
+        {
+          bondProps: {'bondType': Kekule.BondType.COVALENT, 'bondOrder': Kekule.BondOrder.SINGLE, 'bondStereo': Kekule.BondStereo.NONE},
+          'text': 'Single Bond', 'description': 'Single bond'
+        },
+        {
+          bondProps: {'bondType': Kekule.BondType.COVALENT, 'bondOrder': Kekule.BondOrder.DOUBLE, 'bondStereo': Kekule.BondStereo.NONE},
+          'text': 'Double Bond', 'description': 'Double bond'
+        }
+      ]);
+      */
+      bondSelectPanel.setBondData(bondData);
+      bondSelectPanel.on('valueChange', function(e){
+        console.log('bond selected', e.value);
+      });
+
+      chargeSelectPanel = Kekule.Widget.getWidgetById('chargeSelectPanel');
+      chargeSelectPanel.on('valueChange', function(e){
+        console.log('charge selected', e.value);
+      });
 
       objInspector = Kekule.Widget.getWidgetById('objInspector'); // new Kekule.Widget.ObjectInspector();
       objInspector.setObjects(nodeSetter);
@@ -115,6 +141,8 @@
     <div id="refPanel" data-widget="Kekule.Widget.Panel" style="vertical-align:middle">A Panel</div>
     <div id="nodeSelectPanel" data-widget="Kekule.ChemWidget.StructureNodeSelectPanel" style="vertical-align:middle"></div>
     <div id="nodeSetter" data-widget="Kekule.ChemWidget.StructureNodeSetter" style="vertical-align:middle"></div>
+    <div id="bondSelectPanel" data-widget="Kekule.ChemWidget.StructureConnectorSelectPanel" style="vertical-align:middle"></div>
+    <div id="chargeSelectPanel" data-widget="Kekule.ChemWidget.ChargeSelectPanel" style="vertical-align:middle"></div>
   </div>
 </body>
 </html>

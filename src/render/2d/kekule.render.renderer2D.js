@@ -241,6 +241,21 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 
 	},
 	/**
+	 * Draw an arc on context
+	 * @param {Object} context
+	 * @param {Hash} centerCoord
+	 * @param {Number} radius
+	 * @param {Number} startAngle
+	 * @param {Number} endAngle
+	 * @param {Bool} anticlockwise
+	 * @param {Hash} options
+	 * @returns {Object} Element drawn on context
+	 */
+	drawArc: function(context, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+
+	},
+	/**
 	 * Draw an image on context
 	 * @param {Object} context
 	 * @param {String} src Src url of image.
@@ -526,6 +541,10 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	drawCircle: function(context, baseCoord, radius, options)
 	{
 		return this.getDrawBridge().drawCircle(this.getActualTargetContext(context), baseCoord, radius, options);
+	},
+	drawArc: function(context, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+		return this.getDrawBridge().drawArc(this.getActualTargetContext(context), centerCoord, radius, startAngle, endAngle, anticlockwise, options);
 	},
 	drawText: function(context, coord, text, options)
 	{
@@ -1838,12 +1857,14 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 						//console.log('modify', obj.getClassName(), chemObj.hasChildObj(obj));
 						if (chemObj.hasConnector(obj)) // is connector
 						{
-							this.doDrawConnector(context, group, obj, this.getChemObj(), options, cache.transformParams || {});
+							var ops = this.handleConnectorSpecifiedRenderOptions(obj, options);
+							this.doDrawConnector(context, group, obj, this.getChemObj(), ops, cache.transformParams || {});
 							//console.log('draw connector', obj);
 						}
 						else if (chemObj.hasNode(obj)) // is node
 						{
-							this.doDrawNode(context, group, obj, this.getChemObj(), options, cache.transformParams);
+							var ops = this.handleNodeSpecifiedRenderOptions(obj, options);
+							this.doDrawNode(context, group, obj, this.getChemObj(), ops, cache.transformParams);
 						}
 					}
 				}
@@ -1987,7 +2008,9 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		}
 		//if (!obj[this.TRANSFORM_COORD_FIELD])  // not transformed yet
 		var isNode = obj instanceof Kekule.BaseStructureNode;
-		var result = isNode && this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		var nodeParent = obj.getParent();
+		var isConnectorChildNode = isNode && nodeParent && nodeParent instanceof Kekule.BaseStructureConnector;
+		var result = isNode && !isConnectorChildNode && this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
 		  // IMPORTANT: connector center coord is based on node and should not be cached
 		if (!result)
 		{
@@ -2177,7 +2200,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					if (coord2)
 					{
 						//console.log('draw connector', coord1, coord2);
-						elemEx = this.doDrawConnectorShape(context, connector, obj1, obj2, renderOptions, finalTransformOptions);
+						elemEx = this.doDrawConnectorShape(context, connector, [obj1, obj2], renderOptions, finalTransformOptions);
 						if (elemEx)
 						{
 							elem = elemEx.element;
@@ -2186,7 +2209,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 								this.addToDrawGroup(elem, subGroup);
 							//return elem;
 							var boundInfo = elemEx.boundInfo;
-							if (boundInfos)
+							if (boundInfos && boundInfo)
 								boundInfos.push(boundInfo);
 						}
 					}
@@ -2214,16 +2237,15 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/**
-	 * Draw a connector connecting node1 and node2 on context. Descendants need to override this method to do actual drawing.
+	 * Draw a connector connecting nodes on context. Descendants need to override this method to do actual drawing.
 	 * @param {Object} context
 	 * @param {Kekule.ChemStructureConnector} connector
-	 * @param {Kekule.ChemStructureNode} node1
-	 * @param {Kekule.ChemStructureNode} node2
+	 * @param {Array} nodes
 	 * @param {Hash} renderOptions
 	 * @param {Hash} finalTransformOptions
 	 * @private
 	 */
-	doDrawConnectorShape: function(context, connector, node1, node2, renderOptions, finalTransformOptions)
+	doDrawConnectorShape: function(context, connector, nodes, renderOptions, finalTransformOptions)
 	{
 		// do nothing here
 	}
@@ -3244,16 +3266,15 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	},
 
 	/**
-	 * Draw a connector (bond) connecting node1 and node2 with a specified shape on context.
+	 * Draw a connector (bond) connecting nodes with a specified shape on context.
 	 * @param {Object} context
 	 * @param {Kekule.ChemStructureConnector} connector
-	 * @param {Kekule.ChemStructureNode} node1
-	 * @param {Kekule.ChemStructureNode} node2
+	 * @param {Array} nodes
 	 * @param {Hash} renderOptions
 	 * @param {Hash} finalTransformOptions
 	 * @private
 	 */
-	doDrawConnectorShape: function(context, connector, node1, node2, renderOptions, finalTransformOptions)
+	doDrawConnectorShape: function(context, connector, nodes, renderOptions, finalTransformOptions)
 	{
 		var CU = Kekule.CoordUtils;
 		//var globalOptions = this.getRenderConfigs().getLengthConfigs().toHash();
@@ -3266,6 +3287,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (localOptions)
 			renderOptions = Object.extend(renderOptions, localOptions);
 		*/
+
+		var node1 = nodes[0];
+		var node2 = nodes[1];
 
 		var c1 = this.getTransformedCoord2D(context, node1, finalTransformOptions.allowCoordBorrow);
 		var c2 = this.getTransformedCoord2D(context, node2, finalTransformOptions.allowCoordBorrow);

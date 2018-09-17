@@ -13,11 +13,13 @@
  * requires /widgets/commonCtrls/kekule.widget.tabViews.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/editor/kekule.chemEditor.configs.js
+ * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  */
 
 (function(){
 "use strict";
 
+var AU = Kekule.ArrayUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
@@ -26,7 +28,12 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	STRUCTURE_NODE_SELECT_PANEL: 'K-Chem-StructureNodeSelectPanel',
 	STRUCTURE_NODE_SELECT_PANEL_SET_BUTTON: 'K-Chem-StructureNodeSelectPanel-SetButton',
 	STRUCTURE_NODE_SETTER: 'K-Chem-StructureNodeSetter',
-	STRUCTURE_NODE_SETTER_INPUTBOX: 'K-Chem-StructureNodeSetter-InputBox'
+	STRUCTURE_NODE_SETTER_INPUTBOX: 'K-Chem-StructureNodeSetter-InputBox',
+	STRUCTURE_CONNECTOR_SELECT_PANEL: 'K-Chem-StructureConnectorSelectPanel',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_SET_BUTTON: 'K-Chem-StructureConnectorSelectPanel-SetButton',
+	CHARGE_SELECT_PANEL: 'K-Chem-Charge-SelectPanel',
+	CHARGE_SELECT_PANEL_BTNGROUP: 'K-Chem-Charge-SelectPanel-BtnGroup',
+	CHARGE_SELECT_PANEL_CHARGE_BTN: 'K-Chem-Charge-SelectPanel-ChargeBtn'
 });
 
 /**
@@ -317,7 +324,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 		Kekule.DomUtils.clearChildContent(rootElem);
 
 		var btnData = this.generateSelectableData();
-		var tabNames = this._getDisplayedTabPageNames()
+		var tabNames = this._getDisplayedTabPageNames();
 		var tab = new Kekule.Widget.TabView(this);
 
 		if (tabNames.indexOf('atom') >= 0)
@@ -352,8 +359,19 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 	/** @private */
 	generateSelectableDataFromElementSymbol: function(symbol)
 	{
+		var caption = symbol;
+		var isotopeInfo = Kekule.IsotopesDataUtil.getIsotopeInfoById(symbol);
+		if (isotopeInfo)
+		{
+			if (isotopeInfo.isotopeAlias)
+				caption = isotopeInfo.isotopeAlias;
+			else
+			{
+				caption = '<sup>' + isotopeInfo.massNumber + '</sup>' + isotopeInfo.elementSymbol;
+			}
+		}
 		return {
-			'text': symbol,
+			'text': caption,
 			'nodeClass': Kekule.Atom,
 			'props': {'isotopeId': symbol}
 		};
@@ -473,7 +491,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 			this._periodicTable.setSelectedSymbol(node.getSymbol());
 		}
 
-		dialog.openModal(callback, this || caller);
+		dialog.openPopup(callback, this || caller);
 	}
 });
 
@@ -500,9 +518,11 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
  *   Change this value will update property subGroupInfos.
  *
  * @property {Object} labelConfigs Label configs object of render configs.
+ *
  * @property {Array} nodes Structure nodes that currently be edited in node setter.
  *   Note: When done editting, the changes will not directly applied to nodes, editor should handle them insteadly.
  * @property {Hash} value Node new properties setted by setter. Include fields: {nodeClass, props, repositoryItem}
+ * @property {String} nodeLabel
  */
 /**
  * Invoked when the new atom value has been setted.
@@ -568,6 +588,9 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 				}
 				return result;
 			}
+		});
+		this.defineProp('nodeLabel', {'dataType': DataType.STRING, 'serializable': false, 'setter': null,
+			'getter': function() { return this.getNodeInputBox().getValue(); }
 		});
 
 		this.defineProp('nodeInputBox', {
@@ -815,7 +838,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 				newNode = subGroupRepositoryItem.getStructureFragment(); //repObjects[0];
 				nodeClass = newNode.getClass();
 			}
-			else  // add normal node
+			else if (text) // add normal node
 			{
 				nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(text, null); // explicit set defaultClass parameter to null
 				if (!nodeClass)
@@ -860,12 +883,13 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 		var labelConfigs = this.getLabelConfigs();
 		return '~' + (labelConfigs? labelConfigs.getVariableAtom(): Kekule.ChemStructureNodeLabels.VARIABLE_ATOM);
 	},
-	/**
+	/*
 	 * Returns label that shows in node edit.
 	 * @param {Kekule.ChemStructureNode} node
 	 * @returns {String}
 	 * @private
 	 */
+	/*
 	_getNodeLabel: function(node)
 	{
 		var labelConfigs = this.getLabelConfigs();
@@ -876,25 +900,18 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			var groupLabel = node.getAbbr() || node.getFormulaText();
 			return groupLabel || labelConfigs.getRgroup();
 		}
-		/*
-		else if (node instanceof Kekule.VariableAtom)
-		{
-			var allowedIds = node.getAllowedIsotopeIds();
-			var disallowedIds = node.getDisallowedIsotopeIds();
-			return (allowedIds && allowedIds.length)? this._getVarAtomListLabel():
-					(disallowedIds && disallowedIds.length)? this._getVarAtomNotListLabel():
-							this._getVarAtomListLabel();
-		}
-		*/
 		else
 		{
 			var ri = node.getCoreDisplayRichTextItem(null, null, labelConfigs);
 			return Kekule.Render.RichTextUtils.toText(ri);
 		}
 	},
+	*/
 	/** @private */
 	_getAllNodeLabels: function(nodes)
 	{
+		return Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getLabelConfigs());
+		/*
 		var nodeLabel;
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
@@ -911,6 +928,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			}
 		}
 		return nodeLabel;
+		*/
 	},
 
 	/**
@@ -993,6 +1011,397 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			panel.hide();
 		else
 			panel.show(this.getNodeInputBox(), null, Kekule.Widget.ShowHideType.DROPDOWN);
+	}
+});
+
+/**
+ * An panel to set the bond type/order of a chem structure connector.
+ * @class
+ * @augments Kekule.Widget.Panel
+ *
+ * @property {Array} bondData Array of available bond properties.
+ *   Each item is a hash, containing the properties of this bond item.
+ *   e.g. {
+ *     'bondProps': {'bondType': Kekule.BondType.COVALENT, 'bondOrder': Kekule.BondOrder.SINGLE, 'stereo': Kekule.BondStereo.NONE},
+ *     'text': 'Single Bond', 'description': 'Single bond'
+ *   }
+ * @property {Hash} activeBondPropValues Bond property-value hash object of current selected bond.
+ * @property {Array} bondPropNames Property names used in bondData.bondProps. Used to compare bond property values.
+ *  ReadOnly.
+ */
+/**
+ * Invoked when the new bond property has been setted.
+ *   event param of it has field: {props}
+ * @name Kekule.ChemWidget.StructureConnectorSelectPanel#valueChange
+ * @event
+ */
+Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Panel,
+/** @lends Kekule.ChemWidget.StructureConnectorSelectPanel# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.StructureConnectorSelectPanel',
+	/** @private */
+	BTN_DATA_FIELD: '__$btn_data__',
+	/** @private */
+	BTN_GROUP: '__$bond_btn_group__',
+	/** @construct */
+	initialize: function($super, parentOrElementOrDocument)
+	{
+		$super(parentOrElementOrDocument);
+		this._selButtons = [];
+		this._activeBtn = null;
+		this.addEventListener('execute', this.reactSelButtonExec.bind(this));
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('bondData', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+		this.defineProp('activeBondPropValues', {
+			'dataType': DataType.HASH,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('activeBondPropValues', value);
+				this.activeBondPropsChanged(value);
+			}
+		});
+		this.defineProp('activeBondHtmlClass', {
+			'dataType': DataType.STRING,
+			'scope': Class.PropertyScope.PRIVATE,
+			'setter': null,
+			'getter': function()
+			{
+				var btn = this._activeBtn;
+				if (btn)
+				{
+					var data = btn[this.BTN_DATA_FIELD];
+					return data && data.htmlClass;
+				}
+				return null;
+			}
+		});
+		this.defineProp('bondPropNames', {'dataType': DataType.ARRAY, 'serializable': false})
+	},
+
+	/** @ignore */
+	doObjectChange: function(modifiedPropNames)
+	{
+		var affectedProps = [
+			'bondData'
+		];
+		if (Kekule.ArrayUtils.intersect(modifiedPropNames, affectedProps).length)
+			this.updatePanelContent(this.getDocument(), this.getCoreElement());
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('span');
+		return result;
+	},
+	/** @ignore */
+	doCreateSubElements: function($super, doc, rootElem)
+	{
+		var result = $super(doc, rootElem);
+
+		this.updatePanelContent(doc, rootElem);
+		// Custom input
+
+		return result;
+	},
+
+	/** @private */
+	activeBondPropsChanged: function(value)
+	{
+		// deselect all buttons first
+		if (this._activeBtn)
+		{
+			this._activeBtn.setChecked(false);
+			this._activeBtn = null;
+		}
+		// then check the proper button
+		if (value)
+		{
+			var btns = this._selButtons;
+			for (var i = 0, l = btns.length; i < l; ++i)
+			{
+				var data = btns[i][this.BTN_DATA_FIELD];
+				if (data && this._isBondPropsMatch(value, data.bondProps, this.getBondPropNames()))
+				{
+					btns[i].setChecked(true);
+					this._activeBtn = btns[i];
+					break;
+				}
+			}
+		}
+	},
+	/** @private */
+	_isBondPropsMatch: function(src, target, propNames)
+	{
+		return Kekule.Editor.StructureUtils.isBondPropsMatch(src, target, propNames);
+	},
+
+	/**
+	 * Event handler to react on selector button clicked.
+	 * @private
+	 */
+	reactSelButtonExec: function(e)
+	{
+		var self = this;
+		//var currNode = this.getNode();
+		var btn = e.target;
+		if (this._selButtons.indexOf(btn) >= 0)  // is a selector button
+		{
+			this._activeBtn = btn;
+			var data = btn[this.BTN_DATA_FIELD];
+			if (data)
+			{
+				this.setPropStoreFieldValue('activeBondPropValues', data.bondProps);
+				this.notifyValueChange(data.bondProps);
+			}
+		}
+	},
+	/**
+	 * Notify the new bond props value has been setted.
+	 * @private
+	 */
+	notifyValueChange: function(newData)
+	{
+		this.invokeEvent('valueChange', {
+			'value': newData
+		});
+	},
+
+	/** @private */
+	updatePanelContent: function(doc, rootElem)
+	{
+		if (this._selButtons)
+		{
+			for (var i = this._selButtons.length - 1; i >= 0; --i)
+			{
+				var btn = this._selButtons[i];
+				this.removeWidget(btn);
+			}
+		}
+		var propNames = [];
+		this._selButtons = [];
+		//Kekule.DomUtils.clearChildContent(rootElem);
+		var bondData = this.getBondData();
+		if (bondData)
+		{
+			for (var i = 0, l = bondData.length; i < l; ++i)
+			{
+				var data = bondData[i];
+				var propData = data.bondProps;
+				var btn = this._createBondSelButton(doc, data);
+				btn.appendToElem(rootElem);
+				this._selButtons.push(btn);
+				if (propData)
+				  AU.pushUnique(propNames, Kekule.ObjUtils.getOwnedFieldNames(propData));
+			}
+		}
+		if (!this.getBondPropNames())
+			this.setPropStoreFieldValue('bondPropNames', propNames);
+	},
+	/** @private */
+	_createBondSelButton: function(doc, data)
+	{
+		var result = new Kekule.Widget.RadioButton(this);
+		result.addClassName(CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_SET_BUTTON);
+		result.setGroup(this.BTN_GROUP).setShowGlyph(true).setShowText(false);
+		result.setText(data.text || null).setHint(data.hint || data.description || null);
+		if (data.htmlClass)
+			result.addClassName(data.htmlClass);
+		result[this.BTN_DATA_FIELD] = data;
+		return result;
+	}
+});
+
+/**
+ * An panel to set the charge chem structure atom.
+ * @class
+ * @augments Kekule.Widget.Panel
+ *
+ * @property {Number} value Charge value of selected objects or set by panel.
+ * @property {Number} minCharge
+ * @property {Number} maxCharge
+ */
+/**
+ * Invoked when the new bond property has been setted.
+ *   event param of it has field: {props}
+ * @name Kekule.ChemWidget.ChargeSelectPanel#valueChange
+ * @event
+ */
+Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
+/** @lends Kekule.ChemWidget.ChargeSelectPanel# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ChargeSelectPanel',
+	/** @private */
+	CHARGE_FIELD: '__$charge__',
+	/** @construct */
+	initialize: function($super, parentOrElementOrDocument)
+	{
+		this._chargeBtnGroups = {};  // private
+		this._selectedButton = null; // private
+		this._chargeButtonMap = [];  // private
+		$super(parentOrElementOrDocument);
+		this.addEventListener('execute', this.reactSelButtonExec.bind(this));
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('value', {
+			'dataType': DataType.NUMBER,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value)
+			{
+				var oldValue = this.getValue();
+				if (value !== oldValue)
+				{
+					var oldSelBtn = this._chargeButtonMap[oldValue];
+					if (oldSelBtn)
+					{
+						oldSelBtn.setChecked(false);
+						oldSelBtn.blur();
+					}
+					this.setPropStoreFieldValue('value', value);
+					var newSelBtn = this._chargeButtonMap[value];
+					if (newSelBtn)
+						newSelBtn.setChecked(true);
+					this._selectedButton = newSelBtn;
+				}
+			}
+		});
+		this.defineProp('minCharge', {
+			'dataType': DataType.NUMBER,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+		this.defineProp('maxCharge', {
+			'dataType': DataType.NUMBER,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setMaxCharge(4).setMinCharge(-4);
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.CHARGE_SELECT_PANEL;
+	},
+	/** @ignore */
+	doCreateSubElements: function($super, doc, rootElem)
+	{
+		var result = $super(doc, rootElem);
+		this.updateChargeButtons(doc, rootElem);
+		return result;
+	},
+	/** @private */
+	updateChargeButtons: function(doc, rootElem)
+	{
+		// clear old btn groups
+		var groups = this._chargeBtnGroups;
+		var groupNames = ['zero', 'positive', 'negative'];
+		for (var i = 0, l = groupNames.length; i <l; ++i)
+		{
+			var group = groups[groupNames[i]];
+			if (group)
+				group.clearWidgets();
+			else
+			{
+				group = new Kekule.Widget.ButtonGroup(this);
+				group.addClassName(CCNS.CHARGE_SELECT_PANEL_BTNGROUP);
+				group.appendToElem(rootElem);
+				groups[groupNames[i]] = group;
+			}
+		}
+
+		// recreate charge buttons
+		var chargeMax = Math.floor(this.getMaxCharge());
+		var chargeMin = Math.floor(this.getMinCharge());
+		var btn;
+		var sPositive = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_POSITIVE');
+		var sNegative = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NEGATIVE');
+		// positive
+		if (chargeMax >= 1)
+		{
+			var group = this._chargeBtnGroups.positive;
+			for (var i = Math.max(chargeMin, 1); i <= chargeMax; ++i)
+			{
+				btn = this._createChargeButton(group, i, i + sPositive);
+				//btn.appendToWidget(group);
+			}
+		}
+		// zero
+		if (chargeMax >= 0 && chargeMin <= 0)
+		{
+			var group = this._chargeBtnGroups.zero;
+			btn = this._createChargeButton(group, 0, Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NONE'), Kekule.$L('ChemWidgetTexts.HINT_CHARGE_NONE'));
+			//btn.appendToWidget(group);
+		}
+		// negative
+		if (chargeMin <= -1)
+		{
+			var group = this._chargeBtnGroups.negative;
+			for (var i = Math.min(chargeMax, -1); i >= chargeMin; --i)
+			{
+				btn = this._createChargeButton(group, i, Math.abs(i) + sNegative);
+				//btn.appendToWidget(group);
+			}
+		}
+	},
+	/** @private */
+	_createChargeButton: function(btnGroup, charge, text, hint)
+	{
+		var result = new Kekule.Widget.RadioButton(btnGroup, text);
+		result[this.CHARGE_FIELD] = charge;
+		this._chargeButtonMap[charge] = result;
+		if (hint)
+			result.setHint(hint);
+		result.addClassName(CCNS.CHARGE_SELECT_PANEL_CHARGE_BTN);
+		//result.setGroup(this.getClassName());  // group as one
+		result.appendToWidget(btnGroup);
+		if (this.getValue() === charge)
+		{
+			result.setChecked(true);
+			this._selectedButton = result;
+		}
+		return result;
+	},
+
+	/** @private */
+	reactSelButtonExec: function(e)
+	{
+		var target = e.target;
+		var charge = target[this.CHARGE_FIELD];
+		if (Kekule.ObjUtils.notUnset(charge))
+		{
+			this.setValue(charge);
+			this.notifyValueChange(charge);
+		}
+	},
+
+	/**
+	 * Notify the new bond props value has been setted.
+	 * @private
+	 */
+	notifyValueChange: function(newValue)
+	{
+		this.invokeEvent('valueChange', {
+			'value': newValue
+		});
 	}
 });
 
