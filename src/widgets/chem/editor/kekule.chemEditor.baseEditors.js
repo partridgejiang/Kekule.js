@@ -6104,16 +6104,16 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setStartCoord(currCoord);
 
 		// check if mouse just on an object, if so, direct manipulation mode
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
-		if (obj)  // mouse down directly on a object
+		var hoveredObj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
+		if (hoveredObj && !evokedByTouch)  // mouse down directly on a object
 		{
-			obj = obj.getNearestSelectableObject();
+			//hoveredObj = hoveredObj.getNearestSelectableObject();
 			if (this.isInAncestorSelectMode())
-				obj = this.getStandaloneAncestor(obj);
-			// only mouse down and moved will cause manupulating
+				hoveredObj = this.getStandaloneAncestor(hoveredObj);
+			hoveredObj = hoveredObj.getNearestMovableObject();
 			if (this.getEnableMove())
 			{
-				this.startDirectManipulate(null, obj, currCoord);
+				this.startDirectManipulate(null, hoveredObj, currCoord);
 				return;
 			}
 		}
@@ -6191,7 +6191,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				if (this.getEnableMove())
 					this.startDirectManipulate(null, obj, currCoord);
 			}
-			else */  // mouse down on empty region, deselect old selection and prepare for new selecting
+			*/
+			if (hoveredObj)  // point on an object, direct move
+			{
+				if (this.getEnableMove())
+					this.startDirectManipulate(null, hoveredObj, currCoord);
+			}
+			else  // pointer down on empty region, deselect old selection and prepare for new selecting
 			{
 				if (this.getEnableMove() && this.getEnableSelect()
 						&& this.getEditorConfigs().getInteractionConfigs().getEnableOffSelectionManipulation()
