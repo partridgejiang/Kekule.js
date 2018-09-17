@@ -1741,10 +1741,14 @@ ClassEx.defineProp(ObjectEx, 'predefinedSetting', {'dataType': DataType.STRING,
  * @enum
  */
 Kekule.ChemObjInteractMode = {
-	/* A default object, can be selected and moved. */
+	/* A default object, can be selected and moved alone. */
 	DEFAULT: 0,
-	/** A uninteractive object */
-	HIDDEN: -1
+	/* Can be selected but can not be moved alone. */
+	UNMOVABLE: 1,
+	/* Can be moved but can not be selected alone. */
+	UNSELECTABLE: 2,
+	/** A uninteractive object, can not be selected or moved alone */
+	HIDDEN: 3
 };
 
 /**
@@ -2075,11 +2079,22 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return 'o';
 	},
 	/**
-	 * Check whether this object can be selected in editor.
+	 * Check whether this object can be selected alone in editor.
 	 */
 	isSelectable: function()
 	{
-		return this.getInteractMode() !== Kekule.ChemObjInteractMode.HIDDEN;
+		var IM = Kekule.ChemObjInteractMode;
+		var interactMode = this.getInteractMode() || IM.DEFAULT;
+		return !(interactMode & IM.UNSELECTABLE);
+	},
+	/**
+	 * Check whether this object can be moved alone in editor.
+	 */
+	isMovable: function()
+	{
+		var IM = Kekule.ChemObjInteractMode;
+		var interactMode = this.getInteractMode() || IM.DEFAULT;
+		return !(interactMode & IM.UNMOVABLE);
 	},
 	/**
 	 * Returns nearest selectable chem object.
@@ -2092,6 +2107,18 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return this.isSelectable()? this:
 			this.getParent()? this.getParent().getNearestSelectableObject():
 			null;
+	},
+	/**
+	 * Returns nearest movable chem object.
+	 * Usually this method will return this object, but if this object is not selectable,
+	 * parent object will be returned instead.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getNearestMovableObject: function()
+	{
+		return this.isMovable()? this:
+				this.getParent()? this.getParent().getNearestMovableObject():
+				null;
 	},
 
 	/**
