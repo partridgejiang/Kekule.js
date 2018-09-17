@@ -196,8 +196,10 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 		for (var i = 0; i < l; ++i)
 		{
 			var child = chemObj.getChildAt(i);
+			/*
 			if (!child.isSelectable())
 				continue;
+			*/
 			//var childItem = this.appendChildItem(treeItem);
 			var childItem;
 			if (i < oldChildItemCount)
