@@ -1411,6 +1411,7 @@ Kekule.Render.MetaShapeUtils = {
 			case T.LINE: newBound = B._inflateLineShape(originalShape, delta); break;
 			case T.RECT: newBound = B._inflateRectShape(originalShape, delta); break;
 			case T.POLYGON: newBound = B._inflatePolygonShape(originalShape, delta); break;
+			case T.ARC: newBound = B._inflateArcShape(originalShape, delta); break;
 		}
 		return newBound;
 	},
@@ -1434,6 +1435,13 @@ Kekule.Render.MetaShapeUtils = {
 		var newBound = Kekule.Render.MetaShapeUtils.createShapeInfo(
 			Kekule.Render.BoundShapeType.LINE,
 			[originalShape.coords[0], originalShape.coords[1]], {'width': (originalShape.width || 0) + delta * 2});
+		return newBound;
+	},
+	/** @private*/
+	_inflateArcShape: function(originalShape, delta)
+	{
+		var newBound = Object.extend({}, originalShape);
+		newBound.width = (originalShape.width || 0) + delta * 2;
 		return newBound;
 	},
 	/** @private */
@@ -1509,6 +1517,7 @@ Kekule.Render.MetaShapeUtils = {
 				case T.LINE: return B._getDistanceToLine(coord, newBound);
 				case T.RECT: return B._getDistanceToRect(coord, newBound);
 				case T.POLYGON: return B._getDistanceToPolygon(coord, newBound);
+				case T.ARC: return B._getDistanceToArc(coord, newBound);
 				default: return false;
 			}
 		}
@@ -1524,6 +1533,55 @@ Kekule.Render.MetaShapeUtils = {
 		var C = Kekule.CoordUtils;
 		var d = C.getDistance(coord, shapeInfo.coords[0]);
 		return d - shapeInfo.radius;
+	},
+	/** @private */
+	_getDistanceToArc: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var radiusVector = C.substract(coord, shapeInfo.coords[0]);
+		var currAngle = Math.atan2(radiusVector.y, radiusVector.x);
+		if (Kekule.Render.MetaShapeUtils.isAngleInArcRange(currAngle, shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise))
+		{
+			// coord in arc range, check distance to arc
+			var d = C.getDistance(coord, shapeInfo.coords[0]);
+			var d = Math.abs(d - shapeInfo.radius);
+			if (shapeInfo.width && shapeInfo.width > 1)
+				d = d - shapeInfo.width / 2;
+			return Math.max(0, d);
+		}
+		else  // outside arc range, check the min distance to two end points
+		{
+			var centerCoord = shapeInfo.coords[0];
+			var rs;
+			if (shapeInfo.width && shapeInfo.width > 1)
+			{
+				rs = [shapeInfo.radius - shapeInfo.width / 2, shapeInfo.radius + shapeInfo.width / 2];
+			}
+			else
+			{
+				rs = [shapeInfo.radius];
+			}
+
+			var testPoints = [];
+			var startAngle = shapeInfo.startAngle;
+			var endAngle = shapeInfo.endAngle;
+			for (var i = 0, l = rs.length; i <l; ++i)
+			{
+				var r = rs[i];
+				var startCoord = CU.add(centerCoord, {'x': r * Math.cos(startAngle), 'y': r * Math.sin(startAngle)});
+				var endCoord = CU.add(centerCoord, {'x': r * Math.cos(endAngle), 'y': r * Math.sin(endAngle)});
+				testPoints.push(startCoord);
+				testPoints.push(endCoord);
+			}
+			var result = null;
+			for (var i = 0, l = testPoints.length; i < l; ++i)
+			{
+				var d = C.getDistance(testPoints[i], coord);
+				if (result === null || result > d)
+					result = d;
+			}
+			return result;
+		}
 	},
 	/** @private */
 	_getDistanceToLine: function(coord, shapeInfo)
@@ -1657,6 +1715,8 @@ Kekule.Render.MetaShapeUtils = {
 	 */
 	isCoordInside: function(coord, shapeInfo, inflate)
 	{
+		if (!coord)
+			return false;
 		//if (Kekule.ArrayUtils.isArray(shapeInfo))
 		if (Kekule.Render.MetaShapeUtils.isCompositeShape(shapeInfo))
 		{
@@ -1673,6 +1733,8 @@ Kekule.Render.MetaShapeUtils = {
 			var T = Kekule.Render.MetaShapeType;
 			var B = Kekule.Render.MetaShapeUtils;
 			var newBound = inflate? B.inflateShape(shapeInfo, inflate): shapeInfo;
+			if (!newBound)
+				return false;
 			switch (shapeInfo.shapeType)
 			{
 				case T.POINT: return (inflate? B._isInsideCircle(coord, newBound): B._isInsidePoint(coord, newBound));
@@ -1680,6 +1742,7 @@ Kekule.Render.MetaShapeUtils = {
 				case T.LINE: return B._isInsideLine(coord, newBound);
 				case T.RECT: return B._isInsideRect(coord, newBound);
 				case T.POLYGON: return B._isInsidePolygon(coord, newBound);
+				case T.ARC: return B._isInsideArc(coord, newBound);
 				default: return false;
 			}
 		}
@@ -1743,6 +1806,27 @@ Kekule.Render.MetaShapeUtils = {
 			//console.log('distance', distance, boundInfo.width);
 			return (distance <= shapeInfo.width / 2);
 		}
+	},
+	/** @private */
+	_isInsideArc: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var G = Kekule.GeometryUtils;
+		var d = C.getDistance(coord, shapeInfo.coords[0]);
+		var result = (Math.abs(d - shapeInfo.radius) < shapeInfo.width / 2);  // check if in arc circle
+		if (result)  // if true, further check the position if on the angle range of arc
+		{
+			var radiusVector = C.substract(coord, shapeInfo.coords[0]);
+			var currAngle = G.standardizeAngle(Math.atan2(radiusVector.y, radiusVector.x), 0);
+			/*
+			var startAngle = G.standardizeAngle(shapeInfo.startAngle);
+			var endAngle = G.standardizeAngle(shapeInfo.endAngle);
+			var sign = Math.sign(currAngle - startAngle) * Math.sign(currAngle - endAngle) * Math.sign(endAngle - startAngle);
+			result = shapeInfo.anticlockwise? (sign >= 0): sign <= 0;
+			*/
+			result = Kekule.Render.MetaShapeUtils.isAngleInArcRange(currAngle, shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise);
+		}
+		return result;
 	},
 	/** @private */
 	_isInsideRect: function(coord, shapeInfo)
@@ -1827,6 +1911,10 @@ Kekule.Render.MetaShapeUtils = {
 		var T = Kekule.Render.MetaShapeType;
 		var U = Kekule.Render.MetaShapeUtils;
 		var C = Kekule.BoxUtils;
+
+		if (!shapeInfo)
+			return null;
+
 		var coords = shapeInfo.coords;
 		inflation = inflation || 0;
 		var result;
@@ -1858,9 +1946,14 @@ Kekule.Render.MetaShapeUtils = {
 					}
 				case T.LINE:
 					{
-						var result = C.createBox(coords[0], coords[1]);
+						result = C.createBox(coords[0], coords[1]);
 						// TODO: a rough calculate
 						result = Kekule.BoxUtils.inflateBox(result, (shapeInfo.width || 0) / 2);
+						break;
+					}
+				case T.ARC:
+					{
+						result = Kekule.Render.MetaShapeUtils._getArcContainerBox(shapeInfo);
 						break;
 					}
 				case T.RECT:
@@ -1891,6 +1984,68 @@ Kekule.Render.MetaShapeUtils = {
 			result = Kekule.BoxUtils.inflateBox(result, inflation);
 		}
 		return result;
+	},
+	/** @private */
+	_getArcContainerBox: function(shapeInfo)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var CU = Kekule.CoordUtils;
+
+		var radius;
+		if (shapeInfo.width && shapeInfo.width > 1)
+		{
+			radius = [shapeInfo.radius + shapeInfo.width / 2, shapeInfo.radius - shapeInfo.width / 2];
+		}
+		else
+		{
+			radius = [shapeInfo.radius];
+		}
+		var centerCoord = shapeInfo.coords[0];
+		var degree90 = Math.PI / 2;
+
+		var getCoordOfAngle = function(angle, radius)
+		{
+			return CU.add(centerCoord, {'x': radius * Math.cos(angle), 'y': radius * Math.sin(angle)});
+		};
+
+		var anchorPoints = [];
+
+		for (var i = 0, l = radius.length; i < l; ++i)
+		{
+			var currRadius = radius[i];
+			var startPoint = getCoordOfAngle(shapeInfo.startAngle, currRadius);
+			var endPoint = getCoordOfAngle(shapeInfo.endAngle, currRadius);
+			anchorPoints = anchorPoints.concat([startPoint, endPoint]);
+
+			var testAngles = [0, degree90, degree90 * 2, degree90 * 3];
+			for (var j = 0, k = testAngles.length; j < k; ++j)
+			{
+				if (U.isAngleInArcRange(testAngles[j], shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise))
+				{
+					anchorPoints.push(getCoordOfAngle(testAngles[j], currRadius));
+				}
+			}
+		}
+
+		return CU.getContainerBox(anchorPoints);
+	},
+
+	/**
+	 * Check if testAngle is in the arc sector.
+	 * @param {Float} testAngle
+	 * @param {Float} startAngle
+	 * @param {Float} endAngle
+	 * @param {Bool} anticlockwise
+	 * @returns {Bool}
+	 */
+	isAngleInArcRange: function(testAngle, startAngle, endAngle, anticlockwise)
+	{
+		var s = Kekule.GeometryUtils.standardizeAngle;
+		var aS = s(startAngle);
+		var aE = s(endAngle);
+		var aT = s(testAngle);
+		var sign = Math.sign(aT - aS) * Math.sign(aT - aE) * Math.sign(aE - aS);
+		return anticlockwise? (sign >= 0): sign <= 0;
 	},
 
 	/**

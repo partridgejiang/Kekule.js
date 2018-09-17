@@ -415,6 +415,8 @@ Kekule.Render.MetaShapeType = {
 	LINE: 2,
 	/** A rectangle on context, determinated by two coords ({[coord1, coord2]}). */
 	RECT: 3,
+	/** An arc  on context, determinated by a single coord and radius, startAngle, endAngle, anticlockwise. */
+	ARC: 5,
 	/** Unclosed polyline, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
 	POLYLINE: 11,
 	/** Polygon, determinated by a set of coords ({[coord1, coord2, coord3, ... }). */
@@ -1538,6 +1540,12 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	createCircleBoundInfo: function(coord, radius)
 	{
 		return this.createBoundInfo(Kekule.Render.BoundShapeType.CIRCLE, [coord], {'radius': radius});
+	},
+	/** @private */
+	createArcBoundInfo: function(coord, radius, startAngle, endAngle, anticlockwise, width)
+	{
+		return this.createBoundInfo(Kekule.Render.BoundShapeType.ARC, [coord],
+				{'radius': radius, 'startAngle': startAngle, 'endAngle': endAngle, 'anticlockwise': anticlockwise, 'width': width});
 	},
 	/** @private */
 	createLineBoundInfo: function(coord1, coord2, width)
