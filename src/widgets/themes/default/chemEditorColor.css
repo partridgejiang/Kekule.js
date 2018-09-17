@@ -408,6 +408,14 @@
 {
   background-image: url("images/slice/iconsSmall/arrowOpenDouble.gif");
 }
+.K-Chem-ArrowLineIaController-OpenArrowArc > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenArc.gif");
+}
+.K-Chem-ArrowLineIaController-SingleSideOpenArrowArc > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowSingleSideOpenArc.gif");
+}
 .K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/heatSymbol.gif");

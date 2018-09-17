@@ -100,6 +100,8 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	glyphRepDiTriangleArrowLine: 'repDiTriangleArrowLine',
 	glyphRepReversibleArrowLine: 'repReversibleArrowLine',
 	glyphRepOpenArrowDiLine: 'repOpenArrowDiLine',
+	glyphRepOpenArrowArc: 'repOpenArrowArc',
+	glyphRepSingleSideOpenArrowArc: 'repSingleSideOpenArrowArc',
 	glyphRepHeatSymbol: 'repHeatSymbol',
 	glyphRepAddSymbol: 'repAddSymbol'
 });
@@ -1976,6 +1978,47 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController = Kekule
 	null, null,
 	BNS.glyphRepOpenArrowDiLine
 );
+Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowArcController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowArcController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_ARC'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-OpenArrowArc',
+	{
+		'glyphClass': Kekule.Glyph.Arc,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1,
+			'lineGap': 0.1,
+			'lineCount': 1
+		}
+	},
+	null, null,
+	BNS.glyphRepOpenArrowArc
+);
+Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-SingleSideOpenArrowArc',
+	{
+		'glyphClass': Kekule.Glyph.Arc,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowSide': Kekule.Glyph.ArrowSide.REVERSED,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1,
+			'lineGap': 0.1,
+			'lineCount': 1
+		}
+	},
+	null, null,
+	BNS.glyphRepSingleSideOpenArrowArc
+);
 Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_HEAT_SYMBOL,
@@ -2021,6 +2064,8 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryPathDiTriangleArrowLineController,
 		Kekule.Editor.ActionComposerSetRepositoryPathReversibleArrowLineController,
 		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowDblLineController,
+		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowArcController,
+		Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController,
 		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
 		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
