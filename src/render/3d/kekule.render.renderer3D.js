@@ -1504,7 +1504,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 					coord2 = this.getTransformedCoord3D(context, obj2, finalTransformOptions.allowCoordBorrow);
 					if (coord2)
 					{
-						elem = this.doDrawConnectorShape(context, connector, obj1, obj2, parentChemObj, coord1, coord2, op, finalTransformOptions);
+						elem = this.doDrawConnectorShape(context, connector, [obj1, obj2], parentChemObj, coord1, coord2, op, finalTransformOptions);
 						if (elem && subGroup)
 							this.addToDrawGroup(elem, subGroup);
 					}
@@ -1519,11 +1519,10 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	},
 
 	/**
-	 * Draw a connector (bond) connecting node1 and node2 with a specified shape on context.
+	 * Draw a connector (bond) connecting nodes with a specified shape on context.
 	 * @param {Object} context
 	 * @param {Kekule.ChemStructureConnector} connector
-	 * @param {Kekule.ChemStructureNode} node1
-	 * @param {Kekule.ChemStructureNode} node2
+	 * @param {Array} nodes
 	 * @param {Object} parentChemObj
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2
@@ -1531,11 +1530,14 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 * @param {Object} finalTransformOptions
 	 * @private
 	 */
-	doDrawConnectorShape: function(context, connector, node1, node2, parentChemObj, coord1, coord2, options, finalTransformOptions)
+	doDrawConnectorShape: function(context, connector, nodes, parentChemObj, coord1, coord2, options, finalTransformOptions)
 	{
 		var C = Kekule.CoordUtils;
 		var localOptions = connector.getOverriddenRender3DOptions() || {};
 		var unitLength = options.unitLength;
+
+		var node1 = nodes[0];
+		var node2 = nodes[1];
 
 		var spliceMode = oneOf(localOptions.bondSpliceMode, options.bondSpliceMode/*, options.defBondSpliceMode*/);
 
