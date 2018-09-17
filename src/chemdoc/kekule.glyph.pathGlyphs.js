@@ -17,7 +17,7 @@
 /**
  * Represent an node in glyph path.
  * @class
- * @augments Kekule.StructureAbstractNode
+ * @augments Kekule.BaseStructureNode
  * @param {String} id Id of this node.
  * @param {String} nodeType Type of this glyph node. Value from {@link Kekule.Glyph.NodeType}.
  * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
@@ -46,6 +46,12 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 			'dataType': DataType.STRING,
 			'scope': Class.PropertyScope.PUBLIC
 		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	}
 });
 
@@ -60,12 +66,89 @@ Kekule.Glyph.NodeType = {
 	*/
 	/** Location point, do not need to draw. Default value of node type. */
 	LOCATION: 'location',
+	/** Control point, control the shape of glyph, do not need to draw. */
+	CONTROLLER: 'controller',
 	/** Do not need to draw and can not manipulate in editor. */
 	HIDDEN: 'hidden'
 };
 
 /**
- * Implements the concept of a connections between two or more structure nodes.
+ * Represent control node of glyph path connector.
+ * @class
+ * @augments Kekule.BaseStructureNode
+ * @param {String} id Id of this node.
+ * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
+ *
+ * @property {String} nodeType Type of this glyph node.
+ */
+Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNode,
+/** @lends Kekule.Glyph.PathGlyphConnectorControlNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphConnectorControlNode',
+	initialize: function($super, id, coord2D, coord3D)
+	{
+		$super(id);
+		if (coord2D)
+			this.setCoord2D(coord2D);
+		if (coord3D)
+			this.setCoord3D(coord3D);
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+	/** @private */
+	getAutoIdPrefix: function()
+	{
+		return 'cn';
+	},
+	/** @private */
+	getParentConnector: function()
+	{
+		var p = this.getParent();
+		if (p && p instanceof Kekule.Glyph.PathGlyphConnector)
+			return p;
+		else
+			return null;
+	}
+});
+
+/**
+ * Enumeration of path types.
+ * @class
+ */
+Kekule.Glyph.PathType = {
+	/** A straight line, may contains arrow at beginning and ending. */
+	LINE: 'L',
+	/** A arc path */
+	ARC: 'A'
+};
+
+/**
+ * Enumeration of path end arrow types.
+ * @class
+ */
+Kekule.Glyph.ArrowType = {
+	NONE: null,
+	OPEN: 'open',
+	TRIANGLE: 'triangle'
+};
+/**
+ * Enumeration of arrow location around path.
+ * @class
+ */
+Kekule.Glyph.ArrowSide = {
+	BOTH: 0,  // default
+	SINGLE: 1,  // one one side of path
+	REVERSED: -1   // one side but at the different side of SINGLE
+};
+
+/**
+ * General connector between glyph nodes.
  * @class
  * @augments Kekule.BaseStructureConnector
  * @param {String} id Id of this connector.
@@ -95,6 +178,7 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	{
 		$super(id, connectedObjs);
 		this.setPathType(pathType);
+		//this.setControlPoints([new Kekule.Glyph.PathGlyphConnectorControlNode(null, {x: 0.1, y: 0.1})]);  // test
 	},
 	/** @private */
 	initProperties: function()
@@ -125,36 +209,347 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 					this.setPropStoreFieldValue('pathParams', Object.extend({}, value, true));
 			}
 		});
+		this.defineProp('controlPoints', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLISHED,
+			'getter': function(autoCreate)
+			{
+				var result = this.getPropStoreFieldValue('controlPoints');
+				if (!result && autoCreate)
+				{
+					result = [];
+					this.setPropStoreFieldValue('controlPoints', result);
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				this.clearControlPoints();
+				this.setPropStoreFieldValue('controlPoints', value);
+				this._updateControlPointsOwner();
+				this._updateControlPointsParent();
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+
+	// methods about coords
+	// since connector has child control points, it must implement related coord method for the children to get abs coord
+	/** @private */
+	getAbsCoord2D: function(allowCoordBorrow)
+	{
+		return this.getAbsCoordOfMode(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+	},
+	/** @private */
+	getAbsCoord3D: function(allowCoordBorrow)
+	{
+		return this.getAbsCoordOfMode(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+	},
+	/** @private */
+	getAbsCoordOfMode: function(coordMode, allowCoordBorrow)
+	{
+		var CU = Kekule.CoordUtils;
+		// coord is based on connected objects
+		var sum = {'x': 0, 'y': 0};
+		var count = 0;
+		for (var i = 0, l = this.getConnectedObjCount(); i < l; ++i)
+		{
+			var obj = this.getConnectedObjAt(i);
+			if (obj && obj.getAbsCoordOfMode)
+			{
+				var coord = obj.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+				if (coord)
+				{
+					++count;
+					sum = CU.add(sum, coord);
+				}
+			}
+		}
+		return CU.divide(sum, count);
+	},
+
+	// methods about children
+	/**
+	 * Remove childObj from connector.
+	 * @param {Variant} childObj A child control point.
+	 * @param {Bool} cascadeRemove Whether remove related objects (e.g., bond connected to an atom).
+	 * @param {Bool} freeRemoved Whether free all removed objects.
+	 */
+	removeChildObj: function(childObj, cascadeRemove, freeRemoved)
+	{
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			var index = ps.indexOf(childObj);
+			if (index >= 0)
+			{
+				ps.splice(index, 1);
+				if (childObj.setOwner)
+					childObj.setOwner(null);
+				if (childObj.setParent)
+					childObj.setParent(null);
+				this.notifyPropSet('controlPoints', this.getControlPoints());
+			}
+		}
+	},
+	/**
+	 * Remove child obj directly.
+	 * @param {Variant} childObj A child node or connector.
+	 */
+	removeChild: function($super, obj)
+	{
+		return this.removeChildObj(obj) || $super(obj);
+	},
+
+	/**
+	 * Check if childObj is a child node or connector of this fragment's ctab.
+	 * @param {Kekule.ChemObject} childObj
+	 * @returns {Bool}
+	 */
+	hasChildObj: function(childObj)
+	{
+		var ps = this.getControlPoints();
+		return ps && ps.indexOf(childObj) >= 0;
+	},
+
+	/**
+	 * Returns next sibling node or connector to childObj.
+	 * @param {Variant} childObj Node or connector.
+	 * @returns {Variant}
+	 */
+	getNextSiblingOfChild: function(childObj)
+	{
+		var index = this.indexOfChild(childObj);
+		++index;
+		return this.getChildAt(index);
+	},
+
+	/**
+	 * Get count of child objects.
+	 * @returns {Int}
+	 */
+	getChildCount: function()
+	{
+		var ps = this.getControlPoints();
+		return (ps && ps.length) || 0;
+	},
+	/**
+	 * Get child control point at index.
+	 * @param {Int} index
+	 * @returns {Variant}
+	 */
+	getChildAt: function(index)
+	{
+		var ps = this.getControlPoints() || [];
+		return ps[index];
+	},
+	/**
+	 * Get the index of obj in children list.
+	 * @param {Variant} obj
+	 * @returns {Int} Index of obj or -1 when not found.
+	 */
+	indexOfChild: function(obj)
+	{
+		var ps = this.getControlPoints();
+		return ps? ps.indexOf(obj): -1;
+	},
+
+
+	/** @private */
+	_updateControlPointsOwner: function(owner)
+	{
+		if (!owner)
+			owner = this.getOwner();
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			for (var i = 0, l = ps.length; i < l; ++i)
+			{
+				var p = ps[i];
+				if (p.setOwner)
+					p.setOwner(owner);
+			}
+		}
+	},
+	/** @private */
+	_updateControlPointsParent: function(parent)
+	{
+		if (!parent)
+			parent = this;
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			for (var i = 0, l = ps.length; i < l; ++i)
+			{
+				var p = ps[i];
+				if (p.setParent)
+					p.setParent(parent);
+			}
+		}
+	},
+
+	/**
+	 * Clear all control points of this connector.
+	 * @private
+	 */
+	clearControlPoints: function()
+	{
+		var oldPoints = this.getControlPoints();
+		if (oldPoints)
+			oldPoints = Kekule.ArrayUtils.clone(oldPoints);
+
+		this.setPropStoreFieldValue('controlPoints', null);
+
+		if (oldPoints)
+		{
+			for (var i = 0, l = oldPoints.length; i < l; ++i)
+			{
+				var p = oldPoints[i];
+				if (p.setOwner)
+					p.setOwner(null);
+				if (p.setParent)
+					p.setParent(null);
+			}
+		}
+
+		this.notifyPropSet('controlPoints', null);
+		return this;
+	}
+});
+
+
+/**
+ * Control node of glyph arc path connector.
+ * @class
+ * @augments Kekule.Glyph.PathGlyphConnectorControlNode
+ *
+ * @property {String} nodeType Type of this glyph node.
+ */
+Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGlyphConnectorControlNode,
+/** @lends Kekule.Glyph.PathGlyphArcConnectorControlNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnectorControlNode',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('distanceToChord', {
+			'dataType': DataType.FLOAT
+		});
+	},
+
+	/** @ignore */
+	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var CU = Kekule.CoordUtils;
+		// coord 2D is determinated by distance to chord
+		var d = this.getDistanceToChord();
+		if (Kekule.ObjUtils.notUnset(d))
+		{
+			var connector = this.getParentConnector();
+			if (connector)
+			{
+				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
+				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+				if (arcStartCoord && arcEndCoord)
+				{
+					//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
+					var chordVector = CU.substract(arcEndCoord, arcStartCoord);
+					var signX = Math.sign(chordVector.x);
+					var signY = Math.sign(chordVector.y);
+					if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
+					{
+						result = {'x': - d * signY, 'y': 0}
+					}
+					else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
+					{
+						result = {'x': 0, 'y': d * signX};
+					}
+					else
+					{
+						var chordSlope = chordVector.y / chordVector.x;
+						var refSlope = -1 / chordSlope;
+						var result = {'x': -signY * d / Math.sqrt(1 + Math.sqr(refSlope))};
+						result.y = result.x * refSlope;
+					}
+					//console.log(d, arcStartCoord, arcEndCoord);
+
+					return result;
+				}
+			}
+		}
+
+		return $super(allowCoordBorrow, allowCreateNew);
+	},
+
+	/** @ignore */
+	doSetCoord2D: function($super, value)
+	{
+		var CU = Kekule.CoordUtils;
+		// the control point of arc should alway be at the middle of arc, so do this constraint
+		var oldCoord = this.getCoord2D();
+		var connector = this.getParentConnector();
+		if (connector)
+		{
+			var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
+			var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+			var baseVector = CU.substract(arcEndCoord, arcStartCoord);
+			var baseAngle = Math.atan2(baseVector.y, baseVector.x);
+
+			var valueDeltaVector = CU.substract(value, oldCoord);
+			var valueDeltaAngle = Math.atan2(valueDeltaVector.y, valueDeltaVector.x);
+			var valueDeltaLength = CU.getDistance(value, oldCoord);
+
+			var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
+			var newDistanceToChord = (this.getDistanceToChord() || 0) + actualMovement;
+			this.setDistanceToChord(newDistanceToChord);
+			/*
+			var angle = Math.PI / 2 - baseAngle;
+			var actualDelta = {'x': actualMovement * Math.cos(angle), 'y': actualMovement * Math.sin(angle)};
+			var newCoord = CU.add(oldCoord, actualDelta);
+
+			return $super(newCoord);
+			*/
+			return;
+		}
+
+		return $super(value);
 	}
 });
 
 /**
- * Enumeration of path types.
+ * Arc shaped connector between glyph nodes.
  * @class
+ * @augments Kekule.Glyph.PathGlyphConnector
+ * @param {String} id Id of this connector.
+ * @param {Array} connectedObjs Objects ({@link Kekule.ChemStructureObject}) connected by connected, usually a connector connects two nodes.
  */
-Kekule.Glyph.PathType = {
-	/** A straight line, may contains arrow at beginning and ending. */
-	LINE: 'L'
-};
-
-/**
- * Enumeration of path end arrow types.
- * @class
- */
-Kekule.Glyph.ArrowType = {
-	NONE: null,
-	OPEN: 'open',
-	TRIANGLE: 'triangle'
-};
-/**
- * Enumeration of arrow location around path.
- * @class
- */
-Kekule.Glyph.ArrowSide = {
-	BOTH: 0,  // default
-	SINGLE: 1,  // one one side of path
-	REVERSED: -1   // one side but at the different side of SINGLE
-};
+Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnector,
+/** @lends Kekule.Glyph.PathGlyphArcConnector# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnector',
+	/** @constructs */
+	initialize: function($super, id, connectedObjs)
+	{
+		$super(id, Kekule.Glyph.PathType.ARC, connectedObjs);
+		// add control point to control the arc
+		this.setControlPoints([new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0})]);
+	},
+	/**
+	 * Returns the arc control point.
+	 * @returns {Kekule.Glyph.PathGlyphArcConnectorControlNode}
+	 */
+	getControlPoint: function()
+	{
+		return (this.getControlPoints() || [])[0]
+	}
+});
 
 /**
  * A glyph defined by a series of nodes and connectors (paths).
