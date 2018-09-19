@@ -3135,16 +3135,25 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	removeObjFromSelection: function(obj, doNotNotifySelectionChange)
 	{
 		var selection = this.getSelection();
+		var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
+		if (relObj === obj)
+			relObj === null;
 		Kekule.ArrayUtils.remove(selection, obj);
 		this._removeSelectRenderOptions(obj);
+		if (relObj)
+		{
+			Kekule.ArrayUtils.remove(selection, relObj);
+			this._removeSelectRenderOptions(relObj);
+		}
 		// remove possible child objects
 		for (var i = selection.length - 1; i >= 0; --i)
 		{
 			var remainObj = selection[i];
-			if (remainObj.isChildOf && remainObj.isChildOf(obj))
+			if (remainObj.isChildOf && (remainObj.isChildOf(obj) || (relObj && remainObj.isChildOf(relObj))))
 				this.removeObjFromSelection(remainObj, true);
 		}
-		this.selectionChanged();
+		if (!doNotNotifySelectionChange)
+			this.selectionChanged();
 		return this;
 	},
 	/**
@@ -3236,8 +3245,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = objs.length; i < l; ++i)
 			{
 				var obj = objs[i];
+				var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
 				if (this.isInSelection(obj))
 					this.removeObjFromSelection(obj);
+				else if (relObj && this.isInSelection(relObj))
+					this.removeObjFromSelection(relObj);
 				else
 					this.addObjToSelection(obj);
 			}
