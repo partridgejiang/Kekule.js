@@ -141,10 +141,10 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('objBoundTrackMinInflationPen', null);
 		this.addIntConfigProp('objBoundTrackMinInflationTouch', 10);
 
-		this.addIntConfigProp('objBoundTrackInflationRatio', 0.2);
-		this.addIntConfigProp('objBoundTrackInflationRatioMouse', null);
-		this.addIntConfigProp('objBoundTrackInflationRatioPen', null);
-		this.addIntConfigProp('objBoundTrackInflationRatioTouch', 0.33);
+		this.addFloatConfigProp('objBoundTrackInflationRatio', 0.2);
+		this.addFloatConfigProp('objBoundTrackInflationRatioMouse', null);
+		this.addFloatConfigProp('objBoundTrackInflationRatioPen', null);
+		this.addFloatConfigProp('objBoundTrackInflationRatioTouch', 0.33);
 
 		this.addBoolConfigProp('enablePartialAreaSelecting', false);
 		this.addFloatConfigProp('selectingBrushWidth', 12);
