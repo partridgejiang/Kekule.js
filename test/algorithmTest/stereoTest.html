@@ -55,7 +55,7 @@
     function findStereoBonds()
     {
       var mol = getCurrMol();
-      var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(mol);
+      var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(mol, null, null, !true);
       mol.beginUpdate();
 
       var SP = Kekule.StereoParity;

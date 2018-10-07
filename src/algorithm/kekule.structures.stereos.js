@@ -152,7 +152,7 @@ Kekule.MolStereoUtils = {
 	},
 
 	/** @private */
-	_calcParityOfCoordPairs: function(c1, c2, a1, a2, b1, b2)
+	_calcParityOfCoordPairs: function(c1, c2, a1, a2, b1, b2, strictStereoBondGeometry)
 	{
 		var SP = Kekule.StereoParity;
 		var axisVector = CU.substract(c2, c1);  // vector of bond
@@ -160,7 +160,6 @@ Kekule.MolStereoUtils = {
 		if (!axisVector.x && !axisVector.y)  // c1, c2 are same, can not calc parity
 			return SP.UNKNOWN;
 		var axisAngle = Math.atan2(axisVector.y, axisVector.x);
-		var threshold = CU.getDistance(c2, c1) / 1e3;
 		// rotate bond to X axis and align to zero
 		var matrix = CU.calcTransform2DMatrix({
 			'rotateAngle': -axisAngle, 'center': c1,
@@ -189,7 +188,9 @@ Kekule.MolStereoUtils = {
 				result = Math.sign(v1.y);
 			else
 			{
-				var d = v1.y - v2.y;
+				var lenV1 = Math.sqrt(Math.sqr(v1.x) + Math.sqr(v1.y));
+				var lenV2 = Math.sqrt(Math.sqr(v2.x) + Math.sqr(v2.y));
+				var d = v1.y / lenV1 - v2.y / lenV2;   // standard y coord
 				if (Math.abs(d) < threshold)
 					result = 0;
 				else
@@ -200,25 +201,21 @@ Kekule.MolStereoUtils = {
 					}
 					else  // v1, v2 on same side
 					{
-						var ctg1 = v1.x / v1.y;
-						var ctg2 = v2.x / v2.y;
-						d = -(ctg1 - ctg2);
-						/*
-						if (groupIndex === 1)
-							d = -d;
-						*/
-						/*
-						if (Math.sign(v1.y) > 0)  // all above x-axis
-							d = -(ctg1 - ctg2);
+						if (strictStereoBondGeometry)
+							return 0;
 						else
-							d = (ctg1 - ctg2);
-						*/
-						result = Math.sign(d);
+						{
+							var ctg1 = v1.x / v1.y;
+							var ctg2 = v2.x / v2.y;
+							d = -(ctg1 - ctg2);
+							result = Math.sign(d);
+						}
 					}
 				}
 			}
 			return result;
 		};
+		var threshold = 1e-2; // CU.getDistance(c2, c1) / 1e3;
 		var sa = getDirectionSign(ta1, ta2, threshold, -1);
 		var sb = getDirectionSign(tb1, tb2, threshold, 1);
 
@@ -418,7 +415,7 @@ Kekule.MolStereoUtils = {
 	 * //@param {Kekule.StructureFragment} parentMol
 	 * @returns {Int} Value from {@link Kekule.StereoParity}.
 	 */
-	calcStereoBondParity: function(connector, coordMode, ignoreStereoCheck)
+	calcStereoBondParity: function(connector, coordMode, ignoreStereoCheck, strictStereoBondGeometry)
 	{
 		var SP = Kekule.StereoParity;
 		if (!ignoreStereoCheck && !Kekule.MolStereoUtils.isStereoBond(connector))
@@ -517,7 +514,8 @@ Kekule.MolStereoUtils = {
 						currPrjCoords.push(null);
 				}
 				var prjParity = Kekule.MolStereoUtils._calcParityOfCoordPairs(
-						currPrjCoords[0], currPrjCoords[1], currPrjCoords[2], currPrjCoords[3], currPrjCoords[4], currPrjCoords[5]
+						currPrjCoords[0], currPrjCoords[1], currPrjCoords[2], currPrjCoords[3], currPrjCoords[4], currPrjCoords[5],
+						strictStereoBondGeometry
 				);
 				if (prjParity !== SP.UNKNOWN)
 				{
@@ -541,7 +539,7 @@ Kekule.MolStereoUtils = {
 	 * @returns {Array} Array of all chiral nodes.
 	 * @private
 	 */
-	doPerceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	doPerceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, strictStereoBondGeometry)
 	{
 		var result = Kekule.MolStereoUtils.doFindStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
 		structFragmentOrCtab.beginUpdate();
@@ -552,7 +550,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0, l = result.length; i < l; ++i)
 				{
 					var c = result[i];
-					var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true);
+					var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true, strictStereoBondGeometry);
 					if (c.setParity)
 						c.setParity(parity);
 				}
@@ -1188,11 +1186,12 @@ Kekule.MolStereoUtils = {
 	 *     perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. <br />
 	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />
 	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />
+	 *     strictStereoBondGeometry: Bool, if true, the illegal bond geometry will be ignored in calculation (e.g., two connected atoms on same side of a double bond). <br />
 	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
 	 *       Only works when coord mode is 2D. <br/>
 	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
 	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>
-	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead. <br />
 	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>
 	 *   }
 	 * @returns {Array} Array of all nodes and connectors with special stereo parities.
@@ -1235,7 +1234,7 @@ Kekule.MolStereoUtils = {
 			if (ops.perceiveStereoConnectors)
 			{
 				if (ops.calcParity)
-					stereoBonds = Kekule.MolStereoUtils.doPerceiveStereoConnectors(targetFragment, coordMode, true);
+					stereoBonds = Kekule.MolStereoUtils.doPerceiveStereoConnectors(targetFragment, coordMode, true, ops.strictStereoBondGeometry);
 				else
 					stereoBonds = Kekule.MolStereoUtils.doFindStereoBonds(targetFragment, true);
 			}
@@ -1318,16 +1317,18 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Bool} strictStereoBondGeometry
 	 * @returns {Array} Array of all chiral nodes.
 	 * @deprecated
 	 */
-	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, strictStereoBondGeometry)
 	{
 		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, coordMode, ignoreCanonicalization,
 				{
-					perceiveStereoConnectors: true,
-					perceiveChiralNodes: false,
-					calcParity: true
+					'perceiveStereoConnectors': true,
+					'perceiveChiralNodes': false,
+					'calcParity': true,
+					'strictStereoBondGeometry': strictStereoBondGeometry
 				});
 	},
 
