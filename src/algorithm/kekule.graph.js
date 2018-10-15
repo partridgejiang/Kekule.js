@@ -1158,7 +1158,7 @@ Kekule.GraphAlgorithmUtils = {
 		//console.log('before', graph.getVertexes().length, graph.getEdges().length);
 		for (var i = 0, l = bridgeElems.vertexes.length; i < l; ++i)
 		{
-			graph.removeVertex(chainElems.vertexes[i]);
+			graph.removeVertex(bridgeElems.vertexes[i]);
 		}
 		//console.log('after', graph.getVertexes().length, graph.getEdges().length, l);
 		return bridgeElems;
@@ -1408,11 +1408,11 @@ Kekule.GraphAlgorithmUtils = {
 		var findSSSROfPart_wrong = 1 || function(cycle)
 		{
 			var result = [];
-			var SSSRCount = cycleBlock.edges.length - cycleBlock.vertexes.length + 1;
+			var SSSRCount = cycle.edges.length - cycle.vertexes.length + 1;
 			if (SSSRCount <= 0)
 				return [];
 
-			var rings = U.findAllRings(cycleBlock);
+			var rings = U.findAllRings(cycle);
 
 			// prepare and sort rings
 			var ringGroupMap = new Kekule.MapEx(true);
@@ -1441,7 +1441,7 @@ Kekule.GraphAlgorithmUtils = {
 			*/
 
 			var ring;
-			var remainEdges = AU.clone(cycleBlock.edges);
+			var remainEdges = AU.clone(cycle.edges);
 
 			var getUncheckedEdgeCount = function(remainEdges, ring)
 			{

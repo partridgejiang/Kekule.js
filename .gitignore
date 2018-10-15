@@ -61,7 +61,11 @@ typings/
 .next
 
 # mac
+<<<<<<< HEAD
 .DS_Store
 
 # vscode
 .vscode
+=======
+.DS_Store
+>>>>>>> eslint-kekule

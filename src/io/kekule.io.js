@@ -648,7 +648,7 @@ Kekule.IO.ChemDataReaderManager = {
 	createReaderByFormat: function(formatId, otherConditions)
 	{
 		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(formatId, otherConditions);
-		return info? IO.ChemDataReaderManager.createReaderOfInfo(info): null;
+		return info? Kekule.IO.ChemDataReaderManager.createReaderOfInfo(info): null;
 	},
 	/**
 	 * Get reader instance by format Id.
@@ -1071,7 +1071,7 @@ Kekule.IO.ChemDataWriterManager = {
 	{
 		//return Kekule.IO.ChemDataWriterManager.getWriter({'mimeType': mimeType});
 		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
-		return fid? Kekule.IO.ChemDataWriterManager.getWriterByFormat(fid, null, srcObj): null;
+		return fid? Kekule.IO.ChemDataWriterManager.getWriterByFormat(fid, null): null;
 	}
 };
 

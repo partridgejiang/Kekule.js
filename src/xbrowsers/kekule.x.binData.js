@@ -9,7 +9,7 @@
 //   Cross browser binary data supporting
 /////////////////////////////////////////////////////////////
 // TODO: unfinished
-X.BinData = function()
-{
+// X.BinData = function()
+// {
 
-};
+// };
