@@ -34,5 +34,13 @@
     "node": ">=0.10"
   },
   "directories": {},
-  "keywords": ["chemistry", "cheminformatics", "chemoinformatics", "molecule"]
+  "keywords": [
+    "chemistry",
+    "cheminformatics",
+    "chemoinformatics",
+    "molecule"
+  ],
+  "devDependencies": {
+    "eslint": "^5.7.0"
+  }
 }
