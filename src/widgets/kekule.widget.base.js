@@ -3758,7 +3758,7 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 				{
 					var name = this.getPropStoreFieldValue('targetWidgetClassName');
 					if (name)
-						result = ClassEx.findClass(name);
+						result = ClassEx.findClass(name, undefined, Kekule);
 				}
 				return result;
 			}
@@ -3774,7 +3774,7 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('targetWidgetClassName', value);
-				this.setTargetWidgetClass(ClassEx.findClass(value));
+				this.setTargetWidgetClass(ClassEx.findClass(value, undefined, Kekule));
 			}
 		});
 		// alias for targetWidgetClassName
@@ -4003,7 +4003,7 @@ Kekule.Widget.Utils = {
 		var specialFields = ['widget', 'widgetClass', 'htmlClass', 'children'];
 		var wclass = defineObj.widgetClass || defineObj.widget;
 		if (typeof(wclass) === 'string')
-			wclass = ClassEx.findClass(wclass);
+			wclass = ClassEx.findClass(wclass, undefined, Kekule);
 		if (!wclass)
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.WIDGET_CLASS_NOT_FOUND'));
@@ -4084,7 +4084,7 @@ Kekule.Widget.Utils = {
 					}
 				}, null, widget.getDocument());
 			}
-			else if (attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
+			else if (attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype, undefined, Kekule), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
 			{
 				var id = attribValue.substr(1).trim();
 				Kekule.Widget.Utils._setWidgetRefPropFromId(widget, propName, id);

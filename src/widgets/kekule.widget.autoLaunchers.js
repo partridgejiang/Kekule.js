@@ -503,7 +503,7 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	getWidgetClass: function(widgetName)
 	{
 		// TODO: here we simply create class from widget class name
-		return ClassEx.findClass(widgetName);
+		return ClassEx.findClass(widgetName, undefined, Kekule);
 	}
 });
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.AutoLauncher);

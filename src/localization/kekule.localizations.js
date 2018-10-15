@@ -79,7 +79,7 @@ module.exports = function(Kekule){
 		var lanObj = getLanguageRoot(languageName, false, localRoot);
 		if (lanObj)  // found suitable language
 		{
-			var value = Object.getCascadeFieldValue(cascadeName, lanObj);
+			var value = Object.getCascadeFieldValue(cascadeName, lanObj, Kekule);
 			if (value !== undefined)
 				return value;
 		}
@@ -128,7 +128,7 @@ module.exports = function(Kekule){
 	function getLocModuleRootObj(moduleName, canCreate)
 	{
 		var moduleName = moduleName || 'GLOBAL';
-		var result = Object.getCascadeFieldValue(moduleName, locModuleInfo);
+		var result = Object.getCascadeFieldValue(moduleName, locModuleInfo, Kekule);
 		if (!result && canCreate)
 			result = Object.setCascadeFieldValue(moduleName, {}, locModuleInfo, true);
 		return result;

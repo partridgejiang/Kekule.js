@@ -625,13 +625,13 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode Node to save data. Each concrete serializer has its own type of node to store data.
 	 * @returns {Object} Object loaded.
 	 */
-	load: function(obj, storageNode)
+	load: function(obj, storageNode, Kekule)
 	{
 		if (!obj)  // obj is null, create new one
 		{
 			var objType = this.getStorageNodeExplicitType(storageNode);
 			if (objType)
-				obj = DataType.createInstance(objType);
+				obj = DataType.createInstance(objType, Kekule);
 			else if (this.doLoadUntypedNode)
 				return this.doLoadUntypedNode(storageNode);
 			else
@@ -645,7 +645,7 @@ ObjSerializer = Class.create(
 				return customLoadMethod(obj, storageNode, this);
 			}
 		}
-		var result = this.doLoad(obj, storageNode);
+		var result = this.doLoad(obj, storageNode, Kekule);
 		if (result && this.isFunction(obj.loaded))
 			obj.loaded();
 		return result;
@@ -656,15 +656,15 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode
 	 * @private
 	 */
-	doLoad: function(obj, storageNode)
+	doLoad: function(obj, storageNode, Kekule)
 	{
 		var explicitType = this.getStorageNodeExplicitType(storageNode);
 		if (typeof(obj) == 'object')
 		{
 			if (obj instanceof ObjectEx)  // ObjectEx
-				obj = this.doLoadObjectEx(obj, storageNode);
+				obj = this.doLoadObjectEx(obj, storageNode, Kekule);
 			else if (this.isArray(obj)) // Array
-				obj = this.doLoadArray(obj, storageNode);
+				obj = this.doLoadArray(obj, storageNode, Kekule);
 			else if (this.isDate(obj))  // date
 				obj = this.doLoadDate(obj, storageNode);
 			else // a normal object
@@ -678,7 +678,7 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode
 	 * @private
 	 */
-	doLoadArray: function(arrayObj, storageNode)
+	doLoadArray: function(arrayObj, storageNode, Kekule)
 	{
 		var itemNodes = this.getAllArrayItemStorageNodes(storageNode);
 		for (var i = 0, l = itemNodes.length; i < l; ++i)
@@ -692,14 +692,14 @@ ObjSerializer = Class.create(
 					var valueType = this.getStorageNodeExplicitType(node) || this.getStorageNodeName(node);
 					if (valueType) // complex value
 					{
-						obj = DataType.createInstance(valueType);
-						this.load(obj, node);
+						obj = DataType.createInstance(valueType, Kekule);
+						this.load(obj, node, Kekule);
 					}
 					else
 					{
 						// guess it is an object
 						obj = {};
-						this.load(obj, node);
+						this.load(obj, node, Kekule);
 					}
 					arrayObj.push(obj);
 				}
@@ -738,7 +738,7 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode
 	 * @private
 	 */
-	doLoadSimpleObject: function(obj, storageNode)
+	doLoadSimpleObject: function(obj, storageNode, Kekule)
 	{
 		// fetch all stored fields
 		var storageNames = this.getAllStoredStorageNames(storageNode);
@@ -754,11 +754,11 @@ ObjSerializer = Class.create(
 				var explicitType = this.getStorageNodeExplicitType(subNode);
 				if (explicitType)
 				{
-					subObj = DataType.createInstance(explicitType);
+					subObj = DataType.createInstance(explicitType, Kekule);
 				}
 				else
 					subObj = {};  // guess it is a object
-				this.load(subObj, subNode);
+				this.load(subObj, subNode, Kekule);
 				obj[fieldName] = subObj;
 			}
 			else // simple type
@@ -775,7 +775,7 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode
 	 * @private
 	 */
-	doLoadObjectEx: function(obj, storageNode)
+	doLoadObjectEx: function(obj, storageNode, Kekule)
 	{
 		var props = obj.getAllPropList();
 		for (var i = 0, l = props.getLength(); i < l; ++i)
@@ -794,7 +794,7 @@ ObjSerializer = Class.create(
 			if (!!loaded)
 				continue;
 
-			this.doLoadObjectExProp(obj, prop, storageNode);
+			this.doLoadObjectExProp(obj, prop, storageNode, Kekule);
 		}
 		return obj;
 	},
@@ -805,11 +805,11 @@ ObjSerializer = Class.create(
 	 * @param {Object} storageNode
 	 * @private
 	 */
-	doLoadObjectExProp: function(obj, prop, storageNode)
+	doLoadObjectExProp: function(obj, prop, storageNode, Kekule)
 	{
 		var propName = prop.name;
 		var propType = prop.dataType;
-		var propValue = this.doLoadFieldValue(obj, propName, storageNode, propType);
+		var propValue = this.doLoadFieldValue(obj, propName, storageNode, propType, Kekule);
 
 		if ((propValue !== null) && (propValue !== undefined))
 		{
@@ -825,7 +825,7 @@ ObjSerializer = Class.create(
 	 * @returns {Variant} Value loaded
 	 * @private
 	 */
-	doLoadFieldValue: function(obj, fieldName, storageNode, supposedValueType)
+	doLoadFieldValue: function(obj, fieldName, storageNode, supposedValueType, Kekule)
 	{
 		var result;
 		var handled = false;
@@ -838,17 +838,17 @@ ObjSerializer = Class.create(
 				var explicitType = this.getStorageNodeExplicitType(subNode);
 				if (explicitType && (explicitType != supposedValueType))  // explicitType and supposedValueType not match, follow explicitType
 				{
-					result = DataType.createInstance(explicitType);
+					result = DataType.createInstance(explicitType, Kekule);
 				}
 				else
-					result = DataType.createInstance(supposedValueType);
-				this.load(result, subNode);
+					result = DataType.createInstance(supposedValueType, Kekule);
+				this.load(result, subNode, Kekule);
 				handled = true;
 			}
 		}
 		if (DataType.isSimpleType(supposedValueType) || (!handled))  // simple type, or load complex subnode not found, load directly
 		{
-			result = this.doLoadSimpleValue(obj, this.propNameToStorageName(fieldName), supposedValueType, storageNode);
+			result = this.doLoadSimpleValue(obj, this.propNameToStorageName(fieldName), supposedValueType, storageNode, Kekule);
 		}
 		return result;
 	},
@@ -1358,7 +1358,7 @@ ClassEx.extend(ObjectEx,
 	 * @param {Variant} serializerOrName A {@link ObjSerializer} instance or name registered in {@link ObjSerializerFactory}.
 	 *   Can be null to use the default serializer.
 	 */
-	loadObj: function(srcNode, serializerOrName)
+	loadObj: function(srcNode, serializerOrName, Kekule)
 	{
 		var serializer;
 		if (!serializerOrName)  // use default
@@ -1367,7 +1367,7 @@ ClassEx.extend(ObjectEx,
       serializer = ObjSerializerFactory.getSerializer(serializerOrName);
 		else
 			serializer = serializerOrName;
-		return serializer.load(this, srcNode);
+		return serializer.load(this, srcNode, Kekule);
 	}
 });
 

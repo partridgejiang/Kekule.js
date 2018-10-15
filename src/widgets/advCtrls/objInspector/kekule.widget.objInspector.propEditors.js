@@ -551,8 +551,8 @@ Kekule.PropertyEditor.EditorMananger = Class.create(
 		{
 			if (DataType.isObjectExType(srcType) && DataType.isObjectExType(targetType))
 			{
-				var classObj1 = ClassEx.findClass(srcType);
-				var classObj2 = ClassEx.findClass(targetType);
+				var classObj1 = ClassEx.findClass(srcType, undefined, Kekule);
+				var classObj2 = ClassEx.findClass(targetType, undefined, Kekule);
 				result = ClassEx.isOrIsDescendantOf(classObj1, classObj2);
 			}
 		}

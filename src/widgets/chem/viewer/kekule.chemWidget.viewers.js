@@ -1546,7 +1546,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			if (actionClass)  // create action
 			{
 				if (typeof(actionClass) === 'string')
-					actionClass = ClassEx.findClass(objDefHash.actionClass);
+					actionClass = ClassEx.findClass(objDefHash.actionClass, undefined, Kekule);
 			}
 			if (actionClass)
 			{

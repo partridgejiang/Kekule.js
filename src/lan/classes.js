@@ -210,7 +210,7 @@ Object._extendSupportMethods = function(destination, methods)
 };
 /** @ignore */
 // e.g., obj.getCascadeFieldValue('level1.level2.name') will return obj.level1.level2.name.
-Object.getCascadeFieldValue = function(fieldName, root)
+Object.getCascadeFieldValue = function(fieldName, root, Kekule)
 {
   var result;
   var cascadeNames;
@@ -219,15 +219,22 @@ Object.getCascadeFieldValue = function(fieldName, root)
   else
     cascadeNames = fieldName.split('.');
   if (!root)
-    var root = $jsRoot || this;
-  for (var i = 0, l = cascadeNames.length; i < l; ++i)
-  {
-    result = root[cascadeNames[i]];
-    if (!result)
-      break;
-    else
-      root = result;
-  }
+		var root = $jsRoot || this;
+	var i, l;
+	if (cascadeNames[0] === "Kekule") {
+		cascadeNames.shift();
+		for (i = 0, l = cascadeNames.length; i < l; ++i) {
+			result = Kekule[cascadeNames[i]];
+			if (!result) break;
+			else Kekule = result;
+		}
+	} else {
+		for (i = 0, l = cascadeNames.length; i < l; ++i) {
+			result = root[cascadeNames[i]];
+			if (!result) break;
+			else root = result;
+		}
+	}
   return result;
 };
 /** @ignore */
@@ -1627,7 +1634,7 @@ var DataType = {
 	 * @param {String} typeName
 	 * @returns {Variant}
 	 */
-	createInstance: function(typeName)
+	createInstance: function(typeName, Kekule)
 	{
 		switch (typeName)
 		{
@@ -1638,7 +1645,7 @@ var DataType = {
 			case DataType.FUNCTION: return new Function();
 			default: // maybe a ObjectEx descendant
 				{
-					var classInstance = ClassEx.findClass(typeName.capitalizeFirst()); //eval(typeName.capitalizeFirst());
+					var classInstance = ClassEx.findClass(typeName.capitalizeFirst(), undefined, Kekule); //eval(typeName.capitalizeFirst());
 					return new classInstance();
 				}
 		}
@@ -1670,7 +1677,7 @@ var ClassEx = {
 	 * @param {String} className
 	 * @returns {Class}
 	 */
-	findClass: function(className, root)
+	findClass: function(className, root, Kekule)
 	{
     /*
 		var result;
@@ -1687,7 +1694,7 @@ var ClassEx = {
 		}
 		return result;
 		*/
-		return Object.getCascadeFieldValue(className, root || $jsRoot);
+		return Object.getCascadeFieldValue(className, root || $jsRoot, Kekule);
 	},
 	/**
 	 * Get class name of aClass, usually returns CLASS_NAME field of aClass
@@ -3289,11 +3296,11 @@ ObjectEx = Class.create(
 	 * Assign data in this object to targetObj.
 	 * @param {ObjectEx} targetObj
 	 */
-	assignTo: function(targetObj)
+	assignTo: function(targetObj, Kekule)
 	{
 		var jsonObj = {};
 		this.saveObj(jsonObj, 'json');
-		targetObj.loadObj(jsonObj, 'json');
+		targetObj.loadObj(jsonObj, 'json', Kekule);
 	},
 	/**
 	 * Returns a cloned object.

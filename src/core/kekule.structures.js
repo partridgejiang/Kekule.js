@@ -2321,7 +2321,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				{
 					var indexes = [];
 					var subNode = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName(propName)); // get sub node for array
-					serializer.load(indexes, subNode);
+					serializer.load(indexes, subNode, Kekule);
 					obj.__load_anchorNodes_indexes = indexes; // save the indexes and handle it after all properties are loaded
 					return true;  // this property is handled, do not use default save method
 					break;
@@ -2337,15 +2337,15 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 					var valueType = serializer.getStorageNodeExplicitType(itemNode) || serializer.getStorageNodeName(itemNode);
 					if (valueType)
 					{
-						connector = DataType.createInstance(valueType);
-						serializer.load(connector, itemNode);
+						connector = DataType.createInstance(valueType, Kekule);
+						serializer.load(connector, itemNode, Kekule);
 						// then handle connectedObjs array
 						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
 						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
 						if (conObjsNode)
 						{
 							var connectedObjs = [];
-							serializer.load(connectedObjs, conObjsNode);
+							serializer.load(connectedObjs, conObjsNode, Kekule);
 							connector.__load_connectedObj_indexes = connectedObjs;
 						}
 
@@ -2355,14 +2355,14 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						if (conNodeNode)
 						{
 							var connectedNodes = [];
-							serializer.load(connectedNodes, conNodeNode);
+							serializer.load(connectedNodes, conNodeNode, Kekule);
 							connector.__load_connectedNode_indexes = connectedNodes;
 						}
 						var conConnectorNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedConnectors'));
 						if (conConnectorNode)
 						{
 							var connectedConnectors = [];
-							serializer.load(connectedConnectors, conConnectorNode);
+							serializer.load(connectedConnectors, conConnectorNode, Kekule);
 							connector.__load_connectedConnector_indexes = connectedConnectors;
 						}
 
@@ -6866,7 +6866,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		{
 			for (var i = 0, l = classes.length; i < l; ++i)
 			{
-				if (obj instanceof ClassEx.findClass(classes[i]))
+				if (obj instanceof ClassEx.findClass(classes[i], undefined, Kekule))
 					return true;
 			}
 			// not match

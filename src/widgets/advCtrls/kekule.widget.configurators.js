@@ -289,7 +289,7 @@ ClassEx.extend(Kekule.Widget.BaseWidget,
 		do
 		{
 			var className = ClassEx.getClassName(c) + '.Settings';
-			result = ClassEx.findClass(className);
+			result = ClassEx.findClass(className, undefined, Kekule);
 			c = ClassEx.getSuperClass(c);
 		}
 		while (c && !result)
@@ -309,7 +309,7 @@ ClassEx.extend(Kekule.Widget.BaseWidget,
 		do
 		{
 			var className = ClassEx.getClassName(c) + '.Configurator';
-			result = ClassEx.findClass(className);
+			result = ClassEx.findClass(className, undefined, Kekule);
 			c = ClassEx.getSuperClass(c);
 		}
 		while (c && !result)
@@ -404,7 +404,7 @@ Kekule.Widget.BaseWidget.Settings = Class.create(ObjectEx,
 			var cascadeNames = className.split('.');
 			cascadeNames.pop();  // remove '.Settings'
 			className = cascadeNames.join('.');
-			this._basedClass = ClassEx.findClass(className);
+			this._basedClass = ClassEx.findClass(className, undefined, Kekule);
 		}
 		return this._basedClass;
 	},

@@ -62,7 +62,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 			Kekule.error(/*Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.JSON_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
-		return serializer.load(null, data);  // create new object
+		return serializer.load(null, data, Kekule);  // create new object
 	}
 });
 
@@ -165,7 +165,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 			Kekule.error(/*Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.XML_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
-		return serializer.load(null, data);  // create new object
+		return serializer.load(null, data, Kekule);  // create new object
 	}
 });
 

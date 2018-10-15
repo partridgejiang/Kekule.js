@@ -2166,7 +2166,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			if (actionClass)  // create action
 			{
 				if (typeof(actionClass) === 'string')
-					actionClass = ClassEx.findClass(objDefHash.actionClass);
+					actionClass = ClassEx.findClass(objDefHash.actionClass, undefined, Kekule);
 			}
 		}
 

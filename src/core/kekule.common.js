@@ -200,7 +200,7 @@ Kekule.hasLocalRes = function()
 Kekule.globalOptions = {
 	add: function(optionName, valueOrHash)
 	{
-		var oldValue = Object.getCascadeFieldValue(optionName, Kekule.globalOptions);
+		var oldValue = Object.getCascadeFieldValue(optionName, Kekule.globalOptions, Kekule);
 		if (oldValue)  // value already exists
 		{
 			if (DataType.isObjectValue(oldValue) && (DataType.isObjectValue(valueOrHash)))
@@ -2326,7 +2326,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	assignTo: function($super, targetObj, withId)
 	{
-		var result = $super(targetObj);
+		var result = $super(targetObj, Kekule);
 		if (!withId && targetObj.clearIds)
 			targetObj.clearIds();
 		return result;
