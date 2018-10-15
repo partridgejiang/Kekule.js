@@ -7,6 +7,9 @@
     "name": "Chen Jiang",
     "email": "partridge@cpu.edu.cn"
   },
+  "scripts": {
+    "lint": "eslint ./src"
+  },
   "contributors": [
     {
       "name": "Aaron Llanos",
