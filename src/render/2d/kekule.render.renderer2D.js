@@ -1796,7 +1796,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			return r;
 		}
 		else
-			return $super(context, updatedObjs, updateType);
+			return $super(context, updatedObjDetails, updateType);
 	},
 
 	/** @private */

@@ -374,7 +374,7 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	 * @returns {Variant}
 	 * @private
 	 */
-	drawParallelLines: function(context, lineInfos)
+	drawParallelLines: function(context, lineInfos, drawEndCaps)
 	{
 		var b = this.getDrawBridge();
 		if (b.drawParallelLines)
@@ -1196,6 +1196,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	/** @private */
 	calcNodeBaseRadius: function(node, renderOptions)
 	{
+		var radius;
 		var localOptions = node.getOverriddenRender3DOptions() || {};
 		var atomicNumber = node.getAtomicNumber? node.getAtomicNumber(): null;
 		if (localOptions.nodeRadius || renderOptions.nodeRadius)  // radius explicitly set
@@ -1292,7 +1293,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 */
 	transformObjCoord3DToContext: function(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow)
 	{
-		var result;
+		var result, coord;
 		if (obj && obj.getAbsBaseCoord3D)
 		{
 			coord = obj.getAbsBaseCoord3D(allowCoordBorrow);
@@ -1403,7 +1404,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 */
 	doDrawNode: function(context, group, node, parentChemObj, options, finalTransformOptions)
 	{
-		var result;
+		var result, op;
 		var nodeRenderMode = this.getRenderCache(context).nodeRenderMode;
 		if (nodeRenderMode === NRM.NONE)  // do not need to render node
 			return null;

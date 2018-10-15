@@ -197,10 +197,9 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	clearContext: function(context)
 	{
 		var elem = context.canvas;
-		elem.width = elem.width;
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)
-			shadowCanvas.width = shadowCanvas.width;
+			shadowCanvas.width = elem.width;
 
 		var clearColor = context.__$clearColor__;
 		if (clearColor)

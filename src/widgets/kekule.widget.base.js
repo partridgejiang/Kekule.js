@@ -3272,8 +3272,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	observingGestureEventsChanged: function(eventNames)
 	{
-		if (enabled)
-			this.installHammerTouchHandlers();
+		// What?
+		// if (enabled)
+		// 	this.installHammerTouchHandlers();
 	},
 
 	/**
@@ -3761,7 +3762,7 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 			'getter': function()
 			{
 				var c = this.getTargetWidgetClass();
-				var result = c? ClassEx.getClassName(C): this.getPropStoreFieldValue('targetWidgetClassName');
+				var result = c? ClassEx.getClassName(c): this.getPropStoreFieldValue('targetWidgetClassName');
 				return result;
 			},
 			'setter': function(value)
