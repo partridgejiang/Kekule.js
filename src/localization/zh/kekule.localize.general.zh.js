@@ -1,3 +1,4 @@
+var Kekule = {}
 Kekule.Localization.setCurrModule("general");
 
 Kekule.Localization.addResource("zh", "Texts",

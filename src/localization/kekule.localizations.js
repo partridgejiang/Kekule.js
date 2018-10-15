@@ -11,7 +11,7 @@
 module.exports = function(Kekule){
 "use strict";
 
-	var $root = typeof window !== undefined ? window : global;
+	var $root = Kekule.$jsRoot;
 
 	function analysisLanguage(lanName)
 	{

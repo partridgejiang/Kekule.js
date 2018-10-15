@@ -29,11 +29,6 @@
   },
   "globals": {
     "ActiveXObject": true,
-    "Prototype": true,
-    "WebShow": true,
-    "THREE": true,
-    "Hammer": true,
-    "Raphael": true,
-    "Template": true
+    "WebShow": true
   }
 }

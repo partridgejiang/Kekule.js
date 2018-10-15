@@ -1,3 +1,5 @@
+var Kekule = {}
+
 Kekule.Localization.setCurrModule("widget");
 
 Kekule.Localization.addResource("zh", "WidgetTexts",

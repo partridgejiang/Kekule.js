@@ -563,22 +563,6 @@ Object._extendSupportMethods(String.prototype, {
     return this.replace(/<\/?[^>]+>/gi, '');
   },
 
-  stripScripts: function() {
-    return this.replace(new RegExp(Prototype.ScriptFragment, 'img'), '');
-  },
-
-  extractScripts: function() {
-    var matchAll = new RegExp(Prototype.ScriptFragment, 'img');
-    var matchOne = new RegExp(Prototype.ScriptFragment, 'im');
-    return (this.match(matchAll) || []).map(function(scriptTag) {
-      return (scriptTag.match(matchOne) || ['', ''])[1];
-    });
-  },
-
-  evalScripts: function() {
-    return this.extractScripts().map(function(script) { return eval(script); });
-  },
-
   escapeHTML: function escapeHTML() {
 		/*
     var self = arguments.callee;
@@ -674,23 +658,11 @@ Object._extendSupportMethods(String.prototype, {
     return this.inspect(true);
   },
 
-  unfilterJSON: function(filter) {
-    return this.sub(filter || Prototype.JSONFilter, '#{1}');
-  },
-
   isJSON: function() {
     var str = this;
     if (str.blank()) return false;
     str = this.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '');
     return (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(str);
-  },
-
-  evalJSON: function(sanitize) {
-    var json = this.unfilterJSON();
-    try {
-      if (!sanitize || json.isJSON()) return eval('(' + json + ')');
-    } catch (e) { }
-    throw new SyntaxError('Badly formed JSON string: ' + this.inspect());
   },
 
   include: function(pattern) {
@@ -712,10 +684,6 @@ Object._extendSupportMethods(String.prototype, {
 
   blank: function() {
     return /^\s*$/.test(this);
-  },
-
-  interpolate: function(object, pattern) {
-    return new Template(this, pattern).evaluate(object);
   }
 });
 

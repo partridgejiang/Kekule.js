@@ -18,6 +18,7 @@ var XmlUtility = require('../../lan/xmlJsons').XmlUtility
 module.exports = function(Kekule) {
 if (Kekule.$jsRoot.THREE)
 {
+	var THREE = Kekule.$jsRoot.THREE
 	/** @ignore */
 	THREE.Object3D.prototype.clear = function(){
 		var children = this.children;

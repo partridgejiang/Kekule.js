@@ -19,7 +19,7 @@ var DataType = require('../lan/classes').DataType
 var ObjSerializerFactory = require('../lan/serializations').ObjSerializerFactory
 
 module.exports = function(Kekule){
-
+var Hammer = Kekule.$document ? require('hammerjs') : {}
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
 
@@ -2957,7 +2957,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 				var KC = Kekule.X.Event.KeyCode;
 				var keyCode;
-				if (evType === 'mousemove' || evType === 'pointermove')  // test mouse cursor
+				if (evType === 'pointermove')  // test mouse cursor
 				{
 					this.reactPointerMoving(e);
 					var coord = this.getEventMouseRelCoord(e);
@@ -3031,7 +3031,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						this.setIsHover(true);
 					handled = true;
 				}
-				else if (evType === 'mouseout' || evType === 'touchleave')
+				else if (evType === 'mouseout' || evType === 'touchleave' || evType === 'pointerout')
 				{
 					if (!e.ghostMouseEvent)
 					{
@@ -4827,7 +4827,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
 
 		// check first if the component has event handler itself
-		var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
+		var funcName = Kekule.Widget.getEventHandleFuncName(evType);
 
 		if (this[funcName])  // has own handler
 			this[funcName](e);
@@ -4835,7 +4835,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		// dispatch to widget
 		if (targetWidget)
 		{
-			//console.log('event', e.getTarget().tagName, widget.getClassName());
+			// console.log('event', e.getTarget().tagName, targetWidget.getClassName());
 			targetWidget.reactUiEvent(e);
 		}
 

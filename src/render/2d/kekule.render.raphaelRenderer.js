@@ -18,6 +18,7 @@ module.exports = function(Kekule) {
 // Some helper methods of Raphael
 if (Kekule.$jsRoot.Raphael)
 {
+	var Raphael = Kekule.$jsRoot.Raphael;
 	// draw a simple line
 	/** @ignore */
 	Raphael.fn.line = function(x1, y1, x2, y2)
