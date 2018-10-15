@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Testing</title>
+    <link rel="stylesheet" href="./demos/libs/kekule/themes/default/kekule.css">
+  </head>
+  <body>
+    <p>Hello World</p>
+    <div id="kekule"></div>
+
+    <div id="toolbar" data-widget="Kekule.Widget.ButtonGroup">
+      <button id="btnSetCustomButtons" data-widget="Kekule.Widget.Button" data-text="Set Custom Chem Tools"></button>
+      <button id="btnReset" data-widget="Kekule.Widget.Button" data-text="Reset Chem Tools"></button>
+    </div>
+    <div id="composer" data-widget="Kekule.Editor.Composer"></div>
+
+    <label>
+      Skeletal Display?
+      <input type="checkbox" id="skeletal-switch" name="skeletal-switch" checked="true" />
+    </label>
+
+    <script type="text/javascript" src="./test.js"></script>
+  </body>
+</html>

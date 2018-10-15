@@ -13,7 +13,9 @@
  * requires /widgets/chem/editor/kekule.chemEditor.objModifiers.js
  */
 
-(function(){
+var Class = require('../../../../lan/classes').Class
+var DataType = require('../../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var AU = Kekule.ArrayUtils;
@@ -137,5 +139,5 @@ Kekule.Editor.ObjModifier.Color = Class.create(Kekule.Editor.ObjModifier.BaseRen
 // register existed modifiers
 var OMM = Kekule.Editor.ObjModifierManager;
 OMM.register(Kekule.ChemObject, [Kekule.Editor.ObjModifier.Color]);
-
-})();
+return Kekule
+}

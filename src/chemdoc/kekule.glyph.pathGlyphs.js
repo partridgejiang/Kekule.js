@@ -11,7 +11,10 @@
  * requires /chemdoc/kekule.glyph.base.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -1156,5 +1159,5 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return -1;
 	}
 });
-
-})();
+return Kekule;
+};

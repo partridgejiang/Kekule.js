@@ -9,6 +9,10 @@
  * requires /core/kekule.common.js
  * requires /render/kekule.render.utils.js
  */
+var Class = require('../lan/classes').Class
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule) {
 
 "use strict";
 
@@ -2233,3 +2237,6 @@ Kekule.Render.DrawBridge2DMananger = new Kekule.Render.DrawBridgeManager();
  * @object
  */
 Kekule.Render.DrawBridge3DMananger = new Kekule.Render.DrawBridgeManager();
+
+return Kekule;
+}

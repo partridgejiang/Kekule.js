@@ -4,6 +4,8 @@
  * @author Partridge Jiang
  */
 
+module.exports = function (Kekule) {
+
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
@@ -22,3 +24,5 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 		FAIL_TO_GENERATE_3D_STRUCTURE: 'Fail to generate 3D structure coordinates'
 	}
 });
+return Kekule;
+}

@@ -4,6 +4,8 @@
  * @author Partridge Jiang
  */
 
+module.exports = function (Kekule) {
+
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
@@ -427,3 +429,5 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 		}
 	}
 });
+return Kekule;
+}

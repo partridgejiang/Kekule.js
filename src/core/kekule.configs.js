@@ -11,6 +11,13 @@
  * requires /utils/kekule.utils.js
  */
 
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+
+module.exports = function (Kekule) {
+
 /**
  * Represent an abstract configuration class to store a set of config items.
  * Configurations are stored in properties of class.
@@ -256,3 +263,5 @@ Kekule.ConfigPresetMap = Class.create(ObjectEx,
 		this.map.clear();
 	}
 });
+return Kekule;
+}

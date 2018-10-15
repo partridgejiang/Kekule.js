@@ -15,8 +15,10 @@
  * requires /io/kekule.io.js
  * requires /localization
  */
-
-(function(){
+var Class = require('../../lan/classes').Class
+var DataType = require('../../lan/classes').DataType
+var JsonUtility = require('../../lan/xmlJsons').JsonUtility
+module.exports = function (Kekule) {
 "use strict";
 
 var AU = Kekule.ArrayUtils;
@@ -557,4 +559,6 @@ var suitableClasses = [Kekule.StructureFragment, Kekule.ChemObjList, Kekule.Chem
 Kekule.IO.ChemDataWriterManager.register('SMILES', Kekule.IO.SmilesMolWriter,
 	suitableClasses,
 	[Kekule.IO.DataFormat.SMILES]);
-})();
+
+return Kekule;
+};

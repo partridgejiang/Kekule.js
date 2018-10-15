@@ -62,6 +62,12 @@
  * @property {String} resUri Text to refer to resource, such as '#id' or 'http://url'. Readonly.
  * @property {String} resType Resource type id, usually a MIME type text.
  */
+
+var Class = require('../lan/classes').Class
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function (Kekule) {
+
 Kekule.PredefinedResLoader = Class.create(ObjectEx,
 /** @lends Kekule.PredefinedResLoader# */
 {
@@ -411,3 +417,6 @@ Kekule._registerAfterLoadSysProc(function(){
 		}
 	}
 });
+
+return Kekule;
+}

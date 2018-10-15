@@ -22,7 +22,10 @@
  * requires /localization
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 var PS = Class.PropertyScope;
 var AU = Kekule.ArrayUtils;
@@ -3211,4 +3214,5 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	}
 });
 
-})();
+return Kekule
+}

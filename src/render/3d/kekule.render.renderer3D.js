@@ -15,7 +15,10 @@
  * requires /localization/
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function(Kekule) {
 
 var OU = Kekule.ObjUtils;
 var BU = Kekule.BoxUtils;
@@ -2050,5 +2053,5 @@ Kekule.Render.Renderer3DFactory.register(Kekule.ChemObjList, Kekule.Render.ChemO
 Kekule.Render.Renderer3DFactory.register(Kekule.ChemStructureObjectGroup, Kekule.Render.ChemObjGroupList3DRenderer);
 Kekule.Render.Renderer3DFactory.register(Kekule.ChemSpaceElement, Kekule.Render.ChemSpaceElement3DRenderer);
 Kekule.Render.Renderer3DFactory.register(Kekule.ChemSpace, Kekule.Render.ChemSpace3DRenderer);
-
-})();
+return Kekule;
+};

@@ -15,7 +15,11 @@
  */
 
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 /** @ignore */
 const SU = Kekule.StyleUtils;
@@ -320,5 +324,5 @@ Kekule.Widget.showHideManager.setTransitionSelector(defSelector);
 // debug
 	//Kekule.Widget.showHideManager = null;
 
-
-})();
+return Kekule;
+}

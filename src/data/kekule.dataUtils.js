@@ -3,7 +3,11 @@
  * Utils to manipulate chemical data from data JSON files.
  * @author Partridge Jiang
  */
-
+module.exports = function (Kekule) {
+	
+Kekule.chemicalElementsData = require("./kekule.chemicalElementsData");
+Kekule.isotopesData = require("./kekule.isotopesData");
+Kekule.structGenAtomTypesData = require('./kekule.structGenAtomTypesData')
 /**
  *  A class with static methods to get information from kekule.chemicalElements.js JSON data.
  *  @class Kekule.ChemicalElementsDataUtil
@@ -449,3 +453,6 @@ Kekule.AtomTypeDataUtil = {
 		return null;
 	}
 };
+
+return Kekule;
+}

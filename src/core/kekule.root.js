@@ -6,6 +6,9 @@
  * @namespace
  * @description Root namespace of Kekule library.
  */
+
+module.exports = function(Kekule) {
+
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
@@ -196,4 +199,6 @@ if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMess
 			}, '*');
 		}
 	}, false);
+}
+return Kekule
 }

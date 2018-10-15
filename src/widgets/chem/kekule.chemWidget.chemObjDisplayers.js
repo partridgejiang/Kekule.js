@@ -21,7 +21,11 @@
  * requires /widgets/chem/kekule.chemWidget.dialogs.js
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -2370,5 +2374,5 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill = Class.create(Ke
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.TYPE = Kekule.Render.Molecule3DDisplayType.SPACE_FILL;
 
-
-})();
+return Kekule;
+};

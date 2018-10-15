@@ -9,6 +9,12 @@
  * requires /core/kekule.common.js
  * requires /utils/kekule.utils.js
  */
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+
+module.exports = function (Kekule) {
 
 /**
  * Represent an abstract electron set (bond, lone pair, etc.).
@@ -296,3 +302,5 @@ Kekule.HybridizationType = {
 	/** Explicitly no hybridization. */
 	NONE: 0
 };
+return Kekule;
+}

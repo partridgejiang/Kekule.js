@@ -12,7 +12,11 @@
  * requires /widgets/kekule.widget.base.js
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 var EU = Kekule.HtmlElementUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
@@ -179,5 +183,5 @@ Kekule.Widget.Glyph = Class.create(Kekule.Widget.BaseWidget,
 		}
 	}
 });
-
-})();
+return Kekule;
+}

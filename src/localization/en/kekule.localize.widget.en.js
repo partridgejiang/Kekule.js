@@ -4,6 +4,8 @@
  * @author Partridge Jiang
  */
 
+module.exports = function (Kekule) {
+
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
@@ -488,3 +490,5 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 	//WIDGET_UNAVAILABLE_FOR_PLACEHOLDER: 'Widget of this placeholder is unavailable'
 });
+return Kekule;
+}

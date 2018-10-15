@@ -4,7 +4,11 @@
  * @author Partridge Jiang
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule) {
 
 var R = Kekule.Render;
 
@@ -72,6 +76,6 @@ R.atom2DColors = Kekule.Render.atomColorSets.cpk2D;
 R.atomColors = [];
 R.atomColors[R.RendererType.R2D] = R.atom2DColors;
 R.atomColors[R.RendererType.R3D] = R.atom3DColors;
-
-})();
+return Kekule;
+};
 

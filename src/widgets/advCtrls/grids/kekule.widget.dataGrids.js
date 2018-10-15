@@ -18,7 +18,9 @@
  * requires /localizations/
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var DU = Kekule.DomUtils;
@@ -1518,7 +1520,5 @@ Kekule.Widget.PageNavigator.Components = {
 };
 var PNC = Kekule.Widget.PageNavigator.Components;
 
-
-
-
-})();
+return Kekule;
+};

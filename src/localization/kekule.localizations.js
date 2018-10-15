@@ -8,8 +8,10 @@
  * requires /localization
  */
 
-(function($root){
+module.exports = function(Kekule){
 "use strict";
+
+	var $root = typeof window !== undefined ? window : global;
 
 	function analysisLanguage(lanName)
 	{
@@ -191,4 +193,5 @@
 			addLocalizationResources(languageName, resourceName, resources, root);
 		}
 	}
-})(this);
+	return Kekule
+}

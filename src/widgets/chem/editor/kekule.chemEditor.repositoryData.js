@@ -8,7 +8,7 @@
  * @author Partridge Jiang
  */
 
-(function(){
+module.exports = function(Kekule){
 
 Kekule.Editor.RepositoryData = {
 	/*
@@ -146,5 +146,5 @@ Kekule.Editor.RepositoryData = {
 		{"name":"substituentMark","dataFormat":"Kekule-JSON","scale":0.7,"structData":"{\"coordPos2D\":0,\"coordPos3D\":0,\"coord2D\":{\"x\":0,\"y\":0,\"__type__\":\"object\"},\"charge\":0,\"parity\":null,\"ctab\":{\"nodes\":[{\"__type__\":\"Kekule.Atom\",\"coordPos2D\":0,\"coordPos3D\":0,\"coord2D\":{\"x\":-0.40000000000000036,\"y\":0,\"__type__\":\"object\"},\"charge\":0,\"parity\":null,\"isotopeId\":\"C\"},{\"__type__\":\"Kekule.Pseudoatom\",\"coordPos2D\":0,\"coordPos3D\":0,\"renderOptions\":{\"nodeDisplayMode\":-1,\"__type__\":\"object\"},\"coord2D\":{\"x\":0.40000000000000036,\"y\":0,\"__type__\":\"object\"},\"charge\":0,\"parity\":null,\"atomType\":\"any\",\"symbol\":\"A\"}],\"anchorNodes\":[0],\"connectors\":[{\"__type__\":\"Kekule.Bond\",\"coordPos2D\":0,\"coordPos3D\":0,\"renderOptions\":{\"opacity\":0.5,\"__type__\":\"object\"},\"parity\":null,\"bondType\":\"covalent\",\"bondOrder\":1,\"electronCount\":2,\"isInAromaticRing\":false,\"connectedObjs\":[0,1]}],\"__type__\":\"Kekule.StructureConnectionTable\"},\"__type__\":\"Kekule.Molecule\"}"}
 	]
 };
-
-})();
+return Kekule;
+}

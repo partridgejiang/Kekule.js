@@ -10,27 +10,27 @@
  * require /utils/kekule.utils.js
  * require /utils/kekule.domUtils.js
  */
-
-(function (window, document)
-{
-
-var $root = window;
-
-if (!$root.Kekule)
-	Kekule = {};
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function (Kekule) {
 
 /**
  * Browser Check.
  * @class
  */
-Kekule.Browser = {
-	IE:     !!(window.attachEvent && !window.opera),
-  Opera:  !!window.opera,
-  WebKit: navigator.userAgent.indexOf('AppleWebKit/') > -1,
-  Gecko:  navigator.userAgent.indexOf('Gecko') > -1 && navigator.userAgent.indexOf('like Gecko') < 0 && navigator.userAgent.indexOf('KHTML') == -1,
-  MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
-	language: navigator.language || navigator.browserLanguage  // language of broweser
-};
+Kekule.Browser = {}
+if (Kekule.$jsRoot.window) {
+	Kekule.Browser = {
+		IE:     !!(window.attachEvent && !window.opera),
+		Opera:  !!window.opera,
+		WebKit: navigator.userAgent.indexOf('AppleWebKit/') > -1,
+		Gecko:  navigator.userAgent.indexOf('Gecko') > -1 && navigator.userAgent.indexOf('like Gecko') < 0 && navigator.userAgent.indexOf('KHTML') == -1,
+		MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
+		language: navigator.language || navigator.browserLanguage  // language of broweser
+	};
+}
 Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
 	var agent = navigator.userAgent.toLowerCase();
 	return (agent.indexOf('msie') !== -1) ? parseInt(agent.split('msie')[1]) : false
@@ -41,68 +41,71 @@ Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
  * Code copy from https://github.com/mrdoob/three.js/blob/master/examples/js/Detector.js
  * @class
  */
-Kekule.BrowserFeature = {
-	typedArray: (typeof(ArrayBuffer) !== 'undefined'),
-	svg: !!window.SVGSVGElement,
-	canvas: !! window.CanvasRenderingContext2D,
-	webgl: (function()
-	{
-		//if (Kekule.BrowserFeature.webgl === undefined)
+
+if (Kekule.$jsRoot.window) {
+	Kekule.BrowserFeature = {
+		typedArray: (typeof(ArrayBuffer) !== 'undefined'),
+		svg: !!window.SVGSVGElement,
+		canvas: !! window.CanvasRenderingContext2D,
+		webgl: (function()
 		{
-			var result =
-				(function()
-				{
-					try
-					{
-						var canvas = document.createElement('canvas');
-						return !!window.WebGLRenderingContext && ( canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
-					}
-					catch (e)
-					{
-						return false;
-					}
-				})();
-			//Kekule.BrowserFeature.webgl = result;
-		}
-		//return Kekule.BrowserFeature.webgl;
-		return !!result;
-	})(),
-	downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
-	blob: !!window.Blob,
-	workers: !! window.Worker,
-	fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
-	sessionStorage: (function() { try { return !!window.sessionStorage} catch(e) { return false} })(),  // directly call session storage locally on Firefox now will cause exception
-	localStorage: (function() { try { return !!window.localStorage} catch(e) { return false} })(),  // !!window.localStorage,
-	cssTransition: (function(s) {
-		return 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
-	})(document.createElement('div').style),
-	cssTranform: (function(s) {
-		return 'transform' in s || 'WebkitTransform' in s || 'MozTransform' in s || 'msTransform' in s || 'OTransform' in s;
-	})(document.createElement('div').style),
-	cssFlex: (function(s) {
-		return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
-	})(document.createElement('div').style),
-	html5Form: {
-		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
-		supportType: function(typeName)
+			//if (Kekule.BrowserFeature.webgl === undefined)
 			{
-				var elem = document.createElement('input');
-				elem.setAttribute('type', typeName);
-				var result = elem.type === typeName;
-				var textTypes = ['text', 'url', 'search'];
-				if (result && (textTypes.indexOf(typeName.toLowerCase()) < 0))
-				{
-					var testValue = ':)';
-					elem.value = testValue;
-					result = elem.value !== testValue;
-				}
-				return result;
+				var result =
+					(function()
+					{
+						try
+						{
+							var canvas = document.createElement('canvas');
+							return !!window.WebGLRenderingContext && ( canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
+						}
+						catch (e)
+						{
+							return false;
+						}
+					})();
+				//Kekule.BrowserFeature.webgl = result;
 			}
-	},
-	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
-	touchEvent: !!window.touchEvent,
-	pointerEvent: !!window.PointerEvent
-};
+			//return Kekule.BrowserFeature.webgl;
+			return !!result;
+		})(),
+		downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
+		blob: !!window.Blob,
+		workers: !! window.Worker,
+		fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
+		sessionStorage: (function() { try { return !!window.sessionStorage} catch(e) { return false} })(),  // directly call session storage locally on Firefox now will cause exception
+		localStorage: (function() { try { return !!window.localStorage} catch(e) { return false} })(),  // !!window.localStorage,
+		cssTransition: (function(s) {
+			return 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
+		})(document.createElement('div').style),
+		cssTranform: (function(s) {
+			return 'transform' in s || 'WebkitTransform' in s || 'MozTransform' in s || 'msTransform' in s || 'OTransform' in s;
+		})(document.createElement('div').style),
+		cssFlex: (function(s) {
+			return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
+		})(document.createElement('div').style),
+		html5Form: {
+			placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
+			supportType: function(typeName)
+				{
+					var elem = document.createElement('input');
+					elem.setAttribute('type', typeName);
+					var result = elem.type === typeName;
+					var textTypes = ['text', 'url', 'search'];
+					if (result && (textTypes.indexOf(typeName.toLowerCase()) < 0))
+					{
+						var testValue = ':)';
+						elem.value = testValue;
+						result = elem.value !== testValue;
+					}
+					return result;
+				}
+		},
+		mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
+		touchEvent: !!window.touchEvent,
+		pointerEvent: !!window.PointerEvent
+	};
+}
 
 // polyfill of requestAnimationFrame / cancelAnimationFrame
 (function() {
@@ -1409,5 +1412,5 @@ var DOM = Kekule.X.DomReady
  * @function
  */
 Kekule.X.domReady = DOM.domReady;
-
-})(window, document);
+return Kekule;
+};

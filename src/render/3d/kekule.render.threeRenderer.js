@@ -11,7 +11,11 @@
  * requires /render/2d/kekule.render.renderer3D.js
  * requires /xbrowsers/kekule.x.js
  */
-
+var Class = require('../../lan/classes').Class
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function(Kekule) {
 if (Kekule.$jsRoot.THREE)
 {
 	/** @ignore */
@@ -897,3 +901,5 @@ Kekule.Render.ThreeRendererBridge.CheckSupporting = function()
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.ThreeRendererBridge);
 
 Kekule.Render.DrawBridge3DMananger.register(Kekule.Render.ThreeRendererBridge, 20);
+return Kekule;
+}

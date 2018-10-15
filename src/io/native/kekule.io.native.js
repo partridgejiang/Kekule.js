@@ -11,7 +11,12 @@
  * requires /lan/serializations.js
  * requires /core/kekule.common.js
  */
-
+var Class = require('../../lan/classes').Class
+var DataType = require('../../lan/classes').DataType
+var JsonUtility = require('../../lan/xmlJsons').JsonUtility
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+var ObjSerializerFactory = require('../../lan/serializations').ObjSerializerFactory
+module.exports = function (Kekule) {
 /*
  * Default options to read/write KCJ/KCX/JSON/XML format data.
  * @object
@@ -295,3 +300,5 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 	);
 })();
+return Kekule;
+}

@@ -3409,7 +3409,13 @@ $jsRoot.Class = Class;
 $jsRoot.ClassEx = ClassEx;
 $jsRoot.ObjectEx = ObjectEx;
 $jsRoot.DataType = DataType;
-DataType.StringUtils = StringUtils;
+
+module.exports = {
+  Class,
+  ClassEx,
+  ObjectEx,
+  DataType
+};
 
 })(this);
 

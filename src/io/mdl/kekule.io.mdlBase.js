@@ -13,7 +13,11 @@
  * requires /core/kekule.reactions.js
  * requires /localization
  */
-
+var Class = require('../../lan/classes').Class
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 /**
  * Enumeration of MDL MOL/RXN file versions.
  * @enum
@@ -737,3 +741,5 @@ Kekule.IO.MdlBlockWriter = Class.create(Kekule.IO.MdlBlockHandler,
 		// do nothing here.
 	}
 });
+return Kekule;
+}

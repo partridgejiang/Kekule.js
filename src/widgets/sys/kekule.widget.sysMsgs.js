@@ -14,7 +14,11 @@
  * requires /widgets/commonCtrls/kekulw.widget.msgPanels.js
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var EU = Kekule.HtmlElementUtils;
@@ -122,5 +126,5 @@ Kekule.X.domReady(function()
 	Kekule.exceptionHandler = Kekule.Widget.ExceptionHandler.getInstance();
 });
 
-
-})();
+return Kekule;
+}

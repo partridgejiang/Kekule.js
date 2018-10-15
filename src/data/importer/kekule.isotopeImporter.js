@@ -10,8 +10,9 @@
  *  requires /data/kekule/dataUtils.js
  */
 
-if (!window.Kekule)
-	Kekule = {};
+var JsonUtility = require('../../lan/xmlJsons').JsonUtility
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 
 /**
  *  An class with static methods to load content of isotopes.xml from CDK
@@ -117,3 +118,5 @@ Kekule.IsotopesImporter = {
 		return Kekule.IsotopesImporter.saveObjToStr(obj);
 	}
 };
+return Kekule;
+}

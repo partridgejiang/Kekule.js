@@ -16,7 +16,11 @@
  * requires /algorithm/kekule.structure.stereos.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -192,5 +196,5 @@ ClassEx.extendMethod(Kekule.StructureFragment, 'compare', function($origin, targ
 	else
 		return $origin(targetObj, options);
 });
-
-})();
+return Kekule
+}

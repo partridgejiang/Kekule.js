@@ -9,7 +9,10 @@
  * requires /core/kekule.common.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var CM = Kekule.CoordMode;
@@ -311,5 +314,5 @@ Kekule.ImageBlock = Class.create(Kekule.ContentBlock,
 		}
 	}
 });
-
-})();
+return Kekule;
+};

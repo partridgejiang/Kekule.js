@@ -16,7 +16,11 @@
  * requires /io/kekule.io.mdlBase.js
  * requires /localization
  */
-
+var Class = require('../../lan/classes').Class
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 /**
  * Util methods for MDL 2000 format.
  * @class
@@ -1153,3 +1157,6 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		return result;
 	}
 });
+
+return Kekule;
+}

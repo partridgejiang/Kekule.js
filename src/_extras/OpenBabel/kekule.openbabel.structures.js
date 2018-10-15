@@ -16,7 +16,8 @@
  * requires /localization
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule){
 "use strict";
 
 /** @ignore */
@@ -186,5 +187,5 @@ if (Kekule.Calculator)
 }
 
 
-
-})();
+return Kekule
+}

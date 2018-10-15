@@ -12,7 +12,11 @@
  * requires /render/kekule.render.extensions.js
  * requires /render/kekule.render.renderColorData.js
  */
-
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule) {
 /**
  * Contains constants for rich text manipulation.
  * @class
@@ -3328,3 +3332,5 @@ Kekule.Render.RendererDefineUtils = {
 		ClassEx.extend(aClass, Kekule.Render.RendererDefineUtils.CompositeObjRendererMethods);
 	}
 };
+return Kekule;
+}

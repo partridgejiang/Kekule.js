@@ -10,7 +10,11 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -436,5 +440,5 @@ Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallbac
 		return null;
 	}
 }
-
-})();
+return Kekule
+}

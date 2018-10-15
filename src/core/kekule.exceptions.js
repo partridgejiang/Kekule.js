@@ -9,7 +9,10 @@
  * requires /core/kekule.common.js
  */
 
+var Class = require('../lan/classes').Class
+var ObjectEx = require('../lan/classes').ObjectEx
 
+module.exports = function(Kekule) {
 /**
  * @description Class for exception handler.
  * @class Kekule.ExceptionHandler
@@ -166,4 +169,6 @@ if (typeof(console) == 'undefined')
 		error: function() {}
 	};
 
+}
+return Kekule;
 }

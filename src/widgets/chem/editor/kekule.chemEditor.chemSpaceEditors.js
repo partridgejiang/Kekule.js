@@ -24,7 +24,10 @@
  * requires /widgets/chem/editor/kekule.chemEditor.utilWidgets.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -6244,4 +6247,5 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolNodeChargeIaController, Kekule.Editor.ChemSpaceEditor);
 
 
-})();
+return Kekule
+}

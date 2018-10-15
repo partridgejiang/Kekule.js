@@ -11,7 +11,8 @@
  * requires /render/kekule.render.baseTextRender.js
  * requires /render/2d/kekule.render.def2DRenderer.js
  */
-
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule) {
 "use strict";
 
 /**
@@ -687,3 +688,5 @@ Kekule.Render.CanvasRendererBridge.isSupported = function()
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.CanvasRendererBridge);
 
 Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.CanvasRendererBridge, 20);
+return Kekule;
+}

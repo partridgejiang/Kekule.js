@@ -12,7 +12,13 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+var ObjSerializerFactory = require('../lan/serializations').ObjSerializerFactory
+
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -246,5 +252,5 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 });
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.Clipboard);
 Kekule.Widget.clipboard = Kekule.Widget.Clipboard.getInstance();
-
-})();
+return Kekule;
+};

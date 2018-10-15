@@ -10,6 +10,11 @@
  * requires /lan/xmlJsons.js
  */
 
+var Class = require('./classes').Class
+var ClassEx = require('./classes').ClassEx
+var ObjectEx = require('./classes').ObjectEx
+var DataType = require('./classes').DataType
+
 var
 /**
  * @class
@@ -1444,3 +1449,7 @@ Object.extend(DataType, {
 		}
 	}
 });
+
+module.exports = {
+	ObjSerializerFactory: ObjSerializerFactory
+}

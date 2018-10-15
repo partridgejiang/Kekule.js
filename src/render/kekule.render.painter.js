@@ -13,7 +13,11 @@
  * //requires /render/kekule.render.boundInfoRecorder.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule) {
 
 /**
  * Painter used by user to draw a chem object.
@@ -477,5 +481,5 @@ Kekule.Render.ChemObjPainter3D = Class.create(Kekule.Render.ChemObjPainter,
 		$super(Kekule.Render.RendererType.R3D, chemObj, drawBridge, renderConfigs);
 	}
 });
-
-})();
+return Kekule;
+};

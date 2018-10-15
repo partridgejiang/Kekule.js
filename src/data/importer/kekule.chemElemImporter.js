@@ -9,9 +9,9 @@
  *  requires /utils/kekule.utils.js
  *  requires /data/kekule.dataUtils.js
  */
-
-if (!window.Kekule)
-	Kekule = {};
+var JsonUtility = require('../../lan/xmlJsons').JsonUtility
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 
 /**
  *  An class with static methods to load content of chemicalElements.xml from CDK 
@@ -135,4 +135,6 @@ Kekule.ChemElemImporter = {
 		var obj = Kekule.ChemElemImporter.loadElemXmlData(src, options);
 		return Kekule.ChemElemImporter.saveObjToStr(obj);
 	}
+}
+return Kekule;
 }

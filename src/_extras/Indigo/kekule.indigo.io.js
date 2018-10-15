@@ -12,7 +12,8 @@
  * requires /localization
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule){
 "use strict";
 
 /** @ignore */
@@ -82,5 +83,5 @@ Kekule.IO.enableIndigoFormats = function()
 KI._enableFuncs.push(Kekule.IO.registerAllIndigoFormats);
 
 //Kekule._registerAfterLoadSysProc(Kekule.IO.registerAllIndigoFormats);
-
-})();
+return Kekule
+}

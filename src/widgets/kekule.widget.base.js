@@ -12,7 +12,13 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+var ObjSerializerFactory = require('../lan/serializations').ObjSerializerFactory
+
+module.exports = function(Kekule){
 
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
@@ -5732,5 +5738,5 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.GlobalManager);
 Kekule.Widget.globalManager = Kekule.Widget.GlobalManager.getInstance();
 
-
-})();
+return Kekule;
+};

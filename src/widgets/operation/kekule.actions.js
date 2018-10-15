@@ -15,7 +15,11 @@
  */
 
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 /**
  * Base class for actions.
@@ -988,5 +992,5 @@ Kekule.ActionManager = {
 	}
 };
 var AM = Kekule.ActionManager;
-
-})();
+return Kekule
+}

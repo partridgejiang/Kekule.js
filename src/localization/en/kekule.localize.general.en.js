@@ -4,6 +4,8 @@
  * @author Partridge Jiang
  */
 
+module.exports = function (Kekule) {
+
 /** @ignore */
 Kekule.LOCAL_RES = true;
 
@@ -146,3 +148,5 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	CALC_TERMINATED_BY_USER: 'Calculation terminated by user',
 	CALC_SERVICE_UNAVAILABLE: 'Calculation service "{0}" is unavailable'
 });
+return Kekule;
+}

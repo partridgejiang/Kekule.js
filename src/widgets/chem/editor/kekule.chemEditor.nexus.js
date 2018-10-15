@@ -12,7 +12,11 @@
  * requires 'widgets/advCtrls/objInspector/kekule.widget.objInspectors.js',
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var ObjectEx = require('../../../lan/classes').ObjectEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -287,4 +291,5 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 	}
 });
 
-})();
+return Kekule;
+}

@@ -22,8 +22,11 @@
  * requires /algorithm/kekule.structures.comparers.js
  */
 
-(function()
-{
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 
 var K = Kekule;
 var AU = Kekule.ArrayUtils;
@@ -1430,7 +1433,5 @@ ClassEx.defineProp(Kekule.ChemStructureObject, 'canonicalizationIndex', {'dataTy
 
 // register morgan as default
 Kekule.canonicalizer.registerExecutor('morgan', [Kekule.CanonicalizationMorganIndexer, Kekule.CanonicalizationMorganNodeSorter], true);
-
-
-
-})();
+return Kekule
+}

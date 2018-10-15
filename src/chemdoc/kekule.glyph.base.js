@@ -9,7 +9,10 @@
  * requires /core/kekule.common.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -193,5 +196,5 @@ Kekule.Glyph.Base = Class.create(Kekule.ChemObject,
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Glyph.Base);
 //Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Glyph);
 
-
-})();
+return Kekule;
+};

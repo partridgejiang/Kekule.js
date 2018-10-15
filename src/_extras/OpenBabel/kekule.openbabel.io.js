@@ -14,7 +14,8 @@
  * requires /localization
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule){
 
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;
@@ -504,5 +505,5 @@ Kekule.IO.enableOpenBabelFormats = function()
 	});
 	*/
 })();
-
-})();
+return Kekule
+}

@@ -13,7 +13,12 @@
  * requires/widgets/kekule.widget.base.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+
+module.exports = function(Kekule){
 
 "use strict"
 
@@ -166,5 +171,5 @@ RM.register(new SR(SRN.BUTTON_YES_OK, 'K-Res-Button-YesOk'));
 RM.register(new SR(SRN.BUTTON_NO_CANCEL, 'K-Res-Button-NoCancel'));
 RM.register(new SR(SRN.BUTTON_LOAD_FILE, 'K-Res-Button-LoadFile'));
 RM.register(new SR(SRN.ICON_REMOVE, 'K-Res-Icon-Remove'));
-
-})();
+return Kekule;
+};

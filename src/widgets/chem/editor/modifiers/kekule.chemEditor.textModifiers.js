@@ -14,7 +14,9 @@
  * requires /widgets/chem/editor/modifiers/kekule.chemEditor.styleModifiers.js
  */
 
-(function(){
+var Class = require('../../../../lan/classes').Class
+var DataType = require('../../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var DU = Kekule.DomUtils;
@@ -310,5 +312,5 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 
 var OMM = Kekule.Editor.ObjModifierManager;
 OMM.register(Kekule.ChemObject, [Kekule.Editor.ObjModifier.RichText]);
-
-})();
+return Kekule;
+}

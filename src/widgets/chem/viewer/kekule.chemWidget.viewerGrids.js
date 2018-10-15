@@ -21,7 +21,11 @@
  * requires /localization/kekule.localize.widget.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var ObjectEx = require('../../../lan/classes').ObjectEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var PS = Class.PropertyScope;
@@ -250,5 +254,5 @@ Kekule.ChemWidget.ViewerGrid3D = Class.create(Kekule.ChemWidget.ViewerGrid,
 		$super(parentOrElementOrDocument, Kekule.Render.RendererType.R3D, viewerConfigs);
 	}
 });
-
-})();
+return Kekule;
+}

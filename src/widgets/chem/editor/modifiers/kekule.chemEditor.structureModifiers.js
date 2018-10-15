@@ -16,7 +16,9 @@
  * requires /widgets/chem/editor/kekule.chemEditor.utilWidgets.js
  */
 
-(function(){
+var Class = require('../../../../lan/classes').Class
+var DataType = require('../../../../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var AU = Kekule.ArrayUtils;
@@ -800,5 +802,5 @@ var OMM = Kekule.Editor.ObjModifierManager;
 OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Atom]);
 OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Charge]);
 OMM.register([Kekule.Bond, Kekule.StructureFragment], [Kekule.Editor.ObjModifier.Bond]); // can change child bonds of structure fragment
-
-})();
+return Kekule;
+}

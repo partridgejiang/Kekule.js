@@ -12,7 +12,11 @@
  * requires /core/kekule.common.js
  * requires /localization/
  */
-
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function (Kekule) {
 /**
  * DOM helper to help to analysis DOM trees (especially with namespaces).
  * @class
@@ -360,3 +364,5 @@ Kekule.DomHelper = Class.create(ObjectEx,
 		}
 	}
 });
+return Kekule;
+}

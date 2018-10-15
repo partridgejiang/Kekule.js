@@ -12,7 +12,11 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 /** @ignore */
 const D = Kekule.Widget.Direction;
@@ -1239,5 +1243,5 @@ Kekule.Widget.Css3TransitionSimpleClassCreator = {
 };
 /** @ignore */
 var TCC = Kekule.Widget.Css3TransitionSimpleClassCreator;
-
-})();
+return Kekule
+}

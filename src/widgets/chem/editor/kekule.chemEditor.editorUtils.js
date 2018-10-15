@@ -11,8 +11,10 @@
  * requires /utils/kekule.utils.js
  */
 
-(function()
-{
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 /**
  * Util methods about chem structure.
@@ -503,4 +505,5 @@ Kekule.Editor.RepositoryStructureUtils = {
 	}
 };
 
-})();
+return Kekule
+}

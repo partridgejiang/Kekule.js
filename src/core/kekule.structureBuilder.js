@@ -12,7 +12,12 @@
  * requires /core/kekule.electrons.js
  * requires /core/kekule.structures.js
  */
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
 
+module.exports = function (Kekule) {
 /**
  * Class to help to build a legal chemical structure.
  * @class
@@ -187,3 +192,5 @@ Kekule.ChemStructureBuilder = Class.create(ObjectEx,
 			return null;
 	}
 });
+return Kekule;
+}

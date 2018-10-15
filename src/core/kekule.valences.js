@@ -8,6 +8,9 @@
  * A class to help to determinate the valence of atom, especially with charge.
  * @class
  */
+
+module.exports = function (Kekule) {
+
 Kekule.ValenceUtils = {
 	/**
 	 * Returns the implicit MDL valence for element with charge and known (explicit) valence.
@@ -439,3 +442,6 @@ Kekule.ValenceUtils = {
 
 // defaultly the valence determination method is MDL.
 Kekule.ValenceUtils.getImplicitValence = Kekule.ValenceUtils.getImplicitMdlValence;
+
+return Kekule;
+}

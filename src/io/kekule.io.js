@@ -10,8 +10,12 @@
  * requires /utils/kekule.utils.js
  * requires /xbrowsers/kekule.x.js
  */
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
 
-(function(){
+module.exports = function(Kekule){
 
 /*
  * Root object of I/O default options
@@ -1448,5 +1452,5 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt, options)
 	}
 	*/
 };
-
-})();
+return Kekule;
+};

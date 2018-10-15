@@ -11,7 +11,7 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+module.exports = function(Kekule){
 "use strict";
 
 /**
@@ -327,4 +327,5 @@ if (Kekule.Browser.IE || window.navigator.msSaveOrOpenBlob)
 else if (Kekule.BrowserFeature.downloadHref)
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileData;
 
-})();
+return Kekule;
+};

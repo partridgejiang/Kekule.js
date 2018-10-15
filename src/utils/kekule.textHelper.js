@@ -12,7 +12,10 @@
  * requires /core/kekule.common.js
  * requires /localization
  */
-
+var Class = require('../lan/classes').Class
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function (Kekule) {
 /**
  * A helper class to read / write text data organized in lines.
  * @class
@@ -200,3 +203,5 @@ Kekule.TextLinesBuffer = Class.create(ObjectEx,
 		this.setCurrLineNo(0);
 	}
 });
+return Kekule;
+}

@@ -10,8 +10,8 @@
  * requires /render/2d/kekule.render.render2D.js
  */
 
-(function()
-{
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule) {
 
 /** @ignore */
 var PU = Kekule.Render.DrawPathUtils;
@@ -658,5 +658,5 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 	}
 });
 Kekule.Render.Renderer2DFactory.register(Kekule.Glyph.PathGlyph, Kekule.Render.PathGlyph2DRenderer);
-
-})();
+return Kekule;
+};

@@ -11,9 +11,12 @@
  * requires /render/kekule.render.baseTextRender.js
  * requires /render/2d/kekule.render.def2DRenderer.js
  */
-
+var Class = require('../../lan/classes').Class
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function(Kekule) {
 // Some helper methods of Raphael
-if (this.Raphael)
+if (Kekule.$jsRoot.Raphael)
 {
 	// draw a simple line
 	/** @ignore */
@@ -544,3 +547,5 @@ Kekule.Render.RaphaelRendererBridge.isSupported = function()
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.RaphaelRendererBridge);
 
 Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 10);
+return Kekule;
+}

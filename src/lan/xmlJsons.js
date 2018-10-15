@@ -668,3 +668,8 @@ XmlUtility = {
       || xmlDoc.location;  // Opera
   }
 };
+
+module.exports = {
+  JsonUtility,
+  XmlUtility
+}

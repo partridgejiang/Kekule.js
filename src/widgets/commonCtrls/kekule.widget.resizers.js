@@ -4,7 +4,11 @@
  * @author Partridge Jiang
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -414,5 +418,5 @@ ClassEx.defineProps(Kekule.Widget.BaseWidget, [
 	{'name': 'resizeGripper', 'dataType': 'Kekule.Widget.ResizeGripper', 'serializable': false, 'setter': null, 'scope': PS.PRIVATE}
 ]);
 
-
-})();
+return Kekule;
+}

@@ -8,7 +8,11 @@
  * requires core/kekule.common.js
  * requires /localizations/
  */
-
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function (Kekule) {
 /*
 if (!this.Kekule)
 {
@@ -3463,3 +3467,5 @@ Kekule.ZoomUtils = {
 			return currRatio;  // bigger than all, return original value
 	}
 };
+return Kekule;
+}

@@ -9,7 +9,12 @@
  * requires /core/kekule.common.js
  * requires /core/kekule.structures.js
  */
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
 
+module.exports = function (Kekule) {
 /**
  * Enumeration of type of molecules or conditions in reaction.
  * @class
@@ -920,3 +925,5 @@ Kekule.ReactionList = Class.create(Kekule.ChemObjList,
 		$super(id, Kekule.Reaction);
 	}
 });
+return Kekule;
+}

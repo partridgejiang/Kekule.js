@@ -10,7 +10,8 @@
  * requires /localization/
  */
 
-(function($root){
+var Class = require('../../lan/classes').Class
+module.exports = function(Kekule){
 "use strict";
 
 /** @ignore */
@@ -182,5 +183,5 @@ Kekule.Indigo.AdaptUtils = {
 };
 
 Kekule._registerAfterLoadSysProc(function() {if (KI._autoEnabled) KI._enableAllFunctions()} );
-
-})(this);
+return Kekule
+}

@@ -13,7 +13,10 @@
  * requires /localization
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule) {
 "use strict";
 
 var OT = Kekule.OBJDEF_TEXTS;
@@ -597,5 +600,5 @@ Kekule.Render.Length3DConfigs = Class.create(Kekule.AbstractConfigs,
 			return null;
 	}
 });
-
-})();
+return Kekule;
+};

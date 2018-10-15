@@ -11,7 +11,7 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+module.exports = function(Kekule){
 "use strict";
 
 /** @ignore */
@@ -121,5 +121,5 @@ Kekule.Widget.FontEnumerator = {
 		return result;
 	}
 };
-
-})();
+return Kekule;
+};

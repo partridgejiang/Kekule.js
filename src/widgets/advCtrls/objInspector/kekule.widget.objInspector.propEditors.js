@@ -12,7 +12,11 @@
  * requires /widgets/advCtrls/kekule.widget.colorPickers.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var ObjectEx = require('../../../lan/classes').ObjectEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -1489,5 +1493,5 @@ Kekule.PropertyEditor.register(Kekule.PropertyEditor.ColorEditor, DataType.STRIN
 		return propName && (propName.toLowerCase().indexOf('color') >= 0);  // propname may be empty in array items
 	}
 );
-
-})();
+return Kekule;
+};

@@ -14,7 +14,12 @@
  * requires /widgets/commonCtrls/kekule.widget.formControls.js
  */
 
-(function(){
+var Class = require('../../lan/classes').Class
+var ClassEx = require('../../lan/classes').ClassEx
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+module.exports = function(Kekule){
+
 "use strict";
 
 var DU = Kekule.DomUtils;
@@ -861,5 +866,5 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 		}
 	}
 });
-
-})();
+return Kekule;
+};

@@ -25,7 +25,12 @@
  * requires /localization/kekule.localize.widget.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var ObjectEx = require('../../../lan/classes').ObjectEx
+var DataType = require('../../../lan/classes').DataType
+var JsonUtility = require('../../../lan/xmlJsons').JsonUtility
+module.exports = function(Kekule){
 "use strict";
 
 var PS = Class.PropertyScope;
@@ -849,5 +854,5 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		}
 	}
 });
-
-})();
+return Kekule;
+}

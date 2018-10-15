@@ -14,7 +14,10 @@
  * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -509,4 +512,5 @@ Kekule.Editor.StyleSetterConfigs = Class.create(Kekule.AbstractConfigs,
 	}
 });
 
-})();
+return Kekule
+}

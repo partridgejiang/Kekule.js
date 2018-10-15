@@ -9,7 +9,11 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function($root) {
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var ObjectEx = require('../lan/classes').ObjectEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 /** ignore */
 Kekule.EmscriptenUtils = {
 	/** @private */
@@ -18,7 +22,7 @@ Kekule.EmscriptenUtils = {
 	_createdModules: {},
 	_getActualModule: function(moduleName)
 	{
-		return $root[moduleName || EU.DEF_MODULE_NAME];
+		return Kekule.$jsRoot[moduleName || EU.DEF_MODULE_NAME];
 	},
 	isSupported: function(moduleName)
 	{
@@ -106,5 +110,5 @@ Module = Object.extend(Module, {
 });
 */
 
-
-})(this);
+return Kekule
+}

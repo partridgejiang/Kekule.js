@@ -11,7 +11,11 @@
  * requires /widgets/advCtrls/objInspector/kekule.widget.objectInspector.propEditors.js
  */
 
-(function(){
+var Class = require('../../../lan/classes').Class
+var ClassEx = require('../../../lan/classes').ClassEx
+var ObjectEx = require('../../../lan/classes').ObjectEx
+var DataType = require('../../../lan/classes').DataType
+module.exports = function(Kekule){
 
 "use strict";
 
@@ -428,5 +432,5 @@ Kekule.PropertyEditor.GlyphPathParamsEditor = Class.create(Kekule.PropertyEditor
 	]
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.GlyphPathParamsEditor, null, Kekule.Glyph.PathGlyphConnector, 'pathParams');
-
-})();
+return Kekule;
+};

@@ -9,9 +9,9 @@
  *  requires /utils/kekule.utils.js
  *  requires /data/kekule/dataUtils.js
  */
-
-if (!window.Kekule)
-	Kekule = {};
+var JsonUtility = require('../../lan/xmlJsons').JsonUtility
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 
 /**
  *  An class with static methods to load content of structgen_atomtypes.xml from CDK 
@@ -104,4 +104,6 @@ Kekule.AtomTypeImporter = {
 		var obj = Kekule.AtomTypeImporter.loadXmlData(src, options);
 		return Kekule.AtomTypeImporter.saveObjToStr(obj);
 	}
+}
+return Kekule;
 }

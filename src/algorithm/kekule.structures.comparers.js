@@ -14,7 +14,10 @@
  * requires /algorithm/kekule.graph.js
  */
 
-(function(){
+var Class = require('../lan/classes').Class
+var ClassEx = require('../lan/classes').ClassEx
+var DataType = require('../lan/classes').DataType
+module.exports = function(Kekule){
 "use strict";
 
 var K = Kekule;
@@ -428,5 +431,5 @@ Kekule.UnivChemStructObjComparer = {
 	}
 };
 
-
-})();
+return Kekule
+}

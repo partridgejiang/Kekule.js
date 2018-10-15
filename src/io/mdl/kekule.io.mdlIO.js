@@ -18,7 +18,11 @@
  * requires /io/mdl/kekule.io.mdl3000.js
  * requires /localization
  */
-
+var Class = require('../../lan/classes').Class
+var ObjectEx = require('../../lan/classes').ObjectEx
+var DataType = require('../../lan/classes').DataType
+var XmlUtility = require('../../lan/xmlJsons').XmlUtility
+module.exports = function (Kekule) {
 /*
  * Default options to read/write CML format data.
  * @object
@@ -1502,3 +1506,5 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		});
 	*/
 })();
+return Kekule;
+}
