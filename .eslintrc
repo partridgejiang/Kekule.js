@@ -28,6 +28,19 @@
 
   },
   "globals": {
-    "ActiveXObject": true
+    "ActiveXObject": true,
+    "Kekule": true,
+    "Class": true,
+    "JsonUtility": true,
+    "XmlUtility": true,
+    "ClassEx": true,
+    "ObjectEx": true,
+    "DataType": true,
+    "ObjSerializerFactory": true,
+    "Prototype": true,
+    "WebShow": true,
+    "THREE": true,
+    "Hammer": true,
+    "Raphael": true
   }
 }

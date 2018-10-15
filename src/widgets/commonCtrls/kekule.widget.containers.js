@@ -25,6 +25,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
+var SU = Kekule.StyleUtils;
 
 /**
  * An abstract widget container.

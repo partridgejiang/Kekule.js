@@ -959,24 +959,21 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			this.setChemObj(newObj.clone());
 		}
-		else
+		else if (this.getRestrainEditorWithCurrObj())
 		{
-			if (this.getRestrainEditorWithCurrObj())
-			{
-				if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
-					chemObj.assign(newObj.clone());
-				else  // preserve old object type in viewer
-					chemObj.assign(cloneObj);
-				// clear src info data
-				chemObj.setSrcInfo(null);
-				//self.repaint();
-				this.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
-			}
-			else // not restrain, load object in composer directy into viewer
-			{
-				//console.log(newObj);
-				this.setChemObj(newObj);
-			}
+			if (chemObj.getClass() === newObj.getClass())  // same type of object in editor
+				chemObj.assign(newObj.clone());
+			else  // preserve old object type in viewer
+				chemObj.assign(newObj);
+			// clear src info data
+			chemObj.setSrcInfo(null);
+			//self.repaint();
+			this.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
+		} 
+		else // not restrain, load object in composer directy into viewer
+		{
+			//console.log(newObj);
+			this.setChemObj(newObj);
 		}
 	},
 	/** @private */

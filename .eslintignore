@@ -1,3 +1,8 @@
 **/*.js
 src/_devUtils
+src/_extras/browserAddOns
+src/_extras/Indigo
+src/_extras/CKEditorPlugins
+src/_extras/MoodleExtensions
+src/_extras/OpenBabel/workers
 !src/**/*.js

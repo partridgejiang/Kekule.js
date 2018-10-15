@@ -399,39 +399,33 @@ Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallbac
 	if (c)
 	{
 		var o = new c();
+		var done = function()
+		{
+			if (callback)
+				callback(o.getGeneratedMol());
+		};
+		var error = function(err)
+		{
+			if (errCallback)
+				errCallback(err);
+		};
+		var onMsg = function(msgData)
+		{
+			if (msgCallback)
+				msgCallback(msgData);
+		};
 		try
 		{
-			var done = function()
-			{
-				if (callback)
-					callback(o.getGeneratedMol());
-			};
-			var error = function(err)
-			{
-				if (errCallback)
-					errCallback(err);
-			};
-			var onMsg = function(msgData)
-			{
-				if (msgCallback)
-					msgCallback(msgData);
-			};
-			try
-			{
-				o.setSourceMol(sourceMol);
-				o.setOptions(options);
-				o.execute(done, error, onMsg);
-			}
-			catch(e)
-			{
-				error(e);
-			}
+			o.setSourceMol(sourceMol);
+			o.setOptions(options);
+			o.execute(done, error, onMsg);
 		}
-		finally
+		catch(e)
 		{
-			//o.finalize();
-			return o;
+			error(e);
 		}
+		//o.finalize();
+		return o;
 	}
 	else
 	{

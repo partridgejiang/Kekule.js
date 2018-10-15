@@ -691,7 +691,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 		if (row === this.getActiveRow())
 		{
 			this.setActiveRow(null);
-			this.setActiveRow(activeRow);  // force update the active row
+			this.setActiveRow(row);  // force update the active row
 		}
 	},
 
