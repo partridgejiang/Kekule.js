@@ -24,8 +24,8 @@
     "no-console": 0,
     "no-constant-condition": 0,
     "no-useless-escape": 0,
-    "no-global-assign": 0
-
+    "no-global-assign": 0,
+    "no-control-regex": 0
   },
   "globals": {
     "ActiveXObject": true,
@@ -41,6 +41,7 @@
     "WebShow": true,
     "THREE": true,
     "Hammer": true,
-    "Raphael": true
+    "Raphael": true,
+    "Template": true
   }
 }
