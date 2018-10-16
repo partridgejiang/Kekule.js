@@ -322,7 +322,7 @@ Kekule.HtmlNativeServiceImpl = {
 // register
 if (Kekule.BrowserFeature.fileapi)
 	KNS.doShowFilePickerDialog = Kekule.HtmlNativeServiceImpl.doShowFilePickerDialog;
-if (Kekule.Browser.IE || window.navigator.msSaveOrOpenBlob)
+	if (Kekule.Browser.IE || Kekule.$jsRoot.navigator && Kekule.$jsRoot.navigator.msSaveOrOpenBlob)
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileDataIe;
 else if (Kekule.BrowserFeature.downloadHref)
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileData;

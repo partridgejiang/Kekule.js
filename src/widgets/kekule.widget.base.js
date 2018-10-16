@@ -4192,7 +4192,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	initialize: function($super, doc)
 	{
 		$super();
-		this._document = doc || document;
+		this._document = doc || Kekule.$document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);

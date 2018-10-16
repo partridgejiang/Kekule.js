@@ -42,6 +42,7 @@ Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
  * @class
  */
 
+Kekule.BrowserFeature = {}
 if (Kekule.$jsRoot.window) {
 	Kekule.BrowserFeature = {
 		typedArray: (typeof(ArrayBuffer) !== 'undefined'),
@@ -1113,7 +1114,7 @@ X.Event._IEMethods = {
 	}
 };
 
-if (document.addEventListener)  // W3C browser
+if (Kekule.$document && Kekule.$document.addEventListener)  // W3C browser
 {
 	X.Event = Object.extend(X.Event, X.Event._W3C);
 	X.Event.Methods = Object.extend(X.Event.Methods, X.Event._W3CMethods);
@@ -1122,7 +1123,7 @@ if (document.addEventListener)  // W3C browser
 		X.Event = Object.extend(X.Event, X.Event._Gecko);
 	}
 }
-else if (document.attachEvent)  // IE 8
+if (Kekule.$document && Kekule.$document.attachEvent)  // IE 8
 {
 	X.Event = Object.extend(X.Event, X.Event._IE);
 	X.Event.Methods = Object.extend(X.Event.Methods, X.Event._IEMethods);
@@ -1141,8 +1142,8 @@ if (Kekule.$jsRoot.window && Kekule.$jsRoot.window.Event)
 	eproto = window.Event.prototype;
 if (!eproto)
 {
-	if (document.createEvent)
-		eproto = document.createEvent('HTMLEvents').__proto__;
+	if (Kekule.$document && Kekule.$document.createEvent)
+		eproto = Kekule.$document.createEvent('HTMLEvents').__proto__;
 }
 var hasEventPrototype = !!eproto;
 var eventObjMethods = {};
@@ -1322,7 +1323,7 @@ Kekule.X.DomReady = {
 		DOM.initReady();//如果没有建成DOM树，则走第二步，存储起来一起杀
 		if (!DOM.isReady)
 		{
-			var readyState = document && document.readyState;
+			var readyState = Kekule.$document && Kekule.$document.readyState;
 			if (readyState === 'complete' || readyState === 'loaded'    // document already loaded, call fn directly
 				|| (readyState === 'interactive' && !Kekule.Browser.IE))
 			{
@@ -1386,7 +1387,7 @@ Kekule.X.DomReady = {
 	},
   initReady: function()
   {
-    if (document.addEventListener) {
+    if (Kekule.$document && Kekule.$document.addEventListener) {
       document.addEventListener( "DOMContentLoaded", function(){
         document.removeEventListener( "DOMContentLoaded", arguments.callee, false );//清除加载函数
         DOM.fireReady();
@@ -1394,7 +1395,7 @@ Kekule.X.DomReady = {
     }
     else
     {
-      if (document.getElementById) {
+      if (Kekule.$document && Kekule.$document.getElementById) {
         document.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
         document.getElementById("ie-domReady").onreadystatechange = function() {
           if (this.readyState === "complete") {

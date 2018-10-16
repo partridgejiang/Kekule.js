@@ -678,7 +678,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 Kekule.Render.CanvasRendererBridge.isSupported = function()
 {
 	var result = false;
-	if (document && document.createElement)
+	if (Kekule.$document && document && document.createElement)
 	{
 		result = !!document.createElement('canvas').getContext;
 	}
