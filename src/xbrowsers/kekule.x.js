@@ -108,30 +108,32 @@ if (Kekule.$jsRoot.window) {
 }
 
 // polyfill of requestAnimationFrame / cancelAnimationFrame
-(function() {
-	var lastTime = 0;
-	var vendors = ['ms', 'moz', 'webkit', 'o'];
-	for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-		window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-		window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-				|| window[vendors[x]+'CancelRequestAnimationFrame'];
-	}
-
-	if (!window.requestAnimationFrame)
-		window.requestAnimationFrame = function(callback, element) {
-			var currTime = new Date().getTime();
-			var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-			var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-					timeToCall);
-			lastTime = currTime + timeToCall;
-			return id;
-		};
-
-	if (!window.cancelAnimationFrame)
-		window.cancelAnimationFrame = function(id) {
-			clearTimeout(id);
-		};
-}());
+if (Kekule.$jsRoot.requestAnimationFrame) {
+	(function() {
+		var lastTime = 0;
+		var vendors = ['ms', 'moz', 'webkit', 'o'];
+		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+					|| window[vendors[x]+'CancelRequestAnimationFrame'];
+		}
+	
+		if (!window.requestAnimationFrame)
+			window.requestAnimationFrame = function(callback, element) {
+				var currTime = new Date().getTime();
+				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+				var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+						timeToCall);
+				lastTime = currTime + timeToCall;
+				return id;
+			};
+	
+		if (!window.cancelAnimationFrame)
+			window.cancelAnimationFrame = function(id) {
+				clearTimeout(id);
+			};
+	}());
+}
 
 /**
  * Namespace for XBrowser lib.
@@ -171,7 +173,9 @@ var isElemPositioned = function(element)
 /////////////////////////////////////////////////////////////
 //   DOM mutation observer
 /////////////////////////////////////////////////////////////
-X.MutationObserver = window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver;
+if (Kekule.$jsRoot.window) {
+	X.MutationObserver = window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver;	
+}
 
 /////////////////////////////////////////////////////////////
 //   Cross browser event handling supporting
@@ -1133,7 +1137,7 @@ else if (document.attachEvent)  // IE 8
 Object.extend(X.Event, X.Event.Methods);
 // insert new methods to Event class
 var eproto = null;
-if (window.Event)
+if (Kekule.$jsRoot.window && Kekule.$jsRoot.window.Event)
 	eproto = window.Event.prototype;
 if (!eproto)
 {
