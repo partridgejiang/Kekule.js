@@ -11,14 +11,12 @@
  * requires /utils/kekule.domUtils.js
  * requires /xbrowsers/kekule.x.js
  */
-
 var Class = require('../lan/classes').Class
 var ClassEx = require('../lan/classes').ClassEx
 var ObjectEx = require('../lan/classes').ObjectEx
 var DataType = require('../lan/classes').DataType
 var ObjSerializerFactory = require('../lan/serializations').ObjSerializerFactory
-
-module.exports = function(Kekule){
+module.exports = function(Kekule) {
 var Hammer = Kekule.$document ? require('hammerjs') : {}
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
@@ -2957,7 +2955,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 				var KC = Kekule.X.Event.KeyCode;
 				var keyCode;
-				if (evType === 'pointermove')  // test mouse cursor
+					if (evType === 'mousemove' || evType === 'pointermove')  // test mouse cursor
 				{
 					this.reactPointerMoving(e);
 					var coord = this.getEventMouseRelCoord(e);
@@ -3031,7 +3029,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						this.setIsHover(true);
 					handled = true;
 				}
-				else if (evType === 'mouseout' || evType === 'touchleave' || evType === 'pointerout')
+					else if (evType === 'mouseout' || evType === 'touchleave')
 				{
 					if (!e.ghostMouseEvent)
 					{
@@ -3278,7 +3276,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	observingGestureEventsChanged: function(eventNames)
 	{
-		// What?
 		// if (enabled)
 		// 	this.installHammerTouchHandlers();
 	},
@@ -3768,7 +3765,8 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 			'getter': function()
 			{
 				var c = this.getTargetWidgetClass();
-				var result = c? ClassEx.getClassName(c): this.getPropStoreFieldValue('targetWidgetClassName');
+					// var result = c? ClassEx.getClassName(C): this.getPropStoreFieldValue('targetWidgetClassName');
+					var result = this.getPropStoreFieldValue('targetWidgetClassName');
 				return result;
 			},
 			'setter': function(value)
@@ -4192,7 +4190,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	initialize: function($super, doc)
 	{
 		$super();
-		this._document = doc || Kekule.$document;
+			this._document = doc || Kekule.$document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);
@@ -4827,7 +4825,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
 
 		// check first if the component has event handler itself
-		var funcName = Kekule.Widget.getEventHandleFuncName(evType);
+			var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
 
 		if (this[funcName])  // has own handler
 			this[funcName](e);
@@ -4835,7 +4833,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		// dispatch to widget
 		if (targetWidget)
 		{
-			// console.log('event', e.getTarget().tagName, targetWidget.getClassName());
+				//console.log('event', e.getTarget().tagName, widget.getClassName());
 			targetWidget.reactUiEvent(e);
 		}
 
