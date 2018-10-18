@@ -15,7 +15,6 @@
 var Class = require('../../../lan/classes').Class
 var DataType = require('../../../lan/classes').DataType
 module.exports = function(Kekule){
-"use strict"
 
 /**
  * Operation of change a property by property editor in object inspector.

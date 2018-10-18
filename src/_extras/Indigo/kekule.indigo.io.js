@@ -14,7 +14,6 @@
 
 var Class = require('../../lan/classes').Class
 module.exports = function(Kekule){
-"use strict";
 
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;

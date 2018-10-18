@@ -9,7 +9,6 @@
  */
 
 module.exports = function(Kekule){
-"use strict";
 
 	var $root = Kekule.$jsRoot;
 

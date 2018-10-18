@@ -20,7 +20,6 @@ var DataType = require('../lan/classes').DataType
 
 module.exports = function(Kekule){
 
-"use strict"
 
 var EU = Kekule.HtmlElementUtils;
 

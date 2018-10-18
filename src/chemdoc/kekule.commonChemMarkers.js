@@ -17,7 +17,6 @@ var ClassEx = require('../lan/classes').ClassEx
 var DataType = require('../lan/classes').DataType
 module.exports = function(Kekule){
 
-"use strict";
 
 /**
  * Base class of chem marker representing chemical concepts (e.g. charge, lone pair...) of parent chem object.

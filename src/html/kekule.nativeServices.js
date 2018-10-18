@@ -12,7 +12,6 @@
  */
 
 module.exports = function(Kekule){
-"use strict";
 
 /**
  * The class to call native services (e.g., open file picker dialog).

@@ -10,7 +10,6 @@
  * requires /localization
  */
 
-"use strict";
 
 var Class = require('../lan/classes').Class
 var ClassEx = require('../lan/classes').ClassEx

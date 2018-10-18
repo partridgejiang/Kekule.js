@@ -19,7 +19,6 @@ var Class = require('../../lan/classes').Class
 var DataType = require('../../lan/classes').DataType
 var JsonUtility = require('../../lan/xmlJsons').JsonUtility
 module.exports = function (Kekule) {
-"use strict";
 
 var AU = Kekule.ArrayUtils;
 

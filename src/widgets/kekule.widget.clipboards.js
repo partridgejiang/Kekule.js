@@ -19,7 +19,6 @@ var DataType = require('../lan/classes').DataType
 var ObjSerializerFactory = require('../lan/serializations').ObjSerializerFactory
 
 module.exports = function(Kekule){
-"use strict";
 
 /**
  * A class to implement an internal "clipboard" to transfer data between different widgets

@@ -13,7 +13,6 @@
  */
 var Class = require('../../lan/classes').Class
 module.exports = function(Kekule) {
-"use strict";
 
 /**
  * Render bridge class of HTML5 Canvas.

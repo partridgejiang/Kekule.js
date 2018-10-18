@@ -27,7 +27,6 @@ var ObjectEx = require('../../lan/classes').ObjectEx
 var DataType = require('../../lan/classes').DataType
 module.exports = function(Kekule){
 
-"use strict";
 
 var PS = Class.PropertyScope;
 var DU = Kekule.DomUtils;

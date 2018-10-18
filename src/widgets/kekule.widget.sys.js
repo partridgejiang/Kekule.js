@@ -12,7 +12,6 @@
  */
 
 module.exports = function(Kekule){
-"use strict";
 
 /** @ignore */
 var _FontDetector = function() {

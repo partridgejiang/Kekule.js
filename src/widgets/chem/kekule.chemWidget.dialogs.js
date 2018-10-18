@@ -25,7 +25,6 @@ var ClassEx = require('../../lan/classes').ClassEx
 var ObjectEx = require('../../lan/classes').ObjectEx
 var DataType = require('../../lan/classes').DataType
 module.exports = function(Kekule){
-"use strict";
 
 var PS = Class.PropertyScope;
 var CW = Kekule.ChemWidget;

@@ -18,7 +18,6 @@ var ObjectEx = require('../lan/classes').ObjectEx
 var DataType = require('../lan/classes').DataType
 module.exports = function(Kekule){
 
-"use strict";
 
 /**
  * A container class contains nodes and/or connectors as a "partial structure fragment".

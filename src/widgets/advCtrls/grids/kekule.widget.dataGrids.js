@@ -21,7 +21,6 @@
 var Class = require('../../../lan/classes').Class
 var DataType = require('../../../lan/classes').DataType
 module.exports = function(Kekule){
-"use strict";
 
 var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;

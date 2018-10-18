@@ -17,7 +17,6 @@ var Class = require('../../../lan/classes').Class
 var ObjectEx = require('../../../lan/classes').ObjectEx
 var DataType = require('../../../lan/classes').DataType
 module.exports = function(Kekule){
-"use strict";
 
 var AU = Kekule.ArrayUtils;
 var CU = Kekule.CoordUtils;

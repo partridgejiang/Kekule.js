@@ -16,7 +16,6 @@ var Class = require('../../../lan/classes').Class
 var ObjectEx = require('../../../lan/classes').ObjectEx
 var DataType = require('../../../lan/classes').DataType
 module.exports = function(Kekule){
-"use strict";
 
 /**
  * DataSet is a special class to provide large amount of data to other widgets (e.g., DataTable).
