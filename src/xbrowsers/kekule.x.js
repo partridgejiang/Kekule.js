@@ -1388,10 +1388,7 @@ Kekule.X.DomReady = {
   initReady: function()
   {
     if (Kekule.$document && Kekule.$document.addEventListener) {
-      document.addEventListener( "DOMContentLoaded", function(){
-        document.removeEventListener( "DOMContentLoaded", arguments.callee, false );//清除加载函数
-        DOM.fireReady();
-      }, false);
+      document.addEventListener( "DOMContentLoaded", DOM.fireReady, {once: true});
     }
     else
     {

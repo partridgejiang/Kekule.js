@@ -113,12 +113,17 @@ Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
 /**
  * Root object of JavaScript environment, usually window.
  */
-Kekule.$jsRoot = this;
+if (typeof window !== 'undefined') {
+	Kekule.$jsRoot = window
+} else {
+	Kekule.$jsRoot = this || global
+}
 /**
  * Root document of JavaScript environment.
  * Can be null in Node.js.
  */
-Kekule.$document = this.document || null;
+
+Kekule.$document = Kekule.$jsRoot && Kekule.$jsRoot.document;
 
 Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
 if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language
