@@ -197,6 +197,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	clearContext: function(context)
 	{
 		var elem = context.canvas;
+		elem.setAttribute('width', elem.width); // clears the canvas for more info see: https://www.w3.org/TR/2011/WD-html5-20110525/the-canvas-element.html
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)
 			shadowCanvas.width = elem.width;
