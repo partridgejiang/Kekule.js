@@ -17,7 +17,7 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'test.js',
+    filename: '[name].js',
   },
   module: {
     rules: [

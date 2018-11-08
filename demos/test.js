@@ -53,8 +53,49 @@ var composer;
 
 // initialize Composer
 Kekule.X.domReady(function(){
-  composer = new Kekule.Editor.Composer(document.getElementById('composer'))
+  var composerEl = document.getElementById('composer');
+  if (composerEl != null) {
+    composer = new Kekule.Editor.Composer(composerEl)
+    setUpComposer(composer)
+    let validKekule = Kekule.IO.loadFormatData(CORRECT_MOL, 'Kekule-JSON');
+    composer.setChemObj(validKekule)
 
+    var skeletalDisplay = document.getElementById('skeletal-switch')
+    skeletalDisplay.addEventListener('change', function changeSkeletalDisplay (event) {
+      let renderConfigs = composer.getRenderConfigs()
+      let newDisplayType = 2 //2 is CONDENSED
+      if(event.target.checked){
+        newDisplayType = 1 //1 is SKELETAL
+      }
+      renderConfigs.getMoleculeDisplayConfigs().setDefMoleculeDisplayType(newDisplayType)
+      composer.getEditor().repaint()
+    })
+  }
+
+  var btnCompare = document.getElementById('btnCompare')
+  if (btnCompare) {
+    var chemComposer0 = document.getElementById('chemComposer0')
+    var chemComposer1 = document.getElementById('chemComposer1')
+    composer = new Kekule.Editor.Composer(chemComposer0)
+    var composer0 = composer;
+    //setUpComposer(composer)
+    composer = new Kekule.Editor.Composer(chemComposer1)
+    var composer1 = composer;
+    //setUpComposer(composer)
+    btnCompare.addEventListener('click', function compareMolecules () {
+      var mol1 = composer0.exportObj(Kekule.StructureFragment);
+      var mol2 = composer1.exportObj(Kekule.StructureFragment);
+      var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
+      var sResult = isSame? 'Same molecules': 'Different molecules';
+      var sClass = isSame? 'Same': 'Diff';
+      var elem = document.getElementById('labelResult');
+      elem.className = sClass;
+      elem.innerHTML = sResult;
+    })
+  }
+})
+
+function setUpComposer(composer) {
   var BNS = Kekule.ChemWidget.ComponentWidgetNames;
   console.log('BNS', BNS)
   composer.setCommonToolButtons([BNS.saveData, BNS.undo, BNS.redo, BNS.zoomIn, BNS.zoomOut, BNS.objInspector]).setChemToolButtons([
@@ -89,19 +130,7 @@ Kekule.X.domReady(function(){
     // BNS.molCharge,
     // BNS.textImage
   ]);
-  let validKekule = Kekule.IO.loadFormatData(CORRECT_MOL, 'Kekule-JSON');
-  composer.setChemObj(validKekule)
-  var skeletalDisplay = document.getElementById('skeletal-switch')
-  skeletalDisplay.addEventListener('change', function changeSkeletalDisplay (event) {
-    let renderConfigs = composer.getRenderConfigs()
-    let newDisplayType = 2 //2 is CONDENSED
-    if(event.target.checked){
-      newDisplayType = 1 //1 is SKELETAL
-    }
-    renderConfigs.getMoleculeDisplayConfigs().setDefMoleculeDisplayType(newDisplayType)
-    composer.getEditor().repaint()
-  })
-})
+}
 
 function validateKekule (kekuleJSON) {
     let validKekule = false;
