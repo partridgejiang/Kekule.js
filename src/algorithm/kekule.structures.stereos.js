@@ -187,11 +187,17 @@ Kekule.MolStereoUtils = {
 		var getDirectionSign = function(v1, v2, threshold, refDir)
 		{
 			var result = 0;
+			var lenV1 = Math.sqrt(Math.sqr(v1.x) + Math.sqr(v1.y));
 			if (!v2)
-				result = Math.sign(v1.y);
+			{
+				var d = v1.y / lenV1;
+				if (Math.abs(d) < threshold)
+					result = 0;
+				else
+					result = Math.sign(v1.y);
+			}
 			else
 			{
-				var lenV1 = Math.sqrt(Math.sqr(v1.x) + Math.sqr(v1.y));
 				var lenV2 = Math.sqrt(Math.sqr(v2.x) + Math.sqr(v2.y));
 				var d = v1.y / lenV1 - v2.y / lenV2;   // standard y coord
 				if (Math.abs(d) < threshold)
@@ -218,7 +224,7 @@ Kekule.MolStereoUtils = {
 			}
 			return result;
 		};
-		var threshold = 1e-2; // CU.getDistance(c2, c1) / 1e3;
+		var threshold = 5e-2; // CU.getDistance(c2, c1) / 1e3;
 		var sa = getDirectionSign(ta1, ta2, threshold, -1);
 		var sb = getDirectionSign(tb1, tb2, threshold, 1);
 
@@ -491,15 +497,16 @@ Kekule.MolStereoUtils = {
 
 			// if pass dihedral test, check parity on X/Y, X/Z, X/Z planet projection
 			var relNodes = Kekule.MolStereoUtils.getStereoBondRelNodes(connector);
+			// For structure A1/A2 >C1=C2< B1/B2
 			var relCoords = [
-				getNodeCoord(relNodes[0], null, null, coordMode, allowCoordBorrow),
-				getNodeCoord(relNodes[1], null, null, coordMode, allowCoordBorrow)
+				getNodeCoord(relNodes[0], null, null, coordMode, allowCoordBorrow),  // C1
+				getNodeCoord(relNodes[1], null, null, coordMode, allowCoordBorrow)   // C2
 			];
 			relCoords = relCoords.concat([
-				getNodeCoord(relNodes[2], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true),
-				relNodes[3]? getNodeCoord(relNodes[3], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true): null,
-				getNodeCoord(relNodes[4], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true),
-				relNodes[5]? getNodeCoord(relNodes[5], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true): null,
+				getNodeCoord(relNodes[2], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true),  // A1
+				relNodes[3]? getNodeCoord(relNodes[3], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true): null, // A2
+				getNodeCoord(relNodes[4], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true),  // B1
+				relNodes[5]? getNodeCoord(relNodes[5], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true): null  // B2
 			]);
 
 			//console.log('---------- calc parity --------------');
