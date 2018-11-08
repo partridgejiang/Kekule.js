@@ -452,6 +452,32 @@ Kekule.IO.ChemDataReaderManager = {
 		return item;
 	},
 	/**
+	 * Unregister a data reader.
+	 * @param {String} id A UID string for reader.
+	 */
+	unregister: function(id)
+	{
+		var index = -1;
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i < l; ++i)
+		{
+			var currId = readers[i].id;
+			if (currId === id)
+			{
+				index = i;
+				break;
+			}
+		}
+		if (index >= 0)
+		{
+			var reader = readers[index];
+			readers.splice(index, 1);
+			return reader;
+		}
+		else
+			return null;
+	},
+	/**
 	 * Returns all file format IDs that has corresponding reader.
 	 * @returns {Array} Array of format id.
 	 */
@@ -757,6 +783,32 @@ Kekule.IO.ChemDataWriterManager = {
 		item = Object.extend(item, additionalInfo);
 		Kekule.IO.ChemDataWriterManager._writers.push(item);
 		return item;
+	},
+	/**
+	 * Unregister a data writer.
+	 * @param {String} id A UID string for reader.
+	 */
+	unregister: function(id)
+	{
+		var index = -1;
+		var writers = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = 0, l = writers.length; i < l; ++i)
+		{
+			var currId = writers[i].id;
+			if (currId === id)
+			{
+				index = i;
+				break;
+			}
+		}
+		if (index >= 0)
+		{
+			var writer = writers[index];
+			writers.splice(index, 1);
+			return writer;
+		}
+		else
+			return null;
 	},
 	/**
 	 * Returns all file format IDs that has corresponding writer.
