@@ -60,10 +60,23 @@ Kekule.RotationDir = {
 var RD = Kekule.RotationDir;
 
 /**
+ * Default options to do stereo identification.
+ * @object
+ */
+Kekule.globalOptions.add('algorithm.stereoPerception', {
+	useFlatternedShadow: true,
+	perceiveStereoConnectors: true,
+	perceiveChiralNodes: true,
+	calcParity: true
+});
+
+/**
  * Util class about stereo chemistry.
  * @class
  */
 Kekule.MolStereoUtils = {
+	/** @private */
+	FISCHER_PROJECTION_BOND_ALLOWED_ERROR: 0.08,
 	/**
 	 * Returns dihedral angle of plane (n1, n2, n3) and (n2, n3, n4).
 	 * @param {Kekule.ChemStructureNode} n1
@@ -87,43 +100,7 @@ Kekule.MolStereoUtils = {
 				coordMode = Kekule.CoordMode.COORD2D;
 		}
 
-		var getNodeCoord = function(node, centerNode, centerCoord, coordMode, allowCoordBorrow, axisIsDoubleBond)
-		{
-			if (coordMode !== Kekule.CoordMode.COORD2D)  // 3D, get 3D absolute coord directly
-				return node.getAbsCoordOfMode(coordMode, true);  // allow borrow
-			else  // coord 2D, add z value, consider wedge bonds
-			{
-				var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
-				if (centerNode &amp;&amp; centerCoord)
-				{
-					var connector = node.getConnectorTo(centerNode);
-					if (connector.getStereo)
-					{
-						var bondStereo = connector.getStereo();
-						var BS = Kekule.BondStereo;
-						var wedgeDirs = [BS.UP, BS.UP_INVERTED, BS.DOWN, BS.DOWN_INVERTED];
-						if (wedgeDirs.indexOf(bondStereo) >= 0)
-						{
-							var index = connector.indexOfConnectedObj(node) - connector.indexOfConnectedObj(centerNode);
-							if (index &lt; 0)
-								bondStereo = BS.getInvertedDirection(bondStereo);
-							var zFactors = [1, -1, -1, 1];
-							var distance = CU.getDistance(result, centerCoord);
-							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
-							console.log(node.getId(), result);
-							/*
-							if (axisIsDoubleBond)
-								result.y = 0;
-							*/
-						}
-						else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
-							return null;  // return a special mark, can determinate angle calculation
-					}
-				}
-				result.z = result.z || 0;
-				return result;
-			}
-		};
+		var getNodeCoord = Kekule.MolStereoUtils._getNodeCoordForBondParity;
 
 		var axisBond = n2.getConnectorTo(n3);
 		var axisIsDoubleBond = axisBond &amp;&amp; axisBond.isDoubleBond &amp;&amp; axisBond.isDoubleBond();
@@ -163,6 +140,132 @@ Kekule.MolStereoUtils = {
 		return result;
 	},
 
+	/** @private */
+	_getNodeCoordForBondParity: function(node, centerNode, centerCoord, coordMode, allowCoordBorrow, axisIsDoubleBond)
+	{
+		if (coordMode !== Kekule.CoordMode.COORD2D)  // 3D, get 3D absolute coord directly
+			return node.getAbsCoordOfMode(coordMode, true);  // allow borrow
+		else  // coord 2D, add z value, consider wedge bonds
+		{
+			var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
+			if (centerNode &amp;&amp; centerCoord)
+			{
+				var connector = node.getConnectorTo(centerNode);
+				if (connector.getStereo)
+				{
+					var bondStereo = connector.getStereo();
+					var BS = Kekule.BondStereo;
+					var wedgeDirs = [BS.UP, BS.UP_INVERTED, BS.DOWN, BS.DOWN_INVERTED];
+					if (wedgeDirs.indexOf(bondStereo) >= 0)
+					{
+						var index = connector.indexOfConnectedObj(node) - connector.indexOfConnectedObj(centerNode);
+						if (index &lt; 0)
+							bondStereo = BS.getInvertedDirection(bondStereo);
+						var zFactors = [1, -1, -1, 1];
+						var distance = CU.getDistance(result, centerCoord);
+						result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
+						//console.log(node.getId(), result);
+						/*
+						 if (axisIsDoubleBond)
+						 result.y = 0;
+						 */
+					}
+					else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
+						return null;  // return a special mark, can determinate angle calculation
+				}
+			}
+			result.z = result.z || 0;
+			return result;
+		}
+	},
+
+	/** @private */
+	_calcParityOfCoordPairs: function(c1, c2, a1, a2, b1, b2, strictStereoBondGeometry)
+	{
+		var SP = Kekule.StereoParity;
+		var axisVector = CU.substract(c2, c1);  // vector of bond
+		//console.log('input coords', c1, c2, a1, a2, b1, b2, axisVector);
+		if (!axisVector.x &amp;&amp; !axisVector.y)  // c1, c2 are same, can not calc parity
+			return SP.UNKNOWN;
+		var axisAngle = Math.atan2(axisVector.y, axisVector.x);
+		// rotate bond to X axis and align to zero
+		var matrix = CU.calcTransform2DMatrix({
+			'rotateAngle': -axisAngle, 'center': c1,
+			'translateX': -c1.x, 'translateY': -c1.y
+		});
+		var originCoords = [c1, c2, a1, a2, b1, b2];
+		var transformedCoords = [];
+		for (var i = 0, l = originCoords.length; i &lt; l; ++i)
+		{
+			var coord = originCoords[i];
+			if (coord)
+				transformedCoords[i] = CU.transform2DByMatrix(coord, matrix);
+			else
+				transformedCoords[i] = null;
+		}
+		var tc1 = transformedCoords[0], tc2 = transformedCoords[1];
+		//var bondDirection = Math.sign(tc2.x);
+		var ta1 = transformedCoords[2], ta2 = transformedCoords[3];  // tc1 is [0, 0] after transform
+		var tb1 = CU.substract(transformedCoords[4], tc2), tb2 = transformedCoords[5]? CU.substract(transformedCoords[5], tc2): null;
+
+		// compare direction of ta1/ta2, tb1/tb2
+		var getDirectionSign = function(v1, v2, threshold, refDir)
+		{
+			var result = 0;
+			var lenV1 = Math.sqrt(Math.sqr(v1.x) + Math.sqr(v1.y));
+			if (!v2)
+			{
+				var d = v1.y / lenV1;
+				if (Math.abs(d) &lt; threshold)
+					result = 0;
+				else
+					result = Math.sign(v1.y);
+			}
+			else
+			{
+				var lenV2 = Math.sqrt(Math.sqr(v2.x) + Math.sqr(v2.y));
+				var d = v1.y / lenV1 - v2.y / lenV2;   // standard y coord
+				if (Math.abs(d) &lt; threshold)
+					result = 0;
+				else
+				{
+					if (Math.sign(v1.y) !== Math.sign(v2.y))  // v1, v2 or different side of bond (x-axis)
+					{
+						result = Math.sign(d) * refDir;
+					}
+					else  // v1, v2 on same side
+					{
+						if (strictStereoBondGeometry)
+							return 0;
+						else
+						{
+							var ctg1 = v1.x / v1.y;
+							var ctg2 = v2.x / v2.y;
+							d = -(ctg1 - ctg2);
+							result = Math.sign(d);
+						}
+					}
+				}
+			}
+			return result;
+		};
+		var threshold = 5e-2; // CU.getDistance(c2, c1) / 1e3;
+		var sa = getDirectionSign(ta1, ta2, threshold, -1);
+		var sb = getDirectionSign(tb1, tb2, threshold, 1);
+
+		var result;
+		if (!sa || !sb)
+			result = SP.UNKNOWN;
+		else if (sa === sb)  // ta1/tb1 on same side of bond
+			result = SP.ODD;
+		else
+			result = SP.EVEN;
+
+		//console.log('compare', tc1, tc2, ta1, ta2, tb1, tb2, sa, sb, result);
+		//console.log('compare', sa, sb, result);
+		return result;
+	},
+
 	/**
 	 * Check if a connector is a double bond that connects with two different groups on each end (may has trans or cis configurature).
 	 * Note: the parent structure should be canonicalized before calling this method.
@@ -189,7 +292,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0; i &lt; 2; ++i)
 				{
 					var node = endNodes[i];
-					var hydroCount = node.getHydrogenCount();
+					var hydroCount = node.getHydrogenCount(true);  // include explicit bonded H atoms
 					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
 					if ((hydroCount >= 2) || (!sideObjs.length))
 					{
@@ -202,13 +305,26 @@ Kekule.MolStereoUtils = {
 					}
 					else if (sideObjs.length === 2)
 					{
-						if (isUnset(sideObjs[0].getCanonicalizationIndex()) || isUnset(sideObjs[1].getCanonicalizationIndex())
+						if (isUnset(sideObjs[0].getCanonicalizationIndex()) &amp;&amp; isUnset(sideObjs[1].getCanonicalizationIndex())
 							|| (sideObjs[0].getCanonicalizationIndex() === sideObjs[1].getCanonicalizationIndex()))
 						{
 							result = false;
 							break;
 						}
 					}
+
+					// check side bond, if not single, no stereo
+					for (var j = 0, k = sideObjs.length; j &lt; k; ++j)
+					{
+						var bond = node.getConnectorTo(sideObjs[j]);
+						if (!bond.isSingleBond || !bond.isSingleBond())
+						{
+							result = false;
+							break;
+						}
+					}
+					if (!result)
+						break;
 				}
 			}
 		}
@@ -223,8 +339,9 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Bool} ignoreCanonicalization
 	 * @returns {Array}
+	 * @private
 	 */
-	findStereoBonds: function(structFragmentOrCtab, ignoreCanonicalization)
+	doFindStereoBonds: function(structFragmentOrCtab, ignoreCanonicalization)
 	{
 		var result = [];
 		if (!ignoreCanonicalization)
@@ -255,7 +372,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0; i &lt; 2; ++i)
 				{
 					var node = endNodes[i];
-					var hydroCount = node.getHydrogenCount();
+					//var hydroCount = node.getHydrogenCount();
 					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
 					if (/*hydroCount === 1 &amp;&amp; */ sideObjs.length === 1)  // N=N double bond may has no hydro count
 					{
@@ -263,12 +380,61 @@ Kekule.MolStereoUtils = {
 					}
 					else if (sideObjs.length === 2)
 					{
-						var index1 = sideObjs[0].getCanonicalizationIndex();
-						var index2 = sideObjs[1].getCanonicalizationIndex();
+						var index1 = sideObjs[0].getCanonicalizationIndex() || -1;  // cano index maybe undefined to explicit H atom
+						var index2 = sideObjs[1].getCanonicalizationIndex() || -1;
 						refNodes.push((index2 > index1)? sideObjs[1]: sideObjs[0]);
+					}
+					else // too many sideObjs number, maybe a incorrect structure?
+					{
+						return null;
 					}
 				}
 				result = [refNodes[0], endNodes[0], endNodes[1], refNodes[1]];
+			}
+		}
+		return result;
+	},
+
+	/**
+	 * Returns all related nodes to determine the stereo of a double bond
+	 * (including two bond atoms and four possible connected atoms).
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @returns {Array} Array of nodes.
+	 *   For structure A1/A2 >C1=C2&lt; B1/B2, the return sequence should be [C1, C2, A1, A2, B1, B2]
+	 *   where A1/B1 has superior canonicalization index.
+	 */
+	getStereoBondRelNodes: function(connector)
+	{
+		var result = null;
+		if (connector.getConnectedObjCount() === 2)
+		{
+			var endNodes = connector.getConnectedChemNodes();
+			if (endNodes.length === 2)
+			{
+				var relNodes = [];
+				for (var i = 0; i &lt; 2; ++i)
+				{
+					var node = endNodes[i];
+					//var hydroCount = node.getHydrogenCount();
+					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
+					if (/*hydroCount === 1 &amp;&amp; */ sideObjs.length === 1)  // N=N double bond may has no hydro count
+					{
+						relNodes.push(sideObjs[0]);
+						relNodes.push(null); // an empty node
+					}
+					else if (sideObjs.length === 2)
+					{
+						var index1 = sideObjs[0].getCanonicalizationIndex() || -1;  // cano index maybe undefined to explicit H atom
+						var index2 = sideObjs[1].getCanonicalizationIndex() || -1;
+						relNodes.push((index2 > index1)? sideObjs[1]: sideObjs[0]);
+						relNodes.push((index2 > index1)? sideObjs[0]: sideObjs[1]);
+					}
+					else // too many sideObjs number, maybe a incorrect structure?
+					{
+						return null;
+					}
+				}
+				result = [endNodes[0], endNodes[1], relNodes[0], relNodes[1], relNodes[2], relNodes[3]];
 			}
 		}
 		return result;
@@ -283,7 +449,7 @@ Kekule.MolStereoUtils = {
 	 * //@param {Kekule.StructureFragment} parentMol
 	 * @returns {Int} Value from {@link Kekule.StereoParity}.
 	 */
-	calcStereoBondParity: function(connector, coordMode, ignoreStereoCheck)
+	calcStereoBondParity: function(connector, coordMode, ignoreStereoCheck, strictStereoBondGeometry)
 	{
 		var SP = Kekule.StereoParity;
 		if (!ignoreStereoCheck &amp;&amp; !Kekule.MolStereoUtils.isStereoBond(connector))
@@ -322,7 +488,80 @@ Kekule.MolStereoUtils = {
 		var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
 		if (keyNodes &amp;&amp; keyNodes.length)
 		{
+			if (Kekule.ObjUtils.isUnset(coordMode))
+			{
+				if (keyNodes[1].hasCoord3D())
+					coordMode = Kekule.CoordMode.COORD3D;  // default use 3D coord to calculate
+				else
+					coordMode = Kekule.CoordMode.COORD2D;
+			}
+
+			/*
 			result = Kekule.MolStereoUtils.getParityOfNodeSeq(keyNodes[0], keyNodes[1], keyNodes[2], keyNodes[3], coordMode);
+			return result;
+			*/
+			if (coordMode === Kekule.CoordMode.COORD3D)
+			{
+				var angle = Kekule.MolStereoUtils.getDihedralAngleOfNodes(keyNodes[0], keyNodes[1], keyNodes[2], keyNodes[3], coordMode);
+				if (angle &lt; 0 || (angle > Math.PI * 2 / 5 &amp;&amp; angle &lt; Math.PI * 3 / 5) || (angle > Math.PI * 7 / 5 &amp;&amp; angle &lt; Math.PI * 8 / 5))
+					return SP.UNKNOWN;  // dihedral angle identity not clear enough
+			}
+
+			var allowCoordBorrow = true;  // allow coord borrow
+			var getNodeCoord = Kekule.MolStereoUtils._getNodeCoordForBondParity;
+			var extractCoord = function(coord, coordAxises)
+			{
+				if (!coord)
+					return null;
+				else
+					return {
+						x: coord[coordAxises[0]],
+						y: coord[coordAxises[1]]
+					}
+			};
+
+			// if pass dihedral test, check parity on X/Y, X/Z, X/Z planet projection
+			var relNodes = Kekule.MolStereoUtils.getStereoBondRelNodes(connector);
+			// For structure A1/A2 >C1=C2&lt; B1/B2
+			var relCoords = [
+				getNodeCoord(relNodes[0], null, null, coordMode, allowCoordBorrow),  // C1
+				getNodeCoord(relNodes[1], null, null, coordMode, allowCoordBorrow)   // C2
+			];
+			relCoords = relCoords.concat([
+				getNodeCoord(relNodes[2], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true),  // A1
+				relNodes[3]? getNodeCoord(relNodes[3], relNodes[0], relCoords[0], coordMode, allowCoordBorrow, true): null, // A2
+				getNodeCoord(relNodes[4], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true),  // B1
+				relNodes[5]? getNodeCoord(relNodes[5], relNodes[1], relCoords[1], coordMode, allowCoordBorrow, true): null  // B2
+			]);
+
+			//console.log('---------- calc parity --------------');
+
+			var prjPlanets = (coordMode === Kekule.CoordMode.COORD2D)? [['x', 'y']]:  [['x', 'y'], ['x', 'z'], ['y', 'z']];
+			var prjResult = null;
+			for (var i = 0, l = prjPlanets.length; i &lt; l; ++i)
+			{
+				var currPrjCoords = [];
+				for (var j = 0, k = relCoords.length; j &lt; k; ++j)
+				{
+					if (relCoords[j])
+						currPrjCoords.push(extractCoord(relCoords[j], prjPlanets[i]));
+					else
+						currPrjCoords.push(null);
+				}
+				var prjParity = Kekule.MolStereoUtils._calcParityOfCoordPairs(
+						currPrjCoords[0], currPrjCoords[1], currPrjCoords[2], currPrjCoords[3], currPrjCoords[4], currPrjCoords[5],
+						strictStereoBondGeometry
+				);
+				if (prjParity !== SP.UNKNOWN)
+				{
+					if (prjResult === null)
+						prjResult = prjParity;
+					else if (prjResult !== prjParity)  // parity not match on different planet
+						return SP.UNKNOWN;
+				}
+			}
+			// pass planet projection check
+			result = prjResult;
 		}
 		return result;
 	},
@@ -333,10 +572,11 @@ Kekule.MolStereoUtils = {
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
 	 * @returns {Array} Array of all chiral nodes.
+	 * @private
 	 */
-	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	doPerceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, strictStereoBondGeometry)
 	{
-		var result = Kekule.MolStereoUtils.findStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
+		var result = Kekule.MolStereoUtils.doFindStereoBonds(structFragmentOrCtab, ignoreCanonicalization);
 		structFragmentOrCtab.beginUpdate();
 		try
 		{
@@ -345,7 +585,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0, l = result.length; i &lt; l; ++i)
 				{
 					var c = result[i];
-					var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true);
+					var parity = Kekule.MolStereoUtils.calcStereoBondParity(c, coordMode, true, strictStereoBondGeometry);
 					if (c.setParity)
 						c.setParity(parity);
 				}
@@ -360,7 +600,7 @@ Kekule.MolStereoUtils = {
 
 	/**
 	 * Check if a chem structure node is a chiral one.
-	 * Note: now only C/S/P/N atoms are considered, and the parent structure fragment may be standardized.
+	 * Note: now only C/Si/S/P/N/B atoms are considered, and the parent structure fragment may be standardized.
 	 * @param {Kekule.ChemStructureNode} node
 	 */
 	isChiralNode: function(node)
@@ -370,12 +610,14 @@ Kekule.MolStereoUtils = {
 		{
 			var diffNeighborCount;
 			var maxMultiBondCount;
+			var possibleCharges = null;
 			var mayBeChiral = false;
 			// check C first
-			if (node.mayContainElement('C'))  // must has four different attached groups
+			if (node.mayContainElement('C') || node.mayContainElement('Si'))  // must has four different attached groups
 			{
 				diffNeighborCount = 4;
 				maxMultiBondCount = 0;
+				possibleCharges = [0];
 				mayBeChiral = true;
 			}
 			else if (node.mayContainElement('N'))  // must has four different attached groups
@@ -390,6 +632,13 @@ Kekule.MolStereoUtils = {
 				maxMultiBondCount = 0;
 				mayBeChiral = true;
 			}
+			else if (node.mayContainElement('B'))
+			{
+				diffNeighborCount = 3;
+				maxMultiBondCount = 0;
+				possibleCharges = [-1];
+				mayBeChiral = true;
+			}
 
 			if (mayBeChiral)
 			{
@@ -397,7 +646,10 @@ Kekule.MolStereoUtils = {
 				var multibonds = node.getLinkedMultipleBonds();
 				var hydroCount = node.getHydrogenCount ? node.getHydrogenCount() : 0;
 				var allHydroCount = node.getHydrogenCount ? node.getHydrogenCount(true) : 0;
-				if (multibonds.length > maxMultiBondCount || allHydroCount >= 2 || neighbors.length + hydroCount &lt; diffNeighborCount)
+				var charge = node.getCharge() || 0;
+				//console.log(charge);
+				if (multibonds.length > maxMultiBondCount || allHydroCount >= 2 || neighbors.length + hydroCount &lt; diffNeighborCount
+					|| (possibleCharges &amp;&amp; possibleCharges.indexOf(charge) &lt; 0))
 					result = false;
 				else  // check cano index of neighbors, see whether they are different
 				{
@@ -429,8 +681,9 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Bool} ignoreCanonicalization
 	 * @returns {Array}
+	 * @private
 	 */
-	findChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
+	doFindChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
 	{
 		var result = [];
 		//structFragment.canonicalize('morgan');
@@ -518,20 +771,164 @@ Kekule.MolStereoUtils = {
 	},
 
 	/**
+	 * Check if a node is carbon atom in Fischer projection center and returns related information.
+	 * Note: only 2D coord will be checked in this function.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Array} siblings
+	 * @param {Hash} options, including:
+	 *   {
+	 *     allowedError: the allowed error when checking vertical and horizontal line, default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree).
+	 *     reversedDirection: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogen: Whether the simplification in saccharide chain form is allowed (H is omitted from structure).
+	 *     allowExplicitVerticalHydrogen: Whether the implicit hydrogen on vertical direction is allowed (used in SMILES generation).
+	 *     ignoreStructure: Whether structure information should not be checked.
+	 *   }
+	 * @returns {Hash} The information about this Fischer projection, including:
+	 *   {
+	 *     horizontalSiblings: array,
+	 *     verticalSiblings: array,
+	 *     towardSiblings: array, usually siblings on horizontal line,
+	 *     awaySiblings: array, usually siblings on vertical line
+	 *   }.
+	 *   If the node is not a Fischer projection center, null will be returned.
+	 * @private
+	 */
+	_getFischerProjectionInfo: function(node, siblings, options)
+	{
+		var ops = Object.create(options || null);
+		if (siblings.length &lt; 3 || siblings.length > 4)
+			return null;
+		if (siblings.length === 3 &amp;&amp; !ops.allowExplicitHydrogen)
+			return null;
+
+		var coordMode = Kekule.CoordMode.COORD2D;
+		var allowedError = ops.allowedError || Kekule.MolStereoUtils.FISCHER_PROJECTION_BOND_ALLOWED_ERROR;
+
+		if (!ops.ignoreStructure)  // ensure center node is a C atom with atom symbol hidden
+		{
+			var isCenterLegal = (node instanceof Kekule.Atom) &amp;&amp; (node.getAtomicNumber() === 6);
+			if (isCenterLegal &amp;&amp; node.getRenderOption)
+				isCenterLegal = node.getRenderOption('nodeDisplayMode') !== Kekule.Render.NodeLabelDisplayMode.SHOWN;
+			if (!isCenterLegal)
+				return null;
+		}
+
+		var nodeCoord = node.getAbsCoordOfMode(coordMode, true); // allow borrow
+
+		var nodeSeq = [];  // 0: Top, 1: Right, 2: Bottom: 3: Left
+		var verticalNodeCount = 0;
+
+		var _setNodeSeqItem = function(seq, index, value)
+		{
+			if (seq[index])  // already has item
+				return false;
+			else
+			{
+				seq[index] = value;
+				return true;
+			}
+		};
+
+		for (var i = 0, l = siblings.length; i &lt; l; ++i)
+		{
+			var sibling = siblings[i];
+
+			if (!ops.ignoreStructure)  // check bond, must be unstereo one (simple single covalence bond)
+			{
+				var bond = sibling.getConnectorTo(node);
+				var bondStereo = bond.getStereo() || Kekule.BondStereo.NONE;
+				var isLegalBond = (bond instanceof Kekule.Bond) &amp;&amp; (bondStereo === Kekule.BondStereo.NONE);
+				if (!isLegalBond)
+					return null;
+			}
+
+			var siblingCoord = sibling.getAbsCoordOfMode(coordMode, true);  // allow borrow
+			var delta = CU.substract(siblingCoord, nodeCoord);
+			var absDeltaX = Math.abs(delta.x);
+			var absDeltaY = Math.abs(delta.y);
+
+			if (Kekule.NumUtils.isFloatEqual(absDeltaX, 0) &amp;&amp; Kekule.NumUtils.isFloatEqual(absDeltaY, 0))  // x/y too small
+				return null;
+
+			var seqIndex;
+			var bondLengthRatio;
+			if (absDeltaX > absDeltaY)  // on horizontal line
+			{
+				bondLengthRatio = absDeltaY / absDeltaX;
+				seqIndex = (delta.x > 0)? 1: 3;
+			}
+			else  // on vertical line
+			{
+				bondLengthRatio = absDeltaX / absDeltaY;
+				seqIndex = (delta.y > 0)? 0: 2;
+				++verticalNodeCount;
+			}
+			if (bondLengthRatio > allowedError)  // not vertical
+				return null;
+			else
+			{
+				if (!_setNodeSeqItem(nodeSeq, seqIndex, sibling))
+					return null;
+			}
+		}
+
+		// check that must be two vertical nodes (even when H is implicited in saccharide)
+		if (verticalNodeCount !== 2 &amp;&amp; !ops.allowExplicitVerticalHydrogen)
+			return null;
+
+		// sum up, returns successful result
+		var result = {
+			horizontalSiblings: [nodeSeq[3], nodeSeq[1]],
+			verticalSiblings: [nodeSeq[0], nodeSeq[2]]
+		};
+		if (!ops.reversedDirection)
+		{
+			result.towardSiblings = result.horizontalSiblings;
+			result.awaySiblings = result.verticalSiblings;
+		}
+		else
+		{
+			result.towardSiblings = result.verticalSiblings;
+			result.awaySiblings = result.horizontalSiblings;
+		}
+		return result;
+	},
+
+	/**
 	 * Returns rotation direction of a tetrahedron chiral center. Rotation follows the sequence of param siblings.
-	 * @param {Int} coordMode Use 2D or 3D coord of nodes.
 	 * @param {Kekule.ChemStructureNode} centerNode Center node used to get center coord. If this param is not set, geometric center
 	 *   of sibling nodes will be used instead.
 	 * @param {Kekule.ChemStructureNode} refSibling Sibling node to determine the looking direction.
 	 * @param {Array} siblings Array of {@link Kekule.ChemStructureNode}, should not include refSibling.
-	 * @param {Bool} withImplicitSibling Whether there is a implicit sibling (e.g., implicit H atom). Coord of implicit node will be calculated from other sibling nodes.
-	 *   If this param is true and param refSibling is null, this implicit node will be regarded as refSibling, otherwise the
-	 *   implicit node will be regarded as the last one of siblings.
-	 * @param {Bool} refSiblingBehind Whether put refCoord behide center coord.
+	 * @param {hash} options Calculation option, may include the following fields: &lt;br />
+	 *   { &lt;br />
+	 *     coordMode: Int, use 2D or 3D coord of nodes. &lt;br />
+	 *     withImplicitSibling: Bool, whether there is a implicit sibling (e.g., implicit H atom). Coord of implicit node will be calculated from other sibling nodes.
+	 *       If this param is true and param refSibling is null, this implicit node will be regarded as refSibling, otherwise the
+	 *       implicit node will be regarded as the last one of siblings. &lt;br />
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Default is true. Only works when coord mode is 2D.
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree).
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure).
+	 *       Default is true.
+	 *     allowExplicitVerticalHydrogen: Whether the implicit hydrogen on vertical direction is allowed (used in SMILES generation).
+	 *   }
 	 * @returns {Int} Value from {@link Kekule.RotationDir}, clockwise, anti-clockwise or unknown.
 	 */
-	calcTetrahedronChiralCenterRotationDirection: function(coordMode, centerNode, refSibling, siblings, withImplicitSibling, refSiblingBehind)
+	calcTetrahedronChiralCenterRotationDirectionEx: function(centerNode, refSibling, siblings, options)
 	{
+		var ops = Object.extend({
+			implicitFischerProjection: true,
+			allowExplicitHydrogenInFischer: true
+		}, options);
+
+		var coordMode = ops.coordMode;
+		var withImplicitSibling = !!ops.withImplicitSibling;
+		var refSiblingBehind = !!ops.refSiblingBehind;
+		var implicitFischerProjection = !!ops.implicitFischerProjection;
+
 		if (!coordMode)
 		{
 			var node = centerNode || refSibling || siblings[0];
@@ -555,32 +952,41 @@ Kekule.MolStereoUtils = {
 		if (totalSiblingCount &lt; 4)  // not a tetrahedron
 			return RD.UNKNOWN;
 
-		var getNodeCoord = function(node, centerNode, centerCoord, coordMode)
+		var getNodeCoord = function(node, centerNode, centerCoord, coordMode, fischerInfo)
 		{
 			/*
-			var is2D = coordMode === Kekule.CoordMode.COORD2D;
-			if (is2D &amp;&amp; !node.hasCoord2D())
-				coordMode = Kekule.CoordMode.COORD3D;
-			if (!is2D &amp;&amp; !node.hasCoord3D())
-				coordMode = Kekule.CoordMode.COORD2D;
-      */
+			 var is2D = coordMode === Kekule.CoordMode.COORD2D;
+			 if (is2D &amp;&amp; !node.hasCoord2D())
+			 coordMode = Kekule.CoordMode.COORD3D;
+			 if (!is2D &amp;&amp; !node.hasCoord3D())
+			 coordMode = Kekule.CoordMode.COORD2D;
+			 */
 			if (coordMode !== Kekule.CoordMode.COORD2D)  // 3D, get 3D absolute coord directly
 				return node.getAbsCoordOfMode(coordMode, true);  // allow borrow
-			else  // coord 2D, add z value, consider wedge bonds
+			else  // coord 2D, add z value, consider wedge bonds and special "zIndex2D" property expliciting z stack of 2D sketch
 			{
 				var result = node.getAbsCoordOfMode(coordMode, true);  // allow borrow
+				var defCoordZ;
 				if (centerNode &amp;&amp; centerCoord)
 				{
+					defCoordZ = centerCoord.z;
 					var connector = node.getConnectorTo(centerNode);
 					if (connector.getStereo)
 					{
-						var bondStereo = connector.getStereo();
+						var connDirection = connector.indexOfConnectedObj(node) - connector.indexOfConnectedObj(centerNode);
 						var BS = Kekule.BondStereo;
+						var bondStereo = connector.getStereo() || BS.NONE;
+						if (bondStereo === BS.NONE &amp;&amp; fischerInfo)  // with fischer projection info, there is implicit bond stereo
+						{
+							if (fischerInfo.towardSiblings.indexOf(node) >= 0)
+								bondStereo = (connDirection &lt; 0)? BS.UP_INVERTED: BS.UP;
+							else if (fischerInfo.awaySiblings.indexOf(node) >= 0)
+								bondStereo = (connDirection &lt; 0)? BS.DOWN_INVERTED: BS.DOWN;
+						}
 						var wedgeDirs = [BS.UP, BS.UP_INVERTED, BS.DOWN, BS.DOWN_INVERTED];
 						if (wedgeDirs.indexOf(bondStereo) >= 0)
 						{
-							var index = connector.indexOfConnectedObj(node) - connector.indexOfConnectedObj(centerNode);
-							if (index &lt; 0)
+							if (connDirection &lt; 0)
 								bondStereo = BS.getInvertedDirection(bondStereo);
 							var zFactors = [1, -1, -1, 1];
 							var distance = CU.getDistance(result, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
@@ -590,6 +996,12 @@ Kekule.MolStereoUtils = {
 							return null;  // return a special mark, can determinate angle calculation
 					}
 				}
+				if (Kekule.ObjUtils.isUnset(result.z) &amp;&amp; node.getZIndex2D)  // check zIndex2D property of node
+				{
+					result.z = node.getZIndex2D();
+					if (Kekule.ObjUtils.isUnset(result.z))
+						result.z = defCoordZ;
+				}
 				result.z = result.z || 0;
 				return result;
 			}
@@ -597,14 +1009,25 @@ Kekule.MolStereoUtils = {
 
 		// calc all essetianl coords: centerCoord, coords of rotation siblings, coord of implict node
 		var centerCoord = centerNode? getNodeCoord(centerNode, null, null, coordMode): null;
+		var fischerOptions = {
+			'allowedError': ops.fischerAllowedError,
+			'reversedDirection': ops.reversedFischer,
+			'allowExplicitHydrogen': ops.allowExplicitHydrogenInFischer,
+			'allowExplicitVerticalHydrogen': ops.allowExplicitVerticalHydrogen
+		};
+		var allAroundSiblings = [].concat(siblings);
+		if (refSibling)
+			Kekule.ArrayUtils.pushUnique(allAroundSiblings, refSibling);
+		var fischerInfo = (centerNode &amp;&amp; ops.implicitFischerProjection)? Kekule.MolStereoUtils._getFischerProjectionInfo(centerNode, allAroundSiblings, fischerOptions): null;
+
 		var coords = [];
 		for (var i = 0; i &lt; explicitSiblingCount; ++i)
 		{
-			var coord = getNodeCoord(siblings[i], centerNode, centerCoord, coordMode);
+			var coord = getNodeCoord(siblings[i], centerNode, centerCoord, coordMode, fischerInfo);
 			coords.push(coord);
 		}
 		var allExplicitSiblingCoords = AU.clone(coords);
-		var refCoord = refSibling ? getNodeCoord(refSibling, centerNode, centerCoord, coordMode) : null;
+		var refCoord = refSibling ? getNodeCoord(refSibling, centerNode, centerCoord, coordMode, fischerInfo) : null;
 		if (refCoord)
 			allExplicitSiblingCoords.push(refCoord);
 
@@ -631,7 +1054,7 @@ Kekule.MolStereoUtils = {
 			oldCoord.y = c.y;
 			oldCoord.z = c.z;
 			if (is2D &amp;&amp; !!c.z)  // z coord not 0 in 2D mode
-			  ++wedgeNodeCount;
+				++wedgeNodeCount;
 		}
 		if (is2D &amp;&amp; wedgeNodeCount &lt;= 0)  // in 2D mode but with no wedge bond, can not determine
 			return RD.UNKNOWN;
@@ -658,17 +1081,52 @@ Kekule.MolStereoUtils = {
 		else
 			return RD.UNKNOWN;
 	},
+	/**
+	 * Returns rotation direction of a tetrahedron chiral center. Rotation follows the sequence of param siblings.
+	 * @param {Int} coordMode Use 2D or 3D coord of nodes.
+	 * @param {Kekule.ChemStructureNode} centerNode Center node used to get center coord. If this param is not set, geometric center
+	 *   of sibling nodes will be used instead.
+	 * @param {Kekule.ChemStructureNode} refSibling Sibling node to determine the looking direction.
+	 * @param {Array} siblings Array of {@link Kekule.ChemStructureNode}, should not include refSibling.
+	 * @param {Bool} withImplicitSibling Whether there is a implicit sibling (e.g., implicit H atom). Coord of implicit node will be calculated from other sibling nodes.
+	 *   If this param is true and param refSibling is null, this implicit node will be regarded as refSibling, otherwise the
+	 *   implicit node will be regarded as the last one of siblings.
+	 * @param {Hash} additionalOptions
+	 * @param {Bool} refSiblingBehind Whether put refCoord behide center coord.
+	 * @returns {Int} Value from {@link Kekule.RotationDir}, clockwise, anti-clockwise or unknown.
+	 */
+	calcTetrahedronChiralCenterRotationDirection: function(coordMode, centerNode, refSibling, siblings, withImplicitSibling, refSiblingBehind, additionalOptions)
+	{
+		var ops = Object.create(additionalOptions);
+		return Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirectionEx(centerNode, refSibling, siblings, Object.extend(ops, {
+			'coordMode': coordMode,
+			'withImplicitSibling': withImplicitSibling,
+			'refSiblingBehind': refSiblingBehind
+		}));
+	},
 
 	/**
 	 * Calc and returns MDL stereo parity of a chiral node.
 	 * Note: the parent structure fragment should be canonicalized.
 	 * @param {Kekule.ChemStructureNode} node
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 *
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     ignoreChiralCheck: Bool, Whether bypass the check to ensure node is a chiral center. &lt;br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
 	 * //@param {Kekule.StructureFragment} parentMol
 	 * @returns {Int} Value from {@link Kekule.StereoParity}.
 	 */
-	calcTetrahedronChiralNodeParity: function(node, coordMode, ignoreChiralCheck)
+	calcTetrahedronChiralNodeParity: function(node, coordMode, options)
 	{
+		var ops = Object.create(options || null);
 		if (!coordMode)
 		{
 			if (node.hasCoord3D())
@@ -676,25 +1134,30 @@ Kekule.MolStereoUtils = {
 			else
 				coordMode = Kekule.CoordMode.COORD2D;
 		}
+		ops.coordMode = coordMode;
+		ops.refSiblingBehind = true;
+
 
 		var KS = Kekule.StereoParity;
 		/*
 		if (!parentMol)
 			parentMol = node.getParent();
 		*/
+		var ignoreChiralCheck = ops.ignoreChiralCheck;
 		if (!ignoreChiralCheck &amp;&amp; !Kekule.MolStereoUtils.isChiralNode(node))
 			return KS.NONE;
 		var siblings = node.getLinkedChemNodes();
 		var hydroCount = node.getHydrogenCount();
-		var withImplicitNode = !!hydroCount || (siblings.length &lt; 4);  // S/P, may three sibling with a electron pair
+		ops.withImplicitSibling = !!hydroCount || (siblings.length &lt; 4);  // S/P, may three sibling with a electron pair
 		//var allSiblingCount = siblings.length + hydroCount;
 		//var atomicSymbol = node.getSymbol? node.getSymbol(): null;
 		siblings.sort(function(a, b){
 			return -((a.getCanonicalizationIndex() || 0) - (b.getCanonicalizationIndex() || 0));
 		});
-		var refSibling = withImplicitNode? null: siblings[3];
+		var refSibling = ops.withImplicitSibling? null: siblings[3];
 		siblings = siblings.slice(0, 3);
-		var rotationDir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(coordMode, node, refSibling, siblings, withImplicitNode, true);
+		//var rotationDir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(coordMode, node, refSibling, siblings, withImplicitNode, true);
+		var rotationDir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirectionEx(node, refSibling, siblings, ops);
 		return (rotationDir === RD.CLOCKWISE)? KS.ODD:
 			(rotationDir === RD.ANTICLOCKWISE)? KS.EVEN:
 				KS.UNKNOWN;
@@ -705,11 +1168,24 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
 	 * @returns {Array} Array of all chiral nodes.
+	 * @private
 	 */
-	perceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	doPerceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
 	{
-		var result = Kekule.MolStereoUtils.findChiralNodes(structFragmentOrCtab, ignoreCanonicalization);;
+		var ops = Object.create(options || null);
+		var parityCalcOps = Object.create(ops);
+		parityCalcOps.ignoreChiralCheck = true;
+		var result = Kekule.MolStereoUtils.doFindChiralNodes(structFragmentOrCtab, ignoreCanonicalization);
 		structFragmentOrCtab.beginUpdate();
 		try
 		{
@@ -718,7 +1194,7 @@ Kekule.MolStereoUtils = {
 				for (var i = 0, l = result.length; i &lt; l; ++i)
 				{
 					var n = result[i];
-					var parity = Kekule.MolStereoUtils.calcTetrahedronChiralNodeParity(n, coordMode, true);
+					var parity = Kekule.MolStereoUtils.calcTetrahedronChiralNodeParity(n, coordMode, parityCalcOps);
 					if (n.setParity)
 					{
 						//console.log('set parity', n.getId(), parity);
@@ -739,19 +1215,203 @@ Kekule.MolStereoUtils = {
 	 * @param {Variant} structFragmentOrCtab
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     useFlatternedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. &lt;br />
+	 *     perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. &lt;br />
+	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. &lt;br />
+	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. &lt;br />
+	 *     strictStereoBondGeometry: Bool, if true, the illegal bond geometry will be ignored in calculation (e.g., two connected atoms on same side of a double bond). &lt;br />
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead. &lt;br />
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
 	 * @returns {Array} Array of all nodes and connectors with special stereo parities.
 	 */
-	perceiveStereos: function(structFragmentOrCtab, coordMode, ignoreCanonicalization)
+	perceiveStereos: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
 	{
-		var result = [];
+		/*
+		var ops = Object.extend({
+			useFlatternedShadow: true,
+			perceiveStereoConnectors: true,
+			perceiveChiralNodes: true,
+			calcParity: true
+		}, options);
+		*/
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.stereoPerception), options);
+
+		var result;
+
+		var srcStructFragment = (structFragmentOrCtab instanceof Kekule.StructureConnectionTable) ? structFragmentOrCtab.getParent() : structFragmentOrCtab;
+
+		var targetFragment;
+		if (ops.useFlatternedShadow)
+		{
+			targetFragment = srcStructFragment.getFlattenedShadowFragment(true);
+		}
+		else
+			targetFragment = srcStructFragment;
+
+		// Canonicalize first
+		if (!ignoreCanonicalization)
+		{
+			Kekule.canonicalizer.canonicalize(targetFragment, 'morganEx');
+		}
+
+		targetFragment.beginUpdate();
+		try
+		{
+			// then perceive and calculate stereo
+			var stereoBonds, chiralNodes;
+			if (ops.perceiveStereoConnectors)
+			{
+				if (ops.calcParity)
+					stereoBonds = Kekule.MolStereoUtils.doPerceiveStereoConnectors(targetFragment, coordMode, true, ops.strictStereoBondGeometry);
+				else
+					stereoBonds = Kekule.MolStereoUtils.doFindStereoBonds(targetFragment, true);
+			}
+			if (ops.perceiveChiralNodes)
+			{
+				if (ops.calcParity)
+					chiralNodes = Kekule.MolStereoUtils.doPerceiveChiralNodes(targetFragment, coordMode, true, ops);
+				else
+					chiralNodes = Kekule.MolStereoUtils.doFindChiralNodes(targetFragment, true);
+			}
+			var stereoObjs = (chiralNodes || []).concat(stereoBonds || []);
+			//console.log(ops, stereoBonds, chiralNodes, stereoObjs);
+
+			if (ops.useFlatternedShadow &amp;&amp; !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
+			{
+				result = [];
+				srcStructFragment.beginUpdate();
+				try
+				{
+					//var shadowInfo = srcStructFragment.getFlattenedShadow();
+					for (var i = 0, l = stereoObjs.length; i &lt; l; ++i)
+					{
+						var srcObj = srcStructFragment.getFlatternedShadowSourceObj(stereoObjs[i]);
+						if (srcObj)
+						{
+							if (ops.calcParity)
+								srcObj.setParity(stereoObjs[i].getParity());
+							result.push(srcObj);
+						}
+					}
+				}
+				finally
+				{
+					srcStructFragment.endUpdate();
+				}
+			}
+			else
+				result = stereoObjs;
+		}
+		finally
+		{
+			targetFragment.endUpdate();
+		}
+
+		return result;
+
+		/*
 		var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(structFragmentOrCtab, coordMode, ignoreCanonicalization);
-		var chiralNodes = Kekule.MolStereoUtils.perceiveChiralNodes(structFragmentOrCtab, coordMode, true/*ignoreCanonicalization*/);  // already canonicalized when finding bonds
+		var chiralNodes = Kekule.MolStereoUtils.perceiveChiralNodes(structFragmentOrCtab, coordMode, true, options);  // already canonicalized when finding bonds
 		if (stereoBonds)
 			result = result.concat(stereoBonds);
 		if (chiralNodes)
 			result = result.concat(chiralNodes);
 		//console.log(result, stereoBonds, chiralNodes);
 		return result;
+		*/
+	},
+
+	/**
+	 * Find stereo double bond in struct fragment or ctab.
+	 * Note, before finding, if param ignoreCanonicalization is false,
+	 * the struct fragment will be canonicalized by morgan algorithm to set node cano index.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Bool} ignoreCanonicalization
+	 * @returns {Array}
+	 * @deprecated
+	 */
+	findStereoConnectors: function(structFragmentOrCtab, ignoreCanonicalization)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, null, ignoreCanonicalization,
+				{
+					perceiveStereoConnectors: true,
+					perceiveChiralNodes: false,
+					calcParity: false
+				});
+	},
+
+	/**
+	 * Detect and mark parity of all stereo bonds in structure fragment.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Bool} strictStereoBondGeometry
+	 * @returns {Array} Array of all chiral nodes.
+	 * @deprecated
+	 */
+	perceiveStereoConnectors: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, strictStereoBondGeometry)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, coordMode, ignoreCanonicalization,
+				{
+					'perceiveStereoConnectors': true,
+					'perceiveChiralNodes': false,
+					'calcParity': true,
+					'strictStereoBondGeometry': strictStereoBondGeometry
+				});
+	},
+
+	/**
+	 * Find chiral nodes in struct fragment or ctab.
+	 * Note, before finding, if param ignoreCanonicalization is false,
+	 * the struct fragment will be canonicalized by morgan algorithm to set node cano index.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Bool} ignoreCanonicalization
+	 * @returns {Array}
+	 * @deprecated
+	 */
+	findChiralNodes: function(structFragmentOrCtab, ignoreCanonicalization)
+	{
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, null, ignoreCanonicalization,
+				{
+					perceiveStereoConnectors: false,
+					perceiveChiralNodes: true,
+					calcParity: false
+				});
+	},
+
+	/**
+	 * Detect and mark parity of all chiral nodes in structure fragment.
+	 * @param {Variant} structFragmentOrCtab
+	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
+	 * @returns {Array} Array of all chiral nodes.
+	 * @deprecated
+	 */
+	perceiveChiralNodes: function(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)
+	{
+		var ops = Object.create(options || null);
+		ops = Object.extend(ops, {
+			perceiveStereoConnectors: false,
+			perceiveChiralNodes: true,
+			calcParity: true
+		});
+		return Kekule.MolStereoUtils.perceiveStereos(structFragmentOrCtab, coordMode, ignoreCanonicalization, ops);
 	}
 };
 
@@ -770,7 +1430,8 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	{
 		// do a normal morgan indexer first
 		$super(ctab);
-		var nodes = ctab.getNodes();
+		//var nodes = ctab.getNodes();
+		var nodes = ctab.getNonHydrogenNodes();
 		var sortedNodes = this._groupNodesByCanoIndex(nodes);
 		// then detect stereo factors based on indexes
 		var stereoObjs = null;
@@ -784,7 +1445,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 
 			stereoObjCount = stereoObjs.length;
 			stereoObjs = Kekule.MolStereoUtils.perceiveStereos(ctab, null, true) || [];
-			//console.log(stereoObjCount, stereoObjs.length);
+			//console.log('here', stereoObjCount, stereoObjs.length);
 		}
 	},
 
@@ -808,6 +1469,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 			}
 			else
 			{
+				/*
 				var getConnectorCompareValues = function(node)
 				{
 					var result = [];
@@ -819,13 +1481,21 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 					result.sort(function(a, b) { return a - b; });
 					return result;
 				};
+				*/
 				var resorted = AU.group(n, function(a, b) {
-					var result = Kekule.UnivChemStructObjComparer.compare(a, b);
+					//var result = Kekule.UnivChemStructObjComparer.compare(a, b);
+					var result = a.compareStructure(b);
 					if (result === 0)  // still can not distinguish, check linked bonds
 					{
+						/*
 						var cvaluesA = getConnectorCompareValues(a);
 						var cvaluesB = getConnectorCompareValues(b);
 						result = AU.compare(cvaluesA, cvaluesB);
+            */
+
+						var connsA = a.getLinkedConnectors();
+						var connsB = b.getLinkedConnectors();
+						result = Kekule.ObjComparer.compareStructure(connsA, connsB);
 					}
 					return result;
 				});
@@ -845,11 +1515,21 @@ ClassEx.extend(Kekule.StructureFragment,
 	/**
 	 * Detect and mark parity of all chiral nodes in structure fragment.
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization: Bool. If false, ctab will be canonicalized before perception. &lt;br/>
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
 	 * @returns {Array} Array of all chiral nodes.
 	 */
-	perceiveChiralNodes: function(coordMode, ignoreCanonicalization)
+	perceiveChiralNodes: function(coordMode, ignoreCanonicalization, options)
 	{
-		return Kekule.MolStereoUtils.perceiveChiralNodes(this, coordMode, ignoreCanonicalization);
+		return Kekule.MolStereoUtils.perceiveChiralNodes(this, coordMode, ignoreCanonicalization, options);
 	},
 	/**
 	 * Detect and mark parity of all stereo connectors in structure fragment.
@@ -863,11 +1543,21 @@ ClassEx.extend(Kekule.StructureFragment,
 	/**
 	 * Detect and mark parity of all chiral nodes/connectors in structure fragment.
 	 * @param {Int} coordMode Use 2D or 3D coord to calculate.
+	 * @param {Bool} ignoreCanonicalization: Bool. If false, ctab will be canonicalized before perception. &lt;br/>
+	 * @param {Hash} options Chiral calculation options, including:
+	 *   { &lt;br/>
+	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
+	 *       Only works when coord mode is 2D. &lt;br/>
+	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
+	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). &lt;br/>
+	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
+	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). &lt;br/>
+	 *   }
 	 * @returns {Array} Array of all nodes and connectors with special stereo parities.
 	 */
-	perceiveStereos: function(coordMode, ignoreCanonicalization)
+	perceiveStereos: function(coordMode, ignoreCanonicalization, options)
 	{
-		return Kekule.MolStereoUtils.perceiveStereos(this, coordMode, ignoreCanonicalization);
+		return Kekule.MolStereoUtils.perceiveStereos(this, coordMode, ignoreCanonicalization, options);
 	}
 });
 
@@ -882,13 +1572,13 @@ ClassEx.extend(Kekule.StructureFragment,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:22 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

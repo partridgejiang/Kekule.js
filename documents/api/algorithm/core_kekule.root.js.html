@@ -37,18 +37,194 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.6.0',
+	VERSION: '0.8.1.18112300',
+	/**
+	 * A flag that indicate whether all essential Kekule modules are loaded into document.
+	 * @ignore
+	 */
+	LOADED: false,
+	/**
+	 * An array of functions that need be called after load all Kekule modules.
+	 * @private
+	 */
+	_afterLoadSysProcedures: [],
+	/**
+	 * An array of user functions that need be called after load all Kekule modules.
+	 * @private
+	 */
+	_afterLoadUserProcedures: [],
 	// Whether auto find title and description text for object property
 	/** @ignore */
 	PROP_AUTO_TITLE: true
 };
 
 /**
+ * Called when all essential modules is loaded.
+ * User should not call this function directly.
+ * @private
+ */
+Kekule._loaded = function()
+{
+	if (Kekule.LOADED)
+		return;
+	Kekule.LOADED = true;
+	var procs = Kekule._afterLoadSysProcedures;
+	while (procs.length)
+	{
+		var proc = procs.shift();
+		if (proc)
+			proc();
+	}
+
+	var procs = Kekule._afterLoadUserProcedures;
+	while (procs.length)
+	{
+		var proc = procs.shift();
+		if (proc)
+			proc();
+	}
+
+	// at last try fire a custom event
+	var doc = Kekule.$jsRoot &amp;&amp; Kekule.$jsRoot.document;
+	if (doc &amp;&amp; doc.createEvent &amp;&amp; doc.body &amp;&amp; doc.body.dispatchEvent)
+	{
+		var event = doc.createEvent('Event');
+		event.initEvent('kekuleload', true, true);
+		doc.body.dispatchEvent(event);
+	}
+};
+/**
+ * Return whether the whole lib is loaded.
+ * @returns {boolean}
+ * @private
+ */
+Kekule._isLoaded = function()
+{
+	return Kekule.LOADED;
+};
+/**
+ * Register system procedure that need to be called after all modules are loaded.
+ * User should not call this method directly.
+ * @param {Func} proc
+ * @private
+ */
+Kekule._registerAfterLoadSysProc = function(proc)
+{
+	if (proc)
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadSysProcedures.push(proc);
+	}
+};
+/**
+ * Register procedure that need to be called after all modules are loaded and all initial operations has been done.
+ * @param {Func} proc
+ * @private
+ */
+Kekule._ready = function(proc)
+{
+	if (proc)
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadUserProcedures.push(proc);
+	}
+};
+Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
+
+/**
  * Root object of JavaScript environment, usually window.
  */
-var $jsRoot = this;
+Kekule.$jsRoot = this;
+/**
+ * Root document of JavaScript environment.
+ * Can be null in Node.js.
+ */
+Kekule.$document = this.document || null;
 
-Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
+Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+if (Kekule.scriptSrcInfo &amp;&amp; Kekule.scriptSrcInfo.language)  // force Language
+{
+	Kekule.language = Kekule.scriptSrcInfo.language;
+}
+if (!Kekule.scriptSrcInfo &amp;&amp; Kekule.$jsRoot.document)  // script info not found, may be use Kekule.min.js directly
+{
+	Kekule.scriptSrcInfo = (function ()
+	{
+		var entranceSrc = /^(.*\/?)kekule\..*\.js(\?.*)?$/;
+		var scriptElems = document.getElementsByTagName('script');
+		var loc;
+		for (var i = scriptElems.length - 1; i >= 0; --i)
+		{
+			var elem = scriptElems[i];
+			if (elem.src)
+			{
+				var matchResult = elem.src.match(entranceSrc);
+				if (matchResult)
+				{
+					var pstr = matchResult[2];
+					if (pstr)
+						pstr = pstr.substr(1);  // eliminate starting '?'
+					var result = {
+						'src': elem.src,
+						'path': matchResult[1],
+						'paramStr': pstr,
+						'useMinFile': true
+					};
+					return result;
+				}
+			}
+		}
+		return null;
+	})();
+}
+
+Kekule.getScriptPath = function()
+{
+	return Kekule.scriptSrcInfo.path;
+};
+Kekule.getScriptSrc = function()
+{
+	return Kekule.scriptSrcInfo.src;
+};
+Kekule.getStyleSheetPath = function()
+{
+	//var cssFileName = 'themes/default/kekule.css';
+	var cssPath;
+	var scriptInfo = Kekule.scriptSrcInfo;
+	if (scriptInfo.useMinFile)
+		cssPath = scriptInfo.path;
+	else
+		cssPath = scriptInfo.path + 'widgets/';
+	return cssPath;
+};
+Kekule.getStyleSheetUrl = function()
+{
+	var path = Kekule.getStyleSheetPath();
+	return path + 'themes/default/kekule.css';
+};
+
+if (Kekule.$jsRoot &amp;&amp; Kekule.$jsRoot.addEventListener &amp;&amp; Kekule.$jsRoot.postMessage)
+{
+	// response to special message, returns Kekule sys info.
+	// This query is usually requested by browser addon to check
+	// if Kekule lib is loaded into a web page
+	Kekule.$jsRoot.addEventListener('message', function(event)
+	{
+		if (event.data === 'kekule-sys-info-query')
+		{
+			Kekule.$jsRoot.postMessage({
+				'msg': 'kekule-sys-info-result',
+				'libName': Kekule.LIBNAME,
+				'version': Kekule.VERSION
+				//'scriptSrcInfo': Kekule.scriptSrcInfo
+			}, '*');
+		}
+	}, false);
+}
 </code></pre>
         </article>
     </section>
@@ -59,13 +235,13 @@ Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:22 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -92,7 +92,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line38">line 38</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -353,7 +353,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line432">line 432</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line685">line 685</a>
     </li></ul></dd>
     
 
@@ -526,7 +526,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line258">line 258</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line424">line 424</a>
     </li></ul></dd>
     
 
@@ -579,7 +579,7 @@
             
 <dt>
     
-        <h4 class="name" id="calcTetrahedronChiralCenterRotationDirection"><span class="type-signature">(static) </span>calcTetrahedronChiralCenterRotationDirection<span class="signature">(coordMode, centerNode, refSibling, siblings, withImplicitSibling, refSiblingBehind)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+        <h4 class="name" id="calcTetrahedronChiralCenterRotationDirection"><span class="type-signature">(static) </span>calcTetrahedronChiralCenterRotationDirection<span class="signature">(coordMode, centerNode, refSibling, siblings, withImplicitSibling, additionalOptions, refSiblingBehind)</span><span class="type-signature"> &rarr; {Int}</span></h4>
 
         
     
@@ -737,6 +737,29 @@
 
         <tr>
             
+                <td class="name"><code>additionalOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>refSiblingBehind</code></td>
             
 
@@ -791,7 +814,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line505">line 505</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1070">line 1070</a>
     </li></ul></dd>
     
 
@@ -844,7 +867,226 @@
             
 <dt>
     
-        <h4 class="name" id="calcTetrahedronChiralNodeParity"><span class="type-signature">(static) </span>calcTetrahedronChiralNodeParity<span class="signature">(node, coordMode)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+        <h4 class="name" id="calcTetrahedronChiralCenterRotationDirectionEx"><span class="type-signature">(static) </span>calcTetrahedronChiralCenterRotationDirectionEx<span class="signature">(centerNode, refSibling, siblings, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns rotation direction of a tetrahedron chiral center. Rotation follows the sequence of param siblings.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>centerNode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemStructureNode</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Center node used to get center coord. If this param is not set, geometric center  of sibling nodes will be used instead.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>refSibling</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemStructureNode</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Sibling node to determine the looking direction.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>siblings</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array of Kekule.ChemStructureNode, should not include refSibling.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Calculation option, may include the following fields: <br />  { <br />    coordMode: Int, use 2D or 3D coord of nodes. <br />    withImplicitSibling: Bool, whether there is a implicit sibling (e.g., implicit H atom). Coord of implicit node will be calculated from other sibling nodes.      If this param is true and param refSibling is null, this implicit node will be regarded as refSibling, otherwise the      implicit node will be regarded as the last one of siblings. <br />    implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.      Default is true. Only works when coord mode is 2D.    fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,      default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree).    reversedFischer: If true, the node on vertical line will be toward observer instead,    allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure).      Default is true.    allowExplicitVerticalHydrogen: Whether the implicit hydrogen on vertical direction is allowed (used in SMILES generation).  }</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line892">line 892</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Value from <a href="Kekule.html#RotationDir">Kekule.RotationDir</a>, clockwise, anti-clockwise or unknown.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="calcTetrahedronChiralNodeParity"><span class="type-signature">(static) </span>calcTetrahedronChiralNodeParity<span class="signature">(node, coordMode, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
 
         
     
@@ -926,7 +1168,30 @@
 
             
 
-            <td class="description last">Use 2D or 3D coord to calculate.//@param {Kekule.StructureFragment} parentMol</td>
+            <td class="description last">Use 2D or 3D coord to calculate.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Chiral calculation options, including:  { <br/>    ignoreChiralCheck: Bool, Whether bypass the check to ensure node is a chiral center. <br/>    implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.      Only works when coord mode is 2D. <br/>    fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,      default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>    reversedFischer: If true, the node on vertical line will be toward observer instead,    allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>  }//@param {Kekule.StructureFragment} parentMol</td>
         </tr>
 
     
@@ -964,7 +1229,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line642">line 642</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1099">line 1099</a>
     </li></ul></dd>
     
 
@@ -1125,6 +1390,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
+    
 
     
 
@@ -1137,7 +1404,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line405">line 405</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1351">line 1351</a>
     </li></ul></dd>
     
 
@@ -1186,7 +1453,7 @@
             
 <dt>
     
-        <h4 class="name" id="findStereoBonds"><span class="type-signature">(static) </span>findStereoBonds<span class="signature">(structFragmentOrCtab, ignoreCanonicalization)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+        <h4 class="name" id="findStereoConnectors"><span class="type-signature">(static) </span>findStereoConnectors<span class="signature">(structFragmentOrCtab, ignoreCanonicalization)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
         
     
@@ -1294,6 +1561,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
+    
 
     
 
@@ -1306,7 +1575,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line199">line 199</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1312">line 1312</a>
     </li></ul></dd>
     
 
@@ -1567,7 +1836,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line49">line 49</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line62">line 62</a>
     </li></ul></dd>
     
 
@@ -1828,7 +2097,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line127">line 127</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -1978,7 +2247,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line218">line 218</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line335">line 335</a>
     </li></ul></dd>
     
 
@@ -2031,6 +2300,156 @@
             
 <dt>
     
+        <h4 class="name" id="getStereoBondRelNodes"><span class="type-signature">(static) </span>getStereoBondRelNodes<span class="signature">(connector)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns all related nodes to determine the stereo of a double bond(including two bond atoms and four possible connected atoms).
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>connector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.ChemStructureConnector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line378">line 378</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Array of nodes.  For structure A1/A2 >C1=C2< B1/B2, the return sequence should be [C1, C2, A1, A2, B1, B2]  where A1/B1 has superior canonicalization index.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
         <h4 class="name" id="isChiralNode"><span class="type-signature">(static) </span>isChiralNode<span class="signature">(node)</span><span class="type-signature"></span></h4>
 
         
@@ -2040,7 +2459,7 @@
 
     
     <div class="description">
-        Check if a chem structure node is a chiral one.Note: now only C/S/P/N atoms are considered, and the parent structure fragment may be standardized.
+        Check if a chem structure node is a chiral one.Note: now only C/Si/S/P/N/B atoms are considered, and the parent structure fragment may be standardized.
     </div>
     
 
@@ -2128,7 +2547,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line338">line 338</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line578">line 578</a>
     </li></ul></dd>
     
 
@@ -2256,7 +2675,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line144">line 144</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line247">line 247</a>
     </li></ul></dd>
     
 
@@ -2305,7 +2724,7 @@
             
 <dt>
     
-        <h4 class="name" id="perceiveChiralNodes"><span class="type-signature">(static) </span>perceiveChiralNodes<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+        <h4 class="name" id="perceiveChiralNodes"><span class="type-signature">(static) </span>perceiveChiralNodes<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
         
     
@@ -2414,6 +2833,29 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Chiral calculation options, including:  { <br/>    implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.      Only works when coord mode is 2D. <br/>    fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,      default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>    reversedFischer: If true, the node on vertical line will be toward observer instead,    allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>  }</td>
+        </tr>
+
+    
     </tbody>
 </table>
     
@@ -2436,6 +2878,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
+    
 
     
 
@@ -2448,7 +2892,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line682">line 682</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1378">line 1378</a>
     </li></ul></dd>
     
 
@@ -2501,7 +2945,7 @@
             
 <dt>
     
-        <h4 class="name" id="perceiveStereoConnectors"><span class="type-signature">(static) </span>perceiveStereoConnectors<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+        <h4 class="name" id="perceiveStereoConnectors"><span class="type-signature">(static) </span>perceiveStereoConnectors<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization, strictStereoBondGeometry)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
         
     
@@ -2610,6 +3054,29 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>strictStereoBondGeometry</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
     </tbody>
 </table>
     
@@ -2632,6 +3099,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
+    
 
     
 
@@ -2644,7 +3113,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line309">line 309</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1331">line 1331</a>
     </li></ul></dd>
     
 
@@ -2697,7 +3166,7 @@
             
 <dt>
     
-        <h4 class="name" id="perceiveStereos"><span class="type-signature">(static) </span>perceiveStereos<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+        <h4 class="name" id="perceiveStereos"><span class="type-signature">(static) </span>perceiveStereos<span class="signature">(structFragmentOrCtab, coordMode, ignoreCanonicalization, options)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
         
     
@@ -2806,6 +3275,29 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Chiral calculation options, including:  { <br/>    useFlatternedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />    perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. <br />    perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />    calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />    strictStereoBondGeometry: Bool, if true, the illegal bond geometry will be ignored in calculation (e.g., two connected atoms on same side of a double bond). <br />    implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.      Only works when coord mode is 2D. <br/>    fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,      default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>    reversedFischer: If true, the node on vertical line will be toward observer instead. <br />    allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>  }</td>
+        </tr>
+
+    
     </tbody>
 </table>
     
@@ -2840,7 +3332,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line716">line 716</a>
+        <a href="algorithm_kekule.structures.stereos.js.html">algorithm/kekule.structures.stereos.js</a>, <a href="algorithm_kekule.structures.stereos.js.html#line1206">line 1206</a>
     </li></ul></dd>
     
 
@@ -2905,13 +3397,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:34 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:24 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

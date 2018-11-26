@@ -59,6 +59,7 @@ Kekule.ChemObjOperation = {};
  *
  * @property {Kekule.ChemObject} target Target chem object.
  * @property {Bool} allowCoordBorrow Whether allow borrowing between 2D and 3D when manipulating coords.
+ * @property {Kekule.Editor.BaseEditor} The editor object associated.
  */
 Kekule.ChemObjOperation.Base = Class.create(Kekule.Operation,
 /** @lends Kekule.ChemObjOperation.Base# */
@@ -66,16 +67,56 @@ Kekule.ChemObjOperation.Base = Class.create(Kekule.Operation,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.Base',
 	/** @constructs */
-	initialize: function($super, chemObj)
+	initialize: function($super, chemObj, editor)
 	{
 		$super();
 		this.setTarget(chemObj);
+		if (editor)
+			this.setEditor(editor);
 	},
 	/** @private */
 	initProperties: function()
 	{
 		this.defineProp('target', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('allowCoordBorrow', {'dataType': DataType.BOOL});
+		this.defineProp('editor', {'dataType': 'Kekule.Editor.BaseEditor', 'serializable': false});
+	},
+	// A series of notification method to target object
+	/** @private */
+	notifyBeforeAddingByEditor: function(obj, parent, refSibling)
+	{
+		if (obj.beforeAddingByEditor)  // if this special notification method exists, call it first
+			obj.beforeAddingByEditor(parent, refSibling);
+	},
+	/** @private */
+	notifyBeforeRemovingByEditor: function(obj, parent)
+	{
+		if (obj.beforeRemovingByEditor)  // if this special notification method exists, call it first
+			obj.beforeRemovingByEditor(parent);
+	},
+	/** @private */
+	notifyBeforeModifyingByEditor: function(obj, propValues)
+	{
+		if (obj.beforeModifyingByEditor)  // if this special notification method exists, call it first
+			obj.beforeModifyingByEditor(propValues);
+	},
+	/** @private */
+	notifyAfterAddingByEditor: function(obj, parent, refSibling)
+	{
+		if (obj.afterAddingByEditor)  // if this special notification method exists, call it first
+			obj.afterAddingByEditor(parent, refSibling);
+	},
+	/** @private */
+	notifyAfterRemovingByEditor: function(obj, parent)
+	{
+		if (obj.afterRemovingByEditor)  // if this special notification method exists, call it first
+			obj.afterRemovingByEditor(parent);
+	},
+	/** @private */
+	notifyAfterModifyingByEditor: function(obj, propValues)
+	{
+		if (obj.afterModifyingByEditor)  // if this special notification method exists, call it first
+			obj.afterModifyingByEditor(propValues);
 	}
 });
 
@@ -95,9 +136,9 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.Modify',
 	/** @constructs */
-	initialize: function($super, chemObj, newPropValues)
+	initialize: function($super, chemObj, newPropValues, editor)
 	{
-		$super(chemObj);
+		$super(chemObj, editor);
 		if (newPropValues)
 			this.setNewPropValues(newPropValues);
 	},
@@ -113,13 +154,23 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 		var oldValues = {};
 		var map = this.getNewPropValues();
 		var obj = this.getTarget();
-		for (var prop in map)
+		obj.beginUpdate();
+		try
 		{
-			var value = map[prop];
-			// store old value first
-			oldValues[prop] = obj.getPropValue(prop);
-			// set new value
-			obj.setPropValue(prop, value);
+			this.notifyBeforeModifyingByEditor(obj, map);
+			for (var prop in map)
+			{
+				var value = map[prop];
+				// store old value first
+				oldValues[prop] = obj.getPropValue(prop);
+				// set new value
+				obj.setPropValue(prop, value);
+			}
+			this.notifyAfterModifyingByEditor(obj, map);
+		}
+		finally
+		{
+			obj.endUpdate();
 		}
 		this.setOldPropValues(oldValues);
 	},
@@ -128,11 +179,21 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 	{
 		var map = this.getOldPropValues();
 		var obj = this.getTarget();
-		for (var prop in map)
+		obj.beginUpdate();
+		try
 		{
-			var value = map[prop];
-			// restore old value
-			obj.setPropValue(prop, value);
+			this.notifyBeforeModifyingByEditor(obj, map);
+			for (var prop in map)
+			{
+				var value = map[prop];
+				// restore old value
+				obj.setPropValue(prop, value);
+			}
+			this.notifyAfterModifyingByEditor(obj, map);
+		}
+		finally
+		{
+			obj.endUpdate();
 		}
 	}
 });
@@ -145,12 +206,12 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
  * @param {Kekule.ChemObject} chemObject Target chem object.
  * @param {Hash} newCoord
  * @param {Int} coordMode
- * @param {Bool} useAbsCoord
+ * @param {Bool} useAbsBaseCoord
  *
  * @property {Hash} newCoord
  * @property {Hash} oldCoord If old coord is not set, this property will be automatically calculated when execute the operation.
  * @property {Int} coordMode
- * @property {Bool} useAbsCoord
+ * @property {Bool} useAbsBaseCoord
  */
 Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 /** @lends Kekule.ChemObjOperation.MoveTo# */
@@ -158,13 +219,13 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.MoveTo',
 	/** @constructs */
-	initialize: function($super, chemObj, newCoord, coordMode, useAbsCoord)
+	initialize: function($super, chemObj, newCoord, coordMode, useAbsBaseCoord, editor)
 	{
-		$super(chemObj);
+		$super(chemObj, editor);
 		if (newCoord)
 			this.setNewCoord(newCoord);
 		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
-		this.setUseAbsCoord(!!useAbsCoord);
+		this.setUseAbsBaseCoord(!!useAbsBaseCoord);
 	},
 	/** @private */
 	initProperties: function()
@@ -172,7 +233,7 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 		this.defineProp('newCoord', {'dataType': DataType.HASH});
 		this.defineProp('oldCoord', {'dataType': DataType.HASH});
 		this.defineProp('coordMode', {'dataType': DataType.INT});
-		this.defineProp('useAbsCoord', {'dataType': DataType.BOOL});
+		this.defineProp('useAbsBaseCoord', {'dataType': DataType.BOOL});
 	},
 	/** @private */
 	setObjCoord: function(obj, coord, coordMode)
@@ -180,11 +241,18 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 		if (obj &amp;&amp; coord &amp;&amp; coordMode)
 		{
 			var success = false;
-			if (this.getUseAbsCoord())
+			if (this.getUseAbsBaseCoord())
 			{
+				/*
 				if (obj.setAbsCoordOfMode)
 				{
 					obj.setAbsCoordOfMode(coord, coordMode);
+					success = true;
+				}
+				*/
+				if (obj.setAbsBaseCoord)
+				{
+					obj.setAbsBaseCoord(coord, coordMode, this.getAllowCoordBorrow());
 					success = true;
 				}
 			}
@@ -206,10 +274,14 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	getObjCoord: function(obj, coordMode)
 	{
-		if (this.getUseAbsCoord())
+		if (this.getUseAbsBaseCoord())
 		{
+			/*
 			if (obj.getAbsCoordOfMode)
 				return obj.getAbsCoordOfMode(coordMode, this.getAllowCoordBorrow());
+			*/
+			if (obj.getAbsBaseCoord)
+				return obj.getAbsBaseCoord(coordMode, this.getAllowCoordBorrow());
 		}
 		else
 		{
@@ -258,9 +330,9 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.MoveAndResize',
 	/** @constructs */
-	initialize: function($super, chemObj, newDimension, newCoord, coordMode, useAbsCoord)
+	initialize: function($super, chemObj, newDimension, newCoord, coordMode, useAbsCoord, editor)
 	{
-		$super(chemObj, newCoord, coordMode, useAbsCoord);
+		$super(chemObj, newCoord, coordMode, useAbsCoord, editor);
 	},
 	/** @private */
 	initProperties: function()
@@ -298,7 +370,9 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 		$super();
 		var obj = this.getTarget();
 		if (!this.getOldDimension())
+		{
 			this.setOldDimension(this.getObjSize(obj, this.getCoordMode()));
+		}
 		if (this.getNewDimension())
 			this.setObjSize(this.getTarget(), this.getNewDimension(), this.getCoordMode());
 	},
@@ -329,9 +403,9 @@ Kekule.ChemObjOperation.Add = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.Add',
 	/** @constructs */
-	initialize: function($super, chemObj, parentObj, refSibling)
+	initialize: function($super, chemObj, parentObj, refSibling, editor)
 	{
-		$super(chemObj);
+		$super(chemObj, editor);
 		this.setParentObj(parentObj);
 		this.setRefSibling(refSibling);
 	},
@@ -349,7 +423,9 @@ Kekule.ChemObjOperation.Add = Class.create(Kekule.ChemObjOperation.Base,
 		if (parent &amp;&amp; obj)
 		{
 			var sibling = this.getRefSibling() || null;
+			this.notifyBeforeAddingByEditor(obj, parent, sibling);
 			parent.insertBefore(obj, sibling);
+			this.notifyAfterAddingByEditor(obj, parent, sibling);
 		}
 	},
 	/** @private */
@@ -372,7 +448,9 @@ Kekule.ChemObjOperation.Add = Class.create(Kekule.ChemObjOperation.Base,
 				sibling = obj.getNextSibling();
 				this.setRefSibling(sibling);
 			}
+			this.notifyBeforeRemovingByEditor(obj, parent);
 			parent.removeChild(obj);
+			this.notifyAfterRemovingByEditor(obj, parent);
 		}
 	}
 });
@@ -396,9 +474,9 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjOperation.Remove',
 	/** @constructs */
-	initialize: function($super, chemObj, parentObj, refSibling)
+	initialize: function($super, chemObj, parentObj, refSibling, editor)
 	{
-		$super(chemObj);
+		$super(chemObj, editor);
 		this.setParentObj(parentObj);
 		this.setRefSibling(refSibling);
 	},
@@ -406,17 +484,32 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	initProperties: function()
 	{
 		this.defineProp('parentObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+		this.defineProp('ownerObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('refSibling', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 	},
+
+	/** @private */
+	_isInEditorSelection: function(obj)
+	{
+		var editor = this.getEditor();
+		return ((editor &amp;&amp; editor.getSelection &amp;&amp; editor.getSelection()) || []).indexOf(obj) >= 0;
+	},
+
 	/** @private */
 	doExecute: function()
 	{
 		var obj = this.getTarget();
 		var parent = this.getParentObj();
+		var owner = this.getOwnerObj();
 		if (!parent &amp;&amp; obj.getParent)
 		{
 			parent = obj.getParent();
 			this.setParentObj(parent);
+		}
+		if (!owner &amp;&amp; obj.getOwner)
+		{
+			owner = obj.getOwner();
+			this.setOwnerObj(owner);
 		}
 
 		if (parent &amp;&amp; obj)
@@ -426,19 +519,41 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 				var sibling = obj.getNextSibling? obj.getNextSibling(): null;
 				this.setRefSibling(sibling);
 			}
+
+			//console.log('remove', obj.getId());
+			// ensure obj is also removed from editor's selection
+			var editor = this.getEditor();
+			var needModifySelection = this._isInEditorSelection(obj);
+			if (needModifySelection)
+				editor.beginUpdateSelection();
+
 			//console.log('remove child', parent.getClassName(), obj.getClassName());
-			parent.removeChild(obj)
+			this.notifyBeforeRemovingByEditor(obj, parent);
+			parent.removeChild(obj);
+			this.notifyAfterRemovingByEditor(obj, parent);
+
+			if (needModifySelection)
+			{
+				//console.log('remove from selection', obj.getId());
+				editor.removeFromSelection(obj);
+				editor.endUpdateSelection();
+			}
 		}
 	},
 	/** @private */
 	doReverse: function()
 	{
 		var parent = this.getParentObj();
+		var owner = this.getOwnerObj();
 		var obj = this.getTarget();
 		if (parent &amp;&amp; obj)
 		{
 			var sibling = this.getRefSibling();
+			if (owner)
+				obj.setOwner(owner);
+			this.notifyBeforeAddingByEditor(obj, parent, sibling);
 			parent.insertBefore(obj, sibling);
+			this.notifyAfterAddingByEditor(obj, parent, sibling);
 		}
 	}
 });
@@ -519,12 +634,13 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.ReplaceNode',
 	/** @constructs */
-	initialize: function($super, oldNode, newNode, parentObj)
+	initialize: function($super, oldNode, newNode, parentObj, editor)
 	{
 		$super();
 		this.setOldNode(oldNode);
 		this.setNewNode(newNode);
 		this.setParentObj(parentObj);
+		this.setEditor(editor);
 	},
 	/** @private */
 	initProperties: function()
@@ -532,6 +648,13 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 		this.defineProp('oldNode', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
 		this.defineProp('newNode', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
 		this.defineProp('parentObj', {'dataType': 'Kekule.ChemStructureFragment', 'serializable': false});
+		this.defineProp('editor', {'dataType': 'Kekule.Editor.BaseEditor', 'serializable': false});
+	},
+	/** @private */
+	_isInEditorSelection: function(node)
+	{
+		var editor = this.getEditor();
+		return ((editor &amp;&amp; editor.getSelection &amp;&amp; editor.getSelection()) || []).indexOf(node) >= 0;
 	},
 	/** @private */
 	doExecute: function()
@@ -547,7 +670,19 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 				this.setParentObj(parent);
 			}
 			if (parent.replaceNode)
+			{
+				var editor = this.getEditor();
+				var needModifySelection = this._isInEditorSelection(oldNode);
+				if (needModifySelection)
+					editor.beginUpdateSelection();
 				parent.replaceNode(oldNode, newNode);
+				if (needModifySelection)
+				{
+					editor.removeFromSelection(oldNode);
+					editor.addObjToSelection(newNode);
+					editor.endUpdateSelection();
+				}
+			}
 		}
 	},
 	/** @private */
@@ -561,7 +696,17 @@ Kekule.ChemStructOperation.ReplaceNode = Class.create(Kekule.Operation,
 			if (parent.replaceNode)
 			{
 				//console.log('reverse!');
+				var editor = this.getEditor();
+				var needModifySelection = this._isInEditorSelection(newNode);
+				if (needModifySelection)
+					editor.beginUpdateSelection();
 				parent.replaceNode(newNode, oldNode);
+				if (needModifySelection)
+				{
+					editor.removeFromSelection(newNode)
+					editor.addObjToSelection(oldNode);
+					editor.endUpdateSelection();
+				}
 			}
 		}
 	}
@@ -585,11 +730,11 @@ Kekule.ChemStructOperation.AddConnector = Class.create(Kekule.ChemObjOperation.A
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.AddConnector',
 	/** @constructs */
-	initialize: function($super, chemObj, parentObj, refSibling, connectedObjs)
+	initialize: function($super, chemObj, parentObj, refSibling, connectedObjs, editor)
 	{
-		$super(chemObj);
-		this.setParentObj(parentObj);
-		this.setRefSibling(refSibling);
+		$super(chemObj, parentObj, refSibling, editor);
+		//this.setParentObj(parentObj);
+		//this.setRefSibling(refSibling);
 		this.setConnectedObjs(connectedObjs);
 	},
 	/** @private */
@@ -654,7 +799,7 @@ Kekule.ChemStructOperation.RemoveConnector = Class.create(Kekule.ChemObjOperatio
 });
 
 /**
- * Operation of merging two nodes as one.
+ * The base operation of merging two nodes as one, acts as the parent class of MergeNodes and MergeNodesPreview.
  * @class
  * @augments Kekule.ChemObjOperation.Base
  *
@@ -664,32 +809,26 @@ Kekule.ChemStructOperation.RemoveConnector = Class.create(Kekule.ChemObjOperatio
  *
  * @property {Kekule.ChemStructureNode} target Source node, all connectors to this node will be connected to toNode.
  * @property {Kekule.ChemStructureNode} dest Destination node.
- * @property {Array} changedConnectors Connectors modified during merge.
- * @property {Array} removedConnectors Connectors removed during merge.
  * @property {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging nodes between different molecule.
  */
-Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Base,
-/** @lends Kekule.ChemStructOperation.MergeNodes# */
+Kekule.ChemStructOperation.MergeNodesBase = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemStructOperation.MergeNodesBase# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemStructOperation.MergeNodes',
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeNodesBase',
 	/** @constructs */
-	initialize: function($super, target, dest, enableStructFragmentMerge)
+	initialize: function($super, target, dest, enableStructFragmentMerge, editor)
 	{
-		$super(target);
+		$super(target, editor);
 		this.setDest(dest);
 		this.setEnableStructFragmentMerge(enableStructFragmentMerge || false);
 		this._refSibling = null;
 		this._nodeParent = null;
-		this._structFragmentMergeOperation = null;
-		this._removeConnectorOperations = [];
 	},
 	/** @private */
 	initProperties: function()
 	{
 		this.defineProp('dest', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
-		this.defineProp('changedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
-		this.defineProp('removedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('enableStructFragmentMerge', {'dataType': DataType.BOOL});
 	},
 	/**
@@ -707,16 +846,62 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 	/** @private */
 	doExecute: function()
 	{
+		// do nothing, descendants should override
+	},
+	/** @private */
+	doReverse: function()
+	{
+		// do nothing, descendants should override
+	}
+});
+
+/**
+ * Operation of merging two nodes as one.
+ * @class
+ * @augments Kekule.ChemStructOperation.MergeNodesBase
+ *
+ * @param {Kekule.ChemStructureNode} target Source node, all connectors to this node will be connected to toNode.
+ * @param {Kekule.ChemStructureNode} dest Destination node.
+ * @param {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging nodes between different molecule.
+ *
+ * @property {Array} changedConnectors Connectors modified during merge.
+ * @property {Array} removedConnectors Connectors removed during merge.
+ */
+Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.MergeNodesBase,
+/** @lends Kekule.ChemStructOperation.MergeNodes# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeNodes',
+	/** @constructs */
+	initialize: function($super, target, dest, enableStructFragmentMerge, editor)
+	{
+		$super(target, dest, enableStructFragmentMerge, editor);
+		this._refSibling = null;
+		this._nodeParent = null;
+		this._structFragmentMergeOperation = null;
+		this._removeConnectorOperations = [];
+		this._removeNodeOperation = null;
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('changedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('removedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
+		//this.defineProp('enableStructFragmentMerge', {'dataType': DataType.BOOL});
+	},
+	/** @ignore */
+	doExecute: function()
+	{
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
-		var structFragment = fromNode.getParent();
-		var destFragment = toNode.getParent();
+		var structFragment = fromNode.getParentFragment();
+		var destFragment = toNode.getParentFragment();
 		if (structFragment !== destFragment)  // from different molecule
 		{
 			//console.log('need merge mol');
 			if (this.getEnableStructFragmentMerge())
 			{
-				this._structFragmentMergeOperation = new Kekule.ChemStructOperation.MergeStructFragment(structFragment, destFragment);
+				this._structFragmentMergeOperation = new Kekule.ChemStructOperation.MergeStructFragment(structFragment, destFragment, this.getEditor());
 				//this._structFragmentMergeOperation = new Kekule.ChemStructOperation.MergeStructFragment(destFragment, structFragment);
 				this._structFragmentMergeOperation.execute();
 				structFragment = destFragment;
@@ -726,58 +911,69 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 		}
 		this._nodeParent = structFragment;
 
-		var removedConnectors = this.getRemovedConnectors();
-		if (!removedConnectors)  // auto calc
+		structFragment.beginUpdate();
+		try
 		{
-			var commonSiblings = this.getCommonSiblings(fromNode, toNode);
-			var removedConnectors = [];
-			if (commonSiblings.length)  // has common sibling between from/toNode, bypass bond between fromNode and sibling
+			var editor = this.getEditor();
+			var removedConnectors = this.getRemovedConnectors();
+			if (!removedConnectors)  // auto calc
 			{
-				for (var i = 0, l = commonSiblings.length; i &lt; l; ++i)
+				var commonSiblings = this.getCommonSiblings(fromNode, toNode);
+				var removedConnectors = [];
+				if (commonSiblings.length)  // has common sibling between from/toNode, bypass bond between fromNode and sibling
 				{
-					var sibling = commonSiblings[i];
-					var connector = fromNode.getConnectorTo(sibling);
-					if (connector &amp;&amp; (connector.getConnectedObjCount() == 2))
-						removedConnectors.push(connector);
+					for (var i = 0, l = commonSiblings.length; i &lt; l; ++i)
+					{
+						var sibling = commonSiblings[i];
+						var connector = fromNode.getConnectorTo(sibling);
+						if (connector &amp;&amp; (connector.getConnectedObjCount() == 2))
+							removedConnectors.push(connector);
+					}
 				}
+				var directConnector = fromNode.getConnectorTo(toNode);
+				if (directConnector)
+					removedConnectors.push(directConnector);
+				this.setRemovedConnectors(removedConnectors);
 			}
-			var directConnector = fromNode.getConnectorTo(toNode);
-			if (directConnector)
-				removedConnectors.push(directConnector);
-			this.setRemovedConnectors(removedConnectors);
-		}
 
-		var connectors = this.getChangedConnectors();
-		if (!connectors)  // auto calc
+			var connectors = this.getChangedConnectors();
+			if (!connectors)  // auto calc
+			{
+				var connectors = Kekule.ArrayUtils.clone(fromNode.getLinkedConnectors()) || [];
+				connectors = Kekule.ArrayUtils.exclude(connectors, removedConnectors);
+				this.setChangedConnectors(connectors);
+			}
+
+			// save fromNode's information
+			this._refSibling = fromNode.getNextSibling();
+
+			for (var i = 0, l = connectors.length; i &lt; l; ++i)
+			{
+				var connector = connectors[i];
+				var index = connector.indexOfConnectedObj(fromNode);
+				connector.removeConnectedObj(fromNode);
+				connector.insertConnectedObjAt(toNode, index);  // keep the index is important, wedge bond direction is related with node sequence
+			}
+
+			this._removeConnectorOperations = [];
+			for (var i = 0, l = removedConnectors.length; i &lt; l; ++i)
+			{
+				var connector = removedConnectors[i];
+				var oper = new Kekule.ChemStructOperation.RemoveConnector(connector, null, null, editor);
+				oper.execute();
+				this._removeConnectorOperations.push(oper);
+			}
+
+			//structFragment.removeNode(fromNode);
+			this._removeNodeOperation = new Kekule.ChemStructOperation.RemoveNode(fromNode, null, null, editor);
+			this._removeNodeOperation.execute();
+		}
+		finally
 		{
-			var connectors = Kekule.ArrayUtils.clone(fromNode.getLinkedConnectors()) || [];
-			connectors = Kekule.ArrayUtils.exclude(connectors, removedConnectors);
-			this.setChangedConnectors(connectors);
+			structFragment.endUpdate();
 		}
-
-		// save fromNode's information
-		this._refSibling = fromNode.getNextSibling();
-
-		for (var i = 0, l = connectors.length; i &lt; l; ++i)
-		{
-			var connector = connectors[i];
-			var index = connector.indexOfConnectedObj(fromNode);
-			connector.removeConnectedObj(fromNode);
-			connector.insertConnectedObjAt(toNode, index);  // keep the index is important, wedge bond direction is related with node sequence
-		}
-
-		this._removeConnectorOperations = [];
-		for (var i = 0, l = removedConnectors.length; i &lt; l; ++i)
-		{
-			var connector = removedConnectors[i];
-			var oper = new Kekule.ChemStructOperation.RemoveConnector(connector);
-			oper.execute();
-			this._removeConnectorOperations.push(oper);
-		}
-
-		structFragment.removeNode(fromNode);
 	},
-	/** @private */
+	/** @ignore */
 	doReverse: function()
 	{
 		var fromNode = this.getTarget();
@@ -786,32 +982,41 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 		//var structFragment = toNode.getParent();
 		var structFragment = this._nodeParent;
 
-		/*
-		console.log(fromNode.getParent(), fromNode.getParent() === structFragment,
-			toNode.getParent(), toNode.getParent() === structFragment);
-    */
-		structFragment.insertBefore(fromNode, this._refSibling);
-
-		if (this._removeConnectorOperations.length)
+		structFragment.beginUpdate();
+		try
 		{
-			for (var i = this._removeConnectorOperations.length - 1; i >= 0; --i)
+			/*
+			 console.log(fromNode.getParent(), fromNode.getParent() === structFragment,
+			 toNode.getParent(), toNode.getParent() === structFragment);
+			 */
+			//structFragment.insertBefore(fromNode, this._refSibling);
+			this._removeNodeOperation.reverse();
+
+			if (this._removeConnectorOperations.length)
 			{
-				var oper = this._removeConnectorOperations[i];
-				oper.reverse();
+				for (var i = this._removeConnectorOperations.length - 1; i >= 0; --i)
+				{
+					var oper = this._removeConnectorOperations[i];
+					oper.reverse();
+				}
+			}
+			this._removeConnectorOperations = [];
+
+			var connectors = this.getChangedConnectors();
+
+			//console.log('reverse node merge2', toNode, toNode.getParent());
+
+			for (var i = 0, l = connectors.length; i &lt; l; ++i)
+			{
+				var connector = connectors[i];
+				var index = connector.indexOfConnectedObj(toNode);
+				connector.removeConnectedObj(toNode);
+				connector.insertConnectedObjAt(fromNode, index);
 			}
 		}
-		this._removeConnectorOperations = [];
-
-		var connectors = this.getChangedConnectors();
-
-		//console.log('reverse node merge2', toNode, toNode.getParent());
-
-		for (var i = 0, l = connectors.length; i &lt; l; ++i)
+		finally
 		{
-			var connector = connectors[i];
-			var index = connector.indexOfConnectedObj(toNode);
-			connector.removeConnectedObj(toNode);
-			connector.insertConnectedObjAt(fromNode, index);
+			structFragment.endUpdate();
 		}
 
 		//console.log('reverse node merge', toNode, toNode.getParent());
@@ -822,22 +1027,104 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemObjOperation.Bas
 		}
 	}
 });
-	/**
-	 * A class method to check if two connectors can be merged
-	 * @param {Kekule.ChemStructureNode} target
-	 * @param {Kekule.ChemStructureNode} dest
-	 * @param {Bool} canMergeStructFragment
-	 * @returns {Bool}
-	 */
+/**
+ * A class method to check if two connectors can be merged
+ * @param {Kekule.ChemStructureNode} target
+ * @param {Kekule.ChemStructureNode} dest
+ * @param {Bool} canMergeStructFragment
+ * @returns {Bool}
+ */
 Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMergeStructFragment, canMergeNeighborNodes)
 {
+	// never allow merge to another molecule point (e.g. formula molecule) or subgroup
+	if ((target instanceof Kekule.StructureFragment) || (dest instanceof Kekule.StructureFragment))
+		return false;
+	if (!((target instanceof Kekule.ChemStructureNode) &amp;&amp; (dest instanceof Kekule.ChemStructureNode)))
+		return false;
 	var targetFragment = target.getParent();
 	var destFragment = dest.getParent();
 	var result = (targetFragment === destFragment) || canMergeStructFragment;
 	if (!canMergeNeighborNodes)
-		result = result &amp;&amp; (!target.getConnectorTo(dest))
+		result = result &amp;&amp; (!target.getConnectorTo(dest));
 	return result;
 };
+
+/**
+ * Preview operation of merging two nodes as one.
+ * This operation just set the same position of merging nodes, but do not do the actual merge.
+ * @class
+ * @augments Kekule.ChemStructOperation.MergeNodesBase
+ *
+ * @param {Kekule.ChemStructureNode} target Source node, all connectors to this node will be connected to toNode.
+ * @param {Kekule.ChemStructureNode} dest Destination node.
+ * @param {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging nodes between different molecule.
+ */
+Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOperation.MergeNodesBase,
+/** @lends Kekule.ChemStructOperation.MergeNodesPreview# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeNodesPreview',
+	/** @constructs */
+	initialize: function($super, target, dest, enableStructFragmentMerge, editor)
+	{
+		$super(target, dest, enableStructFragmentMerge, editor);
+		this._nodeParent = null;
+	},
+	/** @ignore */
+	doExecute: function()
+	{
+		this._moveNodeOperations = [];
+		var fromNode = this.getTarget();
+		var toNode = this.getDest();
+		var structFragment = fromNode.getParentFragment();
+		/*
+		if (!structFragment)
+			console.log('merge from', fromNode.getId(), 'to', toNode.getId());
+		*/
+		var CM = Kekule.CoordMode;
+		var coordModes = [CM.COORD2D, CM.COORD3D];
+		if (structFragment)
+			structFragment.beginUpdate();
+		try
+		{
+			for (var i = 0, l = coordModes.length; i &lt; l; ++i)
+			{
+				var toCoord = toNode.getAbsBaseCoord(coordModes[i], false);
+				var oper = new Kekule.ChemObjOperation.MoveTo(fromNode, toCoord, coordModes[i], true, this.getEditor());
+				oper.execute();
+				this._moveNodeOperations.push(oper);
+			}
+			this._nodeParent = structFragment;
+		}
+		finally
+		{
+			if (structFragment)
+				structFragment.endUpdate();
+		}
+	},
+	/** @ignore */
+	doReverse: function()
+	{
+		var structFragment = this._nodeParent;
+		if (structFragment)
+			structFragment.beginUpdate();
+		try
+		{
+			var opers = this._moveNodeOperations;
+			for (var i = opers.length - 1; i >= 0; --i)
+			{
+				opers[i].reverse();
+			}
+		}
+		finally
+		{
+			if (structFragment)
+				structFragment.endUpdate();
+		}
+		this._moveNodeOperations = null;
+	}
+});
+Kekule.ChemStructOperation.MergeNodesPreview.canMerge = Kekule.ChemStructOperation.MergeNodes.canMerge;
 
 /**
  * Operation of merging two connectors as one.
@@ -854,15 +1141,15 @@ Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMerge
  * @property {Int} coordMode Coord mode of current editor.
  * @property {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging connectors between different molecule.
  */
-Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemObjOperation.Base,
-/** @lends Kekule.ChemStructOperation.MergeConnectors# */
+Kekule.ChemStructOperation.MergeConnectorsBase = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemStructOperation.MergeConnectorsBase# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemStructOperation.MergeConnectors',
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeConnectorsBase',
 	/** @constructs */
-	initialize: function($super, target, dest, coordMode, enableStructFragmentMerge)
+	initialize: function($super, target, dest, coordMode, enableStructFragmentMerge, editor)
 	{
-		$super(target);
+		$super(target, editor);
 		this.setDest(dest);
 		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
 		this.setEnableStructFragmentMerge(enableStructFragmentMerge || false);
@@ -878,32 +1165,20 @@ Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemObjOperatio
 		this.defineProp('enableStructFragmentMerge', {'dataType': DataType.BOOL});
 		this.defineProp('coordMode', {'dataType': DataType.INT});
 	},
+	/**
+	 * Returns the concrete node merge operation, descendants should override this method.
+	 */
+	getMergeNodeOperationClass: function()
+	{
+		// do nothing here
+	},
 	/** @private */
 	doExecute: function()
 	{
 		var canMerge = Kekule.ChemStructOperation.MergeConnectors.canMerge(this.getTarget(), this.getDest(), this.getEnableStructFragmentMerge());
-		/*
-		if (this.getTarget().isConnectingConnector() || this.getDest().isConnectingConnector())
-		{
-			Kekule.error(Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTOR_CONNECTED_WITH_CONNECTOR);
-			return;
-		}
-		var targetNodes = this.getTarget().getConnectedExposedObjs();
-		var destNodes = this.getDest().getConnectedObjs();
-		if (targetNodes.length !== destNodes.length)
-		{
-			Kekule.error(Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTOR_WITH_DIFF_NODECOUNT);
-			return;
-		}
-		if (targetNodes.length !== 2)  // currently can only handle connector with 2 connected objects
-		{
-			Kekule.error(Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTOR_WITH_NODECOUNT_NOT_TWO);
-			return;
-		}
-		*/
-		if (!canMerge)
-			Kekule.error(/*Kekule.ErrorMsg.CAN_NOT_MERGE_CONNECTORS*/Kekule.$L('ErrorMsg.CAN_NOT_MERGE_CONNECTORS'));
 
+		if (!canMerge)
+			Kekule.error(Kekule.$L('ErrorMsg.CAN_NOT_MERGE_CONNECTORS'));
 
 		// sort targetNodes and destNodes via coord
 		var coordMode = this.getCoordMode();
@@ -940,11 +1215,13 @@ Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemObjOperatio
 		destNodes = AU.exclude(destNodes, commonNodes);
 
 		this._nodeMergeOperations = [];
+		var nodeMergeOperClass = this.getMergeNodeOperationClass();
 		for (var i = 0, l = targetNodes.length; i &lt; l; ++i)
 		{
 			if (targetNodes[i] !== destNodes[i])
 			{
-				var oper = new Kekule.ChemStructOperation.MergeNodes(targetNodes[i], destNodes[i], this.getEnableStructFragmentMerge());
+				//var oper = new Kekule.ChemStructOperation.MergeNodes(targetNodes[i], destNodes[i], this.getEnableStructFragmentMerge());
+				var oper = new nodeMergeOperClass(targetNodes[i], destNodes[i], this.getEnableStructFragmentMerge());
 				oper.execute();
 			}
 			this._nodeMergeOperations.push(oper);
@@ -959,6 +1236,27 @@ Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemObjOperatio
 			oper.reverse();
 		}
 		this._nodeMergeOperations = [];
+	}
+});
+/**
+ * Operation of merging two connectors as one.
+ * @class
+ * @augments Kekule.ChemStructOperation.MergeConnectorsBase
+ *
+ * @param {Kekule.ChemStructureConnector} target Source connector.
+ * @param {Kekule.ChemStructureConnector} dest Destination connector.
+ * @param {Int} coordMode Coord mode of current editor.
+ * @param {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging connectors between different molecule.
+ */
+Kekule.ChemStructOperation.MergeConnectors = Class.create(Kekule.ChemStructOperation.MergeConnectorsBase,
+/** @lends Kekule.ChemStructOperation.MergeConnectors# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeConnectors',
+	/** @ignore */
+	getMergeNodeOperationClass: function()
+	{
+		return Kekule.ChemStructOperation.MergeNodes;
 	}
 });
 /**
@@ -992,6 +1290,28 @@ Kekule.ChemStructOperation.MergeConnectors.canMerge = function(target, dest, can
 	}
 	return true;
 };
+/**
+ * Operation of merging two connectors as one.
+ * @class
+ * @augments Kekule.ChemStructOperation.MergeConnectorsBase
+ *
+ * @param {Kekule.ChemStructureConnector} target Source connector.
+ * @param {Kekule.ChemStructureConnector} dest Destination connector.
+ * @param {Int} coordMode Coord mode of current editor.
+ * @param {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging connectors between different molecule.
+ */
+Kekule.ChemStructOperation.MergeConnectorsPreview = Class.create(Kekule.ChemStructOperation.MergeConnectorsBase,
+/** @lends Kekule.ChemStructOperation.MergeConnectors# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemStructOperation.MergeConnectors',
+	/** @ignore */
+	getMergeNodeOperationClass: function()
+	{
+		return Kekule.ChemStructOperation.MergeNodesPreview;
+	}
+});
+Kekule.ChemStructOperation.MergeConnectorsPreview.canMerge = Kekule.ChemStructOperation.MergeConnectors.canMerge;
 
 /**
  * Operation of merging two structure fragment as one.
@@ -1012,9 +1332,9 @@ Kekule.ChemStructOperation.MergeStructFragment = Class.create(Kekule.ChemObjOper
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.MergeStructFragment',
 	/** @constructs */
-	initialize: function($super, target, dest)
+	initialize: function($super, target, dest, editor)
 	{
-		$super(target);
+		$super(target, editor);
 		this.setDest(dest);
 		this._removeOperation = null;
 	},
@@ -1046,7 +1366,7 @@ Kekule.ChemStructOperation.MergeStructFragment = Class.create(Kekule.ChemObjOper
 			var parent = target.getParent();
 			if (parent)  // remove target from parent
 			{
-				this._removeOperation = new Kekule.ChemObjOperation.Remove(target, parent);
+				this._removeOperation = new Kekule.ChemObjOperation.Remove(target, parent, null, this.getEditor());
 				this._removeOperation.execute();
 			}
 		}
@@ -1097,9 +1417,9 @@ Kekule.ChemStructOperation.SplitStructFragment = Class.create(Kekule.ChemObjOper
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.SplitStructFragment',
 	/** @constructs */
-	initialize: function($super, target)
+	initialize: function($super, target, editor)
 	{
-		$super(target);
+		$super(target, editor);
 	},
 	/** @private */
 	initProperties: function()
@@ -1179,9 +1499,9 @@ Kekule.ChemStructOperation.StandardizeStructFragment = Class.create(Kekule.ChemO
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructOperation.StandardizeStructFragment',
 	/** @constructs */
-	initialize: function($super, target)
+	initialize: function($super, target, editor)
 	{
-		$super(target);
+		$super(target, editor);
 		this.setEnableSplit(true);
 		this.setEnableRemove(true);
 		this._concreteOper = null;  // private
@@ -1198,15 +1518,16 @@ Kekule.ChemStructOperation.StandardizeStructFragment = Class.create(Kekule.ChemO
 		var target = this.getTarget();
 		var nodeCount = target.getNodeCount();
 		this._concreteOper = null;
+		var editor = this.getEditor();
 		if (nodeCount &lt;= 0)
 		{
 			if (this.getEnableRemove())
-				this._concreteOper = new Kekule.ChemObjOperation.Remove(target);
+				this._concreteOper = new Kekule.ChemObjOperation.Remove(target, null, null, editor);
 		}
 		else
 		{
 			if (this.getEnableSplit())
-				this._concreteOper = new Kekule.ChemStructOperation.SplitStructFragment(target);
+				this._concreteOper = new Kekule.ChemStructOperation.SplitStructFragment(target, editor);
 		}
 		if (this._concreteOper)
 			return this._concreteOper.execute();
@@ -1230,13 +1551,13 @@ Kekule.ChemStructOperation.StandardizeStructFragment = Class.create(Kekule.ChemO
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html">MetaShapeUIMarker</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.BoxRegion.html">BoxRegion</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer_.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsBase.html">MergeConnectorsBase</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsPreview.html">MergeConnectorsPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesBase.html">MergeNodesBase</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesPreview.html">MergeNodesPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerClear.html">ActionDisplayerClear</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.html">ChemObjInserter</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker.html">MetaShapeUiMarker</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker2DRenderer.html">MetaShapeUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.TextUiMarker.html">TextUiMarker</a></li><li><a href="Kekule.ChemWidget.TextUiMarker2DRenderer.html">TextUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarker2DRenderer.html">UiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection2DRenderer.html">UiMarkerCollection2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer.html">Viewer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ActionToggleSelectState.html">ActionToggleSelectState</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.AttachedMarkerIaController.html">AttachedMarkerIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.ClientDragScrollIaController.html">ClientDragScrollIaController</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerFrame.html">ComposerFrame</a></li><li><a href="Kekule.Editor.ComposerObjModifierToolbar.html">ComposerObjModifierToolbar</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.ContentBlockIaController.html">ContentBlockIaController</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.ImageBlockIaController.html">ImageBlockIaController</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolAtomIaController_OLD.html">MolAtomIaController_OLD</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolChainRepositoryItem2D.html">MolChainRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolFlexChainIaController.html">MolFlexChainIaController</a></li><li><a href="Kekule.Editor.MolFlexRingIaController.html">MolFlexRingIaController</a></li><li><a href="Kekule.Editor.MolFlexStructureIaController.html">MolFlexStructureIaController</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRepositoryItem2D.html">MolRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.ObjModifier.Atom.html">Atom</a></li><li><a href="Kekule.Editor.ObjModifier.Base.html">Base</a></li><li><a href="Kekule.Editor.ObjModifier.BaseRenderOptionModifier.html">BaseRenderOptionModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Bond.html">Bond</a></li><li><a href="Kekule.Editor.ObjModifier.Charge.html">Charge</a></li><li><a href="Kekule.Editor.ObjModifier.ChemStructureModifier.html">ChemStructureModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Color.html">Color</a></li><li><a href="Kekule.Editor.ObjModifier.RichText.html">RichText</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.RepositoryItemManager.html">RepositoryItemManager</a></li><li><a href="Kekule.Editor.RepositoryStructureFragmentIaController.html">RepositoryStructureFragmentIaController</a></li><li><a href="Kekule.Editor.SelectIaController.html">SelectIaController</a></li><li><a href="Kekule.Editor.StoredStructFragmentRepositoryItem2D.html">StoredStructFragmentRepositoryItem2D</a></li><li><a href="Kekule.Editor.StoredSubgroupRepositoryItem2D.html">StoredSubgroupRepositoryItem2D</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureInsertIaController.html">StructureInsertIaController</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.TrackInputIaController.html">TrackInputIaController</a></li><li><a href="Kekule.Editor.TrackLayoutOptimizer.html">TrackLayoutOptimizer</a></li><li><a href="Kekule.Editor.TrackParser.html">TrackParser</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.ChemWidget.ChargeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.StructureConnectorSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li><li><a href="Kekule.Editor.ObjModifier.html">ObjModifier</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:46:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:55:12 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

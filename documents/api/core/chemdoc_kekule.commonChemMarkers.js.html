@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: chemdoc/kekule.commonChemMarkers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: chemdoc/kekule.commonChemMarkers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * Implementation of some concrete property markers (e.g. charge mark, lone pair, etc.) binding to the chem object.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /core/kekule.common.js
+ * requires /core/kekule.structures.js
+ * requires /chemdoc/kekule.attachedMarkers.js
+ * requires /chemdoc/kekule.contentBlocks.js
+ */
+
+(function(){
+
+"use strict";
+
+/**
+ * Base class of chem marker representing chemical concepts (e.g. charge, lone pair...) of parent chem object.
+ * @class
+ * @augments Kekule.ChemObject
+ * @param {String} id Id of this marker.
+ * @param {Hash} coord2D The 2D coordinates of marker, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of marker, {x, y, z}, can be null.
+ *
+ * @property {Variant} value Value of the property value of parent chem object.
+ */
+Kekule.ChemMarker.BaseMarker = Class.create(Kekule.ChemObject,
+/** @lends Kekule.ChemMarker.BaseMarker# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemMarker.BaseMarker',
+	/**
+	 * @constructs
+	 */
+	initialize: function init($super, id, coord2D, coord3D)
+	{
+		$super(id, coord2D, coord3D);
+	},
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'marker';
+	}
+});
+Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.ChemMarker.BaseMarker);
+
+/**
+ * Represent a lone pair marker in rendering parent chem object.
+ * @class
+ * @augments ChemMarker.BaseMarker
+ */
+Kekule.ChemMarker.UnbondedElectronSet = Class.create(Kekule.ChemMarker.BaseMarker,
+/** @lends Kekule.ChemMarker.UnbondedElectronSet# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemMarker.UnbondedElectronSet',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('electronCount', {'dataType': DataType.VARIANT});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setElectronCount(2);  // default is lone pair
+	}
+});
+
+/**
+ * Represent a marker represents property (e.g. charge, radical...) of parent chem object.
+ * @class
+ * @augments Kekule.ChemMarker.BaseMarker
+ * @param {String} id Id of this node.
+ * @param {Hash} coord2D The 2D coordinates of marker, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of marker, {x, y, z}, can be null.
+ *
+ * @property {Variant} value Value of the property value of parent chem object.
+ */
+Kekule.ChemMarker.ChemPropertyMarker = Class.create(Kekule.ChemMarker.BaseMarker,
+/** @lends Kekule.ChemMarker.ChemPropertyMarker# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemMarker.ChemPropertyMarker',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('value', {'dataType': DataType.VARIANT, 'serializable': false,
+			'getter': function()
+			{
+				var result;
+				var p = this.getParent();
+				var propName = this.getPropertyName();
+				if (p &amp;&amp; propName)
+				{
+					result = p.getPropValue(propName);
+					this.setPropStoreFieldValue('value', result);  // update cached value when possible
+				}
+				else
+				{
+					result = this.getPropStoreFieldValue('value');
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('value', value);
+				this.setParentPropValue(value);
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		/*
+		this.setNeedRecalcSize(true);
+		this.setSize2D({'x': 0, 'y': 0});
+		*/
+	},
+	/** @private */
+	setParentPropValue: function(value)
+	{
+		var p = this.getParent();
+		if (p)
+		{
+			var propName = this.getPropertyName();
+			if (propName &amp;&amp; p)
+				p.setPropValue(propName, value);
+		}
+		return this;
+	},
+	/** @private */
+	resetParentPropValue: function()
+	{
+		return this.setParentPropValue(undefined);
+	},
+	/* @ignore */
+	/*
+	doObjectChange: function($super, modifiedPropNames)
+	{
+		// when text block changed, size may need to be recalculated
+		if (Kekule.ArrayUtils.intersect(['text', 'renderOptions'], modifiedPropNames).length)
+			this.setNeedRecalcSize(true);
+	},
+	*/
+	/**
+	 * Returns the mapped property name of parent chem object.
+	 * Descendants should override this method.
+	 * @returns {Variant}
+	 */
+	getPropertyName: function()
+	{
+		return null;
+	},
+
+	// editor related methods
+	/** @ignore */
+	beforAddingByEditor: function(newParent, refSibling)
+	{
+		if (newParent) // when adding to new parent, update value of parent
+		{
+			var value = this.getPropStoreFieldValue('value');
+			if (Kekule.ObjUtils.notUnset(value))
+				this.setParentPropValue(value);  // update to parent
+		}
+		$super();
+	},
+	/** @ignore */
+	beforeRemovingByEditor: function(parent)
+	{
+		// when removing from editor, usually we should reset the value of property
+		// ensure cached the property value
+		this.setPropStoreFieldValue('value', this.getValue());
+		this.resetParentPropValue();
+	}
+});
+
+/**
+ * Represent a charge marker (+/-) in rendering parent chem object.
+ * @class
+ * @augments Kekule.ChemMarker.ChemPropertyMarker
+ * @param {String} id Id of this node.
+ * @param {Hash} coord2D The 2D coordinates of marker, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of marker, {x, y, z}, can be null.
+ */
+Kekule.ChemMarker.Charge = Class.create(Kekule.ChemMarker.ChemPropertyMarker,
+/** @lends Kekule.ChemMarker.Charge# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemMarker.Charge',
+	/** @ignore */
+	getPropertyName: function()
+	{
+		return 'charge';
+	}
+});
+
+/**
+ * Represent a radical marker in rendering parent chem object.
+ * @class
+ * @augments Kekule.ChemMarker.ChemPropertyMarker
+ * @param {String} id Id of this node.
+ * @param {Hash} coord2D The 2D coordinates of marker, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of marker, {x, y, z}, can be null.
+ */
+Kekule.ChemMarker.Radical = Class.create(Kekule.ChemMarker.ChemPropertyMarker,
+/** @lends Kekule.ChemMarker.Radical# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemMarker.Radical',
+	/** @ignore */
+	getPropertyName: function()
+	{
+		return 'radical';
+	}
+});
+
+
+ClassEx.extend(Kekule.ChemStructureNode,
+/** @lends Kekule.ChemStructureNode# */
+{
+	/**
+	 * Get charge marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+	 * @returns {Kekule.ChemMarker.ChemPropertyMarker}
+	 */
+	fetchChargeMarker: function(canCreate, defProps)
+	{
+		return this.fetchMarkerOfType(Kekule.ChemMarker.Charge, canCreate, false, defProps);
+	},
+	/**
+	 * Get radical marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+	 * @returns {Kekule.ChemMarker.ChemPropertyMarker}
+	 */
+	fetchRadicalMarker: function(canCreate, defProps)
+	{
+		return this.fetchMarkerOfType(Kekule.ChemMarker.Radical, canCreate, false, defProps);
+	}
+});
+
+ClassEx.defineProp(Kekule.AbstractAtom, 'lonePairCount', {
+	'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED, 'serializable': false,
+	'setter': null,  // currently disable setter
+	'getter': function()
+	{
+		var result = 0;
+		var unbondedESets = this.getMarkersOfType(Kekule.ChemMarker.UnbondedElectronSet);
+		for (var i = 0, l = unbondedESets.length; i &lt; l; ++i)
+		{
+			var eSet = unbondedESets[i];
+			if (eSet.getElectronCount() === 2)  // a lone pair
+				++result;
+		}
+		return result;
+	}
+});
+ClassEx.extendMethod(Kekule.AbstractAtom, 'doCompare', function($origin, targetObj, options)
+	{
+		var result = $origin(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in origin method
+		{
+			if (this._getComparisonOptionFlagValue(options, 'lonePair') ||
+					this._getComparisonOptionFlagValue(options, 'unbondedElectron'))  // parity null/0 should be regard as one in comparison
+			{
+				/*
+				 var c1 = this.getLonePairCount() || 0;
+				 var c2 = (targetObj.getLonePairCount &amp;&amp; targetObj.getLonePairCount()) || 0;
+				 result = this.doCompareOnValue(c1, c2, options);
+				 */
+				var _getUnbondedElectronArray = function(atom)
+				{
+					var result = [];
+					if (atom.getMarkersOfType)
+					{
+						var unbondedESets = atom.getMarkersOfType(Kekule.ChemMarker.UnbondedElectronSet);
+						for (var i = 0, l = unbondedESets.length; i &lt; l; ++i)
+						{
+							var eSet = unbondedESets[i];
+							result.push(eSet.getElectronCount())
+						}
+					}
+					result.sort();
+					return result;
+				};
+				var a1 = _getUnbondedElectronArray(this);
+				var a2 = _getUnbondedElectronArray(targetObj);
+				return Kekule.ArrayUtils.compare(a1, a2);
+			}
+		}
+		return result;
+	});
+
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:32 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -44,7 +44,7 @@ if (typeof(Kekule) === 'undefined')
 
 /**
  *  An class with static methods handle HTML or XML DOM.
- *  @class
+ *  @object
  */
 Kekule.DomUtils = {
 	/**
@@ -211,6 +211,7 @@ Kekule.DomUtils = {
 			if (fitAttribValue)
 				result.push(elems[i]);
 		}
+		return result;
 	},
 	/**
 	 * Check if childElem is inside parentElem.
@@ -245,6 +246,16 @@ Kekule.DomUtils = {
 		}
 	},
 	/**
+	 * Check if childElem is inside parentElem or is parentElem itself.
+	 * @param {Object} childElem
+	 * @param {Object} parentElem
+	 * @returns {Bool}
+	 */
+	isOrIsDescendantOf: function(childElem, parentElem)
+	{
+		return (childElem === parentElem) || Kekule.DomUtils.isDescendantOf(childElem, parentElem);
+	},
+	/**
 	 * Get nearest ancestor element with specified tag name.
 	 * @param {Object} elem
 	 * @param {String} tagName
@@ -254,7 +265,7 @@ Kekule.DomUtils = {
 	getNearestAncestorByTagName: function(elem, tagName, includingSelf)
 	{
 		var tag = tagName.toLowerCase();
-		if (includingSelf &amp;&amp; (elem.tagName.toLowerCase() === tag))
+		if (includingSelf &amp;&amp; elem.tagName &amp;&amp; (elem.tagName.toLowerCase() === tag))
 			return elem;
 		var result = elem.parentNode;
 		while (result &amp;&amp; result.tagName)
@@ -309,7 +320,7 @@ Kekule.DomUtils = {
 		 }
 		 else
 		 */
-		result = elem.setAttribute(attribName, value);  // XML attrib are generally not in any namespace
+		var result = elem.setAttribute(attribName, value);  // XML attrib are generally not in any namespace
 		return result;
 	},
 	/**
@@ -380,6 +391,28 @@ Kekule.DomUtils = {
 			//return Kekule.ObjUtils.notUnset(value);
 			return !!value;
 		}
+	},
+	/**
+	 * Returns if a name starts with 'data-'.
+	 * @param {String} attribName
+	 * @returns {Bool}
+	 */
+	isDataAttribName: function(attribName)
+	{
+		return attribName.toString().startsWith('data-');
+	},
+	/**
+	 * Returns attribName without 'data-' prefix.
+	 * If attribName is not a data attribute, null will be returned.
+	 * @param {String} attribName
+	 * @returns {String}
+	 */
+	getDataAttribCoreName: function(attribName)
+	{
+		if (Kekule.DomUtils.isDataAttribName(attribName))
+			return attribName.substr(5);
+		else
+			return null;
 	},
 	/**
 	 * Get value of HTML5 data-* attribute.
@@ -490,6 +523,24 @@ Kekule.DomUtils = {
 	},
 
 	/**
+	 * Set elem's attributes by values appointed by hash object.
+	 * @param {Element} elem
+	 * @param {Hash} hash
+	 */
+	setElemAttributes: function(elem, hash)
+	{
+		var props = Kekule.ObjUtils.getOwnedFieldNames(hash);
+		for (var i = 0, l = props.length; i &lt; l; ++i)
+		{
+			var prop = props[i];
+			var value = hash[prop];
+			if (prop &amp;&amp; value)
+				elem.setAttribute(prop, value);
+		}
+		return elem;
+	},
+
+	/**
 	 * Check if node has been inserted to DOM tree of document.
 	 * @param {DOMNode} node
 	 * @param {Document} doc
@@ -513,7 +564,7 @@ Kekule.DomUtils = {
 
 /**
  * Util methods about CSS and style values.
- * @class
+ * @object
  */
 Kekule.StyleUtils = {
 	/**
@@ -595,7 +646,10 @@ Kekule.StyleUtils = {
 	getComputedStyle: function(elem, propName)
 	{
 		var styles;
-		var view = elem.ownerDocument.defaultView;
+		var doc = elem.ownerDocument;
+		if (!doc)
+			return null;
+		var view = doc.defaultView;
 		if (view &amp;&amp; view.getComputedStyle)
 		{
 			styles = view.getComputedStyle(elem, null);
@@ -650,10 +704,13 @@ Kekule.StyleUtils = {
 	 */
 	setDisplay: function(elem, value)
 	{
-		if (typeof(value) === 'string')
-			elem.style.display = value;
-		else
-			elem.style.display = (!!value)? '': 'none';
+		if (elem)
+		{
+			if (typeof(value) === 'string')
+				elem.style.display = value;
+			else
+				elem.style.display = (!!value) ? '' : 'none';
+		}
 	},
 
 	/**
@@ -682,16 +739,259 @@ Kekule.StyleUtils = {
 	 */
 	setVisibility: function(elem, value)
 	{
-		if (typeof(value) === 'string')
-			elem.style.visibility = value;
+		if (elem)
+		{
+			if (typeof(value) === 'string')
+				elem.style.visibility = value;
+			else
+				elem.style.visibility = (!!value) ? '' : 'hidden';
+		}
+	},
+
+	/**
+	 * Returns whether the element generates a block element box.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isBlockElem: function(elem)
+	{
+		var display = Kekule.StyleUtils.getComputedStyle(elem, 'display');
+		return ['block', 'list-item', 'table', 'flex', 'grid'].indexOf(display) >= 0;
+	},
+
+	/**
+	 * Check if an element is set with absolute or fixed position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAbsOrFixPositioned: function(elem)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		return (position === 'absolute') || (position === 'fixed');
+	},
+	/** @private */
+	_fillAbsOrFixedPositionStyleStack: function(elem, stack)
+	{
+		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+		position = position.toLowerCase();
+		if ((position === 'absolute') || (position === 'fixed'))
+		{
+			stack.push(position.toLocaleLowerCase());
+		}
+		var parent = elem.parentNode;
+		if (parent &amp;&amp; parent.ownerDocument)
+			Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(parent, stack);
+		return stack;
+	},
+	/**
+	 * Check the ancestors of elem, if one is set to absolute or fixed position,
+	 * returns its position style.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isAncestorPositionFixed: function(elem)
+	{
+		var parent = elem.parentNode;
+		if (parent)
+		{
+			return Kekule.StyleUtils.isSelfOrAncestorPositionFixed(elem);
+		}
 		else
-			elem.style.visibility = (!!value)? '': 'hidden';
+			return false;
+	},
+	/**
+	 * Check the elem and its ancestor, if one is set to fixed position, result is true.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	isSelfOrAncestorPositionFixed: function(elem)
+	{
+		var positionStack = [];
+		Kekule.StyleUtils._fillAbsOrFixedPositionStyleStack(elem, positionStack);
+		if (!positionStack.length)
+			return null;
+		for (var i = positionStack.length - 1; i >= 0; --i)
+		{
+			var p = positionStack[i];
+			if (p === 'fixed')
+				return true;
+		}
+		return false;
+	},
+
+	/**
+	 * Set cursor style of an element.
+	 * @param {HTMLElement} elem
+	 * @param {Variant} cursor A string CSS cursor value or an array of cursor keywords.
+	 *   If this param is an array, the first cursor keywords available in current browser will actually be used.
+	 * @returns {String} The actually used cursor value.
+	 */
+	setCursor: function(elem, cursor)
+	{
+		if (DataType.isArrayValue(cursor))
+		{
+			for (var i = 0, l = cursor.length; i &lt; l; ++i)
+			{
+				var currCursor = cursor[i];
+				elem.style.cursor = currCursor;
+				if (elem.style.cursor === currCursor)  // successfully setted
+					return currCursor;
+			}
+			return elem.style.cursor;
+		}
+		else // normal string
+		{
+			elem.style.cursor = cursor;
+			return elem.style.cursor;
+		}
+	},
+
+	/** @private */
+	_cssTransformValuesToMatrix: function(cssTransformValues)
+	{
+		var matrix = Kekule.MatrixUtils.create(3, 3, 0);
+		matrix[0][0] = cssTransformValues.a;
+		matrix[1][0] = cssTransformValues.b;
+		matrix[0][1] = cssTransformValues.c;
+		matrix[1][1] = cssTransformValues.d;
+		matrix[0][2] = cssTransformValues.tx;
+		matrix[1][2] = cssTransformValues.ty;
+		return matrix;
+	},
+	/** @private */
+	_matrixToCssTransformValues: function(matrix)
+	{
+		var result = {
+			'a': matrix[0][0],
+			'b': matrix[1][0],
+			'c': matrix[0][1],
+			'd': matrix[1][1],
+			'tx': matrix[0][2],
+			'ty': matrix[1][2]
+		};
+		return result;
+	},
+
+	/**
+	 * Check if an element has a CSS transform.
+	 * @param {HTMLElement} elem
+	 * @returns {Bool}
+	 */
+	hasTransform: function(elem)
+	{
+		var transform = Kekule.StyleUtils.getComputedStyle(elem, 'transform');
+		return transform &amp;&amp; (transform !== 'none');
+	},
+	/**
+	 * Returns matrix function values of CSS transform property.
+	 * @param {HTMLElement} elem
+	 * @returns {Hash} {a, b, c, d, tx, ty}
+	 */
+	getTransformMatrixValues: function(elem)
+	{
+		var matrix = Kekule.StyleUtils.getComputedStyle(elem, 'transform') || '';
+		var values = matrix.match(/-?[\d\.]+/g);
+		if (values)
+			return {'a': values[0], 'b': values[1], 'c': values[2], 'd': values[3], 'tx': values[4], 'ty': values[5]};
+		else
+			return null;
+	},
+	/**
+	 * Set the matrix values of CSS transform.
+	 * @param {HTMLElement} elem
+	 * @param {Array} values
+	 */
+	setTransformMatrixArrayValues: function(elem, values)
+	{
+		if (values)
+		{
+			var sMatrix = 'matrix(' + values.join(',') + ')';
+			elem.style.transform = sMatrix;
+		}
+	},
+	/**
+	 * Returns a matrix object that represent the 2D transform of element.
+	 * @param {HTMLElement} elem
+	 * @returns {Array}
+	 */
+	getTransformMatrix: function(elem)
+	{
+		var values = Kekule.StyleUtils.getTransformMatrixValues(elem);
+		if (values)
+		{
+			return Kekule.StyleUtils._cssTransformValuesToMatrix(values);
+		}
+		else
+			return null;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns all the transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getCascadeTranformMatrixes: function(elem)
+	{
+		var result = [];
+		var currElem = elem;
+		while (currElem)
+		{
+			var m = Kekule.StyleUtils.getTransformMatrix(currElem);
+			if (m)
+				result.unshift(m);
+			currElem = currElem.parentNode;
+		}
+		return result;
+	},
+	/**
+	 * A transformed element may be nested in another transformed parent.
+	 * This function returns product of all those transform matrixes from parent to child.
+	 * @param {HTMLElement} elem
+	 * @param {Array}
+	 */
+	getTotalTransformMatrix: function(elem)
+	{
+		var matrixes = Kekule.StyleUtils.getCascadeTranformMatrixes(elem);
+		var result = null;
+		// child on left, parent on right
+		for (var i = matrixes.length - 1; i >= 0; --i)
+		{
+			var m = matrixes[i];
+			if (!result)
+				result = m;
+			else
+				result = Kekule.MatrixUtils.multiply(result, m);
+		}
+		return result;
+	},
+	calcInvertTransformMatrix: function(matrix)
+	{
+		var transValues = Kekule.StyleUtils._matrixToCssTransformValues(matrix);
+		var v = transValues;
+
+		// calc inverted values, algorithm from https://blog.csdn.net/qq_17429661/article/details/51985344
+		var det = v.a * v.d - v.b * v.c;
+		if (Math.abs(det) &lt; 0.000001)  // Singular Matrix
+			return false;  // can not calculate
+
+		var v1 = {
+			a: v.d / det,
+			b: -v.b / det,
+			c: -v.c / det,
+			d: v.a / det,
+			tx: (v.c * v.ty - v.d * v.tx) / det,
+			ty: (v.b * v.tx - v.a * v.ty) / det
+		};
+		var result = Kekule.StyleUtils._cssTransformValuesToMatrix(v1);
+
+		return result;
 	}
 };
 
 /**
  * Utils methods for HTML elements.
- * @class
+ * @object
  */
 Kekule.HtmlElementUtils = {
 	/**
@@ -854,7 +1154,7 @@ Kekule.HtmlElementUtils = {
 
 	/**
 	 * Get size of view port.
-	 * @param {Variant} elemOrViewport
+	 * @param {Variant} elemOrDocOrViewport
 	 * @returns {Hash}
 	 */
 	getViewportDimension: function(elemOrDocOrViewport)
@@ -864,9 +1164,11 @@ Kekule.HtmlElementUtils = {
 		if (elemOrDocOrViewport)
 		{
 			if (elemOrDocOrViewport.ownerDocument)
-				w = elemOrDocOrViewport.ownerDocument.defaultView;
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
 			else if (elemOrDocOrViewport.defaultView)
 				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
 			else
 				w = elemOrDocOrViewport;
 		}
@@ -883,6 +1185,40 @@ Kekule.HtmlElementUtils = {
 
 		// For browsers in Quirks mode
 		return { 'width': d.body.clientWidth, 'height': d.body.clientHeight };
+	},
+
+	/**
+	 * Returns coord of top-left and bottom-right of visible viewport part in browser window.
+	 * @param {Variant} elemOrDocOrViewport
+	 * @returns {Hash}
+	 */
+	getViewportVisibleBox: function(elemOrDocOrViewport)
+	{
+		// Use the specified window or the current window if no argument
+		var w;
+		if (elemOrDocOrViewport)
+		{
+			if (elemOrDocOrViewport.ownerDocument)
+				w = Kekule.DocumentUtils.getDefaultView(elemOrDocOrViewport.ownerDocument);
+			else if (elemOrDocOrViewport.defaultView)
+				w = elemOrDocOrViewport.defaultView;
+			else if (elemOrDocOrViewport.parentWindow)
+				w = elemOrDocOrViewport.parentWindow;
+			else
+				w = elemOrDocOrViewport;
+		}
+		w = w || window;
+		var doc = w.document;
+
+		var dim = Kekule.HtmlElementUtils.getViewportDimension(w);
+		var offset = Kekule.DocumentUtils.getScrollPosition(doc);
+
+		var result = {'x1': offset.left, 'y1': offset.top, 'x2': dim.width, 'y2': dim.height};
+		result.left = result.x1;
+		result.top = result.y1;
+		result.right = result.x2;
+		result.bottom = result.y2;
+		return result;
 	},
 
 	/**
@@ -917,16 +1253,18 @@ Kekule.HtmlElementUtils = {
 		return result;
 	},
 	/**
-	 * Get position relative to top-left corner of HTML page.
+	 * Get position relative to top-left corner of HTML page or current viewport (if includeDocScroll is true).
 	 * @param {HTMLElement} elem
+	 * @param {Bool} relToViewport
 	 * @returns {Hash}
 	 */
-	getElemPagePos: function(elem)
+	getElemPagePos: function(elem, relToViewport)
 	{
 
 		var xPosition = 0;
 		var yPosition = 0;
 
+		/*
 		if (elem.getBoundingClientRect)
 		{
 			var box = elem.getBoundingClientRect();
@@ -939,16 +1277,42 @@ Kekule.HtmlElementUtils = {
 			xPosition = box.left + (window &amp;&amp; window.pageXOffset || docElem &amp;&amp; docElem.scrollLeft || body.scrollLeft) - clientLeft;
 		}
 		else
+		*/
 		{
-			while(elem)
+			var currElem = elem;
+			while(currElem)
 			{
 				// TODO: Here Chrome report body.scrollLeft unavailable in strict mode warning
-				xPosition += (elem.offsetLeft - elem.scrollLeft + elem.clientLeft);
-				yPosition += (elem.offsetTop - elem.scrollTop + elem.clientTop);
-				elem = elem.offsetParent;
+				xPosition += (currElem.offsetLeft - currElem.scrollLeft + currElem.clientLeft);
+				yPosition += (currElem.offsetTop - currElem.scrollTop + currElem.clientTop);
+				currElem = currElem.offsetParent;
+			}
+			if (relToViewport)
+			{
+				var doc = elem.ownerDocument;
+				var scrollTop = doc.documentElement.scrollTop || doc.body.scrollTop || 0;
+				var scrollLeft = doc.documentElement.scrollLeft || doc.body.scrollLeft || 0;
+				xPosition -= scrollLeft;
+				yPosition -= scrollTop;
 			}
 		}
 		return { x: xPosition, y: yPosition };
+	},
+	/**
+	 * Get position relative to top-left corner of HTML page togather with width/height of elem.
+	 * @param {HTMLElement} elem
+	 * @param {Bool} relToViewport
+	 * @returns {Hash} {x, y, top, left, bottom, right, width, height}
+	 */
+	getElemPageRect: function(elem, relToViewport)
+	{
+		var pos = Kekule.HtmlElementUtils.getElemPagePos(elem, relToViewport);
+		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		return {
+			'x': pos.x, 'y': pos.y, 'left': pos.x, 'top': pos.y,
+			'right': pos.x + dim.width, 'bottom': pos.y + dim.height,
+			'width': dim.width, 'height': dim.height
+		};
 	},
 	/**
 	 * Get position relative to top-left corner of viewport.
@@ -957,7 +1321,8 @@ Kekule.HtmlElementUtils = {
 	 */
 	getElemViewportPos: function(elem)
 	{
-		var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+		var rect = Kekule.HtmlElementUtils.getElemPagePos(elem, true);
 		return {'x': rect.left, 'y': left.top};
 	},
 
@@ -979,19 +1344,69 @@ Kekule.HtmlElementUtils = {
 	isFormCtrlElement: function(elem)
 	{
 		var formCtrlTags = ['input', 'button', 'textarea', 'select'];
-		var tagName = elem.tagName.toLowerCase();
-		return formCtrlTags.indexOf(tagName) >= 0;
+		var tagName = elem &amp;&amp; elem.tagName.toLowerCase();
+		return !!tagName &amp;&amp; formCtrlTags.indexOf(tagName) >= 0;
+	},
+
+	/**
+	 * Issues an asynchronous request to make the element be displayed full-screen.
+	 * @param {HTMLElement} elem
+	 */
+	requestFullScreen: function(elem)
+	{
+		var func = elem.requestFullScreen || elem.mozRequestFullScreen || elem.webkitRequestFullScreen || elem.msRequestFullScreen;
+		return func? func.apply(elem): null;
+	},
+	/**
+	 * Issues an asynchronous request to make the element exit full-screen mode.
+	 * @param {HTMLElement} elem
+	 */
+	exitFullScreen: function(elem)
+	{
+		var func = elem.exitFullScreen || elem.mozExitFullScreen || elem.webkitExitFullScreen || elem.msExitFullScreen;
+		return func? func.apply(elem): null;
 	}
 };
 
 
 /**
  * Utils on document.
- * @class
+ * @object
  */
 Kekule.DocumentUtils = {
 	/**
+	 * Returns the default view (window) of current document.
+	 * @param {HTMLDocument} document
+	 * @returns {Object}
+	 */
+	getDefaultView: function(document)
+	{
+		return document.defaultView || document.parentWindow;
+	},
+	/**
+	 * Returns scroll top/left of document element.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {left, top}
+	 */
+	getScrollPosition: function(document)
+	{
+		var win = Kekule.DocumentUtils.getDefaultView(document);
+		var result = {
+			'left': ((win.pageXOffset !== undefined)?
+					win.pageXOffset:
+					(document.documentElement || document.body.parentNode || document.body).scrollLeft) || 0,
+			'top': ((win.pageYOffset !== undefined)?
+					win.pageYOffset:
+					(document.documentElement || document.body.parentNode || document.body).scrollTop) || 0
+		};
+		result.x = result.left;
+		result.y = result.top;
+		return result;
+	},
+	/**
 	 * Returns dimension of viewport visible client.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
 	 */
 	getClientDimension: function(document)
 	{
@@ -1009,8 +1424,115 @@ Kekule.DocumentUtils = {
 				'height': document.documentElement.clientHeight
 			}
 		}
+	},
+	/**
+	 * Returns top-left and bottom-right coords and width/height of viewport visible client.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {left, top, right, bottom, x1, x2, y1, y2, width, height}
+	 */
+	getClientVisibleBox: function(document)
+	{
+		var offset = Kekule.DocumentUtils.getScrollPosition(document);
+		var dim = Kekule.DocumentUtils.getInnerClientDimension(document);
+		var result = {};
+		result.left = result.x1 = offset.left;
+		result.top = result.y1 = offset.top;
+		result.right = result.x2 = dim.width + offset.left;
+		result.bottom = result.y2 = dim.height + offset.top;
+		result.width = dim.width;
+		result.height = dim.height;
+		return result;
+	},
+	/**
+	 * Returns innerWidth and innerHeight property of a window.
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
+	 */
+	getWindowInnerDimension: function(document)
+	{
+		var win = Kekule.DocumentUtils.getDefaultView(document);
+		return {'width': Math.min(win.innerWidth, win.outerWidth), 'height': Math.min(win.innerHeight, win.outerHeight)};
+	},
+	/**
+	 * Returns the visible viewport dimension (on mobile device) or the dimension of whole viewport client (ondesktop).
+	 * @param {HTMLDocument} document
+	 * @returns {Hash} {width, height}
+	 */
+	getInnerClientDimension: function(document)
+	{
+		var clientDim = Kekule.DocumentUtils.getClientDimension(document);
+		var innerDim = Kekule.DocumentUtils.getWindowInnerDimension(document);
+		return {
+			'width': innerDim.width? Math.min(innerDim.width, clientDim.width): clientDim.width,
+			'height': innerDim.height? Math.min(innerDim.height, clientDim.height): clientDim.height
+		};
+	},
+
+	/**
+	 * Returns the scale level of current page in mobile browser.
+	 * @param {HTMLDocument} document
+	 * @returns {Float}
+	 */
+	getClientScaleLevel: function(document)
+	{
+		return (document.compatMode == "BackCompat")?
+			document.body.clientWidth / window.innerWidth:
+			document.documentElement.clientWidth / window.innerWidth;
+	},
+	/**
+	 * Returns the ratio of actual device pixel to CSS 1px.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getPixelZoomLevel: function(document)
+	{
+		var scale = Kekule.DocumentUtils.getClientScaleLevel(document);
+		return scale * (Kekule.DocumentUtils.getDefaultView(document).devicePixelRatio || 1);
+	},
+
+	/**
+	 * Returns PPI of current device.
+	 * The algorithm is from https://jsfiddle.net/pgLo6273/2/.
+	 * @param {HTMLDocument} document
+	 * @returns {Number}
+	 */
+	getDevicePPI: function(document)
+	{
+		var win = Kekule.DocumentUtils.getDefaultView(document);
+		if (win.matchMedia)
+		{
+			var minRes = 0;
+			var maxRes = 0;
+			var curRes = 200;
+			var trc = [];
+			while (!maxRes || ((maxRes - minRes) > 1))
+			{
+				if (win.matchMedia('(min-resolution: ' + curRes + 'dpi)').matches)
+				{ // ppi >= curRes
+					if (maxRes)
+					{
+						minRes = curRes;
+						curRes = Math.round((minRes + maxRes) / 2);
+					}
+					else
+					{
+						minRes = curRes;
+						curRes = 2 * curRes;
+					}
+				}
+				else
+				{ // ppi &lt; curRes
+					maxRes = curRes;
+					curRes = Math.round((minRes + maxRes) / 2);
+				}
+			}
+			return curRes;
+		}
+		else
+			return 96;  // old device, assume to be a fixed one
 	}
-}
+};
+
 
 /**
  * Utils to handle 'url(XXXX)' type of attribute value.
@@ -1018,7 +1540,7 @@ Kekule.DocumentUtils = {
  *   content directly
  *   url(http://...)
  *   url(#id)
- * @class
+ * @object
  */
 Kekule.DataSrcAttribUtils = {
 	/**
@@ -1116,6 +1638,84 @@ Kekule.DataSrcAttribUtils = {
 	*/
 };
 
+/**
+ * Utils to handle JavaScript file.
+ * @object
+ */
+Kekule.ScriptFileUtils = {
+	/** @private */
+	_existedScriptUrls: new Kekule.MapEx(),
+	/**
+	 * Append script file to document. When the script is loaded, callback is then called.
+	 * @param {HTMLDocument} doc
+	 * @param {String} url
+	 * @param {Func} callback
+	 * @returns {HTMLElement} New created script element.
+	 */
+	appendScriptFile: function(doc, url, callback)
+	{
+		var exists = Kekule.ScriptFileUtils._existedScriptUrls.get(doc);
+		if (!exists)
+		{
+			exists = [];
+			Kekule.ScriptFileUtils._existedScriptUrls.set(doc, exists);
+		}
+		if (exists.indexOf(url) >= 0)  // already loaded
+		{
+			if (callback)
+				callback();
+			return;
+		}
+		var result = doc.createElement('script');
+		result.src = url;
+		result.onload = result.onreadystatechange = function(e)
+		{
+			if (result._loaded)
+				return;
+			var readyState = result.readyState;
+			if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+			{
+				result._loaded = true;
+				result.onload = result.onreadystatechange = null;
+				exists.push(url);
+				if (callback)
+					callback();
+			}
+		};
+		(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+		//console.log('load script', url);
+		return result;
+	},
+	/**
+	 * Append script files to document. When the all scripts are loaded, callback is then called.
+	 * @param {HTMLDocument} doc
+	 * @param {String} urls
+	 * @param {Func} callback
+	 */
+	appendScriptFiles: function(doc, urls, callback)
+	{
+		var dupUrls = [].concat(urls);
+
+		var _appendScriptFilesCore = function(doc, urls, callback)
+		{
+			if (urls.length &lt;= 0)
+			{
+				if (callback)
+					callback();
+				return;
+			}
+			var file = urls.shift();
+			Kekule.ScriptFileUtils.appendScriptFile(doc, file, function()
+				{
+					Kekule.ScriptFileUtils.appendScriptFiles(doc, urls, callback);
+				}
+			);
+		};
+
+		_appendScriptFilesCore(doc, dupUrls, callback);
+	}
+};
+
 
 })();</code></pre>
         </article>
@@ -1127,13 +1727,13 @@ Kekule.DataSrcAttribUtils = {
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:23 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

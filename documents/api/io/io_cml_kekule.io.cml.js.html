@@ -46,6 +46,14 @@
  * requires /localization
  */
 
+/*
+ * Default options to read/write CML format data.
+ * @object
+ */
+Kekule.globalOptions.add('IO.cml', {
+	prettyPrint: true
+});
+
 /**
  * Defines some constants about CML.
  * @class
@@ -59,7 +67,7 @@ Kekule.IO.CML = {
 	TYPED_ARRAY_ELEM_NAMES: ['stringArray', 'integerArray', 'floatArray'],
 	ATOMS_REF_ATTRIBS: ['atomRef', 'atomRefs2', 'atomRefs3', 'atomRefs4', 'atomRefs', 'atomRefArray'],
 	BONDS_REF_ATTRIBS: ['bondRef', 'bondRefs', 'bondRefArray']
-}
+};
 Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
 	Kekule.IO.CML.CML2CORE_NAMESPACE_URI,
 	Kekule.IO.CML.CML3_SCHEMA_NAMESPACE_URI
@@ -247,7 +255,7 @@ Kekule.IO.CmlUtils = {
 			return node.getSymbol();
 		else if (node instanceof Kekule.Pseudoatom)
 		{
-			console.log(node);
+			//console.log(node);
 			switch (node.getAtomType())
 			{
 				case Kekule.PseudoatomType.DUMMY: return 'Du';
@@ -537,6 +545,19 @@ Kekule.IO.CmlDomUtils = {
 			result = result &amp;&amp; (elem.namespaceURI == namespaceURI);
 		return result;
 	},
+	/**
+	 * Check if an element has builtin attribute.
+	 * @param {Object} elem
+	 * @param {String} namespaceURI Can be null.
+	 * @returns {Bool}
+	 */
+	isCmlBuiltInMarkedElem: function(elem, namespaceURI)
+	{
+		var result = Kekule.DomUtils.hasAttribute(elem, 'builtin');
+		if (namespaceURI &amp;&amp; result)
+			result = elem.namespaceURI === namespaceURI;
+		return result;
+	},
 
 	FILTER_TYPED_ELEM: 1,
 	FILTER_TYPEDARRAY_ELEM: 2,
@@ -565,6 +586,30 @@ Kekule.IO.CmlDomUtils = {
 		return null;
 	},
 	/**
+	 * Get all child typed elements with specified builtinName.
+	 * @param {Object} parent
+	 * @param {String} builtinName
+	 * @param {Int} filter
+	 * @returns {Array} Elements found or null.
+	 */
+	getCmlTypedElems: function(parent, builtinName, filter)
+	{
+		var result = [];
+		var nsURI = parent.namespaceURI;
+		var elems = Kekule.DomUtils.getDirectChildElemsOfAttribValues(parent, [{'builtin': builtinName}], null, null, nsURI);
+		if (elems &amp;&amp; (elems.length > 0))
+		{
+			for (var i = elems.length - 1; i >= 0; --i)
+			{
+				if ((filter &amp; Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM) &amp;&amp; Kekule.IO.CmlDomUtils.isCmlTypedElem(elems[i], nsURI))
+					result.push(elems[i]);
+				else if ((filter &amp; Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM) &amp;&amp; Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(elems[i], nsURI))
+					result.push(elems[i]);
+			}
+		}
+		return result.length? result: null;
+	},
+	/**
 	 * Get value of child typed element with specified builtinName.
 	 * @param {Object} parent
 	 * @param {String} builtinName
@@ -579,6 +624,31 @@ Kekule.IO.CmlDomUtils = {
 		if (elem)
 			//return Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(elem, parent.namespaceURI, domHelper);
 			return Kekule.DomUtils.getElementText(elem);
+	},
+	/**
+	 * Get value of child typed elements (maybe multiple) with specified builtinName.
+	 * @param {Object} parent
+	 * @param {String} builtinName
+	 * @param {Int} filter
+	 * @returns {Variant} Value found (array) or null.
+	 */
+	getMultipleCmlTypedElemValues: function(parent, builtinName, filter, domHelper)
+	{
+		if (!filter)
+			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
+		var elems = Kekule.IO.CmlDomUtils.getCmlTypedElems(parent, builtinName, filter);
+		if (elems)
+		{
+			var result = [];
+			//return Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(elem, parent.namespaceURI, domHelper);
+			for (var i = 0, l = elems.length; i &lt; l; ++i)
+			{
+				result.push(Kekule.DomUtils.getElementText(elems[i]));
+			}
+			return result;
+		}
+		else
+			return null;
 	},
 	/**
 	 * Get attribute value of elem. If attribName not found in elem's attributes,
@@ -596,6 +666,25 @@ Kekule.IO.CmlDomUtils = {
 		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
 		{
 			result = Kekule.IO.CmlDomUtils.getCmlTypedElemValue(elem, attribName, filter, domHelper);
+		}
+		return result;
+	},
+	/**
+	 * Get attribute values of (may) multiple elem. If attribName not found in elem's attributes,
+	 *   this method will automatically check child &lt;string>, &lt;float> or &lt;integer> elements.
+	 * @param {Object} elem
+	 * @param {String} attribName
+	 * @param {Int} filter
+	 * @returns {Variant} Value of attribute.
+	 */
+	getMultipleCmlElemAttribute: function(elem, attribName, filter, domHelper)
+	{
+		if (!filter)
+			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
+		var result = Kekule.DomUtils.getSameNSAttributeValue(elem, attribName, domHelper);
+		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		{
+			result = Kekule.IO.CmlDomUtils.getMultipleCmlTypedElemValues(elem, attribName, filter, domHelper);
 		}
 		return result;
 	},
@@ -624,21 +713,28 @@ Kekule.IO.CmlDomUtils = {
 		for (var i = 0, l = childElems.length; i &lt; l; ++i)
 		{
 			var childElem = childElems[i];
-			if ((filter &amp; Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM) &amp;&amp; Kekule.IO.CmlDomUtils.isCmlTypedElem(childElem, nsURI))
+			if ((filter &amp; Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM)
+					&amp;&amp; (Kekule.IO.CmlDomUtils.isCmlTypedElem(childElem, nsURI) || Kekule.IO.CmlDomUtils.isCmlBuiltInMarkedElem(childElem, nsURI)))
 			{
 				var obj = Kekule.IO.CmlDomUtils.readCmlTypedPropertyElem(childElem, nsURI, domHelper);
-				if (result[obj.name] &amp;&amp; mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
-					result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
-				else
-					result[obj.name] = obj.value;
+				if (obj)
+				{
+					if (result[obj.name] &amp;&amp; mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
+						result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
+					else
+						result[obj.name] = obj.value;
+				}
 			}
 			else if ((filter &amp; Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM) &amp;&amp; Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(childElem, nsURI))
 			{
 				var obj = Kekule.IO.CmlDomUtils.getCmlBuiltinElemInfo(childElem, nsURI, domHelper);
-				if (result[obj.name] &amp;&amp; mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
-					result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
-				else
-					result[obj.name] = obj.value;
+				if (obj)
+				{
+					if (result[obj.name] &amp;&amp; mergeSameNameTypedElem) // multiple elements with same builtin name, merge values
+						result[obj.name] += Kekule.IO.CML.ARRAY_VALUE_DELIMITER + obj.value;
+					else
+						result[obj.name] = obj.value;
+				}
 			}
 		}
 		return result;
@@ -1074,7 +1170,7 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 						metaListElem = this.createChildElem('metaDataList', elem);
 					var metaElem = this.createChildElem('metaData', metaListElem);
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'name', key, this.getDomHelper());
-					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', StringUtils.serializeValue(value), this.getDomHelper());
+					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', DataType.StringUtils.serializeValue(value), this.getDomHelper());
 				}
 			}
 		}
@@ -1382,7 +1478,7 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 	readMeta: function(elem)
 	{
 		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
-		var result = {'key': jsonObj.name, 'value': StringUtils.deserializeValue(jsonObj.content)};
+		var result = {'key': jsonObj.name, 'value': DataType.StringUtils.deserializeValue(jsonObj.content)};
 		return result;
 	}
 });
@@ -1476,10 +1572,10 @@ Kekule.IO.CmlChemStructureReader = Class.create(Kekule.IO.CmlElementReader,
 	 */
 	arrayedAtomInfosToJSON: function(elem, domHelper)
 	{
-		var arrayedAttribNames = ['atomID', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
+		var arrayedAttribNames = ['id', 'atomID', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
 			'xFract', 'yFract', 'zFract',
 			'x2', 'y2', 'x3', 'y3', 'z3'];
-		var attribNames = ['id', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
+		var attribNames = ['id', 'id', 'elementType', 'isotope', 'hydrogenCount', 'formalCharge', 'count',
 			'xFract', 'yFract', 'zFract',
 			'x2', 'y2', 'x3', 'y3', 'z3'];
 		var atomAttribs = [];
@@ -2052,6 +2148,16 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					case 'formula':
 						this.readFormula(result, node, domHelper);
 						break;
+					case 'atom':   // sometimes atom or bond is directly add to molecule element
+						this.getStructureBuilder().setTarget(result);
+						var structureNode = this.readAtom(node, domHelper);
+						this.getStructureBuilder().appendNode(structureNode);
+						break;
+					case 'bond':
+						this.getStructureBuilder().setTarget(result);
+						var connector = this.readBond(result, node, domHelper);
+						this.getStructureBuilder().appendConnector(connector);
+						break;
 					case 'molecule':
 						break;  // do nothing, as pure molecule element should not contain sub-molecule
 					default:
@@ -2089,7 +2195,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			var atomIds = bond[this._BOND_ATOM_REF_TEMP_FIELD];
 			if (atomIds &amp;&amp; atomIds.length)
 			{
-				for (j = 0, k = atomIds.length; j &lt; k; ++j)
+				for (var j = 0, k = atomIds.length; j &lt; k; ++j)
 				{
 					var refedAtom = molecule.getNodeById(atomIds[j]);
 					if (refedAtom)
@@ -2108,7 +2214,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			var bondIds = bond[this._BOND_BOND_REF_TEMP_FIELD];
 			if (bondIds &amp;&amp; bondIds.length)
 			{
-				for (j = 0, k = bondIds.length; j &lt; k; ++j)
+				for (var j = 0, k = bondIds.length; j &lt; k; ++j)
 				{
 					var refedBond = molecule.getConnectorById(bondIds[j]);
 					if (refedBond)
@@ -2346,7 +2452,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				var xy = Kekule.IO.CmlDomUtils.splitCmlArrayValue(attribs.xy2);
 				if (xy.length == 2)
 				{
-					coord2D = {'x': xy[0], 'y': xy[1]};
+					coord2D = {'x': parseFloat(xy[0]), 'y': parseFloat(xy[1])};
 				}
 			}
 			delete attribs['x2'];
@@ -2361,7 +2467,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				var xyz = Kekule.IO.CmlDomUtils.splitCmlArrayValue(attribs.xyz3);
 				if (xyz.length == 3)
 				{
-					coord2D = {'x': xyz[0], 'y': xyz[1], 'z': xyz[2]};
+					coord2D = {'x': parseFloat(xyz[0]), 'y': parseFloat(xyz[1]), 'z': parseFloat(xyz[2])};
 				}
 			}
 			delete attribs['x3'];
@@ -2527,9 +2633,29 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	 */
 	readArrayedBonds: function(molecule, elem, domHelper)
 	{
-		var arrayedAttribNames = ['bondID', 'atomRef1', 'atomRef2', 'order', 'bondStereo'];
-		var attribNames = ['id', 'atomRefs2', 'atomRefs2', 'order', 'bondStereo'];
+		var arrayedAttribNames = ['id', 'bondID', /*'atomRefs',*/ 'atomRef1', 'atomRef2', 'order', 'bondStereo'];
+		var attribNames = ['id', 'id', /*'atomRefs',*/ 'atomRefs2', 'atomRefs2', 'order', 'bondStereo'];
 		var bondAttribs = [];
+
+		// handle atomRefs attrib first, as it may concern to multiple child elems
+		var svalues = Kekule.IO.CmlDomUtils.getMultipleCmlElemAttribute(elem, 'atomRefs', Kekule.IO.CmlDomUtils.FILTER_TYPEDARRAY_ELEM, domHelper);
+		if (svalues &amp;&amp; svalues.length)
+		{
+			for (var i = 0, l = svalues.length; i &lt; l; ++i)
+			{
+				var svalue = svalues[i];
+				var values = Kekule.IO.CmlDomUtils.splitCmlArrayValue(svalue);;
+				for (var j = 0, k = values.length; j &lt; k; ++j)
+				{
+					if (!bondAttribs[j])
+						bondAttribs[j] = {};
+					if (bondAttribs[j]['atomRefs'] == undefined)
+						bondAttribs[j]['atomRefs'] = [];
+					(bondAttribs[j]['atomRefs']).push(values[j]);
+				}
+			}
+		}
+
 		for (var i = 0, l = arrayedAttribNames.length; i &lt; l; ++i)
 		{
 			var svalue;
@@ -2539,12 +2665,23 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			if (svalue)
 				values = Kekule.IO.CmlDomUtils.splitCmlArrayValue(svalue);
 
+			//console.log(arrayedAttribNames[i], svalue, values);
+
 			for (var j = 0, k = values.length; j &lt; k; ++j)
 			{
 				if (!bondAttribs[j])
 					bondAttribs[j] = {};
 				if (values[j])
 				{
+					/*
+					if (arrayedAttribNames[i] == 'atomRefs')
+					{
+						if (bondAttribs[j]['atomRefs'] == undefined)
+							bondAttribs[j]['atomRefs'] = [];
+						(bondAttribs[j]['atomRefs']).push(values[j]);
+					}
+					else
+					*/
 					if ((arrayedAttribNames[i] == 'atomRef1') || (arrayedAttribNames[i] == 'atomRef2'))
 					{
 						if (bondAttribs[j]['atomRefs2'] == undefined)
@@ -3478,7 +3615,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 				break;
 			}
 		}
-		this.setCoreNamespaceURI(uri || null);
+		this.setCoreNamespaceURI(legalCoreUri || null);
 	}
 });
 
@@ -3614,7 +3751,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		$super(options);
 		var op = options || {};
-		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? true: op.prettyPrint);
+		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.cml.prettyPrint: op.prettyPrint);
 	},
 	/** @private */
 	initProperties: function()
@@ -3650,6 +3787,9 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 
 (function ()
 {
+	// extends mime type consts
+	Kekule.IO.MimeType.CML = 'chemical/x-cml';
+
 	// register default CML element readers and writers
 	var RF = Kekule.IO.CmlElementReaderFactory;
 	RF.register('name', Kekule.IO.CmlNameReader);
@@ -3672,7 +3812,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	WF.register('Kekule.ChemDocument', Kekule.IO.CmlRootWriter);
 
 	// register chem data formats
-	Kekule.IO.DataFormatsManager.register('cml', 'chemical/x-cml', 'cml', Kekule.IO.ChemDataType.TEXT, 'Chemical Markup Language');
+	Kekule.IO.DataFormatsManager.register('cml', Kekule.IO.MimeType.CML, 'cml', Kekule.IO.ChemDataType.TEXT, 'Chemical Markup Language');
 
 	// register ChemData reader and writer
 	/*
@@ -3690,7 +3830,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			'fileExt': 'cml'
 		});
 	*/
-	var cmdFmtId = Kekule.IO.DataFormatsManager.findFormatId('chemical/x-cml');
+	var cmdFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.CML);
 
 	Kekule.IO.ChemDataReaderManager.register('cml', Kekule.IO.CmlReader, [cmdFmtId]);
 	Kekule.IO.ChemDataWriterManager.register('cml', Kekule.IO.CmlWriter,
@@ -3708,13 +3848,13 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormat.html">DataFormat</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:11:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

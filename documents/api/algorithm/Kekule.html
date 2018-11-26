@@ -96,10 +96,16 @@
         <h3 class="subsection-title">Classes</h3>
 
         <dl>
+            <dt><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></dt>
+            <dd></dd>
+        
             <dt><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></dt>
             <dd></dd>
         
             <dt><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></dt>
+            <dd></dd>
+        
+            <dt><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></dt>
             <dd></dd>
         
             <dt><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></dt>
@@ -184,6 +190,132 @@
         <h3 class="subsection-title">Members</h3>
 
         <dl>
+            
+<dt>
+    <h4 class="name" id="$document"><span class="type-signature">(static) </span>$document<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        Root document of JavaScript environment.Can be null in Node.js.
+    </div>
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.root.js.html">core/kekule.root.js</a>, <a href="core_kekule.root.js.html#line118">line 118</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="$jsRoot"><span class="type-signature">(static) </span>$jsRoot<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        Root object of JavaScript environment, usually window.
+    </div>
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.root.js.html">core/kekule.root.js</a>, <a href="core_kekule.root.js.html#line113">line 113</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
             
 <dt>
     <h4 class="name" id="AromaticTypes"><span class="type-signature">(static) </span>AromaticTypes<span class="type-signature"></span></h4>
@@ -393,7 +525,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.canonicalizers.js.html">algorithm/kekule.structures.canonicalizers.js</a>, <a href="algorithm_kekule.structures.canonicalizers.js.html#line751">line 751</a>
+        <a href="algorithm_kekule.structures.canonicalizers.js.html">algorithm/kekule.structures.canonicalizers.js</a>, <a href="algorithm_kekule.structures.canonicalizers.js.html#line1370">line 1370</a>
     </li></ul></dd>
     
 
@@ -521,7 +653,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.graph.js.html">algorithm/kekule.graph.js</a>, <a href="algorithm_kekule.graph.js.html#line225">line 225</a>
+        <a href="algorithm_kekule.graph.js.html">algorithm/kekule.graph.js</a>, <a href="algorithm_kekule.graph.js.html#line244">line 244</a>
     </li></ul></dd>
     
 
@@ -684,314 +816,6 @@
     
 </dd>
 
-        
-            
-<dt>
-    <h4 class="name" id="StructureComparationLevel"><span class="type-signature">(static) </span>StructureComparationLevel<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        Enumeration of comparation of chem structure.
-    </div>
-    
-
-    
-
-    
-
-
-    <h5 class="subsection-title">Properties:</h5>
-
-    <dl>
-
-<table class="props">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>SKELETAL</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Compare only topological graph, atom/bond details are ignored.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>CONSTITUTION</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Compare only constitution, ignore stereo factors and charge.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>CONFIGURATION</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Compare with stereo factors but ignore atom mass number and charge.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>EXACT</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Compare with stereo factors and mass number / charge.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>DEFAULT</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Default comparation level.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-</dl>
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.comparers.js.html">algorithm/kekule.structures.comparers.js</a>, <a href="algorithm_kekule.structures.comparers.js.html#line27">line 27</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="StructureRingSearchDefOptions"><span class="type-signature">(static) </span>StructureRingSearchDefOptions<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        Default Options used to search rings in chem structure.
-    </div>
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.ringSearches.js.html">algorithm/kekule.structures.ringSearches.js</a>, <a href="algorithm_kekule.structures.ringSearches.js.html#line26">line 26</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="UnivChemStructObjComparer"><span class="type-signature">(static) </span>UnivChemStructObjComparer<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        A comparer to decide which chem structure object is "bigger" or "superior" than another one.In the comparer, each structure object is turned to a int value with the fixed format.For node, the value will be 0xTNAAABBBLLCPH  (13 digitals)  [Atom]:  T: 0-F, object major type, always be 1 to a node.  N: object class, 1: Atom, 2: Pseudoatom, 3: VariableAtom, E: unspecified atom (atom not the in the previous three types), 0: other node.  AAA: atom major property. Atomic number for usual atom, FFE for pseudoatom, FFF for variable atom, 000 for other types of node.  BBB: atom mass number, if mass number is not specified, 000 will be used. For other node, this value is always 000.  LL: Linked conector count. Connector to hydrogen will not be considered.  C: charge. 7 for a neutral node, 8 for +1, 9 for +2, 6 for -1, 5 for -2 and so on.  P: parity. Stereo parity, 0 for no stereo, 1 for odd and 2 for even.  H: Hydrogen count.  [Fragment]:  T: 0-F, object major type, always be 1 to a node.  N: object class, 1: subgroup, 5: molecule, 0: other fragment.  AAA: atom count in fragment. 000 for unknown. Hydrogen atoms are ignored.  BBB: bond count in fragment, 000 for unknown. Bond to hydrogens are ignored.  LL: Linked conector count.  C: charge. 7 for a neutral node, 8 for +1, 9 for +2, 6 for -1, 5 for -2 and so on.  P: parity. Stereo parity, 0 for no stereo, 1 for odd and 2 for even.  H: Hydrogen count, usually 0.For connector the value will be 0xTCBPNNAA  (8 digitals)  T: 0-F, object major type, always be 0 to a connector.  C: connector type. 1 for bond and 0 for other types of connector.  B: bond type. 1: covalent, 2: ionic, 3: coordinate, 4: metallic, 9: hydrogen, 0: other  P: parity.  NN: bond electron count. 02: single, 04: double, 06: triple, 03: aromatic, 00: other  AA: connected object count.
-    </div>
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="algorithm_kekule.structures.comparers.js.html">algorithm/kekule.structures.comparers.js</a>, <a href="algorithm_kekule.structures.comparers.js.html#line71">line 71</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-</dd>
-
         </dl>
     
 
@@ -1010,13 +834,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:34 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:23 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

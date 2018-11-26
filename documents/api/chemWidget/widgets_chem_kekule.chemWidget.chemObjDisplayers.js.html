@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: widgets/chem/kekule.chemWidget.chemObjDisplayers.js</h1>
 
+    
 
 
 
-
-
+    
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
@@ -80,6 +80,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_LOADFILE: 'K-Chem-LoadFile',
 	ACTION_LOADDATA: 'K-Chem-LoadData',
 	ACTION_SAVEFILE: 'K-Chem-SaveFile',
+	ACTION_CLEAROBJS: 'K-Chem-ClearObjs',
 	ACTION_CONFIG: 'K-Chem-Config',
 
 	DIALOG_CHOOSE_FILE_FORAMT: 'K-Chem-Dialog-Choose-File-Format',
@@ -146,17 +147,23 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}. Read only.
  * @property {Kekule.ChemObject} chemObj Object to be drawn. Set this property will repaint the client.
  * @property {Bool} chemObjLoaded Whether the chemObj is successful loaded and drawn in viewer.
+ * @property {Bool} resetAfterLoad Whether reset display (remove rotate, zoom and so on) after set a new chem obj.
  * @property {Object} renderConfigs Configuration for rendering.
  * @property {Int} moleculeDisplayType Display type of molecule in displayer. Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
- * @property {Hash} drawOptions
+ * @property {Hash} drawOptions A series of params to render chem object.
  * @property {Float} zoom Zoom ratio to draw chem object, equal to drawOptions.zoom.
+ * @property {Float} initialZoom Initial zoom when just loading a chem object. Default is 1.
  * @property {Bool} autoSize Whether the widget change its size to fit the dimension of chem object.
  * @property {Int} padding Padding between chem object and edge of widget, in px. Only works when autoSize is true.
  * @property {Hash} baseCoordOffset Usually displayer draw object at center of widget, use this property to make
  *   the drawing center moved from widget center.
  *   Note: this property is useless when autoSize == true.
+ * @property {Hash} transformParams A combination of (@link Kekule.ChemWidget.ChemObjDisplayer.drawOptions} and (@link Kekule.ChemWidget.ChemObjDisplayer.baseCoordOffset}.
+ * @property {String} backgroundColor Get or set background color of displayer. Default is transparent.
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
- *
+ * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
+ * @property {Array} allowedOutputFormatIds Formats that shown in output file dialog. Default is null, means accept all available formats.
+ * @property {Hash} standardizationOptions Possible options when do standardization on molecule before saving.
  */
 /**
  * Invoked when the an chem object (or null) is loaded into the displayer.
@@ -174,6 +181,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		this._paintFlag = 0;  // used internally
 		//this._errorReportElem = null;  // use internally
+		this._bgColorMap = {};  // use internally
+		this._contextTransformOpsMap = new Kekule.MapEx();
+		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		$super(parentOrElementOrDocument);
 		if (chemObj)
@@ -187,16 +197,19 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.setChemObj(null);
+		//this.setChemObj(null);
+		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
 		var b = this.getPropStoreFieldValue('drawBridge');
 		var ctx = this.getPropStoreFieldValue('drawContext');
 		if (ctx &amp;&amp; b)
 			b.releaseContext(ctx);
-		if (b.finalize)
+		if (b &amp;&amp; b.finalize)
 			b.finalize();
 		this.setPropStoreFieldValue('drawBridge', null);
 		this.setPropStoreFieldValue('drawContext', null);
+		if (this._contextTransformOpsMap)
+			this._contextTransformOpsMap.finalize();
 		$super();
 	},
 	/** @private */
@@ -204,7 +217,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		this.defineProp('displayerConfigs', {'dataType': 'Kekule.ChemWidget.ChemObjDisplayerConfigs', 'serializable': false, 'scope': PS.PUBLIC});
 
-		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL});
+		this.defineProp('allowedInputFormatIds', {'dataType': DataType.ARRAY});
+		this.defineProp('allowedOutputFormatIds', {'dataType': DataType.ARRAY});
+
+		this.defineProp('standardizationOptions', {'dataType': DataType.HASH});
+
+		this.defineProp('resetAfterLoad', {'dataType': DataType.BOOL});
 		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': function(value)
 			{
@@ -220,7 +239,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': null,
 			'getter': function() { return this.getChemObj() &amp;&amp; this.getPropStoreFieldValue('chemObjLoaded'); }
 		});
-		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'setter': null, 'scope': PS.PUBLIC});
+		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLISHED,
+			'setter': function(value)
+			{
+				if (!this.getAllowRenderTypeChange())
+				{
+					Kekule.error(Kekule.$L('ErrorMsg.RENDER_TYPE_CHANGE_NOT_ALLOWED'));
+					return;
+				}
+				var oldValue = this.getRenderType();
+				if (value !== oldValue)
+				{
+					this.setPropStoreFieldValue('renderType', value);
+					this.resetRenderType(oldValue, value);
+				}
+			}
+		});
 
 		this.defineProp('renderConfigs', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
@@ -231,6 +265,37 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 						Kekule.Render.Render3DConfigs.getInstance():
 						Kekule.Render.Render2DConfigs.getInstance();
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('renderConfigs', value);
+				var painter = this.getPropStoreFieldValue('painter');
+				if (painter)
+					painter.setRenderConfigs(this.getRenderConfigs());
+			}
+		});
+		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('backgroundColor', value);
+				//this.setBackgroundColorOfType(value, this.getRenderType());
+				this._bgColorMap[this.getRenderType().toString()] = value;
+				this.backgroundColorChanged();
+			}
+		});
+		this.defineProp('transformParams', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
+			'getter': function()
+			{
+				var result = Object.extend({}, this.getDrawOptions());
+				result.screenCoordOffset = this.getBaseCoordOffset();
+				return result;
+			},
+			'setter': function(value)
+			{
+				var param = value || {};
+				this.setDrawOptions(param);
+				this.setBaseCoordOffset(param.baseCoordOffset);
+				this.drawOptionChanged();
 			}
 		});
 		this.defineProp('drawOptions', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
@@ -243,6 +308,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 					this.setPropStoreFieldValue('drawOptions', result);
 				}
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('drawOptions', value);
+				this.drawOptionChanged();
 			}
 		});
 		this.defineProp('zoom', {'dataType': DataType.FLOAT, 'serializable': false,
@@ -257,6 +327,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return this;
 			}
 		});
+		this.defineProp('initialZoom', {'dataType': DataType.FLOAT});
 		this.defineProp('autofit', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function()
 			{
@@ -330,12 +401,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		// private properties
 		this.defineProp('drawBridge', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': PS.PRIVATE,
 			'setter': null,
-			'getter': function()
+			'getter': function(slient)
 			{
 				var result = this.getPropStoreFieldValue('drawBridge');
 				if (!result)
 				{
-					result = this.createDrawBridge();
+					result = this.createDrawBridge(slient);
 					this.setPropStoreFieldValue('drawBridge', result);
 				}
 				return result;
@@ -393,6 +464,58 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}
 		});
 	},
+	initPropValues: function($super)
+	{
+		$super();
+		this.setStandardizationOptions({'unmarshalSubFragments': false});
+	},
+
+	/** @ignore */
+	doWidgetShowStateChanged: function($super, isShown)
+	{
+		$super(isShown);
+		/*
+		 As position/size calculation may be wrong when displayed = false,
+		 during the show phase, whole context should be force repainted.
+		 */
+		if (isShown)
+			this.setChemObj(this.getChemObj());
+	},
+
+	/**
+	 * Whether changing render type is allowed in current type of displayer.
+	 * Default is false, descendants may override this method.
+	 * @returns {Bool}
+	 */
+	getAllowRenderTypeChange: function()
+	{
+		return false;
+	},
+	/**
+	 * Notify the render type has been changed.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	resetRenderType: function(oldType, newType)
+	{
+		var chemObj = this.getChemObj();
+		var bridge = this.getPropStoreFieldValue('drawBridge');
+		var context = this.getPropStoreFieldValue('drawContext');
+		if (bridge)
+		{
+			if (context)
+				bridge.releaseContext(context);
+		}
+		this.setPropStoreFieldValue('drawContext', null);
+		this.setPropStoreFieldValue('drawBridge', null);
+		var newBgColor = this.getBackgroundColorOfType(newType);
+		this.getDrawOptions().moleculeDisplayType = this.getDefaultMoleculeDisplayType(newType);  // reset display type
+		//this.setBackgroundColor(newBgColor);
+		this.setPropStoreFieldValue('backgroundColor', newBgColor);
+		this.backgroundColorChanged(true);  // notify back color change but not repaint, as painter currently is still old one
+		//if (chemObj)  // repaint
+		this.setChemObj(chemObj || null);
+	},
 
 	/**
 	 * Create a default editor config object.
@@ -405,18 +528,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return new Kekule.ChemWidget.ChemObjDisplayerConfigs();
 	},
 
-	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
-	{
-		$super(isShown);
-		/*
-		  As position/size calculation may be wrong when displayed = false,
-		  during the show phase, whole context should be force repainted.
-		 */
-		if (isShown)
-			this.setChemObj(this.getChemObj());
-	},
-
 	/**
 	 * Returns coord mode according to current renderType.
 	 * @returns {Int}
@@ -425,6 +536,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		return (this.getRenderType() === Kekule.Render.RendererType.R3D)?
 			Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
+	},
+	/**
+	 * Set renderType according to coord mode.
+	 * @param {Int} coordMode
+	 */
+	setCoordMode: function(coordMode)
+	{
+		var rType = (coordMode === Kekule.CoordMode.COORD3D)?
+			Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D;
+		this.setRenderType(rType);
 	},
 
 	/** @private */
@@ -483,15 +604,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	*/
 
 	/** @private */
-	createDrawBridge: function()
+	createDrawBridge: function(slient)
 	{
 		var M = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
 			Kekule.Render.DrawBridge3DMananger: Kekule.Render.DrawBridge2DMananger;
 		var result = M.getPreferredBridgeInstance();
 		if (!result)   // can not find suitable draw bridge
 		{
-			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			if (!slient)
+				Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
+		/* infinite loop, remove this part
+		if (this.getBackgroundColor() &amp;&amp; result.setClearColor)
+			result.setClearColor(this.getDrawContext(), this.getBackgroundColor());
+		*/
 		return result;
 	},
 
@@ -499,11 +625,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * Returns parent element to create draw context inside.
 	 * Descendants can override this method.
 	 */
-	getDrawContextParentElem: function()
+	getDrawContextParentElem: function(disableAutoCreate)
 	{
 		//return this.getElement();
 		var result = this._drawContextParentElem;
-		if (!result)  // create new
+		if (!result &amp;&amp; !disableAutoCreate)  // create new
 		{
 			result = this.getDocument().createElement('div'); // IMPORTANT: span may cause dimension calc problem of context
 			this._drawContextParentElem = result;
@@ -561,7 +687,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	refitDrawContext: function(doNotRepaint)
 	{
-		if (this.getDrawBridge() &amp;&amp; this.getDrawContext())
+		if (this.getDrawBridge(true) &amp;&amp; this.getDrawContext())
 		{
 			//var dim = Kekule.HtmlElementUtils.getElemScrollDimension(this.getElement());
 			var dim = Kekule.HtmlElementUtils.getElemClientDimension(this.getDrawContextParentElem());
@@ -571,6 +697,18 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			if (!doNotRepaint &amp;&amp; success)
 				this.repaint();
 		}
+	},
+
+	/**
+	 * Returns dimension of context.
+	 * @returns {Hash}
+	 */
+	getContextDimension: function()
+	{
+		if (this.getDrawBridge() &amp;&amp; this.getDrawContext())
+			return this.getDrawBridge().getContextDimension(this.getDrawContext());
+		else
+			return null;
 	},
 	/**
 	 * Change the dimension of context.
@@ -597,7 +735,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			var p = this.getPropStoreFieldValue('painter');
 			if (p)
 				p.clear(c);
-
 			this.getDrawBridge().clearContext(c);
 		}
 	},
@@ -625,6 +762,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//if (newObj)
 		//console.log('change to new Obj', newObj);
 		this.doLoad(newObj);
+		if (this.getResetAfterLoad() &amp;&amp; oldObj)  // clear old draw options if oldObj is set
+			this.resetDisplay();
 	},
 
 	/**
@@ -735,13 +874,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		try
 		{
-			//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
-			var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
-			if (chemObj)
-				this.setChemObj(chemObj);
+			if (!data)
+			{
+				this.setChemObj(null);
+				return null;
+			}
 			else
-				Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
-			return chemObj;
+			{
+				//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
+				var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
+				if (chemObj)
+					this.setChemObj(chemObj);
+				else
+					Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+				return chemObj;
+			}
 		}
 		catch(e)
 		{
@@ -755,50 +902,29 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	loadFromFile: function(file)
 	{
-		/*
-		 if (Kekule.BrowserFeature.fileapi)
-		 {
-		 try
-		 {
-		 var fileName = file.name;
-		 // try open it in browser
-		 var reader = new FileReader();
-		 var self = this;
-		 reader.onload = function(e)
-		 {
-		 var content = reader.result;
-		 self.loadFromData(content, null, fileName);
-		 };
-		 reader.readAsText(file);
-		 }
-		 catch(e)
-		 {
-		 this.reportException(e);
-		 }
-		 }
-		 else
-		 {
-		 this.reportException(Kekule.ErrorMsg.FILE_API_NOT_SUPPORTED);
-		 }
-		 */
-		var self = this;
-		try
+		if (!file)
+			this.setChemObj(null);
+		else
 		{
-			Kekule.IO.loadFileData(file, function(chemObj, success)
-				{
-					if (success)
-						self.setChemObj(chemObj);
-				}
-			);
-		}
-		catch(e)
-		{
-			this.reportException(e);
+			var self = this;
+			try
+			{
+				Kekule.IO.loadFileData(file, function(chemObj, success)
+					{
+						if (success)
+							self.setChemObj(chemObj);
+					}
+				);
+			}
+			catch (e)
+			{
+				this.reportException(e);
+			}
 		}
 	},
 
 	/**
-	 * Returns object in displayer that tp be saved.
+	 * Returns object in displayer that to be saved.
 	 * Usually this should be the chemObj itself.
 	 * Descendants may override this method.
 	 * @returns {Kekule.ChemObject}
@@ -823,11 +949,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, obj);
 		if (writer)
 		{
-			var doCanonicalize = this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
+			var doCanonicalize = this._needToCanonicalizeBeforeSaving() &amp;&amp; this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
 			if (doCanonicalize &amp;&amp; obj.standardize)  // canonicalize first
 			{
 				var obj = obj.clone? obj.clone(true): obj;  // clone with id
-				obj.standardize();
+				obj.standardize(this.getStandardizationOptions());
 			}
 			if (!dataType)
 			{
@@ -842,6 +968,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			Kekule.error(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT'));
 			return null;
 		}
+	},
+	/**
+	 * Return whether this displayer need to canonicalize molecule before save.
+	 * Descendants may override this method.
+	 * @returns {Bool}
+	 * @private
+	 */
+	_needToCanonicalizeBeforeSaving: function()
+	{
+		return false;
 	},
 	/**
 	 * Called before obj is saved. Descendants can overrride this method.
@@ -925,7 +1061,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}
 		}
 		baseCoord = this.getDrawBridge().transformScreenCoordToContext(context, baseCoord);
-		return {baseCoord: baseCoord, newWidgetDimension: newDimension};
+		return {'baseCoord': baseCoord, 'baseCoordPos': Kekule.Render.CoordPos.CENTER, 'newWidgetDimension': newDimension};
 	},
 
 	/**
@@ -940,18 +1076,34 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return this.getDrawOptions();
 	},
 
+	/** @private */
 	calcDrawParams: function(overrideOptions)
 	{
 		var ops = this.getActualDrawOptions();
 		if (overrideOptions)
 			ops = Object.extend(ops, overrideOptions);
 		var baseCoordResult = this.calcDrawBaseCoord(ops);
-		return {'drawOptions': ops, 'baseCoord': baseCoordResult.baseCoord, 'newWidgetDimension': baseCoordResult.newWidgetDimension};
+		return {
+			'drawOptions': ops,
+			'baseCoord': baseCoordResult.baseCoord,
+			'baseCoordPos': baseCoordResult.baseCoordPos,
+			'newWidgetDimension': baseCoordResult.newWidgetDimension};
+	},
+
+	/** @private */
+	_savePainterInitialRenderTransformOptions: function(context, painter)
+	{
+		var actualTransformOps = painter.getActualInitialRenderTransformOptions(context);
+		this._contextTransformOpsMap.set(context, actualTransformOps);
+		//console.log('store transform ops', actualTransformOps);
 	},
 
 	/**
-	 * Repaint the context.
-	 * @private
+	 * Repaint the context with current chem object.
+	 * @param {Hash} overrideOptions Transform options to do repainting.
+	 *   If this param is set to null, all transform options will be recalculated.
+	 *   If overrideOptions.preserveTransformOptions is true, transform options remains same as
+	 *   last painting process (rather than recalculated).
 	 */
 	repaint: function(overrideOptions)
 	{
@@ -972,9 +1124,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 drawOptions = Object.extend(drawOptions, overrideOptions);
 			 var baseCoord = this.calcDrawBaseCoord(drawOptions);
 			 */
-			var drawParams = this.calcDrawParams(overrideOptions);
-
 			var context = this.getDrawContext();
+			var drawParams;
+			var transformOps;
+
+			var transformOpsChanged = true;
+			if (overrideOptions &amp;&amp; overrideOptions.preserveTransformOptions)
+			{
+				transformOps = this._contextTransformOpsMap.get(context) || null;
+				transformOpsChanged = false;
+				//console.log(transformOps);
+				drawParams = this.calcDrawParams(transformOps);
+			}
+			else
+				drawParams = this.calcDrawParams(overrideOptions);
 
 			this._lastBaseCoord = drawParams.baseCoord;  // save for next time use in drawOptionChanged
 			//console.log('context center', baseCoord);
@@ -985,7 +1148,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 baseCoord = null;
 			 */
 
+			//console.log(drawParams, drawParams.baseCoord, drawParams.drawOptions);
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
+
+			if (transformOpsChanged)
+			{
+				this._savePainterInitialRenderTransformOptions(context, painter);
+			}
 
 			//var end = (new Date()).getTime();
 			//var duration = end - start;
@@ -1022,6 +1191,42 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Returns background color used for a special renderType.
+	 * @param {Int} renderType
+	 * @returns {String}
+	 */
+	getBackgroundColorOfType: function(renderType)
+	{
+		return this._bgColorMap[renderType.toString()];
+	},
+	/**
+	 * Set background color used for a special renderType.
+	 * @param {String} color
+	 * @param {Int} renderType
+	 */
+	setBackgroundColorOfType: function(color, renderType)
+	{
+		this._bgColorMap[renderType.toString()] = color;
+		if (renderType === this.getRenderType())
+			this.setBackgroundColor(color);
+	},
+	/**
+	 * Called after background color is changed, should repaint the context.
+	 */
+	backgroundColorChanged: function(doNotRepaint)
+	{
+		var color = this.getBackgroundColor();
+		if (color === 'transparent')
+			color = null;
+		var drawBridge = this.getDrawBridge(true);
+		if (drawBridge &amp;&amp; drawBridge.setClearColor)
+		{
+			drawBridge.setClearColor(this.getDrawContext(), color);
+			if (!doNotRepaint)
+				this.repaint();
+		}
+	},
+	/**
 	 * Called after draw options are changed. Should repaint the context.
 	 * Repaint is a time-consuming job. So if only rotate/scale/translate options changes,
 	 * geometryOptionChanged method should be used instead.
@@ -1041,7 +1246,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var drawOptions = this.getDrawOptions();
 		if (painter.supportGeometryOptionChange())
 		{
-			painter.changeGeometryOptions(this.getDrawContext(), drawOptions.baseCoord || this._lastBaseCoord, drawOptions);
+			var context = this.getDrawContext();
+			painter.changeGeometryOptions(context, drawOptions.baseCoord || this._lastBaseCoord, drawOptions);
+			this._savePainterInitialRenderTransformOptions(context, painter);
 		}
 		else
 			this.drawOptionChanged();
@@ -1073,7 +1280,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	resetDisplay: function()
 	{
 		var op = this.getDrawOptions();
-		op.zoom = 1;
+		op.zoom = this.getInitialZoom() || 1;
 		op.rotateX = 0;
 		op.rotateY = 0;
 		op.rotateZ = 0;
@@ -1130,9 +1337,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	resetZoom: function()
 	{
-		return this.zoomTo(1);
+		return this.zoomTo(this.getInitialZoom() || 1);
 	},
 
+	/**
+	 * Returns default mol display type in special render mode.
+	 * @param {Int} renderType
+	 * @return {Int}
+	 * @private
+	 */
+	getDefaultMoleculeDisplayType: function(renderType)
+	{
+		return (renderType === Kekule.Render.RendererType.R3D)?
+			Kekule.Render.Molecule3DDisplayType.DEFAULT: Kekule.Render.Molecule2DDisplayType.DEFAULT;
+	},
 	/**
 	 * Returns current molecule display type.
 	 * @returns {Int}
@@ -1141,8 +1359,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		var result = this.getDrawOptions().moleculeDisplayType;
 		if (!result) // not set, use default
-			result = (this.getRenderType() === Kekule.Render.RendererType.R3D)?
-				Kekule.Render.Molecule3DDisplayType.DEFAULT: Kekule.Render.Molecule2DDisplayType.DEFAULT;
+			result = this.getDefaultMoleculeDisplayType(this.getRenderType());
 		return result;
 	},
 	/*
@@ -1177,6 +1394,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	exportToDataUri: function(dataType, options)
 	{
+		//console.log(this.getDrawBridge(), this.getDrawContext());
 		return this.getDrawBridge().exportToDataUri(this.getDrawContext(), dataType, options);
 	},
 
@@ -1290,9 +1508,9 @@ Kekule.ChemWidget.ChemObjDisplayer.Configurator = Class.create(Kekule.Widget.Con
 /**
  * Action for loading a file in chem displayer.
  * @class
- * @augments Kekule.ActionFileOpen
+ * @augments Kekule.ActionLoadFileData
  */
-Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(Kekule.ActionFileOpen,
+Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(/*Kekule.ActionFileOpen*/Kekule.ActionLoadFileData,
 /** @lends Kekule.ChemWidget.ActionDisplayerLoadFile# */
 {
 	/** @private */
@@ -1319,28 +1537,23 @@ Kekule.ChemWidget.ActionDisplayerLoadFile = Class.create(Kekule.ActionFileOpen,
 		var displayer = this.getDisplayer();
 		this.setEnabled(this.getEnabled() &amp;&amp; displayer &amp;&amp; displayer.getEnabled() &amp;&amp; displayer.getEnableLoadNewFile());
 	},
-	/** @private */
+	/* @private */
+	/*
 	doFileOpened: function(files)
 	{
 		if (files &amp;&amp; files.length)
 		{
 			var file = files[0];
-			/*
-			 var fileName = file.name;
-			 // try open it in browser
-			 var reader = new FileReader();
-			 var self = this;
-			 reader.onload = function(e)
-			 {
-			 var content = reader.result;
-			 var ext = fileName? Kekule.UrlUtils.extractFileExt(fileName): null;
-			 var chemObj = Kekule.IO.loadTypedData(content, null, ext);
-			 self.getViewer().setChemObj(chemObj);
-			 };
-			 reader.readAsText(file);
-			 */
 			this.getDisplayer().loadFromFile(file);
 		}
+	}
+	*/
+	/** @private */
+	doDataLoaded: function(data, fileName, loaded)
+	{
+		//console.log('do data loaded', fileName);
+		if (loaded)
+			this.getDisplayer().loadFromData(data, null, fileName);
 	}
 });
 
@@ -1376,6 +1589,38 @@ Kekule.ChemWidget.ActionOnDisplayer = Class.create(Kekule.Action,
 	{
 		var displayer = this.getDisplayer();
 		this.setEnabled(displayer &amp;&amp; displayer.getChemObj() &amp;&amp; displayer.getChemObjLoaded() &amp;&amp; displayer.getEnabled());
+	}
+});
+
+/**
+ * Action for set chem object to null in chem displayer.
+ * @class
+ * @augments Kekule.ActionOnDisplayer
+ */
+Kekule.ChemWidget.ActionDisplayerClear = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
+/** @lends Kekule.ChemWidget.ActionDisplayerClear# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerClear',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_CLEAROBJS,
+	/** @constructs */
+	initialize: function($super, displayer)
+	{
+		$super(displayer, Kekule.$L('ChemWidgetTexts.CAPTION_CLEAROBJS'), Kekule.$L('ChemWidgetTexts.HINT_CLEAROBJS'));
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		var displayer = this.getDisplayer();
+		this.setEnabled(displayer &amp;&amp; displayer.getEnabled() &amp;&amp; displayer.getChemObj() /* &amp;&amp; displayer.getChemObjLoaded()*/);
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		var displayer = this.getDisplayer();
+		displayer.setChemObj(null);
 	}
 });
 
@@ -1438,7 +1683,8 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	createDataDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		return new Kekule.ChemWidget.LoadDataDialog(doc);
+		var result = new Kekule.ChemWidget.LoadDataDialog(doc);
+		return result;
 	},
 
 	/** @private */
@@ -1453,6 +1699,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	{
 		var self = this;
 		var dialog = this.getDataDialog();
+		dialog.setAllowedFormatIds(this.getDisplayer().getAllowedInputFormatIds() || Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds());
 
 		var formatSelector = dialog._formatSelector;
 
@@ -1557,8 +1804,9 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	createFormatDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_CHOOSEFILEFORMAT'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_SAVEDATA_DIALOG'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		result.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT);
+		result.setAutoAdjustSizeOnPopup(true);
 		// label
 		var elem = doc.createElement('div');
 		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_FORMAT'); //CWT.CAPTION_SELECT_FORMAT;
@@ -1585,9 +1833,14 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		previewTextArea.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER);
 		previewTextArea.appendToElem(elem);
 		result._previewTextArea = previewTextArea;
+
+		if (result.setResizable)
+			result.setResizable(true);
+
 		return result;
 	},
 	/** @private */
+
 	getAvailableWriterInfos: function(chemObj)
 	{
 		//var obj = this.getDisplayer().getChemObj();
@@ -1595,9 +1848,11 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			return [];
 		else
 		{
-			return Kekule.IO.ChemDataWriterManager.getAvailableWriterInfos(null, chemObj);
+			var result = Kekule.IO.ChemDataWriterManager.getAvailableWriterInfos(null, chemObj);
+			return result;
 		}
 	},
+
 	/** @private */
 	getFormatSelectorItems: function(chemObj, writerInfos)
 	{
@@ -1613,6 +1868,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var info = writerInfos[i];
 			Kekule.ArrayUtils.pushUnique(formatIds, info.formatId);
 		}
+		formatIds = Kekule.ArrayUtils.intersect(this.getAllowedFormatIds(), formatIds);
 
 		for (var i = 0, l = formatIds.length; i &lt; l; ++i)
 		{
@@ -1654,6 +1910,42 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		return result;
 	},
 	/** @private */
+	getAllowedFormatIds: function()
+	{
+		return this.getDisplayer().getAllowedOutputFormatIds() || Kekule.IO.ChemDataWriterManager.getAllWritableFormatIds();
+	},
+	/** @private */
+	getFileFilters: function(formatItems)
+	{
+		var result = [];
+		for (var i = 0, l = formatItems.length; i &lt; l; ++i)
+		{
+			var format = formatItems[i];
+			var info = format.data;
+			var title = format.text || format.title || format.value;
+			var exts = Kekule.ArrayUtils.toArray(info.fileExts);
+			/*
+			for (var j = 0, k = exts.length; j &lt; k; ++j)
+			{
+				result.push({'title': title, 'filter': '.' + exts[j]});
+			}
+			*/
+			result.push({'title': title, 'filter': '.' + exts.join(',.')});
+		}
+		// add all and any filter
+		result.push(Kekule.NativeServices.FILTER_ALL_SUPPORT);
+		result.push(Kekule.NativeServices.FILTER_ANY);
+		return result;
+	},
+	/** @private */
+	updateFormatItems: function(chemObj)
+	{
+		this._formatItems = this.getFormatSelectorItems(chemObj, this.getAvailableWriterInfos());
+		this._formatSelector.setItems(this._formatItems);
+		var filters = this.getFileFilters(this._formatItems);
+		this._saveAction.setFilters(filters);
+	},
+	/** @private */
 	reactFormatSelectorChange: function()
 	{
 		var formatId = this.getFormatDialog()._formatSelector.getValue();
@@ -1669,8 +1961,11 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 			var formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
 			var obj = this.getTargetObj();
 			var srcInfo = this.getChemObjSrcInfo(obj);
-			if (srcInfo &amp;&amp; srcInfo.format === formatId)  // can use src data
+			if (srcInfo &amp;&amp; srcInfo.format === formatId &amp;&amp; srcInfo.data)  // can use src data
+			{
 				textArea.setValue(srcInfo.data);
+				this.setCurrSaveData(srcInfo.data);
+			}
 			else
 			{
 				// get suitable writer
@@ -1705,7 +2000,9 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	{
 		$super();
 		var displayer = this.getDisplayer();
-		this.setEnabled(displayer &amp;&amp; displayer.getEnabled() &amp;&amp; displayer.getChemObj() &amp;&amp; this._saveAction.getEnabled());
+		if (this._saveAction)
+			this._saveAction.update();
+		this.setEnabled(displayer &amp;&amp; displayer.getEnabled() &amp;&amp; displayer.getChemObj()/* &amp;&amp; this._saveAction.getEnabled()*/);
 	},
 	/** @private */
 	doExecute: function(target)
@@ -1720,6 +2017,17 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		formatSelector.setItems(formatItems);
 		this.reactFormatSelectorChange();
 
+		// update OK button enabled
+		var saveEnabled = false;
+		if (this._saveAction)
+		{
+			//this._saveAction.update();
+			saveEnabled = this._saveAction.getEnabled();
+		}
+		var btn = dialog.getDialogButton(Kekule.Widget.DialogButtons.OK);
+		if (btn)
+			btn.setEnabled(saveEnabled);
+
 		// open a dialog to choose format first, then save to file
 		var showType = this.getDialogShowType();
 		var openMethod = (showType === Kekule.Widget.ShowHideType.DIALOG)? dialog.openModal: dialog.open;
@@ -1733,10 +2041,17 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 					self._saveAction.setData(data);
 					var formatId = dialog._formatSelector.getValue();
 					self.setLastFormat(formatId);
-					var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
-					var ext = fileExts[0] || fileExts;
+					//var fileExts = Kekule.IO.DataFormatsManager.getFileExts(formatId);
+					var formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
+					var fileExts = formatInfo.fileExts;
+					var ext = Kekule.ArrayUtils.toArray(fileExts[0] || fileExts);
+					var filters = [
+						{'title': formatInfo.title || formatInfo.mimeType, 'filter': '.' + ext.join(',.')},
+						Kekule.NativeServices.FILTER_ANY
+					];
 					var fileName = /*CWT.S_DEF_SAVE_FILENAME*/Kekule.$L('ChemWidgetTexts.S_DEF_SAVE_FILENAME') + '.' + ext;
 					self._saveAction.setFileName(fileName);
+					self._saveAction.setFilters(filters);
 					//console.log(fileName);
 					self._saveAction.execute(target);
 				}
@@ -1826,7 +2141,7 @@ Kekule.ChemWidget.ActionDisplayerResetZoom = Class.create(Kekule.ChemWidget.Acti
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerResetZoom',
 	/** @private */
-	HTML_CLASSNAME: CCNS.ACTION_RESETZOOM,
+	HTML_CLASSNAME: CCNS.ACTION_RESET_ZOOM,
 	/** @constructs */
 	initialize: function($super, displayer)
 	{
@@ -1862,7 +2177,7 @@ Kekule.ChemWidget.ActionDisplayerHideHydrogens = Class.create(Kekule.ChemWidget.
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer &amp;&amp; (displayer.getRenderType() === Kekule.Render.RendererType.R3D);
-		this.setDisplayed(this.getDisplayed() &amp;&amp; flag).setEnabled(this.getEnabled() &amp;&amp; flag);
+		this.setDisplayed(/*this.getDisplayed() &amp;&amp;*/ flag).setEnabled(this.getEnabled() &amp;&amp; flag);
 	},
 	/** @private */
 	doExecute: function()
@@ -1888,11 +2203,20 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase = Class.create(Kekule.
 	{
 		$super(displayer, caption, hint);
 		this._displayType = displayType;
+		this.setCheckGroup('__molDisplayType__');
+	},
+	/** @private */
+	doUpdate: function($super)
+	{
+		$super();
+		var displayer = this.getDisplayer();
+		this.setChecked(displayer &amp;&amp; displayer.getCurrMoleculeDisplayType() === this.getMolDisplayType());
 	},
 	/** @private */
 	doExecute: function()
 	{
 		this.getDisplayer().setMoleculeDisplayType(this._displayType);
+		this.setChecked(true);
 	},
 	/**
 	 * Returns molecule display type set by this action.
@@ -1919,7 +2243,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D = Class.create(Kekul
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer &amp;&amp; (displayer.getRenderType() === Kekule.Render.RendererType.R2D);
-		this.setDisplayed(this.getDisplayed() &amp;&amp; flag).setEnabled(this.getEnabled() &amp;&amp; flag);
+		this.setDisplayed(/*this.getDisplayed() &amp;&amp;*/ flag).setEnabled(this.getEnabled() &amp;&amp; flag);
 	}
 });
 /**
@@ -1938,7 +2262,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D = Class.create(Kekul
 		$super();
 		var displayer = this.getDisplayer();
 		var flag = displayer &amp;&amp; (displayer.getRenderType() === Kekule.Render.RendererType.R3D);
-		this.setDisplayed(this.getDisplayed() &amp;&amp; flag).setEnabled(this.getEnabled() &amp;&amp; flag);
+		this.setDisplayed(/*this.getDisplayed() &amp;&amp;*/ flag).setEnabled(this.getEnabled() &amp;&amp; flag);
 	}
 });
 /**
@@ -1986,7 +2310,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed = Class.create(Ke
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.TYPE = Kekule.Render.Molecule2DDisplayType.CONDENSED;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.WIRE}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.WIRE}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2008,7 +2332,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire = Class.create(Kekule.
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.TYPE = Kekule.Render.Molecule3DDisplayType.WIRE;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.STICKS}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.STICKS}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2030,7 +2354,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks = Class.create(Kekul
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.TYPE = Kekule.Render.Molecule3DDisplayType.STICKS;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.BALL_STICK}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.BALL_STICK}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2052,7 +2376,7 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick = Class.create(Ke
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.TYPE = Kekule.Render.Molecule3DDisplayType.BALL_STICK;
 /**
- * Action change displayer's molecule display type to {@link Kekule.Render.Kekule.Render.Molecule3DDisplayType.SPACE_FILL}.
+ * Action change displayer's molecule display type to {@link Kekule.Render.Molecule3DDisplayType.SPACE_FILL}.
  * @class
  * @augments Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D
  */
@@ -2085,13 +2409,13 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.TYPE = Kekule.Ren
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUIMarker.html">MetaShapeUIMarker</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.BoxRegion.html">BoxRegion</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer_.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsBase.html">MergeConnectorsBase</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsPreview.html">MergeConnectorsPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesBase.html">MergeNodesBase</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesPreview.html">MergeNodesPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerClear.html">ActionDisplayerClear</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.html">ChemObjInserter</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker.html">MetaShapeUiMarker</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker2DRenderer.html">MetaShapeUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.TextUiMarker.html">TextUiMarker</a></li><li><a href="Kekule.ChemWidget.TextUiMarker2DRenderer.html">TextUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarker2DRenderer.html">UiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection2DRenderer.html">UiMarkerCollection2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer.html">Viewer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ActionToggleSelectState.html">ActionToggleSelectState</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.AttachedMarkerIaController.html">AttachedMarkerIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.ClientDragScrollIaController.html">ClientDragScrollIaController</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerFrame.html">ComposerFrame</a></li><li><a href="Kekule.Editor.ComposerObjModifierToolbar.html">ComposerObjModifierToolbar</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.ContentBlockIaController.html">ContentBlockIaController</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.ImageBlockIaController.html">ImageBlockIaController</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolAtomIaController_OLD.html">MolAtomIaController_OLD</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolChainRepositoryItem2D.html">MolChainRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolFlexChainIaController.html">MolFlexChainIaController</a></li><li><a href="Kekule.Editor.MolFlexRingIaController.html">MolFlexRingIaController</a></li><li><a href="Kekule.Editor.MolFlexStructureIaController.html">MolFlexStructureIaController</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRepositoryItem2D.html">MolRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.ObjModifier.Atom.html">Atom</a></li><li><a href="Kekule.Editor.ObjModifier.Base.html">Base</a></li><li><a href="Kekule.Editor.ObjModifier.BaseRenderOptionModifier.html">BaseRenderOptionModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Bond.html">Bond</a></li><li><a href="Kekule.Editor.ObjModifier.Charge.html">Charge</a></li><li><a href="Kekule.Editor.ObjModifier.ChemStructureModifier.html">ChemStructureModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Color.html">Color</a></li><li><a href="Kekule.Editor.ObjModifier.RichText.html">RichText</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.RepositoryItemManager.html">RepositoryItemManager</a></li><li><a href="Kekule.Editor.RepositoryStructureFragmentIaController.html">RepositoryStructureFragmentIaController</a></li><li><a href="Kekule.Editor.SelectIaController.html">SelectIaController</a></li><li><a href="Kekule.Editor.StoredStructFragmentRepositoryItem2D.html">StoredStructFragmentRepositoryItem2D</a></li><li><a href="Kekule.Editor.StoredSubgroupRepositoryItem2D.html">StoredSubgroupRepositoryItem2D</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureInsertIaController.html">StructureInsertIaController</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.TrackInputIaController.html">TrackInputIaController</a></li><li><a href="Kekule.Editor.TrackLayoutOptimizer.html">TrackLayoutOptimizer</a></li><li><a href="Kekule.Editor.TrackParser.html">TrackParser</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.ChemWidget.ChargeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.StructureConnectorSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li><li><a href="Kekule.Editor.ObjModifier.html">ObjModifier</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:46:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:55:12 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

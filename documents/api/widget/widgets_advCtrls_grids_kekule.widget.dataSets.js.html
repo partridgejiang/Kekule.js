@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: widgets/advCtrls/grids/kekule.widget.dataSets.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: widgets/advCtrls/grids/kekule.widget.dataSets.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * DataProvider is a special class to provide part of large amount of data to other widgets (e.g., DataTable).
+ * For example, suppose a database table is filled with 1000 records, the provider can fetch 100 items from it
+ * first, then the next 100 ones.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /utils/kekule.utils.js
+ * requires /localizations/
+ */
+
+(function(){
+"use strict";
+
+/**
+ * DataSet is a special class to provide large amount of data to other widgets (e.g., DataTable).
+ * As transport large amount of data on internet is time cosuming, dataset may tranfer part of data at a time.
+ * For example, suppose a database table is filled with 1000 records, the dataSet can fetch 100 items from it
+ * first, then the next 100 ones in a secondary query.
+ * BaseDataSet is the base class of all providers.
+ *
+ * @class
+ * @augments ObjectEx
+ *
+ * @property {Bool} enableCache Whether previous fetched data can be cached for further use.
+ * @property {Int} defaultTimeout Default timeout milliseconds when fetching data. 0 means never timeout.
+ * @property {Array} sortFields Field names to sort data. If field name is prefixed with '!', means sort in desc order.
+ *   e.g. ['id', '!name'].
+ */
+/**
+ * Invoked when record count in dataset is changed
+ *   event param of it has field: {totalCount}
+ * @name Kekule.Widget.BaseDataSet#totalCountChange
+ * @event
+ */
+/**
+ * Invoked when data in dataset is changed
+ *   event param of it has field: {totalCount}
+ * @name Kekule.Widget.BaseDataSet#dataChange
+ * @event
+ */
+Kekule.Widget.BaseDataSet = Class.create(ObjectEx,
+/** @lends Kekule.Widget.BaseDataSet# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.BaseDataSet',
+	/** @private */
+	PREFIX_SORT_DESC: '!',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('enableCache', {'dataType': DataType.BOOL,
+			'getter': function() {
+				return this.getPropStoreFieldValue('enableCache') &amp;&amp; this.getCacheAvailable();
+			},
+			'setter': function(value) {
+				this.setPropStoreFieldValue('enableCache', value);
+				if (!value)
+					this.clearCache();
+			}
+		});
+		this.defineProp('defaultTimeout', {'dataType': DataType.INT});
+
+		this.defineProp('sortFields', {
+			'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				var a = value? Kekule.ArrayUtils.toArray(value): null;
+				this.setPropStoreFieldValue('sortFields', a);
+				this.sortFieldsChanged(a);
+			}
+		});
+
+		// private
+		this.defineProp('cache', {'dataType': DataType.ARRAY});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setEnableCache(true);
+		this.setCache([]);
+		this.setDefaultTimeout(20000);
+	},
+	/** @ignore */
+	finalize: function($super)
+	{
+		this.clearCache();
+		this.setCache(null);
+		$super();
+	},
+
+	/**
+	 * Notify the data in dataset has been changed.
+	 * @private
+	 */
+	dataChanged: function()
+	{
+		this.clearCache();
+		this.invokeEvent('dataChange');
+	},
+
+	/* @private */
+	/*
+	getSortFieldInfo: function(sortFields)
+	{
+		var sortFieldInfos = [];
+		for (var i = 0, l = sortFields.length; i &lt; l; ++i)
+		{
+			var info = {};
+			var field = sortFields[i] || '';
+			if (field.startsWith(this.PREFIX_SORT_DESC))  // sort desc
+			{
+				info.field = field.substr(1);
+				info.desc = true;
+			}
+			else
+			{
+				info.field = field;
+				info.desc = false;
+			}
+			sortFieldInfos.push(info);
+		}
+		return sortFieldInfos;
+	},
+	*/
+	/**
+	 * Called when sort fields is changed.
+	 * @param {Array} newFields
+	 * @private
+	 */
+	sortFieldsChanged: function(newFields)
+	{
+		// usually sort field change caused cache to invalidate
+		this.clearCache();
+		this.doSortFieldsChanged(newFields);
+	},
+	/**
+	 * Do actual work of sorting data.
+	 * Descendants need to override this method.
+	 * @param {Array} newFields
+	 */
+	doSortFieldsChanged: function(newFields)
+	{
+		// do nothing here
+	},
+
+	/**
+	 * Returns total data item length.
+	 * Returns -1 needs unknown.
+	 * @returns {Int}
+	 */
+	getTotalCount: function()
+	{
+		return this.doGetTotalCount() || 0;
+	},
+	/**
+	 * Do actual work of get data item length.
+	 * Descendants should override this method.
+	 * @returns {Int}
+	 * @private
+	 */
+	doGetTotalCount: function()
+	{
+		// do nothing here
+	},
+	/**
+	 * Notify total record count in dataset has been changed.
+	 * Descendants should call this method when necessary.
+	 * @private
+	 */
+	totalCountChanged: function(newCount)
+	{
+		this.invokeEvent('totalCountChange', {'totalCount': newCount});
+	},
+	/**
+	 * Returns the first index of data (usually 0).
+	 * Descendants may override this method.
+	 * @returns {Int}
+	 */
+	getFirstIndex: function()
+	{
+		return 0;
+	},
+	/**
+	 * Returns the first index of data (usually total data count - 1).
+	 * Descendants may override this method.
+	 * @returns {Int}
+	 */
+	getLastIndex: function()
+	{
+		return (this.getTotalCount() || 0) - 1;
+	},
+
+	/**
+	 * Returns whether this provider can use cache.
+	 * Descendants may override this method.
+	 * @returns {Bool}
+	 */
+	getCacheAvailable: function()
+	{
+		return true;
+	},
+	/**
+	 * Remove all data in cache.
+	 */
+	clearCache: function()
+	{
+		this.getCache().length = 0;
+		return this;
+	},
+	/**
+	 * Save array of data to cache.
+	 * @param {Array} data
+	 * @param {Int} fromIndex Starting index in cache.
+	 * @param {Int} count Total data item count
+	 * @private
+	 */
+	saveCacheData: function(data, fromIndex)
+	{
+		//if (this.getEnableCache())
+		{
+			var cache = this.getCache();
+			var currIndex = fromIndex;
+			for (var i = 0; i &lt; data.length; ++i)
+			{
+				cache[currIndex] = data[i] || null;
+				++currIndex;
+			}
+		}
+	},
+	/**
+	 * Try load data from cache. If cache does not have all essential data, null will be returned.
+	 * @param {Int} fromIndex
+	 * @param {Int} count
+	 * @returns {Array}
+	 * @private
+	 */
+	loadCacheData: function(fromIndex, count)
+	{
+		if (!this.getEnableCache())
+			return null;
+		else
+		{
+			var cache = this.getCache();
+			if (cache.length &lt; fromIndex + count)
+				return null;
+
+			var result = [];
+			for (var i = fromIndex, l = fromIndex + count; i &lt; l; ++i)
+			{
+				var item = cache[i];
+				if (item === undefined)  // not in cache
+					return null;
+				else
+					result.push(item);
+			}
+			return result;
+		}
+	},
+	/**
+	 * Fetch data in a range.
+	 * @param {Hash} options Options may include the following fields:
+	 *   {
+	 *     fromIndex: from index of data,
+	 *     count: count of data item to retrieve, 0 means retrieve all data,
+	 *     ignoreCache: Force to not use cache even if enableCache property is true,
+	 *     timeout: milliseconds,
+	 *     callback: callback function called when data are successful retrieved, callback(dataArray).
+	 *     errCallback: callback when error occurs callback(err)
+	 *     timeOutCallback: callback when timeout. If this callback is not set, errCallback will be called instead.
+	 *   }
+	 */
+	fetch: function(options)
+	{
+		var op = Object.extend({
+			'fromIndex': 0,
+			'count': 0
+			//'timeout': this.getDefaultTimeout()
+		}, options);
+		op.timeout = op.timeout || this.getDefaultTimeout();
+
+		// try load from cache first
+		if (this.getEnableCache())
+		{
+			var data = this.loadCacheData(op.fromIndex, op.count);
+			if (data)
+			{
+				op.callback(data);
+				return;
+			}
+		}
+
+		var self = this;
+		var timeouted = false;
+		var done = function(data)
+		{
+			if (timeouted)
+				return;
+			if (timeoutId)
+				clearTimeout(timeoutId);
+			if (options.callback)
+				options.callback(data);
+			if (self.getEnableCache())  // cache data
+			{
+				self.saveCacheData(data, op.fromIndex);
+			}
+		};
+		var error = function(err)
+		{
+			if (timeouted)
+				return;
+			if (timeoutId)
+				clearTimeout(timeoutId);
+			if (options.errCallback)
+				options.errCallback(err);
+		};
+		if (op.timeout > 0)
+		{
+			var timeoutCallback = function()
+			{
+				if (timeoutId)
+					clearTimeout(timeoutId);
+				//console.log(op.timeout, op.timeoutCallback, op.errCallback);
+				timeouted = true;
+				if (op.timeoutCallback)
+					op.timeoutCallback();
+				else if (options.errCallback)
+					options.errCallback(Kekule.$L('ErrorMsg.FETCH_DATA_TIMEOUT'));
+			};
+			var timeoutId = setTimeout(timeoutCallback, op.timeout);
+		}
+		op.callback = done;
+		op.errCallback = error;
+		var result = this.doFetch(op.fromIndex, op.count, op.callback, op.errCallback);
+	},
+	/**
+	 * Do actual work of fetch data.
+	 * Descendants should override this method.
+	 * @param {Int} fromIndex
+	 * @param {Int} count
+	 * @param {Func} callback
+	 * @param {Func} errCallback
+	 */
+	doFetch: function(fromIndex, count, callback, errCallback)
+	{
+		// fo nothing here
+	}
+});
+
+/**
+ * A simple data set, stored all data in an internal array.
+ *
+ * @class
+ * @augments Kekule.Widget.BaseDataSet
+ * @param {Array} data
+ *
+ * @property {Array} data
+ */
+Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
+/** @lends Kekule.Widget.ArrayDataSet# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.ArrayDataSet',
+	/** @constructs */
+	initialize: function($super, data)
+	{
+		$super();
+		this.setData(data);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('data', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('data', value);
+				// if has sort fields, sort data first
+				var sortFields = this.getSortFields();
+				if (sortFields)
+					this.doSortFieldsChanged(sortFields);
+				this.dataChanged();
+			}
+		});
+	},
+	/** @ignore */
+	getCacheAvailable: function()
+	{
+		// as all data are in data property, no need to cache.
+		return false;
+	},
+	/** @ignore */
+	doSortFieldsChanged: function(newFields)
+	{
+		/*
+		var sortFieldInfos = this.getSortFieldInfo(newFields);
+		var sortFunc = function(hash1, hash2)
+			{
+				var compareValue = 0;
+				for (var i = 0, l = sortFieldInfos.length; i &lt; l; ++i)
+				{
+					var field = sortFieldInfos[i].field;
+					var v1 = hash1[field] || '';
+					var v2 = hash2[field] || '';
+					compareValue = (v1 > v2)? 1:
+						(v1 &lt; v2)? -1: 0;
+					if (sortFieldInfos[i].desc)
+						compareValue = -compareValue;
+					if (compareValue !== 0)
+						break;
+				}
+				return compareValue;
+			};
+		var data = this.getData() || [];
+		data.sort(sortFunc);
+		this.dataChanged();
+		return this;
+		*/
+
+		var data = this.getData() || [];
+		Kekule.ArrayUtils.sortHashArray(data, newFields);
+		this.dataChanged();
+		return this;
+	},
+	/** @ignore */
+	doGetTotalCount: function()
+	{
+		return (this.getData() || []).length;
+	},
+	/** @ignore */
+	doFetch: function(fromIndex, count, callback, errCallback)
+	{
+		var result = [];
+		var data = this.getData() || [];
+		for (var i = fromIndex, l = Math.min(fromIndex + count, data.length); i &lt; l; ++i)
+		{
+			var item = data[i];
+			result.push(item);
+		}
+
+		// debug
+		/*
+		var done = function()
+		{
+			//if ((fromIndex / count) % 2)
+				callback(result);
+			//else
+			//	errCallback('A Error');
+		};
+		setTimeout(done, 500);
+		*/
+
+		callback(result);
+	}
+});
+
+/**
+ * A class to divide data from dataSet to multiple pages,
+ * should be used together with data table widget.
+ * @class
+ * @augments ObjectEx
+ * @param {Kekule.Widget.BaseDataSet} dataSet
+ *
+ * @property {Kekule.Widget.BaseDataSet} dataSet The data provider to fetch data
+ * @property {Int} pageSize Item count in one page.
+ * @property {Int} currPageIndex Index of current page.
+ * @property {Array} currPageData Cache data of current page.
+ * @property {Array} sortFields Field names to sort data in dataset.
+ */
+/**
+ * Invoked when data of new page is starting to retrieve.
+ *   event param of it has field: {pageIndex}
+ * @name Kekule.Widget.DataPager#pageRetrieve
+ * @event
+ */
+/**
+ * Invoked when page index is changed and data are successfully retrieved.
+ *   event param of it has field: {pageIndex, data}
+ * @name Kekule.Widget.DataPager#dataFetched
+ * @event
+ */
+/**
+ * Invoked when retrieving data error.
+ *   event param of it has field: {err}
+ * @name Kekule.Widget.DataPager#dataError
+ * @event
+ */
+/**
+ * Invoked when page count is changed
+ *   event param of it has field: {pageCount}
+ * @name Kekule.Widget.DataPager#pageCountChange
+ * @event
+ */
+Kekule.Widget.DataPager = Class.create(ObjectEx,
+/** @lends Kekule.Widget.DataPager# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.DataPager',
+	/** @constructs */
+	initialize: function($super, dataSet)
+	{
+		$super();
+		this.setDataSet(dataSet);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('dataSet', {'dataType': 'Kekule.Widget.BaseDataSet',
+			'setter': function(value)
+			{
+				var old = this.getDataSet();
+				if (value !== old)
+				{
+					this.setPropStoreFieldValue('dataSet', value);
+					this.dataSetChange(old, value);
+					this.switchToPage(this.getCurrPageIndex() || 0);
+				}
+			}
+		});
+		this.defineProp('pageSize', {'dataType': DataType.INT,
+			'setter': function(value)
+			{
+				if (value !== this.getPageSize())  // page size change, need to reload data in cache
+				{
+					this.setPropStoreFieldValue('pageSize', value);
+					this.pageCountChanged(this.getPageCount());
+					this.switchToPage(this.getCurrPageIndex() || 0);
+				}
+			}
+		});
+		this.defineProp('currPageIndex', {'dataType': DataType.INT});
+		this.defineProp('currPageData', {'dataType': DataType.ARRAY});
+
+		this.defineProp('sortFields', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getDataSet() &amp;&amp; this.getDataSet().getSortFields();
+			},
+			'setter': function(value)
+			{
+				if (this.getDataSet())
+				{
+					this.getDataSet().setSortFields(value);
+					//this.sortFieldsChanged();
+				}
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setCurrPageIndex(0);
+	},
+
+	/** @private */
+	dataSetChange: function(oldDataSet, newDataSet)
+	{
+		if (oldDataSet)
+		{
+			oldDataSet.RemoveEventListener('dataChange', this.reactDataSetDataChange, this);
+			oldDataSet.RemoveEventListener('totalCountChange', this.reactDataSetTotalCountChange, this);
+		}
+		if (newDataSet)
+		{
+			newDataSet.addEventListener('dataChange', this.reactDataSetDataChange, this);
+			newDataSet.addEventListener('totalCountChange', this.reactDataSetTotalCountChange, this);
+		}
+		this.pageCountChanged(this.getPageCount());
+	},
+	/** @private */
+	reactDataSetDataChange: function(e)
+	{
+		this.dataChanged();
+	},
+	/**
+	 * Called when data in dataset has been changed, need to refetch data.
+	 * @private
+	 */
+	dataChanged: function()
+	{
+		this.pageCountChanged(this.getPageCount());
+		this.switchToPage(this.getCurrPageIndex() || 0);
+	},
+
+	/** @private */
+	reactDataSetTotalCountChange: function(e)
+	{
+		this.pageCountChanged(this.getPageCount());
+	},
+
+	/* @private */
+	/*
+	sortFieldsChanged: function()
+	{
+		//this.switchToPage(this.getCurrPageIndex() || 0);
+	},
+	*/
+
+	/**
+	 * Returns total page count.
+	 * @returns {Int}
+	 */
+	getPageCount: function()
+	{
+		var dataset = this.getDataSet();
+		var totalCount = dataset? (dataset.getTotalCount() || 0): 0;
+		return Math.ceil(totalCount / this.getPageSize());
+	},
+	/**
+	 * Notify page count has been changed.
+	 * @private
+	 */
+	pageCountChanged: function(newPageCount)
+	{
+		this.invokeEvent('pageCountChange', {'pageCount': newPageCount});
+	},
+	/**
+	 * Returns data in current page.
+	 * @param {Hash} options Options may include the following fields:
+	 *   {
+	 *     pageIndex: index of data page. If not set, currPageIndex will be used,
+	 *     ignoreCache: Force to not use cache even if enableCache property is true,
+	 *     timeout: milliseconds,
+	 *     callback: callback function called when data are successful retrieved, callback(dataArray).
+	 *     errCallback: callback when error occurs callback(err)
+	 *     timeOutCallback: callback when timeout. If this callback is not set, errCallback will be called instead.
+	 *   }
+	 * @private
+	 */
+	fetchPageData: function(options)
+	{
+		var pageSize = this.getPageSize();
+		var pageIndex = Kekule.ObjUtils.isUnset(options.pageIndex)? this.getCurrPageIndex(): options.pageIndex;
+		var fromIndex = pageSize * pageIndex;
+		var count = this.getPageSize();
+		var ops = Object.create(options);
+		Object.extend(ops, {'fromIndex': fromIndex, 'count': count});
+		this.getDataSet().fetch(ops);
+		return this;
+	},
+
+	/**
+	 * Request data on page index.
+	 * When data is retrieved, event pageSwitched will be invoked.
+	 * When error or timeout, event pageSwitchError will be invoked.
+	 * @param {Int} pageIndex
+	 * @param {Int} timeout
+	 */
+	switchToPage: function(pageIndex, timeout)
+	{
+		var self = this;
+		var ops = {
+			'pageIndex': pageIndex,
+			'timeout': timeout,
+			'callback': function(data)
+			{
+				self.setCurrPageData(data);
+				self.setCurrPageIndex(pageIndex);
+				self.invokeEvent('dataFetched', {'pageIndex': pageIndex, 'data': data});
+			},
+			'errCallback': function(err)
+			{
+				self.invokeEvent('dataError', {'error': err});
+				Kekule.error(err);  // TODO: need to invoke an exception here?
+			}
+		};
+		this.invokeEvent('pageRetrieve', {'pageIndex': pageIndex});
+		this.fetchPageData(ops);
+	}
+});
+
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.Action.html">Action</a></li><li><a href="Kekule.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.ActionList.html">ActionList</a></li><li><a href="Kekule.ActionManager.html">ActionManager</a></li><li><a href="Kekule.ChemWidget.ActionFileOpen.html">ActionFileOpen</a></li><li><a href="Kekule.ChemWidget.ActionFileSave.html">ActionFileSave</a></li><li><a href="Kekule.ChemWidget.ActionLoadFileData.html">ActionLoadFileData</a></li><li><a href="Kekule.DataBingItem.html">DataBingItem</a></li><li><a href="Kekule.MacroOperation.html">MacroOperation</a></li><li><a href="Kekule.Operation.html">Operation</a></li><li><a href="Kekule.Operation.State.html">State</a></li><li><a href="Kekule.OperationHistory.html">OperationHistory</a></li><li><a href="Kekule.PropertyEditor.ArrayEditor.html">ArrayEditor</a></li><li><a href="Kekule.PropertyEditor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.PropertyEditor.BoolEditor.html">BoolEditor</a></li><li><a href="Kekule.PropertyEditor.ColorEditor.html">ColorEditor</a></li><li><a href="Kekule.PropertyEditor.EditorAttributes.html">EditorAttributes</a></li><li><a href="Kekule.PropertyEditor.EditorMananger.html">EditorMananger</a></li><li><a href="Kekule.PropertyEditor.EnumEditor.html">EnumEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectEditor.html">ObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectExEditor.html">ObjectExEditor</a></li><li><a href="Kekule.PropertyEditor.ObjectFieldEditor.html">ObjectFieldEditor</a></li><li><a href="Kekule.PropertyEditor.SelectEditor.html">SelectEditor</a></li><li><a href="Kekule.PropertyEditor.SimpleEditor.html">SimpleEditor</a></li><li><a href="Kekule.PropertyEditor.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Widget.ActionOpenConfigWidget.html">ActionOpenConfigWidget</a></li><li><a href="Kekule.Widget.ArrayDataSet.html">ArrayDataSet</a></li><li><a href="Kekule.Widget.AutoLauncher.html">AutoLauncher</a></li><li><a href="Kekule.Widget.BaseTransition.html">BaseTransition</a></li><li><a href="Kekule.Widget.BaseWidget.html">BaseWidget</a></li><li><a href="Kekule.Widget.Button.html">Button</a></li><li><a href="Kekule.Widget.Button.Kinds.html">Kinds</a></li><li><a href="Kekule.Widget.ButtonGroup.html">ButtonGroup</a></li><li><a href="Kekule.Widget.ButtonTextBox.html">ButtonTextBox</a></li><li><a href="Kekule.Widget.CheckBox.html">CheckBox</a></li><li><a href="Kekule.Widget.CheckButton.html">CheckButton</a></li><li><a href="Kekule.Widget.Clipboard.html">Clipboard</a></li><li><a href="Kekule.Widget.ColorDropButton.html">ColorDropButton</a></li><li><a href="Kekule.Widget.ColorDropTextBox.html">ColorDropTextBox</a></li><li><a href="Kekule.Widget.ColorPicker.html">ColorPicker</a></li><li><a href="Kekule.Widget.ColorPicker.SpecialColors.html">SpecialColors</a></li><li><a href="Kekule.Widget.ComboBox.html">ComboBox</a></li><li><a href="Kekule.Widget.ComboTextBox.html">ComboTextBox</a></li><li><a href="Kekule.Widget.CompactButtonSet.html">CompactButtonSet</a></li><li><a href="Kekule.Widget.Container.html">Container</a></li><li><a href="Kekule.Widget.Css3GrowTransition.html">Css3GrowTransition</a></li><li><a href="Kekule.Widget.Css3OpacityTrans.html">Css3OpacityTrans</a></li><li><a href="Kekule.Widget.Css3SlideTransition.html">Css3SlideTransition</a></li><li><a href="Kekule.Widget.Css3TransformGrowTransition.html">Css3TransformGrowTransition</a></li><li><a href="Kekule.Widget.Css3TransformTrans.html">Css3TransformTrans</a></li><li><a href="Kekule.Widget.Css3Transition.html">Css3Transition</a></li><li><a href="Kekule.Widget.Css3TransitionSimpleClassCreator.html">Css3TransitionSimpleClassCreator</a></li><li><a href="Kekule.Widget.DataPager.html">DataPager</a></li><li><a href="Kekule.Widget.DataTable.html">DataTable</a></li><li><a href="Kekule.Widget.Dialog.html">Dialog</a></li><li><a href="Kekule.Widget.DialogButtons.html">DialogButtons</a></li><li><a href="Kekule.Widget.DumbWidget.html">DumbWidget</a></li><li><a href="Kekule.Widget.DynamicEvokeHelper.html">DynamicEvokeHelper</a></li><li><a href="Kekule.Widget.EvokeMode.html">EvokeMode</a></li><li><a href="Kekule.Widget.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.Widget.FontDetector.html">FontDetector</a></li><li><a href="Kekule.Widget.FontEnumerator.html">FontEnumerator</a></li><li><a href="Kekule.Widget.FormWidget.html">FormWidget</a></li><li><a href="Kekule.Widget.GlobalManager.html">GlobalManager</a></li><li><a href="Kekule.Widget.Glyph.html">Glyph</a></li><li><a href="Kekule.Widget.InteractionController.html">InteractionController</a></li><li><a href="Kekule.Widget.Location.html">Location</a></li><li><a href="Kekule.Widget.Menu.html">Menu</a></li><li><a href="Kekule.Widget.MenuBar.html">MenuBar</a></li><li><a href="Kekule.Widget.MenuItem.html">MenuItem</a></li><li><a href="Kekule.Widget.MoveHelper.html">MoveHelper</a></li><li><a href="Kekule.Widget.MsgGroup.html">MsgGroup</a></li><li><a href="Kekule.Widget.MsgPanel.html">MsgPanel</a></li><li><a href="Kekule.Widget.MsgType.html">MsgType</a></li><li><a href="Kekule.Widget.NestedContainer.html">NestedContainer</a></li><li><a href="Kekule.Widget.ObjectInspector.html">ObjectInspector</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html">ObjPropListEditor</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html">OperHistoryTreeView</a></li><li><a href="Kekule.Widget.Panel.html">Panel</a></li><li><a href="Kekule.Widget.PlaceHolder.html">PlaceHolder</a></li><li><a href="Kekule.Widget.PopupMenu.html">PopupMenu</a></li><li><a href="Kekule.Widget.PropEditorModifyOperation.html">PropEditorModifyOperation</a></li><li><a href="Kekule.Widget.RadioButton.html">RadioButton</a></li><li><a href="Kekule.Widget.ResizeGripper.html">ResizeGripper</a></li><li><a href="Kekule.Widget.SelectBox.html">SelectBox</a></li><li><a href="Kekule.Widget.ShowHideManager.html">ShowHideManager</a></li><li><a href="Kekule.Widget.ShowHideTransitionSelector.html">ShowHideTransitionSelector</a></li><li><a href="Kekule.Widget.StyleResource.html">StyleResource</a></li><li><a href="Kekule.Widget.StyleResourceManager.html">StyleResourceManager</a></li><li><a href="Kekule.Widget.StyleResourceNames.html">StyleResourceNames</a></li><li><a href="Kekule.Widget.SysMsgGroup.html">SysMsgGroup</a></li><li><a href="Kekule.Widget.TabButtonGroup.html">TabButtonGroup</a></li><li><a href="Kekule.Widget.TabPage.html">TabPage</a></li><li><a href="Kekule.Widget.TabView.html">TabView</a></li><li><a href="Kekule.Widget.TextArea.html">TextArea</a></li><li><a href="Kekule.Widget.TextBox.html">TextBox</a></li><li><a href="Kekule.Widget.TextEditor.html">TextEditor</a></li><li><a href="Kekule.Widget.Toolbar.html">Toolbar</a></li><li><a href="Kekule.Widget.TreeView.html">TreeView</a></li><li><a href="Kekule.Widget.Utils.html">Utils</a></li><li><a href="Kekule.Widget.ValueListEditor.html">ValueListEditor</a></li><li><a href="Kekule.Widget.ValueListEditor.ValueDisplayMode.html">ValueDisplayMode</a></li><li><a href="Kekule.Widget.WidgetGrid.html">WidgetGrid</a></li><li><a href="Kekule.Widget.WidgetGroup.html">WidgetGroup</a></li><li><a href="Kekule.Widget.WidgetsReady.html">WidgetsReady</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.Action.html#event:execute">execute</a></li><li><a href="Kekule.ActionFileOpen.html#event:open">open</a></li><li><a href="Kekule.ActionFileSave.html#event:execute">execute</a></li><li><a href="Kekule.ActionList.html#event:execute">execute</a></li><li><a href="Kekule.ActionLoadFileData.html#event:load">load</a></li><li><a href="Kekule.OperationHistory.html#event:clear">clear</a></li><li><a href="Kekule.OperationHistory.html#event:operChange">operChange</a></li><li><a href="Kekule.OperationHistory.html#event:pop">pop</a></li><li><a href="Kekule.OperationHistory.html#event:push">push</a></li><li><a href="Kekule.OperationHistory.html#event:redo">redo</a></li><li><a href="Kekule.OperationHistory.html#event:undo">undo</a></li><li><a href="Kekule.Widget.ArrayDataSet.html#event:dataChange">dataChange</a></li><li><a href="Kekule.Widget.ArrayDataSet.html#event:totalCountChange">totalCountChange</a></li><li><a href="Kekule.Widget.BaseDataSet.html#event:dataChange">dataChange</a></li><li><a href="Kekule.Widget.BaseDataSet.html#event:totalCountChange">totalCountChange</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.BaseWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Button.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Button.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Button.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Button.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Button.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Button.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Button.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.CheckBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.CheckBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:check">check</a></li><li><a href="Kekule.Widget.CheckButton.html#event:checkChange">checkChange</a></li><li><a href="Kekule.Widget.CheckButton.html#event:uncheck">uncheck</a></li><li><a href="Kekule.Widget.Clipboard.html#event:setData">setData</a></li><li><a href="Kekule.Widget.ColorDropButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.ColorPicker.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.ColorPicker.html#event:valueSet">valueSet</a></li><li><a href="Kekule.Widget.ComboBox.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.ComboTextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.CompactButtonSet.html#event:select">select</a></li><li><a href="Kekule.Widget.Configurator.html#event:configChange">configChange</a></li><li><a href="Kekule.Widget.Container.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Container.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Container.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Container.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Container.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Container.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Container.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.DataPager.html#event:dataError">dataError</a></li><li><a href="Kekule.Widget.DataPager.html#event:dataFetched">dataFetched</a></li><li><a href="Kekule.Widget.DataPager.html#event:pageCountChange">pageCountChange</a></li><li><a href="Kekule.Widget.DataPager.html#event:pageRetrieve">pageRetrieve</a></li><li><a href="Kekule.Widget.DataTable.html#event:activate">activate</a></li><li><a href="Kekule.Widget.DataTable.html#event:bind">bind</a></li><li><a href="Kekule.Widget.DataTable.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.DataTable.html#event:execute">execute</a></li><li><a href="Kekule.Widget.DataTable.html#event:resize">resize</a></li><li><a href="Kekule.Widget.DataTable.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.DataTable.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Dialog.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Dialog.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Dialog.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Dialog.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Dialog.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Dialog.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Dialog.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.DropDownButton.html#event:dropDown">dropDown</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:activate">activate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:bind">bind</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:execute">execute</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:resize">resize</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.DumbWidget.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.FormWidget.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.FormWidget.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetCreate">widgetCreate</a></li><li><a href="Kekule.Widget.GlobalManager.html#event:widgetFinalize">widgetFinalize</a></li><li><a href="Kekule.Widget.Glyph.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Glyph.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Glyph.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Glyph.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Glyph.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Glyph.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Glyph.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.Menu.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Menu.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Menu.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Menu.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Menu.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Menu.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Menu.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MenuBar.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MenuBar.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MenuBar.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MenuBar.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MenuBar.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MenuBar.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MenuBar.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MenuItem.html#event:check">check</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.MsgPanel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:activate">activate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:bind">bind</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:execute">execute</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:resize">resize</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.NestedContainer.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:activate">activate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:bind">bind</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:execute">execute</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:resize">resize</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.ObjectInspector.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ObjPropListEditor.html#event:propertyChange">propertyChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.OperHistoryTreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.PageNavigator.html#event:pageChange">pageChange</a></li><li><a href="Kekule.Widget.Panel.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Panel.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Panel.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Panel.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Panel.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Panel.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Panel.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:activate">activate</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:bind">bind</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:execute">execute</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:resize">resize</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.PlaceHolder.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:activate">activate</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:bind">bind</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:execute">execute</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:resize">resize</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.PopupMenu.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.RadioButton.html#event:check">check</a></li><li><a href="Kekule.Widget.RadioButton.html#event:checkChange">checkChange</a></li><li><a href="Kekule.Widget.RadioButton.html#event:uncheck">uncheck</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:activate">activate</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:bind">bind</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:execute">execute</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:resize">resize</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.ResizeGripper.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.SelectBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.SelectBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.SysMsgGroup.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabButtonGroup.html#event:switch">switch</a></li><li><a href="Kekule.Widget.TabPage.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TabPage.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TabPage.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TabPage.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TabPage.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TabPage.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TabPage.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TabView.html#event:switchTab">switchTab</a></li><li><a href="Kekule.Widget.TextArea.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextArea.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.TextBox.html#event:buttonExecute">buttonExecute</a></li><li><a href="Kekule.Widget.TextBox.html#event:valueChange">valueChange</a></li><li><a href="Kekule.Widget.TextEditor.html#event:valueSet">valueSet</a></li><li><a href="Kekule.Widget.Toolbar.html#event:activate">activate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:bind">bind</a></li><li><a href="Kekule.Widget.Toolbar.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.Toolbar.html#event:execute">execute</a></li><li><a href="Kekule.Widget.Toolbar.html#event:resize">resize</a></li><li><a href="Kekule.Widget.Toolbar.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.Toolbar.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.TreeView.html#event:activate">activate</a></li><li><a href="Kekule.Widget.TreeView.html#event:bind">bind</a></li><li><a href="Kekule.Widget.TreeView.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.TreeView.html#event:execute">execute</a></li><li><a href="Kekule.Widget.TreeView.html#event:resize">resize</a></li><li><a href="Kekule.Widget.TreeView.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.TreeView.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:activeRowChange">activeRowChange</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editCancel">editCancel</a></li><li><a href="Kekule.Widget.ValueListEditor.html#event:editFinish">editFinish</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGrid.html#event:unbind">unbind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:activate">activate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:bind">bind</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:deactivate">deactivate</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:execute">execute</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:resize">resize</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:showStateChange">showStateChange</a></li><li><a href="Kekule.Widget.WidgetGroup.html#event:unbind">unbind</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.PropertyEditor.html">PropertyEditor</a></li><li><a href="Kekule.Widget.html">Widget</a></li><li><a href="Kekule.Widget.PropertyEditor.html">PropertyEditor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#flashMessage">flashMessage</a></li><li><a href="global.html#removeMessage">removeMessage</a></li><li><a href="global.html#reportMessage">reportMessage</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:14:44 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

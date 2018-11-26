@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: render/2d/kekule.render.canvasRenderer.js</h1>
 
+    
 
 
 
-
-
+    
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
@@ -192,6 +192,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 				shadowCanvas.style.height = height + 'px';
 			}
 		}
+		this.clearContext(context);
 	},
 
 	/**
@@ -228,6 +229,39 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)
 			shadowCanvas.width = shadowCanvas.width;
+
+		var clearColor = context.__$clearColor__;
+		if (clearColor)
+		{
+			context.save();
+			/*
+			var oldFillColor = context.fillStyle;
+			var oldStrokeColor = context.strokeStyle;
+			console.log(oldFillColor, oldStrokeColor);
+			*/
+			try
+			{
+				var dim = this.getContextDimension(context);
+				this.drawRect(context, {x: 0, y: 0}, {x: dim.width, y: dim.height}, {'fillColor': clearColor, 'strokeColor': clearColor});
+			}
+			finally
+			{
+				context.restore();
+				/*
+				context.fillStyle = oldFillColor;
+				context.strokeStyle = oldStrokeColor;
+				*/
+			}
+		}
+	},
+	/** @private */
+	setClearColor: function(context, color)
+	{
+		if (context)
+		{
+			//console.log('set clear color', color);
+			context.__$clearColor__ = color;
+		}
 	},
 
 	renderContext: function(context)
@@ -350,7 +384,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	{
 		var context = this.getOperatingContext(ctx);
 
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.moveTo(coord1.x, coord1.y);
 		context.lineTo(coord2.x, coord2.y);
@@ -371,7 +405,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	{
 		var context = this.getOperatingContext(ctx);
 
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.rect(coord1.x, coord1.y, coord2.x - coord1.x, coord2.y - coord1.y);
 		this.doneDraw(context, options);
@@ -384,9 +418,17 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	drawCircle: function(ctx, baseCoord, radius, options)
 	{
 		var context = this.getOperatingContext(ctx);
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.arc(baseCoord.x, baseCoord.y, radius, 0, 2 * Math.PI, false);
+		this.doneDraw(context, options);
+	},
+	drawArc: function(ctx, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		context.beginPath();
+		this.setDrawStyle(context, options);
+		context.arc(centerCoord.x, centerCoord.y, radius, startAngle, endAngle, anticlockwise);
 		this.doneDraw(context, options);
 	},
 
@@ -420,21 +462,77 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		}
 		this.doneDraw(context, options);
 	},
+	drawImage: function(ctx, src, baseCoord, size, options, callback, ctxGetter)
+	{
+		var context = this.getOperatingContext(ctx);
+		// first load image into current document
+		var contextElem = this.getContextElem(context);
+		var doc = contextElem.ownerDocument;
+		var imgElem = doc.createElement('img');
+		imgElem.src = src;
+		var self = this;
+		imgElem.onload = function(){
+			try
+			{
+				self.setDrawStyle(context, options);
+				// draw after image is loaded
+				// since actual drawing context may change after image is loaded,
+				// here we must use a getter function to retrieve the real context used
+				var actualCtx = ctx;
+				if (ctxGetter)
+					actualCtx = ctxGetter();
+				actualCtx = self.getOperatingContext(actualCtx);
+				actualCtx.drawImage(imgElem, baseCoord.x, baseCoord.y, size.x, size.y);
+				if (callback)
+					callback(true);
+				self.doneDraw(context, options);
+			}
+			catch(e)
+			{
+				if (callback)
+					callback(false);
+				throw e;
+			}
+		};
+		imgElem.src = src;
+	},
+	drawImageElem: function(ctx, imgElem, baseCoord, size, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		this.setDrawStyle(context, options);
+		context.drawImage(imgElem, baseCoord.x, baseCoord.y, size.x, size.y);
+		this.doneDraw(context, options);
+	},
 
 	/** @private */
 	isLineDashSupported: function(context)
 	{
-		return (context.setLineDash &amp;&amp; (typeof(context.lineDashOffset) == "number"));
+		// using cached value
+		if (Kekule.ObjUtils.isUnset(this.isLineDashSupported._cachedValue))
+		{
+			this.isLineDashSupported._cachedValue = (context.setLineDash &amp;&amp; (typeof(context.lineDashOffset) == "number"));
+		}
+		return this.isLineDashSupported._cachedValue;
 	},
 
 	setDrawStyle: function(context, options)
 	{
 		if (Kekule.ObjUtils.notUnset(options.strokeWidth))
+		{
+			//if (context.lineWidth !== options.strokeWidth)
 			context.lineWidth = options.strokeWidth;
+		}
 		else  // default
+		{
+			//if (context.lineWidth !== 1)
 			context.lineWidth = 1;
-		if (options.strokeColor)
+		}
+		if (options.strokeColor /* &amp;&amp; context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
+
+		// line cap and line join, has default value
+		context.lineCap = options.lineCap || 'butt';
+		context.lineJoin = options.lineJoin || 'miter';
 
 		//console.log('draw style', options, context.strokeStyle);
 
@@ -475,7 +573,12 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		if (drawOptions.fontWeight)
 			result += drawOptions.fontWeight + ' ';
 		if (drawOptions.fontSize)
-			result += drawOptions.fontSize + 'px ';
+		{
+			if (typeof(drawOptions.fontSize) === 'string')  // already contains unit
+				result += drawOptions.fontSize + ' ';
+			else  // integer value
+				result += drawOptions.fontSize + 'px ';
+		}
 		if (drawOptions.fontFamily)
 			result += drawOptions.fontFamily + ' ';
 		return result;
@@ -538,7 +641,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		var fontStyle = this.getCanvasFontStyle(options);
 		context.font = fontStyle;
 		var m = context.measureText(text);
-		var result = {'width': m.width, 'height': options.fontSize};  // height can not be got from Canvas API, use font size instead
+		var fontSize = options.fontSize;
+		if (typeof(fontSize) === 'string')  // with unit, e.g. 10px
+			fontSize = Kekule.StyleUtils.analysisUnitsValue(fontSize).value;
+		var result = {'width': m.width, 'height': fontSize};  // height can not be got from Canvas API, use font size instead
 		return result;
 	},
 
@@ -619,13 +725,13 @@ Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.CanvasRendererBridge, 
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.Render.Abstract2DDrawBridge.html">Abstract2DDrawBridge</a></li><li><a href="Kekule.Render.Abstract3DDrawBridge.html">Abstract3DDrawBridge</a></li><li><a href="Kekule.Render.AbstractRenderer.html">AbstractRenderer</a></li><li><a href="Kekule.Render.AbstractTextDrawBridge.html">AbstractTextDrawBridge</a></li><li><a href="Kekule.Render.Base2DRenderer.html">Base2DRenderer</a></li><li><a href="Kekule.Render.Base3DRenderer.html">Base3DRenderer</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html">BaseGlyph2DRenderer</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html">BaseRichTextDrawer</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html">BoundInfoRecorder</a></li><li><a href="Kekule.Render.CanvasRendererBridge.html">CanvasRendererBridge</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html">ChemCtab2DRenderer</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html">ChemCtab3DRenderer</a></li><li><a href="Kekule.Render.ChemDisplayTextUtils.html">ChemDisplayTextUtils</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html">ChemObj2DRenderer</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html">ChemObj3DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html">ChemObjGroupList2DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html">ChemObjGroupList3DRenderer</a></li><li><a href="Kekule.Render.ChemObjPainter.html">ChemObjPainter</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html">ChemObjPainter2D</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html">ChemObjPainter3D</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html">ChemSpace2DRenderer</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html">ChemSpace3DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html">ChemSpaceElement2DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html">ChemSpaceElement3DRenderer</a></li><li><a href="Kekule.Render.ColorConfigs.html">ColorConfigs</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html">CompositeMolecule2DRenderer</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html">CompositeMolecule3DRenderer</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html">CompositeObj2DRenderer</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html">CompositeObj3DRenderer</a></li><li><a href="Kekule.Render.ConnectorDrawUtils.html">ConnectorDrawUtils</a></li><li><a href="Kekule.Render.CoordSystem.html">CoordSystem</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html">Ctab2DRenderer</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html">DisplayLabelConfigs</a></li><li><a href="Kekule.Render.DrawPathUtils.html">DrawPathUtils</a></li><li><a href="Kekule.Render.Formula2DRenderer.html">Formula2DRenderer</a></li><li><a href="Kekule.Render.GeneralConfigs.html">GeneralConfigs</a></li><li><a href="Kekule.Render.Length3DConfigs.html">Length3DConfigs</a></li><li><a href="Kekule.Render.LengthConfigs.html">LengthConfigs</a></li><li><a href="Kekule.Render.MetaShapeUtils.html">MetaShapeUtils</a></li><li><a href="Kekule.Render.Model3DConfigs.html">Model3DConfigs</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html">Molecule3DDisplayConfigs</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html">MoleculeDisplayConfigs</a></li><li><a href="Kekule.Render.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html">PathGlyph2DRenderer</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html">PathGlyphCtab2DRenderer</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html">PredefinedConfigsMap</a></li><li><a href="Kekule.Render.RaphaelRendererBridge.html">RaphaelRendererBridge</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html">Reaction2DRenderer</a></li><li><a href="Kekule.Render.Render2DConfigs.html">Render2DConfigs</a></li><li><a href="Kekule.Render.Render3DConfigs.html">Render3DConfigs</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html">Render3DEnvironmentConfigs</a></li><li><a href="Kekule.Render.Render3DOptionUtils.html">Render3DOptionUtils</a></li><li><a href="Kekule.Render.RenderColorUtils.html">RenderColorUtils</a></li><li><a href="Kekule.Render.Renderer2DFactory.html">Renderer2DFactory</a></li><li><a href="Kekule.Render.Renderer3DFactory.html">Renderer3DFactory</a></li><li><a href="Kekule.Render.RendererDefineUtils.html">RendererDefineUtils</a></li><li><a href="Kekule.Render.RenderOptionUtils.html">RenderOptionUtils</a></li><li><a href="Kekule.Render.RichText.html">RichText</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html">RichTextBased2DRenderer</a></li><li><a href="Kekule.Render.RichTextUtils.html">RichTextUtils</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html">StructFragment2DRenderer</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html">StructFragment3DRenderer</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html">TextBlock2DRenderer</a></li><li><a href="Kekule.Render.TextDrawUtils.html">TextDrawUtils</a></li><li><a href="Kekule.Render.TextFontConfigs.html">TextFontConfigs</a></li><li><a href="Kekule.Render.ThreeContext.html">ThreeContext</a></li><li><a href="Kekule.Render.ThreeRendererBridge.html">ThreeRendererBridge</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.Render.AbstractRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Render.html">Render</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.Render.Abstract2DDrawBridge.html">Abstract2DDrawBridge</a></li><li><a href="Kekule.Render.Abstract3DDrawBridge.html">Abstract3DDrawBridge</a></li><li><a href="Kekule.Render.AbstractRenderer.html">AbstractRenderer</a></li><li><a href="Kekule.Render.AbstractTextDrawBridge.html">AbstractTextDrawBridge</a></li><li><a href="Kekule.Render.Base2DRenderer.html">Base2DRenderer</a></li><li><a href="Kekule.Render.Base3DRenderer.html">Base3DRenderer</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html">BaseGlyph2DRenderer</a></li><li><a href="Kekule.Render.BaseRichTextDrawer.html">BaseRichTextDrawer</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html">BoundInfoRecorder</a></li><li><a href="Kekule.Render.CanvasRendererBridge.html">CanvasRendererBridge</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html">ChemCtab2DRenderer</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html">ChemCtab3DRenderer</a></li><li><a href="Kekule.Render.ChemDisplayTextUtils.html">ChemDisplayTextUtils</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html">ChemObj2DRenderer</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html">ChemObj3DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html">ChemObjGroupList2DRenderer</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html">ChemObjGroupList3DRenderer</a></li><li><a href="Kekule.Render.ChemObjPainter.html">ChemObjPainter</a></li><li><a href="Kekule.Render.ChemObjPainter2D.html">ChemObjPainter2D</a></li><li><a href="Kekule.Render.ChemObjPainter3D.html">ChemObjPainter3D</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html">ChemSpace2DRenderer</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html">ChemSpace3DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html">ChemSpaceElement2DRenderer</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html">ChemSpaceElement3DRenderer</a></li><li><a href="Kekule.Render.ColorConfigs.html">ColorConfigs</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html">CompositeMolecule2DRenderer</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html">CompositeMolecule3DRenderer</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html">CompositeObj2DRenderer</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html">CompositeObj3DRenderer</a></li><li><a href="Kekule.Render.CompositeRenderer.html">CompositeRenderer</a></li><li><a href="Kekule.Render.ConnectorDrawUtils.html">ConnectorDrawUtils</a></li><li><a href="Kekule.Render.CoordSystem.html">CoordSystem</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html">Ctab2DRenderer</a></li><li><a href="Kekule.Render.DisplayLabelConfigs.html">DisplayLabelConfigs</a></li><li><a href="Kekule.Render.DrawPathUtils.html">DrawPathUtils</a></li><li><a href="Kekule.Render.DummyRenderer.html">DummyRenderer</a></li><li><a href="Kekule.Render.Formula2DRenderer.html">Formula2DRenderer</a></li><li><a href="Kekule.Render.GeneralConfigs.html">GeneralConfigs</a></li><li><a href="Kekule.Render.ImageBlock2DRenderer.html">ImageBlock2DRenderer</a></li><li><a href="Kekule.Render.Length3DConfigs.html">Length3DConfigs</a></li><li><a href="Kekule.Render.LengthConfigs.html">LengthConfigs</a></li><li><a href="Kekule.Render.MetaShapeUtils.html">MetaShapeUtils</a></li><li><a href="Kekule.Render.Model3DConfigs.html">Model3DConfigs</a></li><li><a href="Kekule.Render.Molecule3DDisplayConfigs.html">Molecule3DDisplayConfigs</a></li><li><a href="Kekule.Render.MoleculeDisplayConfigs.html">MoleculeDisplayConfigs</a></li><li><a href="Kekule.Render.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html">PathGlyph2DRenderer</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html">PathGlyphCtab2DRenderer</a></li><li><a href="Kekule.Render.PredefinedConfigsMap.html">PredefinedConfigsMap</a></li><li><a href="Kekule.Render.RaphaelRendererBridge.html">RaphaelRendererBridge</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html">Reaction2DRenderer</a></li><li><a href="Kekule.Render.Render2DConfigs.html">Render2DConfigs</a></li><li><a href="Kekule.Render.Render3DConfigs.html">Render3DConfigs</a></li><li><a href="Kekule.Render.Render3DEnvironmentConfigs.html">Render3DEnvironmentConfigs</a></li><li><a href="Kekule.Render.Render3DOptionUtils.html">Render3DOptionUtils</a></li><li><a href="Kekule.Render.RenderColorUtils.html">RenderColorUtils</a></li><li><a href="Kekule.Render.Renderer2DFactory.html">Renderer2DFactory</a></li><li><a href="Kekule.Render.Renderer3DFactory.html">Renderer3DFactory</a></li><li><a href="Kekule.Render.RenderOptionUtils.html">RenderOptionUtils</a></li><li><a href="Kekule.Render.RichText.html">RichText</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html">RichTextBased2DRenderer</a></li><li><a href="Kekule.Render.RichTextUtils.html">RichTextUtils</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html">StructFragment2DRenderer</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html">StructFragment3DRenderer</a></li><li><a href="Kekule.Render.TextBasedChemMarker2DRenderer.html">TextBasedChemMarker2DRenderer</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html">TextBlock2DRenderer</a></li><li><a href="Kekule.Render.TextDrawUtils.html">TextDrawUtils</a></li><li><a href="Kekule.Render.TextFontConfigs.html">TextFontConfigs</a></li><li><a href="Kekule.Render.ThreeContext.html">ThreeContext</a></li><li><a href="Kekule.Render.ThreeRendererBridge.html">ThreeRendererBridge</a></li><li><a href="Kekule.Render.UnbondedElectronSetRenderer.html">UnbondedElectronSetRenderer</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.Render.AbstractRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.AbstractRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Base3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.BaseGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.BoundInfoRecorder.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemCtab3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemObjGroupList3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpace3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ChemSpaceElement3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeMolecule3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeObj3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.CompositeRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.CompositeRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.CompositeRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.CompositeRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Ctab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.DummyRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.DummyRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.DummyRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.DummyRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Formula2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.ImageBlock2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.ImageBlock2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.ImageBlock2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.ImageBlock2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyph2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.PathGlyphCtab2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.Reaction2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.RichTextBased2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.StructFragment3DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.TextBasedChemMarker2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.TextBasedChemMarker2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.TextBasedChemMarker2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.TextBasedChemMarker2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.TextBlock2DRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li><li><a href="Kekule.Render.UnbondedElectronSetRenderer.html#event:clear">clear</a></li><li><a href="Kekule.Render.UnbondedElectronSetRenderer.html#event:draw">draw</a></li><li><a href="Kekule.Render.UnbondedElectronSetRenderer.html#event:prepareDrawing">prepareDrawing</a></li><li><a href="Kekule.Render.UnbondedElectronSetRenderer.html#event:updateBasicDrawObject">updateBasicDrawObject</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Render.html">Render</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:40:52 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:13:16 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

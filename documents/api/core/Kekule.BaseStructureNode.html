@@ -29,8 +29,6 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
-        
         BaseStructureNode
         </h2>
         
@@ -274,6 +272,29 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>zIndex2D</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A special property like zIndex in HTML, indicating the position of z-stack for 2D sketch.</td>
+        </tr>
+
+    
     </tbody>
 </table>
 </dl>
@@ -307,7 +328,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line420">line 420</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line650">line 650</a>
     </li></ul></dd>
     
 
@@ -464,7 +485,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line398">line 398</a>
     </li></ul></dd>
     
 
@@ -549,7 +570,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line363">line 363</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line592">line 592</a>
     </li></ul></dd>
     
 
@@ -580,7 +601,7 @@
             
 <dt>
     
-        <h4 class="name" id="get2DX"><span class="type-signature"></span>get2DX<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
+        <h4 class="name" id="compareStructure"><span class="type-signature"></span>compareStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
 
         
     
@@ -589,7 +610,7 @@
 
     
     <div class="description">
-        Get x coordinate of coord2D property.
+        Explicit set compare method to chem structure and compare to targetObj.
     </div>
     
 
@@ -623,13 +644,36 @@
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>targetObj</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
 
 
             
@@ -657,6 +701,11 @@
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#compareStructure">Kekule.ChemStructureObject#compareStructure</a>
+    </li></dd>
+    
 
     
 
@@ -677,7 +726,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1044">line 1044</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line312">line 312</a>
     </li></ul></dd>
     
 
@@ -703,10 +752,6 @@
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    x
-</div>
-
 
 
 <dl>
@@ -715,7 +760,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Float</span>
+<span class="param-type">Int</span>
 
 
     </dd>
@@ -730,7 +775,7 @@
             
 <dt>
     
-        <h4 class="name" id="get2DY"><span class="type-signature"></span>get2DY<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
+        <h4 class="name" id="equalStructure"><span class="type-signature"></span>equalStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
 
         
     
@@ -739,7 +784,7 @@
 
     
     <div class="description">
-        Get y coordinate of coord2D property.
+        Check if this object and targetObj has equivalent chem structure.
     </div>
     
 
@@ -773,13 +818,13 @@
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>targetObj</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
 
 
             
@@ -792,144 +837,17 @@
             <td class="description last"></td>
         </tr>
 
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1068">line 1068</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    y
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DX"><span class="type-signature"></span>get3DX<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get x coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type">Hash</span>
 
 
             
@@ -957,6 +875,11 @@
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#equalStructure">Kekule.ChemStructureObject#equalStructure</a>
+    </li></dd>
+    
 
     
 
@@ -977,7 +900,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1136">line 1136</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line324">line 324</a>
     </li></ul></dd>
     
 
@@ -1003,10 +926,6 @@
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    x
-</div>
-
 
 
 <dl>
@@ -1015,307 +934,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DY"><span class="type-signature"></span>get3DY<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get y coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1160">line 1160</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    y
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DZ"><span class="type-signature"></span>get3DZ<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get z coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1184">line 1184</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    z
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
 
 
     </dd>
@@ -1432,7 +1051,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line451">line 451</a>
     </li></ul></dd>
     
 
@@ -1540,7 +1159,7 @@
 
             
 
-            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+            <td class="description last">Determine to calculate 2D or 3D box. Value from Kekule.CoordMode.</td>
         </tr>
 
     
@@ -1601,7 +1220,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line453">line 453</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line687">line 687</a>
     </li></ul></dd>
     
 
@@ -1751,7 +1370,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line697">line 697</a>
     </li></ul></dd>
     
 
@@ -1901,7 +1520,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line706">line 706</a>
     </li></ul></dd>
     
 
@@ -1954,7 +1573,7 @@
             
 <dt>
     
-        <h4 class="name" id="getCoordOfMode"><span class="type-signature"></span>getCoordOfMode<span class="signature">(coordMode, allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+        <h4 class="name" id="getCurrConnectableObj"><span class="type-signature"></span>getCurrConnectableObj<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
 
         
     
@@ -1963,7 +1582,7 @@
 
     
     <div class="description">
-        Get coordinate of specified mode.
+        Returns self or child object that can directly linked to a connector.For atom or other simple chem objetc, this function should just returns self,for structure fragment, this function need to returns an anchor node.
     </div>
     
 
@@ -1971,77 +1590,6 @@
 
     
 
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>coordMode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Int</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>, mode of coordinate.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">If corresponding coord of 2D/3D not found, whether  coord of another mode can be used instead.  If true, 2D coord can be expanded to 3D one as {x, y, 0} and 3D  reducts to 2D one as {x, y}.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
     
 
     
@@ -2053,6 +1601,11 @@
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getCurrConnectableObj">Kekule.ChemStructureObject#getCurrConnectableObj</a>
+    </li></dd>
     
 
     
@@ -2074,7 +1627,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line946">line 946</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line363">line 363</a>
     </li></ul></dd>
     
 
@@ -2108,7 +1661,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Hash</span>
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
 
 
     </dd>
@@ -2225,7 +1778,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -2328,7 +1881,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -2431,7 +1984,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
     </li></ul></dd>
     
 
@@ -2534,7 +2087,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line514">line 514</a>
     </li></ul></dd>
     
 
@@ -2637,7 +2190,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line529">line 529</a>
     </li></ul></dd>
     
 
@@ -2740,7 +2293,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -2798,7 +2351,7 @@
 
     
     <div class="description">
-        If Kekule.ChemStructureObject#parent is a {@link Kekule.StructureFragment}, returns this fragment.
+        If Kekule.ChemStructureObject#parent is a <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, returns this fragment.
     </div>
     
 
@@ -2843,7 +2396,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line333">line 333</a>
     </li></ul></dd>
     
 
@@ -2892,7 +2445,7 @@
             
 <dt>
     
-        <h4 class="name" id="hasCoord2D"><span class="type-signature"></span>hasCoord2D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+        <h4 class="name" id="getRootFragment"><span class="type-signature"></span>getRootFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
 
         
     
@@ -2901,7 +2454,7 @@
 
     
     <div class="description">
-        Check if this node has a 2D coordinate.
+        Returns the root parent of <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, rather than subgroups.
     </div>
     
 
@@ -2909,54 +2462,6 @@
 
     
 
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
     
 
     
@@ -2968,6 +2473,11 @@
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getRootFragment">Kekule.ChemStructureObject#getRootFragment</a>
+    </li></dd>
     
 
     
@@ -2989,7 +2499,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1031">line 1031</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line342">line 342</a>
     </li></ul></dd>
     
 
@@ -3023,7 +2533,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
 
 
     </dd>
@@ -3140,7 +2650,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line390">line 390</a>
     </li></ul></dd>
     
 
@@ -3291,7 +2801,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line440">line 440</a>
     </li></ul></dd>
     
 
@@ -3424,7 +2934,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line421">line 421</a>
     </li></ul></dd>
     
 
@@ -3509,798 +3019,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set2DX"><span class="type-signature"></span>set2DX<span class="signature">(x)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change x coordinate of coord2D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>x</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1054">line 1054</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set2DY"><span class="type-signature"></span>set2DY<span class="signature">(y)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change y coordinate of coord2D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>y</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1078">line 1078</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DX"><span class="type-signature"></span>set3DX<span class="signature">(x)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change x coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>x</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1146">line 1146</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DY"><span class="type-signature"></span>set3DY<span class="signature">(y)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change y coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>y</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1170">line 1170</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DZ"><span class="type-signature"></span>set3DZ<span class="signature">(z)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change z coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>z</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1194">line 1194</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="setCoordOfMode"><span class="type-signature"></span>setCoordOfMode<span class="signature">(value, coordMode)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Set coordinate of specified mode.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>value</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Hash</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value of coordinate. {x, y} or {x, y, z}.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>coordMode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Int</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>, mode of coordinate.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line958">line 958</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line465">line 465</a>
     </li></ul></dd>
     
 
@@ -4393,7 +3112,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -4437,8 +3156,6 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
-        
         BaseStructureNode
         </h2>
         
@@ -4496,7 +3213,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line428">line 428</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line658">line 658</a>
     </li></ul></dd>
     
 
@@ -4647,7 +3364,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line398">line 398</a>
     </li></ul></dd>
     
 
@@ -4732,7 +3449,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line363">line 363</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line592">line 592</a>
     </li></ul></dd>
     
 
@@ -4763,7 +3480,7 @@
             
 <dt>
     
-        <h4 class="name" id="get2DX"><span class="type-signature"></span>get2DX<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
+        <h4 class="name" id="compareStructure"><span class="type-signature"></span>compareStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
 
         
     
@@ -4772,7 +3489,7 @@
 
     
     <div class="description">
-        Get x coordinate of coord2D property.
+        Explicit set compare method to chem structure and compare to targetObj.
     </div>
     
 
@@ -4806,13 +3523,36 @@
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>targetObj</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
 
 
             
@@ -4840,6 +3580,11 @@
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#compareStructure">Kekule.ChemStructureObject#compareStructure</a>
+    </li></dd>
+    
 
     
 
@@ -4860,7 +3605,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1044">line 1044</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line312">line 312</a>
     </li></ul></dd>
     
 
@@ -4886,10 +3631,6 @@
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    x
-</div>
-
 
 
 <dl>
@@ -4898,7 +3639,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Float</span>
+<span class="param-type">Int</span>
 
 
     </dd>
@@ -4913,7 +3654,7 @@
             
 <dt>
     
-        <h4 class="name" id="get2DY"><span class="type-signature"></span>get2DY<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
+        <h4 class="name" id="equalStructure"><span class="type-signature"></span>equalStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
 
         
     
@@ -4922,7 +3663,7 @@
 
     
     <div class="description">
-        Get y coordinate of coord2D property.
+        Check if this object and targetObj has equivalent chem structure.
     </div>
     
 
@@ -4956,13 +3697,13 @@
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>targetObj</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
 
 
             
@@ -4975,144 +3716,17 @@
             <td class="description last"></td>
         </tr>
 
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1068">line 1068</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    y
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DX"><span class="type-signature"></span>get3DX<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get x coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>allowCoordBorrow</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Bool</span>
+<span class="param-type">Hash</span>
 
 
             
@@ -5140,6 +3754,11 @@
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#equalStructure">Kekule.ChemStructureObject#equalStructure</a>
+    </li></dd>
+    
 
     
 
@@ -5160,7 +3779,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1136">line 1136</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line324">line 324</a>
     </li></ul></dd>
     
 
@@ -5186,10 +3805,6 @@
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    x
-</div>
-
 
 
 <dl>
@@ -5198,307 +3813,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DY"><span class="type-signature"></span>get3DY<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get y coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1160">line 1160</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    y
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
-
-
-    </dd>
-</dl>
-
-        
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="get3DZ"><span class="type-signature"></span>get3DZ<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Float}</span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get z coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1184">line 1184</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    z
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Float</span>
 
 
     </dd>
@@ -5615,7 +3930,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line451">line 451</a>
     </li></ul></dd>
     
 
@@ -5723,7 +4038,7 @@
 
             
 
-            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+            <td class="description last">Determine to calculate 2D or 3D box. Value from Kekule.CoordMode.</td>
         </tr>
 
     
@@ -5784,7 +4099,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line453">line 453</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line687">line 687</a>
     </li></ul></dd>
     
 
@@ -5934,7 +4249,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line697">line 697</a>
     </li></ul></dd>
     
 
@@ -6084,7 +4399,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line706">line 706</a>
     </li></ul></dd>
     
 
@@ -6137,7 +4452,7 @@
             
 <dt>
     
-        <h4 class="name" id="getCoordOfMode"><span class="type-signature"></span>getCoordOfMode<span class="signature">(coordMode, allowCoordBorrow)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+        <h4 class="name" id="getCurrConnectableObj"><span class="type-signature"></span>getCurrConnectableObj<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
 
         
     
@@ -6146,7 +4461,7 @@
 
     
     <div class="description">
-        Get coordinate of specified mode.
+        Returns self or child object that can directly linked to a connector.For atom or other simple chem objetc, this function should just returns self,for structure fragment, this function need to returns an anchor node.
     </div>
     
 
@@ -6154,77 +4469,6 @@
 
     
 
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>coordMode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Int</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>, mode of coordinate.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">If corresponding coord of 2D/3D not found, whether  coord of another mode can be used instead.  If true, 2D coord can be expanded to 3D one as {x, y, 0} and 3D  reducts to 2D one as {x, y}.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
     
 
     
@@ -6236,6 +4480,11 @@
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getCurrConnectableObj">Kekule.ChemStructureObject#getCurrConnectableObj</a>
+    </li></dd>
     
 
     
@@ -6257,7 +4506,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line946">line 946</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line363">line 363</a>
     </li></ul></dd>
     
 
@@ -6291,7 +4540,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Hash</span>
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
 
 
     </dd>
@@ -6408,7 +4657,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -6511,7 +4760,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -6614,7 +4863,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
     </li></ul></dd>
     
 
@@ -6717,7 +4966,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line514">line 514</a>
     </li></ul></dd>
     
 
@@ -6820,7 +5069,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line529">line 529</a>
     </li></ul></dd>
     
 
@@ -6923,7 +5172,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -6981,7 +5230,7 @@
 
     
     <div class="description">
-        If Kekule.ChemStructureObject#parent is a {@link Kekule.StructureFragment}, returns this fragment.
+        If Kekule.ChemStructureObject#parent is a <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, returns this fragment.
     </div>
     
 
@@ -7026,7 +5275,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line333">line 333</a>
     </li></ul></dd>
     
 
@@ -7075,7 +5324,7 @@
             
 <dt>
     
-        <h4 class="name" id="hasCoord2D"><span class="type-signature"></span>hasCoord2D<span class="signature">(allowCoordBorrow)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+        <h4 class="name" id="getRootFragment"><span class="type-signature"></span>getRootFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
 
         
     
@@ -7084,7 +5333,7 @@
 
     
     <div class="description">
-        Check if this node has a 2D coordinate.
+        Returns the root parent of <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, rather than subgroups.
     </div>
     
 
@@ -7092,54 +5341,6 @@
 
     
 
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>allowCoordBorrow</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
     
 
     
@@ -7151,6 +5352,11 @@
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getRootFragment">Kekule.ChemStructureObject#getRootFragment</a>
+    </li></dd>
     
 
     
@@ -7172,7 +5378,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1031">line 1031</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line342">line 342</a>
     </li></ul></dd>
     
 
@@ -7206,7 +5412,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Bool</span>
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
 
 
     </dd>
@@ -7323,7 +5529,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line390">line 390</a>
     </li></ul></dd>
     
 
@@ -7474,7 +5680,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line440">line 440</a>
     </li></ul></dd>
     
 
@@ -7607,7 +5813,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line421">line 421</a>
     </li></ul></dd>
     
 
@@ -7692,798 +5898,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set2DX"><span class="type-signature"></span>set2DX<span class="signature">(x)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change x coordinate of coord2D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>x</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1054">line 1054</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set2DY"><span class="type-signature"></span>set2DY<span class="signature">(y)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change y coordinate of coord2D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>y</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1078">line 1078</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DX"><span class="type-signature"></span>set3DX<span class="signature">(x)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change x coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>x</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1146">line 1146</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DY"><span class="type-signature"></span>set3DY<span class="signature">(y)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change y coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>y</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1170">line 1170</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="set3DZ"><span class="type-signature"></span>set3DZ<span class="signature">(z)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Change z coordinate of coord3D property.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>z</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Float</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line1194">line 1194</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<dt>
-    
-        <h4 class="name" id="setCoordOfMode"><span class="type-signature"></span>setCoordOfMode<span class="signature">(value, coordMode)</span><span class="type-signature"></span></h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Set coordinate of specified mode.
-    </div>
-    
-
-    
-
-    
-
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>value</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Hash</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value of coordinate. {x, y} or {x, y, z}.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>coordMode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Int</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>, mode of coordinate.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.common.js.html">core/kekule.common.js</a>, <a href="core_kekule.common.js.html#line958">line 958</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line465">line 465</a>
     </li></ul></dd>
     
 
@@ -8576,7 +5991,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -8615,13 +6030,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:32 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:54 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

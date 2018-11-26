@@ -48,17 +48,19 @@ var GU = Kekule.GraphAlgorithmUtils;
 var CU = Kekule.ChemStructureUtils;
 
 var BT = Kekule.BondType;
-/**
+
+/*
  * Default Options used to search rings in chem structure.
+ * @object
  */
-Kekule.StructureRingSearchDefOptions = {
+Kekule.globalOptions.add('algorithm.ringSearch', {
 	/**
 	 * Which types of bond can be considered as an edge of ring.
 	 * [] means no bond is allowed in ring (as no ring can actually be found.
 	 * Null means all bond type can be included in ring.
 	 */
 	bondTypes: [BT.COVALENT]
-};
+});
 
 ClassEx.extend(Kekule.StructureConnectionTable,
 /** @lends Kekule.StructureConnectionTable# */
@@ -200,7 +202,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 *   {
 	 *     bondTypes: []
 	 *   }
-	 * If this param is not set, {@link Kekule.StructureRingSearchDefOptions} will be used.
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
 	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
 	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
@@ -212,8 +214,9 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	analysisRings: function(options)
 	{
+		var ops = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.ringSearch), options);
 		// no stored ring info, analysis
-		var g = this.getGraph(options || Kekule.StructureRingSearchDefOptions);
+		var g = this.getGraph(ops);
 		if (g)
 		{
 			var resultBlocks = [];
@@ -323,16 +326,23 @@ ClassEx.extend(Kekule.StructureFragment,
 	},
 	/**
 	 * Returns ring system details of structure fragment.
-	 * @returns {Array} An array, each items is a cycle block detail. Item containing a series of hash with fields:
+	 * @param {Hash} options Options to find rings. Can include the following fields:
+	 *   {
+	 *     bondTypes: []
+	 *   }
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
+	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
+	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
 	 *   {
 	 *     connectors: Array of all vertexes in cycle block.
 	 *     nodes: Array of all edges in cycle block.
+	 *     allRings: Array of all rings in cycle block, each item list connectors and nodes of one ring.
 	 *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
 	 *   }
 	 */
-	analysisRings: function()
+	analysisRings: function(options)
 	{
-		return this.hasCtab()? this.getCtab().analysisRings(): null;
+		return this.hasCtab()? this.getCtab().analysisRings(options): null;
 	}
 });
 /** @ignore */
@@ -346,6 +356,62 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 		'setter': null
 	}
 ]);
+
+/** @ignore */
+// ensure ringInfo is cloned when creating shadow in structureFragment
+{
+	ClassEx.extendMethod(Kekule.StructureFragment, '_copyAdditionalFragmentInfo',
+			function($origin, shadowFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var mapRing = function(srcRing)
+		{
+			var result = {'nodes': [], 'connectors': []};
+			for (var i = 0, l = srcRing.nodes.length; i &lt; l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.nodes[i]);
+				if (shadowObj)
+					result.nodes.push(shadowObj);
+			}
+			for (var i = 0, l = srcRing.connectors.length; i &lt; l; ++i)
+			{
+				var shadowObj = srcToShadowMap.get(srcRing.connectors[i]);
+				if (shadowObj)
+					result.connectors.push(shadowObj);
+			}
+			return result;
+		};
+
+		$origin(shadowFragment, srcToShadowMap, shadowToSrcMap);
+		var sourceFragment = this;
+		var srcRingInfo = sourceFragment.getRingInfo(true);  // do not auto create
+		if (srcRingInfo)  // copy to shadow
+		{
+			var shadowRingInfo = {'cycleBlocks': []};
+			for (var i = 0, l = srcRingInfo.cycleBlocks.length; i &lt; l; ++i)
+			{
+				var srcBlock = srcRingInfo.cycleBlocks[i];
+				var shadowBlock = {'allRings': [], 'sssrRings': []};
+				// all rings and SSSR
+				var srcAllRings = srcBlock.allRings;
+				for (var j = 0, k = srcAllRings.length; j &lt; k; ++j)
+				{
+					var srcRing = srcAllRings[j];
+					shadowBlock.allRings.push(mapRing(srcRing));
+				}
+				var srcSSSRs = srcBlock.sssrRings;
+				for (var j = 0, k = srcSSSRs.length; j &lt; k; ++j)
+				{
+					var srcRing = srcSSSRs[j];
+					shadowBlock.sssrRings.push(mapRing(srcRing));
+				}
+				shadowRingInfo.cycleBlocks.push(shadowBlock);
+			}
+			// hack
+			shadowFragment.setPropStoreFieldValue('ringInfo', shadowRingInfo);
+			//console.log('set ringInfo', srcRingInfo, shadowRingInfo);
+		}
+	});
+}
 
 ClassEx.extend(Kekule.ChemStructureObject,
 /** @lends Kekule.ChemStructureObject# */
@@ -471,20 +537,27 @@ ClassEx.extend(Kekule.ChemObject,
 	},
 	/**
 	 * Returns ring system details of chem object.
-	 * @returns {Array} An array, each items is a cycle block detail. Item containing a series of hash with fields:
+	 * @param {Hash} options Options to find rings. Can include the following fields:
 	 *   {
- *     connectors: Array of all vertexes in cycle block.
- *     nodes: Array of all edges in cycle block.
- *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
- *   }
+	 *     bondTypes: []
+	 *   }
+	 * If this param is not set, {@link Kekule.globalOptions.algorithm.ringSearch} will be used.
+	 * @returns {Hash} Ring info of ctab, now has one field {ringBlocks: []} in which ringBlocks is
+	 *   An array, each items in it is a cycle block detail. Item containing a series of hash with fields:
+	 *   {
+	 *     connectors: Array of all vertexes in cycle block.
+	 *     nodes: Array of all edges in cycle block.
+	 *     allRings: Array of all rings in cycle block, each item list connectors and nodes of one ring.
+	 *     sssrRings: Array, each item containing connectors and nodes in a SSSR member ring.
+	 *   }
 	 */
-	analysisRings: function()
+	analysisRings: function(options)
 	{
 		var ss = CU.getAllStructFragments(this);
 		var result = [];
 		for (var i = 0, l = ss.length; i &lt; l; ++i)
 		{
-			var blocks = ss[i].analysisRings();
+			var blocks = ss[i].analysisRings(options);
 			if (blocks)
 				result = result.concat(blocks);
 		}
@@ -502,13 +575,13 @@ ClassEx.extend(Kekule.ChemObject,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:22 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -98,7 +98,7 @@ Kekule.IO.Mdl2kUtils = {
 	atomLineChargeToRadical: function(value)
 	{
 		if (value == 4)
-			return Kekule.RadicalType.DOUBLET;  // doublet radical
+			return Kekule.RadicalOrder.DOUBLET;  // doublet radical
 		else
 			return 0;
 	},
@@ -110,7 +110,7 @@ Kekule.IO.Mdl2kUtils = {
 	 */
 	radicalToMdlAtomLineValue: function(value)
 	{
-		return (value == Kekule.RadicalType.DOUBLET)? 4: 0;
+		return (value == Kekule.RadicalOrder.DOUBLET)? 4: 0;
 	},
 	/**
 	 * Convert charge and radical to a suitable CHG value in MDL 2k atom line.
@@ -401,7 +401,8 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 		// line format: aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv
 		// vvvvvv: version flag, check if it is V2000
 		var s = line.substr(33, 6).trim();
-		if (s != Kekule.IO.MDL.VER2000) // wrong version flag, it may be not a CTAB 2000, raise exception
+		if (s &amp;&amp; s != Kekule.IO.MDL.VER2000) // wrong version flag, it may be not a CTAB 2000, raise exception
+		  // Note: sometime Version mark may be missing (s is empty), assume V2000
 		{
 			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL2000_FORMAT_DATA*/Kekule.$L('ErrorMsg.NOT_MDL2000_FORMAT_DATA'));
 			return null;
@@ -634,7 +635,8 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						var satom = line.substr(7, 3).trim();
 						atomListInfo.atomIndex = parseInt(satom, 10) - 1;
 						result.atomIndex = atomListInfo.atomIndex;
-						var count = parseInt(Math.min(line.substr(10, 3), 16));
+						//var count = parseInt(Math.min(line.substr(10, 3), 16));
+						var count = parseInt(line.substr(10, 3));  // allow more than 16 (unstandard data)
 						var s = line.substr(14, 1);
 						atomListInfo.isAllowList = (s.toLowerCase() == 'f');
 						atomListInfo.symbols = [];
@@ -644,7 +646,19 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 							atomListInfo.symbols.push(s);
 						}
 						result.atomListInfo = atomListInfo;
-						atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+						// may be there is ALS line for atomIndex before...
+						var oldAtomListInfo = atomInfos[atomListInfo.atomIndex].atomListInfo;
+						if (!oldAtomListInfo)
+							atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+						else  // merge old and new
+						{
+							if (oldAtomListInfo.isAllowList !== atomListInfo.isAllowList)  // can not merge, overwrite
+								atomInfos[atomListInfo.atomIndex].atomListInfo = atomListInfo;
+							else  // merge
+							{
+								oldAtomListInfo.symbols = Kekule.ArrayUtils.pushUnique(oldAtomListInfo.symbols, atomListInfo.symbols);
+							}
+						}
 						break;
 					}
 				/*
@@ -685,14 +699,17 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						//var sgInfo = sgroupInfos[sgIndex];
 						if (sgInfo)
 						{
-							var atomCount = parseInt(Math.min(line.substr(10, 3), 15));
-							sgInfo.atomIndexes = [];
+							//var atomCount = parseInt(Math.min(line.substr(10, 3), 15));
+							var atomCount = parseInt(line.substr(10, 3));  // allow non-standard format (more than 15)
+							if (!sgInfo.atomIndexes) // maybe sg atomIndexes is already created when file has more than one SAL lines
+								sgInfo.atomIndexes = [];
 							for (var i = 0; i &lt; atomCount; ++i)
 							{
 								var s = line.substr(14 + i * 4, 3);
 								var atomIndex = parseInt(s) - 1;
 								sgInfo.atomIndexes.push(atomIndex);
 							}
+							//console.log('SAL', atomCount, sgInfo.atomIndexes);
 						}
 						break;
 					}
@@ -702,8 +719,10 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						//var sgInfo = sgroupInfos[sgIndex];
 						if (sgInfo &amp;&amp; (sgInfo.sgType == 'SUP'))
 						{
-							var bondCount = parseInt(Math.min(line.substr(10, 3), 15));
-							sgInfo.crossBondIndexes = [];
+							//var bondCount = parseInt(Math.min(line.substr(10, 3), 15));
+							var bondCount = parseInt(line.substr(10, 3));  // allow more than 15 one (unstandard when reading)
+							if (!sgInfo.crossBondIndexes) // maybe sg xbond indexes is already created when file has more than one SBL lines
+								sgInfo.crossBondIndexes = [];
 							for (var i = 0; i &lt; bondCount; ++i)
 							{
 								var s = line.substr(14 + i * 4, 3);
@@ -1075,10 +1094,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		s = Kekule.IO.Mdl2kUtils.generateCtabPropLine([sIndex, sIndex], 'SLB', 1);
 		result.push(s);
 		// SMT, Sgroup Subscript, M  SMT sss m...
+		/*
 		var slabel = subGroup.getAbbr?
 			subGroup.getAbbr(): (
 				subGroup.getName? subGroup.getName(): null
 			);
+		*/
+		var slabel = (subGroup.getAbbr &amp;&amp; subGroup.getAbbr())
+				|| (subGroup.getFormulaText &amp;&amp; subGroup.getFormulaText())
+				|| (subGroup.getName &amp;&amp; subGroup.getName());
 		if (slabel)
 		{
 			s = Kekule.IO.Mdl2kUtils.generateCtabPropLine([sIndex, slabel], 'SMT');
@@ -1094,9 +1118,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 				atomIndexes.push((index + 1).toString().lpad(3));
 		}
 		atomIndexes = atomIndexes.sort();
-		s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SAL') + ' '
-			+ sIndex + atomIndexes.length.toString().lpad(3) + ' ' + atomIndexes.join(' ');
-		result.push(s);
+		// maxium of 15 atoms are allowed in one line
+		var atomIndexGroups = Kekule.ArrayUtils.divide(atomIndexes, 15);
+		for (var i = 0, l = atomIndexGroups.length; i &lt; l; ++i)
+		{
+			var subAtomIndexes = atomIndexGroups[i];
+			s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SAL') + ' '
+					+ sIndex + subAtomIndexes.length.toString().lpad(3) + ' ' + subAtomIndexes.join(' ');
+			result.push(s);
+		}
 		// SBL, Sgroup xbond List, M  SBL sssn15 bbb
 		// SBV, Abbreviation Sgroup Bond and Vector Information, M  SBV sss bb1 x1 y1
 		var xbonds = subGroup.getCrossConnectors();
@@ -1133,9 +1163,15 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		}
 		xbondIndexes = xbondIndexes.sort();
 		// SBL M  SBL sssn15 bbb
-		s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SBL') + ' '
-			+ sIndex + xbondIndexes.length.toString().lpad(3) + ' ' + xbondIndexes.join(' ');
-		result.push(s);
+		// maxium of 15 atoms are allowed in one line
+		var xbondIndexGroups = Kekule.ArrayUtils.divide(xbondIndexes, 15);
+		for (var i = 0, l = xbondIndexGroups.length; i &lt; l; ++i)
+		{
+			var subXbondIndexes = xbondIndexGroups[i];
+			s = Kekule.IO.Mdl2kUtils.getCtabPropLineTag('SBL') + ' '
+					+ sIndex + subXbondIndexes.length.toString().lpad(3) + ' ' + subXbondIndexes.join(' ');
+			result.push(s);
+		}
 		// SBV M  SBV sss bb1 x1 y1
 		for (var i = 0, l = xbondVectors.length; i &lt; l; ++i)
 		{
@@ -1157,13 +1193,13 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormat.html">DataFormat</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:11:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

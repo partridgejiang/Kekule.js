@@ -206,7 +206,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.SmilesMolWriter',
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		/*
 		 if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -222,7 +222,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return writer.writeBlock(obj);
 			*/
 			var mol = this.getMolecule(obj);
-			return this.writeStructFragment(mol);
+			return mol? this.writeStructFragment(mol, options): '';
 		}
 	},
 	/**
@@ -235,25 +235,31 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	},
 
 	/** @private */
-	writeStructFragment: function(mol)
+	writeStructFragment: function(mol, options)
 	{
-		if (mol.hasCtab())
+		if (mol.hasCtab() &amp;&amp; !mol.isEmpty())
 		{
 			// standardize molecule and mark the aromatic rings
 			var dupMol = mol.clone();
 			//var aromaticRings = dupMol.perceiveAromaticRings();
-			dupMol.standardize();
+			if (dupMol.standardize)
+			{
+				dupMol.standardize();
+			}
 			var aromaticNodes = [];
 			var aromaticConnectors = [];
-			var aromaticRings = dupMol.getAromaticRings();
-			for (var i = 0, l = aromaticRings.length; i &lt; l; ++i)
+			if (dupMol.getAromaticRings)
 			{
-				var ring = aromaticRings[i];
-				AU.pushUnique(aromaticNodes, ring.nodes);
-				AU.pushUnique(aromaticConnectors, ring.connectors);
+				var aromaticRings = dupMol.getAromaticRings();
+				for (var i = 0, l = aromaticRings.length; i &lt; l; ++i)
+				{
+					var ring = aromaticRings[i];
+					AU.pushUnique(aromaticNodes, ring.nodes);
+					AU.pushUnique(aromaticConnectors, ring.connectors);
+				}
 			}
 
-			var molGraph = Kekule.GraphAdaptUtils.ctabToGraph(dupMol.getCtab());
+			var molGraph = Kekule.GraphAdaptUtils.ctabToGraph(dupMol.getCtab(), null, {expandSubStructures: true, ignoreBondedHydrogen: true});
 			// get the longest path as the main chain, starting from the last vertex
 			var graphVertexes = molGraph.getVertexes();
 			var graphEdges = molGraph.getEdges();
@@ -276,7 +282,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				//var remainingVertexes = AU.clone(depthSpanningTree.vertexes);
 				//var remainingEdges = AU.clone(depthSpanningTree.edges);
 				var currVertex = mainChainPath.vertexes[0]; //startingVertex;
-				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges, ringEdgeRepo, aromaticNodes, aromaticConnectors);
+				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges, ringEdgeRepo, aromaticNodes, aromaticConnectors, options);
 
 				if (i === 0)
 					result = partResult;
@@ -289,7 +295,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return '';
 	},
 	/** @private */
-	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors)
+	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options)
 	{
 		var node = vertex.getData('object');
 		var edges = vertex.getEdges();
@@ -302,6 +308,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var ringedVertexes = [];
 		var connectorParity;
 		var nextBondStereoStr = '';
+		var ignoreBondStereo = options.ignoreStereoBond;
+		if (Kekule.ObjUtils.isUnset(ignoreBondStereo))
+			ignoreBondStereo = options.ignoreStereo || false;
 		for (var i = edges.length - 1; i >= 0; --i)
 		{
 			var edge = edges[i];
@@ -309,7 +318,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				continue;
 
 			var connector = edge.getData('object');
-			if (connector.getParity &amp;&amp; connector.getParity())  // next is stereo double bond
+			if (!ignoreBondStereo &amp;&amp; connector.getParity &amp;&amp; connector.getParity())  // next is stereo double bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
 				if (keyNodes)
@@ -327,7 +336,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			if (spanningTreeEdges.indexOf(edge) >= 0)  // edge on spanning tree, not ring edge
 			{
 				var nextVertex = vertex.getNeighborOnEdge(edge);
-				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors);
+				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options);
 				if (mainChainEdges.indexOf(edge) >= 0)  // edge on main chain
 				{
 					mainChainVertex = nextVertex;
@@ -370,7 +379,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			prevNode = prevVertex.getData('object');
 			var prevConnector = prevEdge.getData('object');
 
-			if (prevConnector.getParity &amp;&amp; prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
+			if (!ignoreBondStereo &amp;&amp; prevConnector.getParity &amp;&amp; prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(prevConnector);
 				if (keyNodes)
@@ -397,7 +406,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		if (mainChainVertex)
 			nextNodes.push(mainChainVertex.getData('object'));
-		result += this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0, prevNode, nextNodes);
+		result += this._outputNodeStr(node, aromaticNodes.indexOf(node) >= 0, prevNode, nextNodes, options);
 
 		for (var i = 0, l = ringStrs.length; i &lt; l; ++i)
 		{
@@ -415,7 +424,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		return result;
 	},
 	/** @private */
-	_outputNodeStr: function(node, isAromatic, prevNode, nextNodes)
+	_outputNodeStr: function(node, isAromatic, prevNode, nextNodes, options)
 	{
 		var result;
 		var symbol;
@@ -433,18 +442,35 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 
 		// chiral?
+		var ignoreAtomStereo = options.ignoreStereoAtom;
+		if (Kekule.ObjUtils.isUnset(ignoreAtomStereo))
+			ignoreAtomStereo = options.ignoreStereo || false;
 		var schiralRot;
-		if (node.getParity &amp;&amp; node.getParity())
+		if (!ignoreAtomStereo &amp;&amp; node.getParity &amp;&amp; node.getParity())
 		{
 			// calc rotation direction
 			if (nextNodes &amp;&amp; nextNodes.length)
 			{
-				var hcount = node.getHydrogenCount? (node.getHydrogenCount() || 0): 0;
-				// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
-				var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false);
-				var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE)? SMI.ROTATION_DIR_CLOCKWISE:
-					(dir === Kekule.RotationDir.ANTICLOCKWISE)? SMI.ROTATION_DIR_ANTICLOCKWISE:
-						'';
+				// check if there is a bonded H atom, as it may affects the stereo and are ignored in vertex graph
+				var bondedHAtoms = node.getLinkedHydrogenAtoms();
+				if (bondedHAtoms &amp;&amp; bondedHAtoms.length === 1 &amp;&amp; nextNodes.indexOf(bondedHAtoms[0]) &lt; 0)
+				{
+					nextNodes.push(bondedHAtoms[0]);
+				}
+				//var hcount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
+				var hcount = node.getHydrogenCount? (node.getHydrogenCount(false) || 0): 0;  // calc implicit Hs, as they are excluded from graph
+
+				if (bondedHAtoms.length &amp;&amp; hcount)  // has both implicit and explicit H, this should not be a chiral center
+					schiralRot = '';
+				else
+				{
+
+					// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
+					var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitVerticalHydrogen: true});
+					var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE) ? SMI.ROTATION_DIR_CLOCKWISE :
+							(dir === Kekule.RotationDir.ANTICLOCKWISE) ? SMI.ROTATION_DIR_ANTICLOCKWISE :
+									'';
+				}
 				if (schiralRot)
 				{
 					result += schiralRot;
@@ -455,7 +481,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
 		var explicitHCount;
 		if (schiralRot)  // if chiral center, H is always be listed
-			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount() || 0): 0;
+			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
 		else
 		{
 			explicitHCount = node.getExplicitHydrogenCount ? node.getExplicitHydrogenCount() : 0;
@@ -545,16 +571,20 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	}
 });
 
+// extents mime type consts
+Kekule.IO.MimeType.SMILES = 'chemical/x-daylight-smiles';
+
 // register chem data formats
+Kekule.IO.DataFormat.SMILES = 'smi';
 var smilesFmtId = 'smi';
 
-Kekule.IO.DataFormatsManager.register(smilesFmtId, 'chemical/x-daylight-smiles', 'smi',
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.SMILES, Kekule.IO.MimeType.SMILES, ['smi', 'smiles'],
 	Kekule.IO.ChemDataType.TEXT, 'SMILES format');
 
 var suitableClasses = [Kekule.StructureFragment, Kekule.ChemObjList, Kekule.ChemStructureObjectGroup, Kekule.ChemSpaceElement, Kekule.ChemSpace];
 Kekule.IO.ChemDataWriterManager.register('SMILES', Kekule.IO.SmilesMolWriter,
 	suitableClasses,
-	[smilesFmtId]);
+	[Kekule.IO.DataFormat.SMILES]);
 })();</code></pre>
         </article>
     </section>
@@ -565,13 +595,13 @@ Kekule.IO.ChemDataWriterManager.register('SMILES', Kekule.IO.SmilesMolWriter,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormat.html">DataFormat</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:11:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

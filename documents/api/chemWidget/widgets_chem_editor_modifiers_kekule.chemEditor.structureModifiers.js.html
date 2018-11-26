@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview
+ * Object modifier to change property of atoms (and other similar chem nodes) in chem editor.
+ * @author Partridge Jiang
+ */
+
+/*
+ * requires /lan/classes.js
+ * requires /utils/kekule.utils.js
+ * requires /core/kekule.structures.js
+ * requires /widgets/kekule.widget.base.js
+ * requires /widgets/commonCtrls/kekule.widget.buttons.js
+ * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
+ * requires /widgets/chem/editor/kekule.chemEditor.baseEditor.js
+ * requires /widgets/chem/editor/kekule.chemEditor.objModifiers.js
+ * requires /widgets/chem/editor/kekule.chemEditor.utilWidgets.js
+ */
+
+(function(){
+"use strict";
+
+var AU = Kekule.ArrayUtils;
+var DU = Kekule.DomUtils;
+var EU = Kekule.HtmlElementUtils;
+var CNS = Kekule.Widget.HtmlClassNames;
+var CCNS = Kekule.ChemWidget.HtmlClassNames;
+var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+
+Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
+	COMPOSER_ATOM_MODIFIER_BUTTON: 'K-Chem-Composer-AtomModifier-Button',
+	COMPOSER_ATOM_MODIFIER_DROPDOWN: 'K-Chem-Composer-AtomModifier-DropDown',
+	COMPOSER_BOND_MODIFIER_BUTTON: 'K-Chem-Composer-BondModifier-Button',
+	COMPOSER_BOND_MODIFIER_DROPDOWN: 'K-Chem-Composer-BondModifier-DropDown',
+	COMPOSER_CHARGE_MODIFIER_BUTTON: 'K-Chem-Composer-ChargeModifier-Button',
+	COMPOSER_CHARGE_MODIFIER_DROPDOWN: 'K-Chem-Composer-ChargeModifier-DropDown'
+});
+
+/**
+ * Base modifier class to change the chem structure in editor.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.Base
+ */
+Kekule.Editor.ObjModifier.ChemStructureModifier = Class.create(Kekule.Editor.ObjModifier.Base,
+/** @lends Kekule.Editor.ObjModifier.ChemStructureModifier# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.ChemStructureModifier',
+	/** @ignore */
+	installValueChangeEventHandler: function(widget)
+	{
+		// do nothing, use our own value change event handlers
+	}
+});
+/** @ignore */
+Kekule.Editor.ObjModifier.ChemStructureModifier.getCategories = function()
+{
+	return [Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE];
+};
+
+/**
+ * A atom modifier to change the atom property of chem nodes.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
+ */
+Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
+/** @lends Kekule.Editor.ObjModifier.Atom# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.Atom',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._valueStorage = {};
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// private
+		this.defineProp('atomSetter', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
+	},
+	/** @ignore */
+	doCreateWidget: function()
+	{
+		var result = new Kekule.Widget.DropDownButton(this.getEditor());
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_ATOM_MODIFIER'));
+		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
+		result.setShowText(true);
+		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
+		result.addClassName(CCNS.COMPOSER_ATOM_MODIFIER_BUTTON);
+
+		//var atomSetter = this._createAtomSetter(this.getEditor());
+		//result.setDropDownWidget(atomSetter);
+		result.setDropDownWidgetGetter(this._createAtomSetter.bind(this));
+
+		return result;
+	},
+	/** @private */
+	_createAtomSetter: function(parentWidget)
+	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
+		var editor = this.getEditor();
+		var result = new Kekule.ChemWidget.StructureNodeSetter(parentWidget);
+		//result.setUseDropDownSelectPanel(true);
+		//result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
+		result.addClassName([CNS.PANEL, CCNS.COMPOSER_ATOM_MODIFIER_DROPDOWN, CNS.CORNER_ALL]); // simulate panel outlook
+		result.setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+		// simulate a panel caption
+		var captionElem = parentWidget.getDocument().createElement('div');
+		captionElem.className = CNS.PANEL_CAPTION;
+		DU.setElementText(captionElem, Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER'));
+		var parentElem = result.getElement();
+		parentElem.insertBefore(captionElem, Kekule.DomUtils.getFirstChildElem(parentElem));
+		/*
+		if (result.setResizable)
+			result.setResizable(true);
+		*/
+
+		var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
+		listAtoms.push('...');  // add periodic table item
+		// non-atom nodes
+		var nonAtomLabelInfos = editor &amp;&amp; editor.getEnabledNonAtomInputData &amp;&amp; editor.getEnabledNonAtomInputData();
+
+		result.setSelectableInfos({
+			'elementSymbols': listAtoms,
+			'nonElementInfos': nonAtomLabelInfos,
+			'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
+		});
+
+		// react to value change of setter
+		var self = this;
+		result.addEventListener('valueChange', function(e){
+			self.applyToTargets();
+			result.dismiss();
+		});
+		/*
+		var self = this;
+		result.addEventListener('keyup', function(e)
+			{
+				var ev = e.htmlEvent;
+				if (ev.getKeyCode() === Kekule.X.Event.KeyCode.ENTER)
+				{
+					self.applySetter(result);
+					result.dismiss();  // avoid call apply setter twice
+				}
+			}
+		);
+		result.addEventListener('valueSelect', function(e){
+			//var data = e.value;
+			//console.log(e.target, e.currentTarget);
+			if (self.getAtomSetter() &amp;&amp; self.getAtomSetter().isShown())
+			{
+				self.applySetter(result);
+				result.dismiss();  // avoid call apply setter twice
+			}
+		});
+		result.addEventListener('showStateChange', function(e)
+			{
+				if (e.target === result &amp;&amp; !e.byDomChange)
+				{
+					//console.log('show state change', e);
+					if (!e.isShown &amp;&amp; !e.isDismissed)  // widget hidden, feedback the edited value
+					{
+						if (self.getAtomSetter() &amp;&amp; self.getAtomSetter().isShown())
+							self.applySetter(result);
+					}
+				}
+			}
+		);
+		*/
+		this.setPropStoreFieldValue('atomSetter', result);
+
+		if (this._valueStorage.nodes)
+			result.setNodes(this._valueStorage.nodes);
+
+		return result;
+	},
+	/** @private */
+	_filterStructureNodes: function(targets)
+	{
+		var nodes = [];
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.ChemStructureNode)
+			{
+				/*
+				if (target instanceof Kekule.StructureFragment &amp;&amp; target.isExpanded())  // expanded group can not be modified
+					;
+				else
+				*/
+				nodes.push(target);
+			}
+		}
+		return nodes;
+	},
+	/** @private */
+	_getActualModificationNodes: function(nodes, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = nodes.length; i &lt; l; ++i)
+		{
+			var node = nodes[i];
+			if (node instanceof Kekule.StructureFragment &amp;&amp; node.isExpanded())  // actually modify children node in expanded group
+			{
+				var children = this._getActualModificationNodes(node.getNodes(), true);
+				AU.pushUnique(result, children);
+			}
+			else
+				result.push(node);
+		}
+		if (!byPassfilter)
+			result = this._filterStructureNodes(result);
+		return result;
+	},
+	/** @ignore */
+	doLoadFromTargets: function(editor, targets)
+	{
+		// filter chem nodes from targets
+		//var nodes = this._filterStructureNodes(targets);
+		var nodeLabel;
+		var nodes = this._getActualModificationNodes(targets);
+		this._valueStorage.nodes = nodes;
+
+		if (this.getAtomSetter())
+		{
+			this.getAtomSetter().setLabelConfigs(this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+			this.getAtomSetter().setNodes(nodes);
+			/*
+			if (nodes.length)
+			{
+				nodeLabel = this.getAtomSetter().getNodeLabel();
+				//console.log('update node label', nodeLabel);
+			}
+			*/
+		}
+		/*
+		else
+		{
+			nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+		}
+		*/
+		nodeLabel = Kekule.Editor.StructureUtils.getAllChemStructureNodesHtmlCode(nodes, null, null, this.getEditor().getRenderConfigs().getDisplayLabelConfigs());
+		this.getWidget().setText(nodeLabel || Kekule.$L('ChemWidgetTexts.CAPTION_ATOM_MODIFIER_MIXED'))
+				.setShowText(true).setDisplayed(!!nodes.length);
+	},
+	/** @ignore */
+	doApplyToTargets: function($super, editor, targets)
+	{
+		var data = this.getAtomSetter().getValue();
+		var opers = [];
+		//var nodes = this._filterStructureNodes(targets);
+		var nodes = this._getActualModificationNodes(targets);
+		for (var i = 0, l = nodes.length; i &lt; l; ++i)
+		{
+			var target = nodes[i];
+			if (target instanceof Kekule.ChemStructureNode)
+			{
+				var op = this._createNewDataToAtomOperation(data, target);
+				if (op)
+					opers.push(op);
+			}
+		}
+		var operation;
+		if (opers.length > 1)
+			operation = new Kekule.MacroOperation(opers);
+		else
+			operation = opers[0];
+
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.execOperation(operation);
+		}
+	},
+
+	/** @private */
+	_createNewDataToAtomOperation: function(newData, atom)
+	{
+		if (!newData)
+			return;
+		//console.log('apply setter', newData);
+
+		var nodeClass = newData.nodeClass;
+		var modifiedProps = newData.props;
+		var repItem = newData.repositoryItem;
+		var newNode;
+
+		if (repItem)  // need to apply structure repository item
+		{
+			var repResult = repItem.createObjects(atom) || {};
+			var repObjects = repResult.objects;
+			var transformParams = Kekule.Editor.RepositoryStructureUtils.calcRepObjInitialTransformParams(this.getEditor(), repItem, repResult, atom, null);
+			this.getEditor().transformCoordAndSizeOfObjects(repObjects, transformParams);
+			newNode = repObjects[0];
+			nodeClass = newNode.getClass();
+		}
+
+		if (newData.isUnknownPseudoatom &amp;&amp; !this.getEditorConfigs().getInteractionConfigs().getAllowUnknownAtomSymbol())
+			nodeClass = null;
+
+		if (!nodeClass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.INVALID_ATOM_SYMBOL'));
+			return null;
+		}
+		else
+		{
+			return this._createModificationOperation(atom, newNode, nodeClass, modifiedProps);
+		}
+	},
+	/**
+	 * @private
+	 */
+	_createModificationOperation: function(node, newNode, newNodeClass, modifiedProps)
+	{
+		var newNode;
+		var operGroup, oper;
+		var oldNodeClass = node.getClass();
+		if (newNode &amp;&amp; !newNodeClass)
+			newNodeClass = newNode.getClass();
+		if (newNode || newNodeClass !== oldNodeClass)  // need to replace node
+		{
+			operGroup = new Kekule.MacroOperation();
+			if (!newNode)
+				newNode = new newNodeClass();
+			var tempNode = new Kekule.ChemStructureNode();
+			tempNode.assign(node);
+			newNode.assign(tempNode);  // copy some basic info of old node
+			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode, null, this.getEditor());
+			operGroup.add(operReplace);
+		}
+		else  // no need to replace
+			newNode = node;
+
+		if (modifiedProps)
+		{
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, this.getEditor());
+			if (operGroup)
+				operGroup.add(oper);
+		}
+
+		var operation = operGroup || oper;
+		return operation;
+	}
+});
+
+/**
+ * A modifier to change the bond property of chem connectors.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
+ */
+Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
+/** @lends Kekule.Editor.ObjModifier.Bond# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.Bond',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._activeSelBtnHtmlClass = null;
+		this._defaultBondTypeData = null;
+		this._valueStorage = {};
+
+		var bondTypeData = this.getEditor().getEnabledBondFormData();
+		this._defaultBondTypeData = bondTypeData[0];  // regard the first one as default
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// private
+		this.defineProp('bondSelector', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
+	},
+	/** @ignore */
+	doCreateWidget: function()
+	{
+		var result = new Kekule.Widget.DropDownButton(this.getEditor());
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_BOND_MODIFIER'));
+		result.setText(Kekule.$L('ChemWidgetTexts.CAPTION_BOND_MODIFIER'));
+		result.setShowText(false);
+		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
+		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_BUTTON);
+
+		//var bondSelector = this._createBondSelector(this.getEditor());
+		//result.setDropDownWidget(bondSelector);
+		result.setDropDownWidgetGetter(this._createBondSelector.bind(this));
+
+		if (this._defaultBondTypeData.htmlClass)
+			result.addClassName(this._defaultBondTypeData.htmlClass);  // initialize default bond html class name, for button icon
+
+		return result;
+	},
+
+	/** @private */
+	_filterBond: function(targets)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.Bond)
+			{
+				result.push(target);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getActualModificationBonds: function(targets, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.StructureFragment &amp;&amp; target.isExpanded())  // actually modify children bond in expanded group
+			{
+				var children = this._getActualModificationBonds(target.getNodes(), true);  // cascade child expanded groups
+				AU.pushUnique(result, children);
+				AU.pushUnique(result, target.getConnectors())
+			}
+			else if (target instanceof Kekule.Bond)
+				result.push(target);
+		}
+		if (!byPassfilter)
+			result = this._filterBond(result);
+		return result;
+	},
+
+	/** @private */
+	_createBondSelector: function(parentWidget)
+	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
+		var result = new Kekule.ChemWidget.StructureConnectorSelectPanel(parentWidget);
+		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_BOND_MODIFIER'));
+		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_DROPDOWN);
+		if (this.getEditor().getEnabledBondFormData)
+		{
+			var bondTypeData = this.getEditor().getEnabledBondFormData();
+			result.setBondPropNames(this._getBondComparePropNames(bondTypeData));
+			result.setBondData(bondTypeData);
+		}
+
+		if (this._valueStorage.bondsPropValues)
+		{
+			result.setActiveBondPropValues(this._valueStorage.bondsPropValues);
+		}
+
+		this.setPropStoreFieldValue('bondSelector', result);
+
+		// react to value change of setter
+		var self = this;
+		result.addEventListener('valueChange', function(e){
+			self.applyToTargets();
+			result.dismiss();
+		});
+
+		return result;
+	},
+
+	/** @private */
+	_setActiveBondHtmlClass: function(className)
+	{
+		var oldClassName = this._activeSelBtnHtmlClass;
+		if (oldClassName)
+			this.getWidget().removeClassName(oldClassName);
+		this._activeSelBtnHtmlClass = className;
+		if (!className)
+			className = this._defaultBondTypeData.htmlClass;
+		if (className)
+			this.getWidget().addClassName(className);
+	},
+	/** @private */
+	_extractBondPropValues: function(bond, propNames)
+	{
+		return bond.getPropValues(propNames);
+	},
+	/** @private */
+	_extractBondsPropValues: function(bonds, propNames)
+	{
+		var result;
+		var currPropValues;
+		for (var i = 0, l = bonds.length; i &lt; l; ++i)
+		{
+			currPropValues = this._extractBondPropValues(bonds[i], propNames);
+			if (!result)
+				result = currPropValues;
+			else if (!Kekule.Editor.StructureUtils.isBondPropsMatch(result, currPropValues, propNames))
+			{
+				result = null;
+				break;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getBondComparePropNames: function(bondData)
+	{
+		var result = [];
+		for (var i = 0, l = bondData.length; i &lt; l; ++i)
+		{
+			var data = bondData[i];
+			var propData = data.bondProps;
+			if (propData)
+				AU.pushUnique(result, Kekule.ObjUtils.getOwnedFieldNames(propData));
+		}
+		return result;
+	},
+	/** @private */
+	_getMatchedBondData: function(bondPropValues, bondData, bondPropNames)
+	{
+		if (!bondPropValues)
+			return null;
+		for (var i = 0, l = bondData.length; i &lt; l; ++i)
+		{
+			var data = bondData[i];
+			if (data &amp;&amp; Kekule.Editor.StructureUtils.isBondPropsMatch(bondPropValues, data.bondProps, bondPropNames))
+			{
+				return data;
+			}
+		}
+		return null;
+	},
+
+	/** @ignore */
+	doLoadFromTargets: function(editor, targets)
+	{
+		// filter chem connectors from targets
+		/*
+		var connectors = [];
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.ChemStructureConnector)
+				connectors.push(target);
+		}
+		*/
+		// update bond data retrieved from editor
+		var bondTypeData = this.getEditor().getEnabledBondFormData();
+		this._defaultBondTypeData = bondTypeData[0];  // regard the first one as default
+
+		var connectors = this._getActualModificationBonds(targets);
+		this._valueStorage.connectors = connectors;
+
+		if (this.getBondSelector())
+		{
+			this.getBondSelector().setBondData(bondTypeData);
+			var comparedPropNames = this.getBondSelector().getBondPropNames();
+			var bondPropValues = this._extractBondsPropValues(connectors, comparedPropNames);
+			//console.log('set value', bondPropValues);
+			this.getBondSelector().setActiveBondPropValues(bondPropValues);
+			// copy html class
+			this._setActiveBondHtmlClass(this.getBondSelector().getActiveBondHtmlClass());
+		}
+		else
+		{
+			this._valueStorage.bondPropNames = this._getBondComparePropNames(bondTypeData);
+			this._valueStorage.bondsPropValues = this._extractBondsPropValues(connectors, this._valueStorage.bondPropNames);
+			var matchedBondData = this._getMatchedBondData(this._valueStorage.bondsPropValues, bondTypeData, this._valueStorage.bondPropNames);
+
+			this._setActiveBondHtmlClass(matchedBondData &amp;&amp; matchedBondData.htmlClass);
+		}
+
+		this.getWidget().setDisplayed(!!connectors.length);
+	},
+	/** @ignore */
+	doApplyToTargets: function($super, editor, targets)
+	{
+		var data = this.getBondSelector().getActiveBondPropValues();
+		//console.log('modify data', data);
+		var opers = [];
+		/*
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.ChemStructureConnector)
+			{
+				var op = this._createBondModificationOperation(data, target);
+				if (op)
+					opers.push(op);
+			}
+		}
+		*/
+		var bonds = this._getActualModificationBonds(targets);
+		for (var i = 0, l = bonds.length; i &lt; l; ++i)
+		{
+			var bond = bonds[i];
+			var op = this._createBondModificationOperation(data, bond);
+			if (op)
+				opers.push(op);
+		}
+		var operation;
+		if (opers.length > 1)
+			operation = new Kekule.MacroOperation(opers);
+		else
+			operation = opers[0];
+
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.execOperation(operation);
+		}
+		//console.log('set class name', this.getBondSelector().getActiveBondHtmlClass());
+		this._setActiveBondHtmlClass(this.getBondSelector().getActiveBondHtmlClass());
+	},
+	/** @private */
+	_createBondModificationOperation: function(data, bond)
+	{
+		var op = new Kekule.ChemObjOperation.Modify(bond, data, this.getEditor());
+		return op;
+	}
+});
+
+/**
+ * A modifier to change the charge property of chem nodes.
+ * @class
+ * @augments Kekule.Editor.ObjModifier.ChemStructureModifier
+ */
+Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemStructureModifier,
+/** @lends Kekule.Editor.ObjModifier.Charge# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ObjModifier.Charge',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this._valueStorage = {};
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// private
+		this.defineProp('chargeSelector', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
+	},
+	/** @ignore */
+	doCreateWidget: function()
+	{
+		var result = new Kekule.Widget.DropDownButton(this.getEditor());
+		result.setHint(Kekule.$L('ChemWidgetTexts.HINT_CHARGE_MODIFIER'))
+			.setText(Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN'))
+			.setShowText(true)
+			.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
+		result.addClassName(CCNS.COMPOSER_CHARGE_MODIFIER_BUTTON);
+
+		result.setDropDownWidgetGetter(this._createChargeSelector.bind(this));
+		return result;
+	},
+	/** @private */
+	_createChargeSelector: function(parentWidget)
+	{
+		if (!parentWidget)
+			parentWidget = this.getEditor();
+		var result = new Kekule.ChemWidget.ChargeSelectPanel(parentWidget);
+		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_CHARGE_MODIFIER'));
+		result.addClassName(CCNS.COMPOSER_CHARGE_MODIFIER_DROPDOWN);
+
+		if (Kekule.ObjUtils.notUnset(this._valueStorage.charge))
+		{
+			result.setValue(this._valueStorage.charge);
+		}
+
+		this.setPropStoreFieldValue('chargeSelector', result);
+
+		// react to value change of setter
+		var self = this;
+		result.addEventListener('valueChange', function(e){
+			self.applyToTargets();
+			result.dismiss();
+		});
+
+		return result;
+	},
+
+	/** @private */
+	_filterStructureNodes: function(targets)
+	{
+		var nodes = [];
+		for (var i = 0, l = targets.length; i &lt; l; ++i)
+		{
+			var target = targets[i];
+			if (target instanceof Kekule.ChemStructureNode &amp;&amp; target.getCharge)
+			{
+				nodes.push(target);
+			}
+		}
+		return nodes;
+	},
+	/** @private */
+	_getActualModificationNodes: function(nodes, byPassfilter)
+	{
+		var result = [];
+		for (var i = 0, l = nodes.length; i &lt; l; ++i)
+		{
+			var node = nodes[i];
+			if (node instanceof Kekule.StructureFragment &amp;&amp; node.isExpanded())  // actually modify children node in expanded group
+			{
+				var children = this._getActualModificationNodes(node.getNodes(), true);
+				AU.pushUnique(result, children);
+			}
+			else
+				result.push(node);
+		}
+		if (!byPassfilter)
+			result = this._filterStructureNodes(result);
+		return result;
+	},
+
+	/** @private */
+	_getChargeOfNodes: function(nodes)
+	{
+		var result = null;
+		for (var i = 0, l = nodes.length; i &lt; l; ++i)
+		{
+			var n = nodes[i];
+			if (n.getCharge)
+			{
+				var c = n.getCharge() || 0;
+				if (result === null)
+					result = c;
+				else if (result !== c)
+					return null;
+			}
+		}
+		return result;
+	},
+
+	/** @ignore */
+	doLoadFromTargets: function(editor, targets)
+	{
+		// filter chem nodes from targets
+		//var nodes = this._filterStructureNodes(targets);
+		var nodeLabel;
+		var nodes = this._getActualModificationNodes(targets);
+		var showModifier = (nodes.length >= 0) &amp;&amp; (nodes.length &lt;= 1);  // display modifier when only one node is selected
+
+		if (showModifier)
+		{
+			var charge = this._getChargeOfNodes(nodes);
+			this._valueStorage.charge = charge;
+
+			if (this.getChargeSelector())
+			{
+				this.getChargeSelector().setValue(charge);
+			}
+
+			var caption;
+			if (charge)
+			{
+				var sSign = (charge > 0) ? Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_POSITIVE') : Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NEGATIVE');
+				var c = Kekule.NumUtils.toDecimals(charge, 1);  // reserve 1 digit after point if it is not a integer charge
+				caption = Math.abs(c) + sSign;
+			}
+			else
+				caption = Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_UNKNOWN');
+			this.getWidget().setText(caption).setShowText(true);
+		}
+		this.getWidget().setDisplayed(showModifier);
+	},
+	/** @ignore */
+	doApplyToTargets: function($super, editor, targets)
+	{
+		var charge = this.getChargeSelector().getValue();
+		var opers = [];
+		var nodes = this._getActualModificationNodes(targets);
+		var editor = this.getEditor();
+		for (var i = 0, l = nodes.length; i &lt; l; ++i)
+		{
+			var target = nodes[i];
+			if (target instanceof Kekule.ChemStructureNode)
+			{
+				var op = new Kekule.ChemObjOperation.Modify(target, {'charge': charge}, editor);
+				if (op)
+					opers.push(op);
+			}
+		}
+		var operation;
+		if (opers.length > 1)
+			operation = new Kekule.MacroOperation(opers);
+		else
+			operation = opers[0];
+
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.execOperation(operation);
+		}
+	}
+});
+
+var OMM = Kekule.Editor.ObjModifierManager;
+OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Atom]);
+OMM.register(Kekule.ChemStructureNode, [Kekule.Editor.ObjModifier.Charge]);
+OMM.register([Kekule.Bond, Kekule.StructureFragment], [Kekule.Editor.ObjModifier.Bond]); // can change child bonds of structure fragment
+
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.ChemObjOperation.Add.html">Add</a></li><li><a href="Kekule.ChemObjOperation.Base.html">Base</a></li><li><a href="Kekule.ChemObjOperation.Modify.html">Modify</a></li><li><a href="Kekule.ChemObjOperation.MoveAndResize.html">MoveAndResize</a></li><li><a href="Kekule.ChemObjOperation.MoveTo.html">MoveTo</a></li><li><a href="Kekule.ChemObjOperation.Remove.html">Remove</a></li><li><a href="Kekule.ChemStructOperation.AddConnector.html">AddConnector</a></li><li><a href="Kekule.ChemStructOperation.AddNode.html">AddNode</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectors.html">MergeConnectors</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsBase.html">MergeConnectorsBase</a></li><li><a href="Kekule.ChemStructOperation.MergeConnectorsPreview.html">MergeConnectorsPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeNodes.html">MergeNodes</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesBase.html">MergeNodesBase</a></li><li><a href="Kekule.ChemStructOperation.MergeNodesPreview.html">MergeNodesPreview</a></li><li><a href="Kekule.ChemStructOperation.MergeStructFragment.html">MergeStructFragment</a></li><li><a href="Kekule.ChemStructOperation.RemoveConnector.html">RemoveConnector</a></li><li><a href="Kekule.ChemStructOperation.RemoveNode.html">RemoveNode</a></li><li><a href="Kekule.ChemStructOperation.ReplaceNode.html">ReplaceNode</a></li><li><a href="Kekule.ChemStructOperation.SplitStructFragment.html">SplitStructFragment</a></li><li><a href="Kekule.ChemStructOperation.StandardizeStructFragment.html">StandardizeStructFragment</a></li><li><a href="Kekule.ChemWidget.AbstractUIMarker.html">AbstractUIMarker</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBallStick.html">ActionDisplayerChangeMolDisplayTypeBallStick</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase.html">ActionDisplayerChangeMolDisplayTypeBase</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase2D.html">ActionDisplayerChangeMolDisplayTypeBase2D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeBase3D.html">ActionDisplayerChangeMolDisplayTypeBase3D</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeCondensed.html">ActionDisplayerChangeMolDisplayTypeCondensed</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSkeletal.html">ActionDisplayerChangeMolDisplayTypeSkeletal</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.html">ActionDisplayerChangeMolDisplayTypeSpaceFill</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSticks.html">ActionDisplayerChangeMolDisplayTypeSticks</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeWire.html">ActionDisplayerChangeMolDisplayTypeWire</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerClear.html">ActionDisplayerClear</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerHideHydrogens.html">ActionDisplayerHideHydrogens</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadData.html">ActionDisplayerLoadData</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerLoadFile.html">ActionDisplayerLoadFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerReset.html">ActionDisplayerReset</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerResetZoom.html">ActionDisplayerResetZoom</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerSaveFile.html">ActionDisplayerSaveFile</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomIn.html">ActionDisplayerZoomIn</a></li><li><a href="Kekule.ChemWidget.ActionDisplayerZoomOut.html">ActionDisplayerZoomOut</a></li><li><a href="Kekule.ChemWidget.ActionOnDisplayer.html">ActionOnDisplayer</a></li><li><a href="Kekule.ChemWidget.ActionOnViewer.html">ActionOnViewer</a></li><li><a href="Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub.html">ActionViewerChangeMolDisplayTypeStub</a></li><li><a href="Kekule.ChemWidget.ActionViewerEdit.html">ActionViewerEdit</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase.html">ActionViewerRotateBase</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase2D.html">ActionViewerRotateBase2D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateBase3D.html">ActionViewerRotateBase3D</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateLeft.html">ActionViewerRotateLeft</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateRight.html">ActionViewerRotateRight</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateX.html">ActionViewerRotateX</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateY.html">ActionViewerRotateY</a></li><li><a href="Kekule.ChemWidget.ActionViewerRotateZ.html">ActionViewerRotateZ</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerConfigs.html">ChemObjDisplayerConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayerIOConfigs.html">ChemObjDisplayerIOConfigs</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.html">ChemObjInserter</a></li><li><a href="Kekule.ChemWidget.ChemObjInserter.Configurator.html">Configurator</a></li><li><a href="Kekule.ChemWidget.ComponentWidgetNames.html">ComponentWidgetNames</a></li><li><a href="Kekule.ChemWidget.LoadDataDialog.html">LoadDataDialog</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker.html">MetaShapeUiMarker</a></li><li><a href="Kekule.ChemWidget.MetaShapeUiMarker2DRenderer.html">MetaShapeUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html">PeriodicTable</a></li><li><a href="Kekule.ChemWidget.StructureTreeView.html">StructureTreeView</a></li><li><a href="Kekule.ChemWidget.TextUiMarker.html">TextUiMarker</a></li><li><a href="Kekule.ChemWidget.TextUiMarker2DRenderer.html">TextUiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarker2DRenderer.html">UiMarker2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection.html">UiMarkerCollection</a></li><li><a href="Kekule.ChemWidget.UiMarkerCollection2DRenderer.html">UiMarkerCollection2DRenderer</a></li><li><a href="Kekule.ChemWidget.UiMarkersRenderer.html">UiMarkersRenderer</a></li><li><a href="Kekule.ChemWidget.Viewer.html">Viewer</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html">Viewer2D</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html">Viewer3D</a></li><li><a href="Kekule.ChemWidget.ViewerBasicInteractionController.html">ViewerBasicInteractionController</a></li><li><a href="Kekule.ChemWidget.ViewerGrid.html">ViewerGrid</a></li><li><a href="Kekule.ChemWidget.ViewerGrid2D.html">ViewerGrid2D</a></li><li><a href="Kekule.ChemWidget.ViewerGrid3D.html">ViewerGrid3D</a></li><li><a href="Kekule.Editor.AbstractRepositoryItem.html">AbstractRepositoryItem</a></li><li><a href="Kekule.Editor.ActionCloneSelection.html">ActionCloneSelection</a></li><li><a href="Kekule.Editor.ActionComposerSetIaController.html">ActionComposerSetIaController</a></li><li><a href="Kekule.Editor.ActionComposerToggleInspector.html">ActionComposerToggleInspector</a></li><li><a href="Kekule.Editor.ActionCopySelection.html">ActionCopySelection</a></li><li><a href="Kekule.Editor.ActionCutSelection.html">ActionCutSelection</a></li><li><a href="Kekule.Editor.ActionEditorNewDoc.html">ActionEditorNewDoc</a></li><li><a href="Kekule.Editor.ActionEditorRedo.html">ActionEditorRedo</a></li><li><a href="Kekule.Editor.ActionEditorUndo.html">ActionEditorUndo</a></li><li><a href="Kekule.Editor.ActionOnComposer.html">ActionOnComposer</a></li><li><a href="Kekule.Editor.ActionOnComposerAdv.html">ActionOnComposerAdv</a></li><li><a href="Kekule.Editor.ActionOnEditor.html">ActionOnEditor</a></li><li><a href="Kekule.Editor.ActionOperUtils.html">ActionOperUtils</a></li><li><a href="Kekule.Editor.ActionPaste.html">ActionPaste</a></li><li><a href="Kekule.Editor.ActionToggleSelectState.html">ActionToggleSelectState</a></li><li><a href="Kekule.Editor.ArrowLineIaController.html">ArrowLineIaController</a></li><li><a href="Kekule.Editor.AttachedMarkerIaController.html">AttachedMarkerIaController</a></li><li><a href="Kekule.Editor.BaseEditor.html">BaseEditor</a></li><li><a href="Kekule.Editor.BaseEditorConfigs.html">BaseEditorConfigs</a></li><li><a href="Kekule.Editor.BaseEditorIaController.html">BaseEditorIaController</a></li><li><a href="Kekule.Editor.BasicEraserIaController.html">BasicEraserIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.html">BasicManipulationIaController</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.ManipulationType.html">ManipulationType</a></li><li><a href="Kekule.Editor.BasicManipulationIaController.State.html">State</a></li><li><a href="Kekule.Editor.BasicMolEraserIaController.html">BasicMolEraserIaController</a></li><li><a href="Kekule.Editor.BasicMolManipulationIaController.html">BasicMolManipulationIaController</a></li><li><a href="Kekule.Editor.ChemSpaceConfigs.html">ChemSpaceConfigs</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html">ChemSpaceEditor</a></li><li><a href="Kekule.Editor.ChemSpaceEditorConfigs.html">ChemSpaceEditorConfigs</a></li><li><a href="Kekule.Editor.ClientDragScrollIaController.html">ClientDragScrollIaController</a></li><li><a href="Kekule.Editor.Composer.html">Composer</a></li><li><a href="Kekule.Editor.Composer.Configurator.html">Configurator</a></li><li><a href="Kekule.Editor.Composer.Settings.html">Settings</a></li><li><a href="Kekule.Editor.ComposerDialog.html">ComposerDialog</a></li><li><a href="Kekule.Editor.ComposerFrame.html">ComposerFrame</a></li><li><a href="Kekule.Editor.ComposerObjModifierToolbar.html">ComposerObjModifierToolbar</a></li><li><a href="Kekule.Editor.ComposerStyleToolbar.html">ComposerStyleToolbar</a></li><li><a href="Kekule.Editor.ContentBlockIaController.html">ContentBlockIaController</a></li><li><a href="Kekule.Editor.CoordSys.html">CoordSys</a></li><li><a href="Kekule.Editor.EditorNexus.html">EditorNexus</a></li><li><a href="Kekule.Editor.FormulaIaController.html">FormulaIaController</a></li><li><a href="Kekule.Editor.IaControllerManager.html">IaControllerManager</a></li><li><a href="Kekule.Editor.ImageBlockIaController.html">ImageBlockIaController</a></li><li><a href="Kekule.Editor.InteractionConfigs.html">InteractionConfigs</a></li><li><a href="Kekule.Editor.MolAtomIaController.html">MolAtomIaController</a></li><li><a href="Kekule.Editor.MolAtomIaController_OLD.html">MolAtomIaController_OLD</a></li><li><a href="Kekule.Editor.MolBondIaController.html">MolBondIaController</a></li><li><a href="Kekule.Editor.MolBondIaController.State.html">State</a></li><li><a href="Kekule.Editor.MolChainRepositoryItem2D.html">MolChainRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolFlexChainIaController.html">MolFlexChainIaController</a></li><li><a href="Kekule.Editor.MolFlexRingIaController.html">MolFlexRingIaController</a></li><li><a href="Kekule.Editor.MolFlexStructureIaController.html">MolFlexStructureIaController</a></li><li><a href="Kekule.Editor.MolNodeChargeIaController.html">MolNodeChargeIaController</a></li><li><a href="Kekule.Editor.MolRepositoryItem2D.html">MolRepositoryItem2D</a></li><li><a href="Kekule.Editor.MolRingIaController.html">MolRingIaController</a></li><li><a href="Kekule.Editor.MolRingRepositoryItem2D.html">MolRingRepositoryItem2D</a></li><li><a href="Kekule.Editor.ObjModifier.Atom.html">Atom</a></li><li><a href="Kekule.Editor.ObjModifier.Base.html">Base</a></li><li><a href="Kekule.Editor.ObjModifier.BaseRenderOptionModifier.html">BaseRenderOptionModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Bond.html">Bond</a></li><li><a href="Kekule.Editor.ObjModifier.Charge.html">Charge</a></li><li><a href="Kekule.Editor.ObjModifier.ChemStructureModifier.html">ChemStructureModifier</a></li><li><a href="Kekule.Editor.ObjModifier.Color.html">Color</a></li><li><a href="Kekule.Editor.ObjModifier.RichText.html">RichText</a></li><li><a href="Kekule.Editor.PathGlyphRepositoryItem2D.html">PathGlyphRepositoryItem2D</a></li><li><a href="Kekule.Editor.RepositoryIaController.html">RepositoryIaController</a></li><li><a href="Kekule.Editor.RepositoryItemManager.html">RepositoryItemManager</a></li><li><a href="Kekule.Editor.RepositoryStructureFragmentIaController.html">RepositoryStructureFragmentIaController</a></li><li><a href="Kekule.Editor.SelectIaController.html">SelectIaController</a></li><li><a href="Kekule.Editor.StoredStructFragmentRepositoryItem2D.html">StoredStructFragmentRepositoryItem2D</a></li><li><a href="Kekule.Editor.StoredSubgroupRepositoryItem2D.html">StoredSubgroupRepositoryItem2D</a></li><li><a href="Kekule.Editor.StructureConfigs.html">StructureConfigs</a></li><li><a href="Kekule.Editor.StructureInsertIaController.html">StructureInsertIaController</a></li><li><a href="Kekule.Editor.StructureUtils.html">StructureUtils</a></li><li><a href="Kekule.Editor.StyleSetterConfigs.html">StyleSetterConfigs</a></li><li><a href="Kekule.Editor.TextBlockIaController.html">TextBlockIaController</a></li><li><a href="Kekule.Editor.TrackInputIaController.html">TrackInputIaController</a></li><li><a href="Kekule.Editor.TrackLayoutOptimizer.html">TrackLayoutOptimizer</a></li><li><a href="Kekule.Editor.TrackParser.html">TrackParser</a></li><li><a href="Kekule.Editor.UiMarkerConfigs.html">UiMarkerConfigs</a></li><li><a href="Kekule.PropertyEditor.ChemCoordEditor.html">ChemCoordEditor</a></li><li><a href="Kekule.PropertyEditor.ChemCoordSizeFieldEditor.html">ChemCoordSizeFieldEditor</a></li><li><a href="Kekule.PropertyEditor.ChemIdEditor.html">ChemIdEditor</a></li><li><a href="Kekule.PropertyEditor.ChemOptionObjectEditor.html">ChemOptionObjectEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender2DOptionsEditor.html">ChemRender2DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemRender3DOptionsEditor.html">ChemRender3DOptionsEditor</a></li><li><a href="Kekule.PropertyEditor.ChemSizeEditor.html">ChemSizeEditor</a></li><li><a href="Kekule.PropertyEditor.GlyphPathParamsEditor.html">GlyphPathParamsEditor</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.ChemWidget.ChargeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.ChemObjDisplayer.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:deselect">deselect</a></li><li><a href="Kekule.ChemWidget.PeriodicTable.html#event:select">select</a></li><li><a href="Kekule.ChemWidget.StructureConnectorSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSelectPanel.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueChange">valueChange</a></li><li><a href="Kekule.ChemWidget.StructureNodeSetter.html#event:valueSelect">valueSelect</a></li><li><a href="Kekule.ChemWidget.Viewer2D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer3D.html#event:load">load</a></li><li><a href="Kekule.ChemWidget.Viewer.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.BaseEditor.html#event:selectionChange">selectionChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjChanged">editObjChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsChanged">editObjsChanged</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:editObjsUpdated">editObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:load">load</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operChange">operChange</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operHistoryClear">operHistoryClear</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPop">operPop</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operPush">operPush</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operRedo">operRedo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:operUndo">operUndo</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectedObjsUpdated">selectedObjsUpdated</a></li><li><a href="Kekule.Editor.ChemSpaceEditor.html#event:selectionChange">selectionChange</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.ChemObjOperation.html">ChemObjOperation</a></li><li><a href="Kekule.ChemStructOperation.html">ChemStructOperation</a></li><li><a href="Kekule.ChemWidget.Editor.html">Editor</a></li><li><a href="Kekule.Editor.html">Editor</a></li><li><a href="Kekule.Editor.ObjModifier.html">ObjModifier</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:55:12 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

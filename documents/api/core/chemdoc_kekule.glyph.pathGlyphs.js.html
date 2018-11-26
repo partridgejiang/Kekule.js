@@ -45,7 +45,7 @@
 /**
  * Represent an node in glyph path.
  * @class
- * @augments Kekule.StructureAbstractNode
+ * @augments Kekule.BaseStructureNode
  * @param {String} id Id of this node.
  * @param {String} nodeType Type of this glyph node. Value from {@link Kekule.Glyph.NodeType}.
  * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
@@ -74,6 +74,12 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 			'dataType': DataType.STRING,
 			'scope': Class.PropertyScope.PUBLIC
 		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	}
 });
 
@@ -88,12 +94,89 @@ Kekule.Glyph.NodeType = {
 	*/
 	/** Location point, do not need to draw. Default value of node type. */
 	LOCATION: 'location',
+	/** Control point, control the shape of glyph, do not need to draw. */
+	CONTROLLER: 'controller',
 	/** Do not need to draw and can not manipulate in editor. */
 	HIDDEN: 'hidden'
 };
 
 /**
- * Implements the concept of a connections between two or more structure nodes.
+ * Represent control node of glyph path connector.
+ * @class
+ * @augments Kekule.BaseStructureNode
+ * @param {String} id Id of this node.
+ * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
+ *
+ * @property {String} nodeType Type of this glyph node.
+ */
+Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNode,
+/** @lends Kekule.Glyph.PathGlyphConnectorControlNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphConnectorControlNode',
+	initialize: function($super, id, coord2D, coord3D)
+	{
+		$super(id);
+		if (coord2D)
+			this.setCoord2D(coord2D);
+		if (coord3D)
+			this.setCoord3D(coord3D);
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+	/** @private */
+	getAutoIdPrefix: function()
+	{
+		return 'cn';
+	},
+	/** @private */
+	getParentConnector: function()
+	{
+		var p = this.getParent();
+		if (p &amp;&amp; p instanceof Kekule.Glyph.PathGlyphConnector)
+			return p;
+		else
+			return null;
+	}
+});
+
+/**
+ * Enumeration of path types.
+ * @class
+ */
+Kekule.Glyph.PathType = {
+	/** A straight line, may contains arrow at beginning and ending. */
+	LINE: 'L',
+	/** A arc path */
+	ARC: 'A'
+};
+
+/**
+ * Enumeration of path end arrow types.
+ * @class
+ */
+Kekule.Glyph.ArrowType = {
+	NONE: null,
+	OPEN: 'open',
+	TRIANGLE: 'triangle'
+};
+/**
+ * Enumeration of arrow location around path.
+ * @class
+ */
+Kekule.Glyph.ArrowSide = {
+	BOTH: 0,  // default
+	SINGLE: 1,  // one one side of path
+	REVERSED: -1   // one side but at the different side of SINGLE
+};
+
+/**
+ * General connector between glyph nodes.
  * @class
  * @augments Kekule.BaseStructureConnector
  * @param {String} id Id of this connector.
@@ -123,6 +206,7 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	{
 		$super(id, connectedObjs);
 		this.setPathType(pathType);
+		//this.setControlPoints([new Kekule.Glyph.PathGlyphConnectorControlNode(null, {x: 0.1, y: 0.1})]);  // test
 	},
 	/** @private */
 	initProperties: function()
@@ -153,36 +237,347 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 					this.setPropStoreFieldValue('pathParams', Object.extend({}, value, true));
 			}
 		});
+		this.defineProp('controlPoints', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLISHED,
+			'getter': function(autoCreate)
+			{
+				var result = this.getPropStoreFieldValue('controlPoints');
+				if (!result &amp;&amp; autoCreate)
+				{
+					result = [];
+					this.setPropStoreFieldValue('controlPoints', result);
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				this.clearControlPoints();
+				this.setPropStoreFieldValue('controlPoints', value);
+				this._updateControlPointsOwner();
+				this._updateControlPointsParent();
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+
+	// methods about coords
+	// since connector has child control points, it must implement related coord method for the children to get abs coord
+	/** @private */
+	getAbsCoord2D: function(allowCoordBorrow)
+	{
+		return this.getAbsCoordOfMode(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+	},
+	/** @private */
+	getAbsCoord3D: function(allowCoordBorrow)
+	{
+		return this.getAbsCoordOfMode(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+	},
+	/** @private */
+	getAbsCoordOfMode: function(coordMode, allowCoordBorrow)
+	{
+		var CU = Kekule.CoordUtils;
+		// coord is based on connected objects
+		var sum = {'x': 0, 'y': 0};
+		var count = 0;
+		for (var i = 0, l = this.getConnectedObjCount(); i &lt; l; ++i)
+		{
+			var obj = this.getConnectedObjAt(i);
+			if (obj &amp;&amp; obj.getAbsCoordOfMode)
+			{
+				var coord = obj.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+				if (coord)
+				{
+					++count;
+					sum = CU.add(sum, coord);
+				}
+			}
+		}
+		return CU.divide(sum, count);
+	},
+
+	// methods about children
+	/**
+	 * Remove childObj from connector.
+	 * @param {Variant} childObj A child control point.
+	 * @param {Bool} cascadeRemove Whether remove related objects (e.g., bond connected to an atom).
+	 * @param {Bool} freeRemoved Whether free all removed objects.
+	 */
+	removeChildObj: function(childObj, cascadeRemove, freeRemoved)
+	{
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			var index = ps.indexOf(childObj);
+			if (index >= 0)
+			{
+				ps.splice(index, 1);
+				if (childObj.setOwner)
+					childObj.setOwner(null);
+				if (childObj.setParent)
+					childObj.setParent(null);
+				this.notifyPropSet('controlPoints', this.getControlPoints());
+			}
+		}
+	},
+	/**
+	 * Remove child obj directly.
+	 * @param {Variant} childObj A child node or connector.
+	 */
+	removeChild: function($super, obj)
+	{
+		return this.removeChildObj(obj) || $super(obj);
+	},
+
+	/**
+	 * Check if childObj is a child node or connector of this fragment's ctab.
+	 * @param {Kekule.ChemObject} childObj
+	 * @returns {Bool}
+	 */
+	hasChildObj: function(childObj)
+	{
+		var ps = this.getControlPoints();
+		return ps &amp;&amp; ps.indexOf(childObj) >= 0;
+	},
+
+	/**
+	 * Returns next sibling node or connector to childObj.
+	 * @param {Variant} childObj Node or connector.
+	 * @returns {Variant}
+	 */
+	getNextSiblingOfChild: function(childObj)
+	{
+		var index = this.indexOfChild(childObj);
+		++index;
+		return this.getChildAt(index);
+	},
+
+	/**
+	 * Get count of child objects.
+	 * @returns {Int}
+	 */
+	getChildCount: function()
+	{
+		var ps = this.getControlPoints();
+		return (ps &amp;&amp; ps.length) || 0;
+	},
+	/**
+	 * Get child control point at index.
+	 * @param {Int} index
+	 * @returns {Variant}
+	 */
+	getChildAt: function(index)
+	{
+		var ps = this.getControlPoints() || [];
+		return ps[index];
+	},
+	/**
+	 * Get the index of obj in children list.
+	 * @param {Variant} obj
+	 * @returns {Int} Index of obj or -1 when not found.
+	 */
+	indexOfChild: function(obj)
+	{
+		var ps = this.getControlPoints();
+		return ps? ps.indexOf(obj): -1;
+	},
+
+
+	/** @private */
+	_updateControlPointsOwner: function(owner)
+	{
+		if (!owner)
+			owner = this.getOwner();
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			for (var i = 0, l = ps.length; i &lt; l; ++i)
+			{
+				var p = ps[i];
+				if (p.setOwner)
+					p.setOwner(owner);
+			}
+		}
+	},
+	/** @private */
+	_updateControlPointsParent: function(parent)
+	{
+		if (!parent)
+			parent = this;
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			for (var i = 0, l = ps.length; i &lt; l; ++i)
+			{
+				var p = ps[i];
+				if (p.setParent)
+					p.setParent(parent);
+			}
+		}
+	},
+
+	/**
+	 * Clear all control points of this connector.
+	 * @private
+	 */
+	clearControlPoints: function()
+	{
+		var oldPoints = this.getControlPoints();
+		if (oldPoints)
+			oldPoints = Kekule.ArrayUtils.clone(oldPoints);
+
+		this.setPropStoreFieldValue('controlPoints', null);
+
+		if (oldPoints)
+		{
+			for (var i = 0, l = oldPoints.length; i &lt; l; ++i)
+			{
+				var p = oldPoints[i];
+				if (p.setOwner)
+					p.setOwner(null);
+				if (p.setParent)
+					p.setParent(null);
+			}
+		}
+
+		this.notifyPropSet('controlPoints', null);
+		return this;
+	}
+});
+
+
+/**
+ * Control node of glyph arc path connector.
+ * @class
+ * @augments Kekule.Glyph.PathGlyphConnectorControlNode
+ *
+ * @property {String} nodeType Type of this glyph node.
+ */
+Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGlyphConnectorControlNode,
+/** @lends Kekule.Glyph.PathGlyphArcConnectorControlNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnectorControlNode',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('distanceToChord', {
+			'dataType': DataType.FLOAT
+		});
+	},
+
+	/** @ignore */
+	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var CU = Kekule.CoordUtils;
+		// coord 2D is determinated by distance to chord
+		var d = this.getDistanceToChord();
+		if (Kekule.ObjUtils.notUnset(d))
+		{
+			var connector = this.getParentConnector();
+			if (connector)
+			{
+				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
+				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+				if (arcStartCoord &amp;&amp; arcEndCoord)
+				{
+					//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
+					var chordVector = CU.substract(arcEndCoord, arcStartCoord);
+					var signX = Math.sign(chordVector.x);
+					var signY = Math.sign(chordVector.y);
+					if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
+					{
+						result = {'x': - d * signY, 'y': 0}
+					}
+					else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
+					{
+						result = {'x': 0, 'y': d * signX};
+					}
+					else
+					{
+						var chordSlope = chordVector.y / chordVector.x;
+						var refSlope = -1 / chordSlope;
+						var result = {'x': -signY * d / Math.sqrt(1 + Math.sqr(refSlope))};
+						result.y = result.x * refSlope;
+					}
+					//console.log(d, arcStartCoord, arcEndCoord);
+
+					return result;
+				}
+			}
+		}
+
+		return $super(allowCoordBorrow, allowCreateNew);
+	},
+
+	/** @ignore */
+	doSetCoord2D: function($super, value)
+	{
+		var CU = Kekule.CoordUtils;
+		// the control point of arc should alway be at the middle of arc, so do this constraint
+		var oldCoord = this.getCoord2D();
+		var connector = this.getParentConnector();
+		if (connector)
+		{
+			var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
+			var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+			var baseVector = CU.substract(arcEndCoord, arcStartCoord);
+			var baseAngle = Math.atan2(baseVector.y, baseVector.x);
+
+			var valueDeltaVector = CU.substract(value, oldCoord);
+			var valueDeltaAngle = Math.atan2(valueDeltaVector.y, valueDeltaVector.x);
+			var valueDeltaLength = CU.getDistance(value, oldCoord);
+
+			var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
+			var newDistanceToChord = (this.getDistanceToChord() || 0) + actualMovement;
+			this.setDistanceToChord(newDistanceToChord);
+			/*
+			var angle = Math.PI / 2 - baseAngle;
+			var actualDelta = {'x': actualMovement * Math.cos(angle), 'y': actualMovement * Math.sin(angle)};
+			var newCoord = CU.add(oldCoord, actualDelta);
+
+			return $super(newCoord);
+			*/
+			return;
+		}
+
+		return $super(value);
 	}
 });
 
 /**
- * Enumeration of path types.
+ * Arc shaped connector between glyph nodes.
  * @class
+ * @augments Kekule.Glyph.PathGlyphConnector
+ * @param {String} id Id of this connector.
+ * @param {Array} connectedObjs Objects ({@link Kekule.ChemStructureObject}) connected by connected, usually a connector connects two nodes.
  */
-Kekule.Glyph.PathType = {
-	/** A straight line, may contains arrow at beginning and ending. */
-	LINE: 'L'
-};
-
-/**
- * Enumeration of path end arrow types.
- * @class
- */
-Kekule.Glyph.ArrowType = {
-	NONE: null,
-	OPEN: 'open',
-	TRIANGLE: 'triangle'
-};
-/**
- * Enumeration of arrow location around path.
- * @class
- */
-Kekule.Glyph.ArrowSide = {
-	BOTH: 0,  // default
-	SINGLE: 1,  // one one side of path
-	REVERSED: -1   // one side but at the different side of SINGLE
-};
+Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnector,
+/** @lends Kekule.Glyph.PathGlyphArcConnector# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnector',
+	/** @constructs */
+	initialize: function($super, id, connectedObjs)
+	{
+		$super(id, Kekule.Glyph.PathType.ARC, connectedObjs);
+		// add control point to control the arc
+		this.setControlPoints([new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0})]);
+	},
+	/**
+	 * Returns the arc control point.
+	 * @returns {Kekule.Glyph.PathGlyphArcConnectorControlNode}
+	 */
+	getControlPoint: function()
+	{
+		return (this.getControlPoints() || [])[0]
+	}
+});
 
 /**
  * A glyph defined by a series of nodes and connectors (paths).
@@ -365,7 +760,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		return (!!this.getPropStoreFieldValue('ctab'));
 	},
 	/**
-	 * Calculate the box to fit all sub molecule.
+	 * Calculate the box to fit whole glyph.
 	 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
@@ -685,8 +1080,10 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	{
 		if (this.hasCtab())
 			return this.getCtab().insertBefore(obj, refChild);
+		/*
 		else
 			console.log('no ctab');
+		*/
 	},
 
 	/**
@@ -718,9 +1115,9 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**
@@ -798,13 +1195,13 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:23 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

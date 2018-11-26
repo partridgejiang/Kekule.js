@@ -37,18 +37,194 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.6.0',
+	VERSION: '0.8.1.18112300',
+	/**
+	 * A flag that indicate whether all essential Kekule modules are loaded into document.
+	 * @ignore
+	 */
+	LOADED: false,
+	/**
+	 * An array of functions that need be called after load all Kekule modules.
+	 * @private
+	 */
+	_afterLoadSysProcedures: [],
+	/**
+	 * An array of user functions that need be called after load all Kekule modules.
+	 * @private
+	 */
+	_afterLoadUserProcedures: [],
 	// Whether auto find title and description text for object property
 	/** @ignore */
 	PROP_AUTO_TITLE: true
 };
 
 /**
+ * Called when all essential modules is loaded.
+ * User should not call this function directly.
+ * @private
+ */
+Kekule._loaded = function()
+{
+	if (Kekule.LOADED)
+		return;
+	Kekule.LOADED = true;
+	var procs = Kekule._afterLoadSysProcedures;
+	while (procs.length)
+	{
+		var proc = procs.shift();
+		if (proc)
+			proc();
+	}
+
+	var procs = Kekule._afterLoadUserProcedures;
+	while (procs.length)
+	{
+		var proc = procs.shift();
+		if (proc)
+			proc();
+	}
+
+	// at last try fire a custom event
+	var doc = Kekule.$jsRoot &amp;&amp; Kekule.$jsRoot.document;
+	if (doc &amp;&amp; doc.createEvent &amp;&amp; doc.body &amp;&amp; doc.body.dispatchEvent)
+	{
+		var event = doc.createEvent('Event');
+		event.initEvent('kekuleload', true, true);
+		doc.body.dispatchEvent(event);
+	}
+};
+/**
+ * Return whether the whole lib is loaded.
+ * @returns {boolean}
+ * @private
+ */
+Kekule._isLoaded = function()
+{
+	return Kekule.LOADED;
+};
+/**
+ * Register system procedure that need to be called after all modules are loaded.
+ * User should not call this method directly.
+ * @param {Func} proc
+ * @private
+ */
+Kekule._registerAfterLoadSysProc = function(proc)
+{
+	if (proc)
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadSysProcedures.push(proc);
+	}
+};
+/**
+ * Register procedure that need to be called after all modules are loaded and all initial operations has been done.
+ * @param {Func} proc
+ * @private
+ */
+Kekule._ready = function(proc)
+{
+	if (proc)
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadUserProcedures.push(proc);
+	}
+};
+Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
+
+/**
  * Root object of JavaScript environment, usually window.
  */
-var $jsRoot = this;
+Kekule.$jsRoot = this;
+/**
+ * Root document of JavaScript environment.
+ * Can be null in Node.js.
+ */
+Kekule.$document = this.document || null;
 
-Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
+Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+if (Kekule.scriptSrcInfo &amp;&amp; Kekule.scriptSrcInfo.language)  // force Language
+{
+	Kekule.language = Kekule.scriptSrcInfo.language;
+}
+if (!Kekule.scriptSrcInfo &amp;&amp; Kekule.$jsRoot.document)  // script info not found, may be use Kekule.min.js directly
+{
+	Kekule.scriptSrcInfo = (function ()
+	{
+		var entranceSrc = /^(.*\/?)kekule\..*\.js(\?.*)?$/;
+		var scriptElems = document.getElementsByTagName('script');
+		var loc;
+		for (var i = scriptElems.length - 1; i >= 0; --i)
+		{
+			var elem = scriptElems[i];
+			if (elem.src)
+			{
+				var matchResult = elem.src.match(entranceSrc);
+				if (matchResult)
+				{
+					var pstr = matchResult[2];
+					if (pstr)
+						pstr = pstr.substr(1);  // eliminate starting '?'
+					var result = {
+						'src': elem.src,
+						'path': matchResult[1],
+						'paramStr': pstr,
+						'useMinFile': true
+					};
+					return result;
+				}
+			}
+		}
+		return null;
+	})();
+}
+
+Kekule.getScriptPath = function()
+{
+	return Kekule.scriptSrcInfo.path;
+};
+Kekule.getScriptSrc = function()
+{
+	return Kekule.scriptSrcInfo.src;
+};
+Kekule.getStyleSheetPath = function()
+{
+	//var cssFileName = 'themes/default/kekule.css';
+	var cssPath;
+	var scriptInfo = Kekule.scriptSrcInfo;
+	if (scriptInfo.useMinFile)
+		cssPath = scriptInfo.path;
+	else
+		cssPath = scriptInfo.path + 'widgets/';
+	return cssPath;
+};
+Kekule.getStyleSheetUrl = function()
+{
+	var path = Kekule.getStyleSheetPath();
+	return path + 'themes/default/kekule.css';
+};
+
+if (Kekule.$jsRoot &amp;&amp; Kekule.$jsRoot.addEventListener &amp;&amp; Kekule.$jsRoot.postMessage)
+{
+	// response to special message, returns Kekule sys info.
+	// This query is usually requested by browser addon to check
+	// if Kekule lib is loaded into a web page
+	Kekule.$jsRoot.addEventListener('message', function(event)
+	{
+		if (event.data === 'kekule-sys-info-query')
+		{
+			Kekule.$jsRoot.postMessage({
+				'msg': 'kekule-sys-info-result',
+				'libName': Kekule.LIBNAME,
+				'version': Kekule.VERSION
+				//'scriptSrcInfo': Kekule.scriptSrcInfo
+			}, '*');
+		}
+	}, false);
+}
 </code></pre>
         </article>
     </section>
@@ -59,13 +235,13 @@ Kekule.scriptSrcInfo = $jsRoot['__$kekule_load_info__'];
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormat.html">DataFormat</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:11:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

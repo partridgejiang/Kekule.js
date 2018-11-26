@@ -243,6 +243,25 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	{
 		//this.defineProp('data', {'dataType': DataType.HASH});
 		this.defineProp('vertexes', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+	},
+	/**
+	 * Replace a linked vertex
+	 * @param {Kekule.GraphVertex} oldVertex
+	 * @param {Kekule.GraphVertex} newVertex
+	 */
+	replaceVertex: function(oldVertex, newVertex)
+	{
+		var vs = this.getVertexes();
+		var oldIndex = vs.indexOf(oldVertex);
+		var newIndex = vs.indexOf(newVertex);
+		if (oldIndex &lt; 0 || newIndex >= 0)
+			return;
+		else
+		{
+			vs.splice(oldIndex, 1, newVertex);
+		}
+		oldVertex.doRemoveEdge(this);
+		newVertex.doAppendEdge(this);
 	}
 });
 
@@ -313,7 +332,7 @@ Kekule.Graph = Class.create(ObjectEx,
 	{
 		if (Kekule.ArrayUtils.remove(this.getVertexes(), vertex))  // remove successful
 		{
-			var edges = vertex.getEdges();
+			var edges = Kekule.ArrayUtils.clone(vertex.getEdges());
 			for (var i = 0, l = edges.length; i &lt; l; ++i)
 				this.removeEdge(edges[i]);
 		}
@@ -468,6 +487,15 @@ Kekule.Graph = Class.create(ObjectEx,
 	}
 });
 
+/*
+ * Default options to convert ctab to graph.
+ * @object
+ */
+Kekule.globalOptions.add('algorithm.molToGraph', {
+	expandSubStructures: true,
+	ignoreBondedHydrogen: true
+});
+
 /**
  * Util class to help to convert other structures (e.g., molecule ctab) to graph.
  * @class
@@ -479,16 +507,20 @@ Kekule.GraphAdaptUtils = {
 	 * @param {Kekule.Graph} graph If not set, a new graph will be created.
 	 * @param {Hash} options Options to convert to graph. Can include fields:
 	 *   {
+	 *     nodeClasses: array, only node instanceof those classes will be included in graph.
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
-	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom (on bond end) are converted into graph. Default is true.
+	 *
+	 *     nodeFilter: func(node, allCtabConnectors), returns bool, a custom function, if false returned, this node will be ignored
+	 *     connectorFilter: func(connector, allCtabNodes), returns bool, a custom function, if false returned, this connector will be ignored
 	 *   }
 	 * @returns {Kekule.Graph} Original node and connector can be retrieved by vertexOrEdge.getData('object').
 	 */
 	ctabToGraph: function(connTab, graph, options)
 	{
-		var op = Object.extend({expandSubStructures: true, ignoreBondedHydrogen: true}, options || {});
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.molToGraph), options || {});
 		var ctab = connTab;
 		var AU = Kekule.ArrayUtils;
 		var result = null;
@@ -507,6 +539,47 @@ Kekule.GraphAdaptUtils = {
 
 		if (ctab)
 		{
+			var nodeFilter = op.nodeFilter || function(node, allConnectors) {  // default node filter
+						if (op.nodeClasses)
+						{
+							var nc = node.getClass();
+							if (!ClassEx.isOrIsDescendantOfClasses(nc, op.nodeClasses))
+								return false;
+						}
+						if (op.ignoreBondedHydrogen)
+						{
+							if (node.isHydrogenAtom &amp;&amp; node.isHydrogenAtom())
+							{
+								var linkedConns = node.getLinkedConnectors();
+								if (allConnectors)
+									linkedConns = AU.intersect(linkedConns, allConnectors);
+								if (linkedConns.length &lt;= 1)
+									return false;
+							}
+						}
+						return true;
+					};
+			var connectorFilter = op.connectorFilter || function(connector, allNodes) {  // default connector filter
+						if (op.connectorClasses)
+						{
+							var cc = connector.getClass();
+							if (!ClassEx.isOrIsDescendantOfClasses(cc, op.connectorClasses))
+								return false;
+						}
+						if (connector.getBondType &amp;&amp; op.bondTypes)
+						{
+							if (op.bondTypes.indexOf(connector.getBondType()) &lt; 0)
+								return false;
+						}
+						/*
+						if (op.ignoreBondedHydrogen &amp;&amp; connector.isNormalConnectorToHydrogen &amp;&amp; connector.isNormalConnectorToHydrogen())
+						{
+							return false;
+						}
+						*/
+						return true;
+					};
+
 			var result = graph || new Kekule.Graph();
 			var connectors = expandSub? ctab.getAllContainingConnectors(): ctab.getConnectors();
 			var nodes = expandSub? ctab.getLeafNodes(): ctab.getNodes();
@@ -516,18 +589,8 @@ Kekule.GraphAdaptUtils = {
 			for (var i = 0, l = connectors.length; i &lt; l; ++i)
 			{
 				var connector = connectors[i];
-				if (op.connectorClasses)
-				{
-					var cc = connector.getClass();
-					if (!ClassEx.isOrIsDescendantOfClasses(cc, op.connectorClasses))
-						continue;
-				}
-				if (connector.getBondType &amp;&amp; op.bondTypes)
-				{
-					if (op.bondTypes.indexOf(connector.getBondType()) &lt; 0)
-						continue;
-				}
-				if (op.ignoreBondedHydrogen &amp;&amp; connector.isNormalConnectorToHydrogen &amp;&amp; connector.isNormalConnectorToHydrogen())
+
+				if (!connectorFilter(connector))
 					continue;
 
 				var connNodes = [];
@@ -535,9 +598,12 @@ Kekule.GraphAdaptUtils = {
 				for (var j = 0, k = connectedObjs.length; j &lt; k; ++j)
 				{
 					var connObj = connectedObjs[j];
-					if (nodes.indexOf(connObj) >= 0)  // add nodes bypass connected connectors
+					if (nodes.indexOf(connObj) >= 0)  // add nodes, bypass connected connectors
 					{
-						connNodes.push(connObj);
+						if (nodeFilter(connObj, connectors))  // bypass ignored nodes
+							connNodes.push(connObj);
+						else
+							AU.pushUnique(addedNodes, connObj);
 						if (connNodes.length >= 2)
 						{
 							var newNodes = AU.exclude(connNodes, addedNodes);
@@ -557,6 +623,20 @@ Kekule.GraphAdaptUtils = {
 					}
 				}
 			}
+
+			// if there still unadded nodes
+			var remainingNodes = AU.exclude(nodes, addedNodes);
+			for (var i = 0, l = remainingNodes.length; i &lt; l; ++i)
+			{
+				var node = remainingNodes[i];
+				if (nodeFilter(node, connectors))
+				{
+					var v = result.newVertex();
+					v.setData('object', node);
+					//vertexMap.set(newNodes[ii], v);
+				}
+			}
+
 			vertexMap.finalize();
 		}
 		return result;
@@ -646,6 +726,7 @@ Kekule.GraphAdaptUtils = {
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom are converted into graph. Default is true.
 	 *   }
 	 * @returns {Kekule.Graph}
 	 */
@@ -1593,8 +1674,14 @@ Kekule.GraphAlgorithmUtils = {
 		for (var i = 0, l = cycleParts.length; i &lt; l; ++i)
 		{
 			var part = cycleParts[i];
+			//var tStart = Date.now();
 			var allRings = U.findAllRings(part);
+			//var tEnd = Date.now();
+			//console.log('Find all rings in ', tEnd - tStart);
+			//var tStart = Date.now();
 			var sssrRings = U.findSSSR(part, allRings);
+			//var tEnd = Date.now();
+			//console.log('Find SSSR in ', tEnd - tStart);
 
 			result.push({
 				'vertexes': part.vertexes,
@@ -2102,8 +2189,8 @@ Kekule.RingVectorUtils = {
 					}
 					if ((overlapedVectorGroups.length === 4)/* &amp;&amp; (selVectors.length === 5)*/)
 					{
-						console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
-						console.log(selVectors);
+						//console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
+						//console.log(selVectors);
 					}
 					var combineVector = RU.ringVectorXorAll(selVectors);
 					if (!RU.vectorNotNull(RU.ringVectorXor(combineVector, vector)))  // found
@@ -2117,7 +2204,7 @@ Kekule.RingVectorUtils = {
 						break;
 					}
 				}
-				console.log('tried ', count, result);
+				//console.log('tried ', count, result);
 				return result;
 			}
 			finally
@@ -2138,13 +2225,13 @@ Kekule.RingVectorUtils = {
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:22 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -43,6 +43,136 @@
  * requires /localizations/
  */
 
+(function() {
+"use strict";
+
+var AU = Kekule.ArrayUtils;
+
+/**
+ * Enumeration of comparation of chem structure.
+ * @enum
+ */
+Kekule.StructureComparationLevel = {
+	/** Compare only topological graph, atom/bond details are ignored. */
+	SKELETAL: 1,
+	/** Compare only constitution, ignore stereo factors and charge. */
+	CONSTITUTION: 2,
+	/** Compare with stereo factors but ignore atom mass number and charge. */
+	CONFIGURATION: 3,
+	/** Compare with stereo factors and mass number / charge. */
+	EXACT: 4,
+	/** Default comparation level. */
+	DEFAULT: 4
+};
+
+/*
+ * Default options to compare chem structures.
+ * @object
+ */
+/*
+Kekule.globalOptions.structureComparation = {
+	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
+};
+*/
+
+Kekule.globalOptions.add('algorithm.structureComparation', {
+	structureComparationLevel: Kekule.StructureComparationLevel.DEFAULT
+});
+Kekule.globalOptions.add('algorithm.structureClean', {
+	structureCleanOptions: {
+		'orphanChemNode': true,
+		'hangingChemConnector': true
+	}
+});
+
+// extend method to Kekule.ObjComparer
+Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
+{
+	var ops = Object.create(options || {});
+	ops.method = Kekule.ComparisonMethod.CHEM_STRUCTURE;
+	return Kekule.ObjComparer.compare(obj1, obj2, ops);
+};
+Kekule.ObjComparer.equalStructure = function(obj1, obj2, options)
+{
+	return Kekule.ObjComparer.compareStructure(obj1, obj2, options) === 0;
+};
+Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions)
+{
+	var result = Object.extend({}, initialOptions);
+	if (initialOptions /* &amp;&amp; initialOptions.method === Kekule.ComparisonMethod.CHEM_STRUCTURE */)
+	{
+		var CL = Kekule.StructureComparationLevel;
+		var level = initialOptions.structureLevel || initialOptions.level  // options.level for backward compatible
+				|| Kekule.globalOptions.algorithm.structureComparation.structureComparationLevel;
+		//if (Kekule.ObjUtils.notUnset(level))
+		{
+			var affectedFields = [
+				'atom', 'mass', 'linkedConnectorCount', 'charge', 'radical', 'stereo',
+				'hydrogenCount', 'connectedObjCount', 'bondType', 'bondOrder'
+			];
+			var detailOps;
+			if (level === CL.SKELETAL)
+				detailOps = {
+					atom: false, mass: false, linkedConnectorCount: true, charge: false, radical: false,
+					stereo: false, hydrogenCount: false,
+					connectedObjCount: true, bondType: false, bondOrder: false
+				};
+			else if (level === CL.CONSTITUTION)
+				detailOps = {
+					atom: true, mass: false, linkedConnectorCount: true, charge: false, radical: false,
+					stereo: false, hydrogenCount: true,
+					connectedObjCount: true, bondType: true, bondOrder: true
+				};
+			else if (level === CL.CONFIGURATION)
+				detailOps = {
+					atom: true, mass: false, linkedConnectorCount: true, charge: false, radical: false,
+					stereo: true, hydrogenCount: true,
+					connectedObjCount: true, bondType: true, bondOrder: true
+				};
+			else if (level === CL.EXACT)
+				detailOps = {
+					atom: true, mass: true, linkedConnectorCount: true, charge: true, radical: true,
+					stereo: true, hydrogenCount: true,
+					connectedObjCount: true, bondType: true, bondOrder: true
+				};
+
+			// add compareXXX field to result, for backward compatibility
+			/*
+			var fields = Kekule.ObjUtils.getOwnedFieldNames(detailOps);
+			for (var i = 0, l = fields.length; i &lt; l; ++i)
+			{
+				var fieldName = fields[i];
+				var value = detailOps[fieldName];
+				var compatibleName = 'compare' + fieldName.capitalizeFirst();
+				detailOps[compatibleName] = value;
+			}
+			*/
+			for (var i = 0, l = affectedFields.length; i &lt; l; ++i)
+			{
+				var fieldName = affectedFields[i];
+				var compatibleFieldName = 'compare' + fieldName.capitalizeFirst();  // backward compatible
+				var oldValue = result[fieldName];
+				if (Kekule.ObjUtils.isUnset(oldValue))
+					oldValue = result[compatibleFieldName];
+				if (Kekule.ObjUtils.isUnset(oldValue))
+				{
+					result[fieldName] = detailOps[fieldName];
+					result[compatibleFieldName] = detailOps[fieldName];
+				}
+				else
+				{
+					result[fieldName] = oldValue;
+					result[compatibleFieldName] = oldValue;
+				}
+			}
+
+			// override bool values
+			//result = Object.extend(detailOps || {}, result);
+		}
+	}
+	return result;
+};
+
 /**
  * An abstract structure object, either a node or a connector.
  * @class
@@ -75,13 +205,15 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			'dataType': DataType.ARRAY,
 			'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
-			'setter': null,
+			'setter': null
+			/*
 			'getter': function()
 				{
 					if (!this.getPropStoreFieldValue('linkedConnectors'))
 						this.setPropStoreFieldValue('linkedConnectors', []);
 					return this.getPropStoreFieldValue('linkedConnectors');
 				}
+			*/
 		});
 		this.defineProp('linkedObjs', {
 			'dataType': DataType.ARRAY,
@@ -97,7 +229,8 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 						var objs = connector.getConnectedObjs();
 						for (var j = 0, k = objs.length; j &lt; k; ++j)
 						{
-							if (objs[j] !== this)
+							var currObj = objs[j];
+							if (currObj !== this &amp;&amp; !(this.hasChildObj &amp;&amp; this.hasChildObj(currObj)))
 								Kekule.ArrayUtils.pushUnique(result, objs[j]);
 						}
 					}
@@ -137,8 +270,9 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('linkedConnectors', []);
 		this.setSuppressChildChangeEventInUpdating(true);
 	},
@@ -146,6 +280,78 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	getAutoIdPrefix: function()
 	{
 		return 'o';
+	},
+
+	/** @ignore */
+	doGetActualCompareOptions: function($super, options)
+	{
+		if (options &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			var result = Kekule.ObjComparer.getStructureComparisonDetailOptions(options);
+			if (options.customMethod)
+				result.customMethod = options.customMethod;
+			if (options.extraComparisonProperties)
+				result.extraComparisonProperties = options.extraComparisonProperties;
+			return result;
+		}
+		else
+			return $super(options);
+	},
+	/** @private */
+	_getComparisonOptionFlagValue: function(options, flagName)
+	{
+		var compatibleName = 'compare' + flagName.capitalizeFirst();
+		var result = options[compatibleName];
+		if (Kekule.ObjUtils.isUnset(result))
+			result = options[flagName];
+		return result;
+	},
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			return [];
+		}
+		else
+			return $super(options);
+	},
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in $super
+		{
+			if (this._getComparisonOptionFlagValue(options, 'linkedConnectorCount'))
+			{
+				var c1 = this.getLinkedNonHydrogenConnectors();
+				var c2 = targetObj.getLinkedNonHydrogenConnectors &amp;&amp; targetObj.getLinkedNonHydrogenConnectors();
+				result = this.doCompareOnValue(c1.length, c2 &amp;&amp; c2.length, options);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Explicit set compare method to chem structure and compare to targetObj.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {Hash} options
+	 * @returns {Int}
+	 */
+	compareStructure: function(targetObj, options)
+	{
+		var ops = Object.create(options || {});
+		ops.method = Kekule.ComparisonMethod.CHEM_STRUCTURE;
+		return this.compare(targetObj, ops);
+	},
+	/**
+	 * Check if this object and targetObj has equivalent chem structure.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {Hash} options
+	 * @returns {Bool}
+	 */
+	equalStructure: function(targetObj, options)
+	{
+		return this.compareStructure(targetObj, options) === 0;
 	},
 
 	/**
@@ -157,11 +363,34 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		var p = this.getParent();
 		return (p instanceof Kekule.StructureFragment)? p: null;
 	},
+	/**
+	 * Returns the root parent of {@link Kekule.StructureFragment}, rather than subgroups.
+	 * @returns {Kekule.StructureFragment}
+	 */
+	getRootFragment: function()
+	{
+		var p = this.getParentFragment();
+		if (p)
+			return p.getRootFragment() || p;
+		else
+			return p;
+	},
 
 	/** @private */
 	notifyLinkedConnectorsChanged: function()
 	{
 		this.notifyPropSet('linkedConnectors', this.getPropStoreFieldValue('linkedConnectors'));
+	},
+
+	/**
+	 * Returns self or child object that can directly linked to a connector.
+	 * For atom or other simple chem objetc, this function should just returns self,
+	 * for structure fragment, this function need to returns an anchor node.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getCurrConnectableObj: function()
+	{
+		return this;
 	},
 
 	/**
@@ -427,6 +656,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
  * @property {Hash} coord3D The 3D coordinates of node, {x, y, z}.
  * @property {Hash} absCoord2D The absolute 2D coordinates of node, {x, y}.
  * @property {Hash} absCoord3D The absolute 3D coordinates of node, {x, y, z}.
+ * @property {Int} zIndex2D A special property like zIndex in HTML, indicating the position of z-stack for 2D sketch.
  *
  * @borrows Kekule.ClassDefineUtils.CommonCoordMethods#getCoordOfMode as #getCoordOfMode
  * @borrows Kekule.ClassDefineUtils.CommonCoordMethods#setCoordOfMode as #setCoordOfMode
@@ -460,6 +690,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 			this.setCoord2D(coord2D);
 		if (coord3D)
 			this.setCoord3D(coord3D);
+	},
+	initProperties: function()
+	{
+		this.defineProp('zIndex2D', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)
@@ -524,9 +758,10 @@ Kekule.StereoParity = {
  * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {Float} charge Charge of atom. As there may be partial charge on atom, so a float value is used.
- * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalType}.
+ * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalOrder}.
  * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
  * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
+ * @property {Bool} isAnchor Whether this node is among anchors in parent structure.
  */
 Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.ChemStructureNode# */
@@ -552,6 +787,30 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		});
 		this.defineProp('radical', {'dataType': DataType.INT});
 		this.defineProp('parity', {'dataType': DataType.INT});
+		this.defineProp('isAnchor', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var p = this.getParent();
+				if (p &amp;&amp; p.indexOfAnchorNode)
+					return p.indexOfAnchorNode(this) >= 0;
+				else
+					return false;
+			},
+			'setter': function(value)
+			{
+				if (value !== this.getIsAnchor())
+				{
+					var p = this.getParent();
+					if (p)
+					{
+						if (value &amp;&amp; p.appendAnchorNode())
+							p.appendAnchorNode(this);
+						else if (!value &amp;&amp; p.removeAnchorNode)
+							p.removeAnchorNode(this);
+					}
+				}
+			}
+		});
 	},
 	/** @ignore */
 	getStructureRelatedPropNames: function($super)
@@ -567,6 +826,40 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	{
 		return null;
 	},
+
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'charge'))
+				result.push('charge');
+			if (this._getComparisonOptionFlagValue(options, 'radical'))
+				result.push('radical');
+			/*
+			if (this._getComparisonOptionFlagValue(options, 'stereo'))
+				result.push('parity');
+			*/
+		}
+		return result;
+	},
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in $super
+		{
+			if (this._getComparisonOptionFlagValue(options, 'stereo'))  // parity null/0 should be regard as one in comparison
+			{
+				var c1 = this.getParity() || Kekule.StereoParity.UNKNOWN;
+				var c2 = (targetObj.getParity &amp;&amp; targetObj.getParity()) || Kekule.StereoParity.UNKNOWN;
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+		}
+		return result;
+	},
+
 	/**
 	 * Returns the most possible isotope of node.
 	 * To {@link Kekule.Atom}, this should be simplely the isotope of atom
@@ -670,13 +963,16 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	}
 });
 
-
+/*
 Kekule.RadicalType = {
 	NONE: 0,
 	SINGLET: 1,
 	DOUBLET: 2,
 	TRIPLET: 3
 };
+*/
+/** @deprected */
+Kekule.RadicalType = Kekule.RadicalOrder;   /* A duplicate definition, for backward compatity. */
 
 /**
  * Represent an abstract atom, parent for dummy atom, concrete atom or variable atom.
@@ -703,7 +999,7 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('explicitHydrogenCount', {'dataType': DataType.INT});
+		this.defineProp('explicitHydrogenCount', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -714,6 +1010,22 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	getStructureRelatedPropNames: function($super)
 	{
 		return $super().concat(['explicitHydrogenCount']);
+	},
+
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'hydrogenCount'))
+			{
+				var c1 = this.getHydrogenCount(true);
+				var c2 = targetObj.getHydrogenCount &amp;&amp; targetObj.getHydrogenCount(true);
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+		}
+		return result;
 	},
 
 	/**
@@ -917,6 +1229,20 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'atom'))
+				result.push('atomicNumber');
+			if (this._getComparisonOptionFlagValue(options, 'mass'))
+				result.push('massNumber');
+		}
+		return result;
+	},
+
+	/** @ignore */
 	getPrimaryIsotope: function()
 	{
 		return this.getIsotope();
@@ -1016,6 +1342,26 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		}
 		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	},
+	/** @private */
+	_getCurrIonicBondsInfo: function()
+	{
+		var valenceSum = 0;
+		var maxValence = 0;
+		for (var i = 0, l = this.getLinkedConnectorCount(); i &lt; l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			// check if connector is a covalance bond
+			if ((connector instanceof Kekule.Bond)
+					&amp;&amp; (connector.getBondType() == Kekule.BondType.IONIC))
+			{
+				var v = connector.getBondValence();
+				valenceSum += v;
+				if (v > maxValence)
+					maxValence = v;
+			}
+		}
+		return {'valenceSum': valenceSum, 'maxValence': maxValence};
+	},
 
 	/**
 	 * If the atomType property is not set explicitly, use this function to guess the atom type.
@@ -1091,7 +1437,8 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		{
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{
-				var bondsInfo = this._getCurrCovalentBondsInfo();
+				var coValentBondsInfo = this._getCurrCovalentBondsInfo();
+				var ionicBondsInfo = this._getCurrIonicBondsInfo();
 				/*
 				var atype = this.getProximalAtomType();
 				var valence = atype? atype.bondOrderSum: 0;
@@ -1104,7 +1451,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				valence -= radical;
 
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
-				return Math.max(valence - bondsInfo.valenceSum /* + charge */, 0);
+				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum /* + charge */, 0);
 			}
 		}
 		else
@@ -1124,6 +1471,20 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			result = this.getExplicitHydrogenCount() || 0;
 		if (includingBondedHydrogen)
 			result += this.getLinkedHydrogenAtoms().length || 0;
+		return result;
+	},
+	/**
+	 * Returns exact mass of current atom.
+	 * @returns {Float}
+	 */
+	getAtomicMass: function()
+	{
+		var result = null;
+		var isotope = this.getIsotope();
+		if (isotope)
+		{
+			result = isotope.getExactMass() || isotope.getNaturalMass();
+		}
 		return result;
 	}
 });
@@ -1216,6 +1577,37 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 	{
 		return this.getSymbol();
 	},
+
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'atom'))
+				result.push('atomType');
+		}
+		return result;
+	},
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'atom'))
+			{
+				if (this.getAtomType() === Kekule.PseudoatomType.CUSTOM)  // custom pseudo atom, need to check symbol further
+				{
+					var v1 = this.getSymbol();
+					var v2 = targetObj.getSymbol &amp;&amp; targetObj.getSymbol();
+					result = this.doCompareOnValue(v1, v2, options);
+				}
+			}
+		}
+		return result;
+	},
+
 	/** @ignore */
 	doMayContainElement: function(atomicNum)
 	{
@@ -1326,6 +1718,45 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 	{
 		return Kekule.ChemStructureNodeLabels.VARIABLE_ATOM;
 	},
+
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'atom'))
+			{
+				var AU = Kekule.ArrayUtils;
+				var allowedIds1 = this.getAllowedIsotopeIds();
+				var allowedIds2 = targetObj.getAllowedIsotopeIds &amp;&amp; targetObj.getAllowedIsotopeIds();
+				if (allowedIds1)  // allowed will override disallowed
+				{
+					allowedIds1 = AU.clone(allowedIds1).sort();
+					if (allowedIds2 &amp;&amp; allowedIds2.length)
+						allowedIds2 = AU.clone(allowedIds2).sort();
+					result = this.doCompareOnValue(allowedIds1, allowedIds2, options);
+				}
+				else  // consider disallowed
+				{
+					if (allowedIds2)  // target use allowed list
+						result = 1;
+					else
+					{
+						var disallowedIds1 = this.getDisallowedIsotopeIds();
+						var disallowedIds2 = targetObj.getDisallowedIsotopeIds &amp;&amp; targetObj.getDisallowedIsotopeIds();
+						if (disallowedIds1 &amp;&amp; disallowedIds1.length)
+							disallowedIds1 = AU.clone(disallowedIds1).sort();
+						if (disallowedIds2 &amp;&amp; disallowedIds2.length)
+							disallowedIds2 = AU.clone(disallowedIds2).sort();
+						result = this.doCompareOnValue(disallowedIds1, disallowedIds2, options);
+					}
+				}
+			}
+		}
+		return result;
+	},
+
 	/** @ignore */
 	doMayContainElement: function(atomicNum)
 	{
@@ -1463,6 +1894,14 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	getHigherLevelObj: function()
 	{
 		return this.getParent();
+	},
+	/**
+	 * Check if this formula contains no data.
+	 * @returns {Bool}
+	 */
+	isEmpty: function()
+	{
+		return this.getSectionCount() &lt;= 0;
 	},
 
 	/** @private */
@@ -1612,7 +2051,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 		try
 		{
 			this.setCharge(null);
-			this.setRadical(null)
+			this.setRadical(null);
 			this.setPropStoreFieldValue('sections', []);
 			this.notifySectionsChanged();
 		}
@@ -1679,7 +2118,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
  * @property {Kekule.ChemSpace} owner Owner for each objects in connection table.
  * @property {Kekule.StructureFragment} parent Parent to hold this Ctab. Read only.
  * @property {Array} nodes All structure nodes in this connection table.
- * @property {Array} anchorNodes Nodes that can have bond connected to other structure nodes.
+ * @property {Array} anchorNodes Nodes that can have bond connected to other structure fragments.
  * @property {Array} connectors Connectors (usually bonds) in this connection table.
  * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this connection table.
  * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this connection table.
@@ -1689,6 +2128,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.StructureConnectionTable',
+	/** @private */
+	TRAVERS_VISITED_KEY: '__$ctabTraversVisited__',
 	/**
 	 * @constructs
 	 */
@@ -1749,8 +2190,15 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				for (var i = 0, l = this.getNodeCount(); i &lt; l; ++i)
 				{
 					var node = this.getNodeAt(i);
+					/*
 					if (!node.isHydrogenAtom || !node.isHydrogenAtom())
 						result.push(node);
+					*/
+					if (node instanceof Kekule.ChemStructureNode)
+					{
+						if (!node.isHydrogenAtom || !node.isHydrogenAtom())
+							result.push(node);
+					}
 				}
 				return result;
 			}
@@ -1774,8 +2222,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('nodes', []);
 		this.setPropStoreFieldValue('anchorNodes', []);
 		this.setPropStoreFieldValue('connectors', []);
@@ -1821,11 +2270,15 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						serializer.setStorageNodeExplicitType(itemNode, serializer.getValueExplicitType(item));
 						serializer.save(item, itemNode);
 						// as connector's connectedObjs property is marked as unserializable, need to be handled here
+						/*
 						var connectedNodes = [];
 						var connectedConnectors = [];
+						*/
+						var connectedObjs = [];
 						for (var j = 0, k = item.getConnectedObjCount(); j &lt; k; ++j)
 						{
 							var conObj = item.getConnectedObjAt(j);
+							/*
 							var index = obj.indexOfNode(conObj);
 							if (index >= 0)
 								connectedNodes.push(index);
@@ -1843,8 +2296,21 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 									}
 								}
 							}
+							*/
+							var index = obj.indexOfChild(conObj);
+							if (index >= 0)
+								connectedObjs.push(index);
+							else  // not in direct children, check nested structures's nodes
+							{
+								var indexStack = obj.indexStackOfChild(conObj);
+								if ((indexStack !== null)&amp;&amp; (typeof(indexStack) !== 'undefined'))
+								{
+									connectedObjs.push(indexStack);
+								}
+							}
 						}
 						// save connected array
+						/*
 						if (connectedNodes.length)
 						{
 							var conNodeNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedNodes'), true); // create sub node for array
@@ -1854,6 +2320,12 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						{
 							var conConnectorNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedConnectors'), true); // create sub node for array
 							serializer.save(connectedConnectors, conConnectorNode);
+						}
+						*/
+						if (connectedObjs.length)
+						{
+							var conObjsNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'), true); // create sub node for array
+							serializer.save(connectedObjs, conObjsNode);
 						}
 					}
 					return true;
@@ -1882,6 +2354,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			{
 				var subNode = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName(propName)); // get sub node for array
 				var itemNodes = serializer.getAllArrayItemStorageNodes(subNode);
+				var connector;
 				for (var i = 0, l = itemNodes.length; i &lt; l; ++i)
 				{
 					var itemNode = itemNodes[i];
@@ -1891,6 +2364,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						connector = DataType.createInstance(valueType);
 						serializer.load(connector, itemNode);
 						// then handle connectedObjs array
+						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
+						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
+						if (conObjsNode)
+						{
+							var connectedObjs = [];
+							serializer.load(connectedObjs, conObjsNode);
+							connector.__load_connectedObj_indexes = connectedObjs;
+						}
+
+						// conNode/conConnector are for back compatity
 						var conNodeNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedNodes'));
 						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
 						if (conNodeNode)
@@ -1906,6 +2389,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 							serializer.load(connectedConnectors, conConnectorNode);
 							connector.__load_connectedConnector_indexes = connectedConnectors;
 						}
+
 						obj.appendConnector(connector);
 					}
 				}
@@ -1933,26 +2417,44 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		for (var i = 0, l = this.getConnectorCount(); i &lt; l; ++i)
 		{
 			var connector = this.getConnectorAt(i);
-			if (connector.__load_connectedNode_indexes)
+			if (connector.__load_connectedObj_indexes)
 			{
-				for (var j = 0, k = connector.__load_connectedNode_indexes.length; j &lt; k; ++j)
+				for (var j = 0, k = connector.__load_connectedObj_indexes.length; j &lt; k; ++j)
 				{
-					var index = connector.__load_connectedNode_indexes[j];
+					var index = connector.__load_connectedObj_indexes[j];
+					var connObj;
 					if (typeof(index) == 'object')  // is array, actually the index stack
-						connector.appendConnectedObj(this.getNodeAtIndexStack(index));
+						connObj = this.getChildAtIndexStack(index);
 					else  // normal stack
-						connector.appendConnectedObj(this.getNodeAt(index));
+						connObj = this.getChildAt(index);
+					if (connObj)
+						connector.appendConnectedObj(connObj);
 				}
-				delete connector.__load_connectedNode_indexes;
+				delete connector.__load_connectedObj_indexes;
 			}
-			if (connector.__load_connectedConnector_indexes)
+			//else // for back compatity
 			{
-				for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j &lt; k; ++j)
+				if (connector.__load_connectedNode_indexes)
 				{
-					var index = connector.__load_connectedConnector_indexes[j];
-					connector.appendConnectedObj(this.getConnectorAt(index));
+					for (var j = 0, k = connector.__load_connectedNode_indexes.length; j &lt; k; ++j)
+					{
+						var index = connector.__load_connectedNode_indexes[j];
+						if (typeof(index) == 'object')  // is array, actually the index stack
+							connector.appendConnectedObj(this.getNodeAtIndexStack(index));
+						else  // normal stack
+							connector.appendConnectedObj(this.getNodeAt(index));
+					}
+					delete connector.__load_connectedNode_indexes;
 				}
-				delete connector.__load_connectedConnector_indexes;
+				if (connector.__load_connectedConnector_indexes)
+				{
+					for (var j = 0, k = connector.__load_connectedConnector_indexes.length; j &lt; k; ++j)
+					{
+						var index = connector.__load_connectedConnector_indexes[j];
+						connector.appendConnectedObj(this.getConnectorAt(index));
+					}
+					delete connector.__load_connectedConnector_indexes;
+				}
 			}
 		}
 		this.ownerChanged(this.getOwner());
@@ -2151,6 +2653,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 */
 	getNodeAtIndexStack: function(indexStack)
 	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
 		if (indexStack.length &lt;= 0)
 			return null;
 		else
@@ -2158,7 +2661,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			var node = this.getNodeAt(indexStack[0]);
 			for (var i = 1, l = indexStack.length; i &lt; l; ++i)
 			{
-				if (node.getNodeAt)
+				if (node &amp;&amp; node.getNodeAt)
 					node = node.getNodeAt(indexStack[i]);
 				else
 					return null;
@@ -2208,6 +2711,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				node.setParent(this.getParent());
 		}
 		this.notifyNodesChanged();
+		return index;
 	},
 	/**
 	 * Change index of node.
@@ -2285,6 +2789,27 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				var connector = connectors[i];
 				connector.replaceConnectedObj(oldNode, newNode);
 			}
+
+			// replace related cross connectors of oldNode (when it is subgroup)
+			if (oldNode.getNodes &amp;&amp; oldNode.getCrossConnectors)
+			{
+				var crossConnectors = Kekule.ArrayUtils.clone(oldNode.getCrossConnectors());
+				for (var i = 0, l = crossConnectors.length; i &lt; l; ++i)
+				{
+					var connector = crossConnectors[i];
+					if (this.indexOfConnector(connector) >= 0)  // is connector in this ctab
+					{
+						for (var j = 0, k = connector.getConnectedObjCount(); j &lt; k; ++j)
+						{
+							var obj = connector.getConnectedObjAt(j);
+							if (oldNode.indexOfChild(obj) >= 0)  // obj is inside oldNode group, replace it with new Node
+							  connector.replaceConnectedObj(obj, newNode);
+						}
+					}
+					connector.replaceConnectedObj(oldNode, newNode);
+				}
+			}
+
 			this.removeNode(oldNode);
 		}
 	},
@@ -2343,6 +2868,38 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				return true;
 		}
 		return false;
+	},
+
+	/**
+	 * Create a new Kekule.Atom instance.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	_createAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		var atom = new Kekule.Atom(null, elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+		return atom;
+	},
+
+	/**
+	 * Util method to create a new Kekule.Atom instance and append to current connection table.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	appendAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		var atom = this._createAtom(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+		if (atom)
+			this.appendNode(atom);
+		return atom;
 	},
 
 	/**
@@ -2447,6 +3004,73 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	{
 		return this.getConnectors()[index];
 	},
+
+	/**
+	 * Returns index of connector. If connector exists in nested sub group, index in sub group will be pushed to stack as well.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @returns {Variant} If connector is the direct child of this structure, returns {Int}, otherwise stack {Array} will be returned.
+	 */
+	indexStackOfConnector: function(connector)
+	{
+		var index = this.indexOfConnector(connector);
+		if (index >= 0)
+			return index;
+		else  // check nested structures
+		{
+			var stack = null;
+			for (var i = 0, l = this.getNodeCount(); i &lt; l; ++i)
+			{
+				var n = this.getNodeAt(i);
+				if (n.indexStackOfConnector)
+				{
+					stack = n.indexStackOfConnector(connector);
+					if (!Kekule.ObjUtils.isUnset(stack))  // found
+					{
+						// push index of n to stack
+						if (typeof(stack) != 'object')
+							stack = [stack];
+						stack.unshift(i);
+						//console.log('get stack: ', stack);
+						return stack;
+					}
+				}
+			}
+			return stack;
+		}
+	},
+	/**
+	 * Get connector at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getConnectorAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	getConnectorAtIndexStack: function(indexStack)
+	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
+		if (indexStack.length &lt;= 0)
+			return null;
+		else if (indexStack.length === 1)
+		{
+			return this.getConnectorAt(indexStack[0]);
+		}
+		else
+		{
+			var stackTail = indexStack.length - 1;
+			var node = this.getNodeAt(indexStack[0]);
+			for (var i = 1; i &lt; stackTail; ++i)
+			{
+				if (node &amp;&amp; node.getNodeAt)
+					node = node.getNodeAt(indexStack[i]);
+				else
+					return null;
+			}
+			if (node)
+				return node.getConnectorAt(indexStack[stackTail]);
+			else
+				return null;
+		}
+	},
+
 	/**
 	 * Add connector to connection table.
 	 * @param {Kekule.ChemStructureConnector} connector
@@ -2585,6 +3209,42 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 
 	/**
+	 * A util method to create a new bond object connected with node only.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 * @private
+	 */
+	_createBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		var connectedObjs = [];
+		for (var i = 0, l = nodesOrIndexes.length; i &lt; l; ++i)
+		{
+			var a = nodesOrIndexes[i];
+			if (DataType.isSimpleValue(a))  // not node object, should be index of node
+				a = this.getNodeAt(a);
+			connectedObjs.push(a);
+		}
+		var result = new Kekule.Bond(null, connectedObjs, bondOrder, null, bondType);
+		return result;
+	},
+	/**
+	 * A util method to create a new bond object connected with nodes and append to current connection table.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 */
+	appendBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		var bond = this._createBond(nodesOrIndexes, bondOrder, bondType);
+		if (bond)
+			this.appendConnector(bond);
+		return bond;
+	},
+
+	/**
 	 * Returns nodes or connectors that should be removed cascadely with chemStructObj.
 	 * @param {Object} childObj
 	 * @returns {Array}
@@ -2685,9 +3345,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**
@@ -2750,6 +3410,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			var refIndex = this.indexOfConnector(refChild);
 			return this.insertConnectorAt(obj, refIndex);
 		}
+		else
+			return -1;
 	},
 
 	/**
@@ -2790,9 +3452,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	indexOfChild: function(obj)
 	{
 		var result;
-		if (obj instanceof Kekule.ChemStructureNode)
+		if (obj instanceof Kekule.BaseStructureNode)
 			result = this.indexOfNode(obj);
-		else if (obj instanceof Kekule.ChemStructureConnector)
+		else if (obj instanceof Kekule.BaseStructureConnector)
 		{
 			result = this.indexOfConnector(obj);
 			if (result >= 0)
@@ -2804,6 +3466,59 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		else
 			result = -1;
 		return result;
+	},
+
+	/**
+	 * Get child object at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getChildAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	indexStackOfChild: function(obj)
+	{
+		var result;
+		if (obj instanceof Kekule.BaseStructureNode)
+			result = this.indexStackOfNode(obj);
+		else if (obj instanceof Kekule.BaseStructureConnector)
+		{
+			var nodeCount = this.getNodeCount();
+			result = this.indexStackOfConnector(obj);
+			if (result.length)  // is array
+			{
+				result[result.length - 1] += nodeCount;
+			}
+			else  // simple int value
+			{
+				result += nodeCount;
+			}
+		}
+		else
+			result = -1;
+		return result;
+	},
+	/**
+	 * Get child object at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getChildAt(2).getChildAt(3).getChildAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getChildAtIndexStack: function(indexStack)
+	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
+		if (indexStack.length &lt;= 0)
+			return null;
+		else
+		{
+			var child = this.getChildAt(indexStack[0]);
+			for (var i = 1, l = indexStack.length; i &lt; l; ++i)
+			{
+				if (child &amp;&amp; child.getChildAt)
+					child = child.getChildAt(indexStack[i]);
+				else
+					return null;
+			}
+			return child;
+		}
 	},
 
 	/**
@@ -2833,6 +3548,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		return result;
 	},
 	/**
+	 * Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this ctab.
+	 * Note if a sub group has no children, it will not be regarded as sub fragment.
+	 * @returns {Bool}
+	 */
+	hasSubFragments: function()
+	{
+		var subs = this.getSubFragments();
+		return subs &amp;&amp; subs.length;
+	},
+	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
 	 * Note if a sub group has no children, it will be regarded as leaf node too.
 	 * @returns {Array} Array of {@link Kekule.ChemStructureNode}.
@@ -2852,6 +3577,22 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			}
 		}
 		return result;
+	},
+	/**
+	 * Returns the direct node/substructure that contains originObj.
+	 * originObj may be a child node or connector of substructure in this ctab.
+	 * If originObj is actually not in this ctab, null will be returned.
+	 * @param {Kekule.ChemStructureObject} originObj
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	findDirectChildOfObj: function(originObj)
+	{
+		var obj = originObj;
+		while (obj &amp;&amp; this.indexOfChild(obj) &lt; 0)
+		{
+			obj = obj.getParent? obj.getParent(): null;
+		}
+		return obj;
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
@@ -2951,7 +3692,11 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		var result = new Kekule.MolecularFormula();
 		for (var i = 0, l = isotopeMaps.length; i &lt; l; ++i)
 		{
-			result.appendSection(isotopeMaps[i].isotope, isotopeMaps[i].count, isotopeMaps[i].charge);
+			// create fake atom
+			var fakeAtom = new Kekule.Atom();
+			fakeAtom.setIsotope(isotopeMaps[i].isotope);
+			//result.appendSection(isotopeMaps[i].isotope, isotopeMaps[i].count, isotopeMaps[i].charge);
+			result.appendSection(fakeAtom, isotopeMaps[i].count, isotopeMaps[i].charge);
 		}
 		return result;
 	},
@@ -3064,6 +3809,119 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		result.deltaY = result.y2 - result.y1;
 		result.deltaZ = result.z2 - result.z1;
 		return result;
+	},
+
+	/**
+	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
+	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
+	 * @param {Bool} breadthFirst Set to true to use breadth first algorithm or false to use depth first algorithm.
+	 * @param {Array} partialNodes If this param is set, only part of the structure will be traversed.
+	 * @returns {Hash} A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.
+	 *   Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.
+	 */
+	traverse: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		var result = {'nodes': [], 'connectors': []};
+		var VISITED_KEY = '__$ctabTraverseVisited__';
+
+		var remainingNodes = AU.clone(partialNodes || this.getNodes());
+		// init
+		for (var i = 0, l = remainingNodes.length; i &lt; l; ++i)
+		{
+			remainingNodes[i][this.TRAVERS_VISITED_KEY] = false;
+		}
+
+		while (remainingNodes.length)
+		{
+			var currNode;
+			if (startingNode &amp;&amp; (remainingNodes.indexOf(startingNode) >= 0))
+				currNode = startingNode;
+			else
+				currNode = remainingNodes[0];
+
+			var partialResult = this._doTravers(callback, currNode, breadthFirst, partialNodes);
+			result.nodes = result.nodes.concat(partialResult.nodes);
+			result.connectors = result.connectors.concat(partialResult.connectors);
+			remainingNodes = AU.exclude(remainingNodes, partialResult.nodes);
+		}
+		return result;
+	},
+	/** @private */
+	_doTravers: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		var result = {
+			nodes: [],
+			connectors: []
+		};
+		var node = startingNode;
+
+		if (!node[this.TRAVERS_VISITED_KEY])
+		{
+			result.nodes.push(node);
+			node[this.TRAVERS_VISITED_KEY] = true;
+			if (callback)
+				callback(node, false);
+		}
+
+		var connectors = AU.clone(node.getLinkedConnectors());
+		var allConnectors = this.getConnectors();
+		connectors.sort(function(c1, c2){
+			return allConnectors.indexOf(c1) - allConnectors.indexOf(c2);
+		});
+
+		var unvisitedNodes = [];
+
+		for (var i = 0, l = connectors.length; i &lt; l; ++i)
+		{
+			var connector = connectors[i];
+			var neighborNodes = node.getLinkedObjsOnConnector(connector);
+			if (partialNodes)
+			  neighborNodes = AU.intersect(neighborNodes, partialNodes);
+
+			for (var j = 0, k = neighborNodes.length; j &lt;k; ++j)  // filter out the first node
+			{
+				var neighborNode = neighborNodes[j];  // TODO: only the normal molecule with two-end bond can be traversed
+				if (neighborNode instanceof Kekule.BaseStructureNode)
+					break;
+			}
+
+			if (!neighborNode)
+				continue;
+
+			if (!neighborNode[this.TRAVERS_VISITED_KEY])
+			{
+				result.nodes.push(neighborNode);
+				result.connectors.push(connector);
+				neighborNode[this.TRAVERS_VISITED_KEY] = true;
+				if (callback)
+				{
+					callback(connector, true);
+					callback(neighborNode, false);
+				}
+
+				if (breadthFirst)
+					unvisitedNodes.push(neighborNode);
+				else // depth first
+				{
+					var nextResult = this._doTravers(callback, neighborNode, breadthFirst, partialNodes);
+					result.nodes = result.nodes.concat(nextResult.nodes);
+					result.connectors = result.connectors.concat(nextResult.connectors);
+				}
+			}
+		}
+
+		if (breadthFirst)
+		{
+			for (var i = 0, l = unvisitedNodes.length; i &lt; l; ++i)
+			{
+				var n = unvisitedNodes[i];
+				var nextResult = this._doTravers(callback, n, breadthFirst, partialNodes);
+				result.nodes = result.nodes.concat(nextResult.nodes);
+				result.connectors = result.connectors.concat(nextResult.connectors);
+			}
+		}
+		return result;
 	}
 });
 
@@ -3086,6 +3944,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
  * @property {Array} crossConnectors Connectors outside the fragment connected to nodes inside fragment. Read only.
  * @property {Array} nonHydrogenNodes All structure nodes except hydrogen atoms in this fragment.
  * @property {Array} nonHydrogenConnectors Connectors except ones connected to hydrogen atoms in this fragment.
+ * @property {Kekule.StructureFragmentShadow} flattenedShadow A shadow that "flatten" this structure fragment,
+ *   unmarshalling all subgroups. Some algorithms (e.g., stereo detection) need to be carried out on flattened
+ *   structure, this shadow may prevent the original structure from being modified.
  */
 Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 /** @lends Kekule.StructureFragment# */
@@ -3205,7 +4066,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		this.defineProp('anchorNodes', {
 			'dataType': DataType.ARRAY,
 			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC,
+			'scope': Class.PropertyScope.PUBLISHED,
 			'setter': null,
 			'getter': function() { return this.hasCtab()? this.getCtab().getAnchorNodes(): []; }
 		});
@@ -3227,9 +4088,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					//var result = [].concat(this.getLinkedConnectors());
 					var result = [].concat(this.getPropStoreFieldValue('linkedConnectors'));
 					// check external connectors of anchor nodes
-					for (var i = 0, l = this.getAnchorNodeCount(); i &lt; l; ++i)
+					for (var i = 0, l = this.getNodeCount(); /*this.getAnchorNodeCount();*/ i &lt; l; ++i)
 					{
-						var connectors = this.getAnchorNodeAt(i).getLinkedConnectors();
+						//var connectors = this.getAnchorNodeAt(i).getLinkedConnectors();
+						var node = this.getNodeAt(i);
+						var connectors = node.getLinkedConnectors() || [];
+						/*
+						if (node.getCrossConnectors())
+							Kekule.ArrayUtils.pushUnique(connectors, node.getCrossConnectors());
+						*/
 						for (var j = 0, k = connectors.length; j &lt; k; ++j)
 						{
 							if (this.indexOfConnector(connectors[j]) &lt; 0) // external connector
@@ -3281,6 +4148,51 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				return result;
 			}
 		});
+
+		this.defineProp('flattenedShadow', {
+			'dataType': 'Kekule.StructureFragmentShadow',
+			'serializable': false,
+			'scope': Class.PropertyScope.PRIVATE,
+			'getter': function(autoCreate)
+			{
+				var result = null;
+				if (Kekule.ObjUtils.isUnset(autoCreate))
+					autoCreate = true;
+				var shadowOnSelf = this.getFlattenedShadowOnSelf();
+				if (shadowOnSelf)   // no explicit shadow object, shadow maps on self
+					return null;
+				else // has sub fragment, need explicit shadow object
+				{
+					result = this.getPropStoreFieldValue('flattenedShadow');
+					if (!result &amp;&amp; autoCreate)
+					{
+						//console.log('create shadow');
+						result = new Kekule.StructureFragmentShadow(this);
+						var shadowFragment = result.getShadowFragment();// this.getFlattenedShadowFragment();
+						shadowFragment.unmarshalAllSubFragments(true);
+						// copy structure info (e.g., ringInfo, aromatic info) to shadow
+						this._copyAdditionalInfoToShadowFragment(shadowFragment, result.getSourceToShadowMap(), result.getShadowToSourceMap());
+						this.setPropStoreFieldValue('flattenedShadow', result);
+					}
+				}
+
+				return result;
+			}
+		});
+		// a special property, marks that this fragment has no subgroup, and the flattenedShadow is actually map to itself
+		this.defineProp('flattenedShadowOnSelf', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PROVATE,
+			'setter': null,
+			'getter': function()
+			{
+				var result = this.setPropStoreFieldValue('flattenedShadowOnSelf');
+				if (Kekule.ObjUtils.isUnset(result))
+				{
+					result = !this.hasSubFragments();
+					this.setPropStoreFieldValue('flattenedShadowOnSelf', result);
+				}
+				return result;
+			}
+		});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -3291,6 +4203,157 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	getStructureRelatedPropNames: function($super)
 	{
 		return $super().concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
+	},
+
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		//console.log('do compare structure', options);
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			//if (this._getComparisonOptionFlagValue(options, 'atom'))
+			{
+				// TODO: now only check whether contains ctab or formula
+				var hasCtab1 = this.hasCtab();
+				var hasCtab2 = targetObj.hasCtab &amp;&amp; targetObj.hasCtab();
+				result = hasCtab1? (hasCtab2? 0: 1): (hasCtab2? -1: 0);
+				if (!result)
+				{
+					var hasFormula1 = this.hasFormula();
+					var hasFormula2 = targetObj.hasFormula &amp;&amp; targetObj.hasFormula();
+					result = hasFormula1? (hasFormula2? 0: 1): (hasFormula2? -1: 0);
+				}
+
+				// both has ctab, comparing child nodes and connectors
+				if (!result &amp;&amp; this.hasCtab())
+				{
+					if ((result === 0) &amp;&amp; (this.getNonHydrogenNodes &amp;&amp; targetObj.getNonHydrogenNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
+					{
+						var _getNeighorNodeIndexes = function(nodeOrConnector, parent)
+						{
+							var neighbors;
+							if (nodeOrConnector instanceof Kekule.ChemStructureConnector)
+								neighbors = nodeOrConnector.getConnectedNonHydrogenObjs();
+							else if (nodeOrConnector instanceof Kekule.ChemStructureNode)
+								neighbors = nodeOrConnector.getLinkedNonHydrogenObjs();  // ignore H
+							var result = [];
+							for (var i = 0, l = neighbors.length; i &lt; l; ++i)
+							{
+								var n = neighbors[i];
+								//if (n instanceof Kekule.ChemStructureNode)
+								var index = parent.indexOfNode(n);
+								if (index >= 0)  // ignore cross structure bonds
+									result.push(index);
+							}
+							result.sort();
+							return result;
+						};
+
+
+						var nodes1 = this.getNonHydrogenNodes();
+						var nodes2 = targetObj.getNonHydrogenNodes();
+						result = nodes1.length - nodes2.length;
+						if (result === 0)
+						{
+							for (var i = 0, l = nodes1.length; i &lt; l; ++i)
+							{
+								result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
+								if (result !== 0)
+									break;
+								else
+								{
+									// check the neighbor node index to current node, avoid issue #86
+									var neighborNodeIndexes1 = _getNeighorNodeIndexes(nodes1[i], this);
+									var neighborNodeIndexes2 = _getNeighorNodeIndexes(nodes2[i], targetObj);
+									result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+									if (result !== 0)
+									{
+										//console.log('diff node', nodes1[i].getId(), neighborNodeIndexes1, nodes2[i].getId(), neighborNodeIndexes2);
+										break;
+									}
+								}
+							}
+						}
+					}
+					if ((result === 0) &amp;&amp; (this.getConnectors &amp;&amp; targetObj.getConnectors))
+					{
+						var connectors1 = this.getNonHydrogenConnectors();
+						var connectors2 = targetObj.getNonHydrogenConnectors();
+						result = connectors1.length - connectors2.length;
+						if (result === 0)
+						{
+							for (var i = 0, l = connectors1.length; i &lt; l; ++i)
+							{
+								result = this.doCompareOnValue(connectors1[i], connectors2[i], options);
+								if (result !== 0)
+									break;
+								else
+								{
+									// check the neighbor node index to current node, avoid issue #86
+									var neighborNodeIndexes1 = _getNeighorNodeIndexes(connectors1[i], this);
+									var neighborNodeIndexes2 = _getNeighorNodeIndexes(connectors2[i], targetObj);
+									result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+									if (result !== 0)
+									{
+										//console.log('diff bond', connectors1[i].getId(), neighborNodeIndexes1, connectors2[i].getId(), neighborNodeIndexes2);
+										break;
+									}
+								}
+							}
+						}
+					}
+
+					// The node/connector sequence check can distinguish most molecules
+					// but a few of them (e.g. issue#74 https://github.com/partridgejiang/Kekule.js/issues/74)
+					// still need a spanning tree check
+					if (result === 0)
+					{
+						//console.log('spanning tree compare');
+						// traverse from the last node, with all non hydrongen nodes
+						var nonHydrogenNodesThis = this.getNonHydrogenNodes();
+						var nonHydrogenNodesTarget = targetObj.getNonHydrogenNodes();
+						var traversedObjsThis = this.traverse(null, nonHydrogenNodesThis[nonHydrogenNodesThis.length - 1], true, nonHydrogenNodesThis);
+						var traversedObjsTarget = targetObj.traverse(null, nonHydrogenNodesTarget[nonHydrogenNodesTarget.length - 1], true, nonHydrogenNodesTarget);
+						//console.log(traversedObjsThis.nodes, traversedObjsTarget.nodes);
+						for (var i = 0, l = traversedObjsThis.nodes.length; i &lt; l; ++i)
+						{
+							var nodeThis = traversedObjsThis.nodes[i];
+							var nodeTarget = traversedObjsTarget.nodes[i];
+							result = this.doCompareOnValue(nodeThis, nodeTarget, options);
+							if (result !== 0)
+								break;
+						}
+						if (result === 0)
+						{
+							for (var i = 0, l = traversedObjsThis.connectors.length; i &lt; l; ++i)
+							{
+								var connectorThis = traversedObjsThis.connectors[i];
+								var connectorTarget = traversedObjsTarget.connectors[i];
+								result = this.doCompareOnValue(connectorThis, connectorTarget, options);
+								if (result !== 0)
+									break;
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	},
+
+	/** @ignore */
+	structureChange: function($super, originObj)
+	{
+		// when structure is changed, clear old shadow fragment
+		this.setPropStoreFieldValue('flattenedShadowOnSelf', null);
+		var shadow = this.getFlattenedShadow(false);
+		if (shadow)
+		{
+			shadow.finalize();
+			this.setPropStoreFieldValue('flattenedShadow', null);
+		}
+		$super(originObj);
 	},
 	/** @ignore */
 	clearStructureFlags: function($super)
@@ -3369,10 +4432,50 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return !this.hasCtab() || this.getCtab().isEmpty();
 	},
 
-	/** @private */
+	/** @ignore */
 	doGetLinkedConnectors: function()
 	{
 		return this.getCrossConnectors();
+	},
+	/* @ignore */
+
+	appendLinkedConnector: function($super, connector)
+	{
+		var actualLinkedNode = this.getCurrConnectableObj();
+		if (actualLinkedNode &amp;&amp; actualLinkedNode !== this) // instead of link connector to self, we'd rather link connector to child anchor node
+			return actualLinkedNode.appendLinkedConnector(connector);
+		else  // no child, link to self
+		  return $super(connector);
+	},
+
+
+	/** @ignore */
+	getCurrConnectableObj: function()
+	{
+		// instead of link connector to self, we'd rather link connector to child anchor node
+		var candidates = (this.getAnchorNodeCount() > 0)? this.getAnchorNodes(): this.getNodes();
+		if (candidates.length &lt;= 0)
+			return this;
+		else  // iterate all candidates, find the first one with min cross connector count
+		{
+			var allCrossConnectors = this.getCrossConnectors();
+			var minCrossConnectorCount = null;
+			var minNode = null;
+			for (var i = 0, l = candidates.length; i &lt; l; ++i)
+			{
+				var node = candidates[i];
+				var connectors = node.getLinkedConnectors();
+				var crossConnectors = Kekule.ArrayUtils.intersect(connectors, allCrossConnectors);
+				var crossConnectorCount = crossConnectors.length;
+				if (minCrossConnectorCount === null || minCrossConnectorCount > crossConnectorCount)
+				{
+					minCrossConnectorCount = crossConnectorCount;
+					minNode = node;
+				}
+			}
+			return minNode;
+		}
+		//return this.getAnchorNodeAt(0) || this.getNodeAt(0) || this.getChildAt(0) || this;
 	},
 
 	/** @private */
@@ -3724,6 +4827,20 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Util method to create a new Kekule.Atom instance and append to current connection table.
+	 * @param {Variant} elemSymbolOrAtomicNumber
+	 * @param {Number} massNumber
+	 * @param {Hash} coord2D
+	 * @param {Hash} coord3D
+	 * @returns {Kekule.Atom}
+	 * @private
+	 */
+	appendAtom: function(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	{
+		return this.doGetCtab(true).appendAtom(elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D);
+	},
+
+	/**
 	 * Return count of anchorNodes.
 	 * @returns {Int}
 	 */
@@ -3925,7 +5042,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			return this.getCtab().sortConnectors(sortFunc);
 	},
 
-
 	/**
 	 * Check if a connector is in aromatic ring stored in aromaticRings property.
 	 * @param {Kekule.ChemStructureConnector} connector
@@ -3944,17 +5060,35 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * A util method to create a new bond object connected with nodes and append to current connection table.
+	 * @param {Array} nodesOrIndexes Array of connected nodes or indexes of those nodes
+	 * @param {Int} bondOrder Order of bond.
+	 * @param {Int} bondType Type of bond.
+	 * @returns {Kekule.Bond}
+	 */
+	appendBond: function(nodesOrIndexes, bondOrder, bondType)
+	{
+		return this.doGetCtab(true).appendBond(nodesOrIndexes, bondOrder, bondType);
+	},
+
+	/**
 	 * Insert obj before refChild in node or connector list of ctab.
 	 * If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Variant} obj A node or connector.
 	 * @param {Variant} refChild Ref node or connector
 	 * @return {Int} Index of obj after inserting.
 	 */
-	insertBefore: function(obj, refChild)
+	insertBefore: function($super, obj, refChild)
 	{
-		if (this.hasCtab())
-			return this.getCtab().insertBefore(obj, refChild);
+		var result = -1;
+		if (this.hasCtab()
+				&amp;&amp; (obj instanceof Kekule.ChemStructureObject) &amp;&amp; (!refChild || refChild instanceof Kekule.ChemStructureObject))
+			result = this.getCtab().insertBefore(obj, refChild);
+		if (result &lt; 0)
+			result = $super(obj, refChild);
+		return result;
 	},
+
 
 	/**
 	 * Returns nodes or connectors that should be removed cascadely with childObj.
@@ -3985,9 +5119,9 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.removeChildObj(obj);
+		return this.removeChildObj(obj) || $super(obj);
 	},
 
 	/**
@@ -4071,17 +5205,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 */
 	getSubFragments: function()
 	{
-		/*
-		var result = [];
-		for (var i = 0, l = this.getNodeCount(); i &lt; l; ++i)
-		{
-			var node = this.getNodeAt(i);
-			if (this.isSubFragment(node))
-				result.push(node);
-		}
-		return result;
-		*/
 		return this.hasCtab()? this.getCtab().getSubFragments(): [];
+	},
+	/**
+	 * Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this fragment.
+	 * Note if a sub group has no children, it will not be regarded as sub fragment.
+	 * @returns {Bool}
+	 */
+	hasSubFragments: function()
+	{
+		return this.hasCtab()? this.getCtab().hasSubFragments(): false;
 	},
 	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
@@ -4106,6 +5239,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return result;
 		*/
 		return this.hasCtab()? this.getCtab().getLeafNodes(): [];
+	},
+	/**
+	 * Returns the direct node/substructure that contains originObj.
+	 * originObj may be a child node or connector of substructure in this structure fragment.
+	 * If originObj is actually not in this ctab, null will be returned.
+	 * @param {Kekule.ChemStructureObject} originObj
+	 * @returns {Kekule.ChemStructureNode}
+	 */
+	findDirectChildOfObj: function(originObj)
+	{
+		return this.hasCtab()? this.getCtab().findDirectChildOfObj(originObj): null;
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
@@ -4143,6 +5287,61 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			this.setCtab(undefined);
 		if (this.hasFormula())
 			this.setFormula(undefined);
+	},
+
+	/**
+	 * Clean the structure in ctab, removing illegal nodes and connectors.
+	 * @param {Hash} options An option hash, can including fields: {orphanChemNode, hangingChemConnector}.
+	 */
+	clean: function(options)
+	{
+		var op = Object.extend({}, Kekule.globalOptions.algorithm.structureClean.structureCleanOptions);
+		op = Object.extend(op, options || {});
+
+		return this.doClean(op);
+	},
+	/** @private */
+	doClean: function(options)
+	{
+		if (options.hangingChemConnector)
+		{
+			for (var i = this.getConnectorCount() - 1; i >= 0; --i)
+			{
+				var conn = this.getConnectorAt(i);
+				if (conn instanceof Kekule.ChemStructureConnector)
+				{
+					if (conn.getConnectedObjCount() &lt; 2)
+					{
+						this.removeConnectorAt(i);
+					}
+				}
+			}
+		}
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) &amp;&amp; node.doClean)
+				{
+					node.doClean(options);
+				}
+				else
+				{
+					if (options.orphanChemNode)
+					{
+						if (node.getLinkedConnectorCount() &lt; 1 &amp;&amp; nodeCount > 1)  // if only one node in structure, do not clean it
+						{
+							this.removeNodeAt(i);
+						}
+					}
+				}
+			}
+		}
+
+		return this;
 	},
 
 	/**
@@ -4185,7 +5384,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						continue;
 					var isAnchor = false;
 					var connectors = node.getLinkedConnectors();
-					for (j = 0, k = connectors.length; j &lt; k; ++j)
+					for (var j = 0, k = connectors.length; j &lt; k; ++j)
 					{
 						var connector = connectors[j];
 						var isExternalConnector = false;
@@ -4365,6 +5564,153 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				this.endUpdate();
 			}
 		}
+	},
+
+	/**
+	 * Copy additional structure info to shadow fragment.
+	 * @param shadowFragment
+	 * @param srcToShadowMap
+	 * @param shadowToSrcMap
+	 * @private
+	 */
+	_copyAdditionalInfoToShadowFragment: function(shadowFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var sourceFragment = this;
+		// copy aromatic rings info
+		var srcAromaticRings = sourceFragment.getAromaticRings();
+		if (srcAromaticRings &amp;&amp; srcAromaticRings.length)
+		{
+			var shadowAromaticRings = [];
+			for (var i = 0, l = srcAromaticRings.length; i &lt; l; ++i)
+			{
+				var srcAromaticRing = srcAromaticRings[i];
+				var shadowNodes = [], shadowConnectors = [];
+				for (var j = 0, k = srcAromaticRing.nodes.length; j &lt; k; ++j)
+				{
+					var shadowObj = srcToShadowMap.get(srcAromaticRing.nodes[j]);
+					if (shadowObj)
+						shadowNodes.push(shadowObj);
+				}
+				for (var j = 0, k = srcAromaticRing.connectors.length; j &lt; k; ++j)
+				{
+					var shadowObj = srcToShadowMap.get(srcAromaticRing.connectors[j]);
+					if (shadowObj)
+						shadowConnectors.push(shadowObj);
+				}
+				shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+			}
+			shadowFragment.setAromaticRings(shadowAromaticRings);
+		}
+	},
+	/**
+	 * Returns the shadow fragment with all subgroups unmarshalled
+	 * @param {Bool} autoCreate Whether allow to create new one when the shadow does not exists.
+	 * @returns {Kekule.StructureFragment}
+	 */
+	getFlattenedShadowFragment: function(autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return this;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getShadowFragment() : null;
+		}
+	},
+	/**
+	 * Returns the flatterned shadowed object of source.
+	 * @param {Kekule.ChemStructureObject} srcObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getFlatternedShadowShadowObj: function(srcObj, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return srcObj;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getShadowObj(srcObj) : null;
+		}
+	},
+	/**
+	 * Returns the source object from flatterned shadow.
+	 * @param {Kekule.ChemStructureObject} shadowObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getFlatternedShadowSourceObj: function(shadowObj, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return shadowObj;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			return shadow ? shadow.getSourceObj(shadowObj) : null;
+		}
+	},
+
+	/**
+	 * Returns the flatterned shadowed objects of source.
+	 * @param {Array} srcObjs
+	 * @returns {Array}
+	 */
+	getFlatternedShadowShadowObjs: function(srcObjs, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return srcObjs;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			var result = [];
+			if (shadow)
+			{
+				for (var i = 0, l = srcObjs.length; i &lt; l; ++i)
+				{
+					result.push(shadow.getShadowObj(srcObjs[i]))
+				}
+			}
+			return result
+		}
+	},
+	/**
+	 * Returns the source objects from flatterned shadow.
+	 * @param {Array} shadowObjs
+	 * @returns {Array}
+	 */
+	getFlatternedShadowSourceObjs: function(shadowObjs, autoCreate)
+	{
+		if (this.getFlattenedShadowOnSelf())
+			return shadowObjs;
+		else
+		{
+			var shadow = this.getFlattenedShadow(autoCreate);
+			var result = [];
+			if (shadow)
+			{
+				for (var i = 0, l = shadowObjs.length; i &lt; l; ++i)
+				{
+					result.push(shadow.getSourceObj(shadowObjs[i]));
+				}
+			}
+			return result;
+		}
+	},
+
+	/**
+	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
+	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
+	 * @param {Bool} breadthFirst Set to true to use breadth first algorithm or false to use depth first algorithm.
+	 * @param {Array} partialNodes If this param is set, only part of the structure will be traversed.
+	 * @returns {Hash} A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.
+	 *   Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.
+	 *   If the structure has no ctab, null will be returned.
+	 */
+	traverse: function(callback, startingNode, breadthFirst, partialNodes)
+	{
+		if (this.hasCtab())
+			return this.getCtab().traverse(callback, startingNode, breadthFirst);
+		else
+			return null;
 	}
 });
 
@@ -4448,6 +5794,103 @@ Kekule.StructureFragment.moveChildBetweenStructFragment = function(target, dest,
 };
 
 /**
+ * Represent an "shadow" of structure fragment.
+ * The shadow is cloned fragment from source with two maps (source->shadow and shadow->source)
+ * to connect all child nodes/connectors between shadow and source fragment.
+ * @class
+ * @augments ObjectEx
+ *
+ * @param {Kekule.StructureFragment} srcFragment
+ *
+ * @property {Kekule.MapEx} shadowToSourceMap
+ * @property {Kekule.MapEx} sourceToShadowMap
+ * @property {Kekule.StructureFragment} shadowFragment
+ */
+Kekule.StructureFragmentShadow = Class.create(ObjectEx,
+/** @lends Kekule.StructureFragmentShadow# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.StructureFragmentShadow',
+	initialize: function($super, srcFragment)
+	{
+		if (!srcFragment)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.SOURCE_FRAGMENT_NOT_SET'));
+			return;
+		}
+		$super();
+		this.setPropStoreFieldValue('shadowToSourceMap', new Kekule.MapEx());
+		this.setPropStoreFieldValue('sourceToShadowMap', new Kekule.MapEx());
+		var shadowFragment = this._createShadowFragment(srcFragment, this.getSourceToShadowMap(), this.getShadowToSourceMap());
+		this.setPropStoreFieldValue('shadowFragment', shadowFragment);
+	},
+	doFinalize: function($super)
+	{
+		this.getShadowToSourceMap().finalize();
+		this.getSourceToShadowMap().finalize();
+		this.getShadowFragment().finalize();
+		this.setPropStoreFieldValue('shadowToSourceMap', null);
+		this.setPropStoreFieldValue('sourceToShadowMap', null);
+		this.setPropStoreFieldValue('shadowFragment', null);
+		$super();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('shadowFragment', {'dataType': 'Kekule.StructureFragment', 'setter': null});
+		this.defineProp('sourceToShadowMap', {'dataType': 'Kekule.MapEx', 'setter': null});
+		this.defineProp('shadowToSourceMap', {'dataType': 'Kekule.MapEx', 'setter': null});
+	},
+
+	/**
+	 * Create the shadow fragment from source, and fill the two direction maps.
+	 * @param sourceFragment
+	 * @private
+	 */
+	_createShadowFragment: function(sourceFragment, srcToShadowMap, shadowToSrcMap)
+	{
+		var result = sourceFragment.clone();
+		this._mapFragmentChildren(sourceFragment, result, srcToShadowMap, shadowToSrcMap);
+		return result;
+	},
+	/** @private */
+	_mapFragmentChildren: function(src, shadow, srcToShadowMap, shadowToSrcMap)
+	{
+		for (var i = 0, l = src.getChildCount(); i &lt; l; ++i)
+		{
+			var srcObj = src.getChildAt(i);
+			var shadowObj = shadow.getChildAt(i);
+			srcToShadowMap.set(srcObj, shadowObj);
+			shadowToSrcMap.set(shadowObj, srcObj);
+			// if object is nested, cascade the mapping
+			if (srcObj.getChildCount &amp;&amp; shadowObj.getChildCount)
+			{
+				this._mapFragmentChildren(srcObj, shadowObj, srcToShadowMap, shadowToSrcMap);
+			}
+		}
+	},
+
+	/**
+	 * Returns the shadowed object of source.
+	 * @param {Kekule.ChemStructureObject} srcObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getShadowObj: function(srcObj)
+	{
+		return this.getSourceToShadowMap().get(srcObj);
+	},
+	/**
+	 * Returns the source object from shadow.
+	 * @param {Kekule.ChemStructureObject} shadowObj
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getSourceObj: function(shadowObj)
+	{
+		return this.getShadowToSourceMap().get(shadowObj);
+	}
+});
+
+/**
  * Represent an substituent group.
  * @class
  * @augments Kekule.StructureFragment
@@ -4458,7 +5901,9 @@ Kekule.StructureFragment.moveChildBetweenStructFragment = function(target, dest,
  * @param {Object} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {String} name Name of group.
- * @property {String} abbr Abbreviation of group.
+ * @property {String} abbr Abbreviation of group, e.g. OMe.
+ * @property {String} formulaText Formula in plain text to represent subgroup, e.g. CO2H.
+ *   This property has nothing to do with the actual formula of subgroup.
  */
 Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 /** @lends Kekule.SubGroup# */
@@ -4478,6 +5923,7 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 	initProperties: function()
 	{
 		this.defineProp('abbr', {'dataType': DataType.STRING});
+		this.defineProp('formulaText', {'dataType': DataType.STRING});
 		this.defineProp('name', {'dataType': DataType.STRING});
 	},
 	/** @private */
@@ -4594,7 +6040,11 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 						for (var i = 0, l = value.length; i &lt; l; ++i)
 							this.assertConnectedObjLegal(value[i]);
 						for (var i = 0, l = value.length; i &lt; l; ++i)
-							Kekule.ArrayUtils.pushUnique(objs, value[i]);
+						{
+							var obj = value[i];
+							var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+							Kekule.ArrayUtils.pushUnique(objs, actualConnObj);
+						}
 					}
 					else
 						this.setPropStoreFieldValue('connectedObjs', []);
@@ -4619,6 +6069,22 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	getStructureRelatedPropNames: function($super)
 	{
 		return $super().concat(['connectedObjs']);
+	},
+
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'connectedObjCount'))
+			{
+				var c1 = this.getConnectedObjCount();
+				var c2 = targetObj.getConnectedObjCount &amp;&amp; targetObj.getConnectedObjCount();
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+		}
+		return result;
 	},
 
 	/**
@@ -4647,7 +6113,8 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 					'Unable to link mistyped node to connector'
 			);
 		}
-		else if (obj.getOwner() != this.getOwner())
+		else if (obj.getOwner() &amp;&amp; obj.getOwner() != this.getOwner())
+		// if owner is null, still allow connect, this may occur when undo remove a subgroup in editor
 		{
 			Kekule.chemError(
 				Kekule.hasLocalRes()?
@@ -4717,9 +6184,10 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	appendConnectedObj: function(obj)
 	{
 		this.assertConnectedObjLegal(obj);
-		var result = this._doAppendConnectedObj(obj);
-		if (obj)
-			obj.appendLinkedConnector(this);
+		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+		var result = this._doAppendConnectedObj(actualConnObj);
+		if (actualConnObj)
+			actualConnObj.appendLinkedConnector(this);
 		return result;
 	},
 	/** @private */
@@ -4738,21 +6206,22 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	insertConnectedObjAt: function(obj, index)
 	{
 		this.assertConnectedObjLegal(obj);
-		var i = this.indexOfConnectedObj(obj);
+		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
+		var i = this.indexOfConnectedObj(actualConnObj);
 		var objs = this.getConnectedObjs();
 		if (i >= 0)  // already inside, adjust position
 		{
 			objs.splice(i, 1);
-			objs.splice(index, 0, obj);
+			objs.splice(index, 0, actualConnObj);
 			this.notifyConnectedObjsChanged();
 		}
 		else // new one
 		{
-			objs.splice(index, 0, obj);
-			if (obj)
-				obj.appendLinkedConnector(this);
+			objs.splice(index, 0, actualConnObj);
+			if (actualConnObj)
+				actualConnObj.appendLinkedConnector(this);
 			//console.log('insert new one', obj.getLinkedConnectorCount());
-			this.connectedObjAdded(obj);
+			this.connectedObjAdded(actualConnObj);
 		}
 	},
 	/**
@@ -4877,7 +6346,7 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 			}
 			else
 				return childObj;
-		}
+		};
 
 		for (var i = 0, l = objs.length; i &lt; l; ++i)
 		{
@@ -4945,10 +6414,36 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 			}
 		});
 	},
+
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'stereo'))  // parity null/0 should be regard as one in comparison
+			{
+				var c1 = this.getParity() || Kekule.StereoParity.UNKNOWN;
+				var c2 = (targetObj.getParity &amp;&amp; targetObj.getParity()) || Kekule.StereoParity.UNKNOWN;
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+		}
+		return result;
+	},
+
 	/** @ignore */
 	clearStructureFlags: function()
 	{
 		this.setParity(Kekule.StereoParity.NONE);
+	},
+
+	/**
+	 * Get count of connected chem nodes.
+	 * @returns {Int}
+	 */
+	getConnectedChemNodeCount: function()
+	{
+		return this.getConnectedChemNodes().length;
 	},
 	/**
 	 * Returns connected objects except hydrogen atoms.
@@ -5087,8 +6582,8 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	initialize: function($super, id, connectedObjs, bondOrder, electronCount, bondType)
 	{
 		$super(id, connectedObjs || []);
-		if (bondOrder || electronCount)
-			this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount));
+		if (bondOrder || electronCount || bondType)
+			this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount, bondType));
 	},
 	/** @private */
 	initProperties: function()
@@ -5117,7 +6612,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 				},
 			'setter': function(value)
 				{
-					this.changeBondForm(value, Kekule.ElectronSet.UNSET_ELECTRONCOUNT);
+					this.changeBondForm(value, Kekule.ElectronSet.UNSET_ELECTRONCOUNT, this.getBondType());
 				}
 		});
 		this.defineProp('bondValence', {
@@ -5142,7 +6637,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 			'setter': function(value)
 				{
 					var order = this.getBondOrder();
-					this.changeBondForm(order, value);
+					this.changeBondForm(order, value, this.getBondType());
 				}
 		});
 		this.defineProp('stereo', {'dataType': DataType.INT, 'enumSource': Kekule.BondStereo, 'defaultValue': Kekule.BondStereo.NONE});
@@ -5160,8 +6655,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		});
 	},
 	/** @private */
-	initPropValues: function()
+	initPropValues: function($super)
 	{
+		$super();
 		this.setPropStoreFieldValue('stereo', Kekule.BondStereo.NONE);
 	},
 	/** @private */
@@ -5188,6 +6684,43 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 			return null;
 	},
 
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'bondType'))
+				result.push('bondType');
+			/* Bond order must handle seperatorly, as there may be aromatic bond
+			if (this._getComparisonOptionFlagValue(options, 'bondOrder'))
+				result.push('bondOrder');
+			*/
+		}
+		return result;
+	},
+	/** @ignore */
+	doCompare: function($super, targetObj, options)
+	{
+		var result = $super(targetObj, options);
+		if (!result &amp;&amp; options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			if (this._getComparisonOptionFlagValue(options, 'connectedObjCount'))
+			{
+				var c1 = this.getConnectedObjCount();
+				var c2 = targetObj.getConnectedObjCount &amp;&amp; targetObj.getConnectedObjCount();
+				result = this.doCompareOnValue(c1, c2, options);
+			}
+			if (!result &amp;&amp; this._getComparisonOptionFlagValue(options, 'bondOrder'))
+			{
+				var eCount1 = Math.round(this.getElectronCount());
+				var eCount2 = Math.round(targetObj.getElectronCount());
+				result = this.doCompareOnValue(eCount1, eCount2, options);
+			}
+		}
+		return result;
+	},
+
 	/**
 	 * Change bond form to new order or electron number.
 	 * @private
@@ -5195,6 +6728,13 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	changeBondForm: function(bondOrder, electronCount, bondType)
 	{
 		this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount, bondType));
+	},
+	/** @private */
+	canInvertBondDirection: function()
+	{
+		var BT = Kekule.BondType;
+		var bType = this.getBondType();
+		return [BT.COVALENT, BT.IONIC, BT.METALLIC, BT.HYDROGEN, BT.UNKNOWN].indexOf(bType) >= 0;
 	},
 	/**
 	 * Change bond direction to a inverted one (in case when connected object order swapped).
@@ -5208,9 +6748,16 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	/** @ignore */
 	reverseConnectedObjOrder: function($super)
 	{
-		$super();
-		// direction of bond also need to be reversed
-		this.invertBondDirection();
+		if (this.canInvertBondDirection())
+		{
+			$super();
+			// direction of bond also need to be reversed
+			this.invertBondDirection();
+		}
+		else // can not reverse a directed bond, do nothing
+		{
+
+		}
 	},
 
 	/**
@@ -5336,6 +6883,17 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		return $super().concat(['items']);
 	},
 
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			result.push('items');
+		}
+		return result;
+	},
+
 	/** @private */
 	ownerChanged: function($super, newOwner)
 	{
@@ -5377,7 +6935,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		{
 			for (var i = 0, l = classes.length; i &lt; l; ++i)
 			{
-				if (obj instanceof eval(classes[i]))
+				if (obj instanceof ClassEx.findClass(classes[i]))
 					return true;
 			}
 			// not match
@@ -5526,7 +7084,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 * @param {Int} index
 	 * @param {Hash} attributes Additional attributes of this object. Can be null.
 	 */
-	insertObj: function(obj, index, attribute)
+	insertObj: function(obj, index, attributes)
 	{
 		if (!obj)
 			return;
@@ -5683,7 +7241,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		if (obj instanceof Kekule.ChemObject)
 			return this.insertObj(obj, index);
 		else  // item
-			return this.insertItem(obj);
+			return this.insertItem(obj, index);
 	},
 	/**
 	 * Insert attrib-object pair item before refChild in group.
@@ -5696,7 +7254,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		var refIndex = this.indexOfItem(refChild);
 		if (refIndex &lt; 0)
 			refIndex = this.indexOfObj(refChild);
-		return this.insertChild(item, refChild);
+		return this.insertChild(item, refIndex);
 	},
 	/**
 	 * Remove a child at index.
@@ -5711,13 +7269,15 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 * Remove an object or attrib-object pair item from group.
 	 * @param {Variant} obj
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
+		var result;
 		var index = this.indexOfItem(obj);
 		if (index &lt;= 0)
 			index = this.indexOfObj(obj);
 		if (index >= 0)
-			this.removeItemAt(index);
+			result = this.removeItemAt(index);
+		return result || $super(obj);
 	}
 });
 
@@ -5781,6 +7341,17 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 						this.setPropStoreFieldValue('subMolecules', new Kekule.MoleculeGroup());
 					return this.getPropStoreFieldValue('subMolecules');
 				}});
+	},
+
+	/** @ignore */
+	doGetComparisonPropNames: function($super, options)
+	{
+		var result = $super(options);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			result.push('subMolecules');
+		}
+		return result;
 	},
 
 	/** @private */
@@ -5858,7 +7429,7 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 				if (box)
 				{
 					if (!result)
-						result = Object.extend({}, box);
+						result = Kekule.BoxUtils.clone(box); //Object.extend({}, box);
 					else
 						result = Kekule.BoxUtils.getContainerBox(result, box);
 				}
@@ -5916,9 +7487,10 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Object} obj
 	 * @returns {Int} Index of obj after appending.
 	 */
-	appendChild: function(obj)
+	appendChild: function($super, obj)
 	{
-		return this.getSubMolecules().appendChild(obj);
+		return $super(obj);
+		//return this.getSubMolecules().appendChild(obj);
 	},
 	/**
 	 * Insert obj to index of children list of root. If obj already inside, its position will be changed.
@@ -5936,9 +7508,12 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
-	insertBefore: function(obj, refChild)
+	insertBefore: function($super, obj, refChild)
 	{
-		return this.getSubMolecules().insertBefore(obj, refChild);
+		if (obj instanceof Kekule.StructureFragment)
+			return this.getSubMolecules().insertBefore(obj, refChild);
+		else
+			return $super(obj, refChild);
 	},
 	/**
 	 * Remove a child at index.
@@ -5954,9 +7529,9 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
-	removeChild: function(obj)
+	removeChild: function($super, obj)
 	{
-		return this.getSubMolecules().removeChild(obj);
+		return this.getSubMolecules().removeChild(obj) || $super(obj);
 	}
 });
 
@@ -6029,14 +7604,18 @@ Kekule.ChemStructureNodeFactory = {
 	/** @private */
 	CANDIDATE_CLASSES: [Kekule.SubGroup, Kekule.VariableAtom, Kekule.Pseudoatom /*, Kekule.Atom*/],
 
-	getClassByLabel: function(label)
+	getClassByLabel: function(label, defaultClass)
 	{
+		if (defaultClass === undefined)
+		{
+			defaultClass = Kekule.Pseudoatom;
+		}
 		var NL = Kekule.ChemStructureNodeLabels;
 		var candidateLabels = [
 			[NL.SUBGROUP],
 			[NL.VARIABLE_ATOM],
 			[NL.DUMMY_ATOM, NL.HETERO_ATOM, NL.ANY_ATOM, NL.CUSTOM_ATOM]
-		]
+		];
 		var classes = Kekule.ChemStructureNodeFactory.CANDIDATE_CLASSES;
 		var cclass;
 		for (var i = 0, l = classes.length; i &lt; l; ++i)
@@ -6049,7 +7628,7 @@ Kekule.ChemStructureNodeFactory = {
 				break;
 			}
 		}
-		if (!cclass)  // class not found, use default one, atom or custom pseudoatom
+		if (!cclass)  // class not found, check if it is atom or use default one
 		{
 			/*
 			if (label === Kekule.ChemStructureNodeLabels.DEUTERIUM)
@@ -6059,7 +7638,7 @@ Kekule.ChemStructureNodeFactory = {
 			if (Kekule.IsotopesDataUtil.isIsotopeIdAvailable(label))
 				cclass = Kekule.Atom;
 			else
-				cclass = Kekule.Pseudoatom;
+				cclass = defaultClass;
 		}
 		return cclass;
 	},
@@ -6077,6 +7656,8 @@ Kekule.ChemStructureNodeFactory = {
 		return result;
 	}
 }
+
+})();
 </code></pre>
         </article>
     </section>
@@ -6087,13 +7668,13 @@ Kekule.ChemStructureNodeFactory = {
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:23 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

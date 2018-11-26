@@ -29,8 +29,6 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
-        
         SubGroup
         </h2>
         
@@ -270,7 +268,30 @@
 
             
 
-            <td class="description last">Abbreviation of group.</td>
+            <td class="description last">Abbreviation of group, e.g. OMe.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>formulaText</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Formula in plain text to represent subgroup, e.g. CO2H.  This property has nothing to do with the actual formula of subgroup.</td>
         </tr>
 
     
@@ -307,7 +328,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4435">line 4435</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5880">line 5880</a>
     </li></ul></dd>
     
 
@@ -464,7 +485,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3729">line 3729</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4846">line 4846</a>
     </li></ul></dd>
     
 
@@ -487,6 +508,203 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="appendBond"><span class="type-signature"></span>appendBond<span class="signature">(nodesOrIndexes, bondOrder, bondType)</span><span class="type-signature"> &rarr; {<a href="Kekule.Bond.html">Kekule.Bond</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A util method to create a new bond object connected with nodes and append to current connection table.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>nodesOrIndexes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array of connected nodes or indexes of those nodes</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bondOrder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order of bond.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bondType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of bond.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#appendBond">Kekule.StructureFragment#appendBond</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5041">line 5041</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.Bond.html">Kekule.Bond</a></span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -597,7 +815,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3825">line 3825</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4942">line 4942</a>
     </li></ul></dd>
     
 
@@ -730,7 +948,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line398">line 398</a>
     </li></ul></dd>
     
 
@@ -863,7 +1081,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3570">line 3570</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4673">line 4673</a>
     </li></ul></dd>
     
 
@@ -948,7 +1166,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4124">line 4124</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5323">line 5323</a>
     </li></ul></dd>
     
 
@@ -989,6 +1207,139 @@
 </dl>
 
         
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="clean"><span class="type-signature"></span>clean<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Clean the structure in ctab, removing illegal nodes and connectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An option hash, can including fields: {orphanChemNode, hangingChemConnector}.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#clean">Kekule.StructureFragment#clean</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5268">line 5268</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -1051,7 +1402,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4112">line 4112</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5256">line 5256</a>
     </li></ul></dd>
     
 
@@ -1136,7 +1487,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3779">line 3779</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4896">line 4896</a>
     </li></ul></dd>
     
 
@@ -1221,7 +1572,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3885">line 3885</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5002">line 5002</a>
     </li></ul></dd>
     
 
@@ -1306,7 +1657,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3644">line 3644</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4747">line 4747</a>
     </li></ul></dd>
     
 
@@ -1329,6 +1680,711 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="compareStructure"><span class="type-signature"></span>compareStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Explicit set compare method to chem structure and compare to targetObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>targetObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#compareStructure">Kekule.ChemStructureObject#compareStructure</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line312">line 312</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="equalStructure"><span class="type-signature"></span>equalStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Check if this object and targetObj has equivalent chem structure.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>targetObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#equalStructure">Kekule.ChemStructureObject#equalStructure</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line324">line 324</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="fetchChargeMarker"><span class="type-signature"></span>fetchChargeMarker<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get charge marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureNode.html#fetchChargeMarker">Kekule.ChemStructureNode#fetchChargeMarker</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="chemdoc_kekule.commonChemMarkers.js.html">chemdoc/kekule.commonChemMarkers.js</a>, <a href="chemdoc_kekule.commonChemMarkers.js.html#line229">line 229</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="fetchRadicalMarker"><span class="type-signature"></span>fetchRadicalMarker<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get radical marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureNode.html#fetchRadicalMarker">Kekule.ChemStructureNode#fetchRadicalMarker</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="chemdoc_kekule.commonChemMarkers.js.html">chemdoc/kekule.commonChemMarkers.js</a>, <a href="chemdoc_kekule.commonChemMarkers.js.html#line237">line 237</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="findDirectChildOfObj"><span class="type-signature"></span>findDirectChildOfObj<span class="signature">(originObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureNode.html">Kekule.ChemStructureNode</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the direct node/substructure that contains originObj.originObj may be a child node or connector of substructure in this structure fragment.If originObj is actually not in this ctab, null will be returned.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>originObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#findDirectChildOfObj">Kekule.StructureFragment#findDirectChildOfObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5222">line 5222</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureNode.html">Kekule.ChemStructureNode</a></span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -1391,7 +2447,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4086">line 4086</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5230">line 5230</a>
     </li></ul></dd>
     
 
@@ -1498,7 +2554,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4104">line 4104</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5248">line 5248</a>
     </li></ul></dd>
     
 
@@ -1653,7 +2709,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3711">line 3711</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4828">line 4828</a>
     </li></ul></dd>
     
 
@@ -1756,7 +2812,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3702">line 3702</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4819">line 4819</a>
     </li></ul></dd>
     
 
@@ -1907,7 +2963,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4009">line 4009</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5143">line 5143</a>
     </li></ul></dd>
     
 
@@ -2010,7 +3066,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3997">line 3997</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5131">line 5131</a>
     </li></ul></dd>
     
 
@@ -2161,7 +3217,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3797">line 3797</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4914">line 4914</a>
     </li></ul></dd>
     
 
@@ -2312,7 +3368,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3463">line 3463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4566">line 4566</a>
     </li></ul></dd>
     
 
@@ -2415,7 +3471,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3788">line 3788</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4905">line 4905</a>
     </li></ul></dd>
     
 
@@ -2566,7 +3622,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line451">line 451</a>
     </li></ul></dd>
     
 
@@ -2674,7 +3730,7 @@
 
             
 
-            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+            <td class="description last">Determine to calculate 2D or 3D box. Value from Kekule.CoordMode.</td>
         </tr>
 
     
@@ -2740,7 +3796,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3430">line 3430</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4533">line 4533</a>
     </li></ul></dd>
     
 
@@ -2895,7 +3951,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line697">line 697</a>
     </li></ul></dd>
     
 
@@ -3050,7 +4106,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line706">line 706</a>
     </li></ul></dd>
     
 
@@ -3157,7 +4213,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3545">line 3545</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4648">line 4648</a>
     </li></ul></dd>
     
 
@@ -3192,6 +4248,761 @@
     <dd>
         
 <span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlattenedShadowFragment"><span class="type-signature"></span>getFlattenedShadowFragment<span class="signature">(autoCreate)</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the shadow fragment with all subgroups unmarshalled
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>autoCreate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Whether allow to create new one when the shadow does not exists.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlattenedShadowFragment">Kekule.StructureFragment#getFlattenedShadowFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5582">line 5582</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowShadowObj"><span class="type-signature"></span>getFlatternedShadowShadowObj<span class="signature">(srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the flatterned shadowed object of source.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowShadowObj">Kekule.StructureFragment#getFlatternedShadowShadowObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5597">line 5597</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowShadowObjs"><span class="type-signature"></span>getFlatternedShadowShadowObjs<span class="signature">(srcObjs)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the flatterned shadowed objects of source.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObjs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowShadowObjs">Kekule.StructureFragment#getFlatternedShadowShadowObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5628">line 5628</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowSourceObj"><span class="type-signature"></span>getFlatternedShadowSourceObj<span class="signature">(shadowObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the source object from flatterned shadow.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowSourceObj">Kekule.StructureFragment#getFlatternedShadowSourceObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5612">line 5612</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowSourceObjs"><span class="type-signature"></span>getFlatternedShadowSourceObjs<span class="signature">(shadowObjs)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the source objects from flatterned shadow.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowObjs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowSourceObjs">Kekule.StructureFragment#getFlatternedShadowSourceObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5651">line 5651</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
 
 
     </dd>
@@ -3260,7 +5071,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4063">line 4063</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5196">line 5196</a>
     </li></ul></dd>
     
 
@@ -3415,7 +5226,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line576">line 576</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line869">line 869</a>
     </li></ul></dd>
     
 
@@ -3566,7 +5377,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line559">line 559</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line852">line 852</a>
     </li></ul></dd>
     
 
@@ -3717,7 +5528,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -3820,7 +5631,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -3923,7 +5734,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line611">line 611</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line904">line 904</a>
     </li></ul></dd>
     
 
@@ -4026,7 +5837,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
     </li></ul></dd>
     
 
@@ -4129,7 +5940,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line591">line 591</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line884">line 884</a>
     </li></ul></dd>
     
 
@@ -4232,7 +6043,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line514">line 514</a>
     </li></ul></dd>
     
 
@@ -4335,7 +6146,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line529">line 529</a>
     </li></ul></dd>
     
 
@@ -4438,7 +6249,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -4589,7 +6400,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3985">line 3985</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5119">line 5119</a>
     </li></ul></dd>
     
 
@@ -4740,7 +6551,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3499">line 3499</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4602">line 4602</a>
     </li></ul></dd>
     
 
@@ -4891,7 +6702,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3537">line 3537</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4640">line 4640</a>
     </li></ul></dd>
     
 
@@ -5042,7 +6853,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3445">line 3445</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4548">line 4548</a>
     </li></ul></dd>
     
 
@@ -5145,7 +6956,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3490">line 3490</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4593">line 4593</a>
     </li></ul></dd>
     
 
@@ -5296,7 +7107,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3481">line 3481</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4584">line 4584</a>
     </li></ul></dd>
     
 
@@ -5399,7 +7210,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line333">line 333</a>
     </li></ul></dd>
     
 
@@ -5502,7 +7313,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line843">line 843</a>
     </li></ul></dd>
     
 
@@ -5537,6 +7348,109 @@
     <dd>
         
 <span class="param-type"><a href="Kekule.Isotope.html">Kekule.Isotope</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getRootFragment"><span class="type-signature"></span>getRootFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the root parent of <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, rather than subgroups.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getRootFragment">Kekule.ChemStructureObject#getRootFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line342">line 342</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
 
 
     </dd>
@@ -5605,7 +7519,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4044">line 4044</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5178">line 5178</a>
     </li></ul></dd>
     
 
@@ -5760,7 +7674,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3970">line 3970</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5104">line 5104</a>
     </li></ul></dd>
     
 
@@ -5934,7 +7848,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3817">line 3817</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4934">line 4934</a>
     </li></ul></dd>
     
 
@@ -6037,7 +7951,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3383">line 3383</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4486">line 4486</a>
     </li></ul></dd>
     
 
@@ -6122,7 +8036,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3390">line 3390</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4493">line 4493</a>
     </li></ul></dd>
     
 
@@ -6278,7 +8192,110 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3518">line 3518</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4621">line 4621</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="hasSubFragments"><span class="type-signature"></span>hasSubFragments<span class="signature">()</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this fragment.Note if a sub group has no children, it will not be regarded as sub fragment.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#hasSubFragments">Kekule.StructureFragment#hasSubFragments</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5187">line 5187</a>
     </li></ul></dd>
     
 
@@ -6429,7 +8446,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3721">line 3721</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4838">line 4838</a>
     </li></ul></dd>
     
 
@@ -6580,7 +8597,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4021">line 4021</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5155">line 5155</a>
     </li></ul></dd>
     
 
@@ -6735,7 +8752,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3807">line 3807</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4924">line 4924</a>
     </li></ul></dd>
     
 
@@ -6886,7 +8903,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line390">line 390</a>
     </li></ul></dd>
     
 
@@ -7037,7 +9054,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3508">line 3508</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4611">line 4611</a>
     </li></ul></dd>
     
 
@@ -7188,7 +9205,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3527">line 3527</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4630">line 4630</a>
     </li></ul></dd>
     
 
@@ -7366,7 +9383,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3925">line 3925</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5053">line 5053</a>
     </li></ul></dd>
     
 
@@ -7544,7 +9561,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3843">line 3843</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4960">line 4960</a>
     </li></ul></dd>
     
 
@@ -7700,7 +9717,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3589">line 3589</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4692">line 4692</a>
     </li></ul></dd>
     
 
@@ -7833,7 +9850,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3906">line 3906</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5022">line 5022</a>
     </li></ul></dd>
     
 
@@ -7936,7 +9953,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3339">line 3339</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4402">line 4402</a>
     </li></ul></dd>
     
 
@@ -8039,7 +10056,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3317">line 3317</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4380">line 4380</a>
     </li></ul></dd>
     
 
@@ -8142,7 +10159,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line639">line 639</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line932">line 932</a>
     </li></ul></dd>
     
 
@@ -8293,7 +10310,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3686">line 3686</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4789">line 4789</a>
     </li></ul></dd>
     
 
@@ -8444,7 +10461,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4035">line 4035</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5169">line 5169</a>
     </li></ul></dd>
     
 
@@ -8618,7 +10635,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4140">line 4140</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5339">line 5339</a>
     </li></ul></dd>
     
 
@@ -8769,7 +10786,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3663">line 3663</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4766">line 4766</a>
     </li></ul></dd>
     
 
@@ -8920,7 +10937,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3674">line 3674</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4777">line 4777</a>
     </li></ul></dd>
     
 
@@ -9023,7 +11040,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4288">line 4288</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5487">line 5487</a>
     </li></ul></dd>
     
 
@@ -9156,7 +11173,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3765">line 3765</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4882">line 4882</a>
     </li></ul></dd>
     
 
@@ -9289,7 +11306,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3747">line 3747</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4864">line 4864</a>
     </li></ul></dd>
     
 
@@ -9422,7 +11439,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3960">line 3960</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5094">line 5094</a>
     </li></ul></dd>
     
 
@@ -9601,7 +11618,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3951">line 3951</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5085">line 5085</a>
     </li></ul></dd>
     
 
@@ -9757,7 +11774,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3871">line 3871</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4988">line 4988</a>
     </li></ul></dd>
     
 
@@ -9913,7 +11930,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3852">line 3852</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4969">line 4969</a>
     </li></ul></dd>
     
 
@@ -9998,7 +12015,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3412">line 3412</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4515">line 4515</a>
     </li></ul></dd>
     
 
@@ -10083,7 +12100,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3398">line 3398</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4501">line 4501</a>
     </li></ul></dd>
     
 
@@ -10216,7 +12233,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line440">line 440</a>
     </li></ul></dd>
     
 
@@ -10349,7 +12366,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line421">line 421</a>
     </li></ul></dd>
     
 
@@ -10505,7 +12522,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3619">line 3619</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4722">line 4722</a>
     </li></ul></dd>
     
 
@@ -10661,7 +12678,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3598">line 3598</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4701">line 4701</a>
     </li></ul></dd>
     
 
@@ -10746,7 +12763,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line465">line 465</a>
     </li></ul></dd>
     
 
@@ -10902,7 +12919,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3635">line 3635</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4738">line 4738</a>
     </li></ul></dd>
     
 
@@ -11035,7 +13052,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3894">line 3894</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5011">line 5011</a>
     </li></ul></dd>
     
 
@@ -11168,7 +13185,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3653">line 3653</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4756">line 4756</a>
     </li></ul></dd>
     
 
@@ -11191,6 +13208,230 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="traverse"><span class="type-signature"></span>traverse<span class="signature">(callback, startingNode, breadthFirst, partialNodes)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Func</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>startingNode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.StructureNode</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Starting position of travers.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>breadthFirst</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Set to true to use breadth first algorithm or false to use depth first algorithm.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partialNodes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If this param is set, only part of the structure will be traversed.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#traverse">Kekule.StructureFragment#traverse</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5680">line 5680</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.  Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.  If the structure has no ctab, null will be returned.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -11301,7 +13542,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4267">line 4267</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5466">line 5466</a>
     </li></ul></dd>
     
 
@@ -11457,7 +13698,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4226">line 4226</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5425">line 5425</a>
     </li></ul></dd>
     
 
@@ -11550,7 +13791,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -11594,8 +13835,6 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Kekule.html">Kekule</a>.</span>
-        
         SubGroup
         </h2>
         
@@ -11653,7 +13892,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4443">line 4443</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5888">line 5888</a>
     </li></ul></dd>
     
 
@@ -11804,7 +14043,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3729">line 3729</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4846">line 4846</a>
     </li></ul></dd>
     
 
@@ -11827,6 +14066,203 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="appendBond"><span class="type-signature"></span>appendBond<span class="signature">(nodesOrIndexes, bondOrder, bondType)</span><span class="type-signature"> &rarr; {<a href="Kekule.Bond.html">Kekule.Bond</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A util method to create a new bond object connected with nodes and append to current connection table.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>nodesOrIndexes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array of connected nodes or indexes of those nodes</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bondOrder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order of bond.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bondType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Int</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of bond.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#appendBond">Kekule.StructureFragment#appendBond</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5041">line 5041</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.Bond.html">Kekule.Bond</a></span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -11937,7 +14373,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3825">line 3825</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4942">line 4942</a>
     </li></ul></dd>
     
 
@@ -12070,7 +14506,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line169">line 169</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line398">line 398</a>
     </li></ul></dd>
     
 
@@ -12203,7 +14639,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3570">line 3570</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4673">line 4673</a>
     </li></ul></dd>
     
 
@@ -12288,7 +14724,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4124">line 4124</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5323">line 5323</a>
     </li></ul></dd>
     
 
@@ -12329,6 +14765,139 @@
 </dl>
 
         
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="clean"><span class="type-signature"></span>clean<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Clean the structure in ctab, removing illegal nodes and connectors.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An option hash, can including fields: {orphanChemNode, hangingChemConnector}.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#clean">Kekule.StructureFragment#clean</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5268">line 5268</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -12391,7 +14960,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4112">line 4112</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5256">line 5256</a>
     </li></ul></dd>
     
 
@@ -12476,7 +15045,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3779">line 3779</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4896">line 4896</a>
     </li></ul></dd>
     
 
@@ -12561,7 +15130,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3885">line 3885</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5002">line 5002</a>
     </li></ul></dd>
     
 
@@ -12646,7 +15215,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3644">line 3644</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4747">line 4747</a>
     </li></ul></dd>
     
 
@@ -12669,6 +15238,711 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="compareStructure"><span class="type-signature"></span>compareStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Int}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Explicit set compare method to chem structure and compare to targetObj.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>targetObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#compareStructure">Kekule.ChemStructureObject#compareStructure</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line312">line 312</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Int</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="equalStructure"><span class="type-signature"></span>equalStructure<span class="signature">(targetObj, options)</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Check if this object and targetObj has equivalent chem structure.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>targetObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemObject.html">Kekule.ChemObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Hash</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#equalStructure">Kekule.ChemStructureObject#equalStructure</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line324">line 324</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="fetchChargeMarker"><span class="type-signature"></span>fetchChargeMarker<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get charge marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureNode.html#fetchChargeMarker">Kekule.ChemStructureNode#fetchChargeMarker</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="chemdoc_kekule.commonChemMarkers.js.html">chemdoc/kekule.commonChemMarkers.js</a>, <a href="chemdoc_kekule.commonChemMarkers.js.html#line229">line 229</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="fetchRadicalMarker"><span class="type-signature"></span>fetchRadicalMarker<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get radical marker of node. If no such a marker currently and canCreate is true, a new marker will be created.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureNode.html#fetchRadicalMarker">Kekule.ChemStructureNode#fetchRadicalMarker</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="chemdoc_kekule.commonChemMarkers.js.html">chemdoc/kekule.commonChemMarkers.js</a>, <a href="chemdoc_kekule.commonChemMarkers.js.html#line237">line 237</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemMarker.ChemPropertyMarker.html">Kekule.ChemMarker.ChemPropertyMarker</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="findDirectChildOfObj"><span class="type-signature"></span>findDirectChildOfObj<span class="signature">(originObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureNode.html">Kekule.ChemStructureNode</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the direct node/substructure that contains originObj.originObj may be a child node or connector of substructure in this structure fragment.If originObj is actually not in this ctab, null will be returned.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>originObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#findDirectChildOfObj">Kekule.StructureFragment#findDirectChildOfObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5222">line 5222</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureNode.html">Kekule.ChemStructureNode</a></span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -12731,7 +16005,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4086">line 4086</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5230">line 5230</a>
     </li></ul></dd>
     
 
@@ -12838,7 +16112,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4104">line 4104</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5248">line 5248</a>
     </li></ul></dd>
     
 
@@ -12993,7 +16267,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3711">line 3711</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4828">line 4828</a>
     </li></ul></dd>
     
 
@@ -13096,7 +16370,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3702">line 3702</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4819">line 4819</a>
     </li></ul></dd>
     
 
@@ -13247,7 +16521,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4009">line 4009</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5143">line 5143</a>
     </li></ul></dd>
     
 
@@ -13350,7 +16624,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3997">line 3997</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5131">line 5131</a>
     </li></ul></dd>
     
 
@@ -13501,7 +16775,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3797">line 3797</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4914">line 4914</a>
     </li></ul></dd>
     
 
@@ -13652,7 +16926,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3463">line 3463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4566">line 4566</a>
     </li></ul></dd>
     
 
@@ -13755,7 +17029,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3788">line 3788</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4905">line 4905</a>
     </li></ul></dd>
     
 
@@ -13906,7 +17180,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line222">line 222</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line451">line 451</a>
     </li></ul></dd>
     
 
@@ -14014,7 +17288,7 @@
 
             
 
-            <td class="description last">Determine to calculate 2D or 3D box. Value from <a href="Kekule.CoordMode.html">Kekule.CoordMode</a>.</td>
+            <td class="description last">Determine to calculate 2D or 3D box. Value from Kekule.CoordMode.</td>
         </tr>
 
     
@@ -14080,7 +17354,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3430">line 3430</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4533">line 4533</a>
     </li></ul></dd>
     
 
@@ -14235,7 +17509,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line463">line 463</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line697">line 697</a>
     </li></ul></dd>
     
 
@@ -14390,7 +17664,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line472">line 472</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line706">line 706</a>
     </li></ul></dd>
     
 
@@ -14497,7 +17771,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3545">line 3545</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4648">line 4648</a>
     </li></ul></dd>
     
 
@@ -14532,6 +17806,761 @@
     <dd>
         
 <span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlattenedShadowFragment"><span class="type-signature"></span>getFlattenedShadowFragment<span class="signature">(autoCreate)</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the shadow fragment with all subgroups unmarshalled
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>autoCreate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Whether allow to create new one when the shadow does not exists.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlattenedShadowFragment">Kekule.StructureFragment#getFlattenedShadowFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5582">line 5582</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowShadowObj"><span class="type-signature"></span>getFlatternedShadowShadowObj<span class="signature">(srcObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the flatterned shadowed object of source.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowShadowObj">Kekule.StructureFragment#getFlatternedShadowShadowObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5597">line 5597</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowShadowObjs"><span class="type-signature"></span>getFlatternedShadowShadowObjs<span class="signature">(srcObjs)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the flatterned shadowed objects of source.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>srcObjs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowShadowObjs">Kekule.StructureFragment#getFlatternedShadowShadowObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5628">line 5628</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowSourceObj"><span class="type-signature"></span>getFlatternedShadowSourceObj<span class="signature">(shadowObj)</span><span class="type-signature"> &rarr; {<a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the source object from flatterned shadow.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowObj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowSourceObj">Kekule.StructureFragment#getFlatternedShadowSourceObj</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5612">line 5612</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.ChemStructureObject.html">Kekule.ChemStructureObject</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getFlatternedShadowSourceObjs"><span class="type-signature"></span>getFlatternedShadowSourceObjs<span class="signature">(shadowObjs)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the source objects from flatterned shadow.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>shadowObjs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#getFlatternedShadowSourceObjs">Kekule.StructureFragment#getFlatternedShadowSourceObjs</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5651">line 5651</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
 
 
     </dd>
@@ -14600,7 +18629,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4063">line 4063</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5196">line 5196</a>
     </li></ul></dd>
     
 
@@ -14755,7 +18784,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line576">line 576</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line869">line 869</a>
     </li></ul></dd>
     
 
@@ -14906,7 +18935,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line559">line 559</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line852">line 852</a>
     </li></ul></dd>
     
 
@@ -15057,7 +19086,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line152">line 152</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -15160,7 +19189,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line143">line 143</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -15263,7 +19292,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line611">line 611</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line904">line 904</a>
     </li></ul></dd>
     
 
@@ -15366,7 +19395,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line321">line 321</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
     </li></ul></dd>
     
 
@@ -15469,7 +19498,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line591">line 591</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line884">line 884</a>
     </li></ul></dd>
     
 
@@ -15572,7 +19601,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line285">line 285</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line514">line 514</a>
     </li></ul></dd>
     
 
@@ -15675,7 +19704,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line300">line 300</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line529">line 529</a>
     </li></ul></dd>
     
 
@@ -15778,7 +19807,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line270">line 270</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -15929,7 +19958,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3985">line 3985</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5119">line 5119</a>
     </li></ul></dd>
     
 
@@ -16080,7 +20109,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3499">line 3499</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4602">line 4602</a>
     </li></ul></dd>
     
 
@@ -16231,7 +20260,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3537">line 3537</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4640">line 4640</a>
     </li></ul></dd>
     
 
@@ -16382,7 +20411,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3445">line 3445</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4548">line 4548</a>
     </li></ul></dd>
     
 
@@ -16485,7 +20514,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3490">line 3490</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4593">line 4593</a>
     </li></ul></dd>
     
 
@@ -16636,7 +20665,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3481">line 3481</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4584">line 4584</a>
     </li></ul></dd>
     
 
@@ -16739,7 +20768,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line127">line 127</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line333">line 333</a>
     </li></ul></dd>
     
 
@@ -16842,7 +20871,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line550">line 550</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line843">line 843</a>
     </li></ul></dd>
     
 
@@ -16877,6 +20906,109 @@
     <dd>
         
 <span class="param-type"><a href="Kekule.Isotope.html">Kekule.Isotope</a></span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="getRootFragment"><span class="type-signature"></span>getRootFragment<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the root parent of <a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a>, rather than subgroups.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.ChemStructureObject.html#getRootFragment">Kekule.ChemStructureObject#getRootFragment</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line342">line 342</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Kekule.StructureFragment.html">Kekule.StructureFragment</a></span>
 
 
     </dd>
@@ -16945,7 +21077,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4044">line 4044</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5178">line 5178</a>
     </li></ul></dd>
     
 
@@ -17100,7 +21232,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3970">line 3970</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5104">line 5104</a>
     </li></ul></dd>
     
 
@@ -17274,7 +21406,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3817">line 3817</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4934">line 4934</a>
     </li></ul></dd>
     
 
@@ -17377,7 +21509,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3383">line 3383</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4486">line 4486</a>
     </li></ul></dd>
     
 
@@ -17462,7 +21594,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3390">line 3390</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4493">line 4493</a>
     </li></ul></dd>
     
 
@@ -17618,7 +21750,110 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3518">line 3518</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4621">line 4621</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Bool</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="hasSubFragments"><span class="type-signature"></span>hasSubFragments<span class="signature">()</span><span class="type-signature"> &rarr; {Bool}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns whether there are sub fragment(s) (node that have children, usually SubGroup) in this fragment.Note if a sub group has no children, it will not be regarded as sub fragment.
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#hasSubFragments">Kekule.StructureFragment#hasSubFragments</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5187">line 5187</a>
     </li></ul></dd>
     
 
@@ -17769,7 +22004,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3721">line 3721</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4838">line 4838</a>
     </li></ul></dd>
     
 
@@ -17920,7 +22155,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4021">line 4021</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5155">line 5155</a>
     </li></ul></dd>
     
 
@@ -18075,7 +22310,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3807">line 3807</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4924">line 4924</a>
     </li></ul></dd>
     
 
@@ -18226,7 +22461,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line161">line 161</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line390">line 390</a>
     </li></ul></dd>
     
 
@@ -18377,7 +22612,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3508">line 3508</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4611">line 4611</a>
     </li></ul></dd>
     
 
@@ -18528,7 +22763,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3527">line 3527</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4630">line 4630</a>
     </li></ul></dd>
     
 
@@ -18706,7 +22941,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3925">line 3925</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5053">line 5053</a>
     </li></ul></dd>
     
 
@@ -18884,7 +23119,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3843">line 3843</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4960">line 4960</a>
     </li></ul></dd>
     
 
@@ -19040,7 +23275,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3589">line 3589</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4692">line 4692</a>
     </li></ul></dd>
     
 
@@ -19173,7 +23408,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3906">line 3906</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5022">line 5022</a>
     </li></ul></dd>
     
 
@@ -19276,7 +23511,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3339">line 3339</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4402">line 4402</a>
     </li></ul></dd>
     
 
@@ -19379,7 +23614,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3317">line 3317</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4380">line 4380</a>
     </li></ul></dd>
     
 
@@ -19482,7 +23717,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line639">line 639</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line932">line 932</a>
     </li></ul></dd>
     
 
@@ -19633,7 +23868,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3686">line 3686</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4789">line 4789</a>
     </li></ul></dd>
     
 
@@ -19784,7 +24019,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4035">line 4035</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5169">line 5169</a>
     </li></ul></dd>
     
 
@@ -19958,7 +24193,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4140">line 4140</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5339">line 5339</a>
     </li></ul></dd>
     
 
@@ -20109,7 +24344,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3663">line 3663</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4766">line 4766</a>
     </li></ul></dd>
     
 
@@ -20260,7 +24495,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3674">line 3674</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4777">line 4777</a>
     </li></ul></dd>
     
 
@@ -20363,7 +24598,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4288">line 4288</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5487">line 5487</a>
     </li></ul></dd>
     
 
@@ -20496,7 +24731,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3765">line 3765</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4882">line 4882</a>
     </li></ul></dd>
     
 
@@ -20629,7 +24864,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3747">line 3747</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4864">line 4864</a>
     </li></ul></dd>
     
 
@@ -20762,7 +24997,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3960">line 3960</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5094">line 5094</a>
     </li></ul></dd>
     
 
@@ -20941,7 +25176,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3951">line 3951</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5085">line 5085</a>
     </li></ul></dd>
     
 
@@ -21097,7 +25332,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3871">line 3871</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4988">line 4988</a>
     </li></ul></dd>
     
 
@@ -21253,7 +25488,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3852">line 3852</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4969">line 4969</a>
     </li></ul></dd>
     
 
@@ -21338,7 +25573,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3412">line 3412</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4515">line 4515</a>
     </li></ul></dd>
     
 
@@ -21423,7 +25658,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3398">line 3398</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4501">line 4501</a>
     </li></ul></dd>
     
 
@@ -21556,7 +25791,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line211">line 211</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line440">line 440</a>
     </li></ul></dd>
     
 
@@ -21689,7 +25924,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line192">line 192</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line421">line 421</a>
     </li></ul></dd>
     
 
@@ -21845,7 +26080,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3619">line 3619</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4722">line 4722</a>
     </li></ul></dd>
     
 
@@ -22001,7 +26236,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3598">line 3598</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4701">line 4701</a>
     </li></ul></dd>
     
 
@@ -22086,7 +26321,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line236">line 236</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line465">line 465</a>
     </li></ul></dd>
     
 
@@ -22242,7 +26477,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3635">line 3635</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4738">line 4738</a>
     </li></ul></dd>
     
 
@@ -22375,7 +26610,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3894">line 3894</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5011">line 5011</a>
     </li></ul></dd>
     
 
@@ -22508,7 +26743,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line3653">line 3653</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4756">line 4756</a>
     </li></ul></dd>
     
 
@@ -22531,6 +26766,230 @@
     
 
     
+
+    
+</dd>
+
+        
+            
+<dt>
+    
+        <h4 class="name" id="traverse"><span class="type-signature"></span>traverse<span class="signature">(callback, startingNode, breadthFirst, partialNodes)</span><span class="type-signature"> &rarr; {Hash}</span></h4>
+
+        
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Func</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>startingNode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Kekule.StructureNode</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Starting position of travers.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>breadthFirst</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Bool</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Set to true to use breadth first algorithm or false to use depth first algorithm.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partialNodes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If this param is set, only part of the structure will be traversed.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="Kekule.StructureFragment.html#traverse">Kekule.StructureFragment#traverse</a>
+    </li></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5680">line 5680</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.  Note that all nodes but not all connectors (e.g., the one in ring) may be traversed.  If the structure has no ctab, null will be returned.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Hash</span>
+
+
+    </dd>
+</dl>
+
+        
 
     
 </dd>
@@ -22641,7 +27100,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4267">line 4267</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5466">line 5466</a>
     </li></ul></dd>
     
 
@@ -22797,7 +27256,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line4226">line 4226</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line5425">line 5425</a>
     </li></ul></dd>
     
 
@@ -22890,7 +27349,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line30">line 30</a>
+        <a href="core_kekule.structures.js.html">core/kekule.structures.js</a>, <a href="core_kekule.structures.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -22929,13 +27388,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:59 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:10:02 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

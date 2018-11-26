@@ -41,6 +41,12 @@
 
 (function(){
 
+/*
+ * Root object of I/O default options
+ * @object
+ */
+Kekule.globalOptions.add('IO', {});
+
 /**
  * Name space for IO package of Kekule.
  * @namespace
@@ -75,6 +81,14 @@ Kekule.IO.ChemDataType = {
 		return (!dataType) || (dataType === T.BINARY)
 			|| (dataType === T.OTHER) || (dataType === T.UNKNOWN);
 	}
+};
+
+/**
+ * Enumeration of common data format ids.
+ * @class
+ */
+Kekule.IO.DataFormat = {
+
 };
 
 /**
@@ -297,9 +311,10 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 	 * @param {Variant} data
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.ChemStructureDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to read data. Different reader may have different options.
 	 * @returns {Variant} Instance created by data.
 	 */
-	readData: function(data, dataType, format)
+	readData: function(data, dataType, format, options)
 	{
 		if (!dataType)  // auto detect
 		{
@@ -310,7 +325,7 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 					Kekule.IO.ChemDataType.TEXT:
 					(data.getElementsByTagName? Kekule.IO.ChemDataType.DOM: Kekule.IO.ChemDataType.BINARY );
 		}
-		var result = this.doReadData(data, dataType, format);
+		var result = this.doReadData(data, dataType, format, options || {});
 		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
 		{
 			var info = result.getSrcInfo();
@@ -332,9 +347,10 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 	 * @param {Variant} data
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to read data. Different reader may have different options.
 	 * @returns {Variant} Instance created by data.
 	 */
-	doReadData: function(data, dataType, format)
+	doReadData: function(data, dataType, format, options)
 	{
 		// do nothing here
 	}
@@ -387,9 +403,10 @@ Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
 	 * @param {Kekule.ChemObject} obj Object to write
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to write data. Different writer may have different options.
 	 * @returns {Variant} Data output, the type of data is decided by dataType param.
 	 */
-	writeData: function(obj, dataType, format)
+	writeData: function(obj, dataType, format, options)
 	{
 		//var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if (!dataType)  // auto detect
@@ -397,16 +414,18 @@ Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
 			var finfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
 			dataType = finfo? finfo.dataType: null;
 		}
-		return this.doWriteData(obj, dataType, format);
+		return this.doWriteData(obj, dataType, format, options || {});
 	},
 	/**
 	 * Do actual work for {@link Kekule.IO.ChemDataReader#writeData}. Descendants should override this method.
 	 * @param {Kekule.ChemObject} obj Object to write
 	 * @param {String} dataType Type of data, value should fom {@link Kekule.IO.ChemDataType}.
 	 * @param {String} format Format ID.
+	 * @param {Hash} options Additional options to write data. Different writer may have different options.
 	 * @returns {Variant} Data output, the type of data is decided by dataType param.
+	 * @private
 	 */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		// do nothing here
 	}
@@ -444,6 +463,8 @@ Kekule.IO.ChemDataReaderManager = {
 	 */
 	register: function(id, readerClass, formatId, additionalInfo)
 	{
+		if (!id || !readerClass || !formatId || (DataType.isArrayValue(formatId) &amp;&amp; !formatId.length))  // empty format
+			return;
 		if (Kekule.IO.ChemDataReaderManager.getReaderInfoById(id)) // id can not be duplicate
 		{
 			Kekule.raise(/*Kekule.ErrorMsg.READER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.READER_ID_ALREADY_EXISTS'));
@@ -457,6 +478,80 @@ Kekule.IO.ChemDataReaderManager = {
 		item = Object.extend(item, additionalInfo);
 		Kekule.IO.ChemDataReaderManager._readers.push(item);
 		return item;
+	},
+	/**
+	 * Unregister a data reader.
+	 * @param {String} id A UID string for reader.
+	 */
+	unregister: function(id)
+	{
+		var index = -1;
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i &lt; l; ++i)
+		{
+			var currId = readers[i].id;
+			if (currId === id)
+			{
+				index = i;
+				break;
+			}
+		}
+		if (index >= 0)
+		{
+			var reader = readers[index];
+			readers.splice(index, 1);
+			return reader;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Returns all file format IDs that has corresponding reader.
+	 * @returns {Array} Array of format id.
+	 */
+	getAllReadableFormatIds: function()
+	{
+		var result = [];
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i &lt; l; ++i)
+		{
+			var item = readers[i];
+			var fids = item.formatId;
+			//result = result.concat(fids || []);
+			Kekule.ArrayUtils.pushUnique(result, fids);
+		}
+		return result;
+	},
+	/**
+	 * Returns all file formats that has corresponding reader.
+	 * @returns {Array} Array of format object.
+	 */
+	getAllReadableFormats: function()
+	{
+		var result = [];
+		/*
+		var readers = Kekule.IO.ChemDataReaderManager._readers;
+		for (var i = 0, l = readers.length; i &lt; l; ++i)
+		{
+			var item = readers[i];
+			var fids = item.formatId;
+			for (var j = 0, k = fids.length; j &lt; k; ++j)
+			{
+				var fid = fids[j];
+				var info = FM.getFormatInfo(fid);
+				if (info)
+					result.push(info);
+			}
+		}
+		*/
+		var ids = Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds();
+		for (var i = 0, l = ids.length; i &lt; l; ++i)
+		{
+			var info = FM.getFormatInfo(ids[i]);
+			if (info)
+				result.push(info);
+		}
+		return result;
 	},
 	/**
 	 * Get all available reader infos by condition provided and be suitable for targetClass.
@@ -700,6 +795,8 @@ Kekule.IO.ChemDataWriterManager = {
 	 */
 	register: function(id, writerClass, srcClasses, formatId, additionalInfo)
 	{
+		if (!id || !writerClass || !formatId || (DataType.isArrayValue(formatId) &amp;&amp; !formatId.length))  // empty format
+			return;
 		if (Kekule.IO.ChemDataWriterManager.getWriterInfoById(id)) // id can not be duplicate
 		{
 			Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));
@@ -714,6 +811,65 @@ Kekule.IO.ChemDataWriterManager = {
 		item = Object.extend(item, additionalInfo);
 		Kekule.IO.ChemDataWriterManager._writers.push(item);
 		return item;
+	},
+	/**
+	 * Unregister a data writer.
+	 * @param {String} id A UID string for reader.
+	 */
+	unregister: function(id)
+	{
+		var index = -1;
+		var writers = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = 0, l = writers.length; i &lt; l; ++i)
+		{
+			var currId = writers[i].id;
+			if (currId === id)
+			{
+				index = i;
+				break;
+			}
+		}
+		if (index >= 0)
+		{
+			var writer = writers[index];
+			writers.splice(index, 1);
+			return writer;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Returns all file format IDs that has corresponding writer.
+	 * @returns {Array} Array of format id.
+	 */
+	getAllWritableFormatIds: function()
+	{
+		var result = [];
+		var writers = Kekule.IO.ChemDataWriterManager._writers;
+		for (var i = 0, l = writers.length; i &lt; l; ++i)
+		{
+			var item = writers[i];
+			var fids = item.formatId;
+			//result = result.concat(fids || []);
+			Kekule.ArrayUtils.pushUnique(result, fids);
+		}
+		return result;
+	},
+	/**
+	 * Returns all file formats that has corresponding writer.
+	 * @returns {Array} Array of format object.
+	 */
+	getAllWritableFormats: function()
+	{
+		var result = [];
+		var ids = Kekule.IO.ChemDataWriterManager.getAllWritableFormatIds();
+		for (var i = 0, l = ids.length; i &lt; l; ++i)
+		{
+			var info = FM.getFormatInfo(ids[i]);
+			if (info)
+				result.push(info);
+		}
+		return result;
 	},
 	/**
 	 * Get all available writer infos by condition provided and suitble for srcObj.
@@ -1003,14 +1159,15 @@ Kekule.IO.ChemDataWriterManager = {
  * Load from content with certain format.
  * @param {String} content
  * @param {String} formatId
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadFormatData = function(content, formatId)
+Kekule.IO.loadFormatData = function(content, formatId, options)
 {
 	var reader = Kekule.IO.ChemDataReaderManager.getReaderByFormat(formatId);
 	if (reader)
 	{
-		var result = reader.readData(content, null, formatId);
+		var result = reader.readData(content, null, formatId, options);
 		/*
 		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
 		{
@@ -1020,6 +1177,12 @@ Kekule.IO.loadFormatData = function(content, formatId)
 			info.url = url;
 		}
 		*/
+		//if (!result)
+		if (result === false)  // read data failed
+		{
+			var msg = Kekule.$L('ErrorMsg.FAIL_TO_READ_FORMAT') + formatId;
+			Kekule.raise(msg);
+		}
 		return result;
 	}
 	else
@@ -1033,9 +1196,10 @@ Kekule.IO.loadFormatData = function(content, formatId)
  * Load from content with mimeType and create a new chem object.
  * @param {String} content
  * @param {String} mimeType
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadMimeData = function(content, mimeType)
+Kekule.IO.loadMimeData = function(content, mimeType, options)
 {
 	/*
 	var reader = Kekule.IO.ChemDataReaderManager.getReaderByMimeType(mimeType);
@@ -1053,16 +1217,17 @@ Kekule.IO.loadMimeData = function(content, mimeType)
 		return null;
 	}
 	*/
-	return Kekule.IO.loadTypedData(content, mimeType, null);
+	return Kekule.IO.loadTypedData(content, mimeType, null, options);
 };
 /**
  * Load a typed content  and create a new chem object, the type is recognized by mimeType or the file extension.
  * @param {String} content
  * @param {String} mimeType
  * @param {String} url
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.loadTypedData = function(content, mimeType, url)
+Kekule.IO.loadTypedData = function(content, mimeType, url, options)
 {
 	//var reader;
 	var fileExt;
@@ -1104,8 +1269,11 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 	}
 	*/
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
-	var result = Kekule.IO.loadFormatData(content, formatId);
-	if (result)
+	var result;
+	if (formatId)
+		result = Kekule.IO.loadFormatData(content, formatId, options);
+	//if (result)
+	if (result !== false)  // read data success
 	{
 		if ((result instanceof Kekule.ChemObject) &amp;&amp; (result.getSrcInfo))
 		{
@@ -1115,7 +1283,10 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 			if (fileExt)
 				info.fileExt = fileExt;
 			if (url)
+			{
 				info.url = url;
+				info.fileName = url;
+			}
 		}
 		return result;
 	}
@@ -1128,14 +1299,16 @@ Kekule.IO.loadTypedData = function(content, mimeType, url)
 		return null;
 	}
 };
+
 /**
  * Load chem object from a File object.
  * Note this function relies on FileApi support.
  * @param {File} file
  * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
  * @param {String} formatId If not set, format will be get from file name automatically.
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
  */
-Kekule.IO.loadFileData = function(file, callback, formatId)
+Kekule.IO.loadFileData = function(file, callback, formatId, options)
 {
 	if (Kekule.BrowserFeature.fileapi)
 	{
@@ -1155,6 +1328,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 			{
 				var msg = /*Kekule.ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT*/Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
 				Kekule.raise(msg);
+				return;
 			}
 
 			//var isBinary = (formatInfo.dataType === Kekule.IO.ChemDataType.BINARY);
@@ -1165,10 +1339,11 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 			reader.onload = function(e)
 			{
 				var content = reader.result;
-				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id);
+				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id, options);
 				var info = chemObj.getSrcInfo();
 				info.fileName = fileName;
-				var success = !!chemObj;
+				//var success = !!chemObj;
+				var success = (chemObj !== false);
 				callback(chemObj, success);
 			};
 
@@ -1193,18 +1368,74 @@ Kekule.IO.loadFileData = function(file, callback, formatId)
 };
 
 /**
+ * Load chem object from a URL.
+ * Note this function relies on AJAX support.
+ * @param {String} fileUrl
+ * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
+ * @param {String} formatId If not set, format will be get from file name automatically.
+ * @param {Hash} options Additional options to read data. Different data format may have different options.
+ */
+Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
+{
+	if (Kekule.Ajax)
+	{
+		Kekule.Ajax.sendRequest(fileUrl, function(data, requestObj, success){
+			if (data &amp;&amp; success)
+			{
+				// try resolve file format
+				var formatInfo;
+				if (formatId)
+					formatInfo = Kekule.IO.DataFormatsManager.getFormatInfo(formatId);
+				if (!formatId)
+				{
+					var mimeType = Kekule.Ajax.getResponseMimeType(requestObj);
+					formatInfo = Kekule.IO.DataFormatsManager.findFormat(mimeType);
+				}
+				if (!formatId)
+				{
+					var ext = Kekule.UrlUtils.extractFileExt(fileUrl);
+					formatInfo = Kekule.IO.DataFormatsManager.findFormat(null, ext);
+				}
+				if (!formatInfo)
+				{
+					var msg = Kekule.$L('ErrorMsg.NO_SUITABLE_READER_FOR_FILEEXT') + ext;
+					Kekule.raise(msg);
+					return;
+				}
+
+				var chemObj = Kekule.IO.loadFormatData(data, formatInfo.id, options);
+				var info = chemObj.getSrcInfo();
+				info.fileName = fileUrl;
+				//var success = !!chemObj;
+				var success = (chemObj !== false);
+				callback(chemObj, success);
+			}
+			else
+			{
+				Kekule.raise(Kekule.$L('ErrorMsg.FAIL_TO_LOAD_FILE_URL') + fileUrl);
+			}
+		});
+	}
+	else
+	{
+		Kekule.raise(Kekule.$L('ErrorMsg.AJAX_FILELOADER_NOT_FOUND'));
+		return null;
+	}
+};
+
+/**
  * Save chemObj with certain format.
  * @param {String} content
  * @param {String} formatId
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {Kekule.ChemObject}
  */
-Kekule.IO.saveFormatData = function(chemObj, formatId)
+Kekule.IO.saveFormatData = function(chemObj, formatId, options)
 {
 	var writer = Kekule.IO.ChemDataWriterManager.getWriterByFormat(formatId, null, chemObj);
 	if (writer)
 	{
-		//console.log(writer, writer.writeData);
-		var result = writer.writeData(chemObj, null, formatId);
+		var result = writer.writeData(chemObj, null, formatId, options);
 		return result;
 	}
 	else
@@ -1218,9 +1449,10 @@ Kekule.IO.saveFormatData = function(chemObj, formatId)
  * Save chemObj to string of mimeType.
  * @param {Kekule.ChemObject} chemObj
  * @param {String} mimeType
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {String}
  */
-Kekule.IO.saveMimeData = function(chemObj, mimeType)
+Kekule.IO.saveMimeData = function(chemObj, mimeType, options)
 {
 	/*
 	var writer = Kekule.IO.ChemDataWriterManager.getWriterByMimeType(mimeType);
@@ -1232,16 +1464,17 @@ Kekule.IO.saveMimeData = function(chemObj, mimeType)
 		return null;
 	}
 	*/
-	return Kekule.IO.saveTypedData(chemObj, mimeType, null);
+	return Kekule.IO.saveTypedData(chemObj, mimeType, null, options);
 };
 /**
  * Save chem object to a typed content. The type is recognized by mimeType or the file extension.
  * @param {Kekule.ChemObj} chemObj
  * @param {String} mimeType
  * @param {String} urlOrFileExt URL or file ext.
+ * @param {Hash} options Additional options to save data. Different data format may have different options.
  * @returns {Variant}
  */
-Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
+Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt, options)
 {
 	var fileExt;
 	if (urlOrFileExt)
@@ -1258,7 +1491,9 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 	}
 
 	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
-	var result = Kekule.IO.saveFormatData(chemObj, formatId);
+	var result;
+	if (formatId)
+		result = Kekule.IO.saveFormatData(chemObj, formatId, options);
 	if (Kekule.ObjUtils.isUnset(result))
 	{
 		var msg = mimeType?
@@ -1305,13 +1540,13 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt)
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.IO.BaseMdlReader.html">BaseMdlReader</a></li><li><a href="Kekule.IO.BaseMdlWriter.html">BaseMdlWriter</a></li><li><a href="Kekule.IO.ChemDataReader.html">ChemDataReader</a></li><li><a href="Kekule.IO.ChemDataReaderManager.html">ChemDataReaderManager</a></li><li><a href="Kekule.IO.ChemDataType.html">ChemDataType</a></li><li><a href="Kekule.IO.ChemDataWriter.html">ChemDataWriter</a></li><li><a href="Kekule.IO.ChemDataWriterManager.html">ChemDataWriterManager</a></li><li><a href="Kekule.IO.CmlChemStructureReader.html">CmlChemStructureReader</a></li><li><a href="Kekule.IO.CmlDomUtils.html">CmlDomUtils</a></li><li><a href="Kekule.IO.CmlElementHandler.html">CmlElementHandler</a></li><li><a href="Kekule.IO.CmlElementReader.html">CmlElementReader</a></li><li><a href="Kekule.IO.CmlElementReaderFactory.html">CmlElementReaderFactory</a></li><li><a href="Kekule.IO.CmlElementWriter.html">CmlElementWriter</a></li><li><a href="Kekule.IO.CmlElementWriterFactory.html">CmlElementWriterFactory</a></li><li><a href="Kekule.IO.CmlFormulaReader.html">CmlFormulaReader</a></li><li><a href="Kekule.IO.CmlFormulaWriter.html">CmlFormulaWriter</a></li><li><a href="Kekule.IO.CmlListReader.html">CmlListReader</a></li><li><a href="Kekule.IO.CmlListWriter.html">CmlListWriter</a></li><li><a href="Kekule.IO.CmlMetaDataListReader.html">CmlMetaDataListReader</a></li><li><a href="Kekule.IO.CmlMetaDataReader.html">CmlMetaDataReader</a></li><li><a href="Kekule.IO.CmlMoleculeReader.html">CmlMoleculeReader</a></li><li><a href="Kekule.IO.CmlMoleculeWriter.html">CmlMoleculeWriter</a></li><li><a href="Kekule.IO.CmlNameReader.html">CmlNameReader</a></li><li><a href="Kekule.IO.CmlReactionReader.html">CmlReactionReader</a></li><li><a href="Kekule.IO.CmlReactionReagentReader.html">CmlReactionReagentReader</a></li><li><a href="Kekule.IO.CmlReactionWriter.html">CmlReactionWriter</a></li><li><a href="Kekule.IO.CmlReader.html">CmlReader</a></li><li><a href="Kekule.IO.CmlRootReader.html">CmlRootReader</a></li><li><a href="Kekule.IO.CmlRootWriter.html">CmlRootWriter</a></li><li><a href="Kekule.IO.CmlScalarReader.html">CmlScalarReader</a></li><li><a href="Kekule.IO.CmlScalarWriter.html">CmlScalarWriter</a></li><li><a href="Kekule.IO.CmlUtils.html">CmlUtils</a></li><li><a href="Kekule.IO.CmlWriter.html">CmlWriter</a></li><li><a href="Kekule.IO.DataFormat.html">DataFormat</a></li><li><a href="Kekule.IO.DataFormatsManager.html">DataFormatsManager</a></li><li><a href="Kekule.IO.KcjReader.html">KcjReader</a></li><li><a href="Kekule.IO.KcjWriter.html">KcjWriter</a></li><li><a href="Kekule.IO.KcxReader.html">KcxReader</a></li><li><a href="Kekule.IO.KcxWriter.html">KcxWriter</a></li><li><a href="Kekule.IO.MDL.html">MDL</a></li><li><a href="Kekule.IO.Mdl2kCTabWriter.html">Mdl2kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kCTabWriter.html">Mdl3kCTabWriter</a></li><li><a href="Kekule.IO.Mdl3kMoleculeCTabWriter.html">Mdl3kMoleculeCTabWriter</a></li><li><a href="Kekule.IO.MdlBlockHandler.html">MdlBlockHandler</a></li><li><a href="Kekule.IO.MdlBlockReader.html">MdlBlockReader</a></li><li><a href="Kekule.IO.MdlBlockWriter.html">MdlBlockWriter</a></li><li><a href="Kekule.IO.MdlMoleculeReader.html">MdlMoleculeReader</a></li><li><a href="Kekule.IO.MdlMoleculeWriter.html">MdlMoleculeWriter</a></li><li><a href="Kekule.IO.MdlMolReader.html">MdlMolReader</a></li><li><a href="Kekule.IO.MdlMolWriter.html">MdlMolWriter</a></li><li><a href="Kekule.IO.MdlReactionReader.html">MdlReactionReader</a></li><li><a href="Kekule.IO.MdlReactionWriter.html">MdlReactionWriter</a></li><li><a href="Kekule.IO.MdlReader.html">MdlReader</a></li><li><a href="Kekule.IO.MdlRxnReader.html">MdlRxnReader</a></li><li><a href="Kekule.IO.MdlRxnWriter.html">MdlRxnWriter</a></li><li><a href="Kekule.IO.MdlSdReader.html">MdlSdReader</a></li><li><a href="Kekule.IO.MdlSdWriter.html">MdlSdWriter</a></li><li><a href="Kekule.IO.MdlStructDataWriter.html">MdlStructDataWriter</a></li><li><a href="Kekule.IO.MdlStructureFragmentReader.html">MdlStructureFragmentReader</a></li><li><a href="Kekule.IO.MdlStructureFragmentWriter.html">MdlStructureFragmentWriter</a></li><li><a href="Kekule.IO.MdlUtils.html">MdlUtils</a></li><li><a href="Kekule.IO.MdlWriter.html">MdlWriter</a></li><li><a href="Kekule.IO.MimeType.html">MimeType</a></li><li><a href="Kekule.IO.SMILES.html">SMILES</a></li><li><a href="Kekule.IO.SmilesMolWriter.html">SmilesMolWriter</a></li><li><a href="Kekule.IO.SmilesUtils.html">SmilesUtils</a></li><li><a href="Kekule.Mdl3kTextBuffer.html">Mdl3kTextBuffer</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.IO.html">IO</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:47:43 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:11:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

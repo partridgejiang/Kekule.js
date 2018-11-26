@@ -35,16 +35,17 @@
  *  @author Partridge Jiang
  */
 
+
 "use strict";
 
-var $jsRoot = this;
+(function($jsRoot){
 
 /** @ignore */
 function emptyFunction() {};
 
 
 /** @ignore */
-function $A(iterable) {
+function __$A__(iterable) {
     if (!iterable) return [];
     if (iterable.toArray) return iterable.toArray();
     var length = iterable.length || 0, results = new Array(length);
@@ -61,7 +62,12 @@ var Class = {
 		 * @return {Class} The class created.
 		 */
     createCore: function() {
-        var parent = null, properties = $A(arguments);
+        var parent = null, properties = __$A__(arguments);
+        if (!properties[0])
+        {
+          if (properties.length > 1)
+            throw 'Can not create new class, base class not found';
+        }
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
 
@@ -152,12 +158,14 @@ Class.Methods = {
 
 
 				for (var i = 0, length = properties.length; i &lt; length; i++) {
-				    var property = properties[i]
+				    var property = properties[i];
 				    var value = source[property];
 
 						var isFunction = Object.isFunction(value);
 
-				    if (ancestor &amp;&amp; isFunction &amp;&amp; value.argumentNames().first() == "$super")
+				    //if (ancestor &amp;&amp; isFunction &amp;&amp; value.argumentNames().first() == "$super")
+					//if (ancestor &amp;&amp; isFunction &amp;&amp; FunctionUtils.argumentNames(value).first() == "$super")
+          if (ancestor &amp;&amp; isFunction &amp;&amp; FunctionUtils.argumentNames(value)[0] === "$super")
 						{
 				        var method = value;
 				        /** @inner */
@@ -175,17 +183,58 @@ Class.Methods = {
 };
 
 /** @ignore */
-Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString) {
+Object.extend = function(destination, source, ignoreUnsetValue, ignoreEmptyString)
+{
+  if (!ignoreUnsetValue &amp;&amp; !ignoreEmptyString)  // normal situation, extract out for performance
+  {
     for (var property in source)
-		{
-			var value = source[property];
-			if (ignoreUnsetValue &amp;&amp; ((value === undefined) || (value === null)))
-				continue;
-			if (ignoreEmptyString &amp;&amp; (value === ''))
-				continue;
+    {
+      destination[property] = source[property];
+    }
+  }
+  else
+  {
+    for (var property in source)
+    {
+      var value = source[property];
+      if (ignoreUnsetValue &amp;&amp; ((value === undefined) || (value === null)))
+        continue;
+      if (ignoreEmptyString &amp;&amp; (value === ''))
+        continue;
       destination[property] = value;
-		}
-    return destination;
+    }
+  }
+  return destination;
+};
+
+/** @ignore */
+Object.extendEx = function(destination, source, options)
+{
+  var ops = options || {};
+  for (var property in source)
+  {
+    var value = source[property];
+    if (ops.ignoreUnsetValue &amp;&amp; ((value === undefined) || (value === null)))
+      continue;
+    if (ops.ignoreEmptyString &amp;&amp; (value === ''))
+      continue;
+
+    var oldValue = destination[property];
+    if (options.preserveExisted &amp;&amp; oldValue)
+      continue;
+    var oldProto = oldValue &amp;&amp; oldValue.constructor &amp;&amp; oldValue.constructor.prototype;
+    var newProto = value &amp;&amp; value.constructor &amp;&amp; value.constructor.prototype;
+    if (oldValue &amp;&amp; typeof(oldValue) === 'object' &amp;&amp; oldProto === newProto)
+      Object.extendEx(oldValue, value, options);
+    else
+      destination[property] = value;
+  }
+  return destination;
+};
+/** @ignore */
+Object._extendSupportMethods = function(destination, methods)
+{
+  return Object.extendEx(destination, methods, {ignoreUnsetValue: true, preserveExisted: true});
 };
 /** @ignore */
 // e.g., obj.getCascadeFieldValue('level1.level2.name') will return obj.level1.level2.name.
@@ -198,7 +247,7 @@ Object.getCascadeFieldValue = function(fieldName, root)
   else
     cascadeNames = fieldName.split('.');
   if (!root)
-    var root = this;
+    var root = $jsRoot || this;
   for (var i = 0, l = cascadeNames.length; i &lt; l; ++i)
   {
     result = root[cascadeNames[i]];
@@ -224,7 +273,7 @@ Object.setCascadeFieldValue = function(fieldName, value, root, forceCreateEssent
     if (i === l - 1)  // success
     {
       parent[name] = value;
-      return true;
+      return value; //true;
     }
     else
     {
@@ -287,93 +336,183 @@ Object.copyValues = function(dest, src, propNames)
 
 // extend class methods
 /** @ignore */
-Object.extend(Object, {
-    keys: function(object) {
-        var keys = [];
-        for (var property in object)
-            keys.push(property);
-        return keys;
-    },
-    isFunction: function(object) {
-        return typeof object == "function";
-    },
-    isUndefined: function(object) {
-        return typeof object == "undefined";
-    }
-});
-
-/** @ignore */
-Object.extend(Function.prototype, {
-    argumentNames: function() {
-        var names = this.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/)[1].replace(/\s+/g, '').split(',');
-        return names.length == 1 &amp;&amp; !names[0] ? [] : names;
-    },
-    wrap: function(wrapper) {
-        var __method = this;
-        return function() {
-            return wrapper.apply(this, [__method.bind(this)].concat($A(arguments)));
-        };
-    },
-    methodize: function() {
-	    if (this._methodized) return this._methodized;
-	    var __method = this;
-	    return this._methodized = function() {
-	      var a = Array.prototype.slice.call(arguments);
-	      a.unshift(this);
-	      return __method.apply(null, a);
-    };
+Object._extendSupportMethods(Object, {
+  keys: function(object) {
+      var keys = [];
+      for (var property in object)
+          keys.push(property);
+      return keys;
+  },
+  isFunction: function(object) {
+      return typeof object == "function";
+  },
+  isUndefined: function(object) {
+      return typeof object == "undefined";
   }
 });
 
-if (!Function.prototype.bind)
+if (!Object.getOwnPropertyNames)
 {
-	Object.extend(Function.prototype, {
-		bind: function() {
-        if (arguments.length &lt; 2 &amp;&amp; Object.isUndefined(arguments[0])) return this;
-        var __method = this, args = $A(arguments), object = args.shift();
-        return function() {
-            return __method.apply(object, args.concat($A(arguments)));
-        };
+  Object.getOwnPropertyNames = function(obj)
+  {
+    var result = [];
+    for (var k in obj)
+    {
+      if (obj.hasOwnProperty(k))
+        result.push(k);
     }
-	});
+    return result;
+  }
 }
 
+var FunctionUtils = {
+	argumentNames: function(f) {
+		var names = ((f.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/) || [])[1] || '').replace(/\s+/g, '').split(',');
+		return names.length == 1 &amp;&amp; !names[0] ? [] : names;
+	}
+	/*
+	wrap: function(f, wrapper) {
+		var __method = f;
+		return function() {
+			return wrapper.apply(f, [__method.bind(f)].concat(__$A__(arguments)));
+		};
+	},
+	methodize: function(f) {
+		if (f._methodized) return f._methodized;
+		var __method = f;
+		return f._methodized = function() {
+			var a = Array.prototype.slice.call(arguments);
+			a.unshift(f);
+			return __method.apply(null, a);
+		};
+	},
+	bind: function(f) {
+		if (arguments.length &lt; 2 &amp;&amp; Object.isUndefined(arguments[0])) return f;
+		var __method = f, args = __$A__(arguments), object = args.shift();
+		return function() {
+			return __method.apply(object, args.concat(__$A__(arguments)));
+		};
+	},
+	delay: function(f) {
+		var __method = f, args = __$A__(arguments), timeout = args.shift();
+		return window.setTimeout(function() {
+			return __method.apply(__method, args);
+		}, timeout);
+	},
+	defer: function() {
+		var __method = f, args = __$A__(arguments), timeout = args.shift();
+		return window.setTimeout(function() {
+			return __method.apply(__method, args);
+		}, 10);
+	}
+	*/
+};
+
 /** @ignore */
-Object.extend(Array.prototype, {
-    first: function() {
-        return this[0];
-    },
-    last: function() {
-      return this[this.length - 1];
-    },
-    clear: function() {
-      this.length = 0;
-      return this;
-    },
-    without: function() {
-      var values = $A(arguments);
-      return this.select(function(value) {
-        return !values.include(value);
-      });
-    },
-    removeAt: function(index)
-    {
-			/*
-    	for (var i = index, l = this.length - 1; i &lt; l - 1; ++i)
-    	{
-    		this[i] = this[i + 1];
-    	}
-    	delete this[length - 1];
-    	*/
-			this.splice(index, 1);
-    },
-    remove: function(item)
-    {
-    	var index = this.indexOf(item);
-    	if (index >= 0)
-    		return this.removeAt(index);
-    }
+Object._extendSupportMethods(Function.prototype, {
+  argumentNames: function() {
+      var names = this.toString().match(/^[\s\(]*function[^(]*\(([^\)]*)\)/)[1].replace(/\s+/g, '').split(',');
+      return names.length == 1 &amp;&amp; !names[0] ? [] : names;
+  },
+  wrap: function(wrapper) {
+      var __method = this;
+      return function() {
+          return wrapper.apply(this, [__method.bind(this)].concat(__$A__(arguments)));
+      };
+  },
+  methodize: function() {
+    if (this._methodized) return this._methodized;
+    var __method = this;
+    return this._methodized = function() {
+      var a = Array.prototype.slice.call(arguments);
+      a.unshift(this);
+      return __method.apply(null, a);
+    };
+  },
+  bind: function() {
+    if (arguments.length &lt; 2 &amp;&amp; Object.isUndefined(arguments[0])) return this;
+    var __method = this, args = __$A__(arguments), object = args.shift();
+    return function() {
+      return __method.apply(object, args.concat(__$A__(arguments)));
+    };
+  },
+  delay: function() {
+    var __method = this, args = __$A__(arguments), timeout = args.shift();
+    return window.setTimeout(function() {
+      return __method.apply(__method, args);
+    }, timeout);
+  },
+  defer: function() {
+    var __method = this, args = __$A__(arguments), timeout = args.shift();
+    return window.setTimeout(function() {
+      return __method.apply(__method, args);
+    }, 10);
+  }
 });
+/*
+Object._extendSupportMethods(Function.prototype, {
+	argumentNames: function() {
+		return FunctionUtils.argumentNames(this);
+	},
+	wrap: function(wrapper) {
+		return FunctionUtils.wrap(this, wrapper);
+	},
+	methodize: function() {
+		return FunctionUtils.methodize(this);
+	},
+	bind: function() {
+		return FunctionUtils.bind(this);
+	},
+	delay: function() {
+		return FunctionUtils.delay(this);
+	},
+	defer: function() {
+		return FunctionUtils.defer(this);
+	}
+});
+*/
+
+
+/** @ignore */
+/*
+Object._extendSupportMethods(Array.prototype, {
+  first: function() {
+      return this[0];
+  },
+  last: function() {
+    return this[this.length - 1];
+  },
+  clear: function() {
+    this.length = 0;
+    return this;
+  },
+  without: function() {
+    var values = __$A__(arguments);
+    return this.select(function(value) {
+      return !values.include(value);
+    });
+  },
+  removeAt: function(index)
+  {
+    this.splice(index, 1);
+  },
+  remove: function(item)
+  {
+    var index = this.indexOf(item);
+    if (index >= 0)
+      return this.removeAt(index);
+  },
+  forEach: function(func, scope)
+  {
+    var i, len;
+    for (i = 0, len = this.length; i &lt; len; ++i) {
+      if (i in this) {
+        func.call(scope, this[i], i, this);
+      }
+    }
+  }
+});
+*/
 if (!Array.prototype.indexOf)
 {
 	/** @ignore */
@@ -398,39 +537,37 @@ if (!Array.prototype.lastIndexOf)
 }
 
 /** @ignore */
-Object.extend(String.prototype, {
-	/*
-  gsub: function(pattern, replacement) {
-    var result = '', source = this, match;
-    replacement = arguments.callee.prepareReplacement(replacement);
+Object._extendSupportMethods(String.prototype, {
+	gsub: function gsub(pattern, replacement) {
+		var result = '', source = this, match;
+		//replacement = this.gsub.prepareReplacement(replacement);
 
-    while (source.length > 0) {
-      if (match = source.match(pattern)) {
-        result += source.slice(0, match.index);
-        result += String.interpret(replacement(match));
-        source  = source.slice(match.index + match[0].length);
-      } else {
-        result += source, source = '';
-      }
-    }
-    return result;
-  },
+		while (source.length > 0) {
+			if (match = source.match(pattern)) {
+				result += source.slice(0, match.index);
+				result += replacement;
+				source  = source.slice(match.index + match[0].length);
+			} else {
+				result += source, source = '';
+			}
+		}
+		return result;
+	},
 
-  sub: function(pattern, replacement, count) {
-    replacement = this.gsub.prepareReplacement(replacement);
-    count = Object.isUndefined(count) ? 1 : count;
+	sub: function(pattern, replacement, count) {
+		//replacement = this.gsub.prepareReplacement(replacement);
+		count = Object.isUndefined(count) ? 1 : count;
 
-    return this.gsub(pattern, function(match) {
-      if (--count &lt; 0) return match[0];
-      return replacement(match);
-    });
-  },
+		return this.gsub(pattern, function(match) {
+			if (--count &lt; 0) return match[0];
+			return replacement(match);
+		});
+	},
 
-  scan: function(pattern, iterator) {
-    this.gsub(pattern, iterator);
-    return String(this);
-  },
-  */
+	scan: function(pattern, iterator) {
+		this.gsub(pattern, iterator);
+		return String(this);
+	},
 
   truncate: function(length, truncation) {
     length = length || 30;
@@ -463,18 +600,24 @@ Object.extend(String.prototype, {
     return this.extractScripts().map(function(script) { return eval(script); });
   },
 
-  escapeHTML: function() {
+  escapeHTML: function escapeHTML() {
+		/*
     var self = arguments.callee;
     self.text.data = this;
     return self.div.innerHTML;
+    */
+		return this.replace(/&amp;/g,'&amp;amp;').replace(/&lt;/g,'&amp;lt;').replace(/>/g,'&amp;gt;').replace(/\n/g, '&lt;br />');
   },
 
   unescapeHTML: function() {
+		/*
     var div = new Element('div');
     div.innerHTML = this.stripTags();
     return div.childNodes[0] ? (div.childNodes.length > 1 ?
-      $A(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
+      __$A__(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
       div.childNodes[0].nodeValue) : '';
+    */
+		return this.replace(/\&lt;br \/\>/g, '\n').replace(/&amp;amp;/g,'&amp;').replace(/&amp;lt;/g,'&lt;').replace(/&amp;gt;/g,'>');
   },
 
   toQueryParams: function(separator) {
@@ -599,7 +742,7 @@ Object.extend(String.prototype, {
 
 // added by partridge
 /** @ignore */
-Object.extend(String.prototype, {
+Object._extendSupportMethods(String.prototype, {
 	upperFirst: function()
 	{
 		return this.charAt(0).toUpperCase() + this.substring(1);
@@ -613,6 +756,10 @@ Object.extend(String.prototype, {
     }
     return formatted;
 	},
+  trim: function()
+  {
+    return this.replace(/^\s*|\s*$/g, "");
+  },
 	ltrim: function()
 	{
 		return this.replace(/^\s+/,"");
@@ -621,6 +768,14 @@ Object.extend(String.prototype, {
 	{
 		return this.replace(/\s+$/,"");
 	},
+  trimLeft: function()
+  {
+    return this.ltrim();
+  },
+  trimRight: function()
+  {
+    return this.rtrim();
+  },
 	pad: function(length, padString, rightPad)
 	{
 		var p = padString || ' ';
@@ -684,25 +839,7 @@ Object.extend(String.prototype, {
 	}
 });
 
-// implementation of JS string standard methods
-if (!String.prototype.trim)
-{
-	/** @ignore */
-	Object.extend(String.prototype, {
-		trim: function()
-		{
-			return this.replace(/^\s*|\s*$/g, "");
-		}
-	});
-}
-if (!String.prototype.trimLeft)
-{
-	String.prototype.trimLeft = String.prototype.ltrim;
-}
-if (!String.prototype.trimRight)
-{
-	String.prototype.trimLeft = String.prototype.rtrim;
-}
+
 
 /**
  * Some helper methods about string
@@ -743,6 +880,16 @@ var StringUtils = {
 		return true;
 	},
 	/**
+   * Check if str is in number format.
+   * @param {String} str
+   * @returns {Bool}
+   */
+  isNumbericStr: function(str)
+  {
+    var a = Number(str);
+    return !isNaN(a);
+  },
+	/**
 	 * Serialize a simple value and try to preserve value type info.
 	 * @param {Variant} value
 	 * @param {Array} unchangeTypes Name of types that need not to be special marked.
@@ -768,7 +915,7 @@ var StringUtils = {
 				case 'boolean':
 					return value ? StringUtils.STRUE : StringUtils.SFALSE;
 					break;
-				case 'number':
+				case 'number': case DataType.INT:case DataType.FLOAT:
 					// add '+' or '-' symbol before a number value
 					var sign = (value >= 0)? StringUtils.SPOSITIVE: '';  //this.SNEGATIVE;
 					return sign + value;
@@ -824,7 +971,7 @@ var StringUtils = {
 						case StringUtils.SNEGATIVE: // may be number
 							{
 								var s = str.substring(1);
-								if (StringUtils.isAllDigitalChar(s)) // really number
+								if (StringUtils.isNumbericStr(s)) // really number or number like 1e20
 									return parseFloat(str);
 								else
 									return str;
@@ -857,17 +1004,28 @@ Object.extend(Date.prototype, {
 });
 
 /** @ignore */
-Math.sqr = function(x) { return x * x; };
+if (!Math.sqr)
+{
+  Math.sqr = function(x)
+  {
+    return x * x;
+  };
+}
 /** @ignore */
-Math.sign = function(x) { return (x >= 0)? 1: -1};
+if (!Math.sign)
+  Math.sign = function(x) {
+    return (x > 0)? 1:
+      (x &lt; 0)? -1:
+        0;
+  };
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };
-if (!this.Node) var Node = { };
+if (!$jsRoot.Node) $jsRoot.Node = { };
 
-if (!Node.ELEMENT_NODE) {
+if (!$jsRoot.Node.ELEMENT_NODE) {
   // DOM level 2 ECMAScript Language Binding
-  Object.extend(Node, {
+  Object.extend($jsRoot.Node, {
     ELEMENT_NODE: 1,
     ATTRIBUTE_NODE: 2,
     TEXT_NODE: 3,
@@ -1515,6 +1673,10 @@ var DataType = {
 	}
 };
 
+// Wether has full support of Object/defineProperty method (IE8 has partial support and will return false)
+var __definePropertyAvailable__ = Object.defineProperty &amp;&amp;
+  (function () { try { Object.defineProperty({}, 'x', {}); return true; } catch (e) { return false; } } ())
+
 
 /**
  * A pack of utility methods to modify a existing class.
@@ -1529,7 +1691,7 @@ var ClassEx = {
 	{
 		if (!classObj)
 			return false;
-		return (classObj.superclass &amp;&amp; classObj.subclasses);
+		return !!(classObj.superclass || classObj.subclasses);
 	},
 	/**
 	 * Return class object from class name. If this class is not found, null will be returned.
@@ -1561,8 +1723,22 @@ var ClassEx = {
 	 */
 	getClassName: function(aClass)
 	{
-		return aClass.prototype.CLASS_NAME;
+    if (aClass)
+		  return aClass.prototype.CLASS_NAME;
+    else
+      return null;
 	},
+  /**
+   * Get last part of class name of this class.
+   * For example, 'Atom' will be returned by class 'Kekule.Atom'.
+   * @return {String} Last part of class name of class.
+   */
+  getClassLocalName: function(aClass)
+  {
+    var className = ClassEx.getClassName(aClass);
+    var pos = className.lastIndexOf('.');
+    return (pos >= 0)? className.substring(pos + 1): className;
+  },
 	/**
 	 * Get prototype of aClass.
 	 * @returns {Object}
@@ -1694,6 +1870,48 @@ var ClassEx = {
 		if (!ClassEx.getPrototype(aClass).hasOwnProperty('properties'))
 			ClassEx.getPrototype(aClass).properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function(aClass, availableFieldNames)
+  {
+    var proto = ClassEx.getPrototype(aClass);
+    var fieldNames = availableFieldNames || Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i &lt; l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 &amp;&amp; fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (proto.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = ClassEx.getPropInfo(aClass, propName);
+          if (propInfo &amp;&amp; propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+  },
 	/**
 	 * Get own property list of this aClass, excluding inherited properties.
 	 * @returns {Class.PropList}
@@ -1826,11 +2044,12 @@ var ClassEx = {
   /**
    * Get property info object from the property list of aClass.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(aClass, propName)
+  getPropInfo: function(aClass, propName, ownPropertyOnly)
   {
-  	return ClassEx.getPrototype(aClass).getPropInfo(propName);
+  	return ClassEx.getPrototype(aClass).getPropInfo(propName, ownPropertyOnly);
   },
   /**
    * Define an event in aClass. Event is actually a special property with type {@link Class.EventHandlerList}
@@ -1919,8 +2138,9 @@ var ClassEx = {
 		    var property = properties[i], value = extension[property];
 				if (typeof(value) == 'function')
 				{
-					var args = value.argumentNames();
-					var first = args.first();
+					//var args = value.argumentNames();
+					var args = FunctionUtils.argumentNames(value);
+					var first = args[0];  //args.first();
 
 					if (first == '$origin')
 					{
@@ -1959,6 +2179,9 @@ var ClassEx = {
 
 		    proto[property] = value;
 		}
+
+    ClassEx._remapPropGetters(aClass, properties);
+
 		return aClass;
 	}
 };
@@ -1970,8 +2193,10 @@ var
  *
  * //@property {Bool} enablePropValueGetEvent Whether propValueGet event should
  * //  be fired when a property value is read.
+ * @property {Bool} enableObjectChangeEvent Whether event "change" will be automatically fired when the object is changed.
  * @property {Bool} enablePropValueSetEvent Whether propValueSet event should
  *   be fired when a property value is written.
+ * //  Note, if property {@link ObjectEx#enableObjectChangeEvent} is false, this event will never be fired.
  * @property {Bool} bubbleEvent Whether event evoked can be relayed to higher level object.
  * @property {Bool} suppressChildChangeEventInUpdating If this property is true, when object is updating
  *   (calling obj.beginUpdate()), received "change" event will always not be bubbled. Instead, when updating
@@ -2016,6 +2241,8 @@ ObjectEx = Class.create(
 	CLASS_NAME: 'ObjectEx',
 	//* @private */
 	//PROPINFO_HASHKEY_PREFIX: '__$propInfo__',
+  /** @private */
+  EVENT_HANDLERS_FIELD: '__$__k__eventhandlers__$__',
 	/**
 	 * @constructs
 	 */
@@ -2046,7 +2273,8 @@ ObjectEx = Class.create(
 			this.doFinalize();
 			this.invokeEvent('finalize', {'obj': this});
       // free all event objects
-      this.setPropStoreFieldValue('eventHandlers', null);
+      //this.setPropStoreFieldValue('eventHandlers', null);
+      this[this.EVENT_HANDLERS_FIELD] = null;
 			this._finalized = true;
 		}
 	},
@@ -2067,18 +2295,21 @@ ObjectEx = Class.create(
 	{
 		// define properties
 		this.defineProp('enablePropValueGetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
-		this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+    this.defineProp('enablePropValueSetEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('enableObjectChangeEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('bubbleEvent', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
     this.defineProp('suppressChildChangeEventInUpdating', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		// private, event storer
-		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE,
+		this.defineProp('eventHandlers', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE, 'setter': null,
 			'getter': function()
 				{
-					var r = this.getPropStoreFieldValue('eventHandlers');
+					//var r = this.getPropStoreFieldValue('eventHandlers');
+          var r = this[this.EVENT_HANDLERS_FIELD];  // direct access, for speed
 					if (!r)
 					{
 						r = {};
-						this.setPropStoreFieldValue('eventHandlers', r);
+						//this.setPropStoreFieldValue('eventHandlers', r);
+            this[this.EVENT_HANDLERS_FIELD] = r;
 					}
 					return r;
 				}
@@ -2128,11 +2359,16 @@ ObjectEx = Class.create(
 	{
 		if (!this.getPrototype().hasOwnProperty('properties'))
 		{
+      //console.log('init prop system', this.getClassName());
 			// ensure super class's property list is created
 			var parent = this.getSuperClassPrototype();
 			if (parent)
 				parent._initPropertySystem.apply(parent);
+
 			this._createPropertyList();
+
+      this._remapPropGetters();  // override before self property list created, avoid override method of self
+
 			if (this.getPrototype().hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				this.getPrototype().initProperties.apply(this.getPrototype());
 		}
@@ -2143,6 +2379,52 @@ ObjectEx = Class.create(
 		if (!this.getPrototype().hasOwnProperty('properties'))
 			this.getPrototype().properties = new Class.PropList();
 	},
+  /** @private */
+  _remapPropGetters: function()
+  {
+    ClassEx._remapPropGetters(this.getClass());
+    /*
+    var proto = this.getPrototype();
+    var fieldNames = Object.getOwnPropertyNames(proto);
+    // check if has own doGetXXX method that override the getter of super class
+    for (var i = 0, l = fieldNames.length; i &lt; l; ++i)
+    {
+      var fieldName = fieldNames[i];
+      if (fieldName.length > 5 &amp;&amp; fieldName.startsWith('doGet'))
+      {
+        var field = proto[fieldName];
+        if (typeof(field) === 'function')
+        {
+          var propName = fieldName.charAt(5).toLowerCase() + fieldName.substr(6);
+          if (this.hasDirectProperty(propName))  // ignore properties defined in this class, only override properties from super classes
+            continue;
+          var propInfo = this.getPropInfo(propName);
+          if (propInfo &amp;&amp; propInfo.getter)
+          {
+            //console.log('find prop getter override', i, propName, this.getClassName(), field);
+            var getterName = 'get' + propName.capitalizeFirst();
+            proto[getterName] = field;
+
+
+            if (__definePropertyAvailable__)  // redefine property
+            {
+              var descs = Object.extend({}, propInfo.descriptor);
+              descs['get'] = field;
+              try
+              {
+                Object.defineProperty(proto, propName, descs);
+              }
+              catch (e)
+              {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+    }
+    */
+  },
 	/**
 	 * Get class of this object.
 	 * @return {Object} Class object.
@@ -2167,6 +2449,15 @@ ObjectEx = Class.create(
 	{
 		return this.getPrototype().CLASS_NAME;
 	},
+  /**
+   * Get last part of class name of this object.
+   * For example, 'Atom' will be returned by instance of class 'Kekule.Atom'.
+   * @return {String} Last part of class name of object.
+   */
+  getClassLocalName: function()
+  {
+    return ClassEx.getClassLocalName(this.getClass());
+  },
 	/**
 	 * Returns a name to be used in serialization. Descendants can override this.
 	 * @return {String}
@@ -2270,22 +2561,59 @@ ObjectEx = Class.create(
 	 */
   defineProp: function(propName, options)
   {
+    var ops;
 		if (!options)
-			options = {};
-		if (options.serializable === undefined)
-			options.serializable = true;
-		if (!options.storeField)  // use default store field
-			options.storeField = this.getDefPropStoreFieldName(propName); //'f' + propName;
+			ops = {};
+    else
+      ops = Object.extend({}, options);
+		if (ops.serializable === undefined)
+			ops.serializable = true;
+		//if (!options.storeField)  // use default store field
+		ops.storeField = this.getDefPropStoreFieldName(propName);  // always use default store field name for performance
 		//options.storeField = this.getDefPropStoreFieldName(propName);
 		var list = this.getOwnPropList();
-		var prop = list.addProperty(propName, options);
-		if (options.getter !== null)
-			prop.getter = this.createPropGetter(prop, options.getter);
-		if (options.setter !== null)
-			prop.setter = this.createPropSetter(prop, options.setter);
+		var prop = list.addProperty(propName, ops);
+    var propGetterInfo, propSetterInfo;
+		if (ops.getter !== null &amp;&amp; ops.getter !== false)
+    {
+      propGetterInfo = this.createPropGetter(prop, ops.getter);
+      prop.getter = propGetterInfo.doGetterName;
+    }
+		if (ops.setter !== null &amp;&amp; ops.setter !== false)
+    {
+      propSetterInfo = this.createPropSetter(prop, ops.setter);
+      prop.setter = propSetterInfo.doSetterName;
+    }
 
 		// to accelerate property access, add a hash key here
 		this[this.getPropInfoHashKey(propName)] = prop;
+
+    // Add property to object in supported browsers
+    if (__definePropertyAvailable__)
+    {
+      var descs = {
+        'enumerable': ops.enumerable,
+        'configurable': false
+      };
+      if (descs.enumerable === undefined)
+        descs.enumerable = true;
+      if (propGetterInfo)
+        descs.get = this[propGetterInfo.getterName];
+      if (propSetterInfo)
+        descs.set = this[propSetterInfo.setterName];
+
+      prop.descriptor = descs;
+      try
+      {
+        Object.defineProperty(this, propName, descs);
+      }
+      catch(e)
+      {
+        //console.log(this.getClassName(), propName);
+        throw e;
+      }
+    }
+
 		return prop;
   },
   /** @private */
@@ -2316,14 +2644,21 @@ ObjectEx = Class.create(
 				return this.getPropValue.apply(this, args);
 			};
 			*/
-		//this.getPrototype()[getterName] = actualGetter;
+		this.getPrototype()[getterName] = actualGetter;
+    /*
 		this.getPrototype()[getterName] = function()
 		{
-			var args = Array.prototype.slice.call(arguments);
-			return this[doGetterName].apply(this, args);
+			//var args = Array.prototype.slice.call(arguments);
+			return this[doGetterName].apply(this, arguments);
 		};
+		*/
 
-  	return doGetterName; //actualGetter; //this[getterName];
+    //this.getPrototype()[getterName] = this.getPrototype()[doGetterName];
+
+  	return {
+      'getterName': getterName,
+      'doGetterName': doGetterName   // actual method to retrieve value
+    };
   },
   /** @private */
   createPropSetter: function(prop, setter)
@@ -2346,14 +2681,18 @@ ObjectEx = Class.create(
   	*/
 		this.getPrototype()[setterName] = function()
 			{
+        /*
 				var args = Array.prototype.slice.call(arguments);
 				var value = args[0];
+				*/
+        //var args = arguments;
+        var value = arguments[0];
 
 				/*
 				args.unshift(prop.name);
 				return this.setPropValueX.apply(this, args);
 				*/
-				this[doSetterName].apply(this, args);
+				this[doSetterName].apply(this, arguments);
 				this.notifyPropSet(propName, value);
 				/*
 				// NOTE: here we call actualSetter directly instead of call setPropValue
@@ -2366,7 +2705,11 @@ ObjectEx = Class.create(
 			};
 
   	//this.getPrototype()[setterName] = actualSetter;
-  	return doSetterName; // actualSetter; //this[setterName];
+  	//return doSetterName; // actualSetter; //this[setterName];
+    return {
+      'setterName': setterName,
+      'doSetterName': doSetterName   // actual method to set value
+    };
   },
   /**
    * Check if property exists in current class.
@@ -2378,20 +2721,35 @@ ObjectEx = Class.create(
   	return (this.getPropInfo(propName) != null);
   },
   /**
+   * Check if property is defined in current class (not inherited from super class).
+   * @param {String} propName Name of property.
+   * @return {Boolean}
+   */
+  hasDirectProperty: function(propName)
+  {
+    return (this.getPropInfo(propName, true) != null);
+  },
+  /**
    * Get property info object from the property list of current class.
    * @param {String} propName Name of property.
+   * @param {Bool} ownPropertyOnly If true, only property defined in this class will be checked.
    * @return {Object} Property info object found. If there is no such a property, null is returned.
    */
-  getPropInfo: function(propName)
+  getPropInfo: function(propName, ownPropertyOnly)
   {
-		var pname = propName || '';
-		var hashKey = this.getPropInfoHashKey(pname) || '';
-		var result = this[hashKey];
+    var pname = propName || '';
+    var result;
+
+    if (!ownPropertyOnly)  // check hashkey for a quich search, but it should be disabled when ownPropertyOnly is true
+    {
+      var hashKey = this.getPropInfoHashKey(pname) || '';
+      result = this[hashKey];
+    }
 
 		if (!result)
 		{
 			result = this.getOwnPropList().getPropInfo(pname);
-			if (!result)  // check parent
+			if (!result &amp;&amp; !ownPropertyOnly)  // check parent
 			{
 				var parent = this.getSuperClassPrototype();
 				if (parent &amp;&amp; parent.getPropInfo)
@@ -2425,7 +2783,7 @@ ObjectEx = Class.create(
 	isPropertySerializable: function(propName)
 	{
 		var info = this.getPropInfo(propName);
-		var s = info.serializable;
+		var s = info &amp;&amp; info.serializable;
 		return (s === undefined) || (!!s);
 	},
   /**
@@ -2437,15 +2795,20 @@ ObjectEx = Class.create(
    */
   getPropStoreFieldValue: function(propName)
   {
-  	var info = this.getPropInfo(propName);
-  	if (info.storeField)
-  		return this[info.storeField];
-  	else
-  		return undefined;
-  	/*
-		var storeFieldName = this.getDefPropStoreFieldName(propName);
-		return this[storeFieldName];
-		*/
+    //var storeFieldName = this.getDefPropStoreFieldName(propName);
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    //if (this.hasOwnProperty(defFieldName))
+    return this[defFieldName];
+    /*
+    else
+    {
+      var info = this.getPropInfo(propName);
+      if (info.storeField)
+        return this[info.storeField];
+      else
+        return undefined;
+    }
+    */
   },
   /**
    * Get value of a property.
@@ -2473,6 +2836,34 @@ ObjectEx = Class.create(
   	else
   		return null;
   },
+	/**
+   * Returns values of a series of properties.
+   * @param {Variant} propNames Can be an array of property names, also can be an object while the
+   *   direct field names of object will be regarded as property names.
+   * @returns {Hash} Stores all property name-value pair.
+   */
+  getPropValues: function(propNames)
+  {
+    var result = {};
+    var names;
+    if (DataType.isArrayValue(propNames))
+    {
+      for (var i = 0, l = propNames.length; i &lt; l; ++i)
+      {
+        var pname = propNames[i];
+        result[pname] = this.getPropValue(pname);
+      }
+    }
+    else if (DataType.isObjectValue(propNames))
+    {
+      for (var pname in propNames)
+      {
+        if (propNames.hasOwnProperty(pname) &amp;&amp; typeof(obj[pname]) !== 'function')
+          result[pname] = this.getPropValue(pname);
+      }
+    }
+    return result;
+  },
   /**
    * Set value of a property's store field. Use this method to set property value and avoid
    * the call of property setter. Readonly property can also be changed in this method.
@@ -2482,10 +2873,13 @@ ObjectEx = Class.create(
    */
   setPropStoreFieldValue: function(propName, value)
   {
-		var pname;
+    var defFieldName = ObjectEx._PROP_STOREFIELD_PREFIX + propName;
+    this[defFieldName] = value;
+    /*
   	var info = this.getPropInfo(propName);
   	if (info.storeField)
   		this[info.storeField] = value;
+  	*/
   },
   /**
    * Set value of a property.
@@ -2610,7 +3004,8 @@ ObjectEx = Class.create(
 	objectChange: function(modifiedPropNames)
 	{
 		this.doObjectChange(modifiedPropNames);
-		this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
+    if (this.getEnableObjectChangeEvent())
+		  this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
 	},
 	/** @private */
 	doObjectChange: function(modifiedPropNames)
@@ -2728,6 +3123,10 @@ ObjectEx = Class.create(
   	var handlerList = this.getEventHandlerList(eventName);
   	if (this.isEventHandlerList(handlerList))
   	{
+      if (eventName === 'change')  // automatically turn on object change monitor
+      {
+        this.setEnableObjectChangeEvent(true);
+      }
   		return handlerList.add(listener, thisArg);
   	}
   	else
@@ -2747,7 +3146,7 @@ ObjectEx = Class.create(
 		{
 			self.removeEventListener(eventName, wrapper, thisArg);
 			listener(event);
-		}
+		};
 		return this.addEventListener(eventName, wrapper, thisArg);
 	},
   /**
@@ -2766,6 +3165,39 @@ ObjectEx = Class.create(
   	}
   },
   /**
+   * Add an event handler, shortcut for {@link ObjectEx.addEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   * @return {Object} Handler info object on success, null on fail.
+   */
+  on: function(eventName, listener, thisArg)
+  {
+    return this.addEventListener(eventName, listener, thisArg);
+  },
+  /**
+   * Add an event handler that will only be evoked once, shortcut for {@link ObjectEx.addOnceEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   * @return {Object} Handler info object on success, null on fail.
+   */
+  once: function(eventName, listener, thisArg)
+  {
+    return this.addOnceEventListener(eventName, listener, thisArg);
+  },
+  /**
+   * Remove an event handler, shortcut for (@link ObjectEx.removeEventListener}.
+   * @param {String} eventName Name of event.
+   * @param {Function} listener Handler function.
+   * @param {Object} thisArg The scope object applied when the handler is called.
+   *   If not set, all listenr function in list will be removed.
+   */
+  off: function(eventName, listener, thisArg)
+  {
+    return this.removeEventListener(eventName, listener, thisArg);
+  },
+  /**
    * Invoke an event and call all corresponding handlers (listeners).
    * @param {String} eventName Event to be invoked.
    * @param {Object} event A hash object with information about event.
@@ -2779,11 +3211,25 @@ ObjectEx = Class.create(
   invokeEvent: function(eventName, event)
   {
   	if (!event)
-  		event = {};
-  	event.name = eventName;
-	  event.target = this;
-	  event.stopPropagation = this._eventStopPropagation;
+    {
+      event = {
+        'name': eventName, 'target': this
+      };
+    }
+    else
+    {
+      event.name = eventName;
+      event.target = this;
+    }
+    if (!event.stopPropagation)
+      event.stopPropagation = this._eventCancelBubble;  // function() { event.cancelBubble = true; };
   	this.dispatchEvent(eventName, event);
+  },
+  /** @private */
+  _eventCancelBubble: function()
+  {
+    // called with event.stopPropagation, so this here is the event object
+    this.cancelBubble = true;
   },
   /**
    * Relay event from child of this object.
@@ -2805,27 +3251,22 @@ ObjectEx = Class.create(
   dispatchEvent: function(eventName, event)
   {
   	var handlerList = this.getEventHandlerList(eventName);
-  	if (this.isEventHandlerList(handlerList))
+  	//if (this.isEventHandlerList(handlerList))
   	{
 	  	for (var i = 0, l = handlerList.getLength(); i &lt; l; ++i)
 	  	{
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
-	  		if (handlerInfo.handler)
-        {
-          handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
-        }
+        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
-    else
+    if (!event.cancelBubble &amp;&amp; this.getBubbleEvent())
     {
-      console.log(eventName, this.getClassName(), handlerList._$flag_);
+      var higherObj = this.getHigherLevelObj();
+      if (higherObj &amp;&amp; higherObj.relayEvent)
+      {
+        higherObj.relayEvent(eventName, event);
+      }
     }
-  	var higherObj = this.getHigherLevelObj();
-  	if (!event.cancelBubble &amp;&amp; this.getBubbleEvent() &amp;&amp; higherObj)
-  	{
-  		if (higherObj.relayEvent)
-  			higherObj.relayEvent(eventName, event);
-  	}
   },
   /**
    * Stop propagation of event, disallow it to bubble to higher level.
@@ -2834,6 +3275,33 @@ ObjectEx = Class.create(
   stopEventPropagation: function(event)
   {
   	event.cancelBubble = true;
+  },
+
+  /**
+   * Overwrite method of object instance (rather than prototype) with a new one.
+   * @param {String} methodName
+   * @param {Func} newMethod New function.
+   *   The arguments of function should be same as overwritten one plus a extra leading param stores the old method.
+   *   e.g. Overwrite getPropValue method: &lt;br />
+   *     var obj = new ObjectEx(); &lt;br />
+   *     obj.overwriteMethod('getPropValue', function($old, propName) &lt;br />
+   *       { &lt;br />
+   *         console.log('new method');
+   *         return $old(propName);
+   *       });
+   * @returns {ObjectEx}
+   */
+  overwriteMethod: function(methodName, newMethod)
+  {
+    var self = this;
+    var oldMethod = this[methodName];
+    this[methodName] = function _delegator_()
+    {
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift(oldMethod.bind(self));
+      return newMethod.apply(self, args);
+    };
+    return this;
   },
 
 	// clone and assign services
@@ -2887,9 +3355,12 @@ ObjectEx = Class.create(
 			var modifiedProps = this._modifiedProps || [];
 			this._modifiedProps = [];
       if (this._childChangeEventSuppressed)
-        modifiedProps.push('[children]');
+      {
+        modifiedProps.push('[children]');  // TODO: special propName, indicating children has been changed
+        this._childChangeEventSuppressed = false;
+      }
       this.doEndUpdate(modifiedProps);
-      this._childChangeEventSuppressed = false;
+      //this._childChangeEventSuppressed = false;
 		}
 	},
 	/**
@@ -2909,6 +3380,7 @@ ObjectEx = Class.create(
 				}
 			}
 			/*this.invokeEvent('change after update', modifiedPropNames);*/
+      //console.log('class end update', this.getClassName(), modifiedPropNames);
 			this.objectChange(modifiedPropNames);
 		}
 	},
@@ -2958,7 +3430,16 @@ ObjectEx = Class.create(
 });
 /** @private */
 ObjectEx._PROPINFO_HASHKEY_PREFIX = '__$propInfo__';
-ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
+ObjectEx._PROP_STOREFIELD_PREFIX = '__$__k__p__';
+
+// Export to root name space
+$jsRoot.Class = Class;
+$jsRoot.ClassEx = ClassEx;
+$jsRoot.ObjectEx = ObjectEx;
+$jsRoot.DataType = DataType;
+DataType.StringUtils = StringUtils;
+
+})(this);
 
 </code></pre>
         </article>
@@ -2970,13 +3451,13 @@ ObjectEx._PROP_STOREFIELD_PREFIX = '__$';
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="DataType.html">DataType</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemDocument.html">ChemDocument</a></li><li><a href="Kekule.ChemError.html">ChemError</a></li><li><a href="Kekule.ChemObject.html">ChemObject</a></li><li><a href="Kekule.ChemObjInteractMode.html">ChemObjInteractMode</a></li><li><a href="Kekule.ChemObjList.html">ChemObjList</a></li><li><a href="Kekule.ChemSpace.html">ChemSpace</a></li><li><a href="Kekule.ChemSpaceElement.html">ChemSpaceElement</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassDefineUtils.html">ClassDefineUtils</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.CoordMode.html">CoordMode</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DataSrcAttribUtils.html">DataSrcAttribUtils</a></li><li><a href="Kekule.DocumentUtils.html">DocumentUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.DomUtils.html">DomUtils</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.Error.html">Error</a></li><li><a href="Kekule.Exception.html">Exception</a></li><li><a href="Kekule.ExceptionHandler.html">ExceptionHandler</a></li><li><a href="Kekule.ExceptionLevel.html">ExceptionLevel</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HashEx.html">HashEx</a></li><li><a href="Kekule.HtmlElementUtils.html">HtmlElementUtils</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MapEx.html">MapEx</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjPropSettingManager.html">ObjPropSettingManager</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.Scalar.html">Scalar</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.StyleUtils.html">StyleUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.TwoTupleMapEx.html">TwoTupleMapEx</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="StringUtils.html">StringUtils</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BondForm.html#event:change">change</a></li><li><a href="Kekule.BondForm.html#event:finalize">finalize</a></li><li><a href="Kekule.BondForm.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemDocument.html#event:change">change</a></li><li><a href="Kekule.ChemDocument.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemDocument.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObject.html#event:change">change</a></li><li><a href="Kekule.ChemObject.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObject.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemObjList.html#event:change">change</a></li><li><a href="Kekule.ChemObjList.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemObjList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpace.html#event:change">change</a></li><li><a href="Kekule.ChemSpace.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpace.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemSpaceElement.html#event:change">change</a></li><li><a href="Kekule.ChemSpaceElement.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemSpaceElement.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ElectronSet.html#event:change">change</a></li><li><a href="Kekule.ElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.ElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Element.html#event:change">change</a></li><li><a href="Kekule.Element.html#event:finalize">finalize</a></li><li><a href="Kekule.Element.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ExceptionHandler.html#event:change">change</a></li><li><a href="Kekule.ExceptionHandler.html#event:exceptionThrown">exceptionThrown</a></li><li><a href="Kekule.ExceptionHandler.html#event:finalize">finalize</a></li><li><a href="Kekule.ExceptionHandler.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.Base.html#event:change">change</a></li><li><a href="Kekule.Glyph.Base.html#event:finalize">finalize</a></li><li><a href="Kekule.Glyph.Base.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Isotope.html#event:change">change</a></li><li><a href="Kekule.Isotope.html#event:finalize">finalize</a></li><li><a href="Kekule.Isotope.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeList.html#event:change">change</a></li><li><a href="Kekule.MoleculeList.html#event:finalize">finalize</a></li><li><a href="Kekule.MoleculeList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Reaction.html#event:change">change</a></li><li><a href="Kekule.Reaction.html#event:finalize">finalize</a></li><li><a href="Kekule.Reaction.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ReactionList.html#event:change">change</a></li><li><a href="Kekule.ReactionList.html#event:finalize">finalize</a></li><li><a href="Kekule.ReactionList.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Scalar.html#event:change">change</a></li><li><a href="Kekule.Scalar.html#event:finalize">finalize</a></li><li><a href="Kekule.Scalar.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextBlock.html#event:change">change</a></li><li><a href="Kekule.TextBlock.html#event:finalize">finalize</a></li><li><a href="Kekule.TextBlock.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:change">change</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:finalize">finalize</a></li><li><a href="Kekule.UnbondedElectronSet.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Class.html">Class</a></li><li><a href="ClassEx.html">ClassEx</a></li><li><a href="JsonObjSerializer.html">JsonObjSerializer</a></li><li><a href="Kekule.AbstractAtom.html">AbstractAtom</a></li><li><a href="Kekule.AbstractConfigs.html">AbstractConfigs</a></li><li><a href="Kekule.ArrayUtils.html">ArrayUtils</a></li><li><a href="Kekule.Atom.html">Atom</a></li><li><a href="Kekule.AtomType.html">AtomType</a></li><li><a href="Kekule.BaseStructureConnector.html">BaseStructureConnector</a></li><li><a href="Kekule.BaseStructureNode.html">BaseStructureNode</a></li><li><a href="Kekule.Bond.html">Bond</a></li><li><a href="Kekule.BondForm.html">BondForm</a></li><li><a href="Kekule.BondFormFactory.html">BondFormFactory</a></li><li><a href="Kekule.BondOrder.html">BondOrder</a></li><li><a href="Kekule.BondStereo.html">BondStereo</a></li><li><a href="Kekule.BondType.html">BondType</a></li><li><a href="Kekule.BoxUtils.html">BoxUtils</a></li><li><a href="Kekule.ChemMarker.BaseMarker.html">BaseMarker</a></li><li><a href="Kekule.ChemMarker.Charge.html">Charge</a></li><li><a href="Kekule.ChemMarker.ChemPropertyMarker.html">ChemPropertyMarker</a></li><li><a href="Kekule.ChemMarker.Radical.html">Radical</a></li><li><a href="Kekule.ChemMarker.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ChemStructureBuilder.html">ChemStructureBuilder</a></li><li><a href="Kekule.ChemStructureConnector.html">ChemStructureConnector</a></li><li><a href="Kekule.ChemStructureNode.html">ChemStructureNode</a></li><li><a href="Kekule.ChemStructureNodeFactory.html">ChemStructureNodeFactory</a></li><li><a href="Kekule.ChemStructureNodeLabels.html">ChemStructureNodeLabels</a></li><li><a href="Kekule.ChemStructureObjectGroup.html">ChemStructureObjectGroup</a></li><li><a href="Kekule.ChemStructureUtils.html">ChemStructureUtils</a></li><li><a href="Kekule.ChemTextAnalyzer.html">ChemTextAnalyzer</a></li><li><a href="Kekule.ClassUtils.html">ClassUtils</a></li><li><a href="Kekule.CompositeMolecule.html">CompositeMolecule</a></li><li><a href="Kekule.ConfigPresetMap.html">ConfigPresetMap</a></li><li><a href="Kekule.ContentBlock.html">ContentBlock</a></li><li><a href="Kekule.CoordUtils.html">CoordUtils</a></li><li><a href="Kekule.DomHelper.html">DomHelper</a></li><li><a href="Kekule.ElectronSet.html">ElectronSet</a></li><li><a href="Kekule.Element.html">Element</a></li><li><a href="Kekule.FactoryUtils.html">FactoryUtils</a></li><li><a href="Kekule.FormulaUtils.html">FormulaUtils</a></li><li><a href="Kekule.GeometryUtils.html">GeometryUtils</a></li><li><a href="Kekule.Glyph.AddSymbol.html">AddSymbol</a></li><li><a href="Kekule.Glyph.Arc.html">Arc</a></li><li><a href="Kekule.Glyph.ArrowSide.html">ArrowSide</a></li><li><a href="Kekule.Glyph.ArrowType.html">ArrowType</a></li><li><a href="Kekule.Glyph.Base.html">Base</a></li><li><a href="Kekule.Glyph.HeatSymbol.html">HeatSymbol</a></li><li><a href="Kekule.Glyph.NodeType.html">NodeType</a></li><li><a href="Kekule.Glyph.PathGlyph.html">PathGlyph</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html">PathGlyphArcConnector</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html">PathGlyphArcConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html">PathGlyphConnector</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html">PathGlyphConnectorControlNode</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html">PathGlyphNode</a></li><li><a href="Kekule.Glyph.PathType.html">PathType</a></li><li><a href="Kekule.Glyph.Polygon.html">Polygon</a></li><li><a href="Kekule.Glyph.StraightLine.html">StraightLine</a></li><li><a href="Kekule.HybridizationType.html">HybridizationType</a></li><li><a href="Kekule.ImageBlock.html">ImageBlock</a></li><li><a href="Kekule.Isotope.html">Isotope</a></li><li><a href="Kekule.IsotopeFactory.html">IsotopeFactory</a></li><li><a href="Kekule.MatrixUtils.html">MatrixUtils</a></li><li><a href="Kekule.MolecularFormula.html">MolecularFormula</a></li><li><a href="Kekule.Molecule.html">Molecule</a></li><li><a href="Kekule.MoleculeGroup.html">MoleculeGroup</a></li><li><a href="Kekule.MoleculeList.html">MoleculeList</a></li><li><a href="Kekule.NumUtils.html">NumUtils</a></li><li><a href="Kekule.ObjUtils.html">ObjUtils</a></li><li><a href="Kekule.PredefinedResLoader.html">PredefinedResLoader</a></li><li><a href="Kekule.PredefinedResReferer.html">PredefinedResReferer</a></li><li><a href="Kekule.Pseudoatom.html">Pseudoatom</a></li><li><a href="Kekule.PseudoatomType.html">PseudoatomType</a></li><li><a href="Kekule.RadicalOrder.html">RadicalOrder</a></li><li><a href="Kekule.Reaction.html">Reaction</a></li><li><a href="Kekule.ReactionComponent.html">ReactionComponent</a></li><li><a href="Kekule.ReactionList.html">ReactionList</a></li><li><a href="Kekule.ReactionRole.html">ReactionRole</a></li><li><a href="Kekule.RectUtils.html">RectUtils</a></li><li><a href="Kekule.RoleMapUtils.html">RoleMapUtils</a></li><li><a href="Kekule.StructureConnectionTable.html">StructureConnectionTable</a></li><li><a href="Kekule.StructureFragment.html">StructureFragment</a></li><li><a href="Kekule.StructureFragmentGroup.html">StructureFragmentGroup</a></li><li><a href="Kekule.StructureFragmentShadow.html">StructureFragmentShadow</a></li><li><a href="Kekule.StrUtils.html">StrUtils</a></li><li><a href="Kekule.SubGroup.html">SubGroup</a></li><li><a href="Kekule.TextBlock.html">TextBlock</a></li><li><a href="Kekule.TextLinesBuffer.html">TextLinesBuffer</a></li><li><a href="Kekule.TokenAnalyzer.html">TokenAnalyzer</a></li><li><a href="Kekule.UnbondedElectronSet.html">UnbondedElectronSet</a></li><li><a href="Kekule.ValenceUtils.html">ValenceUtils</a></li><li><a href="Kekule.VariableAtom.html">VariableAtom</a></li><li><a href="Kekule.ZoomUtils.html">ZoomUtils</a></li><li><a href="ObjectEx.html">ObjectEx</a></li><li><a href="ObjSerializerFactory.html">ObjSerializerFactory</a></li><li><a href="XmlObjSerializer.html">XmlObjSerializer</a></li><li><a href="XmlUtility.html">XmlUtility</a></li></ul><h3>Events</h3><ul><li><a href="Kekule.AbstractAtom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.AbstractConfigs.html#event:change">change</a></li><li><a href="Kekule.AbstractConfigs.html#event:finalize">finalize</a></li><li><a href="Kekule.AbstractConfigs.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Atom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.BaseStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Bond.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:change">change</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemStructureBuilder.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.ChemStructureConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObject.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemStructureObjectGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:change">change</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.ChemTextAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.CompositeMolecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.ConfigPresetMap.html#event:change">change</a></li><li><a href="Kekule.ConfigPresetMap.html#event:finalize">finalize</a></li><li><a href="Kekule.ConfigPresetMap.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.DomHelper.html#event:change">change</a></li><li><a href="Kekule.DomHelper.html#event:finalize">finalize</a></li><li><a href="Kekule.DomHelper.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphArcConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnector.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphConnectorControlNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.Glyph.PathGlyphNode.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MolecularFormula.html#event:change">change</a></li><li><a href="Kekule.MolecularFormula.html#event:finalize">finalize</a></li><li><a href="Kekule.MolecularFormula.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Molecule.html#event:structureChange">structureChange</a></li><li><a href="Kekule.MoleculeGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.PredefinedResLoader.html#event:change">change</a></li><li><a href="Kekule.PredefinedResLoader.html#event:finalize">finalize</a></li><li><a href="Kekule.PredefinedResLoader.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.Pseudoatom.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureConnectionTable.html#event:change">change</a></li><li><a href="Kekule.StructureConnectionTable.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureConnectionTable.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.StructureFragment.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:change">change</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:finalize">finalize</a></li><li><a href="Kekule.StructureFragmentShadow.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.SubGroup.html#event:structureChange">structureChange</a></li><li><a href="Kekule.TextLinesBuffer.html#event:change">change</a></li><li><a href="Kekule.TextLinesBuffer.html#event:finalize">finalize</a></li><li><a href="Kekule.TextLinesBuffer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.TokenAnalyzer.html#event:change">change</a></li><li><a href="Kekule.TokenAnalyzer.html#event:finalize">finalize</a></li><li><a href="Kekule.TokenAnalyzer.html#event:propValueSet">propValueSet</a></li><li><a href="Kekule.VariableAtom.html#event:structureChange">structureChange</a></li><li><a href="ObjectEx.html#event:change">change</a></li><li><a href="ObjectEx.html#event:finalize">finalize</a></li><li><a href="ObjectEx.html#event:propValueSet">propValueSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.ChemMarker.html">ChemMarker</a></li><li><a href="Kekule.Glyph.html">Glyph</a></li></ul><h3>Global</h3><ul><li><a href="global.html#jsonToValue">jsonToValue</a></li><li><a href="global.html#loadObj">loadObj</a></li><li><a href="global.html#saveObj">saveObj</a></li><li><a href="global.html#valueToJson">valueToJson</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 14:26:23 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:08:32 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>

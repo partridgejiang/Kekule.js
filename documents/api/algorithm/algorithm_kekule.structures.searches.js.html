@@ -44,7 +44,15 @@
 "use strict";
 
 var AU = Kekule.ArrayUtils;
-var SC = Kekule.UnivChemStructObjComparer;
+//var SC = Kekule.UnivChemStructObjComparer;
+
+/*
+ * Default options to do sub structure search.
+ * @object
+ */
+Kekule.globalOptions.add('algorithm.structureSearch', {
+	doStandardize: true
+});
 
 /**
  * A util class to search sub structures in ctab based molecule.
@@ -66,19 +74,20 @@ Kekule.ChemStructureSearcher = {
 	 *     doStandardize: Bool, whether standardize molecule (especially perceive aromatic rings) before searching,
 	 *       default is true.
 	 *     exactMatch: Bool, if true, only the same structure with subStructure will be matched.
-	 *     level: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
-	 *     compareAtom: Bool, if false, all node will be regarded as same. Default is true.
-	 *     compareMass: Bool, whether mass number is compared. Default is false.
-	 *     compareCharge: Bool, whether charge of node is compared. Default is false.
-	 *     compareBondOrder: Bool, whether order of bond is compared. Default is true.
-	 *     compareStereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
+	 *     structureLevel: comparation level, value from {@link Kekule.StructureComparationLevel}. Default is constitution.
+	 *     atom: Bool, if false, all node will be regarded as same. Default is true.
+	 *     mass: Bool, whether mass number is compared. Default is false.
+	 *     charge: Bool, whether charge of node is compared. Default is false.
+	 *     bondOrder: Bool, whether order of bond is compared. Default is true.
+	 *     stereo: Bool, whether stereo feature (chiral center, cis/trans of double bond) is taken into consideration. Default is false.
 	 *   }
 	 * @returns {Variant} If sub structure is found, an array of matching node and connectors will be returned.
 	 *   Otherwise false will be returned.
 	 */
 	findSubStructure: function(subStructure, sourceMol, options)
 	{
-		var op = Object.extend({doStandardize: true}, options);
+		// TODO: configuration search need to be rechecked
+		var op = Object.extend(Object.extend({}, Kekule.globalOptions.algorithm.structureSearch), options);
 
 		if (op.exactMatch)
 		{
@@ -112,25 +121,42 @@ Kekule.ChemStructureSearcher = {
 		// initial options
 		op = Object.extend({level: Kekule.StructureComparationLevel.CONSTITUTION,
 			compareLinkedConnectorCount: false, compareHydrogenCount: false, compareConnectedObjCount: false}, op);
-		op = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		/*
+		var op1 = Kekule.UnivChemStructObjComparer.prepareCompareOptions(op);
+		var op2 = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
+		op = op2;
+		console.log(op1);
+		console.log(op2);
+		console.log('===================');
+		*/
+		op = Kekule.ObjComparer.getStructureComparisonDetailOptions(op);
 		var objCompareOptions = op;
 
 		// standardize structures first, perceive aromatic rings
+		//console.log(op);
 		if (op.doStandardize)
 		{
 			var standardizeOps = {
-				unmarshalSubFragments: true,
+				unmarshalSubFragments: !true,
 				doCanonicalization: true,
 				doAromaticPerception: true
 			};
 			if (!op.compareStereo)  // do not need perceive stereo
-				op.doCanonicalization = false;
+				standardizeOps.doCanonicalization = false;
+			// here we ensure two structures are standardized (with their flattened shadows).
 			subStructure.standardize(standardizeOps);
 			sourceMol.standardize(standardizeOps);
 		}
+		var flattenedSrcMol = sourceMol.getFlattenedShadowFragment(true);
+		var flattenedSubStruct = subStructure.getFlattenedShadowFragment(true);
 
+		/*
 		var targetStartingNode = subStructure.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
 		var srcNodes = sourceMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+		*/
+		var targetStartingNode = flattenedSubStruct.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
+		var srcNodes = flattenedSrcMol.getNonHydrogenNodes(); //sourceMol.getNodes();
+
 		var srcNodeCount = srcNodes.length;
 		var srcIndex = 0;
 
@@ -151,7 +177,10 @@ Kekule.ChemStructureSearcher = {
 			return false;
 		else
 		{
-			return AU.toUnique(compareResult);
+			var matchedObjs = AU.toUnique(compareResult);
+			// map back to original structure
+			var result = sourceMol.getFlatternedShadowSourceObjs(matchedObjs);
+			return result;
 		}
 	},
 
@@ -243,7 +272,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		//if (SC.compare(targetNode, srcNode, compareOptions) !== 0)
+		if (targetNode.compareStructure(srcNode, compareOptions) !== 0)
 			return false;
 		else
 		{
@@ -334,7 +364,8 @@ Kekule.ChemStructureSearcher = {
 		};
 		*/
 
-		if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		//if (SC.compare(targetConn, srcConn, compareOptions) !== 0)
+		if (targetConn.compareStructure(srcConn, compareOptions) !== 0)
 			return false;
 		else
 		{
@@ -456,13 +487,13 @@ ClassEx.extend(Kekule.StructureFragment,
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$jsRoot">$jsRoot</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Kekule.CanonicalizationConnectorConnectedObjsSorter.html">CanonicalizationConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationConnectorSorter.html">CanonicalizationConnectorSorter</a></li><li><a href="Kekule.CanonicalizationCustomExecutor.html">CanonicalizationCustomExecutor</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorConnectedObjsSorter.html">CanonicalizationGeneralConnectorConnectedObjsSorter</a></li><li><a href="Kekule.CanonicalizationGeneralConnectorSorter.html">CanonicalizationGeneralConnectorSorter</a></li><li><a href="Kekule.CanonicalizationIndexer.html">CanonicalizationIndexer</a></li><li><a href="Kekule.CanonicalizationMorganExIndexer.html">CanonicalizationMorganExIndexer</a></li><li><a href="Kekule.CanonicalizationMorganIndexer.html">CanonicalizationMorganIndexer</a></li><li><a href="Kekule.CanonicalizationMorganNodeSorter.html">CanonicalizationMorganNodeSorter</a></li><li><a href="Kekule.CanonicalizationNodeSorter.html">CanonicalizationNodeSorter</a></li><li><a href="Kekule.Canonicalizer.html">Canonicalizer</a></li><li><a href="Kekule.ChemStructObjContainer.html">ChemStructObjContainer</a></li><li><a href="Kekule.ChemStructureSearcher.html">ChemStructureSearcher</a></li><li><a href="Kekule.Graph.html">Graph</a></li><li><a href="Kekule.GraphAdaptUtils.html">GraphAdaptUtils</a></li><li><a href="Kekule.GraphAlgorithmUtils.html">GraphAlgorithmUtils</a></li><li><a href="Kekule.GraphEdge.html">GraphEdge</a></li><li><a href="Kekule.GraphElement.html">GraphElement</a></li><li><a href="Kekule.GraphVertex.html">GraphVertex</a></li><li><a href="Kekule.MolStandardizer.html">MolStandardizer</a></li><li><a href="Kekule.MolStereoUtils.html">MolStereoUtils</a></li></ul><h3>Namespaces</h3><ul><li><a href="Kekule.html">Kekule</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bondTypes">bondTypes</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon May 04 2015 22:48:33 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Nov 26 2018 21:16:22 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>
