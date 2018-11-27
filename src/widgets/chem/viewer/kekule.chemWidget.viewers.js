@@ -34,6 +34,7 @@ var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 var CW = Kekule.ChemWidget;
 var EM = Kekule.Widget.EvokeMode;
 
+/** @ignore */
 Kekule.globalOptions.add('chemWidget.viewer', {
 	toolButtons: [
 		//BNS.loadFile,
@@ -162,14 +163,8 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  *
  * @property {Array} allowedMolDisplayTypes Molecule types can be changed in tool bar.
  */
-/**
- * Invoked when the an chem object is loaded into the viewer.
- *   event param of it has one fields: {obj: Object}
- * @name Kekule.ChemWidget.Viewer#load
- * @event
- */
 Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
-/** @lends Kekule.ChemWidget.viewer# */
+/** @lends Kekule.ChemWidget.Viewer# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.Viewer',
@@ -2539,7 +2534,7 @@ Kekule.ChemWidget.Viewer.Settings = Class.create(Kekule.ChemWidget.ChemObjDispla
  * @class
  * @augments Kekule.ChemWidget.ActionOnDisplayer
  *
- * @param {Kekule.ChemWidget.viewer} viewer Target viewer widget.
+ * @param {Kekule.ChemWidget.Viewer} viewer Target viewer widget.
  * @param {String} caption
  * @param {String} hint
  */
