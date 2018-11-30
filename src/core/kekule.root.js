@@ -12,7 +12,7 @@ module.exports = function(Kekule) {
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.8.1.18102900',
+	VERSION: '0.8.1.18112300',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
