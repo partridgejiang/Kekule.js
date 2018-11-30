@@ -231,7 +231,7 @@ Kekule.MolStereoUtils = {
 		var result;
 		if (!sa || !sb)
 			result = SP.UNKNOWN;
-		else if (sa !== sb)  // ta1/tb1 on same side of bond
+		else if (sa === sb)  // ta1/tb1 on same side of bond
 			result = SP.ODD;
 		else
 			result = SP.EVEN;
