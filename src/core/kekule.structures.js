@@ -4202,6 +4202,27 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				{
 					if ((result === 0) && (this.getNonHydrogenNodes && targetObj.getNonHydrogenNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
 					{
+						var _getNeighorNodeIndexes = function(nodeOrConnector, parent)
+						{
+							var neighbors;
+							if (nodeOrConnector instanceof Kekule.ChemStructureConnector)
+								neighbors = nodeOrConnector.getConnectedNonHydrogenObjs();
+							else if (nodeOrConnector instanceof Kekule.ChemStructureNode)
+								neighbors = nodeOrConnector.getLinkedNonHydrogenObjs();  // ignore H
+							var result = [];
+							for (var i = 0, l = neighbors.length; i < l; ++i)
+							{
+								var n = neighbors[i];
+								//if (n instanceof Kekule.ChemStructureNode)
+								var index = parent.indexOfNode(n);
+								if (index >= 0)  // ignore cross structure bonds
+									result.push(index);
+							}
+							result.sort();
+							return result;
+						};
+
+
 						var nodes1 = this.getNonHydrogenNodes();
 						var nodes2 = targetObj.getNonHydrogenNodes();
 						result = nodes1.length - nodes2.length;
@@ -4212,6 +4233,18 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 								result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
 								if (result !== 0)
 									break;
+								else
+								{
+									// check the neighbor node index to current node, avoid issue #86
+									var neighborNodeIndexes1 = _getNeighorNodeIndexes(nodes1[i], this);
+									var neighborNodeIndexes2 = _getNeighorNodeIndexes(nodes2[i], targetObj);
+									result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+									if (result !== 0)
+									{
+										//console.log('diff node', nodes1[i].getId(), neighborNodeIndexes1, nodes2[i].getId(), neighborNodeIndexes2);
+										break;
+									}
+								}
 							}
 						}
 					}
@@ -4227,6 +4260,18 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 								result = this.doCompareOnValue(connectors1[i], connectors2[i], options);
 								if (result !== 0)
 									break;
+								else
+								{
+									// check the neighbor node index to current node, avoid issue #86
+									var neighborNodeIndexes1 = _getNeighorNodeIndexes(connectors1[i], this);
+									var neighborNodeIndexes2 = _getNeighorNodeIndexes(connectors2[i], targetObj);
+									result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+									if (result !== 0)
+									{
+										//console.log('diff bond', connectors1[i].getId(), neighborNodeIndexes1, connectors2[i].getId(), neighborNodeIndexes2);
+										break;
+									}
+								}
 							}
 						}
 					}
