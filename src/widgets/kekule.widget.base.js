@@ -3269,14 +3269,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
-	/** @private */
-	observingGestureEventsChanged: function(eventNames)
-	{
-		// What?
-		// if (enabled)
-		// 	this.installHammerTouchHandlers();
-	},
-
 	/**
 	 * React to active event (mouse down, enter key down and so on).
 	 * @param {Event} e
