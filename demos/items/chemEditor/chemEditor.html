@@ -5,6 +5,7 @@
   <title>Composer Demo</title><script src="../../libs/raphael-min.2.0.1.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
 
+
   <script src="../../libs/kekule/kekule.js?modules=chemWidget,algorithm&locals=en,zh"></script>
   <link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
 
@@ -28,8 +29,11 @@
       chemComposer = new Kekule.Editor.Composer(elem, chemEditor);
       */
       chemComposer = Kekule.Widget.getWidgetById('chemComposer');
-      chemComposer.setAutoResizeConstraints({width: 1, height: 1})
-        .setEnableDimensionTransform(true).setAutoSetMinDimension(true);
+      chemComposer
+        .setEnableDimensionTransform(true)
+        .setAutoSetMinDimension(true)
+        .setAutoResizeConstraints({width: 1, height: 1})
+        .autoResizeToClient();  // force a resize to window client
     }
     Kekule.X.domReady(init);
   </script>

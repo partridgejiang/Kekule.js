@@ -5,10 +5,13 @@
   <title>Stereo Test</title>
   <script src="../_libs/raphael-min.2.0.1.js"></script>
   <script src="../../src/kekule.js?min=false"></script>
+  <!--
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+  -->
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
 
   <script>
     var chemEditor;
@@ -52,7 +55,7 @@
     function findStereoBonds()
     {
       var mol = getCurrMol();
-      var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(mol);
+      var stereoBonds = Kekule.MolStereoUtils.perceiveStereoConnectors(mol, null, null, !true);
       mol.beginUpdate();
 
       var SP = Kekule.StereoParity;

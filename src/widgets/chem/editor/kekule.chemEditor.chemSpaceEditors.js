@@ -2435,6 +2435,7 @@ Kekule.Editor.SelectIaController = Class.create(Kekule.Editor.BasicMolManipulati
 	{
 		$super(editor);
 		this.setEnableSelect(true);
+		this.setEnableGestureManipulation(true);
 	}
 });
 // register

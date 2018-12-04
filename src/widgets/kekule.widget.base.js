@@ -2041,16 +2041,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var minWidth = minDim && minDim.width;
 		var minHeight = minDim && minDim.height;
 
-		if (!this.getEnableDimensionTransform())
-		{
-			var actualWidth = notUnset(width)?
-					(minWidth? Math.max(width, minWidth): width):	null;
-			var actualHeight = notUnset(height)?
-					(minHeight? Math.max(height, minHeight): height):	null;
-			this._setTransformScale(1);
-			return this.doSetDimension(actualWidth, actualHeight, suppressResize);
-		}
-		else  // may scale
+		var handled = false;
+		if (this.getEnableDimensionTransform())  // may scale
 		{
 			var ratioWidth = (notUnset(width) && minWidth) ? width / minWidth : null;
 			var ratioHeight = (notUnset(height) && minHeight) ? height / minHeight : null;
@@ -2060,9 +2052,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			else
 				actualRatio = Math.min(ratioWidth, ratioHeight);
 
-			if (actualRatio >= 1)
+			if (!actualRatio)
+			{
+				handled = false;  // do not scale transform
+			}
+			else if (actualRatio >= 1)
 			{
 				this._setTransformScale(1);
+				handled = true;
 				return this.doSetDimension(width, height, suppressResize);
 			}
 			else
@@ -2079,8 +2076,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					actualWidth = width && (width / actualRatio);
 				}
 				this._setTransformScale(actualRatio);
+				handled = true;
 				return this.doSetDimension(actualWidth, actualHeight, suppressResize);
 			}
+		}
+
+		if (!handled)
+		{
+			var actualWidth = notUnset(width)?
+					(minWidth? Math.max(width, minWidth): width):	null;
+			var actualHeight = notUnset(height)?
+					(minHeight? Math.max(height, minHeight): height):	null;
+			this._setTransformScale(1);
+			return this.doSetDimension(actualWidth, actualHeight, suppressResize);
 		}
 	},
 	/** @private */

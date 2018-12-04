@@ -281,6 +281,10 @@ M  END
 		btns.push('menu');
 		chemViewer.setToolButtons(btns).setRestrainEditorWithCurrObj(false);
 		Kekule.Widget.getWidgetById('objInspector').setObjects(chemViewer/*.getRenderConfigs()*/);
+
+		var renderConfigs = new Kekule.Render.Render2DConfigs();
+		renderConfigs.getColorConfigs().setUseAtomSpecifiedColor(true);
+		chemViewer.setEditorProperties({'renderConfigs': renderConfigs});
 	}
 </script>
 </head>
