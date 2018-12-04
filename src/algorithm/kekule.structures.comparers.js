@@ -380,7 +380,7 @@ Kekule.UnivChemStructObjComparer = {
 	getFragmentDetailCompareValue: function(fragment, options)
 	{
 		var result = 0;
-		result += (fragment.getNodeCount() || 0) * U._P32 + (fragment.getConnectorCount() || 0) * U._P20;
+		result += (fragment.getNodeCount() || 0) * this._P32 + (fragment.getConnectorCount() || 0) * this._P20;
 
 		return result;
 	},

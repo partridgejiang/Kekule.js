@@ -15,9 +15,9 @@
 (function(){
 
 /** @ignore */
-var D = Kekule.Widget.Direction;
+const D = Kekule.Widget.Direction;
 /** @ignore */
-SU = Kekule.StyleUtils;
+const SU = Kekule.StyleUtils;
 
 /**
  * Class to execute transition on HTML elements.

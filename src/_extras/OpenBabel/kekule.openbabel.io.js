@@ -94,7 +94,7 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 					{
 						if (obObj.NumAtoms && (obObj.NumAtoms() > 0))  // bypass empty molecule with no atoms
 						{
-							kObj = AU.obObjToKekule(obObj);
+							var kObj = AU.obObjToKekule(obObj);
 							kObjs.push(kObj);
 							//console.log(obObj, kObj.getNodeCount());
 						}

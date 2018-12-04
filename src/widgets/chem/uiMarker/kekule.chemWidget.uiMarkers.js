@@ -499,7 +499,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			return r;
 		}
 		else
-			return $super(context, updatedObjs, updateType);
+			return $super(context, updatedObjDetails, updateType);
 	},
 	/** @private */
 	doAddNew: function(/*$super,*/ context, updatedObjDetails)

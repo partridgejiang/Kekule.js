@@ -292,7 +292,7 @@ if (!Object.create)
 Object.copyValues = function(dest, src, propNames)
 {
 	if (!propNames)
-		return Object.extend(dest, source);
+		return Object.extend(dest, src);
 	else
 	{
 		for (var i = 0, l = propNames.length; i < l; ++i)
@@ -515,7 +515,7 @@ Object._extendSupportMethods(String.prototype, {
 		//replacement = this.gsub.prepareReplacement(replacement);
 
 		while (source.length > 0) {
-			if (match = source.match(pattern)) {
+			if (match === source.match(pattern)) {
 				result += source.slice(0, match.index);
 				result += replacement;
 				source  = source.slice(match.index + match[0].length);
@@ -2830,7 +2830,7 @@ ObjectEx = Class.create(
     {
       for (var pname in propNames)
       {
-        if (propNames.hasOwnProperty(pname) && typeof(obj[pname]) !== 'function')
+        if (propNames.hasOwnProperty(pname) && typeof(propNames[pname]) !== 'function')
           result[pname] = this.getPropValue(pname);
       }
     }

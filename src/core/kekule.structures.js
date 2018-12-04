@@ -1594,7 +1594,7 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 			else
 			{
 				var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(atomicNum);
-				return (eleminfo.chemicalSerie === "Nonmetals");
+				return (elemInfo.chemicalSerie === "Nonmetals");
 			}
 		}
 		else // dummy or custom
@@ -1909,7 +1909,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 				result += sections[i].charge;
 			else*/
 			if (sections[i].obj.getCharge)
-				result += sections[i].obj.getCharge() * (section.count || 1);
+				result += sections[i].obj.getCharge() * (sections.count || 1);
 			/*
 			if (sections[i].charge)
 				result += sections[i].charge;
@@ -2948,7 +2948,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	clearAnchorNodes: function()
 	{
 		this.setPropStoreFieldValue('anchorNodes', []);
-		notifyAnchorNodesChanged();
+		this.notifyAnchorNodesChanged();
 	},
 	/**
 	 * Return count of connectors.
@@ -4620,7 +4620,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 */
 	hasNode: function(node, checkNestedStructure)
 	{
-		return this.hasCtab()? the.getCtab().hasNode(node, checkNestedStructure): null;
+		return this.hasCtab()? this.getCtab().hasNode(node, checkNestedStructure): null;
 	},
 	/**
 	 * Returns index of node. If node exists in nested sub group, index in sub group will be pushed to stack as well.
@@ -7188,7 +7188,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		var refIndex = this.indexOfItem(child);
 		if (refIndex < 0)
 			refIndex = this.indexOfObj(child);
-		return (refIndex >= 0)? this.getChildAt(index + 1): null;
+		return (refIndex >= 0)? this.getChildAt(refIndex + 1): null;
 	},
 	/**
 	 * Append obj to children list. If obj already inside, nothing will be done.

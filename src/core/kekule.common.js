@@ -819,11 +819,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set2DSizeX: function(x)
 		{
-			var c = fetchSize2D();
+			var c = this.fetchSize2D();
 			if (c.x != x)
 			{
 				c.x = x;
-				notifySize2DChanged(c);
+				this.notifySize2DChanged(c);
 			}
 		},
 		/**
@@ -842,11 +842,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set2DSizeY: function(y)
 		{
-			var c = fetchSize2D();
+			var c = this.fetchSize2D();
 			if (c.y != y)
 			{
 				c.y = y;
-				notifySize2DChanged(c);
+				this.notifySize2DChanged(c);
 			}
 		}
 	},
@@ -921,11 +921,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DSizeX: function(x)
 		{
-			var c = fetchSize3D();
+			var c = this.fetchSize3D();
 			if (c.x != x)
 			{
 				c.x = x;
-				notifySize3DChanged(c);
+				this.notifySize3DChanged(c);
 			}
 		},
 		/**
@@ -944,11 +944,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DSizeY: function(y)
 		{
-			var c = fetchSize3D();
+			var c = this.fetchSize3D();
 			if (c.y != y)
 			{
 				c.y = y;
-				notifySize3DChanged(c);
+				this.notifySize3DChanged(c);
 			}
 		},
 		/**
@@ -967,11 +967,11 @@ Kekule.ClassDefineUtils = {
 		 */
 		set3DSizeZ: function(z)
 		{
-			var c = fetchSize3D();
+			var c = this.fetchSize3D();
 			if (c.z != z)
 			{
 				c.z = z;
-				notifySize3DChanged(c);
+				this.notifySize3DChanged(c);
 			}
 		}
 	},
@@ -2804,8 +2804,8 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	/** @ignore */
 	isEmpty: function()
 	{
-		//var result = $super();
-		return result && (this.getItemCount() <= 0);
+		// var result = $super();
+		return (this.getItemCount() <= 0);
 	},
 
 	/** @private */

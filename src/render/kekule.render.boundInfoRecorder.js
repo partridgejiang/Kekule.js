@@ -343,7 +343,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		var infos = this.getAllBoundInfosOfContext(context);
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
-			var box = MU.getContainerBox(info[i], 0);
+			var box = MU.getContainerBox(infos[i], 0);
 			result = BU.getContainerBox(result, box);
 		}
 		return result;
