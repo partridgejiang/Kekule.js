@@ -558,7 +558,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		});
 
 		this.defineElemAttribMappingProp('id', 'id');
-		this.defineElemAttribMappingProp('draggable', 'draggable');
+		//this.defineElemAttribMappingProp('draggable', 'draggable');
+		this.defineProp('draggable', {'dataType': DataType.BOOL, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return Kekule.StrUtils.strToBool(this.getElement().getAttribute('draggable')); },
+			'setter': function(value) { this.getElement().setAttribute('draggable', value? 'true': 'false')}
+		});
 
 		this.defineElemStyleMappingProp('width', 'width');
 		this.defineElemStyleMappingProp('height', 'height');
