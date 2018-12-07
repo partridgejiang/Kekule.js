@@ -101,7 +101,11 @@ Kekule.BrowserFeature = {
 	},
 	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
 	touchEvent: !!window.touchEvent,
-	pointerEvent: !!window.PointerEvent
+	pointerEvent: !!window.PointerEvent,
+	draggable: (function() {
+		var div = document.createElement('div');
+		return ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
+	})()
 };
 
 // polyfill of requestAnimationFrame / cancelAnimationFrame
@@ -129,6 +133,7 @@ Kekule.BrowserFeature = {
 			clearTimeout(id);
 		};
 }());
+
 
 /**
  * Namespace for XBrowser lib.
@@ -1164,6 +1169,33 @@ if (eproto)  // IE7 can not get event prototype, sucks
 	*/
 	Object.extend(eproto, eventObjMethods);
 };
+
+
+// enable drag draggable element in IE
+(function(){
+	if (typeof(document) !== 'undefined')
+	{
+		var div = document.createElement('div');
+		var needPolyfill = !('draggable' in div) && ('ondragstart' in div && 'ondrop' in div);
+		//var needPolyfill = !!Kekule.Browser.IE;
+		if (needPolyfill)
+		{
+			Kekule.X.Event.addListener(document, 'selectstart', function(e){
+				for (var el = e.target; el; el = el.parentNode) {
+					if (el.attributes && el.attributes['draggable']) {
+						e.preventDefault();
+						if (e.stopImmediatePropagation)
+							e.stopImmediatePropagation();
+						else
+							e.stopPropagation();
+						el.dragDrop();
+						return false;
+					}
+				}
+			});
+		}
+	}
+})();
 
 
 /////////////////////////////////////////////////////////////
