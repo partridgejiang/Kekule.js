@@ -186,8 +186,8 @@
 .K-Chem-Viewer
 {
     /* default size of viewer */
-    width: 20em;
-    height: 15em;
+    width:100% !important;
+    height:100% !important;
 }
 
 .K-Chem-Viewer.K-State-Hover
@@ -470,7 +470,6 @@
 .K-Chem-Composer .K-Chem-Composer-Left-Region,
 .K-Chem-Composer .K-Chem-Composer-Bottom-Region
 {
-    position: absolute;
     padding: 0;
     margin: 0;
 }

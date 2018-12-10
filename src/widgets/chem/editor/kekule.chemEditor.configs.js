@@ -463,7 +463,6 @@ Kekule.Editor.ChemSpaceConfigs = Class.create(Kekule.AbstractConfigs,
 	initPropValues: function($super)
 	{
 		$super();
-		this.setDefScreenSize2D({'x': 900, 'y': 1500});
 		this.setDefScreenSize3D({'x': 600, 'y': 600, 'z': 600});
 	}
 });

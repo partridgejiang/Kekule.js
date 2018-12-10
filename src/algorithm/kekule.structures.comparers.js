@@ -203,7 +203,7 @@ Kekule.UnivChemStructObjComparer = {
 		var result =  v1 - v2;
 		if (obj1 && obj2)
 		{
-			if ((result === 0) && (obj1.getNodes && obj2.getNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
+			if ((result === 0) && (obj1.getNonHydrogenNodes && obj2.getNonHydrogenNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
 			{
 				var nodes1 = obj1.getNonHydrogenNodes(); // obj1.getNodes();
 				var nodes2 = obj2.getNonHydrogenNodes(); // obj2.getNodes();
@@ -218,7 +218,7 @@ Kekule.UnivChemStructObjComparer = {
 					}
 				}
 			}
-			if ((result === 0) && (obj1.getConnectors && obj2.getConnectors))
+			if ((result === 0) && (obj1.getNonHydrogenConnectors && obj2.getNonHydrogenConnectors))
 			{
 				var connectors1 = obj1.getNonHydrogenConnectors(); //obj1.getConnectors();
 				var connectors2 = obj2.getNonHydrogenConnectors(); //obj2.getConnectors();
@@ -320,7 +320,7 @@ Kekule.UnivChemStructObjComparer = {
 		// Linked conector count
 		if (options.compareLinkedConnectorCount)
 		{
-			var vlinkedConnector = node.getLinkedNonHydrogenConnectors().length; //node.getLinkedConnectorCount();
+			var vlinkedConnector = node.getLinkedConnectors().length; //node.getLinkedConnectorCount();
 			result += (vlinkedConnector << (4 * 4));
 		}
 

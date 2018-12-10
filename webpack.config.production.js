@@ -29,7 +29,7 @@ module.exports = {
       { test: /\.woff2?$/, loader: 'url-loader?prefix=font/' },
       { test: /\.ttf$/, loader: 'url-loader?prefix=font/' },
       { test: /\.eot$/, loader: 'url-loader?prefix=font/' },
-      { test: /\.svg$/, loader: 'url-loader?prefix=font/' },
+      { test: /\.svg$/, loader: 'svg-inline-loader' },
       { test: /\.png$/, loader: 'url-loader?prefix=images/' },
       { test: /\.gif$/, loader: 'url-loader?prefix=images/' },
       { test: /\.jpg$/, loader: 'url-loader?prefix=images/' },

@@ -813,8 +813,8 @@ Kekule.ChemStructOperation.MergeNodesBase = Class.create(Kekule.ChemObjOperation
 	 */
 	getCommonSiblings: function(node1, node2)
 	{
-		var siblings1 = node1.getLinkedObjs();
-		var siblings2 = node2.getLinkedObjs();
+		var siblings1 = (!(node1 instanceof Kekule.ChemMarker.UnbondedElectronSet))? node1.getLinkedObjs() : node1.getParent().getLinkedObjs();
+		var siblings2 = (!(node2 instanceof Kekule.ChemMarker.UnbondedElectronSet))? node2.getLinkedObjs() : node2.getParent().getLinkedObjs();
 		return Kekule.ArrayUtils.intersect(siblings1, siblings2);
 	},
 	/** @private */
@@ -868,8 +868,8 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 	{
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
-		var structFragment = fromNode.getParentFragment();
-		var destFragment = toNode.getParentFragment();
+		var structFragment = (fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet)? fromNode.getParent().getParentFragment() : fromNode.getParentFragment();
+		var destFragment = (toNode instanceof Kekule.ChemMarker.UnbondedElectronSet)? toNode.getParent().getParentFragment() : toNode.getParentFragment();
 		if (structFragment !== destFragment)  // from different molecule
 		{
 			//console.log('need merge mol');
@@ -890,7 +890,7 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 		{
 			var editor = this.getEditor();
 			var removedConnectors = this.getRemovedConnectors();
-			if (!removedConnectors)  // auto calc
+			if (!removedConnectors && !(fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet))  // auto calc
 			{
 				var commonSiblings = this.getCommonSiblings(fromNode, toNode);
 				var removedConnectors = [];
@@ -911,36 +911,44 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 			}
 
 			var connectors = this.getChangedConnectors();
-			if (!connectors)  // auto calc
+			if (!connectors && !(fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet))  // auto calc
 			{
-				var connectors = Kekule.ArrayUtils.clone(fromNode.getLinkedConnectors()) || [];
+				var linkedConnectors = fromNode.getLinkedConnectors();
+				var connectors = Kekule.ArrayUtils.clone(linkedConnectors) || [];
 				connectors = Kekule.ArrayUtils.exclude(connectors, removedConnectors);
 				this.setChangedConnectors(connectors);
 			}
 
 			// save fromNode's information
-			this._refSibling = fromNode.getNextSibling();
+			this._refSibling = (fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet)? fromNode.getParent().getNextSibling() : fromNode.getNextSibling();
 
-			for (var i = 0, l = connectors.length; i < l; ++i)
-			{
-				var connector = connectors[i];
-				var index = connector.indexOfConnectedObj(fromNode);
-				connector.removeConnectedObj(fromNode);
-				connector.insertConnectedObjAt(toNode, index);  // keep the index is important, wedge bond direction is related with node sequence
+			if (connectors) {
+				for (var i = 0, l = connectors.length; i < l; ++i)
+				{
+					var connector = connectors[i];
+					var index = connector.indexOfConnectedObj(fromNode);
+					connector.removeConnectedObj(fromNode);
+					connector.insertConnectedObjAt(toNode, index);  // keep the index is important, wedge bond direction is related with node sequence
+				}
 			}
 
 			this._removeConnectorOperations = [];
-			for (var i = 0, l = removedConnectors.length; i < l; ++i)
-			{
-				var connector = removedConnectors[i];
-				var oper = new Kekule.ChemStructOperation.RemoveConnector(connector, null, null, editor);
-				oper.execute();
-				this._removeConnectorOperations.push(oper);
+			if (removedConnectors) {
+				for (var i = 0, l = removedConnectors.length; i < l; ++i)
+				{
+					var connector = removedConnectors[i];
+					var oper = new Kekule.ChemStructOperation.RemoveConnector(connector);
+					oper.execute();
+					this._removeConnectorOperations.push(oper);
+				}
 			}
 
-			//structFragment.removeNode(fromNode);
-			this._removeNodeOperation = new Kekule.ChemStructOperation.RemoveNode(fromNode, null, null, editor);
-			this._removeNodeOperation.execute();
+			if (fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet) {
+				var parentNode = fromNode.getParent();
+				parentNode.removeMarker(fromNode);
+			}  else {
+				structFragment.removeNode(fromNode);
+			}
 		}
 		finally
 		{
@@ -1013,8 +1021,12 @@ Kekule.ChemStructOperation.MergeNodes.canMerge = function(target, dest, canMerge
 	// never allow merge to another molecule point (e.g. formula molecule) or subgroup
 	if ((target instanceof Kekule.StructureFragment) || (dest instanceof Kekule.StructureFragment))
 		return false;
-	if (!((target instanceof Kekule.ChemStructureNode) && (dest instanceof Kekule.ChemStructureNode)))
+	if (!(((target instanceof Kekule.ChemStructureNode) || (target instanceof Kekule.ChemMarker.UnbondedElectronSet))
+					&& ((dest instanceof Kekule.ChemStructureNode) || (dest instanceof Kekule.ChemMarker.UnbondedElectronSet))))
 		return false;
+	if (target.getClassName() !== dest.getClassName())
+		return false;
+		
 	var targetFragment = target.getParent();
 	var destFragment = dest.getParent();
 	var result = (targetFragment === destFragment) || canMergeStructFragment;
@@ -1050,11 +1062,7 @@ Kekule.ChemStructOperation.MergeNodesPreview = Class.create(Kekule.ChemStructOpe
 		this._moveNodeOperations = [];
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
-		var structFragment = fromNode.getParentFragment();
-		/*
-		if (!structFragment)
-			console.log('merge from', fromNode.getId(), 'to', toNode.getId());
-		*/
+		var structFragment = (fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet)? fromNode.getParent().getParentFragment() : fromNode.getParentFragment();
 		var CM = Kekule.CoordMode;
 		var coordModes = [CM.COORD2D, CM.COORD3D];
 		if (structFragment)
