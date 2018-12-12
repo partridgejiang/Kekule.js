@@ -764,6 +764,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 			// calc secondary adjustment, by AlignRect super or subscript should handle separately
 			var dimension = {'x': alignRect.width, 'y': alignRect.height};
 			var fontInfo = this._getActualFontInfo(item);
+			var isSupSub;
 			if (fontInfo)
 				isSupSub = fontInfo.isSup || fontInfo.isSub;
 			else

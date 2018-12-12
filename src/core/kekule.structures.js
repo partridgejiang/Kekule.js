@@ -1594,7 +1594,7 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 			else
 			{
 				var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(atomicNum);
-				return (eleminfo.chemicalSerie === "Nonmetals");
+				return (elemInfo.chemicalSerie === "Nonmetals");
 			}
 		}
 		else // dummy or custom
@@ -1909,7 +1909,7 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 				result += sections[i].charge;
 			else*/
 			if (sections[i].obj.getCharge)
-				result += sections[i].obj.getCharge() * (section.count || 1);
+				result += sections[i].obj.getCharge() * (sections.count || 1);
 			/*
 			if (sections[i].charge)
 				result += sections[i].charge;
@@ -2948,7 +2948,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	clearAnchorNodes: function()
 	{
 		this.setPropStoreFieldValue('anchorNodes', []);
-		notifyAnchorNodesChanged();
+		this.notifyAnchorNodesChanged();
 	},
 	/**
 	 * Return count of connectors.
@@ -4620,7 +4620,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 */
 	hasNode: function(node, checkNestedStructure)
 	{
-		return this.hasCtab()? the.getCtab().hasNode(node, checkNestedStructure): null;
+		return this.hasCtab()? this.getCtab().hasNode(node, checkNestedStructure): null;
 	},
 	/**
 	 * Returns index of node. If node exists in nested sub group, index in sub group will be pushed to stack as well.
@@ -5313,6 +5313,46 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			}
 		}
 
+		return this;
+	},
+
+	/**
+	 * Removes all explicit hydrogen atoms and related bonds from this structure.
+	 */
+	clearExplicitHydrogens: function()
+	{
+		var self = this;
+		var delNodeWithConnectors = function(node, index)
+		{
+			var conns = node.getLinkedConnectors();
+			for (var i = conns.length; i >= 0; --i)
+			{
+				var conn = conns[i];
+				if (self.hasConnector(conn, true))
+					self.removeConnector(conn, false);
+			}
+			self.removeNodeAt(index, false);
+		};
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+				{
+					node.clearExplicitHydrogens();
+					if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
+						delNodeWithConnectors(node, i);
+				}
+				else
+				{
+					if (node.isHydrogenAtom())
+						delNodeWithConnectors(node, i);
+				}
+			}
+		}
 		return this;
 	},
 
@@ -7188,7 +7228,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		var refIndex = this.indexOfItem(child);
 		if (refIndex < 0)
 			refIndex = this.indexOfObj(child);
-		return (refIndex >= 0)? this.getChildAt(index + 1): null;
+		return (refIndex >= 0)? this.getChildAt(refIndex + 1): null;
 	},
 	/**
 	 * Append obj to children list. If obj already inside, nothing will be done.

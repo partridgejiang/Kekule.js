@@ -489,10 +489,12 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	 * Clear the whole context.
 	 * @param {Object} context
 	 */
+	/*
 	clearContext: function(context)
 	{
 		context.clear();
 	},
+	*/
 
 	/**
 	 * Indicate whether this bridge and context can change glyph content or position after drawing it.
@@ -503,18 +505,6 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	canModifyGraphic: function(context)
 	{
 		return true;
-	},
-
-	/**
-	 * Transform a 3D context based coord to screen based one (usually 2D in pixel).
-	 * @param {Object} context
-	 * @param {Hash} coord
-	 * @return {Hash}
-	 */
-	// TODO: unfinished yet.
-	transformContextCoordToScreen: function(context, coord)
-	{
-		return {x: coord.x, y: coord.y};
 	},
 
 	/**
@@ -570,8 +560,8 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	/** @private */
 	clearContext: function(context)
 	{
-		context.getScene().clearMesh();
-		this.renderContext(context);
+	 	context.getScene().clearMesh();
+	 	this.renderContext(context);
 	},
 	/** @private */
 	renderContext: function(context)
@@ -616,7 +606,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		geom.vertices.push(new THREE.Vector3(coord1.x, coord1.y, coord1.z));
 		geom.vertices.push(new THREE.Vector3(coord2.x, coord2.y, coord2.z));
 
-		line = new THREE.Line(geom, lineMat);
+		var line = new THREE.Line(geom, lineMat);
 		context.getScene().add(line);
 		return line;
 	},

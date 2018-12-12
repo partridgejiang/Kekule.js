@@ -101,7 +101,11 @@ Kekule.BrowserFeature = {
 	},
 	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
 	touchEvent: !!window.touchEvent,
-	pointerEvent: !!window.PointerEvent
+	pointerEvent: !!window.PointerEvent,
+	draggable: (function() {
+		var div = document.createElement('div');
+		return ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
+	})()
 };
 
 // polyfill of requestAnimationFrame / cancelAnimationFrame
@@ -129,6 +133,7 @@ Kekule.BrowserFeature = {
 			clearTimeout(id);
 		};
 }());
+
 
 /**
  * Namespace for XBrowser lib.
@@ -788,7 +793,7 @@ X.Event._MouseEventEx = {
 			|| ((eventType === 'mouseleave') && X.Event.isSupported('mouseleave'));
 		if (isSupported)
 			//return Kekule.X.Event.removeListener(element, eventType, handler);
-			return element.removeEventListener(eventType, handler, useCapture);  // IE support leave/enter event and has no extra code added, so we can use w3c method directly
+			return element.removeEventListener(eventType, handler);  // IE support leave/enter event and has no extra code added, so we can use w3c method directly
 		else
 		{
 			var newType = (eventType === 'mouseenter')? 'mouseover': 'mouseout';
@@ -1029,9 +1034,9 @@ X.Event._IE = {
 	/** @private */
 	unregisterHandler: function(element, eventType, handler)
 	{
-		if (!handlers[eventType])
+		if (!handler[eventType])
 			return;
-		var hs = handlers[eventType];
+		var hs = handler[eventType];
 		var index = X.Event.findHandlerIndex(element, eventType, handler);
 		if (index >= 0)
 			hs.splice(index, 1);
@@ -1164,6 +1169,33 @@ if (eproto)  // IE7 can not get event prototype, sucks
 	*/
 	Object.extend(eproto, eventObjMethods);
 };
+
+
+// enable drag draggable element in IE
+(function(){
+	if (typeof(document) !== 'undefined')
+	{
+		var div = document.createElement('div');
+		var needPolyfill = !('draggable' in div) && ('ondragstart' in div && 'ondrop' in div);
+		//var needPolyfill = !!Kekule.Browser.IE;
+		if (needPolyfill)
+		{
+			Kekule.X.Event.addListener(document, 'selectstart', function(e){
+				for (var el = e.target; el; el = el.parentNode) {
+					if (el.attributes && el.attributes['draggable']) {
+						e.preventDefault();
+						if (e.stopImmediatePropagation)
+							e.stopImmediatePropagation();
+						else
+							e.stopPropagation();
+						el.dragDrop();
+						return false;
+					}
+				}
+			});
+		}
+	}
+})();
 
 
 /////////////////////////////////////////////////////////////

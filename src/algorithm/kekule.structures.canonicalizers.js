@@ -391,6 +391,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		if (!graph)
 			return null;
 		//console.log('graph size', graph.getVertexes().length);
+		//console.log(graph);
 		// calc EC values of graph
 		var ecResult = this._calcGraphFinalECs(graph);
 		var ecMapping = ecResult.ecMapping;
@@ -670,7 +671,8 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 					var subGroups = AU.group(vertexes, function(v1, v2){
 						var node1 = v1.getData('object');
 						var node2 = v2.getData('object');
-						var result = node1.getLinkedConnectorCount() - node2.getLinkedConnectorCount();
+						//var result = node1.getLinkedConnectorCount() - node2.getLinkedConnectorCount();
+						var result = (node1.getLinkedNonHydrogenConnectors() || []).length - (node2.getLinkedNonHydrogenConnectors() || []).length;
 						if (!result)
 						{
 							result = node1.compareStructure(node2);

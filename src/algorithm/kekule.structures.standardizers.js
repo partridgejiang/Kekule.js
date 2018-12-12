@@ -25,6 +25,7 @@
  */
 Kekule.globalOptions.add('algorithm.molStandardization', {
 	cleanStructure: true,
+	clearHydrogens: true,
 	unmarshalSubFragments: true,
 	doCanonicalization: true,
 	doAromaticPerception: true,
@@ -43,6 +44,7 @@ Kekule.MolStandardizer = {
 	 * @param {Hash} options Standardization options, including the following fields:
 	 *   {
 	 *     cleanStructure: bool, whether clean the structure before standardization.
+	 *     clearHydrogens: bool, whether removes all explicit hydrogen atoms (and related bonds)
 	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
 	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
 	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
@@ -60,6 +62,8 @@ Kekule.MolStandardizer = {
 			mol.unmarshalAllSubFragments(true);
 		if (op.cleanStructure)
 			mol.clean();
+		if (op.clearHydrogens)
+			mol.clearExplicitHydrogens();
 
 		/*
 		if (op.doStereoPerception)

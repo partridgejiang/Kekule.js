@@ -574,7 +574,7 @@ ObjSerializer = Class.create(
 		{
 			if (this.isComplexType(fieldValue)) // a complex value, whether an ObjectEx or Object or Array
 			{
-				subNode = this.createChildStorageNode(storageNode, this.propNameToStorageName(fieldName), this.isArray(fieldValue));
+				var subNode = this.createChildStorageNode(storageNode, this.propNameToStorageName(fieldName), this.isArray(fieldValue));
 				if (explicitType)
 					this.setStorageNodeExplicitType(subNode, explicitType);
 				this.save(fieldValue, subNode);
@@ -1338,6 +1338,7 @@ ClassEx.extend(ObjectEx,
 	 */
 	saveObj: function(destNode, serializerOrName, options)
 	{
+		var serializer;
     if (!serializerOrName)  // use default
       serializer = ObjSerializerFactory.getSerializer();
     else if (typeof(serializerOrName) == 'string')  // is name
@@ -1354,6 +1355,7 @@ ClassEx.extend(ObjectEx,
 	 */
 	loadObj: function(srcNode, serializerOrName)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
       serializer = ObjSerializerFactory.getSerializer();
     else if (typeof(serializerOrName) == 'string')  // is name
@@ -1376,6 +1378,7 @@ Object.extend(ClassEx, {
 	 */
 	saveObj: function(obj, destNode, serializerOrName, options)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
 			serializer = ObjSerializerFactory.getSerializer();
 		else if (typeof(serializerOrName) == 'string')  // is name
@@ -1392,6 +1395,7 @@ Object.extend(ClassEx, {
 	 */
 	loadObj: function(obj, srcNode, serializerOrName)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
 			serializer = ObjSerializerFactory.getSerializer();
 		else if (typeof(serializerOrName) == 'string')  // is name

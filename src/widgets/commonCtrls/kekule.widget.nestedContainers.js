@@ -241,7 +241,7 @@ Kekule.Widget.NestedContainer = Class.create(Kekule.Widget.BaseWidget,
 			if (childItemElemOrData)
 				this.setItemData(result, childItemElemOrData);
 		}
-		var refChild = DataType.isSimpleType(indexOrRefItem)? this.getChildren(parentItemElem)[index]: indexOrRefItem;
+		var refChild = DataType.isSimpleType(indexOrRefItem)? this.getChildren(parentItemElem)[indexOrRefItem]: indexOrRefItem;
 		if (refChild)
 			containerElem.insertBefore(result, refChild);
 		else

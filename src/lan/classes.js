@@ -292,7 +292,7 @@ if (!Object.create)
 Object.copyValues = function(dest, src, propNames)
 {
 	if (!propNames)
-		return Object.extend(dest, source);
+		return Object.extend(dest, src);
 	else
 	{
 		for (var i = 0, l = propNames.length; i < l; ++i)
@@ -515,7 +515,7 @@ Object._extendSupportMethods(String.prototype, {
 		//replacement = this.gsub.prepareReplacement(replacement);
 
 		while (source.length > 0) {
-			if (match = source.match(pattern)) {
+			if (match === source.match(pattern)) {
 				result += source.slice(0, match.index);
 				result += replacement;
 				source  = source.slice(match.index + match[0].length);
@@ -2830,7 +2830,7 @@ ObjectEx = Class.create(
     {
       for (var pname in propNames)
       {
-        if (propNames.hasOwnProperty(pname) && typeof(obj[pname]) !== 'function')
+        if (propNames.hasOwnProperty(pname) && typeof(propNames[pname]) !== 'function')
           result[pname] = this.getPropValue(pname);
       }
     }
@@ -3193,15 +3193,30 @@ ObjectEx = Class.create(
       event.name = eventName;
       event.target = this;
     }
+    if (!event.stopImmediatePropagation)
+    	  event.stopImmediatePropagation = this._eventStopImmediatePropagation;
     if (!event.stopPropagation)
       event.stopPropagation = this._eventCancelBubble;  // function() { event.cancelBubble = true; };
+    if (!event.preventDefault)
+      event.preventDefault = this._eventPreventDefault;
   	this.dispatchEvent(eventName, event);
   },
+	/** @private */
+	_eventStopImmediatePropagation: function()
+	{
+		this._stopImmediatePropagation = true;
+		this._cancelBubble = true;
+	},
   /** @private */
   _eventCancelBubble: function()
   {
     // called with event.stopPropagation, so this here is the event object
-    this.cancelBubble = true;
+    this._cancelBubble = true;
+  },
+  /** @private */
+  _eventPreventDefault: function()
+  {
+    this._preventDefault = true;
   },
   /**
    * Relay event from child of this object.
@@ -3227,11 +3242,15 @@ ObjectEx = Class.create(
   	{
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
+	  		if (event._stopImmediatePropagation)
+			  {
+				  break;
+			  }
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
         handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
-    if (!event.cancelBubble && this.getBubbleEvent())
+    if (!event._cancelBubble && this.getBubbleEvent())
     {
       var higherObj = this.getHigherLevelObj();
       if (higherObj && higherObj.relayEvent)

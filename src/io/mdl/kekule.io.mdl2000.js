@@ -537,7 +537,7 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 				var entryCount = parseInt(line.substr(6, 3).trim());
 				result.entryCount = entryCount;
 				result.entries = [];
-				propName = (spropId === 'CHG')? 'charge':
+				var propName = (spropId === 'CHG')? 'charge':
 					(spropId === 'RAD')? 'radical':
 					'massNumber';
 
@@ -730,20 +730,17 @@ Kekule.IO.Mdl2kCTabReader = Class.create(Kekule.IO.MdlBlockReader,
 						if (sgInfo)
 						{
 							var vecBondIndex = parseInt(line.substr(11, 3), 10) - 1;
-							vectorX = parseFloat(line.substr(14, 10));
-							vectorY = parseFloat(line.substr(24, 10));
 							if (!sgInfo.bondVectors)
 								sgInfo.bondVectors = [];
 							sgInfo.bondVectors[vecBondIndex] = {
 								'bondIndex': vecBondIndex,
-								'x': vectorX,
-								'y': vectorY
+								'x': parseFloat(line.substr(14, 10)),
+								'y': parseFloat(line.substr(24, 10))
 							};
 							var sz = line.substr(34, 10).trim();
 							if (sz)
 							{
-								vectorZ = parseFloat(sz) || 0;
-								sgInfo.bondVectors[vecBondIndex].z = vectorZ;
+								sgInfo.bondVectors[vecBondIndex].z = parseFloat(sz) || 0;
 							}
 						}
 						break;

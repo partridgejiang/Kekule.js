@@ -717,7 +717,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	 */
 	appendCondition: function(item, role, additionalInfo)
 	{
-		return this.appendItem(Kekule.ReactionComponent.CONDITION, item, role, info);
+		return this.appendItem(Kekule.ReactionComponent.CONDITION, item, role, additionalInfo);
 	},
 	/**
 	 * remove reactant at index of {@link Kekule.Reaction#reactants} array.

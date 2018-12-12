@@ -674,7 +674,7 @@ Kekule.IO.ChemDataReaderManager = {
 	createReaderByFormat: function(formatId, otherConditions)
 	{
 		var info = Kekule.IO.ChemDataReaderManager.getReaderInfoByFormat(formatId, otherConditions);
-		return info? IO.ChemDataReaderManager.createReaderOfInfo(info): null;
+		return info? Kekule.IO.ChemDataReaderManager.createReaderOfInfo(info): null;
 	},
 	/**
 	 * Get reader instance by format Id.
@@ -1123,7 +1123,7 @@ Kekule.IO.ChemDataWriterManager = {
 	{
 		//return Kekule.IO.ChemDataWriterManager.getWriter({'mimeType': mimeType});
 		var fid = Kekule.IO.DataFormatsManager.findFormatId(mimeType, null);
-		return fid? Kekule.IO.ChemDataWriterManager.getWriterByFormat(fid, null, srcObj): null;
+		return fid? Kekule.IO.ChemDataWriterManager.getWriterByFormat(fid, null): null;
 	}
 };
 
@@ -1312,8 +1312,11 @@ Kekule.IO.loadFileData = function(file, callback, formatId, options)
 			{
 				var content = reader.result;
 				var chemObj = Kekule.IO.loadFormatData(content, formatInfo.id, options);
-				var info = chemObj.getSrcInfo();
-				info.fileName = fileName;
+				if (chemObj && chemObj.getSrcInfo)
+				{
+					var info = chemObj.getSrcInfo();
+					info.fileName = fileName;
+				}
 				//var success = !!chemObj;
 				var success = (chemObj !== false);
 				callback(chemObj, success);

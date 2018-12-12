@@ -215,7 +215,7 @@ Kekule.Editor.ObjModifier.Base = Class.create(ObjectEx,
 	createModificationOper: function(targets)
 	{
 		var operations = [];
-		if (target && targets.length)
+		if (targets && targets.length)
 		{
 			for (var i = 0, l = targets.length; i < l; ++i)
 			{

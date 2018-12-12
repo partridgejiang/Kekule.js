@@ -100,7 +100,7 @@ JsonUtility = {
   /** Load a file that containers JSON string only, use WebShow.XHRLoader for AJAX loading. */
   loadJson: function(url, callback, options)
   {
-    loptions = options || {};
+    var loptions = options || {};
     if (!loptions.timeout)
       loptions.timeout = JsonUtility.DEF_LOAD_TIMEOUT;
 
@@ -624,7 +624,7 @@ XmlUtility = {
   {
     try
     {
-      return XML((new XMLSerializer( )).serializeToString(node)).toXMLString();  // firefox
+      return new XMLSerializer().serializeToString(node).toXMLString();  // firefox
 			// TODO: E4X is deprecated in firefox 21, so need other methods
     }
     catch(e)

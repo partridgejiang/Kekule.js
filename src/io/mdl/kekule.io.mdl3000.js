@@ -569,8 +569,8 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 			result = null;
 		else  // find end tag
 		{
-			var startPos = this.getCurrLineNo();
-			endPos = this.getCurrLineNo();
+			var startPos = this.getCurrLineNo(),
+			endPos = this.getCurrLineNo(),
 			line = this.readLine().trim();
 			while ((line != endTag) && (!this.eof()))
 			{
@@ -801,7 +801,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		//for (var i = 0; i < countInfo.atomCount; ++i)
 		while (!textBuffer.eof())
 		{
-			line = textBuffer.readLine();
+			var line = textBuffer.readLine();
 			var atomInfo = this.analysisAtomLine(line);
 			var actualIndex = atomInfos.push(atomInfo) - 1;
 			// as index of atom in MDL file may be disordered, here use a map to keep
@@ -932,7 +932,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		//for (var i = 0; i < countInfo.bondCount; ++i)
 		while (!textBuffer.eof())
 		{
-			line = textBuffer.readLine();
+			var line = textBuffer.readLine();
 			var bondInfo = this.analysisBondLine(line, atomIndexMap);
 			bondInfos[bondInfo.index] = bondInfo;
 		}
@@ -979,6 +979,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 					}
 					else  // number value?
 						result.endAtomIndexes = [atomIndexMap[parseInt(value, 10)]];
+					break;
 				}
 				case 'TOPO': // topological query property, chain or ring, ignore
 				case 'RXCTR': // Reacting center status, ignore
@@ -998,7 +999,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		// check if the first line is default value
 		// [M  V30 DEFAULT [CLASS=class] -]
 		var pos = textBuffer.getCurrLineNo();
-		line = textBuffer.readLine();
+		var line = textBuffer.readLine();
 		var values = Kekule.IO.Mdl3kValueUtils.splitValues(line);
 		if (values.shift().value == 'DEFAULT')  // default line, fetch all default values
 			defValues = this.fetchSGroupOptionalValues(line, atomIndexMap);

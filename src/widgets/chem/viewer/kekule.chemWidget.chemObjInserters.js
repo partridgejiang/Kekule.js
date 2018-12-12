@@ -675,8 +675,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			attribs.autoSize = JsonUtility.parse(attribs['data-auto-size']);
 		if (attribs['data-autofit'])
 			attribs.autofit = JsonUtility.parse(attribs['data-autofit']);
-		if (attribs['backgroundColor'])
-			attribs.backgroundColor = attribs['backgroundColor'];
+		if (attribs['data-background-color'])
+			attribs.backgroundColor = attribs['data-background-color'];
 		return this.importChemObjWithDetails(chemObj, attribs);
 	},
 
