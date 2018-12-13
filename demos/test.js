@@ -53,7 +53,11 @@ var composer;
 
 // initialize Composer
 Kekule.X.domReady(function(){
-  composer = new Kekule.Editor.Composer(document.getElementById('composer'))
+  const composerElement = document.getElementById('composer')
+  if (!composerElement) {
+    return;
+  }
+  composer = new Kekule.Editor.Composer()
 
   var BNS = Kekule.ChemWidget.ComponentWidgetNames;
   console.log('BNS', BNS)

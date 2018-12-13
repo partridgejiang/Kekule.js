@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Molecule Compare</title>
+    <link rel="stylesheet" href="/demos/libs/kekule/themes/default/kekule.css">
+    <script type="text/javascript" src="/test.js"></script>
+
+	<style>
+		.Editor { width: 650px; height: 400px; }
+		.Same { color: green; }
+		.Diff { color: red; }
+	</style>
+</head>
+<body>
+	<p>Draw or load molecules in both editors and click on "compare" button to check whether molecules are same.</p>
+	<div>
+		<button id="btnCompare" data-widget="Kekule.Widget.Button">Compare Molecules</button>
+		<span id="labelResult"></span>
+	</div>
+	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" ></div>
+	<div class="Editor" id="chemComposer1" data-widget="Kekule.Editor.Composer" ></div>
+</body>
+</html>
