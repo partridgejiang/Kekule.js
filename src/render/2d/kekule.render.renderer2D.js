@@ -1474,7 +1474,7 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 			var adjustDelta = CU.multiply(deltaVector, eRadius * 2 / gap);
 			var c1 = CU.substract(electronCoords[0], adjustDelta);
 			var c2 = CU.add(electronCoords[electronCount - 1], adjustDelta);
-			boundInfo = this.createLineBoundInfo(c1, c2, eRadius);
+			boundInfo = this.createLineBoundInfo(c1, c2, eRadius, true);
 		}
 
 		return {'electronCoords': electronCoords, 'drawnElem': group || drawElem, 'electronRadius': eRadius, 'boundInfo': boundInfo};
@@ -2633,6 +2633,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		else
 		{
 			var nodeCoreElem, chargeElem;
+			var skeletalRadius = 10;
 			if (this.getObjNeedDrawDot(context, node) && Kekule.ObjUtils.isUnset(nodeRenderOptions.atomRadius))
 			{
 				nodeRenderOptions.atomRadius = nodeRenderOptions.allenCenterAtomRadius;
@@ -2643,10 +2644,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				nodeRenderOptions.strokeColor = nodeRenderOptions.color;
 				nodeRenderOptions.fillColor = nodeRenderOptions.color;
 				nodeCoreElem = this.drawCircle(context, coord, radius, nodeRenderOptions);
-				boundInfo = this.createCircleBoundInfo(coord, radius);
 			}
-			else
-				boundInfo = this.createPointBoundInfo(coord);
+			boundInfo = this.createCircleBoundInfo(coord, skeletalRadius);
+
 			//if (node.getCharge() || node.getRadical()) // draw charge or radical
 			if (needDrawCharge || needDrawRadical)
 			{

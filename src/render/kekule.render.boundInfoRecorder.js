@@ -376,14 +376,11 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 			}
 			if (bound)
 			{
-				if (infos[i].obj instanceof Kekule.ChemMarker.UnbondedElectronSet || infos[i].obj instanceof Kekule.Atom) {
+				if (infos[i].obj instanceof Kekule.ChemMarker.UnbondedElectronSet) {
 					if (Kekule.Render.MetaShapeUtils.isCoordInside(coord, bound, context.zoom ? context.zoom*inflation > inflation ? context.zoom*inflation : inflation : inflation))
 						result.push(infos[i]);
-				} else if (infos[i].obj instanceof Kekule.Bond) {
-					if (Kekule.Render.MetaShapeUtils.isCoordInside(coord, bound, 0))
-						result.push(infos[i]);
 				} else {
-					if (Kekule.Render.MetaShapeUtils.isCoordInside(coord, bound, context.zoom ? context.zoom*inflation : inflation))
+					if (Kekule.Render.MetaShapeUtils.isCoordInside(coord, bound, inflation))
 						result.push(infos[i]);
 				}
 			}

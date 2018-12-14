@@ -1550,13 +1550,25 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 				{'radius': radius, 'startAngle': startAngle, 'endAngle': endAngle, 'anticlockwise': anticlockwise, 'width': width});
 	},
 	/** @private */
-	createLineBoundInfo: function(coord1, coord2, width)
+	createLineBoundInfo: function(coord1, coord2, width, isElectron)
 	{
-		return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': width});
+		var increasingBondHitArea = 24;
+		if (!isElectron) {
+			return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': increasingBondHitArea});
+		} else {
+			increasingBondHitArea = 8;
+			return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': increasingBondHitArea});
+		}
 	},
 	/** @private */
 	createRectBoundInfo: function(coord1, coord2)
 	{
+		var increaseHitAreaTop = 6;
+		var increaseHitAreaLeft = 9;
+		coord1.x = coord1.x - increaseHitAreaLeft;
+		coord1.y = coord1.y - increaseHitAreaTop;
+		coord2.x = coord2.x + increaseHitAreaLeft;
+		coord2.y = coord2.y + increaseHitAreaTop;
 		return this.createBoundInfo(Kekule.Render.BoundShapeType.RECT, [coord1, coord2]);
 	},
 	/** @private */
