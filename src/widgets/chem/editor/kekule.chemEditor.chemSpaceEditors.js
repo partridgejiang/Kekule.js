@@ -94,6 +94,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		});
 		this.defineProp('allowCreateNewChild', {'dataType': DataType.BOOL});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setFileDroppable(true);  // defaultly turn on file drop function
+	},
 
 	/**
 	 * Returns whether new direct child can be created in current space.

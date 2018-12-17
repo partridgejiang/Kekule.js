@@ -129,7 +129,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		elem = doc.createElement('div');
 		clientElem.appendChild(elem);
 		var dataEditor = new Kekule.Widget.TextEditor(this); //new Kekule.Widget.TextArea(result);
-		dataEditor.setWrap('off');
+		dataEditor.setWrap('off').setFileDroppable(true);  // enable file drop in editor
 		dataEditor.setToolbarPos(Kekule.Widget.Position.BOTTOM);
 		dataEditor.addClassName(CCNS.DIALOG_LOADDATA_SRCEDITOR);
 		dataEditor.appendToElem(elem);

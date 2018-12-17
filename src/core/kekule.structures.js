@@ -5320,6 +5320,46 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Removes all explicit hydrogen atoms and related bonds from this structure.
+	 */
+	clearExplicitHydrogens: function()
+	{
+		var self = this;
+		var delNodeWithConnectors = function(node, index)
+		{
+			var conns = node.getLinkedConnectors();
+			for (var i = conns.length; i >= 0; --i)
+			{
+				var conn = conns[i];
+				if (self.hasConnector(conn, true))
+					self.removeConnector(conn, false);
+			}
+			self.removeNodeAt(index, false);
+		};
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+				{
+					node.clearExplicitHydrogens();
+					if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
+						delNodeWithConnectors(node, i);
+				}
+				else
+				{
+					if (node.isHydrogenAtom())
+						delNodeWithConnectors(node, i);
+				}
+			}
+		}
+		return this;
+	},
+
+	/**
 	 * Calculate molecular formula from this connection table.
 	 * @returns {Kekule.MolecularFormula}
 	 */
