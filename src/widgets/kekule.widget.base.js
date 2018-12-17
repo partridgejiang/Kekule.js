@@ -395,14 +395,26 @@ var widgetBindingField = '__$kekule_widget__';
  */
 /**
  * Invoked when a widget is being dragged.
- *   event param of it has field: {widget}
+ *   event param of it has field: {widget, srcElem, htmlEvent}
  * @name Kekule.Widget.BaseWidget#dragStart
+ * @event
+ */
+/**
+ * Invoked when dragging of this widget is ended.
+ *   event param of it has field: {widget, srcElem, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragEnd
  * @event
  */
 /**
  * Invoked when object are dragging over this widget.
  *   event param of it has field: {widget, srcElem, srcWidget, srcFiles, dataTransfer, htmlEvent}
  * @name Kekule.Widget.BaseWidget#dragOver
+ * @event
+ */
+/**
+ * Invoked when the dragging is leaving off this widget.
+ *   event param of it has field: {widget, srcElem, srcWidget, srcFiles, dataTransfer, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragLeave
  * @event
  */
 /**
@@ -597,7 +609,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		//this.defineElemAttribMappingProp('draggable', 'draggable');
 		this.defineProp('draggable', {'dataType': DataType.BOOL, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
-			'getter': function() { return Kekule.StrUtils.strToBool(this.getElement().getAttribute('draggable')); },
+			'getter': function() { return Kekule.StrUtils.strToBool(this.getElement().getAttribute('draggable') || ''); },
 			'setter': function(value) { this.getElement().setAttribute('draggable', value? 'true': 'false')}
 		});
 		this.defineProp('droppable', {'dataType': DataType.BOOL, //'serializable': false,
@@ -3520,7 +3532,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (dataTransfer.items)
 		{
 			var result = [];
-			var acceptedKinds = this.getDroppableDataKinds();
+			//var acceptedKinds = this.getDroppableDataKinds();
 			for (var i = 0, l = dataTransfer.items.length; i < l; ++i)
 			{
 				var item = dataTransfer.items[i];
@@ -3543,7 +3555,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (this.getDraggable())
 		{
 			var result = this.doDragStart(details);
-			this.invokeEvent('dragStart', {'widget': this});
+			this.invokeEvent('dragStart', {'widget': this, 'dataTransfer': details.dataTransfer, 'startingElem': details.targetElem});
 			return result;
 		}
 		else
@@ -3561,6 +3573,28 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		// do nothing here
 		return true;
 	},
+		/**
+	 * Called when the dragging is ended.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 */
+	dragEnd: function(details)
+	{
+		var result = this.doDragEnd(details);
+		this.invokeEvent('dragEnd',
+			{'widget': this, 'dataTransfer': details.dataTransfer, 'startingElem': details.targetElem});
+		return result;
+	},
+	/**
+	 * Do actual work of method dragEnd.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @private
+	 */
+	doDragEnd: function(details)
+	{
+		// do nothing here
+	},
 	/**
 	 * A test method to determinate whether the dragging src can be dropped in this widget.
 	 * @param {Hash} details Detail object of drag, including field:
@@ -3572,22 +3606,35 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (this.getDroppable())
 		{
 			var result = true;
-			var acceptedKinds = this.getDroppableDataKinds();
-			if (acceptedKinds)
+
+			// evoke event to query
+			var evArg = {'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files};
+			this.invokeEvent('dragAcceptQuery',	evArg);
+
+			if (Kekule.ObjUtils.notUnset(evArg.result))  // user evoke returns the result, follows it
 			{
-				if (details.dataTransfer.items)
-				{
-					var acceptedItems = this._filterDraggedDataItemByKinds(details.dataTransfer);
-					if (!acceptedItems.length)
-						result = false;
-				}
-				else // another way to check if files drags in
-				{
-					if (acceptedKinds.indexOf('file') >=0 && details.dataTransfer.files && details.dataTransfer.files.length)
-						result = true;
-				}
+				result = evArg.result;
+				return result;
 			}
-			return result && this.doAcceptDragSrc(details);
+			else
+			{
+				var acceptedKinds = this.getDroppableDataKinds();
+				if (acceptedKinds)
+				{
+					if (details.dataTransfer.items)
+					{
+						var acceptedItems = this._filterDraggedDataItemByKinds(details.dataTransfer, acceptedKinds);
+						result = !!acceptedItems.length;
+					}
+					else // another way to check if files drags in
+					{
+						if (acceptedKinds.indexOf('file') >=0 && details.dataTransfer.files && details.dataTransfer.files.length)
+							result = true;
+					}
+				}
+
+				return result && this.doAcceptDragSrc(details);
+			}
 		}
 		else
 			return false;
@@ -3635,6 +3682,31 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		return true;
 	},
+	/**
+	 * Called when source objects is dragging out of this widget.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 */
+	dragLeave: function(details)
+	{
+		var result = this.doDragLeave(details);
+		this.invokeEvent('dragLeave',
+			{'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files});
+		return result
+	},
+	/**
+	 * Do actual work of method dragLeave.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doDragLeave: function(details)
+	{
+		// do nothing here
+	},
+
 	/**
 	 * Called when source objects is dropped on this widget.
 	 * @param {Hash} details Detail object of drag, including field:
@@ -5253,6 +5325,20 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
+	react_dragend: function(e)
+	{
+		var targetElem = e.getTarget();
+		if (targetElem)
+		{
+			var widget = Kekule.Widget.getBelongedWidget(targetElem);   // drag a widget
+			if (widget)
+			{
+				widget.dragEnd({'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'startingElem': targetElem});  // notify the widget
+			}
+		}
+		this._dragDone(e);
+	},
+	/** @private */
 	react_dragover: function(e)
 	{
 		var elem = e.getTarget();
@@ -5265,6 +5351,21 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			{
 				e.preventDefault();
 				widget.dragOver(dragDetails);
+			}
+		}
+	},
+	/** @private */
+	react_dragleave: function(e)
+	{
+		var elem = e.getTarget();
+		var widget = this._getNearestDragDropDestWidget(Kekule.Widget.getBelongedWidget(elem));
+		if (widget && widget.getDroppable() && e.dataTransfer)  // is available drop target
+		{
+			var transferDetails = this._getElemAndWidgetInDraggingTransfer(e.dataTransfer);
+			var dragDetails = {'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'srcElem': transferDetails.elem, 'srcWidget': transferDetails.widget};
+			if (widget.acceptDragSrc(dragDetails))
+			{
+				widget.dragLeave(dragDetails);
 			}
 		}
 	},
@@ -5286,11 +5387,6 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				}
 			}
 		}
-		this._dragDone(e);
-	},
-	/** @private */
-	react_dragend: function(e)
-	{
 		this._dragDone(e);
 	},
 	/** @private */
