@@ -427,8 +427,28 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		}
 		*/
 		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping, vertexGroup);
-		// at last assign indexes
+		// assign cano indexes to indication the symmetric information
 		this._setCanonicalizationIndexToNodeGroups(sortedNodes);
+
+		// then also sort graph and generate a assoc spanning tree
+		var vertexes = graph.getVertexes();
+		if (vertexes && vertexes.length)
+			vertexes.sort(function(v1, v2){
+				var node1 = v1.getData('object');
+				var node2 = v2.getData('object');
+				if (!node1 && !node2)
+					return 0;
+				else if (!node1)
+					return -1;
+				else if (!node2)
+					return 1;
+				else  // node1 node2 all assigned
+				{
+					return (node2.getCanonicalizationIndex() || -1) - (node1.getCanonicalizationIndex() || -1);
+				}
+			});
+		// at last set the spanning tree index of nodes
+		this._setSpanningTreeIndexToNodeOfGraph(graph);
 	},
 
 	/** @private */
@@ -544,6 +564,27 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			{
 				//console.log('set cano index', item.getSymbol(), vIndex);
 				item.setCanonicalizationIndex(vIndex);
+			}
+		}
+	},
+	/** @private */
+	_setSpanningTreeIndexToNodeOfGraph: function(graph)
+	{
+		var spanningTrees = Kekule.GraphAlgorithmUtils.createSpanningTrees(graph, Kekule.GraphTraverseMode.DEPTH_FIRST);
+		for (var i = 0, l = spanningTrees.length; i < l; ++i)
+		{
+			var tree = spanningTrees[i];
+			if (tree.vertexes)
+			{
+				var length = tree.vertexes.length;
+				for (var j = 0; j < length; ++j)
+				{
+					var node = tree.vertexes[j].getData('object');
+					if (node && node.setCanonicalizationAssocIndex)
+					{
+						node.setCanonicalizationAssocIndex(length - j);
+					}
+				}
 			}
 		}
 	},
@@ -998,6 +1039,12 @@ Kekule.CanonicalizationMorganNodeSorter = Class.create(Kekule.CanonicalizationNo
 					//if ()
 				}
 				*/
+				if (result === 0)  // same, check cano assoc index
+				{
+					var aIndex1 = n1.getCanonicalizationAssocIndex();
+					var aIndex2 = n2.getCanonicalizationAssocIndex();
+					result = (aIndex1 || -1) - (aIndex2 || -1);
+				}
 				if (result === 0) // still same, compare coord if possible
 				{
 					if (n1.hasCoord3D(true) && n2.hasCoord3D(true))  // allow borrow from 2D
@@ -1431,6 +1478,7 @@ ClassEx.extend(Kekule.StructureFragment,
 
 // A special property to store cano-label of atoms or bonds
 ClassEx.defineProp(Kekule.ChemStructureObject, 'canonicalizationIndex', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PUBLISHED});
+ClassEx.defineProp(Kekule.ChemStructureObject, 'canonicalizationAssocIndex', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PUBLISHED});
 
 
 // register morgan as default
