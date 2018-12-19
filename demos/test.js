@@ -85,7 +85,10 @@ Kekule.X.domReady(function(){
     btnCompare.addEventListener('click', function compareMolecules () {
       var mol1 = composer0.exportObj(Kekule.StructureFragment);
       var mol2 = composer1.exportObj(Kekule.StructureFragment);
-      var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
+      var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2, { lonePair: true,
+        hydrogen_display_type: "IMPLICIT",
+        compareStereo: false,
+        skeletalMode: true });
       var sResult = isSame? 'Same molecules': 'Different molecules';
       var sClass = isSame? 'Same': 'Diff';
       var elem = document.getElementById('labelResult');

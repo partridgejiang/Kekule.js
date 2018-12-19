@@ -4484,8 +4484,8 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					var skeletal_mode = this._getComparisonOptionFlagValue(options, 'skeletalMode') || false;
 					
 					// normalize hydrogens for comparison
-					var explicitHydrogens1 = hydrogen_display_type === 'EXPLICIT' && nodes1[i].getExplicitHydrogenCount() && (!skeletal_mode || skeletal_mode && nodes1[i].getIsotopeId() !== "C") ? nodes1[i].getExplicitHydrogenCount() : 0;
-					var explicitHydrogens2 = hydrogen_display_type === 'EXPLICIT' && nodes2[j].getExplicitHydrogenCount() && (!skeletal_mode || skeletal_mode && nodes2[j].getIsotopeId() !== "C") ? nodes2[j].getExplicitHydrogenCount() : 0;
+					var explicitHydrogens1 = hydrogen_display_type === 'EXPLICIT' && nodes1[i].getExplicitHydrogenCount() ? nodes1[i].getExplicitHydrogenCount() : 0;
+					var explicitHydrogens2 = hydrogen_display_type === 'EXPLICIT' && nodes2[j].getExplicitHydrogenCount() ? nodes2[j].getExplicitHydrogenCount() : 0;
 					
 					var implicitHydrogens1 = hydrogen_display_type === 'IMPLICIT' || (skeletal_mode && hydrogen_display_type === 'EXPLICIT' && nodes1[i].getIsotopeId() === "C") ? nodes1[i].getImplicitHydrogenCount() : 0;
 					var implicitHydrogens2 = hydrogen_display_type === 'IMPLICIT' || (skeletal_mode && hydrogen_display_type === 'EXPLICIT' && nodes2[j].getIsotopeId() === "C") ? nodes2[j].getImplicitHydrogenCount() : 0;
@@ -4688,13 +4688,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				// both has ctab, comparing child nodes and connectors
 				if (!result && this.hasCtab())
 				{
-					if (this._getComparisonOptionFlagValue(options, 'compareStereo')) {
-						const stereoBonds1 = this.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
-						const stereoBonds2 = targetObj.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
-						
-						result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
-					}
-					
 					if ((result === 0) && (this.getNonHydrogenNodes && targetObj.getNonHydrogenNodes))  // structure fragment, if with same node and connector count, compare nodes and connectors
 					{
 						if (this._getComparisonOptionFlagValue(options, 'hydrogenCount'))
@@ -4706,21 +4699,29 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							return result;
 						}
 						var hydrogen_display_type = this._getComparisonOptionFlagValue(options, 'hydrogen_display_type') || 'BONDED';
-						
+
 						if (result === 0)
 						{
 							// if it's not bonded, remove the extra bonds to hydrogens, they are unnecessary
 							// to prove out the structure of the item, and at this point we've already
 							// tested the hydrogen decorations
-							if (hydrogen_display_type !== 'BONDED') {
-								this.sanitizeHydrogenNodes();
-								targetObj.sanitizeHydrogenNodes();
-								Kekule.MolStandardizer.standardize(this);
-								Kekule.MolStandardizer.standardize(targetObj);
-							}
+                            if (hydrogen_display_type !== 'BONDED') {
+                                this.sanitizeHydrogenNodes();
+                                targetObj.sanitizeHydrogenNodes();
+                                Kekule.MolStandardizer.standardize(this);
+                                Kekule.MolStandardizer.standardize(targetObj);
+                            }
+
 							var nodes1 = this.getNonHydrogenNodes();
 							var nodes2 = targetObj.getNonHydrogenNodes();
 							result = nodes1.length - nodes2.length;
+
+                            if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
+                                const stereoBonds1 = this.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
+                                const stereoBonds2 = targetObj.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
+
+                                result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
+                            }
 							
 							for (var i = 0, l = nodes1.length; i < l; ++i)
 							{
