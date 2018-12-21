@@ -30,6 +30,8 @@ var isNode = (typeof process === 'object') && (typeof process.versions === 'obje
 if (isNode)
 {
 	var __nodeContext = {};
+	var vm = require("vm");
+	var fs = require("fs");
 }
 
 if (!isNode)
@@ -50,8 +52,6 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var vm = require("vm");
-			var fs = require("fs");
 			var data = fs.readFileSync(url);
 			//console.log('[k] node append', url, data.length);
 			vm.runInThisContext(data, {'filename': url});
@@ -673,6 +673,18 @@ function init()
 			//'useMinFile': false  // for debug
 			'useMinFile': true
 		};
+
+		// if min files not found, use dev files instead
+		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		try
+		{
+			fs.statsSync(testFileName)
+		}
+		catch(e)
+		{
+			//scriptInfo.path += 'src/'
+			scriptInfo.useMinFile = false;
+		}
 	}
 	else  // in browser
 	{
