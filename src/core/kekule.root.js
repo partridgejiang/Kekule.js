@@ -117,7 +117,10 @@ Kekule.$jsRoot = this;
  */
 Kekule.$document = this.document || null;
 
-Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+if (!Kekule.scriptSrcInfo)  // scriptSrcInfo maybe set already in node.js environment
+{
+	Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+}
 if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language
 {
 	Kekule.language = Kekule.scriptSrcInfo.language;

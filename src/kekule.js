@@ -710,7 +710,7 @@ function init()
 		'appendScriptFiles': appendScriptFiles
 	};
 
-	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
 		if (isNode)  // export Kekule namespace
 		{
 			// export Kekule in module
@@ -724,6 +724,8 @@ function init()
 			this.ClassEx = exports.ClassEx;
 			this.ObjectEx = exports.ObjectEx;
 			this.DataType = exports.DataType;
+			// then store script info of Kekule
+			this.Kekule.scriptSrcInfo = scriptInfo;
 		}
 	});
 }
