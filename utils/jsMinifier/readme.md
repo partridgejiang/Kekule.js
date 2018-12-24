@@ -13,7 +13,7 @@ where the -d arg appoint the output path and the -m arg limits the modules neede
 If this arg is not set, all modules of Kekule.js will be compressed and outputted.
 
 For example, the following command line will compress files related to ```io``` and ```widget``` module
-and output them in ```../dist`` directory:
+and output them in ```../dist``` directory:
 
 ```
 node run.js -m=io,widget -d=../dist
