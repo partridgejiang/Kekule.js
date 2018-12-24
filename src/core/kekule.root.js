@@ -200,3 +200,9 @@ if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMess
 		}
 	}, false);
 }
+
+/**
+ * A namespace for development tools.
+ * @namespace
+ */
+Kekule.Dev = {}
