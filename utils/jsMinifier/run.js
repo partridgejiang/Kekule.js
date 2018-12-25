@@ -11,8 +11,9 @@ if (argv.dest || argv.d)
 {
 	destPath = argv.dest || argv.d;
 }
+var minifierName = argv.minifier || null;
 
 const Compressor = require('./js/compressors.js').Compressor;
 
-var compress = new Compressor(destPath);
+var compress = new Compressor(destPath, minifierName);
 compress.execute(moduleNames);
