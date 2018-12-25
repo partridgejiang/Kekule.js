@@ -111,6 +111,16 @@ Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
  * Root object of JavaScript environment, usually window.
  */
 Kekule.$jsRoot = this;
+
+if (typeof(self) === 'object')
+	Kekule.$jsRoot = self;
+else if (typeof(window) === 'object' && window.document)
+	Kekule.$jsRoot = window;
+else if (typeof(global) === 'object')  // node env
+	Kekule.$jsRoot = global;
+
+Kekule.$jsRoot.Kekule = Kekule;
+
 /**
  * Root document of JavaScript environment.
  * Can be null in Node.js.
@@ -205,4 +215,4 @@ if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMess
  * A namespace for development tools.
  * @namespace
  */
-Kekule.Dev = {}
+Kekule.Dev = {};

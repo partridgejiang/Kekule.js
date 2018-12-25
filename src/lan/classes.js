@@ -12,6 +12,14 @@
 
 (function($jsRoot){
 
+// ensure the $jsRoot refers to the global object in browser or node
+if (typeof(self) === 'object')
+	$jsRoot = self;
+else if (typeof(window) === 'object' && window.document)
+	$jsRoot = window;
+else if (typeof(global) === 'object')  // node env
+	$jsRoot = global;
+
 /** @ignore */
 function emptyFunction() {};
 
