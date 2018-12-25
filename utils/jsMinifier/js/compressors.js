@@ -5,7 +5,7 @@ require('./kekule.dev.packageTools.js');
 var fs = require('fs');
 var path = require('path');
 var minify = require('node-minify');
-const minifierNoCompress = require('@node-minify/no-compress');
+//const minifierNoCompress = require('@node-minify/no-compress');
 
 const defMinifierName = 'terser';
 const defMinifierOptions = {
@@ -16,6 +16,7 @@ const defMinifierOptions = {
 	'gcc': {
 		//compilationLevel: 'ADVANCED'
 		//warningLevel: 'VERBOSE'
+		compilationLevel: 'SIMPLE'
 	},
 	'uglifyES': {
 		mangle: { reserved: ['$super', '$origin'] }
@@ -48,22 +49,22 @@ var Compressor = class {
 			var doMinify = function(minifierName, minifierOptions, srcFileNames, destPath, minFileName)
 			{
 				minify.minify({
-					compressor: minifierName,
-					input: srcFileNames,
-					output: path.resolve(destPath, minFileName),
-					sync: true,
-					//options: minifierOptions || {},
-					callback: function(err, min) {
-						if (err)
-							//console.error(err);
-							console.log(err);
-						else
-						{
-							compressedMinFileNames.push(path.resolve(destPath, minFileName));
-							console.log('Min file ' + minFileName + ' created');
-						}
+				compressor: minifierName,
+				input: srcFileNames,
+				output: path.resolve(destPath, minFileName),
+				sync: true,
+				options: minifierOptions || {},
+				callback: function(err, min) {
+					if (err)
+					//console.error(err);
+						console.log(err);
+					else
+					{
+						compressedMinFileNames.push(path.resolve(destPath, minFileName));
+						console.log('Min file ' + minFileName + ' created');
 					}
-				});
+				}
+			});
 			};
 
 			//console.log('need to compress', minFiles.length);
@@ -93,8 +94,7 @@ var Compressor = class {
 				try
 				{
 					var minifierOptions =  this.minifierOptions? JSON.parse(JSON.stringify(this.minifierOptions)) : {};  // some minifier seems to modify this object, so clone it first
-					//doMinify(minifierName, minifierOptions, srcFileNames, destPath, minFileName);
-					doMinify(minifierNoCompress, {}/*minifierOptions*/, srcFileNames, destPath, minFileName);
+					doMinify(minifierName, minifierOptions, srcFileNames, destPath, minFileName);
 				}
 				catch(e)
 				{
