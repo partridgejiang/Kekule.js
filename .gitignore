@@ -87,6 +87,7 @@ test/misc/touchEventTest.html
 Wohler_DEPRECATED
 jsDoc
 .idea
+.test
 .*
 *.diff
 *.log
