@@ -10,6 +10,9 @@
  * requires /lan/xmlJsons.js
  */
 
+(function(){
+"use strict";
+
 var
 /**
  * @class
@@ -1325,6 +1328,9 @@ ObjSerializerFactory = {
 	ObjSerializerFactory.registerSerializer('xml', XmlObjSerializer);
 })();
 
+// export ObjSerializerFactory to Class namespace
+Class.ObjSerializerFactory = ObjSerializerFactory;
+
 // extend ObjectEx and add save/load methods
 ClassEx.extend(ObjectEx,
 /** @lends ObjectEx# */
@@ -1444,3 +1450,5 @@ Object.extend(DataType, {
 		}
 	}
 });
+
+})();

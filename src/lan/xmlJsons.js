@@ -4,6 +4,11 @@
  * @author Partridge Jiang
  */
 
+(function(){
+
+"use strict";
+
+
 var
 /**
  *  Class to handle JSON file and data.
@@ -668,3 +673,9 @@ XmlUtility = {
       || xmlDoc.location;  // Opera
   }
 };
+
+// export those two util class to DataType namespace
+DataType.JsonUtility = JsonUtility;
+DataType.XmlUtility = XmlUtility;
+
+})();

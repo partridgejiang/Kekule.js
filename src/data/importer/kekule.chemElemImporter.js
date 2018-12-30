@@ -14,12 +14,12 @@ if (!window.Kekule)
 	Kekule = {};
 
 /**
- *  An class with static methods to load content of chemicalElements.xml from CDK 
+ *  An class with static methods to load content of chemicalElements.xml from CDK
  *  and save data into a JSON text.
  *  @class Kekule.ChemElemImporter
  */
 Kekule.ChemElemImporter = {
-	/** 
+	/**
 	 *  Load chemicalElements.xml string.
 	 *  @param {String} data The source xml string.
 	 *  @param {Object} options A hash object to set options of importing. Can include the following fields:
@@ -28,14 +28,14 @@ Kekule.ChemElemImporter = {
 	 *  		calcNaturalMass: {Bool} whether calculate natural abundance mass number.
 	 *  			Note this can only be calculated when kekule.isotopesData.js exists.
 	 *  	}
-	 *  @returns {Object} A JavaScript object to hold all data. 
+	 *  @returns {Object} A JavaScript object to hold all data.
 	 */
 	loadElemXmlData: function(data, options)
 	{
 		var ops = options? options: {};
 		var result = [];
 		// parse data into a XML document
-		var srcDoc = XmlUtility.parse(data);
+		var srcDoc = DataType.XmlUtility.parse(data);
 		// analysis srcDoc
 		var elemTypeNodes = srcDoc.getElementsByTagName('elementType');
 		for (var i = 0, l = elemTypeNodes.length; i < l; ++i)
@@ -55,11 +55,11 @@ Kekule.ChemElemImporter = {
 					var tagName = child.tagName;
 					if ((tagName == 'label') && (child.getAttribute('dictRef') == 'cas:id')) // a CAS-id
 					{
-						if (!(ops.importCasId === false))  
+						if (!(ops.importCasId === false))
 						{
 							var text = Kekule.DomUtils.getElementText(child);
 							if (text)
-								obj.casId = text; 
+								obj.casId = text;
 						}
 					}
 					else if (tagName == 'scalar')  // scalar values
@@ -82,7 +82,7 @@ Kekule.ChemElemImporter = {
 								else if ((valueName == 'radiiCova') || (valueName == 'radiiVdw') || (valueName == 'paulingE'))
 									value = floatValue;
 							}
-							obj[valueName] = value; 
+							obj[valueName] = value;
 						}
 					}
 				}
@@ -95,9 +95,9 @@ Kekule.ChemElemImporter = {
 				{
 					var totalMass = 0;
 					var totalAbundance = 0;
-					if (isotopes.length > 1) 
+					if (isotopes.length > 1)
 					{
-						for (var j = 0, k = isotopes.length; j < k; ++j) 
+						for (var j = 0, k = isotopes.length; j < k; ++j)
 						{
 							var isotope = isotopes[j];
 							totalMass += (isotope.exactMass || isotope.massNumber) * (isotope.relativeAbundance || 0);
@@ -114,7 +114,7 @@ Kekule.ChemElemImporter = {
 						obj.naturalMass = mass;
 				}
 			}
-			
+
 			//result.push(obj);
 			result[obj.atomicNumber - 1] = obj;
 		}
@@ -123,13 +123,13 @@ Kekule.ChemElemImporter = {
 	/**
 	 *  Save imported JS object to a JSON string.
 	 *  @param {Object} obj Imported JavaScript object.
-	 *  @returns {String} JSON string. 
+	 *  @returns {String} JSON string.
 	 */
 	saveObjToStr: function(obj)
 	{
-		return JsonUtility.serializeToStr(obj/*, {'prettyPrint': true}*/);
+		return DataType.JsonUtility.serializeToStr(obj/*, {'prettyPrint': true}*/);
 	},
-	
+
 	import: function(src, options)
 	{
 		var obj = Kekule.ChemElemImporter.loadElemXmlData(src, options);
