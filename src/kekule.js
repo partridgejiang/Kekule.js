@@ -26,12 +26,20 @@ if (!document)
 
 // check if is in Node.js environment
 var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isWebpack = (typeof(__webpack_require__) === 'function');
 
-if (isNode)
+//if (!isWebpack && isNode)
+if (typeof(__webpack_require__) !== 'function' && isNode)
 {
 	var __nodeContext = {};
-	var vm = require("vm");
-	var fs = require("fs");
+	try
+	{
+		var vm = require("vm");
+		var fs = require("fs");
+	}
+	catch(e)
+	{
+	}
 }
 
 if (!isNode)
@@ -729,6 +737,11 @@ function init()
 	});
 }
 
-init();
+if (isWebpack)
+{
+	module.exports = require('./kekule.webpack.prod.js');
+}
+else
+	init();
 
 })(this);
