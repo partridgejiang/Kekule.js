@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.8.1.18112300',
+	VERSION: '0.8.1.18123000',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -216,3 +216,10 @@ if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMess
  * @namespace
  */
 Kekule.Dev = {};
+
+// Also store Class/ClassEx/ObjectEx/DataType in Kekule namespace
+/** @ignore */
+Kekule.Class = Class;
+Kekule.ClassEx = ClassEx;
+Kekule.ObjectEx = ObjectEx;
+Kekule.DataType = DataType;
