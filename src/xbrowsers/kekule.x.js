@@ -14,6 +14,8 @@
 (function (window, document)
 {
 
+"use strict";
+
 var $root = window;
 
 if (!$root.Kekule)
@@ -1409,11 +1411,11 @@ Kekule.X.DomReady = {
 	{
 		return DOM.suspendFlag > 0;
 	},
-  initReady: function()
+  initReady: function initReady()
   {
     if (document.addEventListener) {
       document.addEventListener( "DOMContentLoaded", function(){
-        document.removeEventListener( "DOMContentLoaded", arguments.callee, false );//清除加载函数
+	      document.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
         DOM.fireReady();
       }, false);
     }
