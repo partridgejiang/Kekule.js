@@ -50,8 +50,8 @@ Kekule.AromaticTypes = {
 };
 
 ClassEx.extend(Kekule.Atom,
-	/** @lends Kekule.Atom# */
-	{
+/** @lends Kekule.Atom# */
+{
 	/** @private */
 	isSulfoneOrSulfoxideSulphur: function()
 	{
@@ -108,8 +108,8 @@ Kekule.globalOptions.add('algorithm.aromaticRingsPerception', {
 });
 
 ClassEx.extend(Kekule.StructureConnectionTable,
-	/** @lends Kekule.StructureConnectionTable# */
-	{
+/** @lends Kekule.StructureConnectionTable# */
+{
 	/**
 	 * Returns Possible PI electron numbers of atom.
 	 * @param node
@@ -499,6 +499,53 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			piECountMap.finalize();
 		}
 		return result;
+	},
+	/**
+	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+ 	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
+	 * @return {Array} Hucklized bonds.
+	 */
+	hucklize: function(allowUncertainRings, targetBonds)
+	{
+		var result = [];
+		this.beginUpdate();
+		try
+		{
+			var aromaticRings = this.findAromaticRings(allowUncertainRings);
+			for (var i = 0, l = aromaticRings.length; i < l; ++i)
+			{
+				var bonds = aromaticRings[i].connectors;
+				for (var j = 0, k = bonds.length; j < k; ++j)
+				{
+					var bond = bonds[j];
+					if (!targetBonds || targetBonds.indexOf(bond) >= 0)
+					{
+						if (bond.setBondOrder)
+						{
+							bond.setBondOrder(Kekule.BondOrder.EXPLICIT_AROMATIC);
+							result.push(bond);
+						}
+					}
+				}
+			}
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+		return result;
+	},
+
+	/**
+	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} childBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
+	 * @return {Array} Hucklized bonds.
+	 */
+	kekulize: function(targetBonds)
+	{
+
 	}
 });
 
@@ -540,12 +587,23 @@ ClassEx.extend(Kekule.StructureFragment,
 	getRingAromaticType: function(ring, refRings)
 	{
 		return this.hasCtab()? this.getCtab().getRingAromaticType(ring, refRings): null;
+	},
+
+	/**
+	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in this molecule will be handled.
+	 * @return {Array} Hucklized bonds.
+	 */
+	hucklize: function(allowUncertainRings, targetBonds)
+	{
+		return this.hasCtab()? this.getCtab().hucklize(allowUncertainRings, targetBonds): [];
 	}
 });
 
 ClassEx.extend(Kekule.ChemObject,
-	/** @lends Kekule.ChemObject# */
-	{
+/** @lends Kekule.ChemObject# */
+{
 	/**
 	 * Perceive and mark all aromatic rings in chem object. Found rings will be stored in aromaticRings
 	 * property of structure fragment object.
@@ -576,6 +634,22 @@ ClassEx.extend(Kekule.ChemObject,
 	findAromaticRings: function(allowUncertainRings, candidateRings)
 	{
 		return this.perceiveAromaticRings(allowUncertainRings, candidateRings);
+	},
+	/**
+	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
+	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
+	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in this object will be handled.
+	 * @return {Array} Hucklized bonds.
+	 */
+	hucklize: function(allowUncertainRings, targetBonds)
+	{
+		var result = [];
+		var ss = CU.getAllStructFragments(this);
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			result = result.concat(ss[i].hucklize(allowUncertainRings, targetBonds) || []);
+		}
+		return result;
 	}
 });
 
