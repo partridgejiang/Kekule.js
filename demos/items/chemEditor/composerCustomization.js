@@ -564,7 +564,6 @@ function generateComposerCustomSettingCode(options)
 			'// Object modifiers'
 		];
 		var setting = activeObjModifierSetting;
-		console.log(setting);
 		var allowedCategoriesCode;
 		var categoryNames = [];
 		if (!ops.useVarValue)

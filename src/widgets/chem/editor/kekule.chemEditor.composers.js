@@ -1215,7 +1215,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			}
 		});
 
-		this.defineProp('allowedObjModifierCategories', {'dataType': DataType.ARRAY});
+		this.defineProp('allowedObjModifierCategories', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('allowedObjModifierCategories', value);
+				this.updateObjModifierToolbarState();
+			}
+		});
 
 		this.defineProp('commonToolButtons', {'dataType': DataType.HASH, 'serializable': false,
 			'getter': function()
