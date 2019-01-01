@@ -34,11 +34,11 @@ var Compressor = class {
 		this.minifierOptions = minifierOptions || defMinifierOptions[this.minifierName];
 	}
 
-	_compress(targetModuleNames, destPath)
+	_compress(compressFileDetails, destPath)
 	{
 		if (destPath)
 		{
-			var details = Kekule.Dev.PackageUtils.getCompressFileDetails(targetModuleNames, true);
+			var details = compressFileDetails;
 			var minFiles = details.targetMinFileNames;
 			var fileMap = details.compressFileMap;
 
@@ -71,13 +71,13 @@ var Compressor = class {
 			minFiles.forEach((minFileName) => {
 				//console.log('now compress ' + minFileName, this.minifierName, this.minifierOptions);
 				/*
-				if (this.minifierName === 'yui' && minFileName === details.targetFileName)  // some times there may be problem in compress kekule.min.js in YUI
+				if (this.minifierName === 'yui' && minFileName === details.targetStandaloneFileName)  // some times there may be problem in compress kekule.min.js in YUI
 				{
 					//console.log('another approach');
 					// try another approach, combine the compressed module min files together
 					if (compressedMinFileNames.length === minFiles.length - 1)  // only need to compress kekule.min.js now
 					{
-						doMinify('noCompress', null, compressedMinFileNames, destPath, details.targetFileName);
+						doMinify('noCompress', null, compressedMinFileNames, destPath, details.targetStandaloneFileName);
 					}
 					else
 					{
@@ -126,6 +126,39 @@ var Compressor = class {
 		});
 	}
 
+	_normalizePath(targetPath)  // change path sep from '\' to '/' in windows env
+	{
+		if (path.sep === '\\')
+		{
+			return targetPath.replace(/\\/g, '/');
+		}
+		else
+			return targetPath;
+	}
+
+	_generateWebpackWrapperFiles(compressFileDetails, destPath)
+	{
+		// dist web pack entrance
+		var lines = [];
+		lines.push('require("./themes/default/kekule.css");');  // TODO: CSS file, currently path is fixed
+		lines.push('module.exports = require(\"./' + compressFileDetails.targetStandaloneFileName + '");');  // kekule.min.js
+		// write to file
+		fs.writeFileSync(path.resolve(destPath, 'kekule.webpack.prod.js'), lines.join('\n'));
+
+		// dev web pack entrance
+		//var srcRelPath = path.relative(destPath, srcRootPath);
+		var srcCssPath = this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, 'widgets/themes/default/kekule.css'))); // TODO: CSS file, currently path is fixed
+		lines = [];
+		lines.push('require("' + srcCssPath + '");');  // TODO: CSS file, currently path is fixed
+		var srcFiles = compressFileDetails.compressFileMap[compressFileDetails.targetStandaloneFileName];
+		srcFiles.forEach((srcFileName) => {
+			lines.push('require("' + this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, srcFileName))) + '");');
+		});
+		lines.push('module.exports = Kekule;');
+		fs.writeFileSync(path.resolve(destPath, 'kekule.webpack.dev.js'), lines.join('\n'));
+		console.log('Webpack wrapper generated.');
+	}
+
 	execute(targetModuleNames, destPath)
 	{
 		if (!destPath)
@@ -135,8 +168,10 @@ var Compressor = class {
 			if (!fs.existsSync(destPath)){
 				fs.mkdirSync(destPath);
 			}
-			this._compress(targetModuleNames, destPath);
+			var compressFileDetails = Kekule.Dev.PackageUtils.getCompressFileDetails(targetModuleNames, true);
+			this._compress(compressFileDetails, destPath);
 			this._copyAdditionalJsFiles(targetModuleNames, destPath);
+			this._generateWebpackWrapperFiles(compressFileDetails, destPath);
 		}
 	}
 };

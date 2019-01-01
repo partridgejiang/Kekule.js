@@ -147,7 +147,7 @@ Kekule.Dev.PackageUtils = {
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
 		compressFileMap[targetFileName] = allSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
-		return {targetFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap};
+		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap};
 	},
 
 	getStandaloneJsFileDetails: function(targetModuleNames)
