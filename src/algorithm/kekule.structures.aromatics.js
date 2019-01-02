@@ -330,7 +330,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 
 				if (lastResult !== null)  // check previous and curr result value
 				{
-					if (lastResult !== currResult)
+					if (currResult && lastResult !== currResult)
 					{
 						if ((lastResult === Kekule.AromaticTypes.EXPLICIT_AROMATIC)
 							|| (currResult === Kekule.AromaticTypes.EXPLICIT_AROMATIC))

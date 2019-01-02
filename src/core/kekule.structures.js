@@ -1344,6 +1344,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	{
 		var valenceSum = 0;
 		var maxValence = 0;
+		var piECount = this.getStructureCacheData('piElectronCount') || null;
 		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
 		{
 			var connector = this.getLinkedConnectorAt(i);
@@ -1351,12 +1352,19 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			if ((connector instanceof Kekule.Bond)
 				&& (connector.getBondType() == Kekule.BondType.COVALENT))
 			{
-				var v = connector.getBondValence();
+				var v;
+				// a fix, if a hetero atom connected with two explicit aromatics bonds in a aromatic ring (e.g., pyrole),
+				// and the pi electron count is 2 (rather than 1), the bond order should be considered as 1 rather than 2
+				if (connector.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC && piECount >= 2)
+					v = 1;
+				else
+					v = connector.getBondValence();
 				valenceSum += v;
 				if (v > maxValence)
 					maxValence = v;
 			}
 		}
+
 		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	},
 	/** @private */
@@ -5712,7 +5720,11 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					if (shadowObj)
 						shadowConnectors.push(shadowObj);
 				}
-				shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+				var shadowRing = Object.clone(srcAromaticRing);
+				shadowRing.nodes = shadowNodes;
+				shadowRing.connectors = shadowConnectors;
+				//shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+				shadowAromaticRings.push(shadowRing);
 			}
 			shadowFragment.setAromaticRings(shadowAromaticRings);
 		}
