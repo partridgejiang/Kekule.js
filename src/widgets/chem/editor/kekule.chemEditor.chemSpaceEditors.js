@@ -239,7 +239,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		}
 		this.setDefBondLength(defBondLength);
-		
+
 		return result;
 	},
 	/** @ignore */
@@ -261,7 +261,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			var drawBridge = this.getDrawBridge()
 			var height = drawBridge ? drawBridge.module_height : visibleClientSize.height;
 			var width = drawBridge ? drawBridge.module_width : visibleClientSize.width;
-			this.scrollClientTo(((screenSize.y * currZoom) - visibleClientSize.height) * .4, 
+			this.scrollClientTo(((screenSize.y * currZoom) - visibleClientSize.height) * .4,
 				((screenSize.x * currZoom) - visibleClientSize.width) / 2);
 		}
 	},
@@ -3000,11 +3000,15 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 				this.addOperationToEditor();
 				this.stopManipulate();
 				this.setState(S.NORMAL);
+				if (this.getEditor().getSelection().length > 0)
+					this.getEditor().setSelection(null);
 				return true;
 			}
 		}
-
-		return $super(e);  // finish move operation first;
+		var finishMove =  $super(e);  // finish move operation first;
+		if (this.getEditor().getSelection().length > 0)
+			this.getEditor().setSelection(null);
+		return finishMove;
 	}
 });
 
@@ -4315,11 +4319,15 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 				this.stopManipulate();
 				this.setState(S.NORMAL);
 				e.preventDefault();
+				if (this.getEditor().getSelection().length > 0)
+					this.getEditor().setSelection(null);
 				return true;
 			}
 		}
-
-		return $super(e);  // finish move operation
+		var finishMove =  $super(e);  // finish move operation first;
+		if (this.getEditor().getSelection().length > 0)
+			this.getEditor().setSelection(null);
+		return finishMove;
 	}
 });
 
