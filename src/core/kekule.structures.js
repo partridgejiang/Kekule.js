@@ -5720,7 +5720,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					if (shadowObj)
 						shadowConnectors.push(shadowObj);
 				}
-				var shadowRing = Object.clone(srcAromaticRing);
+				var shadowRing = Object.extend({}, srcAromaticRing);
 				shadowRing.nodes = shadowNodes;
 				shadowRing.connectors = shadowConnectors;
 				//shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
