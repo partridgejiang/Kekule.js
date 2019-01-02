@@ -238,7 +238,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	/**
 	 * Check if a ring is a aromatic one.
 	 * @param {Object} ring
-	 * @returns {Int} Value from {@link Kekule.AromaticTypes}
+	 * @returns {Hash} A {result, eMap} Hash, where result is a value from {@link Kekule.AromaticTypes},
+	 *   while the eMap stores the possible aromatic pi electron count of each node in ring.
 	 * @private
 	 */
 	_checkRingAromaticType: function(ring, piECountMap)
@@ -292,6 +293,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			var finalResult;
 			var lastResult = null;
 			var tryCount = 0;
+			var aromaticEIndexes = null;
 			// loop and calculate all possible pi e sums
 			do
 			{
@@ -317,7 +319,10 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 					if ((times <= 5) && (times !== 2))  // times = 2, 10 carbon ring, not aromatic
 					{
 						if (mod === 2)
+						{
 							currResult = Kekule.AromaticTypes.EXPLICIT_AROMATIC;
+							aromaticEIndexes = AU.clone(currIndexes);
+						}
 						else if (!mod)
 							currResult = Kekule.AromaticTypes.ANTIAROMATIC;
 					}
@@ -330,7 +335,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 						if ((lastResult === Kekule.AromaticTypes.EXPLICIT_AROMATIC)
 							|| (currResult === Kekule.AromaticTypes.EXPLICIT_AROMATIC))
 						{
-							return Kekule.AromaticTypes.UNCERTAIN;
+							finalResult = Kekule.AromaticTypes.UNCERTAIN;
 							break;
 						}
 					}
@@ -338,9 +343,22 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 				else  // lastResult not set
 					lastResult = currResult;
 			}
-			while (nextIndexes(currIndexes))
+			while (nextIndexes(currIndexes));
 
-			return lastResult;
+			if (!finalResult)
+				finalResult = lastResult;
+
+			if (aromaticEIndexes)  // find aromatic electron set, returns it too
+			{
+				var eMap = new Kekule.MapEx();
+				for (var i = 0, l = aromaticEIndexes.length; i < l; ++i)
+				{
+					eMap.set(nodes[i], nodeECounts[i][aromaticEIndexes[i]]);
+				}
+			}
+
+			//return lastResult;
+			return {'result': finalResult, 'eMap': eMap};
 			/*
 			var eSum = 0;
 			for (var i = 0, l = nodes.length; i < l; ++i)
@@ -405,9 +423,38 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		for (var i = 0, l = targetNodes.length; i < l; ++i)
 		{
 			var node = targetNodes[i];
-			var eCounts = this._getPossibleRingNodePiElectronCounts(node, allNodes, allConnectors);
-			piECountMap.set(node, eCounts);
+			var cachedECount = node.getStructureCacheData('piElectronCount');
+			if (Kekule.ObjUtils.notUnset(cachedECount))
+			{
+				piECountMap.set(node, [cachedECount]);
+			}
+			else
+			{
+				var eCounts = this._getPossibleRingNodePiElectronCounts(node, allNodes, allConnectors);
+				piECountMap.set(node, eCounts);
+			}
 			//node.setCharge(eCount);  // debug
+		}
+	},
+	_storeAromaticCacheToRingInfo: function(ring, aromaticType, piECountMap)
+	{
+		ring.aromaticType = aromaticType;
+		// store pi electron map to nodes in ring
+		var nodes = ring.nodes;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			if (Kekule.ObjUtils.isUnset(node.getStructureCacheData('piElectronCount')))
+			{
+				if (piECountMap)
+				{
+					var eCount = piECountMap.get(node);
+					if (Kekule.ObjUtils.notUnset(eCount))
+					{
+						node.setStructureCacheData('piElectronCount', eCount);
+					}
+				}
+			}
 		}
 	},
 	/**
@@ -453,10 +500,20 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			for (var i = 0, l = rings.length; i < l; ++i)
 			{
 				var ring = rings[i];
-				var aromaticType = this._checkRingAromaticType(ring, piECountMap);
+				var aromaticType;
+				if (Kekule.ObjUtils.notUnset(ring.aromaticType))
+					aromaticType = ring.aromaticType;
+				else
+				{
+					var checkResult = this._checkRingAromaticType(ring, piECountMap);
+					aromaticType = checkResult.result;
+					this._storeAromaticCacheToRingInfo(ring, aromaticType, checkResult.eMap);
+				}
 				if ((aromaticType === Kekule.AromaticTypes.EXPLICIT_AROMATIC)
 					|| (allowUncertainRings && (aromaticType === Kekule.AromaticTypes.UNCERTAIN)))
+				{
 					result.push(ring);
+				}
 			}
 			return result;
 		}
@@ -482,9 +539,13 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 * @param {Object} ring
 	 * @param {Array} refRings Should list all related rings to ring, help to determine the p electron number.
 	 *   If this value is not set, SSSR of ctab will be used instead.
+	 * @return {Int} Value from {@link Kekule.AromaticTypes}.
 	 */
 	getRingAromaticType: function(ring, refRings)
 	{
+		// restore from cache first
+		if (Kekule.ObjUtils.notUnset(ring.aromaticType))
+			return ring.aromaticType;
 		if (!refRings)
 			refRings = this.findSSSR();
 		var result;
@@ -492,7 +553,9 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		try
 		{
 			this._calcPossibleRingNodesPElectronCounts(piECountMap, [ring], refRings);
-			result = this._checkRingAromaticType(ring, piECountMap);
+			var checkResult = this._checkRingAromaticType(ring, piECountMap);
+			result = checkResult.result;
+			this._storeAromaticCacheToRingInfo(ring, result, checkResult.eMap);
 		}
 		finally
 		{
