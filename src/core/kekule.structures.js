@@ -156,6 +156,7 @@ Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions
  * @property {Array} linkedSiblings Sibling objects connected with this one through linkedConnectors. Read only.
  *   Note: if there are sub structures (subgroups) in connection table, and a object is linked with a inside object inside subgroup,
  *   linkedSiblings will returns the subgroup rather than the inside object.
+ * @property {Hash} structureCache Cached complex structure data, e.g. ring info. The cache will be automatically cleared when the structure is changed.
  */
 /**
  * Invoked when object is changed and the change is related with structure
@@ -239,6 +240,20 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 					}
 					return result;
 				}
+		});
+		this.defineProp('structureCache', {'dataType': DataType.HASH, 'serializable': false,
+			// 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,   // do not allow change it directly, use method setStructureCacheData instead
+			'getter': function(autoCreate)
+			{
+				var result = this.getPropStoreFieldValue('structureCache');
+				if (!result && autoCreate)
+				{
+					result = {};
+					this.setPropStoreFieldValue('structureCache', result);
+				}
+				return result;
+			}
 		});
 	},
 	/** @private */
@@ -348,6 +363,35 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			return p;
 	},
 
+	/**
+	 * Retrieve a cached structure data item.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getStructureCacheData: function(key)
+	{
+		var cache = this.getStructureCache();
+		return cache && cache[key];
+	},
+	/**
+	 * Set a cached structure data item.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setStructureCacheData: function(key, value)
+	{
+		this.getStructureCache(true)[key] = value;
+		return this;
+	},
+	/**
+	 * Clear all cached structure data.
+	 */
+	clearStructureCache: function()
+	{
+		this.setPropStoreFieldValue('structureCache', null);
+		return this;
+	},
+
 	/** @private */
 	notifyLinkedConnectorsChanged: function()
 	{
@@ -356,7 +400,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 
 	/**
 	 * Returns self or child object that can directly linked to a connector.
-	 * For atom or other simple chem objetc, this function should just returns self,
+	 * For atom or other simple chem object, this function should just returns self,
 	 * for structure fragment, this function need to returns an anchor node.
 	 * @returns {Kekule.ChemStructureObject}
 	 */
@@ -583,6 +627,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	{
 		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
 		this.clearStructureFlags();
+		this.clearStructureCache();
 		this.invokeEvent('structureChange', {'origin': originObj || this});
 	},
 	/**
@@ -2192,6 +2237,16 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				return result;
 			}
 		});
+
+		this.defineProp('structureCache', {'dataType': DataType.HASH, 'serializable': false,
+			// 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,   // do not allow change it directly, use method setStructureCacheData instead
+			'getter': function(autoCreate)
+			{
+				var p = this.getParent();
+				return p && p.getStructureCache(autoCreate);
+			}
+		});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -2492,6 +2547,37 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	isEmpty: function()
 	{
 		return (this.getNodeCount() <= 0) && (this.getConnectorCount() <= 0);
+	},
+
+	/**
+	 * Retrieve a cached structure data item.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getStructureCacheData: function(key)
+	{
+		var cache = this.getStructureCache();
+		return cache && cache[key];
+	},
+	/**
+	 * Set a cached structure data item.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setStructureCacheData: function(key, value)
+	{
+		this.getStructureCache(true)[key] = value;
+		return this;
+	},
+	/**
+	 * Clear all cached structure data.
+	 */
+	clearStructureCache: function()
+	{
+		var p = this.getParent();
+		if (p)
+			p.clearStructureCache();
+		return this;
 	},
 
 	/**
@@ -4103,7 +4189,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		this.defineProp('canonicalizationInfo', {
 			'dataType': DataType.OBJECT,
 			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function()
+			{
+				return this.getStructureCacheData('canonicalizationInfo');
+			},
+			'setter': function(value)
+			{
+				this.setStructureCacheData('canonicalizationInfo', value);
+			}
 		});
 		this.defineProp('aromaticRings', {
 			'dataType': DataType.ARRAY,
@@ -4111,13 +4205,19 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			'scope': Class.PropertyScope.PUBLIC,
 			'getter': function()
 			{
-				var result = this.getPropStoreFieldValue('aromaticRings');
+				//var result = this.getPropStoreFieldValue('aromaticRings');
+				var result = this.getStructureCacheData('aromaticRings');
 				if (!result)
 				{
 					result = [];
-					this.setPropStoreFieldValue('aromaticRings', result);
+					//this.setPropStoreFieldValue('aromaticRings', result);
+					this.setStructureCacheData('aromaticRings', result);
 				}
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setStructureCacheData('aromaticRings', value);
 			}
 		});
 
@@ -4325,14 +4425,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			shadow.finalize();
 			this.setPropStoreFieldValue('flattenedShadow', null);
 		}
+		// also clear all cached structure info data
 		$super(originObj);
 	},
 	/** @ignore */
 	clearStructureFlags: function($super)
 	{
 		$super();
+		/*  Remove these, since now canonicalizationInfo and aromaticRings are already stored in structure cache
 		this.setPropStoreFieldValue('canonicalizationInfo', null);
 		this.setPropStoreFieldValue('aromaticRings', []);
+		*/
 
 		// also clear flags of children (e.g., parity of atoms and bonds)
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
