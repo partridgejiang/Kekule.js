@@ -75,7 +75,7 @@
   </style>
 
   <script src="../_libs/raphael-min.2.0.1.js"></script>
-  <script src="../../src/kekule.js?min=false"></script>
+  <script src="../../src/kekule.js?min=false&modules=chemWidget,algorithm,indigo"></script>
 
   <link type="chemical/x-mdl-molfile" id="cyclopropene" href="../../demos/chemFiles/2D/cyclopropene.mol" />
   <link type="chemical/x-mdl-molfile" id="cyclobutadiene" href="../../demos/chemFiles/2D/cyclobutadiene.mol" />
@@ -289,7 +289,7 @@
       if (mol)
       {
         var tStart = Date.now();
-        var rings = mol.findAromaticRings(true);
+        var rings = mol.findAromaticRings(!true);
         var tEnd = Date.now();
         listRings(mol, rings, tEnd - tStart);
       }
@@ -302,6 +302,7 @@
 	    	mol.hucklize();
     }
 
+    var composer;
     function init()
     {
       var gridMol = Kekule.Widget.getWidgetById('gridMol');
@@ -316,7 +317,7 @@
 	    var btn = Kekule.Widget.getWidgetById('btnHucklize');
 	    btn.addEventListener('execute', hucklize);
 
-      var composer = Kekule.Widget.getWidgetById('composerMol');
+      composer = Kekule.Widget.getWidgetById('composerMol');
       composer.addEventListener('load', clearResult);
 
       Kekule.X.Event.addListener($('resultList'), 'click', selectRing);
