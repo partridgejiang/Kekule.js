@@ -830,6 +830,44 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Returns the screen box (x1, y1, x2, y2) of current visible client area in editor.
+	 * @returns {Hash}
+	 */
+	getVisibleClientScreenBox: function()
+	{
+		var elem = this.getEditClientElem().parentNode;
+		var result = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		result.x1 = elem.scrollLeft;
+		result.y1 = elem.scrollTop;
+		result.x2 = result.x1 + result.width;
+		result.y2 = result.y1 + result.height;
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in a specified coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientBoxOfSys: function(coordSys)
+	{
+		var screenBox = this.getVisibleClientScreenBox();
+		var coords = Kekule.BoxUtils.getMinMaxCoords(screenBox);
+		var c1 = this.translateCoord(coords.min, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var c2 = this.translateCoord(coords.max, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var result = Kekule.BoxUtils.createBox(c1, c2);
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in object coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientObjBox: function(coordSys)
+	{
+		return this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
+	},
+
+	/**
 	 * Returns whether the chem object inside editor has been modified since load.
 	 * @returns {Bool}
 	 */
