@@ -3174,8 +3174,8 @@ Kekule.BoxUtils = {
 	getCenterCoord: function(box)
 	{
 		var result = {
-			'x': (box.x1 || 0 + box.x2 || 0) / 2,
-			'y': (box.y1 || 0 + box.y2 || 0) / 2
+			'x': ((box.x1 || 0) + (box.x2 || 0)) / 2,
+			'y': ((box.y1 || 0) + (box.y2 || 0)) / 2
 		};
 		if (Kekule.ObjUtils.notUnset(box.z1) || Kekule.ObjUtils.notUnset(box.z2))
 			result.z = (box.z1 || 0 + box.z2 || 0) / 2;
