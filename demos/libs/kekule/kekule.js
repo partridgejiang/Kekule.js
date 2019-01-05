@@ -26,10 +26,20 @@ if (!document)
 
 // check if is in Node.js environment
 var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isWebpack = (typeof(__webpack_require__) === 'function');
 
-if (isNode)
+//if (!isWebpack && isNode)
+if (typeof(__webpack_require__) !== 'function' && isNode)
 {
 	var __nodeContext = {};
+	try
+	{
+		var vm = require("vm");
+		var fs = require("fs");
+	}
+	catch(e)
+	{
+	}
 }
 
 if (!isNode)
@@ -50,8 +60,6 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var vm = require("vm");
-			var fs = require("fs");
 			var data = fs.readFileSync(url);
 			//console.log('[k] node append', url, data.length);
 			vm.runInThisContext(data, {'filename': url});
@@ -186,7 +194,6 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 var kekuleFiles = {
 	'lan': {
 		'files': [
-			'lan/json2.js',
 			'lan/classes.js',
 			'lan/xmlJsons.js',
 			'lan/serializations.js'
@@ -673,6 +680,18 @@ function init()
 			//'useMinFile': false  // for debug
 			'useMinFile': true
 		};
+
+		// if min files not found, use dev files instead
+		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		try
+		{
+			fs.statsSync(testFileName)
+		}
+		catch(e)
+		{
+			//scriptInfo.path += 'src/'
+			scriptInfo.useMinFile = false;
+		}
 	}
 	else  // in browser
 	{
@@ -698,7 +717,7 @@ function init()
 		'appendScriptFiles': appendScriptFiles
 	};
 
-	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
 		if (isNode)  // export Kekule namespace
 		{
 			// export Kekule in module
@@ -712,10 +731,17 @@ function init()
 			this.ClassEx = exports.ClassEx;
 			this.ObjectEx = exports.ObjectEx;
 			this.DataType = exports.DataType;
+			// then store script info of Kekule
+			this.Kekule.scriptSrcInfo = scriptInfo;
 		}
 	});
 }
 
-init();
+if (isWebpack)
+{
+	module.exports = require('./kekule.webpack.prod.js');
+}
+else
+	init();
 
 })(this);
