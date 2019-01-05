@@ -777,7 +777,7 @@ Kekule.StereoParity = {
  * @property {Float} charge Charge of atom. As there may be partial charge on atom, so a float value is used.
  * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalOrder}.
  * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
- * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
+ * //@property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
  * @property {Bool} isAnchor Whether this node is among anchors in parent structure.
  */
 Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
@@ -6127,6 +6127,7 @@ Kekule.Molecule = Class.create(Kekule.StructureFragment,
  *   Usually a connector connects two nodes. However, there are some compounds that has bond-atom bond
  *   (such as Zeise's salt: [Cl3Pt(CH2=CH2)]), so here array of {@link Kekule.ChemStructureObject}
  *   rather than array of {@link Kekule.ChemStructureNode} is used.
+ * @property {Array} neighboringConnectors Readonly, all connectors which has the one of the same connectedObjs of this one.
  */
 Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 /** @lends Kekule.BaseStructureConnector# */
@@ -6185,6 +6186,26 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 
 					this.notifyConnectedObjsChanged();
 				}
+		});
+		this.defineProp('neighboringConnectors', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var result = [];
+				var connObjs = this.getConnectedObjs();
+				for (var i = 0, l = connObjs.length; i < l; ++i)
+				{
+					var connObj = connObjs[i];
+					if (connObj.getLinkedConnectors)
+						Kekule.ArrayUtils.pushUnique(result, connObj.getLinkedConnectors() || []);
+				}
+				// remove self
+				Kekule.ArrayUtils.remove(result, this);
+				return result;
+			}
 		});
 	},
 	/** @private */
@@ -6699,6 +6720,7 @@ Kekule.BondStereo = {
  * @property {Bool} isInAromaticRing A flag to indicate the bond is in a aromatic ring and is a aromatic bond.
  *   User should not set this property directly, instead, this value will be marked
  *   in aromatic detection routine.
+ * @property {Array} neighboringBonds Readonly, all neighboring bonds that has at least one connected object of this one.
  */
 Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 /** @lends Kekule.Bond# */
@@ -6778,6 +6800,23 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 					return parent.isConnectorInAromaticRing(this);
 				else
 					return false;
+			}
+		});
+		this.defineProp('neighboringBonds', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var neighboringConnectors = this.getNeighboringConnectors() || [];
+				var result = [];
+				for (var i = 0, l = neighboringConnectors.length; i < l; ++i)
+				{
+					if (neighboringConnectors[i] instanceof Kekule.Bond)
+						result.push(neighboringConnectors[i]);
+				}
+				return result;
 			}
 		});
 	},
@@ -6899,6 +6938,14 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 			this.reverseConnectedObjOrder();
 	},
 
+	/**
+	 * Returns if bond is a covalence bond.
+	 * @returns {Bool}
+	 */
+	isCovalentBond: function()
+	{
+		return (this.getBondType() === Kekule.BondType.COVALENT);
+	},
 	/**
 	 * Returns if bond is a single covalence bond.
 	 * @returns {Bool}
