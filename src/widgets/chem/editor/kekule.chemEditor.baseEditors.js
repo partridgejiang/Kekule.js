@@ -4340,13 +4340,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var BU = Kekule.BoxUtils;
 		if (!targetObjOrObjs)
 			return this;
+		var rootObj = this.getChemObj();
+		if (!rootObj)
+			return this;
 		var objs = AU.toArray(targetObjOrObjs);
 		var containerBoxes = [];
 		var totalContainerBox = null;
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			if (obj.getContainerBox)
+			if (obj.getContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
 			{
 				var box = obj.getContainerBox(this.getCoordMode());
 				if (box)
