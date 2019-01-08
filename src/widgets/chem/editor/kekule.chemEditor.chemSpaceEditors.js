@@ -138,7 +138,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				if (value instanceof Kekule.ChemSpace)
 				{
 					this._initChemSpaceDefProps(value);
-					return $super(value);
+					var result = $super(value);
+					// auto scroll
+					if (this.getEditorConfigs().getInteractionConfigs().getScrollToObjAfterLoading())
+					{
+						var objs = value.getChildren();
+						if (objs && objs.length)
+							this.scrollClientToObject(objs);
+					}
+					return result;
 				}
 				else
 				{
