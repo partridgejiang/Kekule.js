@@ -3039,30 +3039,15 @@ ObjectEx = Class.create(
       event.name = eventName;
       event.target = this;
     }
-    if (!event.stopImmediatePropagation)
-    	  event.stopImmediatePropagation = this._eventStopImmediatePropagation;
     if (!event.stopPropagation)
       event.stopPropagation = this._eventCancelBubble;  // function() { event.cancelBubble = true; };
-    if (!event.preventDefault)
-      event.preventDefault = this._eventPreventDefault;
   	this.dispatchEvent(eventName, event);
   },
-	/** @private */
-	_eventStopImmediatePropagation: function()
-	{
-		this._stopImmediatePropagation = true;
-		this._cancelBubble = true;
-	},
   /** @private */
   _eventCancelBubble: function()
   {
     // called with event.stopPropagation, so this here is the event object
-    this._cancelBubble = true;
-  },
-  /** @private */
-  _eventPreventDefault: function()
-  {
-    this._preventDefault = true;
+    this.cancelBubble = true;
   },
   /**
    * Relay event from child of this object.
@@ -3088,15 +3073,11 @@ ObjectEx = Class.create(
   	{
 	  	for (var i = 0, l = handlerList.getLength(); i < l; ++i)
 	  	{
-	  		if (event._stopImmediatePropagation)
-			  {
-				  break;
-			  }
 	  		var handlerInfo = handlerList.getHandlerInfo(i);
         handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
-    if (!event._cancelBubble && this.getBubbleEvent())
+    if (!event.cancelBubble && this.getBubbleEvent())
     {
       var higherObj = this.getHigherLevelObj();
       if (higherObj && higherObj.relayEvent)

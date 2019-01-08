@@ -232,29 +232,6 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		}
 	},
 
-	/** @ignore */
-	doFileDragDrop: function($super, files)
-	{
-		if (!files /* || files.length > 1 */)
-			return $super();
-		else  // if only one file is dropped in, output the file content
-		{
-			if (Kekule.BrowserFeature.fileapi)
-			{
-				var self = this;
-				// try open it the file by FileReader
-				var reader = new FileReader();
-				reader.onload = function(e)
-				{
-					var content = reader.result;
-					self.setText(content);
-				};
-				reader.readAsText(files[0]);
-			}
-			return true;
-		}
-	},
-
 	/** @private */
 	createToolbar: function()
 	{

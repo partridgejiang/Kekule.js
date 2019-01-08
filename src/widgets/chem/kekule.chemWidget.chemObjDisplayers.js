@@ -457,29 +457,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			this.setChemObj(this.getChemObj());
 	},
 
-	/** @ignore */
-	doFileDragDrop: function($super, files)
-	{
-		if (!files /* || files.length > 1 */)
-			return $super();
-		else  // if only one file is dropped in, output the file content
-		{
-			var self = this;
-			(function()
-			{
-				Kekule.IO.loadFileData(files[0], function(chemObj, success)
-				{
-					if (success)
-					{
-						self.setChemObj(chemObj);
-					}
-				});
-			}).defer(); // call load later, avoid error in load process that prevent result true is returned
-
-			return true;
-		}
-	},
-
 	/**
 	 * Whether changing render type is allowed in current type of displayer.
 	 * Default is false, descendants may override this method.

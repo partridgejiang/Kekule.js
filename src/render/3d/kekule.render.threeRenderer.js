@@ -494,12 +494,10 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	 * Clear the whole context.
 	 * @param {Object} context
 	 */
-	/*
 	clearContext: function(context)
 	{
 		context.clear();
 	},
-	*/
 
 	/**
 	 * Indicate whether this bridge and context can change glyph content or position after drawing it.
@@ -563,11 +561,11 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	},
 
 	/** @private */
-	clearContext: function(context)
-	{
-	 	context.getScene().clearMesh();
-	 	this.renderContext(context);
-	},
+	// clearContext: function(context)
+	// {
+	// 	context.getScene().clearMesh();
+	// 	this.renderContext(context);
+	// },
 	/** @private */
 	renderContext: function(context)
 	{

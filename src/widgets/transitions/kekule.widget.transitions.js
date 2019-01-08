@@ -19,9 +19,9 @@ var DataType = require('../../lan/classes').DataType
 module.exports = function(Kekule){
 
 /** @ignore */
-var D = Kekule.Widget.Direction;
+const D = Kekule.Widget.Direction;
 /** @ignore */
-var SU = Kekule.StyleUtils;
+const SU = Kekule.StyleUtils;
 
 /**
  * Class to execute transition on HTML elements.
