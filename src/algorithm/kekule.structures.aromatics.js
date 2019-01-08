@@ -602,7 +602,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	{
 		var BO = Kekule.BondOrder;
 		var result = [];
-		this.beginUpdate();
+		var mol = this.getParent();
+		mol.beginUpdate();
 		try
 		{
 			var aromaticRings = this.findAromaticRings(allowUncertainRings);
@@ -629,66 +630,125 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		}
 		finally
 		{
-			this.endUpdate();
+			mol.endUpdate();
+		}
+		return result;
+	},
+
+	/**
+	 * Returns the bond order changes that need to be done on explicit aromatic bonds.
+	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
+	 * @param {Hash} options
+	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder}.
+	 */
+	getKekulizationChanges: function(targetBonds, options)
+	{
+		var result = [];
+
+		var mol = this.getParent();
+		// var shadowFragment = mol.getFlattenedShadowFragment(true);  // perform on the flattened shadow
+		var shadow = mol.createShadow();
+		var shadowFragment = shadow.getShadowFragment();
+		try
+		{
+			shadowFragment.unmarshalAllSubFragments(true);    // perform on the flattened shadow
+
+			// map target bonds to shadow first
+			var shadowTargetBonds;
+			if (targetBonds)
+			{
+				shadowTargetBonds = [];
+				for (var i = 0, l = targetBonds.length; i < l; ++i)
+				{
+					var shadowBond = shadow.getShadowObj(targetBonds[i]);
+					if (shadowBond)
+						shadowTargetBonds.push(shadowBond);
+				}
+			}
+			else
+				shadowTargetBonds = shadowFragment.getConnectors();
+
+			// filter out explicit aromatic ones
+			var explicitAromaticBonds = [];
+			for (var i = 0, l = shadowTargetBonds.length; i < l; ++i)
+			{
+				var b = shadowTargetBonds[i];
+				if (b.getBondType() === Kekule.BondType.COVALENT && b.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC
+					&& b.getConnectedChemNodeCount() === 2)
+					explicitAromaticBonds.push(b);
+			}
+
+			shadowFragment.beginUpdate();
+			try
+			{
+				// split aromatic bonds to unconnected parts
+				var parts = this._splitConnectorsToContinuousParts(explicitAromaticBonds) || [];
+				// handle each parts
+				var partResult;
+				for (var i = 0, l = parts.length; i < l; ++i)
+				{
+					var part = parts[i];
+					partResult = this._kekulizeContinousBonds(part, shadow, shadowFragment, mol);
+					if (partResult)  // some bonds need to be modified
+					{
+						for (var j = 0, k = part.length; j < k; ++j)
+						{
+							var newBondOrder = part[j].getBondOrder();
+							if (newBondOrder !== BO.EXPLICIT_AROMATIC)
+							{
+								var originalBond = shadow.getSourceObj(part[j]);
+								result.push({'bond': originalBond, 'bondOrder': newBondOrder});
+							}
+						}
+					}
+				}
+
+			}
+			finally
+			{
+				shadowFragment.endUpdate();
+			}
+		}
+		finally
+		{
+			shadowFragment.finalize();
 		}
 		return result;
 	},
 
 	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
-	 * @param {Bool} allowUncertainRings Whether uncertain rings (e.g., with variable atom) be included in result.
-	 * @param {Array} childBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
-	 * @return {Array} Hucklized bonds.
+	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
+	 * @param {Hash} options
+	 * @return {Array} Changed bonds.
 	 */
-	kekulize: function(targetBonds)
+	kekulize: function(targetBonds, options)
 	{
-		var mol = this.getParent();
-		var shadowFragment = mol.getFlattenedShadowFragment(true);  // perform on the flattened shadow
-
-		// map target bonds to shadow first
-		var shadowTargetBonds;
-		if (targetBonds)
+		var result = [];
+		var changes = this.getKekulizationChanges(targetBonds, options);
+		if (changes)
 		{
-			shadowTargetBonds = [];
-			for (var i = 0, l = targetBonds.length; i < l; ++i)
+			var mol = this.getParent();
+			try
 			{
-				var shadowBond = mol.getFlatternedShadowShadowObj(targetBonds[i]);
-				if (shadowBond)
-					shadowTargetBonds.push(shadowBond);
+				mol.beginUpdate();
+				for (var i = 0, l = changes.length; i < l; ++i)
+				{
+					var change = changes[i];
+					change.bond.setBondOrder(change.bondOrder);
+					result.push(change.bond);
+				}
+			}
+			finally
+			{
+				mol.endUpdate();
 			}
 		}
-		else
-			shadowTargetBonds = shadowFragment.getConnectors();
-
-		// filter out explicit aromatic ones
-		var explicitAromaticBonds = [];
-		for (var i = 0, l = shadowTargetBonds.length; i < l; ++i)
-		{
-			var b = shadowTargetBonds[i];
-			if (b.getBondType() === Kekule.BondType.COVALENT && b.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC
-				&& b.getConnectedChemNodeCount() === 2)
-				explicitAromaticBonds.push(b);
-		}
-
-		shadowFragment.beginUpdate();
-		try
-		{
-			// split aromatic bonds to unconnected parts
-			var parts = this._splitConnectorsToContinuousParts(explicitAromaticBonds) || [];
-			// handle each parts
-			for (var i = 0, l = parts.length; i < l; ++i)
-			{
-				this._kekulizeContinousBonds(parts[i], shadowFragment, mol);
-			}
-		}
-		finally
-		{
-			shadowFragment.endUpdate();
-		}
+		return result;
 	},
 
 	/** @private */
-	_kekulizeContinousBonds: function(targetBonds, shadowMol, originalMol)
+	_kekulizeContinousBonds: function(targetBonds, shadow, shadowMol, originalMol)
 	{
 		// get all related nodes first
 		var targetNodes = [];
@@ -703,8 +763,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		for (var i = 0, l = targetNodes.length; i < l; ++i)
 		{
 			var shadowNode = targetNodes[i];
-			var originalNode = originalMol.getFlatternedShadowSourceObj(shadowNode);
-			var cachedPiECount = originalMol.getStructureCacheData('piElectronCount');
+			var originalNode = shadow.getSourceObj(shadowNode);  //originalMol.getFlatternedShadowSourceObj(shadowNode);
+			var cachedPiECount = originalNode && originalNode.getStructureCacheData('piElectronCount');
 			if (OU.notUnset(cachedPiECount))
 			{
 				determinatedMap.set(shadowNode, {'cachedPiElectronCount': cachedPiECount});
