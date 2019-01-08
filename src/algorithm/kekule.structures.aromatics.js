@@ -15,6 +15,7 @@
 (function(){
 "use strict";
 
+var OU = Kekule.ObjUtils;
 var AU = Kekule.ArrayUtils;
 var BT = Kekule.BondType;
 var BO = Kekule.BondOrder;
@@ -130,6 +131,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			var isotope = Kekule.IsotopeFactory.getIsotope(symbol);
 			var charge = node.getCharge();
 			//var bonds = node.getLinkedBonds(BT.COVALENT);  // now only consider covalent bonds
+			//var implValence = node.getImplicitValence && node.getImplicitValence();
+
 			var isSaturated = node.isSaturated && node.isSaturated();
 
 			if (!isSaturated)  // check if the multiple bond is on ring or outside ring
@@ -140,8 +143,17 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 				else if (node.isEsterCarbon && node.isEsterCarbon())
 					return PElectronCountMarkers.ESTER_CARBON;
 
-				var multipleBondsOnRing = AU.intersect(multipleBonds, ctabRingConnectors);
-				var multipleBondOnRingCount = multipleBondsOnRing.length;
+				var multipleBondsOnRing, multipleBondOnRingCount;
+				if (ctabRingConnectors)
+				{
+					multipleBondsOnRing = AU.intersect(multipleBonds, ctabRingConnectors);
+					multipleBondOnRingCount = multipleBondsOnRing.length;
+				}
+				else  // sometimes ctabRingConnectors are not set (e.g., in kekulize method), we suppose the multiple bond is on ring
+				{
+					multipleBondsOnRing = null;    // flag
+					multipleBondOnRingCount = 1;
+				}
 				if (multipleBondOnRingCount)  // multiple bond on ring
 				{
 					if ((multipleBondOnRingCount === 2) && (multipleBondsOnRing[0].getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC))
@@ -153,10 +165,12 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 						else  // C
 							return 1;
 					}
-					else if ((multipleBondOnRingCount === 1) && (multipleBondsOnRing[0].getBondOrder() === Kekule.BondOrder.DOUBLE))
+					else if ((multipleBondOnRingCount === 1) && (multipleBondsOnRing && multipleBondsOnRing[0].getBondOrder() === Kekule.BondOrder.DOUBLE))
+						return 1;
+					else if ((multipleBondOnRingCount === 1) && !multipleBondsOnRing)   // receive special flag
 						return 1;
 					else
-						return 0;  // C=C=C or triple bond has no aromatic
+						return -1;  //0;  // C=C=C or triple bond has no aromatic
 				}
 				else  // multiple bond outside ring
 				{
@@ -571,6 +585,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	hucklize: function(allowUncertainRings, targetBonds)
 	{
+		var BO = Kekule.BondOrder;
 		var result = [];
 		this.beginUpdate();
 		try
@@ -584,10 +599,14 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 					var bond = bonds[j];
 					if (!targetBonds || targetBonds.indexOf(bond) >= 0)
 					{
-						if (bond.setBondOrder)
+						var currOrder = bond.getBondOrder && bond.getBondOrder();
+						if (currOrder === BO.SINGLE || currOrder === BO.DOUBLE)  // triple bond will not be affected
 						{
-							bond.setBondOrder(Kekule.BondOrder.EXPLICIT_AROMATIC);
-							result.push(bond);
+							if (bond.setBondOrder)
+							{
+								bond.setBondOrder(Kekule.BondOrder.EXPLICIT_AROMATIC);
+								result.push(bond);
+							}
 						}
 					}
 				}
@@ -608,8 +627,332 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	 */
 	kekulize: function(targetBonds)
 	{
+		var mol = this.getParent();
+		var shadowFragment = mol.getFlattenedShadowFragment(true);  // perform on the flattened shadow
 
-	}
+		// map target bonds to shadow first
+		var shadowTargetBonds;
+		if (targetBonds)
+		{
+			shadowTargetBonds = [];
+			for (var i = 0, l = targetBonds.length; i < l; ++i)
+			{
+				var shadowBond = mol.getFlatternedShadowShadowObj(targetBonds[i]);
+				if (shadowBond)
+					shadowTargetBonds.push(shadowBond);
+			}
+		}
+		else
+			shadowTargetBonds = shadowFragment.getConnectors();
+
+		// filter out explicit aromatic ones
+		var explicitAromaticBonds = [];
+		for (var i = 0, l = shadowTargetBonds.length; i < l; ++i)
+		{
+			var b = shadowTargetBonds[i];
+			if (b.getBondType() === Kekule.BondType.COVALENT && b.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC
+				&& b.getConnectedChemNodeCount() === 2)
+				explicitAromaticBonds.push(b);
+		}
+
+		shadowFragment.beginUpdate();
+		try
+		{
+			// split aromatic bonds to unconnected parts
+			var parts = this._splitConnectorsToContinuousParts(explicitAromaticBonds) || [];
+			// handle each parts
+			for (var i = 0, l = parts.length; i < l; ++i)
+			{
+				this._kekulizeContinousBonds(parts[i], shadowFragment, mol);
+			}
+		}
+		finally
+		{
+			shadowFragment.endUpdate();
+		}
+	},
+
+	/** @private */
+	_kekulizeContinousBonds: function(targetBonds, shadowMol, originalMol)
+	{
+		// get all related nodes first
+		var targetNodes = [];
+		for (var i = 0, l = targetBonds.length; i < l; ++i)
+		{
+			var connNodes = targetBonds[i].getConnectedChemNodes() || [];
+			AU.pushUnique(targetNodes, connNodes);
+		}
+
+		var determinatedMap = new Kekule.MapEx(false);
+		// if original nodes has pi e information, stores it
+		for (var i = 0, l = targetNodes.length; i < l; ++i)
+		{
+			var shadowNode = targetNodes[i];
+			var originalNode = originalMol.getFlatternedShadowSourceObj(shadowNode);
+			var cachedPiECount = originalMol.getStructureCacheData('piElectronCount');
+			if (OU.notUnset(cachedPiECount))
+			{
+				determinatedMap.set(shadowNode, {'cachedPiElectronCount': cachedPiECount});
+			}
+		}
+		var result = this._doKekulizeContinousBondSys(0, targetBonds, targetNodes, determinatedMap);
+		return result;
+	},
+	/** @private */
+	_doKekulizeContinousBondSys: function(currBondIndex, undeterminatedBonds, sysNodes, determinatedMap)  // determinatedMap should be all filled with null to each node/bond
+	{
+		var self = this;
+		// returns explicit bond order, or bond order calculated in this process
+		var getBondOrder = function(bond)
+		{
+			var bondOrder;
+			var bondInfo = determinatedMap.get(bond);
+			if (bondInfo)
+				bondOrder = bondInfo.bondOrder;
+			else if (undeterminatedBonds.indexOf(bond) < 0)  // bond outside this system
+				bondOrder = bond.getBondOrder();
+			if (OU.notUnset(bondOrder))
+				return bondOrder;
+			else
+				return null;
+		};
+		// function to return whether a bond is double or triple order
+		var isMultipleBond = function(bond)
+		{
+			var bondOrder = getBondOrder(bond);
+			if ((bondOrder > BO.SINGLE) && (bondOrder <= BO.QUAD))
+				return true;
+			else
+				return false;
+		};
+		// function to check if there is a double/triple bond connected to this connector
+		var hasMultibondNeighborConnector = function(bond)
+		{
+			var neighborBonds = bond.getNeighboringBonds();
+			for (var i = 0, l = neighborBonds.length; i < l; ++i)
+			{
+				var bond = neighborBonds[i];
+				if (isMultipleBond(bond))
+					return true;
+			}
+			return false;
+		};
+		// check if all bond orders are determinated or outside this calcuation system
+		var allBondsDeterminated = function(bonds)
+		{
+			var bondsInSys = AU.intersect(bonds, undeterminatedBonds);
+			var result = !bondsInSys || !bondsInSys.length;
+			if (!result)
+			{
+				result = true;
+				for (var i = 0, l = bondsInSys.length; i < l; ++i)
+				{
+					var b = bondsInSys[i];
+					if (!determinatedMap.get(b))  // this bond has not been calculated
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+			return result;
+		};
+		// function to returns the calculated pi electron count of a node before
+		var getNodeDeterminatedPiECount = function(node)
+		{
+			// check structure cache first
+			var cachedData = determinatedMap.get(node);
+			var result = cachedData && cachedData.cachedPiElectronCount;
+			// if not set, check if node connected with multiple bonds
+			if (OU.isUnset(result))
+			{
+				var linkedConns = node.getLinkedBonds(Kekule.BondType.COVALENT);
+				var isAllConnectorsDeterminated = allBondsDeterminated(linkedConns);
+				if (isAllConnectorsDeterminated)
+				{
+					var possiblePiECount = AU.toArray(self._getPossibleRingNodePiElectronCounts(node, null, null));
+					if (!possiblePiECount || !possiblePiECount.length || possiblePiECount[0] < 0)  // not a aromatic result
+						return -1;
+					else
+						return possiblePiECount[0];  // any positive value is ok
+				}
+
+				var multipleBondCount = 0, singleBondCount = 0;
+				for (var i = 0, l = linkedConns.length; i < l; ++i)
+				{
+					var conn = linkedConns[i];
+					var bondOrder = getBondOrder(conn);
+					if (OU.notUnset(bondOrder))
+					{
+						if (bondOrder === BO.DOUBLE || bondOrder === BO.TRIPLE || bondOrder === BO.QUAD)
+							++multipleBondCount;
+						else // if (bondOrder === BO.SINGLE)
+							++singleBondCount;
+					}
+					else
+					{
+						// can not determinate
+					}
+				}
+				// decide e count, or raise error according to bond situation
+				if (multipleBondCount)
+				{
+					if (multipleBondCount === 1)
+						result = 1;
+					else  // more than one multipleBond, error
+						result = -1;
+				}
+				else  // no multiple bond, unknown
+				{
+					/*
+					var isotope = node.getIsotope && node.getIsotope();
+					var isHetero = isotope.isHetero && isotope.isHetero();
+					*/
+				}
+			}
+			return result;
+		};
+		var connectedNodeHas2PiElectron = function(bond, nodes)
+		{
+			for (var i = 0, l = nodes.length; i < l; ++i)
+			{
+				var count = getNodeDeterminatedPiECount(nodes[i]);
+				if (OU.notUnset(count))
+				{
+					if (count >= 2)
+						return true;
+					else // if (count <= 1)
+						return false;
+				}
+			}
+			return null;  // undeterminated
+		};
+
+		var currBond = undeterminatedBonds[currBondIndex];
+		var currNodes = currBond.getConnectedChemNodes();
+		var possibleBondOrders = [];
+
+		if (!determinatedMap.get(currBond))  // this bond has not be determinated
+		{
+			if (hasMultibondNeighborConnector(currBond))  // has double/triple neighbor bond, this bond should always has single order
+			{
+				possibleBondOrders = [BO.SINGLE];
+			}
+			else  // neighbors are all single, may be double or single order (e.g., C-N in pyrrole)
+			{
+				var has2PiElectron = connectedNodeHas2PiElectron(currBond, currNodes);
+				if (has2PiElectron)
+					possibleBondOrders = [BO.SINGLE];
+				else if (has2PiElectron !== null)  // has2PiElectron === false, 1 pi e count
+					possibleBondOrders = [BO.DOUBLE];
+				else  // has2PiElectron === null, undeterminated
+				{
+					possibleBondOrders = [BO.DOUBLE, BO.SINGLE];
+				}
+			}
+
+			//console.log('possible bond order', possibleBondOrders, currNodes[0].getSymbol(), currNodes[1].getSymbol());
+			var result;
+			// try all possible bond orders
+			for (var i = 0, l = possibleBondOrders.length; i < l; ++i)
+			{
+				result = true;
+				//console.log('try', currBondIndex, i, [possibleBondOrders]);
+				var currBondOrder = possibleBondOrders[i];
+				determinatedMap.set(currBond, {'bondOrder': currBondOrder});
+				currBond.setBondOrder(currBondOrder);
+				// check curr node pi e count, to see if this setting has error
+				for (var j = 0, k = currNodes.length; j < k; ++j)
+				{
+					var node = currNodes[j];
+					if (getNodeDeterminatedPiECount(node) < 0)
+					{
+						result = false;
+						break;
+					}
+				}
+
+				//console.log('node check pass', i, result, currBondOrder, possibleBondOrders);
+				//alert('node check pass ' + i + ' ' + result);
+
+				if (result)  // node check passed
+				{
+					//console.log('True on', currBondIndex, currBond.getId(), currBondOrder);
+					// continue to determinate the rest bonds
+					if (currBondIndex < undeterminatedBonds.length - 1)
+					{
+						result = this._doKekulizeContinousBondSys(currBondIndex + 1, undeterminatedBonds, sysNodes, determinatedMap);
+						if (result)  // kekulize successful,returns
+							break;
+					}
+					else
+					{
+						result = true;
+						break;
+					}
+				}
+			}
+
+			if (!result)  // kekulize failed, maybe there is error in previous bond, rollback
+			{
+				//console.log('failed', currBondIndex);
+				currBond.setBondOrder(BO.EXPLICIT_AROMATIC);  // restore the bond order of curr bond
+				determinatedMap.remove(currBond);
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+
+	},
+	/** @private */
+	_splitConnectorsToContinuousParts: function(connectors)
+	{
+		if (!connectors || !connectors.length)
+			return null;
+
+		var _getNeighboringConnectorNet = function(startingConnector, remainingConnectors)
+		{
+			/*
+			if (traversedConnectors.indexOf(startingConnector) >= 0)
+				return [];
+			*/
+			var startingIndex = remainingConnectors.indexOf(startingConnector);
+			if (startingIndex < 0)
+				return [];
+			else
+				remainingConnectors.splice(startingIndex, 1);
+
+			var result = [startingConnector];
+			//traversedConnectors.push(startingConnector);
+			var neighbors = startingConnector.getNeighboringConnectors();
+			for (var i = 0, l = neighbors.length; i < l; ++i)
+			{
+				var neighbor = neighbors[i];
+				if (/*traversedConnectors.indexOf(neighbor) < 0 &&*/ remainingConnectors.indexOf(neighbor) >= 0)
+				{
+					// traversedConnectors.push(neighbor);
+					result = result.concat(_getNeighboringConnectorNet(neighbor, remainingConnectors));
+				}
+			}
+			return result;
+		};
+
+		var result = [];
+		var remainingConnectors = AU.clone(connectors);
+		while (remainingConnectors.length)
+		{
+			var startingConnector = remainingConnectors[0];
+			var neighborNet = _getNeighboringConnectorNet(startingConnector, remainingConnectors);
+			if (neighborNet && neighborNet.length)
+			{
+				result.push(neighborNet);
+			}
+		}
+		return result;
+	},
 });
 
 
