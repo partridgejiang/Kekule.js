@@ -659,6 +659,29 @@ Kekule.ArrayUtils = {
 		}
 		return result;
 	},
+
+	/**
+	 * Convert a nested array to one-dimension array.
+	 * @param {Array} src
+	 * @returns {Array}
+	 */
+	flatten: function(src)
+	{
+		var result = [];
+		for (var i = 0, l = src.length; i < l; ++i)
+		{
+			var child = src[i];
+			if (Kekule.ArrayUtils.isArray(child))
+			{
+				var flattened = Kekule.ArrayUtils.flatten(child);
+				result = result.concat(flattened);
+			}
+			else
+				result.push(child);
+		}
+		return result;
+	},
+
 	/**
 	 * Compare two arrays, from first to last items. If two items in each array is different,
 	 * the one with the smaller item will be regarded as smaller array.
@@ -3155,8 +3178,8 @@ Kekule.BoxUtils = {
 	getCenterCoord: function(box)
 	{
 		var result = {
-			'x': (box.x1 || 0 + box.x2 || 0) / 2,
-			'y': (box.y1 || 0 + box.y2 || 0) / 2
+			'x': ((box.x1 || 0) + (box.x2 || 0)) / 2,
+			'y': ((box.y1 || 0) + (box.y2 || 0)) / 2
 		};
 		if (Kekule.ObjUtils.notUnset(box.z1) || Kekule.ObjUtils.notUnset(box.z2))
 			result.z = (box.z1 || 0 + box.z2 || 0) / 2;

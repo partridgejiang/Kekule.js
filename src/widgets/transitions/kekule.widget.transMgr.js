@@ -22,7 +22,7 @@ var DataType = require('../../lan/classes').DataType
 module.exports = function(Kekule){
 
 /** @ignore */
-const SU = Kekule.StyleUtils;
+var SU = Kekule.StyleUtils;
 
 /**
  * A singleton class to manage some global behavior of widgets show/hide process (especially with transitions).
