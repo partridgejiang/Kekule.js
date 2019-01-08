@@ -137,6 +137,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 
 			if (!isSaturated)  // check if the multiple bond is on ring or outside ring
 			{
+				var baseECount;
 				var multipleBonds = node.getLinkedMultipleBonds();
 				if (node.isSulfoneOrSulfoxideSulphur && node.isSulfoneOrSulfoxideSulphur())
 					return PElectronCountMarkers.SULFONE_OR_SULFOXIDE_SULPHUR;
@@ -160,17 +161,17 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 					{
 						if (isotope.isHetero && isotope.isHetero())  // hetero atom on aromatic bond may provide 1 or 2 e
 						{
-							return [1, 2];
+							baseECount = [1, 2];
 						}
 						else  // C
-							return 1;
+							baseECount = 1;
 					}
 					else if ((multipleBondOnRingCount === 1) && (multipleBondsOnRing && multipleBondsOnRing[0].getBondOrder() === Kekule.BondOrder.DOUBLE))
-						return 1;
+						baseECount = 1;
 					else if ((multipleBondOnRingCount === 1) && !multipleBondsOnRing)   // receive special flag
-						return 1;
+						baseECount = 1;
 					else
-						return -1;  //0;  // C=C=C or triple bond has no aromatic
+						return -1;  //0;  // C=C=C or triple bond has no aromatic, returns directly
 				}
 				else  // multiple bond outside ring
 				{
@@ -193,20 +194,34 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 							}
 						}
 						if (hasHetero)  // C=O/N/S/P, C has no p electron
-							return 0;
+							baseECount = 0;
 						else
-							return 1;
+							baseECount = 1;
 					}
 					else
-						return 1;
+						baseECount = 1;
 				}
+				// adjust with charge
+				if (AU.isArray(baseECount))
+				{
+					for (var i = 0, l = baseECount.length; i < l; ++i)
+					{
+						baseECount[i] = Math.min(Math.max(baseECount[i] - charge, 0), 2);
+					}
+					return baseECount;
+				}
+				else
+					return Math.min(Math.max(baseECount - charge, 0), 2);  // C=C(+), C+ has 0 pi e.
 			}
 			else // saturated
 			{
 				if (node.getRadical && (node.getRadical() === Kekule.RadicalOrder.DOUBLET))
 					return 1;
 				else if (isotope.isHetero())  // saturated N/S/P/O..., pX2
-					return 2;
+				{
+					//return 2;
+					return Math.min(Math.max(2 - charge, 0), 2);
+				}
 				else if (symbol === 'C')
 				{
 					if (charge > 0)  // +1
