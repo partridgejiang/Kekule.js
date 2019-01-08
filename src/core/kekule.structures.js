@@ -5823,6 +5823,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Create a shadow fragment of this one.
+	 * @returns {@link Kekule.StructureFragmentShadow}
+	 */
+	createShadow: function()
+	{
+		var result = new Kekule.StructureFragmentShadow(this);
+		this._copyAdditionalInfoToShadowFragment(result, result.getSourceToShadowMap(), result.getShadowToSourceMap());
+		return result;
+	},
+
+	/**
 	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
 	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
 	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
