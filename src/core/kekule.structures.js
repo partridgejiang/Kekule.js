@@ -156,7 +156,10 @@ Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions
  * @property {Array} linkedSiblings Sibling objects connected with this one through linkedConnectors. Read only.
  *   Note: if there are sub structures (subgroups) in connection table, and a object is linked with a inside object inside subgroup,
  *   linkedSiblings will returns the subgroup rather than the inside object.
- * @property {Hash} structureCache Cached complex structure data, e.g. ring info. The cache will be automatically cleared when the structure is changed.
+ * @property {Hash} structureCache Cached complex structure data, e.g. ring info.
+ *   The cache will be automatically cleared when the structure is changed unless property (@link Kekule.ChemStructureObject.autoClearStructureCache} is false.
+ * @property {Bool} autoClearStructureCache Default is true, automatically clear structure cache data when structure object is changed.
+ *   Note: this property is not serializable and should be set manually.
  */
 /**
  * Invoked when object is changed and the change is related with structure
@@ -170,6 +173,12 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructureObject',
+	/** @constructs */
+	initialize: function($super, id)
+	{
+		this.setPropStoreFieldValue('autoClearStructureCache', true);
+		$super(id);
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -255,6 +264,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 				return result;
 			}
 		});
+		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -388,8 +398,18 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	 */
 	clearStructureCache: function()
 	{
+		//console.log('clear cache', this.getClassName());
 		this.setPropStoreFieldValue('structureCache', null);
 		return this;
+	},
+	/**
+	 * Check if structure cache of current object should be cleared when the structure is changed.
+	 * It will returns false if autoClearStructureCache property of this object (or its parent) is false.
+	 */
+	needAutoClearStructureCache: function()
+	{
+		var p = this.getParent();
+		return this.getAutoClearStructureCache() && (!p || (p.needAutoClearStructureCache && p.needAutoClearStructureCache()));
 	},
 
 	/** @private */
@@ -626,8 +646,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	structureChange: function(originObj)
 	{
 		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
-		this.clearStructureFlags();
-		this.clearStructureCache();
+		if (this.needAutoClearStructureCache())
+		{
+			this.clearStructureFlags();
+			this.clearStructureCache();
+		}
 		this.invokeEvent('structureChange', {'origin': originObj || this});
 	},
 	/**
@@ -2574,7 +2597,10 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 */
 	setStructureCacheData: function(key, value)
 	{
-		this.getStructureCache(true)[key] = value;
+		//this.getStructureCache(true)[key] = value;
+		var p = this.getParent();
+		if (p && p.setStructureCacheData)
+			p.setStructureCacheData(key, value);
 		return this;
 	},
 	/**
@@ -5829,7 +5855,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	createShadow: function()
 	{
 		var result = new Kekule.StructureFragmentShadow(this);
-		this._copyAdditionalInfoToShadowFragment(result, result.getSourceToShadowMap(), result.getShadowToSourceMap());
+		this._copyAdditionalInfoToShadowFragment(result.getShadowFragment(), result.getSourceToShadowMap(), result.getShadowToSourceMap());
 		return result;
 	},
 
