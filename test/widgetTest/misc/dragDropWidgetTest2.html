@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DragDrop Widget Test 2</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+  <style>
+    .Region
+    {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+    }
+  </style>
+  <script>
+    function reactWidgetDrop(e)
+    {
+	    console.log('drop', e);
+      var panel = e.widget;
+      var srcWidget = e.srcWidget;
+      if (srcWidget)
+      {
+        if (srcWidget.getParent() !== panel)
+          srcWidget.appendToWidget(panel);
+      }
+    }
+    Kekule.X.domReady(function(){
+      Kekule.Widget.getWidgetById('panel1').on('dragDrop', reactWidgetDrop);
+      Kekule.Widget.getWidgetById('panel2').on('dragDrop', reactWidgetDrop);
+    });
+  </script>
+</head>
+<body>
+  <div id="panel1" data-widget="Kekule.Widget.Panel" data-droppable="true">
+    <p>Panel 1</p>
+    <a href='#' data-widget="Kekule.Widget.Button" data-text="Button 1" data-draggable="true"></a>
+    <a href='#' data-widget="Kekule.Widget.Button" data-text="Button 2" data-draggable="true"></a>
+    <a href='#' data-widget="Kekule.Widget.Button" data-text="Button 3" data-draggable="true"></a>
+    <a href='#' data-widget="Kekule.Widget.Button" data-text="Button 4" data-draggable="true"></a>
+  </div>
+  <div id="panel2" data-widget="Kekule.Widget.Panel" data-droppable="true">
+    <p>Panel 2</p>
+  </div>
+</body>
+</html>

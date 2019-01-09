@@ -4706,10 +4706,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							// to prove out the structure of the item, and at this point we've already
 							// tested the hydrogen decorations
                             if (hydrogen_display_type !== 'BONDED') {
-                                this.sanitizeHydrogenNodes();
-                                targetObj.sanitizeHydrogenNodes();
+                            	if (hydrogen_display_type === 'EXPLICIT') {
+                                    this.sanitizeHydrogenNodes();
+                                    targetObj.sanitizeHydrogenNodes();
+								}
+                                Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
                                 Kekule.MolStandardizer.standardize(this);
                                 Kekule.MolStandardizer.standardize(targetObj);
+                                Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = false;
                             }
 
 							var nodes1 = this.getNonHydrogenNodes();
@@ -4756,7 +4760,10 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						{
 							for (var i = 0, l = connectors1.length; i < l; ++i)
 							{
+                                options.doStandardize = true;
+                                // Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
 								result = this.doCompareOnValue(connectors1[i], connectors2[i], options);
+                                // Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = false;
 								if (result !== 0)
 								break;
 								else
@@ -4815,31 +4822,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	sanitizeHydrogenNodes: function()
 	{
-		var nodes = this.getNonHydrogenNodes();
-		for (var i = 0, l = nodes.length; i < l; ++i)
-		{
-			var nonHydrogenOnlyConnectors = nodes[i].getLinkedConnectors().filter((connector) => {
-				var connectedObjs = connector.getConnectedObjs();
-				return connectedObjs[0].getIsotopeId() !== "H" && connectedObjs[1].getIsotopeId() !== "H";
-			});
-			
-			nodes[i].setLinkedConnectors(nonHydrogenOnlyConnectors);
-		}
+		var nodes = this.getNodes();
 		var resultNodes = [];
 			nodes.forEach((node) => {
-				node.setExplicitHydrogenCount(0);
+				if (node.setExplicitHydrogenCount) {
+                    node.setExplicitHydrogenCount(0);
+				}
 				resultNodes.push(node);
 			})
 		this.setNodes(resultNodes);
-		
-		var resultConnectors = [];
-		for (var i = 0, l = this.getConnectorCount(); i < l; ++i)
-		{
-			var conn = this.getConnectorAt(i);
-			if (!conn.isNormalConnectorToHydrogen || !conn.isNormalConnectorToHydrogen())
-			resultConnectors.push(conn);
-		}
-		this.setConnectors(resultConnectors);
 	},
 
 	/** @ignore */
@@ -5841,6 +5832,46 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			}
 		}
 
+		return this;
+	},
+
+	/**
+	 * Removes all explicit hydrogen atoms and related bonds from this structure.
+	 */
+	clearExplicitHydrogens: function()
+	{
+		var self = this;
+		var delNodeWithConnectors = function(node, index)
+		{
+			var conns = node.getLinkedConnectors();
+			for (var i = conns.length; i >= 0; --i)
+			{
+				var conn = conns[i];
+				if (self.hasConnector(conn, true))
+					self.removeConnector(conn, false);
+			}
+			self.removeNodeAt(index, false);
+		};
+
+		var nodeCount = this.getNodeCount();
+		for (var i = nodeCount - 1; i >= 0; --i)
+		{
+			var node = this.getNodeAt(i);
+			if (node instanceof Kekule.ChemStructureNode)
+			{
+				if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+				{
+					node.clearExplicitHydrogens();
+					if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
+						delNodeWithConnectors(node, i);
+				}
+				else
+				{
+					if (node.isHydrogenAtom())
+						delNodeWithConnectors(node, i);
+				}
+			}
+		}
 		return this;
 	},
 
