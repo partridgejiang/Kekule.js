@@ -299,7 +299,41 @@
     {
 	    var mol = getTargetObj();
 	    if (mol)
-	    	mol.hucklize();
+	    {
+		    var targetBonds = [];
+		    var selection = composer.getSelection();
+		    if (selection)
+		    {
+			    for (var i = 0, l = selection.length; i < l; ++i)
+			    {
+				    if (selection[i] instanceof Kekule.Bond)
+					    targetBonds.push(selection[i]);
+			    }
+		    }
+		    if (!targetBonds.length)
+			    targetBonds = null;
+		    mol.hucklize(targetBonds, {allowUncertainRings: !true});
+	    }
+    }
+    function kekulize()
+    {
+	    var mol = getTargetObj();
+	    if (mol)
+	    {
+	    	var targetBonds = [];
+	    	var selection = composer.getSelection();
+	    	if (selection)
+        {
+        	for (var i = 0, l = selection.length; i < l; ++i)
+          {
+          	if (selection[i] instanceof Kekule.Bond)
+          		targetBonds.push(selection[i]);
+          }
+        }
+	    	if (!targetBonds.length)
+	    		targetBonds = null;
+		    mol.kekulize(targetBonds);
+	    }
     }
 
     var composer;
@@ -316,6 +350,8 @@
       btn.addEventListener('execute', findAromaticRings);
 	    var btn = Kekule.Widget.getWidgetById('btnHucklize');
 	    btn.addEventListener('execute', hucklize);
+	    var btn = Kekule.Widget.getWidgetById('btnKekulize');
+	    btn.addEventListener('execute', kekulize);
 
       composer = Kekule.Widget.getWidgetById('composerMol');
       composer.addEventListener('load', clearResult);
@@ -339,6 +375,7 @@
       <button id="btnFindSssrRings" data-widget="Kekule.Widget.Button">Find SSSR Rings</button>
       <button id="btnFindAromaticRings" data-widget="Kekule.Widget.Button">Find Aromatic Rings</button>
       <button id="btnHucklize" data-widget="Kekule.Widget.Button">Hucklize</button>
+      <button id="btnKekulize" data-widget="Kekule.Widget.Button">Kekulize</button>
     </div>
     <div id="resultContainer">
       <div id="resultSummary"></div>
