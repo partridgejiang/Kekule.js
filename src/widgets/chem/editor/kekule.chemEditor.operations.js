@@ -943,13 +943,10 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 				}
 			}
 
-			if (fromNode instanceof Kekule.ChemMarker.UnbondedElectronSet) {
-				var parentNode = fromNode.getParent();
-				parentNode.removeMarker(fromNode);
-			}  else {
-				structFragment.removeNode(fromNode);
-			}
-		}
+		this._removeNodeOperation = new Kekule.ChemStructOperation.RemoveNode(fromNode, null, null, editor);
+		this._removeNodeOperation.execute();
+	}
+
 		finally
 		{
 			structFragment.endUpdate();
