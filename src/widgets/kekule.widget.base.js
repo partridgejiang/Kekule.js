@@ -213,6 +213,14 @@ Kekule.Widget.ShowHideType = {
 };
 
 /**
+ * Stores related consts of drag and drop methods
+ * @object
+ */
+Kekule.Widget.DragDrop = {
+	ELEM_INDEX_DATA_TYPE: 'application/x-kekule-dragdrop-elem-index'
+};
+
+/**
  * A series of interactive events that may be handled by widget.
  * @ignore
  */
@@ -220,7 +228,8 @@ Kekule.Widget.UiEvents = [
 	/*'blur', 'focus',*/ 'click', 'dblclick', 'mousedown',/*'mouseenter', 'mouseleave',*/ 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'mousewheel',
 	'keydown', 'keyup', 'keypress',
 	'touchstart', 'touchend', 'touchcancel', 'touchmove',
-	'pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'
+	'pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup',
+	'drag', 'dragend', 'dragenter', 'dragexit', 'dragleave', 'dragover', 'dragstart', 'drop'
 ];
 /**
  * A series of interactive events that must be listened on local element.
@@ -314,6 +323,14 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Bool} inheritState If set to true, widget will has the same state value of parent.
  * @property {String} hint Hint of widget, actually mapping to title attribute of HTML element.
  * @property {String} cursor CSS cusor property for widget.
+ *
+ * @property {Bool} draggable Whether this widget is draggable, mapping to HTML draggable attribute.
+ * @property {Bool} droppable Whether this widget is a target of drag-drop.
+ * @property {Array} droppableDataKinds The data kinds that accepted by this widget in drag-drop. Array of strings.
+ *   Default is null, means accept all kinds.
+ * @property {Bool} fileDroppable Whether external local files can be dropped to this widget.
+ *   Same as droppableDataKinds.indexOf('file') >= 0.
+ *
  * @property {Kekule.Action} action Action associated with widget. Excute the widget will invoke that action.
  * @property {Bool} enablePeriodicalExec If this property is true, the execute event will be invoked repeatly between startPeriodicalExec and stopPeriodicalExec methods.
  *   (for instance, mousedown on button).
@@ -376,6 +393,36 @@ var widgetBindingField = '__$kekule_widget__';
  * @name Kekule.Widget.BaseWidget#resize
  * @event
  */
+/**
+ * Invoked when a widget is being dragged.
+ *   event param of it has field: {widget, srcElem, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragStart
+ * @event
+ */
+/**
+ * Invoked when dragging of this widget is ended.
+ *   event param of it has field: {widget, srcElem, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragEnd
+ * @event
+ */
+/**
+ * Invoked when object are dragging over this widget.
+ *   event param of it has field: {widget, srcElem, srcWidget, srcFiles, dataTransfer, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragOver
+ * @event
+ */
+/**
+ * Invoked when the dragging is leaving off this widget.
+ *   event param of it has field: {widget, srcElem, srcWidget, srcFiles, dataTransfer, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragLeave
+ * @event
+ */
+/**
+ * Invoked when object are dropping on this widget.
+ *   event param of it has field: {widget, srcElem, srcWidget, srcFles, dataTransfer, htmlEvent}
+ * @name Kekule.Widget.BaseWidget#dragDrop
+ * @event
+ */
 Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 /** @lends Kekule.Widget.BaseWidget# */
 {
@@ -407,6 +454,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
 		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none disable default touch actions
+		this.setPropStoreFieldValue('droppableDataKinds', ['string']);  // defaultly disallow file drop
 
 		this._touchActionNoneTouchStartHandlerBind = this._touchActionNoneTouchStartHandler.bind(this);
 
@@ -445,7 +493,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		if (!this.getLayout())
 			this.setLayout(Kekule.Widget.Layout.HORIZONTAL);
-		this.setDraggable(false);
+		//this.setDraggable(false);
 
 		this._periodicalExecBind = this._periodicalExec.bind(this);
 
@@ -558,7 +606,46 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		});
 
 		this.defineElemAttribMappingProp('id', 'id');
-		this.defineElemAttribMappingProp('draggable', 'draggable');
+		//this.defineElemAttribMappingProp('draggable', 'draggable');
+		this.defineProp('draggable', {'dataType': DataType.BOOL, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return Kekule.StrUtils.strToBool(this.getElement().getAttribute('draggable') || ''); },
+			'setter': function(value) { this.getElement().setAttribute('draggable', value? 'true': 'false')}
+		});
+		this.defineProp('droppable', {'dataType': DataType.BOOL, //'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+		this.defineProp('droppableDataKinds', {'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+		this.defineProp('fileDroppable', {'dataType': DataType.ARRAY, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() {
+				if (!this.getDroppable())
+					return false;
+				var kinds = this.getDroppableDataKinds();
+				return !kinds || (kinds && kinds.indexOf && kinds.indexOf('file') >= 0);
+			},
+			'setter': function(value) {
+				if (value && !this.getDroppable())
+					this.setDroppable(true);
+
+				var kinds = this.getPropStoreFieldValue('droppableDataKinds');
+				if (!kinds)
+				{
+					if (!value)
+						this.setDroppableDataKinds(['string']);
+				}
+				else
+				{
+					var index = kinds.indexOf('file');
+					if (!value && index >= 0)  // remove file from kinds
+						kinds.splice(index, 1);
+					else if (value && index < 0)  // add file to kinds
+						kinds.push('file');
+				}
+			}
+		});
 
 		this.defineElemStyleMappingProp('width', 'width');
 		this.defineElemStyleMappingProp('height', 'height');
@@ -3269,13 +3356,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
-	/** @private */
-	observingGestureEventsChanged: function(eventNames)
-	{
-		if (enabled)
-			this.installHammerTouchHandlers();
-	},
-
 	/**
 	 * React to active event (mouse down, enter key down and so on).
 	 * @param {Event} e
@@ -3445,6 +3525,242 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		return gm.getMouseCaptureWidget() === this;
 	},
 
+	// methods about drag and drop
+	/** @private */
+	_filterDraggedDataItemByKinds: function(dataTransfer, acceptedKinds)
+	{
+		if (dataTransfer.items)
+		{
+			var result = [];
+			//var acceptedKinds = this.getDroppableDataKinds();
+			for (var i = 0, l = dataTransfer.items.length; i < l; ++i)
+			{
+				var item = dataTransfer.items[i];
+				if (acceptedKinds.indexOf(item.kind) >= 0)
+					result.push(item);
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Called when this widget has been started dragging.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field: {dataTransfer: DataTransfer, startingElem: HTMLElement}.
+	 * @returns {Bool} Returns false if this widget is not draggable.
+	 */
+	dragStart: function(details)
+	{
+		if (this.getDraggable())
+		{
+			var result = this.doDragStart(details);
+			this.invokeEvent('dragStart', {'widget': this, 'dataTransfer': details.dataTransfer, 'startingElem': details.targetElem});
+			return result;
+		}
+		else
+			return false;
+	},
+	/**
+	 * Do actual work of method dragStart.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field: {dataTransfer: DataTransfer, startingElem: HTMLElement}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doDragStart: function(dataTransfer, startingElem)
+	{
+		// do nothing here
+		return true;
+	},
+		/**
+	 * Called when the dragging is ended.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 */
+	dragEnd: function(details)
+	{
+		var result = this.doDragEnd(details);
+		this.invokeEvent('dragEnd',
+			{'widget': this, 'dataTransfer': details.dataTransfer, 'startingElem': details.targetElem});
+		return result;
+	},
+	/**
+	 * Do actual work of method dragEnd.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @private
+	 */
+	doDragEnd: function(details)
+	{
+		// do nothing here
+	},
+	/**
+	 * A test method to determinate whether the dragging src can be dropped in this widget.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 */
+	acceptDragSrc: function(details)
+	{
+		if (this.getDroppable())
+		{
+			var result = true;
+
+			// evoke event to query
+			var evArg = {'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files};
+			this.invokeEvent('dragAcceptQuery',	evArg);
+
+			if (Kekule.ObjUtils.notUnset(evArg.result))  // user evoke returns the result, follows it
+			{
+				result = evArg.result;
+				return result;
+			}
+			else
+			{
+				var acceptedKinds = this.getDroppableDataKinds();
+				if (acceptedKinds)
+				{
+					if (details.dataTransfer.items)
+					{
+						var acceptedItems = this._filterDraggedDataItemByKinds(details.dataTransfer, acceptedKinds);
+						result = !!acceptedItems.length;
+					}
+					else // another way to check if files drags in
+					{
+						if (acceptedKinds.indexOf('file') >=0 && details.dataTransfer.files && details.dataTransfer.files.length)
+							result = true;
+					}
+				}
+
+				return result && this.doAcceptDragSrc(details);
+			}
+		}
+		else
+			return false;
+	},
+	/**
+	 * Do actual test of method acceptDragSrc.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doAcceptDragSrc: function(details)
+	{
+		return true;  // accept all by default
+	},
+	/**
+	 * Called when source objects is dragging over this widget.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool} Returns false if this widget is not draggable or not accepting src objects.
+	 */
+	dragOver: function(details)
+	{
+		if (this.getDroppable() && this.acceptDragSrc(details))
+		{
+			//console.log('drag over on', details.htmlEvent);
+			var result = this.doDragOver(details);
+			this.invokeEvent('dragOver',
+					{'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files});
+			return result;
+		}
+		else
+			return false;
+	},
+	/**
+	 * Do actual work of method dragOver.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doDragOver: function(details)
+	{
+		return true;
+	},
+	/**
+	 * Called when source objects is dragging out of this widget.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 */
+	dragLeave: function(details)
+	{
+		var result = this.doDragLeave(details);
+		this.invokeEvent('dragLeave',
+			{'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files});
+		return result
+	},
+	/**
+	 * Do actual work of method dragLeave.
+	 * Descendants may override this method to do some concrete work.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doDragLeave: function(details)
+	{
+		// do nothing here
+	},
+
+	/**
+	 * Called when source objects is dropped on this widget.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool} Returns true if this widget has already handled the drop action and the default behavior should not be performed.
+	 */
+	dragDrop: function(details)
+	{
+		if (this.getDroppable() && this.acceptDragSrc(details))
+		{
+			var result = this.doDragDrop(details);
+			// check if files drops in
+			var acceptedKinds = this.getDroppableDataKinds();
+			if (!acceptedKinds || acceptedKinds.indexOf('file') >= 0)
+			{
+				var files = details.dataTransfer.files;
+				if (files && files.length)
+				{
+					result = result || this.doFileDragDrop(files);
+				}
+			}
+
+			var evArg = {'widget': this, 'htmlEvent': details.htmlEvent, 'dataTransfer': details.dataTransfer, 'srcElem': details.srcElem, 'srcWidget': details.srcWidget, 'srcFiles': details.dataTransfer && details.dataTransfer.files};
+			this.invokeEvent('dragDrop', evArg);
+			return result || evArg._preventDefault;  // event handler can done the drop job
+		}
+		else
+			return false;
+	},
+	/**
+	 * Do actual work of method dragDrop.
+	 * Descendants may override this method to do so me concrete work.
+	 * @param {Hash} details Detail object of drag, including field:
+	 *   {htmlEvent: HTMLEvent, dataTransfer: DataTransfer, startingElem: HTMLElement, srcWidget: Kekule.Widget.BaseWidget}.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doDragDrop: function(details)
+	{
+		return false;   // do nothing here
+	},
+	/**
+	 * Called when local files are dropped into this widget.
+	 * Desendants can override this method to do some concrete work.
+	 * @param {Array} files
+	 * @returns {Bool}
+	 * @private
+	 */
+	doFileDragDrop: function(files)
+	{
+		return !false;  // do nothing here
+	},
+
+	// methods about IA controller
 	/**
 	 * Link a controller with this component.
 	 * @param {String} id Unique id of controller
@@ -3761,7 +4077,7 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 			'getter': function()
 			{
 				var c = this.getTargetWidgetClass();
-				var result = c? ClassEx.getClassName(C): this.getPropStoreFieldValue('targetWidgetClassName');
+				var result = c? ClassEx.getClassName(c): this.getPropStoreFieldValue('targetWidgetClassName');
 				return result;
 			},
 			'setter': function(value)
@@ -4087,7 +4403,7 @@ Kekule.Widget.Utils = {
 				var value = JSON.parse(attribValue);
 				if (Kekule.ObjUtils.notUnset(value))
 				{
-					var obj = ObjSerializerFactory.getSerializer('json').load(null, value);
+					var obj = Class.ObjSerializerFactory.getSerializer('json').load(null, value);
 					widget.setPropValue(propName, obj);
 				}
 			}
@@ -4193,6 +4509,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('modalWidgets', []);
 		this.setPropStoreFieldValue('autoResizeWidgets', []);
 		this.setPropStoreFieldValue('widgets', []);
+		this.setPropStoreFieldValue('draggingElems', []);
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
 		this.setPropStoreFieldValue('enableHammerGesture', !true);
@@ -4224,6 +4541,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
+		this.setPropStoreFieldValue('draggingElems', null);
 		$super();
 	},
 	/** @private */
@@ -4234,6 +4552,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('dialogWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('modalWidgets', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('autoResizeWidgets', {'dataType': DataType.ARRAY, 'serializable': false}); // widgets resize itself when client size changing
+		this.defineProp('draggingElems', {'dataType': DataType.ARRAY, 'serializable': false}); // elements related to drag and drop
 		this.defineProp('preserveWidgetList', {'dataType': DataType.BOOL, 'serializable': false,
 			'setter': function(value)
 			{
@@ -4248,6 +4567,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+
 
 		this.defineProp('modalBackgroundElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
@@ -4974,6 +5294,171 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			var elem = e.getTarget();
 			this.hidePopupWidgets(elem);
 		}
+	},
+
+	/** @private */
+	react_dragstart: function(e)
+	{
+		this._clearDraggingElems();
+		var targetElem = e.getTarget();
+		if (targetElem)
+		{
+			if (e.dataTransfer)
+			{
+				var index = this._appendDraggingElem(targetElem);
+				// save this index to e.dataTransfer for retrieving this elem later
+				if (e.dataTransfer.setData)
+				{
+					try
+					{
+						e.dataTransfer.setData(Kekule.Widget.DragDrop.ELEM_INDEX_DATA_TYPE, '' + index);  // IE only allows setData('Text', data), so a different type may raise error
+					}
+					catch (e)
+					{}
+				}
+				var widget = Kekule.Widget.getBelongedWidget(targetElem);   // drag a widget
+				if (widget)
+				{
+					widget.dragStart({'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'startingElem': targetElem});  // notify the widget itself has been dragged
+				}
+			}
+		}
+	},
+	/** @private */
+	react_dragend: function(e)
+	{
+		var targetElem = e.getTarget();
+		if (targetElem)
+		{
+			var widget = Kekule.Widget.getBelongedWidget(targetElem);   // drag a widget
+			if (widget)
+			{
+				widget.dragEnd({'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'startingElem': targetElem});  // notify the widget
+			}
+		}
+		this._dragDone(e);
+	},
+	/** @private */
+	react_dragover: function(e)
+	{
+		var elem = e.getTarget();
+		var widget = this._getNearestDragDropDestWidget(Kekule.Widget.getBelongedWidget(elem));
+		if (widget && widget.getDroppable() && e.dataTransfer)  // is available drop target
+		{
+			var transferDetails = this._getElemAndWidgetInDraggingTransfer(e.dataTransfer);
+			var dragDetails = {'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'srcElem': transferDetails.elem, 'srcWidget': transferDetails.widget};
+			if (widget.acceptDragSrc(dragDetails))
+			{
+				e.preventDefault();
+				widget.dragOver(dragDetails);
+			}
+		}
+	},
+	/** @private */
+	react_dragleave: function(e)
+	{
+		var elem = e.getTarget();
+		var widget = this._getNearestDragDropDestWidget(Kekule.Widget.getBelongedWidget(elem));
+		if (widget && widget.getDroppable() && e.dataTransfer)  // is available drop target
+		{
+			var transferDetails = this._getElemAndWidgetInDraggingTransfer(e.dataTransfer);
+			var dragDetails = {'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'srcElem': transferDetails.elem, 'srcWidget': transferDetails.widget};
+			if (widget.acceptDragSrc(dragDetails))
+			{
+				widget.dragLeave(dragDetails);
+			}
+		}
+	},
+	/** @private */
+	react_drop: function(e)
+	{
+		var elem = e.getTarget();
+		var widget = this._getNearestDragDropDestWidget(Kekule.Widget.getBelongedWidget(elem));
+		if (widget && widget.getDroppable())  // is available drop target
+		{
+			// drop done
+			var transferDetails = this._getElemAndWidgetInDraggingTransfer(e.dataTransfer);
+			var dragDetails = {'htmlEvent': e, 'dataTransfer': e.dataTransfer, 'srcElem': transferDetails.elem, 'srcWidget': transferDetails.widget}
+			if (widget.acceptDragSrc(dragDetails))
+			{
+				if (widget.dragDrop(dragDetails))
+				{
+					e.preventDefault();
+				}
+			}
+		}
+		this._dragDone(e);
+	},
+	/** @private */
+	_dragDone: function(e)
+	{
+		this._clearDraggingElems();
+		var dataTransfer = e.dataTransfer;
+		if (dataTransfer)
+		{
+			if (dataTransfer.items)
+			{
+				// Use DataTransferItemList interface to remove the drag data
+				dataTransfer.items.clear();
+			}
+			else
+			{
+				// Use DataTransfer interface to remove the drag data
+				dataTransfer.clearData();
+			}
+		}
+	},
+	/** @private */
+	_getNearestDragDropDestWidget: function(currWidget)
+	{
+		if (!currWidget)
+			return null;
+		if (currWidget.getDroppable())  // is available drop target
+			return currWidget;
+		else
+		{
+			var parent = currWidget.getParent();
+			return parent && this._getNearestDragDropDestWidget(parent);
+		}
+	},
+	/** @private */
+	_getElemAndWidgetInDraggingTransfer: function(dataTransfer)
+	{
+		var elem, widget;
+		if (dataTransfer.getData)
+		{
+			try  // IE only allows getData('Text', data), so a different type may raise error
+			{
+				var sIndex = dataTransfer.getData(Kekule.Widget.DragDrop.ELEM_INDEX_DATA_TYPE);
+				if (Kekule.ObjUtils.notUnset(sIndex))
+				{
+					var index = parseInt(sIndex) || 0;
+					elem = this.getDraggingElems()[index];
+				}
+			}
+			catch(e)
+			{
+				// maybe IE
+				var elems = this.getDraggingElems();
+				if (elems && elems.length === 1)
+					elem = elems[0];
+			}
+			if (elem)
+				widget = Kekule.Widget.getBelongedWidget(elem);
+		}
+		return {'elem': elem, 'widget': widget};
+	},
+	/** @private */
+	_clearDraggingElems: function()
+	{
+		this.setPropStoreFieldValue('draggingElems', []);
+	},
+	/** @private */
+	_appendDraggingElem: function(elem)
+	{
+		var elems = this.getDraggingElems();
+		elems.push(elem);
+		return elems.length - 1;
 	},
 
 	// methods about popups

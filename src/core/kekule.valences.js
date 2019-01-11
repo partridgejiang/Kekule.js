@@ -421,7 +421,7 @@ Kekule.ValenceUtils = {
 		
 	  var impval = 0;
 	  if (elem == 6) { // C
-	    impval = 4 - abs(q);
+	    impval = 4 - Math.abs(q);
 	  } else if (elem == 7 || elem == 15) { // N or P
 	    impval = 3 + q;
 	  } else if (elem == 8 || elem == 16) { // O or S

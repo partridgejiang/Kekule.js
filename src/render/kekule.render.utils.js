@@ -1023,6 +1023,7 @@ Kekule.Render.TextDrawUtils = {
 	 */
 	getActualDirection: function(direction, parentDirection)
 	{
+		var TD = Kekule.Render.TextDirection;
 		if (direction === TD.LINE_BREAK)
 		{
 			return ((parentDirection === TD.TTB) || (parentDirection === TD.BTT))? TD.LTR:
@@ -1568,8 +1569,8 @@ Kekule.Render.MetaShapeUtils = {
 			for (var i = 0, l = rs.length; i <l; ++i)
 			{
 				var r = rs[i];
-				var startCoord = CU.add(centerCoord, {'x': r * Math.cos(startAngle), 'y': r * Math.sin(startAngle)});
-				var endCoord = CU.add(centerCoord, {'x': r * Math.cos(endAngle), 'y': r * Math.sin(endAngle)});
+				var startCoord = C.add(centerCoord, {'x': r * Math.cos(startAngle), 'y': r * Math.sin(startAngle)});
+				var endCoord = C.add(centerCoord, {'x': r * Math.cos(endAngle), 'y': r * Math.sin(endAngle)});
 				testPoints.push(startCoord);
 				testPoints.push(endCoord);
 			}
@@ -2132,6 +2133,7 @@ Kekule.Render.MetaShapeUtils = {
 	 */
 	isIntersectingBox: function(shapeInfo, box)
 	{
+		var U = Kekule.Render.MetaShapeUtils;
 		if (U.isCompositeShape(shapeInfo))
 		{
 			for (var i = 0, l = shapeInfo.length; i < l; ++i)
@@ -2437,7 +2439,7 @@ Kekule.Render.RenderOptionUtils = {
 	 */
 	getConnectorRenderType: function(renderOptions)
 	{
-		return renderOptions? renderOption.renderType: null;
+		return renderOptions? renderOptions.renderType: null;
 	},
 	/**
 	 * Retrieve params for drawing connectors.

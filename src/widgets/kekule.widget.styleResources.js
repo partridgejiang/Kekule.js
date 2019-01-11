@@ -144,6 +144,7 @@ Kekule.Widget.StyleResourceNames = {
 	/* Dialog buttons */
 	BUTTON_YES_OK: '$$btn_yes_ok',
 	BUTTON_NO_CANCEL: '$$btn_no_cancel',
+	BUTTON_RESET: '$$btn_reset',
 	BUTTON_LOAD_FILE: '$$btn_load_file',
 	/* Misc icons */
 	ICON_REMOVE: '$$icon_remove'
@@ -164,6 +165,7 @@ RM.register(new SR(SRN.ICON_COLOR_NOTSET, 'K-Res-Icon-Color-NotSet'));
 RM.register(new SR(SRN.ICON_COLOR_MIXED, 'K-Res-Icon-Color-Mixed'));
 RM.register(new SR(SRN.BUTTON_YES_OK, 'K-Res-Button-YesOk'));
 RM.register(new SR(SRN.BUTTON_NO_CANCEL, 'K-Res-Button-NoCancel'));
+RM.register(new SR(SRN.BUTTON_RESET, 'K-Res-Button-Reset'));
 RM.register(new SR(SRN.BUTTON_LOAD_FILE, 'K-Res-Button-LoadFile'));
 RM.register(new SR(SRN.ICON_REMOVE, 'K-Res-Icon-Remove'));
 

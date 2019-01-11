@@ -92,6 +92,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		});
 		this.defineProp('allowCreateNewChild', {'dataType': DataType.BOOL});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setFileDroppable(true);  // defaultly turn on file drop function
+	},
 
 	/**
 	 * Returns whether new direct child can be created in current space.
@@ -130,7 +136,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				if (value instanceof Kekule.ChemSpace)
 				{
 					this._initChemSpaceDefProps(value);
-					return $super(value);
+					var result = $super(value);
+					// auto scroll
+					if (this.getEditorConfigs().getInteractionConfigs().getScrollToObjAfterLoading())
+					{
+						var objs = value.getChildren();
+						if (objs && objs.length)
+							this.scrollClientToObject(objs);
+					}
+					return result;
 				}
 				else
 				{

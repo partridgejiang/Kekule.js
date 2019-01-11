@@ -4,6 +4,11 @@
  * @author Partridge Jiang
  */
 
+(function(){
+
+"use strict";
+
+
 var
 /**
  *  Class to handle JSON file and data.
@@ -100,7 +105,7 @@ JsonUtility = {
   /** Load a file that containers JSON string only, use WebShow.XHRLoader for AJAX loading. */
   loadJson: function(url, callback, options)
   {
-    loptions = options || {};
+    var loptions = options || {};
     if (!loptions.timeout)
       loptions.timeout = JsonUtility.DEF_LOAD_TIMEOUT;
 
@@ -624,7 +629,7 @@ XmlUtility = {
   {
     try
     {
-      return XML((new XMLSerializer( )).serializeToString(node)).toXMLString();  // firefox
+      return new XMLSerializer().serializeToString(node).toXMLString();  // firefox
 			// TODO: E4X is deprecated in firefox 21, so need other methods
     }
     catch(e)
@@ -668,3 +673,9 @@ XmlUtility = {
       || xmlDoc.location;  // Opera
   }
 };
+
+// export those two util class to DataType namespace
+DataType.JsonUtility = JsonUtility;
+DataType.XmlUtility = XmlUtility;
+
+})();

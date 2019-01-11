@@ -10,6 +10,9 @@
  * requires /lan/xmlJsons.js
  */
 
+(function(){
+"use strict";
+
 var
 /**
  * @class
@@ -574,7 +577,7 @@ ObjSerializer = Class.create(
 		{
 			if (this.isComplexType(fieldValue)) // a complex value, whether an ObjectEx or Object or Array
 			{
-				subNode = this.createChildStorageNode(storageNode, this.propNameToStorageName(fieldName), this.isArray(fieldValue));
+				var subNode = this.createChildStorageNode(storageNode, this.propNameToStorageName(fieldName), this.isArray(fieldValue));
 				if (explicitType)
 					this.setStorageNodeExplicitType(subNode, explicitType);
 				this.save(fieldValue, subNode);
@@ -657,7 +660,17 @@ ObjSerializer = Class.create(
 		if (typeof(obj) == 'object')
 		{
 			if (obj instanceof ObjectEx)  // ObjectEx
-				obj = this.doLoadObjectEx(obj, storageNode);
+			{
+				obj.beginUpdate();
+				try
+				{
+					obj = this.doLoadObjectEx(obj, storageNode);
+				}
+				finally
+				{
+					obj.endUpdate();
+				}
+			}
 			else if (this.isArray(obj)) // Array
 				obj = this.doLoadArray(obj, storageNode);
 			else if (this.isDate(obj))  // date
@@ -1325,6 +1338,9 @@ ObjSerializerFactory = {
 	ObjSerializerFactory.registerSerializer('xml', XmlObjSerializer);
 })();
 
+// export ObjSerializerFactory to Class namespace
+Class.ObjSerializerFactory = ObjSerializerFactory;
+
 // extend ObjectEx and add save/load methods
 ClassEx.extend(ObjectEx,
 /** @lends ObjectEx# */
@@ -1338,6 +1354,7 @@ ClassEx.extend(ObjectEx,
 	 */
 	saveObj: function(destNode, serializerOrName, options)
 	{
+		var serializer;
     if (!serializerOrName)  // use default
       serializer = ObjSerializerFactory.getSerializer();
     else if (typeof(serializerOrName) == 'string')  // is name
@@ -1354,13 +1371,25 @@ ClassEx.extend(ObjectEx,
 	 */
 	loadObj: function(srcNode, serializerOrName)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
       serializer = ObjSerializerFactory.getSerializer();
     else if (typeof(serializerOrName) == 'string')  // is name
       serializer = ObjSerializerFactory.getSerializer(serializerOrName);
 		else
 			serializer = serializerOrName;
-		return serializer.load(this, srcNode);
+
+		var result;
+		this.beginUpdate();
+		try
+		{
+			result = serializer.load(this, srcNode);
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+		return result;
 	}
 });
 
@@ -1376,6 +1405,7 @@ Object.extend(ClassEx, {
 	 */
 	saveObj: function(obj, destNode, serializerOrName, options)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
 			serializer = ObjSerializerFactory.getSerializer();
 		else if (typeof(serializerOrName) == 'string')  // is name
@@ -1392,6 +1422,7 @@ Object.extend(ClassEx, {
 	 */
 	loadObj: function(obj, srcNode, serializerOrName)
 	{
+		var serializer;
 		if (!serializerOrName)  // use default
 			serializer = ObjSerializerFactory.getSerializer();
 		else if (typeof(serializerOrName) == 'string')  // is name
@@ -1440,3 +1471,5 @@ Object.extend(DataType, {
 		}
 	}
 });
+
+})();

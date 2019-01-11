@@ -22,8 +22,10 @@
 
 "use strict";
 
+var OU = Kekule.ObjUtils;
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
+var CU = Kekule.CoordUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
@@ -827,6 +829,45 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		}
 		this.repaint();
+	},
+
+	/**
+	 * Returns the screen box (x1, y1, x2, y2) of current visible client area in editor.
+	 * @returns {Hash}
+	 */
+	getVisibleClientScreenBox: function()
+	{
+		var elem = this.getEditClientElem().parentNode;
+		var result = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		var pos = this.getClientScrollPosition();
+		result.x1 = pos.x;
+		result.y1 = pos.y;
+		result.x2 = result.x1 + result.width;
+		result.y2 = result.y1 + result.height;
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in a specified coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientBoxOfSys: function(coordSys)
+	{
+		var screenBox = this.getVisibleClientScreenBox();
+		var coords = Kekule.BoxUtils.getMinMaxCoords(screenBox);
+		var c1 = this.translateCoord(coords.min, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var c2 = this.translateCoord(coords.max, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var result = Kekule.BoxUtils.createBox(c1, c2);
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in object coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientObjBox: function(coordSys)
+	{
+		return this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
 	},
 
 	/**
@@ -3531,7 +3572,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Object} obj
 	 * @param {Hash} size
 	 */
-	doSetObjSize: function(obj, size)
+	doSetObjSize: function(obj, dimension)
 	{
 		if (obj.setSizeOfMode)
 			obj.setSizeOfMode(dimension, this.getCoordMode());
@@ -4006,7 +4047,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var h = this.getOperHistory();
 		if (h)
 		{
-			r = h.pop(operation);
+			r = h.pop();
 			if (autoReverse)
 			{
 				this.beginUpdateObject();
@@ -4228,12 +4269,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	scrollClientTo: function(yPosition, xPosition)
 	{
+		/*
 		var elem = this.getEditClientElem().parentNode;
 		if (Kekule.ObjUtils.notUnset(yPosition))
 			elem.scrollTop = yPosition;
 		if (Kekule.ObjUtils.notUnset(xPosition))
 			elem.scrollLeft = xPosition;
 		return this;
+		*/
+		return this.scrollClientToCoord({'y': yPosition, 'x': xPosition});
 	},
 	/**
 	 * Scroll edit client to top.
@@ -4241,6 +4285,162 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	scrollClientToTop: function()
 	{
 		return this.scrollClientTo(0, null);
+	},
+	/**
+	 * Scroll edit client to bottom.
+	 */
+	scrollClientToBottom: function()
+	{
+		var elem = this.getEditClientElem();
+		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		return this.scrollClientTo(dim.height, null);
+	},
+
+	/**
+	 * Scroll edit client to coord (based on coordSys).
+	 * @param {Hash} coord
+	 * @param {Int} coordSys If not set, screen coord system will be used.
+	 * @param {Hash} options A hash object that contains the options of scrolling.
+	 *   Currently it may has one field: scrollToCenter. If scrollToCenter is true,
+	 *   the coord will be at the center of edit area rather than top-left.
+	 */
+	scrollClientToCoord: function(coord, coordSys, options)
+	{
+		var scrollX = OU.notUnset(coord.x);
+		var scrollY = OU.notUnset(coord.y);
+		var scrollToCenter = options && options.scrollToCenter;
+		var screenCoord;
+		if (OU.isUnset(coordSys))
+			screenCoord = coord;
+		else
+			screenCoord = this.translateCoord(coord, coordSys, Kekule.Editor.CoordSys.SCREEN);
+		if (scrollToCenter)
+		{
+			var visibleClientBox = this.getVisibleClientScreenBox();
+			var delta = {'x': visibleClientBox.width / 2, 'y': visibleClientBox.height / 2};
+			screenCoord = Kekule.CoordUtils.substract(screenCoord, delta);
+		}
+		var elem = this.getEditClientElem().parentNode;
+		if (scrollY)
+			elem.scrollTop = screenCoord.y;
+		if (scrollX)
+			elem.scrollLeft = screenCoord.x;
+
+		return this;
+	},
+
+	/**
+	 * Scroll edit client to target object or objects in editor.
+	 * @param {Variant} targetObjOrObjs Target object or objects array.
+	 * @param {Hash} options Scroll options, can including two fields: scrollToCenter, coverMostObjs.
+	 *   The default value of both of those options are true.
+	 */
+	scrollClientToObject: function(targetObjOrObjs, options)
+	{
+		var BU = Kekule.BoxUtils;
+		if (!targetObjOrObjs)
+			return this;
+		var rootObj = this.getChemObj();
+		if (!rootObj)
+			return this;
+		var objs = AU.toArray(targetObjOrObjs);
+		var containerBoxes = [];
+		var totalContainerBox = null;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj.getContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
+			{
+				var box = obj.getContainerBox(this.getCoordMode());
+				if (box)
+				{
+					containerBoxes.push(box);
+					if (!totalContainerBox)
+						totalContainerBox = box;
+					else
+						totalContainerBox = BU.getContainerBox(totalContainerBox, box);
+				}
+			}
+		}
+
+		if (totalContainerBox)
+		{
+			var ops = Object.extend({scrollToCenter: true, coverMostObjs: true}, options || {});
+
+			var actualBox;
+			// if scroll to centerCoord and none of the obj can be seen in current state, we need another approach
+			var visibleBox = this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
+			if (((totalContainerBox.x2 - totalContainerBox.x1 > visibleBox.x2 - visibleBox.x1)
+				|| (totalContainerBox.y2 - totalContainerBox.y1 > visibleBox.y2 - visibleBox.y1))
+				&& ops.coverMostObjs)
+			{
+				actualBox = this._getMostIntersectedContainerBox(visibleBox.x2 - visibleBox.x1, visibleBox.y2 - visibleBox.y1, containerBoxes, totalContainerBox);
+			}
+			else
+				actualBox = totalContainerBox;
+
+			var scrollCoord = ops.scrollToCenter? BU.getCenterCoord(actualBox): {x: actualBox.x1, y: actualBox.y2};
+			return this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM, ops);
+		}
+		else
+			return this;
+	},
+
+	/** @private */
+	_getMostIntersectedContainerBox: function(width, height, boxes, totalContainerBox)
+	{
+		var BU = Kekule.BoxUtils;
+
+		var generateTestBox = function(startingCoord, directions)
+		{
+			var endingCoord = CU.add(startingCoord, {'x': width * directions.x, 'y': height * directions.y});
+			if (endingCoord.x < totalContainerBox.x1)
+				endingCoord.x = totalContainerBox.x1;
+			else if (endingCoord.x > totalContainerBox.x2)
+				endingCoord.x = totalContainerBox.x2;
+			if (endingCoord.y < totalContainerBox.y1)
+				endingCoord.y = totalContainerBox.y1;
+			else if (endingCoord.y > totalContainerBox.y2)
+				endingCoord.y = totalContainerBox.y2;
+			var actualStartingCoord = CU.add(endingCoord, {'x': -width * directions.x, 'y': -height * directions.y});
+			var result = BU.createBox(actualStartingCoord, endingCoord);
+			return result;
+		};
+
+		var getIntersectedBoxCount = function(testBox, boxes)
+		{
+			var result = 0;
+			for (var i = 0, l = boxes.length; i < l; ++i)
+			{
+				var box = boxes[i];
+				if (BU.hasIntersection(box, testBox))
+					++result;
+			}
+			return result;
+		};
+
+		var maxIntersectCount = 0;
+		var currContainerBox;
+		for (var i = 0, l = boxes.length; i < l; ++i)
+		{
+			var corners = BU.getCornerCoords(boxes[i]);
+			var testBoxes = [
+				generateTestBox(corners[0], {x: 1, y: 1}),
+				generateTestBox(corners[1], {x: 1, y: -1}),
+				generateTestBox(corners[2], {x: -1, y: 1}),
+				generateTestBox(corners[3], {x: -1, y: -1}),
+			];
+			for (var j = 0, k = testBoxes.length; j < k; ++j)
+			{
+				var count = getIntersectedBoxCount(testBoxes[j], boxes);
+				if (count > maxIntersectCount)
+				{
+					maxIntersectCount = count;
+					currContainerBox = testBoxes[j];
+				}
+			}
+		}
+		return currContainerBox;
 	},
 
 	/////// Event handle  //////////////////////

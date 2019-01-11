@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Drag Drop Widget Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+  <style>
+    .Region
+    {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+    }
+  </style>
+  <script>
+    function reactWidgetDragDrop(ev)
+    {
+    	console.log('Drag dropped on', ev.widget.getId(), 'srcElem: ', ev.srcElem, 'srcWidget: ', ev.srcWidget);
+    }
+    function init()
+    {
+    	Kekule.Widget.getWidgetById('btnDrop').on('dragDrop', reactWidgetDragDrop);
+	    Kekule.Widget.getWidgetById('textEditorDrop').on('dragDrop', reactWidgetDragDrop);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div class="Region" id="dragSrcZone">
+    <p>Drag source zone</p>
+    <p id="text1" draggable="true">Draggable text here</p>
+    <a id="btn1" data-widget="Kekule.Widget.Button" data-text="Button 1" data-draggable="true"></a>
+    <input id="textbox1" data-widget="Kekule.Widget.TextBox" data-placeholder="A Placeholder" data-draggable="true" />
+    <div id="colorPicker1" data-widget="Kekule.Widget.ColorPicker" data-draggable="true" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
+  </div>
+  <div class="Region" id="dropTargetZone">
+    <button id="btnDrop" data-widget="Kekule.Widget.Button" data-text="Button Drop" data-droppable="true"></button>
+    <textarea id="textAreaDrop" data-widget="Kekule.Widget.TextArea" data-file-droppable="true"></textarea>
+    <div id="textEditorDrop" data-widget="Kekule.Widget.TextEditor" data-file-droppable="true"></div>
+  </div>
+  <div class="Region" id="otherWidgetZone">
+    <textarea style="width:10em;height:4em"></textarea>
+  </div>
+</body>
+</html>
