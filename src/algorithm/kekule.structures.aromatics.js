@@ -652,48 +652,78 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	/**
 	 * Returns the bond order changes that need to be done on explicit aromatic bonds.
 	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
-	 * @param {Hash} options
+	 * @param {Hash} options Options for kekulization process. It may include the following fields:
+	 *   {
+	 *     doAromaticTests: Whether do an aromatic ring perception to determinate the pi electron count before carrying out the calculation. Default is false.
+	 *     includingSubgroups: Whether do kekulization on sub groups too. Default is true.
+	 *     expandSubFragments: Whether expand all sub structures before kekulization.
+	 *     useShadow: Whether use a shadow fragment for calculating the changes to avoid affect current molecule. Default is true.
+	 *       Note: if not using shadow, the bond modifications will be applied directly to structure, rather than record them.
+	 *   }
 	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder}.
 	 */
 	getKekulizationChanges: function(targetBonds, options)
 	{
+		var ops = Object.extend({
+			doAromaticTests: false,
+			includingSubFragments: true,
+			expandSubFragments: false,
+			useShadow: true
+		}, options || {});
+
 		var result = [];
 
 		var mol = this.getParent();
-		// var shadowFragment = mol.getFlattenedShadowFragment(true);  // perform on the flattened shadow
-		var shadow = mol.createShadow();
-		var shadowFragment = shadow.getShadowFragment();
+		if (ops.doAromaticTests)
+			this.perceiveAromaticRings();
+
+		var targetFragment;
+		if (ops.useShadow)
+		{
+			var shadow = mol.createShadow();
+			targetFragment = shadow.getShadowFragment();
+		}
+		else
+			targetFragment = mol;
+
 		try
 		{
-			shadowFragment.unmarshalAllSubFragments(true);    // perform on the flattened shadow
+			if (ops.expandSubFragments && ops.useShadow)
+				targetFragment.unmarshalAllSubFragments(true);    // perform on the flattened shadow
 
 			// map target bonds to shadow first
-			var shadowTargetBonds;
+			var actualTargetBonds;
 			if (targetBonds)
 			{
-				shadowTargetBonds = [];
-				for (var i = 0, l = targetBonds.length; i < l; ++i)
+				actualTargetBonds = [];
+				if (ops.useShadow)
 				{
-					var shadowBond = shadow.getShadowObj(targetBonds[i]);
-					if (shadowBond)
-						shadowTargetBonds.push(shadowBond);
+					for (var i = 0, l = targetBonds.length; i < l; ++i)
+					{
+						var shadowBond = shadow.getShadowObj(targetBonds[i]);
+						if (shadowBond)
+							actualTargetBonds.push(shadowBond);
+					}
 				}
+				else
+					actualTargetBonds = targetBonds;
 			}
 			else
-				shadowTargetBonds = shadowFragment.getConnectors();
+				actualTargetBonds = (ops.includingSubFragments && !ops.expandSubFragments)?
+					targetFragment.getAllContainingConnectors(): targetFragment.getConnectors();
 
 			// filter out explicit aromatic ones
 			var explicitAromaticBonds = [];
-			for (var i = 0, l = shadowTargetBonds.length; i < l; ++i)
+			for (var i = 0, l = actualTargetBonds.length; i < l; ++i)
 			{
-				var b = shadowTargetBonds[i];
+				var b = actualTargetBonds[i];
 				if (b.getBondType() === Kekule.BondType.COVALENT && b.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC
 					&& b.getConnectedChemNodeCount() === 2)
 					explicitAromaticBonds.push(b);
 			}
 
-			shadowFragment.setAutoClearStructureCache(false);  // the structure after kekulization should be the same with current one, so cache need not to be cleared
-			shadowFragment.beginUpdate();
+			targetFragment.setAutoClearStructureCache(false);  // the structure after kekulization should be the same with current one, so cache need not to be cleared
+			targetFragment.beginUpdate();
 			try
 			{
 				// split aromatic bonds to unconnected parts
@@ -703,7 +733,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 				for (var i = 0, l = parts.length; i < l; ++i)
 				{
 					var part = parts[i];
-					partResult = this._kekulizeContinousBonds(part, shadow, shadowFragment, mol);
+					partResult = this._kekulizeContinousBonds(part, shadow, targetFragment, mol);
 					if (partResult)  // some bonds need to be modified
 					{
 						for (var j = 0, k = part.length; j < k; ++j)
@@ -711,7 +741,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 							var newBondOrder = part[j].getBondOrder();
 							if (newBondOrder !== BO.EXPLICIT_AROMATIC)
 							{
-								var originalBond = shadow.getSourceObj(part[j]);
+								var originalBond = ops.useShadow? shadow.getSourceObj(part[j]): part[j];
 								result.push({'bond': originalBond, 'bondOrder': newBondOrder});
 							}
 						}
@@ -721,28 +751,41 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			}
 			finally
 			{
-				shadowFragment.endUpdate();
-				shadowFragment.setAutoClearStructureCache(true);
+				targetFragment.endUpdate();
+				targetFragment.setAutoClearStructureCache(true);
 			}
 		}
 		finally
 		{
-			shadowFragment.finalize();
+			if (ops.useShadow)
+			{
+				shadow.finalize();
+				//targetFragment.finalize();
+			}
 		}
+
+		result._useShadow = ops.useShadow;  // a special flag field
 		return result;
 	},
 
 	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
 	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
-	 * @param {Hash} options
+	 * @param {Hash} options Options for kekulization process. It may include the following fields:
+	 *   {
+	 *     doAromaticTests: Whether do an aromatic ring perception to determinate the pi electron count before carrying out the calculation. Default is false.
+	 *     includingSubgroups: Whether do kekulization on sub groups too. Default is true.
+	 *     expandSubFragments: Whether expand all sub structures before kekulization.
+	 *     useShadow: Whether use a shadow fragment for calculating the changes to avoid affect current molecule. Default is true.
+	 *       Note: if not using shadow, the bond modifications will be applied directly to structure, rather than record them.
+	 *   }
 	 * @return {Array} Changed bonds.
 	 */
 	kekulize: function(targetBonds, options)
 	{
 		var result = [];
 		var changes = this.getKekulizationChanges(targetBonds, options);
-		if (changes)
+		if (changes && changes._useShadow)
 		{
 			var mol = this.getParent();
 			try
@@ -781,7 +824,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		for (var i = 0, l = targetNodes.length; i < l; ++i)
 		{
 			var shadowNode = targetNodes[i];
-			var originalNode = shadow.getSourceObj(shadowNode);  //originalMol.getFlatternedShadowSourceObj(shadowNode);
+			var originalNode = shadow? shadow.getSourceObj(shadowNode): shadowNode;  //originalMol.getFlatternedShadowSourceObj(shadowNode);
 			var cachedPiECount = originalNode && originalNode.getStructureCacheData('piElectronCount');
 			if (OU.notUnset(cachedPiECount))
 			{
@@ -1119,7 +1162,14 @@ ClassEx.extend(Kekule.StructureFragment,
 	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
 	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
-	 * @param {Hash} options
+	 * @param {Hash} options Options for kekulization process. It may include the following fields:
+	 *   {
+	 *     doAromaticTests: Whether do an aromatic ring perception to determinate the pi electron count before carrying out the calculation. Default is false.
+	 *     includingSubgroups: Whether do kekulization on sub groups too. Default is true.
+	 *     expandSubFragments: Whether expand all sub structures before kekulization.
+	 *     useShadow: Whether use a shadow fragment for calculating the changes to avoid affect current molecule. Default is true.
+	 *       Note: if not using shadow, the bond modifications will be applied directly to structure, rather than record them.
+	 *   }
 	 * @return {Array} Changed bonds.
 	 */
 	kekulize: function(targetBonds, options)
@@ -1183,7 +1233,14 @@ ClassEx.extend(Kekule.ChemObject,
 	/**
 	 * Returns the bond order changes that need to be done on explicit aromatic bonds.
 	 * @param {Array} targetBonds Target explicit aromatic bonds. If not set, all aromatic bonds in molecule will be handled.
-	 * @param {Hash} options
+	 * @param {Hash} options Options for kekulization process. It may include the following fields:
+	 *   {
+	 *     doAromaticTests: Whether do an aromatic ring perception to determinate the pi electron count before carrying out the calculation. Default is false.
+	 *     includingSubgroups: Whether do kekulization on sub groups too. Default is true.
+	 *     expandSubFragments: Whether expand all sub structures before kekulization.
+	 *     useShadow: Whether use a shadow fragment for calculating the changes to avoid affect current molecule. Default is true.
+	 *       Note: if not using shadow, the bond modifications will be applied directly to structure, rather than record them.
+	 *   }
 	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder}.
 	 */
 	getKekulizationChanges: function(targetBonds, options)
