@@ -233,6 +233,7 @@ ClassEx.defineProps(Kekule.StructureConnectionTable, [
 		'name': 'ringInfo', 'dataType': DataType.HASH, 'serializable': false,
 		'getter': function(doNotCreate)
 		{
+			/*
 			var result = this.getPropStoreFieldValue('ringInfo');
 			if (!result && !doNotCreate)
 			{
@@ -241,17 +242,27 @@ ClassEx.defineProps(Kekule.StructureConnectionTable, [
 				this.setPropStoreFieldValue('ringInfo', result);
 			}
 			return result;
+			*/
+			var result = this.getStructureCacheData('ringInfo');
+			if (!result && !doNotCreate)
+			{
+				result = this.analysisRings();
+				this.setStructureCacheData('ringInfo', result);
+			}
+			return result;
 		},
 		'setter': null
 	}
 ]);
 /** @ignore */
+/*
 ClassEx.extendMethod(Kekule.StructureConnectionTable, 'objectChange', function($origin, modifiedPropNames)
 	{
 		this.setPropStoreFieldValue('ringInfo', null);  // clear rings cache when connection table changed
 		return $origin(modifiedPropNames);
 	}
 );
+*/
 
 ClassEx.extend(Kekule.StructureFragment,
 /** @lends Kekule.StructureFragment# */

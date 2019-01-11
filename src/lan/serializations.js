@@ -660,7 +660,17 @@ ObjSerializer = Class.create(
 		if (typeof(obj) == 'object')
 		{
 			if (obj instanceof ObjectEx)  // ObjectEx
-				obj = this.doLoadObjectEx(obj, storageNode);
+			{
+				obj.beginUpdate();
+				try
+				{
+					obj = this.doLoadObjectEx(obj, storageNode);
+				}
+				finally
+				{
+					obj.endUpdate();
+				}
+			}
 			else if (this.isArray(obj)) // Array
 				obj = this.doLoadArray(obj, storageNode);
 			else if (this.isDate(obj))  // date
@@ -1368,7 +1378,18 @@ ClassEx.extend(ObjectEx,
       serializer = ObjSerializerFactory.getSerializer(serializerOrName);
 		else
 			serializer = serializerOrName;
-		return serializer.load(this, srcNode);
+
+		var result;
+		this.beginUpdate();
+		try
+		{
+			result = serializer.load(this, srcNode);
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+		return result;
 	}
 });
 
