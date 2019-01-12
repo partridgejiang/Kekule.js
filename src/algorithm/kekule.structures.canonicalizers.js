@@ -534,6 +534,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				sortedNodes1st = sortedNodes1st.concat(groups);
 			}
 		}
+		//console.log('before 2nd sorted', sortedNodes1st);
 
 		// 2nd pass, from top to bottom
 		var sortedNodes = [];
@@ -548,26 +549,26 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			}
 			else  // need compare
 			{
-				var _getSortLevel = function(node)
+				var _getSortLevel = function(node, repositoryNodes)
 				{
-					for (var i = 0, l = sortedNodes.length; i < l; ++i)
+					for (var i = 0, l = repositoryNodes.length; i < l; ++i)
 					{
-						if (!AU.isArray(sortedNodes[i]))
+						if (!AU.isArray(repositoryNodes[i]))
 						{
-							if (sortedNodes[i] === node)
+							if (repositoryNodes[i] === node)
 								return i;
 						}
-						else if (sortedNodes[i].indexOf(node) >= 0)
+						else if (repositoryNodes[i].indexOf(node) >= 0)
 							return i;
 					}
 					return -1;
 				};
-				var _getSortLevels = function(centerNode, connectedNodes)
+				var _getSortLevels = function(centerNode, connectedNodes, repositoryNodes)
 				{
 					var result = [];
 					for (var i = 0, l = connectedNodes.length; i < l; ++i)
 					{
-						result.push(_getSortLevel(connectedNodes[i]));
+						result.push(_getSortLevel(connectedNodes[i], repositoryNodes));
 					}
 					result.sort(function(a,b){ return b-a; });
 					//console.log(result);
@@ -582,17 +583,36 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 					// compare connected node sorted level
 					if (result === 0 && connNodes1.length > 0)
 					{
-						var sortLevels1 = _getSortLevels(n1, connNodes1);
-						var sortLevels2 = _getSortLevels(n2, connNodes2);
+						var sortLevels1 = _getSortLevels(n1, connNodes1, sortedNodes);
+						var sortLevels2 = _getSortLevels(n2, connNodes2, sortedNodes);
 						result = AU.compare(sortLevels1, sortLevels2);
 					}
+					if (result === 0)
+					{
+						// still same, check the first level sort array
+						var connNodes1 = AU.intersect(n1.getLinkedObjs(), sortedNodes1st);
+						var connNodes2 = AU.intersect(n2.getLinkedObjs(), sortedNodes1st);
+						// compare connected node count
+						var result = connNodes1.length - connNodes2.length;
+						if (result === 0)
+						{
+							var sortLevels1 = _getSortLevels(n1, connNodes1, sortedNodes1st);
+							var sortLevels2 = _getSortLevels(n2, connNodes2, sortedNodes1st);
+							result = AU.compare(sortLevels1, sortLevels2);
+						}
+					}
+					//console.log(result, n1.getId(), sortLevels1, n2.getId(), sortLevels2);
 					return result;
 				};
 				var groupedCurrNodes = AU.group(currNodes, _compFunc);
+				//console.log(groupedCurrNodes.map(function(item){ return item.getId(); }));
 				sortedNodes = sortedNodes.concat(groupedCurrNodes);
+
+				handledNodes = handledNodes.concat(currNodes);
 			}
-			handledNodes = handledNodes.concat(currNodes);
 		}
+
+		//console.log('sorted', sortedNodes);
 
 		// at last, standardize array
 		var result = [];
