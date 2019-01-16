@@ -4438,8 +4438,9 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	compareHydrogens: function(targetObj, options, result)
 	{
 		var result = 0;
-        var hNodes1 = this.getHydrogenNodes();
-        var hNodes2 = targetObj.getHydrogenNodes();
+        var hNodes1 = this.getNodes();
+        var hNodes2 = targetObj.getNodes();
+        // this will validate the decorations if there is only a single node
         if (hNodes1.length === 1 && hNodes2.length === 1) {
             var hydrogenObj1 = hNodes1[0];
             var hydrogenObj2 = hNodes2[0];
