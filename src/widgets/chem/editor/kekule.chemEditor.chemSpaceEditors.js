@@ -4346,50 +4346,6 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 });
 
 /**
- * Controller to add ring structure into chem space.
- * @class
- * @augments Kekule.Editor.RepositoryIaController
- *
- * @property {Int} ringAtomCount Atom count on ring.
- * @property {Bool} isAromatic Whether this ring is a aromatic one (single/double bond intersect),
- */
-Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.RepositoryIaController,
-/** @lends Kekule.Editor.MolRingIaController# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Editor.MolRingIaController',
-	/** @construct */
-	initialize: function($super, editor)
-	{
-		$super(editor);
-		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D());
-	},
-	/** @ignore */
-	getActualManipulatingObjects: function(objs)
-	{
-		// since we are sure that the manipulated objects is carbon chain itself,
-		// we can return all its atoms as the actual manipulating objects / coord dependent objects
-		var mol = this.getCurrRepositoryObjects()[0];
-		//console.log(mol);
-		return mol? AU.clone(mol.getNodes()): [];
-	},
-	/** @private */
-	initProperties: function()
-	{
-		this.defineProp('ringAtomCount', {'dataType': DataType.INT,
-			'getter': function() { return this.getRepositoryItem().getRingAtomCount(); },
-			'setter': function(value) { this.getRepositoryItem().setRingAtomCount(value); }
-		});
-		this.defineProp('isAromatic', {'dataType': DataType.INT,
-			'getter': function() { return this.getRepositoryItem().getIsAromatic(); },
-			'setter': function(value) { this.getRepositoryItem().setIsAromatic(value); }
-		});
-	}
-});
-// register
-Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolRingIaController, Kekule.Editor.ChemSpaceEditor);
-
-/**
  * Controller to add repository structure into chem space.
  * @class
  * @augments Kekule.Editor.RepositoryIaController
@@ -5125,27 +5081,29 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.MolFlexStruct
 });
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexRingIaController, Kekule.Editor.ChemSpaceEditor);
 
-
 /**
- * Controller to add a conjugated ring (e.g., benzene) into chem space.
- * If grown from a existing structure, the position double bond on the ring may be changed during manipulation,
- * so here the MolFlexStructureIaController is choosen as the base class.
+ * Controller to add ring structure into chem space.
+ * The ring could be a simple one (all ring bonds are single), or an aromatic one (e.g. benzene).
+ * If the ring is aromatic, the double bond and single bond position will be automatically adjusted when inserting
+ * to editor, according to nearby nodes and connectors of existing molecules.
+ * So here the MolFlexStructureIaController is choosen as the base class.
  * @class
- * @augments Kekule.Editor.MolFlexStructureIaController
+ * @augments Kekule.Editor.RepositoryIaController
+ *
+ * @property {Int} ringAtomCount Atom count on ring.
+ * @property {Bool} isAromatic Whether this ring is a aromatic one (single/double bond intersect),
  */
-Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlexStructureIaController,
-/** @lends Kekule.Editor.MolConjugatedRingIaController# */
+Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureIaController,  // Kekule.Editor.RepositoryIaController,
+/** @lends Kekule.Editor.MolRingIaController# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.MolConjugatedRingIaController',
+	CLASS_NAME: 'Kekule.Editor.MolRingIaController',
 	/** @construct */
 	initialize: function($super, editor)
 	{
 		$super(editor);
+		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D());
 		this.setEnableSelect(false);
-
-		var rep = new Kekule.Editor.MolRingRepositoryItem2D(3);
-		this.setRepositoryItem(rep);
 	},
 	/** @private */
 	initProperties: function()
@@ -5154,7 +5112,24 @@ Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlex
 			'getter': function() { return this.getRepositoryItem().getRingAtomCount(); },
 			'setter': function(value) { this.getRepositoryItem().setRingAtomCount(value); }
 		});
+		/*
+		this.defineProp('isAromatic', {'dataType': DataType.INT,
+			'getter': function() { return this.getRepositoryItem().getIsAromatic(); },
+			'setter': function(value) { this.getRepositoryItem().setIsAromatic(value); }
+		});
+		*/
+		this.defineProp('isAromatic', {'dataType': DataType.INT});
 	},
+	/** @ignore */
+	getActualManipulatingObjects: function(objs)
+	{
+		// since we are sure that the manipulated objects is carbon chain itself,
+		// we can return all its atoms as the actual manipulating objects / coord dependent objects
+		var mol = this.getCurrRepositoryObjects()[0];
+		//console.log(mol);
+		return mol? AU.clone(mol.getNodes()): [];
+	},
+
 	/** @ignore */
 	_mergeOperationsChanged : function($super, mergedObjCount, targetObjs, destObjs)
 	{
@@ -5178,12 +5153,14 @@ Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlex
 	createObjFromRepositoryItem: function($super, targetObj, repItem)
 	{
 		var result = $super(targetObj, repItem);
-		this.updateRepStructureBondOrders(result.objects[0], null);  // initialize double bonds
+		this.updateRepStructureBondOrders(result.objects[0], null);  // initialize double bonds of aromatic ring
 		return result;
 	},
 	/** @private */
 	updateRepStructureBondOrders: function(srcStruct, mergedDestObjs)
 	{
+		if (!this.getIsAromatic())
+			return;
 		if (!srcStruct)
 		{
 			var repObjects = this.getCurrRepositoryObjects();
@@ -5465,7 +5442,7 @@ Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlex
 			for (var i = 0, l = destMergeNodes.length; i < l; ++i)
 			{
 				var n = destMergeNodes[i];
-				if (_hasExplicitAromaticBond(n))
+				if (n && _hasExplicitAromaticBond(n))
 				{
 					hasOldExplicitAromaticBond = true;
 					break;
@@ -5500,7 +5477,8 @@ Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlex
 		}
 	}
 });
-Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolConjugatedRingIaController, Kekule.Editor.ChemSpaceEditor);
+// register
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolRingIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
  * Controller to add arrow/line into chem space.
