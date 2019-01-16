@@ -4403,7 +4403,7 @@ Kekule.Editor.MolFlexStructureIaController = Class.create(Kekule.Editor.Reposito
 	/** @private */
 	initProperties: function()
 	{
-		// marker to display the ring atom count
+		// marker to display the additional markers to flex structure
 		this.defineProp('assocMarker', {'dataType': DataType.OBJECT, 'serializable': false,
 			'setter': null,
 			'getter': function()
@@ -5128,6 +5128,17 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 		var mol = this.getCurrRepositoryObjects()[0];
 		//console.log(mol);
 		return mol? AU.clone(mol.getNodes()): [];
+	},
+	/** @ignore */
+	createNodeMergeOperation: function($super, fromNode, toNode, useMergePreview)
+	{
+		var result = $super(fromNode, toNode, useMergePreview);
+		if (this.getIsAromatic())  // when inserting aromatic ring, double bond may need to overwrite single bond of existing structure
+		{
+			if (result && result.setMergeConnectorPropsFromTarget)
+				result.setMergeConnectorPropsFromTarget(true);
+		}
+		return result;
 	},
 
 	/** @ignore */
