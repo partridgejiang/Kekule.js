@@ -108,7 +108,7 @@ function setUpComposer(composer) {
       'text': 'Create', 'hint': 'My create button', 'id': 'btnMyCreate', 'htmlClass': 'MYBUTTON',
       'widget': Kekule.Widget.RadioButton,
       'attached': [
-        BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple, BNS.molRepFischer2, //only show single, double and triple bounds
+        BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple, BNS.molBondWedgeUp, BNS.molBondWedgeDown, BNS.molRepFischer2, //only show single, double and triple bounds
 
       //{'name': BNS.molAtom, 'actionClass': Kekule.Editor.ActionComposerSetAtomController}
       BNS.molAtom
