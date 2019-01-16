@@ -782,6 +782,7 @@ Kekule.ChemStructOperation.RemoveConnector = Class.create(Kekule.ChemObjOperatio
  * @property {Kekule.ChemStructureNode} target Source node, all connectors to this node will be connected to toNode.
  * @property {Kekule.ChemStructureNode} dest Destination node.
  * @property {Bool} enableStructFragmentMerge If true, molecule will be also merged when merging nodes between different molecule.
+ * @property {Bool} mergeConnectorPropsFromTarget If connectors are merged in this operation, whether copy some properties of target connector to dest.
  */
 Kekule.ChemStructOperation.MergeNodesBase = Class.create(Kekule.ChemObjOperation.Base,
 /** @lends Kekule.ChemStructOperation.MergeNodesBase# */
@@ -802,6 +803,7 @@ Kekule.ChemStructOperation.MergeNodesBase = Class.create(Kekule.ChemObjOperation
 	{
 		this.defineProp('dest', {'dataType': 'Kekule.ChemStructureNode', 'serializable': false});
 		this.defineProp('enableStructFragmentMerge', {'dataType': DataType.BOOL});
+		this.defineProp('mergeConnectorPropsFromTarget', {'dataType': DataType.BOOL});
 	},
 	/**
 	 * Returns nodes connected with both node1 and node2.
@@ -838,7 +840,6 @@ Kekule.ChemStructOperation.MergeNodesBase = Class.create(Kekule.ChemObjOperation
  *
  * @property {Array} relinkedConnectors Connectors changing conntected objects during merge.
  * @property {Array} removedConnectors Connectors removed during merge.
- * @property {Bool} mergeConnectorPropsFromTarget If connectors are merged in this operation, whether copy some properties of target connector to dest.
  */
 Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.MergeNodesBase,
 /** @lends Kekule.ChemStructOperation.MergeNodes# */
@@ -859,7 +860,6 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('mergeConnectorPropsFromTarget', {'dataType': DataType.BOOL});
 		this.defineProp('relinkedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
 		this.defineProp('removedConnectors', {'dataType': DataType.ARRAY, 'serializable': false});
 		//this.defineProp('enableStructFragmentMerge', {'dataType': DataType.BOOL});
@@ -891,7 +891,7 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 	doExecute: function()
 	{
 		var mergeConnectorProps = this.getMergeConnectorPropsFromTarget();
-		var connModifyOpers = [];
+		var connModifyOpers = this._modifyConnecorOperations || [];
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
 		var structFragment = fromNode.getParentFragment();
@@ -916,9 +916,11 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 		{
 			var editor = this.getEditor();
 			var removedConnectors = this.getRemovedConnectors();
+			var commonSiblings;
 			if (!removedConnectors)  // auto calc
 			{
-				var commonSiblings = this.getCommonSiblings(fromNode, toNode);
+				connModifyOpers = [];  // need calculate later
+				commonSiblings = this.getCommonSiblings(fromNode, toNode);
 				var removedConnectors = [];
 				if (commonSiblings.length)  // has common sibling between from/toNode, bypass bond between fromNode and sibling
 				{
@@ -929,18 +931,6 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 						if (connector && (connector.getConnectedObjCount() == 2))  // connector in target struct need to be removed
 						{
 							removedConnectors.push(connector);
-							if (mergeConnectorProps)  // some properties of removed connector may need to be copied to dest connector
-							{
-								var destConnector = toNode.getConnectorTo(sibling);
-								if (destConnector)
-								{
-									var copyConnPropsOper = this.getMergeConnPropsOperation(connector, destConnector);
-									if (copyConnPropsOper)
-									{
-										connModifyOpers.push(copyConnPropsOper);
-									}
-								}
-							}
 						}
 					}
 				}
@@ -967,6 +957,30 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 				var index = connector.indexOfConnectedObj(fromNode);
 				connector.removeConnectedObj(fromNode);
 				connector.insertConnectedObjAt(toNode, index);  // keep the index is important, wedge bond direction is related with node sequence
+			}
+
+			// some properties of removed connector may need to be copied to dest connector
+			if (mergeConnectorProps && !connModifyOpers.length && removedConnectors && removedConnectors.length)
+			{
+				if (!commonSiblings)
+					commonSiblings = this.getCommonSiblings(fromNode, toNode);
+				for (var i = 0, l = commonSiblings.length; i < l; ++i)
+				{
+					var sibling = commonSiblings[i];
+					var targetConnector = fromNode.getConnectorTo(sibling);
+					if (removedConnectors.indexOf(targetConnector) >= 0)
+					{
+						var destConnector = toNode.getConnectorTo(sibling);
+						if (destConnector)
+						{
+							var copyConnPropsOper = this.getMergeConnPropsOperation(targetConnector, destConnector);
+							if (copyConnPropsOper)
+							{
+								connModifyOpers.push(copyConnPropsOper);
+							}
+						}
+					}
+				}
 			}
 
 			this._removeConnectorOperations = [];
@@ -1015,7 +1029,7 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 				{
 					connModifyOpers[i].reverse();
 				}
-				this._modifyConnecorOperations = [];
+				//this._modifyConnecorOperations = [];
 			}
 
 			/*
