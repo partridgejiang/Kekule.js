@@ -1945,6 +1945,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 					if (needCreateNewMerge)
 					{
+						// notify a new merge need to be done
+						this._mergeOperationsChanged(mergedObjCount, magneticMergeObjs, magneticMergeDests);
 						//console.log('here');
 						for (var i = 0, l = mergedObjCount; i < l; ++i)
 						{
@@ -2060,9 +2062,24 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 		// no merge, just reverse old one and do normal move
 		//this.reverseMergeOpers();
-		this.reverseMergeOpers(this.getMergeOperationsInManipulating());
+		var oldMergeOpers = this.getMergeOperationsInManipulating();
+		if (oldMergeOpers && oldMergeOpers.length)
+		{
+			this._mergeOperationsChanged(0, [], []);  // also notify that no merge should be done here
+			this.reverseMergeOpers(oldMergeOpers);
+		}
 
 		$super(endScreenCoord);
+	},
+
+	/**
+	 * Notify a set of new merge operations are created.
+	 * Descendants may override this method to reflect to those merges.
+	 * @private
+	 */
+	_mergeOperationsChanged: function(mergedObjCount, targetObjs, destObjs)
+	{
+		// do nothing here
 	},
 
 	/**
@@ -5107,6 +5124,383 @@ Kekule.Editor.MolFlexRingIaController = Class.create(Kekule.Editor.MolFlexStruct
 	}
 });
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolFlexRingIaController, Kekule.Editor.ChemSpaceEditor);
+
+
+/**
+ * Controller to add a conjugated ring (e.g., benzene) into chem space.
+ * If grown from a existing structure, the position double bond on the ring may be changed during manipulation,
+ * so here the MolFlexStructureIaController is choosen as the base class.
+ * @class
+ * @augments Kekule.Editor.MolFlexStructureIaController
+ */
+Kekule.Editor.MolConjugatedRingIaController = Class.create(Kekule.Editor.MolFlexStructureIaController,
+/** @lends Kekule.Editor.MolConjugatedRingIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.MolConjugatedRingIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		this.setEnableSelect(false);
+
+		var rep = new Kekule.Editor.MolRingRepositoryItem2D(3);
+		this.setRepositoryItem(rep);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('ringAtomCount', {'dataType': DataType.INT,
+			'getter': function() { return this.getRepositoryItem().getRingAtomCount(); },
+			'setter': function(value) { this.getRepositoryItem().setRingAtomCount(value); }
+		});
+	},
+	/** @ignore */
+	_mergeOperationsChanged : function($super, mergedObjCount, targetObjs, destObjs)
+	{
+		$super(mergedObjCount, targetObjs, destObjs);
+		//console.log('new we have a new merge', mergedObjCount, targetObjs, destObjs);
+
+		// since a new merge is created, we have to modify the double bond position in ring
+		//console.log(this.getCurrRepositoryObjects());
+
+		var repObjects = this.getCurrRepositoryObjects();
+		var srcStruct = repObjects && repObjects[0];
+
+		if (srcStruct)
+		{
+			var mergedDestObjs = this._getMergedDestObjs(srcStruct, mergedObjCount, targetObjs, destObjs);
+			// according to obj map, calculate the correct bond orders of src
+			this.updateRepStructureBondOrders(srcStruct, mergedDestObjs);
+		}
+	},
+	/** @ignore */
+	createObjFromRepositoryItem: function($super, targetObj, repItem)
+	{
+		var result = $super(targetObj, repItem);
+		this.updateRepStructureBondOrders(result.objects[0], null);  // initialize double bonds
+		return result;
+	},
+	/** @private */
+	updateRepStructureBondOrders: function(srcStruct, mergedDestObjs)
+	{
+		if (!srcStruct)
+		{
+			var repObjects = this.getCurrRepositoryObjects();
+			var srcStruct = repObjects && repObjects[0];
+		}
+		if (!mergedDestObjs)
+		{
+			mergedDestObjs = {'nodes': [], 'connectors': [], 'nodeCount': 0, 'connectorCount': 0};
+		}
+		var bondOrders = this._calcSrcBondOrders(srcStruct, mergedDestObjs);
+
+		var editor = this.getEditor();
+		try
+		{
+			editor.beginUpdateObject();
+			//if (this.useMergePreview())
+			{
+				srcStruct.beginUpdate();
+				try
+				{
+					// set bond order of src structure
+					for (var i = 0, l = srcStruct.getConnectorCount(); i < l; ++i)
+					{
+						var bond = srcStruct.getConnectorAt(i);
+						if (bond.setBondOrder)
+							bond.setBondOrder(bondOrders[i]);
+					}
+				}
+				finally
+				{
+					srcStruct.endUpdate();
+				}
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
+		}
+	},
+	/** @private */
+	_getMergedDestObjs: function(srcStruct, mergedObjCount, srcObjs, destObjs)
+	{
+		var insertedMol = srcStruct;
+		if (insertedMol)
+		{
+			var _getMappedConnector = function(srcConnector, srcNodes, destNodes)
+			{
+				var srcConnectedNodes = srcConnector.getConnectedChemNodes();
+				var destConnectedNodes = [];
+				for (var i = 0, l = srcConnectedNodes.length; i < l; ++i)
+				{
+					var currNode = srcConnectedNodes[i];
+					var index = srcNodes.indexOf(currNode);
+					var destNode = destNodes[index];
+					if (destNode)
+						destConnectedNodes.push(destNode);
+					else
+						return null;
+				}
+				if (destConnectedNodes.length === 2)
+				{
+					var testDestConnectors = destConnectedNodes[0].getLinkedConnectors();
+					for (var i = 0, l = testDestConnectors.length; i < l; ++i)
+					{
+						var testConnector = testDestConnectors[i];
+						var testConnectedNodes = testConnector.getConnectedChemNodes();
+						if (testConnectedNodes.length === 2 && testConnectedNodes.indexOf(destConnectedNodes[1]) >= 0)
+							return testConnector;
+					}
+				}
+				return null;
+			};
+			var result = {'nodes': [], 'connectors': [], nodeCount: 0, connectorCount: 0};
+			// nodes
+			for (var i = 0, l = insertedMol.getNodeCount(); i < l; ++i)
+			{
+				var srcNode = insertedMol.getNodeAt(i);
+				var index = srcObjs.indexOf(srcNode);
+				var destNode = (index >= 0)? destObjs[index]: null;
+				result.nodes.push(destNode);
+				if (destNode)
+					++result.nodeCount;
+			}
+			// connectors
+			for (var i = 0, l = insertedMol.getConnectorCount(); i < l; ++i)
+			{
+				var srcConn = insertedMol.getConnectorAt(i);
+				var destConn = _getMappedConnector(srcConn, insertedMol.getNodes(), result.nodes) || null;
+				result.connectors.push(destConn);
+				if (destConn)
+					++result.connectorCount;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_calcSrcBondOrders: function(srcStruct, mergedDestObjs)
+	{
+		if (srcStruct && srcStruct.getNodeCount())
+		{
+			var hasMerge = mergedDestObjs && mergedDestObjs.nodeCount;
+			var srcConnectors = srcStruct.getConnectors();
+			var destMergeConnectors = mergedDestObjs.connectors;
+			var srcNodes = srcStruct.getNodes();
+			var destMergeNodes = mergedDestObjs.nodes;
+
+			var _isMultipleBondOrder = function(bondOrder)
+			{
+				return ((bondOrder > Kekule.BondOrder.SINGLE) && (bondOrder <= Kekule.BondOrder.QUAD));
+			};
+			var _hasExplicitAromaticBond = function(destNode)
+			{
+				var linkedBonds = destNode.getLinkedBonds(Kekule.BondType.COVALENT);
+				var result = false;
+				if (linkedBonds.length)
+				{
+					for (var i = 0, l = linkedBonds.length; i < l; ++i)
+					{
+						var bondOrder = linkedBonds[i].getBondOrder();
+						if (bondOrder === Kekule.BondOrder.EXPLICIT_AROMATIC)
+						{
+							result = true;
+							break;
+						}
+					}
+				}
+				return result;
+			};
+			var _hasMultipleBondsOutsideRing = function(destNode, destMergeConnectors)
+			{
+				var linkedBonds = destNode.getLinkedBonds(Kekule.BondType.COVALENT);
+				//var outsideRingBonds = linkedBonds;
+				var outsideRingBonds = AU.exclude(linkedBonds, destMergeConnectors);
+				outsideRingBonds = AU.exclude(outsideRingBonds, srcConnectors);
+				var result = false;
+				if (outsideRingBonds.length)
+				{
+					for (var i = 0, l = outsideRingBonds.length; i < l; ++i)
+					{
+						var bondOrder = outsideRingBonds[i].getBondOrder();
+						if (_isMultipleBondOrder(bondOrder))
+						{
+							result = true;
+							break;
+						}
+					}
+				}
+				return result;
+			};
+			var _hasOldMultipleBondsInsideRing = function(destNode, destMergeConnectors)
+			{
+				var linkedBonds = destNode.getLinkedBonds(Kekule.BondType.COVALENT);
+				var insideRingBonds = AU.intersect(linkedBonds, destMergeConnectors);
+				var result = false;
+				if (insideRingBonds.length)
+				{
+					for (var i = 0, l = insideRingBonds.length; i < l; ++i)
+					{
+						var bondOrder = insideRingBonds[i].getBondOrder();
+						if (_isMultipleBondOrder(bondOrder))
+						{
+							result = true;
+							break;
+						}
+					}
+				}
+				return result;
+			};
+			// this function returns the confilict count of current bond order setting
+			var _trySetSrcBondOrders = function(currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders)
+			{
+				var BO = Kekule.BondOrder;
+				var currAvailableOrders;
+				var lastIndex = currIndex - 1;
+				if (lastIndex < 0)
+					lastIndex = srcConnectors.length - 1;
+				var hasLastConnector = !!calculatedBondOrders[lastIndex]; // lastIndex >= 0;
+				var lastOrder = hasLastConnector? calculatedBondOrders[lastIndex]: null;
+
+				// check if already has a multiple bond on merge dest, if so, we should use the old bond order
+				var currSrcConnector = srcConnectors[currIndex];  // getConnectorAtIndex(currIndex);
+				var destMergeConnector = destMergeConnectors[currIndex];
+				var oldOrder = destMergeConnector && destMergeConnector.getBondOrder();
+
+				var conflictCount = 0;
+
+				if (oldOrder && _isMultipleBondOrder(oldOrder))
+				{
+					currAvailableOrders = [oldOrder];
+					// if last order is a double bond, error
+					if (lastOrder && _isMultipleBondOrder(lastOrder))
+						++conflictCount; //return false;
+				}
+				else
+				{
+					if (hasLastConnector && _isMultipleBondOrder(lastOrder))  // previous bond is double, this one must be single
+					{
+						currAvailableOrders = [BO.SINGLE];
+						//console.log('index', currIndex, 'last is multi');
+					}
+					else
+					{
+						//var currDestMergeConnector = destMergeConnectors[currIndex];
+						var currSrcNodes = currSrcConnector.getConnectedChemNodes();
+						var hasMultipleBondsOutsideRing = false;
+						var hasMultipleBondsInsideRing = false;
+						for (var i = 0, l = currSrcNodes.length; i < l; ++i)
+						{
+							var nodeIndex = srcNodes.indexOf(currSrcNodes[i]);
+							var currDestMergeNode = destMergeNodes[nodeIndex];
+							if (currDestMergeNode)
+							{
+								hasMultipleBondsOutsideRing = _hasMultipleBondsOutsideRing(currDestMergeNode, destMergeConnectors);
+								hasMultipleBondsInsideRing = _hasOldMultipleBondsInsideRing(currDestMergeNode, destMergeConnectors);
+								if (hasMultipleBondsOutsideRing || hasMultipleBondsInsideRing)
+									break;
+							}
+						}
+						//console.log('index', currIndex, hasMultipleBondsOutsideRing, hasMultipleBondsInsideRing);
+						if (hasMultipleBondsOutsideRing || hasMultipleBondsInsideRing)  // double bond outside ring, need to set current bond order to 1
+						{
+							currAvailableOrders = [BO.SINGLE];
+						}
+						else
+						{
+							currAvailableOrders = [BO.DOUBLE, BO.SINGLE];
+							/*
+							if (!hasLastConnector)  // this is the first bond
+							{
+								if (destMergeConnectors[currIndex])  // has a existing old bond
+								{
+
+									if (Kekule.ObjUtils.notUnset(oldOrder) && oldOrder <= 1)  // use existing bond order, 1
+										currAvailableOrders = 1;  // oldOrder;
+								}
+							}
+							*/
+						}
+					}
+				}
+
+				//console.log('available order', currIndex, currAvailableOrders);
+
+				var minConflictCount;
+				var finalOrder;
+				for (var i = 0, l = currAvailableOrders.length; i < l; ++i)
+				{
+					var currOrder = currAvailableOrders[i];
+					calculatedBondOrders[currIndex] = currOrder;
+					// continue to set next bond
+					if (currIndex < srcConnectors.length - 1)
+					{
+						conflictCount = conflictCount + _trySetSrcBondOrders(++currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders);
+						if (Kekule.ObjUtils.isUnset(minConflictCount) || minConflictCount > conflictCount)
+						{
+							minConflictCount = conflictCount;
+							finalOrder = currOrder;
+						}
+						if (conflictCount <= 0)  // no error, just use this one
+							break;
+						/*
+						if (!conflictCount)  // try set bond orders failed
+							continue;  // try another way
+						else
+							break;
+						*/
+					}
+				}
+
+				return conflictCount;
+			};
+
+			var currIndex = 0;
+			var bondOrders = [];
+			//console.log(srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, bondOrders);
+
+			// TODO: if destMergeConnectors has explicit aromatoc bond, now the bond on the new ring will all be set to explicit aromatic
+			var hasOldExplicitAromaticBond = false;
+			for (var i = 0, l = destMergeNodes.length; i < l; ++i)
+			{
+				var n = destMergeNodes[i];
+				if (_hasExplicitAromaticBond(n))
+				{
+					hasOldExplicitAromaticBond = true;
+					break;
+				}
+			}
+
+			if (hasOldExplicitAromaticBond)
+			{
+				bondOrders = [];
+				for (var i = 0, l = srcConnectors.length; i < l; ++i)
+					bondOrders[i] = Kekule.BondOrder.EXPLICIT_AROMATIC;
+				return bondOrders;
+			}
+			else
+			{
+				// if destMergeConnectors has multiple bond, those bond orders should inherited
+				for (var i = 0, l = destMergeConnectors.length; i < l; ++i)
+				{
+					var b = destMergeConnectors[i];
+					if (b)
+					{
+						var bOrder = b.getBondOrder();
+						if (_isMultipleBondOrder(bOrder))
+							bondOrders[i] = bOrder;
+					}
+				}
+				// the calculate the bond orders of the rests
+				var orderResult = _trySetSrcBondOrders(0, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, bondOrders);
+				//console.log('calc bond orders', bondOrders, 'error', orderResult, destMergeConnectors, destMergeNodes);
+				return bondOrders;
+			}
+		}
+	}
+});
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolConjugatedRingIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
  * Controller to add arrow/line into chem space.
