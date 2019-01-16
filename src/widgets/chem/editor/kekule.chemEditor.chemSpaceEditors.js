@@ -2437,7 +2437,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			}
 		}
 	},
-
 	/** @private */
 	react_pointermove: function($super, e)
 	{
@@ -5104,6 +5103,7 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 		$super(editor);
 		this.setRepositoryItem(new Kekule.Editor.MolRingRepositoryItem2D());
 		this.setEnableSelect(false);
+		this._currBondOrders = null;  // stores current bond orders after a merge, may be needed at the last step of manipulation
 	},
 	/** @private */
 	initProperties: function()
@@ -5140,6 +5140,15 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 		}
 		return result;
 	},
+	/** @ignore */
+	manipulateBeforeStopping: function($super)
+	{
+		if (this._currBondOrders && this.useMergePreview())  // apply the actual bond orders to newly inserted structure, instead of the preview one
+		{
+			this._applyBondOrdersToSrcStruct(null, this._currBondOrders);
+		}
+		return $super();
+	},
 
 	/** @ignore */
 	_mergeOperationsChanged : function($super, mergedObjCount, targetObjs, destObjs)
@@ -5157,7 +5166,7 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 		{
 			var mergedDestObjs = this._getMergedDestObjs(srcStruct, mergedObjCount, targetObjs, destObjs);
 			// according to obj map, calculate the correct bond orders of src
-			this.updateRepStructureBondOrders(srcStruct, mergedDestObjs);
+			this.updateRepStructureBondOrders(srcStruct, mergedDestObjs, this.useMergePreview());
 		}
 	},
 	/** @ignore */
@@ -5165,10 +5174,11 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 	{
 		var result = $super(targetObj, repItem);
 		this.updateRepStructureBondOrders(result.objects[0], null);  // initialize double bonds of aromatic ring
+		this._currBondOrders = null;
 		return result;
 	},
 	/** @private */
-	updateRepStructureBondOrders: function(srcStruct, mergedDestObjs)
+	updateRepStructureBondOrders: function(srcStruct, mergedDestObjs, isPreview)
 	{
 		if (!this.getIsAromatic())
 			return;
@@ -5181,8 +5191,24 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 		{
 			mergedDestObjs = {'nodes': [], 'connectors': [], 'nodeCount': 0, 'connectorCount': 0};
 		}
-		var bondOrders = this._calcSrcBondOrders(srcStruct, mergedDestObjs);
+		var bondOrderResult = this._calcSrcBondOrders(srcStruct, mergedDestObjs);
+		var bondOrders = bondOrderResult.bondOrders;
+		var previewBondOrders = bondOrderResult.previewBondOrders;
 
+		// stores the latest actual bond orders (not preview orders)
+		this._currBondOrders = bondOrders;
+
+		//console.log(bondOrders, previewBondOrders, isPreview);
+		this._applyBondOrdersToSrcStruct(srcStruct, isPreview ? previewBondOrders: bondOrders);
+	},
+	/** @private */
+	_applyBondOrdersToSrcStruct: function(srcStruct, bondOrders)
+	{
+		if (!srcStruct)
+		{
+			var repObjects = this.getCurrRepositoryObjects();
+			var srcStruct = repObjects && repObjects[0];
+		}
 		var editor = this.getEditor();
 		try
 		{
@@ -5196,8 +5222,11 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 					for (var i = 0, l = srcStruct.getConnectorCount(); i < l; ++i)
 					{
 						var bond = srcStruct.getConnectorAt(i);
-						if (bond.setBondOrder)
-							bond.setBondOrder(bondOrders[i]);
+						if (bond && bond.setBondOrder)
+						{
+							var bondOrder = bondOrders[i];
+							bond.setBondOrder(bondOrder);
+						}
 					}
 				}
 				finally
@@ -5341,10 +5370,10 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 				return result;
 			};
 			// this function returns the confilict count of current bond order setting
-			var _trySetSrcBondOrders = function(currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders)
+			var _trySetSrcBondOrders = function(currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders, calculatedMergePreviewBondOrders)
 			{
 				var BO = Kekule.BondOrder;
-				var currAvailableOrders;
+				var currAvailableOrders, currPreviewOrders;
 				var lastIndex = currIndex - 1;
 				if (lastIndex < 0)
 					lastIndex = srcConnectors.length - 1;
@@ -5361,6 +5390,7 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 				if (oldOrder && _isMultipleBondOrder(oldOrder))
 				{
 					currAvailableOrders = [oldOrder];
+					currPreviewOrders = [BO.SINGLE];  // in preview, need use single bond to avoid display two double bonds (like a triple bond in view)
 					// if last order is a double bond, error
 					if (lastOrder && _isMultipleBondOrder(lastOrder))
 						++conflictCount; //return false;
@@ -5421,10 +5451,11 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 				{
 					var currOrder = currAvailableOrders[i];
 					calculatedBondOrders[currIndex] = currOrder;
+					calculatedMergePreviewBondOrders[currIndex] = (currPreviewOrders && currPreviewOrders[i]) || currOrder;
 					// continue to set next bond
 					if (currIndex < srcConnectors.length - 1)
 					{
-						conflictCount = conflictCount + _trySetSrcBondOrders(++currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders);
+						conflictCount = conflictCount + _trySetSrcBondOrders(++currIndex, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, calculatedBondOrders, calculatedMergePreviewBondOrders);
 						if (Kekule.ObjUtils.isUnset(minConflictCount) || minConflictCount > conflictCount)
 						{
 							minConflictCount = conflictCount;
@@ -5445,7 +5476,7 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 			};
 
 			var currIndex = 0;
-			var bondOrders = [];
+			var bondOrders = [], mergePreviewBondOrders = [];
 			//console.log(srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, bondOrders);
 
 			// TODO: if destMergeConnectors has explicit aromatoc bond, now the bond on the new ring will all be set to explicit aromatic
@@ -5481,9 +5512,9 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 					}
 				}
 				// the calculate the bond orders of the rests
-				var orderResult = _trySetSrcBondOrders(0, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, bondOrders);
+				var orderResult = _trySetSrcBondOrders(0, srcConnectors, srcNodes, destMergeConnectors, destMergeNodes, bondOrders, mergePreviewBondOrders);
 				//console.log('calc bond orders', bondOrders, 'error', orderResult, destMergeConnectors, destMergeNodes);
-				return bondOrders;
+				return {'bondOrders': bondOrders, 'previewBondOrders': mergePreviewBondOrders};
 			}
 		}
 	}

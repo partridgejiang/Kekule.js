@@ -6107,6 +6107,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		editor.endManipulateObject();
 	},
 	/**
+	 * Called before method stopManipulate.
+	 * Descendants may do some round-off work here.
+	 * @private
+	 */
+	manipulateBeforeStopping: function()
+	{
+		// do nothing here
+	},
+	/**
 	 * Stop manipulate of objects.
 	 * @private
 	 */
@@ -6693,6 +6702,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 				else  // move objects to new pos
 				{
+					this.manipulateBeforeStopping();
 					/*
 					if (this.getEnableMove())
 					{
@@ -6809,6 +6819,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			if (this._isInGestureManipulation())
 			{
+				this.manipulateBeforeStopping();
 				this.addOperationToEditor();
 				this.stopManipulate();
 				this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
