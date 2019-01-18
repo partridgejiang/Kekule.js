@@ -601,6 +601,44 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		return result;
 	},
 	/**
+	 * Returns the bond order changes that need to be done on aromatic rings when do a hucklization.
+	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
+	 * @param {Hash} options Option object, can include fields: {
+	 *   allowUncertainRings: Whether uncertain rings (e.g., with variable atom) be included in result. Default is false.
+	 * }.
+	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder (always be explicit aromatic)}.
+	 */
+	getHucklizationChanges: function(targetBonds, options)
+	{
+		var allowUncertainRings = options && options.allowUncertainRings;
+		var BO = Kekule.BondOrder;
+		var result = [];
+		var mol = this.getParent();
+
+		var aromaticRings = this.findAromaticRings(allowUncertainRings);
+		for (var i = 0, l = aromaticRings.length; i < l; ++i)
+		{
+			var bonds = aromaticRings[i].connectors;
+			for (var j = 0, k = bonds.length; j < k; ++j)
+			{
+				var bond = bonds[j];
+				if (!targetBonds || targetBonds.indexOf(bond) >= 0)
+				{
+					var currOrder = bond.getBondOrder && bond.getBondOrder();
+					if (currOrder === BO.SINGLE || currOrder === BO.DOUBLE)  // triple bond will not be affected
+					{
+						if (bond.setBondOrder)
+						{
+							result.push({'bond': bond, 'bondOrder': Kekule.BondOrder.EXPLICIT_AROMATIC});
+						}
+					}
+				}
+			}
+		}
+
+		return result;
+	},
+	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
  	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
 	 * @param {Hash} options Option object, can include fields: {
@@ -619,6 +657,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		mol.beginUpdate();
 		try
 		{
+			/*
 			var aromaticRings = this.findAromaticRings(allowUncertainRings);
 			for (var i = 0, l = aromaticRings.length; i < l; ++i)
 			{
@@ -637,6 +676,21 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 								result.push(bond);
 							}
 						}
+					}
+				}
+			}
+			*/
+			var changes = this.getHucklizationChanges(targetBonds, options);
+			if (changes)
+			{
+				for (var i = 0, l = changes.length; i < l; ++i)
+				{
+					var bond = changes[i].bond;
+					var order = changes[i].bondOrder;
+					if (bond.setBondOrder)
+					{
+						bond.setBondOrder(order);
+						result.push(bond);
 					}
 				}
 			}
@@ -1138,6 +1192,18 @@ ClassEx.extend(Kekule.StructureFragment,
 	},
 
 	/**
+	 * Returns the bond order changes that need to be done on aromatic rings when do a hucklization.
+	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
+	 * @param {Hash} options Option object, can include fields: {
+	 *   allowUncertainRings: Whether uncertain rings (e.g., with variable atom) be included in result. Default is false.
+	 * }.
+	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder (always be explicit aromatic)}.
+	 */
+	getHucklizationChanges: function(targetBonds, options)
+	{
+		return this.hasCtab()? this.getCtab().getHucklizationChanges(targetBonds, options): [];
+	},
+	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
 	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
 	 * @param {Hash} options Option object, can include fields: {
@@ -1212,6 +1278,63 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		return this.perceiveAromaticRings(allowUncertainRings, candidateRings);
 	},
+
+	/** @private */
+	_groupActualTargetBondsOfKekulizationOrHucklization: function(structFragments, targetBonds, options)
+	{
+		var result = [];
+		if (!targetBonds)
+		{
+			for (var i = 0, l = structFragments.length; i < l; ++i)
+				result.push({'structFragment': structFragments[i], 'bonds': null});
+		}
+		else
+		{
+			for (var i = 0, l = targetBonds.length; i < l; ++i)
+			{
+				var bond = targetBonds[i];
+				for (var j = 0, k = structFragments.length; j < k; ++j)
+				{
+					var mol = structFragments[j];
+					if (bond.isChildOf(mol))
+					{
+						if (!result[j])
+							result[j] = {'structFragment': mol, 'bonds': [bond]};
+						else
+							result[j].bonds.push(bond);
+					}
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns the bond order changes that need to be done on aromatic rings when do a hucklization.
+	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
+	 * @param {Hash} options Option object, can include fields: {
+	 *   allowUncertainRings: Whether uncertain rings (e.g., with variable atom) be included in result. Default is false.
+	 * }.
+	 * @returns {Array} Each item is a hash of {bond, (new)bondOrder (always be explicit aromatic)}.
+	 */
+	getHucklizationChanges: function(targetBonds, options)
+	{
+		var result = [];
+		var ss = CU.getAllStructFragments(this);
+		var group = this._groupActualTargetBondsOfKekulizationOrHucklization(ss, targetBonds, options);
+		for (var i = 0, l = group.length; i < l; ++i)
+		{
+			var item = group[i];
+			if (item)
+				result = result.concat(item.structFragment.getHucklizationChanges(item.bonds, options) || []);
+		}
+		/*
+		for (var i = 0, l = ss.length; i < l; ++i)
+		{
+			result = result.concat(ss[i].getHucklizationChanges(targetBonds, options) || []);
+		}
+		*/
+		return result;
+	},
 	/**
 	 * Set the orders of Kekule form bonds (single/double bonds) in aromatic rings to {@link Kekule.BondOrder.EXPLICIT_AROMATIC}.
 	 * @param {Array} targetBonds Optional, the target bonds. If this param is not set, all aromatic rings in connection table will be handled.
@@ -1224,9 +1347,18 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		var result = [];
 		var ss = CU.getAllStructFragments(this);
+		/*
 		for (var i = 0, l = ss.length; i < l; ++i)
 		{
 			result = result.concat(ss[i].hucklize(targetBonds, options) || []);
+		}
+		*/
+		var group = this._groupActualTargetBondsOfKekulizationOrHucklization(ss, targetBonds, options);
+		for (var i = 0, l = group.length; i < l; ++i)
+		{
+			var item = group[i];
+			if (item)
+				result = result.concat(item.structFragment.hucklize(item.bonds, options) || []);
 		}
 		return result;
 	},
@@ -1247,9 +1379,18 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		var result = [];
 		var ss = CU.getAllStructFragments(this);
+		/*
 		for (var i = 0, l = ss.length; i < l; ++i)
 		{
 			result = result.concat(ss[i].getKekulizationChanges(targetBonds, options) || []);
+		}
+		*/
+		var group = this._groupActualTargetBondsOfKekulizationOrHucklization(ss, targetBonds, options);
+		for (var i = 0, l = group.length; i < l; ++i)
+		{
+			var item = group[i];
+			if (item)
+				result = result.concat(item.structFragment.getKekulizationChanges(item.bonds, options) || []);
 		}
 		return result;
 	},
@@ -1263,9 +1404,18 @@ ClassEx.extend(Kekule.ChemObject,
 	{
 		var result = [];
 		var ss = CU.getAllStructFragments(this);
+		/*
 		for (var i = 0, l = ss.length; i < l; ++i)
 		{
 			result = result.concat(ss[i].kekulize(targetBonds, options) || []);
+		}
+		*/
+		var group = this._groupActualTargetBondsOfKekulizationOrHucklization(ss, targetBonds, options);
+		for (var i = 0, l = group.length; i < l; ++i)
+		{
+			var item = group[i];
+			if (item)
+				result = result.concat(item.structFragment.kekulize(item.bonds, options) || []);
 		}
 		return result;
 	}
