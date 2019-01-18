@@ -186,6 +186,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_BOND_COORDINATE: 'Coordinate bond',
 	CAPTION_MOL_BOND_METALLIC: 'Metallic bond',
 	CAPTION_MOL_BOND_HYDROGEN: 'Hydrogen bond',
+
+	CAPTION_MOL_BOND_KEKULIZE: 'Kekulize',
+	CAPTION_MOL_BOND_HUCKLIZE: 'Hucklize',
+
 	CAPTION_MOL_ATOM: 'Atom',
 	CAPTION_MOL_FORMULA: 'Formula',
 	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom & formula',
@@ -310,6 +314,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_BOND_COORDINATE: 'Coordinate bond',
 	HINT_MOL_BOND_METALLIC: 'Metallic bond',
 	HINT_MOL_BOND_HYDROGEN: 'Hydrogen bond',
+
+	HINT_MOL_BOND_KEKULIZE: 'Kekulize, convert explicit aromatic bonds to compartmental single and double ones',
+	HINT_MOL_BOND_HUCKLIZE: 'Hucklize, mark bonds on aromatic rings as explicit aromatic ones',
+
 	HINT_MOL_ATOM: 'Atom tool',
 	HINT_MOL_FORMULA: 'Formula tool',
 	HINT_MOL_ATOM_AND_FORMULA: 'Atom and formula tool',
