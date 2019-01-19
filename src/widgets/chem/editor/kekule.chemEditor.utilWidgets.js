@@ -1414,6 +1414,8 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		this._chargeBtnGroups = {};  // private
 		this._selectedButton = null; // private
 		this._chargeButtonMap = [];  // private
+		this.setPropStoreFieldValue('maxCharge', 4);
+		this.setPropStoreFieldValue('minCharge', -4);
 		$super(parentOrElementOrDocument);
 		this.addEventListener('execute', this.reactSelButtonExec.bind(this));
 	},
@@ -1444,18 +1446,26 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		});
 		this.defineProp('minCharge', {
 			'dataType': DataType.NUMBER,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value){
+				if (value !== this.getMinCharge())
+				{
+					this.setPropStoreFieldValue('minCharge', value);
+					this.updateChargeButtons();
+				}
+			}
 		});
 		this.defineProp('maxCharge', {
 			'dataType': DataType.NUMBER,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value){
+				if (value !== this.getMaxCharge())
+				{
+					this.setPropStoreFieldValue('maxCharge', value);
+					this.updateChargeButtons();
+				}
+			}
 		});
-	},
-	/** @ignore */
-	initPropValues: function($super)
-	{
-		$super();
-		this.setMaxCharge(4).setMinCharge(-4);
 	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
@@ -1499,27 +1509,34 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		if (chargeMax >= 1)
 		{
 			var group = this._chargeBtnGroups.positive;
-			for (var i = Math.max(chargeMin, 1); i <= chargeMax; ++i)
+			if (group)
 			{
-				btn = this._createChargeButton(group, i, i + sPositive);
-				//btn.appendToWidget(group);
+				for (var i = Math.max(chargeMin, 1); i <= chargeMax; ++i)
+				{
+					btn = this._createChargeButton(group, i, i + sPositive);
+					//btn.appendToWidget(group);
+				}
 			}
 		}
 		// zero
 		if (chargeMax >= 0 && chargeMin <= 0)
 		{
 			var group = this._chargeBtnGroups.zero;
-			btn = this._createChargeButton(group, 0, Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NONE'), Kekule.$L('ChemWidgetTexts.HINT_CHARGE_NONE'));
+			if (group)
+				btn = this._createChargeButton(group, 0, Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NONE'), Kekule.$L('ChemWidgetTexts.HINT_CHARGE_NONE'));
 			//btn.appendToWidget(group);
 		}
 		// negative
 		if (chargeMin <= -1)
 		{
 			var group = this._chargeBtnGroups.negative;
-			for (var i = Math.min(chargeMax, -1); i >= chargeMin; --i)
+			if (group)
 			{
-				btn = this._createChargeButton(group, i, Math.abs(i) + sNegative);
-				//btn.appendToWidget(group);
+				for (var i = Math.min(chargeMax, -1); i >= chargeMin; --i)
+				{
+					btn = this._createChargeButton(group, i, Math.abs(i) + sNegative);
+					//btn.appendToWidget(group);
+				}
 			}
 		}
 	},
