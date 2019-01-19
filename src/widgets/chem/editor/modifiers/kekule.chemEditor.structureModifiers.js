@@ -445,6 +445,9 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 			var bondTypeData = this.getEditor().getEnabledBondFormData();
 			result.setBondPropNames(this._getBondComparePropNames(bondTypeData));
 			result.setBondData(bondTypeData);
+			// kekulize and hucklize buttons
+			var showKekulize = this.getEditor().getEditorConfigs().getInteractionConfigs().getEnableBondKekulizeHucklize();
+			result.setExtraComponents(showKekulize? [Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Components.KEKULIZE]: []);
 		}
 
 		if (this._valueStorage.bondsPropValues)
@@ -574,7 +577,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 
 		if (this.getBondSelector())
 		{
-			this.getBondSelector().setBondData(bondTypeData);
+			// this.getBondSelector().setBondData(bondTypeData);  // avoid update panel each time, but lost the ability to react to config changes instantly
 			var comparedPropNames = this.getBondSelector().getBondPropNames();
 			var bondPropValues = this._extractBondsPropValues(connectors, comparedPropNames);
 			//console.log('set value', bondPropValues);

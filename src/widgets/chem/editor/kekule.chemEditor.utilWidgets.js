@@ -1098,7 +1098,9 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 			'bondData'
 		];
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames, affectedProps).length)
+		{
 			this.updatePanelContent(this.getDocument(), this.getCoreElement());
+		}
 	},
 
 	/** @ignore */
