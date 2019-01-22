@@ -51,6 +51,7 @@
 .K-Chem-StructureNodeSetter.K-ChemEditor-Atom-Setter{margin:0}
 .K-Chem-StructureNodeSetter .K-Chem-StructureNodeSetter-InputBox,.K-Chem-StructureNodeSetter .K-Chem-StructureNodeSelectPanel{display:block}
 .K-Chem-StructureNodeSetter-InputBox .K-ComboTextBox-Assoc-Widget .K-Pri-Glyph-Content{display:none}
+.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection{margin-top:.7em}
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup{display:block;margin:.5em auto;background-color:transparent;text-align:left}
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn{min-width:4em}
 .K-Chem-Editor{overflow:auto}
@@ -120,4 +121,4 @@
 .K-Chem-ComposerFrame{border:none}
 .K-Chem-ComposerFrame-ContentDoc,.K-Chem-ComposerFrame-ContentBody{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .K-Chem-ComposerFrame-ContentBody .K-Chem-Composer{margin:0;width:100%;height:100%}
-#CssGaga{content:"180901215335,swt,334"}
+#CssGaga{content:"190122222536,swt,334"}
