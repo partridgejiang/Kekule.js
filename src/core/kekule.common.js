@@ -2168,6 +2168,24 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns an parent array ([this.parent, this.parent.parent, ...]).
+	 * @returns {Array}
+	 */
+	getParentList: function()
+	{
+		var result = [];
+		var p = this.getParent();
+		if (p)
+		{
+			if (p.getParentList)
+			{
+				result = p.getParentList() || [];
+			}
+			result.unshift(p);
+		}
+		return result;
+	},
+	/**
 	 * Check if this object is a child (direct or indirect) of another object.
 	 * @param obj
 	 */
@@ -2296,22 +2314,39 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	indexStackOfChild: function(obj)
 	{
-		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		var parentList = obj.getParentList && obj.getParentList();
+		var pIndex = -1;
+		if (parentList && parentList.length)
 		{
-			var child = this.getChildAt(i);
-			if (child === obj)
-				return [i];
-			else if (child.indexStackOfChild)
-			{
-				var childStack = child.indexStackOfChild(obj)
-				if (childStack)
-				{
-					childStack.unshift(i);
-					return childStack;
-				}
-			}
+			pIndex = parentList.indexOf(this);
 		}
-		return null;
+		if (pIndex < 0)  // this is not in the parent list of obj
+			return null;
+		else
+		{
+			//var testObjs = parentList.slice(0, pIndex);
+			var result = [];
+			var parent = this;
+			var index;
+			for (var i = pIndex - 1; i >= 0; --i)
+			{
+				var testObj = parentList[i];
+				index = parent.indexOfChild(testObj);
+				if (index >= 0)
+				{
+					result.push(index);
+					parent = testObj;
+				}
+				else
+					return null;
+			}
+			index = parent.indexOfChild(obj);
+			if (index >= 0)
+				result.push(index);
+			else
+				return null;
+			return result;
+		}
 	},
 	/**
 	 * Get child object at indexStack.
@@ -2321,6 +2356,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	getChildAtIndexStack: function(indexStack)
 	{
+		if (!indexStack)
+			return null;
 		indexStack = Kekule.ArrayUtils.toArray(indexStack);
 		if (indexStack.length <= 0)
 			return null;
@@ -3464,6 +3501,17 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	removeChild: function($super, obj)
 	{
 		return this.getRoot().removeChild(obj) || $super(obj);
+	},
+
+	/** @ignore */
+	indexStackOfChild: function(obj)
+	{
+		return this.getRoot().indexStackOfChild(obj);
+	},
+	/** @ignore */
+	getChildAtIndexStack: function(indexStack)
+	{
+		return this.getRoot().getChildAtIndexStack(indexStack);
 	},
 
 	/**
