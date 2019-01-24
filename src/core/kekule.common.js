@@ -2286,7 +2286,56 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		this.cascadeOnChildren(func);
 		func(this);
 		return this;
+	},
 
+	/**
+	 * Returns index stack of child.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Array} Array of index, e.g. [3,2,1] means obj === this.getChildAt(3).getChildAt(2).getChildAt(1).
+	 *   If obj is not a child or descendant child of this, null will be returned.
+	 */
+	indexStackOfChild: function(obj)
+	{
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child === obj)
+				return [i];
+			else if (child.indexStackOfChild)
+			{
+				var childStack = child.indexStackOfChild(obj)
+				if (childStack)
+				{
+					childStack.unshift(i);
+					return childStack;
+				}
+			}
+		}
+		return null;
+	},
+	/**
+	 * Get child object at indexStack.
+	 * For example, indexStack is [2, 3, 1], then this.getChildAt(2).getChildAt(3).getChildAt(1) will be returned.
+	 * @param {Array} indexStack Array of integers.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getChildAtIndexStack: function(indexStack)
+	{
+		indexStack = Kekule.ArrayUtils.toArray(indexStack);
+		if (indexStack.length <= 0)
+			return null;
+		else
+		{
+			var child = this.getChildAt(indexStack[0]);
+			for (var i = 1, l = indexStack.length; i < l; ++i)
+			{
+				if (child && child.getChildAt)
+					child = child.getChildAt(indexStack[i]);
+				else
+					return null;
+			}
+			return child;
+		}
 	},
 
 	/**
