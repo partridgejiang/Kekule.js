@@ -28,6 +28,8 @@ const singleElectron = require("../../../public/svg/one-electron.svg");
 const lonePair = require("../../../public/svg/two-electrons.svg");
 const positiveCharge = require("../../../public/svg/positive-charge.svg");
 const negativeCharge = require("../../../public/svg/negative-charge.svg");
+const curvedArrowSingleBarb = require("../../../public/svg/curved-arrow-single-barb.svg");
+const curvedArrowDoubleBarb = require("../../../public/svg/curved-arrow-double-barb.svg");
 
 module.exports = function (Kekule) {
 
@@ -266,8 +268,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: reversibleArrowLine,
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: openArrowDoubleLine,
-	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
-	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: curvedArrowDoubleBarb,
+	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: curvedArrowSingleBarb,
 
 	CAPTION_REPOSITORY_HEAT_SYMBOL: heatSymbol,
 	CAPTION_REPOSITORY_ADD_SYMBOL: addSymbol,

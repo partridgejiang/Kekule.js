@@ -3092,8 +3092,10 @@ ObjectEx = Class.create(
 			  {
 				  break;
 			  }
-	  		var handlerInfo = handlerList.getHandlerInfo(i);
-        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+				var handlerInfo = handlerList.getHandlerInfo(i);
+				if (handlerInfo) {
+					handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+				}
 	  	}
   	}
     if (!event._cancelBubble && this.getBubbleEvent())
