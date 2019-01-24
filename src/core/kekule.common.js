@@ -2078,6 +2078,18 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		return 'o';
 	},
+
+	/**
+	 * Called when the owner of this object has been loaded/deserialized from external data.
+	 * Descendants may override this method to do some extra jobs after loading.
+	 * @param {Kekule.ChemSpace} owner
+	 * @private
+	 */
+	_ownerSpaceLoaded: function(owner)
+	{
+		console.log('owner loaded', owner.getClassName(), this.getClassName());
+	},
+
 	/**
 	 * Check whether this object can be selected alone in editor.
 	 */
@@ -3395,12 +3407,25 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 			root.setParent(this);
 			root.setOwner(this);
 		}
+		this.notifyOwnerLoaded();
 	},
 
 	/** @private */
 	notifyOwnedObjsChange: function()
 	{
 		this.notifyPropSet('ownedObjs', this.getPropStoreFieldValue('ownedObjs'));
+	},
+	/** @private */
+	notifyOwnerLoaded: function()
+	{
+		// when the whole chem space is loaded from external data, notify all owned objects.
+		var ownedObjs = this.getOwnedObjs() || [];
+		for (var i = 0, l = ownedObjs.length; i < l; ++i)
+		{
+			var obj = ownedObjs[i];
+			if (obj._ownerSpaceLoaded)
+				obj._ownerSpaceLoaded(this);
+		}
 	},
 
 	/* @ignore */
