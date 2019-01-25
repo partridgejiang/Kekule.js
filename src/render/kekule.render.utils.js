@@ -1784,8 +1784,7 @@ Kekule.Render.MetaShapeUtils = {
 			betweenFlag = (Math.sign(crossPoint.y - lineCoords[0].y) * Math.sign(crossPoint.y - lineCoords[1].y) <= 0);
 		else // x/y of coord0/1 all equal, two coords are actually the same point
 		*/
-		if (NU.isFloatEqual(lineCoords[0].x, lineCoords[1].x) && NU.isFloatEqual(lineCoords[0].y, lineCoords[1].y
-		))
+		if (NU.isFloatEqual(lineCoords[0].x, lineCoords[1].x) && NU.isFloatEqual(lineCoords[0].y, lineCoords[1].y))
 			// x/y of coord0/1 all equal, two coords are actually the same point
 		{
 			var circleInfo = {coords: [shapeInfo.coords[0]], radius: shapeInfo.width};
@@ -1796,11 +1795,9 @@ Kekule.Render.MetaShapeUtils = {
 		{
 			var vector = Kekule.CoordUtils.substract(lineCoords[1], lineCoords[0]);
 			if (Math.abs(vector.y) > Math.abs(vector.x))
-				betweenFlag = ((Math.sign(crossPoint.y - (lineCoords[0].y + 8)) * Math.sign(crossPoint.y - (lineCoords[1].y + 8)) <= 0) ||
-												(Math.sign(crossPoint.y - (lineCoords[0].y - 8)) * Math.sign(crossPoint.y - (lineCoords[1].y - 8)) <= 0));
+				betweenFlag = (Math.sign(crossPoint.y - lineCoords[0].y) * Math.sign(crossPoint.y - lineCoords[1].y) <= 0);
 			else
-				betweenFlag = ((Math.sign(crossPoint.x - (lineCoords[0].x + 8)) * Math.sign(crossPoint.x - (lineCoords[1].x + 8)) <= 0) ||
-												(Math.sign(crossPoint.x - (lineCoords[0].x - 8)) * Math.sign(crossPoint.x - (lineCoords[1].x - 8)) <= 0));
+				betweenFlag = (Math.sign(crossPoint.x - lineCoords[0].x) * Math.sign(crossPoint.x - lineCoords[1].x) <= 0);
 		}
 
 		if (!betweenFlag)  // not inside

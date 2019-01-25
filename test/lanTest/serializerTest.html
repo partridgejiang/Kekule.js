@@ -71,8 +71,8 @@
 				console.log(srcObj, destObj);
 			var jsonObj2 = {};
 			destObj.saveObj(jsonObj2);
-			var str = DataType.JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
-			var str2 = DataType.JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
+			var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
+			var str2 = JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
 			/*
 			console.log(str);
 			console.log(str2);
@@ -89,8 +89,8 @@
 				console.log(srcObj, destObj2);
 			var jsonObj2 = {};
 			destObj2.saveObj(jsonObj2);
-			var str = DataType.JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
-			var str2 = DataType.JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
+			var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
+			var str2 = JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
 			//console.log(str2);
 			if (window.console)
 				console.log(str == str2);
@@ -164,8 +164,8 @@
 			//serializerJson.save(mol2, jsonObj2);
 			mol2.saveObj(jsonObj2);
 
-			var str = DataType.JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
-			var str2 = DataType.JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
+			var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
+			var str2 = JsonUtility.serializeToStr(jsonObj2, {'prettyPrint': true});
 			/*
 			console.log(str);
 			console.log(str2);

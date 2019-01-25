@@ -35,7 +35,7 @@
 		var serializer = new JsonObjSerializer();
 		serializer.save(result, jsonObj);
 		//mol.saveObj(jsonObj);
-		var str = DataType.JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
+		var str = JsonUtility.serializeToStr(jsonObj, {'prettyPrint': true});
 		console.log(jsonObj);
 		//console.log(str);
 		//console.log(mol.calcFormula());

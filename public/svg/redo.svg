@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="undo" transform="translate(5.000000, 3.000000)" fill="#00758E">
-            <path d="M7,14.875 C9.67231731,14.875 11.8461538,12.7302773 11.8461538,10.09375 C11.8461538,7.45722266 9.67231731,5.3125 7,5.3125 L7,8.5 L1.61538462,4.25 L7,0 L7,3.1875 C10.8596923,3.1875 14,6.2857832 14,10.09375 C14,13.90175 10.8596923,17 7,17 C3.14034135,17 0,13.90175 0,10.09375 L2.15384615,10.09375 C2.15384615,12.7302773 4.32768269,14.875 7,14.875 Z" id="Shape"></path>
-        </g>
-    </g>
-</svg>

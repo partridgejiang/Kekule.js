@@ -65,23 +65,3 @@ The full API documents can be found [here](http://partridgejiang.github.io/Kekul
 ## License
 
 The toolkit is released under [MIT](https://github.com/partridgejiang/Kekule.js/blob/master/LICENSE) license.
-
----
-## Class Extensions
-- ObjectEx
-  - ChemObject
-    - Glyph.Base
-      - PathGlyph
-        - Arc
-    - ChemStructureObject
-      - BaseStructureNode
-        - PathGlyphNode
-          - ChemStructureNode
-            - StructureFragment
-              - AbstractAtom
-                - Atom
-      - BaseStructureConnector
-        - ChemStructureConnector
-          - Bond
-    - BaseMarker
-      - UnbondedElectronSet

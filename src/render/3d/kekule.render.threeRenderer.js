@@ -847,7 +847,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		{
 			var domElem = context.getRenderer().domElement;
 			//var svg = (new XMLSerializer()).serializeToString(domElem);
-			var svg = DataType.XmlUtility.serializeNode(domElem);
+			var svg = XmlUtility.serializeNode(domElem);
 			return 'data:image/svg+xml;base64,' + btoa(svg);
 		}
 		else  // canvas or webgl

@@ -525,7 +525,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 		}
 		else if (context.canvas && (context.canvas.tagName.toLowerCase() === 'svg'))
 		{
-			var svg = DataType.XmlUtility.serializeNode(context.canvas);
+			var svg = XmlUtility.serializeNode(context.canvas);
 			return 'data:image/svg+xml;base64,' + btoa(svg);
 		}
 	}

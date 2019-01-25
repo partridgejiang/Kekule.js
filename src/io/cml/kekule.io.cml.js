@@ -3688,7 +3688,7 @@ Kekule.IO.CmlReader = Class.create(Kekule.IO.ChemDataReader,
 		var rootElem;
 		if (dataType != Kekule.IO.ChemDataType.DOM) // not a dom doc, parse it first
 		{
-			var doc = DataType.XmlUtility.parse(data);
+			var doc = XmlUtility.parse(data);
 			rootElem = doc.documentElement;
 		}
 		else
@@ -3731,7 +3731,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		var nsUri = Kekule.IO.CML.CML3_SCHEMA_NAMESPACE_URI;
 		// create a new XML document
-		var xmlDoc = DataType.XmlUtility.newDocument('cml', nsUri);
+		var xmlDoc = XmlUtility.newDocument('cml', nsUri);
 		var writer = Kekule.IO.CmlElementWriterFactory.getWriter('Kekule.ChemDocument');
 		if (writer)
 		{
@@ -3740,7 +3740,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result = writer.writeObject(obj, xmlDoc.documentElement);
 			if (dataType == Kekule.IO.ChemDataType.TEXT) // convert DOM to text
 			{
-				result = DataType.XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': this.getPrettyPrint()});
+				result = XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': this.getPrettyPrint()});
 			}
 			return result;
 		}

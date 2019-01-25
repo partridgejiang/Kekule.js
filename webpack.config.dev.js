@@ -17,7 +17,7 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: '[name].js',
+    filename: 'test.js',
   },
   module: {
     rules: [
@@ -34,7 +34,7 @@ module.exports = {
       { test: /\.woff2?$/, loader: 'url-loader?prefix=font/' },
       { test: /\.ttf$/, loader: 'url-loader?prefix=font/' },
       { test: /\.eot$/, loader: 'url-loader?prefix=font/' },
-      { test: /\.svg$/, loader: 'svg-inline-loader' },
+      { test: /\.svg$/, loader: 'url-loader?prefix=font/' },
       { test: /\.png$/, loader: 'url-loader?prefix=images/' },
       { test: /\.gif$/, loader: 'url-loader?prefix=images/' },
       { test: /\.jpg$/, loader: 'url-loader?prefix=images/' },

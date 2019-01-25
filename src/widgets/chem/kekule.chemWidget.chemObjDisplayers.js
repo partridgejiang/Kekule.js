@@ -1071,9 +1071,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	getActualDrawOptions: function()
 	{
-		this.getDrawBridge().hydrogenDisplayType = this.getRenderConfigs().getNodeViewConfigs().getHydrogenDisplayType();
-		this.getDrawBridge().module_width = this.getRenderConfigs().getGeneralConfigs().getModuleWidth();
-		this.getDrawBridge().module_height = this.getRenderConfigs().getGeneralConfigs().getModuleHeight();
 		return this.getDrawOptions();
 	},
 
@@ -1281,7 +1278,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	resetDisplay: function()
 	{
 		var op = this.getDrawOptions();
-		op.zoom = 0.66;
+		op.zoom = this.getInitialZoom() || 1;
 		op.rotateX = 0;
 		op.rotateY = 0;
 		op.rotateZ = 0;

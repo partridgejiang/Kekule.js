@@ -58,8 +58,8 @@ Kekule.ElectronSet.UNSET_ELECTRONCOUNT = null;
  * @param {Float} electronCount Count of electrons in this set. If this param is not set,
  *   electron count will be regarded as bondOrder * 2.
  */
-Kekule.UnBondedElectronSet = Class.create(Kekule.ElectronSet,
-/** @lends Kekule.UnBondedElectronSet# */
+Kekule.UnbondedElectronSet = Class.create(Kekule.ElectronSet,
+/** @lends Kekule.UnbondedElectronSet# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.UnBondedElectronSet',

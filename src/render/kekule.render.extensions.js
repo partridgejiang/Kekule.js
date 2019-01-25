@@ -1039,8 +1039,7 @@ module.exports = function(Kekule) {
 		getDisplayRichText: function($super, hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
-			// Check for number because `NONE` enumeration is 0
-			if (typeof hydrogenDisplayLevel !== 'number')
+			if (!hydrogenDisplayLevel)
 				hydrogenDisplayLevel = R.HydrogenDisplayLevel.DEFAULT;
 			/*
 			//var result = this.getCoreDisplayRichText() || R.RichTextUtils.create();
@@ -1055,24 +1054,21 @@ module.exports = function(Kekule) {
 			var result = $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 
 			var hcount = 0;
-			var implicitHydrogenCount = !this || this.getIsotopeId() === 'H' ? 0 : this.getImplicitHydrogenCount();
-			var explicitHydrogenCount = this.getExplicitHydrogenCount() || 0;
 			switch (hydrogenDisplayLevel)
 			{
 				case R.HydrogenDisplayLevel.NONE:
 					hcount = 0;
 					break;
 				case R.HydrogenDisplayLevel.ALL:
-				case R.HydrogenDisplayLevel.IMPLICIT:
-					hcount = implicitHydrogenCount + explicitHydrogenCount;
+					hcount = this.getHydrogenCount();
 					break;
 				case R.HydrogenDisplayLevel.EXPLICIT:
-					hcount = explicitHydrogenCount;
+					hcount = this.getExplicitHydrogenCount();
 					break;
 				case R.HydrogenDisplayLevel.UNMATCHED_EXPLICIT:
 				{
-					if (this.getImplicitHydrogenCount && (this.getImplicitHydrogenCount() !== explicitHydrogenCount))
-						hcount = explicitHydrogenCount;
+					if (this.getImplicitHydrogenCount && (this.getImplicitHydrogenCount() !== this.getExplicitHydrogenCount()))
+						hcount = this.getExplicitHydrogenCount();
 					break;
 				}
 			}

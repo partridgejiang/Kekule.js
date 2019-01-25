@@ -67,7 +67,6 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	molRadicalTriplet: 'radicalTriplet',
 	molRadicalDoublet: 'radicalDoublet',
 	molElectronLonePair: 'electronLonePair',
-	molElectronSingle: 'electronSingle',
 
 	molChain: 'chain',
 	molRing3: 'ring3',
@@ -330,7 +329,7 @@ Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
+		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONESELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
 	},
 	/** @private */
 	_hasCloneMethod: function()
@@ -1477,21 +1476,6 @@ Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair = Kekule.Edito
 	BNS.molElectronLonePair
 );
 
-Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerSingle = Kekule.Editor.createComposerIaControllerActionClass(
-  'Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerSingleElectron',
-	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ELECTRON_SINGLE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_DOUBLET,
-	Kekule.$L('ChemWidgetTexts.HINT_MOL_ELECTRON_SINGLE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_DOUBLET,
-	'AttachedMarkerIaController',
-	'AttachedMarkerIaController-SingleElectron',
-	{
-		'markerClassName': 'Kekule.ChemMarker.UnbondedElectronSet',
-		'targetClassName': 'Kekule.AbstractAtom',
-		'initialPropValues': {'electronCount': 1}
-	},
-	null, null,
-	BNS.molElectronSingle
-);
-
 // Charge and its variations
 Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerClear',
@@ -1592,8 +1576,7 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet,
-		Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair,
-		Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerSingle
+		Kekule.Editor.ActionComposerSetAttachedMarkerIaControllerLonePair
 	],
 	null,
 	BNS.molCharge
@@ -2115,7 +2098,6 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.copy, CE.ActionCopySelection, widgetClass);
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
 	reg(BNS.paste, CE.ActionPaste, widgetClass);
-	reg(BNS.toggleSelect, CE.ActionToggleSelectState, widgetClass);
 
 	//reg(BNS.manipulate, CE.ActionComposerSetManipulateController, widgetClass);
 	//reg(BNS.erase, CE.ActionComposerSetEraserController, widgetClass);

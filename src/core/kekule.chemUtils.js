@@ -467,10 +467,6 @@ Kekule.ChemStructureUtils = {
 			return -angles[0];
 		else  // more than two connectors
 		{
-			if (angles [1] === 0) {
-				angles[1] = 2*Math.PI;
-				angles.sort();
-			}
 			var max = 0;
 			var index = 0;
 			for (var i = 0; i < l; ++i)
@@ -480,18 +476,13 @@ Kekule.ChemStructureUtils = {
 				var delta = a2 - a1;
 				if (delta < 0)
 					delta += Math.PI * 2;
-				if (delta >= max)
+				if (delta > max)
 				{
 					max = delta;
 					index = i;
 				}
 			}
-			var result = 0;
-			if (angles[index] !== 0) {
-				result = angles[index] + Math.PI/Math.pow(2, (Math.round(l/2) - 1));
-			} else {
-				result = angles[index + 1] - Math.PI/Math.pow(2, (Math.round(l/2) - 1));
-			}
+			var result = angles[index] + max / 2;
 			/* debug
 			var msg = 'Angles: [';
 			for (var i = 0; i < l; ++i)
@@ -512,11 +503,7 @@ Kekule.ChemStructureUtils = {
 		var angles = Kekule.ChemStructureUtils._calcLinkedObj2DAnglesOfObj(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings);
 		if (avoidDirectionAngles)
 		{
-			if (angles.length === 0 && avoidDirectionAngles.length === 1 && avoidDirectionAngles[0] === 0) {
-				angles = angles.concat(Math.PI);
-			} else {
-				angles = angles.concat(avoidDirectionAngles);
-			}
+			angles = angles.concat(avoidDirectionAngles);
 			angles.sort();
 		}
 		var result = Kekule.ChemStructureUtils._getMostEmptyDirectionOfExistingAngles(angles);

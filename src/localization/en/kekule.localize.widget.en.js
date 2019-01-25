@@ -4,33 +4,6 @@
  * @author Partridge Jiang
  */
 
-const singleBond = require ("../../../public/svg/single-bond.svg");
-const doubleBond = require("../../../public/svg/double-bond.svg");
-const tripleBond = require("../../../public/svg/triple-bond.svg");
-const wedgeUpBond = require("../../../public/svg/piramid.svg");
-const wedgeDownBond = require("../../../public/svg/dotted-piramid.svg");
-const zoomIn = require("../../../public/svg/zoom-in.svg");
-const zoomOut = require("../../../public/svg/zoom-out.svg");
-const resetZoom = require("../../../public/svg/reset-zoom.svg");
-const undo = require("../../../public/svg/undo.svg");
-const redo = require("../../../public/svg/redo.svg");
-const openArrowLine = require("../../../public/svg/open-arrow-line.svg");
-const bidirectionalOpenArrowLine = require("../../../public/svg/bidirectional-open-arrow-line.svg");
-const reversibleArrowLine = require("../../../public/svg/reversible-arrow-line.svg");
-const openArrowDoubleLine = require("../../../public/svg/open-arrow-double-line.svg");
-const heatSymbol = require("../../../public/svg/triangle.svg");
-const addSymbol = require("../../../public/svg/plus.svg");
-const cycloPropane = require("../../../public/svg/cyclo-propane.svg");
-const cycloButane = require("../../../public/svg/cyclo-butane.svg");
-const cycloPentane = require("../../../public/svg/cyclo-pentane.svg");
-const cycloHexane = require("../../../public/svg/cyclo-hexane.svg");
-const singleElectron = require("../../../public/svg/one-electron.svg");
-const lonePair = require("../../../public/svg/two-electrons.svg");
-const positiveCharge = require("../../../public/svg/positive-charge.svg");
-const negativeCharge = require("../../../public/svg/negative-charge.svg");
-const curvedArrowSingleBarb = require("../../../public/svg/curved-arrow-single-barb.svg");
-const curvedArrowDoubleBarb = require("../../../public/svg/curved-arrow-double-barb.svg");
-
 module.exports = function (Kekule) {
 
 /** @ignore */
@@ -130,10 +103,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_LOADFILE: 'Load...',
 	CAPTION_LOADDATA: 'Load...',
 	CAPTION_SAVEFILE: 'Save...',
-	CAPTION_ZOOMIN: zoomIn,
-	CAPTION_ZOOMOUT: zoomOut,
-	CAPTION_RESETZOOM: resetZoom,
-	CAPTION_RESETVIEW: resetZoom,
+	CAPTION_ZOOMIN: 'Zoom In',
+	CAPTION_ZOOMOUT: 'Zoom Out',
+	CAPTION_RESETZOOM: 'Reset Zoom',
+	CAPTION_RESETVIEW: 'Reset',
 	CAPTION_ROTATE: 'Rotate',
 	CAPTION_ROTATELEFT: 'Left Rotate',
 	CAPTION_ROTATERIGHT: 'Right Rotate',
@@ -182,8 +155,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	// chem editor
 	CAPTION_NEWDOC: 'New',
-	CAPTION_UNDO: undo,
-	CAPTION_REDO: redo,
+	CAPTION_UNDO: 'Undo',
+	CAPTION_REDO: 'Redo',
 	CAPTION_COPY: 'Copy',
 	CAPTION_CUT: 'Cut',
 	CAPTION_PASTE: 'Paste',
@@ -199,14 +172,14 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ERASE: 'Erase',
 	CAPTION_TRACK_INPUT: 'Track',
 	CAPTION_MOL_BOND: 'Bond',
-	CAPTION_MOL_BOND_SINGLE: singleBond,
-	CAPTION_MOL_BOND_DOUBLE: doubleBond,
-	CAPTION_MOL_BOND_TRIPLE: tripleBond,
+	CAPTION_MOL_BOND_SINGLE: 'Single bond',
+	CAPTION_MOL_BOND_DOUBLE: 'Double bond',
+	CAPTION_MOL_BOND_TRIPLE: 'Triple bond',
 	CAPTION_MOL_BOND_QUAD: 'Quad bond',
 	CAPTION_MOL_BOND_EXPLICIT_AROMATIC: 'Aromatic bond',
-	CAPTION_MOL_BOND_WEDGEUP: wedgeUpBond,
+	CAPTION_MOL_BOND_WEDGEUP: 'Wedge up bond',
 	CAPTION_MOL_BOND_WEDGEUP_INVERTED: 'Wedge up bond 2',
-	CAPTION_MOL_BOND_WEDGEDOWN: wedgeDownBond,
+	CAPTION_MOL_BOND_WEDGEDOWN: 'Wedge down bond',
 	CAPTION_MOL_BOND_WEDGEDOWN_INVERTED: 'Wedge down bond 2',
 	CAPTION_MOL_BOND_CLOSER: 'Outer bond',
 	CAPTION_MOL_BOND_WAVY: 'Wavy bond',
@@ -215,34 +188,29 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_BOND_COORDINATE: 'Coordinate bond',
 	CAPTION_MOL_BOND_METALLIC: 'Metallic bond',
 	CAPTION_MOL_BOND_HYDROGEN: 'Hydrogen bond',
-
-	CAPTION_MOL_BOND_KEKULIZE: 'Kekulize',
-	CAPTION_MOL_BOND_HUCKLIZE: 'Hucklize',
-
 	CAPTION_MOL_ATOM: 'Atom',
 	CAPTION_MOL_FORMULA: 'Formula',
-	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom & formula',
+	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom and formula',
 	CAPTION_MOL_CHARGE: 'Charge',
 	CAPTION_MOL_CHARGE_CLEAR: 'Charge clear',
-	CAPTION_MOL_CHARGE_POSITIVE: positiveCharge,
-	CAPTION_MOL_CHARGE_NEGATIVE: negativeCharge,
-	CAPTION_MOL_CHARGE_SINGLET: singleElectron,
+	CAPTION_MOL_CHARGE_POSITIVE: 'Positive charge',
+	CAPTION_MOL_CHARGE_NEGATIVE: 'Negative charge',
+	CAPTION_MOL_CHARGE_SINGLET: 'Singlet radical',
 	CAPTION_MOL_CHARGE_DOUBLET: 'Monoradical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
-	CAPTION_MOL_ELECTRON_LONEPAIR: lonePair,
-	CAPTION_MOL_ELECTRON_SINGLE: singleElectron,
+	CAPTION_MOL_ELECTRON_LONEPAIR: 'Lone pair',
 	CAPTION_TEXT_BLOCK: 'Text block',
 	CAPTION_IMAGE_BLOCK: 'Image block',
-	CAPTION_TEXT_IMAGE: 'Text & image',
+	CAPTION_TEXT_IMAGE: 'Text and image',
 
 	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
 	CAPTION_MOL_FLEXRING: 'Flex ring',
 
 	CAPTION_REPOSITORY_RING: 'Rings',
-	CAPTION_REPOSITORY_RING_3: cycloPropane,
-	CAPTION_REPOSITORY_RING_4: cycloButane,
-	CAPTION_REPOSITORY_RING_5: cycloPentane,
-	CAPTION_REPOSITORY_RING_6: cycloHexane,
+	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
+	CAPTION_REPOSITORY_RING_4: 'Cyclobutane',
+	CAPTION_REPOSITORY_RING_5: 'Cyclopentane',
+	CAPTION_REPOSITORY_RING_6: 'Cyclohexane',
 	CAPTION_REPOSITORY_RING_7: 'Cycloheptane',
 	CAPTION_REPOSITORY_RING_8: 'Cyclooctane',
 	CAPTION_REPOSITORY_RING_AR_6: 'Benzene',
@@ -266,17 +234,17 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & lines',
 	CAPTION_REPOSITORY_GLYPH: 'Glyphs',
 	CAPTION_REPOSITORY_GLYPH_LINE: 'Line',
-	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE: openArrowLine,
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
 	CAPTION_REPOSITORY_GLYPH_TRIANGLE_ARROW_LINE: 'Triangle arrow line',
-	CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE: bidirectionalOpenArrowLine,
+	CAPTION_REPOSITORY_GLYPH_DI_OPEN_ARROW_LINE: 'Bidirectional open arrow line',
 	CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
-	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: reversibleArrowLine,
-	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: openArrowDoubleLine,
-	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: curvedArrowDoubleBarb,
-	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: curvedArrowSingleBarb,
+	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: 'Reversible arrow line',
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 
-	CAPTION_REPOSITORY_HEAT_SYMBOL: heatSymbol,
-	CAPTION_REPOSITORY_ADD_SYMBOL: addSymbol,
+	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
+	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
 	CAPTION_TEXT_FORMAT: 'Text format',
 	CAPTION_PICK_COLOR: 'Color',
@@ -328,7 +296,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_ERASE: 'Erase tool',
 	HINT_TRACK_INPUT: 'Track tool',
 	HINT_MOL_BOND: 'Bond tool',
-	HINT_MOL_BOND_SINGLE: singleBond,
+	HINT_MOL_BOND_SINGLE: 'Single bond',
 	HINT_MOL_BOND_DOUBLE: 'Double bond',
 	HINT_MOL_BOND_TRIPLE: 'Triple bond',
 	HINT_MOL_BOND_QUAD: 'Quad bond',
@@ -339,15 +307,11 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_BOND_WEDGEDOWN_INVERTED: 'Wedge down bond 2',
 	HINT_MOL_BOND_CLOSER: 'Outer bond',
 	HINT_MOL_BOND_WAVY: 'Wavy bond',
-	HINT_MOL_BOND_DOUBLE_EITHER: 'Double either bond',
+	HINT_MOL_BOND_DOUBLE_EITHER: 'Double Either bond',
 	HINT_MOL_BOND_IONIC: 'Ionic bond',
 	HINT_MOL_BOND_COORDINATE: 'Coordinate bond',
 	HINT_MOL_BOND_METALLIC: 'Metallic bond',
 	HINT_MOL_BOND_HYDROGEN: 'Hydrogen bond',
-
-	HINT_MOL_BOND_KEKULIZE: 'Kekulize, convert explicit aromatic bonds to compartmental single and double ones',
-	HINT_MOL_BOND_HUCKLIZE: 'Hucklize, mark bonds on aromatic rings as explicit aromatic ones',
-
 	HINT_MOL_ATOM: 'Atom tool',
 	HINT_MOL_FORMULA: 'Formula tool',
 	HINT_MOL_ATOM_AND_FORMULA: 'Atom and formula tool',
@@ -359,7 +323,6 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_CHARGE_DOUBLET: 'Monoradical',
 	HINT_MOL_CHARGE_TRIPLET: 'Triplet radical',
 	HINT_MOL_ELECTRON_LONEPAIR: 'Lone pair electrons',
-	HINT_MOL_ELECTRON_SINGLE: 'Single electron',
 	HINT_TEXT_BLOCK: 'Text block tool',
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',
@@ -367,7 +330,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_FLEXCHAIN: 'Flex carbon chain',
 	HINT_MOL_FLEXRING: 'Flex carbon ring',
 
-	HINT_REPOSITORY_RING: 'Ring structures tool',
+	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',
 	HINT_REPOSITORY_RING_4: 'Cyclobutane',
 	HINT_REPOSITORY_RING_5: 'Cyclopentane',
@@ -392,7 +355,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	HINT_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
 
-	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines tool',
+	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines',
 	HINT_REPOSITORY_GLYPH: 'Glyphs',
 	HINT_REPOSITORY_GLYPH_LINE: 'Line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',

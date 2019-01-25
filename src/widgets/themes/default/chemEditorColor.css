@@ -12,8 +12,7 @@
   background-repeat: no-repeat;
 }
 .K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content,
-.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content,
-.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button .K-Pri-Glyph-Content
+.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content
 {
   width: 21px;
   height: 21px;
@@ -63,8 +62,8 @@
 
 .K-Chem-Editor .K-Chem-Editor-Client
 {
-  background-color: white;
-  outline: 1px solid #ddd;
+  background-color: #fff;
+  outline: 1px solid #666;
 }
 
 .K-Chem-Composer .K-Chem-Editor
@@ -424,13 +423,4 @@
 .K-Chem-ArrowLineIaController-AddSymbol > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/addSymbol.gif");
-}
-
-.K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Kekulize > .K-Pri-Glyph-Content
-{
-  background-image: url("images/slice/iconsSmall/ringAr6.gif");
-}
-.K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Hucklize > .K-Pri-Glyph-Content
-{
-  background-image: url("images/slice/iconsSmall/ringAr6_2.gif");
 }

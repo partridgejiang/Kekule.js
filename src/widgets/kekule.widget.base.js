@@ -4408,7 +4408,7 @@ Kekule.Widget.Utils = {
 				var value = JSON.parse(attribValue);
 				if (Kekule.ObjUtils.notUnset(value))
 				{
-					var obj = Class.ObjSerializerFactory.getSerializer('json').load(null, value);
+					var obj = ObjSerializerFactory.getSerializer('json').load(null, value);
 					widget.setPropValue(propName, obj);
 				}
 			}

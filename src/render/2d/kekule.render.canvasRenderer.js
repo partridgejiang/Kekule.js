@@ -499,8 +499,6 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			//if (context.lineWidth !== 1)
 			context.lineWidth = 1;
 		}
-		if (options.strokeColor && options.strokeColor === "#999999")
-			options.strokeColor = "#686868";
 		if (options.strokeColor /* && context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
 
@@ -529,8 +527,6 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			context.globalAlpha = options.opacity;
 		else  // default
 			context.globalAlpha = 1;
-		if (options.zoom)
-			context.zoom = options.zoom;
 	},
 	doneDraw: function(context, options)
 	{
@@ -585,7 +581,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		context.font = fontStyle;
 		if (options.color)
 			context.fillStyle = options.color;
-		context.textBaseline = 'hanging';
+		context.textBaseline = 'top';
 		context.fillText(text, coord.x, coord.y);
 
 		context.fontStyle = oldFontStyle;

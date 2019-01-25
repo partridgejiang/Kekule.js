@@ -765,11 +765,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		//console.log('zoom center info', this.getZoomCenter(), zoomCenterCoord);
 		//if (zoomCenterCoord)
-		// {
-		// 	var scrollDelta = CU.multiply(zoomCenterCoord, zoomLevel / currZoomLevel - 1);
-		// 	selfElem.scrollLeft += scrollDelta.x;
-		// 	selfElem.scrollTop += scrollDelta.y;
-		// }
+		{
+			var scrollDelta = CU.multiply(zoomCenterCoord, zoomLevel / currZoomLevel - 1);
+			selfElem.scrollLeft += scrollDelta.x;
+			selfElem.scrollTop += scrollDelta.y;
+		}
 		return result;
 	},
 	/**
@@ -958,6 +958,32 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!this._initialRenderTransformParams)
 		{
 			this._initialRenderTransformParams = this.getPainter().getActualInitialRenderTransformOptions(this.getObjContext());
+			/*
+			if (transParam)
+			{
+				var trans = {}
+				var unitLength = transParam.unitLength || 1;
+				if (Kekule.ObjUtils.notUnset(transParam.translateX))
+					trans.translateX = transParam.translateX / unitLength;
+				if (Kekule.ObjUtils.notUnset(transParam.translateY))
+					trans.translateY = transParam.translateY / unitLength;
+				if (Kekule.ObjUtils.notUnset(transParam.translateZ))
+					trans.translateZ = transParam.translateZ / unitLength;
+
+				if (transParam.center)
+					trans.center = transParam.center;
+
+				//var zoom = transParam.zoom || 1;
+				var zoom = 1;
+
+				trans.scaleX = transParam.scaleX / zoom;
+				trans.scaleY = transParam.scaleY / zoom;
+				trans.scaleZ = transParam.scaleZ / zoom;
+
+				this._initialRenderTransformParams = trans;
+				console.log(this._initialRenderTransformParams, this);
+			}
+			*/
 		}
 
 		// redraw ui markers
@@ -1164,7 +1190,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var parent = this.getCoreElement();
 		if (parent)
 		{
-			parent.style.height = '340px';
 			var doc = parent.ownerDocument;
 			this._createContextParentElem(doc, parent, 'objContextParentElem');
 			this._createContextParentElem(doc, parent, 'operContextParentElem');
@@ -1176,6 +1201,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var result = doc.createElement('div');
 		result.style.position = 'absolute';
+		result.style.width = '100%';
+		result.style.height = '100%';
 		result.className = contextElemPropName + ' ' + CNS.DYN_CREATED;  // debug
 		this.setPropStoreFieldValue(contextElemPropName, result);
 		parentElem.appendChild(result);
@@ -6082,15 +6109,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		editor.endManipulateObject();
 	},
 	/**
-	 * Called before method stopManipulate.
-	 * Descendants may do some round-off work here.
-	 * @private
-	 */
-	manipulateBeforeStopping: function()
-	{
-		// do nothing here
-	},
-	/**
 	 * Stop manipulate of objects.
 	 * @private
 	 */
@@ -6677,7 +6695,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				}
 				else  // move objects to new pos
 				{
-					this.manipulateBeforeStopping();
 					/*
 					if (this.getEnableMove())
 					{
@@ -6794,7 +6811,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			if (this._isInGestureManipulation())
 			{
-				this.manipulateBeforeStopping();
 				this.addOperationToEditor();
 				this.stopManipulate();
 				this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);

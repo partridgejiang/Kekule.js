@@ -28,7 +28,7 @@ module.exports = function(Kekule){
  */
 Kekule.globalOptions.add('algorithm.molStandardization', {
 	cleanStructure: true,
-	clearHydrogens: false,
+	clearHydrogens: true,
 	unmarshalSubFragments: true,
 	doCanonicalization: true,
 	doAromaticPerception: true,

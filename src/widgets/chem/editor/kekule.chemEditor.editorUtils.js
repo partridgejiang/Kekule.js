@@ -37,8 +37,7 @@ Kekule.Editor.StructureUtils = {
 	 */
 	getSurroundingObjs: function(chemObj)
 	{
-		var objs = (!(chemObj instanceof Kekule.ChemMarker.UnbondedElectronSet))?
-								chemObj.getLinkedObjs() : chemObj.getParent().getLinkedObjs();
+		var objs = chemObj.getLinkedObjs();
 
 		if (chemObj instanceof Kekule.ChemStructureConnector)  // a connector, should also consider other connectors connecting it
 		{

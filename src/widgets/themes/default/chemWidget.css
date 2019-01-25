@@ -186,8 +186,8 @@
 .K-Chem-Viewer
 {
     /* default size of viewer */
-    width:100% !important;
-    height:100% !important;
+    width: 20em;
+    height: 15em;
 }
 
 .K-Chem-Viewer.K-State-Hover
@@ -383,11 +383,6 @@
     display: none;
 }
 
-.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection
-{
-    margin-top: 0.7em;
-}
-
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup
 {
     display: block;
@@ -475,6 +470,7 @@
 .K-Chem-Composer .K-Chem-Composer-Left-Region,
 .K-Chem-Composer .K-Chem-Composer-Bottom-Region
 {
+    position: absolute;
     padding: 0;
     margin: 0;
 }

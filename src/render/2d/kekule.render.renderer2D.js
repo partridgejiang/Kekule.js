@@ -569,21 +569,6 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	drawRichText: function(context, coord, richText, options)  // note: return {drawnObj, boundRect}
 	{
 		var drawer = this.getRichTextDrawer();
-		options.fontWeight = 'bold';
-		if (richText.text) {
-			var sign = richText.text;
-			options.strokeColor = 'transparent';
-			options.globalCompositeOperation = 'destination-over';
-			var radius = 12 * options.zoom;
-			if (sign === '-' || sign === '+')
-					options.fontSize = 20;
-			if (sign.includes('+'))
-					options.fillColor = 'rgb(172,219,162)';
-			if (sign.includes('-'))
-					options.fillColor = 'rgb(255,175,175)';
-			richText.text = sign.replace('-', '\u2012');
-			this.drawCircle(context, coord, radius, options);
-		}
 		// debug
 		//console.log('draw richText', richText, options);
 		if (this.__$redirectContextDebug__)
@@ -961,6 +946,70 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		}
 		return result;
 	},
+
+	/*
+	 * Calculate the actual coordinate transform options from baseOptions (drawOptions).
+	 * Descendants can override this method.
+	 * @param {Object} context
+	 * @param {Object} chemObj
+	 * @param {Hash} baseCoord
+	 * @param {Hash} baseOptions
+	 * @returns {Hash}
+	 */
+	/*
+	calcActualTransformOptions: function(context, chemObj, baseCoord, baseOptions)
+	{
+		if (!chemObj)
+			chemObj = this.getChemObj();
+
+		var objBox = this.estimateObjBox(context, chemObj, baseOptions);
+
+		var O = Kekule.ObjUtils;
+		var op = Object.create(baseOptions || {});
+		var unitLength = this.getRenderConfigs().getLengthConfigs().getUnitLength() || 1;
+		if (op.translateX)
+			op.translateX *= unitLength;
+		if (op.tranlateY)
+			op.translateY *= unitLength;
+		if (baseCoord)
+		{
+			var boxCenter = {'x': (objBox.x1 + objBox.x2) / 2, 'y': (objBox.y1 + objBox.y2) / 2};
+			op.translateX = (op.translateX || 0) + baseCoord.x - boxCenter.x;
+			op.translateY = (op.translateY || 0) + baseCoord.y - boxCenter.y;
+		}
+		var zoom = op.zoom || 1;
+		if (op.scale)
+			op.scale *= unitLength * zoom;
+		if (op.scaleX)
+			op.scaleX *= unitLength * zoom;
+		if (op.scaleY)
+			op.scaleY *= unitLength * zoom;
+		if ((!op.scale) && (!op.scaleX) && (!op.scaleY) && op.autoScale)
+		{
+			// auto determinate the scale by defBondLength and median of ctab bond length
+			var defDrawRefLength = oneOf(op.refDrawLength, this.getAutoScaleRefDrawLength());
+			var medianObjRefLength = this.getAutoScaleRefObjLength(chemObj);
+			op.scale = defDrawRefLength / medianObjRefLength * unitLength * zoom;
+		}
+
+		if (O.isUnset(op.center))  // center not set, use center coord of Ctab
+		{
+			op.center = {};
+			op.center.x = (objBox.x1 + objBox.x2) / 2;
+			op.center.y = (objBox.y1 + objBox.y2) / 2;
+		}
+		/*
+		if (op.baseOnRootCoord && chemObj.hasCoord2D && chemObj.hasCoord2D())  // consider coord of chemObj
+		{
+			var baseCoord = chemObj.getCoord2D();
+			op.translateX = (op.translateX || 0) + baseCoord.x; // * op.scale;
+			op.translateY = (op.translateY || 0) + baseCoord.y; // * op.scale;
+			console.log(op.translateX, op.translateY);
+		}
+		*//*
+		return op;
+	}
+	*/
 
 	/** @ignore */
 	getRenderFinalTransformParams: function(context)
@@ -1425,9 +1474,6 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 	/** @private */
 	_drawSingleElectron: function(context, coord, radius, options)
 	{
-		options.strokeColor = '#ffffff';
-		options.strokeWidth = 4;
-		options.globalCompositeOperation = 'destination-over';
 		return this.drawCircle(context, coord, radius, options);
 	},
 	/** @private */
@@ -1474,7 +1520,7 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 			var adjustDelta = CU.multiply(deltaVector, eRadius * 2 / gap);
 			var c1 = CU.substract(electronCoords[0], adjustDelta);
 			var c2 = CU.add(electronCoords[electronCount - 1], adjustDelta);
-			boundInfo = this.createLineBoundInfo(c1, c2, eRadius, true);
+			boundInfo = this.createLineBoundInfo(c1, c2, eRadius);
 		}
 
 		return {'electronCoords': electronCoords, 'drawnElem': group || drawElem, 'electronRadius': eRadius, 'boundInfo': boundInfo};
@@ -1515,22 +1561,8 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 
 		//console.log('draw lone pair', baseCoord, parentCoord, options);
 
-		var electronsGroups = 0;
-		for (var i = 0; i < parentObj.getMarkerCount(); ++i) {
-				var marker = parentObj.getMarkerAt(i);
-				if (marker instanceof Kekule.ChemMarker.UnbondedElectronSet) {
-					electronsGroups += 1;
-				}
-		}
-
 		if (!baseCoord || !parentCoord)
 			return null;
-
-		// prevent 4 electrons goroups (pair or single)
-		if ((electronsGroups > 4) && (chemObj instanceof Kekule.ChemMarker.UnbondedElectronSet) && (parentObj.indexOfMarker(chemObj) > 3)) {
-			parentObj.removeMarkerAt(parentObj.getMarkerCount() - 1);
-			return null;
-		}
 
 		// do actual draw
 		var drawResult = this._drawElectrons(context, chemObj.getElectronCount(), baseCoord, parentCoord, ops);
@@ -2596,7 +2628,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			 var renderOptions = Object.extend(renderConfigs, localOptions);
 			 */
 			// if a label is drawn, all hydrogens should be marked
-			var hdisplayLevel = this._getNodeHydrogenDisplayLevel(node, options);
+			var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
 			//console.log(hdisplayLevel);
 			var needShowChargeInLabel = !!(needDrawCharge || needDrawRadical);
 			//console.log(node.getCharge(), node.getRadical(), needDrawCharge, needDrawRadical, needShowChargeInLabel);
@@ -2620,7 +2652,6 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			//console.log('draw node label', nodeRenderOptions, label);
 			var actualDrawOptions = Object.create(nodeRenderOptions);
 			actualDrawOptions.charDirection = labelCharDirection;
-			actualDrawOptions.verticalAlign = Kekule.Render.TextAlign.CENTER;
 			var elemEx = this.drawRichText(context, coord, label,
 					actualDrawOptions/*nodeRenderOptions/*richTextDrawOptions*/);
 			var elem = elemEx.drawnObj;
@@ -2633,7 +2664,6 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		else
 		{
 			var nodeCoreElem, chargeElem;
-			var skeletalRadius = 10;
 			if (this.getObjNeedDrawDot(context, node) && Kekule.ObjUtils.isUnset(nodeRenderOptions.atomRadius))
 			{
 				nodeRenderOptions.atomRadius = nodeRenderOptions.allenCenterAtomRadius;
@@ -2644,9 +2674,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				nodeRenderOptions.strokeColor = nodeRenderOptions.color;
 				nodeRenderOptions.fillColor = nodeRenderOptions.color;
 				nodeCoreElem = this.drawCircle(context, coord, radius, nodeRenderOptions);
+				boundInfo = this.createCircleBoundInfo(coord, radius);
 			}
-			boundInfo = this.createCircleBoundInfo(coord, skeletalRadius);
-
+			else
+				boundInfo = this.createPointBoundInfo(coord);
 			//if (node.getCharge() || node.getRadical()) // draw charge or radical
 			if (needDrawCharge || needDrawRadical)
 			{
@@ -2761,21 +2792,16 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 */
 	_getNodeHydrogenDisplayLevel: function(node, drawOptions)
 	{
-		const { hydrogenDisplayType: HDT } = this.getDrawBridge()
-		const { IMPLICIT, EXPLICIT, NONE } = Kekule.Render.HydrogenDisplayLevel
-		const { SKELETAL } = Kekule.Render.MoleculeDisplayType
-		if (node.getIsotopeId() === "C" && drawOptions.moleculeDisplayType === SKELETAL) {
-			return EXPLICIT
-		}
-		switch (HDT) {
-			case 'BONDED':
-				return NONE
-			case 'IMPLICIT':
-				return IMPLICIT
-			case 'EXPLICIT':
-			default:
-				return EXPLICIT
-		}
+		//if (this.getMoleculeDisplayType() === Kekule.Render.MoleculeDisplayType.CONDENSED)  // condensed, need display all hydrogens defaultly
+		var localRenderOptions = node.getOverriddenRenderOptions();
+		var localLevel = Kekule.Render.RenderOptionUtils.getHydrogenDisplayLevel(localRenderOptions);
+		var hdisplayLevel = Kekule.ObjUtils.notUnset(localLevel)?
+			localLevel:
+			((drawOptions.moleculeDisplayType === Kekule.Render.MoleculeDisplayType.CONDENSED)?
+					Kekule.Render.HydrogenDisplayLevel.ALL:
+					drawOptions.hydrogenDisplayLevel);
+					//this.getRenderConfigs().getMoleculeDisplayConfigs().getDefHydrogenDisplayLevel());
+		return hdisplayLevel;
 	},
 
 	/**
@@ -3263,7 +3289,6 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (localOptions)
 			renderOptions = Object.extend(renderOptions, localOptions);
 		*/
-		renderOptions.globalCompositeOperation = 'destination-over';
 
 		var node1 = nodes[0];
 		var node2 = nodes[1];
@@ -3609,7 +3634,13 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var initialBondAlign = 1;
 			if (!(lineCount & 1))  // line count is even, must decide which direction should put one more lines
 			{
-				initialBondAlign = 0;
+				if (isCross)  // cross multiple bonds, always align to center
+					initialBondAlign = 0;
+				else
+					initialBondAlign = Kekule.ObjUtils.isUnset(lineParams.bondAlign)?
+						this._decideEvenBondAlign(context, node1, node2):
+						lineParams.bondAlign;
+				//console.log(initialBondAlign);
 			}
 			for (var i = 0; i < lineCount; ++i)
 			{
@@ -4338,7 +4369,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	doDrawSelf: function($super, context, baseCoord, options)
 	{
 		//this.applyConfigs();
-		context.textBaseline = 'hanging';
+
 		$super(context, baseCoord, options);
 		/*
 		var transformOptions = this.calcActualTransformOptions(context, this.getChemObj(), baseCoord, options);
@@ -4644,7 +4675,7 @@ Kekule.Render.ChemSpace2DRenderer = Class.create(Kekule.Render.CompositeObj2DRen
 	doEstimateSelfObjBox: function($super, context, options, allowCoordBorrow)
 	{
 		var size = this.getChemObj().getSize2D();
-		if (size && size.x && size.y && options.useExplicitSpaceSize)
+		if (size.x && size.y && options.useExplicitSpaceSize)
 		{
 			var result = {
 				'x1': 0,

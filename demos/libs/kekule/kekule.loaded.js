@@ -4,29 +4,5 @@
  * than using kekule.js loader).
  */
 
-if (typeof(Kekule) !== 'undefined')
-{
+if (this.Kekule)
 	Kekule._loaded();
-}
-
-// export objects in webpack or other similiar environment at the tail of the js files
-if (typeof (module) !== 'undefined')
-{
-	try
-	{
-		/*
-		module.exports = {
-			'Class': Class,
-			'ClassEx': ClassEx,
-			'ObjectEx': ObjectEx,
-			'DataType': DataType,
-			'Kekule': Kekule
-		};
-		*/
-		module.exports = Kekule;
-	}
-	catch (e)
-	{
-	}
-}
-

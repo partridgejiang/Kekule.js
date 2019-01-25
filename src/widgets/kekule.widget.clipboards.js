@@ -102,7 +102,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		else  // object
 		{
 			var jsonObj = {};
-			Class.ObjSerializerFactory.getSerializer('json').save(data, jsonObj);
+			ObjSerializerFactory.getSerializer('json').save(data, jsonObj);
 			result = JSON.stringify(jsonObj);
 		}
 		return result;
@@ -114,7 +114,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		if (DataType.isSimpleValue(jsonObj))
 			return jsonObj;
 		else
-			return Class.ObjSerializerFactory.getSerializer('json').load(null, jsonObj);
+			return ObjSerializerFactory.getSerializer('json').load(null, jsonObj);
 	},
 
 	/**
@@ -209,7 +209,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	setObjects: function(dataType, objs)
 	{
 		var jsonObjs = [];
-		var serializer = Class.ObjSerializerFactory.getSerializer('json');
+		var serializer = ObjSerializerFactory.getSerializer('json');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
@@ -235,7 +235,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 			if (!DataType.isArrayValue(jsonObjs))
 				jsonObjs = [jsonObjs];
 			var result = [];
-			var serializer = Class.ObjSerializerFactory.getSerializer('json');
+			var serializer = ObjSerializerFactory.getSerializer('json');
 			for (var i = 0, l = jsonObjs.length; i < l; ++i)
 			{
 				var jsonObj = jsonObjs[i];

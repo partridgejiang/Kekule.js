@@ -14,6 +14,7 @@ var ObjectEx = require('../lan/classes').ObjectEx
 var DataType = require('../lan/classes').DataType
 module.exports = function(Kekule) {
 
+
 /**
  * Namespace for renderer system.
  * @namespace
@@ -110,16 +111,14 @@ Kekule.Render.NodeLabelDisplayMode = {
  * @enum
  */
 Kekule.Render.HydrogenDisplayLevel = {
-	/** No hydrodgens are displayed */
+	/** No hydrongen is displayed */
 	NONE: 0,
 	/** Only display explicit hydrogens. */
 	EXPLICIT: 1,
 	/** Display explicit hydrogens only when the count is not the same as implicit. */
 	UNMATCHED_EXPLICIT: 2,
-	/** Display all hydrogens, whether explicit and implicit ones. */
+	/** Display all hydrogens, whether explicit or implicit ones. */
 	ALL: 10,
-	/** Display only display implicit hydrogen count */
-	IMPLICIT: 12,
 	/** Default is EXPLICIT. */
 	DEFAULT: 1
 };
@@ -1358,7 +1357,9 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		var box = this.doEstimateObjBox(context, options, allowCoordBorrow);
 		//console.log('get box', this.getClassName(), box);
 		// if box has some field which is undefined or null, set it to 0
-		return this._fillBoxDefaultValue(box, this.getRendererType());;
+		if (box)
+			box = this._fillBoxDefaultValue(box, this.getRendererType());
+		return box;
 	},
 	/**
 	 * Do actual work of {@link Kekule.Render.AbstractRenderer.estimateObjBox}.
@@ -1550,25 +1551,13 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 				{'radius': radius, 'startAngle': startAngle, 'endAngle': endAngle, 'anticlockwise': anticlockwise, 'width': width});
 	},
 	/** @private */
-	createLineBoundInfo: function(coord1, coord2, width, isElectron)
+	createLineBoundInfo: function(coord1, coord2, width)
 	{
-		var increasingBondHitArea = 24;
-		if (!isElectron) {
-			return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': increasingBondHitArea});
-		} else {
-			increasingBondHitArea = 8;
-			return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': increasingBondHitArea});
-		}
+		return this.createBoundInfo(Kekule.Render.BoundShapeType.LINE, [coord1, coord2], {'width': width});
 	},
 	/** @private */
 	createRectBoundInfo: function(coord1, coord2)
 	{
-		var increaseHitAreaTop = 6;
-		var increaseHitAreaLeft = 9;
-		coord1.x = coord1.x - increaseHitAreaLeft;
-		coord1.y = coord1.y - increaseHitAreaTop;
-		coord2.x = coord2.x + increaseHitAreaLeft;
-		coord2.y = coord2.y + increaseHitAreaTop;
 		return this.createBoundInfo(Kekule.Render.BoundShapeType.RECT, [coord1, coord2]);
 	},
 	/** @private */
@@ -1895,15 +1884,6 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		var ops = Object.create(options);
 
 		this.getRenderCache(context).childDrawOptions = ops;
-
-		if (childRenderers.length > 1) {
-			for (var i = 0, l = childRenderers.length; i < l; ++i) {
-				if (childRenderers[i] instanceof Kekule.Render.TextBasedChemMarker2DRenderer) {
-					var charge = childRenderers.splice(i, 1);
-					childRenderers.unshift(charge[0]);
-				}
-			}
-		}
 
 		for (var i = 0, l = childRenderers.length; i < l; ++i)
 		{
