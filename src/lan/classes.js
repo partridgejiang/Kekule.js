@@ -960,7 +960,18 @@ var StringUtils = {
 						case StringUtils.SDATEPREFIX:  // may be date
 							{
 								var s = str.substr(1);
-								return new Date(s);
+								try
+								{
+									var d =	new Date(s);
+									if (!isNaN(d.getTime()))
+										return d;
+									else
+										return str;
+								}
+								catch(e)
+								{
+									return str;
+								}
 							}
 						default:
 							return str;
