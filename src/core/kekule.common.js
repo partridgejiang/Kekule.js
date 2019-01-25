@@ -1897,6 +1897,8 @@ Kekule.ObjComparer = {
 	}
 };
 
+/** @ignore */
+var S_PREFIX_OBJ_REF = '@';  // internal const
 /**
  * Root class for all object related to chemistry in Kekule library.
  * @class
@@ -2203,7 +2205,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		//console.log('indexStack', indexStack);
 		if (indexStack && indexStack.length)
 		{
-			var str = '@' + JSON.stringify(indexStack);
+			var str = S_PREFIX_OBJ_REF + JSON.stringify(indexStack);
 			return str;
 		}
 		else
@@ -2224,7 +2226,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode /*, DataType.STRING*/);
 				if (value)
 				{
-					if (typeof(value) === 'string' && value.startsWith('@'))  // maybe a reference string
+					if (typeof(value) === 'string' && value.startsWith(S_PREFIX_OBJ_REF))  // maybe a reference string
 					{
 						//var indexStack = this._doUnwrapObjRefSerializationStr(obj, prop, value);
 						//if (indexStack)
