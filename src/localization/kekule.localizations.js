@@ -186,6 +186,7 @@ module.exports = function(Kekule){
 	Kekule.Localization.addResource = function(languageName, resourceName, resources)
 	{
 		addLocalizationResources(languageName, resourceName, resources);
+		
 		if (saveLocModuleInfo)
 		{
 			var root = getLocModuleRootObj(currLocModuleName, true);

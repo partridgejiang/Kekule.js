@@ -655,7 +655,8 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-Res-Button-YesOk .K-Pri-Glyph-Content,
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content,
-.K-Res-Button-LoadFile .K-Pri-Glyph-Content
+.K-Res-Button-LoadFile .K-Pri-Glyph-Content,
+.K-Res-Button-Reset .K-Pri-Glyph-Content
 {
     /*display: inherit;*/
     width: 24px;
@@ -669,6 +670,10 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/cancel.png");
+}
+.K-Res-Button-Reset .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/reset.png");
 }
 
 .K-Res-Button-LoadFile .K-Pri-Glyph-Content

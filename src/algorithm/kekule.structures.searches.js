@@ -124,10 +124,6 @@ Kekule.ChemStructureSearcher = {
 		var flattenedSrcMol = sourceMol.getFlattenedShadowFragment(true);
 		var flattenedSubStruct = subStructure.getFlattenedShadowFragment(true);
 
-		/*
-		var targetStartingNode = subStructure.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
-		var srcNodes = sourceMol.getNonHydrogenNodes(); //sourceMol.getNodes();
-		*/
 		var targetStartingNode = flattenedSubStruct.getNonHydrogenNodes()[0]; //subStructure.getNodeAt(0);
 		var srcNodes = flattenedSrcMol.getNonHydrogenNodes(); //sourceMol.getNodes();
 

@@ -108,6 +108,9 @@ Kekule.MolStereoUtils = {
 	{
 		var SP = Kekule.StereoParity;
 		var angle = Kekule.MolStereoUtils.getDihedralAngleOfNodes(n1, n2, n3, n4, coordMode, allowCoordBorrow);
+		if (angle === -1) {
+			return SP.LINEAR;
+		}
 		var result = (angle < 0)? SP.UNKNOWN:
 			(angle < Math.PI * 2 / 5 || angle > Math.PI * 8 / 5)? SP.ODD:
 				(angle > Math.PI * 3 / 5 && angle < Math.PI * 7 / 5)? SP.EVEN:
@@ -126,7 +129,7 @@ Kekule.MolStereoUtils = {
 			if (centerNode && centerCoord)
 			{
 				var connector = node.getConnectorTo(centerNode);
-				if (connector.getStereo)
+				if (connector && connector.getStereo)
 				{
 					var bondStereo = connector.getStereo();
 					var BS = Kekule.BondStereo;
@@ -141,9 +144,9 @@ Kekule.MolStereoUtils = {
 						result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
 						//console.log(node.getId(), result);
 						/*
-						 if (axisIsDoubleBond)
-						 result.y = 0;
-						 */
+						if (axisIsDoubleBond)
+							result.y = 0;
+						*/
 					}
 					else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
 						return null;  // return a special mark, can determinate angle calculation

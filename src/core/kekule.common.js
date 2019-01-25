@@ -2005,6 +2005,19 @@ Kekule.ChemObject = Class.create(ObjectEx,
 					return r;
 				}
 			});
+		this.defineProp('attachedArcNodeIds', {
+			'dataType': DataType.HASH,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('attachedArcNodeIds');
+				if (!result)
+				{
+					result = {};
+					this.setPropStoreFieldValue('attachedArcNodeIds', result);
+				}
+				return result;
+			}
+		});
 		this.defineProp('scalarAttribs', {
 			'dataType': DataType.ARRAY,
 			'setter': null
@@ -2637,7 +2650,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	doGetComparisonPropNames: function(options)
 	{
-		return null;
+		return [];
 	},
 	/**
 	 * Returns all default property names that should be handled during object comparison.
@@ -3288,7 +3301,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 			'getter': function()
 			{
 				var o = this.getPropStoreFieldValue('screenSize') || {};
-				return {'x': o.x, 'y': o.y};
+				return {'x': 1500, 'y': 1000};
 			},
 			'setter': function(value)
 			{

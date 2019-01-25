@@ -11,6 +11,14 @@
 
 (function($jsRoot){
 
+// ensure the $jsRoot refers to the global object in browser or node
+if (typeof(self) === 'object')
+	$jsRoot = self;
+else if (typeof(window) === 'object' && window.document)
+	$jsRoot = window;
+else if (typeof(global) === 'object')  // node env
+	$jsRoot = global;
+
 /** @ignore */
 function emptyFunction() {};
 
@@ -516,174 +524,41 @@ if (!Array.prototype.lastIndexOf)
 
 /** @ignore */
 Object._extendSupportMethods(String.prototype, {
-	gsub: function gsub(pattern, replacement) {
-		var result = '', source = this, match;
-		//replacement = this.gsub.prepareReplacement(replacement);
-
-		while (source.length > 0) {
-			if (match === source.match(pattern)) {
-				result += source.slice(0, match.index);
-				result += replacement;
-				source  = source.slice(match.index + match[0].length);
-			} else {
-				result += source, source = '';
-			}
-		}
-		return result;
+	toArray: function() {
+		return this.split("");
 	},
 
-	sub: function(pattern, replacement, count) {
-		//replacement = this.gsub.prepareReplacement(replacement);
-		count = Object.isUndefined(count) ? 1 : count;
+	camelize: function() {
+		var parts = this.split("-"),
+		len = parts.length;
+		if (len == 1) return parts[0];
 
-		return this.gsub(pattern, function(match) {
-			if (--count < 0) return match[0];
-			return replacement(match);
-		});
+		var camelized =
+		this.charAt(0) == "-"
+		? parts[0].charAt(0).toUpperCase() + parts[0].substring(1)
+		: parts[0];
+
+		for (var i = 1; i < len; i++)
+		camelized += parts[i].charAt(0).toUpperCase() + parts[i].substring(1);
+
+		return camelized;
 	},
 
-	scan: function(pattern, iterator) {
-		this.gsub(pattern, iterator);
-		return String(this);
-	},
-
-  truncate: function(length, truncation) {
-    length = length || 30;
-    truncation = Object.isUndefined(truncation) ? '...' : truncation;
-    return this.length > length ?
-      this.slice(0, length - truncation.length) + truncation : String(this);
-  },
-
-  strip: function() {
-    return this.replace(/^\s+/, '').replace(/\s+$/, '');
-  },
-
-  stripTags: function() {
-    return this.replace(/<\/?[^>]+>/gi, '');
-  },
-
-  escapeHTML: function escapeHTML() {
-		/*
-    var self = arguments.callee;
-    self.text.data = this;
-    return self.div.innerHTML;
-    */
-		return this.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br />');
-  },
-
-  unescapeHTML: function() {
-		/*
-    var div = new Element('div');
-    div.innerHTML = this.stripTags();
-    return div.childNodes[0] ? (div.childNodes.length > 1 ?
-      __$A__(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue; }) :
-      div.childNodes[0].nodeValue) : '';
-    */
-		return this.replace(/\<br \/\>/g, '\n').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
-  },
-
-  toQueryParams: function(separator) {
-    var match = this.strip().match(/([^?#]*)(#.*)?$/);
-    if (!match) return { };
-
-    return match[1].split(separator || '&').inject({ }, function(hash, pair) {
-      if ((pair = pair.split('='))[0]) {
-        var key = decodeURIComponent(pair.shift());
-        var value = pair.length > 1 ? pair.join('=') : pair[0];
-        if (value != undefined) value = decodeURIComponent(value);
-
-        if (key in hash) {
-          if (!Object.isArray(hash[key])) hash[key] = [hash[key]];
-          hash[key].push(value);
-        }
-        else hash[key] = value;
-      }
-      return hash;
-    });
-  },
-
-  toArray: function() {
-    return this.split('');
-  },
-
-  succ: function() {
-    return this.slice(0, this.length - 1) +
-      String.fromCharCode(this.charCodeAt(this.length - 1) + 1);
-  },
-
-  times: function(count) {
-    return count < 1 ? '' : new Array(count + 1).join(this);
-  },
-
-  camelize: function() {
-    var parts = this.split('-'), len = parts.length;
-    if (len == 1) return parts[0];
-
-    var camelized = this.charAt(0) == '-'
-      ? parts[0].charAt(0).toUpperCase() + parts[0].substring(1)
-      : parts[0];
-
-    for (var i = 1; i < len; i++)
-      camelized += parts[i].charAt(0).toUpperCase() + parts[i].substring(1);
-
-    return camelized;
-  },
-
-  capitalize: function() {
-    return this.charAt(0).toUpperCase() + this.substring(1).toLowerCase();
-  },
 	capitalizeFirst: function() {
-    return this.charAt(0).toUpperCase() + this.substring(1);
-  },
+		return this.charAt(0).toUpperCase() + this.substring(1);
+	},
+	include: function(pattern) {
+		return this.indexOf(pattern) > -1;
+	},
 
-  underscore: function() {
-    return this.gsub(/::/, '/').gsub(/([A-Z]+)([A-Z][a-z])/,'#{1}_#{2}').gsub(/([a-z\d])([A-Z])/,'#{1}_#{2}').gsub(/-/,'_').toLowerCase();
-  },
+	startsWith: function(pattern) {
+		return this.indexOf(pattern) === 0;
+	},
 
-  dasherize: function() {
-    return this.gsub(/_/,'-');
-  },
-
-  inspect: function(useDoubleQuotes) {
-    var escapedString = this.gsub(/[\x00-\x1f\\]/, function(match) {
-      var character = String.specialChar[match[0]];
-      return character ? character : '\\u00' + match[0].charCodeAt().toPaddedString(2, 16);
-    });
-    if (useDoubleQuotes) return '"' + escapedString.replace(/"/g, '\\"') + '"';
-    return "'" + escapedString.replace(/'/g, '\\\'') + "'";
-  },
-
-  toJSON: function() {
-    return this.inspect(true);
-  },
-
-  isJSON: function() {
-    var str = this;
-    if (str.blank()) return false;
-    str = this.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '');
-    return (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(str);
-  },
-
-  include: function(pattern) {
-    return this.indexOf(pattern) > -1;
-  },
-
-  startsWith: function(pattern) {
-    return this.indexOf(pattern) === 0;
-  },
-
-  endsWith: function(pattern) {
-    var d = this.length - pattern.length;
-    return d >= 0 && this.lastIndexOf(pattern) === d;
-  },
-
-  empty: function() {
-    return this == '';
-  },
-
-  blank: function() {
-    return /^\s*$/.test(this);
-  }
+	endsWith: function(pattern) {
+		var d = this.length - pattern.length;
+		return d >= 0 && this.lastIndexOf(pattern) === d;
+	}
 });
 
 // added by partridge
@@ -3225,8 +3100,10 @@ ObjectEx = Class.create(
 			  {
 				  break;
 			  }
-	  		var handlerInfo = handlerList.getHandlerInfo(i);
-        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+				var handlerInfo = handlerList.getHandlerInfo(i);
+				if (handlerInfo) {
+					handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
+				}
 	  	}
   	}
     if (!event._cancelBubble && this.getBubbleEvent())
@@ -3407,6 +3284,8 @@ $jsRoot.Class = Class;
 $jsRoot.ClassEx = ClassEx;
 $jsRoot.ObjectEx = ObjectEx;
 $jsRoot.DataType = DataType;
+DataType.JsonUtility = require('./xmlJsons').JsonUtility;
+DataType.XmlUtility = require('./xmlJsons').XmlUtility;
 
 module.exports = {
   Class,
