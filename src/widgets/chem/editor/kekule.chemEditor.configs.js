@@ -116,6 +116,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Float} unmovePointerDistanceThreshold When moving less than this distance, pointer will be regarded as still.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
+ * @property {Bool} enableBondKekulizeHucklize Whether Kekulize and Hucklize buttons are shown in bond modifier of editor.
  * @property {Int} clonedObjectScreenOffset The pixel distance between cloned objects and origin objects when doing clone selection action in editor.
  * @property {Int} selectingCurveSimplificationDistanceThreshold Distance threshold to simplify curves in selecting marker.
  * @property {Float} selectingBrushWidth The selecting brush width.
@@ -177,6 +178,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addIntConfigProp('atomSetterFontSize', 14);
 		this.addBoolConfigProp('allowUnknownAtomSymbol', true);
+
+		this.addBoolConfigProp('enableBondKekulizeHucklize', true);
 
 		this.addIntConfigProp('trackSimplifierDistanceThreshold', 8);
 		this.addIntConfigProp('trackSimplifierIgnoreSegmentThreshold', 10);

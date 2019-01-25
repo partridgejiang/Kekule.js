@@ -34,6 +34,11 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	STRUCTURE_NODE_SETTER_INPUTBOX: 'K-Chem-StructureNodeSetter-InputBox',
 	STRUCTURE_CONNECTOR_SELECT_PANEL: 'K-Chem-StructureConnectorSelectPanel',
 	STRUCTURE_CONNECTOR_SELECT_PANEL_SET_BUTTON: 'K-Chem-StructureConnectorSelectPanel-SetButton',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_ADV: 'K-Chem-StructureConnectorSelectPanelAdv',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_ADV_EXTRA_SECTION: 'K-Chem-StructureConnectorSelectPanelAdv-ExtraSection',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON: 'K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON_KEKULIZE: 'K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Kekulize',
+	STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON_HUCKLIZE: 'K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Hucklize',
 	CHARGE_SELECT_PANEL: 'K-Chem-Charge-SelectPanel',
 	CHARGE_SELECT_PANEL_BTNGROUP: 'K-Chem-Charge-SelectPanel-BtnGroup',
 	CHARGE_SELECT_PANEL_CHARGE_BTN: 'K-Chem-Charge-SelectPanel-ChargeBtn'
@@ -1096,7 +1101,9 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 			'bondData'
 		];
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames, affectedProps).length)
+		{
 			this.updatePanelContent(this.getDocument(), this.getCoreElement());
+		}
 	},
 
 	/** @ignore */
@@ -1229,6 +1236,160 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 });
 
 /**
+ * An advanced panel inherited from {@link Kekule.ChemWidget.StructureConnectorSelectPanel}.
+ * Aside from the basic function of setting the bond type/order of a chem structure connector, it also
+ * includes buttons to run Hucklize or Kekulize process to connectors.
+ * @class
+ * @augments Kekule.ChemWidget.StructureConnectorSelectPanel
+ *
+ * @property {Array} extraComponents Additional sections in this panel, now the only available value is ['kekulize'].
+ */
+/**
+ * Invoked when a command button in extra section is clicked.
+ *   event param of it has field: {command}
+ * @name Kekule.ChemWidget.StructureConnectorSelectPanelAdv#command
+ * @event
+ */
+Kekule.ChemWidget.StructureConnectorSelectPanelAdv = Class.create(Kekule.ChemWidget.StructureConnectorSelectPanel,
+/** @lends Kekule.ChemWidget.StructureConnectorSelectPanelAdv# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.StructureConnectorSelectPanelAdv',
+	/** @construct */
+	initialize: function($super, parentOrElementOrDocument)
+	{
+		this.setPropStoreFieldValue('extraComponents', [Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Components.KEKULIZE]);
+		this._additionalCompWidgets = [];  // internal
+		$super(parentOrElementOrDocument);
+	},
+	/** @private */
+	initProperties: function() {
+		this.defineProp('extraComponents', {
+			'dataType': DataType.ARRAY,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_ADV;
+	},
+	/** @ignore */
+	doObjectChange: function($super, modifiedPropNames)
+	{
+		$super(modifiedPropNames);
+		var affectedProps = [
+			'extraComponents'
+		];
+		if (Kekule.ArrayUtils.intersect(modifiedPropNames, affectedProps).length)
+			this.updatePanelContent(this.getDocument(), this.getCoreElement());
+	},
+
+	/** @ignore */
+	updatePanelContent: function($super, doc, rootElem)
+	{
+		this.clearAdditionalSections();
+		$super(doc, rootElem);
+		var extraComps = this.getExtraComponents();
+		if (extraComps)
+		{
+			if (extraComps.indexOf(Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Components.KEKULIZE) >= 0)  // need to show the hucklize-kekulize section
+			{
+				this._createKekulizeSection(doc, rootElem).appendToElem(rootElem);
+			}
+		}
+	},
+	/**
+	 * Event handler to react on selector button clicked.
+	 * @private
+	 */
+	reactSelButtonExec: function($super, e)
+	{
+		$super(e);
+		var btn = e.target;
+		if (btn._command)  // is a extra command button, not a bond select button
+		{
+			this.invokeEvent('command', {
+				'command': btn._command
+			});
+		}
+	},
+	/** @private */
+	clearAdditionalSections: function()
+	{
+		if (this._additionalCompWidgets)
+		{
+			for (var i = 0, l = this._additionalCompWidgets.length; i < l; ++i)
+			{
+				var w = this._additionalCompWidgets[i];
+				w.finalize();
+			}
+			this._additionalCompWidgets = [];
+		}
+	},
+	/**
+	 * Create an additional component section in panel.
+	 * @param {HTMLDocument} doc
+	 * @param {HTMLElement} rootElem
+	 * @private
+	 */
+	createAdditionalSection: function(doc, rootElem)
+	{
+		var result = new Kekule.Widget.Container(doc);
+		result.addClassName(CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_ADV_EXTRA_SECTION);
+		this._additionalCompWidgets.push(result);
+		result.appendToElem(rootElem);
+		result.setParent(this);
+		return result;
+	},
+	/** @private */
+	_createKekulizeSection: function(doc, rootElem)
+	{
+		var result = this.createAdditionalSection(doc, rootElem);
+
+		// add kekulize and hucklize buttons
+		var btnKekulize = new Kekule.Widget.Button(result);
+		btnKekulize.addClassName([CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON, CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON_KEKULIZE])
+			.setText(Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_KEKULIZE')).setHint(Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_KEKULIZE'))
+			.setShowGlyph(true).setShowText(false);
+		btnKekulize._command = Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Commands.KEKULIZE;
+		result.appendWidget(btnKekulize);
+
+		// double direction arrow
+		var span = doc.createElement('span');
+		Kekule.DomUtils.setElementText(span, ' \u25C0 \u25B6 ');  // ◀ ▶
+		//span.innerHTML = '&10231;';
+		result.getElement().appendChild(span);
+
+		var btnHucklize = new Kekule.Widget.Button(result);
+		btnHucklize.addClassName([CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON, CCNS.STRUCTURE_CONNECTOR_SELECT_PANEL_EXTRA_SECTION_BUTTON_HUCKLIZE])
+			.setText(Kekule.$L('ChemWidgetTexts.CAPTION_MOL_BOND_HUCKLIZE')).setHint(Kekule.$L('ChemWidgetTexts.HINT_MOL_BOND_HUCKLIZE'))
+			.setShowGlyph(true).setShowText(false);
+		btnHucklize._command = Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Commands.HUCKLIZE;
+		result.appendWidget(btnHucklize);
+
+		return result;
+	}
+});
+/**
+ * A enumeration of available additional component names in {@link Kekule.ChemWidget.StructureConnectorSelectPanelAdv}.
+ * @enum
+ * @ignore
+ */
+Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Components = {
+	KEKULIZE: 'kekulize'
+};
+/**
+ * A enumeration of available additional command names in {@link Kekule.ChemWidget.StructureConnectorSelectPanelAdv}.
+ * @enum
+ * @ignore
+ */
+Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Commands = {
+	KEKULIZE: 'kekulize',
+	HUCKLIZE: 'hucklize'
+};
+
+/**
  * An panel to set the charge chem structure atom.
  * @class
  * @augments Kekule.Widget.Panel
@@ -1256,6 +1417,8 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		this._chargeBtnGroups = {};  // private
 		this._selectedButton = null; // private
 		this._chargeButtonMap = [];  // private
+		this.setPropStoreFieldValue('maxCharge', 4);
+		this.setPropStoreFieldValue('minCharge', -4);
 		$super(parentOrElementOrDocument);
 		this.addEventListener('execute', this.reactSelButtonExec.bind(this));
 	},
@@ -1286,18 +1449,26 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		});
 		this.defineProp('minCharge', {
 			'dataType': DataType.NUMBER,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value){
+				if (value !== this.getMinCharge())
+				{
+					this.setPropStoreFieldValue('minCharge', value);
+					this.updateChargeButtons();
+				}
+			}
 		});
 		this.defineProp('maxCharge', {
 			'dataType': DataType.NUMBER,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': function(value){
+				if (value !== this.getMaxCharge())
+				{
+					this.setPropStoreFieldValue('maxCharge', value);
+					this.updateChargeButtons();
+				}
+			}
 		});
-	},
-	/** @ignore */
-	initPropValues: function($super)
-	{
-		$super();
-		this.setMaxCharge(4).setMinCharge(-4);
 	},
 	/** @ignore */
 	doGetWidgetClassName: function($super)
@@ -1341,27 +1512,34 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
 		if (chargeMax >= 1)
 		{
 			var group = this._chargeBtnGroups.positive;
-			for (var i = Math.max(chargeMin, 1); i <= chargeMax; ++i)
+			if (group)
 			{
-				btn = this._createChargeButton(group, i, i + sPositive);
-				//btn.appendToWidget(group);
+				for (var i = Math.max(chargeMin, 1); i <= chargeMax; ++i)
+				{
+					btn = this._createChargeButton(group, i, i + sPositive);
+					//btn.appendToWidget(group);
+				}
 			}
 		}
 		// zero
 		if (chargeMax >= 0 && chargeMin <= 0)
 		{
 			var group = this._chargeBtnGroups.zero;
-			btn = this._createChargeButton(group, 0, Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NONE'), Kekule.$L('ChemWidgetTexts.HINT_CHARGE_NONE'));
+			if (group)
+				btn = this._createChargeButton(group, 0, Kekule.$L('ChemWidgetTexts.TEXT_CHARGE_NONE'), Kekule.$L('ChemWidgetTexts.HINT_CHARGE_NONE'));
 			//btn.appendToWidget(group);
 		}
 		// negative
 		if (chargeMin <= -1)
 		{
 			var group = this._chargeBtnGroups.negative;
-			for (var i = Math.min(chargeMax, -1); i >= chargeMin; --i)
+			if (group)
 			{
-				btn = this._createChargeButton(group, i, Math.abs(i) + sNegative);
-				//btn.appendToWidget(group);
+				for (var i = Math.min(chargeMax, -1); i >= chargeMin; --i)
+				{
+					btn = this._createChargeButton(group, i, Math.abs(i) + sNegative);
+					//btn.appendToWidget(group);
+				}
 			}
 		}
 	},

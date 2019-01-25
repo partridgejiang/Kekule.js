@@ -662,7 +662,17 @@ ObjSerializer = Class.create(
 		if (typeof(obj) == 'object')
 		{
 			if (obj instanceof ObjectEx)  // ObjectEx
-				obj = this.doLoadObjectEx(obj, storageNode, Kekule);
+			{
+				obj.beginUpdate();
+				try
+				{
+				    obj = this.doLoadObjectEx(obj, storageNode, Kekule);
+				}
+				finally
+				{
+					obj.endUpdate();
+				}
+			}
 			else if (this.isArray(obj)) // Array
 				obj = this.doLoadArray(obj, storageNode, Kekule);
 			else if (this.isDate(obj))  // date
@@ -1330,6 +1340,9 @@ ObjSerializerFactory = {
 	ObjSerializerFactory.registerSerializer('xml', XmlObjSerializer);
 })();
 
+// export ObjSerializerFactory to Class namespace
+Class.ObjSerializerFactory = ObjSerializerFactory;
+
 // extend ObjectEx and add save/load methods
 ClassEx.extend(ObjectEx,
 /** @lends ObjectEx# */
@@ -1367,7 +1380,18 @@ ClassEx.extend(ObjectEx,
       serializer = ObjSerializerFactory.getSerializer(serializerOrName);
 		else
 			serializer = serializerOrName;
-		return serializer.load(this, srcNode, Kekule);
+
+		var result;
+		this.beginUpdate();
+		try
+		{
+		   result = serializer.load(this, srcNode, Kekule);
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+		return result;
 	}
 });
 

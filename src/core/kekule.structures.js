@@ -159,6 +159,10 @@ Kekule.ObjComparer.getStructureComparisonDetailOptions = function(initialOptions
  * @property {Array} linkedSiblings Sibling objects connected with this one through linkedConnectors. Read only.
  *   Note: if there are sub structures (subgroups) in connection table, and a object is linked with a inside object inside subgroup,
  *   linkedSiblings will returns the subgroup rather than the inside object.
+ * @property {Hash} structureCache Cached complex structure data, e.g. ring info.
+ *   The cache will be automatically cleared when the structure is changed unless property (@link Kekule.ChemStructureObject.autoClearStructureCache} is false.
+ * @property {Bool} autoClearStructureCache Default is true, automatically clear structure cache data when structure object is changed.
+ *   Note: this property is not serializable and should be set manually.
  */
 /**
  * Invoked when object is changed and the change is related with structure
@@ -172,6 +176,12 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructureObject',
+	/** @constructs */
+	initialize: function($super, id)
+	{
+		this.setPropStoreFieldValue('autoClearStructureCache', true);
+		$super(id);
+	},
 	/** @private */
 	initProperties: function()
 	{
@@ -242,6 +252,21 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 					return result;
 				}
 		});
+		this.defineProp('structureCache', {'dataType': DataType.HASH, 'serializable': false,
+			// 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,   // do not allow change it directly, use method setStructureCacheData instead
+			'getter': function(autoCreate)
+			{
+				var result = this.getPropStoreFieldValue('structureCache');
+				if (!result && autoCreate)
+				{
+					result = {};
+					this.setPropStoreFieldValue('structureCache', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -350,6 +375,45 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			return p;
 	},
 
+	/**
+	 * Retrieve a cached structure data item.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getStructureCacheData: function(key)
+	{
+		var cache = this.getStructureCache();
+		return cache && cache[key];
+	},
+	/**
+	 * Set a cached structure data item.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setStructureCacheData: function(key, value)
+	{
+		this.getStructureCache(true)[key] = value;
+		return this;
+	},
+	/**
+	 * Clear all cached structure data.
+	 */
+	clearStructureCache: function()
+	{
+		//console.log('clear cache', this.getClassName());
+		this.setPropStoreFieldValue('structureCache', null);
+		return this;
+	},
+	/**
+	 * Check if structure cache of current object should be cleared when the structure is changed.
+	 * It will returns false if autoClearStructureCache property of this object (or its parent) is false.
+	 */
+	needAutoClearStructureCache: function()
+	{
+		var p = this.getParent();
+		return this.getAutoClearStructureCache() && (!p || (p.needAutoClearStructureCache && p.needAutoClearStructureCache()));
+	},
+
 	/** @private */
 	notifyLinkedConnectorsChanged: function()
 	{
@@ -358,7 +422,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 
 	/**
 	 * Returns self or child object that can directly linked to a connector.
-	 * For atom or other simple chem objetc, this function should just returns self,
+	 * For atom or other simple chem object, this function should just returns self,
 	 * for structure fragment, this function need to returns an anchor node.
 	 * @returns {Kekule.ChemStructureObject}
 	 */
@@ -568,6 +632,67 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns all pathes (node-connector-node-connector-node...) to destObj.
+	 * Usually this method should be used between two nodes.
+	 * @param {Kekule.ChemStructureObject} destObj
+	 * @returns {Array} Each item is a hash {connector, object}, indicating a path step, obj is usually a node.
+	 *   If destObj === this, [] will be returned (a zero-distance path).
+	 *   If there is no path between this object and destObj, null will be returned.
+	 */
+	getPathesToDest: function(destObj)
+	{
+		return this._doGetPathesToDest(destObj, []);
+	},
+	/** @private */
+	_doGetPathesToDest: function(destObj, iteratedConnectors)
+	{
+		if (destObj === this)
+			return [];
+
+		var result = [];
+		var pathes;
+		var dupIteratedConnectors = AU.clone(iteratedConnectors);
+
+		for (var i = 0, ii = this.getLinkedConnectorCount(); i < ii; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+
+			if (dupIteratedConnectors.indexOf(connector) >= 0)
+				continue;
+			else
+				dupIteratedConnectors.push(connector);
+
+			var objs = connector.getConnectedObjs();
+			for (var j = 0, jj = objs.length; j < jj; ++j)
+			{
+				var currObj = objs[j];
+
+				if (currObj === destObj)
+					pathes = [[]];
+				else if (currObj === this)
+					continue;
+				else
+				{
+					pathes = currObj && currObj._doGetPathesToDest && currObj._doGetPathesToDest(destObj, dupIteratedConnectors);
+				}
+				if (pathes)
+				{
+					var currEdge = {'connector': connector, 'object': currObj};
+					for (var k = 0, kk = pathes.length; k < kk; ++k)
+					{
+						pathes[k].unshift(currEdge);
+					}
+					result = result.concat(pathes);
+				}
+			}
+		}
+		
+		if (!result.length)
+			result = null;
+		return result;
+	},
+
+	/**
 	 * Returns property names that affects chem structure.
 	 * Descendants should override this method.
 	 * @private
@@ -584,7 +709,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	structureChange: function(originObj)
 	{
 		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
-		this.clearStructureFlags();
+		if (this.needAutoClearStructureCache())
+		{
+			this.clearStructureFlags();
+			this.clearStructureCache();
+		}
 		this.invokeEvent('structureChange', {'origin': originObj || this});
 	},
 	/**
@@ -763,7 +892,7 @@ Kekule.StereoParity = {
  * @property {Float} charge Charge of atom. As there may be partial charge on atom, so a float value is used.
  * @property {Int} radical Radical state of node, value should from {@link Kekule.RadicalOrder}.
  * @property {Int} parity Stereo parity of node if the node is a chiral one, following the MDL convention.
- * @property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
+ * //@property {Array} linkedChemNodes Neighbor nodes linked to this node through proper connectors.
  * @property {Bool} isAnchor Whether this node is among anchors in parent structure.
  */
 Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
@@ -1314,6 +1443,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	{
 		var valenceSum = 0;
 		var maxValence = 0;
+		var piECount = this.getStructureCacheData('piElectronCount') || null;
 		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
 		{
 			var connector = this.getLinkedConnectorAt(i);
@@ -1321,12 +1451,19 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			if ((connector instanceof Kekule.Bond)
 				&& (connector.getBondType() == Kekule.BondType.COVALENT))
 			{
-				var v = connector.getBondValence();
+				var v;
+				// a fix, if a hetero atom connected with two explicit aromatics bonds in a aromatic ring (e.g., pyrole),
+				// and the pi electron count is 2 (rather than 1), the bond order should be considered as 1 rather than 2
+				if (connector.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC && piECount >= 2)
+					v = 1;
+				else
+					v = connector.getBondValence();
 				valenceSum += v;
 				if (v > maxValence)
 					maxValence = v;
 			}
 		}
+
 		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	},
 	/** @private */
@@ -2201,6 +2338,17 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				return result;
 			}
 		});
+
+		this.defineProp('structureCache', {'dataType': DataType.HASH, 'serializable': false,
+			// 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,   // do not allow change it directly, use method setStructureCacheData instead
+			'getter': function(autoCreate)
+			{
+				var p = this.getParent();
+				return p && p.getStructureCache(autoCreate);
+			}
+		});
+
 		this.defineProp('hydrogenNodes', {
 			'dataType': DataType.ARRAY,
 			'scope': Class.PropertyScope.PUBLIC,
@@ -2535,6 +2683,40 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	isEmpty: function()
 	{
 		return (this.getNodeCount() <= 0) && (this.getConnectorCount() <= 0);
+	},
+
+	/**
+	 * Retrieve a cached structure data item.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getStructureCacheData: function(key)
+	{
+		var cache = this.getStructureCache();
+		return cache && cache[key];
+	},
+	/**
+	 * Set a cached structure data item.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setStructureCacheData: function(key, value)
+	{
+		//this.getStructureCache(true)[key] = value;
+		var p = this.getParent();
+		if (p && p.setStructureCacheData)
+			p.setStructureCacheData(key, value);
+		return this;
+	},
+	/**
+	 * Clear all cached structure data.
+	 */
+	clearStructureCache: function()
+	{
+		var p = this.getParent();
+		if (p)
+			p.clearStructureCache();
+		return this;
 	},
 
 	/**
@@ -4179,24 +4361,40 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				return this.hasCtab()? this.getCtab().getHydrogenConnectors(): [];
 			}
 		});
+		
 		this.defineProp('canonicalizationInfo', {
 			'dataType': DataType.OBJECT,
 			'serializable': false,
-			'scope': Class.PropertyScope.PUBLIC
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function()
+			{
+				return this.getStructureCacheData('canonicalizationInfo');
+			},
+			'setter': function(value)
+			{
+				this.setStructureCacheData('canonicalizationInfo', value);
+			}
 		});
+
 		this.defineProp('aromaticRings', {
 			'dataType': DataType.ARRAY,
 			'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,
 			'getter': function()
 			{
-				var result = this.getPropStoreFieldValue('aromaticRings');
+				//var result = this.getPropStoreFieldValue('aromaticRings');
+				var result = this.getStructureCacheData('aromaticRings');
 				if (!result)
 				{
 					result = [];
-					this.setPropStoreFieldValue('aromaticRings', result);
+					//this.setPropStoreFieldValue('aromaticRings', result);
+					this.setStructureCacheData('aromaticRings', result);
 				}
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setStructureCacheData('aromaticRings', value);
 			}
 		});
 
@@ -4883,14 +5081,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			shadow.finalize();
 			this.setPropStoreFieldValue('flattenedShadow', null);
 		}
+		// also clear all cached structure info data
 		$super(originObj);
 	},
 	/** @ignore */
 	clearStructureFlags: function($super)
 	{
 		$super();
+		/*  Remove these, since now canonicalizationInfo and aromaticRings are already stored in structure cache
 		this.setPropStoreFieldValue('canonicalizationInfo', null);
 		this.setPropStoreFieldValue('aromaticRings', []);
+		*/
 
 		// also clear flags of children (e.g., parity of atoms and bonds)
 		for (var i = 0, l = this.getChildCount(); i < l; ++i)
@@ -6167,7 +6368,11 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					if (shadowObj)
 						shadowConnectors.push(shadowObj);
 				}
-				shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+				var shadowRing = Object.extend({}, srcAromaticRing);
+				shadowRing.nodes = shadowNodes;
+				shadowRing.connectors = shadowConnectors;
+				//shadowAromaticRings.push({'nodes': shadowNodes, 'connectors': shadowConnectors});
+				shadowAromaticRings.push(shadowRing);
 			}
 			shadowFragment.setAromaticRings(shadowAromaticRings);
 		}
@@ -6263,6 +6468,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			}
 			return result;
 		}
+	},
+
+	/**
+	 * Create a shadow fragment of this one.
+	 * @returns {@link Kekule.StructureFragmentShadow}
+	 */
+	createShadow: function()
+	{
+		var result = new Kekule.StructureFragmentShadow(this);
+		this._copyAdditionalInfoToShadowFragment(result.getShadowFragment(), result.getSourceToShadowMap(), result.getShadowToSourceMap());
+		return result;
 	},
 
 	/**
@@ -6570,6 +6786,7 @@ Kekule.Molecule = Class.create(Kekule.StructureFragment,
  *   Usually a connector connects two nodes. However, there are some compounds that has bond-atom bond
  *   (such as Zeise's salt: [Cl3Pt(CH2=CH2)]), so here array of {@link Kekule.ChemStructureObject}
  *   rather than array of {@link Kekule.ChemStructureNode} is used.
+ * @property {Array} neighboringConnectors Readonly, all connectors which has the one of the same connectedObjs of this one.
  */
 Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 /** @lends Kekule.BaseStructureConnector# */
@@ -6628,6 +6845,26 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 
 					this.notifyConnectedObjsChanged();
 				}
+		});
+		this.defineProp('neighboringConnectors', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var result = [];
+				var connObjs = this.getConnectedObjs();
+				for (var i = 0, l = connObjs.length; i < l; ++i)
+				{
+					var connObj = connObjs[i];
+					if (connObj.getLinkedConnectors)
+						Kekule.ArrayUtils.pushUnique(result, connObj.getLinkedConnectors() || []);
+				}
+				// remove self
+				Kekule.ArrayUtils.remove(result, this);
+				return result;
+			}
 		});
 	},
 	/** @private */
@@ -7142,6 +7379,7 @@ Kekule.BondStereo = {
  * @property {Bool} isInAromaticRing A flag to indicate the bond is in a aromatic ring and is a aromatic bond.
  *   User should not set this property directly, instead, this value will be marked
  *   in aromatic detection routine.
+ * @property {Array} neighboringBonds Readonly, all neighboring bonds that has at least one connected object of this one.
  */
 Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 /** @lends Kekule.Bond# */
@@ -7221,6 +7459,23 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 					return parent.isConnectorInAromaticRing(this);
 				else
 					return false;
+			}
+		});
+		this.defineProp('neighboringBonds', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var neighboringConnectors = this.getNeighboringConnectors() || [];
+				var result = [];
+				for (var i = 0, l = neighboringConnectors.length; i < l; ++i)
+				{
+					if (neighboringConnectors[i] instanceof Kekule.Bond)
+						result.push(neighboringConnectors[i]);
+				}
+				return result;
 			}
 		});
 	},
@@ -7350,6 +7605,14 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 			this.reverseConnectedObjOrder();
 	},
 
+	/**
+	 * Returns if bond is a covalence bond.
+	 * @returns {Bool}
+	 */
+	isCovalentBond: function()
+	{
+		return (this.getBondType() === Kekule.BondType.COVALENT);
+	},
 	/**
 	 * Returns if bond is a single covalence bond.
 	 * @returns {Bool}
