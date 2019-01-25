@@ -630,6 +630,67 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns all pathes (node-connector-node-connector-node...) to destObj.
+	 * Usually this method should be used between two nodes.
+	 * @param {Kekule.ChemStructureObject} destObj
+	 * @returns {Array} Each item is a hash {connector, object}, indicating a path step, obj is usually a node.
+	 *   If destObj === this, [] will be returned (a zero-distance path).
+	 *   If there is no path between this object and destObj, null will be returned.
+	 */
+	getPathesToDest: function(destObj)
+	{
+		return this._doGetPathesToDest(destObj, []);
+	},
+	/** @private */
+	_doGetPathesToDest: function(destObj, iteratedConnectors)
+	{
+		if (destObj === this)
+			return [];
+
+		var result = [];
+		var pathes;
+		var dupIteratedConnectors = AU.clone(iteratedConnectors);
+
+		for (var i = 0, ii = this.getLinkedConnectorCount(); i < ii; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+
+			if (dupIteratedConnectors.indexOf(connector) >= 0)
+				continue;
+			else
+				dupIteratedConnectors.push(connector);
+
+			var objs = connector.getConnectedObjs();
+			for (var j = 0, jj = objs.length; j < jj; ++j)
+			{
+				var currObj = objs[j];
+
+				if (currObj === destObj)
+					pathes = [[]];
+				else if (currObj === this)
+					continue;
+				else
+				{
+					pathes = currObj && currObj._doGetPathesToDest && currObj._doGetPathesToDest(destObj, dupIteratedConnectors);
+				}
+				if (pathes)
+				{
+					var currEdge = {'connector': connector, 'object': currObj};
+					for (var k = 0, kk = pathes.length; k < kk; ++k)
+					{
+						pathes[k].unshift(currEdge);
+					}
+					result = result.concat(pathes);
+				}
+			}
+		}
+		
+		if (!result.length)
+			result = null;
+		return result;
+	},
+
+	/**
 	 * Returns property names that affects chem structure.
 	 * Descendants should override this method.
 	 * @private
