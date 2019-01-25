@@ -2101,23 +2101,45 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				for (var i = 0, l = propNames.length; i < l; ++i)
 				{
 					var propName = propNames[i];
-					var indexStack = objRefPropInfo[propName];
-					if (indexStack)
+					var objRefValue = objRefPropInfo[propName];
+					if (DataType.isArrayValue(objRefValue))
 					{
-						var value = owner.getChildAtIndexStack(indexStack);
+						var values = [];
+						for (var i = 0, l = objRefValue.length; i < l; ++i)
+						{
+							var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue[i]);
+							if (indexStack)
+							{
+								var obj = owner.getChildAtIndexStack(indexStack);
+								values.push(obj);
+							}
+							else
+								values.push(undefined);
+						}
+						this.setPropValue(propName, values);
+					}
+					else  // simple str
+					{
+						var value;
+						var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue);
+						if (indexStack)
+							value = owner.getChildAtIndexStack(indexStack);
+						else  // not a obj ref str, do nothing currently
+							;
 						if (value)
 						{
 							//console.log('set ref prop value', propName, indexStack, value);
 							this.setPropValue(propName, value);
-							try
-							{
-								delete objRefPropInfo[propName];
-							}
-							catch(e)
-							{
-
-							}
 						}
+					}
+
+					try
+					{
+						delete objRefPropInfo[propName];
+					}
+					catch (e)
+					{
+
 					}
 				}
 			}
@@ -2136,7 +2158,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		if (!prop.serializable)
 			return;
 		var owner = obj.getOwner();
-		if (owner)
+		if (owner && obj._doGetObjRefSerializationValue)
 		{
 			var isObjRefProp = !!prop.objRef;
 			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
@@ -2144,18 +2166,48 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				var value = obj.getPropValue(prop.name);
 				if (value)
 				{
-					var indexStack = owner.indexStackOfChild(value);
-					//console.log('indexStack', indexStack);
-					if (indexStack && indexStack.length)
+					if (Kekule.ArrayUtils.isArray(value))  // maybe an array of object references
 					{
-						var str = '@' + JSON.stringify(indexStack);
-						//console.log('save ref prop', prop.name, str);
-						serializer.doSaveFieldValue(obj, prop.name, serializer.serializeValue(str), storageNode, serializer.getValueExplicitType(str));
+						//if (prop.dataType === DataType.ARRAY)
+						{
+							var serializationValues = [];
+							for (var i = 0, l = value.length; i < l; ++i)
+							{
+								var sv = obj._doGetObjRefSerializationValue(owner, obj, value[i]);
+								if (sv)
+									serializationValues.push(sv);
+								else
+									serializationValues.push(value[i]);  // those who can not be transformed, keep it
+							}
+							serializer.doSaveFieldValue(obj, prop.name, serializationValues, storageNode, serializer.getValueExplicitType(serializationValues));
+							return true;
+						}
+					}
+					else // single object reference
+					{
+						var serializationValue = obj._doGetObjRefSerializationValue(owner, obj, value);
+						if (serializationValue)
+						{
+							serializer.doSaveFieldValue(obj, prop.name, serializationValue, storageNode, serializer.getValueExplicitType(serializationValue));
+							return true;  // handled, do not save again in default action
+						}
 					}
 				}
-				return true;  // handled, do not save again in default action
 			}
 		}
+	},
+	/** @private */
+	_doGetObjRefSerializationValue: function(owner, currObj, objRef)
+	{
+		var indexStack = owner.indexStackOfChild(objRef);
+		//console.log('indexStack', indexStack);
+		if (indexStack && indexStack.length)
+		{
+			var str = '@' + JSON.stringify(indexStack);
+			return str;
+		}
+		else
+			return null;
 	},
 	/** @private */
 	doLoadProp: function(obj, prop, storageNode, serializer)
@@ -2169,28 +2221,45 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			if (isObjRefProp && obj.__load_objRef_props__)  // this property is an object reference, refers to another object(s) in this chem space
 			{
 				// retrieve the ref str first
-				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode, DataType.STRING);
+				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode /*, DataType.STRING*/);
 				if (value)
 				{
-					if (typeof(value) === 'string' && value.startsWith('@'))  // a reference string
+					if (typeof(value) === 'string' && value.startsWith('@'))  // maybe a reference string
 					{
-						try
+						//var indexStack = this._doUnwrapObjRefSerializationStr(obj, prop, value);
+						//if (indexStack)
 						{
-							var jsonStr = value.substr(1);  // remove leading @
-							var indexStack = JSON.parse(jsonStr);
-							if (DataType.isArrayValue(indexStack))
-							{
-								obj.__load_objRef_props__[prop.name] = indexStack;  // save this index stack, and set the real object after the chem space is loaded
-							}
-						}
-						catch(e)
-						{
-							Kekule.error(e);
+							obj.__load_objRef_props__[prop.name] = value;  // save this index stack string, and set the real object after the chem space is loaded
+							return true;    // handled, do not load again in default action
 						}
 					}
+					else if (DataType.isArrayValue(value))  // may be an ref array
+					{
+						obj.__load_objRef_props__[prop.name] = value;  // save this index stack array, and set the real object after the chem space is loaded
+						return true;    // handled, do not load again in default action
+					}
 				}
-				return true;  // handled, do not load again in default action
+				//return true;  // handled, do not load again in default action
 			}
+		}
+	},
+	/** @private */
+	_doUnwrapObjRefSerializationStr: function(currObj, serializationStr)
+	{
+		try
+		{
+			var jsonStr = serializationStr.substr(1);  // remove leading @
+			var indexStack = JSON.parse(jsonStr);
+			if (DataType.isArrayValue(indexStack))
+			{
+				return indexStack;
+			}
+			else
+				return null;
+		}
+		catch(e)
+		{
+			Kekule.error(e);
 		}
 	},
 

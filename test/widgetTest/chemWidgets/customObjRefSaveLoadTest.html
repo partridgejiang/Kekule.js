@@ -19,6 +19,18 @@
           'setter': null,
           'getter': function(){ var obj = this.getTestRefObj(); return obj&&obj.getId();}
         });
+	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true});
+	      this.defineProp('testRefObjArrayIds', {'dataType': DataType.STRING, 'serializable': false,
+		      'setter': null,
+		      'getter': function(){
+	      	  var ids = [];
+	      	  var objs = this.getTestRefObjArray();
+	      	  objs.forEach(function(obj) {
+	      	  	ids.push(obj && obj.getId());
+            });
+	      	  return ids.join(', ');
+	        }
+	      });
 	    }
     });
 
@@ -27,9 +39,11 @@
     	var space = composer.getChemObj();
     	var mol = space.getChildAt(0);
     	var atom = mol.getNodeAt(1);
+    	var atoms = mol.getNodes();
     	var obj = new CustomClass();
     	space.appendChild(obj);
     	obj.setTestRefObj(atom);
+    	obj.setTestRefObjArray(atoms);
     }
 
     var composer;
