@@ -7,7 +7,8 @@ describe('Test of structure comparison', function(){
 	var allMols = [];
 	var allMolNames = [
 		'compTest1_1.mol', 'compTest1_2.mol',
-		'compTest2_1.kcj', 'compTest2_2.kcj'
+		'compTest2_1.kcj', 'compTest2_2.kcj',
+		'compTest3_1.kcj', 'compTest3_2.kcj',
 	];
 	beforeAll(function(done){   // load all essential molecules
 		var allUrls = [];
@@ -45,12 +46,16 @@ describe('Test of structure comparison', function(){
 		});
 	};
 
-	testComparison('Search base on mol pair 1',
+	testComparison('Comparison base on mol pair 1',
 		'compTest1_1.mol', 'compTest1_2.mol', null,
 		false
 	);
-	testComparison('Search base on mol pair 2',
+	testComparison('Comparison base on mol pair 2',
 		'compTest2_1.kcj', 'compTest2_2.kcj', null,
+		true
+	);
+	testComparison('Comparison base on mol pair 3',
+		'compTest3_1.kcj', 'compTest3_2.kcj', null,
 		true
 	);
 });
