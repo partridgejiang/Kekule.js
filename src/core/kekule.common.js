@@ -1932,6 +1932,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			this.setId(id);
 		this.setBubbleEvent(true);  // allow event bubble
 
+		this.__load_objRef_props__ = {};  // used internally
+
 		// react on change (both on self and children)
 		// when object is modified,clear srcInfo information
 
@@ -1974,6 +1976,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		this.setParent(null);
 		this.setOwner(null);
 		*/
+		this.__load_objRef_props__ = null;
 		this.removeSelf();
 		$super();
 	},
@@ -2087,7 +2090,108 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	_ownerSpaceLoaded: function(owner)
 	{
-		console.log('owner loaded', owner.getClassName(), this.getClassName());
+		//console.log('owner loaded', owner.getClassName(), this.getClassName());
+		var objRefPropInfo = this.__load_objRef_props__;
+		if (objRefPropInfo)
+		{
+			var owner = this.getOwner();
+			if (owner && owner.getChildAtIndexStack)
+			{
+				var propNames = Kekule.ObjUtils.getOwnedFieldNames(objRefPropInfo);
+				for (var i = 0, l = propNames.length; i < l; ++i)
+				{
+					var propName = propNames[i];
+					var indexStack = objRefPropInfo[propName];
+					if (indexStack)
+					{
+						var value = owner.getChildAtIndexStack(indexStack);
+						if (value)
+						{
+							//console.log('set ref prop value', propName, indexStack, value);
+							this.setPropValue(propName, value);
+							try
+							{
+								delete objRefPropInfo[propName];
+							}
+							catch(e)
+							{
+
+							}
+						}
+					}
+				}
+			}
+			//this.__load_objRef_props__ = {};  // clear
+		}
+	},
+
+	// custom save / load method
+	/** @private */
+	doSaveProp: function(obj, prop, storageNode, serializer)
+	{
+		/*
+		if (prop.name === 'testRefObj')
+			console.log('prepare save', prop.name, prop, obj.getOwner());
+		*/
+		if (!prop.serializable)
+			return;
+		var owner = obj.getOwner();
+		if (owner)
+		{
+			var isObjRefProp = !!prop.objRef;
+			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
+			{
+				var value = obj.getPropValue(prop.name);
+				if (value)
+				{
+					var indexStack = owner.indexStackOfChild(value);
+					//console.log('indexStack', indexStack);
+					if (indexStack && indexStack.length)
+					{
+						var str = '@' + JSON.stringify(indexStack);
+						//console.log('save ref prop', prop.name, str);
+						serializer.doSaveFieldValue(obj, prop.name, serializer.serializeValue(str), storageNode, serializer.getValueExplicitType(str));
+					}
+				}
+				return true;  // handled, do not save again in default action
+			}
+		}
+	},
+	/** @private */
+	doLoadProp: function(obj, prop, storageNode, serializer)
+	{
+		if (!prop.serializable)
+			return;
+		//var owner = obj.getOwner();  // on loading, the owner may not be set yet
+		//if (owner)
+		{
+			var isObjRefProp = !!prop.objRef;
+			if (isObjRefProp && obj.__load_objRef_props__)  // this property is an object reference, refers to another object(s) in this chem space
+			{
+				// retrieve the ref str first
+				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode, DataType.STRING);
+				if (value)
+				{
+					if (typeof(value) === 'string' && value.startsWith('@'))  // a reference string
+					{
+						try
+						{
+							var jsonStr = value.substr(1);  // remove leading @
+							var indexStack = JSON.parse(jsonStr);
+							if (DataType.isArrayValue(indexStack))
+							{
+								obj.__load_objRef_props__[prop.name] = indexStack;  // save this index stack, and set the real object after the chem space is loaded
+							}
+						}
+						catch(e)
+						{
+							Kekule.error(e);
+						}
+					}
+				}
+				return true;  // handled, do not load again in default action
+			}
+		}
 	},
 
 	/**
@@ -2882,6 +2986,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		// update parent and owner of children
 		this.ownerChanged(this.getOwner());
 		this.parentChanged(this.getParent());
+		$super();
 	},
 
 	/* @private */
@@ -3221,10 +3326,22 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 				{
 					value.setParent(this);
 					value.setOwner(this.getOwner());
+					value._transparent = true;  // force the obj list be transparent
 				}
 				this.setPropStoreFieldValue('children', value);
 			}
 		});
+	},
+	/** @private */
+	loaded: function($super)
+	{
+		var objList = this.getChildren();
+		if (objList)
+		{
+			objList.parentChanged(this);
+			objList.ownerChanged(this.getOwner());
+		}
+		$super();
 	},
 
 	/** @ignore */
@@ -3400,13 +3517,13 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	/** @private */
 	loaded: function($super)
 	{
-		$super();
 		var root = this.getRoot();
 		if (root)
 		{
 			root.setParent(this);
 			root.setOwner(this);
 		}
+		$super();
 		this.notifyOwnerLoaded();
 	},
 
