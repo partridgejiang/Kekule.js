@@ -197,6 +197,7 @@ Kekule.GraphVertex = Class.create(Kekule.GraphElement,
  *
  * @property {Hash} data Extra data assocaited with this edge (e.g., weight).
  * @property {Array} vertexes Connected vertexes on this edge.
+ * @property {Number} weight Edge weight, default is 1.
  */
 Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 /** @lends Kekule.GraphEdge# */
@@ -206,6 +207,7 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	/** @constructs */
 	initialize: function($super)
 	{
+		this.setPropStoreFieldValue('weight', 1);  // default weight
 		$super();
 		this.setPropStoreFieldValue('vertexes', []);
 		//this.setData({});
@@ -215,6 +217,7 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	{
 		//this.defineProp('data', {'dataType': DataType.HASH});
 		this.defineProp('vertexes', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		this.defineProp('weight', {'dataType': DataType.NUMBER});
 	},
 	/**
 	 * Replace a linked vertex
@@ -749,6 +752,92 @@ Kekule.GraphAlgorithmUtils = {
 	createSpanningTrees: function(graph, traverseMode)
 	{
 		return graph.traverse(null, traverseMode);
+	},
+
+	/**
+	 * Returns the minimal distance of all vertexes to from vertex.
+	 * @param {Kekule.Graph} graph
+	 * @param {Variant} fromVertexOrIndex A vertex or vertex index.
+	 * @returns {Array} The distance result. Result[0] is the distance from vertexes[0] to fromVertex.
+	 */
+	calcMinDistances: function(graph, fromVertexOrIndex)
+	{
+		var allVertexes = graph.getVertexes();
+		var fromVertex, fromIndex;
+		if (DataType.isSimpleValue(fromVertexOrIndex))
+		{
+			fromIndex = fromVertexOrIndex;
+			fromVertex = allVertexes[fromIndex];
+		}
+		else
+		{
+			fromVertex = fromVertexOrIndex;
+			fromIndex = allVertexes.indexOf(fromVertex);
+		}
+
+		// using the dijkstra algorithm
+		var distances = [];
+		var minPath = [];
+
+		// init distance array
+		for (var i = 0, l = allVertexes.length; i < l; ++i)
+		{
+			var currVertex = allVertexes[i];
+			if (i === fromIndex)
+			{
+				distances[i] = 0;
+				minPath[i] = fromVertex;
+			}
+			else
+			{
+				var currEdge = fromVertex.getEdgeTo(currVertex);
+				if (currEdge)
+				{
+					distances[i] = currEdge.getWeight();
+					minPath[i] = fromVertex
+				}
+				else
+				{
+					distances[i] = Infinity;
+					minPath[i] = null;
+				}
+			}
+		}
+		var visited = [fromIndex];
+
+		// iterate
+		for (var i = 0, l = allVertexes.length; i < l; ++i)
+		{
+			if (i === fromIndex)
+				continue;
+			var minDistance = Infinity;
+			var minVertexIndex = -1, minVertex;
+			for (var j = 0, k = allVertexes.length; j < k; ++j)
+			{
+				if (j === fromIndex)
+					continue;
+				if (visited.indexOf(j) < 0 && distances[j] < minDistance)  // not visited
+				{
+					minDistance = distances[j];
+					minVertexIndex = j;
+					minVertex = allVertexes[j];
+				}
+			}
+			visited.push(minVertexIndex);
+			for (var j = 0, k = allVertexes.length; j < k; ++j)
+			{
+				if (visited.indexOf(j) < 0)
+				{
+					var currEdge = minVertex.getEdgeTo(allVertexes[j]);
+					var delta = currEdge? currEdge.getWeight(): Infinity;
+					var currDistance = minDistance + delta;
+					if (currDistance < distances[j])
+						distances[j] = currDistance;
+				}
+			}
+		}
+
+		return distances;
 	},
 
 	/**
