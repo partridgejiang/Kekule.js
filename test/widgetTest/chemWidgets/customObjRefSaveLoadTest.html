@@ -19,7 +19,7 @@
           'setter': null,
           'getter': function(){ var obj = this.getTestRefObj(); return obj&&obj.getId();}
         });
-	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true});
+	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent'});
 	      this.defineProp('testRefObjArrayIds', {'dataType': DataType.STRING, 'serializable': false,
 		      'setter': null,
 		      'getter': function(){

@@ -1934,7 +1934,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			this.setId(id);
 		this.setBubbleEvent(true);  // allow event bubble
 
-		this.__load_objRef_props__ = {};  // used internally
+		this.__load_owner_objRef_props__ = null;  // used internally
+		this.__load_parent_objRef_props__ = null;  // used internally
 
 		// react on change (both on self and children)
 		// when object is modified,clear srcInfo information
@@ -1978,7 +1979,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		this.setParent(null);
 		this.setOwner(null);
 		*/
-		this.__load_objRef_props__ = null;
+		this.__load_owner_objRef_props__ = null;
+		this.__load_parent_objRef_props__ = null;
 		this.removeSelf();
 		$super();
 	},
@@ -2085,19 +2087,34 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Called when the parent of this object has been loaded/deserialized from external data.
+	 * Descendants may override this method to do some extra jobs after loading.
+	 * @param {Kekule.ChemObject} parent
+	 * @private
+	 */
+	_parentObjectLoaded: function(parent)
+	{
+		this._handleObjRefProps(parent, this.__load_parent_objRef_props__);
+	},
+
+	/**
 	 * Called when the owner of this object has been loaded/deserialized from external data.
 	 * Descendants may override this method to do some extra jobs after loading.
 	 * @param {Kekule.ChemSpace} owner
 	 * @private
 	 */
-	_ownerSpaceLoaded: function(owner)
+	_ownerObjectLoaded: function(owner)
 	{
-		//console.log('owner loaded', owner.getClassName(), this.getClassName());
-		var objRefPropInfo = this.__load_objRef_props__;
+		this._handleObjRefProps(owner, this.__load_owner_objRef_props__);
+	},
+
+	/** @private */
+	_handleObjRefProps: function(rootObj, refValueStorage)
+	{
+		var objRefPropInfo = refValueStorage;  // this.__load_owner_objRef_props__;
 		if (objRefPropInfo)
 		{
-			var owner = this.getOwner();
-			if (owner && owner.getChildAtIndexStack)
+			if (rootObj && rootObj.getChildAtIndexStack)
 			{
 				var propNames = Kekule.ObjUtils.getOwnedFieldNames(objRefPropInfo);
 				for (var i = 0, l = propNames.length; i < l; ++i)
@@ -2112,7 +2129,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 							var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue[i]);
 							if (indexStack)
 							{
-								var obj = owner.getChildAtIndexStack(indexStack);
+								var obj = rootObj.getChildAtIndexStack(indexStack);
 								values.push(obj);
 							}
 							else
@@ -2125,7 +2142,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 						var value;
 						var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue);
 						if (indexStack)
-							value = owner.getChildAtIndexStack(indexStack);
+							value = rootObj.getChildAtIndexStack(indexStack);
 						else  // not a obj ref str, do nothing currently
 							;
 						if (value)
@@ -2145,7 +2162,6 @@ Kekule.ChemObject = Class.create(ObjectEx,
 					}
 				}
 			}
-			//this.__load_objRef_props__ = {};  // clear
 		}
 	},
 
@@ -2159,39 +2175,43 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		*/
 		if (!prop.serializable)
 			return;
-		var owner = obj.getOwner();
-		if (owner && obj._doGetObjRefSerializationValue)
+		if (obj._doGetObjRefSerializationValue)
 		{
 			var isObjRefProp = !!prop.objRef;
 			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
 			{
-				var value = obj.getPropValue(prop.name);
-				if (value)
+				var objRefRootOnParent = (prop.objRefRoot === 'parent');
+				var rootObj = objRefRootOnParent? obj.getParent(): obj.getOwner(); // default is based on owner
+				if (rootObj)
 				{
-					if (Kekule.ArrayUtils.isArray(value))  // maybe an array of object references
+					var value = obj.getPropValue(prop.name);
+					if (value)
 					{
-						//if (prop.dataType === DataType.ARRAY)
+						if (Kekule.ArrayUtils.isArray(value))  // maybe an array of object references
 						{
-							var serializationValues = [];
-							for (var i = 0, l = value.length; i < l; ++i)
+							//if (prop.dataType === DataType.ARRAY)
 							{
-								var sv = obj._doGetObjRefSerializationValue(owner, obj, value[i]);
-								if (sv)
-									serializationValues.push(sv);
-								else
-									serializationValues.push(value[i]);  // those who can not be transformed, keep it
+								var serializationValues = [];
+								for (var i = 0, l = value.length; i < l; ++i)
+								{
+									var sv = obj._doGetObjRefSerializationValue(rootObj, obj, value[i]);
+									if (sv)
+										serializationValues.push(sv);
+									else
+										serializationValues.push(value[i]);  // those who can not be transformed, keep it
+								}
+								serializer.doSaveFieldValue(obj, prop.name, serializationValues, storageNode, serializer.getValueExplicitType(serializationValues));
+								return true;
 							}
-							serializer.doSaveFieldValue(obj, prop.name, serializationValues, storageNode, serializer.getValueExplicitType(serializationValues));
-							return true;
 						}
-					}
-					else // single object reference
-					{
-						var serializationValue = obj._doGetObjRefSerializationValue(owner, obj, value);
-						if (serializationValue)
+						else // single object reference
 						{
-							serializer.doSaveFieldValue(obj, prop.name, serializationValue, storageNode, serializer.getValueExplicitType(serializationValue));
-							return true;  // handled, do not save again in default action
+							var serializationValue = obj._doGetObjRefSerializationValue(rootObj, obj, value);
+							if (serializationValue)
+							{
+								serializer.doSaveFieldValue(obj, prop.name, serializationValue, storageNode, serializer.getValueExplicitType(serializationValue));
+								return true;  // handled, do not save again in default action
+							}
 						}
 					}
 				}
@@ -2220,8 +2240,18 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		//if (owner)
 		{
 			var isObjRefProp = !!prop.objRef;
-			if (isObjRefProp && obj.__load_objRef_props__)  // this property is an object reference, refers to another object(s) in this chem space
+			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
 			{
+				var objRefRootOnParent = (prop.objRefRoot === 'parent');
+				var storageObj = objRefRootOnParent? obj.__load_parent_objRef_props__: obj.__load_owner_objRef_props__; // default is based on owner
+				if (!storageObj)
+				{
+					storageObj = {};
+					if (objRefRootOnParent)
+						obj.__load_parent_objRef_props__ = storageObj;
+					else
+						obj.__load_owner_objRef_props__ = storageObj;
+				}
 				// retrieve the ref str first
 				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode /*, DataType.STRING*/);
 				if (value)
@@ -2231,13 +2261,13 @@ Kekule.ChemObject = Class.create(ObjectEx,
 						//var indexStack = this._doUnwrapObjRefSerializationStr(obj, prop, value);
 						//if (indexStack)
 						{
-							obj.__load_objRef_props__[prop.name] = value;  // save this index stack string, and set the real object after the chem space is loaded
+							storageObj[prop.name] = value;  // save this index stack string, and set the real object after the chem space is loaded
 							return true;    // handled, do not load again in default action
 						}
 					}
 					else if (DataType.isArrayValue(value))  // may be an ref array
 					{
-						obj.__load_objRef_props__[prop.name] = value;  // save this index stack array, and set the real object after the chem space is loaded
+						storageObj[prop.name] = value;  // save this index stack array, and set the real object after the chem space is loaded
 						return true;    // handled, do not load again in default action
 					}
 				}
@@ -2262,6 +2292,25 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		catch(e)
 		{
 			Kekule.error(e);
+		}
+	},
+
+	/** @private */
+	loaded: function($super)
+	{
+		$super();
+		this.notifyParentLoaded();
+	},
+
+	/** @private */
+	notifyParentLoaded: function()
+	{
+		// when the whole object is loaded from external data, notify all child objects.
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child && child._parentObjectLoaded)
+				child._parentObjectLoaded(this);
 		}
 	},
 
@@ -3611,8 +3660,8 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 		for (var i = 0, l = ownedObjs.length; i < l; ++i)
 		{
 			var obj = ownedObjs[i];
-			if (obj._ownerSpaceLoaded)
-				obj._ownerSpaceLoaded(this);
+			if (obj && obj._ownerObjectLoaded)
+				obj._ownerObjectLoaded(this);
 		}
 	},
 
