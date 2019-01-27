@@ -759,15 +759,34 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	 * @param {Hash} coordOffset New cloned objects will be moved based on this coord.
 	 *   If this value is not set, a default one will be used.
 	 * @param {Bool} addToSpace If true, the objects cloned will be added to space immediately.
+	 * @param {Bool} allowCloneSpace If true, the chemspace itself can be cloned when being selected.
+	 *   Otherwise, the cloned targets are its children.
 	 * @returns {Array} Actually cloned objects.
 	 */
-	cloneSelection: function(coordOffset, addToSpace)
+	cloneSelection: function(coordOffset, addToSpace, allowCloneSpace)
 	{
+
+		var _getActualTargetObjs = function(objs, allowCloneSpace)
+		{
+			var result = [];
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				if ((obj instanceof Kekule.ChemSpace) && !allowCloneSpace)  // can not clone chemspace, use its children instead
+				{
+					var children = obj.getChildren();
+					AU.pushUnique(result, children);
+				}
+			}
+			return result;
+		}
+
 		if (coordOffset === undefined)  // use default one
 		{
 			coordOffset = this.getDefaultCloneScreenCoordOffset();
 		}
 		var objs = this.getSelection();
+		objs = _getActualTargetObjs(objs, allowCloneSpace);
 		var clonedObjs = this.cloneObjects(objs, coordOffset, addToSpace);
 		if (addToSpace)
 			this.setSelection(clonedObjs);
@@ -1087,10 +1106,21 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 	doGetActualRemovedObjs: function(objs)
 	{
 		var result = [];
-		Kekule.ArrayUtils.pushUnique(result, objs);
+		var editorRoot = this.getEditor().getChemObj();
+		//Kekule.ArrayUtils.pushUnique(result, objs);
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
-			var delObjs = objs[i].getCascadeDeleteObjs? objs[i].getCascadeDeleteObjs(): [];
+			var delObjs;
+			var obj = objs[i];
+			if ((obj instanceof Kekule.ChemSpace) && (obj === editorRoot))  // can not remove root chem space in editor, use its children instead
+			{
+				delObjs = obj.getChildren();
+			}
+			else
+			{
+				Kekule.ArrayUtils.pushUnique(result, obj);
+				delObjs = obj.getCascadeDeleteObjs ? obj.getCascadeDeleteObjs() : [];
+			}
 			//Kekule.Editor.StructureUtils.getCascadeDeleteObjs(objs[i]);
 			if (delObjs)
 				Kekule.ArrayUtils.pushUnique(result, delObjs);
