@@ -3700,6 +3700,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	{
 		$super(id);
 		this._autoIdMap = {};  // private
+		this._enableObjRefRelations = true;  // private
 		this.setPropStoreFieldValue('enableAutoId', true);
 		this.setPropStoreFieldValue('ownedObjs', []);
 		var root = new Kekule.ChemSpaceElement();
@@ -4043,7 +4044,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	getObjRefRelations: function()
 	{
-		return this.getObjRefRelationManager().getRelations();
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().getRelations();
+		else
+			return null;
 	},
 	/**
 	 * Create a new object reference relation.
@@ -4054,7 +4058,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	createObjRefRelation: function(srcObj, srcProp, destObjOrObjs)
 	{
-		return this.getObjRefRelationManager().createRelation(srcObj, srcProp, destObjOrObjs);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().createRelation(srcObj, srcProp, destObjOrObjs);
+		else
+			return null;
 	},
 	/**
 	 * Modify an existing object reference relation. If it not exists, a new one will be created.
@@ -4065,7 +4072,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	modifyObjRefRelation: function(srcObj, srcProp, destObjOrObjs)
 	{
-		return this.getObjRefRelationManager().modifyRelation(srcObj, srcProp, destObjOrObjs);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().modifyRelation(srcObj, srcProp, destObjOrObjs);
+		else
+			return null;
 	},
 	/**
 	 * Get a object reference relation index.
@@ -4075,7 +4085,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	getObjRefRelationIndex: function(srcObj, srcProp)
 	{
-		return this.getObjRefRelationManager().getRelationIndex(srcObj, srcProp);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().getRelationIndex(srcObj, srcProp);
+		else
+			return -1;
 	},
 	/**
 	 * Get a object reference relation.
@@ -4085,7 +4098,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	getObjRefRelation: function(srcObj, srcProp)
 	{
-		return this.getObjRefRelationManager().getRelation(srcObj, srcProp);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().getRelation(srcObj, srcProp);
+		else
+			return null;
 	},
 	/**
 	 * Remove a object reference relation.
@@ -4094,7 +4110,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	releaseObjRefRelation: function(srcObj, srcProp)
 	{
-		return this.getObjRefRelationManager().releaseRelation(srcObj, srcProp);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().releaseRelation(srcObj, srcProp);
+		else
+			return null;
 	},
 	/**
 	 * Find all object reference relations meeting conditions.
@@ -4103,7 +4122,10 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	 */
 	findObjRefRelations: function(conditions)
 	{
-		return this.getObjRefRelationManager().findRelations(conditions);
+		if (this._enableObjRefRelations)
+			return this.getObjRefRelationManager().findRelations(conditions);
+		else
+			return [];
 	}
 });
 Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.ChemSpace);
@@ -4116,7 +4138,14 @@ Kekule.IntermediateChemSpace = Class.create(Kekule.ChemSpace,
 /** @lends Kekule.IntermediateChemSpace# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.IntermediateChemSpace'
+	CLASS_NAME: 'Kekule.IntermediateChemSpace',
+	/** @constructs */
+	initialize: function($super, id)
+	{
+		$super(id);
+		this.setPropStoreFieldValue('enableAutoId', false);
+		this._enableObjRefRelations = false;  // private, force not use relation manager for performance
+	}
 });
 
 
