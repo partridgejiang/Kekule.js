@@ -862,6 +862,9 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			{
 				var obj = standAloneObjs[i];
 				var clonedObj = obj.clone();
+				// clear ids to avoid conflict
+				if (clonedObj.clearIds)
+					clonedObj.clearIds();
 				clonedObjs.push(clonedObj);
 			}
 			//interSpace.appendChildren(clonedObjs);
@@ -888,9 +891,6 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			{
 				var obj = standAloneObjs[i];
 				var clonedObj = clonedObjs[i];
-				// clear ids to avoid conflict
-				if (clonedObj.clearIds)
-					clonedObj.clearIds();
 
 				// remove unessential child objects of cloned object
 				removeUnessentialChildren(clonedObj, obj, childObjMap.get(obj));
