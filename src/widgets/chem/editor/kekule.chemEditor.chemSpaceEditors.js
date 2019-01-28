@@ -634,10 +634,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	 * @param {Array} objects
 	 * @param {Hash} screenCoordOffset If this value is set, new cloned objects will be moved based on this coord.
 	 * @param {Bool} addToSpace If true, the cloned objects will add to current space immediately.
+	 * @param {Bool} keepRelations If true, the object reference relations between objects will be kept in the cloned ones.
 	 * @returns {Array} Actually cloned objects.
 	 */
-	cloneObjects: function(objects, screenCoordOffset, addToSpace)
+	cloneObjects: function(objects, screenCoordOffset, addToSpace, keepRelations)
 	{
+		var self = this;
 		if (!this.getChemSpace())
 			return null;
 		/*
@@ -692,6 +694,110 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		};
 
+		var _findParentObjOrSelf = function(targetObj, candidateObjs)
+		{
+			for (var i = 0, l = candidateObjs.length; i < l; ++i)
+			{
+				var candObj = candidateObjs[i];
+				if (targetObj === candObj || (targetObj.isChildOf && targetObj.isChildOf(candObj)))
+					return candObj;
+			}
+			return null;
+		};
+
+		var getRelatedObjRefRelations = function(standAloneObjs, owner)
+		{
+			var result = [];
+			if (!owner)
+				owner = self.getChemObj();  // the root chemspace
+			var relations = owner.getObjRefRelations && owner.getObjRefRelations();
+			if (relations)
+			{
+				// check each relation
+				for (var i = 0, l = relations.length; i < l; ++i)
+				{
+					var rel = relations[i];
+					var src = rel.srcObj;
+					var dests = AU.toArray(rel.dest);
+					var matchedSrc = _findParentObjOrSelf(src, standAloneObjs);
+					var matchedDests = [];
+					var matchAtLeastOneDest = false;
+					if (matchedSrc)
+					{
+						for (var j = 0, k = dests.length; j < k; ++j)
+						{
+							var dest = dests[j];
+							var matchedDest = _findParentObjOrSelf(dest, standAloneObjs);
+							if (matchedDest)
+								matchAtLeastOneDest = true;
+							matchedDests.push(matchedDest);
+						}
+
+						if (matchAtLeastOneDest)
+							result.push({'relation': rel, 'srcParent': matchedSrc, 'destParents': matchedDests});
+					}
+				}
+			}
+			return result;
+		};
+
+		var getNewObjRefRelation = function(relationMatch, oldObjs, clonedObjs)
+		{
+			var oldRelation = relationMatch.relation;
+			var oldSrcParent = relationMatch.srcParent;
+			var oldDestParents = relationMatch.destParents;
+			var indexStack, newSrcObj, newDestObjs = [];
+
+			// src
+			var srcIndex = oldObjs.indexOf(oldSrcParent);
+			var newSrcParent = clonedObjs[srcIndex];
+			if (oldRelation.srcObj === oldSrcParent)
+				newSrcObj = newSrcParent;
+			else
+			{
+				indexStack = oldSrcParent.indexStackOfChild && oldSrcParent.indexStackOfChild(oldRelation.srcObj);
+				if (indexStack)
+				{
+					newSrcObj = newSrcParent.getChildAtIndexStack && newSrcParent.getChildAtIndexStack(indexStack);
+				}
+			}
+			if (!newSrcObj)
+				return null;
+
+			// dest
+			var destIsArray = AU.isArray(oldRelation.dest);
+			var oldDests = destIsArray? oldRelation.dest: [oldRelation.dest];
+			for (var i = 0, l = oldDestParents.length; i <l; ++i)
+			{
+				var oldDestParent = oldDestParents[i];
+				var destIndex = oldObjs.indexOf(oldDestParent);
+				var newDestParent = clonedObjs[destIndex];
+				var newDestObj;
+				if (oldDestParent)  // parent has been cloned
+				{
+					if (oldDestParent === oldDests[i])
+						newDestObjs.push(newDestParent);
+					else if (oldDests[i])
+					{
+						indexStack = oldDestParent.indexStackOfChild && oldDestParent.indexStackOfChild(oldDests[i]);
+						if (indexStack)
+						{
+							newDestObj = newDestParent.getChildAtIndexStack && newDestParent.getChildAtIndexStack(indexStack);
+							if (newDestObj)
+								newDestObjs.push(newDestObj);
+						}
+					}
+				}
+			}
+			if (!newDestObjs.length)
+				return null;
+
+			var newDestValue = destIsArray? newDestObjs: newDestObjs[0];
+
+			var newRelation = {'srcObj': newSrcObj, 'srcProp': oldRelation.srcProp, 'dest': newDestValue};
+			return newRelation;
+		};
+
 		var targetObjs = Kekule.ArrayUtils.toArray(objects);
 		var standAloneObjs = [];
 		var childObjMap = new Kekule.MapEx();
@@ -712,12 +818,17 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		}
 
+		// find related relations
+		var owner = this.getChemSpace();
+		var relationMatches = getRelatedObjRefRelations(standAloneObjs, owner);
+
 		// start clone
 		var space = this.getChemSpace();
 		var clonedObjs = [];
 		var coordMode = this.getCoordMode();
 		var allowCoordBorrow = this.getAllowCoordBorrow();
 		var standAloneObjCount = standAloneObjs.length;
+		/*
 		for (var i = 0; i < standAloneObjCount; ++i)
 		{
 			var obj = standAloneObjs[i];
@@ -725,14 +836,6 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			// clear ids to avoid conflict
 			if (clonedObj.clearIds)
 				clonedObj.clearIds();
-			/*
-			if (coordOffset && clonedObj.getCoordOfMode && clonedObj.setCoordOfMode)
-			{
-				var coord = clonedObj.getCoordOfMode(coordMode, allowCoordBorrow);
-				var newCoord = Kekule.CoordUtils.add(coord, coordOffset);
-				clonedObj.setCoordOfMode(newCoord, coordMode);
-			}
-			*/
 
 			// remove unessential child objects of cloned object
 			removeUnessentialChildren(clonedObj, obj, childObjMap.get(obj));
@@ -749,8 +852,102 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 			clonedObjs.push(clonedObj);
 		}
+		*/
 
+		//var interSpace = new Kekule.IntermediateChemSpace();
+		//try
+		{
+			// clone objects first, and put them in a inter chemspace to build relations
+			for (var i = 0; i < standAloneObjCount; ++i)
+			{
+				var obj = standAloneObjs[i];
+				var clonedObj = obj.clone();
+				clonedObjs.push(clonedObj);
+			}
+			//interSpace.appendChildren(clonedObjs);
+			// copy cloned object to a inter chem space, to build relations
+
+			// then map the new relations
+			var newRelations = [];
+			for (var i = 0, l = relationMatches.length; i < l; ++i)
+			{
+				var relationMatch = relationMatches[i];
+				var newRelation = getNewObjRefRelation(relationMatch, standAloneObjs, clonedObjs);
+				if (newRelation)
+				{
+					newRelations.push(newRelation);
+					/*
+					newRelation.srcObj.setPropValue(newRelation.srcProp.name, newRelation.dest);  // link objects
+					console.log('new relation', newRelation, newRelation.srcObj.getOwner(), newRelation.srcObj, newRelation.srcObj.getPropValue(newRelation.srcProp.name));
+					*/
+				}
+			}
+
+			// then remove unessential children
+			for (var i = 0; i < standAloneObjCount; ++i)
+			{
+				var obj = standAloneObjs[i];
+				var clonedObj = clonedObjs[i];
+				// clear ids to avoid conflict
+				if (clonedObj.clearIds)
+					clonedObj.clearIds();
+
+				// remove unessential child objects of cloned object
+				removeUnessentialChildren(clonedObj, obj, childObjMap.get(obj));
+
+				if (addToSpace && allowAddToSpace)
+				{
+					space.appendChild(clonedObj);
+					if (screenCoordOffset)
+					{
+						var coord = this.getObjectScreenCoord(clonedObj);
+						var newCoord = Kekule.CoordUtils.add(coord, screenCoordOffset);
+						this.setObjectScreenCoord(clonedObj, newCoord);
+					}
+				}
+			}
+
+			// at last rebuild the relations
+			for (var i = 0, l = newRelations.length; i < l; ++i)
+			{
+				var newRelation = newRelations[i];
+				// check if new src/dest are not removed
+				var finalDest;
+				var hasNewSrcObj = _findParentObjOrSelf(newRelation.srcObj, clonedObjs);
+				if (hasNewSrcObj)
+				{
+					if (AU.isArray(newRelation.dest))
+					{
+						finalDest = [];
+						for (var j = 0, k = newRelation.dest.length; j < k; ++j)
+						{
+							var destObj = newRelation.dest[j];
+							if (_findParentObjOrSelf(destObj, clonedObjs))
+								finalDest.push(destObj);
+						}
+						if (!finalDest.length)
+							finalDest = null;
+					}
+					else
+					{
+						if (_findParentObjOrSelf(newRelation.dest, clonedObjs))
+							finalDest = newRelation.dest;
+					}
+
+					if (finalDest)  // now we can map the new relation
+					{
+						newRelation.srcObj.setPropValue(newRelation.srcProp.name, finalDest);  // link objects
+						console.log('new relation', newRelation, newRelation.srcObj.getOwner(), newRelation.srcObj, newRelation.srcObj.getPropValue(newRelation.srcProp.name));
+					}
+				}
+			}
+		}
+		//finally
+		{
+			//interSpace.finalize();
+		}
 		childObjMap.finalize();
+
 		return clonedObjs;
 	},
 
@@ -765,7 +962,6 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	 */
 	cloneSelection: function(coordOffset, addToSpace, allowCloneSpace)
 	{
-
 		var _getActualTargetObjs = function(objs, allowCloneSpace)
 		{
 			var result = [];
@@ -777,9 +973,11 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					var children = obj.getChildren();
 					AU.pushUnique(result, children);
 				}
+				else
+					AU.pushUnique(result, obj);
 			}
 			return result;
-		}
+		};
 
 		if (coordOffset === undefined)  // use default one
 		{
@@ -1100,7 +1298,7 @@ Kekule.Editor.BasicMolEraserIaController = Class.create(Kekule.Editor.BasicErase
 	{
 		$super(widget);
 	},
-	/*
+	/**
 	 * @private
 	 */
 	doGetActualRemovedObjs: function(objs)

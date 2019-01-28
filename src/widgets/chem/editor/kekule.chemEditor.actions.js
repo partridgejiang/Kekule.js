@@ -430,8 +430,20 @@ Kekule.Editor.ActionCopySelection = Class.create(Kekule.Editor.ActionOnEditor,
 		if (editor && chemSpace)
 		{
 			var objs = editor.cloneSelection();
+			/*
 			Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, objs);
 			//console.log(Kekule.Widget.Clipboard.getData('text/json'));
+			*/
+			var space = new Kekule.IntermediateChemSpace();
+			try
+			{
+				space.appendChildren(objs);  // use a space to keep all objs, to keep the relations
+				Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, [space]);
+			}
+			finally
+			{
+				space.finalize();
+			}
 		}
 	}
 });
@@ -469,7 +481,17 @@ Kekule.Editor.ActionCutSelection = Class.create(Kekule.Editor.ActionOnEditor,
 		if (editor && chemSpace)
 		{
 			var objs = editor.cloneSelection();
-			Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, objs);
+			//Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, objs);
+			var space = new Kekule.IntermediateChemSpace();
+			try
+			{
+				space.appendChildren(objs);  // use a space to keep all objs, to keep the relations
+				Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, [space]);
+			}
+			finally
+			{
+				space.finalize();
+			}
 
 			// TODO: this is not a good approach
 			var controller = editor.getIaController('BasicMolEraserIaController');
@@ -547,7 +569,22 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 		var editor = this.getEditor();
 		if (editor && editor.getChemSpace)
 		{
-			var objs = Kekule.Widget.clipboard.getObjects(Kekule.IO.MimeType.JSON);
+			//var objs = Kekule.Widget.clipboard.getObjects(Kekule.IO.MimeType.JSON);
+			var space, objs;
+			var clipboardObjs = Kekule.Widget.clipboard.getObjects(Kekule.IO.MimeType.JSON);
+			if (clipboardObjs.length === 1 && clipboardObjs[0] instanceof Kekule.IntermediateChemSpace)
+			{
+				space = clipboardObjs[0];
+				objs = AU.clone(space.getChildren());
+
+				// remove objs from space first
+				space.removeChildren(objs);
+			}
+			else
+				objs = clipboardObjs;
+
+			if (space)
+				space.finalize();
 
 			// calc coord offset
 			var coordOffset = null;
