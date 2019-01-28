@@ -14,20 +14,21 @@
 	    /** @private */
 	    initProperties: function()
       {
-		    this.defineProp('testRefObj', {'dataType': DataType.OBJECT, 'objRef': true});
+		    this.defineProp('testRefObj', {'dataType': 'ObjectEx', 'objRef': true, 'autoManage': true});
 	      this.defineProp('testRefObjId', {'dataType': DataType.STRING, 'serializable': false,
           'setter': null,
           'getter': function(){ var obj = this.getTestRefObj(); return obj&&obj.getId();}
         });
-	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent'});
+	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent', 'autoManage': true});
 	      this.defineProp('testRefObjArrayIds', {'dataType': DataType.STRING, 'serializable': false,
 		      'setter': null,
 		      'getter': function(){
 	      	  var ids = [];
 	      	  var objs = this.getTestRefObjArray();
-	      	  objs.forEach(function(obj) {
-	      	  	ids.push(obj && obj.getId());
-            });
+	      	  if (objs)
+              objs.forEach(function(obj) {
+                ids.push(obj && obj.getId());
+              });
 	      	  return ids.join(', ');
 	        }
 	      });
@@ -43,7 +44,7 @@
     	var obj = new CustomClass();
     	space.appendChild(obj);
     	obj.setTestRefObj(atom);
-    	obj.setTestRefObjArray(atoms);
+    	obj.setTestRefObjArray(Kekule.ArrayUtils.clone(atoms));
     }
 
     var composer;
