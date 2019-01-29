@@ -32,7 +32,21 @@
 	      	  return ids.join(', ');
 	        }
 	      });
-	    }
+	    },
+
+	    objSpaceOfOwnerUpdated: function($super, obj, owner, operation)
+      {
+      	$super(obj, owner, operation);
+      	if (operation === Kekule.ObjectTreeOperation.REMOVE)
+        {
+        	if (obj === this.getTestRefObj())
+        		this.setTestRefObj(null);
+        	var objs = this.getTestRefObjArray();
+        	var index = objs.indexOf(obj);
+        	if (index >= 0)
+        		objs.splice(index, 1);
+        }
+      }
     });
 
     function addObjects()
