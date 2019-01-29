@@ -14,12 +14,12 @@
 	    /** @private */
 	    initProperties: function()
       {
-		    this.defineProp('testRefObj', {'dataType': 'ObjectEx', 'objRef': true, 'autoManage': true});
+		    this.defineProp('testRefObj', {'dataType': 'ObjectEx', 'objRef': true, 'autoUpdate': true});
 	      this.defineProp('testRefObjId', {'dataType': DataType.STRING, 'serializable': false,
           'setter': null,
           'getter': function(){ var obj = this.getTestRefObj(); return obj&&obj.getId();}
         });
-	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent', 'autoManage': true});
+	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent', 'autoUpdate': true});
 	      this.defineProp('testRefObjArrayIds', {'dataType': DataType.STRING, 'serializable': false,
 		      'setter': null,
 		      'getter': function(){
@@ -36,7 +36,7 @@
 
 	    objSpaceOfOwnerUpdated: function($super, obj, owner, operation)
       {
-      	$super(obj, owner, operation);
+      	return $super(obj, owner, operation);
       	if (operation === Kekule.ObjectTreeOperation.REMOVE)
         {
         	if (obj === this.getTestRefObj())

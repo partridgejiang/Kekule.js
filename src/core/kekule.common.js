@@ -3807,6 +3807,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 		$super(id);
 		this._autoIdMap = {};  // private
 		this._enableObjRefRelations = true;  // private
+		this._autoUpdateObjRefRelations = true;  // private
 		this.setPropStoreFieldValue('enableAutoId', true);
 		this.setPropStoreFieldValue('ownedObjs', []);
 		var root = new Kekule.ChemSpaceElement();
@@ -3874,6 +3875,25 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 			var child = this.getOwnedObjAt(i);
 			if (child && child.objSpaceOfOwnerUpdated)
 				child.objSpaceOfOwnerUpdated(obj, owner, operation);
+		}
+
+		// update related objects of removed one
+		if (this._enableObjRefRelations && this._autoUpdateObjRefRelations && operation === Kekule.ObjectTreeOperation.REMOVE)
+		{
+			var AU = Kekule.ArrayUtils;
+			var relations = this.findObjRefRelations({'dest': obj}) || [];
+			for (var i = 0, l = relations.length; i < l; ++i)
+			{
+				var rel = relations[i];
+				if (rel.srcProp.autoUpdate)  // an auto-update relation, update it
+				{
+					var relDest = rel.dest;
+					var newDest = (AU.isArray(relDest))? AU.exclude(relDest, [obj]): null;
+					// set value
+					rel.srcObj.setPropValue(rel.srcProp.name, newDest);
+					console.log('auto set ref value', rel.srcObj.getId() + '.' + rel.srcProp.name, newDest);
+				}
+			}
 		}
 	},
 	/** @private */
@@ -4281,6 +4301,7 @@ Kekule.IntermediateChemSpace = Class.create(Kekule.ChemSpace,
 		$super(id);
 		this.setPropStoreFieldValue('enableAutoId', false);
 		this._enableObjRefRelations = false;  // private, force not use relation manager for performance
+		this._autoUpdateObjRefRelations = false;  // private
 	}
 });
 
