@@ -16,6 +16,8 @@
 (function(){
 "use strict";
 
+var AU = Kekule.ArrayUtils;
+
 /**
  * A namespace for operation about normal ChemObject instance.
  * @namespace
@@ -458,6 +460,9 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 		this.defineProp('parentObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('ownerObj', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 		this.defineProp('refSibling', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+
+		// private
+		this.defineProp('removedRelations', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 
 	/** @private */
@@ -465,6 +470,41 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	{
 		var editor = this.getEditor();
 		return ((editor && editor.getSelection && editor.getSelection()) || []).indexOf(obj) >= 0;
+	},
+
+	/** @private */
+	_getRelatedObjRefRelations: function(obj)
+	{
+		var result = [];
+		var owner = obj.getOwner();
+		if (owner)
+		{
+			var rels = owner.findObjRefRelations({'dest': obj}, {'checkDestChildren': true});
+			if (rels && rels.length)
+			{
+				for (var i = 0, l = rels.length; i < l; ++i)
+				{
+					var stored = Object.extend({}, rels[i]);
+					if (AU.isArray(stored.dest))  // clone the array
+						stored.dest = AU.clone(stored.dest);
+					result.push(stored);
+				}
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_restoreRelations: function(relations)
+	{
+		if (relations)
+		{
+			//console.log('restore relations', relations);
+			for (var i = 0, l = relations.length; i < l; ++i)
+			{
+				var rel = relations[i];
+				rel.srcObj.setPropValue(rel.srcProp.name, rel.dest);
+			}
+		}
 	},
 
 	/** @private */
@@ -491,6 +531,10 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 				var sibling = obj.getNextSibling? obj.getNextSibling(): null;
 				this.setRefSibling(sibling);
 			}
+
+			var removedRelations = this._getRelatedObjRefRelations(obj);
+			this.setRemovedRelations(removedRelations);
+			//console.log('store relations', removedRelations);
 
 			//console.log('remove', obj.getId());
 			// ensure obj is also removed from editor's selection
@@ -523,8 +567,13 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 			var sibling = this.getRefSibling();
 			if (owner)
 				obj.setOwner(owner);
+
 			this.notifyBeforeAddingByEditor(obj, parent, sibling);
+
 			parent.insertBefore(obj, sibling);
+			this._restoreRelations(this.getRemovedRelations());
+			this.setRemovedRelations([]);
+
 			this.notifyAfterAddingByEditor(obj, parent, sibling);
 		}
 	}
