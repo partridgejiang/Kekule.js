@@ -5,10 +5,13 @@
 	<title>Molecule Compare</title>
 
 	<script src="../../libs/raphael-min.2.0.1.js"></script>
+
 	<script src="../../libs/kekule/kekule.js?module=chemWidget,algorithm"></script>
+
 	<!--
 	<script src="../../../../project/src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
 	-->
+
 	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
 
 	<script  id="compareMol1" type="chemical/x-mdl-molfile">
@@ -117,7 +120,6 @@ M  END
 			else
 				level = CL.EXACT;
 			ops.level = level;
-			//ops.compareCharge = !($('checkboxIgnoreCharge').checked);
 			ops.compareMass = !($('checkboxIgnoreMass').checked);
 			ops.strictStereoBondGeometry = $('checkboxStrictBondGeometry').checked;
 
