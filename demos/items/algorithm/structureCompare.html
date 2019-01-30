@@ -108,6 +108,7 @@ M  END
 		function compare()
 		{
 			var ops = {};
+			/*
 			var level;
 			var CL = Kekule.StructureComparationLevel;
 			var levelValue = $('listCompareLevel').value;
@@ -121,6 +122,7 @@ M  END
 				level = CL.EXACT;
 			ops.level = level;
 			ops.compareMass = !($('checkboxIgnoreMass').checked);
+			*/
 			ops.strictStereoBondGeometry = $('checkboxStrictBondGeometry').checked;
 
 			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
@@ -177,6 +179,7 @@ M  END
 		<span id="labelResult"></span>
 	</div>
 	<div id="compareOptionPanel" data-widget="Kekule.Widget.Panel">
+		<!--
 		<label for="listCompareLevel">Comparation Level: </label>
 		<select id="listCompareLevel">
 			<option value="Skeletal">Skeletal</option>
@@ -184,6 +187,7 @@ M  END
 			<option value="Configuration" selected="selected">Configuration</option>
 		</select><br />
 		<input type="checkbox" id="checkboxIgnoreMass" checked="true" /><label for="checkboxIgnoreMass">Ignore mass number</label><br />
+		-->
 		<input type="checkbox" id="checkboxStrictBondGeometry" /><label for="checkboxStrictBondGeometry">Strict bond geometry</label><br />
 	</div>
 	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>
