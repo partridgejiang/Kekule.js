@@ -48,6 +48,8 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 			'dataType': DataType.STRING,
 			'scope': Class.PropertyScope.PUBLIC
 		});
+
+		this.defineProp('anchorObj', { 'dataType': DataType.STRING });
 	},
 	/** @ignore */
 	initPropValues: function($super)

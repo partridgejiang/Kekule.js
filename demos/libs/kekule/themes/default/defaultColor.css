@@ -111,9 +111,10 @@ input.K-State-Disabled,select.K-State-Disabled,textarea.K-State-Disabled{opacity
 .K-Res-Icon-Color-NotSet,.K-Color-Unset,.K-Color-Default{background-image:url(sprite/defaultColor.png);background-position:0 0}
 .K-Res-Icon-Color-Mixed,.K-Color-Mixed{background-image:url(sprite/defaultColor.png);background-position:-51px 0}
 .K-Res-Icon-Color-Transparent,.K-Color-Transparent{background-image:url(sprite/defaultColor.png);background-position:-270px 0}
-.K-Res-Button-YesOk .K-Pri-Glyph-Content,.K-Res-Button-NoCancel .K-Pri-Glyph-Content,.K-Res-Button-LoadFile .K-Pri-Glyph-Content{width:24px;height:24px}
+.K-Res-Button-YesOk .K-Pri-Glyph-Content,.K-Res-Button-NoCancel .K-Pri-Glyph-Content,.K-Res-Button-LoadFile .K-Pri-Glyph-Content,.K-Res-Button-Reset .K-Pri-Glyph-Content{width:24px;height:24px}
 .K-Res-Button-YesOk .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-102px -26px}
 .K-Res-Button-NoCancel .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px 0}
-.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px -26px}
-.K-Res-Icon-Remove .K-Pri-Glyph-Content{width:24px;height:24px;background-image:url(sprite/defaultColor.png);background-position:-154px 0}
-#CssGaga{content:"180917162809,swt,334"}
+.K-Res-Button-Reset .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-128px -26px}
+.K-Res-Button-LoadFile .K-Pri-Glyph-Content{background-image:url(sprite/defaultColor.png);background-position:-154px 0}
+.K-Res-Icon-Remove .K-Pri-Glyph-Content{width:24px;height:24px;background-image:url(sprite/defaultColor.png);background-position:-154px -26px}
+#CssGaga{content:"190122222551,swt,334"}

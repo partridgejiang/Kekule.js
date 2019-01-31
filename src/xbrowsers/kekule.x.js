@@ -1417,10 +1417,13 @@ Kekule.X.DomReady = {
 	{
 		return DOM.suspendFlag > 0;
 	},
-  initReady: function()
+  initReady: function initReady()
   {
-    if (Kekule.$document && Kekule.$document.addEventListener) {
-      document.addEventListener( "DOMContentLoaded", DOM.fireReady, {once: true});
+	if (Kekule.$document && Kekule.$document.addEventListener) {
+      document.addEventListener( "DOMContentLoaded", function(){
+	      document.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
+        DOM.fireReady();
+      }, false);
     }
     else
     {

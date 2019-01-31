@@ -8,10 +8,13 @@
 	<!--
 	<script src="../../../src/_compressed/kekule.compressed.js"></script>
 	-->
+	<!--
 	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
 	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
 	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
 	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+	-->
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
 	<style>
 		#listPanel
 		{
@@ -181,6 +184,33 @@
 						{'vertexes': result.longestPath.vertexes, 'edges': result.longestPath.edges, 'color': 'green'}
 					]
 			);
+		}
+
+		function calcMinDistances()
+		{
+			var mol = getCurrMol();
+			var graph = getCurrGraph();
+			var obj = getCurrSelectedObject();
+			var startingVertex;
+
+			var vertexes = graph.getVertexes();
+			for (var i = 0, l = vertexes.length; i < l; ++i)
+			{
+				var v = vertexes[i];
+				if (v.getData('object') === obj)
+				{
+					startingVertex = v;
+					break;
+				}
+			}
+
+			var result = Kekule.GraphAlgorithmUtils.calcMinDistances(graph, startingVertex);
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				var v = vertexes[i];
+				var node = v.getData('object');
+				console.log(node.getId(), result[i]);
+			}
 		}
 
 		function findEndChain()
@@ -385,6 +415,8 @@
 	<button type="button" onclick="findMolAllRings()">Mol All rings</button>
 	<button type="button" onclick="findMolSSSR()">Mol SSSR rings</button>
 	<button type="button" onclick="findMolAromaticRings()">Mol Aromatic rings</button>
+
+	<button type="button" onclick="calcMinDistances()">Min distances</button>
 
 	<button type="button" onclick="canonicalize()">Canonicalize</button>
 </div>

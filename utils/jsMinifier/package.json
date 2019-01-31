@@ -1,0 +1,13 @@
+{
+  "name": "kekule-js-minifier",
+  "version": "1.0.0",
+  "description": "A helper program to compress Kekule.js source files",
+  "main": "run.js",
+  "author": "Partridge Jiang",
+  "license": "MIT",
+  "dependencies": {
+    "@node-minify/no-compress": "^4.0.2",
+    "minimist": "^1.2.0",
+    "node-minify": "^3.6.0"
+  }
+}

@@ -35,7 +35,7 @@ Kekule.IsotopesImporter = {
 		var importLimitedElements = (!!loadOptions.includeElems);
 		var result = [];
 		// parse data into a XML document
-		var srcDoc = XmlUtility.parse(data);
+		var srcDoc = DataType.XmlUtility.parse(data);
 		// analysis srcDoc
 		var isotopeListNodes = srcDoc.getElementsByTagName('isotopeList');
 		for (var i = 0, l = isotopeListNodes.length; i < l; ++i)
@@ -109,7 +109,7 @@ Kekule.IsotopesImporter = {
 	 */
 	saveObjToStr: function(obj)
 	{
-		return JsonUtility.serializeToStr(obj);
+		return DataType.JsonUtility.serializeToStr(obj);
 	},
 
 	import: function(src, options)
