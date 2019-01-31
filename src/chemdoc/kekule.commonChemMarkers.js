@@ -258,6 +258,24 @@ ClassEx.defineProp(Kekule.AbstractAtom, 'lonePairCount', {
 		return result;
 	}
 });
+
+ClassEx.defineProp(Kekule.AbstractAtom, 'singleElectronCount', {
+	'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED, 'serializable': false,
+	'setter': null,  // currently disable setter
+	'getter': function()
+	{
+		var result = 0;
+		var unbondedESets = this.getMarkersOfType(Kekule.ChemMarker.UnbondedElectronSet);
+		for (var i = 0, l = unbondedESets.length; i < l; ++i)
+		{
+			var eSet = unbondedESets[i];
+			if(eSet.getElectronCount() === 1)
+				++result;
+		}
+		return result;
+	}
+});
+
 ClassEx.extendMethod(Kekule.AbstractAtom, 'doCompare', function($origin, targetObj, options)
 	{
 		var result = $origin(targetObj, options);

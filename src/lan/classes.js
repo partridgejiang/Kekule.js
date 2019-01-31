@@ -11,14 +11,6 @@
 
 (function($jsRoot){
 
-// ensure the $jsRoot refers to the global object in browser or node
-if (typeof(self) === 'object')
-	$jsRoot = self;
-else if (typeof(window) === 'object' && window.document)
-	$jsRoot = window;
-else if (typeof(global) === 'object')  // node env
-	$jsRoot = global;
-
 /** @ignore */
 function emptyFunction() {};
 
@@ -3100,10 +3092,8 @@ ObjectEx = Class.create(
 			  {
 				  break;
 			  }
-				var handlerInfo = handlerList.getHandlerInfo(i);
-				if (handlerInfo) {
-					handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
-				}
+	  		var handlerInfo = handlerList.getHandlerInfo(i);
+        handlerInfo.handler.apply(handlerInfo.thisArg, [event]);
 	  	}
   	}
     if (!event._cancelBubble && this.getBubbleEvent())
@@ -3284,8 +3274,6 @@ $jsRoot.Class = Class;
 $jsRoot.ClassEx = ClassEx;
 $jsRoot.ObjectEx = ObjectEx;
 $jsRoot.DataType = DataType;
-DataType.JsonUtility = require('./xmlJsons').JsonUtility;
-DataType.XmlUtility = require('./xmlJsons').XmlUtility;
 
 module.exports = {
   Class,

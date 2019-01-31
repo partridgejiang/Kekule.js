@@ -2068,13 +2068,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/**
 	 * Create a tool button inside parent button group.
 	 * //@param {Kekule.Widget} targetWidget
-	 * @param {Variant} btnNameOrHash
+	 * @param {String} btnName
 	 * @param {Kekule.Widget.ButtonGroup} parentGroup
 	 * @param {Kekule.Action} actions
 	 * @returns {Kekule.Widget.Button}
 	 * @private
 	 */
-	createToolButton: function(btnNameOrHash, parentGroup, actions, checkGroup)
+	createToolButton: function(btnName, parentGroup, actions, checkGroup)
 	{
 		/*
 		var result = null;
@@ -2122,23 +2122,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 		*/
 		var result = null;
-		var name = DataType.isObjectValue(btnNameOrHash)? btnNameOrHash.name: btnNameOrHash;
-		var defActionClass = this.getCompActionClass(name);  // || (DataType.isObjectValue(btnName)? btnName.actionClass: null);
-		var action = this._createToolButtonAction(btnNameOrHash, actions, checkGroup);
+		var name = DataType.isObjectValue(btnName)? btnName.name: btnName;
+		var actionClass = this.getCompActionClass(name);
+		var action = this._createToolButtonAction(btnName, actions, checkGroup);
 
-		if (DataType.isObjectValue(btnNameOrHash) && !defActionClass)  // custom button, has not default action class
+		if (DataType.isObjectValue(btnName) && !actionClass)  // custom button
 		{
-			var defWidgetClass = checkGroup? Kekule.Widget.RadioButton: Kekule.Widget.Button;
-
-			var objDefHash;
-			/*
-			if (!defActionClass)  // no binded action, custom button
-				objDefHash = Object.extend({'widget': defWidgetClass}, btnNameOrHash);
-			else
-				objDefHash = btnNameOrHash;
-			*/
-			objDefHash = Object.extend({'widget': defWidgetClass}, btnNameOrHash);
-
+			if (!actionClass)  // no binded action, custom button
+				var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
 			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
 		}
 		else  // predefined names
@@ -2147,7 +2138,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			//console.log(action.getClassName(), preferredWidgetClass);
 			var btnClass =
 					preferredWidgetClass? preferredWidgetClass:
-					(btnNameOrHash === BNS.objInspector) ? Kekule.Widget.CheckButton :
+					(btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
 					(!!checkGroup) ? Kekule.Widget.RadioButton :
 					Kekule.Widget.Button;
 			result = new btnClass(parentGroup);
@@ -2173,16 +2164,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	_createToolButtonAction: function(actionNameOrHash, defActions, checkGroup)
 	{
-		var isActionHash = DataType.isObjectValue(actionNameOrHash);
-
 		var result = null;
-		var name = isActionHash? actionNameOrHash.name: actionNameOrHash;
-		var children = isActionHash? actionNameOrHash.attached: null;
+		var name = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.name: actionNameOrHash;
+		var children = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.attached: null;
 		var actionClass = this.getCompActionClass(name);
 
 		var result;
 
-		if (isActionHash && !actionClass)  // custom button
+		if (DataType.isObjectValue(actionNameOrHash) && !actionClass)  // custom button
 		{
 			var objDefHash = actionNameOrHash;
 			var actionClass = objDefHash.actionClass;
@@ -2201,15 +2190,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			if (!result)
 			{
 				var result = new actionClass(this._getActionTargetWidget(actionClass));
-				if (isActionHash)  // if has custom text and hint, overwirte the default on in actionClass
-				{
-					if (actionNameOrHash.text)
-						result.setText(actionNameOrHash.text);
-					if (actionNameOrHash.hint)
-						result.setHint(actionNameOrHash.hint);
-					if (actionNameOrHash.htmlClass || actionNameOrHash.htmlClassName)
-						result.setHtmlClassName((result.getHtmlClassName() || '') + (actionNameOrHash.htmlClass || actionNameOrHash.htmlClassName));
-				}
 				//this.getActions().add(action);
 				actionMap.set(actionClass, result);
 			}

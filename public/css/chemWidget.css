@@ -383,11 +383,6 @@
     display: none;
 }
 
-.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection
-{
-    margin-top: 0.7em;
-}
-
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup
 {
     display: block;

@@ -234,14 +234,12 @@ ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerAdded', function($origin
 	var result = $origin(marker);
 	if (marker)
 		marker.setIsAttachedToParent(true);
-		marker.setParent(this)
 	return result;
 });
 ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerRemoved', function($origin, marker){
 	var result = $origin(marker);
 	if (marker)
 		marker.setIsAttachedToParent(false);
-		marker.setParent(null)
 	return result;
 });
 ClassEx.defineProps(Kekule.ChemObject, [

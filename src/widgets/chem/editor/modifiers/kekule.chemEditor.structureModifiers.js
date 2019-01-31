@@ -438,7 +438,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	{
 		if (!parentWidget)
 			parentWidget = this.getEditor();
-		var result = new Kekule.ChemWidget.StructureConnectorSelectPanelAdv(parentWidget);
+		var result = new Kekule.ChemWidget.StructureConnectorSelectPanel(parentWidget);
 		result.setCaption(Kekule.$L('ChemWidgetTexts.CAPTION_BOND_MODIFIER'));
 		result.addClassName(CCNS.COMPOSER_BOND_MODIFIER_DROPDOWN);
 		if (this.getEditor().getEnabledBondFormData)
@@ -446,9 +446,6 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 			var bondTypeData = this.getEditor().getEnabledBondFormData();
 			result.setBondPropNames(this._getBondComparePropNames(bondTypeData));
 			result.setBondData(bondTypeData);
-			// kekulize and hucklize buttons
-			var showKekulize = this.getEditor().getEditorConfigs().getInteractionConfigs().getEnableBondKekulizeHucklize();
-			result.setExtraComponents(showKekulize? [Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Components.KEKULIZE]: []);
 		}
 
 		if (this._valueStorage.bondsPropValues)
@@ -463,9 +460,6 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		result.addEventListener('valueChange', function(e){
 			self.applyToTargets();
 			result.dismiss();
-		});
-		result.addEventListener('command', function(e){
-			self.execExtraCommand(e.command);
 		});
 
 		return result;
@@ -534,27 +528,6 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		}
 		return null;
 	},
-	/** @private */
-	_createBondModificationOperation: function(data, bond)
-	{
-		var op = new Kekule.ChemObjOperation.Modify(bond, data, this.getEditor());
-		return op;
-	},
-	/** @private */
-	_execModificationOperations: function(opers)
-	{
-		var operation;
-		if (opers.length > 1)
-			operation = new Kekule.MacroOperation(opers);
-		else
-			operation = opers[0];
-
-		if (operation)  // only execute when there is real modification
-		{
-			var editor = this.getEditor();
-			editor.execOperation(operation);
-		}
-	},
 
 	/** @ignore */
 	doLoadFromTargets: function(editor, targets)
@@ -578,7 +551,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 
 		if (this.getBondSelector())
 		{
-			// this.getBondSelector().setBondData(bondTypeData);  // avoid update panel each time, but lost the ability to react to config changes instantly
+			this.getBondSelector().setBondData(bondTypeData);
 			var comparedPropNames = this.getBondSelector().getBondPropNames();
 			var bondPropValues = this._extractBondsPropValues(connectors, comparedPropNames);
 			//console.log('set value', bondPropValues);
@@ -623,54 +596,25 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 			if (op)
 				opers.push(op);
 		}
-		this._execModificationOperations(opers);
+		var operation;
+		if (opers.length > 1)
+			operation = new Kekule.MacroOperation(opers);
+		else
+			operation = opers[0];
+
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.execOperation(operation);
+		}
 		//console.log('set class name', this.getBondSelector().getActiveBondHtmlClass());
 		this._setActiveBondHtmlClass(this.getBondSelector().getActiveBondHtmlClass());
 	},
-	/**
-	 * Called when extra command buttons (e.g., Kekulize button) in bond panel is clicked.
-	 * @param {String} command
-	 * @private
-	 */
-	execExtraCommand: function(command)
-	{
-		var targetBonds = this._getActualModificationBonds(this.getTargetObjs());
-		if (!targetBonds || !targetBonds.length)
-			return;
-
-		var rootObj = this.getEditor().getChemObj();
-		if (!rootObj || !rootObj.getKekulizationChanges)
-			return;
-
-		var CMD = Kekule.ChemWidget.StructureConnectorSelectPanelAdv.Commands;
-		var changes;
-		if (command === CMD.KEKULIZE)
-		{
-			changes = rootObj.getKekulizationChanges(targetBonds);
-		}
-		else if (command === CMD.HUCKLIZE)
-		{
-			changes = rootObj.getHucklizationChanges(targetBonds);
-		}
-
-		if (changes && changes.length)  // create modification operations
-		{
-			var opers = [];
-			for (var i = 0, l = changes.length; i < l; ++i)
-			{
-				var bond = changes[i].bond;
-				var newOrder = changes[i].bondOrder;
-				var oper = this._createBondModificationOperation({'bondOrder': newOrder}, bond);
-				opers.push(oper);
-			}
-			this._execModificationOperations(opers);
-		}
-	},
 	/** @private */
-	_getKekulizeOrHucklizeBondModifications: function(command)
+	_createBondModificationOperation: function(data, bond)
 	{
-		var editor = this.getEditor();
-
+		var op = new Kekule.ChemObjOperation.Modify(bond, data, this.getEditor());
+		return op;
 	}
 });
 

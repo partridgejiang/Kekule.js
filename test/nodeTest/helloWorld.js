@@ -2,7 +2,7 @@
  * Created by ginger on 2017/10/29.
  */
 
-var Kekule = require('../../src/kekule.js').Kekule;
+var Kekule = require('../../dist/kekule.js').Kekule;
 
 // Create a simple CO2 molecule
 var mol = new Kekule.Molecule();

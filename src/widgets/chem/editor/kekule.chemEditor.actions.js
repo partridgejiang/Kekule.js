@@ -330,7 +330,7 @@ Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @constructs */
 	initialize: function($super, editor)
 	{
-		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
+		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONESELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
 	},
 	/** @private */
 	_hasCloneMethod: function()
@@ -2115,7 +2115,6 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.copy, CE.ActionCopySelection, widgetClass);
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
 	reg(BNS.paste, CE.ActionPaste, widgetClass);
-	reg(BNS.toggleSelect, CE.ActionToggleSelectState, widgetClass);
 
 	//reg(BNS.manipulate, CE.ActionComposerSetManipulateController, widgetClass);
 	//reg(BNS.erase, CE.ActionComposerSetEraserController, widgetClass);

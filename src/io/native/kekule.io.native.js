@@ -45,7 +45,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 		if (dtype == Kekule.IO.ChemDataType.JSON)
 			jsonObj = data;
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
-			jsonObj = DataType.JsonUtility.parse(data);
+			jsonObj = JsonUtility.parse(data);
 		else // can not understand data other than text or JSON
 		{
 			Kekule.error(/*Kekule.ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT*/Kekule.$L('ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT'));
@@ -56,7 +56,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	doReadData: function(data, dataType)
 	{
-		var serializer = Class.ObjSerializerFactory.getSerializer('json');
+		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.JSON_SERIALIZER_NOT_EXISTS'));
@@ -105,15 +105,15 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return result;
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
 		{
-			//console.log(DataType.JsonUtility.serializeToStr(result, {'prettyPrint': false}));
+			//console.log(JsonUtility.serializeToStr(result, {'prettyPrint': false}));
 			var prettyPrint = (options && Kekule.ObjUtils.notUnset(options.prettyPrint))? options.prettyPrint: this.getPrettyPrint();
-			return DataType.JsonUtility.serializeToStr(result, {'prettyPrint': prettyPrint});
+			return JsonUtility.serializeToStr(result, {'prettyPrint': prettyPrint});
 		}
 	},
 	/** @private */
 	doWriteData: function(obj, dataType, format, options)
 	{
-		var serializer = Class.ObjSerializerFactory.getSerializer('json');
+		var serializer = ObjSerializerFactory.getSerializer('json');
 		if (!serializer)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.JSON_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.JSON_SERIALIZER_NOT_EXISTS'));
@@ -146,7 +146,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 			srcElem = data;
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
 		{
-			var doc = DataType.XmlUtility.parse(data);
+			var doc = XmlUtility.parse(data);
 			srcElem = doc.documentElement;
 		}
 		else // can not understand data other than text or DOM
@@ -159,7 +159,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	doReadData: function(data, dataType)
 	{
-		var serializer = Class.ObjSerializerFactory.getSerializer('xml');
+		var serializer = ObjSerializerFactory.getSerializer('xml');
 		if (!serializer)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.XML_SERIALIZER_NOT_EXISTS'));
@@ -211,19 +211,19 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
 		{
 			var options = {'prettyPrint': this.getPrettyPrint()};
-			return DataType.XmlUtility.serializeNode(result, options);
+			return XmlUtility.serializeNode(result, options);
 		}
 	},
 	/** @private */
 	doWriteData: function(obj, dataType)
 	{
-		var serializer = Class.ObjSerializerFactory.getSerializer('xml');
+		var serializer = ObjSerializerFactory.getSerializer('xml');
 		if (!serializer)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.XML_SERIALIZER_NOT_EXISTS*/Kekule.$L('ErrorMsg.XML_SERIALIZER_NOT_EXISTS'));
 			return null;
 		}
-		var doc = DataType.XmlUtility.newDocument(this.getRootTag());
+		var doc = XmlUtility.newDocument(this.getRootTag());
 		serializer.save(obj, doc.documentElement);  // create new object
 		return doc.documentElement;
 	}

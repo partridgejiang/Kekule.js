@@ -666,19 +666,19 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	importFromElemAttribs: function(attribs)
 	{
 		//if (!attribs.width)
-		attribs.width = DataType.JsonUtility.parse(attribs.width);
+		attribs.width = JsonUtility.parse(attribs.width);
 		//if (!attribs.height)
-		attribs.height = DataType.JsonUtility.parse(attribs.height);
+		attribs.height = JsonUtility.parse(attribs.height);
 		var chemObjJson = attribs['data-chem-obj'];
 		var chemObj = chemObjJson? Kekule.IO.loadMimeData(chemObjJson, 'chemical/x-kekule-json'): null;
 		if (attribs['data-render-type'])
-			attribs.renderType = DataType.JsonUtility.parse(attribs['data-render-type']);
+			attribs.renderType = JsonUtility.parse(attribs['data-render-type']);
 		if (attribs['data-draw-options'])
-			attribs.drawOptions = DataType.JsonUtility.parse(attribs['data-draw-options']);
+			attribs.drawOptions = JsonUtility.parse(attribs['data-draw-options']);
 		if (attribs['data-auto-size'])
-			attribs.autoSize = DataType.JsonUtility.parse(attribs['data-auto-size']);
+			attribs.autoSize = JsonUtility.parse(attribs['data-auto-size']);
 		if (attribs['data-autofit'])
-			attribs.autofit = DataType.JsonUtility.parse(attribs['data-autofit']);
+			attribs.autofit = JsonUtility.parse(attribs['data-autofit']);
 		if (attribs['data-background-color'])
 			attribs.backgroundColor = attribs['data-background-color'];
 		return this.importChemObjWithDetails(chemObj, attribs);

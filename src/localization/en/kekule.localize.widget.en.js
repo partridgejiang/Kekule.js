@@ -28,8 +28,6 @@ const singleElectron = require("../../../public/svg/one-electron.svg");
 const lonePair = require("../../../public/svg/two-electrons.svg");
 const positiveCharge = require("../../../public/svg/positive-charge.svg");
 const negativeCharge = require("../../../public/svg/negative-charge.svg");
-const curvedArrowSingleBarb = require("../../../public/svg/curved-arrow-single-barb.svg");
-const curvedArrowDoubleBarb = require("../../../public/svg/curved-arrow-double-barb.svg");
 
 module.exports = function (Kekule) {
 
@@ -215,13 +213,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_BOND_COORDINATE: 'Coordinate bond',
 	CAPTION_MOL_BOND_METALLIC: 'Metallic bond',
 	CAPTION_MOL_BOND_HYDROGEN: 'Hydrogen bond',
-
-	CAPTION_MOL_BOND_KEKULIZE: 'Kekulize',
-	CAPTION_MOL_BOND_HUCKLIZE: 'Hucklize',
-
 	CAPTION_MOL_ATOM: 'Atom',
 	CAPTION_MOL_FORMULA: 'Formula',
-	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom & formula',
+	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom and formula',
 	CAPTION_MOL_CHARGE: 'Charge',
 	CAPTION_MOL_CHARGE_CLEAR: 'Charge clear',
 	CAPTION_MOL_CHARGE_POSITIVE: positiveCharge,
@@ -233,7 +227,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_MOL_ELECTRON_SINGLE: singleElectron,
 	CAPTION_TEXT_BLOCK: 'Text block',
 	CAPTION_IMAGE_BLOCK: 'Image block',
-	CAPTION_TEXT_IMAGE: 'Text & image',
+	CAPTION_TEXT_IMAGE: 'Text and image',
 
 	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
 	CAPTION_MOL_FLEXRING: 'Flex ring',
@@ -272,8 +266,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: reversibleArrowLine,
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: openArrowDoubleLine,
-	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: curvedArrowDoubleBarb,
-	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: curvedArrowSingleBarb,
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 
 	CAPTION_REPOSITORY_HEAT_SYMBOL: heatSymbol,
 	CAPTION_REPOSITORY_ADD_SYMBOL: addSymbol,
@@ -339,15 +333,11 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_BOND_WEDGEDOWN_INVERTED: 'Wedge down bond 2',
 	HINT_MOL_BOND_CLOSER: 'Outer bond',
 	HINT_MOL_BOND_WAVY: 'Wavy bond',
-	HINT_MOL_BOND_DOUBLE_EITHER: 'Double either bond',
+	HINT_MOL_BOND_DOUBLE_EITHER: 'Double Either bond',
 	HINT_MOL_BOND_IONIC: 'Ionic bond',
 	HINT_MOL_BOND_COORDINATE: 'Coordinate bond',
 	HINT_MOL_BOND_METALLIC: 'Metallic bond',
 	HINT_MOL_BOND_HYDROGEN: 'Hydrogen bond',
-
-	HINT_MOL_BOND_KEKULIZE: 'Kekulize, convert explicit aromatic bonds to compartmental single and double ones',
-	HINT_MOL_BOND_HUCKLIZE: 'Hucklize, mark bonds on aromatic rings as explicit aromatic ones',
-
 	HINT_MOL_ATOM: 'Atom tool',
 	HINT_MOL_FORMULA: 'Formula tool',
 	HINT_MOL_ATOM_AND_FORMULA: 'Atom and formula tool',
@@ -367,7 +357,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_MOL_FLEXCHAIN: 'Flex carbon chain',
 	HINT_MOL_FLEXRING: 'Flex carbon ring',
 
-	HINT_REPOSITORY_RING: 'Ring structures tool',
+	HINT_REPOSITORY_RING: 'Ring structures',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',
 	HINT_REPOSITORY_RING_4: 'Cyclobutane',
 	HINT_REPOSITORY_RING_5: 'Cyclopentane',
@@ -392,7 +382,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	HINT_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
 
-	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines tool',
+	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines',
 	HINT_REPOSITORY_GLYPH: 'Glyphs',
 	HINT_REPOSITORY_GLYPH_LINE: 'Line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
