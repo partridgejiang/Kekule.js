@@ -1578,7 +1578,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				var implicitHydrogens = Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum /* + charge */, 0);
 				
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
-				return Math.max(0, implicitHydrogens - explicitHydrogens);
+				return Math.max(0, implicitHydrogens - explicitHydrogens - this.getSingleElectronCount());
 			}
 		}
 		else
@@ -4716,6 +4716,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					if (usedNodes.includes(j)) {
 						continue;
 					}
+
+                    if (tmpResult === 0) {
+                        if (nodes1[i].getSingleElectronCount() !== nodes2[j].getSingleElectronCount()) {
+                            tmpResult = -1;
+                            continue;
+                        }
+                    }
 
 					var hydrogen_display_type = this._getComparisonOptionFlagValue(options, 'hydrogen_display_type') || 'BONDED';
 					var skeletal_mode = this._getComparisonOptionFlagValue(options, 'skeletalMode') || false;
