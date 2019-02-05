@@ -117,8 +117,6 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 			return {'symbol': Kekule.Element.UNSET_ELEMENT, 'atomicNumber': Kekule.Element.UNSET_ELEMENT};
 		if (Kekule.Element.isDummyElement(symbolOrAtomicNumber))
 			return {'symbol': Kekule.Element.DUMMY_ELEMENT, 'atomicNumber': Kekule.Element.DUMMY_ELEMENT_ATOMICNUM};
-		else if (Kekule.Element.isRGroup(symbolOrAtomicNumber))
-			return {'symbol': Kekule.Element.RGROUP_ELEMENT, 'atomicNumber': Kekule.Element.RGROUP_ELEMENT_ATMOICNUM};
 		else
 			return Kekule.ChemicalElementsDataUtil.getElementInfo(symbolOrAtomicNumber);
 	},

@@ -331,7 +331,7 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		//this.addBoolConfigProp('enableChargeAndRadicalMarker', true);
 
 		this.addHashConfigProp('enabledNonAtomNodeTypes', {
-			'RGroup': true,
+			'RGroup': false,
 			'pseudoatomDummy': true,
 			'pseudoatomHetero': true,
 			'pseudoatomAny': true,

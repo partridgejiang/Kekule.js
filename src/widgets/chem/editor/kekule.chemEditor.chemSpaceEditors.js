@@ -6971,7 +6971,7 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 				if (boundItem)
 				{
 					var obj = boundItem.obj;
-					if (this.isValidTarget(obj))  // can add marker to this object
+					if (this.isValidTarget(obj) && obj.getAtomicNumber() < 113)  // can add marker to this object
 					{
 						this.apply(obj);
 						e.preventDefault();

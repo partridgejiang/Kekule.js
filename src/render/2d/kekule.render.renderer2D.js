@@ -570,6 +570,7 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	{
 		var drawer = this.getRichTextDrawer();
 		options.fontWeight = 'bold';
+		// 112 single atoms from 113 multiatoms
 		if (richText.text) {
 			var sign = richText.text;
 			options.strokeColor = 'transparent';
@@ -1506,7 +1507,7 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 		var parentObj = chemObj.getParent();
 		var transformOptions = options.transformParams;
 
-		if (!chemObj || !parentObj || !chemObj.getElectronCount || (chemObj.getElectronCount() || 0) <= 0)
+		if (!chemObj || !parentObj || parentObj.getAtomicNumber() >= 113 || !chemObj.getElectronCount || (chemObj.getElectronCount() || 0) <= 0)
 			return null;
 
 		if (!baseCoord)
@@ -2584,6 +2585,12 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//if (!this._needNodeDrawLabel(node))
 		//var autoCreateChargeAndRadicalMarker = nodeRenderOptions.autoCreateChargeAndRadicalMarker;
 		// TODO: charge and radical drawing are now handled togather, may be splitted in the future
+		if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D' && node.getAttachedMarkers()) {
+			node.getAttachedMarkers().length = 0;
+		}
+		if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D' && node.getCharge() != 0) {
+			node.setCharge(0);
+		}
 		var hasChargeOrRadical = node.getCharge() || node.getRadical();
 		var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
 		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
@@ -2697,7 +2704,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// consider node label if exists
 			if (nodeWithLabel)
 			{
-				var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio ||*/ 1;
+				var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio) ||*/ 1;
 				var fSize = this._getNodeFontSize(context, node) * (finalTransformOptions.zoom || 1);
 				var halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
 				margin += halfBoxWidth - margin / 2;  // shrink margin a little for better outlook
