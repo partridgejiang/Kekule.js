@@ -4768,8 +4768,8 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					
 					var hxConnectors1 = nodes1[i].getLinkedConnectors().filter((connector) => {
 						var connectedObjs = connector.getConnectedObjs();
-						if (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H") {
-							var nonHydrogen = connectedObjs[0].getIsotope().getSymbol() === "H" ?
+						if (connectedObjs[0].getIsotopeId() === "H" || connectedObjs[1].getIsotopeId() === "H") {
+							var nonHydrogen = connectedObjs[0].getIsotopeId() === "H" ?
 								connectedObjs[1] : connectedObjs[0];
 							return nonHydrogen === nodes1[i];
 						} 
@@ -5036,12 +5036,9 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						{
 							for (var i = 0, l = connectors1.length; i < l; ++i)
 							{
-								options.doStandardize = true;
-								// Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
 								result = this.doCompareOnValue(connectors1[i], connectors2[i], options);
-								// Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = false;
 								if (result !== 0)
-								break;
+									break;
 								else
 								{
 									// check the neighbor node index to current node, avoid issue #86
