@@ -74,8 +74,11 @@ Kekule.MolStandardizer = {
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
 			mol.perceiveStereos(null, true);  // stereo detection should do canonicalization first
 		}
-		else*/ if (op.doCanonicalization)
-			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+		else*/
+		if (op.doCanonicalization) {
+            Kekule.Canonicalizer._compareOptions = options;
+            Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+		}
 
 		if (op.doAromaticPerception)
 		{
@@ -83,7 +86,7 @@ Kekule.MolStandardizer = {
 			//console.log('perceive aromatics');
 		}
 		if (op.doStereoPerception)
-			mol.perceiveStereos(null, true);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
+			mol.perceiveStereos(null, true, op);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
 
 		return mol;
 	}
@@ -107,11 +110,14 @@ Object.extend(Kekule.ChemStructureUtils,
 		// set cano index of two root molecules to null, avoid affect the following comparison
 		m1.setCanonicalizationIndex(null);
 		m2.setCanonicalizationIndex(null);
-		// standardize each
-		m1 = Kekule.MolStandardizer.standardize(m1);
-		m2 = Kekule.MolStandardizer.standardize(m2);
-		// compare options
+
+		// compare options, may also containing standardization options (e.g. stereo perception options)
 		var op = Object.create(compareOptions || {}); //Object.extend(compareOptions || {});
+
+		// standardize each
+		m1 = Kekule.MolStandardizer.standardize(m1, op);
+		m2 = Kekule.MolStandardizer.standardize(m2, op);
+
 		op.doStandardize = false;  // flag that notify the molecule do not do standardize again (that will invoke recursion)
 		op.extraComparisonProperties = ['canonicalizationIndex'];  // flag that indicate the cano step has been done and the canoIndex can be used in comparison
 		// compare

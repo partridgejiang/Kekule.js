@@ -445,8 +445,6 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 					return 1;
 				else if (!node2)
 					return -1;
-				else if (!node2)
-					return 1;
 				else  // node1 node2 all assigned
 				{
 					// node with larger cano index first

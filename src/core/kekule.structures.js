@@ -1144,6 +1144,23 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 		return $super().concat(['explicitHydrogenCount']);
 	},
 
+    /** @ignore */
+    doCompare: function($super, targetObj, options)
+    {
+        var result = $super(targetObj, options);
+        if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+        {
+            var compareOptions = Kekule.Canonicalizer._compareOptions;
+            if (this._getComparisonOptionFlagValue(compareOptions, 'hydrogenCount'))
+            {
+                var c1 = this.getHydrogenCount(true, compareOptions);
+                var c2 = targetObj.getHydrogenCount && targetObj.getHydrogenCount(true, compareOptions);
+                result = this.doCompareOnValue(c1, c2, compareOptions);
+            }
+        }
+        return result;
+    },
+
 	/**
 	 * Returns hydrogen count linked to this atom.
 	 * Same as getExplicitHydrogenCount if includingBondedHydrogen is false.
@@ -1589,13 +1606,24 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	 * If explicitHydrogenCount is set, returns it, else returns implicit hydrogen count.
 	 * @param {Bool} includingBondedHydrogen
 	 */
-	getHydrogenCount: function(includingBondedHydrogen)
+	getHydrogenCount: function(includingBondedHydrogen, compareOptions)
 	{
 		var result;
-		if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
-			result = this.getImplicitHydrogenCount() || 0;
-		else
-			result = this.getExplicitHydrogenCount() || 0;
+
+        if (compareOptions) {
+			var hydrogen_display_type = this._getComparisonOptionFlagValue(compareOptions, 'hydrogen_display_type') || 'BONDED';
+			var skeletal_mode = this._getComparisonOptionFlagValue(compareOptions, 'skeletalMode') || false;
+
+			var explicitHydrogens = hydrogen_display_type === 'EXPLICIT' && this.getExplicitHydrogenCount() ? this.getExplicitHydrogenCount() : 0;
+			var implicitHydrogens = hydrogen_display_type === 'IMPLICIT' || (skeletal_mode && hydrogen_display_type === 'EXPLICIT' && this.getIsotopeId() === "C") ? this.getImplicitHydrogenCount() : 0;
+
+			result = (explicitHydrogens + implicitHydrogens);
+		} else {
+            if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
+                result = this.getImplicitHydrogenCount() || 0;
+            else
+                result = this.getExplicitHydrogenCount() || 0;
+		}
 		if (includingBondedHydrogen)
 			result += this.getLinkedHydrogenAtoms().length || 0;
 		return result;
@@ -4959,8 +4987,8 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
                                     targetObj.sanitizeHydrogenNodes();
 								}
                                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
-                                Kekule.MolStandardizer.standardize(this);
-                                Kekule.MolStandardizer.standardize(targetObj);
+                            	Kekule.MolStandardizer.standardize(this, options);
+                                Kekule.MolStandardizer.standardize(targetObj, options);
                                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = false;
                             }
 
