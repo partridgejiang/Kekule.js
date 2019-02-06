@@ -4690,7 +4690,11 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
                 }, 0) : 0;
             var charge1 = hydrogenObj1.getCharge() === undefined ? 0 : hydrogenObj1.getCharge();
             var charge2 = hydrogenObj2.getCharge() === undefined ? 0 : hydrogenObj2.getCharge();
-            result = (charge1 - charge2) + (electrons1 - electrons2);
+            result = (charge1 - charge2);
+            if (result !== 0) {
+                return result;
+            }
+            result = (electrons1 - electrons2);
 		}
 
 		if (result !== 0) {
