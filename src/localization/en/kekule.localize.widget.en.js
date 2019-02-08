@@ -20,6 +20,8 @@ const reversibleArrowLine = require("../../../public/svg/reversible-arrow-line.s
 const openArrowDoubleLine = require("../../../public/svg/open-arrow-double-line.svg");
 const heatSymbol = require("../../../public/svg/triangle.svg");
 const addSymbol = require("../../../public/svg/plus.svg");
+const benzeneRing = require("../../../public/svg/benzene-ring.svg");
+const flexRing = require("../../../public/svg/n-ring.svg");
 const cycloPropane = require("../../../public/svg/cyclo-propane.svg");
 const cycloButane = require("../../../public/svg/cyclo-butane.svg");
 const cycloPentane = require("../../../public/svg/cyclo-pentane.svg");
@@ -236,7 +238,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_TEXT_IMAGE: 'Text & image',
 
 	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
-	CAPTION_MOL_FLEXRING: 'Flex ring',
+	CAPTION_MOL_FLEXRING: flexRing,
 
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: cycloPropane,
@@ -245,7 +247,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_RING_6: cycloHexane,
 	CAPTION_REPOSITORY_RING_7: 'Cycloheptane',
 	CAPTION_REPOSITORY_RING_8: 'Cyclooctane',
-	CAPTION_REPOSITORY_RING_AR_6: 'Benzene',
+	CAPTION_REPOSITORY_RING_AR_6: benzeneRing,
 	CAPTION_REPOSITORY_RING_AR_5: 'Cyclopentadiene',
 	CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR1: 'Cyclohexane chair 1',
 	CAPTION_REPOSITORY_CYCLOHEXANE_CHAIR2: 'Cyclohexane chair 2',

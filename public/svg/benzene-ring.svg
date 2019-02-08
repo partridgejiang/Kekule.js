@@ -1,0 +1,8 @@
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <polygon stroke="#00758E" points="12 3 19.7942286 7.5 19.7942286 16.5 12 21 4.20577137 16.5 4.20577137 7.5"></polygon>
+        <path d="M11.5410156,18.6914062 L17.1885156,15.6914062" stroke="#00758E" stroke-linecap="square" transform="translate(14.541016, 17.191406) rotate(-180.000000) translate(-14.541016, -17.191406) "></path>
+        <path d="M12.5410156,5.69140625 L17.5410156,8.69140625" stroke="#00758E" stroke-linecap="square" transform="translate(15.041016, 7.191406) rotate(-180.000000) translate(-15.041016, -7.191406) "></path>
+        <path d="M6.5,8.5 L6.5,15" stroke="#00758E" stroke-linecap="square"></path>
+    </g>
+</svg>
