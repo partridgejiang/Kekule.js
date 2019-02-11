@@ -1417,6 +1417,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			propOptions.setter = function(value)
 			{
 				this.getEditor().setPropValue(editorPropName, value);
+				if (editorPropName === "chemObj")
+					this.createChemToolbar();
 			}
 		}
 		//console.log('define delegate prop', propOptions);
@@ -2438,7 +2440,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var name = btns[i];
 			var btn = this.createToolButton(name, toolbar, actions, checkGroup);
-			if (i === 0)
+			if ((i === 0 && btn.getElement().id !== 'btnSelect') || (btn.getElement().id === 'btnDraw'))
 				firstBtn = btn;
 		}
 		this.setChemBtnGroup(toolbar);
