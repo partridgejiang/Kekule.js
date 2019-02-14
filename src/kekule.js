@@ -685,7 +685,7 @@ function init()
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
 		try
 		{
-			fs.statsSync(testFileName)
+			fs.statSync(testFileName)
 		}
 		catch(e)
 		{
