@@ -40,7 +40,8 @@ Kekule.globalOptions.add('algorithm.stereoPerception', {
 	perceiveStereoConnectors: true,
 	perceiveChiralNodes: true,
 	calcParity: true,
-	strictStereoBondGeometry: false
+	strictStereoBondGeometry: false,
+	wedgeBondPrior: true
 });
 
 /**
@@ -961,7 +962,10 @@ Kekule.MolStereoUtils = {
 						{
 							if (connDirection < 0)
 								bondStereo = BS.getInvertedDirection(bondStereo);
-							var zFactors = [1, -1, -1, 1];
+
+							// use a larger factor for wedge bond than the dashes one when wedge is considered prior in chiral calculation
+							var zFactors = ops.wedgeBondPrior? [2, -2, -1, 1]: [1, -1, -1, 1];
+
 							var distance = CU.getDistance(result, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
 							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
 						}
