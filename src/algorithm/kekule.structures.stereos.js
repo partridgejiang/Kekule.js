@@ -36,10 +36,11 @@ var RD = Kekule.RotationDir;
  * @object
  */
 Kekule.globalOptions.add('algorithm.stereoPerception', {
-	useFlatternedShadow: true,
+	useFlattenedShadow: true,
 	perceiveStereoConnectors: true,
 	perceiveChiralNodes: true,
-	calcParity: true
+	calcParity: true,
+	strictStereoBondGeometry: false
 });
 
 /**
@@ -1189,7 +1190,7 @@ Kekule.MolStereoUtils = {
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
 	 * @param {Hash} options Chiral calculation options, including:
 	 *   { <br/>
-	 *     useFlatternedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />
+	 *     useFlattenedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />
 	 *     perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. <br />
 	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />
 	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />
@@ -1207,7 +1208,7 @@ Kekule.MolStereoUtils = {
 	{
 		/*
 		var ops = Object.extend({
-			useFlatternedShadow: true,
+			useFlattenedShadow: true,
 			perceiveStereoConnectors: true,
 			perceiveChiralNodes: true,
 			calcParity: true
@@ -1220,7 +1221,7 @@ Kekule.MolStereoUtils = {
 		var srcStructFragment = (structFragmentOrCtab instanceof Kekule.StructureConnectionTable) ? structFragmentOrCtab.getParent() : structFragmentOrCtab;
 
 		var targetFragment;
-		if (ops.useFlatternedShadow)
+		if (ops.useFlattenedShadow)
 		{
 			targetFragment = srcStructFragment.getFlattenedShadowFragment(true);
 		}
@@ -1255,7 +1256,7 @@ Kekule.MolStereoUtils = {
 			var stereoObjs = (chiralNodes || []).concat(stereoBonds || []);
 			//console.log(ops, stereoBonds, chiralNodes, stereoObjs);
 
-			if (ops.useFlatternedShadow && !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
+			if (ops.useFlattenedShadow && !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
 			{
 				result = [];
 				srcStructFragment.beginUpdate();
