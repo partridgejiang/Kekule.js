@@ -1472,10 +1472,8 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 			boundInfo = this.createCircleBoundInfo(electronCoords[0], eRadius);
 		else  // line bound
 		{
-			var adjustDelta = CU.multiply(deltaVector, eRadius * 2 / gap);
-			var c1 = CU.substract(electronCoords[0], adjustDelta);
-			var c2 = CU.add(electronCoords[electronCount - 1], adjustDelta);
-			boundInfo = this.createLineBoundInfo(c1, c2, eRadius, true);
+			var middle = {'x': (electronCoords[0].x + electronCoords[1].x)/2, 'y': (electronCoords[0].y + electronCoords[1].y)/2};
+			boundInfo = this.createCircleBoundInfo(middle, eRadius);
 		}
 
 		return {'electronCoords': electronCoords, 'drawnElem': group || drawElem, 'electronRadius': eRadius, 'boundInfo': boundInfo};
