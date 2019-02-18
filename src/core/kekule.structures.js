@@ -1147,7 +1147,10 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
     /** @ignore */
     doCompare: function($super, targetObj, options)
     {
-        var result = $super(targetObj, options);
+		var compareOptions = Kekule.Canonicalizer._compareOptions ? Kekule.Canonicalizer._compareOptions : options;
+		options.stereo = compareOptions.stereo;
+		options.compareStereo = compareOptions.compareStereo;
+		var result = $super(targetObj, options);
         if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
         {
             var compareOptions = Kekule.Canonicalizer._compareOptions;
@@ -1158,6 +1161,19 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
                 result = this.doCompareOnValue(c1, c2, compareOptions);
             }
         }
+		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			// compare electron count
+			var c1 = this.getAttachedMarkers() ? this.getAttachedMarkers().reduce((acc, marker) => {
+				var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
+				return acc + electronCount;
+			}, 0) : 0;
+			var c2 =  targetObj.getAttachedMarkers() ? targetObj.getAttachedMarkers().reduce((acc, marker) => {
+				var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
+				return acc + electronCount;
+			}, 0) : 0;
+			result = this.doCompareOnValue(c1, c2, compareOptions);
+		}
         return result;
     },
 
@@ -4925,6 +4941,10 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	//// this is where most of the molcule grading happens
 	doCompare: function($super, targetObj, options)
 	{
+
+		var first = Kekule.IO.saveFormatData(this, 'Kekule-JSON');
+		var second = Kekule.IO.saveFormatData(targetObj, 'Kekule-JSON');
+
 		//console.log('do compare structure', options);
 		var result = $super(targetObj, options);
 		var _getNeighorNodeIndexes = function(nodeOrConnector, parent)
@@ -5007,7 +5027,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							{
 								// this isn't necessary at this point as electrons have already been validated 
 								// also, electrons don't seem to normalize correctly
-								options.lonePair = false;
 								result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
 								if (result !== 0)
 								break;
