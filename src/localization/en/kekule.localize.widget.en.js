@@ -330,7 +330,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_ERASE: 'Erase tool',
 	HINT_TRACK_INPUT: 'Track tool',
 	HINT_MOL_BOND: 'Bond tool',
-	HINT_MOL_BOND_SINGLE: singleBond,
+	HINT_MOL_BOND_SINGLE: 'Single bond',
 	HINT_MOL_BOND_DOUBLE: 'Double bond',
 	HINT_MOL_BOND_TRIPLE: 'Triple bond',
 	HINT_MOL_BOND_QUAD: 'Quad bond',
