@@ -917,8 +917,12 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		this.defineProp('charge', {'dataType': DataType.FLOAT,
 			'getter': function() { return this.getPropStoreFieldValue('charge') || 0; }
 		});
-		this.defineProp('radical', {'dataType': DataType.INT});
-		this.defineProp('parity', {'dataType': DataType.INT});
+		this.defineProp('radical', {'dataType': DataType.INT,
+			'getter': function() { return this.getPropStoreFieldValue('radical') || 0; }
+		});
+		this.defineProp('parity', {'dataType': DataType.INT,
+			'getter': function() { return this.getPropStoreFieldValue('parity') || 0; }
+		});
 		this.defineProp('isAnchor', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function()
 			{
