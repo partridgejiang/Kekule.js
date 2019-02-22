@@ -258,6 +258,11 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	{
 		// called after loading a new chemObj, or creating a new doc
 		$super();
+		this.resetClientDisplay();
+	},
+	/** @private */
+	resetClientDisplay: function()
+	{
 		// adjust editor size
 		var space = this.getChemObj();
 		if (space)
@@ -446,7 +451,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		return result;
 	},
 	/** @private */
-	_initChemSpaceDefProps: function(chemSpace, containingChemObj)
+	_initChemSpaceDefProps: function(chemSpace, containingChemObj, forceResetSize2D)
 	{
 		var configs = this.getEditorConfigs();
 		var chemSpaceConfigs = configs.getChemSpaceConfigs();
@@ -475,7 +480,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					refLength = configs.getStructureConfigs().getDefBondLength();
 				chemSpace.setDefAutoScaleRefLength(refLength);
 			}
-			if (!chemSpace.getSize2D())
+			if (!chemSpace.getSize2D() || forceResetSize2D)
 			{
 				var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
 				var ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
@@ -483,6 +488,56 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				chemSpace.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
 			}
 		}
+	},
+
+	/**
+	 * Change the size of current chemspace.
+	 * The screen size of the space will also be modified in 2D coord mode.
+	 * @param {Hash} size
+	 * @param {Int} coordMode
+	 */
+	changeChemSpaceSize: function(size, coordMode)
+	{
+		var chemSpace = this.getChemSpace();
+		chemSpace.setSizeOfMode(size, coordMode);
+
+		// now only change screen size in 2D mode
+		if (coordMode === Kekule.CoordMode.COORD2D)
+		{
+			var ratio = chemSpace.getObjScreenLengthRatio();
+			if (!ratio)
+			{
+				var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
+				ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
+			}
+			if (ratio)
+			{
+				chemSpace.setScreenSize({'x': size.x / ratio, 'y': size.y / ratio});
+			}
+		}
+		this.resetClientDisplay();
+	},
+	/**
+	 * Change the screen size of current chem space in editor.
+	 * The size2D of chemSpace will also be modified.
+	 * @param {Hash} screenSize
+	 */
+	changeChemSpaceScreenSize: function(screenSize)
+	{
+		var chemSpace = this.getChemSpace();
+		var ratio = chemSpace.getObjScreenLengthRatio();
+		if (!ratio)
+		{
+			var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
+			ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
+		}
+		if (ratio)
+		{
+			// change size 2D
+			chemSpace.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
+		}
+		chemSpace.setScreenSize(screenSize);
+		this.resetClientDisplay();
 	},
 
 	/**
