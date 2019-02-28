@@ -288,6 +288,13 @@ ClassEx.extend(Kekule.ChemStructureObject,
 			AU.pushUnique(result, connector);
 			AU.pushUnique(result, connector.getCoordDeterminateObjects());
 		}
+		var shadowNodes = this.getAttachedShadowNodes();
+		for (var i = 0, l = shadowNodes.length; i < l; ++i)
+		{
+			var node = shadowNodes[i];
+			AU.pushUnique(result, node);
+			AU.pushUnique(result, node.getCoordDeterminateObjects());
+		}
 		return result;
 	}
 });
@@ -338,6 +345,35 @@ ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode,
 	move3D: function(delta)
 	{
 		return this.move(delta, C.COORD3D);
+	}
+});
+
+ClassEx.extend(Kekule.StructureCoordShadowNode,
+/** @lends Kekule.StructureCoordShadowNode# */
+{
+	/**
+	 * Whether the coord of chem object is calculated from other object (like connector).
+	 * @returns {Bool}
+	 */
+	isCoordDependent: function()
+	{
+		return !!this.getTarget();
+	},
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 */
+	getCoordDependentObjects: function($super)
+	{
+		if (this.isCoordDependent())  // has target
+		{
+			var result = $super() || [];
+			result = result.concat(this.getTarget());
+			console.log(result);
+			return result;
+		}
+		else
+			return $super();
 	}
 });
 
