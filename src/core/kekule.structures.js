@@ -177,7 +177,14 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	initialize: function($super, id)
 	{
 		this.setPropStoreFieldValue('autoClearStructureCache', true);
+		this.setPropStoreFieldValue('attachedShadowNodes', []);
 		$super(id);
+	},
+	/** @ignore */
+	doFinalize: function($super)
+	{
+		this.setPropStoreFieldValue('attachedShadowNodes', null);
+		$super();
 	},
 	/** @private */
 	initProperties: function()
@@ -265,6 +272,9 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			}
 		});
 		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
+
+		// private
+		this.defineProp('attachedShadowNodes', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -723,6 +733,32 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		// do nothing here
 	},
 
+	/**
+	 * Called when new shadow nodes are attached to this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	attachCoordShadowNodes: function(nodes)
+	{
+		var ns = AU.toArray(nodes);
+		var currShadowNodes = this.getAttachedShadowNodes();
+		AU.pushUnique(currShadowNodes, ns);
+		return this;
+	},
+	/**
+	 * Called when shadow nodes are detached from this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	detachCoordShadowNodes: function(nodes)
+	{
+		var ns = AU.toArray(nodes);
+		var currShadowNodes = this.getAttachedShadowNodes();
+		for (var i = 0, l = ns.length; i < l; ++i)
+			AU.remove(currShadowNodes, ns[i]);
+		return this;
+	},
+
 	/** @ignore */
 	relayEvent: function($super, eventName, event)
 	{
@@ -855,7 +891,22 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('target', {'dataType': 'Kekule.ChemStructureObject', 'serializable': false, 'objRef': true, 'autoUpdate': true});
+		this.defineProp('target', {'dataType': 'Kekule.ChemStructureObject', 'objRef': true, 'autoUpdate': true,
+			'setter': function(value)
+			{
+				this._targetChanged(this.getTarget(), value);
+				this.setPropStoreFieldValue('target', value);
+			}
+		});
+	},
+
+	/** @private */
+	_targetChanged: function(oldValue, newValue)
+	{
+		if (oldValue && oldValue.detachCoordShadowNodes)
+			oldValue.detachCoordShadowNodes(this);
+		if (newValue && newValue.attachCoordShadowNodes)
+			newValue.attachCoordShadowNodes(this);
 	},
 
 	/** @ignore */
