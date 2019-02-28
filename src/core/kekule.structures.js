@@ -840,6 +840,64 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.BaseStructureNode);
 
 /**
+ * A special structure node, attaching to another node (e.g., a concrete atom).
+ * The coords of this shadow node will keep the same to the attached node.
+ * @class
+ * @augments Kekule.BaseStructureNode
+ *
+ * @property {Kekule.ChemStructureObject} target The shadow source object.
+ */
+Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
+/** @lends Kekule.StructureCoordShadowNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.StructureCoordShadowNode',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('target', {'dataType': 'Kekule.ChemStructureObject', 'serializable': false, 'objRef': true, 'autoUpdate': true});
+	},
+
+	/** @ignore */
+	getCoordParent: function($super, coordMode)
+	{
+		// if has target node, the coord of this object is the same of abs coord of target, and should not be influenced by the parent of this object
+		return this.getTarget()? null: $super(coordMode);
+	},
+
+	// override coord getters, returns the coord of target
+	// (the setter should not be overrided here)
+	/** @ignore */
+	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var n = this.getTarget();
+		if (n && n.getAbsCoord2D)
+		{
+			var result = n.getAbsCoord2D(allowCoordBorrow, allowCreateNew);
+			// update stored coord field also
+			this.setPropStoreFieldValue('coord2D', result);
+			return result;
+		}
+		else
+			return $super(allowCoordBorrow, allowCreateNew);
+	},
+	/** @ignore */
+	doGetCoord3D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var n = this.getTarget();
+		if (n && n.getAbsCoord3D)
+		{
+			var result = n.getAbsCoord3D(allowCoordBorrow, allowCreateNew);
+			// update stored coord field also
+			this.setPropStoreFieldValue('coord3D', result);
+			return result;
+		}
+		else
+			return $super(allowCoordBorrow, allowCreateNew);
+	}
+});
+
+/**
  * Enumeration of stereo parity of node or connector.
  * @enum
  */
