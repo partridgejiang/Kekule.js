@@ -76,11 +76,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 			}
 			else
 			{
-				Kekule.chemError(
-					Kekule.hasLocalRes()?
-						/*Kekule.ErrorMsg.INVALID_CHEMELEMENT*/Kekule.$L('ErrorMsg.INVALID_CHEMELEMENT') + ': ' + symbolOrAtomicNumber :
-						'Invalid chemical element: ' + symbolOrAtomicNumber
-				);
+				this.setPropStoreFieldValue('symbol', symbolOrAtomicNumber);
 			}
 		}
 		else

@@ -1151,18 +1151,14 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
     /** @ignore */
     doCompare: function($super, targetObj, options)
     {
-		var compareOptions = Kekule.Canonicalizer._compareOptions ? Kekule.Canonicalizer._compareOptions : options;
-		options.stereo = compareOptions.stereo;
-		options.compareStereo = compareOptions.compareStereo;
 		var result = $super(targetObj, options);
         if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
         {
-            var compareOptions = Kekule.Canonicalizer._compareOptions;
-            if (this._getComparisonOptionFlagValue(compareOptions, 'hydrogenCount'))
+            if (this._getComparisonOptionFlagValue(options, 'hydrogenCount'))
             {
-                var c1 = this.getHydrogenCount(true, compareOptions);
-                var c2 = targetObj.getHydrogenCount && targetObj.getHydrogenCount(true, compareOptions);
-                result = this.doCompareOnValue(c1, c2, compareOptions);
+				var c1 = this.getHydrogenCount(true);
+				var c2 = targetObj.getHydrogenCount && targetObj.getHydrogenCount(true);
+				result = this.doCompareOnValue(c1, c2);
             }
         }
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
@@ -1176,7 +1172,7 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 				var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
 				return acc + electronCount;
 			}, 0) : 0;
-			result = this.doCompareOnValue(c1, c2, compareOptions);
+			result = this.doCompareOnValue(c1, c2);
 		}
         return result;
     },
@@ -1613,7 +1609,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 
 				var explicitHydrogens = this.getExplicitHydrogenCount() ? this.getExplicitHydrogenCount() : 0;
 				var implicitHydrogens = Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum /* + charge */, 0);
-				
+
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
 				return Math.max(0, implicitHydrogens - explicitHydrogens - this.getSingleElectronCount());
 			}
@@ -1626,24 +1622,14 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	 * If explicitHydrogenCount is set, returns it, else returns implicit hydrogen count.
 	 * @param {Bool} includingBondedHydrogen
 	 */
-	getHydrogenCount: function(includingBondedHydrogen, compareOptions)
+	getHydrogenCount: function(includingBondedHydrogen)
 	{
 		var result;
 
-        if (compareOptions) {
-			var hydrogen_display_type = this._getComparisonOptionFlagValue(compareOptions, 'hydrogen_display_type') || 'BONDED';
-			var skeletal_mode = this._getComparisonOptionFlagValue(compareOptions, 'skeletalMode') || false;
-
-			var explicitHydrogens = hydrogen_display_type === 'EXPLICIT' && this.getExplicitHydrogenCount() ? this.getExplicitHydrogenCount() : 0;
-			var implicitHydrogens = hydrogen_display_type === 'IMPLICIT' || (skeletal_mode && hydrogen_display_type === 'EXPLICIT' && this.getIsotopeId() === "C") ? this.getImplicitHydrogenCount() : 0;
-
-			result = (explicitHydrogens + implicitHydrogens);
-		} else {
-            if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
-                result = this.getImplicitHydrogenCount() || 0;
-            else
-                result = this.getExplicitHydrogenCount() || 0;
-		}
+        if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
+			result = this.getImplicitHydrogenCount() || 0;
+		else
+			result = this.getExplicitHydrogenCount() || 0;
 		if (includingBondedHydrogen)
 			result += this.getLinkedHydrogenAtoms().length || 0;
 		return result;
@@ -4944,7 +4930,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			if (result === 0) {
 				var Hs1 = this.getConnectors().map((connector) => {
 					var connectedObjs = connector.getConnectedObjs();
-					if (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H") {
+					if (connectedObjs[0].getIsotope() && (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H")) {
 						var hydrogen = connectedObjs[0].getIsotope().getSymbol() === "H" ?
 							connectedObjs[0] : connectedObjs[1];
 						return hydrogen;
@@ -4953,7 +4939,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				var uniqueHs1 = Hs1.filter(this.onlyUnique);
 				var Hs2 = targetObj.getConnectors().map((connector) => {
 					var connectedObjs = connector.getConnectedObjs();
-					if (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H") {
+					if (connectedObjs[0].getIsotope() && (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H")) {
 						var hydrogen = connectedObjs[0].getIsotope().getSymbol() === "H" ?
 							connectedObjs[0] : connectedObjs[1];
 						return hydrogen;
@@ -5019,10 +5005,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	//// this is where most of the molcule grading happens
 	doCompare: function($super, targetObj, options)
 	{
-
-		var first = Kekule.IO.saveFormatData(this, 'Kekule-JSON');
-		var second = Kekule.IO.saveFormatData(targetObj, 'Kekule-JSON');
-
 		//console.log('do compare structure', options);
 		var result = $super(targetObj, options);
 		var _getNeighorNodeIndexes = function(nodeOrConnector, parent)
@@ -5072,18 +5054,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						if (result !== 0) {
 							return result;
 						}
-						var hydrogen_display_type = this._getComparisonOptionFlagValue(options, 'hydrogen_display_type') || 'BONDED';
 
+						var hydrogen_display_type = this._getComparisonOptionFlagValue(options, 'hydrogen_display_type') || 'BONDED';
 						if (result === 0)
 						{
-							// if it's not bonded, remove the extra bonds to hydrogens, they are unnecessary
-							// to prove out the structure of the item, and at this point we've already
-							// tested the hydrogen decorations
+							this.hydrateExplicitHydrogenBonds();
+							targetObj.hydrateExplicitHydrogenBonds();
+
                             if (hydrogen_display_type !== 'BONDED') {
-                            	if (hydrogen_display_type === 'EXPLICIT') {
-                                    this.sanitizeHydrogenNodes();
-                                    targetObj.sanitizeHydrogenNodes();
-								}
                                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
                             	Kekule.MolStandardizer.standardize(this, options);
                                 Kekule.MolStandardizer.standardize(targetObj, options);
@@ -5097,17 +5075,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
                             if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
                                 const stereoBonds1 = this.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
                                 const stereoBonds2 = targetObj.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
-
                                 result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
                             }
 							
 							for (var i = 0, l = nodes1.length; i < l; ++i)
 							{
-								// this isn't necessary at this point as electrons have already been validated 
-								// also, electrons don't seem to normalize correctly
 								result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
 								if (result !== 0)
-								break;
+									break;
 								else
 								{
 									// check the neighbor node index to current node, avoid issue #86
@@ -5190,17 +5165,65 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return result;
 	},
 
-	sanitizeHydrogenNodes: function()
+	hydrateExplicitHydrogenBonds: function()
 	{
 		var nodes = this.getNodes();
 		var resultNodes = [];
-			nodes.forEach((node) => {
-				if (node.setExplicitHydrogenCount) {
-                    node.setExplicitHydrogenCount(0);
+		var resultConnectors = this.getConnectors();
+		nodes.forEach((node) => {
+			var existingStereoBonds = node.getLinkedConnectors().map((bond) => {
+				var stereo = bond.getStereo();
+				if (stereo) {
+					switch (stereo) {
+						case 1:
+							return 'dash';
+						case 2:
+							return 'reverse-dash';
+						case 3:
+							return 'wedge';
+						case 4:
+							return 'reverse-wedge';
+					}
 				}
-				resultNodes.push(node);
-			})
+				return 'normal';
+			});
+			var explicitCount = node.getExplicitHydrogenCount();
+			if (explicitCount) {
+				for(var i = 0; i < explicitCount; i++) {
+					var hydrogen = new Kekule.Atom();
+					hydrogen.setIsotopeId('H');
+					var bond = new Kekule.Bond();
+					var counts = {};
+					for (var j = 0; j < existingStereoBonds.length; j++) {
+						if (existingStereoBonds[j] !== 'normal') {
+							counts[existingStereoBonds[j]] = 1 + (counts[existingStereoBonds[j]] || 0);
+						}
+					}
+					if (Object.keys(counts).length === 1) {
+						switch (counts[0]) {
+							case 'dash':
+								bond.setStereo(1);
+							case 'reverse-dash':
+								bond.setStereo(2);
+							case 'wedge':
+								bond.setStereo(3);
+							case 'reverse-wedge':
+								bond.setStereo(4);
+						}
+					}
+					resultNodes.push(hydrogen);
+					resultConnectors.push(bond);
+					bond.getConnectedObjs().push(node);
+					bond.getConnectedObjs().push(hydrogen);
+					hydrogen.getLinkedConnectors().push(bond);
+					node.getLinkedConnectors().push(bond);
+				}
+			}
+			node.setExplicitHydrogenCount(undefined);
+			resultNodes.push(node);
+		})
 		this.setNodes(resultNodes);
+		this.setConnectors(resultConnectors);
 	},
 
 	/** @ignore */
