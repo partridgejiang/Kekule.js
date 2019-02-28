@@ -30,6 +30,50 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphNode',
+	/** @constructs */
+	initialize: function($super, id, nodeType, coord2D, coord3D)
+	{
+		$super(id);
+		if (coord2D)
+			this.setCoord2D(coord2D);
+		if (coord3D)
+			this.setCoord3D(coord3D);
+		this.setNodeType(nodeType || Kekule.Glyph.NodeType.LOCATION);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('nodeType', {
+			'dataType': DataType.STRING,
+			'scope': Class.PropertyScope.PUBLIC
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	}
+});
+
+/**
+ * A special glyph path node, attaching to another node (e.g. atom) in chem space.
+ * The coord of this node will remains the same to the attached one.
+ * @class
+ * @augments Kekule.StructureCoordShadowNode
+ * @param {String} id Id of this node.
+ * @param {String} nodeType Type of this glyph node. Value from {@link Kekule.Glyph.NodeType}.
+ * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
+ * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
+ *
+ * @property {String} nodeType Type of this glyph node.
+ */
+Kekule.Glyph.PathGlyphCoordShadowNode = Class.create(Kekule.StructureCoordShadowNode,
+/** @lends Kekule.Glyph.PathGlyphCoordShadowNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphCoordShadowNode',
+	/** @constructs */
 	initialize: function($super, id, nodeType, coord2D, coord3D)
 	{
 		$super(id);
@@ -454,8 +498,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var connector = this.getParentConnector();
 			if (connector)
 			{
-				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
-				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+				/*
+				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D(allowCoordBorrow);
+				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D(allowCoordBorrow);
+				*/
+				// use abs coord to calculate the arc, since there may be shadow node in connector
+				var arcStartCoord = connector.getConnectedObjAt(0).getAbsCoord2D(allowCoordBorrow);
+				var arcEndCoord = connector.getConnectedObjAt(1).getAbsCoord2D(allowCoordBorrow);
 				if (arcStartCoord && arcEndCoord)
 				{
 					//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
@@ -464,7 +513,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 					var signY = Math.sign(chordVector.y);
 					if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
 					{
-						result = {'x': - d * signY, 'y': 0}
+						result = {'x': - d * signY, 'y': 0};
 					}
 					else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
 					{
