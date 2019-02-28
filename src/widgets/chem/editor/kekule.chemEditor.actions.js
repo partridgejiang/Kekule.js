@@ -103,7 +103,8 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	glyphRepOpenArrowArc: 'repOpenArrowArc',
 	glyphRepSingleSideOpenArrowArc: 'repSingleSideOpenArrowArc',
 	glyphRepHeatSymbol: 'repHeatSymbol',
-	glyphRepAddSymbol: 'repAddSymbol'
+	glyphRepAddSymbol: 'repAddSymbol',
+	glyphElectronPushingArrow: 'repElectronPushingArrow',
 });
 
 /**
@@ -2087,6 +2088,27 @@ Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.cre
 	BNS.glyphRepAddSymbol
 );
 
+Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-ElectronPushingArrow',
+	{
+		'glyphClass': Kekule.Glyph.ElectronPushingArrow,
+		'glyphInitialParams': {
+			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1,
+			'lineGap': 0.1,
+			'lineCount': 1
+		}
+	},
+	null, null,
+	BNS.glyphElectronPushingArrow
+);
+
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE,
@@ -2105,7 +2127,8 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController,
 		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
-		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
+		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController,
+		Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController
 	],
 	null,
 	BNS.glyph

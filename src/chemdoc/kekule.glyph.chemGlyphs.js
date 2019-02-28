@@ -116,4 +116,49 @@ Kekule.Glyph.AddSymbol = Class.create(Kekule.Glyph.PathGlyph,
 	}
 });
 
+/**
+ * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
+ * @class
+ * @augments Kekule.Glyph.PathGlyph
+ */
+Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
+/** @lends Kekule.Glyph.ElectronPushingArrow# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.ElectronPushingArrow',
+	/** @private */
+	doCreateDefaultStructure: function(refLength, initialParams)
+	{
+		// initialParams can include additional field: lineLength
+		var C = Kekule.CoordUtils;
+
+		var coord2D = {'x': 0, 'y': 0};
+		var coord3D = {'x': 0, 'y': 0, 'z': 0};
+		var delta = {'x': refLength * (initialParams.lineLength || 1)};
+		var controllerDelta = {'x': 0, 'y': delta.x / 2};
+		var node1 = new Kekule.Glyph.PathGlyphCoordShadowNode(null, null, coord2D, coord3D);  // starting node
+		var node2 = new Kekule.Glyph.PathGlyphCoordShadowNode(null, null, C.add(coord2D, delta), C.add(coord3D, delta));  // ending node
+		//var node3 = new Kekule.Glyph.PathGlyphNode(null, Kekule.Glyph.NodeType.CONTROLLER, C.add(coord2D, controllerDelta), C.add(coord3D, controllerDelta));  // control node
+		var connector = new Kekule.Glyph.PathGlyphArcConnector(null, [node1, node2]);
+		this._applyParamsToConnector(connector, initialParams);
+		var controlPoint = connector.getControlPoint();
+		//controlPoint.setDistanceToChord(delta.x)
+		controlPoint.setCoord2D(controllerDelta)
+			.setCoord3D(controllerDelta);
+
+		this.appendNode(node1);
+		this.appendNode(node2);
+		this.appendConnector(connector);
+
+		connector.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
+		//node1.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
+		//node2.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
+	},
+	/** @private */
+	_applyParamsToConnector: function(connector, initialParams)
+	{
+		connector.setPathParams(initialParams);
+	}
+});
+
 })();
