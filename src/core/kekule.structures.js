@@ -976,7 +976,6 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		{
 			var result = n.getAbsCoord2D(allowCoordBorrow, allowCreateNew);
 			var pCoord = this._getParentAbsCoord(Kekule.CoordMode.COORD2D, allowCoordBorrow);
-			console.log('parent coord', pCoord);
 			if (pCoord)
 				result = Kekule.CoordUtils.substract(result, pCoord);
 			return result;

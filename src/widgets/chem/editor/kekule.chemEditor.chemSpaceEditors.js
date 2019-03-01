@@ -992,7 +992,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					if (finalDest)  // now we can map the new relation
 					{
 						newRelation.srcObj.setPropValue(newRelation.srcProp.name, finalDest);  // link objects
-						console.log('new relation', newRelation, newRelation.srcObj.getOwner(), newRelation.srcObj, newRelation.srcObj.getPropValue(newRelation.srcProp.name));
+						//console.log('new relation', newRelation, newRelation.srcObj.getOwner(), newRelation.srcObj, newRelation.srcObj.getPropValue(newRelation.srcProp.name));
 					}
 				}
 			}
