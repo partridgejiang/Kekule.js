@@ -1851,6 +1851,7 @@ var ClassEx = {
 			if (parent)
 				ClassEx._ensurePropertySystem(parent);
 			ClassEx._createPropertyList(aClass);
+			ClassEx._remapPropGetters(aClass);  // remap possible overrided methods
 			if (proto.hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				proto.initProperties.apply(proto);
 		}
@@ -2348,6 +2349,7 @@ ObjectEx = Class.create(
 	/** @private */
 	_initPropertySystem: function()  // used internally for create property list
 	{
+		/*
 		if (!this.getPrototype().hasOwnProperty('properties'))
 		{
       //console.log('init prop system', this.getClassName());
@@ -2363,12 +2365,17 @@ ObjectEx = Class.create(
 			if (this.getPrototype().hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				this.getPrototype().initProperties.apply(this.getPrototype());
 		}
+		*/
+		ClassEx._ensurePropertySystem(this.getClass());
 	},
 	/** @private */
 	_createPropertyList: function()  // used internal, create property list
 	{
+		/*
 		if (!this.getPrototype().hasOwnProperty('properties'))
 			this.getPrototype().properties = new Class.PropList();
+		*/
+		ClassEx._createPropertyList(this.getClass());
 	},
   /** @private */
   _remapPropGetters: function()
