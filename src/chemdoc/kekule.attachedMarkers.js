@@ -391,7 +391,7 @@ ClassEx.extendMethod(Kekule.ChemObject, 'removeChild', function($origin, child){
 	//console.log('remove child', child.getClassName(), child.getId());
 	var result = $origin(child);
 	if (!result)
-		result = this.removeMarker(child) || $origin(child);
+		result = this.removeMarker(child);  // || $origin(child);
 	return result;
 });
 ClassEx.extendMethod(Kekule.ChemObject, 'insertBefore', function($origin, child, refChild){

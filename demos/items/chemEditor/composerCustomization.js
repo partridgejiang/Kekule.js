@@ -141,6 +141,7 @@ function _initCustomizationSystem(concreteComposer, commonBtnZoneParent, chemBtn
 				createButtonInfo('N.molBondDoubleEither'),  // not default
 				createButtonInfo('N.molChain'),
 				createButtonInfo('N.trackInput'),
+				createButtonInfo('N.molRepSubBondMark'),  // not default
 				createButtonInfo('N.molRepMethane'),  // not default
 				createButtonInfo('N.molRepFischer1'),
 				createButtonInfo('N.molRepFischer2'),  // not default
