@@ -1840,6 +1840,7 @@ var ClassEx = {
 			if (parent)
 				ClassEx._ensurePropertySystem(parent);
 			ClassEx._createPropertyList(aClass);
+			ClassEx._remapPropGetters(aClass);  // remap possible overrided methods
 			if (proto.hasOwnProperty('initProperties'))  // prevent call parent initProperties method
 				proto.initProperties.apply(proto);
 		}
