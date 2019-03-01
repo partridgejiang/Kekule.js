@@ -903,10 +903,50 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	_targetChanged: function(oldValue, newValue)
 	{
+		if (oldValue && !newValue)  // when set target to null, copy the coords to store fields
+		{
+			this._copyAbsCoordFromTarget(oldValue, this.getParent());
+		}
+		else if (newValue)   // when set new target, copy the coords also
+		{
+			this._copyAbsCoordFromTarget(newValue, this.getParent());
+		}
 		if (oldValue && oldValue.detachCoordShadowNodes)
+		{
 			oldValue.detachCoordShadowNodes(this);
+		}
 		if (newValue && newValue.attachCoordShadowNodes)
 			newValue.attachCoordShadowNodes(this);
+	},
+	/** @private */
+	_copyAbsCoordFromTarget: function(target, parent)
+	{
+		var CU = Kekule.CoordUtils;
+
+		if (!parent)
+			parent = this.getParent();
+
+		var coord2D = target.getAbsCoord2D();
+		var coord3D = target.getAbsCoord3D();
+
+		if (parent)
+		{
+			if (coord2D)
+			{
+				var pCoord2D = parent.getAbsCoord2D && parent.getAbsCoord2D();
+				if (pCoord2D)
+					coord2D = CU.substract(coord2D, pCoord2D);
+			}
+			if (coord3D)
+			{
+				var pCoord3D = parent.getAbsCoord3D && parent.getAbsCoord3D();
+				if (pCoord3D)
+					coord3D = CU.substract(coord3D, pCoord3D);
+			}
+		}
+		// update stored coord field
+		this.setPropStoreFieldValue('coord2D', coord2D);
+		this.setPropStoreFieldValue('coord3D', coord3D);
 	},
 
 	/** @ignore */
@@ -926,7 +966,7 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 		{
 			var result = n.getAbsCoord2D(allowCoordBorrow, allowCreateNew);
 			// update stored coord field also
-			this.setPropStoreFieldValue('coord2D', result);
+			//this.setPropStoreFieldValue('coord2D', result);
 			return result;
 		}
 		else
@@ -940,7 +980,7 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 		{
 			var result = n.getAbsCoord3D(allowCoordBorrow, allowCreateNew);
 			// update stored coord field also
-			this.setPropStoreFieldValue('coord3D', result);
+			//this.setPropStoreFieldValue('coord3D', result);
 			return result;
 		}
 		else
