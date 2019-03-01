@@ -48,6 +48,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	INVALID_ISOTOPE: 'Invalid isotope',
 
 	// core/kekule.structures.js
+	UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ: 'Unable to stick to object with a different owner',
 	UNABLE_ADD_MISTYPED_NODE: 'Unable to link mistyped node to connector',
 	UNABLE_ADD_DIFF_OWNER_OBJ: 'Object with different owner can not be linked to connector',
 	CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH: 'Mismatched group item class',

@@ -177,13 +177,13 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	initialize: function($super, id)
 	{
 		this.setPropStoreFieldValue('autoClearStructureCache', true);
-		this.setPropStoreFieldValue('attachedShadowNodes', []);
+		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super(id);
 	},
 	/** @ignore */
 	doFinalize: function($super)
 	{
-		this.setPropStoreFieldValue('attachedShadowNodes', null);
+		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
 		$super();
 	},
 	/** @private */
@@ -274,7 +274,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
 
 		// private
-		this.defineProp('attachedShadowNodes', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -734,28 +734,28 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/**
-	 * Called when new shadow nodes are attached to this object.
+	 * Called when new coord stick nodes are attached to this object.
 	 * @param {Variant} nodes Node or node array.
 	 * @private
 	 */
-	attachCoordShadowNodes: function(nodes)
+	attachCoordStickNodes: function(nodes)
 	{
 		var ns = AU.toArray(nodes);
-		var currShadowNodes = this.getAttachedShadowNodes();
-		AU.pushUnique(currShadowNodes, ns);
+		var currStickNodes = this.getAttachedCoordStickNodes();
+		AU.pushUnique(currStickNodes, ns);
 		return this;
 	},
 	/**
-	 * Called when shadow nodes are detached from this object.
+	 * Called when coord stick nodes are detached from this object.
 	 * @param {Variant} nodes Node or node array.
 	 * @private
 	 */
-	detachCoordShadowNodes: function(nodes)
+	detachCoordStickNodes: function(nodes)
 	{
 		var ns = AU.toArray(nodes);
-		var currShadowNodes = this.getAttachedShadowNodes();
+		var currStickNodes = this.getAttachedCoordStickNodes();
 		for (var i = 0, l = ns.length; i < l; ++i)
-			AU.remove(currShadowNodes, ns[i]);
+			AU.remove(currStickNodes, ns[i]);
 		return this;
 	},
 
@@ -782,7 +782,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 });
 
 /**
- * Represent an abstract structure node (atom, atom group, or even node in path glyphs etc.).
+ * A base class of structure node, user should create instance of this class directly.
  * @class
  * @augments Kekule.ChemStructureObject
  * @param {String} id Id of this node.
@@ -812,11 +812,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
  * @borrows Kekule.ClassDefineUtils.Coord3DMethods#get3DZ as #get3DZ
  * @borrows Kekule.ClassDefineUtils.Coord3DMethods#set3DZ as #set3DZ
  */
-Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
-/** @lends Kekule.BaseStructureNode# */
+Kekule.SimpleStructureNode = Class.create(Kekule.ChemStructureObject,
+/** @lends Kekule.SimpleStructureNode# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.BaseStructureNode',
+	CLASS_NAME: 'Kekule.SimpleStructureNode',
 	/**
 	 * @constructs
 	 */
@@ -873,61 +873,76 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 		return this.getContainerBox(Kekule.CoordMode.COORD3D, allowCoordBorrow);
 	}
 });
-Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.BaseStructureNode);
+Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.SimpleStructureNode);
 
 /**
- * A special structure node, attaching to another node (e.g., a concrete atom).
- * The coords of this shadow node will keep the same to the attached node.
+ * Represent an abstract structure node (atom, atom group, or even node in path glyphs etc.).
  * @class
- * @augments Kekule.BaseStructureNode
+ * @augments Kekule.SimpleStructureNode
  *
- * @property {Kekule.ChemStructureObject} target The shadow source object.
+ * @property {Kekule.ChemStructureObject} coordStickTarget If this property is set, the abs coords (2D/3D) of this node
+ *   will always be the same to the target object.
  */
-Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
-/** @lends Kekule.StructureCoordShadowNode# */
+Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
+/** @lends Kekule.BaseStructureNode# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.StructureCoordShadowNode',
+	CLASS_NAME: 'Kekule.BaseStructureNode',
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('target', {'dataType': 'Kekule.ChemStructureObject', 'objRef': true, 'autoUpdate': true,
+		this.defineProp('coordStickTarget', {'dataType': 'Kekule.ChemStructureObject', 'objRef': true, 'autoUpdate': true,
 			'setter': function(value)
 			{
-				this._targetChanged(this.getTarget(), value);
-				this.setPropStoreFieldValue('target', value);
+				var selfOwner = this.getOwner();
+				var targetOwner = value && value.getOwner();
+				if (targetOwner && selfOwner !== targetOwner)
+				{
+					Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ'));
+					return;
+				}
+				this._coordStickTargetChanged(this.getCoordStickTarget(), value);
+				this.setPropStoreFieldValue('coordStickTarget', value);
 			}
 		});
 	},
 
 	/** @private */
-	_targetChanged: function(oldValue, newValue)
+	_getParentAbsCoord: function(coordMode, allowCoordBorrow)
+	{
+		var	parent = this.getCoordParent();
+		return parent && parent.getAbsCoordOfMode && parent.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+	},
+	/** @private */
+	_coordStickTargetChanged: function(oldValue, newValue)
 	{
 		if (oldValue && !newValue)  // when set target to null, copy the coords to store fields
 		{
-			this._copyAbsCoordFromTarget(oldValue, this.getParent());
+			this._copyAbsCoordFromStickedTarget(oldValue, this.getCoordParent());
 		}
 		else if (newValue)   // when set new target, copy the coords also
 		{
-			this._copyAbsCoordFromTarget(newValue, this.getParent());
+			this._copyAbsCoordFromStickedTarget(newValue, this.getCoordParent());
 		}
-		if (oldValue && oldValue.detachCoordShadowNodes)
+		if (oldValue && oldValue.detachCoordStickNodes)
 		{
-			oldValue.detachCoordShadowNodes(this);
+			oldValue.detachCoordStickNodes(this);
 		}
-		if (newValue && newValue.attachCoordShadowNodes)
-			newValue.attachCoordShadowNodes(this);
+		if (newValue && newValue.attachCoordStickNodes)
+			newValue.attachCoordStickNodes(this);
 	},
+
 	/** @private */
-	_copyAbsCoordFromTarget: function(target, parent)
+	_copyAbsCoordFromStickedTarget: function(target, parent, coordMode)
 	{
 		var CU = Kekule.CoordUtils;
+		var CM = Kekule.CoordMode;
 
 		if (!parent)
-			parent = this.getParent();
+			parent = this.getCoordParent();
 
-		var coord2D = target.getAbsCoord2D();
-		var coord3D = target.getAbsCoord3D();
+		var coord2D = (!coordMode || coordMode === CM.COORD2D)? target.getAbsCoord2D(): null;
+		var coord3D = (!coordMode || coordMode === CM.COORD2D)? target.getAbsCoord3D(): null;
 
 		if (parent)
 		{
@@ -945,15 +960,10 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 			}
 		}
 		// update stored coord field
-		this.setPropStoreFieldValue('coord2D', coord2D);
-		this.setPropStoreFieldValue('coord3D', coord3D);
-	},
-
-	/** @ignore */
-	getCoordParent: function($super, coordMode)
-	{
-		// if has target node, the coord of this object is the same of abs coord of target, and should not be influenced by the parent of this object
-		return this.getTarget()? null: $super(coordMode);
+		if (coord2D)
+			this.setPropStoreFieldValue('coord2D', coord2D);
+		if (coord3D)
+			this.setPropStoreFieldValue('coord3D', coord3D);
 	},
 
 	// override coord getters, returns the coord of target
@@ -961,12 +971,14 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 	/** @ignore */
 	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
 	{
-		var n = this.getTarget();
+		var n = this.getCoordStickTarget();
 		if (n && n.getAbsCoord2D)
 		{
 			var result = n.getAbsCoord2D(allowCoordBorrow, allowCreateNew);
-			// update stored coord field also
-			//this.setPropStoreFieldValue('coord2D', result);
+			var pCoord = this._getParentAbsCoord(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+			console.log('parent coord', pCoord);
+			if (pCoord)
+				result = Kekule.CoordUtils.substract(result, pCoord);
 			return result;
 		}
 		else
@@ -975,12 +987,13 @@ Kekule.StructureCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 	/** @ignore */
 	doGetCoord3D: function($super, allowCoordBorrow, allowCreateNew)
 	{
-		var n = this.getTarget();
+		var n = this.getCoordStickTarget();
 		if (n && n.getAbsCoord3D)
 		{
 			var result = n.getAbsCoord3D(allowCoordBorrow, allowCreateNew);
-			// update stored coord field also
-			//this.setPropStoreFieldValue('coord3D', result);
+			var pCoord = this._getParentAbsCoord(Kekule.CoordMode.COORD3D, allowCoordBorrow);
+			if (pCoord)
+				result = Kekule.CoordUtils.substract(result, pCoord);
 			return result;
 		}
 		else

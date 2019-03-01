@@ -68,7 +68,7 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
  *
  * @property {String} nodeType Type of this glyph node.
  */
-Kekule.Glyph.PathGlyphCoordShadowNode = Class.create(Kekule.StructureCoordShadowNode,
+Kekule.Glyph.PathGlyphCoordShadowNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.Glyph.PathGlyphCoordShadowNode# */
 {
 	/** @private */
