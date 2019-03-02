@@ -891,9 +891,16 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('coordStickTarget', {'dataType': 'Kekule.ChemStructureObject', 'objRef': true, 'autoUpdate': true,
+		this.defineProp('coordStickTarget', {
+			'dataType': 'Kekule.ChemStructureObject', 'scope': Class.PropertyScope.PUBLIC,
+			'objRef': true, 'autoUpdate': true,
 			'setter': function(value)
 			{
+				if (value && !this.getAllowCoordStick())
+				{
+					Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
+					return;
+				}
 				var selfOwner = this.getOwner();
 				var targetOwner = value && value.getOwner();
 				if (targetOwner && selfOwner !== targetOwner)
@@ -905,6 +912,16 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 				this.setPropStoreFieldValue('coordStickTarget', value);
 			}
 		});
+	},
+
+	/**
+	 * Returns whether this type of node is allowed to stick to another chem object.
+	 * Descendants may override this method.
+	 * @returns {Bool}
+	 */
+	getAllowCoordStick: function()
+	{
+		return false;  // default do not allow stick
 	},
 
 	/** @private */
