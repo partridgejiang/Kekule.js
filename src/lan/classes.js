@@ -46,7 +46,11 @@ var Class = {
         if (!properties[0])
         {
           if (properties.length > 1)
-            throw 'Can not create new class, base class not found';
+          {
+          	var exProps = properties[1];
+          	var currClassName = (exProps && exProps.CLASS_NAME);
+	          throw 'Can not create new class' + (currClassName? ' ' + currClassName: '') + ' , base class not found';
+          }
         }
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
