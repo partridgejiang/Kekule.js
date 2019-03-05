@@ -57,7 +57,7 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 });
 
 /**
- * A special glyph path node, attaching to another node (e.g. atom) in chem space.
+ * A special glyph path node, is able to attaching to another node (e.g. atom) in chem space.
  * The coord of this node will remains the same to the attached one.
  * @class
  * @augments Kekule.StructureCoordShadowNode
@@ -68,34 +68,15 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
  *
  * @property {String} nodeType Type of this glyph node.
  */
-Kekule.Glyph.PathGlyphCoordShadowNode = Class.create(Kekule.BaseStructureNode,
-/** @lends Kekule.Glyph.PathGlyphCoordShadowNode# */
+Kekule.Glyph.PathGlyphStickableNode = Class.create(Kekule.Glyph.PathGlyphNode,
+/** @lends Kekule.Glyph.PathGlyphStickableNode# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Glyph.PathGlyphCoordShadowNode',
-	/** @constructs */
-	initialize: function($super, id, nodeType, coord2D, coord3D)
-	{
-		$super(id);
-		if (coord2D)
-			this.setCoord2D(coord2D);
-		if (coord3D)
-			this.setCoord3D(coord3D);
-		this.setNodeType(nodeType || Kekule.Glyph.NodeType.LOCATION);
-	},
-	/** @private */
-	initProperties: function()
-	{
-		this.defineProp('nodeType', {
-			'dataType': DataType.STRING,
-			'scope': Class.PropertyScope.PUBLIC
-		});
-	},
+	CLASS_NAME: 'Kekule.Glyph.PathGlyphStickableNode',
 	/** @ignore */
-	initPropValues: function($super)
+	getAllowCoordStick: function()
 	{
-		$super();
-		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+		return true;
 	}
 });
 
