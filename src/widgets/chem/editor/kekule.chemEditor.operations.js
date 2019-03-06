@@ -360,6 +360,84 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 });
 
 /**
+ * Operation of sticking a stickable node to another chem object.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.BaseStructureNode} node Stickable structure node.
+ * @param {Kekule.ChemObject} stickTarget The target chem object to be sticked.
+ *
+ * @property {Kekule.ChemObject} stickTarget The target chem object to be sticked.
+ * @property {Hash} oldCoord If old coord is not set, this property will be automatically calculated when execute the operation.
+ * @property {Int} coordMode
+ * @property {Bool} useAbsBaseCoord
+ */
+Kekule.ChemObjOperation.StickTo = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemObjOperation.StickTo# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemObjOperation.StickTo',
+	/** @constructs */
+	initialize: function($super, node, stickTarget, editor)
+	{
+		$super(node, editor);
+		if (stickTarget)
+			this.setStickTarget(stickTarget);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('stickTarget', {'dataType': Kekule.ChemObject, 'serializable': false});
+		this.defineProp('oldStickTarget', {'dataType': Kekule.ChemObject, 'serializable': false});
+	},
+	/** @private */
+	_canExecute: function(node)
+	{
+		return node && node.getAllowCoordStick && node.getAllowCoordStick();
+	},
+	/** @private */
+	doExecute: function($super)
+	{
+		$super();
+		var node = this.getTarget();
+		if (this._canExecute(node))
+		{
+			if (this.getOldStickTarget() === undefined)
+				this.setOldStickTarget(node.getCoordStickTarget() || null);
+			node.setCoordStickTarget(this.getStickTarget());
+		}
+	},
+	/** @private */
+	doReverse: function($super)
+	{
+		var node = this.getTarget();
+		node.setCoordStickTarget(this.getOldStickTarget());
+		$super();
+	}
+});
+/**
+ * A class method to check if a node can be sticked to another chem object.
+ * @param {Kekule.BaseStructureNode} node
+ * @param {Kekule.ChemObject} dest
+ * @param {Bool} canStickToStructFragment
+ * @returns {Bool}
+ */
+Kekule.ChemObjOperation.StickTo.canStick = function(node, dest, canStickToStructFragment, canStickToSiblings)
+{
+	var result = node && node.getAllowCoordStick && node.getAllowCoordStick();  // basic request
+	result = result && dest && dest.getAbsCoordOfMode;  // request of dest
+	if (result)
+		result = canStickToStructFragment || !(dest instanceof Kekule.StructureFragment);
+	if (result && !canStickToSiblings)
+	{
+		var p1 = node.getParent();
+		var p2 = dest.getParent();
+		result = (p1 !== p2) || (!p1 || !p2);
+	}
+	return result;
+};
+
+/**
  * Operation of adding a chem object to parent.
  * @class
  * @augments Kekule.ChemObjOperation.Base
@@ -1124,7 +1202,7 @@ Kekule.ChemStructOperation.MergeNodes = Class.create(Kekule.ChemStructOperation.
 	}
 });
 /**
- * A class method to check if two connectors can be merged
+ * A class method to check if two nodes can be merged
  * @param {Kekule.ChemStructureNode} target
  * @param {Kekule.ChemStructureNode} dest
  * @param {Bool} canMergeStructFragment
