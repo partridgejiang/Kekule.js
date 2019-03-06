@@ -896,17 +896,25 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			'objRef': true, 'autoUpdate': true,
 			'setter': function(value)
 			{
-				if (value && !this.getAllowCoordStick())
+				if (value)
 				{
-					Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
-					return;
-				}
-				var selfOwner = this.getOwner();
-				var targetOwner = value && value.getOwner();
-				if (targetOwner && selfOwner !== targetOwner)
-				{
-					Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ'));
-					return;
+					if (!this.getAllowCoordStick())
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
+						return;
+					}
+					var selfOwner = this.getOwner();
+					var targetOwner = value.getOwner && value.getOwner();
+					if (targetOwner && selfOwner !== targetOwner)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ'));
+						return;
+					}
+					if (!value.getAbsCoordOfMode)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OBJ_WITHOUT_ABS_COORD'));
+						return;
+					}
 				}
 				this._coordStickTargetChanged(this.getCoordStickTarget(), value);
 				this.setPropStoreFieldValue('coordStickTarget', value);
