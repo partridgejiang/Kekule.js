@@ -425,14 +425,18 @@ Kekule.ChemObjOperation.StickTo = Class.create(Kekule.ChemObjOperation.Base,
 Kekule.ChemObjOperation.StickTo.canStick = function(node, dest, canStickToStructFragment, canStickToSiblings)
 {
 	var result = node && node.getAllowCoordStick && node.getAllowCoordStick();  // basic request
-	result = result && dest && dest.getAbsCoordOfMode;  // request of dest
-	if (result)
-		result = canStickToStructFragment || !(dest instanceof Kekule.StructureFragment);
-	if (result && !canStickToSiblings)
+	if (dest)  // dest can be set to null
 	{
-		var p1 = node.getParent();
-		var p2 = dest.getParent();
-		result = (p1 !== p2) || (!p1 || !p2);
+		result = result && dest && dest.getAbsCoordOfMode;  // request of dest
+		result = result && (dest !== node);
+		result = result && (dest.getAcceptCoordStick && dest.getAcceptCoordStick());
+		result = result && (canStickToStructFragment || !(dest instanceof Kekule.StructureFragment));
+		if (result && !canStickToSiblings)
+		{
+			var p1 = node.getParent();
+			var p2 = dest.getParent();
+			result = (p1 !== p2) || (!p1 || !p2);
+		}
 	}
 	return result;
 };
