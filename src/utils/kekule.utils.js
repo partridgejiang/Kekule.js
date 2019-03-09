@@ -796,6 +796,61 @@ Kekule.ArrayUtils = {
 		}
 		return result;
 	},
+
+	/**
+	 * Returns the index stack of elem in a nested array.
+	 * For example, getIndexStack(2, [1, [1, 2], 3]) returns [1,1]; getIndexStack(3, [1, [1, 2], 3]) returns [2].
+	 * If elem is not found in arr, null will be returned.
+	 * @param {Variant} elem
+	 * @param {Array} arr
+	 * @returns {Array}
+	 */
+	indexStackOfElem: function(elem, arr)
+	{
+		for (var i = 0, l = arr.length; i < l; ++i)
+		{
+			var curr = arr[i];
+			if (curr === elem)
+				return [i];
+			else if (Kekule.ArrayUtils.isArray(curr))
+			{
+				var childResult = Kekule.ArrayUtils.indexStackOfElem(elem, curr);
+				if (childResult)
+				{
+					childResult.unshift(i);
+					return childResult;
+				}
+			}
+		}
+		return null;
+	},
+	/**
+	 * Returns an element by indexStack from a nested array.
+	 * @param {Array} arr
+	 * @param {Array} indexStack
+	 * @returns {Variant}
+	 */
+	getElemByIndexStack: function(arr, indexStack)
+	{
+		var stack = Kekule.ArrayUtils.isArray(indexStack)? Kekule.ArrayUtils.clone(indexStack): [indexStack];
+		var index = stack.shift();
+		var curr = arr[index];
+		if (curr)
+		{
+			if (stack.length)
+			{
+				if (Kekule.ArrayUtils.isArray(curr))
+					return Kekule.ArrayUtils.getElemByIndexStack(curr, stack);
+				else
+					return null;
+			}
+			else
+				return curr;
+		}
+		else
+			return null;
+	},
+
 	/**
 	 * Returns median number of a numberic array.
 	 * @param {Array} arr

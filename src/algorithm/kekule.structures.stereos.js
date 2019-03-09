@@ -41,6 +41,7 @@ Kekule.globalOptions.add('algorithm.stereoPerception', {
 	perceiveChiralNodes: true,
 	calcParity: true,
 	strictStereoBondGeometry: false,
+	strictStereoAtomGemoetry: false,
 	wedgeBondPrior: true
 });
 
@@ -616,6 +617,11 @@ Kekule.MolStereoUtils = {
 
 			if (mayBeChiral)
 			{
+				var multicenterBonds = node.getLinkedMultiCenterBonds();
+				if (multicenterBonds.length)
+				{
+					return false;  // there should be no chiral in node connected with multicenter bond
+				}
 				var neighbors = node.getLinkedChemNodes();
 				var multibonds = node.getLinkedMultipleBonds();
 				var hydroCount = node.getHydrogenCount ? node.getHydrogenCount() : 0;
@@ -1124,6 +1130,15 @@ Kekule.MolStereoUtils = {
 		if (!ignoreChiralCheck && !Kekule.MolStereoUtils.isChiralNode(node))
 			return KS.NONE;
 		var siblings = node.getLinkedChemNodes();
+
+		if (coordMode === Kekule.CoordMode.COORD2D && options.strictStereoAtomGeometry)  // ensure the bond stereo are legal
+		{
+			if (!Kekule.MolStereoUtils._isSiblingBond2DGeometryLegal(node, siblings))
+			{
+				return KS.UNKNOWN;
+			}
+		}
+
 		var hydroCount = node.getHydrogenCount();
 		ops.withImplicitSibling = !!hydroCount || (siblings.length < 4);  // S/P, may three sibling with a electron pair
 		//var allSiblingCount = siblings.length + hydroCount;
@@ -1138,6 +1153,46 @@ Kekule.MolStereoUtils = {
 		return (rotationDir === RD.CLOCKWISE)? KS.ODD:
 			(rotationDir === RD.ANTICLOCKWISE)? KS.EVEN:
 				KS.UNKNOWN;
+	},
+	/** @private */
+	_isSiblingBond2DGeometryLegal: function(node, siblings)
+	{
+		var connectors = [];
+		var BS = Kekule.BondStereo;
+		var checkingBondStereos = [BS.NONE, /*BS.UP, BS.UP_INVERTED, BS.DOWN, BS.DOWN_INVERTED,*/ BS.CLOSER];
+		var checkingBondStereosMaxCounts = [2, 2];
+		var stereoBondCounts = [];
+
+		for (var i = 0, l = siblings.length; i < l; ++i)
+		{
+			var sibling = siblings[i];
+			if (sibling.getZIndex2D())  // if sibling has explicit non-zero index, ignore
+			{
+				continue;
+			}
+			else
+			{
+				var bond = node.getConnectorTo(sibling);
+				if (bond.getStereo)
+				{
+					var bondStereo = bond.getStereo();
+					if (checkingBondStereos.indexOf(bondStereo) >= 0)
+					{
+						if (!stereoBondCounts[bondStereo])
+							stereoBondCounts[bondStereo] = 1;
+						else
+						{
+							++stereoBondCounts[bondStereo];
+							if (stereoBondCounts[bondStereo] > checkingBondStereosMaxCounts[bondStereo])  // more than max count of same stereo, these bonds is implied on the same planet, wrong structure
+							{
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+		return true;
 	},
 
 	/**
@@ -1199,6 +1254,7 @@ Kekule.MolStereoUtils = {
 	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />
 	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />
 	 *     strictStereoBondGeometry: Bool, if true, the illegal bond geometry will be ignored in calculation (e.g., two connected atoms on same side of a double bond). <br />
+	 *     strictStereoAtomGeometry:
 	 *     implicitFischerProjection: Bool, whether the "+" cross of Fischer projection need to be recognized and take into consideration.
 	 *       Only works when coord mode is 2D. <br/>
 	 *     fischerAllowedError: the allowed error when checking vertical and horizontal line in Fischer projection cross,
@@ -1376,6 +1432,7 @@ Kekule.MolStereoUtils = {
 	 *       default is 0.08 (deltaY/deltaX or vice versa, about 4.5 degree). <br/>
 	 *     reversedFischer: If true, the node on vertical line will be toward observer instead,
 	 *     allowExplicitHydrogenInFischer: Whether the simplification Fischer projection in saccharide chain form is allowed (H is omitted from structure). <br/>
+	 *     strictStereoAtomGeometry
 	 *   }
 	 * @returns {Array} Array of all chiral nodes.
 	 * @deprecated
@@ -1406,7 +1463,10 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	doExecute: function($super, ctab)
 	{
 		// do a normal morgan indexer first
-		$super(ctab);
+		//$super(ctab);
+		var graphInfo = this.doCalcGraphAndEcResult(ctab);
+		this.doExecuteOnGraphEcResult(graphInfo.graph, graphInfo.ecMapping, graphInfo.vertexGroup);
+
 		//var nodes = ctab.getNodes();
 		var nodes = ctab.getNonHydrogenNodes();
 		var sortedNodes = this._groupNodesByCanoIndex(nodes);
@@ -1424,6 +1484,11 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 			stereoObjs = Kekule.MolStereoUtils.perceiveStereos(ctab, null, true) || [];
 			//console.log('here', stereoObjCount, stereoObjs.length);
 		}
+		if (stereoObjCount > 0)  // has stereo, need to do node sort again
+		{
+			//$super(ctab);
+			this.doExecuteOnGraphEcResult(graphInfo.graph, graphInfo.ecMapping, graphInfo.vertexGroup);
+		}
 	},
 
 	/** @private */
@@ -1435,6 +1500,22 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	},
 	/** @private */
 	_regroupSortedNodes: function(sortedNodes)
+	{
+		var oldNodeGroupCount, newNodeGroupCount;
+		var result = sortedNodes;
+		do
+		{
+			oldNodeGroupCount = result.length;
+			result = this._doRegroupSortedNodes(result);
+			//console.log('do regroup', result);
+			newNodeGroupCount = result.length;
+		}
+		while (newNodeGroupCount > oldNodeGroupCount);
+
+		return result;
+	},
+	/** @private */
+	_doRegroupSortedNodes: function(sortedNodes)
 	{
 		var result = [];
 		for (var i = 0, l = sortedNodes.length; i < l; ++i)

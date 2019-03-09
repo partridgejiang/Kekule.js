@@ -9,6 +9,7 @@ describe('Test of structure comparison', function(){
 		'compTest1_1.mol', 'compTest1_2.mol',
 		'compTest2_1.kcj', 'compTest2_2.kcj',
 		'compTest3_1.kcj', 'compTest3_2.kcj',
+		'compTest4_1.mol', 'compTest4_2.mol'
 	];
 	beforeAll(function(done){   // load all essential molecules
 		var allUrls = [];
@@ -56,6 +57,10 @@ describe('Test of structure comparison', function(){
 	);
 	testComparison('Comparison base on mol pair 3',
 		'compTest3_1.kcj', 'compTest3_2.kcj', null,
+		true
+	);
+	testComparison('Comparison base on mol pair 3',
+		'compTest4_1.mol', 'compTest4_2.mol', null,
 		true
 	);
 });

@@ -35,7 +35,8 @@
 
       //var chiralNodes = Kekule.MolStereoUtils.findChiralNodes(mol);
       //console.log(chiralNodes.length);
-      var chiralNodes = mol.perceiveChiralNodes(Kekule.CoordMode.COORD2D, null, {implicitFischerProjection: true, allowExplicitHydrogenInFischer: true});
+      var chiralNodes = mol.perceiveChiralNodes(Kekule.CoordMode.COORD2D, null,
+        {implicitFischerProjection: true, allowExplicitHydrogenInFischer: true, strictStereoAtomGeometry: !true});
       console.log(chiralNodes.length);
 
       // set mark
