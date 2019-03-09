@@ -1406,7 +1406,10 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	doExecute: function($super, ctab)
 	{
 		// do a normal morgan indexer first
-		$super(ctab);
+		//$super(ctab);
+		var graphInfo = this.doCalcGraphAndEcResult(ctab);
+		this.doExecuteOnGraphEcResult(graphInfo.graph, graphInfo.ecMapping, graphInfo.vertexGroup);
+
 		//var nodes = ctab.getNodes();
 		var nodes = ctab.getNonHydrogenNodes();
 		var sortedNodes = this._groupNodesByCanoIndex(nodes);
@@ -1424,6 +1427,11 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 			stereoObjs = Kekule.MolStereoUtils.perceiveStereos(ctab, null, true) || [];
 			//console.log('here', stereoObjCount, stereoObjs.length);
 		}
+		if (stereoObjCount > 0)  // has stereo, need to do node sort again
+		{
+			//$super(ctab);
+			this.doExecuteOnGraphEcResult(graphInfo.graph, graphInfo.ecMapping, graphInfo.vertexGroup);
+		}
 	},
 
 	/** @private */
@@ -1435,6 +1443,22 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	},
 	/** @private */
 	_regroupSortedNodes: function(sortedNodes)
+	{
+		var oldNodeGroupCount, newNodeGroupCount;
+		var result = sortedNodes;
+		do
+		{
+			oldNodeGroupCount = result.length;
+			result = this._doRegroupSortedNodes(result);
+			//console.log('do regroup', result);
+			newNodeGroupCount = result.length;
+		}
+		while (newNodeGroupCount > oldNodeGroupCount);
+
+		return result;
+	},
+	/** @private */
+	_doRegroupSortedNodes: function(sortedNodes)
 	{
 		var result = [];
 		for (var i = 0, l = sortedNodes.length; i < l; ++i)
