@@ -376,7 +376,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.CanonicalizationMorganIndexer',
-	/** @ignore */
+	 /** @ignore */
 	doExecute: function(ctab)
 	{
 		// clear old indexes
@@ -386,54 +386,47 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			ctab.getNodeAt(i).setCanonicalizationIndex(null);
 		}
 		*/
+		var graphInfo = this.doCalcGraphAndEcResult(ctab);
+
+		this.doExecuteOnGraphEcResult(graphInfo.graph, graphInfo.ecMapping, graphInfo.vertexGroup);
+	},
+	/** @private */
+	doCalcGraphAndEcResult: function(ctab)
+	{
 		// turn ctab into pure graph first (with sub structure degrouped)
 		var graph = Kekule.GraphAdaptUtils.ctabToGraph(ctab, null, {'expandSubStructures': true, ignoreBondedHydrogen: true});
 		if (!graph)
 			return null;
-		//console.log('graph size', graph.getVertexes().length);
-		//console.log(graph);
+
 		// calc EC values of graph
 		var ecResult = this._calcGraphFinalECs(graph);
 		var ecMapping = ecResult.ecMapping;
 		var vertexGroup = ecResult.vertexGroup;
-		/*
-		if (ecResult.ecCount < graph.getVertexes().length)  // some vertexes has same ec value, need to index it further
-		{
 
-		}
-		else
-		{
-
-		}
-		*/
-
-		/*
-		var sortedNodes = [];
-		var vertexGroups = this._groupVertexesByEcValue(graph, ecMapping);
-		for (var i = 0, l = vertexGroups.length; i < l; ++i)
-		{
-			var vertexGroup = vertexGroups[i];
-			var nodes = this._vertexesToNodes(vertexGroup.vertexes);
-			if (nodes.length === 1)
-				AU.pushUnique(sortedNodes, nodes[0]);
-			else
-			{
-				var groups = this._groupNodesWithSameEcValue(nodes, sortedNodes);
-				sortedNodes = sortedNodes.concat(groups);
-			}
-		}
-		*/
+		return {
+			'graph': graph,
+			'ecMapping': ecMapping,
+			'vertexGroup': vertexGroup
+		};
+	},
+	/** @private */
+	doExecuteOnGraphEcResult: function(graph, ecMapping, vertexGroup)
+	{
 		var sortedNodes = this._sortNodeByEcMapping(graph, ecMapping, vertexGroup);
 
 		// assign cano indexes to indication the symmetric information
 		this._setCanonicalizationIndexToNodeGroups(sortedNodes);
 
 		// then also sort graph and generate a assoc spanning tree
+		this._fillSpanningTreeInfo(graph);
+	},
+	/** @private */
+	_fillSpanningTreeInfo: function(graph)
+	{
 		var vertexes = graph.getVertexes();
 		if (vertexes && vertexes.length)
 		{
-			vertexes.sort(function(v1, v2)
-			{
+			vertexes.sort(function(v1, v2) {
 				var node1 = v1.getData('object');
 				var node2 = v2.getData('object');
 				if (!node1 && !node2)
@@ -462,8 +455,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			var edges = graph.getEdges();
 			if (edges && edges.length)
 			{
-				var _getConnectedVertexIndexes = function(edge, vertexesSeq)
-				{
+				var _getConnectedVertexIndexes = function(edge, vertexesSeq) {
 					var seqLength = vertexesSeq.length;
 					var result = [];
 					var vs = edge.getVertexes();
@@ -479,8 +471,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				};
 
 				var vertexes = graph.getVertexes();
-				edges.sort(function(e1, e2)
-				{
+				edges.sort(function(e1, e2) {
 					var vs1 = _getConnectedVertexIndexes(e1, vertexes);
 					var vs2 = _getConnectedVertexIndexes(e2, vertexes);
 					return Kekule.ArrayUtils.compare(vs1, vs2);
@@ -492,7 +483,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 			{
 				var v = vertexes[i];
 				var linkedEdges = v.getEdges();
-				linkedEdges.sort(function(e1, e2){
+				linkedEdges.sort(function(e1, e2) {
 					var index1 = edges.indexOf(e1);
 					var index2 = edges.indexOf(e2);
 					return index1 - index2;
@@ -515,9 +506,93 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 		// at last set the spanning tree index of nodes
 		this._setSpanningTreeIndexToNodeOfGraph(graph);
 	},
-
 	/** @private */
-	_sortNodeByEcMapping: function(graph, ecMapping, ecVertexGroup) {
+	_sortNodeByEcMapping: function(graph, ecMapping, ecVertexGroup)
+	{
+		var result = this._doSortNodeByEcMapping(graph, ecMapping, ecVertexGroup);
+		return result;
+	},
+	/** @private */
+	_doSortNodeByEcMapping: function(graph, ecMapping, ecVertexGroup)
+	{
+		// 1st phase, sort by ecMapping
+		var sortedNodes1st = this._doSortNodeByEcMappingDirectly(ecVertexGroup);
+		//console.log('before 2nd sorted', sortedNodes1st);
+
+		// 2nd phase, sort all nodes by previous sorted ones
+		var sortedNodes = this._doSortNodeBySortedNodeList(sortedNodes1st);
+
+		//console.log('sorted', sortedNodes);
+
+		// after 2nd vertex sort, using the largest vertex as starting point, generate a min distance array and sort for 3rd time
+		/*
+		var largestNodes = sortedNodes[sortedNodes.length - 1];
+		var startingNode = AU.isArray(largestNodes) ? largestNodes[largestNodes.length - 1] : largestNodes;
+		var startingVertex;
+		var allVertexes = graph.getVertexes();
+		for (var i = 0, l = allVertexes.length; i < l; ++i)
+		{
+			var v = allVertexes[i];
+			if (v.getData('object') === startingNode)
+			{
+				startingVertex = v;
+				break;
+			}
+		}
+		if (startingVertex)
+		{
+			var minDistances = Kekule.GraphAlgorithmUtils.calcMinDistances(graph, startingVertex);
+			var distanceMap = new Kekule.MapEx();
+			for (var i = 0, l = minDistances.length; i < l; ++i)
+			{
+				v = allVertexes[i];
+				var currNode = v.getData('object');
+				if (currNode)
+					distanceMap.set(currNode, minDistances[i]);
+			}
+
+			var sortedNodes3rd = [];
+			//console.log('before', sortedNodes);
+			for (var i = 0, l = sortedNodes.length; i < l; ++i)
+			{
+				var currNodes = sortedNodes[i];
+				if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
+					sortedNodes3rd.push(currNodes);
+				else if (currNodes.length === 1)
+					sortedNodes3rd.push(currNodes[0]);
+				else  // compare by min distances
+				{
+					var groupedCurrNodes = AU.group(currNodes, function(n1, n2){
+						var d1 = distanceMap.get(n1) || Infinity;
+						var d2 = distanceMap.get(n2) || Infinity;
+						return (d1 - d2);
+					});
+					sortedNodes3rd = sortedNodes3rd.concat(groupedCurrNodes);
+				}
+			}
+			sortedNodes = sortedNodes3rd;
+			//console.log('after', sortedNodes);
+		}
+		*/
+
+		// at last, standardize array
+		var result = [];
+		for (var i = 0, l = sortedNodes.length; i < l; ++i)
+		{
+			var currNodes = sortedNodes[i];
+			if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
+				result.push(currNodes);
+			else if (currNodes.length === 1)
+				result.push(currNodes[0]);
+			else
+				result.push(currNodes);
+		}
+
+		return result;
+	},
+	/** @private */
+	_doSortNodeByEcMappingDirectly: function(ecVertexGroup)
+	{
 		var sortedNodes1st = [];
 		var vertexGroups = ecVertexGroup;  // || this._groupVertexesByEcValue(graph, ecMapping);
 		// 1st pass, from top to bottom
@@ -533,8 +608,27 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				sortedNodes1st = sortedNodes1st.concat(groups);
 			}
 		}
-		//console.log('before 2nd sorted', sortedNodes1st);
-
+		return sortedNodes1st;
+	},
+	/** @private */
+	_doSortNodeBySortedNodeList: function(sortedNodes1st)
+	{
+		var currResult = this._doSortNodeBySortedNodeListCore(sortedNodes1st);
+		var currGroupCount = currResult.length;
+		var count = 0;
+		do
+		{
+			var prevResult = currResult;
+			var prevGroupCount = currGroupCount;
+			var currResult = this._doSortNodeBySortedNodeListCore(prevResult);
+			var currGroupCount = currResult.length;
+		}
+		while(currGroupCount > prevGroupCount);
+		return prevResult;
+	},
+	/** @private */
+	_doSortNodeBySortedNodeListCore: function(sortedNodes1st)
+	{
 		// 2nd pass, from top to bottom
 		var sortedNodes = [];
 		var handledNodes = [];
@@ -609,74 +703,7 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				handledNodes = handledNodes.concat(currNodes);
 			}
 		}
-
-		//console.log('sorted', sortedNodes);
-
-		// after 2nd vertex sort, using the largest vertex as starting point, generate a min distance array and sort for 3rd time
-		/*
-		var largestNodes = sortedNodes[sortedNodes.length - 1];
-		var startingNode = AU.isArray(largestNodes) ? largestNodes[largestNodes.length - 1] : largestNodes;
-		var startingVertex;
-		var allVertexes = graph.getVertexes();
-		for (var i = 0, l = allVertexes.length; i < l; ++i)
-		{
-			var v = allVertexes[i];
-			if (v.getData('object') === startingNode)
-			{
-				startingVertex = v;
-				break;
-			}
-		}
-		if (startingVertex)
-		{
-			var minDistances = Kekule.GraphAlgorithmUtils.calcMinDistances(graph, startingVertex);
-			var distanceMap = new Kekule.MapEx();
-			for (var i = 0, l = minDistances.length; i < l; ++i)
-			{
-				v = allVertexes[i];
-				var currNode = v.getData('object');
-				if (currNode)
-					distanceMap.set(currNode, minDistances[i]);
-			}
-
-			var sortedNodes3rd = [];
-			//console.log('before', sortedNodes);
-			for (var i = 0, l = sortedNodes.length; i < l; ++i)
-			{
-				var currNodes = sortedNodes[i];
-				if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
-					sortedNodes3rd.push(currNodes);
-				else if (currNodes.length === 1)
-					sortedNodes3rd.push(currNodes[0]);
-				else  // compare by min distances
-				{
-					var groupedCurrNodes = AU.group(currNodes, function(n1, n2){
-						var d1 = distanceMap.get(n1) || Infinity;
-						var d2 = distanceMap.get(n2) || Infinity;
-						return (d1 - d2);
-					});
-					sortedNodes3rd = sortedNodes3rd.concat(groupedCurrNodes);
-				}
-			}
-			sortedNodes = sortedNodes3rd;
-			//console.log('after', sortedNodes);
-		}
-		*/
-
-		// at last, standardize array
-		var result = [];
-		for (var i = 0, l = sortedNodes.length; i < l; ++i)
-		{
-			var currNodes = sortedNodes[i];
-			if (!AU.isArray(currNodes))   // only one node, input into sortedNodes
-				result.push(currNodes);
-			else if (currNodes.length === 1)
-				result.push(currNodes[0]);
-			else
-				result.push(currNodes);
-		}
-
-		return result;
+		return sortedNodes;
 	},
 
 	/** @private */
@@ -1038,25 +1065,55 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 	{
 		var formAssocCompareArray = function(node, sortedNodes)
 		{
+			var flattenSortedNodes = AU.flatten(sortedNodes);
 			var linkedObjs = node.getLinkedObjs();
-			var linkedNodes = AU.intersect(linkedObjs, sortedNodes);
-			var ncompareValues = [];  // calc from node
-			var ccompareValues = [];  // calc from connector
+			var linkedNodes = AU.intersect(linkedObjs, flattenSortedNodes);
+			var nIndexCompareValues = [];  // calc from node
+			/*
+			var cOrderCompareValues = [];  // calc from connector
+			var cTypeCompareValues = [];
+			var cParityCompareValues = [];
+			*/
+			var connectors = [];
 			for (var i = 0, l = linkedNodes.length; i < l; ++i)
 			{
 				var n = linkedNodes[i];
-				ncompareValues.push(sortedNodes.indexOf(n));
+				//nIndexCompareValues.push(sortedNodes.indexOf(n));
+				var indexStack = AU.indexStackOfElem(n, sortedNodes);
+				nIndexCompareValues.push(indexStack);
 			}
-			ncompareValues.sort( function(a, b) { return a - b; });
-			for (var i = 0, l = ncompareValues.length; i < l; ++i)
+			//nIndexCompareValues.sort( function(a, b) { return a - b; });
+			nIndexCompareValues.sort( function(a, b) { return AU.compare(a, b); });
+			for (var i = 0, l = nIndexCompareValues.length; i < l; ++i)
 			{
-				var n = sortedNodes[ncompareValues[i]];
+				//var n = sortedNodes[nIndexCompareValues[i]];
+				//console.log('stack', nIndexCompareValues[i]);
+				var n = AU.getElemByIndexStack(sortedNodes, nIndexCompareValues[i]);
+				if (!n)
+					console.error('not found', n, nIndexCompareValues[i]);
 				var conn = node.getConnectorTo(n);
-				var connOrder = conn.getBondOrder? conn.getBondOrder() || 0: 0;
-				ccompareValues.push(connOrder);
+				//if (conn.getParity())
+				//console.log('conn ', conn.getId(), conn.getParity());
+				/*
+				var connType = conn.getBondType? conn.getBondType() || Kekule.BondType.DEFAULT: null;
+				var connOrder = (conn.getBondOrder && conn.getBondOrder()) || Kekule.BondOrder.DEFAULT;
+				var connParity = (conn.getParity && conn.getParity()) || Kekule.StereoParity.UNKNOWN;
+				cOrderCompareValues.push(connOrder);
+				cTypeCompareValues.push(connType);
+				cParityCompareValues.push(connParity);
+				*/
+				connectors.push(conn);
 			}
+			//console.log(flattenSortedNodes, linkedNodes, nIndexCompareValues);
 			return {
-				nodeOrders: ncompareValues, connectorOrders: ccompareValues
+				nodeIndexValues: nIndexCompareValues,
+				//nodeParityValues: nParityCompareValues,
+				/*
+				connectorTypeValues: cOrderCompareValues,
+				connectorOrderValues: cOrderCompareValues,
+				connectorParityValues: cParityCompareValues
+				*/
+				connectors: connectors
 			};
 		};
 
@@ -1068,12 +1125,28 @@ Kekule.CanonicalizationMorganIndexer = Class.create(Kekule.CanonicalizationIndex
 				{
 					var compareValue1 = formAssocCompareArray(n1, sortedNodes);
 					var compareValue2 = formAssocCompareArray(n2, sortedNodes);
-					result = AU.compare(compareValue1.nodeOrders, compareValue2.nodeOrders);
-					if (result === 0)  // connected node can not distinguish, need to check linked connectors
+					//console.log(n1.getId(), compareValue1, n2.getId(),compareValue2);
+					result = AU.compare(compareValue1.nodeIndexValues, compareValue2.nodeIndexValues);
+
+					// connected node can not distinguish, need to check linked connectors
+					/*
+					if (result === 0)
+						result = AU.compare(compareValue1.connectorTypeValues, compareValue2.connectorTypeValues);
+					if (result === 0)
+						result = AU.compare(compareValue1.connectorOrderValues, compareValue2.connectorOrderValues);
+					if (result === 0)
+						result === AU.compare(compareValue1.connectorParityValues, compareValue2.connectorParityValues);
+					*/
+					var conns1 = compareValue1.connectors, conns2 =compareValue2.connectors;
+					for (var i = 0, l = conns1.length; i < l; ++i)  // we are sure that conns1/2 has the same length
 					{
-						result = AU.compare(compareValue1.connectorOrders, compareValue2.connectorOrders);
+						result = conns1[i].compareStructure(conns2[i]);
+						if (result !== 0)
+							break;
 					}
-					if (result === 0)  // still can not distinguish, check ring situation
+
+					// still can not distinguish, check ring situation
+					if (result === 0)
 					{
 						var sssr1 = (n1.getBelongedSssrRings && n1.getBelongedSssrRings()) || [];
 						var sssr2 = (n2.getBelongedSssrRings && n2.getBelongedSssrRings()) || [];
