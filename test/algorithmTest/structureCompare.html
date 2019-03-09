@@ -123,6 +123,8 @@ M  END
 			//ops.compareCharge = !($('checkboxIgnoreCharge').checked);
 			ops.compareMass = !($('checkboxIgnoreMass').checked);
 			ops.strictStereoBondGeometry = $('checkboxStrictBondGeometry').checked;
+			ops.strictStereoAtomGeometry = $('checkboxStrictAtomGeometry').checked;
+			//ops.clearHydrogens = false;
 
 			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
 			var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
@@ -183,6 +185,7 @@ M  END
 		</select><br />
 		<input type="checkbox" id="checkboxIgnoreMass" checked="true" /><label for="checkboxIgnoreMass">Ignore mass number</label><br />
 		<input type="checkbox" id="checkboxStrictBondGeometry" /><label for="checkboxStrictBondGeometry">Strict bond geometry</label><br />
+		<input type="checkbox" id="checkboxStrictAtomGeometry" /><label for="checkboxStrictAtomGeometry">Strict atom geometry</label><br />
 	</div>
 	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>
 	<div class="Editor" id="chemComposer1" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol2)"></div>
