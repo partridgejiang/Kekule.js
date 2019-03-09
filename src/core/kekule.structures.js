@@ -684,7 +684,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 				}
 			}
 		}
-		
+
 		if (!result.length)
 			result = null;
 		return result;
@@ -1007,7 +1007,24 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		return result;
 	},
 	/**
-	 * Returns linked multiple covalent bond to this node.
+	 * Returns linked multicenter bonds to this node.
+	 * @returns {Array}
+	 */
+	getLinkedMultiCenterBonds: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var c = this.getLinkedConnectorAt(i);
+			if ((c instanceof Kekule.Bond) && (c.getConnectedObjCount() > 2))
+			{
+				result.push(c);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns linked multiple covalent bonds to this node.
 	 * @returns {Array}
 	 */
 	getLinkedMultipleBonds: function()
