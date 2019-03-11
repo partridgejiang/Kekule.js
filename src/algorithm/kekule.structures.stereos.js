@@ -39,10 +39,12 @@ var RD = Kekule.RotationDir;
  * @object
  */
 Kekule.globalOptions.add('algorithm.stereoPerception', {
-	useFlatternedShadow: true,
+	useFlattenedShadow: true,
 	perceiveStereoConnectors: true,
 	perceiveChiralNodes: true,
-	calcParity: true
+	calcParity: true,
+	strictStereoBondGeometry: false,
+	wedgeBondPrior: true
 });
 
 /**
@@ -966,7 +968,10 @@ Kekule.MolStereoUtils = {
 						{
 							if (connDirection < 0)
 								bondStereo = BS.getInvertedDirection(bondStereo);
-							var zFactors = [1, -1, -1, 1];
+
+							// use a larger factor for wedge bond than the dashes one when wedge is considered prior in chiral calculation
+							var zFactors = ops.wedgeBondPrior? [2, -2, -1, 1]: [1, -1, -1, 1];
+
 							var distance = CU.getDistance(result, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
 							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
 						}
@@ -1195,7 +1200,7 @@ Kekule.MolStereoUtils = {
 	 * @param {Bool} ignoreCanonicalization If false, ctab will be canonicalized before perception.
 	 * @param {Hash} options Chiral calculation options, including:
 	 *   { <br/>
-	 *     useFlatternedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />
+	 *     useFlattenedShadow: Bool, use flatterned shadow structure to perceive stereo. Default is true. <br />
 	 *     perceiveStereoConnectors: Bool, whether find out the all stereo bonds, default is true. <br />
 	 *     perceiveChiralNodes: Bool, whether find out all stereo atoms, default is true. <br />
 	 *     calcParity: Bool, whether calculate the parity of stereo bonds and node found, default is true. <br />
@@ -1213,7 +1218,7 @@ Kekule.MolStereoUtils = {
 	{
 		/*
 		var ops = Object.extend({
-			useFlatternedShadow: true,
+			useFlattenedShadow: true,
 			perceiveStereoConnectors: true,
 			perceiveChiralNodes: true,
 			calcParity: true
@@ -1226,7 +1231,7 @@ Kekule.MolStereoUtils = {
 		var srcStructFragment = (structFragmentOrCtab instanceof Kekule.StructureConnectionTable) ? structFragmentOrCtab.getParent() : structFragmentOrCtab;
 
 		var targetFragment;
-		if (ops.useFlatternedShadow)
+		if (ops.useFlattenedShadow)
 		{
 			targetFragment = srcStructFragment.getFlattenedShadowFragment(true);
 		}
@@ -1261,7 +1266,7 @@ Kekule.MolStereoUtils = {
 			var stereoObjs = (chiralNodes || []).concat(stereoBonds || []);
 			//console.log(ops, stereoBonds, chiralNodes, stereoObjs);
 
-			if (ops.useFlatternedShadow && !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
+			if (ops.useFlattenedShadow && !srcStructFragment.getFlattenedShadowOnSelf())  // map back to src fragment
 			{
 				result = [];
 				srcStructFragment.beginUpdate();

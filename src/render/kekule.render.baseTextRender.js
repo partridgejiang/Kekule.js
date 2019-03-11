@@ -540,9 +540,10 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 		//console.log(result, ops);
 
-		if (Kekule.ObjUtils.notUnset(ops.zoom))
+		if (Kekule.ObjUtils.notUnset(/*ops.zoom*/result.zoom))
 		{
-			result.fontSize = _multipyFontSize(result.fontSize, ops.zoom || 1);
+			result.fontSize = _multipyFontSize(result.fontSize, result.zoom || 1);
+			result.zoom = null;   // clear the zoom field, since it has already affected to font size
 		}
 
 		if (RTU.isSuperscript(richTextItem))

@@ -12,7 +12,7 @@ module.exports = function(Kekule) {
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.8.1.19012200',
+	VERSION: '0.8.1.19021500',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -121,6 +121,8 @@ else if (typeof(window) === 'object' && window.document)
 	Kekule.$jsRoot = window;
 else if (typeof(global) === 'object')  // node env
 	Kekule.$jsRoot = global;
+
+Kekule.$jsRoot.Kekule = Kekule;
 
 /**
  * Root document of JavaScript environment.
