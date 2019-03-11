@@ -90,7 +90,8 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
- * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted into editor by IA controllers autimatically.
+ * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted by mouse or pen into editor by IA controllers automatically.
+ * @property {Bool} autoSelectNewlyInsertedObjectsOnTouch Whether select objects newly inserted by touch into editor by IA controllers automatically.
  * @property {Int} objBoundTrackMinInflation The bound of object will usually be inflated to make it easier to select. This value controls the minimal inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
@@ -137,7 +138,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableHotTrack', true);
 
 		this.addBoolConfigProp('scrollToObjAfterLoading', true);
-		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', true);
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', !true);
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjectsOnTouch', true);
 
 		this.addIntConfigProp('objBoundTrackMinInflation', 5);
 		this.addIntConfigProp('objBoundTrackMinInflationMouse', null);

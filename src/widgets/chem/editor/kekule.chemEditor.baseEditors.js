@@ -4731,11 +4731,20 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	 */
 	doneInsertOrModifyBasicObjects: function(objs)
 	{
-		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
+		if (this.needAutoSelectNewlyInsertedObjects())
 		{
 			var filteredObjs = this._filterBasicObjectsInEditor(objs);
 			this.getEditor().select(filteredObjs);
 		}
+	},
+
+	/** @private */
+	needAutoSelectNewlyInsertedObjects: function()
+	{
+		var pointerType = this.getManipulationPointerType();
+		var ic = this.getEditorConfigs().getInteractionConfigs();
+		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
+			|| ic.getAutoSelectNewlyInsertedObjects();
 	},
 
 	/** @private */
@@ -5190,6 +5199,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('manipulationType', {'dataType': DataType.INT, 'serializable': false});  // private
 
 		this.defineProp('isManipulatingSelection', {'dataType': DataType.BOOL, 'serializable': false});
+
+		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false});  // private
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
 		//this.defineProp('activeOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false}); // store operation that should be add to history
@@ -6317,6 +6328,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
+		this.setManipulationPointerType(pointerType);
 
 		var editor = this.getEditor();
 		editor.beginManipulateObject();

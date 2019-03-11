@@ -2906,7 +2906,7 @@ Kekule.Editor.StructureInsertIaController = Class.create(Kekule.Editor.BasicMolM
 	/** @ignore */
 	stopManipulate: function($super)
 	{
-		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
+		if (this.needAutoSelectNewlyInsertedObjects())
 		{
 			var basicObjs = this.getInsertedObjs();
 			this.doneInsertOrModifyBasicObjects(basicObjs);
