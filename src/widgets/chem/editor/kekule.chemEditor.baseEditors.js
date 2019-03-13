@@ -6328,7 +6328,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
-		this.setManipulationPointerType(e.pointerType);
+		this.setManipulationPointerType(e && e.pointerType);
 
 		var editor = this.getEditor();
 		editor.beginManipulateObject();
