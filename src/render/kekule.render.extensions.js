@@ -1055,7 +1055,7 @@ module.exports = function(Kekule) {
 			var result = $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 
 			var hcount = 0;
-			var implicitHydrogenCount = !this || this.getIsotopeId() === 'H' ? 0 : this.getImplicitHydrogenCount();
+			var implicitHydrogenCount = !this || !this.getIsotopeId || this.getIsotopeId() === 'H' ? 0 : this.getImplicitHydrogenCount();
 			var explicitHydrogenCount = this.getExplicitHydrogenCount() || 0;
 			switch (hydrogenDisplayLevel)
 			{

@@ -970,7 +970,7 @@ Kekule.MolStereoUtils = {
 								bondStereo = BS.getInvertedDirection(bondStereo);
 
 							// use a larger factor for wedge bond than the dashes one when wedge is considered prior in chiral calculation
-							var zFactors = ops.wedgeBondPrior? [2, -2, -1, 1]: [1, -1, -1, 1];
+							var zFactors = ops.wedgeBondPrior? [2, -2, -1, -1]: [1, -1, -1, 1];
 
 							var distance = CU.getDistance(result, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
 							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
