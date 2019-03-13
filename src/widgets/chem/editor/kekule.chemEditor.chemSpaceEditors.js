@@ -1861,6 +1861,23 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @private */
+	_objCanBeMagneticMerged: function(obj)
+	{
+		if (obj instanceof Kekule.StructureFragment)
+			return false;
+		else
+			return (obj instanceof Kekule.ChemStructureNode) || (obj instanceof Kekule.ChemStructureConnector);
+	},
+	/** @private */
+	_objCanBeMagneticSticked: function(obj)
+	{
+		if (obj instanceof Kekule.StructureFragment)
+			return false;
+		else
+			return (obj instanceof Kekule.BaseStructureNode) && (obj.getAllowCoordStick());
+	},
+
+	/** @private */
 	_canStickNode: function(node, destObj)
 	{
 		if (this.getEnableNodeStick())
@@ -2000,7 +2017,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		return $super(actualEndCoord);
 	},
 
-	/** @ignore */
+		/** @ignore */
 	applyManipulatingObjsInfo: function($super, endScreenCoord)
 	{
 		var MergeTypes = {MERGE: 0, STICK: 1};
@@ -2027,82 +2044,21 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		//var allowMolMerge = this.getEnableStructFragmentMerge();
 		var self = this;
 
-		var objCanBeMerged = function(obj)
-		{
-			if (obj instanceof Kekule.StructureFragment)
-				return false;
-			else
-				return (obj instanceof Kekule.ChemStructureNode) || (obj instanceof Kekule.ChemStructureConnector);
-		};
-		var objCanBeSticked = function(obj)
-		{
-			if (obj instanceof Kekule.StructureFragment)
-				return false;
-			else
-				return (obj instanceof Kekule.BaseStructureNode) && (obj.getAllowCoordStick());
-		};
-
 		// handle mouse position merge and magnetic merge here
 
 		var isMovingOneBond = (originManipulatedObjs.length === 1) && (originManipulatedObjs[0] instanceof Kekule.ChemStructureConnector);
-		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof Kekule.ChemStructureNode) && objCanBeMerged(manipulatedObjs[0]);
+		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof Kekule.ChemStructureNode) && this._objCanBeMagneticMerged(manipulatedObjs[0]);
 		if (!isMovingOneBond && this.getEnableMagneticMerge())
 		{
 			var currManipulateInfoMap = this.getManipulateObjCurrInfoMap();
 			var manipulateInfoMap = this.getManipulateObjInfoMap();
-			var self = this;
-			var magneticMergeObjIndexes = [];
-			var magneticMergeObjs = [];
-			var magneticMergeDests = [];
-			var magneticMergeTypes = [];
 
-			// filter out all merge nodes
-			//console.log('manipulate objects count', manipulatedObjs.length);
-			for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
-			{
-				var obj = manipulatedObjs[i];
-				if (!objCanBeMerged(obj) && !objCanBeSticked(obj))
-				{
-					continue;
-				}
-				var currInfo = currManipulateInfoMap.get(obj);
-				var currCoord = currInfo.screenCoord;
-				if (currCoord)
-				{
-					var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
-					/*
-					 var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, Kekule.ChemStructureNode,
-					 function(destObj)
-					 {
-					 return self._canMergeNodes(obj, destObj);
-					 }
-					 );
-					 if (overlapBoundInfo && overlapBoundInfo.obj)  // may merge, store info
-					 */
-					//var mergeDest = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
-					var mergeOrStickDestInfo = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
-					var mergeDest = null, stickDest = null;
-					if (mergeOrStickDestInfo)
-					{
-						if (mergeOrStickDestInfo.isStick)
-							stickDest = mergeOrStickDestInfo.obj;
-						else if (mergeOrStickDestInfo.isMerge)
-							mergeDest = mergeOrStickDestInfo.obj;
-					}
-					if (mergeDest || stickDest)  // may merge, or stick store info
-					{
-						magneticMergeObjIndexes.push(i);
-						magneticMergeObjs.push(obj);
-						magneticMergeDests.push(mergeDest || stickDest);
-						magneticMergeTypes.push(stickDest? MergeTypes.STICK: MergeTypes.MERGE);
-						//console.log('check merge ok on', i, stickDest);
-					}
-					else
-					{
-						//console.log('check merge fail on', i, currCoord);
-					}
-				}
-			}
+			var magneticOperObjInfos = this._calcMagneticMergeOrStickInfos(manipulatedObjs, currManipulateInfoMap, excludedObjs, MergeTypes);
+			var magneticMergeObjIndexes = magneticOperObjInfos.magneticObjIndexes;
+			var magneticMergeObjs = magneticOperObjInfos.magneticObjs;
+			var magneticMergeDests = magneticOperObjInfos.magneticDests;
+			var magneticMergeTypes = magneticOperObjInfos.magneticTypes;
+
 			if (magneticMergeObjs.length)  // has merge items
 			{
 				var mergedObjCount = magneticMergeObjs.length;
@@ -2428,6 +2384,67 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		$super(endScreenCoord);
 	},
 
+	/** @private */
+	_calcMagneticMergeOrStickInfos: function(manipulatedObjs, currManipulateInfoMap, excludedObjs, MergeTypes)
+	{
+		var objCanBeMerged = this._objCanBeMagneticMerged;
+		var objCanBeSticked = this._objCanBeMagneticSticked;
+
+		var editor = this.getEditor();
+
+		var magneticObjIndexes = [];
+		var magneticObjs = [];
+		var magneticDests = [];
+		var magneticTypes = [];
+
+		// filter out all merge nodes
+		//console.log('manipulate objects count', manipulatedObjs.length);
+		for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+		{
+			var obj = manipulatedObjs[i];
+			if (!objCanBeMerged(obj) && !objCanBeSticked(obj))
+			{
+				continue;
+			}
+			var currInfo = currManipulateInfoMap.get(obj);
+			var currCoord = currInfo.screenCoord;
+			if (currCoord)
+			{
+				var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
+
+				//var mergeDest = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
+				var mergeOrStickDestInfo = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
+				var mergeDest = null, stickDest = null;
+				if (mergeOrStickDestInfo)
+				{
+					if (mergeOrStickDestInfo.isStick)
+						stickDest = mergeOrStickDestInfo.obj;
+					else if (mergeOrStickDestInfo.isMerge)
+						mergeDest = mergeOrStickDestInfo.obj;
+				}
+				if (mergeDest || stickDest)  // may merge, or stick store info
+				{
+					magneticObjIndexes.push(i);
+					magneticObjs.push(obj);
+					magneticDests.push(mergeDest || stickDest);
+					magneticTypes.push(stickDest ? MergeTypes.STICK : MergeTypes.MERGE);
+					//console.log('check merge ok on', i, stickDest);
+				}
+				else
+				{
+					//console.log('check merge fail on', i, currCoord);
+				}
+			}
+		}
+
+		return {
+			'magneticObjIndexes': magneticObjIndexes,
+			'magneticObjs': magneticObjs,
+			'magneticDests': magneticDests,
+			'magneticTypes': magneticTypes
+		};
+	},
+	
 	/**
 	 * Notify a set of new merge operations are created.
 	 * Descendants may override this method to reflect to those merges.
