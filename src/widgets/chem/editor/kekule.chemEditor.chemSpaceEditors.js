@@ -2309,7 +2309,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							var mergeType = magneticMergeTypes[i];
 							if (mergeType === MagneticOperTypes.STICK)  // stick operation
 							{
-								var stickOper = this.createNodeStickOperation(obj, dest);
+								var originManipulateInfo = manipulateInfoMap.get(obj);
+								var originStickTarget = originManipulateInfo.stickTarget;
+								if (dest !== originStickTarget)
+									var stickOper = this.createNodeStickOperation(obj, dest);
 								this.getStickOperations()[index] = stickOper;
 								//this.getMergeOperationsInManipulating()[index] = stickOper;
 							}
