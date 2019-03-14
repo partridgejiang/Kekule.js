@@ -904,6 +904,13 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		this.defineProp('coordStickTarget', {
 			'dataType': 'Kekule.ChemStructureObject', 'scope': Class.PropertyScope.PUBLIC,
 			'objRef': true, 'autoUpdate': true,
+			'getter': function()
+			{
+				if (this.getAllowCoordStick())
+					return this.getPropStoreFieldValue('coordStickTarget');
+				else
+					return null;
+			},
 			'setter': function(value)
 			{
 				if (value)
