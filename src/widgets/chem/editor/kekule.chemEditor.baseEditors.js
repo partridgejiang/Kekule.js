@@ -6156,6 +6156,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		info.hasNoCoord = !info.objCoord;
 		if (!info.hasNoCoord && startScreenCoord)
 			info.screenCoordOffset = Kekule.CoordUtils.substract(info.screenCoord, startScreenCoord);
+		if (obj.getCoordStickTarget)  // wether is a sticking object
+			info.stickTarget = obj.getCoordStickTarget();
 		return info;
 	},
 
