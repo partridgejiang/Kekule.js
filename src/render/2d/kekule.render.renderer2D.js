@@ -2593,6 +2593,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
 		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
 		var nodeWithLabel = false;
+		var nodeBoundInfoRadius = 10;
 		if (this.getObjNeedDrawLabel(context, node))  // draw label
 		{
 			nodeWithLabel = true;
@@ -2631,14 +2632,13 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var elem = elemEx.drawnObj;
 			var rect = elemEx.boundRect;
 			// change boundInfo to a rect
-			boundInfo = this.createRectBoundInfo({x: rect.left, y: rect.top}, {x: rect.left + rect.width, y: rect.top + rect.height});
+			boundInfo =this.createCircleBoundInfo(coord, nodeBoundInfoRadius);
 			//console.log(rect);
 			result = elem;
 		}
 		else
 		{
 			var nodeCoreElem, chargeElem;
-			var skeletalRadius = 10;
 			if (this.getObjNeedDrawDot(context, node) && Kekule.ObjUtils.isUnset(nodeRenderOptions.atomRadius))
 			{
 				nodeRenderOptions.atomRadius = nodeRenderOptions.allenCenterAtomRadius;
@@ -2650,7 +2650,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				nodeRenderOptions.fillColor = nodeRenderOptions.color;
 				nodeCoreElem = this.drawCircle(context, coord, radius, nodeRenderOptions);
 			}
-			boundInfo = this.createCircleBoundInfo(coord, skeletalRadius);
+			boundInfo = this.createCircleBoundInfo(coord, nodeBoundInfoRadius);
 
 			//if (node.getCharge() || node.getRadical()) // draw charge or radical
 			if (needDrawCharge || needDrawRadical)
