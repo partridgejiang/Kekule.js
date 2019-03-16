@@ -313,8 +313,8 @@ ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode,
 	 */
 	isCoordDependent: function()
 	{
-		//return false;
-		return !!this.getCoordStickTarget();
+		return false;
+		//return !!this.getCoordStickTarget();
 	},
 	/**
 	 * If coord is calculated from other objects, this function will return them.

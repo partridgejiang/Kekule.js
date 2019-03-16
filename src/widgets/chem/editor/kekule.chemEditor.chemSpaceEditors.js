@@ -1862,7 +1862,20 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 		var stickOpers = this.getStickOperations();
 		if (stickOpers && stickOpers.length)
-			Kekule.ArrayUtils.pushUnique(result, stickOpers);
+		{
+			for (var i = 0, l = stickOpers.length; i < l; ++i)
+			{
+				var oper = stickOpers[i];
+				if (oper)
+				{
+					if (oper.getStickTarget && !oper.getStickTarget())  // no target, actually a unstick operation, must execute before coord setting operation
+						result.unshift(oper);
+					else
+						result.push(oper);
+				}
+			}
+			//Kekule.ArrayUtils.pushUnique(result, stickOpers);
+		}
 
 		return result;
 	},
@@ -2027,7 +2040,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		/** @ignore */
 	applyManipulatingObjsInfo: function($super, endScreenCoord)
 	{
-		var MagneticOperTypes = {MERGE: 0, STICK: 1};
+		var MagneticOperTypes = {MERGE: 0, STICK: 1, UNSTICK: 10};
 
 		this.setAllManipulateObjsMerged(false);
 		var useMergePreview = this.useMergePreview();
@@ -2061,13 +2074,14 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			var currManipulateInfoMap = this.getManipulateObjCurrInfoMap();
 			var manipulateInfoMap = this.getManipulateObjInfoMap();
 
-			var magneticOperObjInfos = this._calcMagneticMergeOrStickInfos(manipulatedObjs, currManipulateInfoMap, excludedObjs, MagneticOperTypes);
+			var magneticOperObjInfos = this._calcMagneticMergeOrStickInfos(manipulatedObjs, currManipulateInfoMap, manipulateInfoMap, excludedObjs, MagneticOperTypes);
+			//console.log('mag', magneticOperObjInfos);
 			var magneticMergeObjIndexes = magneticOperObjInfos.magneticObjIndexes;
 			var magneticMergeObjs = magneticOperObjInfos.magneticObjs;
 			var magneticMergeDests = magneticOperObjInfos.magneticDests;
 			var magneticMergeTypes = magneticOperObjInfos.magneticTypes;
 
-			if (magneticMergeObjs.length)  // has merge items
+			if (magneticMergeObjs.length || oldStickOpers.length)  // has merge items, or we need to reverse stick oper
 			{
 				var magneticObjCount = magneticMergeObjs.length;
 				this.setAllManipulateObjsMerged(magneticObjCount === manipulatedObjs.length);
@@ -2075,7 +2089,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				if (this.getAllManipulateObjsMerged())
 					console.log('all merged!', mergedObjCount);
         */
-				var magneticSingleObj = (magneticObjCount <= 1);  // merge only one node
+				var magneticSingleObj = (magneticObjCount === 1);  // merge only one node
 				/*
 				// If merge on only one node, other node position may also be changed
 				// e.g. add repository ring structure to another node
@@ -2178,45 +2192,48 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						var currInfo = currManipulateInfoMap.get(magneticMergeObjs[0]);
 						var currCoord = currInfo.screenCoord;
 						var destCoord = editor.getObjectScreenCoord(magneticMergeDests[0]);
-						var coordTranslate = CU.substract(destCoord, currCoord);
-						// change all currInfo coord, and redo apply job
-						var needReApply = false;
-
-						var fequal = Kekule.NumUtils.isFloatEqual;
-						var threshold = 1e-10; //{x: Math.abs(currCoord.x) * 1e-8, y: Math.abs(currCoord.y) * 1e-8}
-						if (!fequal(coordTranslate.x, 0, threshold) || !fequal(coordTranslate.y, 0, threshold))  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
+						if (destCoord)
 						{
-							//console.log('here', coordTranslate, currCoord, destCoord);
-							for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+							var coordTranslate = CU.substract(destCoord, currCoord);
+							// change all currInfo coord, and redo apply job
+							var needReApply = false;
+
+							var fequal = Kekule.NumUtils.isFloatEqual;
+							var threshold = 1e-10; //{x: Math.abs(currCoord.x) * 1e-8, y: Math.abs(currCoord.y) * 1e-8}
+							if (!fequal(coordTranslate.x, 0, threshold) || !fequal(coordTranslate.y, 0, threshold))  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
 							{
-								var obj = manipulatedObjs[i];
-								if (obj !== magneticMergeObjs[0])
+								//console.log('here', coordTranslate, currCoord, destCoord);
+								for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 								{
-									var info = currManipulateInfoMap.get(obj);
-									if (info.screenCoord)
+									var obj = manipulatedObjs[i];
+									if (obj !== magneticMergeObjs[0])
 									{
-										var newCoord = CU.add(info.screenCoord, coordTranslate);
-										info.screenCoord = newCoord;
-										if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
-											needReApply = true;
+										var info = currManipulateInfoMap.get(obj);
+										if (info.screenCoord)
+										{
+											var newCoord = CU.add(info.screenCoord, coordTranslate);
+											info.screenCoord = newCoord;
+											if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
+												needReApply = true;
+										}
+										//this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
 									}
-									//this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
 								}
 							}
-						}
-						if (needReApply)
-						{
-							return this.applyManipulatingObjsInfo(endScreenCoord);
-						}
-						else
-						{
-							for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+							if (needReApply)
 							{
-								var obj = manipulatedObjs[i];
-								//if (obj !== magneticMergeObjs[0])
+								return this.applyManipulatingObjsInfo(endScreenCoord);
+							}
+							else
+							{
+								for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 								{
-									var info = currManipulateInfoMap.get(obj);
-									this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
+									var obj = manipulatedObjs[i];
+									//if (obj !== magneticMergeObjs[0])
+									{
+										var info = currManipulateInfoMap.get(obj);
+										this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
+									}
 								}
 							}
 						}
@@ -2225,73 +2242,76 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					{
 						var obj0 = magneticMergeObjs[0];
 						var obj1 = magneticMergeObjs[1];
-						var coordObj0 = manipulateInfoMap.get(obj0).screenCoord;
-						var coordObj1 = manipulateInfoMap.get(obj1).screenCoord;
-						//console.log(coordObj0, coordObj1, manipulateInfoMap.get(obj0));
-
-						/*
-						 var distanceObj = CU.getDistance(coordObj0, coordObj1);
-						 var deltaObj = CU.substract(coordObj1, coordObj0);
-						 var angleObj = Math.atan2(deltaObj.y, deltaObj.x);
-						 */
-
-						var coordDest0 = editor.getObjectScreenCoord(magneticMergeDests[0]);
-						var coordDest1 = editor.getObjectScreenCoord(magneticMergeDests[1]);
-						/*
-						 var distanceDest = CU.getDistance(coordDest0, coordDest1);
-						 var deltaDest = CU.substract(coordDest1, coordDest0);
-						 var angleDest = Math.atan2(deltaDest.y, deltaDest.x);
-
-						 var coordDelta = CU.substract(coordDest0, coordObj0);
-						 //console.log(coordDelta, coordDest0, coordObj0);
-
-						 var transParam = {
-						 'translateX': coordDelta.x,
-						 'translateY': coordDelta.y,
-						 'scale': distanceDest / distanceObj,
-						 'rotateAngle': angleDest - angleObj,
-						 'center': coordObj0  //coordDest0
-						 }
-						 */
-						// TODO: currently only handle 2D situation
-						var transParam = CU.calcCoordGroup2DTransformParams(coordObj0, coordObj1, coordDest0, coordDest1);
-						//console.log(transParam, transParam.rotateAngle * 180 / Math.PI);
-						var matrix = CU.calcTransform2DMatrix(transParam);
-
-						// change all currInfo coord, and redo apply job
-						var needReApply = false;
-						for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+						if (obj0 && obj1)
 						{
-							var obj = manipulatedObjs[i];
-							if (magneticMergeObjs.indexOf(obj) < 0)
-							{
-								var info = manipulateInfoMap.get(obj);
-								var currInfo = currManipulateInfoMap.get(obj);
-								if (info.screenCoord)
-								{
-									var newCoord = CU.transform2DByMatrix(info.screenCoord, matrix);
-									currInfo.screenCoord = newCoord;
-									if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
-										needReApply = true;
-								}
-								if (info.size)
-									currInfo.size = CU.multiply(info.size, transParam.scale);
+							var coordObj0 = manipulateInfoMap.get(obj0).screenCoord;
+							var coordObj1 = manipulateInfoMap.get(obj1).screenCoord;
+							//console.log(coordObj0, coordObj1, manipulateInfoMap.get(obj0));
 
-								//this.applySingleManipulatingObjInfo(i, obj, currInfo, endScreenCoord);
-							}
-						}
+							/*
+							 var distanceObj = CU.getDistance(coordObj0, coordObj1);
+							 var deltaObj = CU.substract(coordObj1, coordObj0);
+							 var angleObj = Math.atan2(deltaObj.y, deltaObj.x);
+							 */
 
-						if (needReApply)
-							return this.applyManipulatingObjsInfo(endScreenCoord);
-						else
-						{
+							var coordDest0 = editor.getObjectScreenCoord(magneticMergeDests[0]);
+							var coordDest1 = editor.getObjectScreenCoord(magneticMergeDests[1]);
+							/*
+							 var distanceDest = CU.getDistance(coordDest0, coordDest1);
+							 var deltaDest = CU.substract(coordDest1, coordDest0);
+							 var angleDest = Math.atan2(deltaDest.y, deltaDest.x);
+
+							 var coordDelta = CU.substract(coordDest0, coordObj0);
+							 //console.log(coordDelta, coordDest0, coordObj0);
+
+							 var transParam = {
+							 'translateX': coordDelta.x,
+							 'translateY': coordDelta.y,
+							 'scale': distanceDest / distanceObj,
+							 'rotateAngle': angleDest - angleObj,
+							 'center': coordObj0  //coordDest0
+							 }
+							 */
+							// TODO: currently only handle 2D situation
+							var transParam = CU.calcCoordGroup2DTransformParams(coordObj0, coordObj1, coordDest0, coordDest1);
+							//console.log(transParam, transParam.rotateAngle * 180 / Math.PI);
+							var matrix = CU.calcTransform2DMatrix(transParam);
+
+							// change all currInfo coord, and redo apply job
+							var needReApply = false;
 							for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 							{
 								var obj = manipulatedObjs[i];
 								if (magneticMergeObjs.indexOf(obj) < 0)
 								{
+									var info = manipulateInfoMap.get(obj);
 									var currInfo = currManipulateInfoMap.get(obj);
-									this.applySingleManipulatingObjInfo(i, obj, currInfo, endScreenCoord);
+									if (info.screenCoord)
+									{
+										var newCoord = CU.transform2DByMatrix(info.screenCoord, matrix);
+										currInfo.screenCoord = newCoord;
+										if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
+											needReApply = true;
+									}
+									if (info.size)
+										currInfo.size = CU.multiply(info.size, transParam.scale);
+
+									//this.applySingleManipulatingObjInfo(i, obj, currInfo, endScreenCoord);
+								}
+							}
+
+							if (needReApply)
+								return this.applyManipulatingObjsInfo(endScreenCoord);
+							else
+							{
+								for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+								{
+									var obj = manipulatedObjs[i];
+									if (magneticMergeObjs.indexOf(obj) < 0)
+									{
+										var currInfo = currManipulateInfoMap.get(obj);
+										this.applySingleManipulatingObjInfo(i, obj, currInfo, endScreenCoord);
+									}
 								}
 							}
 						}
@@ -2299,6 +2319,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 
 					if (needCreateNewMerge || needCreateNewStick)
 					{
+						var unstickedObjRecords = [];
 						// notify a new merge need to be done
 						this._mergeOperationsChanged(magneticObjCount, magneticMergeObjs, magneticMergeDests);
 						for (var i = 0, l = magneticObjCount; i < l; ++i)
@@ -2314,6 +2335,16 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 								if (dest !== originStickTarget)
 									var stickOper = this.createNodeStickOperation(obj, dest);
 								this.getStickOperations()[index] = stickOper;
+
+								if (!dest)  // actually a unstick operation, need to change coord also, stores the info
+								{
+									unstickedObjRecords.push({
+										'index': index,
+										'obj': obj,
+										'newInfo': currManipulateInfoMap.get(obj)
+									});
+								}
+
 								//this.getMergeOperationsInManipulating()[index] = stickOper;
 							}
 							else  // merge operation
@@ -2338,6 +2369,16 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							this.executeMergeOpers(this.getMergeOperationsInManipulating());
 						if (needCreateNewStick)
 							this.executeMergeOpers(this.getStickOperations());
+
+						if (unstickedObjRecords.length)  // set coord of unsticked objects after unstick operation executed
+						{
+							for (var i = 0, l = unstickedObjRecords.length; i < l; ++i)
+							{
+								var unstickedRec = unstickedObjRecords[i];
+								//console.log('apply',currManipulateInfoMap.get(obj));
+								this.applySingleManipulatingObjInfo(unstickedRec.index, unstickedRec.obj, unstickedRec.newInfo, endScreenCoord);
+							}
+						}
 					}
 				}
 
@@ -2442,8 +2483,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @private */
-	_calcMagneticMergeOrStickInfos: function(manipulatedObjs, currManipulateInfoMap, excludedObjs, MergeTypes)
+	_calcMagneticMergeOrStickInfos: function(manipulatedObjs, currManipulateInfoMap, originalManipulateInfoMap, excludedObjs, MergeTypes)
 	{
+		var isManipulateSingleStickedObj = this._isManipulatingSingleStickedObj(manipulatedObjs);
+
 		var objCanBeMerged = this._objCanBeMagneticMerged;
 		var objCanBeSticked = this._objCanBeMagneticSticked;
 
@@ -2453,6 +2496,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var magneticObjs = [];
 		var magneticDests = [];
 		var magneticTypes = [];
+		//var unstickObjs = [];
 
 		// filter out all merge nodes
 		//console.log('manipulate objects count', manipulatedObjs.length);
@@ -2489,7 +2533,18 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				}
 				else
 				{
-					//console.log('check merge fail on', i, currCoord);
+					if (!stickDest && isManipulateSingleStickedObj)
+					{
+						var originalInfo = originalManipulateInfoMap.get(obj);
+						if (originalInfo.stickTarget)   // has old stick object, but now moves out, it should be unsticked
+						{
+							magneticObjIndexes.push(i);
+							magneticObjs.push(obj);
+							magneticDests.push(null);
+							magneticTypes.push(MergeTypes.STICK);   // stick to null means unstick
+							//unstickObjs.push(obj);
+						}
+					}
 				}
 			}
 		}
