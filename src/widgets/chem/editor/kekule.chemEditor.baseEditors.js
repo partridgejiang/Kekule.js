@@ -3594,6 +3594,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	doGetObjCoord: function(obj, coordPos)
 	{
+		if (!obj)
+			return null;
 		var coordMode = this.getCoordMode();
 		var allowCoordBorrow = this.getAllowCoordBorrow();
 		var result = obj.getAbsBaseCoord? obj.getAbsBaseCoord(coordMode, allowCoordBorrow):
