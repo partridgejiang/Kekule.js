@@ -464,6 +464,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 				{
 					//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
 					var chordVector = CU.substract(arcEndCoord, arcStartCoord);
+					// adding just enough chaos into the calculation to prevent curves from collapsing
+					var collapseDelta = 0.0000000000001;
+					if (Math.abs(chordVector.x - chordVector.y) < collapseDelta)
+					{
+							chordVector.x = chordVector.x - collapseDelta;
+							chordVector.y = chordVector.y + collapseDelta;
+ 					}
 					var signX = Math.sign(chordVector.x);
 					var signY = Math.sign(chordVector.y);
 					if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
