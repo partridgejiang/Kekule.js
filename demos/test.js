@@ -56,6 +56,7 @@ Kekule.X.domReady(function(){
   var composerEl = document.getElementById('composer');
   if (composerEl != null) {
     composer = new Kekule.Editor.Composer(composerEl)
+    setBasicSettings(composer)
     setUpComposer(composer)
     let validKekule = Kekule.IO.loadFormatData(CORRECT_MOL, 'Kekule-JSON');
     composer.setChemObj(validKekule)
@@ -77,9 +78,11 @@ Kekule.X.domReady(function(){
     var chemComposer0 = document.getElementById('chemComposer0')
     var chemComposer1 = document.getElementById('chemComposer1')
     composer = new Kekule.Editor.Composer(chemComposer0)
+    setBasicSettings(composer)
     var composer0 = composer;
     //setUpComposer(composer)
     composer = new Kekule.Editor.Composer(chemComposer1)
+    setBasicSettings(composer)
     var composer1 = composer;
     //setUpComposer(composer)
     btnCompare.addEventListener('click', function compareMolecules () {
@@ -99,6 +102,37 @@ Kekule.X.domReady(function(){
     })
   }
 })
+
+function setBasicSettings(composer) {
+  const renderConfigs = composer.getRenderConfigs()
+  const lengthConfigs = renderConfigs.getLengthConfigs()
+  const colorConfigs = renderConfigs.getColorConfigs()
+  const textFontConfigs = renderConfigs.getTextFontConfigs()
+  //Atom Configs
+  lengthConfigs.setAtomFontSize(20)
+  lengthConfigs.setAtomLabelBoxExpandRatio(2)
+  colorConfigs.setAtomColor('#000000')
+  textFontConfigs.setAtomFontFamily('Source Sans Pro')
+
+  //Bond Configs
+  lengthConfigs.setBondLineWidth(3)
+  lengthConfigs.setHashSpacing(7) //Wedge Down Inbetween Spacing
+  lengthConfigs.setMultipleBondSpacingRatio(0.18)
+  lengthConfigs.setMultipleBondMaxAbsSpacing(7)
+  lengthConfigs.setBondWedgeWidth(10)
+  //lengthConfigs.setBondWedgeHashMinWidth(5)
+  lengthConfigs.setDefBondLength(83)
+  colorConfigs.setBondColor('#000000')
+
+  //Electron Configs (Yes I know the sets say charge but they change electrons)
+  lengthConfigs.setChargeMarkFontSize(25)
+  lengthConfigs.setChargeMarkMargin(16)
+
+  //Charge Configs
+  lengthConfigs.setChemMarkerFontSize(15)
+  lengthConfigs.setChemMarkerMargin(36)
+  textFontConfigs.setLabelFontFamily('Source Sans Pro')
+}
 
 function setUpComposer(composer) {
   var BNS = Kekule.ChemWidget.ComponentWidgetNames;
