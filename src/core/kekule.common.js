@@ -489,7 +489,7 @@ Kekule.MapEx = Class.create(
 				var result;
 				if (Array.from)
 					result = Array.from(iter);
-				if (iter.next)
+				else if (iter.next)
 				{
 					result = [];
 					var nextResult = iter.next();
