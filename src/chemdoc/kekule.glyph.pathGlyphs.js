@@ -186,7 +186,7 @@ Kekule.Glyph.ArrowSide = {
  * @param {Array} connectedObjs Objects ({@link Kekule.ChemStructureObject}) connected by connected, usually a connector connects two nodes.
  *
  * @property {String} pathType Type of path to draw between connected nodes, value from {@link Kekule.Glyph.PathType}.
- * @property {Hash} pathParams Other params to control the outlook of path. Mayb including the following fields:
+ * @property {Hash} pathParams Other params to control the outlook of path. May including the following fields:
  *   {
  *     lineCount: {Int} need to draw single or multiple line in path?
  *     lineGap: {Float} gap between multiple lines
@@ -196,6 +196,7 @@ Kekule.Glyph.ArrowSide = {
  *     endArrowType:
  *     endArrowSide:
  *     endArrowLength, endArrowWidth:
+ *     startOffset, endOffset: {Float}
  *   }
  */
 Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
