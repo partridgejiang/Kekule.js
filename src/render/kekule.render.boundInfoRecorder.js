@@ -56,12 +56,18 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		$super();
 		this.setPropStoreFieldValue('boundInfos', new Kekule.TwoTupleMapEx(true));
 		this._renderer = rendererOrPainter;  // used internally
+		if (rendererOrPainter && rendererOrPainter.setBoundInfoRecorder)
+		{
+			rendererOrPainter.setBoundInfoRecorder(this);
+		}
 		//console.log('boundInfoCreated', rendererOrPainter);
 		this.installEventListener(rendererOrPainter);
 	},
 	/** @ignore */
 	finalize: function($super)
 	{
+		if (this._renderer)
+			this.uninstallEventListener(this._renderer);
 		var infos = this.getPropStoreFieldValue('boundInfos');
 		if (infos)
 			infos.clear();
@@ -84,42 +90,50 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 	/** @private */
 	installEventListener: function(renderer)
 	{
-		renderer.addEventListener('updateBasicDrawObject', function(e)
+		renderer.addEventListener('updateBasicDrawObject', this._reactRendererUpdateBasicDrawObject, this);
+		renderer.addEventListener('clear', this._reactRendererClear, this);
+	},
+	/** @private */
+	uninstallEventListener: function(renderer)
+	{
+		renderer.removeEventListener('updateBasicDrawObject', this._reactRendererUpdateBasicDrawObject, this);
+		renderer.removeEventListener('clear', this._reactRendererClear, this);
+	},
+	/** @private */
+	_reactRendererUpdateBasicDrawObject: function(e)
+	{
+		var OT = Kekule.Render.ObjectUpdateType;
+		if (this.needRecordOnContext(e.context))
+		{
+			var utype = e.updateType;
+			if (utype === OT.ADD)
+				this.add(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
+			else if (utype === OT.MODIFY)
+				this.modify(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
+			else if (utype === OT.REMOVE)
 			{
-				var OT = Kekule.Render.ObjectUpdateType;
-				if (this.needRecordOnContext(e.context))
-				{
-					var utype = e.updateType;
-					if (utype === OT.ADD)
-						this.add(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
-					else if (utype === OT.MODIFY)
-						this.modify(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
-					else if (utype === OT.REMOVE)
-					{
-						//console.log('object removed', e.obj.getClassName());
-						this.remove(e.context, e.obj);
-					}
-					else if (utype === OT.CLEAR)
-						this.clear(e.context);
-					//console.log(utype, e.context.canvas.parentNode.className, e.obj.getClassName(), e.parentObj.getClassName(), e.boundInfo);
-					/*
-					if (!e.boundInfo)
-						console.log('no boundInfo', e);
-					*/
-					this.invokeEvent('updateBasicDrawObject', e);
-				}
-			}, this
-		);
-		renderer.addEventListener('clear', function(e)
-			{
-				//console.log('[RECEIVE CLEAR]', e.target.getClassName());
-				if (this.needRecordOnContext(e.context))
-					//this.clear(e.context);
-					this.clearOnRenderer(e.context, e.target);
-				var infos = this.getAllRecordedInfoOfContext(e.context);
-				//console.log(infos.length, infos);
-			}, this
-		);
+				//console.log('object removed', e.obj.getClassName());
+				this.remove(e.context, e.obj);
+			}
+			else if (utype === OT.CLEAR)
+				this.clear(e.context);
+			//console.log(utype, e.context.canvas.parentNode.className, e.obj.getClassName(), e.parentObj.getClassName(), e.boundInfo);
+			/*
+			if (!e.boundInfo)
+				console.log('no boundInfo', e);
+			*/
+			this.invokeEvent('updateBasicDrawObject', e);
+		}
+	},
+	/** @private */
+	_reactRendererClear: function(e)
+	{
+		//console.log('[RECEIVE CLEAR]', e.target.getClassName());
+		if (this.needRecordOnContext(e.context))
+		//this.clear(e.context);
+			this.clearOnRenderer(e.context, e.target);
+		var infos = this.getAllRecordedInfoOfContext(e.context);
+		//console.log(infos.length, infos);
 	},
 
 	/**
