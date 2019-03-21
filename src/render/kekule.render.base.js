@@ -592,6 +592,9 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			}
 		});
 
+		// private object to record all bound infos
+		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false});
+
 		this.defineEvent('clear');
 		this.defineEvent('updateBasicDrawObject');
 	},
@@ -608,6 +611,31 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	getHigherLevelObj: function()
 	{
 		return this.getParent();
+	},
+
+	/**
+	 * Returns the root renderer of this child renderer.
+	 * @returns {Kekule.Render.BoundInfoRecorder}
+	 */
+	getRootRenderer: function()
+	{
+		if (this.isRootRenderer())
+			return this;
+		else
+		{
+			var p = this.getParentRenderer();
+			return p? p.getRootRenderer(): this;
+		}
+	},
+
+	/**
+	 * Returns the associated bound info recorder of root renderer.
+	 * @returns {*|Kekule.Render.AbstractRenderer}
+	 */
+	getBoundRecorder: function()
+	{
+		var p = this.getRootRenderer();
+		return p && p.getBoundInfoRecorder();
 	},
 
 	/**
