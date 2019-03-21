@@ -26,10 +26,20 @@ if (!document)
 
 // check if is in Node.js environment
 var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isWebpack = (typeof(__webpack_require__) === 'function');
 
-if (isNode)
+//if (!isWebpack && isNode)
+if (typeof(__webpack_require__) !== 'function' && isNode)
 {
 	var __nodeContext = {};
+	try
+	{
+		var vm = require("vm");
+		var fs = require("fs");
+	}
+	catch(e)
+	{
+	}
 }
 
 if (!isNode)
@@ -50,8 +60,6 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var vm = require("vm");
-			var fs = require("fs");
 			var data = fs.readFileSync(url);
 			//console.log('[k] node append', url, data.length);
 			vm.runInThisContext(data, {'filename': url});
@@ -186,7 +194,6 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 var kekuleFiles = {
 	'lan': {
 		'files': [
-			'lan/json2.js',
 			'lan/classes.js',
 			'lan/xmlJsons.js',
 			'lan/serializations.js'
@@ -256,7 +263,9 @@ var kekuleFiles = {
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js',
-			'chemdoc/kekule.contentBlocks.js'
+			'chemdoc/kekule.contentBlocks.js',
+			'chemdoc/kekule.attachedMarkers.js',
+			'chemdoc/kekule.commonChemMarkers.js'
 		],
 		'category': 'core'
 	},
@@ -313,6 +322,8 @@ var kekuleFiles = {
 	'widget': {
 		'requires': ['lan', 'root', 'common', 'html'],
 		'files': [
+			'lib/hammer.js/hammer.min.js',
+
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
 
@@ -374,10 +385,17 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.configs.js',
 			'widgets/chem/editor/kekule.chemEditor.repositoryData.js',
 			'widgets/chem/editor/kekule.chemEditor.repositories.js',
+			'widgets/chem/editor/kekule.chemEditor.utilWidgets.js',
 			'widgets/chem/editor/kekule.chemEditor.chemSpaceEditors.js',
 			'widgets/chem/editor/kekule.chemEditor.nexus.js',
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
+			'widgets/chem/editor/kekule.chemEditor.trackParser.js',
+
+			'widgets/chem/editor/kekule.chemEditor.objModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.styleModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
 
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
 		],
@@ -662,6 +680,18 @@ function init()
 			//'useMinFile': false  // for debug
 			'useMinFile': true
 		};
+
+		// if min files not found, use dev files instead
+		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		try
+		{
+			fs.statSync(testFileName)
+		}
+		catch(e)
+		{
+			//scriptInfo.path += 'src/'
+			scriptInfo.useMinFile = false;
+		}
 	}
 	else  // in browser
 	{
@@ -687,7 +717,7 @@ function init()
 		'appendScriptFiles': appendScriptFiles
 	};
 
-	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
 		if (isNode)  // export Kekule namespace
 		{
 			// export Kekule in module
@@ -701,10 +731,17 @@ function init()
 			this.ClassEx = exports.ClassEx;
 			this.ObjectEx = exports.ObjectEx;
 			this.DataType = exports.DataType;
+			// then store script info of Kekule
+			this.Kekule.scriptSrcInfo = scriptInfo;
 		}
 	});
 }
 
-init();
+if (isWebpack)
+{
+	module.exports = require('./kekule.webpack.prod.js');
+}
+else
+	init();
 
 })(this);
