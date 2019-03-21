@@ -105,6 +105,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		var OT = Kekule.Render.ObjectUpdateType;
 		if (this.needRecordOnContext(e.context))
 		{
+			//console.log('update', this._renderer.getClassName());
 			var utype = e.updateType;
 			if (utype === OT.ADD)
 				this.add(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
@@ -128,7 +129,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 	/** @private */
 	_reactRendererClear: function(e)
 	{
-		//console.log('[RECEIVE CLEAR]', e.target.getClassName());
+		//console.log('[RECEIVE CLEAR]', this._renderer.getClassName());
 		if (this.needRecordOnContext(e.context))
 		//this.clear(e.context);
 			this.clearOnRenderer(e.context, e.target);

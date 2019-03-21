@@ -539,6 +539,11 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	},
 	finalize: function($super)
 	{
+		var boundRecorder = this.getPropStoreFieldValue('boundInfoRecorder');  // do not auto create
+		if (boundRecorder)
+		{
+			boundRecorder.finalize();
+		}
 		//console.log('release renderer', this.getClassName());
 		this.setPropValue('chemObj', null, true);
 		this.setDrawBridge(null);
@@ -593,10 +598,42 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		});
 
 		// private object to record all bound infos
-		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false});
+		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null,
+			'getter': function(disableAutoCreate)
+			{
+				if (!this.isRootRenderer())
+				{
+					var p = this.getRootRenderer();
+					return p && p.getBoundInfoRecorder(disableAutoCreate);
+				}
+				else
+				{
+					var result = this.getPropStoreFieldValue('boundInfoRecorder');
+					if (!result && !disableAutoCreate)
+					{
+						result = this._createBoundInfoRecorder();
+					}
+					return result;
+				}
+			}
+		});
 
 		this.defineEvent('clear');
 		this.defineEvent('updateBasicDrawObject');
+	},
+
+	/** @private */
+	_createBoundInfoRecorder: function()
+	{
+		// ensure the old one is finalized
+		var old = this.getPropStoreFieldValue('boundInfoRecorder');
+		if (old)
+			old.finalize();
+		// create new
+		//console.log('create recorder', this.getClassName());
+		var result = new Kekule.Render.BoundInfoRecorder(this);
+		this.setPropStoreFieldValue('boundInfoRecorder', result);
+		return result;
 	},
 
 	/**
@@ -626,16 +663,6 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			var p = this.getParentRenderer();
 			return p? p.getRootRenderer(): this;
 		}
-	},
-
-	/**
-	 * Returns the associated bound info recorder of root renderer.
-	 * @returns {*|Kekule.Render.AbstractRenderer}
-	 */
-	getBoundRecorder: function()
-	{
-		var p = this.getRootRenderer();
-		return p && p.getBoundInfoRecorder();
 	},
 
 	/**
@@ -795,6 +822,9 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		try
 		{
 			this.__isDrawing = true;  // flag avoid duplicated draw
+
+			this.getBoundInfoRecorder();  // ensure boundInfo recorder is created;
+
 			var ops = {};
 			// actual draw options should also inherited from parent renderer
 			var parentOps;

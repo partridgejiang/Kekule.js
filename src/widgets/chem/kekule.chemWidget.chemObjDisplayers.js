@@ -170,6 +170,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	doFinalize: function($super)
 	{
 		//this.setChemObj(null);
+
+		/*
+		var r = this.getPropStoreFieldValue('boundInfoRecorder');
+		if (r)
+			r.finalize();
+		this.setPropStoreFieldValue('boundInfoRecorder', null);
+		*/
+
 		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
 		var b = this.getPropStoreFieldValue('drawBridge');
@@ -436,7 +444,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}
 		});
 		// private object to record all bound infos
-		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
+		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null,
+			'getter': function() { var p = this.getRootRenderer(); return p && p.getBoundInfoRecorder(); }
+		});
 	},
 	initPropValues: function($super)
 	{
@@ -746,10 +756,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var result = new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj, this.getDrawBridge());
 		this.setPropStoreFieldValue('painter', result);
 		// create new bound info recorder
-		this.createNewBoundInfoRecorder(result);
+		//this.createNewBoundInfoRecorder(result);
 		return result;
 	},
-	/** @private */
+	/* @private */
+	/*
 	createNewBoundInfoRecorder: function(renderer)
 	{
 		var old = this.getPropStoreFieldValue('boundInfoRecorder');
@@ -759,6 +770,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//recorder.setTargetContext(this.getObjContext());
 		this.setPropStoreFieldValue('boundInfoRecorder', recorder);
 	},
+	*/
 
 	/**
 	 * Called when chemObj property has been changed.

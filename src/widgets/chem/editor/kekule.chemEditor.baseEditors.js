@@ -659,11 +659,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('uiDrawBridge', null);
 		this.setPropStoreFieldValue('uiContext', null);
 
-		var r = this.getPropStoreFieldValue('boundInfoRecorder');
-		if (r)
-			r.finalize();
-		this.setPropStoreFieldValue('boundInfoRecorder', null);
-
 		var m = this.getPropStoreFieldValue('objRendererMap');
 		if (m)
 			m.finalize();
