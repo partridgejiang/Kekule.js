@@ -56,12 +56,21 @@ Untitled Document-1
   9 10  1  0
 M  END
 </script>
+  <script name="carboxyl" id="carboxyl" type="chemical/x-kekule-json">
+	  {"id":"m1","coordPos2D":0,"coordPos3D":0,"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":3.050666666666622,"y":2.2239999999998616,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":11.349333333333332,"y":43.775999999999996,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a3","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":10.656513010305785,"y":44.176,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a2","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":12.042153656360883,"y":44.17599999999999,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a4","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":9.963692687278233,"y":43.77600000000001,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b2","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b1","coordPos2D":0,"coordPos3D":0,"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b3","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[1,3]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
+  <script name="sulfonic " id="sulfonic" type="chemical/x-kekule-json">
+    {"id":"m1","coordPos2D":0,"coordPos3D":0,"renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":1.4720000000000262,"y":1.456000000000067,"__type__":"object"},"charge":0,"parity":null,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a1","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":12.927999999999999,"y":44.544,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"S"},{"__type__":"Kekule.Atom","id":"a4","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":12.927999999999999,"y":43.744,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a2","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":13.620820323027548,"y":44.944,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a3","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":12.235179676972443,"y":44.94399999999999,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a5","coordPos2D":0,"coordPos3D":0,"coord2D":{"x":13.62082032302755,"y":43.344,"__type__":"object"},"charge":0,"parity":null,"isotopeId":"H"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b3","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[0,1]},{"__type__":"Kekule.Bond","id":"b1","coordPos2D":0,"coordPos3D":0,"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedObjs":[0,2]},{"__type__":"Kekule.Bond","id":"b2","coordPos2D":0,"coordPos3D":0,"bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedObjs":[0,3]},{"__type__":"Kekule.Bond","id":"b4","coordPos2D":0,"coordPos3D":0,"parity":null,"bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedObjs":[1,4]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+  </script>
 
   <script>
     var chemEditor;
     var chemEditorUi;
     var viewer;
     var calculator;
+    var acidicGroups = [];
+    var acidicReplacementGroups = [];
+    var REPLACE_SYMBOL = 'F';
 
     function getCurrMol()
     {
@@ -69,9 +78,147 @@ M  END
       return Kekule.ChemStructureUtils.getTotalStructFragment(chemEditor.getChemSpace());
     }
 
+    function fillAcidicGroupList()
+    {
+    	var ids = ['carboxyl', 'sulfonic'];
+    	for (var i = 0, l = ids.length; i < l; ++i)
+      {
+        Kekule.IO.loadResourceData('url(#' + ids[i] + ')', function(chemObj, success){
+        	if (success && chemObj)
+	        {
+		        acidicGroups.push(chemObj);
+		        var replaced = chemObj.clone();
+		        replaceAcidicHydrogenInAcidicGroup(replaced, null, REPLACE_SYMBOL);
+		        acidicReplacementGroups.push(replaced);
+	        }
+        });
+      }
+    }
+    function replaceAcidicHydrogenInAcidicGroup(mol, groupObjs, replacementAtomSymbol)
+    {
+    	if (!groupObjs)
+    		groupObjs = mol.getNodes();
+    	for (var i = 0, l = groupObjs.length; i < l; ++i)
+      {
+      	var obj = groupObjs[i];
+      	var node = (obj instanceof Kekule.Atom)? obj: null;
+      	if (node)
+	      {
+	      	var atomOxygen;
+		      if (node.getSymbol() === 'H')  // explicit H
+		      {
+			      node.setSymbol(replacementAtomSymbol);  // replace directly
+            atomOxygen = node.getLinkedChemNodes(true)[0];
+		      }
+		      else if (node.getSymbol() === 'O')
+		      {
+			      var explicitHCount = node.getHydrogenCount(false); // do not includ explicit bonded H
+			      if (explicitHCount === 1)
+			      {
+				      var newAtom = mol.appendAtom(replacementAtomSymbol);
+				      mol.appendBond([node, newAtom], Kekule.BondOrder.SINGLE);
+				      atomOxygen = node;
+			      }
+		      }
+		      if (atomOxygen)
+          {
+          	atomOxygen.setMassNumber(19);  // set to a extraordinary mass number, avoid to be searched again
+            break;
+          }
+	      }
+      }
+    }
+    function replaceBackAcidicHydrogenInAcidicGroup(mol, groupObjs, replacementAtomSymbol)
+    {
+    	for (var i = 0, l = groupObjs.length; i < l; ++i)
+      {
+      	var obj = groupObjs[i];
+      	if (obj instanceof Kekule.Atom)
+	      {
+		      if (obj.getSymbol() === replacementAtomSymbol)
+			      obj.setSymbol('H');
+		      else if (obj.getSymbol() === 'O' && obj.getMassNumber() === 19)
+		      	obj.setMassNumber(null);
+	      }
+      }
+    	return mol;
+    }
+
+    function replaceAcidicHydrogens(mol, acidicGroup, replacementAtomSymbol)
+    {
+    	var result = mol.clone();
+      var searchResult = result.search(acidicGroup, {level: Kekule.StructureComparationLevel.CONSTITUTION, mass: true});
+      while (searchResult)
+      {
+	      replaceAcidicHydrogenInAcidicGroup(result, searchResult, replacementAtomSymbol);
+	      searchResult = result.search(acidicGroup, {level: Kekule.StructureComparationLevel.CONSTITUTION, mass: true});
+      }
+      return result;
+    }
+    function replaceBackAcidicHydrogens(mol, repalcedAcidicGroup, replacementAtomSymbol)
+    {
+    	var result = mol.clone(true);
+	    var testMol = mol.clone(true);  // clone with id
+	    var searchResult = testMol.search(repalcedAcidicGroup, {level: Kekule.StructureComparationLevel.CONSTITUTION, mass: true});
+	    while (searchResult)
+	    {
+	    	// map ids in testMol to result
+        var groupMembers = [];
+        for (var i = 0, l = searchResult.length; i < l; ++i)
+        {
+        	var obj = getChildById(result, searchResult[i].getId());
+        	if (obj)
+        		groupMembers.push(obj);
+        }
+		    replaceBackAcidicHydrogenInAcidicGroup(testMol, searchResult, replacementAtomSymbol);
+		    replaceBackAcidicHydrogenInAcidicGroup(result, groupMembers, replacementAtomSymbol);
+		    searchResult = testMol.search(repalcedAcidicGroup, {level: Kekule.StructureComparationLevel.CONSTITUTION, mass: true});
+	    }
+	    return result;
+    }
+    function getChildById(mol, id)
+    {
+    	for (var i = 0, l = mol.getChildCount(); i < l; ++i)
+      {
+      	var obj = mol.getChildAt(i);
+      	if (obj.getId() === id)
+      		return obj;
+      }
+    	return null;
+    }
+
+    function prepareSourceMol(mol)
+    {
+    	var result = mol;
+    	for (var i = 0, l = acidicGroups.length; i < l; ++i)
+      {
+	      result = replaceAcidicHydrogens(result, acidicGroups[i], REPLACE_SYMBOL);
+      }
+    	//console.log('after prepared', Kekule.IO.saveFormatData(result, 'smi'));
+    	return result;
+    }
+    function prepareOutputMol(mol)
+    {
+	    var result = mol.clone();
+      // assign id to result nodes
+      for (var i = 0, l = result.getNodeCount(); i < l; ++i)
+      {
+      	var node = result.getNodeAt(i);
+      	node.setId('n' + i);
+      }
+	    //console.log('before prepared', Kekule.IO.saveFormatData(result, 'smi'));
+	    for (var i = 0, l = acidicReplacementGroups.length; i < l; ++i)
+	    {
+		    result = replaceBackAcidicHydrogens(result, acidicReplacementGroups[i], REPLACE_SYMBOL);
+	    }
+	    //console.log('after prepared', Kekule.IO.saveFormatData(result, 'smi'));
+	    return result;
+    }
+
     function generate3D()
     {
       var mol = getCurrMol();
+      mol = prepareSourceMol(mol);
       var msgs = [];
       /*
       var generator = new Kekule.Calculator.ObStructure3DGenerator();
@@ -85,7 +232,11 @@ M  END
       calculator = Kekule.Calculator.generate3D(mol, {'forceField': ''},
         function(generatedMol){
           console.log(generatedMol);
-          viewer.setChemObj(generatedMol);
+
+          var newMol = prepareOutputMol(generatedMol);
+          viewer.setChemObj(newMol);
+
+          //viewer.setChemObj(generatedMol);
         },
         function(err)
         {
@@ -110,6 +261,8 @@ M  END
 
     function init()
     {
+	    fillAcidicGroupList();
+
       var elem = document.getElementById('chemEditorUi');
       chemEditor = new Kekule.Editor.ChemSpaceEditor(document, null, Kekule.Render.RendererType.R2D);
       chemEditorUi = new Kekule.Editor.Composer(elem, chemEditor);
@@ -130,7 +283,7 @@ M  END
   <button type="button" onclick="terminate()">Terminate</button>
 </div>
 <div id="chemEditorUi" style="width:900px;height:500px" data-chem-obj="url(#molSrc)"></div>
-<div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+<div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D" data-predefined-setting="fullFunc"></div>
 <div id="logPanel">
   <div id="memoLog" style="width:100em;height:40em" data-widget="Kekule.Widget.TextEditor"></div>
 </div>
