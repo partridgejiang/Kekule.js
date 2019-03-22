@@ -4510,8 +4510,8 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	getHydrogenNodeData: function (connector)
 	{
-		var connectedObjs = connector.getConnectedObjs();
-		var hydrogenObj = connectedObjs[0].getIsotope().getSymbol() === "H" ? connectedObjs[0] : connectedObjs[1];
+		var [obj1, obj2] = connector.getConnectedObjs();
+		var hydrogenObj = obj1.getIsotope() && obj1.getIsotope().getSymbol() === "H" ? obj1 : obj2;
 		var electrons = hydrogenObj.getAttachedMarkers() ? hydrogenObj.getAttachedMarkers().reduce((acc, marker) => {
 			var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
 			return acc + electronCount;
@@ -4522,17 +4522,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	getHydrogenOnlyNodeData: function (connector)
 	{
-		var connectedObjs = connector.getConnectedObjs();
-		var hydrogenObj1 = connectedObjs[0];
-		var hydrogenObj2 = connectedObjs[1];
-		var electrons1 = hydrogenObj1.getAttachedMarkers() ? hydrogenObj1.getAttachedMarkers().reduce((acc, marker) => {
+		function electronCountReducer (acc, marker) {
 			var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
 			return acc + electronCount;
-		}, 0) : 0;
-		var electrons2 = hydrogenObj2.getAttachedMarkers() ? hydrogenObj2.getAttachedMarkers().reduce((acc, marker) => {
-			var electronCount = marker.getElectronCount ? marker.getElectronCount() : 0;
-			return acc + electronCount;
-		}, 0) : 0;
+		}
+		var [hydrogenObj1, hydrogenObj2] = connector.getConnectedObjs();
+		var electrons1 = hydrogenObj1.getAttachedMarkers() ? hydrogenObj1.getAttachedMarkers().reduce(electronCountReducer, 0) : 0;
+		var electrons2 = hydrogenObj2.getAttachedMarkers() ? hydrogenObj2.getAttachedMarkers().reduce(electronCountReducer, 0) : 0;
 		var charge1 = hydrogenObj1.getCharge() === undefined ? 0 : hydrogenObj1.getCharge();
 		var charge2 = hydrogenObj2.getCharge() === undefined ? 0 : hydrogenObj2.getCharge();
 		return [ charge1 , electrons1, charge2 , electrons2 ];
@@ -4781,6 +4777,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	compareHydrogens: function(targetObj, options, result)
 	{
+		function getHydrogenNodeFromConnector (connector) {
+			var [obj1, obj2] = connector.getConnectedObjs();
+			var obj1IsHydrogen = obj1.getIsotope() && obj1.getIsotope().getSymbol() === "H"
+			var obj2IsHydrogen = obj2.getIsotope() && obj2.getIsotope().getSymbol() === "H"
+			if (obj1IsHydrogen || obj2IsHydrogen) {
+				var hydrogen = obj1IsHydrogen ?
+					obj1 : obj2;
+				return hydrogen;
+			}
+		}
 		var result = 0;
         var hNodes1 = this.getNodes();
         var hNodes2 = targetObj.getNodes();
@@ -4928,23 +4934,9 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					break;
 			}
 			if (result === 0) {
-				var Hs1 = this.getConnectors().map((connector) => {
-					var connectedObjs = connector.getConnectedObjs();
-					if (connectedObjs[0].getIsotope() && (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H")) {
-						var hydrogen = connectedObjs[0].getIsotope().getSymbol() === "H" ?
-							connectedObjs[0] : connectedObjs[1];
-						return hydrogen;
-					}
-				});
+				var Hs1 = this.getConnectors().map(getHydrogenNodeFromConnector);
 				var uniqueHs1 = Hs1.filter(this.onlyUnique);
-				var Hs2 = targetObj.getConnectors().map((connector) => {
-					var connectedObjs = connector.getConnectedObjs();
-					if (connectedObjs[0].getIsotope() && (connectedObjs[0].getIsotope().getSymbol() === "H" || connectedObjs[1].getIsotope().getSymbol() === "H")) {
-						var hydrogen = connectedObjs[0].getIsotope().getSymbol() === "H" ?
-							connectedObjs[0] : connectedObjs[1];
-						return hydrogen;
-					}
-				});
+				var Hs2 = targetObj.getConnectors().map(getHydrogenNodeFromConnector);
 				var uniqueHs2 = Hs2.filter(this.onlyUnique);
 				return (allDecoratedHydrogens1 + uniqueHs1.length) -
 					(allDecoratedHydrogens2 + uniqueHs2.length);
@@ -5203,12 +5195,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						switch (counts[0]) {
 							case 'dash':
 								bond.setStereo(1);
+								break;
 							case 'reverse-dash':
 								bond.setStereo(2);
+								break;
 							case 'wedge':
 								bond.setStereo(3);
+								break;
 							case 'reverse-wedge':
 								bond.setStereo(4);
+								break;
 						}
 					}
 					resultNodes.push(hydrogen);
