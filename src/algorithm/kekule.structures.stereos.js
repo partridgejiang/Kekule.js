@@ -778,6 +778,7 @@ Kekule.MolStereoUtils = {
 	{
 		var ops = Object.create(options || null);
 		ops.allowExplicitVerticalHydrogen = true;  // TODO: now fixed to true, since the C-H bond may be removed in the standardize process
+		ops.allowExplicitHydrogen = true;
 		if (siblings.length < 3 || siblings.length > 4)
 			return null;
 		if (siblings.length === 3 && !ops.allowExplicitHydrogen)
