@@ -439,7 +439,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	initPropValues: function($super)
 	{
 		$super();
-		this.setStandardizationOptions({'unmarshalSubFragments': false});
+		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false, });    // do not auto clear explicit H
 	},
 
 	/** @ignore */
