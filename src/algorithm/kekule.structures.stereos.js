@@ -769,6 +769,7 @@ Kekule.MolStereoUtils = {
 	 *     verticalSiblings: array,
 	 *     towardSiblings: array, usually siblings on horizontal line,
 	 *     awaySiblings: array, usually siblings on vertical line
+	 *     implicitTowardSibling, implicitAwaySibling: bool
 	 *   }.
 	 *   If the node is not a Fischer projection center, null will be returned.
 	 * @private
@@ -776,6 +777,8 @@ Kekule.MolStereoUtils = {
 	_getFischerProjectionInfo: function(node, siblings, options)
 	{
 		var ops = Object.create(options || null);
+		ops.allowExplicitVerticalHydrogen = true;  // TODO: now fixed to true, since the C-H bond may be removed in the standardize process
+		ops.allowExplicitHydrogen = true;
 		if (siblings.length < 3 || siblings.length > 4)
 			return null;
 		if (siblings.length === 3 && !ops.allowExplicitHydrogen)
@@ -865,12 +868,17 @@ Kekule.MolStereoUtils = {
 		{
 			result.towardSiblings = result.horizontalSiblings;
 			result.awaySiblings = result.verticalSiblings;
+			result.implicitTowardSibling = (!nodeSeq[1] || !nodeSeq[3]);
+			result.implicitAwaySibling = (!nodeSeq[0] || !nodeSeq[2]);
 		}
 		else
 		{
 			result.towardSiblings = result.verticalSiblings;
 			result.awaySiblings = result.horizontalSiblings;
+			result.implicitTowardSibling = (!nodeSeq[0] || !nodeSeq[2]);
+			result.implicitAwaySibling = (!nodeSeq[1] || !nodeSeq[3]);
 		}
+
 		return result;
 	},
 
@@ -1046,12 +1054,23 @@ Kekule.MolStereoUtils = {
 
 		if (withImplicitSibling)  // calc coord of implicit siblings
 		{
+			var maxAbsZCoord = 0;
 			var coordSum = {};
 			for (var i = 0, l = allExplicitSiblingCoords.length; i < l; ++i)
 			{
 				coordSum = CU.add(allExplicitSiblingCoords[i], coordSum);
+				maxAbsZCoord = Math.max(maxAbsZCoord, allExplicitSiblingCoords[i].z || 0);
 			}
 			var implicitCoord = CU.substract({'x': 0, 'y': 0, 'z': 0}, coordSum);
+
+			if (fischerInfo)
+			{
+				if (fischerInfo.implicitTowardSibling || fischerInfo.implicitTowardSibling)  // the implicit coord is on Fischer projection
+				{
+					implicitCoord.z = fischerInfo.implicitTowardSibling? maxAbsZCoord: -maxAbsZCoord;
+				}
+			}
+
 			if (!refSibling)
 				refCoord = implicitCoord;
 			else
