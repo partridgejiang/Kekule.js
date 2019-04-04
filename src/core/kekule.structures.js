@@ -290,11 +290,13 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/**
-	 * Returns whether another node can stick to this object.
+	 * Returns whether another object can stick to this object.
 	 * Descendants may override this method.
+	 * @param {Kekule.ChemStructureObject} fromObj
 	 * @returns {Bool}
+	 * @private
 	 */
-	getAcceptCoordStick: function()
+	getAcceptCoordStickFrom: function(fromObj)
 	{
 		return false;
 	},
@@ -906,7 +908,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			'objRef': true, 'autoUpdate': true,
 			'getter': function()
 			{
-				if (this.getAllowCoordStick())
+				if (this.getAllowCoordStickTo())
 					return this.getPropStoreFieldValue('coordStickTarget');
 				else
 					return null;
@@ -915,7 +917,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			{
 				if (value)
 				{
-					if (!this.getAllowCoordStick())
+					if (!this.getAllowCoordStickTo(value))
 					{
 						Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
 						return;
@@ -927,7 +929,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ'));
 						return;
 					}
-					if (!value.getAcceptCoordStick && !value.getAcceptCoordStick())
+					if (!value.getAcceptCoordStickFrom && !value.getAcceptCoordStickFrom(this))
 					{
 						Kekule.chemError(Kekule.$L('ErrorMsg.INVALID_STICK_TARGET_OBJ'));
 						return;
@@ -935,6 +937,11 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 					if (!value.getAbsCoordOfMode)
 					{
 						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OBJ_WITHOUT_ABS_COORD'));
+						return;
+					}
+					if (value.getCoordStickTarget && value.getCoordStickTarget() === this)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.STICK_RECURSION_NOT_ALLOWED'));
 						return;
 					}
 				}
@@ -947,9 +954,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 	/**
 	 * Returns whether this type of node is allowed to stick to another chem object.
 	 * Descendants may override this method.
+	 * @param {Kekule.ChemStructureObject} dest
 	 * @returns {Bool}
 	 */
-	getAllowCoordStick: function()
+	getAllowCoordStickTo: function(dest)
 	{
 		return false;  // default do not allow stick
 	},
@@ -1137,7 +1145,7 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	},
 
 	/** @private */
-	getAcceptCoordStick: function()
+	getAcceptCoordStickFrom: function(fromObj)
 	{
 		return true;
 	},
@@ -6894,7 +6902,7 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 
 	/** @private */
-	getAcceptCoordStick: function()
+	getAcceptCoordStickFrom: function(fromObj)
 	{
 		return true;
 	},

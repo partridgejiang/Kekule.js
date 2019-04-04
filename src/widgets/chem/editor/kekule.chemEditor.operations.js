@@ -393,7 +393,7 @@ Kekule.ChemObjOperation.StickTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	_canExecute: function(node)
 	{
-		return node && node.getAllowCoordStick && node.getAllowCoordStick();
+		return node && node.getAllowCoordStickTo && node.getAllowCoordStickTo();
 	},
 	/** @private */
 	doExecute: function($super)
@@ -424,12 +424,13 @@ Kekule.ChemObjOperation.StickTo = Class.create(Kekule.ChemObjOperation.Base,
  */
 Kekule.ChemObjOperation.StickTo.canStick = function(node, dest, canStickToStructFragment, canStickToSiblings)
 {
-	var result = node && node.getAllowCoordStick && node.getAllowCoordStick();  // basic request
+	var result = node && node.getAllowCoordStickTo && node.getAllowCoordStickTo(dest);  // basic request
 	if (dest)  // dest can be set to null
 	{
 		result = result && dest && dest.getAbsCoordOfMode;  // request of dest
 		result = result && (dest !== node);
-		result = result && (dest.getAcceptCoordStick && dest.getAcceptCoordStick());
+		result = result && (dest.getAcceptCoordStickFrom && dest.getAcceptCoordStickFrom(node));
+		result = result && (!dest.getCoordStickTarget || dest.getCoordStickTarget() !== node);
 		result = result && (canStickToStructFragment || !(dest instanceof Kekule.StructureFragment));
 		if (result && !canStickToSiblings)
 		{

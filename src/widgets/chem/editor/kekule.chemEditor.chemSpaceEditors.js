@@ -1894,7 +1894,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		if (obj instanceof Kekule.StructureFragment)
 			return false;
 		else
-			return (obj instanceof Kekule.BaseStructureNode) && (obj.getAllowCoordStick());
+			return (obj instanceof Kekule.BaseStructureNode) && (obj.getAllowCoordStickTo());
 	},
 
 	/** @private */

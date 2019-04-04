@@ -53,30 +53,26 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 	{
 		$super();
 		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
-	}
-});
-
-/**
- * A special glyph path node, is able to attaching to another node (e.g. atom) in chem space.
- * The coord of this node will remains the same to the attached one.
- * @class
- * @augments Kekule.StructureCoordShadowNode
- * @param {String} id Id of this node.
- * @param {String} nodeType Type of this glyph node. Value from {@link Kekule.Glyph.NodeType}.
- * @param {Hash} coord2D The 2D coordinates of node, {x, y}, can be null.
- * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
- *
- * @property {String} nodeType Type of this glyph node.
- */
-Kekule.Glyph.PathGlyphStickableNode = Class.create(Kekule.Glyph.PathGlyphNode,
-/** @lends Kekule.Glyph.PathGlyphStickableNode# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Glyph.PathGlyphStickableNode',
+	},
 	/** @ignore */
-	getAllowCoordStick: function()
+	getAllowCoordStickTo: function(dest)
 	{
-		return true;
+		var p = this.getParent();
+		// coord stick is controlled by parent glyph
+		if (p && p.getAllowChildCoordStickTo)
+			return p.getAllowChildCoordStickTo(this, dest);
+		// defaultly is not allowed
+		return false;
+	},
+	/** @ignore */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		var p = this.getParent();
+		// coord stick is controlled by parent glyph
+		if (p && p.getChildAcceptCoordStickFrom)
+			return p.getChildAcceptCoordStickFrom(this, fromObj);
+		// defaultly is not allowed
+		return false;
 	}
 });
 
@@ -132,7 +128,7 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 		return 'cn';
 	},
 	/** @ignore */
-	getAcceptCoordStick: function()
+	getAcceptCoordStickFrom: function(fromObj)
 	{
 		return false;  // ensure other node can not stick to this control node
 	},

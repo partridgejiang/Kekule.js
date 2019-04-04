@@ -54,6 +54,17 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 	_applyParamsToConnector: function(connector, initialParams)
 	{
 		connector.setPathParams(initialParams);
+	},
+
+	/** @ignore */
+	getAllowChildCoordStickTo: function(child, dest)
+	{
+		return true;
+	},
+	/** @ignore */
+	getChildAcceptCoordStickFrom: function(child, fromObj)
+	{
+		return true;
 	}
 });
 

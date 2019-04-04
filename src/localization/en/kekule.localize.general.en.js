@@ -52,6 +52,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	INVALID_STICK_TARGET_OBJ: 'Invalid sticking target',
 	UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ: 'Unable to stick to object with a different owner',
 	UNABLE_TO_STICK_TO_OBJ_WITHOUT_ABS_COORD: 'Unable to stick to object without absolute coordinates',
+	STICK_RECURSION_NOT_ALLOWED: 'Stick recursion is not allowed',
 	UNABLE_ADD_MISTYPED_NODE: 'Unable to link mistyped node to connector',
 	UNABLE_ADD_DIFF_OWNER_OBJ: 'Object with different owner can not be linked to connector',
 	CHEMSTRUCTUREOBJECTGROUP_ITEMCLASS_MISMATCH: 'Mismatched group item class',

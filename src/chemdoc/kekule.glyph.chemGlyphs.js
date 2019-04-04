@@ -126,6 +126,11 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.ElectronPushingArrow',
+	/** @ignore */
+	getAllowChildNodeCoordStick: function(child)
+	{
+		return true;  // allow coord stick of child nodes
+	},
 	/** @private */
 	doCreateDefaultStructure: function(refLength, initialParams)
 	{
@@ -136,8 +141,8 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
 		var coord3D = {'x': 0, 'y': 0, 'z': 0};
 		var delta = {'x': refLength * (initialParams.lineLength || 1)};
 		var controllerDelta = {'x': 0, 'y': delta.x / 2};
-		var node1 = new Kekule.Glyph.PathGlyphStickableNode(null, null, coord2D, coord3D);  // starting node
-		var node2 = new Kekule.Glyph.PathGlyphStickableNode(null, null, C.add(coord2D, delta), C.add(coord3D, delta));  // ending node
+		var node1 = new Kekule.Glyph.PathGlyphNode(null, null, coord2D, coord3D);  // starting node
+		var node2 = new Kekule.Glyph.PathGlyphNode(null, null, C.add(coord2D, delta), C.add(coord3D, delta));  // ending node
 		//var node3 = new Kekule.Glyph.PathGlyphNode(null, Kekule.Glyph.NodeType.CONTROLLER, C.add(coord2D, controllerDelta), C.add(coord3D, controllerDelta));  // control node
 		var connector = new Kekule.Glyph.PathGlyphArcConnector(null, [node1, node2]);
 		this._applyParamsToConnector(connector, initialParams);
