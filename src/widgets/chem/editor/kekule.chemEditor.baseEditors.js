@@ -2060,12 +2060,38 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @returns {Array}
 	 * @private
 	 */
-	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, sortFunc)
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs)
 	{
 		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
 		var result = [];
 		if (boundInfos)
 		{
+			if (excludeObjs)
+			{
+				boundInfos = AU.filter(boundInfos, function(boundInfo){
+					var obj = boundInfos[i].obj;
+					if (!obj)
+						return false;
+					if (obj)
+					{
+						if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+							return false;
+					}
+					return true;
+				});
+			}
+
+			// the coord sticked obj should be firstly selected for unstick operation, even it is under the back layer
+			var _getStickLevel = function(obj){
+				var stickTarget = obj && obj.getCoordStickTarget && obj.getCoordStickTarget();
+				return stickTarget? 1: 0;
+			};
+			boundInfos.sort(function(b1, b2){
+				var stickLevel1 = _getStickLevel(b1.obj);
+				var stickLevel2 = _getStickLevel(b2.obj);
+				return (stickLevel1 - stickLevel2);
+			});
+
 			var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
 			if (enableTrackNearest)  // sort by bound distances to screenCoord
 			{
@@ -2095,8 +2121,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 				result.push(obj);
 			}
-			if (sortFunc)
-				result.sort(sortFunc);
 		}
 		return result;
 	},
@@ -2108,13 +2132,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, sortFunc)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation)
 	{
 		/*
 		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
 		*/
-		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, sortFunc);
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null);
+
 		return objs && objs[0];
 	},
 
