@@ -353,6 +353,30 @@ Kekule.ArrayUtils = {
 		return src.slice(0);
 	},
 	/**
+	 * creates a new array with all elements that pass the test implemented by the provided function.
+	 * @param {Array} src
+	 * @param {Func} filterFunc
+	 * @param {Object} thisArg
+	 */
+	filter: function(src, filterFunc, thisArg)
+	{
+		if (!filterFunc)
+			return Kekule.ArrayUtils.clone(src);
+		if (src.filter)  // built-in support
+			return src.filter(filterFunc, thisArg);
+		else
+		{
+			var result = [];
+			for (var i = 0, l = src.length; i < l; ++i)
+			{
+				var item = src[i];
+				if (filterFunc.apply(thisArg, [item, i, src]))
+					result.push(item);
+			}
+			return result;
+		}
+	},
+	/**
 	 * Divide array into several small ones, each containing memberCount numbers of elements.
 	 * @param {Array} src
 	 * @param {Int} memberCount
