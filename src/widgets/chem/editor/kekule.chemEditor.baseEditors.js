@@ -2050,16 +2050,72 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		return result;
 	},
+
+	/**
+	 * Returns all basic drawn object at coord (with inflation) based on screen system.
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} excludeObjs
+	 * @param {Func} sortFunc Custom sort function
+	 * @returns {Array}
+	 * @private
+	 */
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, sortFunc)
+	{
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		var result = [];
+		if (boundInfos)
+		{
+			var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+			if (enableTrackNearest)  // sort by bound distances to screenCoord
+			{
+				var SU = Kekule.Render.MetaShapeUtils;
+				boundInfos.sort(function(b1, b2){  // the topmost boundinfo at tail
+					var result = 0;
+					var shapeInfo1 = b1.boundInfo;
+					var shapeInfo2 = b2.boundInfo;
+					result = -(shapeInfo1.shapeType - shapeInfo2.shapeType);
+					if (!result)
+					{
+						var d1 = SU.getDistance(screenCoord, shapeInfo1);
+						var d2 = SU.getDistance(screenCoord, shapeInfo2);
+						result = -(d1 - d2);
+					}
+					return result;
+				});
+			}
+
+			for (var i = boundInfos.length - 1; i >= 0; --i)
+			{
+				var obj = boundInfos[i].obj;
+				if (obj)
+				{
+					if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+						continue;
+				}
+				result.push(obj);
+			}
+			if (sortFunc)
+				result.sort(sortFunc);
+		}
+		return result;
+	},
 	/**
 	 * Returns the topmost basic drawn object at coord based on screen system.
-	 * @params {Hash} coord
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Func} sortFunc Custom sort function
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, sortFunc)
 	{
+		/*
 		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
+		*/
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, sortFunc);
+		return objs && objs[0];
 	},
 
 	/**
