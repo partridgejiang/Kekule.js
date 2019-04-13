@@ -4656,6 +4656,8 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			'getter': function() { return this.getEditor().getCurrBoundInflation(); },
 			'setter': null  // function(value) { return this.getEditor().setCurrBoundInflation(value); }
 		});
+
+		this.defineProp('activePointerType', {'dataType': DataType.BOOL, 'serializable': false});  // private
 	},
 	/**
 	 * Returns the preferred id for this controller.
@@ -4805,11 +4807,36 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		return result;
 	},
 
+	/**
+	 * Notify the manipulation is done and objs are inserted into or modified in editor.
+	 * This method should be called by descendants at the end of their manipulation.
+	 * Objs will be automatically selected if autoSelectNewlyInsertedObjects option is true.
+	 * @param {Array} objs
+	 * @private
+	 */
+	doneInsertOrModifyBasicObjects: function(objs)
+	{
+		if (this.needAutoSelectNewlyInsertedObjects())
+		{
+			var filteredObjs = this._filterBasicObjectsInEditor(objs);
+			this.getEditor().select(filteredObjs);
+		}
+	},
+	/** @private */
+	needAutoSelectNewlyInsertedObjects: function()
+	{
+		var pointerType = this.getActivePointerType();
+		var ic = this.getEditorConfigs().getInteractionConfigs();
+		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
+				|| ic.getAutoSelectNewlyInsertedObjects();
+	},
+
 	/** @private */
 	react_pointerdown: function(e)
 	{
 		//this.updateCurrBoundInflation(e);
 		//this.getEditor().setCurrPointerType(e.pointerType);
+		this.setActivePointerType(e.pointerType);
 		e.preventDefault();
 		return true;
 	},
@@ -5258,7 +5285,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this.defineProp('isManipulatingSelection', {'dataType': DataType.BOOL, 'serializable': false});
 
-		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false});  // private
+		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getActivePointerType(); },
+			'setter': function(value) { this.setActivePointerType(); }
+		});  // private, alias of property activePointerType
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
 		//this.defineProp('activeOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false}); // store operation that should be add to history
@@ -6423,7 +6453,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
-		this.setManipulationPointerType(e && e.pointerType);
+		if (e)
+			this.setManipulationPointerType(e && e.pointerType);
 
 		var editor = this.getEditor();
 		editor.beginManipulateObject();
@@ -6673,32 +6704,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		*/
 	},
 
-	/**
-	 * Notify the manipulation is done and objs are inserted into or modified in editor.
-	 * This method should be called by descendants at the end of their manipulation.
-	 * Objs will be automatically selected if autoSelectNewlyInsertedObjects option is true.
-	 * @param {Array} objs
-	 * @private
-	 */
-	doneInsertOrModifyBasicObjects: function(objs)
-	{
-		if (this.needAutoSelectNewlyInsertedObjects())
-		{
-			var filteredObjs = this._filterBasicObjectsInEditor(objs);
-			this.getEditor().select(filteredObjs);
-		}
-	},
-
-	/** @private */
-	needAutoSelectNewlyInsertedObjects: function()
-	{
-		var pointerType = this.getManipulationPointerType();
-		var ic = this.getEditorConfigs().getInteractionConfigs();
-		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
-			|| ic.getAutoSelectNewlyInsertedObjects();
-	},
-
-	// event handle methods
+		// event handle methods
 	/** @ignore */
 	react_pointermove: function($super, e)
 	{
