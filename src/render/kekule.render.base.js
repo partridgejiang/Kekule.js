@@ -1584,6 +1584,19 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			return false;
 	},
 
+	/**
+	 * Returns the rendering bound of object.
+	 * @param {Object} context
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Object}
+	 * @private
+	 */
+	getObjRenderBound: function(context, obj)
+	{
+		var boundRecorder = this.getBoundInfoRecorder();
+		return boundRecorder && boundRecorder.getBound(context, obj);
+	},
+
 	/** @private */
 	createBoundInfo: function(boundType, coords, additionalInfos)
 	{
