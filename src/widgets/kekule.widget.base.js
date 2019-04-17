@@ -48,6 +48,8 @@ Kekule.Widget.HtmlClassNames = {
 	DYN_CREATED: 'K-Dynamic-Created',
 	/* A top most layer. */
 	/*TOP_LAYER: 'K-Top-Layer',*/
+	/** An isolated layer */
+	ISOLATED_LAYER: 'K-Isolated-Layer',
 	NORMAL_BACKGROUND: 'K-Normal-Background',
 	/** Indicate text in widget can not be selected. */
 	NONSELECTABLE: 'K-NonSelectable',
@@ -4497,6 +4499,8 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	CLASS_NAME: 'Kekule.Widget.GlobalManager',
 	/** @private */
 	INFO_FIELD: '__$info__',
+	/** @private */
+	ISOLATED_LAYER_FIELD: '__$isolated_layer__',
 	/** @constructs */
 	initialize: function($super, doc)
 	{
@@ -5635,11 +5639,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		dropElem.style.visible = 'hidden';
 		dropElem.style.display = '';
 		var manualAppended = false;
-		var topmostLayer = this.getTopmostLayer(dropElem.ownerDocument);
-		if (!dropElem.parentNode)
+		//var topmostLayer = this.getTopmostLayer(dropElem.ownerDocument);
+		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true);
+		//if (!dropElem.parentNode)
 		{
-			//invokerElem.appendChild(dropElem);  // IMPORTANT: must append to invoker, otherwise style may be different
-			topmostLayer.appendChild(dropElem);
+			//invokerElem.appendChild(dropElem);
+			//topmostLayer.appendChild(dropElem);
+			// move drop elem to an isolated layer first, avoid other CSS styles (e.g. flex) affect the dimension calculation
+			isolatedLayer.appendChild(dropElem);
 			manualAppended = true;
 		}
 
@@ -5654,8 +5661,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// then remove from DOM tree
 		if (manualAppended)
+		{
 			//invokerElem.removeChild(dropElem);
-			topmostLayer.removeChild(dropElem);
+			//topmostLayer.removeChild(dropElem);
+			isolatedLayer.removeChild(dropElem);
+		}
 
 		//if (layout)
 		if (!pos || pos === D.AUTO)  // decide drop pos
@@ -6128,6 +6138,30 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return div;
 	},
 	*/
+	/**
+	 * Get isolated layer previous created in document.
+	 * @param {HTMLDocument} doc
+	 * @returns {HTMLElement}
+	 * @private
+	 */
+	getIsolatedLayer: function(doc, canCreate)
+	{
+		var result = doc[this.ISOLATED_LAYER_FIELD];
+		if (!result && canCreate)
+		{
+			result = this._createIsolatedLayer(doc);
+			doc[this.ISOLATED_LAYER_FIELD] = result;
+		}
+		return result;
+	},
+	/** @private */
+	_createIsolatedLayer: function(doc)
+	{
+		var div = doc.createElement('div');
+		div.className = CNS.ISOLATED_LAYER;
+		doc.body.appendChild(div);
+		return div;
+	},
 
 	/** @private */
 	_getElemStoredInfo: function(elem)
