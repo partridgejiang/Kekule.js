@@ -1,6 +1,7 @@
 /* top layer */
 .K-Top-Layer
 {
+    display: block;
     background-color: transparent;
     z-index: 100;
     position: absolute;
@@ -12,6 +13,7 @@
 
 .K-Isolated-Layer
 {
+    display: block;
     background-color: transparent;
     visibility: hidden;
     z-index: -100000;
