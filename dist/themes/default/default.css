@@ -1,4 +1,5 @@
-.K-Top-Layer{background-color:transparent;z-index:100;position:absolute;top:0;left:0;right:0;bottom:0}
+.K-Top-Layer{display:block;background-color:transparent;z-index:100;position:absolute;top:0;left:0;right:0;bottom:0}
+.K-Isolated-Layer{display:block;background-color:transparent;visibility:hidden;z-index:-100000;position:absolute;top:0;left:0;right:0;bottom:0}
 .K-State-Disabled{cursor:default!important}
 .K-Text-Content,.K-Img-Content,.K-Glyph-Content,.K-Decoration-Content{display:inline-block;vertical-align:middle}
 .K-Layout-H>.K-Widget,.K-Layout-H>.K-Content{display:inline-block;vertical-align:middle}
@@ -186,4 +187,4 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"190122222544,swt,334"}
+#CssGaga{content:"190419131909,swt,334"}
