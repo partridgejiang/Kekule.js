@@ -2056,11 +2056,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @params {Hash} screenCoord
 	 * @param {Number} boundInflation
 	 * @param {Array} excludeObjs
-	 * @param {Func} sortFunc Custom sort function
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
 	 * @returns {Array}
 	 * @private
 	 */
-	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs)
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, filterObjClasses)
 	{
 		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
 		var result = [];
@@ -2121,6 +2121,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 				result.push(obj);
 			}
+
+			if (result && filterObjClasses)  // filter
+			{
+				result = AU.filter(result, function(obj)
+				{
+					for (var i = 0, l = filterObjClasses.length; i < l; ++i)
+					{
+						if (obj instanceof filterObjClasses[i])
+							return true;
+					}
+					return false;
+				});
+			}
 		}
 		return result;
 	},
@@ -2128,17 +2141,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Returns the topmost basic drawn object at coord based on screen system.
 	 * @params {Hash} screenCoord
 	 * @param {Number} boundInflation
-	 * @param {Func} sortFunc Custom sort function
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, filterObjClasses)
 	{
 		/*
 		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
 		*/
-		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null);
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, filterObjClasses);
 
 		return objs && objs[0];
 	},
@@ -4728,6 +4741,35 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		return !!obj;
 	},
+	/**
+	 * Returns all interactable object classes for this IA controller in editor.
+	 * If can interact will all objects, simply returns null.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	getInteractableTargetClasses: function()
+	{
+		return null;
+	},
+	/** @private */
+	getAllInteractableObjsAtScreenCoord: function(coord)
+	{
+		return this.getEditor().getBasicObjectsAtCoord(coord, this.getCurrBoundInflation(), null, this.getInteractableTargetClasses());
+	},
+	/** @private */
+	getTopmostInteractableObjAtScreenCoord: function(coord)
+	{
+		var objs = this.getAllInteractableObjsAtScreenCoord(coord);
+		if (objs)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				if (this.canInteractWithObj(objs[i]))
+					return objs[i];
+			}
+		}
+		return null;
+	},
 
 	/**
 	 * Show a hot track marker on obj in editor.
@@ -4849,14 +4891,14 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
+		var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
 		if (!this.getManuallyHotTrack())
 		{
 			/*
 			if (obj)
 				console.log('point to', obj.getClassName(), obj.getId());
 			*/
-			if (obj && this.canInteractWithObj(obj))
+			if (obj /* && this.canInteractWithObj(obj)*/)   // canInteractWithObj check now already done in getTopmostInteractableObjAtScreenCoord
 			{
 				this.hotTrackOnObj(obj);
 			}
