@@ -393,7 +393,7 @@ Kekule.ChemObjOperation.StickTo = Class.create(Kekule.ChemObjOperation.Base,
 	/** @private */
 	_canExecute: function(node)
 	{
-		return node && node.getAllowCoordStickTo && node.getAllowCoordStickTo();
+		return node && node.getAllowCoordStickTo && node.getAllowCoordStickTo(this.getStickTarget());
 	},
 	/** @private */
 	doExecute: function($super)
