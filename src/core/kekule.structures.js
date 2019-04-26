@@ -908,10 +908,13 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			'objRef': true, 'autoUpdate': true,
 			'getter': function()
 			{
+				/*
 				if (this.getAllowCoordStickTo())
 					return this.getPropStoreFieldValue('coordStickTarget');
 				else
 					return null;
+				*/
+				return this.getPropStoreFieldValue('coordStickTarget');
 			},
 			'setter': function(value)
 			{
@@ -1147,7 +1150,7 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	getAcceptCoordStickFrom: function(fromObj)
 	{
-		return true;
+		return (!this.isSiblingWith(fromObj) && !(fromObj instanceof Kekule.ChemStructureNode));
 	},
 
 	/** @ignore */
@@ -6904,7 +6907,7 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 	/** @private */
 	getAcceptCoordStickFrom: function(fromObj)
 	{
-		return true;
+		return (!this.isSiblingWith(fromObj) && !(fromObj instanceof Kekule.ChemStructureNode) && !(fromObj instanceof Kekule.BaseStructureConnector));
 	},
 
 	/** @ignore */
