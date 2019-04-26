@@ -2666,6 +2666,17 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		else
 			return null;
 	},
+	/**
+	 * Check if obj has the same parent to this one.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 */
+	isSiblingWith: function(obj)
+	{
+		var pSelf = this.getParent();
+		var pObj = obj.getParent && obj.getParent();
+		return (pSelf && pObj && pSelf === pObj);
+	},
 
 	/**
 	 * Get count of child objects.
