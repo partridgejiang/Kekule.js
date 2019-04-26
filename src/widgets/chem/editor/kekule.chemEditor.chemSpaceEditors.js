@@ -4383,6 +4383,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		style.position = 'absolute';
 		style.left = (coord.x - posAdjust) + 'px';
 		style.top = (coord.y - posAdjust) + 'px';
+		style.opacity = 1;
 		inputBox.getElement().style.fontSize = fontSize + 'px';
 		/*
 		 style.marginTop = -posAdjust + 'px';
@@ -4514,11 +4515,12 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			this.getEditor().setSelection(null);
 			var coord = this._getEventMouseCoord(e);
 			{
-				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
-				if (boundItem)
+				//var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
+				//if (boundItem)
 				{
-					var obj = boundItem.obj;
-					if (this.isValidNode(obj))  // can modify atom of this object
+					//var obj = boundItem.obj;
+					var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
+					//if (this.isValidNode(obj))  // can modify atom of this object
 					{
 						var baseCoord = this.getEditor().getObjectScreenCoord(obj);
 						e.preventDefault();
@@ -6341,6 +6343,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 * Open formula edit box in coord.
 	 * @param {Hash} coord
 	 * @param {Object} mol
+	 * @private
 	 */
 	openSetterUi: function(coord, mol)
 	{
@@ -6405,6 +6408,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			var coord = this._getEventMouseCoord(e);
 			{
 				var mol;
+				/*
 				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
 				{
@@ -6415,6 +6419,11 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 						mol = obj;
 					}
 				}
+				*/
+				var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
+				mol = obj;
+				var molBounds = obj && this.getEditor().getChemObjBounds(obj);
+				var boundItem = molBounds && molBounds[0];
 
 				/*
 				 if (!block)  // create new
@@ -6434,6 +6443,7 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 					}
 					else
 						baseCoord = coord;
+
 					e.preventDefault();
 					e.stopPropagation();
 					// important, prevent event bubble to document, otherwise reactDocumentClick will be evoked
@@ -6506,6 +6516,7 @@ Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIa
 			this.getEditor().setSelection(null);
 			var coord = this._getEventMouseCoord(e);
 			{
+				/*
 				var block;
 				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				if (boundItem)
@@ -6517,6 +6528,8 @@ Kekule.Editor.ContentBlockIaController = Class.create(Kekule.Editor.BaseEditorIa
 						block = obj;
 					}
 				}
+				*/
+				var block = this.getTopmostInteractableObjAtScreenCoord(coord);
 
 				var baseCoord = block? this.getEditor().getObjectScreenCoord(block): coord;
 				e.preventDefault();
@@ -6775,6 +6788,7 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		style.left = setterCoord.x + 'px';
 		style.top = setterCoord.y + 'px';
 		style.fontFamily = fontName;
+		style.opacity = 1;
 		/*
 		style.marginTop = -posAdjust + 'px';
 		style.marginLeft = -posAdjust + 'px';
