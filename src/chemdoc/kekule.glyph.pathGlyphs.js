@@ -57,10 +57,13 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 	/** @ignore */
 	getAllowCoordStickTo: function(dest)
 	{
-		var p = this.getParent();
-		// coord stick is controlled by parent glyph
-		if (p && p.getAllowChildCoordStickTo)
-			return p.getAllowChildCoordStickTo(this, dest);
+		if (!dest || !this.isSiblingWith(dest))
+		{
+			var p = this.getParent();
+			// coord stick is controlled by parent glyph
+			if (p && p.getAllowChildCoordStickTo)
+				return p.getAllowChildCoordStickTo(this, dest);
+		}
 		// defaultly is not allowed
 		return false;
 	},
@@ -192,7 +195,8 @@ Kekule.Glyph.ArrowSide = {
  *     endArrowType:
  *     endArrowSide:
  *     endArrowLength, endArrowWidth:
- *     startOffset, endOffset: {Float}
+ *     //startOffsetPercent, endOffsetPercent: {Float} percent of total path length, determinated by the actual renderer of connector
+ *     autoOffset: {Bool}
  *   }
  */
 Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
