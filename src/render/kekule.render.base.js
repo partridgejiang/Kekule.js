@@ -1588,13 +1588,19 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 * Returns the rendering bound of object.
 	 * @param {Object} context
 	 * @param {Kekule.ChemObject} obj
+	 * @param {Bool} shadowOnCoordStickTarget If true, when obj has coordStickTarget, returns the the bound of this target.
 	 * @returns {Object}
 	 * @private
 	 */
-	getObjRenderBound: function(context, obj)
+	getObjRenderBound: function(context, obj, shadowOnCoordStickTarget)
 	{
 		var boundRecorder = this.getBoundInfoRecorder();
-		return boundRecorder && boundRecorder.getBound(context, obj);
+		var concreteObj = obj;
+		if (shadowOnCoordStickTarget && obj.getCoordStickTarget)
+		{
+			concreteObj = obj.getCoordStickTarget() || concreteObj;
+		}
+		return boundRecorder && boundRecorder.getBound(context, concreteObj);
 	},
 
 	/** @private */
