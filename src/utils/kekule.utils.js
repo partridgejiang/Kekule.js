@@ -2960,6 +2960,18 @@ Kekule.GeometryUtils = {
 	},
 
 	/**
+	 * Returns the cross point coord of two vectors. If no cross point or the point out of vectors, null will be returned.
+	 * The algorithm is explained in https://www.jb51.net/article/90104.htm.
+	 * @param {Array} vectorCoords1
+	 * @param {Array} vectorCoords2
+	 * @returns {Hash}
+	 */
+	getCrossPointOfVectors: function(vectorCoords1, vectorCoords2)
+	{
+		return Kekule.GeometryUtils.getCrossPointOfLines(vectorCoords1[0], vectorCoords1[1], vectorCoords2[0], vectorCoords2[1]);
+	},
+
+	/**
 	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
 	 * @param {Array} curvePoints Array of {x, y} coords to define a curve.
 	 * @param {Float} distanceThreshold

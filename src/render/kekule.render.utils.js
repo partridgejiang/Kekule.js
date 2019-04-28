@@ -2300,6 +2300,92 @@ Kekule.Render.MetaShapeUtils = {
 			}
 			return result;
 		}
+	},
+
+	/**
+	 * Returns all edge line vectors of a shape.
+	 * Note that not all shape edge can be decomposited to vectors (e.g. circle).
+	 * @param {Object} shapeInfo
+	 * @returns {Array} Array of [coord0, coord1] of vectors
+	 */
+	getEdgeVectors: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result;
+		if (U.isCompositeShape(shapeInfo))
+		{
+			result = [];
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childVectors = U.getEdgeVectors(childShape);
+				result = result.concat(childVectors);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result = [[coords[0], coords[0]]];
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result = null;  // Circle has no line edge
+					break;
+				}
+				case T.LINE:
+				{
+					result = [[coords[0], coords[1]]];
+					break;
+				}
+				case T.RECT:
+				{
+					var c0 = coords[0], c2 = coords[1];
+					var c1 = {x: c2.x, y: c0.y}, c3 = {x: c0.x, y: c2.y};
+					result = [[c0, c1], [c1, c2], [c2, c3], [c3, c0]];
+					break;
+				}
+				case T.POLYGON:
+				{
+					result = [];
+					for (var i = 0, l = coords.length - 1; i < l; ++i)
+					{
+						var nextIndex = ++i;
+						if (nextIndex >= l)
+							nextIndex = 0;
+						result.push([coords[i], coords[nextIndex]]);
+					}
+					break;
+				}
+			}
+			return result;
+		}
+	},
+	/**
+	 * Returns the cross point of a vector line to shape edges.
+	 * @param {Array} vectorCoords
+	 * @param {Object} shapeInfo
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToShapeEdges: function(vectorCoords, shapeInfo)
+	{
+		var edgeVectors = Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo);
+		var result = [];
+		for (var i = 0, l = edgeVectors.length; i < l; ++i)
+		{
+			var edge = edgeVectors[i];
+			var crossPoint = Kekule.GeometryUtils.getCrossPointOfVectors(vectorCoords, edge);
+			if (crossPoint)
+				result.push(crossPoint);
+		}
+		return result;
 	}
 };
 
