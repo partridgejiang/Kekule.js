@@ -101,7 +101,7 @@ Kekule.Render.NodeLabelDisplayMode = {
 	SMART: 0,
 	/** Default is SMART */
 	DEFAULT: 0
-}
+};
 
 /**
  * Enumeration of hydrongen display strategy (espcially in 2D renderer).
@@ -114,10 +114,12 @@ Kekule.Render.HydrogenDisplayLevel = {
 	EXPLICIT: 1,
 	/** Display explicit hydrogens only when the count is not the same as implicit. */
 	UNMATCHED_EXPLICIT: 2,
-	/** Display all hydrogens, whether explicit or implicit ones. */
+	/** Display all hydrogens on all atoms, whether explicit or implicit ones. */
 	ALL: 10,
-	/** Default is EXPLICIT. */
-	DEFAULT: 1
+	/** Always display hydrogen on all labeled atoms. */
+	LABELED: 30,
+	/** Default is LABELED. */
+	DEFAULT: 30
 };
 
 

@@ -136,7 +136,7 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 	{
 		this.addIntConfigProp('defMoleculeDisplayType', Kekule.Render.MoleculeDisplayType.SKELETAL, {'enumSource': Kekule.Render.MoleculeDisplayType});
 		this.addIntConfigProp('defNodeDisplayMode', Kekule.Render.NodeLabelDisplayMode.SMART, {'enumSource': Kekule.Render.NodeLabelDisplayMode});
-		this.addIntConfigProp('defHydrogenDisplayLevel', Kekule.Render.HydrogenDisplayLevel.EXPLICIT, {'enumSource': Kekule.Render.HydrogenDisplayLevel});
+		this.addIntConfigProp('defHydrogenDisplayLevel', Kekule.Render.HydrogenDisplayLevel.DEFAULT, {'enumSource': Kekule.Render.HydrogenDisplayLevel});
 		this.addIntConfigProp('defChargeMarkType', Kekule.Render.ChargeMarkRenderType.DEFAULT, {'enumSource': Kekule.Render.ChargeMarkRenderType});
 		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);

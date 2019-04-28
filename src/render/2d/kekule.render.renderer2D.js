@@ -2626,7 +2626,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			 var renderOptions = Object.extend(renderConfigs, localOptions);
 			 */
 			// if a label is drawn, all hydrogens should be marked
-			var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
+			//var hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL; //this._getNodeHydrogenDisplayLevel(node);
+			var hdisplayLevel = this._getNodeHydrogenDisplayLevel(node, nodeRenderOptions);
+			if (hdisplayLevel === Kekule.Render.HydrogenDisplayLevel.LABELED)  // when label is shown, always show hydrogens
+				hdisplayLevel = Kekule.Render.HydrogenDisplayLevel.ALL;
 			//console.log(hdisplayLevel);
 			var needShowChargeInLabel = !!(needDrawCharge || needDrawRadical);
 			//console.log(node.getCharge(), node.getRadical(), needDrawCharge, needDrawRadical, needShowChargeInLabel);
@@ -2795,9 +2798,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		var localLevel = Kekule.Render.RenderOptionUtils.getHydrogenDisplayLevel(localRenderOptions);
 		var hdisplayLevel = Kekule.ObjUtils.notUnset(localLevel)?
 			localLevel:
-			((drawOptions.moleculeDisplayType === Kekule.Render.MoleculeDisplayType.CONDENSED)?
-					Kekule.Render.HydrogenDisplayLevel.ALL:
-					drawOptions.hydrogenDisplayLevel);
+			/*((drawOptions.moleculeDisplayType === Kekule.Render.MoleculeDisplayType.CONDENSED)?
+					Kekule.Render.HydrogenDisplayLevel.ALL:*
+					drawOptions.hydrogenDisplayLevel);*/
+			drawOptions.hydrogenDisplayLevel;
 					//this.getRenderConfigs().getMoleculeDisplayConfigs().getDefHydrogenDisplayLevel());
 		return hdisplayLevel;
 	},
@@ -2885,13 +2889,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 					var hDisplayLevel = this._getNodeHydrogenDisplayLevel(node, drawOptions);
 					var HDL = Kekule.Render.HydrogenDisplayLevel;
-					if ((hDisplayLevel === HDL.ALL) || (hDisplayLevel === HDL.NONE))
+					if ((hDisplayLevel === HDL.ALL)/* || (hDisplayLevel === HDL.NONE)*/)
 					{
 						return true;
 					}
 					else if (hDisplayLevel === HDL.UNMATCHED_EXPLICIT)
 					{
-						return (node.getImplicitHydrogenCount() !== node.getExplicitHydrogenCount());
+						var explicitHCount = node.getExplicitHydrogenCount();
+						return (Kekule.ObjUtils.notUnset(explicitHCount) && node.getImplicitHydrogenCount() !== explicitHCount);
 					}
 					else  // explicit
 						return Kekule.ObjUtils.notUnset(node.getExplicitHydrogenCount());
