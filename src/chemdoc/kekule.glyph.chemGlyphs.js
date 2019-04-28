@@ -127,7 +127,7 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.ElectronPushingArrow',
 	/** @ignore */
-	getAllowChildNodeCoordStick: function(child)
+	getAllowChildCoordStickTo: function(child)
 	{
 		return true;  // allow coord stick of child nodes
 	},
@@ -162,7 +162,10 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	_applyParamsToConnector: function(connector, initialParams)
 	{
-		connector.setPathParams(initialParams);
+		var p = Object.create(initialParams);
+		if (Kekule.ObjUtils.isUnset(initialParams.autoOffset))
+			p.autoOffset = true;
+		connector.setPathParams(p);
 	}
 });
 

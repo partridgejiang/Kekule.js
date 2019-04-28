@@ -52,6 +52,19 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.PathGlyphCtab2DRenderer',
+	/** @constructs */
+	initialize: function($super, chemObj, drawBridge, parent)
+	{
+		$super(chemObj, drawBridge, parent);
+		this._nodeCoordOverrideMap = new Kekule.MapEx(true);  // non-weak, for clear call
+	},
+	/** @ignore */
+	doFinalize: function($super)
+	{
+		this._nodeCoordOverrideMap.finalize();
+		$super();
+	},
+
 	/** @private */
 	extractGlyphDrawOptions: function(renderOptions)
 	{
@@ -66,16 +79,19 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	doDraw: function($super, context, baseCoord, options)
 	{
 		//console.log('do draw ctab');
-		return $super(context, baseCoord, options);
+		var result = $super(context, baseCoord, options);
+		this._nodeCoordOverrideMap.clear();  // clear override map after a full draw
+		return result;
 	},
 	/** @private */
 	doDrawNode: function(context, group, node, parentChemObj, options, finalTransformOptions)
 	{
 		var boundInfo;
-		var coord = this.getTransformedCoord2D(context, node, finalTransformOptions.allowCoordBorrow);
 		var nodeType = node.getNodeType();
 		if (!nodeType || nodeType === NT.LOCATION || nodeType === NT.CONTROLLER)  // no need to draw, but add bound info
 		{
+			var overrideCoord = this._nodeCoordOverrideMap.get(node);  // node coord maybe overrided by connector drawing for offset bounds
+			var coord = overrideCoord || this.getTransformedCoord2D(context, node, finalTransformOptions.allowCoordBorrow);
 			boundInfo = this.createPointBoundInfo(coord);
 		}
 
@@ -175,6 +191,14 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			};
 		}
 
+		// calculate the autoOffset positions
+		var offsetBound1, offsetBound2;
+		if (pathParams.autoOffset)
+		{
+			offsetBound1 = this.getObjRenderBound(context, node1, true);
+			offsetBound2 = this.getObjRenderBound(context, node2, true);
+		}
+
 		// draw parrel lines
 		var drawnElems = [];
 		var boundInfos = [];
@@ -192,7 +216,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 
 		if (pathType === PT.LINE)
 		{
-			var lineResult = this._doDrawLineConnectorShape(context, ctab, connector, coord1, coord2, lineCount, lineScreenGap, startArrowParams, endArrowParams, drawOptions, renderOptions);
+			var lineResult = this._doDrawLineConnectorShape(context, ctab, connector, nodes, coord1, coord2, lineCount, lineScreenGap, startArrowParams, endArrowParams, [offsetBound1, offsetBound2], drawOptions, renderOptions);
 			drawnElems = lineResult.drawnElems;
 			arrowElems = lineResult.arrowElems;
 			boundInfos = lineResult.boundInfos;
@@ -205,7 +229,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			{
 				var coordController = CU.clone(this.getTransformedCoord2D(context, controlPoint, finalTransformOptions.allowCoordBorrow));
 
-				var lineResult = this._doDrawArcConnectorShape(context, ctab, connector, coord1, coord2, coordController, lineCount, lineScreenGap, startArrowParams, endArrowParams, drawOptions, renderOptions);
+				var lineResult = this._doDrawArcConnectorShape(context, ctab, connector, nodes, coord1, coord2, coordController, lineCount, lineScreenGap, startArrowParams, endArrowParams, [offsetBound1, offsetBound2], drawOptions, renderOptions);
 				drawnElems = lineResult.drawnElems;
 				arrowElems = lineResult.arrowElems;
 				boundInfos = lineResult.boundInfos;
@@ -233,9 +257,16 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			return {element: drawnGroup, boundInfo: boundInfos};
 		}
 	},
+	/* @private */
+	/*
+	_doCalcBoundInterectPointToLinePath: function(bound, coord1, coord2)
+	{
+
+	},
+	*/
 
 	/** @private */
-	_doDrawLineConnectorShape: function(context, ctab, connector, coord1, coord2, lineCount, lineGap, startArrowParams, endArrowParams, shapeDrawOptions, otherRenderOptions)
+	_doDrawLineConnectorShape: function(context, ctab, connector, nodes, coord1, coord2, lineCount, lineGap, startArrowParams, endArrowParams, offsetBounds, shapeDrawOptions, otherRenderOptions)
 	{
 		var AS = Kekule.Glyph.ArrowSide;
 
@@ -338,27 +369,50 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	},
 
 	/** @private */
-	_doDrawArcConnectorShape: function(context, ctab, connector, coord1, coord2, controllerCoord, lineCount, lineGap, startArrowParams, endArrowParams, shapeDrawOptions, otherRenderOptions)
+	_doDrawArcConnectorShape: function(context, ctab, connector, nodes, coord1, coord2, controllerCoord, lineCount, lineGap, startArrowParams, endArrowParams, offsetBounds, shapeDrawOptions, otherRenderOptions)
 	{
 		var drawnElems = [], boundInfos = [], arrowElems = [];
+		var actualEndCoords = [coord1, coord2];
+
+		// consider the offset bound
+		// TODO: currently a very rough approach, only support rect bound (for drawing arc to atom label)
+		var testVectors = [[coord1, controllerCoord], [controllerCoord, coord2]];
+		for (var i = 0; i < 2; ++i)
+		{
+			var offsetBound = offsetBounds[i];
+			if (offsetBound)
+			{
+				if (offsetBound.shapeType === Kekule.Render.BoundShapeType.RECT)
+				{
+					var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVectors[i], offsetBound);
+					if (crossPoints && crossPoints.length === 1)  // we should draw arc to this point rather than the original end point
+					{
+						actualEndCoords[i] = crossPoints[0];  // should have only one cross point
+						// set override
+						this._nodeCoordOverrideMap.set(nodes[i], actualEndCoords[i]);
+					}
+				}
+			}
+		}
 
 		// calculate out the arc center and radius, angles
 		// algorithm from https://blog.csdn.net/kezunhai/article/details/39476691
-		var midCoord1 = CU.divide(CU.add(controllerCoord, coord1), 2);
-		var midCoord2 = CU.divide(CU.add(coord2, controllerCoord), 2);
-		var k1 = -(coord1.x - controllerCoord.x) / (coord1.y - controllerCoord.y);
-		var k2 = -(coord2.x - controllerCoord.x) / (coord2.y - controllerCoord.y);
+		var midCoord1 = CU.divide(CU.add(controllerCoord, actualEndCoords[0]), 2);
+		var midCoord2 = CU.divide(CU.add(actualEndCoords[1], controllerCoord), 2);
+		var k1 = -(actualEndCoords[0].x - controllerCoord.x) / (actualEndCoords[0].y - controllerCoord.y);
+		var k2 = -(actualEndCoords[1].x - controllerCoord.x) / (actualEndCoords[1].y - controllerCoord.y);
 		var centerCoord = {
 			'x': (midCoord2.y - midCoord1.y- k2* midCoord2.x + k1*midCoord1.x)/(k1 - k2),
 			'y': midCoord1.y + k1*( midCoord2.y - midCoord1.y - k2*midCoord2.x + k2*midCoord1.x)/(k1-k2)
 		};
-		var radius = CU.getDistance(centerCoord, coord1);
-		var vector1 = CU.substract(coord1, centerCoord);
-		var vector2 = CU.substract(coord2, centerCoord);
+		var radius = CU.getDistance(centerCoord, actualEndCoords[0]);
+		var vector1 = CU.substract(actualEndCoords[0], centerCoord);
+		var vector2 = CU.substract(actualEndCoords[1], centerCoord);
 		var vectorController = CU.substract(controllerCoord, centerCoord);
 		var startAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector1.y, vector1.x));
 		var endAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector2.y, vector2.x));
 		var controllerAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vectorController.y, vectorController.x));
+
 		var angleDelta0 = endAngle - startAngle;
 		var angleDelta1 = controllerAngle - startAngle;
 		var angleDelta2 = controllerAngle - endAngle;
@@ -401,7 +455,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 					if (i === 0)
 					{
 						var arrowRefCoord = CU.add(centerCoord, CU.multiply(startArrowRefVector, r));
-						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, arrowRefCoord, coord1, endArrowParams, shapeDrawOptions, true));
+						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, arrowRefCoord, actualEndCoords[0], endArrowParams, shapeDrawOptions, true));
 					}
 				}
 				if (endArrowParams)
@@ -410,7 +464,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 					if (i === 0)
 					{
 						var arrowRefCoord = CU.add(centerCoord, CU.multiply(endArrowRefVector, r));
-						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, arrowRefCoord, coord2, endArrowParams, shapeDrawOptions, true));
+						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, arrowRefCoord, actualEndCoords[1], endArrowParams, shapeDrawOptions, true));
 					}
 				}
 			}
@@ -423,7 +477,8 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 				boundInfos.push(pathResult.boundInfo);
 		}
 
-		return {'drawnElems': drawnElems, 'boundInfos': boundInfos, 'arrowElems': arrowElems};
+		var result = {'drawnElems': drawnElems, 'boundInfos': boundInfos, 'arrowElems': arrowElems};
+		return result;
 	},
 
 	/** @private */
