@@ -2729,8 +2729,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			}
 			var objMargin = margin / nodeRenderOptions.defBondLength * nodeRenderOptions.medianObjRefLength;
 
-			this.doAdjustChemPropMarkerPos(node, objMargin, finalTransformOptions.allowCoordBorrow,
-					Kekule.ObjUtils.notUnset(nodeLabelDirAngle)? [nodeLabelDirAngle]: []); // consider label direction
+			this.doAdjustChemPropMarkerPos(node, objMargin, finalTransformOptions.allowCoordBorrow, []);
 		}
 
 		if (result)

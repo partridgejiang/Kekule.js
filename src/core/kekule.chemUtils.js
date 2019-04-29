@@ -463,10 +463,10 @@ Kekule.ChemStructureUtils = {
 		if (numberOfAngles === 0)
 			return 0;
 		else if (numberOfAngles === 1)  // only one connector
-			return -angles[0];
+			return angles[0] + Math.PI;
 		else  // more than two connectors
 		{
-			if (angles [1] === 0) {
+			if (angles[1] === 0) {
 				angles[1] = 2*Math.PI;
 				angles.sort();
 			}
@@ -479,57 +479,24 @@ Kekule.ChemStructureUtils = {
 				var delta = a2 - a1;
 				if (delta < 0)
 					delta += Math.PI * 2;
-				if (delta >= max)
+				if (delta.toFixed(6) >= max.toFixed(6))
 				{
 					max = delta;
 					index = i;
 				}
 			}
 			var result = 0;
-			if (angles[index] !== 0) {
-				result = angles[index] + Math.PI/Math.pow(2, (Math.round(numberOfAngles/2) - 1));
+			if (angles.length === 2 &&
+				angles[0] === 0 && angles[1].toFixed(6) === Math.PI.toFixed(6) ||
+				angles[1] === 0 && angles[0].toFixed(6) === Math.PI.toFixed(6)) {
+				result = 3.0*Math.PI/2;
 			} else {
-				result = angles[index + 1] - Math.PI/Math.pow(2, (Math.round(numberOfAngles/2) - 1));
-			}
-			//Avoiding electron overlapping with vertical and horizontal bonds
-			//It happens when, for example, the angles are 0.5 PI and 2.5 PI
-			//First angle is returned because above, the first time -angles[0] is returned
-			if (numberOfAngles === 2) {
-					if (Math.sin(-angles[0]) === Math.sin(result) || Math.sin(-angles[1]) === Math.sin(result))
-						return firstAngle;
-			}
-			if (numberOfAngles === 4) {
-					if (Math.sin(-angles[0]) === Math.sin(result) || Math.sin(-angles[1]) === Math.sin(result) ||
-						Math.sin(-angles[2]) === Math.sin(result) || Math.sin(-angles[3]) === Math.sin(result)) {
-						var delta = 0.000005;
-						var includesHalfPI = false;
-						var includesPIAndHalf = false;
-						for (var i = 0; i < numberOfAngles; ++i) {
-								if (angles[i] >= ((Math.PI/2) - delta) && angles[i] <= ((Math.PI/2) + delta)) {
-									includesHalfPI = true;
-								}
-								if (angles[i] >= ((3*Math.PI/2) - delta) && angles[i] <= ((3*Math.PI/2) + delta)) {
-									includesPIAndHalf = true;
-								}
-						}
-						if (includesHalfPI) {
-							if (includesHalfPI) {
-									return Math.PI/4;
-							}	else {
-								return 3*Math.PI/2;
-							}
-						}	else {
-							return Math.PI/2;
-						}
+				if (angles[index] !== 0) {
+					result = angles[index] + Math.PI/Math.pow(2, (Math.round((numberOfAngles+1)/2) - 1));
+				} else {
+					result = angles[index + 1] - Math.PI/Math.pow(2, (Math.round((numberOfAngles+1)/2) - 1));
 				}
 			}
-			/* debug
-			var msg = 'Angles: [';
-			for (var i = 0; i < l; ++i)
-				msg += (angles[i] * 180 / Math.PI) + ' '
-			msg + ']';
-			console.log(msg, result * 180 / Math.PI);
-      */
 			return result;
 		}
 	},
@@ -545,7 +512,7 @@ Kekule.ChemStructureUtils = {
 		angles.sort();
 		if (avoidDirectionAngles)
 		{
-			if (angles.length === 0 && avoidDirectionAngles.length === 1 && avoidDirectionAngles[0] === 0) {
+			if (angles.length === 0 && (avoidDirectionAngles.length === 1 && avoidDirectionAngles[0] === 0)) {
 				angles = angles.concat(Math.PI);
 			} else {
 				angles = angles.concat(avoidDirectionAngles);
