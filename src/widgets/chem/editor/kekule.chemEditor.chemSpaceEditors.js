@@ -2508,7 +2508,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				continue;
 			}
 			var currInfo = currManipulateInfoMap.get(obj);
-			var currCoord = currInfo.screenCoord;
+			var currCoord = currInfo && currInfo.screenCoord;
 			if (currCoord)
 			{
 				var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
