@@ -669,6 +669,15 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ChemObj2DRenderer',
 
+	/** @ignore */
+	_getRenderSortIndex: function($super)
+	{
+		var obj = this.getChemObj();
+		if (obj && obj.coordStickTarget && obj.getCoordStickTarget())
+			return 1;
+		return $super();
+	},
+
 	/** @private */
 	doEstimateSelfObjBox: function(context, options, allowCoordBorrow)
 	{
@@ -1605,6 +1614,20 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	CHILD_TRANSFORM_MATRIX_FIELD: '__$childTransMatrix__',
 
+	/** ignore */
+	_getRenderSortIndex: function($super)
+	{
+		var ctab = this.getChemObj();
+		var nodes = ctab.getExposedNodes();
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var obj = nodes[i];
+			if (obj && obj.coordStickTarget && obj.getCoordStickTarget())
+				return 1;
+		}
+		return $super();
+	},
+
 	/** @private */
 	doEstimateSelfObjBox: function(context, options, allowCoordBorrow)
 	{
@@ -1681,6 +1704,17 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	doPrepare: function($super, context, chemObj, baseCoord, options)
 	{
 		$super(context, chemObj, baseCoord, options);
+		this.doPrepareLayout(context, chemObj, baseCoord, options);
+	},
+	/**
+	 * Prepare the actual drawing coord and bound of chemObj (and its children).
+	 * The bound of actually drawing child objects should be reported to boundRecorder of base renderer.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	doPrepareLayout: function(context, chemObj, baseCoord, options)
+	{
+		// do nothing here
 	},
 	/** @private */
 	handleNodeSpecifiedRenderOptions: function(currObj, parentOptions)
@@ -2344,7 +2378,6 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	/** @private */
 	doPrepare: function($super, context, chemObj, baseCoord, options)
 	{
-		$super(context, chemObj, baseCoord, options);
 		/*
 		// generate draw options
 		var c = this.getRenderCache(context);
@@ -2369,6 +2402,13 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 		//this.getRenderCache(context).appliedOptions = options;
 
+		$super(context, chemObj, baseCoord, options);
+	},
+	/** @ignore */
+	doPrepareLayout: function($super, context, chemObj, baseCoord, options)
+	{
+		$super(context, chemObj, baseCoord, options);
+
 		// iterate through nodes to see whether node label need to be set
 		var nodes = chemObj.getExposedNodes();
 		for (var i = 0, l = nodes.length; i < l; ++i)
@@ -2378,6 +2418,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			//node[this.NODE_NEED_LABEL_FIELD] = needDrawLabel;
 			this.setObjNeedDrawLabel(context, node, needDrawLabel);
 		}
+		// calculate the actual drawing coord and bound of nodes/connectors
+
 	},
 	/*
 	 * @private
@@ -4150,6 +4192,14 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			this._concreteRenderer.finalize();
 			this._concreteRenderer = null;
 		}
+	},
+	/** ignore */
+	_getRenderSortIndex: function($super)
+	{
+		if (this._concreteRenderer)
+			return this._concreteRenderer._getRenderSortIndex();
+		else
+			return $super();
 	},
 	/** @private */
 	initConcreteRenderer: function()

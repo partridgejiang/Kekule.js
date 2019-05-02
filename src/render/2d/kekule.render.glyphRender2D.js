@@ -666,6 +666,14 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 			this._concreteRenderer = null;
 		}
 	},
+	/** ignore */
+	_getRenderSortIndex: function($super)
+	{
+		if (this._concreteRenderer)
+			return this._concreteRenderer._getRenderSortIndex();
+		else
+			return $super();
+	},
 	/** @ignore */
 	getRenderCache: function(context)
 	{
