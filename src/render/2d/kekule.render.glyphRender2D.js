@@ -197,6 +197,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		{
 			offsetBound1 = this.getObjRenderBound(context, node1, true);
 			offsetBound2 = this.getObjRenderBound(context, node2, true);
+			//console.log(connector.getClassName(), 'autoOffset', offsetBound1, offsetBound2);
 		}
 
 		// draw parrel lines
@@ -268,6 +269,25 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	/** @private */
 	_doDrawLineConnectorShape: function(context, ctab, connector, nodes, coord1, coord2, lineCount, lineGap, startArrowParams, endArrowParams, offsetBounds, shapeDrawOptions, otherRenderOptions)
 	{
+		// TODO: currently a very rough approach, only support rect bound (for drawing line to atom label)
+		var actualEndCoords = [coord1, coord2];
+		var testVector = [coord1, coord2];
+		var midCoord = CU.divide(CU.add(coord1, coord2), 2);
+		for (var i = 0; i < 2; ++i)
+		{
+			var offsetBound = offsetBounds[i];
+			if (offsetBound)
+			{
+				var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVector, offsetBound);
+				if (crossPoints && crossPoints.length)  // we should draw line to this point rather than the original end point
+				{
+					actualEndCoords[i] = this._getNearestCoordToPoint(midCoord, crossPoints);
+					// set override
+					this._nodeCoordOverrideMap.set(nodes[i], actualEndCoords[i]);
+				}
+			}
+		}
+
 		var AS = Kekule.Glyph.ArrowSide;
 
 		var drawnElems = [];
@@ -276,10 +296,10 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 
 		var adjustC1, adjustC2;
 
-		var coordDelta  = CU.substract(coord2, coord1);
+		var coordDelta  = CU.substract(actualEndCoords[1], actualEndCoords[0]);
 		var w = coordDelta.x;
 		var h = coordDelta.y;
-		var l = CU.getDistance(coord1, coord2);
+		var l = CU.getDistance(actualEndCoords[0], actualEndCoords[1]);
 		var angleSin = h / l;
 		var angleCos = w / l;
 
@@ -291,8 +311,8 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var totalDeltaScreenCoord = CU.multiply(deltaScreenCoord, (lineCount - 1) / 2);
 
 		var initialOffsetCoord = CU.multiply(deltaScreenCoord, (lineCount - 1) / 2);
-		var c1 = CU.substract(coord1, initialOffsetCoord);
-		var c2 = CU.substract(coord2, initialOffsetCoord);
+		var c1 = CU.substract(actualEndCoords[0], initialOffsetCoord);
+		var c2 = CU.substract(actualEndCoords[1], initialOffsetCoord);
 
 		for (var i = 0; i < lineCount; ++i)
 		{
@@ -324,7 +344,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 						//var adjustC1 = CU.add(c1, arrowAdjustCoord);
 					}
 					if (startArrowParams.drawOnCenter && i === 0)
-						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, coord2, coord1, startArrowParams, shapeDrawOptions, true));
+						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, actualEndCoords[1], actualEndCoords[0], startArrowParams, shapeDrawOptions, true));
 					if (!startArrowParams.drawOnCenter &&
 							((startArrowParams.arrowSide === AS.SINGLE && i === 0) ||
 							(startArrowParams.arrowSide === AS.REVERSED && i === lineCount - 1)))
@@ -347,7 +367,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 					}
 
 					if (endArrowParams.drawOnCenter && i === 0)
-						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, coord1, coord2, endArrowParams, shapeDrawOptions));
+						Kekule.ArrayUtils.pushUnique(arrowElems, this.doDrawArrowShape(context, connector, actualEndCoords[0], actualEndCoords[1], endArrowParams, shapeDrawOptions));
 
 					if (!endArrowParams.drawOnCenter &&
 							((endArrowParams.arrowSide === AS.SINGLE && i === 0) ||
@@ -478,6 +498,23 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		}
 
 		var result = {'drawnElems': drawnElems, 'boundInfos': boundInfos, 'arrowElems': arrowElems};
+		return result;
+	},
+
+	/** @private */
+	_getNearestCoordToPoint: function(pointCoord, coords)
+	{
+		var result = null;
+		var minDistance = null;
+		for (var i = 0, l = coords.length; i < l; ++i)
+		{
+			var distance = CU.getDistance(coords[i], pointCoord);
+			if (!result || distance < minDistance)
+			{
+				result = coords[i];
+				minDistance = distance;
+			}
+		}
 		return result;
 	},
 
