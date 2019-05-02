@@ -1958,6 +1958,18 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	},
 
 	/** @private */
+	_getCoordStickActualTarget: function(obj)
+	{
+		var result = obj;
+		var nextStickTarget = result.getCoordStickTarget && result.getCoordStickTarget();
+		while (nextStickTarget)
+		{
+			result = nextStickTarget;
+			nextStickTarget = result.getCoordStickTarget && result.getCoordStickTarget();
+		}
+		return result;
+	},
+	/** @private */
 	_getMagneticNodeMergeOrStickDestInfo: function(node, nodeScreenCoord, excludedObjs)
 	{
 		var editor = this.getEditor();
@@ -1965,9 +1977,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var filterFunc = function(bound)
 		{
 			var obj = bound.obj;
+			var stickTargetObj = self._getCoordStickActualTarget(obj);
 			return (node !== obj) && (excludedObjs.indexOf(obj) < 0)
 					&& ((obj instanceof Kekule.BaseStructureNode && self._canMergeNodes(node, obj))
-						|| (self._canStickNode(node, obj)));
+						|| (self._canStickNode(node, stickTargetObj)));
 		};
 		if (nodeScreenCoord)
 		{
@@ -1986,10 +1999,11 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			if (overlapBoundInfo)
 			{
 				var obj = overlapBoundInfo.obj;
+				var stickTargetObj = this._getCoordStickActualTarget(obj);
 				if (this._canMergeNodes(node, obj))
 					return {'obj': obj, 'isMerge': true};
-				else if (this._canStickNode(node, obj))
-					return {'obj': obj, 'isStick': true};
+				else if (this._canStickNode(node, stickTargetObj))
+					return {'obj': stickTargetObj, 'isStick': true};
 				else
 					return null;
 			}
