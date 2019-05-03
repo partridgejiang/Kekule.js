@@ -3933,7 +3933,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 					var newDest = (AU.isArray(relDest))? AU.exclude(relDest, [obj]): null;
 					// set value
 					rel.srcObj.setPropValue(rel.srcProp.name, newDest);
-					console.log('auto set ref value', rel.srcObj.getId() + '.' + rel.srcProp.name, newDest);
+					//console.log('auto set ref value', rel.srcObj.getId() + '.' + rel.srcProp.name, newDest);
 				}
 			}
 		}
