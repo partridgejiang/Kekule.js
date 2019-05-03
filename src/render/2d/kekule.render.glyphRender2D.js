@@ -395,6 +395,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var drawnElems = [], boundInfos = [], arrowElems = [];
 		var actualEndCoords = [coord1, coord2];
 
+		/*
 		// consider the offset bound
 		// TODO: currently a very rough approach, only support rect bound (for drawing arc to atom label)
 		var testVectors = [[coord1, controllerCoord], [controllerCoord, coord2]];
@@ -405,7 +406,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			{
 				if (offsetBound.shapeType === Kekule.Render.BoundShapeType.RECT)
 				{
-					var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVectors[i], offsetBound);
+					var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVectors[i], offsetBound, true);
 					if (crossPoints && crossPoints.length === 1)  // we should draw arc to this point rather than the original end point
 					{
 						actualEndCoords[i] = crossPoints[0];  // should have only one cross point
@@ -415,6 +416,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 				}
 			}
 		}
+		*/
 
 		// calculate out the arc center and radius, angles
 		// algorithm from https://blog.csdn.net/kezunhai/article/details/39476691
@@ -433,6 +435,34 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var startAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector1.y, vector1.x));
 		var endAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector2.y, vector2.x));
 		var controllerAngle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(vectorController.y, vectorController.x));
+
+		// consider the offset bound
+		var overrideAngles = [];
+		for (var i = 0; i < 2; ++i)
+		{
+			var offsetBound = offsetBounds[i];
+			if (offsetBound)
+			{
+				if (offsetBound.shapeType === Kekule.Render.BoundShapeType.RECT)
+				{
+					var crossAnglesAndCoords = this._getCrossCoordsAndAnglesOfArcToShapeEdges(centerCoord, radius, startAngle, endAngle, controllerAngle, offsetBound);
+					if (crossAnglesAndCoords && crossAnglesAndCoords.length === 1)  // we should draw arc to this angle rather than the original one
+					{
+						var actualCoord = crossAnglesAndCoords[0].coord;
+						var actualAngle = crossAnglesAndCoords[0].angle;
+						// set override
+						overrideAngles[i] = actualAngle;
+						actualEndCoords[i] = actualCoord;
+						this._nodeCoordOverrideMap.set(nodes[i], actualCoord);
+					}
+				}
+			}
+		}
+
+		if (overrideAngles[0])
+			startAngle = overrideAngles[0];
+		if (overrideAngles[1])
+			endAngle = overrideAngles[1];
 
 		var angleDelta0 = endAngle - startAngle;
 		var angleDelta1 = controllerAngle - startAngle;
@@ -499,6 +529,33 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		}
 
 		var result = {'drawnElems': drawnElems, 'boundInfos': boundInfos, 'arrowElems': arrowElems};
+		return result;
+	},
+
+	/** @private */
+	_getCrossCoordsAndAnglesOfArcToShapeEdges: function(arcCenter, arcRadius, arcStartAngle, arcEndAngle, arcControllerAngle, shapeInfo)
+	{
+		var edgeVectors = Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo);
+		var candidates = [];
+		for (var i = 0, l = edgeVectors.length; i < l; ++i)
+		{
+			var edge = edgeVectors[i];
+			var crossPoints = Kekule.GeometryUtils.getCrossPointsOfVectorToCircle(edge, arcCenter, arcRadius, 1e-4);  // TODO: currently threshold fixed, a rather large value for screen coord sys
+			if (crossPoints && crossPoints.length)
+			{
+				candidates = candidates.concat(crossPoints);
+			}
+		}
+
+		var result = [];
+		var sign = Math.sign((arcControllerAngle - arcStartAngle) * (arcControllerAngle - arcEndAngle));
+		for (var i = 0, l = candidates.length; i < l; ++i)
+		{
+			var delta = CU.substract(candidates[i], arcCenter);
+			var angle = Kekule.GeometryUtils.standardizeAngle(Math.atan2(delta.y, delta.x));
+			if (Math.sign((angle - arcStartAngle) * (angle - arcEndAngle)) === sign)
+				result.push({'angle': angle, 'coord': candidates[i]});
+		}
 		return result;
 	},
 
