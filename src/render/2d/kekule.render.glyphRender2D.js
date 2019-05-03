@@ -278,10 +278,11 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			var offsetBound = offsetBounds[i];
 			if (offsetBound)
 			{
-				var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVector, offsetBound);
+				var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVector, offsetBound, true); // shortcut when find the first cross point
 				if (crossPoints && crossPoints.length)  // we should draw line to this point rather than the original end point
 				{
-					actualEndCoords[i] = this._getNearestCoordToPoint(midCoord, crossPoints);
+					//actualEndCoords[i] = this._getNearestCoordToPoint(midCoord, crossPoints);
+					actualEndCoords[i] = crossPoints[0];
 					// set override
 					this._nodeCoordOverrideMap.set(nodes[i], actualEndCoords[i]);
 				}
