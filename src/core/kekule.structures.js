@@ -501,6 +501,46 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		return r.index;
 	},
 	/**
+	 * Insert an connector to linkedConnectors array at index. If index is not set, connector will be inserted as the first one in linkedConnectors.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Int} index
+	 * @returns {Int} Index of newly inserted connector.
+	 */
+	insertLinkedConnectorAt: function(connector, index)
+	{
+		if (!index)
+			index = 0;
+		var i = this.indexOfLinkedConnector(connector);
+		var connectors = this.getLinkedConnectors();
+		if (i >= 0)  // already inside, adjust position
+		{
+			connectors.splice(i, 1);
+			connectors.splice(index, 0, connector);
+			this.notifyLinkedConnectorsChanged();
+		}
+		else // new one
+		{
+			connectors.splice(index, 0, connector);
+			if (connector)
+				connector._doAppendConnectedObj(this);
+			this.notifyLinkedConnectorsChanged();
+		}
+	},
+	/**
+	 * Insert an connector to linkedConnectors array before refSibling. If refSibling is not set, connector will be push to the tail of linkedConnectors.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.ChemStructureConnector} refSibling
+	 * @returns {Int} Index of newly inserted connector.
+	 */
+	insertLinkedConnectorBefore: function(connector, refSibling)
+	{
+		var refIndex = refSibling? this.indexOfLinkedConnector(refSibling): -1;
+		if (refIndex < 0)
+			return this.appendLinkedConnector(connector);
+		else
+			return this.insertLinkedConnectorAt(connector, refIndex);
+	},
+	/**
 	 * Remove connector at index of linkedConnectors.
 	 * @param {Int} index
 	 */
@@ -6688,12 +6728,30 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 		return r.index;
 	},
 	/**
+	 * Insert an object to connectedObjs array before refSibling. If refSibling is not set, obj will be push to the tail of connectedObjs.
+	 * @param {Kekule.ChemStructureObject} obj
+	 * @param {Kekule.ChemStructureObject} refSibling
+	 * @returns {Int} Index of newly inserted object.
+	 */
+	insertConnectedObjBefore: function(obj, refSibling)
+	{
+		this.assertConnectedObjLegal(obj);
+		var actualRefObj = refSibling? (refSibling.getCurrConnectableObj? refSibling.getCurrConnectableObj(): refSibling): null;
+		var refIndex = actualRefObj? this.indexOfConnectedObj(actualRefObj): -1;
+		if (refIndex < 0)
+			return this.appendConnectedObj(obj);
+		else
+			return this.insertConnectedObjAt(obj, refIndex);
+	},
+	/**
 	 * Insert obj at index of connectedObjs array. If index is not set, obj will be put as the first obj.
 	 * @param {Kekule.ChemStructureObject} obj
 	 * @param {Int} index
 	 */
 	insertConnectedObjAt: function(obj, index)
 	{
+		if (!index)
+			index = 0;
 		this.assertConnectedObjLegal(obj);
 		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
 		var i = this.indexOfConnectedObj(actualConnObj);
