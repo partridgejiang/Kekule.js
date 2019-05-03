@@ -2970,6 +2970,91 @@ Kekule.GeometryUtils = {
 	{
 		return Kekule.GeometryUtils.getCrossPointOfLines(vectorCoords1[0], vectorCoords1[1], vectorCoords2[0], vectorCoords2[1]);
 	},
+	/**
+	 * Returns the cross points of a vector to circle.
+	 * @param {Array} vectorCoords
+	 * @param {Hash} circleCenterCoord
+	 * @param {Float} circleRadius
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToCircle: function(vectorCoords, circleCenterCoord, circleRadius, floatEqualThreshold)
+	{
+		var result = [];
+
+		var CU = Kekule.CoordUtils;
+		var isFloatEqual = Kekule.NumUtils.isFloatEqual;
+		var THRESHOLD = floatEqualThreshold;
+		// translate with circle center coord first
+		var transCoords = [CU.substract(vectorCoords[0], circleCenterCoord), CU.substract(vectorCoords[1], circleCenterCoord)];
+		// suppose the vector line is ax + by + c = 0, y = -(ax + c) / b
+		var a = transCoords[1].y - transCoords[0].y;
+		var b = transCoords[0].x - transCoords[1].x;
+		var c = transCoords[1].x * transCoords[0].y - transCoords[0].x * transCoords[1].y;
+		// r = radius
+		var r = circleRadius;
+		// the solution x = (-2ac +- sqrt(4a^2c62 - 4(a^2 + b^2)(c^2 - r^2b^2)) / 2(a^2 + b^2)
+		var xs = [];
+		var sqrItem = 4 * a * a * c * c - 4 * (a * a + b * b) * (c * c - r * r * b * b);
+		if (isFloatEqual(sqrItem, 0, THRESHOLD))  // one solution
+		{
+			xs = [-a * c / (a * a + b * b)];
+		}
+		else if (sqrItem < 0)  // no solution
+		{
+			xs = [];
+		}
+		else  // two solution
+		{
+			var sqrtItem = Math.sqrt(sqrItem);
+			xs = [
+				(-2 * a * c + sqrtItem) / (2 * (a * a + b * b)),
+				(-2 * a * c - sqrtItem) / (2 * (a * a + b * b))
+			]
+		}
+		if (xs && xs.length)  // has solution
+		{
+			var ys = [];
+			if (xs.length === 1 && isFloatEqual(b, 0, THRESHOLD))  // vertical line, may has two cross points even if xs.length === 1
+			{
+				var absY = Math.sqrt(r * r - xs[0] * xs[0]);
+				if (isFloatEqual(absY, 0, THRESHOLD))
+					ys = [0];
+				else  // two cross points
+				{
+					ys[0] = absY;
+					ys[1] = -absY;
+					xs[1] = xs[0];
+				}
+			}
+			else
+			{
+				for (var i = 0, l = xs.length; i < l; ++i)
+				{
+					ys[i] = (-(a * xs[i] + c) / b);
+				}
+			}
+
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				// filter out the point out of vector
+				var xCheck = (xs[i] - transCoords[0].x) * (xs[i] - transCoords[1].x);
+				var yCheck = (ys[i] - transCoords[0].y) * (ys[i] - transCoords[1].y);
+				if ((isFloatEqual(a, 0, THRESHOLD) && xCheck <= 0)
+					|| (isFloatEqual(b, 0, THRESHOLD) && yCheck <= 0)
+					|| (xCheck <= 0 && yCheck <= 0))
+					result.push(CU.add({x: xs[i], y: ys[i]}, circleCenterCoord));  // translate back to original coord sys
+			}
+
+			/*
+			// translate result back to original coord sys
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				result[i] = CU.add(result[i], circleCenterCoord);
+			}
+			*/
+		}
+		return result;
+	},
 
 	/**
 	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
