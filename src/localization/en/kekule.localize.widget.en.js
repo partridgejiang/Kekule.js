@@ -393,6 +393,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	// load / save data dialog
 	CAPTION_LOADDATA_DIALOG: 'Load data',
+	CAPTION_LOADDATA_DIALOG_APPENDMODE: 'Append to current',
 	CAPTION_SAVEDATA_DIALOG: 'Save data',
 	CAPTION_DATA_FORMAT: 'Data format:',
 	CAPTION_DATA_SRC: 'Input or paste data below:',

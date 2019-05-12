@@ -312,6 +312,111 @@ Kekule.Editor.ActionEditorNewDoc = Class.create(Kekule.Editor.ActionOnEditor,
 });
 
 /**
+ * Action for loading or appending new data into editor.
+ * @class
+ * @augments Kekule.ChemWidget.ActionDisplayerLoadData
+ *
+ * @property {Bool} enableAppend Whether appending data into editor is enabled.
+ */
+Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDisplayerLoadData,
+/** @lends Kekule.Editor.ActionEditorLoadData# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionEditorLoadData',
+	/* @private */
+	// HTML_CLASSNAME: CCNS.ACTION_LOADFILE,
+	/** @constructs */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('enableAppend', {'dataType': DataType.BOOL});
+	},
+	/** @private */
+	doExecute: function($super, target)
+	{
+		var dialog = this.getDataDialog();
+		if (dialog && dialog.setDisplayAppendCheckBox)
+			dialog.setDisplayAppendCheckBox(this._isEditorRootObjAppendable());
+		return $super(target);
+	},
+	/** @private */
+	_getEditorRootObj: function()
+	{
+		var editor = this.getDisplayer();
+		var rootObj = editor.getChemObj();
+		return rootObj;
+	},
+	/** @private */
+	_isEditorRootObjAppendable: function()
+	{
+		// check if the root object of editor can append child
+		var rootObj = this._getEditorRootObj();
+		return rootObj && (rootObj instanceof Kekule.ChemSpace);
+	},
+	/** @private */
+	_getAppendableObjs: function(srcObj)
+	{
+		var result = [];
+		var rootObj = this._getEditorRootObj();
+		if (rootObj && srcObj)
+		{
+			if (srcObj.getClass() === rootObj.getClass() || srcObj instanceof Kekule.ChemSpace)  // class is same (chemspace)
+			{
+				result = AU.clone(srcObj.getChildren());
+			}
+			else
+				result = [srcObj];
+		}
+		return result;
+	},
+	/** @private */
+	createDataDialog: function()
+	{
+		var doc = this.getDisplayer().getDocument();
+		var result = new Kekule.ChemWidget.LoadOrAppendDataDialog(doc);
+		return result;
+	},
+	/** @ignore */
+	doLoadToDisplayer: function($super, chemObj, dialog)
+	{
+		var editor = this.getDisplayer();
+		var isAppending = dialog.getIsAppending();
+		console.log('is appending', isAppending);
+		if (isAppending && this._isEditorRootObjAppendable())
+		{
+			editor.beginUpdateObject();
+			try
+			{
+				var rootObj = this._getEditorRootObj();
+				rootObj.beginUpdate();
+				try
+				{
+					var appendableObjs = this._getAppendableObjs(chemObj);
+					for (var i = 0, l = appendableObjs.length; i < l; ++i)
+					{
+						rootObj.appendChild(appendableObjs[i]);
+					}
+				}
+				finally
+				{
+					rootObj.endUpdate();
+				}
+			}
+			finally
+			{
+				editor.endUpdateObject();
+			}
+		}
+		else
+			return $super(chemObj, dialog);
+	}
+});
+
+/**
  * A clone selection action on editor.
  * @class
  * @augments Kekule.Editor.ActionOnEditor
@@ -2084,7 +2189,8 @@ Kekule._registerAfterLoadSysProc(function(){
 
 	reg(BNS.newDoc, CE.ActionEditorNewDoc, widgetClass);
 	reg(BNS.loadFile, CW.ActionDisplayerLoadFile, widgetClass);
-	reg(BNS.loadData, CW.ActionDisplayerLoadData, widgetClass);
+	//reg(BNS.loadData, CW.ActionDisplayerLoadData, widgetClass);
+	reg(BNS.loadData, CE.ActionEditorLoadData, widgetClass);
 	reg(BNS.saveData, CW.ActionDisplayerSaveFile, widgetClass);
 	reg(BNS.zoomIn, CW.ActionDisplayerZoomIn, widgetClass);
 	reg(BNS.zoomOut, CW.ActionDisplayerZoomOut, widgetClass);

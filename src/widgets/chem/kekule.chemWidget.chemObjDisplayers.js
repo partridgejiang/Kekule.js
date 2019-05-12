@@ -1717,10 +1717,19 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					var displayer = self.getDisplayer();
 					displayer.loadFromData(data, mimeType);
 					*/
+					/*
 					var displayer = self.getDisplayer();
 					displayer.load(dialog.getChemObj());
+					*/
+					self.doLoadToDisplayer(dialog.getChemObj(), dialog);
 				}
 			}, target, showType]);
+	},
+	/** @private */
+	doLoadToDisplayer: function(chemObj, dialog)
+	{
+		var displayer = this.getDisplayer();
+		displayer.load(chemObj);
 	}
 });
 
