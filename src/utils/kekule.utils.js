@@ -3055,6 +3055,57 @@ Kekule.GeometryUtils = {
 		}
 		return result;
 	},
+	/**
+	 * Returns the cross point coords of two circles.
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @returns {Array}
+	 */
+	getCrossPointsOfCircles: function(centerCoord1, radius1, centerCoord2, radius2, floatEqualThreshold)
+	{
+		var CU = Kekule.CoordUtils;
+		var distance = CU.getDistance(centerCoord1, centerCoord2);
+		if (distance > (radius1 + radius2))
+			return [];
+		/*
+		else if (Kekule.NumUtils.isFloatEqual(distance, radius1 + radius2))
+		{
+
+		}
+		*/
+		else
+		{
+			// algorithm from https://wenku.baidu.com/view/b5b9194ca9114431b90d6c85ec3a87c241288a5d.html
+			var r1 = radius1, r2 = radius2;
+			var x1 = centerCoord1.x, x2 = centerCoord2.x;
+			var y1 = centerCoord1.y, y2 = centerCoord2.y;
+
+			var a1 = (r1*r1 - r2*r2) + (x2*x2 - x1*x1) + (y2*y2 - y1*y1);
+			var a2 = a1 / (2 * (y2 - y1));
+			var b2 = (x2 - x1) / (y2 - y1);
+			var a3 = 1 + b2 * b2;
+			var b3 = -(2 * x1 + 2 * (a2 - y1) * b2);
+			var c3 = x1 * x1 + Math.pow(a2 - y1, 2) - r1 * r1;
+			var sqrtItem = Math.sqrt(b3 * b3 - 4 * a3 * c3);
+
+			var xs = Kekule.NumUtils.isFloatEqual(sqrtItem, 0, floatEqualThreshold)?
+				[-b3 / (2 * a3)]:
+				[
+					(-b3 + sqrtItem) / (2 * a3),
+					(-b3 - sqrtItem) / (2 * a3)
+				];
+			var ys = [];
+			var result = [];
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				ys[i] = Math.sqrt(r1 * r1 - Math.pow(xs[i] - x1, 2)) + y1;
+				result.push({x: xs[i], y: ys[i]});
+			}
+			return result;
+		}
+	},
 
 	/**
 	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
