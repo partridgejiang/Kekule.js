@@ -2369,16 +2369,64 @@ Kekule.Render.MetaShapeUtils = {
 		}
 	},
 	/**
+	 * Returns all basic edge elements, including vectors and circles of a shape.
+	 * @param {Object} shapeInfo
+	 * @returns {Hash} Hash of {vectors: [{coord1, coord2}], circles: [{center, radius}]}
+	 */
+	getEdgeBasicElements: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result = {vectors: [], circles: []};
+		if (U.isCompositeShape(shapeInfo))
+		{
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childResult = U.getEdgeBasicElements(childShape);
+				result.vectors = result.concat(childResult.vectors);
+				result.circles = result.concat(childResult.circles);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result.circles.push({center: coords[0], radius: 0});
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result.circles.push({center: coords[0], radius: shapeInfo.radius});
+					break;
+				}
+				default:
+				{
+					result.vectors = result.vectors.concat(Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo));
+				}
+			}
+		}
+		return result;
+	},
+	/**
 	 * Returns the cross point of a vector line to shape edges.
 	 * @param {Array} vectorCoords
 	 * @param {Object} shapeInfo
 	 * @param {Bool} shortcut If true, returns directly when finding cross point and bypassing all rest vectors.
 	 * @returns {Array}
 	 */
-	getCrossPointsOfVectorToShapeEdges: function(vectorCoords, shapeInfo, shortcut)
+	getCrossPointsOfVectorToShapeEdges: function(vectorCoords, shapeInfo, shortcut, floatEqualThreshold)
 	{
-		var edgeVectors = Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo);
+		var edgeElems = Kekule.Render.MetaShapeUtils.getEdgeBasicElements(shapeInfo);
+		var edgeVectors = edgeElems.vectors;
+		var edgeCircles = edgeElems.circles;
 		var result = [];
+
 		for (var i = 0, l = edgeVectors.length; i < l; ++i)
 		{
 			var edge = edgeVectors[i];
@@ -2387,7 +2435,18 @@ Kekule.Render.MetaShapeUtils = {
 			{
 				result.push(crossPoint);
 				if (shortcut)
-					break;
+					return result;
+			}
+		}
+		for (var i = 0, l = edgeCircles.length; i < l; ++i)
+		{
+			var circle = edgeCircles[i];
+			var crossPoints = Kekule.GeometryUtils.getCrossPointsOfVectorToCircle(vectorCoords, circle.center, circle.radius, floatEqualThreshold)
+			if (crossPoints && crossPoints.length)
+			{
+				result = result.concat(crossPoints);
+				if (shortcut)
+					return result;
 			}
 		}
 		return result;
