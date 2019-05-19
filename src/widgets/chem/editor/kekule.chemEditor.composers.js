@@ -1039,6 +1039,7 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Bool} enableCreateNewDoc Whether create new object in editor is allowed.
  * @property {Bool} allowCreateNewChild Whether new direct child of space can be created.
  *   Note: if the space is empty, one new child will always be allowed to create.
+ * @property {Bool} allowAppendDataToCurr Whether display "append data" check box in the data load dialog.
  */
 Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 /** @lends Kekule.Editor.Composer# */
@@ -1187,6 +1188,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('enableStyleToolbar', value);
+				if (value)  // enable style bar should disable modifier bar
+					this.setPropStoreFieldValue('enableObjModifierToolbar', false);
 				this.updateSelectionAssocToolbarState();
 			}
 		});
@@ -1211,6 +1214,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('enableObjModifierToolbar', value);
+				if (value)  // enable modifier bar should disable style bar
+					this.setPropStoreFieldValue('enableStyleToolbar', false);
 				this.updateSelectionAssocToolbarState();
 			}
 		});
@@ -1353,6 +1358,20 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				var ed = this.getEditor();
 				if (ed.setAllowCreateNewChild)
 					ed.setAllowCreateNewChild(value);
+				return this;
+			}
+		});
+		this.defineProp('allowAppendDataToCurr', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				var ed = this.getEditor();
+				return (ed && ed.getAllowAppendDataToCurr)? ed.getAllowAppendDataToCurr(): null;
+			},
+			'setter': function(value)
+			{
+				var ed = this.getEditor();
+				if (ed.setAllowAppendDataToCurr)
+					ed.setAllowAppendDataToCurr(value);
 				return this;
 			}
 		});
@@ -2881,7 +2900,10 @@ Kekule.Editor.Composer.Settings = Class.create(Kekule.Widget.BaseWidget.Settings
 	initProperties: function()
 	{
 		//this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false, 'scope': PS.PUBLIC});
-		this.defineDelegatedProps(['enableCreateNewDoc', 'enableLoadNewFile', 'initOnNewDoc', 'enableOperHistory', 'allowCreateNewChild', 'enableStyleToolbar']);
+		this.defineDelegatedProps([
+			'enableCreateNewDoc', 'enableLoadNewFile', 'initOnNewDoc', 'enableOperHistory', 'allowCreateNewChild', 'allowAppendDataToCurr',
+			'enableStyleToolbar', 'enableObjModifierToolbar'
+		]);
 	}
 });
 

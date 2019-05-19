@@ -62,6 +62,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
  * @property {Bool} autoCreateNewStructFragment Whether new molecule object can be created in space.
  *   Note: if property {@link Kekule.Editor.ChemSpaceEditor.allowCreateNewChild} is false, this property
  *   will always be false.
+ * @property {Bool} allowAppendDataToCurr Whether display "append data" check box in the dialog of data load action.
  */
 Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 /** @lends Kekule.Editor.ChemSpaceEditor# */
@@ -73,6 +74,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	{
 		this.setPropStoreFieldValue('allowCreateNewChild', true);
 		this.setPropStoreFieldValue('autoCreateNewStructFragment', true);
+		this.setPropStoreFieldValue('allowAppendDataToCurr', true);
 		$super(parentOrElementOrDocument, chemObj, renderType, editorConfigs);
 		this._containerChemSpace = null;  // private field, used to mark that a extra chem space container is used
 
@@ -91,6 +93,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		});
 		this.defineProp('allowCreateNewChild', {'dataType': DataType.BOOL});
+		this.defineProp('allowAppendDataToCurr', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	initPropValues: function($super)
