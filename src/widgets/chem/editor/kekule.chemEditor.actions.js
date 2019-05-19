@@ -422,8 +422,10 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 	_isEditorRootObjAppendable: function()
 	{
 		// check if the root object of editor can append child
+		var editor = this.getDisplayer();
 		var rootObj = this._getEditorRootObj();
-		return rootObj && (rootObj instanceof Kekule.ChemSpace);
+		return rootObj && (rootObj instanceof Kekule.ChemSpace) && (editor.canAddNewStandaloneObject && editor.canAddNewStandaloneObject())
+			&& (editor.getAllowAppendDataToCurr && editor.getAllowAppendDataToCurr());
 	},
 	/** @private */
 	_isEditorEmpty: function()
