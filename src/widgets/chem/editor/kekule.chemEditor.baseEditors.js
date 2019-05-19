@@ -4263,6 +4263,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}: null;
 	},
 	/**
+	 * Returns the screen rect/box of editor client element.
+	 * @returns {Hash} {x1, y1, x2, y2, left, top, width, height}
+	 */
+	getClientVisibleRect: function()
+	{
+		var result = this.getClientDimension();
+		var p = this.getClientScrollPosition();
+		result.x1 = result.left = p.x;
+		result.y1 = result.top = p.y;
+		result.x2 = result.x1 + result.width;
+		result.y2 = result.y1 + result.height;
+		return result;
+	},
+	/**
 	 * Scroll edit client to a position.
 	 * @param {Int} yPosition, in px.
 	 * @param {Int} xPosition, in px.
