@@ -1610,6 +1610,29 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		}
 		return boundRecorder && boundRecorder.getBound(context, concreteObj);
 	},
+	/**
+	 * Returns the rendering bound of sticking target of object.
+	 * @param {Object} context
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Object}
+	 * @private
+	 */
+	getStickingTargetRenderBound: function(context, obj)
+	{
+		var targetObj;
+		if (obj.getCoordStickTarget)
+		{
+			targetObj = obj.getCoordStickTarget();
+		}
+		if (targetObj)
+		{
+			var boundRecorder = this.getBoundInfoRecorder();
+
+			return boundRecorder && boundRecorder.getBound(context, targetObj, true);
+		}
+		else
+			return null;
+	},
 
 	/** @private */
 	createBoundInfo: function(boundType, coords, additionalInfos)
