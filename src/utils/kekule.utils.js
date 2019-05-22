@@ -3087,20 +3087,22 @@ Kekule.GeometryUtils = {
 			var b2 = (x2 - x1) / (y2 - y1);
 			var a3 = 1 + b2 * b2;
 			var b3 = -(2 * x1 + 2 * (a2 - y1) * b2);
-			var c3 = x1 * x1 + Math.pow(a2 - y1, 2) - r1 * r1;
+			var c3 = x1 * x1 + Math.sqr(a2 - y1) - r1 * r1;
 			var sqrtItem = Math.sqrt(b3 * b3 - 4 * a3 * c3);
+			var divItem = 2 * a3;
 
 			var xs = Kekule.NumUtils.isFloatEqual(sqrtItem, 0, floatEqualThreshold)?
-				[-b3 / (2 * a3)]:
+				[-b3]:
 				[
-					(-b3 + sqrtItem) / (2 * a3),
-					(-b3 - sqrtItem) / (2 * a3)
+					(-b3 + sqrtItem) / divItem,
+					(-b3 - sqrtItem) / divItem
 				];
 			var ys = [];
 			var result = [];
 			for (var i = 0, l = xs.length; i < l; ++i)
 			{
-				ys[i] = Math.sqrt(r1 * r1 - Math.pow(xs[i] - x1, 2)) + y1;
+				//ys[i] = Math.sqrt(r1 * r1 - Math.pow(xs[i] - x1, 2)) + y1;
+				ys[i] = a2 - b2 * xs[i];
 				result.push({x: xs[i], y: ys[i]});
 			}
 			return result;
