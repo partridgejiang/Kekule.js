@@ -195,9 +195,34 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var offsetBound1, offsetBound2;
 		if (pathParams.autoOffset)
 		{
-			offsetBound1 = this.getObjRenderBound(context, node1, true);
-			offsetBound2 = this.getObjRenderBound(context, node2, true);
+			offsetBound1 = this.getStickingTargetRenderBound(context, node1);
+			offsetBound2 = this.getStickingTargetRenderBound(context, node2);
 			//console.log(connector.getClassName(), 'autoOffset', offsetBound1, offsetBound2);
+			// calculate the glyphStickOffsetRefLength, do the offset
+		}
+		var offsetBounds = [offsetBound1, offsetBound2];
+		if (offsetBound1 || offsetBound2)
+		{
+			//console.log(renderOptions);
+			var offsetRelLength = pathParams.glyphStickOffsetRelLength || renderOptions.glyphStickOffsetRelLength;
+			var offsetContextLength = offsetRelLength? this._doGetStickOffsetContextLength(context, offsetRelLength, renderOptions): null;
+			if (offsetContextLength)
+			{
+				var inflateShape = Kekule.Render.MetaShapeUtils.inflateShape;
+				for (var i = 0, l = offsetBounds.length; i < l; ++i)
+				{
+					if (offsetBounds[i])
+					{
+						console.log('before inflate', offsetBounds[i], offsetContextLength);
+						offsetBounds[i] = inflateShape(offsetBounds[i], offsetContextLength);
+						console.log('after inflate', offsetBounds[i]);
+					}
+				}
+				/*
+				offsetBound1 = offsetBounds[0];
+				offsetBound2 = offsetBounds[1];
+				*/
+			}
 		}
 
 		// draw parrel lines
@@ -217,7 +242,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 
 		if (pathType === PT.LINE)
 		{
-			var lineResult = this._doDrawLineConnectorShape(context, ctab, connector, nodes, coord1, coord2, lineCount, lineScreenGap, startArrowParams, endArrowParams, [offsetBound1, offsetBound2], drawOptions, renderOptions);
+			var lineResult = this._doDrawLineConnectorShape(context, ctab, connector, nodes, coord1, coord2, lineCount, lineScreenGap, startArrowParams, endArrowParams, offsetBounds, drawOptions, renderOptions);
 			drawnElems = lineResult.drawnElems;
 			arrowElems = lineResult.arrowElems;
 			boundInfos = lineResult.boundInfos;
@@ -230,7 +255,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			{
 				var coordController = CU.clone(this.getTransformedCoord2D(context, controlPoint, finalTransformOptions.allowCoordBorrow));
 
-				var lineResult = this._doDrawArcConnectorShape(context, ctab, connector, nodes, coord1, coord2, coordController, lineCount, lineScreenGap, startArrowParams, endArrowParams, [offsetBound1, offsetBound2], drawOptions, renderOptions);
+				var lineResult = this._doDrawArcConnectorShape(context, ctab, connector, nodes, coord1, coord2, coordController, lineCount, lineScreenGap, startArrowParams, endArrowParams, offsetBounds, drawOptions, renderOptions);
 				drawnElems = lineResult.drawnElems;
 				arrowElems = lineResult.arrowElems;
 				boundInfos = lineResult.boundInfos;
@@ -258,6 +283,17 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			return {element: drawnGroup, boundInfo: boundInfos};
 		}
 	},
+	/** @private */
+	_doGetStickOffsetContextLength: function(context, offsetRelLength, renderOptions)
+	{
+		var objLength = offsetRelLength * renderOptions.medianObjRefLength;
+		var coord0 = {x: 0, y: 0};
+		var coord1 = {x: objLength, y: 0};
+		var renderer = this.getRootRenderer();
+		var contextCoord0 = renderer.transformCoordToContext(context, this.getChemObj(), coord0);
+		var contextCoord1 = renderer.transformCoordToContext(context, this.getChemObj(), coord1);
+		return CU.getDistance(contextCoord0, contextCoord1)
+	},
 	/* @private */
 	/*
 	_doCalcBoundInterectPointToLinePath: function(bound, coord1, coord2)
@@ -279,6 +315,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			if (offsetBound)
 			{
 				var crossPoints = Kekule.Render.MetaShapeUtils.getCrossPointsOfVectorToShapeEdges(testVector, offsetBound, true); // shortcut when find the first cross point
+				//console.log('line cross', crossPoints);
 				if (crossPoints && crossPoints.length)  // we should draw line to this point rather than the original end point
 				{
 					//actualEndCoords[i] = this._getNearestCoordToPoint(midCoord, crossPoints);

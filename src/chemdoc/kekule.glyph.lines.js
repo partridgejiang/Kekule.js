@@ -57,7 +57,7 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 
 		var p = Object.create(initialParams);
 		if (Kekule.ObjUtils.isUnset(initialParams.autoOffset))
-			p.autoOffset = true;
+			p.autoOffset = false;
 		connector.setPathParams(p);
 	},
 
