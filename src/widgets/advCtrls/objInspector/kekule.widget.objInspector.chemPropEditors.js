@@ -424,7 +424,9 @@ Kekule.PropertyEditor.GlyphPathParamsEditor = Class.create(Kekule.PropertyEditor
 		{'name': 'endArrowType', dataType: DataType.INT, 'enumSource': Kekule.Glyph.ArrowType, 'targetClass': Kekule.Glyph.PathGlyphConnector},
 		{'name': 'endArrowSide', dataType: DataType.INT, 'enumSource': Kekule.Glyph.ArrowSide, 'targetClass': Kekule.Glyph.PathGlyphConnector},
 		{'name': 'endArrowLength', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector},
-		{'name': 'endArrowWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector}
+		{'name': 'endArrowWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector},
+		{'name': 'autoOffset', dataType: DataType.BOOL, 'targetClass': Kekule.Glyph.PathGlyphConnector},
+		{'name': 'glyphStickOffsetRelLength', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector}
 	]
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.GlyphPathParamsEditor, null, Kekule.Glyph.PathGlyphConnector, 'pathParams');
