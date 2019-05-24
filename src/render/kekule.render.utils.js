@@ -1472,7 +1472,7 @@ Kekule.Render.MetaShapeUtils = {
 		{
 			var coord = coords[i];
 			var vec = C.substract(coord, center);
-			var distance = C.getDistance(coord);
+			var distance = C.getDistance(vec);
 			var deltaVec = C.multiply(vec, delta / distance);
 			var newCoord = C.add(coord, deltaVec);
 			result.push(newCoord);
@@ -2312,6 +2312,7 @@ Kekule.Render.MetaShapeUtils = {
 	{
 		var T = Kekule.Render.MetaShapeType;
 		var U = Kekule.Render.MetaShapeUtils;
+		var CU = Kekule.CoordUtils;
 
 		var result;
 		if (U.isCompositeShape(shapeInfo))
@@ -2342,7 +2343,32 @@ Kekule.Render.MetaShapeUtils = {
 				}
 				case T.LINE:
 				{
-					result = [[coords[0], coords[1]]];
+					// console.log(shapeInfo);
+					var w = shapeInfo.width;
+					if (!w)
+						result = [[coords[0], coords[1]]];
+					else
+					{
+						var c1 = coords[0];
+						var c2 = coords[1];
+						var delta = CU.substract(c2, c1);
+						var d = CU.getDistance(c1, c2);
+						var sinAngle = delta.y / d;
+						var cosAngle = delta.x / d;
+						var halfWidth = w / 2;
+						var widthDeltaX = halfWidth * sinAngle;
+						var widthDeltaY = halfWidth * cosAngle;
+						var polyCoords = [
+							{x: c1.x - widthDeltaX, y: c1.y + widthDeltaY},
+							{x: c1.x + widthDeltaX, y: c1.y - widthDeltaY},
+							{x: c2.x + widthDeltaX, y: c2.y - widthDeltaY},
+							{x: c2.x - widthDeltaX, y: c2.y + widthDeltaY}
+						];
+						var pc = polyCoords;
+						result = [
+							[pc[0], pc[1]], [pc[1], pc[2]], [pc[2], pc[3]], [pc[3], pc[0]]
+						]
+					}
 					break;
 				}
 				case T.RECT:
