@@ -106,6 +106,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
  *   Set this value to true will improve the performance of chem editor.
+ * @property {Bool} followPointerCoordOnDirectManipulatingSingleObj If true, the new coord of manipulating object will be set directly by the position of pointer (rather than the delta coord to the original position).
  * @property {Bool} enableOffSelectionManipulation If true, holding pointer down outside selection region for a while
  *   will enter the manipulation state to move the selected objects.
  * @property {Int} OffSelectionManipulationActivatingTimeThreshold Holding pointer down longer then this time (in ms) may
@@ -163,6 +164,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
 		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
 
+		this.addBoolConfigProp('followPointerCoordOnDirectManipulatingSingleObj', true);
 		//this.addConfigProp('constrainedResizeLevels', DataType.ARRAY, undefined);
 		this.addFloatConfigProp('constrainedResizeStep', 0.25);
 		this.addIntConfigProp('rotationRegionInflation', 10);

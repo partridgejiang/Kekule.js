@@ -6179,6 +6179,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
 
 		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
+		var isDirectManipulateSingleObj = this.isDirectManipulating() && (manipulatingObjs.length === 1);
+		var followPointerCoord = isDirectManipulateSingleObj && this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
 
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{
@@ -6188,7 +6190,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				continue;
 			if (info.stickTarget && !isMovingOneStickNode)
 				continue;
-			var newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
+			var newScreenCoord;
+			if (followPointerCoord)
+				newScreenCoord = endScreenCoord;
+			else
+				newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
 			newScreenCoord = this._calcActualMovedScreenCoord(obj, info, newScreenCoord);
 			this._addManipultingObjNewInfo(obj, {'screenCoord': newScreenCoord});
 		}
@@ -6255,6 +6261,16 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.stopManipulate();
 	},
 	*/
+
+	/**
+	 * Returns whether the controller is in direct manipulating state.
+	 */
+	isDirectManipulating: function()
+	{
+		return (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			&& (!this.getIsManipulatingSelection());
+	},
+
 	/**
 	 * Click on a object or objects and manipulate it directly.
 	 * @private
