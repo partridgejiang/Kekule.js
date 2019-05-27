@@ -6179,8 +6179,18 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
 
 		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
+
 		var isDirectManipulateSingleObj = this.isDirectManipulating() && (manipulatingObjs.length === 1);
 		var followPointerCoord = isDirectManipulateSingleObj && this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
+		if (followPointerCoord)
+		{
+			var startCoord = this.getStartCoord();
+			var moveDistance = C.getDistance(endScreenCoord, startCoord);
+			if (moveDistance <= this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObjDistanceThreshold())
+			{
+				followPointerCoord = false;
+			}
+		}
 
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{

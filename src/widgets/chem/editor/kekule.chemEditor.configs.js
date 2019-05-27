@@ -165,6 +165,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
 
 		this.addBoolConfigProp('followPointerCoordOnDirectManipulatingSingleObj', true);
+		this.addIntConfigProp('followPointerCoordOnDirectManipulatingSingleObjDistanceThreshold', 2);
 		//this.addConfigProp('constrainedResizeLevels', DataType.ARRAY, undefined);
 		this.addFloatConfigProp('constrainedResizeStep', 0.25);
 		this.addIntConfigProp('rotationRegionInflation', 10);
