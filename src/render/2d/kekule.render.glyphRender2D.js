@@ -213,9 +213,9 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 				{
 					if (offsetBounds[i])
 					{
-						console.log('before inflate', offsetBounds[i], offsetContextLength);
+						//console.log('before inflate', offsetBounds[i], offsetContextLength);
 						offsetBounds[i] = inflateShape(offsetBounds[i], offsetContextLength);
-						console.log('after inflate', offsetBounds[i]);
+						//console.log('after inflate', offsetBounds[i]);
 					}
 				}
 				/*
@@ -483,7 +483,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 				//if (offsetBound.shapeType === Kekule.Render.BoundShapeType.RECT)
 				{
 					var crossAnglesAndCoords = this._getCrossCoordsAndAnglesOfArcToShapeEdges(centerCoord, radius, startAngle, endAngle, controllerAngle, offsetBound);
-					if (crossAnglesAndCoords && crossAnglesAndCoords.length === 1)  // we should draw arc to this angle rather than the original one
+					if (crossAnglesAndCoords && crossAnglesAndCoords.length >= 1)  // we should draw arc to this angle rather than the original one
 					{
 						var actualCoord = crossAnglesAndCoords[0].coord;
 						var actualAngle = crossAnglesAndCoords[0].angle;
