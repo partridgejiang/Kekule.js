@@ -1455,6 +1455,7 @@ Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicMolEraserIaControl
  * @property {Bool} enableSiblingStick
  * @property {Bool} enableStructFragmentStick
  * @property {Bool} enableConstrainedMove
+ //* @property {Bool} enableLengthChangeInConstrainedMoving
  * @property {Bool} enableConstrainedRotate
  * @property {Bool} enableConstrainedResize
  * @property {Bool} enableDirectedMove When true, pres shift key during moving will cause object moves only at X or Y direction.
@@ -1502,6 +1503,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.defineProp('enableStructFragmentStick', {'dataType': DataType.BOOL});
 
 		this.defineProp('enableConstrainedMove', {'dataType': DataType.BOOL, 'serializable': false});
+		//this.defineProp('enableLengthChangeInConstrainedMoving', {'dataType': DataType.BOOL, 'serializable': false});
+
 		this.defineProp('enableConstrainedRotate', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableConstrainedResize', {'dataType': DataType.BOOL, 'serializable': false});
 
@@ -1663,6 +1666,17 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		return info;
 	},
 	/** @private */
+	getAllowLengthChangeInConstrainedMoving: function(obj)
+	{
+		// only allow length change when constrained moving path node,
+		// other ones (including molecule atom) are not allowed
+		// TODO: maybe a more flexible approach is needed here
+		if (obj instanceof Kekule.Glyph.PathGlyphNode)
+			return true;
+		else
+			return false;
+	},
+	/** @private */
 	_calcActualMovedScreenCoord: function($super, obj, info, newScreenCoord)
 	{
 		var C = Kekule.CoordUtils;
@@ -1677,6 +1691,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			var directionAngle;
 			var currVector = C.substract(newScreenCoord, info.refScreenCoord);
 			var currDirection = Math.atan2(currVector.y, currVector.x);
+			var currScreenLength = C.getDistance(currVector);
 
 			if (constrainedBondDirectionAngles && constrainedBondDirectionAngleThreshold)
 			{
@@ -1702,20 +1717,26 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			if (!directionAngleResolved)
 				directionAngle = currDirection;
 
+			// calc actual connector length
+			var actualLength;
+			if (this.getAllowLengthChangeInConstrainedMoving(obj))
+			{
+				var baseLength = this.getEditor().getDefBondScreenLength();
+				var lengthRatio = currScreenLength / baseLength /*info.connectorScreenLength*/;
+				var resizeStep = this.getEditorConfigs().getInteractionConfigs().getConstrainedResizeStep();
+				lengthRatio = (Math.round(lengthRatio / resizeStep) || 1) * resizeStep;  // do not scale to 0
+				actualLength = /* info.connectorScreenLength */ baseLength * lengthRatio;
+			}
+			else
+				actualLength = info.connectorScreenLength;
+
+			/*
 			result = C.add(info.refScreenCoord,
 				{'x': info.connectorScreenLength * Math.cos(directionAngle), 'y': info.connectorScreenLength * Math.sin(directionAngle)});
+			*/
+			result = C.add(info.refScreenCoord,
+					{'x': actualLength * Math.cos(directionAngle), 'y': actualLength * Math.sin(directionAngle)});
 			//console.log(directionAngle, result);
-			/*
-			 var currLength = C.getDistance(screenCoord, info.refScreenCoord);
-			 if (currLength !== info.connectorScreenLength)
-			 {
-			 var ratio = info.connectorScreenLength / currLength;
-			 var delta = C.substract(screenCoord, info.refScreenCoord);
-			 //console.log('constrained', info, ratio);
-			 result = C.add(info.refScreenCoord, C.multiply(delta, ratio));
-			 //console.log(result, info.connectorScreenLength, C.getDistance(result, info.refScreenCoord));
-			 }
-			 */
 		}
 		else
 			result = screenCoord;
@@ -1988,7 +2009,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		if (nodeScreenCoord)
 		{
 			var boundInfos = editor.getBoundInfosAtCoord(nodeScreenCoord, filterFunc, this.getCurrBoundInflation());
-			//console.log('boundInfos', boundInfos);
+			//console.log('boundInfos', boundInfos, nodeScreenCoord);
 			/*
 			var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, Kekule.ChemStructureNode,
 					function(destObj)
@@ -2057,7 +2078,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		/** @ignore */
 	applyManipulatingObjsInfo: function($super, endScreenCoord)
 	{
-		var MagneticOperTypes = {MERGE: 0, STICK: 1, UNSTICK: 10};
+		var MagneticOperTypes = {MERGE: 0, MERGE_BOND: 1, STICK: 10, UNSTICK: 20};
 
 		this.setAllManipulateObjsMerged(false);
 		var useMergePreview = this.useMergePreview();
@@ -2085,18 +2106,70 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		// handle mouse position merge and magnetic merge here
 
 		var isMovingOneBond = (originManipulatedObjs.length === 1) && (originManipulatedObjs[0] instanceof Kekule.ChemStructureConnector);
-		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof Kekule.ChemStructureNode) && this._objCanBeMagneticMerged(manipulatedObjs[0]);
-		if (!isMovingOneBond && this.getEnableMagneticMerge())
+		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof /*Kekule.ChemStructureNode*/Kekule.BaseStructureNode)
+					&& (this._objCanBeMagneticMerged(manipulatedObjs[0]) || this._objCanBeMagneticSticked(manipulatedObjs[0]));
+		var maybeMousePosMerge = (manipulateType === MT.MOVE) && ((isMovingOneBond && this.getEnableConnectorMerge()) || (isMovingOneNode && this.getEnableNodeMerge()));
+		var maybeObjPosMagneticMerge = !isMovingOneBond && this.getEnableMagneticMerge();
+		//if (!isMovingOneBond && this.getEnableMagneticMerge())
+		if (maybeObjPosMagneticMerge || maybeMousePosMerge)
 		{
 			var currManipulateInfoMap = this.getManipulateObjCurrInfoMap();
 			var manipulateInfoMap = this.getManipulateObjInfoMap();
 
-			var magneticOperObjInfos = this._calcMagneticMergeOrStickInfos(manipulatedObjs, currManipulateInfoMap, manipulateInfoMap, excludedObjs, MagneticOperTypes);
-			//console.log('mag', magneticOperObjInfos);
-			var magneticMergeObjIndexes = magneticOperObjInfos.magneticObjIndexes;
-			var magneticMergeObjs = magneticOperObjInfos.magneticObjs;
-			var magneticMergeDests = magneticOperObjInfos.magneticDests;
-			var magneticMergeTypes = magneticOperObjInfos.magneticTypes;
+			var magneticMergeObjIndexes = [];
+			var magneticMergeObjs = [];
+			var magneticMergeDests = [];
+			var magneticMergeTypes = [];
+
+			if (maybeMousePosMerge)
+			{
+				var targetObj = isMovingOneBond? originManipulatedObjs[0]: manipulatedObjs[0];
+				var checkResult = this._calcMagneticMergeOrStickInfoOnScreenCoord(
+					endScreenCoord, targetObj,
+					this._isManipulatingSingleStickedObj(manipulatedObjs),
+					currManipulateInfoMap, manipulateInfoMap, excludedObjs, MagneticOperTypes
+				);
+				if (checkResult)
+				{
+					magneticMergeObjIndexes = [0];
+					magneticMergeObjs = [checkResult.magneticObj];
+					magneticMergeDests = [checkResult.magneticDest];
+					magneticMergeTypes = [checkResult.magneticType];
+				}
+				else
+				{
+					if (isMovingOneBond && this.getEnableConnectorMerge())   // may be bond merge?
+					{
+						var boundInfos = editor.getBoundInfosAtCoord(endScreenCoord, null, this.getCurrBoundInflation());
+						var targetClass = Kekule.ChemStructureConnector;
+						var targetObj = originManipulatedObjs[0];
+						var checkFunc = function(obj)
+							{
+								return self._canMergeConnectors(targetObj, obj);
+							};
+						var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, targetClass, checkFunc);
+						//console.log('merge', isMovingOneNode, boundInfos, overlapBoundInfo);
+						if (overlapBoundInfo)  // has bound info, do bond merge
+						{
+							magneticMergeObjIndexes = [0];
+							magneticMergeObjs = [targetObj];
+							magneticMergeDests = [overlapBoundInfo.obj];
+							magneticMergeTypes = [MagneticOperTypes.MERGE_BOND];
+						}
+					}
+				}
+			}
+			if (!magneticMergeObjs.length && maybeObjPosMagneticMerge)
+			{
+				var magneticOperObjInfos = this._calcMagneticMergeOrStickInfos(manipulatedObjs, currManipulateInfoMap, manipulateInfoMap, excludedObjs, MagneticOperTypes);
+				//console.log('mag', magneticOperObjInfos);
+				magneticMergeObjIndexes = magneticOperObjInfos.magneticObjIndexes;
+				magneticMergeObjs = magneticOperObjInfos.magneticObjs;
+				magneticMergeDests = magneticOperObjInfos.magneticDests;
+				magneticMergeTypes = magneticOperObjInfos.magneticTypes;
+			}
+
+			//console.log(maybeMousePosMerge, magneticMergeObjs);
 
 			if (magneticMergeObjs.length || oldStickOpers.length)  // has merge items, or we need to reverse stick oper
 			{
@@ -2206,50 +2279,61 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					var CU = Kekule.CoordUtils;
 					if ((magneticObjCount === 1) || (editor.getCoordMode() === Kekule.CoordMode.COORD3D))
 					{
-						var currInfo = currManipulateInfoMap.get(magneticMergeObjs[0]);
-						var currCoord = currInfo.screenCoord;
-						var destCoord = editor.getObjectScreenCoord(magneticMergeDests[0]);
-						if (destCoord)
+						var mergeOrStickType = magneticMergeTypes[0];
+						if (mergeOrStickType !== MagneticOperTypes.MERGE_BOND)
 						{
-							var coordTranslate = CU.substract(destCoord, currCoord);
-							// change all currInfo coord, and redo apply job
-							var needReApply = false;
-
-							var fequal = Kekule.NumUtils.isFloatEqual;
-							var threshold = 1e-10; //{x: Math.abs(currCoord.x) * 1e-8, y: Math.abs(currCoord.y) * 1e-8}
-							if (!fequal(coordTranslate.x, 0, threshold) || !fequal(coordTranslate.y, 0, threshold))  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
+							var currInfo = currManipulateInfoMap.get(magneticMergeObjs[0]);
+							var currCoord = currInfo && currInfo.screenCoord;
+							var destCoord = editor.getObjectScreenCoord(magneticMergeDests[0]);
+							if (currCoord && destCoord)
 							{
-								//console.log('here', coordTranslate, currCoord, destCoord);
-								for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+								var coordTranslate = CU.substract(destCoord, currCoord);
+								// change all currInfo coord, and redo apply job
+								var needReApply = false;
+
+								var fequal = Kekule.NumUtils.isFloatEqual;
+								var threshold = 1e-10; //{x: Math.abs(currCoord.x) * 1e-8, y: Math.abs(currCoord.y) * 1e-8}
+								if (!fequal(coordTranslate.x, 0, threshold) || !fequal(coordTranslate.y, 0, threshold))  // if transalte coord is {0, 0} (often ocurrs in ring / chain ia controller, no need to adjust coords)
 								{
-									var obj = manipulatedObjs[i];
-									if (obj !== magneticMergeObjs[0])
+									//console.log('here', coordTranslate, currCoord, destCoord);
+									for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 									{
+										var obj = manipulatedObjs[i];
 										var info = currManipulateInfoMap.get(obj);
-										if (info && info.screenCoord)
+										if (obj !== magneticMergeObjs[0])
 										{
-											var newCoord = CU.add(info.screenCoord, coordTranslate);
-											info.screenCoord = newCoord;
-											if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
-												needReApply = true;
+											if (info && info.screenCoord)
+											{
+												var newCoord = CU.add(info.screenCoord, coordTranslate);
+												info.screenCoord = newCoord;
+												if (this._getMagneticNodeMergeOrStickDestInfo(obj, newCoord, excludedObjs))  // move position can do another magnetic merge
+													needReApply = true;
+											}
+											//this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
 										}
-										//this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
+										else  // magnetic merge obj, set to dest coord
+										{
+											if (info && info.screenCoord)
+											{
+												info.screenCoord = destCoord;
+											}
+										}
 									}
 								}
-							}
-							if (needReApply)
-							{
-								return this.applyManipulatingObjsInfo(endScreenCoord);
-							}
-							else
-							{
-								for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
+								if (needReApply)
 								{
-									var obj = manipulatedObjs[i];
-									//if (obj !== magneticMergeObjs[0])
+									return this.applyManipulatingObjsInfo(endScreenCoord);
+								}
+								else
+								{
+									for (var i = 0, l = manipulatedObjs.length; i < l; ++i)
 									{
-										var info = currManipulateInfoMap.get(obj);
-										this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
+										var obj = manipulatedObjs[i];
+										//if (obj !== magneticMergeObjs[0])
+										{
+											var info = currManipulateInfoMap.get(obj);
+											this.applySingleManipulatingObjInfo(i, obj, info, endScreenCoord);
+										}
 									}
 								}
 							}
@@ -2368,12 +2452,16 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 							{
 								if (useMergePreview)
 								{
-									var mergePreviewOper = this.createNodeMergeOperation(obj, dest, true);
+									var mergePreviewOper = (mergeType === MagneticOperTypes.MERGE_BOND)?
+										this.createConnectorMergeOperation(obj, dest, true):
+										this.createNodeMergeOperation(obj, dest, true);
 									this.getMergePreviewOperations()[index] = mergePreviewOper;
 								}
 								else
 								{
-									var mergeOper = this.createNodeMergeOperation(obj, dest);
+									var mergeOper = (mergeType === MagneticOperTypes.MERGE_BOND)?
+										this.createConnectorMergeOperation(obj, dest):
+										this.createNodeMergeOperation(obj, dest);
 									this.getMergeOperations()[index] = mergeOper;
 								}
 							}
@@ -2409,6 +2497,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		// check if do magnetic merge
 
 		// then check if mouse position merge
+		/*
 		if (manipulateType === MT.MOVE)
 		{
 			var doMousePosMerge = false;
@@ -2427,9 +2516,10 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					}:
 					function(obj)
 					{
-						return self._canMergeNodes(targetObj, obj);
+						return self._canMergeNodes(targetObj, obj) || self._canStickNode(targetObj, obj);
 					};
 				var overlapBoundInfo = this._findSuitableMergeTargetBoundInfo(boundInfos, excludedObjs, targetClass, checkFunc);
+				console.log('merge', isMovingOneNode, boundInfos, overlapBoundInfo);
 				if (overlapBoundInfo)  // has bound info, do merge
 				{
 					var destObj = overlapBoundInfo.obj;
@@ -2456,12 +2546,6 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 								this.reverseMergeOpers(this.getMergeOperationsInManipulating());
 							}
 
-							/*
-							var mergeOper = isMovingOneBond?
-								this.createConnectorMergeOperation(targetObj, destObj):
-								this.createNodeMergeOperation(targetObj, destObj);
-							this.getMergeOperations()[0] = mergeOper;
-							*/
 							if (useMergePreview)
 							{
 								var mergeOper = isMovingOneBond?
@@ -2486,6 +2570,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 				}
 			}
 		}
+		*/
 
 		// no merge, just reverse old one and do normal move
 		//this.reverseMergeOpers();
@@ -2499,6 +2584,60 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		$super(endScreenCoord);
 	},
 
+	/** @private */
+	_calcMagneticMergeOrStickInfoOnScreenCoord: function(currScreenCoord, manipulatedObj, isManipulateSingleStickedObj, currManipulateInfoMap, originalManipulateInfoMap, excludedObjs, MergeTypes)
+	{
+		var editor = this.getEditor();
+		var objCanBeMerged = this._objCanBeMagneticMerged;
+		var objCanBeSticked = this._objCanBeMagneticSticked;
+
+		var obj = manipulatedObj;
+		/*
+		if (!objCanBeMerged(obj) && !objCanBeSticked(obj))
+		{
+			return null;
+		}
+		*/
+		var currCoord = currScreenCoord;
+		if (currCoord)
+		{
+			var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
+
+			//var mergeDest = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
+			var mergeOrStickDestInfo = this._getMagneticNodeMergeOrStickDestInfo(obj, currCoord, excludedObjs);
+			var mergeDest = null, stickDest = null;
+			if (mergeOrStickDestInfo)
+			{
+				if (mergeOrStickDestInfo.isStick)
+					stickDest = mergeOrStickDestInfo.obj;
+				else if (mergeOrStickDestInfo.isMerge)
+					mergeDest = mergeOrStickDestInfo.obj;
+			}
+			if (mergeDest || stickDest)  // may merge, or stick store info
+			{
+				return {
+					magneticObj: obj,
+					magneticDest: mergeDest || stickDest,
+					magneticType: stickDest ? MergeTypes.STICK : MergeTypes.MERGE
+				};
+			}
+			else
+			{
+				if (!stickDest && isManipulateSingleStickedObj)
+				{
+					var originalInfo = originalManipulateInfoMap.get(obj);
+					if (originalInfo.stickTarget)   // has old stick object, but now moves out, it should be unsticked
+					{
+						return {
+							magneticObj: obj,
+							magneticDest: null,   // stick to null means unstick
+							magneticType: MergeTypes.STICK
+						};
+					}
+				}
+			}
+		}
+	},
 	/** @private */
 	_calcMagneticMergeOrStickInfos: function(manipulatedObjs, currManipulateInfoMap, originalManipulateInfoMap, excludedObjs, MergeTypes)
 	{
@@ -2526,6 +2665,18 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 			}
 			var currInfo = currManipulateInfoMap.get(obj);
 			var currCoord = currInfo && currInfo.screenCoord;
+			if (currCoord)
+			{
+				var checkResult = this._calcMagneticMergeOrStickInfoOnScreenCoord(currCoord, obj, isManipulateSingleStickedObj, currManipulateInfoMap, originalManipulateInfoMap, excludedObjs, MergeTypes);
+				if (checkResult)
+				{
+					magneticObjIndexes.push(i);
+					magneticObjs.push(checkResult.magneticObj);
+					magneticDests.push(checkResult.magneticDest);
+					magneticTypes.push(checkResult.magneticType);
+				}
+			}
+			/*
 			if (currCoord)
 			{
 				var boundInfos = editor.getBoundInfosAtCoord(currCoord, null, this.getCurrBoundInflation());
@@ -2564,6 +2715,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 					}
 				}
 			}
+			*/
 		}
 
 		return {
@@ -4875,6 +5027,12 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 	},
 
 	/** @private */
+	getDirectManipulateObjs: function(insertedObjs, repInsertionResult)
+	{
+		return insertedObjs;
+	},
+
+	/** @private */
 	react_pointerdown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
@@ -4892,7 +5050,10 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 				{
 					this.startDirectManipulate(insertResult.manipulateType, insertResult.objects,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
-					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
+					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to all inserted objects
+					this.startDirectManipulate(insertResult.manipulateType, this.getDirectManipulateObjs(insertResult.objects, insertResult),
+							insertResult.coord, insertResult.box, insertResult.rotateCenter);  // directly manipulate on suitable objects
+					//this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
 				}
 				e.preventDefault();
 				return true; // important
@@ -6101,15 +6262,60 @@ Kekule.Editor.MolRingIaController = Class.create(Kekule.Editor.MolFlexStructureI
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.MolRingIaController, Kekule.Editor.ChemSpaceEditor);
 
 /**
- * Controller to add arrow/line into chem space.
+ * Controller to add path glyph with ctab.
  * @class
  * @augments Kekule.Editor.RepositoryIaController
+ *
+ * @property {Bool} allowBondingToBond Whether bond-bond connection (e.g., in Zeise salt) is allowed.
+ * @property {Bool} enableBondModification Whether modification existing bond is enabled.
+ * @property {Bool} autoSwitchBondOrder If true, click on bond will switch bond order between single, double and triple.
+ * @property {Kekule.ChemStructureObject} startingObj
+ * @property {Kekule.ChemStructureObject} endingObj
+ * @property {String} bondType
+ * @property {Int} bondOrder
+ * @property {Int} bondStereo
+ * //@property {Bool} autoCreateNewStructFragment Whether a new molecule is created when a bond appointed to a blank space in editor.
+ */
+Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaController,
+/** @lends Kekule.Editor.PathGlyphIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.PathGlyphIaController',
+	/** @construct */
+	initialize: function($super, editor)
+	{
+		$super(editor);
+		//this.setEnableLengthChangeInConstrainedMoving(true);
+	},
+	/** @ignore */
+	getDirectManipulateObjs: function($super, insertedObjs, repInsertionResult)
+	{
+		//return insertedObjs;
+		if (insertedObjs.length === 1)
+		{
+			var parent = insertedObjs[0];
+			// if parent has two node (e.g., arrow), allow to move the end point of it directly
+			if (parent.getNodeAt && parent.getNodeCount)
+			{
+				if (parent.getNodeCount() === 2)
+					return parent.getNodeAt(parent.getNodeCount() - 1);
+			}
+		}
+		// default
+		return $super(insertedObjs, repInsertionResult);
+	}
+});
+
+/**
+ * Controller to add arrow/line into chem space.
+ * @class
+ * @augments Kekule.Editor.PathGlyphIaController
  *
  * @property {Class} glyphClass Class to create glyph.
  * @property {Float} glyphRefLength Default length to generate glyph.
  * @property {Hash} glyphInitialParams Initial params to create glyph.
  */
-Kekule.Editor.ArrowLineIaController = Class.create(Kekule.Editor.RepositoryIaController,
+Kekule.Editor.ArrowLineIaController = Class.create(Kekule.Editor.PathGlyphIaController,
 /** @lends Kekule.Editor.ArrowLineIaController# */
 {
 	/** @private */

@@ -504,6 +504,12 @@ ClassEx.extend(Kekule.Glyph.PathGlyphNode,
 		*/
 		var result = [this.getParent()];
 		return result;
+	},
+	/** @ignore */
+	getConstraintManipulationBaseObj: function($super)
+	{
+		var linkedObjs = this.getLinkedObjs();
+		return (linkedObjs.length === 1)? linkedObjs[0]: $super();
 	}
 });
 ClassEx.extend(Kekule.Glyph.PathGlyphConnectorControlNode,
