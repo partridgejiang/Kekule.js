@@ -345,7 +345,8 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var midNo = (lineCount - 1) / 2;
 
 		var lineScreenGap = lineGap;
-		var deltaScreenCoord = {'y': lineScreenGap * angleCos, 'x': lineScreenGap * angleSin};
+		var deltaScreenCoord = {'y': lineScreenGap * angleCos, 'x': -lineScreenGap * angleSin};
+		// console.log('l', l, 'w', w, 'h', h, 'sin', angleSin, 'cos', angleCos, 'gap', lineScreenGap, 'delta', deltaScreenCoord);
 		var totalDeltaScreenCoord = CU.multiply(deltaScreenCoord, (lineCount - 1) / 2);
 
 		var initialOffsetCoord = CU.multiply(deltaScreenCoord, (lineCount - 1) / 2);
