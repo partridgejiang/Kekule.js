@@ -52,7 +52,7 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 	initPropValues: function($super)
 	{
 		$super();
-		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+		//this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	},
 	/** @ignore */
 	getAllowCoordStickTo: function(dest)
