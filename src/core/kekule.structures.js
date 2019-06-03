@@ -1005,6 +1005,18 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		return false;  // default do not allow stick
 	},
 
+	/**
+	 * Notify tje coord stick target has been changed.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} oldTarget
+	 * @param {Kekule.ChemObject} newTarget
+	 * @private
+	 */
+	notifyCoordStickTargetChanged: function(oldTarget, newTarget)
+	{
+		// do nothing here
+	},
+
 	/** @private */
 	_getParentAbsCoord: function(coordMode, allowCoordBorrow)
 	{
@@ -1028,6 +1040,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		}
 		if (newValue && newValue.attachCoordStickNodes)
 			newValue.attachCoordStickNodes(this);
+		this.notifyCoordStickTargetChanged(oldValue, newValue);
 	},
 
 	/** @private */
