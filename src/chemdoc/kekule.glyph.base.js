@@ -211,6 +211,18 @@ Kekule.Glyph.Base = Class.create(Kekule.ChemObject,
 	getChildAcceptCoordStickFrom: function(child, fromObj)
 	{
 		return false;
+	},
+	/**
+	 * Controls whether coord offset should be used in rendering when a child sticking to another target.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} child
+	 * @param {Kekule.ChemObject} stickDest
+	 * @returns {Bool}
+	 * @private
+	 */
+	getChildUseCoordStickOffset: function(child, stickDest)
+	{
+		return null;
 	}
 });
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Glyph.Base);

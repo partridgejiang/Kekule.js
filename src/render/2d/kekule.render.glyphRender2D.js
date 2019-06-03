@@ -192,6 +192,31 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		}
 
 		// calculate the autoOffset positions
+		var offsetBounds = [];
+		var inflateShape = Kekule.Render.MetaShapeUtils.inflateShape;
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var nodeParams = nodes[i].getPathNodeParams();
+			if (nodeParams.useStickingOffset)
+			{
+				var offsetBound = this.getStickingTargetRenderBound(context, nodes[i]);
+				if (offsetBound)
+				{
+					var offsetRelLength = nodeParams.stickingOffsetRelLength;
+					if (Kekule.ObjUtils.isUnset(offsetRelLength))
+					{
+						offsetRelLength = renderOptions.glyphStickOffsetRelLength;
+					}
+					if (offsetRelLength)
+					{
+						var offsetContextLength = this._doGetStickOffsetContextLength(context, offsetRelLength, renderOptions);
+						offsetBound = inflateShape(offsetBound, offsetContextLength);
+					}
+					offsetBounds[i] = offsetBound;
+				}
+			}
+		}
+		/*
 		var offsetBound1, offsetBound2;
 		if (pathParams.autoOffset)
 		{
@@ -200,7 +225,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 			//console.log(connector.getClassName(), 'autoOffset', offsetBound1, offsetBound2);
 			// calculate the glyphStickOffsetRefLength, do the offset
 		}
-		var offsetBounds = [offsetBound1, offsetBound2];
+		//var offsetBounds = [offsetBound1, offsetBound2];
 		if (offsetBound1 || offsetBound2)
 		{
 			//console.log(renderOptions);
@@ -218,12 +243,9 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 						//console.log('after inflate', offsetBounds[i]);
 					}
 				}
-				/*
-				offsetBound1 = offsetBounds[0];
-				offsetBound2 = offsetBounds[1];
-				*/
 			}
 		}
+		*/
 
 		// draw parrel lines
 		var drawnElems = [];

@@ -24,6 +24,12 @@
  * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {String} nodeType Type of this glyph node.
+ * @property {Hash} pathNodeParams Additional params of path node. Different glyph may requires different params.
+ *   Some common ones:
+ *   {
+ *     useStickingOffset: Bool. Whether use a small offset to draw the end of path when this node sticking to another target.
+ *     stickingOffsetRelLength: Number. Can be null to use the default one.
+ *   }
  */
 Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.Glyph.PathGlyphNode# */
@@ -46,6 +52,27 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 		this.defineProp('nodeType', {
 			'dataType': DataType.STRING,
 			'scope': Class.PropertyScope.PUBLIC
+		});
+		this.defineProp('pathNodeParams', {
+			'dataType': DataType.HASH,
+			'scope': Class.PropertyScope.PUBLISHED,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('pathNodeParams');
+				if (!result)
+				{
+					result = {};
+					this.setPropStoreFieldValue('pathNodeParams', result);
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				if (!value)
+					this.setPropStoreFieldValue('pathNodeParams', null);
+				else
+					this.setPropStoreFieldValue('pathNodeParams', Object.extend({}, value, true));
+			}
 		});
 	},
 	/** @ignore */
@@ -76,6 +103,23 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 			return p.getChildAcceptCoordStickFrom(this, fromObj);
 		// defaultly is not allowed
 		return false;
+	},
+	/** @ignore */
+	notifyCoordStickTargetChanged: function($super, oldTarget, newTarget)
+	{
+		$super(oldTarget, newTarget);
+		if (Kekule.ObjUtils.isUnset(this.getPathNodeParams().useStickingOffset))
+		{
+			var p = this.getParent();
+			if (p.getChildUseCoordStickOffset)
+			{
+				var useOffset = p.getChildUseCoordStickOffset(this, newTarget);
+				if (Kekule.ObjUtils.notUnset(useOffset))
+				{
+					this.getPathNodeParams().useStickingOffset = useOffset;
+				}
+			}
+		}
 	}
 });
 

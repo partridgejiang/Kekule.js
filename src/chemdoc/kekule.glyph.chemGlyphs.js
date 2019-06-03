@@ -131,6 +131,19 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.PathGlyph,
 	{
 		return true;  // allow coord stick of child nodes
 	},
+	/** @ignore */
+	getChildUseCoordStickOffset: function($super, child, stickDest)
+	{
+		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+			//return $super(child, stickDest);
+		}
+	},
 	/** @private */
 	doCreateDefaultStructure: function(refLength, initialParams)
 	{
