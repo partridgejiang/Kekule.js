@@ -116,6 +116,134 @@ Kekule.Glyph.AddSymbol = Class.create(Kekule.Glyph.PathGlyph,
 	}
 });
 
+/////////////// Set of line based glyphs ////////////////////
+
+/**
+ * A simple line segment glyph.
+ * @class
+ * @augments Kekule.Glyph.StraightLine
+ */
+Kekule.Glyph.Segment = Class.create(Kekule.Glyph.StraightLine,
+/** @lends Kekule.Glyph.Segment# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.Segment'
+});
+
+/**
+ * Enumeration of reaction arrow types.
+ * @enum
+ */
+Kekule.Glyph.ReactionArrowType = {
+	NORMAL: 'normal',
+	REVERSIBLE: 'Reversible',
+	RESONANCE: 'resonance',
+	RETROSYNTHESIS: 'retrosynthesis'
+};
+
+/**
+ * A simple line segment glyph.
+ * @class
+ * @augments Kekule.Glyph.StraightLine
+ */
+Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
+/** @lends Kekule.Glyph.ReactionArrow# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.ReactionArrow',
+	/** @private */
+	initProperties: function() {
+		this.defineProp('reactionType', {
+			'dataType': DataType.STRING,
+			'enumSource': Kekule.Glyph.ReactionArrowType,
+			'setter': function(value) {
+				this.setPropStoreFieldValue('reactionType', value);
+				this.reactionTypeChanged(value);
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setReactionType(Kekule.Glyph.ReactionArrowType.NORMAL);
+	},
+	/** @ignore */
+	doCreateDefaultStructure: function($super, refLength, initialParams)
+	{
+		var creationParams = initialParams;
+		var rType = this.getReactionType();
+		if (rType)
+		{
+			var defParams = this._getPathParamOfArrowType(rType);
+			creationParams = Object.extend(defParams, initialParams);
+		}
+		return $super(refLength, creationParams);
+	},
+	/** @private */
+	reactionTypeChanged: function(newArrowType)
+	{
+		var pParams = this._getPathParamOfArrowType(newArrowType);
+		if (pParams)
+		{
+			// update path params
+			var connector = this.getConnectorAt(0);
+			if (connector)
+				connector.modifyPathParams(pParams);
+		}
+	},
+	/** @private */
+	_getPathParamOfArrowType: function(arrowType)
+	{
+		var RAT = Kekule.Glyph.ReactionArrowType;
+		var AT = Kekule.Glyph.ArrowType;
+		var AS = Kekule.Glyph.ArrowSide;
+		var result;
+		switch (arrowType)
+		{
+			case RAT.NORMAL:
+				result = {
+					'startArrowType': AT.NONE,
+					'endArrowType': AT.OPEN,
+					'endArrowSide': AS.BOTH,
+					'lineCount': 1
+				};
+				break;
+			case RAT.REVERSIBLE:
+				result = {
+					'startArrowType': AT.OPEN,
+					'startArrowSide': AS.REVERSED,
+					'endArrowType': AT.OPEN,
+					'endArrowSide': AS.SINGLE,
+					'lineGap': 0.1,
+					'lineCount': 2
+				};
+				break;
+			case RAT.RESONANCE:
+				result = {
+					'startArrowType': AT.OPEN,
+					'startArrowSide': AS.BOTH,
+					'endArrowType': AT.OPEN,
+					'endArrowSide': AS.BOTH,
+					'lineCount': 1
+				};
+				break;
+			case RAT.RETROSYNTHESIS:
+				result = {
+					'startArrowType': AT.NONE,
+					'endArrowType': AT.OPEN,
+					'endArrowSide': AS.BOTH,
+					'lineGap': 0.1,
+					'lineCount': 2
+				};
+				break;
+		}
+		return result;
+	}
+});
+
+////////////// Set of arc based glyphs //////////////////////
+
 /**
  * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
  * @class
