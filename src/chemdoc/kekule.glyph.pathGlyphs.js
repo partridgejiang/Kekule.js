@@ -494,6 +494,24 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 
 		this.notifyPropSet('controlPoints', null);
 		return this;
+	},
+	/**
+	 * Modify current path params.
+	 * Only values in params will be changed, other values of old path params will remain unchanged.
+	 * @param {Hash} params
+	 * @returns {Hash} New path params.
+	 */
+	modifyPathParams: function(params)
+	{
+		if (params)
+		{
+			var p = this.getPathParams();
+			p = Object.extend(p, params || {});
+			this.setPathParams(p);
+			return p;
+		}
+		else
+			return null;
 	}
 });
 
