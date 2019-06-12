@@ -988,8 +988,9 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 						return;
 					}
 				}
-				this._coordStickTargetChanged(this.getCoordStickTarget(), value);
+				var old = this.getCoordStickTarget();
 				this.setPropStoreFieldValue('coordStickTarget', value);
+				this._coordStickTargetChanged(old, value);
 			}
 		});
 	},
