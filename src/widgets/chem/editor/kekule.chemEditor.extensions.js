@@ -695,4 +695,57 @@ ClassEx.extend(Kekule.Glyph.PathGlyph,
 	}
 });
 
+ClassEx.extend(Kekule.Glyph.Arc,
+/** @lends Kekule.Glyph.Arc# */
+{
+	/** @private */
+	_getChemStickTargets: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
+		{
+			var node = this.getNodeAt(i);
+			var stickTarget = node.getCoordStickTarget();
+			if (stickTarget && (stickTarget instanceof Kekule.ChemStructureNode || stickTarget instanceof Kekule.ChemStructureConnector))
+				result.push(stickTarget);
+		}
+		return result;
+	},
+	/** @ignore */
+	notifyChildCoordStickTargetChanged: function(child, oldTarget, newTarget)
+	{
+		this._autoAdjustClass();
+	},
+	_autoAdjustClass: function()
+	{
+		if (this.getIsEditing())
+		{
+			var stickTargets = this._getChemStickTargets();
+			var isEPushingArrow = stickTargets.length >= 2;
+			if (isEPushingArrow)
+			{
+				if (!(this instanceof Kekule.Glyph.ElectronPushingArrow))
+				{
+					//console.log('change to e arrow');
+					this.__changeClass__(Kekule.Glyph.ElectronPushingArrow);
+				}
+			}
+			else
+			{
+				if (this instanceof Kekule.Glyph.ElectronPushingArrow)
+				{
+					//console.log('change to arc');
+					this.__changeClass__(Kekule.Glyph.Arc);
+				}
+			}
+		}
+	}
+});
+ClassEx.extendMethod(Kekule.Glyph.Arc, 'doCreateDefaultStructure', function($origin, refLength, initialParams)
+{
+	var result = $origin(refLength, initialParams);
+	this._autoAdjustClass();
+	return result;
+})
+
 })();

@@ -108,9 +108,9 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 	notifyCoordStickTargetChanged: function($super, oldTarget, newTarget)
 	{
 		$super(oldTarget, newTarget);
+		var p = this.getParent();
 		if (Kekule.ObjUtils.isUnset(this.getPathNodeParams().useStickingOffset))
 		{
-			var p = this.getParent();
 			if (p.getChildUseCoordStickOffset)
 			{
 				var useOffset = p.getChildUseCoordStickOffset(this, newTarget);
@@ -119,6 +119,11 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 					this.getPathNodeParams().useStickingOffset = useOffset;
 				}
 			}
+		}
+		// notify parent that stick target has been changed
+		if (p.notifyChildCoordStickTargetChanged)
+		{
+			p.notifyChildCoordStickTargetChanged(this.oldTarget, newTarget);
 		}
 	}
 });

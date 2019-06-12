@@ -59,18 +59,21 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 		if (Kekule.ObjUtils.isUnset(initialParams.autoOffset))
 			p.autoOffset = false;
 		connector.setPathParams(p);
-	},
-
-	/** @ignore */
+	}
+	/* @ignore */
+	/*
 	getAllowChildCoordStickTo: function(child, dest)
 	{
 		return true;
 	},
-	/** @ignore */
+	*/
+	/* @ignore */
+	/*
 	getChildAcceptCoordStickFrom: function(child, fromObj)
 	{
 		return true;
 	}
+	*/
 });
 
 /**
@@ -189,6 +192,24 @@ Kekule.Glyph.Arc = Class.create(Kekule.Glyph.PathGlyph,
 	_applyParamsToConnector: function(connector, initialParams)
 	{
 		connector.setPathParams(initialParams);
+	},
+	/** @ignore */
+	getAllowChildCoordStickTo: function(child)
+	{
+		return true;  // allow coord stick of child nodes
+	},
+	/** @ignore */
+	getChildUseCoordStickOffset: function($super, child, stickDest)
+	{
+		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+			//return $super(child, stickDest);
+		}
 	}
 });
 
