@@ -491,6 +491,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				chemSpace.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
 			}
 		}
+		if (chemSpace.setIsEditing)
+			chemSpace.setIsEditing(true);
 	},
 
 	/**

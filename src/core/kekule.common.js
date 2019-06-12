@@ -1964,6 +1964,10 @@ var S_PREFIX_OBJ_REF = '@';  // internal const
  * @property {Kekule.ChemObject} owner
  * @property {Object} srcInfo Stores the source data of ChemObject when read object from external file, a object that
  *   can has the following fields: {data, dataType, format, mimeType, fileExt, possibleFileExts, url}.
+ * //@property {String} role The role of this object in chem document.
+ * //  Instances of one class may act as different roles in a chem document. For example, arrow arc linking to atoms/bonds
+ * //  act as electron pushing arrow, while the stand alone one should be only a arrow marker.
+ * @property {Bool} isEditing Indicating whether the object is being edited in a editor.
  */
 /**
  * Invoked when this object has been added to a parent as child.
@@ -2138,6 +2142,18 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				return result;
 			}
 		});
+		//this.defineProp('role', {'dataType': DataType.STRING});
+
+		this.defineProp('isEditing', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() {
+				var owner = this.getOwner();
+				if (owner && owner.getIsEditing)
+					return owner.getIsEditing();
+				else
+					return this.getPropStoreFieldValue('isEditing');
+			}
+		});
+		// prop isEditing should never be saved, it should set by editor when loading chem space
 	},
 	/** @ignore */
 	initPropValues: function($super)
