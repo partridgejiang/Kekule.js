@@ -2304,6 +2304,29 @@ Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController = Ke
 	null, null,
 	BNS.glyphElectronPushingArrow
 );
+Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReactionArrow',
+	{
+		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphInitialParams': {
+			//'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+			//'lineCount': 1
+		}
+	},
+	null, null,
+	BNS.glyphElectronPushingArrow
+);
+
 
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
@@ -2324,7 +2347,8 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
 		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController,
-		Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController
+		Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController
 	],
 	null,
 	BNS.glyph
