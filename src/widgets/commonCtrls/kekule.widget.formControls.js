@@ -33,7 +33,8 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	TEXTAREA: 'K-TextArea',
 	SELECTBOX: 'K-SelectBox',
 	COMBOBOX: 'K-ComboBox',
-	COMBOBOX_TEXTWRAPPER: 'K-ComboBox-TextWrapper'
+	COMBOBOX_TEXTWRAPPER: 'K-ComboBox-TextWrapper',
+	SLIDER: 'K-Slider'
 });
 
 /**
@@ -338,7 +339,6 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('input');
-		result.setAttribute('type', 'text');
 		return result;
 	},
 
@@ -346,6 +346,7 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	doBindElement: function($super, element)
 	{
 		$super(element);
+		element.setAttribute('type', 'text');
 	}
 });
 
@@ -1516,6 +1517,93 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 			}
 		}
 		$super(text);  // set value of core element(text box)
+	}
+});
+
+/**
+ * An silder widget based on input element.
+ * @class
+ * @augments Kekule.Widget.FormWidget
+ *
+ * @property {Number} minValue
+ * @property {Number} maxValue
+ * @property {Number} step
+ */
+Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
+/** @lends Kekule.Widget.Slider# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Slider',
+	/** @private */
+	BINDABLE_TAG_NAMES: ['input'],
+	/** @private */
+	DEF_MIN_VALUE: 0,
+	/** @private */
+	DEF_MAX_VALUE: 100,
+	/** @private */
+	DEF_STEP: 1,
+	/** @constructs */
+	initialize: function($super, parentOrElementOrDocument, minValue, maxValue, step)
+	{
+		$super(parentOrElementOrDocument);
+		if (OU.notUnset(minValue))
+			this.setMinValue(minValue);
+		if (OU.notUnset(maxValue))
+			this.setMaxValue(maxValue);
+		if (OU.notUnset(step))
+			this.setStep(step);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('minValue', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().min) || null; },
+			'setter': function(value)
+			{
+				this.getElement().min = value;
+			}
+		});
+		this.defineProp('maxValue', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().max) || null; },
+			'setter': function(value)
+			{
+				this.getElement().max = value;
+			}
+		});
+		this.defineProp('step', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().step) || null; },
+			'setter': function(value)
+			{
+				this.getElement().step = value;
+			}
+		});
+	},
+	/** @ignore */
+	doGetValue: function($super)  // convert the type of value to number
+	{
+		var v = $super();
+		if (v)
+			return parseFloat(v);
+		else
+			return 0;
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CNS.SLIDER;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('input');
+		return result;
+	},
+
+	/** @ignore */
+	doBindElement: function($super, element)
+	{
+		$super(element);
+		element.setAttribute('type', 'range');
 	}
 });
 
