@@ -34,7 +34,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	SELECTBOX: 'K-SelectBox',
 	COMBOBOX: 'K-ComboBox',
 	COMBOBOX_TEXTWRAPPER: 'K-ComboBox-TextWrapper',
-	SLIDER: 'K-Slider'
+	NUMINPUT: 'K-NumInput'
 });
 
 /**
@@ -1521,19 +1521,21 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 });
 
 /**
- * An silder widget based on input element.
+ * An widget to input number, based on input element.
+ * Can be in to forms: slider (type=range) or number inputter (type=number).
  * @class
  * @augments Kekule.Widget.FormWidget
  *
  * @property {Number} minValue
  * @property {Number} maxValue
  * @property {Number} step
+ * @property {String} controlType Type of input element, should be either 'range' or 'number'.
  */
-Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
-/** @lends Kekule.Widget.Slider# */
+Kekule.Widget.NumInput = Class.create(Kekule.Widget.FormWidget,
+/** @lends Kekule.Widget.NumInput# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Slider',
+	CLASS_NAME: 'Kekule.Widget.NumInput',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['input'],
 	/** @private */
@@ -1543,7 +1545,7 @@ Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	DEF_STEP: 1,
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, minValue, maxValue, step)
+	initialize: function($super, parentOrElementOrDocument, minValue, maxValue, step, controlType)
 	{
 		$super(parentOrElementOrDocument);
 		if (OU.notUnset(minValue))
@@ -1552,6 +1554,8 @@ Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
 			this.setMaxValue(maxValue);
 		if (OU.notUnset(step))
 			this.setStep(step);
+		if (controlType)
+			this.setControlType(controlType);
 	},
 	/** @private */
 	initProperties: function()
@@ -1577,6 +1581,13 @@ Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
 				this.getElement().step = value;
 			}
 		});
+		this.defineProp('controlType', {'dataType': DataType.STRING,
+			'getter': function() { return this.getElement().getAttribute('type'); },
+			'setter': function(value)
+			{
+				this.getElement().setAttribute('type', value);
+			}
+		});
 	},
 	/** @ignore */
 	doGetValue: function($super)  // convert the type of value to number
@@ -1590,7 +1601,7 @@ Kekule.Widget.Slider = Class.create(Kekule.Widget.FormWidget,
 	/** @ignore */
 	doGetWidgetClassName: function($super)
 	{
-		return $super() + ' ' + CNS.SLIDER;
+		return $super() + ' ' + CNS.NUMINPUT;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
