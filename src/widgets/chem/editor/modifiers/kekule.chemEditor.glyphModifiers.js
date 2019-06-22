@@ -39,7 +39,10 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	COMPOSER_GLYPH_PATH_MODIFIER_BUTTON: 'K-Chem-Composer-GlyphPathModifier-Button',
-	COMPOSER_Glyph_PATH_MODIFIER_DROPDOWN: 'K-Chem-Composer-GlyphPathModifier-DropDown'
+	COMPOSER_Glyph_PATH_MODIFIER_DROPDOWN: 'K-Chem-Composer-GlyphPathModifier-DropDown',
+	COMPOSER_GLYPH_REACTION_ARROW_MODIFIER_BUTTON: 'K-Chem-Composer-ReactionArrowModifier-Button',
+	COMPOSER_GLYPH_ARC_PATH_MODIFIER_BUTTON: 'K-Chem-Composer-ArcPathModifier-Button',
+	COMPOSER_GLYPH_ELECTRON_PUSHING_ARROW_MODIFIER_BUTTON: 'K-Chem-Composer-ElectronPushingArrowModifier-Button',
 });
 
 /**
@@ -93,7 +96,7 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		result.setText(this.getModifierCaption());
 		result.setShowText(true);
 		result.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
-		result.addClassName(CCNS.COMPOSER_GLYPH_PATH_MODIFIER_BUTTON);
+		result.addClassName(CCNS.COMPOSER_GLYPH_PATH_MODIFIER_BUTTON + ' ' + this.getModifierClassName());
 
 		//var atomSetter = this._createAtomSetter(this.getEditor());
 		//result.setDropDownWidget(atomSetter);
@@ -145,6 +148,11 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 	getModifierHint: function()
 	{
 		return Kekule.$L('ChemWidgetTexts.HINT_GLYPH_PATH_MODIFIER');
+	},
+	/** @private */
+	getModifierClassName: function()
+	{
+		return '';
 	},
 
 	/** @private */
@@ -408,6 +416,11 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 	{
 		return Kekule.$L('ChemWidgetTexts.HINT_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER');
 	},
+	/** @private */
+	getModifierClassName: function()
+	{
+		return CCNS.COMPOSER_GLYPH_REACTION_ARROW_MODIFIER_BUTTON;
+	},
 	/** @ignore */
 	getApplicableGlyphClasses: function()
 	{
@@ -509,6 +522,11 @@ Kekule.Editor.ObjModifier.ArcPath = Class.create(Kekule.Editor.ObjModifier.Glyph
 	{
 		return Kekule.$L('ChemWidgetTexts.HINT_ARC_PATH_MODIFIER');
 	},
+	/** @private */
+	getModifierClassName: function()
+	{
+		return CCNS.COMPOSER_GLYPH_ARC_PATH_MODIFIER_BUTTON;
+	},
 	/** @ignore */
 	getApplicableGlyphClasses: function()
 	{
@@ -545,6 +563,11 @@ Kekule.Editor.ObjModifier.ElectronPushingArrow = Class.create(Kekule.Editor.ObjM
 	getModifierHint: function()
 	{
 		return Kekule.$L('ChemWidgetTexts.HINT_ELECTRON_PUSHING_ARROW_MODIFIER');
+	},
+	/** @private */
+	getModifierClassName: function()
+	{
+		return CCNS.COMPOSER_GLYPH_ELECTRON_PUSHING_ARROW_MODIFIER_BUTTON;
 	},
 	/** @ignore */
 	getApplicableGlyphClasses: function()

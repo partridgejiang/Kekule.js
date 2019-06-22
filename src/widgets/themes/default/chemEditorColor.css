@@ -436,6 +436,19 @@
   background-image: url("images/slice/iconsSmall/addSymbol.gif");
 }
 
+.K-Chem-Composer-ReactionArrowModifier-Button > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/icons16/arrows.png");
+}
+.K-Chem-Composer-ArcPathModifier-Button > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/icons16/arc.png");
+}
+.K-Chem-Composer-ElectronPushingArrowModifier-Button > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/icons16/arcArrows.png");
+}
+
 .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Kekulize > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/ringAr6.gif");
