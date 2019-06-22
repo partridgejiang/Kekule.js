@@ -141,7 +141,7 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		var ctab = this.getChemObj();
 
 		// prepare draw parell paths
-		var lineGap = pathParams.lineGap || 0;
+		var lineGap = (pathParams.lineGap || 0) * renderOptions.defScaleRefLength;
 		var lineCount = lineGap? (pathParams.lineCount || 1): 1;
 		//var isEven = lineCount & 1;  // even or order number
 		//if ((lineCount > 1) && lineGap)

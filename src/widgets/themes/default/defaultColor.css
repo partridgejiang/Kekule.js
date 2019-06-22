@@ -236,6 +236,11 @@
     filter:Alpha(Opacity=35);
     color: #555555;
 }
+.K-State-Disabled .K-State-Disabled
+{
+    opacity: 1;
+    filter:Alpha(Opacity=100);
+}
 
 input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {

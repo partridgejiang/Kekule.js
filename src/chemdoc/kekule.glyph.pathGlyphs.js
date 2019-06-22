@@ -220,6 +220,7 @@ Kekule.Glyph.ArrowType = {
  * @class
  */
 Kekule.Glyph.ArrowSide = {
+	DEFAULT: 0,
 	BOTH: 0,  // default
 	SINGLE: 1,  // one one side of path
 	REVERSED: -1   // one side but at the different side of SINGLE
@@ -237,7 +238,7 @@ Kekule.Glyph.ArrowSide = {
  * @property {Hash} pathParams Other params to control the outlook of path. May including the following fields:
  *   {
  *     lineCount: {Int} need to draw single or multiple line in path?
- *     lineGap: {Float} gap between multiple lines
+ *     lineGap: {Float} gap between multiple lines, a relative value to ref length.
  *     startArrowType:
  *     startArrowSide:
  *     startArrowLength, startArrowWidth:
@@ -626,7 +627,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 });
 
 /**
- * Arc shaped connector between glyph nodes.
+ * BaseArc shaped connector between glyph nodes.
  * @class
  * @augments Kekule.Glyph.PathGlyphConnector
  * @param {String} id Id of this connector.
@@ -751,7 +752,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		if (!refLength)
 			refLength = 1;
 		var actualParams = {};
-		var lengthFields = ['lineGap', 'startArrowLength', 'startArrowWidth', 'endArrowLength', 'endArrowWidth'];
+		var lengthFields = [/*'lineGap',*/ 'startArrowLength', 'startArrowWidth', 'endArrowLength', 'endArrowWidth'];
 		for (var field in initialParams)
 		{
 			if (lengthFields.indexOf(field) >= 0)

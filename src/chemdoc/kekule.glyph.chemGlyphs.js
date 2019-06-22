@@ -136,9 +136,59 @@ Kekule.Glyph.Segment = Class.create(Kekule.Glyph.StraightLine,
  */
 Kekule.Glyph.ReactionArrowType = {
 	NORMAL: 'normal',
-	REVERSIBLE: 'Reversible',
+	REVERSIBLE: 'reversible',
 	RESONANCE: 'resonance',
-	RETROSYNTHESIS: 'retrosynthesis'
+	RETROSYNTHESIS: 'retrosynthesis',
+	CUSTOM: 'custom'
+};
+Kekule.Glyph.ReactionArrowType.getDefPathParamOfArrowType = function(arrowType)
+{
+	var RAT = Kekule.Glyph.ReactionArrowType;
+	var AT = Kekule.Glyph.ArrowType;
+	var AS = Kekule.Glyph.ArrowSide;
+	var result;
+	switch (arrowType)
+	{
+		case RAT.NORMAL:
+			result = {
+				'startArrowType': AT.NONE,
+				'endArrowType': AT.OPEN,
+				'endArrowSide': AS.BOTH,
+				'lineCount': 1
+			};
+			break;
+		case RAT.REVERSIBLE:
+			result = {
+				'startArrowType': AT.OPEN,
+				'startArrowSide': AS.REVERSED,
+				'endArrowType': AT.OPEN,
+				'endArrowSide': AS.SINGLE,
+				'lineGap': 0.1,
+				'lineCount': 2
+			};
+			break;
+		case RAT.RESONANCE:
+			result = {
+				'startArrowType': AT.OPEN,
+				'startArrowSide': AS.BOTH,
+				'endArrowType': AT.OPEN,
+				'endArrowSide': AS.BOTH,
+				'lineCount': 1
+			};
+			break;
+		case RAT.RETROSYNTHESIS:
+			result = {
+				'startArrowType': AT.NONE,
+				'endArrowType': AT.OPEN,
+				'endArrowSide': AS.BOTH,
+				'lineGap': 0.1,
+				'lineCount': 2
+			};
+			break;
+		default:  // other situation is not a reaction arrow
+			result = null;
+	}
+	return result;
 };
 
 /**
@@ -172,13 +222,16 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
 	doCreateDefaultStructure: function($super, refLength, initialParams)
 	{
 		var creationParams = initialParams;
-		var rType = this.getReactionType();
+		var rType = initialParams.reactionType || this.getReactionType();
 		if (rType)
 		{
 			var defParams = this._getPathParamOfArrowType(rType);
 			creationParams = Object.extend(defParams, initialParams);
 		}
-		return $super(refLength, creationParams);
+		var result = $super(refLength, creationParams);
+		if (rType)
+			this.setReactionType(rType);
+		return result;
 	},
 	/** @private */
 	reactionTypeChanged: function(newArrowType)
@@ -195,52 +248,10 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
 	/** @private */
 	_getPathParamOfArrowType: function(arrowType)
 	{
-		var RAT = Kekule.Glyph.ReactionArrowType;
-		var AT = Kekule.Glyph.ArrowType;
-		var AS = Kekule.Glyph.ArrowSide;
-		var result;
-		switch (arrowType)
-		{
-			case RAT.NORMAL:
-				result = {
-					'startArrowType': AT.NONE,
-					'endArrowType': AT.OPEN,
-					'endArrowSide': AS.BOTH,
-					'lineCount': 1
-				};
-				break;
-			case RAT.REVERSIBLE:
-				result = {
-					'startArrowType': AT.OPEN,
-					'startArrowSide': AS.REVERSED,
-					'endArrowType': AT.OPEN,
-					'endArrowSide': AS.SINGLE,
-					'lineGap': 0.1,
-					'lineCount': 2
-				};
-				break;
-			case RAT.RESONANCE:
-				result = {
-					'startArrowType': AT.OPEN,
-					'startArrowSide': AS.BOTH,
-					'endArrowType': AT.OPEN,
-					'endArrowSide': AS.BOTH,
-					'lineCount': 1
-				};
-				break;
-			case RAT.RETROSYNTHESIS:
-				result = {
-					'startArrowType': AT.NONE,
-					'endArrowType': AT.OPEN,
-					'endArrowSide': AS.BOTH,
-					'lineGap': 0.1,
-					'lineCount': 2
-				};
-				break;
-		}
-		return result;
+		return Kekule.Glyph.ReactionArrowType.getDefPathParamOfArrowType(arrowType);
 	}
 });
+
 
 ////////////// Set of arc based glyphs //////////////////////
 
@@ -249,33 +260,99 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
  * @class
  * @augments Kekule.Glyph.PathGlyph
  */
-Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.Arc,
+Kekule.Glyph.Arc = Class.create(Kekule.Glyph.BaseArc,
+/** @lends Kekule.Glyph.Arc# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.Arc'
+});
+
+/**
+ * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
+ * @class
+ * @augments Kekule.Glyph.PathGlyph
+ */
+Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 /** @lends Kekule.Glyph.ElectronPushingArrow# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.ElectronPushingArrow',
-	/* @ignore */
-	/*
-	getAllowChildCoordStickTo: function(child)
+	/** @private */
+	initProperties: function()
 	{
-		return true;  // allow coord stick of child nodes
+		this.defineProp('electronCount', {
+			'dataType': DataType.INT,
+			'getter': function() {
+				var arrowSide = this._getValidArrowSide();
+				var ASide = Kekule.Glyph.ArrowSide;
+				if (arrowSide === ASide.BOTH)
+					return 2;
+				else if ([ASide.SINGLE || ASide.REVERSED].indexOf(arrowSide) >= 0)
+					return 1;
+				else
+					return null;
+			},
+			'setter': function(value) {
+				var ASide = Kekule.Glyph.ArrowSide;
+				var arrowPos = this._getValidArrowPos();
+				var conn = this.getConnectorAt(0);
+				if (!arrowPos)
+				{
+					conn.getPathParams().endArrowType = Kekule.Glyph.ArrowType.OPEN;
+					arrowPos = 'end';
+				}
+				var params = conn.getPathParams();
+				if (value >= 2)
+				{
+					params[arrowPos + 'ArrowSide'] = ASide.BOTH;
+				}
+				else if (value === 1)
+				{
+					params[arrowPos + 'ArrowSide'] = ASide.SINGLE;
+				}
+				conn.setPathParams(params);
+			}
+		});
 	},
-	*/
-	/* @ignore */
-	/*
-	getChildUseCoordStickOffset: function($super, child, stickDest)
+	/** @ignore */
+	doCreateDefaultStructure: function($super, refLength, initialParams)
 	{
-		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
+		var result = $super(refLength, initialParams);
+		if (initialParams.electronCount)
 		{
-			return true;
+			this.setElectronCount(initialParams.electronCount);
 		}
-		else
-		{
-			return false;
-			//return $super(child, stickDest);
-		}
+		return result;
 	},
-	*/
+	/** @private */
+	_getValidArrowPos: function()
+	{
+		var conn = this.getConnectorAt(0);
+		var params = conn && conn.getPathParams();
+		if (params)
+		{
+			if (params.endArrowType)
+				return 'end';
+			else if (params.startArrowType)
+				return 'start';
+		}
+		return null;
+	},
+	/** @private */
+	_getValidArrowSide: function()
+	{
+		var conn = this.getConnectorAt(0);
+		var params = conn && conn.getPathParams();
+		if (params)
+		{
+			if (params.endArrowType)
+				return params.endArrowSide || Kekule.Glyph.ArrowSide.DEFAULT;
+			if (params.startArrowType)
+				return params.startArrowSide || Kekule.Glyph.ArrowSide.DEFAULT;
+
+		}
+		return null;
+	},
 	/** @ignore */
 	_applyParamsToConnector: function(connector, initialParams)
 	{

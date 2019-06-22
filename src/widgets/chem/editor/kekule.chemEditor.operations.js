@@ -95,6 +95,73 @@ Kekule.ChemObjOperation.Base = Class.create(Kekule.Operation,
 });
 
 /**
+ * A hack operation of changing a chemObject's class.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.ChemObject} chemObject Target chem object.
+ * @param {Class} newClass
+ *
+ * @property {Class} newClass
+ */
+Kekule.ChemObjOperation.ChangeClass = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemObjOperation.ChangeClass# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemObjOperation.ChangeClass',
+	/** @constructs */
+	initialize: function($super, chemObj, newClass, editor)
+	{
+		$super(chemObj, editor);
+		if (newClass)
+			this.setNewClass(newClass);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('newClass', {'dataType': DataType.CLASS, 'serializable': false});
+		this.defineProp('oldClass', {'dataType': DataType.CLASS, 'serializable': false});
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var obj = this.getTarget();
+		obj.beginUpdate();
+		try
+		{
+			this.notifyBeforeModifyingByEditor(obj, {});
+			if (!this.getOldClass())
+			{
+				this.setOldClass(obj.getClass());
+			}
+			obj.__changeClass__(this.getNewClass());
+
+			this.notifyAfterModifyingByEditor(obj, {});
+		}
+		finally
+		{
+			obj.endUpdate();
+		}
+	},
+	/** @private */
+	doReverse: function()
+	{
+		var obj = this.getTarget();
+		obj.beginUpdate();
+		try
+		{
+			this.notifyBeforeModifyingByEditor(obj, {});
+			obj.__changeClass__(this.getOldClass());
+			this.notifyAfterModifyingByEditor(obj, {});
+		}
+		finally
+		{
+			obj.endUpdate();
+		}
+	}
+});
+
+/**
  * Operation of changing a chemObject's properties.
  * @class
  * @augments Kekule.ChemObjOperation.Base
@@ -164,6 +231,92 @@ Kekule.ChemObjOperation.Modify = Class.create(Kekule.ChemObjOperation.Base,
 				obj.setPropValue(prop, value);
 			}
 			this.notifyAfterModifyingByEditor(obj, map);
+		}
+		finally
+		{
+			obj.endUpdate();
+		}
+	}
+});
+
+/**
+ * Operation of changing a chemObject's hash based properties.
+ * Note that different from {@link Kekule.ChemObjOperation.Modify},
+ * only the fields existing in new value will be overwrited, other field in old value will remains intact.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.ChemObject} chemObject Target chem object.
+ * @param {String} propName
+ * @param {Hash} newPropValue New prop hash value.
+ *
+ * @param {String} propName
+ * @property {Hash} newPropValue New prop hash value.
+ */
+Kekule.ChemObjOperation.ModifyHashProp = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemObjOperation.ModifyHashProp# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemObjOperation.ModifyHashProp',
+	/** @constructs */
+	initialize: function($super, chemObj, propName, newPropValue, editor)
+	{
+		$super(chemObj, editor);
+		if (propName)
+			this.setPropName(propName);
+		if (newPropValue)
+			this.setNewPropValue(newPropValue);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('propName', {'dataType': DataType.STRING});
+		this.defineProp('newPropValue', {'dataType': DataType.HASH});
+		this.defineProp('oldPropValue', {'dataType': DataType.HASH});  // private
+	},
+	/** @private */
+	_extendHash: function(oldValue, newValue)
+	{
+		//var propNames = Kekule.ObjUtils.getOwnedFieldNames(newValue);
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var obj = this.getTarget();
+		var propName = this.getPropName();
+		var oldValue = obj.getPropValue(this.getPropName());
+		var newValue = Object.extend(Object.extend({}, oldValue), this.getNewPropValue(), !true);
+		var valueMap = {};
+		valueMap[propName] = newValue;
+
+		obj.beginUpdate();
+		try
+		{
+			this.notifyBeforeModifyingByEditor(obj, valueMap);
+			obj.setPropValue(propName, newValue);
+			this.notifyAfterModifyingByEditor(obj, valueMap);
+		}
+		finally
+		{
+			obj.endUpdate();
+		}
+		this.setOldPropValue(oldValue);
+	},
+	/** @private */
+	doReverse: function()
+	{
+		var propName = this.getPropName();
+		var oldValue = this.getOldPropValue();
+		var valueMap = {};
+		valueMap[propName] = oldValue;
+
+		var obj = this.getTarget();
+		obj.beginUpdate();
+		try
+		{
+			this.notifyBeforeModifyingByEditor(obj, valueMap);
+			obj.setPropValue(propName, oldValue);
+			this.notifyAfterModifyingByEditor(obj, valueMap);
 		}
 		finally
 		{

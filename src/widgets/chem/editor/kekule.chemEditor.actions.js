@@ -105,6 +105,12 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	glyphRepHeatSymbol: 'repHeatSymbol',
 	glyphRepAddSymbol: 'repAddSymbol',
 	glyphElectronPushingArrow: 'repElectronPushingArrow',
+	glyphElectronPushingArrowDouble: 'repElectronPushingArrowDouble',
+	glyphElectronPushingArrowSingle: 'repElectronPushingArrowSingle',
+	glyphReactionArrowNormal: 'repGlyphReactionArrowNormal',
+	glyphReactionArrowReversible: 'glyphReactionArrowReversible',
+	glyphReactionArrowResonance: 'glyphReactionArrowResonance',
+	glyphReactionArrowRetrosynthesis: 'glyphReactionArrowRetrosynthesis'
 });
 
 /**
@@ -2219,7 +2225,7 @@ Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowArcController = Kekule.Edi
 	'ArrowLineIaController',
 	'ArrowLineIaController-OpenArrowArc',
 	{
-		'glyphClass': Kekule.Glyph.Arc,
+		'glyphClass': Kekule.Glyph.BaseArc,
 		'glyphInitialParams': {
 			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
 			'endArrowWidth': 0.25,
@@ -2239,7 +2245,7 @@ Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController = 
 	'ArrowLineIaController',
 	'ArrowLineIaController-SingleSideOpenArrowArc',
 	{
-		'glyphClass': Kekule.Glyph.Arc,
+		'glyphClass': Kekule.Glyph.BaseArc,
 		'glyphInitialParams': {
 			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
 			'endArrowSide': Kekule.Glyph.ArrowSide.REVERSED,
@@ -2284,16 +2290,121 @@ Kekule.Editor.ActionComposerSetRepositoryAddSymbolController = Kekule.Editor.cre
 	BNS.glyphRepAddSymbol
 );
 
-Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
-	'Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController',
-	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
-	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+Kekule.Editor.ActionComposerSetRepositoryLineSegmentController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryLineSegmentController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_LINE'),
+	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_GLYPH_LINE'),
 	'ArrowLineIaController',
-	'ArrowLineIaController-ElectronPushingArrow',
+	'ArrowLineIaController-Line',
+	{
+		'glyphClass': Kekule.Glyph.Segment,
+		'glyphInitialParams': {
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+		}
+	},
+	null, null,
+	BNS.glyphReactionArrowNormal
+);
+Kekule.Editor.ActionComposerSetRepositoryNormalReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryNormalReactionArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REACTION_ARROW_NORMAL'),
+	Kekule.$L('ChemWidgetTexts.HINT_REACTION_ARROW_NORMAL'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReactionArrowNormal',
+	{
+		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphInitialParams': {
+			'reactionArrowType': Kekule.Glyph.ReactionArrowType.NORMAL,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+		}
+	},
+	null, null,
+	BNS.glyphReactionArrowNormal
+);
+Kekule.Editor.ActionComposerSetRepositoryReversibleReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryReversibleReactionArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REACTION_ARROW_REVERSIBLE'),
+	Kekule.$L('ChemWidgetTexts.HINT_REACTION_ARROW_REVERSIBLE'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReactionArrowReversible',
+	{
+		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphInitialParams': {
+			'reactionType': Kekule.Glyph.ReactionArrowType.REVERSIBLE,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+		}
+	},
+	null, null,
+	BNS.glyphReactionArrowReversible
+);
+Kekule.Editor.ActionComposerSetRepositoryResonanceReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryResonanceReactionArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REACTION_ARROW_RESONANCE'),
+	Kekule.$L('ChemWidgetTexts.HINT_REACTION_ARROW_RESONANCE'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReactionArrowResonance',
+	{
+		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphInitialParams': {
+			'reactionType': Kekule.Glyph.ReactionArrowType.RESONANCE,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+		}
+	},
+	null, null,
+	BNS.glyphReactionArrowResonance
+);
+Kekule.Editor.ActionComposerSetRepositoryRetrosynthesisReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryRetrosynthesisReactionArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_REACTION_ARROW_RETROSYNTHESIS'),
+	Kekule.$L('ChemWidgetTexts.HINT_REACTION_ARROW_RETROSYNTHESIS'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-ReactionArrowRetrosynthesis',
+	{
+		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphInitialParams': {
+			'reactionType': Kekule.Glyph.ReactionArrowType.RETROSYNTHESIS,
+			'startArrowWidth': 0.25,
+			'startArrowLength': 0.25,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1.5,
+			'lineGap': 0.1,
+		}
+	},
+	null, null,
+	BNS.glyphReactionArrowRetrosynthesis
+);
+
+Kekule.Editor.ActionComposerSetRepositoryDoubleElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryDoubleElectronPushingArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_ELECTRON_PUSHING_ARROW_2'),
+	Kekule.$L('ChemWidgetTexts.HINT_ELECTRON_PUSHING_ARROW_2'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-ElectronPushingArrowDouble',
 	{
 		'glyphClass': Kekule.Glyph.ElectronPushingArrow,
 		'glyphInitialParams': {
-			'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+			'electronCount': 2,
 			'endArrowWidth': 0.25,
 			'endArrowLength': 0.25,
 			'lineLength': 1,
@@ -2302,31 +2413,28 @@ Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController = Ke
 		}
 	},
 	null, null,
-	BNS.glyphElectronPushingArrow
+	BNS.glyphElectronPushingArrowDouble
 );
-Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController = Kekule.Editor.createComposerIaControllerActionClass(
-	'Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController',
-	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
-	Kekule.$L('ChemWidgetTexts.HINT_REPOSITORY_ELECTRON_PUSHING_ARROW'), //Kekule.ChemWidgetTexts.HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE,
+Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_ELECTRON_PUSHING_ARROW_1'),
+	Kekule.$L('ChemWidgetTexts.HINT_ELECTRON_PUSHING_ARROW_1'),
 	'ArrowLineIaController',
-	'ArrowLineIaController-ReactionArrow',
+	'ArrowLineIaController-ElectronPushingArrowSingle',
 	{
-		'glyphClass': Kekule.Glyph.ReactionArrow,
+		'glyphClass': Kekule.Glyph.ElectronPushingArrow,
 		'glyphInitialParams': {
-			//'endArrowType': Kekule.Glyph.ArrowType.OPEN,
-			'startArrowWidth': 0.25,
-			'startArrowLength': 0.25,
+			'electronCount': 1,
 			'endArrowWidth': 0.25,
 			'endArrowLength': 0.25,
-			'lineLength': 1.5,
+			'lineLength': 1,
 			'lineGap': 0.1,
-			//'lineCount': 1
+			'lineCount': 1
 		}
 	},
 	null, null,
-	BNS.glyphElectronPushingArrow
+	BNS.glyphElectronPushingArrowSingle
 );
-
 
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
@@ -2336,6 +2444,7 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 	null,
 	null,
 	[
+		/*
 		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowLineController,
 		Kekule.Editor.ActionComposerSetRepositoryPathTriangleArrowLineController,
 		Kekule.Editor.ActionComposerSetRepositoryPathDiOpenArrowLineController,
@@ -2345,10 +2454,16 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryPathOpenArrowArcController,
 		Kekule.Editor.ActionComposerSetRepositoryPathSingleSideOpenArrowArcController,
 		Kekule.Editor.ActionComposerSetRepositoryPathLineController,
+		*/
+		Kekule.Editor.ActionComposerSetRepositoryNormalReactionArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryReversibleReactionArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryResonanceReactionArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryRetrosynthesisReactionArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryLineSegmentController,
+		Kekule.Editor.ActionComposerSetRepositoryDoubleElectronPushingArrowController,
+		Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
-		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController,
-		Kekule.Editor.ActionComposerSetRepositoryPathElectronPushingArrowController,
-		Kekule.Editor.ActionComposerSetRepositoryPathReactionArrowController
+		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
 	],
 	null,
 	BNS.glyph

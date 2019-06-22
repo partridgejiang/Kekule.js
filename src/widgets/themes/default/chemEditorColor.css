@@ -13,7 +13,11 @@
 }
 .K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content,
 .K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content,
-.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button .K-Pri-Glyph-Content
+.K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button .K-Pri-Glyph-Content,
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-StyleButtonGroup .K-Button .K-Pri-Glyph-Content,
+.K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button .K-Pri-Glyph-Content,
+.K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button .K-Pri-Glyph-Content,
+.K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button .K-Pri-Glyph-Content
 {
   width: 21px;
   height: 21px;
@@ -385,7 +389,8 @@
 {
   background-image: url("images/slice/iconsSmall/line.gif");
 }
-.K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-OpenArrowLine > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ReactionArrowNormal > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowOpen.gif");
 }
@@ -393,7 +398,8 @@
 {
   background-image: url("images/slice/iconsSmall/arrowTriangle.gif");
 }
-.K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-DiOpenArrowLine > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ReactionArrowResonance > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/diArrowOpen.gif");
 }
@@ -401,19 +407,23 @@
 {
   background-image: url("images/slice/iconsSmall/diArrowTriangle.gif");
 }
-.K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-ReversibleArrowLine > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ReactionArrowReversible > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowOpenReversible.gif");
 }
-.K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-OpenArrowDiLine > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ReactionArrowRetrosynthesis > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowOpenDouble.gif");
 }
-.K-Chem-ArrowLineIaController-OpenArrowArc > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-OpenArrowArc > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ElectronPushingArrowDouble > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowOpenArc.gif");
 }
-.K-Chem-ArrowLineIaController-SingleSideOpenArrowArc > .K-Pri-Glyph-Content
+.K-Chem-ArrowLineIaController-SingleSideOpenArrowArc > .K-Pri-Glyph-Content,
+.K-Chem-ArrowLineIaController-ElectronPushingArrowSingle > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowSingleSideOpenArc.gif");
 }
@@ -433,4 +443,67 @@
 .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button-Hucklize > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/ringAr6_2.gif");
+}
+
+.K-Chem-GlyphPath-Arrow-StyleButton-None > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowNone.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Open-Both > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpen.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Open-Single > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenSingle.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Open-Reversed > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenSingleReversed.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Triangle-Both > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowTriangle.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Triangle-Single > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowTriangleSingle.gif");
+}
+.K-Chem-GlyphPath-Arrow-StyleButton-Triangle-Reversed > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowTriangleSingleReversed.gif");
+}
+
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Unset > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowNone.gif");
+}
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Custom > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowTriangle.gif");
+}
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Normal > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpen.gif");
+}
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Resonance > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/diArrowOpen.gif");
+}
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Reversible > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenReversible.gif");
+}
+.K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Retrosynthesis > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenDouble.gif");
+}
+
+.K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button-2 > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowOpenArc.gif");
+}
+.K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button-1 > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowSingleSideOpenArc.gif");
 }

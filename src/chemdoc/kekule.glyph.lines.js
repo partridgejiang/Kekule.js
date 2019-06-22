@@ -146,15 +146,15 @@ Kekule.Glyph.Polygon = Class.create(Kekule.Glyph.PathGlyph,
 });
 
 /**
- * A glyph of arc line.
+ * A base glyph of arc segment.
  * @class
  * @augments Kekule.Glyph.PathGlyph
  */
-Kekule.Glyph.Arc = Class.create(Kekule.Glyph.PathGlyph,
-/** @lends Kekule.Glyph.Arc# */
+Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
+/** @lends Kekule.Glyph.BaseArc# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Glyph.Arc',
+	CLASS_NAME: 'Kekule.Glyph.BaseArc',
 	/** @constructs */
 	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
 	{
