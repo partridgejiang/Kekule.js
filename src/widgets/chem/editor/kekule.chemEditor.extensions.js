@@ -702,7 +702,7 @@ ClassEx.extend(Kekule.Glyph.BaseArc,
 	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var needAutoAdjustClass = (!oldOwner && newOwner);  // when first inserting to a space, may need to adjust class
-		var result = $super(newOwner);
+		var result = $super(newOwner, oldOwner);
 		if (needAutoAdjustClass && this.getIsEditing())
 		{
 			this._autoAdjustClass();

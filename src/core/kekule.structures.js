@@ -2919,7 +2919,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Note Connection table is not inherited from ChemObject, so no $super() need to be called.
 	 * @private
 	 */
-	parentChanged: function(newParent)
+	parentChanged: function($super, newParent, oldParent)
 	{
 		// change nodes and connectors' parent
 		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
@@ -4841,7 +4841,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	/** @private */
 	_removeChildObj: function($super, obj)
@@ -7497,7 +7497,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			if (obj && obj.setOwner)
 				obj.setOwner(newOwner);
 		}
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/** @private */
@@ -7954,7 +7954,7 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 		var subMols = this.getPropStoreFieldValue('subMolecules');
 		if (subMols)
 			subMols.setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/**

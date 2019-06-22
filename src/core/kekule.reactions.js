@@ -164,7 +164,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 				}
 			}
 		}
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/** @private */

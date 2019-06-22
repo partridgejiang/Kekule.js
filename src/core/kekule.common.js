@@ -2102,7 +2102,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 						value._appendChildObj(this);
 						this.invokeEvent('addToObjTree', {'obj': this, 'parent': value});
 					}
-					this.parentChanged(value);
+					this.parentChanged(value, oldParent);
 				}
 		});
 		this.defineProp('owner', {
@@ -2633,7 +2633,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 * Called after a new parent property is set. Descendants can override this method.
 	 * @private
 	 */
-	parentChanged: function(newParent)
+	parentChanged: function(newParent, oldParent)
 	{
 		// do nothing here
 	},
@@ -3378,14 +3378,14 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		this.changeAllItemsOwner();
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	*/
 	/** @private */
-	parentChanged: function($super, newParent)
+	parentChanged: function($super, newParent, oldParent)
 	{
 		this.changeAllItemsParent();
-		$super(newParent);
+		$super(newParent, oldParent);
 	},
 
 	/** @ignore */
@@ -3733,6 +3733,7 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	{
 		// change owners of children
 		this.getChildren().setOwner(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	/** @private */
 	_removeChildObj: function($super, obj)

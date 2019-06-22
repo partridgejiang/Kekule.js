@@ -787,7 +787,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	/** @private */
 	_removeChildObj: function($super, obj)
