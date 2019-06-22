@@ -147,7 +147,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var components = ['reactants', 'products', 'substances', 'conditions'];
 		for (var i = 0, l = components.length; i < l; ++i)

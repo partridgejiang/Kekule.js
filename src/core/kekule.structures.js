@@ -4837,7 +4837,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		}
 	},
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
@@ -7488,7 +7488,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var items = this.getItems();
 		for (var i = 0, l = items.length; i < l; ++i)
@@ -7949,7 +7949,7 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var subMols = this.getPropStoreFieldValue('subMolecules');
 		if (subMols)
