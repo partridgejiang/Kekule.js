@@ -258,7 +258,7 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
 /**
  * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
  * @class
- * @augments Kekule.Glyph.PathGlyph
+ * @augments Kekule.Glyph.BaseArc
  */
 Kekule.Glyph.Arc = Class.create(Kekule.Glyph.BaseArc,
 /** @lends Kekule.Glyph.Arc# */
@@ -270,7 +270,7 @@ Kekule.Glyph.Arc = Class.create(Kekule.Glyph.BaseArc,
 /**
  * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
  * @class
- * @augments Kekule.Glyph.PathGlyph
+ * @augments Kekule.Glyph.BaseArc
  */
 Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 /** @lends Kekule.Glyph.ElectronPushingArrow# */
