@@ -31,9 +31,10 @@ var defaultBtnSetting = {
 			N.molElectronLonePair
 		]},
 		{'name': N.glyph, attached: [
-			N.glyphRepOpenArrowLine, N.glyphRepTriangleArrowLine, N.glyphRepDiOpenArrowLine, N.glyphRepDiTriangleArrowLine,
-			N.glyphRepReversibleArrowLine, N.glyphRepOpenArrowDiLine, N.glyphRepOpenArrowArc, N.glyphRepSingleSideOpenArrowArc,
-			N.glyphRepLine, N.glyphRepHeatSymbol, N.glyphRepAddSymbol
+			N.glyphReactionArrowNormal, N.glyphReactionArrowReversible, N.glyphReactionArrowResonance, N.glyphReactionArrowRetrosynthesis,
+			N.glyphRepSegment,
+			N.glyphElectronPushingArrowDouble, N.glyphElectronPushingArrowSingle,
+			N.glyphRepHeatSymbol, N.glyphRepAddSymbol
 		]},
 		{'name': N.textImage, attached: [N.textBlock, N.imageBlock]}
 	]
@@ -180,6 +181,7 @@ function _initCustomizationSystem(concreteComposer, commonBtnZoneParent, chemBtn
 				createButtonInfo('N.molElectronLonePair')
 			]),
 			createButtonInfo('N.glyph', null, null, null, [
+				/*
 				createButtonInfo('N.glyphRepOpenArrowLine'),
 				createButtonInfo('N.glyphRepTriangleArrowLine'),
 				createButtonInfo('N.glyphRepDiOpenArrowLine'),
@@ -189,6 +191,14 @@ function _initCustomizationSystem(concreteComposer, commonBtnZoneParent, chemBtn
 				createButtonInfo('N.glyphRepOpenArrowArc'),
 				createButtonInfo('N.glyphRepSingleSideOpenArrowArc'),
 				createButtonInfo('N.glyphRepLine'),
+				*/
+				createButtonInfo('N.glyphReactionArrowNormal'),
+				createButtonInfo('N.glyphReactionArrowReversible'),
+				createButtonInfo('N.glyphReactionArrowResonance'),
+				createButtonInfo('N.glyphReactionArrowRetrosynthesis'),
+				createButtonInfo('N.glyphSegment'),
+				createButtonInfo('N.glyphElectronPushingArrowDouble'),
+				createButtonInfo('N.glyphElectronPushingArrowSingle'),
 				createButtonInfo('N.glyphRepHeatSymbol'),
 				createButtonInfo('N.glyphRepAddSymbol')
 			]),
