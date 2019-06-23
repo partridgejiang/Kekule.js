@@ -53,7 +53,18 @@
 .K-Chem-StructureNodeSetter-InputBox .K-ComboTextBox-Assoc-Widget .K-Pri-Glyph-Content{display:none}
 .K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection{margin-top:.7em}
 .K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup{display:block;margin:.5em auto;background-color:transparent;text-align:left}
-.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn{min-width:4em}
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeButton{min-width:4em}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-StyleButtonGroup{}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter{display:inline-block;margin-right:.5em;vertical-align:middle}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter *{display:inline-block;vertical-align:middle}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter .K-NumInput,.K-Chem-GlyphPath-Line-SettingPanel .K-NumInput{margin-left:.5em;margin-right:.5em}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter .K-NumInput{width:7em}
+.K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button,.K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button{text-align:left}
+.K-Chem-GlyphPath-Line-SettingPanel .K-NumInput{width:6em}
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section{display:block}
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Title{display:block;font-size:1em;font-weight:bold}
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Panel{border:none;margin:.5em;padding:0}
+.K-Chem-ReactionArrow-SettingPanel .K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title{display:inline;margin-right:.5em}
 .K-Chem-Editor{overflow:auto}
 .K-Chem-Editor .K-Chem-Editor-Client{position:relative;width:100%;height:100%;margin:0 auto}
 .K-Chem-Editor .K-Chem-Editor-UiEvent-Receiver{background:#fff;opacity:0;filter:Alpha(Opacity=0);position:absolute;left:0;top:0;width:100%;height:100%}
@@ -121,4 +132,4 @@
 .K-Chem-ComposerFrame{border:none}
 .K-Chem-ComposerFrame-ContentDoc,.K-Chem-ComposerFrame-ContentBody{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .K-Chem-ComposerFrame-ContentBody .K-Chem-Composer{margin:0;width:100%;height:100%}
-#CssGaga{content:"190419131904,swt,334"}
+#CssGaga{content:"190623082535,mae,334"}

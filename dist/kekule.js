@@ -396,6 +396,7 @@ var kekuleFiles = {
 			'widgets/chem/editor/modifiers/kekule.chemEditor.styleModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
+			'widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js',
 
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
 		],
