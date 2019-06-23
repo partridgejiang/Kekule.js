@@ -194,9 +194,11 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 		connector.setPathParams(initialParams);
 	},
 	/** @ignore */
-	getAllowChildCoordStickTo: function(child)
+	getAllowChildCoordStickTo: function(child, dest)
 	{
-		return true;  // allow coord stick of child nodes
+
+		return !dest ||  // dest not set, a general test, just returns true
+			((dest instanceof Kekule.ChemStructureNode) || (dest instanceof Kekule.ChemStructureConnector)) && (!this._isChildrenStickingTo(dest, [child]));
 	},
 	/** @ignore */
 	getChildUseCoordStickOffset: function($super, child, stickDest)
@@ -210,6 +212,19 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 			return false;
 			//return $super(child, stickDest);
 		}
+	},
+	/** @private */
+	_isChildrenStickingTo: function(dest, excludeChildren)
+	{
+		var nodes = this.getNodes();
+		nodes = Kekule.ArrayUtils.exclude(nodes, excludeChildren || []);
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var n = nodes[i];
+			if (n.getCoordStickTarget() === dest)
+				return true;
+		}
+		return false;
 	}
 });
 
