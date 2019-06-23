@@ -177,7 +177,23 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	 */
 	hasData: function(dataType)
 	{
-		return Kekule.ObjUtils.notUnset(this.getData(dataType));
+		if (this._useSessionClipboard())
+		{
+			var s, success;
+			try
+			{
+				s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (success)
+				return Kekule.ObjUtils.notUnset(s);
+		}
+		//else
+		return Kekule.ObjUtils.notUnset(this._data.get(dataType));  // fallback approach
 	},
 	/**
 	 * Clear all data in clipboard.
