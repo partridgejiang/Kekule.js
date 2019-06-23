@@ -2110,7 +2110,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var isMovingOneBond = (originManipulatedObjs.length === 1) && (originManipulatedObjs[0] instanceof Kekule.ChemStructureConnector);
 		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof /*Kekule.ChemStructureNode*/Kekule.BaseStructureNode)
 					&& (this._objCanBeMagneticMerged(manipulatedObjs[0]) || this._objCanBeMagneticSticked(manipulatedObjs[0]));
-		var maybeMousePosMerge = (manipulateType === MT.MOVE) && ((isMovingOneBond && this.getEnableConnectorMerge()) || (isMovingOneNode && this.getEnableNodeMerge()));
+		var maybeMousePosMerge = (manipulateType === MT.MOVE) && !this.getIsOffsetManipulating()
+			&& ((isMovingOneBond && this.getEnableConnectorMerge()) || (isMovingOneNode && this.getEnableNodeMerge()));
 		var maybeObjPosMagneticMerge = !isMovingOneBond && this.getEnableMagneticMerge();
 		//if (!isMovingOneBond && this.getEnableMagneticMerge())
 		if (maybeObjPosMagneticMerge || maybeMousePosMerge)

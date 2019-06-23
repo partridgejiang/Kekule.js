@@ -5356,6 +5356,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('manipulationType', {'dataType': DataType.INT, 'serializable': false});  // private
 
 		this.defineProp('isManipulatingSelection', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('isOffsetManipulating', {'dataType': DataType.BOOL, 'serializable': false});
 
 		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function() { return this.getActivePointerType(); },
@@ -6335,6 +6336,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		var editor = this.getEditor();
 		editor.endManipulateObject();
+		this.setIsOffsetManipulating(false);
 	},
 	/**
 	 * Called before method stopManipulate.
@@ -6534,6 +6536,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	_startOffSelectionManipulation: function(currCoord)
 	{
 		//console.log('off selection!');
+		this.setIsOffsetManipulating(true);
 		this.beginManipulation(currCoord, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE);
 		this.getEditor().pulseSelectionAreaMarker();  // pulse selection, reach the user's attention
 	},
