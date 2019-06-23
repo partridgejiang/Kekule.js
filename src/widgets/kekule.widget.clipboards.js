@@ -123,13 +123,25 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		if (this._useSessionClipboard())
 		{
 			var s = this.serializeData(data);
-			this._crossPageStorage.setItem(this.STORAGE_KEY + dataType, s);
+			var success;
+			try
+			{
+				this._crossPageStorage.setItem(this.STORAGE_KEY + dataType, s);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (!success)
+				this._data.set(dataType, data);  // fallback approach
 		}
 		else
 		{
 			this._data.set(dataType, data);
 		}
 		this.invokeEvent('setData', {'dataType': dataType, 'data': data});
+
 		return this;
 	},
 	/**
@@ -142,11 +154,21 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	{
 		if (this._useSessionClipboard())
 		{
-			var s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
-			return s? this.deserializeData(s): null;
+			var s, success;
+			try
+			{
+				s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (success)
+				return s? this.deserializeData(s): null;
 		}
-		else
-			return this._data.get(dataType);
+		//else
+		return this._data.get(dataType);  // fallback approach
 	},
 	/**
 	 * Check there are data in clipboard.
