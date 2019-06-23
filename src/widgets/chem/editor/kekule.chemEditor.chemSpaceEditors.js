@@ -6307,6 +6307,11 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 		}
 		// default
 		return $super(insertedObjs, repInsertionResult);
+	},
+	/** @ignore */
+	getInsertedObjs: function($super)
+	{
+		return this.getCurrRepositoryObjects();  // the whole inserted objects should be auto selected after inserting
 	}
 });
 
