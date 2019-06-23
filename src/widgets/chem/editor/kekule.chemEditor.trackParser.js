@@ -1588,7 +1588,8 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		//$super(e);
 		// important, since we did not call $super, a bound inflation should be done manually here
 		//this.updateCurrBoundInflation(e);
-		this.getEditor().setCurrPointerType(e.pointerType);
+		this.setActivePointerType(e.pointerType);
+		//this.getEditor().setCurrPointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var coord = this._getEventMouseCoord(e);

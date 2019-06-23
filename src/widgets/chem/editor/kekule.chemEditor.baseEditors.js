@@ -4684,7 +4684,21 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			'setter': null  // function(value) { return this.getEditor().setCurrBoundInflation(value); }
 		});
 
-		this.defineProp('activePointerType', {'dataType': DataType.BOOL, 'serializable': false});  // private
+		this.defineProp('activePointerType', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var editor = this.getEditor();
+				return (editor && editor.getCurrPointerType()) || this.getStoreFieldValue('activePointerType');
+			},
+			'setter': function(value)
+			{
+				var editor = this.getEditor();
+				if (editor)
+					editor.setCurrPointerType(value);
+				else
+					this.setStoreFieldValue('activePointerType', value);
+			}
+		});  // private
 	},
 	/**
 	 * Returns the preferred id for this controller.
@@ -5024,6 +5038,7 @@ Kekule.Editor.ClientDragScrollIaController = Class.create(Kekule.Editor.BaseEdit
 	/** @private */
 	react_pointerdown: function(e)
 	{
+		this.setActivePointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)  // begin scroll
 		{
 			if (!this.isExecuting())
@@ -5171,6 +5186,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	/** @private */
 	react_pointerdown: function(e)
 	{
+		this.setActivePointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			this.startRemove();
@@ -5343,7 +5359,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function() { return this.getActivePointerType(); },
-			'setter': function(value) { this.setActivePointerType(); }
+			'setter': function(value) { this.setActivePointerType(value); }
 		});  // private, alias of property activePointerType
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
