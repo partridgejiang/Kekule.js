@@ -353,6 +353,30 @@ Kekule.ArrayUtils = {
 		return src.slice(0);
 	},
 	/**
+	 * creates a new array with all elements that pass the test implemented by the provided function.
+	 * @param {Array} src
+	 * @param {Func} filterFunc
+	 * @param {Object} thisArg
+	 */
+	filter: function(src, filterFunc, thisArg)
+	{
+		if (!filterFunc)
+			return Kekule.ArrayUtils.clone(src);
+		if (src.filter)  // built-in support
+			return src.filter(filterFunc, thisArg);
+		else
+		{
+			var result = [];
+			for (var i = 0, l = src.length; i < l; ++i)
+			{
+				var item = src[i];
+				if (filterFunc.apply(thisArg, [item, i, src]))
+					result.push(item);
+			}
+			return result;
+		}
+	},
+	/**
 	 * Divide array into several small ones, each containing memberCount numbers of elements.
 	 * @param {Array} src
 	 * @param {Int} memberCount
@@ -2933,6 +2957,156 @@ Kekule.GeometryUtils = {
 		var dx= t*(line1Coord2.x - line1Coord1.x),
 				dy= t*(line1Coord2.y - line1Coord1.y);
 		return { x: line1Coord1.x + dx , y: line1Coord1.y + dy };
+	},
+
+	/**
+	 * Returns the cross point coord of two vectors. If no cross point or the point out of vectors, null will be returned.
+	 * The algorithm is explained in https://www.jb51.net/article/90104.htm.
+	 * @param {Array} vectorCoords1
+	 * @param {Array} vectorCoords2
+	 * @returns {Hash}
+	 */
+	getCrossPointOfVectors: function(vectorCoords1, vectorCoords2)
+	{
+		return Kekule.GeometryUtils.getCrossPointOfLines(vectorCoords1[0], vectorCoords1[1], vectorCoords2[0], vectorCoords2[1]);
+	},
+	/**
+	 * Returns the cross points of a vector to circle.
+	 * @param {Array} vectorCoords
+	 * @param {Hash} circleCenterCoord
+	 * @param {Float} circleRadius
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToCircle: function(vectorCoords, circleCenterCoord, circleRadius, floatEqualThreshold)
+	{
+		var result = [];
+
+		var CU = Kekule.CoordUtils;
+		var isFloatEqual = Kekule.NumUtils.isFloatEqual;
+		var THRESHOLD = floatEqualThreshold;
+		// translate with circle center coord first
+		var transCoords = [CU.substract(vectorCoords[0], circleCenterCoord), CU.substract(vectorCoords[1], circleCenterCoord)];
+		// suppose the vector line is ax + by + c = 0, y = -(ax + c) / b
+		var a = transCoords[1].y - transCoords[0].y;
+		var b = transCoords[0].x - transCoords[1].x;
+		var c = transCoords[1].x * transCoords[0].y - transCoords[0].x * transCoords[1].y;
+		// r = radius
+		var r = circleRadius;
+		// the solution x = (-2ac +- sqrt(4a^2c62 - 4(a^2 + b^2)(c^2 - r^2b^2)) / 2(a^2 + b^2)
+		var xs = [];
+		var sqrItem = 4 * a * a * c * c - 4 * (a * a + b * b) * (c * c - r * r * b * b);
+		if (isFloatEqual(sqrItem, 0, THRESHOLD))  // one solution
+		{
+			xs = [-a * c / (a * a + b * b)];
+		}
+		else if (sqrItem < 0)  // no solution
+		{
+			xs = [];
+		}
+		else  // two solution
+		{
+			var sqrtItem = Math.sqrt(sqrItem);
+			xs = [
+				(-2 * a * c + sqrtItem) / (2 * (a * a + b * b)),
+				(-2 * a * c - sqrtItem) / (2 * (a * a + b * b))
+			]
+		}
+		if (xs && xs.length)  // has solution
+		{
+			var ys = [];
+			if (xs.length === 1 && isFloatEqual(b, 0, THRESHOLD))  // vertical line, may has two cross points even if xs.length === 1
+			{
+				var absY = Math.sqrt(r * r - xs[0] * xs[0]);
+				if (isFloatEqual(absY, 0, THRESHOLD))
+					ys = [0];
+				else  // two cross points
+				{
+					ys[0] = absY;
+					ys[1] = -absY;
+					xs[1] = xs[0];
+				}
+			}
+			else
+			{
+				for (var i = 0, l = xs.length; i < l; ++i)
+				{
+					ys[i] = (-(a * xs[i] + c) / b);
+				}
+			}
+
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				// filter out the point out of vector
+				var xCheck = (xs[i] - transCoords[0].x) * (xs[i] - transCoords[1].x);
+				var yCheck = (ys[i] - transCoords[0].y) * (ys[i] - transCoords[1].y);
+				if ((isFloatEqual(a, 0, THRESHOLD) && xCheck <= 0)
+					|| (isFloatEqual(b, 0, THRESHOLD) && yCheck <= 0)
+					|| (xCheck <= 0 && yCheck <= 0))
+					result.push(CU.add({x: xs[i], y: ys[i]}, circleCenterCoord));  // translate back to original coord sys
+			}
+
+			/*
+			// translate result back to original coord sys
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				result[i] = CU.add(result[i], circleCenterCoord);
+			}
+			*/
+		}
+		return result;
+	},
+	/**
+	 * Returns the cross point coords of two circles.
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @returns {Array}
+	 */
+	getCrossPointsOfCircles: function(centerCoord1, radius1, centerCoord2, radius2, floatEqualThreshold)
+	{
+		var CU = Kekule.CoordUtils;
+		var distance = CU.getDistance(centerCoord1, centerCoord2);
+		if (distance > (radius1 + radius2))
+			return [];
+		/*
+		else if (Kekule.NumUtils.isFloatEqual(distance, radius1 + radius2))
+		{
+
+		}
+		*/
+		else
+		{
+			// algorithm from https://wenku.baidu.com/view/b5b9194ca9114431b90d6c85ec3a87c241288a5d.html
+			var r1 = radius1, r2 = radius2;
+			var x1 = centerCoord1.x, x2 = centerCoord2.x;
+			var y1 = centerCoord1.y, y2 = centerCoord2.y;
+
+			var a1 = (r1*r1 - r2*r2) + (x2*x2 - x1*x1) + (y2*y2 - y1*y1);
+			var a2 = a1 / (2 * (y2 - y1));
+			var b2 = (x2 - x1) / (y2 - y1);
+			var a3 = 1 + b2 * b2;
+			var b3 = -(2 * x1 + 2 * (a2 - y1) * b2);
+			var c3 = x1 * x1 + Math.sqr(a2 - y1) - r1 * r1;
+			var sqrtItem = Math.sqrt(b3 * b3 - 4 * a3 * c3);
+			var divItem = 2 * a3;
+
+			var xs = Kekule.NumUtils.isFloatEqual(sqrtItem, 0, floatEqualThreshold)?
+				[-b3]:
+				[
+					(-b3 + sqrtItem) / divItem,
+					(-b3 - sqrtItem) / divItem
+				];
+			var ys = [];
+			var result = [];
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				//ys[i] = Math.sqrt(r1 * r1 - Math.pow(xs[i] - x1, 2)) + y1;
+				ys[i] = a2 - b2 * xs[i];
+				result.push({x: xs[i], y: ys[i]});
+			}
+			return result;
+		}
 	},
 
 	/**

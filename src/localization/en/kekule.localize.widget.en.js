@@ -233,7 +233,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	CAPTION_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
 
-	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & lines',
+	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & symbols',
 	CAPTION_REPOSITORY_GLYPH: 'Glyphs',
 	CAPTION_REPOSITORY_GLYPH_LINE: 'Line',
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
@@ -244,6 +244,15 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
 	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
+	CAPTION_ELECTRON_PUSHING_ARROW: 'Electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_DOUBLE: 'Double electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_SINGLE: 'Single electron pushing arrow',
+	/*
+	CAPTION_REACTION_ARROW_NORMAL: 'Normal reaction arrow',
+	CAPTION_REACTION_ARROW_REVERSIBLE: 'Reversible reaction arrow',
+	CAPTION_REACTION_ARROW_RESONANCE: 'Resonance reaction arrow',
+	CAPTION_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+  */
 
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
@@ -274,6 +283,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ATOM_MODIFIER_MIXED: '[A]',
 	CAPTION_BOND_MODIFIER: 'Bond',
 	CAPTION_CHARGE_MODIFIER: 'Charge',
+	CAPTION_GLYPH_PATH_MODIFIER: 'Path',
+	CAPTION_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Reaction arrow & segment',
+	CAPTION_ARC_PATH_MODIFIER: 'Arc',
+	CAPTION_ELECTRON_PUSHING_ARROW_MODIFIER: 'Electron pushing arrow',
 
 	TEXT_CHARGE_POSITIVE: '+',
 	TEXT_CHARGE_NEGATIVE: '-',
@@ -361,7 +374,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	HINT_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
 
-	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines tool',
+	HINT_REPOSITORY_ARROWLINE: 'Arrows and symbols tool',
 	HINT_REPOSITORY_GLYPH: 'Glyphs',
 	HINT_REPOSITORY_GLYPH_LINE: 'Line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
@@ -374,6 +387,13 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 	HINT_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	HINT_REPOSITORY_ADD_SYMBOL: 'Add symbol',
+	HINT_ELECTRON_PUSHING_ARROW: 'Electron pushing arrow',
+	/*
+	HINT_REACTION_ARROW_NORMAL: 'Normal reaction arrow',
+	HINT_REACTION_ARROW_REVERSIBLE: 'Reversible reaction arrow',
+	HINT_REACTION_ARROW_RESONANCE: 'Resonance reaction arrow',
+	HINT_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+	*/
 
 	HINT_TEXT_FORMAT: 'Set text format',
 	HINT_FONTNAME: 'Set font name',
@@ -388,6 +408,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_ATOM_MODIFIER: 'Set atom',
 	HINT_BOND_MODIFIER: 'Set bond',
 	HINT_CHARGE_MODIFIER: 'Set charge',
+	HINT_GLYPH_PATH_MODIFIER: 'Set path properties',
+	HINT_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Set reaction arrow and segment properties',
+	HINT_ARC_PATH_MODIFIER: 'Set arc properties',
+	HINT_ELECTRON_PUSHING_ARROW_MODIFIER: 'Set electron pushing arrow properties',
 
 	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
 
@@ -428,6 +452,39 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	// Text block editor
 	CAPTION_TEXTBLOCK_INIT: 'Enter text here',
+
+	// Glyph arrow param setter panel
+	CAPTION_WIDTH: 'Width',
+	CAPTION_LENGTH: 'Length',
+	// Reaction arrow preset selector
+	CAPTION_REACTION_ARROW_UNSET: '(Unset)',
+	CAPTION_REACTION_ARROW_CUSTOM: 'Custom',
+	CAPTION_REACTION_ARROW_NORMAL: 'Normal',
+	CAPTION_REACTION_ARROW_RESONANCE: 'Resonance',
+	CAPTION_REACTION_ARROW_REVERSIBLE: 'Reversible',
+	CAPTION_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis',
+	HINT_REACTION_ARROW_UNSET: 'Unset',
+	HINT_REACTION_ARROW_CUSTOM: 'Custom',
+	HINT_REACTION_ARROW_NORMAL: 'Normal arrow',
+	HINT_REACTION_ARROW_RESONANCE: 'Resonance arrow',
+	HINT_REACTION_ARROW_REVERSIBLE: 'Reversible arrow',
+	HINT_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+	// Glyph line param setter panel
+	CAPTION_LINE_COUNT: 'Line count',
+	CAPTION_LINE_GAP: 'Line gap',
+	// Path glyph param setter panel
+	CAPTION_LINE: 'Line',
+	CAPTION_STARTING_ARROW: 'Starting arrow',
+	CAPTION_ENDING_ARROW: 'Ending arrow',
+	CAPTION_REACTION_ARROW_TYPE: 'Reaction arrow type',
+	CAPTION_ELECTRON_PUSHING_ARROW_TYPE: 'Arrow type',
+	// electron pushing arrow panel
+	CAPTION_ELECTRON_PUSHING_ARROW_1: 'Single electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_1_ABBR: 'Single',
+	HINT_ELECTRON_PUSHING_ARROW_1: 'Single electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_2_ABBR: 'Double',
+	HINT_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
 
 	// Periodic table
 	LEGEND_CAPTION: 'Legend',

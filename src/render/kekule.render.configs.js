@@ -369,6 +369,7 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('bondWavyRadius', 5);
 		// length for glyphs
 		this.addFloatConfigProp('glyphStrokeWidth', 1);
+		this.addFloatConfigProp('glyphStickOffsetRelLength', 0.1);  // 1/10 of default bond length
 		// length for reaction
 		this.addFloatConfigProp('rxnMolMargin', 10, {'scope': PS.PUBLIC});
 

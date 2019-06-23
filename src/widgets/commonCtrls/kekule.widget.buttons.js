@@ -1031,19 +1031,30 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 		{
 			if (e.target !== this.getSelected())
 			{
-				e.target.setIsFocused(false);
-				e.target.setIsHover(false);
-				e.target.setIsActive(false);
+				if (!this._currExecButton || this._currExecButton !== e.target)
+				{
+					try
+					{
+						this._currExecButton = e.target;
+						e.target.setIsFocused(false);
+						e.target.setIsHover(false);
+						e.target.setIsActive(false);
 
-				this.setSelected(e.target);
+						this.setSelected(e.target);
 
-				if (this.getButtonSet().isShown())
-					this.getButtonSet().hide();
-				/*
-				var self = this;
-				this.getButtonSet().hide(function() { self.setSelected(e.target); });
-				*/
-				this.invokeEvent('select', {'selected': e.target});
+						if (this.getButtonSet().isShown())
+							this.getButtonSet().hide();
+						/*
+						var self = this;
+						this.getButtonSet().hide(function() { self.setSelected(e.target); });
+						*/
+						this.invokeEvent('select', {'selected': e.target});
+					}
+					finally
+					{
+						this._currExecButton = null;
+					}
+				}
 			}
 		}
 	},

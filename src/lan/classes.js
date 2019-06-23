@@ -46,7 +46,11 @@ var Class = {
         if (!properties[0])
         {
           if (properties.length > 1)
-            throw 'Can not create new class, base class not found';
+          {
+          	var exProps = properties[1];
+          	var currClassName = (exProps && exProps.CLASS_NAME);
+	          throw 'Can not create new class' + (currClassName? ' ' + currClassName: '') + ' , base class not found';
+          }
         }
         if (Object.isFunction(properties[0]))
             parent = properties.shift();
@@ -960,7 +964,18 @@ var StringUtils = {
 						case StringUtils.SDATEPREFIX:  // may be date
 							{
 								var s = str.substr(1);
-								return new Date(s);
+								try
+								{
+									var d =	new Date(s);
+									if (!isNaN(d.getTime()))
+										return d;
+									else
+										return str;
+								}
+								catch(e)
+								{
+									return str;
+								}
 							}
 						default:
 							return str;
@@ -2478,6 +2493,20 @@ ObjectEx = Class.create(
 			return this.constructor.superclass.prototype;
 		else
 			return null;
+	},
+	/**
+	 * Change the class of an existing object.
+	 * This method is quite dangerous, call it with caution.
+	 * @param {Class} aClass
+	 */
+	__changeClass__: function(aClass)
+	{
+		var proto = ClassEx.getPrototype(aClass);
+		this.prototype = proto;
+		this.__proto__ = proto;
+		this.constructor = aClass;
+		this.objectChange(['__proto__']);  // notify object changed
+		return this;
 	},
 	/*
 	getPropList: function()

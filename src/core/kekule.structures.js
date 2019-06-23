@@ -177,7 +177,14 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	initialize: function($super, id)
 	{
 		this.setPropStoreFieldValue('autoClearStructureCache', true);
+		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super(id);
+	},
+	/** @ignore */
+	doFinalize: function($super)
+	{
+		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
+		$super();
 	},
 	/** @private */
 	initProperties: function()
@@ -265,6 +272,9 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			}
 		});
 		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
+
+		// private
+		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -277,6 +287,18 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	getAutoIdPrefix: function()
 	{
 		return 'o';
+	},
+
+	/**
+	 * Returns whether another object can stick to this object.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemStructureObject} fromObj
+	 * @returns {Bool}
+	 * @private
+	 */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		return false;
 	},
 
 	/** @ignore */
@@ -477,6 +499,46 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			this.notifyLinkedConnectorsChanged();
 		//console.log('append linked connector', linkedConnectors.length, this.getLinkedConnectors().length);
 		return r.index;
+	},
+	/**
+	 * Insert an connector to linkedConnectors array at index. If index is not set, connector will be inserted as the first one in linkedConnectors.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Int} index
+	 * @returns {Int} Index of newly inserted connector.
+	 */
+	insertLinkedConnectorAt: function(connector, index)
+	{
+		if (!index)
+			index = 0;
+		var i = this.indexOfLinkedConnector(connector);
+		var connectors = this.getLinkedConnectors();
+		if (i >= 0)  // already inside, adjust position
+		{
+			connectors.splice(i, 1);
+			connectors.splice(index, 0, connector);
+			this.notifyLinkedConnectorsChanged();
+		}
+		else // new one
+		{
+			connectors.splice(index, 0, connector);
+			if (connector)
+				connector._doAppendConnectedObj(this);
+			this.notifyLinkedConnectorsChanged();
+		}
+	},
+	/**
+	 * Insert an connector to linkedConnectors array before refSibling. If refSibling is not set, connector will be push to the tail of linkedConnectors.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.ChemStructureConnector} refSibling
+	 * @returns {Int} Index of newly inserted connector.
+	 */
+	insertLinkedConnectorBefore: function(connector, refSibling)
+	{
+		var refIndex = refSibling? this.indexOfLinkedConnector(refSibling): -1;
+		if (refIndex < 0)
+			return this.appendLinkedConnector(connector);
+		else
+			return this.insertLinkedConnectorAt(connector, refIndex);
 	},
 	/**
 	 * Remove connector at index of linkedConnectors.
@@ -723,6 +785,32 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		// do nothing here
 	},
 
+	/**
+	 * Called when new coord stick nodes are attached to this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	attachCoordStickNodes: function(nodes)
+	{
+		var ns = AU.toArray(nodes);
+		var currStickNodes = this.getAttachedCoordStickNodes();
+		AU.pushUnique(currStickNodes, ns);
+		return this;
+	},
+	/**
+	 * Called when coord stick nodes are detached from this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	detachCoordStickNodes: function(nodes)
+	{
+		var ns = AU.toArray(nodes);
+		var currStickNodes = this.getAttachedCoordStickNodes();
+		for (var i = 0, l = ns.length; i < l; ++i)
+			AU.remove(currStickNodes, ns[i]);
+		return this;
+	},
+
 	/** @ignore */
 	relayEvent: function($super, eventName, event)
 	{
@@ -746,7 +834,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 });
 
 /**
- * Represent an abstract structure node (atom, atom group, or even node in path glyphs etc.).
+ * A base class of structure node, user should not create instance of this class directly.
  * @class
  * @augments Kekule.ChemStructureObject
  * @param {String} id Id of this node.
@@ -776,11 +864,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
  * @borrows Kekule.ClassDefineUtils.Coord3DMethods#get3DZ as #get3DZ
  * @borrows Kekule.ClassDefineUtils.Coord3DMethods#set3DZ as #set3DZ
  */
-Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
-/** @lends Kekule.BaseStructureNode# */
+Kekule.SimpleStructureNode = Class.create(Kekule.ChemStructureObject,
+/** @lends Kekule.SimpleStructureNode# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.BaseStructureNode',
+	CLASS_NAME: 'Kekule.SimpleStructureNode',
 	/**
 	 * @constructs
 	 */
@@ -837,7 +925,192 @@ Kekule.BaseStructureNode = Class.create(Kekule.ChemStructureObject,
 		return this.getContainerBox(Kekule.CoordMode.COORD3D, allowCoordBorrow);
 	}
 });
-Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.BaseStructureNode);
+Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.SimpleStructureNode);
+
+/**
+ * Represent an abstract structure node (atom, atom group, or even node in path glyphs etc.).
+ * @class
+ * @augments Kekule.SimpleStructureNode
+ *
+ * @property {Kekule.ChemStructureObject} coordStickTarget If this property is set, the abs coords (2D/3D) of this node
+ *   will always be the same to the target object.
+ */
+Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
+/** @lends Kekule.BaseStructureNode# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.BaseStructureNode',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('coordStickTarget', {
+			'dataType': 'Kekule.ChemStructureObject', // 'scope': Class.PropertyScope.PUBLIC,
+			'objRef': true, 'autoUpdate': true,
+			'getter': function()
+			{
+				/*
+				if (this.getAllowCoordStickTo())
+					return this.getPropStoreFieldValue('coordStickTarget');
+				else
+					return null;
+				*/
+				return this.getPropStoreFieldValue('coordStickTarget');
+			},
+			'setter': function(value)
+			{
+				if (value)
+				{
+					if (!this.getAllowCoordStickTo(value))
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
+						return;
+					}
+					var selfOwner = this.getOwner();
+					var targetOwner = value.getOwner && value.getOwner();
+					if (targetOwner && selfOwner !== targetOwner)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OTHER_OWNER_OBJ'));
+						return;
+					}
+					if (!value.getAcceptCoordStickFrom && !value.getAcceptCoordStickFrom(this))
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.INVALID_STICK_TARGET_OBJ'));
+						return;
+					}
+					if (!value.getAbsCoordOfMode)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.UNABLE_TO_STICK_TO_OBJ_WITHOUT_ABS_COORD'));
+						return;
+					}
+					if (value.getCoordStickTarget && value.getCoordStickTarget() === this)
+					{
+						Kekule.chemError(Kekule.$L('ErrorMsg.STICK_RECURSION_NOT_ALLOWED'));
+						return;
+					}
+				}
+				var old = this.getCoordStickTarget();
+				this.setPropStoreFieldValue('coordStickTarget', value);
+				this._coordStickTargetChanged(old, value);
+			}
+		});
+	},
+
+	/**
+	 * Returns whether this type of node is allowed to stick to another chem object.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemStructureObject} dest
+	 * @returns {Bool}
+	 */
+	getAllowCoordStickTo: function(dest)
+	{
+		return false;  // default do not allow stick
+	},
+
+	/**
+	 * Notify tje coord stick target has been changed.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} oldTarget
+	 * @param {Kekule.ChemObject} newTarget
+	 * @private
+	 */
+	notifyCoordStickTargetChanged: function(oldTarget, newTarget)
+	{
+		// do nothing here
+	},
+
+	/** @private */
+	_getParentAbsCoord: function(coordMode, allowCoordBorrow)
+	{
+		var	parent = this.getCoordParent();
+		return parent && parent.getAbsCoordOfMode && parent.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+	},
+	/** @private */
+	_coordStickTargetChanged: function(oldValue, newValue)
+	{
+		if (oldValue && !newValue)  // when set target to null, copy the coords to store fields
+		{
+			this._copyAbsCoordFromStickedTarget(oldValue, this.getCoordParent());
+		}
+		else if (newValue)   // when set new target, copy the coords also
+		{
+			this._copyAbsCoordFromStickedTarget(newValue, this.getCoordParent());
+		}
+		if (oldValue && oldValue.detachCoordStickNodes)
+		{
+			oldValue.detachCoordStickNodes(this);
+		}
+		if (newValue && newValue.attachCoordStickNodes)
+			newValue.attachCoordStickNodes(this);
+		this.notifyCoordStickTargetChanged(oldValue, newValue);
+	},
+
+	/** @private */
+	_copyAbsCoordFromStickedTarget: function(target, parent, coordMode)
+	{
+		var CU = Kekule.CoordUtils;
+		var CM = Kekule.CoordMode;
+
+		if (!parent)
+			parent = this.getCoordParent();
+
+		var coord2D = (!coordMode || coordMode === CM.COORD2D)? target.getAbsCoord2D(): null;
+		var coord3D = (!coordMode || coordMode === CM.COORD2D)? target.getAbsCoord3D(): null;
+
+		if (parent)
+		{
+			if (coord2D)
+			{
+				var pCoord2D = parent.getAbsCoord2D && parent.getAbsCoord2D();
+				if (pCoord2D)
+					coord2D = CU.substract(coord2D, pCoord2D);
+			}
+			if (coord3D)
+			{
+				var pCoord3D = parent.getAbsCoord3D && parent.getAbsCoord3D();
+				if (pCoord3D)
+					coord3D = CU.substract(coord3D, pCoord3D);
+			}
+		}
+		// update stored coord field
+		if (coord2D)
+			this.setPropStoreFieldValue('coord2D', coord2D);
+		if (coord3D)
+			this.setPropStoreFieldValue('coord3D', coord3D);
+	},
+
+	// override coord getters, returns the coord of target
+	// (the setter should not be overrided here)
+	/** @ignore */
+	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var n = this.getCoordStickTarget();
+		if (n && n.getAbsCoord2D)
+		{
+			var result = n.getAbsCoord2D(allowCoordBorrow, allowCreateNew);
+			var pCoord = this._getParentAbsCoord(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+			if (pCoord)
+				result = Kekule.CoordUtils.substract(result, pCoord);
+			return result;
+		}
+		else
+			return $super(allowCoordBorrow, allowCreateNew);
+	},
+	/** @ignore */
+	doGetCoord3D: function($super, allowCoordBorrow, allowCreateNew)
+	{
+		var n = this.getCoordStickTarget();
+		if (n && n.getAbsCoord3D)
+		{
+			var result = n.getAbsCoord3D(allowCoordBorrow, allowCreateNew);
+			var pCoord = this._getParentAbsCoord(Kekule.CoordMode.COORD3D, allowCoordBorrow);
+			if (pCoord)
+				result = Kekule.CoordUtils.substract(result, pCoord);
+			return result;
+		}
+		else
+			return $super(allowCoordBorrow, allowCreateNew);
+	}
+});
 
 /**
  * Enumeration of stereo parity of node or connector.
@@ -926,6 +1199,12 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	getLabel: function()
 	{
 		return null;
+	},
+
+	/** @private */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		return (!this.isSiblingWith(fromObj) && !(fromObj instanceof Kekule.ChemStructureNode));
 	},
 
 	/** @ignore */
@@ -2640,7 +2919,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Note Connection table is not inherited from ChemObject, so no $super() need to be called.
 	 * @private
 	 */
-	parentChanged: function(newParent)
+	parentChanged: function($super, newParent, oldParent)
 	{
 		// change nodes and connectors' parent
 		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
@@ -2695,7 +2974,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Get a structure node object with a specified id.
 	 * @param {String} id
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	getNodeById: function(id)
 	{
@@ -2710,7 +2989,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Get a structure connector object with a specified id.
 	 * @param {String} id
-	 * @returns {Kekule.ChemStructureConnector}
+	 * @returns {Kekule.BaseStructureConnector}
 	 */
 	getConnectorById: function(id)
 	{
@@ -2760,7 +3039,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Check if a node exists in structure.
-	 * @param {Kekule.ChemStructureNode} node Node to seek.
+	 * @param {Kekule.BaseStructureNode} node Node to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -2783,7 +3062,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Returns index of node. If node exists in nested sub group, index in sub group will be pushed to stack as well.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @returns {Variant} If node is the direct child of this structure, returns {Int}, otherwise stack {Array} will be returned.
 	 */
 	indexStackOfNode: function(node)
@@ -2819,7 +3098,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Get node at indexStack.
 	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getNodeAt(1) will be returned.
 	 * @param {Array} indexStack Array of integers.
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	getNodeAtIndexStack: function(indexStack)
 	{
@@ -2841,7 +3120,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Add node to connection table. If node already inside, nothing will be done.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 */
 	appendNode: function(node)
 	{
@@ -2858,7 +3137,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Insert node to index. If index is not set, node will be inserted to the tail of node list of ctab.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @param {Int} index
 	 */
 	insertNodeAt: function(node, index)
@@ -2885,7 +3164,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Change index of node.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @param {Int} index
 	 */
 	setNodeIndex: function(node, index)
@@ -2923,7 +3202,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Remove a node in connection table.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @param {Bool} preserveLinkedConnectors Whether remove relations between this node and linked connectors.
 	 */
 	removeNode: function(node, preserveLinkedConnectors)
@@ -2934,8 +3213,8 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Replace oldNode with new one, preserve coords and all linked connectors.
-	 * @param {Kekule.ChemStructureNode} oldNode Must be direct child of current ctab (node in nested structure fragment will be ignored).
-	 * @param {Kekule.ChemStructureNode} newNode
+	 * @param {Kekule.BaseStructureNode} oldNode Must be direct child of current ctab (node in nested structure fragment will be ignored).
+	 * @param {Kekule.BaseStructureNode} newNode
 	 */
 	replaceNode: function(oldNode, newNode)
 	{
@@ -3132,7 +3411,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Remove a node in anchorNodes.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 */
 	removeAnchorNode: function(node)
 	{
@@ -3158,7 +3437,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Get index of connector in connectors list.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @returns {Int}
 	 */
 	indexOfConnector: function(connector)
@@ -3168,7 +3447,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Get connector at index.
 	 * @param {Int} index
-	 * @returns {Kekule.ChemStructureConnector}
+	 * @returns {Kekule.BaseStructureConnector}
 	 */
 	getConnectorAt: function(index)
 	{
@@ -3177,7 +3456,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 
 	/**
 	 * Returns index of connector. If connector exists in nested sub group, index in sub group will be pushed to stack as well.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @returns {Variant} If connector is the direct child of this structure, returns {Int}, otherwise stack {Array} will be returned.
 	 */
 	indexStackOfConnector: function(connector)
@@ -3212,7 +3491,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Get connector at indexStack.
 	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getConnectorAt(1) will be returned.
 	 * @param {Array} indexStack Array of integers.
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureConnector}
 	 */
 	getConnectorAtIndexStack: function(indexStack)
 	{
@@ -3243,7 +3522,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 
 	/**
 	 * Add connector to connection table.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 */
 	appendConnector: function(connector)
 	{
@@ -3260,7 +3539,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Insert connector to index. If index is not set, node will be inserted as the first connector of ctab.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @param {Int} index
 	 */
 	insertConnectorAt: function(connector, index)
@@ -3286,7 +3565,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Change index of connector.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @param {Int} index
 	 */
 	setConnectorIndex: function(connector, index)
@@ -3322,7 +3601,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Remove a connector in connection table.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @param {Bool} preserveConnectedObjs Whether delte relations between this connector and related nodes.
 	 */
 	removeConnector: function(connector, preserveConnectedObjs)
@@ -3341,7 +3620,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Check if a connector exists in structure.
-	 * @param {Kekule.ChemStructureConnector} connector Connector to seek.
+	 * @param {Kekule.BaseStructureConnector} connector Connector to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -3547,13 +3826,13 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 */
 	getNextSiblingOfChild: function(childObj)
 	{
-		if (childObj instanceof Kekule.ChemStructureNode)
+		if (childObj instanceof Kekule.SimpleStructureNode)
 		{
 			var index = this.indexOfNode(childObj);
 			if (index >= 0)
 				return this.getNodeAt(index + 1);
 		}
-		else if (childObj instanceof Kekule.ChemStructureConnector)
+		else if (childObj instanceof Kekule.BaseStructureConnector)
 		{
 			var index = this.indexOfConnector(childObj);
 			if (index >= 0)
@@ -3570,7 +3849,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 */
 	insertBefore: function(obj, refChild)
 	{
-		if (obj instanceof Kekule.BaseStructureNode)
+		if (obj instanceof Kekule.SimpleStructureNode)
 		{
 			var refIndex = this.indexOfNode(refChild);
 			return this.insertNodeAt(obj, refIndex);
@@ -3694,7 +3973,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Check if a node has a sub structure (has child nodes).
 	 * Note if a sub group has no children, it will not be regarded as sub fragment.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @returns {Bool}
 	 */
 	isSubFragment: function(node)
@@ -3730,7 +4009,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
 	 * Note if a sub group has no children, it will be regarded as leaf node too.
-	 * @returns {Array} Array of {@link Kekule.ChemStructureNode}.
+	 * @returns {Array} Array of {@link Kekule.BaseStructureNode}.
 	 */
 	getLeafNodes: function()
 	{
@@ -3753,7 +4032,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * originObj may be a child node or connector of substructure in this ctab.
 	 * If originObj is actually not in this ctab, null will be returned.
 	 * @param {Kekule.ChemStructureObject} originObj
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	findDirectChildOfObj: function(originObj)
 	{
@@ -3766,7 +4045,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
-	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
+	 * @returns {Array} Array of {Kekule.BaseStructureConnector}.
 	 */
 	getAllChildConnectors: function()
 	{
@@ -3781,7 +4060,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
-	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
+	 * @returns {Array} Array of {Kekule.BaseStructureConnector}.
 	 */
 	getAllContainingConnectors: function()
 	{
@@ -3984,7 +4263,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Traverse the nodes in connection tab through a depth or breadth first spanning tree algorithm.
 	 * @param {Func} callback Function called when meet a new node or connector, has two params: callback(currNodeOrConnector, isConnector)
-	 * @param {Kekule.StructureNode} startingNode Starting position of travers.
+	 * @param {Kekule.BaseStructureNode} startingNode Starting position of travers.
 	 * @param {Bool} breadthFirst Set to true to use breadth first algorithm or false to use depth first algorithm.
 	 * @param {Array} partialNodes If this param is set, only part of the structure will be traversed.
 	 * @returns {Hash} A hash object containing all the nodes and connectors sequence traversed. {nodes, connectors}.
@@ -4558,14 +4837,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		}
 	},
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	/** @private */
-	_removeChildObj: function(obj)
+	_removeChildObj: function($super, obj)
 	{
 		if (this.hasFormula())
 		{
@@ -4586,6 +4865,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					ctab.removeChildObj(obj);
 			}
 		}
+		$super(obj);
 	},
 
 	/**
@@ -4758,7 +5038,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Get a structure node object with a specified id.
 	 * @param {String} id
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	getNodeById: function(id)
 	{
@@ -4776,7 +5056,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Get a structure connector object with a specified id.
 	 * @param {String} id
-	 * @returns {Kekule.ChemStructureConnector}
+	 * @returns {Kekule.BaseStructureConnector}
 	 */
 	getConnectorById: function(id)
 	{
@@ -4812,7 +5092,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Get node at index.
 	 * @param {Int} index
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	getNodeAt: function(index)
 	{
@@ -4820,7 +5100,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Get index of node.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @returns {Int}
 	 */
 	indexOfNode: function(node)
@@ -4829,7 +5109,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Check if a node exists in structure.
-	 * @param {Kekule.ChemStructureNode} node Node to seek.
+	 * @param {Kekule.BaseStructureNode} node Node to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -4839,7 +5119,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Returns index of node. If node exists in nested sub group, index in sub group will be pushed to stack as well.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @returns {Variant} If node is the direct child of this structure, returns {Int}, otherwise stack {Array} will be returned.
 	 */
 	indexStackOfNode: function(node)
@@ -4850,7 +5130,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * Get node at indexStack.
 	 * For example, indexStack is [2, 3, 1], then this.getNodeAt(2).getNodeAt(3).getNodeAt(1) will be returned.
 	 * @param {Array} indexStack Array of integers.
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.BaseStructureNode}
 	 */
 	getNodeAtIndexStack: function(indexStack)
 	{
@@ -4883,7 +5163,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Add node to container. If node already in container, nothing will be done.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 */
 	appendNode: function(node)
 	{
@@ -4901,7 +5181,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Insert node to index. If index is not set, node will be inserted as the first node of ctab.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @param {Int} index
 	 */
 	insertNodeAt: function(node, index)
@@ -4931,7 +5211,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Remove a node in container.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @param {Bool} preserveLinkedConnectors Whether remove relations between this node and linked connectors.
 	 */
 	removeNode: function(node, preserveLinkedConnectors)
@@ -4947,8 +5227,8 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Replace oldNode with new one, preserve coords and all linked connectors.
-	 * @param {Kekule.ChemStructureNode} oldNode Must be direct child of current fragment (node in nested structure fragment will be ignored).
-	 * @param {Kekule.ChemStructureNode} newNode
+	 * @param {Kekule.BaseStructureNode} oldNode Must be direct child of current fragment (node in nested structure fragment will be ignored).
+	 * @param {Kekule.BaseStructureNode} newNode
 	 */
 	replaceNode: function(oldNode, newNode)
 	{
@@ -4998,7 +5278,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	/**
 	 * Check if a node is in aromatic ring stored in aromaticRings property.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.BaseStructureNode} node
 	 * @returns {Bool}
 	 */
 	isNodeInAromaticRing: function(node)
@@ -5124,7 +5404,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Get connector at index.
 	 * @param {Int} index
-	 * @returns {Kekule.ChemStructureConnector}
+	 * @returns {Kekule.BaseStructureConnector}
 	 */
 	getConnectorAt: function(index)
 	{
@@ -5133,7 +5413,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Get index of connector inside fragment.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @returns {Int}
 	 */
 	indexOfConnector: function(connector)
@@ -5142,7 +5422,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Check if a connector exists in structure.
-	 * @param {Kekule.ChemStructureConnector} connector Connector to seek.
+	 * @param {Kekule.BaseStructureConnector} connector Connector to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -5152,7 +5432,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Add connector to container.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 */
 	appendConnector: function(connector)
 	{
@@ -5169,7 +5449,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Insert connector to index. If index is not set, node will be inserted as the first connector of ctab.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @param {Int} index
 	 */
 	insertConnectorAt: function(connector, index)
@@ -5197,7 +5477,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Remove a connector in container.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @param {Bool} preserveConnectedObjs Whether delte relations between this connector and related nodes.
 	 */
 	removeConnector: function(connector, preserveConnectedObjs)
@@ -5231,7 +5511,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	/**
 	 * Check if a connector is in aromatic ring stored in aromaticRings property.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} connector
 	 * @returns {Bool}
 	 */
 	isConnectorInAromaticRing: function(connector)
@@ -5406,7 +5686,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Get all leaf nodes (node that do not have children, usually atom).
 	 * Note if a sub group has no children, it will be regarded as leaf node too.
-	 * @returns {Array} Array of {@link Kekule.ChemStructureNode}.
+	 * @returns {Array} Array of {@link Kekule.BaseStructureNode}.
 	 */
 	getLeafNodes: function()
 	{
@@ -5431,7 +5711,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * Returns the direct node/substructure that contains originObj.
 	 * originObj may be a child node or connector of substructure in this structure fragment.
 	 * If originObj is actually not in this ctab, null will be returned.
-	 * @param {Kekule.ChemStructureObject} originObj
+	 * @param {Kekule.BaseStructureObject} originObj
 	 * @returns {Kekule.ChemStructureNode}
 	 */
 	findDirectChildOfObj: function(originObj)
@@ -5440,7 +5720,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
-	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
+	 * @returns {Array} Array of {Kekule.BaseStructureConnector}.
 	 */
 	getAllChildConnectors: function()
 	{
@@ -5458,7 +5738,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/**
 	 * Return all bonds in structure as well as in sub structure.
-	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
+	 * @returns {Array} Array of {Kekule.BaseStructureConnector}.
 	 */
 	getAllContainingConnectors: function()
 	{
@@ -6462,12 +6742,30 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 		return r.index;
 	},
 	/**
+	 * Insert an object to connectedObjs array before refSibling. If refSibling is not set, obj will be push to the tail of connectedObjs.
+	 * @param {Kekule.ChemStructureObject} obj
+	 * @param {Kekule.ChemStructureObject} refSibling
+	 * @returns {Int} Index of newly inserted object.
+	 */
+	insertConnectedObjBefore: function(obj, refSibling)
+	{
+		this.assertConnectedObjLegal(obj);
+		var actualRefObj = refSibling? (refSibling.getCurrConnectableObj? refSibling.getCurrConnectableObj(): refSibling): null;
+		var refIndex = actualRefObj? this.indexOfConnectedObj(actualRefObj): -1;
+		if (refIndex < 0)
+			return this.appendConnectedObj(obj);
+		else
+			return this.insertConnectedObjAt(obj, refIndex);
+	},
+	/**
 	 * Insert obj at index of connectedObjs array. If index is not set, obj will be put as the first obj.
 	 * @param {Kekule.ChemStructureObject} obj
 	 * @param {Int} index
 	 */
 	insertConnectedObjAt: function(obj, index)
 	{
+		if (!index)
+			index = 0;
 		this.assertConnectedObjLegal(obj);
 		var actualConnObj = obj.getCurrConnectableObj? obj.getCurrConnectableObj(): obj;
 		var i = this.indexOfConnectedObj(actualConnObj);
@@ -6676,6 +6974,12 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 				return result;
 			}
 		});
+	},
+
+	/** @private */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		return (!this.isSiblingWith(fromObj) && !(fromObj instanceof Kekule.ChemStructureNode) && !(fromObj instanceof Kekule.BaseStructureConnector));
 	},
 
 	/** @ignore */
@@ -7184,7 +7488,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var items = this.getItems();
 		for (var i = 0, l = items.length; i < l; ++i)
@@ -7193,11 +7497,11 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			if (obj && obj.setOwner)
 				obj.setOwner(newOwner);
 		}
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/** @private */
-	_removeChildObj: function(obj)
+	_removeChildObj: function($super, obj)
 	{
 		var index = this.indexOfObj(obj);
 		if (index < 0)
@@ -7206,6 +7510,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		{
 			this.removeObjAt(index);
 		}
+		$super(obj);
 	},
 
 	/** @private */
@@ -7644,12 +7949,12 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var subMols = this.getPropStoreFieldValue('subMolecules');
 		if (subMols)
 			subMols.setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/**

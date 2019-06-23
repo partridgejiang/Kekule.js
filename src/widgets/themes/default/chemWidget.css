@@ -395,9 +395,71 @@
     background-color: transparent;
     text-align: left;
 }
-.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeBtn
+.K-Chem-Charge-SelectPanel .K-Chem-Charge-SelectPanel-BtnGroup .K-Chem-Charge-SelectPanel-ChargeButton
 {
     min-width: 4em;
+}
+
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-StyleButtonGroup
+{
+
+}
+
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter
+{
+    display: inline-block;
+    margin-right: 0.5em;
+    vertical-align: middle;
+}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter *
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter .K-NumInput,
+.K-Chem-GlyphPath-Line-SettingPanel .K-NumInput
+{
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-SizeSetter .K-NumInput
+{
+    width: 7em;
+}
+
+.K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button,
+.K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button
+{
+    text-align: left;
+}
+
+.K-Chem-GlyphPath-Line-SettingPanel .K-NumInput
+{
+    width: 6em;
+}
+
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section
+{
+    display: block;
+}
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Title
+{
+    display: block;
+    font-size: 1em;
+    font-weight: bold;
+}
+.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Panel
+{
+    border: none;
+    margin: 0.5em;
+    padding: 0;
+}
+
+.K-Chem-ReactionArrow-SettingPanel .K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title
+{
+    display: inline;
+    margin-right: 0.5em;
 }
 
 .K-Chem-Editor

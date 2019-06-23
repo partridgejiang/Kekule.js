@@ -90,7 +90,8 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
- * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted into editor by IA controllers autimatically.
+ * @property {Bool} autoSelectNewlyInsertedObjects Whether select objects newly inserted by mouse or pen into editor by IA controllers automatically.
+ * @property {Bool} autoSelectNewlyInsertedObjectsOnTouch Whether select objects newly inserted by touch into editor by IA controllers automatically.
  * @property {Int} objBoundTrackMinInflation The bound of object will usually be inflated to make it easier to select. This value controls the minimal inflating degree.
  * @property {Int} selectionMarkerInflation Inflation of selection marker, makes it easier to see the containing objects.
  * @property {Int} selectionMarkerEdgeInflation Inflation when judging if a coord is on selection marker edge.
@@ -105,6 +106,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
  *   Set this value to true will improve the performance of chem editor.
+ * @property {Bool} followPointerCoordOnDirectManipulatingSingleObj If true, the new coord of manipulating object will be set directly by the position of pointer (rather than the delta coord to the original position).
  * @property {Bool} enableOffSelectionManipulation If true, holding pointer down outside selection region for a while
  *   will enter the manipulation state to move the selected objects.
  * @property {Int} OffSelectionManipulationActivatingTimeThreshold Holding pointer down longer then this time (in ms) may
@@ -137,7 +139,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableHotTrack', true);
 
 		this.addBoolConfigProp('scrollToObjAfterLoading', true);
-		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', true);
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', !true);
+		this.addBoolConfigProp('autoSelectNewlyInsertedObjectsOnTouch', true);
 
 		this.addIntConfigProp('objBoundTrackMinInflation', 5);
 		this.addIntConfigProp('objBoundTrackMinInflationMouse', null);
@@ -161,6 +164,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('selectionMarkerDefPulseDuration', 500);
 		this.addIntConfigProp('selectionMarkerDefPulseCount', 2);
 
+		this.addBoolConfigProp('followPointerCoordOnDirectManipulatingSingleObj', true);
+		this.addIntConfigProp('followPointerCoordOnDirectManipulatingSingleObjDistanceThreshold', 2);
 		//this.addConfigProp('constrainedResizeLevels', DataType.ARRAY, undefined);
 		this.addFloatConfigProp('constrainedResizeStep', 0.25);
 		this.addIntConfigProp('rotationRegionInflation', 10);

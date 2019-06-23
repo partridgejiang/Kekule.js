@@ -24,12 +24,19 @@
  * @param {Hash} coord3D The 3D coordinates of node, {x, y, z}, can be null.
  *
  * @property {String} nodeType Type of this glyph node.
+ * @property {Hash} pathNodeParams Additional params of path node. Different glyph may requires different params.
+ *   Some common ones:
+ *   {
+ *     useStickingOffset: Bool. Whether use a small offset to draw the end of path when this node sticking to another target.
+ *     stickingOffsetRelLength: Number. Can be null to use the default one.
+ *   }
  */
 Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 /** @lends Kekule.Glyph.PathGlyphNode# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphNode',
+	/** @constructs */
 	initialize: function($super, id, nodeType, coord2D, coord3D)
 	{
 		$super(id);
@@ -46,12 +53,78 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 			'dataType': DataType.STRING,
 			'scope': Class.PropertyScope.PUBLIC
 		});
+		this.defineProp('pathNodeParams', {
+			'dataType': DataType.HASH,
+			'scope': Class.PropertyScope.PUBLISHED,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('pathNodeParams');
+				if (!result)
+				{
+					result = {};
+					this.setPropStoreFieldValue('pathNodeParams', result);
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				if (!value)
+					this.setPropStoreFieldValue('pathNodeParams', null);
+				else
+					this.setPropStoreFieldValue('pathNodeParams', Object.extend({}, value, true));
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
 	{
 		$super();
-		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+		//this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+	/** @ignore */
+	getAllowCoordStickTo: function(dest)
+	{
+		if (!dest || !this.isSiblingWith(dest))
+		{
+			var p = this.getParent();
+			// coord stick is controlled by parent glyph
+			if (p && p.getAllowChildCoordStickTo)
+				return p.getAllowChildCoordStickTo(this, dest);
+		}
+		// defaultly is not allowed
+		return false;
+	},
+	/** @ignore */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		var p = this.getParent();
+		// coord stick is controlled by parent glyph
+		if (p && p.getChildAcceptCoordStickFrom)
+			return p.getChildAcceptCoordStickFrom(this, fromObj);
+		// defaultly is not allowed
+		return false;
+	},
+	/** @ignore */
+	notifyCoordStickTargetChanged: function($super, oldTarget, newTarget)
+	{
+		$super(oldTarget, newTarget);
+		var p = this.getParent();
+		if (Kekule.ObjUtils.isUnset(this.getPathNodeParams().useStickingOffset))
+		{
+			if (p.getChildUseCoordStickOffset)
+			{
+				var useOffset = p.getChildUseCoordStickOffset(this, newTarget);
+				if (Kekule.ObjUtils.notUnset(useOffset))
+				{
+					this.getPathNodeParams().useStickingOffset = useOffset;
+				}
+			}
+		}
+		// notify parent that stick target has been changed
+		if (p.notifyChildCoordStickTargetChanged)
+		{
+			p.notifyChildCoordStickTargetChanged(this.oldTarget, newTarget);
+		}
 	}
 });
 
@@ -106,6 +179,11 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 	{
 		return 'cn';
 	},
+	/** @ignore */
+	getAcceptCoordStickFrom: function(fromObj)
+	{
+		return false;  // ensure other node can not stick to this control node
+	},
 	/** @private */
 	getParentConnector: function()
 	{
@@ -142,6 +220,7 @@ Kekule.Glyph.ArrowType = {
  * @class
  */
 Kekule.Glyph.ArrowSide = {
+	DEFAULT: 0,
 	BOTH: 0,  // default
 	SINGLE: 1,  // one one side of path
 	REVERSED: -1   // one side but at the different side of SINGLE
@@ -156,16 +235,18 @@ Kekule.Glyph.ArrowSide = {
  * @param {Array} connectedObjs Objects ({@link Kekule.ChemStructureObject}) connected by connected, usually a connector connects two nodes.
  *
  * @property {String} pathType Type of path to draw between connected nodes, value from {@link Kekule.Glyph.PathType}.
- * @property {Hash} pathParams Other params to control the outlook of path. Mayb including the following fields:
+ * @property {Hash} pathParams Other params to control the outlook of path. May including the following fields:
  *   {
  *     lineCount: {Int} need to draw single or multiple line in path?
- *     lineGap: {Float} gap between multiple lines
+ *     lineGap: {Float} gap between multiple lines, a relative value to ref length.
  *     startArrowType:
  *     startArrowSide:
  *     startArrowLength, startArrowWidth:
  *     endArrowType:
  *     endArrowSide:
  *     endArrowLength, endArrowWidth:
+ *     //startOffsetPercent, endOffsetPercent: {Float} percent of total path length, determinated by the actual renderer of connector
+ *     autoOffset: {Bool}
  *   }
  */
 Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
@@ -419,6 +500,24 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 
 		this.notifyPropSet('controlPoints', null);
 		return this;
+	},
+	/**
+	 * Modify current path params.
+	 * Only values in params will be changed, other values of old path params will remain unchanged.
+	 * @param {Hash} params
+	 * @returns {Hash} New path params.
+	 */
+	modifyPathParams: function(params)
+	{
+		if (params)
+		{
+			var p = this.getPathParams();
+			p = Object.extend(p, params || {});
+			this.setPathParams(p);
+			return p;
+		}
+		else
+			return null;
 	}
 });
 
@@ -454,8 +553,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var connector = this.getParentConnector();
 			if (connector)
 			{
-				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D();
-				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D();
+				/*
+				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D(allowCoordBorrow);
+				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D(allowCoordBorrow);
+				*/
+				// use abs coord to calculate the arc, since there may be shadow node in connector
+				var arcStartCoord = connector.getConnectedObjAt(0).getAbsCoord2D(allowCoordBorrow);
+				var arcEndCoord = connector.getConnectedObjAt(1).getAbsCoord2D(allowCoordBorrow);
 				if (arcStartCoord && arcEndCoord)
 				{
 					//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
@@ -464,7 +568,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 					var signY = Math.sign(chordVector.y);
 					if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
 					{
-						result = {'x': - d * signY, 'y': 0}
+						result = {'x': - d * signY, 'y': 0};
 					}
 					else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
 					{
@@ -523,7 +627,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 });
 
 /**
- * Arc shaped connector between glyph nodes.
+ * BaseArc shaped connector between glyph nodes.
  * @class
  * @augments Kekule.Glyph.PathGlyphConnector
  * @param {String} id Id of this connector.
@@ -648,7 +752,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		if (!refLength)
 			refLength = 1;
 		var actualParams = {};
-		var lengthFields = ['lineGap', 'startArrowLength', 'startArrowWidth', 'endArrowLength', 'endArrowWidth'];
+		var lengthFields = [/*'lineGap',*/ 'startArrowLength', 'startArrowWidth', 'endArrowLength', 'endArrowWidth'];
 		for (var field in initialParams)
 		{
 			if (lengthFields.indexOf(field) >= 0)
@@ -679,14 +783,14 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		return 'p';
 	},
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 	/** @private */
-	_removeChildObj: function(obj)
+	_removeChildObj: function($super, obj)
 	{
 		if (this.hasCtab())
 		{
@@ -699,6 +803,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 					ctab.removeChildObj(obj);
 			}
 		}
+		$super(obj);
 	},
 	/**
 	 * Returns if this fragment has no formula or ctab, or ctab has no nodes or connectors.

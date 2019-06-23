@@ -601,7 +601,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		// private object to record all bound infos
-		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
+		//this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
 
 		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
 	},
@@ -658,11 +658,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		this.setPropStoreFieldValue('uiDrawBridge', null);
 		this.setPropStoreFieldValue('uiContext', null);
-
-		var r = this.getPropStoreFieldValue('boundInfoRecorder');
-		if (r)
-			r.finalize();
-		this.setPropStoreFieldValue('boundInfoRecorder', null);
 
 		var m = this.getPropStoreFieldValue('objRendererMap');
 		if (m)
@@ -1215,12 +1210,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			result.setCanModifyTargetObj(true);
 			this.installPainterEventHandlers(result);
+			/* Moved up to class ChemObjDisplayer
 			// create new bound info recorder
 			this.createNewBoundInfoRecorder(this.getPainter());
+			*/
 		}
 		return result;
 	},
 	/** @private */
+	/* Moved up to class ChemObjDisplayer
 	createNewBoundInfoRecorder: function(renderer)
 	{
 		var old = this.getPropStoreFieldValue('boundInfoRecorder');
@@ -1230,6 +1228,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//recorder.setTargetContext(this.getObjContext());
 		this.setPropStoreFieldValue('boundInfoRecorder', recorder);
 	},
+	*/
 
 	/** @private */
 	getDrawContextParentElem: function()
@@ -2051,16 +2050,110 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		return result;
 	},
+
+	/**
+	 * Returns all basic drawn object at coord (with inflation) based on screen system.
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} excludeObjs
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
+	 * @returns {Array}
+	 * @private
+	 */
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, filterObjClasses)
+	{
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		var result = [];
+		if (boundInfos)
+		{
+			if (excludeObjs)
+			{
+				boundInfos = AU.filter(boundInfos, function(boundInfo){
+					var obj = boundInfos[i].obj;
+					if (!obj)
+						return false;
+					if (obj)
+					{
+						if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+							return false;
+					}
+					return true;
+				});
+			}
+
+			// the coord sticked obj should be firstly selected for unstick operation, even it is under the back layer
+			var _getStickLevel = function(obj){
+				var stickTarget = obj && obj.getCoordStickTarget && obj.getCoordStickTarget();
+				return stickTarget? 1: 0;
+			};
+			boundInfos.sort(function(b1, b2){
+				var stickLevel1 = _getStickLevel(b1.obj);
+				var stickLevel2 = _getStickLevel(b2.obj);
+				return (stickLevel1 - stickLevel2);
+			});
+
+			var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+			if (enableTrackNearest)  // sort by bound distances to screenCoord
+			{
+				var SU = Kekule.Render.MetaShapeUtils;
+				boundInfos.sort(function(b1, b2){  // the topmost boundinfo at tail
+					var result = 0;
+					var shapeInfo1 = b1.boundInfo;
+					var shapeInfo2 = b2.boundInfo;
+					result = -(shapeInfo1.shapeType - shapeInfo2.shapeType);
+					if (!result)
+					{
+						var d1 = SU.getDistance(screenCoord, shapeInfo1);
+						var d2 = SU.getDistance(screenCoord, shapeInfo2);
+						result = -(d1 - d2);
+					}
+					return result;
+				});
+			}
+
+			for (var i = boundInfos.length - 1; i >= 0; --i)
+			{
+				var obj = boundInfos[i].obj;
+				if (obj)
+				{
+					if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+						continue;
+				}
+				result.push(obj);
+			}
+
+			if (result && filterObjClasses)  // filter
+			{
+				result = AU.filter(result, function(obj)
+				{
+					for (var i = 0, l = filterObjClasses.length; i < l; ++i)
+					{
+						if (obj instanceof filterObjClasses[i])
+							return true;
+					}
+					return false;
+				});
+			}
+		}
+		return result;
+	},
 	/**
 	 * Returns the topmost basic drawn object at coord based on screen system.
-	 * @params {Hash} coord
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, filterObjClasses)
 	{
+		/*
 		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
+		*/
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, filterObjClasses);
+
+		return objs && objs[0];
 	},
 
 	/**
@@ -3594,6 +3687,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	doGetObjCoord: function(obj, coordPos)
 	{
+		if (!obj)
+			return null;
 		var coordMode = this.getCoordMode();
 		var allowCoordBorrow = this.getAllowCoordBorrow();
 		var result = obj.getAbsBaseCoord? obj.getAbsBaseCoord(coordMode, allowCoordBorrow):
@@ -4588,6 +4683,8 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			'getter': function() { return this.getEditor().getCurrBoundInflation(); },
 			'setter': null  // function(value) { return this.getEditor().setCurrBoundInflation(value); }
 		});
+
+		this.defineProp('activePointerType', {'dataType': DataType.BOOL, 'serializable': false});  // private
 	},
 	/**
 	 * Returns the preferred id for this controller.
@@ -4657,6 +4754,35 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	canInteractWithObj: function(obj)
 	{
 		return !!obj;
+	},
+	/**
+	 * Returns all interactable object classes for this IA controller in editor.
+	 * If can interact will all objects, simply returns null.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	getInteractableTargetClasses: function()
+	{
+		return null;
+	},
+	/** @private */
+	getAllInteractableObjsAtScreenCoord: function(coord)
+	{
+		return this.getEditor().getBasicObjectsAtCoord(coord, this.getCurrBoundInflation(), null, this.getInteractableTargetClasses());
+	},
+	/** @private */
+	getTopmostInteractableObjAtScreenCoord: function(coord)
+	{
+		var objs = this.getAllInteractableObjsAtScreenCoord(coord);
+		if (objs)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				if (this.canInteractWithObj(objs[i]))
+					return objs[i];
+			}
+		}
+		return null;
 	},
 
 	/**
@@ -4736,6 +4862,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		}
 		return result;
 	},
+
 	/**
 	 * Notify the manipulation is done and objs are inserted into or modified in editor.
 	 * This method should be called by descendants at the end of their manipulation.
@@ -4745,11 +4872,19 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	 */
 	doneInsertOrModifyBasicObjects: function(objs)
 	{
-		if (this.getEditorConfigs().getInteractionConfigs().getAutoSelectNewlyInsertedObjects())
+		if (this.needAutoSelectNewlyInsertedObjects())
 		{
 			var filteredObjs = this._filterBasicObjectsInEditor(objs);
 			this.getEditor().select(filteredObjs);
 		}
+	},
+	/** @private */
+	needAutoSelectNewlyInsertedObjects: function()
+	{
+		var pointerType = this.getActivePointerType();
+		var ic = this.getEditorConfigs().getInteractionConfigs();
+		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
+				|| ic.getAutoSelectNewlyInsertedObjects();
 	},
 
 	/** @private */
@@ -4757,6 +4892,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		//this.updateCurrBoundInflation(e);
 		//this.getEditor().setCurrPointerType(e.pointerType);
+		this.setActivePointerType(e.pointerType);
 		e.preventDefault();
 		return true;
 	},
@@ -4769,14 +4905,14 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
+		var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
 		if (!this.getManuallyHotTrack())
 		{
 			/*
 			if (obj)
 				console.log('point to', obj.getClassName(), obj.getId());
 			*/
-			if (obj && this.canInteractWithObj(obj))
+			if (obj /* && this.canInteractWithObj(obj)*/)   // canInteractWithObj check now already done in getTopmostInteractableObjAtScreenCoord
 			{
 				this.hotTrackOnObj(obj);
 			}
@@ -5204,6 +5340,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('manipulationType', {'dataType': DataType.INT, 'serializable': false});  // private
 
 		this.defineProp('isManipulatingSelection', {'dataType': DataType.BOOL, 'serializable': false});
+
+		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getActivePointerType(); },
+			'setter': function(value) { this.setActivePointerType(); }
+		});  // private, alias of property activePointerType
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
 		//this.defineProp('activeOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false}); // store operation that should be add to history
@@ -5902,6 +6043,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var scaleX = transformParams.scaleX || transformParams.scale;
 		var scaleY = transformParams.scaleY || transformParams.scale;
 
+		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
+
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{
 			var obj = manipulatingObjs[i];
@@ -5910,8 +6053,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (!info.hasNoCoord)  // this object has coord property and can be rotated
 			{
 				var oldCoord = info.screenCoord;
-				var newCoord = C.transform2DByMatrix(oldCoord, transformMatrix);
-				newInfo.screenCoord = newCoord;
+				if (!info.stickTarget || isMovingOneStickNode)
+				{
+					var newCoord = C.transform2DByMatrix(oldCoord, transformMatrix);
+					newInfo.screenCoord = newCoord;
+				}
+				else
+					newInfo.screenCoord = oldCoord;
 				//this._addManipultingObjNewInfo(obj, {'screenCoord': newCoord});
 			}
 			// TODO: may need change dimension also
@@ -5924,6 +6072,27 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 
 		return true;
+	},
+
+	/**
+	 * Whether an object is sticking to another one.
+	 * @private
+	 */
+	_isStickedObj: function(obj)
+	{
+		return obj && obj.getCoordStickTarget && obj.getCoordStickTarget();
+	},
+	/** @private */
+	_isManipulatingSingleStickedObj: function(manipulatingObjs)
+	{
+		var result = false;
+		if (manipulatingObjs.length === 1)
+		{
+			var oneObj = manipulatingObjs[0];
+			var info = this.getManipulateObjInfoMap().get(oneObj);
+			result = !!info.stickTarget;
+		}
+		return result;
 	},
 
 	/*
@@ -6008,13 +6177,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var C = Kekule.CoordUtils;
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+
+		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
+
+		var isDirectManipulateSingleObj = this.isDirectManipulating() && (manipulatingObjs.length === 1);
+		var followPointerCoord = isDirectManipulateSingleObj && this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
+		if (followPointerCoord)
+		{
+			var startCoord = this.getStartCoord();
+			var moveDistance = C.getDistance(endScreenCoord, startCoord);
+			if (moveDistance <= this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObjDistanceThreshold())
+			{
+				followPointerCoord = false;
+			}
+		}
+
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{
 			var obj = manipulatingObjs[i];
 			var info = this.getManipulateObjInfoMap().get(obj);
 			if (info.hasNoCoord)  // this object has no coord property and can not be moved
 				continue;
-			var newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
+			if (info.stickTarget && !isMovingOneStickNode)
+				continue;
+			var newScreenCoord;
+			if (followPointerCoord)
+				newScreenCoord = endScreenCoord;
+			else
+				newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
 			newScreenCoord = this._calcActualMovedScreenCoord(obj, info, newScreenCoord);
 			this._addManipultingObjNewInfo(obj, {'screenCoord': newScreenCoord});
 		}
@@ -6081,6 +6271,16 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.stopManipulate();
 	},
 	*/
+
+	/**
+	 * Returns whether the controller is in direct manipulating state.
+	 */
+	isDirectManipulating: function()
+	{
+		return (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			&& (!this.getIsManipulatingSelection());
+	},
+
 	/**
 	 * Click on a object or objects and manipulate it directly.
 	 * @private
@@ -6159,6 +6359,10 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		info.hasNoCoord = !info.objCoord;
 		if (!info.hasNoCoord && startScreenCoord)
 			info.screenCoordOffset = Kekule.CoordUtils.substract(info.screenCoord, startScreenCoord);
+		if (obj.getCoordStickTarget)  // wether is a sticking object
+		{
+			info.stickTarget = obj.getCoordStickTarget();
+		}
 		return info;
 	},
 
@@ -6331,6 +6535,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
+		if (e)
+			this.setManipulationPointerType(e && e.pointerType);
 
 		var editor = this.getEditor();
 		editor.beginManipulateObject();
@@ -6580,7 +6786,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		*/
 	},
 
-	// event handle methods
+		// event handle methods
 	/** @ignore */
 	react_pointermove: function($super, e)
 	{

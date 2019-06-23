@@ -1472,7 +1472,7 @@ Kekule.Render.MetaShapeUtils = {
 		{
 			var coord = coords[i];
 			var vec = C.substract(coord, center);
-			var distance = C.getDistance(coord);
+			var distance = C.getDistance(vec);
 			var deltaVec = C.multiply(vec, delta / distance);
 			var newCoord = C.add(coord, deltaVec);
 			result.push(newCoord);
@@ -2300,6 +2300,182 @@ Kekule.Render.MetaShapeUtils = {
 			}
 			return result;
 		}
+	},
+
+	/**
+	 * Returns all edge line vectors of a shape.
+	 * Note that not all shape edge can be decomposited to vectors (e.g. circle).
+	 * @param {Object} shapeInfo
+	 * @returns {Array} Array of [coord0, coord1] of vectors
+	 */
+	getEdgeVectors: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+		var CU = Kekule.CoordUtils;
+
+		var result;
+		if (U.isCompositeShape(shapeInfo))
+		{
+			result = [];
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childVectors = U.getEdgeVectors(childShape);
+				result = result.concat(childVectors);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result = [[coords[0], coords[0]]];
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result = null;  // Circle has no line edge
+					break;
+				}
+				case T.LINE:
+				{
+					// console.log(shapeInfo);
+					var w = shapeInfo.width;
+					if (!w)
+						result = [[coords[0], coords[1]]];
+					else
+					{
+						var c1 = coords[0];
+						var c2 = coords[1];
+						var delta = CU.substract(c2, c1);
+						var d = CU.getDistance(c1, c2);
+						var sinAngle = delta.y / d;
+						var cosAngle = delta.x / d;
+						var halfWidth = w / 2;
+						var widthDeltaX = halfWidth * sinAngle;
+						var widthDeltaY = halfWidth * cosAngle;
+						var polyCoords = [
+							{x: c1.x - widthDeltaX, y: c1.y + widthDeltaY},
+							{x: c1.x + widthDeltaX, y: c1.y - widthDeltaY},
+							{x: c2.x + widthDeltaX, y: c2.y - widthDeltaY},
+							{x: c2.x - widthDeltaX, y: c2.y + widthDeltaY}
+						];
+						var pc = polyCoords;
+						result = [
+							[pc[0], pc[1]], [pc[1], pc[2]], [pc[2], pc[3]], [pc[3], pc[0]]
+						]
+					}
+					break;
+				}
+				case T.RECT:
+				{
+					var c0 = coords[0], c2 = coords[1];
+					var c1 = {x: c2.x, y: c0.y}, c3 = {x: c0.x, y: c2.y};
+					result = [[c0, c1], [c1, c2], [c2, c3], [c3, c0]];
+					break;
+				}
+				case T.POLYGON:
+				{
+					result = [];
+					for (var i = 0, l = coords.length - 1; i < l; ++i)
+					{
+						var nextIndex = ++i;
+						if (nextIndex >= l)
+							nextIndex = 0;
+						result.push([coords[i], coords[nextIndex]]);
+					}
+					break;
+				}
+			}
+			return result;
+		}
+	},
+	/**
+	 * Returns all basic edge elements, including vectors and circles of a shape.
+	 * @param {Object} shapeInfo
+	 * @returns {Hash} Hash of {vectors: [{coord1, coord2}], circles: [{center, radius}]}
+	 */
+	getEdgeBasicElements: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result = {vectors: [], circles: []};
+		if (U.isCompositeShape(shapeInfo))
+		{
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childResult = U.getEdgeBasicElements(childShape);
+				result.vectors = result.concat(childResult.vectors);
+				result.circles = result.concat(childResult.circles);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result.circles.push({center: coords[0], radius: 0});
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result.circles.push({center: coords[0], radius: shapeInfo.radius});
+					break;
+				}
+				default:
+				{
+					result.vectors = result.vectors.concat(Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo));
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns the cross point of a vector line to shape edges.
+	 * @param {Array} vectorCoords
+	 * @param {Object} shapeInfo
+	 * @param {Bool} shortcut If true, returns directly when finding cross point and bypassing all rest vectors.
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToShapeEdges: function(vectorCoords, shapeInfo, shortcut, floatEqualThreshold)
+	{
+		var edgeElems = Kekule.Render.MetaShapeUtils.getEdgeBasicElements(shapeInfo);
+		var edgeVectors = edgeElems.vectors;
+		var edgeCircles = edgeElems.circles;
+		var result = [];
+
+		for (var i = 0, l = edgeVectors.length; i < l; ++i)
+		{
+			var edge = edgeVectors[i];
+			var crossPoint = Kekule.GeometryUtils.getCrossPointOfVectors(vectorCoords, edge);
+			if (crossPoint)
+			{
+				result.push(crossPoint);
+				if (shortcut)
+					return result;
+			}
+		}
+		for (var i = 0, l = edgeCircles.length; i < l; ++i)
+		{
+			var circle = edgeCircles[i];
+			var crossPoints = Kekule.GeometryUtils.getCrossPointsOfVectorToCircle(vectorCoords, circle.center, circle.radius, floatEqualThreshold)
+			if (crossPoints && crossPoints.length)
+			{
+				result = result.concat(crossPoints);
+				if (shortcut)
+					return result;
+			}
+		}
+		return result;
 	}
 };
 
@@ -2741,590 +2917,5 @@ Kekule.Render.UpdateObjUtils = {
 			result.push({'obj': updatedObjs[i]});
 		}
 		return result;
-	}
-};
-
-
-/**
- * Helper class to define some common methods of renderer.
- * Note: as the introducing of the base class {@link Kekule.Render.CompositeRenderer},
- * almost all renderers support child renderers now, so this helper class should not be used again.
- * @deprecated
- * @ignore
- * @class
- */
-Kekule.Render.RendererDefineUtils = {
-	/// Methods to expand support for compositeObjRenderer
-	/**
-	 * @class
-	 * @private
-	 */
-	CompositeObjRendererMethods:
-	/** @lends Kekule.Render.RendererDefineUtil.CompositeObjRendererMethods# */
-	{
-		/*
-		initialize: function($super, chemObj, drawBridge, parent)
-		{
-			$super(chemObj, drawBridge, parent);
-		},
-		*/
-		/** @ignore */
-		finalize: function($super)
-		{
-			this.reset();
-			$super();
-		},
-		/** @private */
-		doEstimateObjBox: function(context, options, allowCoordBorrow)
-		{
-			var result = null;
-			var renderers = this.prepareChildRenderers();
-			var BU = Kekule.BoxUtils;
-			for (var i = 0, l = renderers.length; i < l; ++i)
-			{
-				var r = renderers[i];
-				if (r)
-				{
-					var b = r.estimateObjBox(context, options, allowCoordBorrow);
-					if (b)
-					{
-						if (!result)
-							result = BU.clone(b); //Object.extend({}, b);
-						else
-							result = BU.getContainerBox(result, b);
-					}
-				}
-			}
-			return result;
-		},
-		/** @ignore */
-		isChemObjRenderedBySelf: function($super, context, obj)
-		{
-			var result = $super(context, obj);
-			if (!result)
-			{
-				var childRenderers = this.getChildRenderers();
-				for (var i = 0, l = childRenderers.length; i < l; ++i)
-				{
-					var r = childRenderers[i];
-					if (r.isChemObjRenderedBySelf(context, obj))
-						return true;
-				}
-			}
-			if (!result)
-			{
-				this.refreshChildObjs();
-				var objs = this.getTargetChildObjs();
-				result = (objs && objs.indexOf(obj) >= 0);
-				//console.log('here', this.getClassName(), obj.getClassName(), result);
-			}
-			return result;
-		},
-		/** @ignore */
-		isChemObjRenderedDirectlyBySelf: function($super, context, obj)
-		{
-			return $super(context, obj);
-		},
-		/**
-		 * Returns all children of this.getChemObj(). Descendants must override this method.
-		 * If no children is found, null should be returned.
-		 * @returns {Array}
-		 * @private
-		 */
-		getChildObjs: function()
-		{
-			return null;
-		},
-		/**
-		 * Prepare all child objects to be drawn.
-		 * @private
-		 */
-		prepareChildObjs: function()
-		{
-			var childObjs = this.getTargetChildObjs();
-			if (childObjs)  // already prepared
-				return childObjs;
-
-			this.setTargetChildObjs(this.getChildObjs());
-			return this.getTargetChildObjs();
-		},
-		/** @private */
-		refreshChildObjs: function()
-		{
-			this.setTargetChildObjs(null);
-			this.prepareChildObjs();
-		},
-		/** @private */
-		getChildRenderers: function()
-		{
-			return this.getChildRendererMap().getValues();
-		},
-		/** @private */
-		getRendererForChild: function(childObj, canCreate)
-		{
-			var renderSelector = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-				Kekule.Render.get3DRendererClass: Kekule.Render.get2DRendererClass;
-			var rendererMap = this.getChildRendererMap();
-			var result = rendererMap.get(childObj);
-			if (!result && canCreate)
-			{
-				var c = renderSelector(childObj) || Kekule.Render.DummyRenderer;  // dummy renderer, do nothing
-				var result = c? new c(childObj, this.getDrawBridge(), /*this.getRenderConfigs(),*/ this): null;  // renderer may be null for some unregistered objects
-				rendererMap.set(childObj, result);
-				result.setRedirectContext(this.getRedirectContext());
-			}
-			return result;
-		},
-		/**
-		 * Prepare renders to draw child objects.
-		 * @private
-		 */
-		prepareChildRenderers: function()
-		{
-			/*
-			var childRenderers = this.getChildRenderers();
-			if (childRenderers)
-				return childRenderers;
-			childRenderers = [];
-			this.setChildRenderers(childRenderers);
-			*/
-			var rendererMap = this.getChildRendererMap();
-
-			var childObjs = this.prepareChildObjs() || [];
-
-			// remove unneed renderers
-			var oldRenderedObjs = rendererMap.getKeys();
-			for (var i = 0, l = oldRenderedObjs.length; i < l; ++i)
-			{
-				var obj = oldRenderedObjs[i];
-				if (childObjs.indexOf(obj) < 0)
-					rendererMap.remove(obj);
-			}
-			// add new renderers if needed
-			for (var i = 0, l = childObjs.length; i < l; ++i)
-			{
-				var childObj = childObjs[i];
-				/*
-				if (!rendererMap.get(childObj))
-				{
-					var c = renderSelector(childObj);
-					var r = c? new c(childObj, this.getDrawBridge(), this): null;  // renderer may be null for some unregistered objects
-					//console.log('prepare new child renderer', r.getClassName(), childObj.getClassName(), childObj.getNodeCount? childObj.getNodeCount(): -1);
-					//childRenderers.push(r);
-					rendererMap.set(childObj, r);
-				}
-				*/
-				this.getRendererForChild(childObj, true);
-			}
-
-			//return childRenderers;
-			return rendererMap.getValues();
-		},
-		/**
-		 * Release all child renderer instance.
-		 * @private
-		 */
-		releaseChildRenderers: function()
-		{
-			var rendererMap = this.getChildRendererMap();
-			//var childRenderers = this.getChildRenderers();
-			var childRenderers = rendererMap.getValues();
-			if (!childRenderers)
-				return;
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				childRenderers[i].finalize();
-			}
-			//this.setChildRenderers(null);
-			rendererMap.clear();
-		},
-
-		/** @private */
-		hasChild: function()
-		{
-			return !!(this.getTargetChildObjs() || []).length;
-		},
-
-		/**
-		 * Prepare child objects and renderers, a must have step before draw.
-		 * @private
-		 */
-		prepare: function()
-		{
-			this.prepareChildObjs();
-			this.prepareChildRenderers();
-		},
-
-		/**
-		 * Set renderer to initialized state, clear childObjs and childRenderers.
-		 * @private
-		 */
-		reset: function()
-		{
-			this.setTargetChildObjs(null);
-			this.releaseChildRenderers();
-		},
-
-		/** @private */
-		doDraw: function($super, context, baseCoord, options)
-		{
-			// prepare, calc transform options and so on
-			//this.reset();
-			this.prepare();
-			if (!this.hasChild())
-				return $super(context, baseCoord, options);
-			else  // then draw each child objects by child renderers
-				return this.doDrawChildrenAndSelf(context, baseCoord, options);
-		},
-		/** @private */
-		doDrawChildrenAndSelf: function(context, baseCoord, options)
-		{
-			var group = this.createDrawGroup(context);
-			var childRenderers = this.getChildRenderers();
-			/*
-			 var coordMode = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-			 Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
-			 var transformFunc = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-			 Kekule.CoordUtils.transform3D: Kekule.CoordUtils.transform2D;
-			 */
-
-			var ops = Object.create(options);
-			/*
-			var chemObj = this.getChemObj();
-			var objOptions = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-				chemObj.getOverriddenRender3DOptions(): chemObj.getOverriddenRenderOptions();
-
-			ops = Object.extend(ops, objOptions || {});
-			*/
-
-			//console.log('overrided ops', chemObj.getClassName(), ops, objOptions);
-
-			this.getRenderCache(context).childDrawOptions = ops;
-
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				var baseCoord = null;
-				/*
-				 var chemObj = r.getChemObj();
-				 if (chemObj.getAbsBaseCoordOfMode)
-				 {
-				 var baseCoord = chemObj.getAbsBaseCoordMode(coordMode);
-				 baseCoord = transformFunc(baseCoord, options.transformParams);
-				 }
-				 //console.log('drawOptions', options);
-				 */
-				var elem = r.draw(context, baseCoord, ops);
-				if (group && elem)
-					this.addToDrawGroup(elem, group);
-			}
-			//console.log('drawn group', group);
-
-			// self
-			var selfElem = this.doDrawSelf(context, baseCoord, options);
-			if (selfElem)
-				 this.addToDrawGroup(selfElem, group);
-
-			return group;
-		},
-		/**
-		 * Draw only self, without child objects.
-		 * Descendants may override this method.
-		 * @private
-		 */
-		doDrawSelf: function($super, context, baseCoord, options)
-		{
-			return $super(context, baseCoord, options);
-		},
-
-		/* @private */
-		/*
-		doRedraw: function(context)
-		{
-			//console.log('redraw', this.getClassName());
-			return this.doRedrawCore(context);
-		},
-		*/
-		/* @private */
-		/*
-		doRedrawCore: function(context, options)
-		{
-			var group = this.createDrawGroup(context);
-			var childRenderers = this.getChildRenderers();
-
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				var elem = r.redraw(context)
-				if (group && elem)
-					this.addToDrawGroup(elem, group);
-			}
-			return group;
-		},
-		*/
-
-		/** @private */
-		doClear: function($super, context)
-		{
-			if (this.hasChild())
-			{
-				var childRenderers = this.getChildRendererMap().getValues();
-				for (var i = 0, l = childRenderers.length; i < l; ++i)
-				{
-					if (childRenderers[i])
-					{
-						childRenderers[i].clear(context);
-					}
-				}
-			}
-			//this.doClearSelf(context);
-			$super(context);
-			return true;
-		},
-		/**
-		 * Clear only self, without child objects.
-		 * Descendants may override this method.
-		 * @private
-		 */
-		doClearSelf: function($super, context)
-		{
-			return $super(context);
-		},
-		/** @private */
-		doUpdate: function($super, context, updateObjDetails, updateType)
-		{
-			//if (!this.hasChild())
-				return $super(context, updateObjDetails, updateType);
-
-			var updatedObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updateObjDetails);
-			//console.log(this.getClassName(), updateType, updateObjDetails);
-
-			//console.log(updatedObjs);
-
-			//this.setTargetChildObjs(null);
-			//this.prepareChildObjs();  // update childObjs
-
-			//var directChildren = this.getChildObjs();
-			var directChildren = this.getTargetChildObjs() || [];
-			var childRendererMap = this.getChildRendererMap();
-			var objs = Kekule.ArrayUtils.toArray(updatedObjs);
-			var objsMap = new Kekule.MapEx(false);
-			var renderers = [];
-			var redrawRoot = false;
-
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-				if (this.isChemObjRenderedDirectlyBySelf(context, obj))  // need redraw self
-				{
-					redrawRoot = true;
-				}
-			}
-			if (redrawRoot)
-			{
-				//console.log('redraw root', this.getClassName());
-				this.doClear(context);
-				this.redraw(context);
-				return true;
-			}
-
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-
-				/*
-				// debug
-				var isMol = false;
-				if (obj instanceof Kekule.StructureFragment)
-				{
-					console.log('obj update here', obj.getId());
-					isMol = true;
-				}
-				*/
-
-				/*  // TODO: now has bugs, disable it currently
-				if (this.isChemObjRenderedDirectlyBySelf(context, obj))  // the root object it self updated, need re-render self
-				{
-					//console.log('do redraw');
-					redrawRoot = true;
-					//return true;
-				}
-				*/
-
-				var renderer = childRendererMap.get(obj);
-
-				if (renderer)  // is direct child and has a corresponding renderer
-				{
-					/*
-					// debug
-					if (isMol)
-					{
-						console.log('find renderer', renderer.getClassName(), updateType, obj.getId());
-						if (!renderer.id)
-							renderer.id = obj.getId();
-						else if (renderer.id !== obj.getId())
-							console.log('id conflivt', renderer.id, obj.getId())
-					}
-					*/
-					// check update type, if updateType is remove, just remove the renderer
-					if (updateType === Kekule.Render.ObjectUpdateType.REMOVE)
-					{
-						renderer.clear();
-						childRendererMap.remove(obj);
-					}
-					else
-					{
-						Kekule.ArrayUtils.pushUnique(renderers, renderer);
-						//renderers.push(renderer);
-						olds = [obj];
-						objsMap.set(renderer, olds);
-					}
-				}
-				else
-				{
-					var rs = this._getRenderersForChildObj(context, obj);
-					if (!rs.length)
-					{
-						if (directChildren.indexOf(obj) >= 0)  // still can not find
-						{
-							var r = this.getRendererForChild(obj, true);
-							/*
-							if (r)
-								rs.push(r);
-							*/
-
-							//console.log('here', r.getClassName());
-							// draw directly
-							var drawnResult = r.draw(context, null, this.getRenderCache(context).childDrawOptions);
-							if (drawnResult)
-							{
-								var drawnElem = this.getCachedDrawnElem(context);
-								if (drawnElem)
-									this.addToDrawGroup(drawnResult, drawnElem);
-							}
-						}
-					}
-					for (var j = 0, k = rs.length; j < k; ++j)
-					{
-						var renderer = rs[j];
-						var olds = objsMap.get(renderer);
-						if (!olds)
-						{
-							renderers.push(renderer);
-							olds = [];
-							objsMap.set(renderer, olds);
-						}
-						olds.push(obj);
-					}
-				}
-			}
-
-			//console.log('do update', this.getClassName(), renderers);
-
-			// apply update in each renderer
-			var result = true;
-			for (var i = 0, l = renderers.length; i < l; ++i)
-			{
-				var renderer = renderers[i];
-				//console.log(renderer);
-				var o = objsMap.get(renderer);
-				//console.log('call update', renderer.getClassName(), o);
-				var details = Kekule.Render.UpdateObjUtils._createUpdateObjDetailsFromObjs(o);
-				/*
-				// debug
-				if (renderer.id)
-					console.log('renderer id', renderer.id);
-				if (renderer.getChemObj() instanceof Kekule.StructureFragment)
-				{
-					console.log('update renderer', renderer.getClassName(), updateType, o);
-				}
-				*/
-				var r = renderer.update(context, details, updateType);
-				result = result && r;
-
-				/*
-				if (!result)  // fail to update part, need to repaint whole
-				{
-					break;
-				}
-				*/
-			}
-
-			var result = renderers && renderers.length > 0;
-
-			/*
-			//if (redrawRoot)
-			if (!result)
-			{
-
-				this.doClear(context);
-				this.redraw(context);
-				result = true;
-
-			}
-			*/
-
-			//result = $super(context, updateObjDetails, updateType) && result;
-
-			if (!result)
-			{
-				result = true;
-			}
-
-			//console.log('update', updatedObjs[0].getClassName(), this.getChemObj().getClassName(), updatedObjs[0] === this.getChemObj(), renderers.length);
-
-			return result;
-		},
-		/** @private */
-		doUpdateSelf: function($super, context, updateObjDetails, updateType)
-		{
-			return $super(context, updateObjDetails, updateType);;
-		},
-		/** @private */
-		_getRenderersForChildObj: function(context, childObj)
-		{
-			var result = [];
-			var childRenderers = this.getChildRenderers();
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				if (r.isChemObjRenderedBySelf(context, childObj))
-					result.push(r);
-			}
-			return result;
-		}
-	},
-
-	/**
-	 * Define composite render properties and methods to a class.
-	 * @param {Object} aClass Should be class object.
-	 */
-	addCompositeRenderSupport: function(aClass)
-	{
-		ClassEx.defineProp(aClass, 'targetChildObjs', {
-			'dataType': DataType.ARRAY,
-			'serializable': false
-		});
-		/*
-		ClassEx.defineProp(aClass, 'childRenderers', {
-			'dataType': DataType.ARRAY,
-			'serializable': false
-		});
-		*/
-		ClassEx.defineProp(aClass, 'childRendererMap', {
-			'dataType': DataType.OBJECT,
-			'serializable': false,
-			'getter': function()
-			{
-				var result = this.getPropStoreFieldValue('childRendererMap');
-				if (!result)
-				{
-					result = new Kekule.MapEx(true);  // non-weak map, as we should store the renderers
-					this.setPropStoreFieldValue('childRendererMap', result);
-				}
-				return result;
-			}
-		});
-		ClassEx.extend(aClass, Kekule.Render.RendererDefineUtils.CompositeObjRendererMethods);
 	}
 };

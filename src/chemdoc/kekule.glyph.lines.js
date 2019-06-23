@@ -53,8 +53,27 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	_applyParamsToConnector: function(connector, initialParams)
 	{
-		connector.setPathParams(initialParams);
+		//connector.setPathParams(initialParams);
+
+		var p = Object.create(initialParams);
+		if (Kekule.ObjUtils.isUnset(initialParams.autoOffset))
+			p.autoOffset = false;
+		connector.setPathParams(p);
 	}
+	/* @ignore */
+	/*
+	getAllowChildCoordStickTo: function(child, dest)
+	{
+		return true;
+	},
+	*/
+	/* @ignore */
+	/*
+	getChildAcceptCoordStickFrom: function(child, fromObj)
+	{
+		return true;
+	}
+	*/
 });
 
 /**
@@ -127,15 +146,15 @@ Kekule.Glyph.Polygon = Class.create(Kekule.Glyph.PathGlyph,
 });
 
 /**
- * A glyph of arc line.
+ * A base glyph of arc segment.
  * @class
  * @augments Kekule.Glyph.PathGlyph
  */
-Kekule.Glyph.Arc = Class.create(Kekule.Glyph.PathGlyph,
-/** @lends Kekule.Glyph.Arc# */
+Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
+/** @lends Kekule.Glyph.BaseArc# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Glyph.Arc',
+	CLASS_NAME: 'Kekule.Glyph.BaseArc',
 	/** @constructs */
 	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
 	{
@@ -173,6 +192,39 @@ Kekule.Glyph.Arc = Class.create(Kekule.Glyph.PathGlyph,
 	_applyParamsToConnector: function(connector, initialParams)
 	{
 		connector.setPathParams(initialParams);
+	},
+	/** @ignore */
+	getAllowChildCoordStickTo: function(child, dest)
+	{
+
+		return !dest ||  // dest not set, a general test, just returns true
+			((dest instanceof Kekule.ChemStructureNode) || (dest instanceof Kekule.ChemStructureConnector)) && (!this._isChildrenStickingTo(dest, [child]));
+	},
+	/** @ignore */
+	getChildUseCoordStickOffset: function($super, child, stickDest)
+	{
+		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+			//return $super(child, stickDest);
+		}
+	},
+	/** @private */
+	_isChildrenStickingTo: function(dest, excludeChildren)
+	{
+		var nodes = this.getNodes();
+		nodes = Kekule.ArrayUtils.exclude(nodes, excludeChildren || []);
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var n = nodes[i];
+			if (n.getCoordStickTarget() === dest)
+				return true;
+		}
+		return false;
 	}
 });
 

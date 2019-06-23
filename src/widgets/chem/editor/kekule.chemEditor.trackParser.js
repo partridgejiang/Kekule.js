@@ -1482,11 +1482,21 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 	/** @private */
 	_getMergeDestObjAtCoord: function(screenCoord)
 	{
+		/*
 		var obj = this.getEditor().getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation());
 		if (this.isValidMergeDestObj(obj))
 			return obj;
 		else
 			return null;
+		*/
+		var objs = this.getEditor().getBasicObjectsAtCoord(screenCoord, this.getCurrBoundInflation());
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (this.isValidMergeDestObj(obj))
+				return obj;
+		}
+		return null;
 	},
 	/** @private */
 	addTrackCoord: function(screenCoord, doNotRepaint)
