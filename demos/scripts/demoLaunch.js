@@ -59,10 +59,13 @@ DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistr
 	DU.newConcreteDemo('chemViewer2D', 'Chem Viewer 2D', 'Demonstrates function of 2D chem viewer widget.', 'chemViewer/chemViewer2D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('chemViewer3D', 'Chem Viewer 3D', 'Demonstrates function of 3D chem viewer widget.', 'chemViewer/chemViewer3D.html', 'chemViewer/chemViewer_intro.html'),
 	DU.newConcreteDemo('embeddedViewer', 'Embedded Chem Object', 'Demonstrates display molecules using embedded chem viewer and pure HTML code (without JavaScript).', 'chemViewer/embeddedChemViewer.html'),
-	DU.newConcreteDemo('moleculeViewer', 'Molecule Viewer', 'Demonstrates variety forms of chem viewer widge to display molecule.', 'chemViewer/moleculeViewer.html'),
-	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html', null, {'newWindow': false}),
-	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
+	DU.newConcreteDemo('moleculeViewer', 'Molecule Viewer', 'Demonstrates variety forms of chem viewer widge to display molecule.', 'chemViewer/moleculeViewer.html')	
 ]);
+DU.newRootCategory('chemEditor', 'Chem Editor', 'Demos about the composer (chem editor) widget', [	
+	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html', null, {'newWindow': false}),
+	DU.newConcreteDemo('composerCustomization', 'Composer Customization', 'Demo of the UI customization of chemistry editor.', 'chemEditor/composerCustomization.html', null, {'newWindow': false}),
+	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
+]);	
 DU.newRootCategory('extra', 'Extra', 'Demos some extra functions of Kekule.js', [
 	DU.newConcreteDemo('ckEditorPlugins', 'Plugins for CKEditor', 'Demonstrates the integration of Kekule.js with web rich text editor.', 'CKEditor/ckeditorDemo.html', 'CKEditor/ckeditorDemo_intro.html'),
 	DU.newConcreteDemo('openBabelGen3D', '3D Structure Generator', 'Generate 3D molecule structure from 2D connection table by force field calculation totally inside web browser.', 'calculation/gen3D.html'),
