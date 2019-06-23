@@ -2980,7 +2980,7 @@ Kekule._registerAfterLoadSysProc(function(){
 	var EMC = Kekule.Editor.ObjModifier.Category;
 	var SM = Kekule.ObjPropSettingManager;
 	SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
-		enableStyleToolbar: true,
+		enableObjModifierToolbar: true,
 		enableOperHistory: true,
 		enableLoadNewFile: true,
 		enableCreateNewDoc: true,
@@ -2991,7 +2991,7 @@ Kekule._registerAfterLoadSysProc(function(){
 		allowedObjModifierCategories: null  // allow modifiers of all categories
 	});
 	SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
-		enableStyleToolbar: true,
+		enableObjModifierToolbar: true,
 		enableOperHistor: true,
 		enableLoadNewFile: true,
 		enableCreateNewDoc: true,
@@ -3010,7 +3010,7 @@ Kekule._registerAfterLoadSysProc(function(){
 		allowedObjModifierCategories: [EMC.GENERAL, EMC.CHEM_STRUCTURE]  // only all chem structure modifiers
 	});
 	SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
-		enableStyleToolbar: false,
+		enableObjModifierToolbar: true,
 		commonToolButtons: [
 			BNS.newDoc,
 			BNS.loadData,
