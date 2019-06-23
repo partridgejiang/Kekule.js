@@ -62,7 +62,7 @@ DU.newRootCategory('chemWidget', 'Chem Widget', 'Demos about widgets of chemistr
 	DU.newConcreteDemo('moleculeViewer', 'Molecule Viewer', 'Demonstrates variety forms of chem viewer widge to display molecule.', 'chemViewer/moleculeViewer.html')	
 ]);
 DU.newRootCategory('chemEditor', 'Chem Editor', 'Demos about the composer (chem editor) widget', [	
-	DU.newConcreteDemo('chemEditor', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html', null, {'newWindow': false}),
+	DU.newConcreteDemo('composer', 'Chem Composer', 'A full function chemistry editor.', 'chemEditor/chemEditor.html', null, {'newWindow': false}),
 	DU.newConcreteDemo('composerCustomization', 'Composer Customization', 'Demo of the UI customization of chemistry editor.', 'chemEditor/composerCustomization.html', null, {'newWindow': false}),
 	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
 ]);	
