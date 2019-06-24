@@ -970,6 +970,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				// if not hover, the active state should also be turned off
 				if (!value && !this.isCaptureMouse())
 					this.setPropStoreFieldValue('isActive', false);
+				var m = this.getGlobalManager();
+				if (m)
+					m.notifyWidgetHoverChanged(this, value);
 				this.stateChanged();
 			}
 		});
@@ -4568,6 +4571,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('widgets', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		// private, record current active and focused widget
 		// at one time, only one widget can be in those states
+		this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
@@ -4623,6 +4627,30 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this.setCurrFocusedWidget(null);
 
 		this.invokeEvent('widgetFinalize', {'widget': widget});
+	},
+	/**
+	 * Notify that hover state of a widget is changed.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} hover
+	 * @private
+	 */
+	notifyWidgetHoverChanged: function(widget, hover)
+	{
+		var oldWidget = this.getCurrHoverWidget();
+		if (hover)
+		{
+			if (widget !== oldWidget)
+			{
+				if (oldWidget)
+					oldWidget.setIsHover(false);
+				this.setCurrHoverWidget(widget);
+			}
+		}
+		else
+		{
+			if (oldWidget === widget)
+				this.setCurrHoverWidget(null);
+		}
 	},
 	/**
 	 * Notify that active state of a widget is changed.
