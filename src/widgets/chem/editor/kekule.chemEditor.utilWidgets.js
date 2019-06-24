@@ -1613,8 +1613,14 @@ Kekule.ChemWidget.ChargeSelectPanel = Class.create(Kekule.Widget.Panel,
  */
 /**
  * Invoked when the new arrow params has been set.
- *   event param of it has field: {value}
+ *   event param of it has field: {widget, value}
  * @name Kekule.ChemWidget.GlyphPathArrowSettingPanel#valueChange
+ * @event
+ */
+/**
+ * Invoked when the new arrow params are setting in the widget.
+ *   event param of it has field: {widget, value}
+ * @name Kekule.ChemWidget.GlyphPathArrowSettingPanel#valueInput
  * @event
  */
 Kekule.ChemWidget.GlyphPathArrowSettingPanel = Class.create(Kekule.Widget.Panel,
@@ -1650,6 +1656,7 @@ Kekule.ChemWidget.GlyphPathArrowSettingPanel = Class.create(Kekule.Widget.Panel,
 
 		this.addEventListener('check', this.reactArrowStyleButtonCheck.bind(this));
 		this.addEventListener('valueChange', this.reactArrowSizeInputterChange.bind(this));
+		this.addEventListener('valueInput', this.reactArrowSizeInputterInput.bind(this));
 	},
 	/** @private */
 	initProperties: function() {
@@ -1878,6 +1885,12 @@ Kekule.ChemWidget.GlyphPathArrowSettingPanel = Class.create(Kekule.Widget.Panel,
 		this.notifyPropSet('value', newValue);
 		this.invokeEvent('valueChange', {'value': newValue});
 	},
+	/** @private */
+	notifyValueInput: function(newValue)
+	{
+		this.notifyPropSet('value', newValue);
+		this.invokeEvent('valueInput', {'value': newValue});
+	},
 
 	/** @private */
 	reactArrowStyleButtonCheck: function(e)
@@ -1911,6 +1924,27 @@ Kekule.ChemWidget.GlyphPathArrowSettingPanel = Class.create(Kekule.Widget.Panel,
 				else if (w === this._arrowLengthInputter)
 					v.arrowLength = size;
 				this.notifyValueChange(v);
+				e.stopPropagation();
+			}
+		}
+	},
+	/** @private */
+	reactArrowSizeInputterInput: function(e)
+	{
+		if (this._isSettingValue)  // input value by program, do not evoke event
+			return;
+		var w = e.widget;
+		if (w === this._arrowWidthInputter || w === this._arrowLengthInputter)
+		{
+			var size = w.getValue() && w.getValue();
+			if (OU.notUnset(size))
+			{
+				var v = this.getValue();
+				if (w === this._arrowWidthInputter)
+					v.arrowWidth = size;
+				else if (w === this._arrowLengthInputter)
+					v.arrowLength = size;
+				this.notifyValueInput(v);
 				e.stopPropagation();
 			}
 		}
@@ -2351,6 +2385,12 @@ Kekule.ChemWidget.GlyphPathLineSettingPanel = Class.create(Kekule.Widget.Panel,
  * @name Kekule.ChemWidget.GlyphPathSettingPanel#valueChange
  * @event
  */
+/**
+ * Invoked when the new params are setting in the widget.
+ *   event param of it has field: {value}
+ * @name Kekule.ChemWidget.GlyphPathSettingPanel#valueInput
+ * @event
+ */
 Kekule.ChemWidget.GlyphPathSettingPanel = Class.create(Kekule.Widget.Panel,
 /** @lends Kekule.ChemWidget.GlyphPathSettingPanel# */
 {
@@ -2363,6 +2403,7 @@ Kekule.ChemWidget.GlyphPathSettingPanel = Class.create(Kekule.Widget.Panel,
 	{
 		$super(parentOrElementOrDocument);
 		this.addEventListener('valueChange', this.reactChildSetterValueChange.bind(this));
+		this.addEventListener('valueInput', this.reactChildSetterValueInput.bind(this));
 	},
 	/** @private */
 	initProperties: function() {
@@ -2478,6 +2519,20 @@ Kekule.ChemWidget.GlyphPathSettingPanel = Class.create(Kekule.Widget.Panel,
 			this.notifyPropSet('value', newValue);
 			//console.log('value change', newValue);
 			this.invokeEvent('valueChange', {'value': newValue});
+			//console.log('value change end');
+		}
+	},
+	/** @private */
+	reactChildSetterValueInput: function(e)
+	{
+		var w = e.widget;
+		if (w && this.getChildValueSetterWidgets().indexOf(w) >= 0)
+		{
+			var newValue = this.getValue();
+			e.stopPropagation();
+			this.notifyPropSet('value', newValue);
+			//console.log('value change', newValue);
+			this.invokeEvent('valueInput', {'value': newValue});
 			//console.log('value change end');
 		}
 	},
