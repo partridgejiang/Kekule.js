@@ -9,7 +9,7 @@ Composer UI
 .. figure:: images/widgets/composerUI.png
   :align: center
 
-  < Composer UI, with object inspect opened >
+  < Composer UI, with object inspector opened >
 
 The primary part of composer is a input panel, in which user can draw chemical structures and
 other objects. Around it there exist four toolbars as shown in figure above. The common toolbar
@@ -61,7 +61,8 @@ The zoom toolbar simply contains zoom in/out and reset buttons:
 
 The chem toolbar enables user to input, remove or select different types of chemistry objects.
 The operating practices of inputting molecule are quite similar to existing chemistry editors
-like ChemDraw and JME.
+like ChemDraw and JME. When click on a button in the chem toolbar, an associated toolbar with
+more options may be displayed at the bottom or the left side of the editor.
 
 .. table:: Buttons in chem toolbar
 
@@ -71,12 +72,11 @@ like ChemDraw and JME.
   |B20|       manipulate        Select objects in composer.
   |B21|       erase             Remove selection in composer.
   |B22|       bond              Input different types of molecule bond.
-  |B23|       atom              Input atom symbol.
-  |B24|       formula           Input molecule formula.
+  |B23|       atomAndFormula    Input atom symbol or formula.
   |B25|       ring              Input typical ring structures with 3-9 atoms.
   |B26|       charge            Input negative or positive charge on atom.
   |B27|       glyph             Input glyphs and symbols such as reaction arrow and heat symbol.
-  |B28|       textBlock         Input a block of plain text.
+  |B28|       textAndImage      Input text or image block.
   ==========  ================  =============
 
 .. |B20| image:: images/widgets/btnSelect.png
@@ -87,11 +87,18 @@ like ChemDraw and JME.
 .. |B25| image:: images/widgets/btnRing.png
 .. |B26| image:: images/widgets/btnCharge.png
 .. |B27| image:: images/widgets/btnArrow.png
-.. |B28| image:: images/widgets/btnText.png
+.. |B28| image:: images/widgets/btnTextImage.png
 
-The style toolbar consists of two drop box to select font name and size of text,
-three drop button to change text direction and horizontal/vertical alignment and
-a drop button to change change color of objects.
+
+..
+
+  The style toolbar consists of two drop box to select font name and size of text,
+  three drop button to change text direction and horizontal/vertical alignment and
+  a drop button to change change color of objects.
+
+The object modifier toolbar is visible when objects in the editor are selected. With dropdown buttons
+on it, user can change the properties of selected objects with ease. Different modifier buttons are displayed
+when different types of objects are in selection.
 
 All those toolbars are configurable and we will discuss it later.
 
@@ -260,12 +267,22 @@ All toolbars in composers can be easily customized like chem viewer:[#example]_
   composer.setCommonToolButtons(['newDoc', 'loadData', 'saveData', 'zoomIn', 'zoomOut']);
 
   // Set displayed buttons in chem toolbar
-  composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'ring', 'charge']);
+  composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atomAndFormula', 'ring', 'charge']);
+
+  // Set available object modifiers categories
+  composer.setAllowedObjModifierCategories([
+    Kekule.Editor.ObjModifier.Category.GENERAL, Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE
+    /* Kekule.Editor.ObjModifier.Category.STYLE, Kekule.Editor.ObjModifier.Category.GLYPH */
+  ]);
+
+..
 
   // Set displayed components in style toolbar
   composer.setStyleToolComponentNames(['color', 'textDirection', 'textAlign']);
   // hide style toolbar totally
   composer.setEnableStyleToolbar(false);
+
+An `interactive demo <https://partridgejiang.github.io/Kekule.js/demos/items/chemEditor/composerCustomization.html>`_ has also been published to let the user customize composer widget with ease.
 
 Presets
 -------
@@ -284,7 +301,6 @@ Change to a preset by method ``setPredefinedSetting``:[#example]_
 ::
 
   composer
-    .setEnableStyleToolbar(true)
     .setEnableOperHistory(true)
     .setEnableLoadNewFile(true)
     .setEnableCreateNewDoc(true)
@@ -292,7 +308,7 @@ Change to a preset by method ``setPredefinedSetting``:[#example]_
     .setCommonToolButtons(['newDoc', 'loadData', 'saveData', 'undo', 'redo', 'copy', 'cut', 'paste',
       'zoomIn', 'reset', 'zoomOut', 'config', 'objInspector'])   // create all default common tool buttons
     .setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula',
-      'ring', 'charge', 'glyph', 'textBlock'])   // create all default chem tool buttons
+      'ring', 'charge', 'glyph', 'textAndImage'])   // create all default chem tool buttons
     .setStyleToolComponentNames(['fontName', 'fontSize', 'color',
       'textDirection', 'textAlign']);  // create all default style components
 
@@ -304,14 +320,13 @@ Change to a preset by method ``setPredefinedSetting``:[#example]_
 ::
 
   composer
-    .setEnableStyleToolbar(true)
     .setEnableOperHistory(true)
     .setEnableLoadNewFile(true)
     .setEnableCreateNewDoc(true)
     .setAllowCreateNewChild(true)
     .setCommonToolButtons(['newDoc', 'loadData', 'saveData', 'undo', 'redo', 'copy', 'cut', 'paste',
       'zoomIn', 'reset', 'zoomOut', 'config', 'objInspector'])   // create all default common tool buttons
-    .setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula',
+    .setChemToolButtons(['manipulate', 'erase', 'bond', 'atomAndFormula',
       'ring', 'charge'])   // create only chem tool buttons related to molecule
     .setStyleToolComponentNames(['fontName', 'fontSize', 'color',
       'textDirection', 'textAlign']);  // create all default style components
@@ -324,10 +339,9 @@ Change to a preset by method ``setPredefinedSetting``:[#example]_
 ::
 
   composer
-    .setEnableStyleToolbar(false)  // do not show style toolbar
     .setCommonToolButtons(['newDoc', 'loadData', 'saveData', 'undo', 'redo'])  // create a small number of tool buttons
-    .setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'formula',
-      'ring', 'charge', 'glyph', 'textBlock']);   // create all default chem tool buttons
+    .setChemToolButtons(['manipulate', 'erase', 'bond', 'atomAndFormula',
+      'ring', 'charge', 'glyph', 'textAndImage']);   // create all default chem tool buttons
 
 .. figure:: images/widgets/composerCompact.png
 

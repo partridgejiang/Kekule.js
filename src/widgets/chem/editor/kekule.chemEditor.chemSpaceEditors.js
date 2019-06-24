@@ -2110,7 +2110,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var isMovingOneBond = (originManipulatedObjs.length === 1) && (originManipulatedObjs[0] instanceof Kekule.ChemStructureConnector);
 		var isMovingOneNode = (manipulatedObjs.length === 1) && (manipulatedObjs[0] instanceof /*Kekule.ChemStructureNode*/Kekule.BaseStructureNode)
 					&& (this._objCanBeMagneticMerged(manipulatedObjs[0]) || this._objCanBeMagneticSticked(manipulatedObjs[0]));
-		var maybeMousePosMerge = (manipulateType === MT.MOVE) && ((isMovingOneBond && this.getEnableConnectorMerge()) || (isMovingOneNode && this.getEnableNodeMerge()));
+		var maybeMousePosMerge = (manipulateType === MT.MOVE) && !this.getIsOffsetManipulating()
+			&& ((isMovingOneBond && this.getEnableConnectorMerge()) || (isMovingOneNode && this.getEnableNodeMerge()));
 		var maybeObjPosMagneticMerge = !isMovingOneBond && this.getEnableMagneticMerge();
 		//if (!isMovingOneBond && this.getEnableMagneticMerge())
 		if (maybeObjPosMagneticMerge || maybeMousePosMerge)
@@ -3676,6 +3677,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 	/** @private */
 	react_pointerdown: function(e)
 	{
+		this.setActivePointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			var S = BC.State;
@@ -5037,6 +5039,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 	/** @private */
 	react_pointerdown: function(e)
 	{
+		this.setActivePointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			var S = BC.State;
@@ -6305,6 +6308,11 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 		}
 		// default
 		return $super(insertedObjs, repInsertionResult);
+	},
+	/** @ignore */
+	getInsertedObjs: function($super)
+	{
+		return this.getCurrRepositoryObjects();  // the whole inserted objects should be auto selected after inserting
 	}
 });
 

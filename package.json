@@ -1,6 +1,6 @@
 {
   "name": "kekule",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Open source JavaScript toolkit for chemoinformatics",
   "main": "dist/kekule.js",
   "author": {
