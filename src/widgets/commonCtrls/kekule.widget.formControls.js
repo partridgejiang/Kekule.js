@@ -53,8 +53,16 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * This event will actually be fired when "change" event occurs on form element.
  * Instead of simply "change", the event name is "valueChange" to avoid conflict with
  * change event of ObjectEx.
- *   event param of it has field: {widget}
+ *   event param of it has field: {widget, value}
  * @name Kekule.Widget.FormWidget#valueChange
+ * @event
+ */
+/**
+ * Invoked when the value of form control element is input by user.
+ * This event will actually be fired when "input" event occurs on form element.
+ * Instead of simply "input", the event name is "valueInput" to match the "valueChange" event.
+ *   event param of it has field: {widget, value}
+ * @name Kekule.Widget.FormWidget#valueInput
  * @event
  */
 Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
@@ -136,7 +144,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 	{
 		//console.log('value change', this.getClassName());
 		this.setIsDirty(true);
-		this.invokeEvent('valueChange', {'widget': this});
+		this.invokeEvent('valueChange', {'widget': this, 'value':this.getValue()});
 	},
 	/**
 	 * Select all content in widget.
@@ -157,6 +165,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 	reactInput: function(e)
 	{
 		this.setIsDirty(true);
+		this.invokeEvent('valueInput', {'widget': this, 'value':this.getValue()});
 	}
 });
 
