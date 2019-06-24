@@ -300,22 +300,25 @@ Kekule.ChemObjOperation.ModifyHashProp = Class.create(Kekule.ChemObjOperation.Ba
 		{
 			obj.endUpdate();
 		}
-		this.setOldPropValue(oldValue);
+		if (!this.getOldPropValue())
+			this.setOldPropValue(oldValue);
 	},
 	/** @private */
 	doReverse: function()
 	{
+		var obj = this.getTarget();
 		var propName = this.getPropName();
 		var oldValue = this.getOldPropValue();
+		var nowValue = obj.getPropValue(propName);
+		var reverseValue = Object.extend(Object.extend({}, nowValue), oldValue, !true);
 		var valueMap = {};
-		valueMap[propName] = oldValue;
+		valueMap[propName] = reverseValue;
 
-		var obj = this.getTarget();
 		obj.beginUpdate();
 		try
 		{
 			this.notifyBeforeModifyingByEditor(obj, valueMap);
-			obj.setPropValue(propName, oldValue);
+			obj.setPropValue(propName, reverseValue);
 			this.notifyAfterModifyingByEditor(obj, valueMap);
 		}
 		finally
