@@ -267,13 +267,15 @@ All toolbars in composers can be easily customized like chem viewer:[#example]_
   composer.setCommonToolButtons(['newDoc', 'loadData', 'saveData', 'zoomIn', 'zoomOut']);
 
   // Set displayed buttons in chem toolbar
-  composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atom', 'ring', 'charge']);
+  composer.setChemToolButtons(['manipulate', 'erase', 'bond', 'atomAndFormula', 'ring', 'charge']);
 
   // Set available object modifiers categories
   composer.setAllowedObjModifierCategories([
     Kekule.Editor.ObjModifier.Category.GENERAL, Kekule.Editor.ObjModifier.Category.CHEM_STRUCTURE
     /* Kekule.Editor.ObjModifier.Category.STYLE, Kekule.Editor.ObjModifier.Category.GLYPH */
   ]);
+
+..
 
   // Set displayed components in style toolbar
   composer.setStyleToolComponentNames(['color', 'textDirection', 'textAlign']);
