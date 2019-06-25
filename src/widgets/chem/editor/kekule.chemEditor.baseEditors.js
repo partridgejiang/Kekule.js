@@ -6193,6 +6193,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	_isSameTransformParams: function(p1, p2, threshold, coordMode)
 	{
+		/*
 		var isUnset = OU.isUnset;
 		var equal = Kekule.NumUtils.isFloatEqual;
 		if (!threshold)
@@ -6229,6 +6230,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 	  else  // TODO: now handles 2D params only
 	  	return false;
+		*/
+		if (coordMode === Kekule.CoordMode.COORD2D)
+			return CU.isSameTransform2DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
+		else
+			return CU.isSameTransform3DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
 	},
 
 	/* @private */
