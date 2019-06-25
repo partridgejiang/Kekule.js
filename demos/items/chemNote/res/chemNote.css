@@ -75,19 +75,6 @@ section.Panel .SectionContent
   margin: 0;
 }
 
-.ChemNote-NoteItem-Container
-{
-  display: block;
-  height: 9em;
-  margin: 0.5em;
-  padding: 0.5em 0.5em;
-  border: 1px solid #ccc;
-  -ms-border-radius: 0.3em;
-  -webkit-border-radius: 0.3em;
-  -moz-border-radius: 0.3em;
-  border-radius: 0.3em;
-}
-
 .ChemNote-NoteListView .ChemNote-NoteItem
 {
   display: block;
@@ -110,10 +97,29 @@ section.Panel .SectionContent
   flex-direction: row;
 }
 
+.ChemNote-NoteItem-Container
+{
+  display: block;
+  height: 9em;
+  margin: 0.5em;
+  padding: 0.5em 0.5em;
+  border: 1px solid #ccc;
+  -ms-border-radius: 0.3em;
+  -webkit-border-radius: 0.3em;
+  -moz-border-radius: 0.3em;
+  border-radius: 0.3em;
+}
+
 .ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextRegion
 {
   /* float: left; */
   flex: auto;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextRegion
+{
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemRegion
 {
@@ -153,6 +159,7 @@ section.Panel .SectionContent
   max-height: 5em;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: auto;
 }
 .ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemContent
 {
@@ -205,8 +212,14 @@ section.Panel .SectionContent
   -webkit-flex: 1.0;
   -moz-flex: 1.0;
   flex: 1.0;
+  flex-shrink: 1.0;
 
   padding: 0.5em;
+}
+
+.ChemNote-NoteEditor .ChemNote-NoteEditor-TextRegion
+{
+  min-width: 10em;
 }
 
 .ChemNote-NoteEditor .K-TextBox,
