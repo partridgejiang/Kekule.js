@@ -347,6 +347,17 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		return opers;
 	},
 	/** @private */
+	updateModificationOperations: function(editor, targets, pathParams, operations)
+	{
+		for (var i = 0, l = operations.length; i < l; ++i)
+		{
+			var operation = operations[i];
+			if (operation instanceof Kekule.ChemObjOperation.ModifyHashProp)
+				operation.setNewPropValue(pathParams);
+		}
+		return operations;
+	},
+	/** @private */
 	doModification: function(editor, targets, doNotAddOperToHistory)
 	{
 		var pathParams = this.getPathParamSetter().getValue();
@@ -367,7 +378,12 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 			}
 		}
 		*/
-		var opers = this.createModificationOperations(editor, targets, pathParams);
+		var opers;
+		if (this._lastOperation)
+			opers = this.updateModificationOperations(editor, targets, pathParams, this._lastOperation);
+		else
+			opers = this.createModificationOperations(editor, targets, pathParams);
+
 		var operation;
 		if (opers && opers.length > 1)
 			operation = new Kekule.MacroOperation(opers);
@@ -378,14 +394,11 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		editor.beginUpdateObject();
 		try
 		{
-			if (this._lastOperation)
-				this._lastOperation.reverse();
 			if (operation)  // only execute when there is real modification
 			{
 				if (!doNotAddOperToHistory)
 				{
 					editor.execOperation(operation);
-					this._lastOperation = null;
 				}
 				else
 				{
@@ -406,6 +419,7 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 	{
 		var objs = this._getActualModificationObjs(targets);
 		var showModifier = (objs.length > 0);
+		this._lastOperation = null;
 
 		if (showModifier)
 		{
