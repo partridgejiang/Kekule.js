@@ -6162,11 +6162,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				transformParams = this._calcManipulateObjsRotationParams(objs, endScreenCoord);
 		}
 
+		if (this._lastTransformParams && this._isSameTransformParams(this._lastTransformParams, transformParams, null, editor.getCoordMode())) // not a significant change, do not transform
+		{
+			//console.log('bypass transform');
+			return;
+		}
+
 		//console.log('do transform', transformParams);
 
 		var doConcreteTransform = transformParams && this._calcManipulateObjsTransformInfo(objs, transformParams);
 		if (!doConcreteTransform)
 			return;
+
+		this._lastTransformParams = transformParams;
 
 		editor.beginUpdateObject();
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
@@ -6181,6 +6189,46 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			editor.endUpdateObject();
 			this.manipulateStepDone();
 		}
+	},
+	/** @private */
+	_isSameTransformParams: function(p1, p2, threshold, coordMode)
+	{
+		var isUnset = OU.isUnset;
+		var equal = Kekule.NumUtils.isFloatEqual;
+		if (!threshold)
+			threshold = 0.05;  // TODO: currently fixed
+		if (coordMode === (Kekule.CoordMode.COORD2D))
+		{
+			var result = false;
+			// check center
+			var c1 = p1.center, c2 = p2.center;
+			if (c1 && c2)
+			{
+				result = equal(c1.x, c2.x, threshold) && equal(c1.y, c2.y, threshold);
+			}
+			else
+				result = false;
+			if (result)  // further check scale, translate and rotate
+			{
+				var fields = ['scale', 'scaleX', 'scaleY', 'rotateAngle', 'translateX', 'translateY'];
+				for (var i = 0, l = fields.length; i < l; ++i)
+				{
+					var fname = fields[i];
+					var v1 = p1[fname], v2 = p2[fname];
+					if (isUnset(v1) && isUnset(v2))
+						continue;
+					else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
+						result = equal(v1, v2, threshold);
+					else
+						result = false;
+					if (!result)
+						break;
+				}
+			}
+			return result;
+		}
+	  else  // TODO: now handles 2D params only
+	  	return false;
 	},
 
 	/* @private */
@@ -6336,6 +6384,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		var editor = this.getEditor();
 		editor.endManipulateObject();
+		this._lastTransformParams = null;
 		this.setIsOffsetManipulating(false);
 	},
 	/**
@@ -6472,6 +6521,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	setSuspendedOperations: function(immediateOper, delayedOper, delay)
 	{
+		if (this._suspendedOperations)
+			this.haltSuspendedOperations();  // halt old
 		var self = this;
 		this._suspendedOperations = {
 			'immediate': immediateOper,
@@ -6577,6 +6628,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				return;
 			}
 		}
+
+		this._lastTransformParams = null;
 
 		var coordRegion = currCoord && this.getEditor().getCoordRegionInSelectionMarker(currCoord);
 		var R = Kekule.Editor.BoxRegion;
@@ -6883,8 +6936,17 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var coord = this._getEventMouseCoord(e);
 			if ((this.getState() === S.NORMAL)/* && (this.getEditor().getMouseLBtnDown()) */)
 			{
-				this.beginManipulation(coord, e);
-				e.preventDefault();
+				//var evokedByTouch = e && e.pointerType === 'touch';
+				var self = this;
+				var beginNormalManipulation = function(){
+					if (self.getState() === S.NORMAL)
+					{
+						self.beginManipulation(coord, e);
+						e.preventDefault();
+					}
+				};
+				// wait for a while for the possible gesture operations
+				this.setSuspendedOperations(beginNormalManipulation, beginNormalManipulation, 50);
 			}
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
