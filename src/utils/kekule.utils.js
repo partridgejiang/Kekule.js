@@ -1878,6 +1878,127 @@ Kekule.CoordUtils = {
 			result.push(coord.z);
 	},
 	/**
+	 * Returns whether two transform 2D options are numberic same.
+	 * @param {Hash} p1
+	 * @param {Hash} p2
+	 * @param {Hash} thresholds Thresholds for comparing, including fields {scale, translate, rotate}.
+	 */
+	isSameTransform2DOptions: function(p1, p2, thresholds)
+	{
+		var DEF_THRESHOLDS = 0.01;
+
+		var isUnset = Kekule.ObjUtils.isUnset;
+		var equal = Kekule.NumUtils.isFloatEqual;
+
+		if (!thresholds)
+			thresholds = {};
+
+		var thresTranslate = thresholds.translate || DEF_THRESHOLDS;
+		var thresScale = thresholds.scale || DEF_THRESHOLDS;
+		var thresRotate = thresholds.rotate || DEF_THRESHOLDS;
+
+		var result = false;
+		// check center
+		var c1 = p1.center, c2 = p2.center;
+		if (c1 && c2)
+		{
+			result = equal(c1.x, c2.x, thresTranslate) && equal(c1.y, c2.y, thresTranslate);
+		}
+		else
+			result = false;
+		if (result)  // further check scale, translate and rotate
+		{
+			var fields = ['scale', 'scaleX', 'scaleY', 'rotateAngle', 'translateX', 'translateY'];
+			for (var i = 0, l = fields.length; i < l; ++i)
+			{
+				var fname = fields[i];
+				var v1 = p1[fname], v2 = p2[fname];
+				if (isUnset(v1) && isUnset(v2))
+					continue;
+				else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
+				{
+					var thres = (fname.indexOf('scale') === 0)? thresScale:
+						(fname.indexOf('rotate') === 0)? thresRotate:
+							thresTranslate;
+					result = equal(v1, v2, thres);
+				}
+				else
+					result = false;
+				if (!result)
+					break;
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns whether two transform 3D options are numberic same.
+	 * @param {Hash} p1
+	 * @param {Hash} p2
+	 * @param {Hash} thresholds Thresholds for comparing, including fields {scale, translate, rotate}.
+	 */
+	isSameTransform3DOptions: function(p1, p2, thresholds)
+	{
+		var DEF_THRESHOLDS = 0.01;
+
+		var isUnset = Kekule.ObjUtils.isUnset;
+		var equal = Kekule.NumUtils.isFloatEqual;
+
+		if (!thresholds)
+			thresholds = {};
+
+		var thresTranslate = thresholds.translate || DEF_THRESHOLDS;
+		var thresScale = thresholds.scale || DEF_THRESHOLDS;
+		var thresRotate = thresholds.rotate || DEF_THRESHOLDS;
+
+		var result = false;
+		// check center
+		var c1 = p1.center, c2 = p2.center;
+		if (c1 && c2)
+		{
+			result = equal(c1.x, c2.x, thresTranslate) && equal(c1.y, c2.y, thresTranslate) && equal(c1.z, c2.z, thresTranslate);
+		}
+		else if (!c1 && !c2)
+			result = true;
+		else
+			result = false;
+		// check rotateAxisVector
+		if (result)
+		{
+			var a1 = p1.rotateAxisVector, a2 = p2.rotateAxisVector;
+			if (a1 && a2)
+			{
+				result = equal(a1.x, a2.x, thresTranslate) && equal(a1.y, a2.y, thresTranslate) && equal(a1.z, a2.z, thresTranslate);
+			}
+			else if (!a1 && !a2)
+				result = true;
+			else
+				result = false;
+		}
+		if (result)  // further check scale, translate and rotate
+		{
+			var fields = ['scale', 'scaleX', 'scaleY', 'scaleZ', 'rotateAngle', 'rotateX', 'rotateY', 'rotateZ', 'translateX', 'translateY', 'translateZ'];
+			for (var i = 0, l = fields.length; i < l; ++i)
+			{
+				var fname = fields[i];
+				var v1 = p1[fname], v2 = p2[fname];
+				if (isUnset(v1) && isUnset(v2))
+					continue;
+				else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
+				{
+					var thres = (fname.indexOf('scale') === 0)? thresScale:
+						(fname.indexOf('rotate') === 0)? thresRotate:
+							thresTranslate;
+					result = equal(v1, v2, thres);
+				}
+				else
+					result = false;
+				if (!result)
+					break;
+			}
+		}
+		return result;
+	},
+	/**
 	 * Do a 2d transform to a coord.
 	 * The tranform will be performed in the following order:
 	 *   rotate, scale, translate.

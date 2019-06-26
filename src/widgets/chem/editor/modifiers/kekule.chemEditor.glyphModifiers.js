@@ -123,10 +123,28 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 
 		// react to value change of setter
 		var self = this;
+		result.addEventListener('showStateChange', function(e){
+			if (e.isShown)  // when the setter popups, clear the original operations
+				self._lastOperation = null;
+			else if (e.isDismissed) // when closing and dismissed, ensure operation is undo
+			{
+				if (self._lastOperation)
+					self._lastOperation.reverse();
+			}
+		});
 		result.addEventListener('valueChange', function(e){
 			if (e.widget === result)
 			{
 				self.applyToTargets();
+				//result.dismiss();
+				e.stopPropagation();
+			}
+		});
+		result.addEventListener('valueInput', function(e){
+			if (e.widget === result)
+			{
+				//self.applyToTargets();
+				self.doModification(self.getEditor(), self.getTargetObjs(), true);
 				//result.dismiss();
 				e.stopPropagation();
 			}
@@ -328,27 +346,19 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		}
 		return opers;
 	},
-
-	/** @ignore */
-	doLoadFromTargets: function(editor, targets)
+	/** @private */
+	updateModificationOperations: function(editor, targets, pathParams, operations)
 	{
-		var objs = this._getActualModificationObjs(targets);
-		var showModifier = (objs.length > 0);
-
-		if (showModifier)
+		for (var i = 0, l = operations.length; i < l; ++i)
 		{
-			var pathParams = this._extractPathParamsOfObjs(objs);
-			this._valueStorage.pathParams = pathParams;
-
-			if (this.getPathParamSetter())
-			{
-				this.getPathParamSetter().setValue(pathParams);
-			}
+			var operation = operations[i];
+			if (operation instanceof Kekule.ChemObjOperation.ModifyHashProp)
+				operation.setNewPropValue(pathParams);
 		}
-		this.getWidget().setDisplayed(showModifier);
+		return operations;
 	},
-	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	/** @private */
+	doModification: function(editor, targets, doNotAddOperToHistory)
 	{
 		var pathParams = this.getPathParamSetter().getValue();
 		//console.log('do apply begin', pathParams);
@@ -368,19 +378,65 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 			}
 		}
 		*/
-		var opers = this.createModificationOperations(editor, targets, pathParams);
+		var opers;
+		if (this._lastOperation)
+			opers = this.updateModificationOperations(editor, targets, pathParams, this._lastOperation);
+		else
+			opers = this.createModificationOperations(editor, targets, pathParams);
+
 		var operation;
 		if (opers && opers.length > 1)
 			operation = new Kekule.MacroOperation(opers);
 		else
 			operation = opers[0];
 
-		if (operation)  // only execute when there is real modification
+		var editor = this.getEditor();
+		editor.beginUpdateObject();
+		try
 		{
-			var editor = this.getEditor();
-			editor.execOperation(operation);
+			if (operation)  // only execute when there is real modification
+			{
+				if (!doNotAddOperToHistory)
+				{
+					editor.execOperation(operation);
+				}
+				else
+				{
+					operation.execute();
+					this._lastOperation = operation;
+				}
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
 		}
 		//console.log('do apply end');
+	},
+
+	/** @ignore */
+	doLoadFromTargets: function(editor, targets)
+	{
+		var objs = this._getActualModificationObjs(targets);
+		var showModifier = (objs.length > 0);
+		this._lastOperation = null;
+
+		if (showModifier)
+		{
+			var pathParams = this._extractPathParamsOfObjs(objs);
+			this._valueStorage.pathParams = pathParams;
+
+			if (this.getPathParamSetter())
+			{
+				this.getPathParamSetter().setValue(pathParams);
+			}
+		}
+		this.getWidget().setDisplayed(showModifier);
+	},
+	/** @ignore */
+	doApplyToTargets: function($super, editor, targets)
+	{
+		this.doModification(editor, targets, false);
 	}
 });
 
