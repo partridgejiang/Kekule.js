@@ -3246,6 +3246,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	isInSelection: function(obj)
 	{
+		if (!obj)
+			return false;
 		return this.getSelection().indexOf(obj) >= 0;
 	},
 	/**
@@ -3255,6 +3257,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	addObjToSelection: function(obj)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
 		Kekule.ArrayUtils.pushUnique(selection, obj.getNearestSelectableObject());
 		this._addSelectRenderOptions(obj);
@@ -3268,6 +3272,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	removeObjFromSelection: function(obj, doNotNotifySelectionChange)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
 		var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
 		if (relObj === obj)
