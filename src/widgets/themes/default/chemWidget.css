@@ -247,9 +247,10 @@
 
 .K-Chem-Viewer-Editor-FullClient
 {
+    /* important, override the adjusted popup settings (maybe absolute positioned) by global manager */
     position: fixed !important;
-    top: 0px;
-    left: 0px;
+    top: 0px !important;
+    left: 0px !important;
 }
 
 .K-Chem-StructureNodeSelectPanel, .K-Chem-StructureConnectorSelectPanel
