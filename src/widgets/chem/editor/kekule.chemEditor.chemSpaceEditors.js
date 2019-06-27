@@ -2460,7 +2460,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 										this.createNodeMergeOperation(obj, dest, true);
 									this.getMergePreviewOperations()[index] = mergePreviewOper;
 								}
-								//else  // always need to create concrete merge oper to execute at the end
+								else
 								{
 									var mergeOper = (mergeType === MagneticOperTypes.MERGE_BOND)?
 										this.createConnectorMergeOperation(obj, dest):
@@ -5053,12 +5053,24 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 				var insertResult = this.insertRepositoryObjToEditor(coord, boundObj);
 				if (insertResult)
 				{
-					this.startDirectManipulate(insertResult.manipulateType, insertResult.objects,
+					var allObjs = insertResult.objects || [];
+					var directObjs = this.getDirectManipulateObjs(insertResult.objects, insertResult) || [];
+
+					if (!AU.exclude(allObjs, directObjs).length && !AU.exclude(directObjs, allObjs).length)  // allObjs === directObjs
+					{
+						this.startDirectManipulate(insertResult.manipulateType, allObjs,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
-					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to all inserted objects
-					this.startDirectManipulate(insertResult.manipulateType, this.getDirectManipulateObjs(insertResult.objects, insertResult),
+						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to all inserted objects
+					}
+					else
+					{
+						this.startDirectManipulate(insertResult.manipulateType, allObjs,
+							insertResult.coord, insertResult.box, insertResult.rotateCenter);
+						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to all inserted objects
+						this.startDirectManipulate(insertResult.manipulateType, directObjs,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);  // directly manipulate on suitable objects
-					//this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
+						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to direct manipulatd objs
+					}
 				}
 				e.preventDefault();
 				return true; // important
@@ -6305,7 +6317,7 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 			if (parent.getNodeAt && parent.getNodeCount)
 			{
 				if (parent.getNodeCount() === 2)
-					return parent.getNodeAt(parent.getNodeCount() - 1);
+					return [parent.getNodeAt(parent.getNodeCount() - 1)];
 			}
 		}
 		// default
