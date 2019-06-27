@@ -36,7 +36,7 @@
 .K-Chem-Viewer .K-Chem-InnerToolbar.K-Button{height:37px}
 .K-Chem-Viewer .K-Chem-Viewer-Caption{display:block;position:absolute;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;margin:0;padding:.5em 0;width:100%;text-align:center}
 .K-Chem-Viewer .K-Error-Report{display:block;position:absolute;left:0;right:0;top:0;padding:.3em .6em}
-.K-Chem-Viewer-Editor-FullClient{position:fixed!important;top:0;left:0}
+.K-Chem-Viewer-Editor-FullClient{position:fixed!important;top:0px!important;left:0px!important;}
 .K-Chem-StructureNodeSelectPanel,.K-Chem-StructureConnectorSelectPanel{width:20em}
 .K-Chem-StructureNodeSelectPanel .K-TabView{}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container{height:22em;overflow-y:auto}
