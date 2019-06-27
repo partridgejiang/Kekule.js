@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Drawing Molecule &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Drawing Molecule &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Introduction to Widget" href="widgetIntro.html" />
     <link rel="prev" title="Molecule Comparison and Searching" href="molCompareAndSearch.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,12 +29,12 @@
         <li class="right" >
           <a href="molCompareAndSearch.html" title="Molecule Comparison and Searching"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Drawing Molecule</a><ul>
 <li><a class="reference internal" href="#background-introduction">Background Introduction</a></li>
@@ -62,13 +51,13 @@
   <p class="topless"><a href="widgetIntro.html"
                         title="next chapter">Introduction to Widget</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -83,7 +72,7 @@
 <h1>Drawing Molecule<a class="headerlink" href="#drawing-molecule" title="Permalink to this headline">¶</a></h1>
 <p>The ability to display intuitive image of molecule is one of the most important
 features of chemoinformatics-related programs. However, drawing graphics on HTML
-page is more complex than one&#8217;s first sense.</p>
+page is more complex than one’s first sense.</p>
 <div class="section" id="background-introduction">
 <h2>Background Introduction<a class="headerlink" href="#background-introduction" title="Permalink to this headline">¶</a></h2>
 <p>In the history of web evolution, there emerges several technologies to draw 2D graphic.
@@ -91,7 +80,7 @@ Firstly proprietary <a class="reference external" href="https://en.wikipedia.org
 Microsoft Internet Explorer, then <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/SVG">SVG</a>
 proposed by W3C, at last the <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API">Canvas</a>.
 Different technologies requires different drawing context, normal
-HTML element (like <code class="docutils literal"><span class="pre">&lt;div&gt;</span></code>) for <strong>VML</strong>, <code class="docutils literal"><span class="pre">&lt;svg&gt;</span></code> element for <strong>SVG</strong> and <code class="docutils literal"><span class="pre">&lt;canvas&gt;</span></code>
+HTML element (like <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code>) for <strong>VML</strong>, <code class="docutils literal notranslate"><span class="pre">&lt;svg&gt;</span></code> element for <strong>SVG</strong> and <code class="docutils literal notranslate"><span class="pre">&lt;canvas&gt;</span></code>
 for <strong>Canvas</strong>. Most modern web browsers supports <strong>Canvas</strong> well but there still
 exists legacy browsers in market. For instance, default web browser before Android 2.1
 supports <strong>SVG</strong> but does not support <strong>Canvas</strong>; MS IE does not supported <strong>SVG</strong> and
@@ -105,14 +94,14 @@ current environment. That approach helps developer to avoid the difference of
 VML, SVG and Canvas and to concentrate on one set of code runs in different platform.</p>
 <div class="figure align-center" id="id5">
 <img alt="../_images/renderSystemUml.png" src="../_images/renderSystemUml.png" />
-<p class="caption"><span class="caption-text">&lt; Simplified UML diagram of rendering system &gt;</span></p>
+<p class="caption"><span class="caption-text">&lt; Simplified UML diagram of rendering system &gt;</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
 <p>To draw a molecule on screen, a special <em>renderer</em> class will be used. However, besides
 molecule, there often to be many other types of objects in a chemoinformatics application
 (e.g., text, formula, reaction arrow) and they requires different renderers. So factory
 method pattern is applied here. Rather than calling a <em>renderer</em> class directly, you should
 query the <em>renderer manager</em> to return a preferred class for molecule (or other types of object).</p>
-<p>After those background introduction, now let us implement those knowledge in code. <a class="footnote-reference" href="#module" id="id1">[1]</a></p>
+<p>After those background introduction, now let us implement those knowledge in code. <a class="footnote-reference brackets" href="#module" id="id1">1</a></p>
 </div>
 <div class="section" id="drawing-by-renderer">
 <h2>Drawing by Renderer<a class="headerlink" href="#drawing-by-renderer" title="Permalink to this headline">¶</a></h2>
@@ -120,26 +109,26 @@ query the <em>renderer manager</em> to return a preferred class for molecule (or
 page. Raphael.js for 2D drawing (unless your target enviroment all supports <strong>Canvas</strong>)
 and Three.js for 3D drawing as mention in the <a class="reference internal" href="installation.html#libsforrendering"><span class="std std-ref">Installation</span></a> part
 of this tutorial.</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;raphael.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;raphael.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;Three.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=render&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<p>The following code snippet can be used to draw a molecule. <a class="footnote-reference" href="#example" id="id2">[2]</a> It can be divided into several steps:</p>
+<p>The following code snippet can be used to draw a molecule. <a class="footnote-reference brackets" href="#example" id="id2">2</a> It can be divided into several steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li>Line 2, we check the render type, decide which form, 2D or 3D graphics should be made.</li>
-<li>Line 5-7, old content in parent HTML element is cleared.
-We are preparing to draw inside it later.</li>
-<li>Line 10-12, a suitable <em>draw bridge</em> is created.</li>
-<li>Line 15-16, a suitable <em>draw context</em> is created inside parent HTML element.</li>
-<li>Line 18-23, a <em>renderer</em> class for molecule is found.</li>
-<li>Line 24, concrete <em>renderer</em> object is created, bind with molecule and draw bridge.</li>
-<li>Line 26-40, prepare options for drawing.</li>
-<li>Line 43, at last, draw the molecule to <em>context</em> by <em>renderer</em>.</li>
+<li><p>Line 2, we check the render type, decide which form, 2D or 3D graphics should be made.</p></li>
+<li><p>Line 5-7, old content in parent HTML element is cleared.
+We are preparing to draw inside it later.</p></li>
+<li><p>Line 10-12, a suitable <em>draw bridge</em> is created.</p></li>
+<li><p>Line 15-16, a suitable <em>draw context</em> is created inside parent HTML element.</p></li>
+<li><p>Line 18-23, a <em>renderer</em> class for molecule is found.</p></li>
+<li><p>Line 24, concrete <em>renderer</em> object is created, bind with molecule and draw bridge.</p></li>
+<li><p>Line 26-40, prepare options for drawing.</p></li>
+<li><p>Line 43, at last, draw the molecule to <em>context</em> by <em>renderer</em>.</p></li>
 </ol>
 </div></blockquote>
-<div class="highlight-javascript"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -226,8 +215,8 @@ We are preparing to draw inside it later.</li>
 <span class="nx">renderer</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="o">:</span> <span class="nx">dim</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="o">:</span> <span class="nx">dim</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">},</span> <span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </td></tr></table></div>
-<p>For example, if the <code class="docutils literal"><span class="pre">mol</span></code> is loaded with porphyrin data and <code class="docutils literal"><span class="pre">renderType</span></code> is set to
-<code class="docutils literal"><span class="pre">Kekule.Render.RendererType.R2D</span></code>, the following graphic can be drawn to screen:</p>
+<p>For example, if the <code class="docutils literal notranslate"><span class="pre">mol</span></code> is loaded with porphyrin data and <code class="docutils literal notranslate"><span class="pre">renderType</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">Kekule.Render.RendererType.R2D</span></code>, the following graphic can be drawn to screen:</p>
 <img alt="../_images/porphyrin.png" src="../_images/porphyrin.png" />
 <p>Of course, the codes above is quite complex (the complexity is a cost of
 extensibility and platform independency), developer have to create <em>draw bridge</em>, <em>context</em>
@@ -237,8 +226,8 @@ is introduced in the toolkit.</p>
 <div class="section" id="drawing-by-painter">
 <h2>Drawing by Painter<a class="headerlink" href="#drawing-by-painter" title="Permalink to this headline">¶</a></h2>
 <p>The <em>painter</em> is a special class which can create suitable <em>bridge</em>, <em>context</em> and <em>renderer</em>
-for us automatically. The following code snippet is used to draw molecule with painter:<a class="footnote-reference" href="#example" id="id3">[2]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">renderType</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Render</span><span class="p">.</span><span class="nx">RendererType</span><span class="p">.</span><span class="nx">R2D</span><span class="c1">//R3D  // do 2D or 3D drawing</span>
+for us automatically. The following code snippet is used to draw molecule with painter:<a class="footnote-reference brackets" href="#example" id="id3">2</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">renderType</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Render</span><span class="p">.</span><span class="nx">RendererType</span><span class="p">.</span><span class="nx">R2D</span><span class="c1">//R3D  // do 2D or 3D drawing</span>
 
 <span class="c1">// parent element, we will draw inside it</span>
 <span class="kd">var</span> <span class="nx">parentElem</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;parent&#39;</span><span class="p">);</span>
@@ -257,8 +246,8 @@ for us automatically. The following code snippet is used to draw molecule with p
 </pre></div>
 </div>
 <p>Actually, molecule and other types of objects can all be drawn to HTML page in such a way.
-For instance, the following code draws an balance arrow:<a class="footnote-reference" href="#example" id="id4">[2]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// Create arrow glyph with initial parameters</span>
+For instance, the following code draws an balance arrow:<a class="footnote-reference brackets" href="#example" id="id4">2</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create arrow glyph with initial parameters</span>
 <span class="kd">var</span> <span class="nx">glyph</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Glyph</span><span class="p">.</span><span class="nx">StraightLine</span><span class="p">(</span><span class="s1">&#39;glyph1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{</span>
       <span class="s1">&#39;startArrowType&#39;</span><span class="o">:</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Glyph</span><span class="p">.</span><span class="nx">ArrowType</span><span class="p">.</span><span class="nx">OPEN</span><span class="p">,</span>
       <span class="s1">&#39;startArrowSide&#39;</span><span class="o">:</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Glyph</span><span class="p">.</span><span class="nx">ArrowSide</span><span class="p">.</span><span class="nx">REVERSED</span><span class="p">,</span>
@@ -283,21 +272,19 @@ For instance, the following code draws an balance arrow:<a class="footnote-refer
 <p>It is obvious that two code snippets are much more shorter than the one by using
 <em>renderer</em> directly. However, there do exists a even simpler method to display
 chemoinformatics objects: using <strong>widget</strong>.</p>
-<table class="docutils footnote" frame="void" id="module" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>To draw molecule as examples in this chapter, render module must be loaded, e.g.:</td></tr>
-</tbody>
-</table>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=render&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<dl class="footnote brackets">
+<dt class="label" id="module"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>To draw molecule as examples in this chapter, render module must be loaded, e.g.:</p>
+</dd>
+</dl>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=render&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<table class="docutils footnote" frame="void" id="example" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id4">3</a>)</em> Example of this chapter can be found and run at <a class="reference external" href="../examples/renderMol.html">here</a>.</td></tr>
-</tbody>
-</table>
+<dl class="footnote brackets">
+<dt class="label" id="example"><span class="brackets">2</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id3">2</a>,<a href="#id4">3</a>)</span></dt>
+<dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/renderMol.html">here</a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 
@@ -319,12 +306,12 @@ chemoinformatics objects: using <strong>widget</strong>.</p>
         <li class="right" >
           <a href="molCompareAndSearch.html" title="Molecule Comparison and Searching"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>

@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Creating Molecule &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Creating Molecule &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Loading and Saving Molecule" href="molIO.html" />
     <link rel="prev" title="Atom and Bond" href="atomAndBond.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,12 +29,12 @@
         <li class="right" >
           <a href="atomAndBond.html" title="Atom and Bond"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Creating Molecule</a><ul>
 <li><a class="reference internal" href="#creating-molecule-with-atoms-and-bonds">Creating Molecule with Atoms and Bonds</a></li>
@@ -62,13 +51,13 @@
   <p class="topless"><a href="molIO.html"
                         title="next chapter">Loading and Saving Molecule</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -85,8 +74,8 @@
 operations of molecules, especially organic molecules with connection table, in JavaScript code.</p>
 <div class="section" id="creating-molecule-with-atoms-and-bonds">
 <h2>Creating Molecule with Atoms and Bonds<a class="headerlink" href="#creating-molecule-with-atoms-and-bonds" title="Permalink to this headline">¶</a></h2>
-<p>The following code create a new oxirane molecule with three atoms and three bonds:<a class="footnote-reference" href="#example" id="id1">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// create molecule first</span>
+<p>The following code create a new oxirane molecule with three atoms and three bonds:<a class="footnote-reference brackets" href="#example" id="id1">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule first</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
 <span class="c1">// add three atoms to molecule, property setter can be called cascadely</span>
 <span class="kd">var</span> <span class="nx">a1</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="o">:</span> <span class="mf">0.23</span><span class="p">});</span>
@@ -106,8 +95,8 @@ operations of molecules, especially organic molecules with connection table, in 
 </div>
 <p>Molecule oxirane created with code:</p>
 <img alt="../_images/oxirane.png" src="../_images/oxirane.png" />
-<p>Atoms or bonds can also be easily removed from existing molecule:<a class="footnote-reference" href="#example" id="id2">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// remove atom O related bonds in molecule</span>
+<p>Atoms or bonds can also be easily removed from existing molecule:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// remove atom O related bonds in molecule</span>
 <span class="nx">mol</span><span class="p">.</span><span class="nx">removeNodeAt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>  <span class="c1">// the atom index starts from 0</span>
         <span class="c1">// or mol.removeNode(mol.getNodeAt(2));</span>
 <span class="nx">mol</span><span class="p">.</span><span class="nx">removeConnectorAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -117,8 +106,8 @@ operations of molecules, especially organic molecules with connection table, in 
 </div>
 <p>Molecule after removing atom O:</p>
 <img alt="../_images/ethane.png" src="../_images/ethane.png" />
-<p>Aside from normal atoms, pseudo atom and variable atom are also supported:<a class="footnote-reference" href="#example" id="id3">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<p>Aside from normal atoms, pseudo atom and variable atom are also supported:<a class="footnote-reference brackets" href="#example" id="id3">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
 
 <span class="c1">// add atoms to molecule</span>
 <span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
@@ -145,8 +134,8 @@ operations of molecules, especially organic molecules with connection table, in 
 </div>
 <p>The result will be:</p>
 <img alt="../_images/molWithTypesOfNodes.png" src="../_images/molWithTypesOfNodes.png" />
-<p>Even the subgroup:<a class="footnote-reference" href="#example" id="id4">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<p>Even the subgroup:<a class="footnote-reference brackets" href="#example" id="id4">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
 
 <span class="c1">// add atoms to molecule</span>
 <span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
@@ -186,8 +175,8 @@ operations of molecules, especially organic molecules with connection table, in 
 <div class="section" id="multicenter-bonds">
 <h2>Multicenter Bonds<a class="headerlink" href="#multicenter-bonds" title="Permalink to this headline">¶</a></h2>
 <p>The toolkit supports multicenter bonds (e.g., B-H-B bond in diborane and Cp-Fe bond in ferrocene).
-Such bond can be created by assigning multiple connected atoms:<a class="footnote-reference" href="#example" id="id5">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
+Such bond can be created by assigning multiple connected atoms:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
 
 <span class="c1">// add atoms to molecule</span>
@@ -202,15 +191,15 @@ Such bond can be created by assigning multiple connected atoms:<a class="footnot
 </div>
 <img alt="../_images/diborane.png" src="../_images/diborane.png" />
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Currently the toolkit draws multicenter bond by simply connecting all centers.
+<p class="admonition-title">Note</p>
+<p>Currently the toolkit draws multicenter bond by simply connecting all centers.
 This should be improved in the future.</p>
 </div>
 </div>
 <div class="section" id="bond-bond-connection">
 <h2>Bond-bond Connection<a class="headerlink" href="#bond-bond-connection" title="Permalink to this headline">¶</a></h2>
-<p>Special bond-bond connection (e.g., in Zeise&#8217;s salt) is also supported:<a class="footnote-reference" href="#example" id="id6">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
+<p>Special bond-bond connection (e.g., in Zeise’s salt) is also supported:<a class="footnote-reference brackets" href="#example" id="id6">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
 
 <span class="kd">var</span> <span class="nx">atomPt</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">();</span>  <span class="c1">// Pt atom</span>
@@ -236,12 +225,11 @@ This should be improved in the future.</p>
 <p>However, it is very rare to create a molecule by pure JavaScript codes. Usually user loads a molecule from
 external data (e.g., a file or a piece of string). This process will be introduced at
 <a class="reference internal" href="molIO.html"><span class="doc">next part</span></a> of this tutorial.</p>
-<table class="docutils footnote" frame="void" id="example" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id5">5</a>, <a class="fn-backref" href="#id6">6</a>)</em> Example of this chapter can be found and run at <a class="reference external" href="../examples/creatingMol.html">here</a>.</td></tr>
-</tbody>
-</table>
+<dl class="footnote brackets">
+<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>,<a href="#id4">4</a>,<a href="#id5">5</a>,<a href="#id6">6</a>)</span></dt>
+<dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/creatingMol.html">here</a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 
@@ -263,12 +251,12 @@ external data (e.g., a file or a piece of string). This process will be introduc
         <li class="right" >
           <a href="atomAndBond.html" title="Atom and Bond"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>

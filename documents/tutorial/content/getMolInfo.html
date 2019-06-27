@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Get Molecule Information &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Get Molecule Information &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Molecule Comparison and Searching" href="molCompareAndSearch.html" />
     <link rel="prev" title="Loading and Saving Molecule" href="molIO.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,12 +29,12 @@
         <li class="right" >
           <a href="molIO.html" title="Loading and Saving Molecule"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Get Molecule Information</a><ul>
 <li><a class="reference internal" href="#iterating-over-atoms-and-bonds">Iterating over Atoms and Bonds</a></li>
@@ -64,13 +53,13 @@
   <p class="topless"><a href="molCompareAndSearch.html"
                         title="next chapter">Molecule Comparison and Searching</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -88,8 +77,8 @@ provided by the toolkit to reveal the information of molecule, from the intuitiv
 atom/bond count to more complicated feature such as ring set and stereo center.</p>
 <div class="section" id="iterating-over-atoms-and-bonds">
 <h2>Iterating over Atoms and Bonds<a class="headerlink" href="#iterating-over-atoms-and-bonds" title="Permalink to this headline">¶</a></h2>
-<p>Once you have a molecule, it&#8217;s easy to loop over its atoms and bonds:<a class="footnote-reference" href="#example" id="id1">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// iterate all nodes(atoms)</span>
+<p>Once you have a molecule, it’s easy to loop over its atoms and bonds:<a class="footnote-reference brackets" href="#example" id="id1">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// iterate all nodes(atoms)</span>
 <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">getNodeCount</span><span class="p">();</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">getNodeAt</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
@@ -105,19 +94,19 @@ atom/bond count to more complicated feature such as ring set and stereo center.<
 </pre></div>
 </div>
 <p>The atom or bond inside a molecule can also be accessed by its id:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom1</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">getNodeById</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">);</span>  <span class="c1">// returns the atom with id &#39;atom1&#39;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom1</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">getNodeById</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">);</span>  <span class="c1">// returns the atom with id &#39;atom1&#39;</span>
 <span class="kd">var</span> <span class="nx">bond1</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">getConnectorById</span><span class="p">(</span><span class="s1">&#39;bond1&#39;</span><span class="p">);</span>  <span class="c1">// returns the bond with id &#39;bond1&#39;</span>
 </pre></div>
 </div>
 <p>To individual node(atom) or connector(bond), their belonged molecule (or structure fragment)
 can be get by method <em>getParentFragment</em>:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">atom</span><span class="p">.</span><span class="nx">getParentFragment</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">atom</span><span class="p">.</span><span class="nx">getParentFragment</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">bond</span><span class="p">.</span><span class="nx">getParentFragment</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>In the molecule, atoms and bonds connected with each other, their relations can be gained
 by properties <em>linkedConnectors</em>, <em>linkedObjs</em> of node and <em>connectedObjs</em> of connector:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">bondsAroundAtom</span> <span class="o">=</span> <span class="nx">atom</span><span class="p">.</span><span class="nx">getLinkedConnectors</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">bondsAroundAtom</span> <span class="o">=</span> <span class="nx">atom</span><span class="p">.</span><span class="nx">getLinkedConnectors</span><span class="p">();</span>
   <span class="c1">// returns an array of connectors linked with this atom</span>
 <span class="kd">var</span> <span class="nx">neighborAtoms</span> <span class="o">=</span> <span class="nx">atom</span><span class="p">.</span><span class="nx">getLinkedObjs</span><span class="p">();</span>
   <span class="c1">// returns neighbor atoms linked with this atom by only one bond</span>
@@ -128,8 +117,8 @@ by properties <em>linkedConnectors</em>, <em>linkedObjs</em> of node and <em>con
 </div>
 <div class="section" id="molecule-formula">
 <h2>Molecule Formula<a class="headerlink" href="#molecule-formula" title="Permalink to this headline">¶</a></h2>
-<p>Formula can be calculated from atoms in molecule:<a class="footnote-reference" href="#example" id="id2">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// get molecule in editor</span>
+<p>Formula can be calculated from atoms in molecule:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// get molecule in editor</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
 <span class="c1">// get the formula object</span>
 <span class="kd">var</span> <span class="nx">formula</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">calcFormula</span><span class="p">();</span>
@@ -139,18 +128,18 @@ by properties <em>linkedConnectors</em>, <em>linkedObjs</em> of node and <em>con
 </div>
 </div>
 <div class="section" id="ring-information">
-<h2>Ring Information <a class="footnote-reference" href="#module" id="id3">[2]</a><a class="headerlink" href="#ring-information" title="Permalink to this headline">¶</a></h2>
+<h2>Ring Information <a class="footnote-reference brackets" href="#module" id="id3">2</a><a class="headerlink" href="#ring-information" title="Permalink to this headline">¶</a></h2>
 <p>Kekule.js provides method to easily find all rings and SSSR(Smallest Set of Smallest Rings) of a molecule.
-The following codes can be used to get all rings:<a class="footnote-reference" href="#example" id="id4">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
+The following codes can be used to get all rings:<a class="footnote-reference brackets" href="#example" id="id4">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
 <span class="c1">// find all rings of molecule</span>
 <span class="kd">var</span> <span class="nx">rings</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">findAllRings</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The result of method <em>mol.findAllRings</em> is a JavaScript array, each <em>item</em> of it is an object represents
 a ring in the molecule, all nodes(atoms) and connectors(bonds) in the ring can be access by <em>item.nodes</em>
-and <em>item.connectors</em>:<a class="footnote-reference" href="#example" id="id5">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ringCountMap</span> <span class="o">=</span> <span class="p">[];</span>
+and <em>item.connectors</em>:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ringCountMap</span> <span class="o">=</span> <span class="p">[];</span>
 <span class="c1">// iterate over those rings</span>
 <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">rings</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
 <span class="p">{</span>
@@ -170,14 +159,14 @@ and <em>item.connectors</em>:<a class="footnote-reference" href="#example" id="i
 </div>
 <p>For example, the codes above to find all rings in phenanthrene will shows the following logs
 in the console panel of web browser:</p>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Find 6 rings
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Find 6 rings
 ring with 6 atoms:  3
 ring with 10 atoms:  2
 ring with 14 atoms:  1
 </pre></div>
 </div>
-<p>The SSSR rings can be found with method <em>findSSSR</em>:<a class="footnote-reference" href="#example" id="id6">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
+<p>The SSSR rings can be found with method <em>findSSSR</em>:<a class="footnote-reference brackets" href="#example" id="id6">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
 <span class="k">if</span> <span class="p">(</span><span class="nx">mol</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="c1">// find SSSR of molecule</span>
@@ -202,22 +191,22 @@ ring with 14 atoms:  1
 </pre></div>
 </div>
 <p>The codes above performed on phenanthrene will shows the following logs in console panel:</p>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Find 3 SSSR rings
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Find 3 SSSR rings
 ring with 6 atoms:  3
 </pre></div>
 </div>
 <p>As ring searching is often to be a time consuming job to complex molecules, ring information returned
 by <em>findAllRings</em> and <em>findSSSR</em> will be cached until the structure of molecule been changed.</p>
 <div class="admonition attention">
-<p class="first admonition-title">Attention</p>
-<p class="last">Currently, multicenter bonds and bond-bond connections are ignored during ring perception.</p>
+<p class="admonition-title">Attention</p>
+<p>Currently, multicenter bonds and bond-bond connections are ignored during ring perception.</p>
 </div>
 </div>
 <div class="section" id="aromatic-detection">
-<h2>Aromatic Detection <a class="footnote-reference" href="#module" id="id7">[2]</a><a class="headerlink" href="#aromatic-detection" title="Permalink to this headline">¶</a></h2>
+<h2>Aromatic Detection <a class="footnote-reference brackets" href="#module" id="id7">2</a><a class="headerlink" href="#aromatic-detection" title="Permalink to this headline">¶</a></h2>
 <p>Currently, to save the calculation time, aromatic detection is carried on SSSR rings of molecule in
-Kekule.js. You can simply call method <em>findAromaticRings</em>:<a class="footnote-reference" href="#example" id="id8">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
+Kekule.js. You can simply call method <em>findAromaticRings</em>:<a class="footnote-reference brackets" href="#example" id="id8">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">getCurrMol</span><span class="p">();</span>
 <span class="k">if</span> <span class="p">(</span><span class="nx">mol</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="c1">// find aromatic of molecule</span>
@@ -242,22 +231,22 @@ Kekule.js. You can simply call method <em>findAromaticRings</em>:<a class="footn
 </pre></div>
 </div>
 <p>The codes above performed on phenanthrene will shows the following logs in console panel:</p>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Find 3 aromatic rings
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Find 3 aromatic rings
 ring with 6 atoms:  3
 </pre></div>
 </div>
 </div>
 <div class="section" id="stereo-perception">
-<h2>Stereo Perception <a class="footnote-reference" href="#module" id="id9">[2]</a><a class="headerlink" href="#stereo-perception" title="Permalink to this headline">¶</a></h2>
-<p>Chiral atoms or stereo bonds can also be revealed:<a class="footnote-reference" href="#example" id="id10">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">chiralNodes</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">perceiveChiralNodes</span><span class="p">();</span>
+<h2>Stereo Perception <a class="footnote-reference brackets" href="#module" id="id9">2</a><a class="headerlink" href="#stereo-perception" title="Permalink to this headline">¶</a></h2>
+<p>Chiral atoms or stereo bonds can also be revealed:<a class="footnote-reference brackets" href="#example" id="id10">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">chiralNodes</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">perceiveChiralNodes</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">stereoBonds</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">perceiveStereoConnectors</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Those methods returns all stereo atoms and bonds. To simplify the calculation,
 configuration of atom or bond is not marked with R/S or E/Z but with a parity
-value: 1(odd), 2(even) or 0(unknown):<a class="footnote-reference" href="#example" id="id11">[1]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">chiralNodes</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
+value: 1(odd), 2(even) or 0(unknown):<a class="footnote-reference brackets" href="#example" id="id11">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">chiralNodes</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">chiralNodes</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Chiral center: &#39;</span><span class="p">,</span> <span class="nx">n</span><span class="p">.</span><span class="nx">getLabel</span><span class="p">(),</span> <span class="nx">n</span><span class="p">.</span><span class="nx">getParity</span><span class="p">());</span>
@@ -269,19 +258,15 @@ value: 1(odd), 2(even) or 0(unknown):<a class="footnote-reference" href="#exampl
 <span class="p">}</span>
 </pre></div>
 </div>
-<table class="docutils footnote" frame="void" id="example" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id4">3</a>, <a class="fn-backref" href="#id5">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id8">6</a>, <a class="fn-backref" href="#id10">7</a>, <a class="fn-backref" href="#id11">8</a>)</em> Example of this chapter can be found and run at <a class="reference external" href="../examples/getMolInfo.html">here</a>.</td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="module" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id7">2</a>, <a class="fn-backref" href="#id9">3</a>)</em> To use this feature, algorithm module must be loaded, e.g.:</td></tr>
-</tbody>
-</table>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<dl class="footnote brackets">
+<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id4">3</a>,<a href="#id5">4</a>,<a href="#id6">5</a>,<a href="#id8">6</a>,<a href="#id10">7</a>,<a href="#id11">8</a>)</span></dt>
+<dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/getMolInfo.html">here</a>.</p>
+</dd>
+<dt class="label" id="module"><span class="brackets">2</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id7">2</a>,<a href="#id9">3</a>)</span></dt>
+<dd><p>To use this feature, algorithm module must be loaded, e.g.:</p>
+</dd>
+</dl>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
 </div>
@@ -305,12 +290,12 @@ value: 1(odd), 2(even) or 0(unknown):<a class="footnote-reference" href="#exampl
         <li class="right" >
           <a href="molIO.html" title="Loading and Saving Molecule"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>

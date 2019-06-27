@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Installation &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Installation &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Object and Class System of Kekule.js" href="objSys.html" />
     <link rel="prev" title="Tutorial of Kekule.js" href="../index.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,7 +29,7 @@
         <li class="right" >
           <a href="../index.html" title="Tutorial of Kekule.js"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -52,13 +41,13 @@
   <p class="topless"><a href="objSys.html"
                         title="next chapter">Object and Class System of Kekule.js</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -75,77 +64,80 @@
 be <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/download/">downloaded</a> and
 be referred in HTML page by &lt;script&gt; tag. You can use the compressed script file to
 reduce the net traffic:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
 <p>By using kekule.min.js, all modules (exclude module Extra) are loaded into HTML page. If only a few modules is needed, you can utilize a special bootstrap script:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget,algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget,algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<p>Note the module parameter after &#8221;?&#8221;. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
+<p>Note the module parameter after “?”. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
 <p>The following table is a brief introduction of major modules in current toolkit:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="7%" />
-<col width="93%" />
+<col style="width: 7%" />
+<col style="width: 93%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Module</th>
-<th class="head">Major feature(s)</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>Major feature(s)</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>Core</td>
-<td><ul class="first last simple">
-<li>Representation of chemical concepts including element, atom, bond, molecule and reaction.</li>
+<tbody>
+<tr class="row-even"><td><p>Core</p></td>
+<td><ul class="simple">
+<li><p>Representation of chemical concepts including element, atom, bond, molecule and reaction.</p></li>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td>IO</td>
-<td><ul class="first last simple">
-<li>Read/write different format of chemical data. Now including:<ul>
-<li>Kekule JSON/XML format</li>
-<li>CML</li>
-<li>MDL MOL2000/3000</li>
-<li>SMILES (for output)</li>
+<tr class="row-odd"><td><p>IO</p></td>
+<td><ul class="simple">
+<li><p>Read/write different format of chemical data. Now including:</p>
+<ul>
+<li><p>Kekule JSON/XML format</p></li>
+<li><p>CML</p></li>
+<li><p>MDL MOL2000/3000</p></li>
+<li><p>SMILES (for output)</p></li>
 </ul>
 </li>
 </ul>
 </td>
 </tr>
-<tr class="row-even"><td>Render</td>
-<td><ul class="first last simple">
-<li>Provides low-level cross-browser render methods to draw molecule (and other chemical objects) in web browser context..</li>
+<tr class="row-even"><td><p>Render</p></td>
+<td><ul class="simple">
+<li><p>Provides low-level cross-browser render methods to draw molecule (and other chemical objects) in web browser context..</p></li>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td>Widget</td>
-<td><ul class="first last simple">
-<li>Small components to be used in web applications, including button, text box, combo box, dialog, tree view, tab view, text editor, color picker, object inspector and so on.</li>
-<li>Animation system to show/hide those widgets.</li>
-<li>Actions associated with those widgets.</li>
+<tr class="row-odd"><td><p>Widget</p></td>
+<td><ul class="simple">
+<li><p>Small components to be used in web applications, including button, text box, combo box, dialog, tree view, tab view, text editor, color picker, object inspector and so on.</p></li>
+<li><p>Animation system to show/hide those widgets.</p></li>
+<li><p>Actions associated with those widgets.</p></li>
 </ul>
 </td>
 </tr>
-<tr class="row-even"><td>Chem Widget</td>
-<td><ul class="first last simple">
-<li>Widgets related to chemistry, including:<ul>
-<li>Periodical table</li>
-<li>2D or 3D viewer for molecule and other chemical objects.</li>
-<li>2D diagram editor for molecule and other chemical objects.</li>
+<tr class="row-even"><td><p>Chem Widget</p></td>
+<td><ul class="simple">
+<li><p>Widgets related to chemistry, including:</p>
+<ul>
+<li><p>Periodical table</p></li>
+<li><p>2D or 3D viewer for molecule and other chemical objects.</p></li>
+<li><p>2D diagram editor for molecule and other chemical objects.</p></li>
 </ul>
 </li>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td>Algorithm</td>
-<td><ul class="first last simple">
-<li>Algorithms for chemical graph theory, including:<ul>
-<li>Ring perception</li>
-<li>Aromatic ring recognization</li>
-<li>Molecule comparison</li>
-<li>Sub-structure search</li>
-<li>Stereo center and stereo bond identification</li>
+<tr class="row-odd"><td><p>Algorithm</p></td>
+<td><ul class="simple">
+<li><p>Algorithms for chemical graph theory, including:</p>
+<ul>
+<li><p>Ring perception</p></li>
+<li><p>Aromatic ring recognization</p></li>
+<li><p>Molecule comparison</p></li>
+<li><p>Sub-structure search</p></li>
+<li><p>Stereo center and stereo bond identification</p></li>
 </ul>
 </li>
 </ul>
@@ -154,18 +146,18 @@ reduce the net traffic:</p>
 </tbody>
 </table>
 <p>If widget or chem widget modules are used, additional style sheet file also need to be linked into HTML page:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
 </pre></div>
 </div>
 <p id="libsforrendering">Two additional JavaScript libraries may also be requested for drawing molecule (and other chem objects) in HTML page. You can download those libraries from their website easily:</p>
-<dl class="docutils">
-<dt><a class="reference external" href="http://dmitrybaranovskiy.github.io/raphael/">Raphael.js</a>:</dt>
-<dd>This library is utilized to draw 2D chem objects in SVG or VML format (rather than the default Canvas form of Kekule.js). However, as currently most modern web browsers support Canvas well, it is seldom needed unless you have to support a very ancient web browser (e.g., IE6-9).</dd>
-<dt><a class="reference external" href="http://threejs.org/">Three.js</a>:</dt>
-<dd>This library is utilized to draw 3D molecules in WebGL or Canvas form. As the whole three.js lib is quite large and a little overhead for drawing molecule, it is planned to replaced by our own implementation in the future.</dd>
+<dl class="simple">
+<dt><a class="reference external" href="http://dmitrybaranovskiy.github.io/raphael/">Raphael.js</a>:</dt><dd><p>This library is utilized to draw 2D chem objects in SVG or VML format (rather than the default Canvas form of Kekule.js). However, as currently most modern web browsers support Canvas well, it is seldom needed unless you have to support a very ancient web browser (e.g., IE6-9).</p>
+</dd>
+<dt><a class="reference external" href="http://threejs.org/">Three.js</a>:</dt><dd><p>This library is utilized to draw 3D molecules in WebGL or Canvas form. As the whole three.js lib is quite large and a little overhead for drawing molecule, it is planned to replaced by our own implementation in the future.</p>
+</dd>
 </dl>
-<p>If Raphael.js and three.js are used, don&#8217;t forget to put them ahead of Kekule.js script tag:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;raphael.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<p>If Raphael.js and three.js are used, don’t forget to put them ahead of Kekule.js script tag:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;raphael.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;Three.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
@@ -190,12 +182,12 @@ reduce the net traffic:</p>
         <li class="right" >
           <a href="../index.html" title="Tutorial of Kekule.js"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>

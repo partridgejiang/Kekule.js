@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Atom and Bond &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Atom and Bond &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Creating Molecule" href="molCreation.html" />
     <link rel="prev" title="Object and Class System of Kekule.js" href="objSys.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,12 +29,12 @@
         <li class="right" >
           <a href="objSys.html" title="Object and Class System of Kekule.js"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Atom and Bond</a><ul>
 <li><a class="reference internal" href="#working-with-atom">Working with Atom</a></li>
@@ -61,13 +50,13 @@
   <p class="topless"><a href="molCreation.html"
                         title="next chapter">Creating Molecule</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -85,49 +74,49 @@ objects in Kekule.js.</p>
 <div class="section" id="working-with-atom">
 <h2>Working with Atom<a class="headerlink" href="#working-with-atom" title="Permalink to this headline">¶</a></h2>
 <p>To create an atom:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">);</span>  <span class="c1">// create an atom with an id</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">);</span>  <span class="c1">// create an atom with an id</span>
 </pre></div>
 </div>
 <p>Atom can be modified by its properties:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="14%" />
-<col width="11%" />
-<col width="76%" />
+<col style="width: 14%" />
+<col style="width: 11%" />
+<col style="width: 76%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Value Type</th>
-<th class="head">Description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Value Type</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>atomicNumber</td>
-<td>int</td>
-<td>Atomic number of atom, e.g. 6 for carbon.
-It will be automatically changed when property <code class="docutils literal"><span class="pre">symbol</span></code> is set.</td>
+<tbody>
+<tr class="row-even"><td><p>atomicNumber</p></td>
+<td><p>int</p></td>
+<td><p>Atomic number of atom, e.g. 6 for carbon.
+It will be automatically changed when property <code class="docutils literal notranslate"><span class="pre">symbol</span></code> is set.</p></td>
 </tr>
-<tr class="row-odd"><td>symbol</td>
-<td>string</td>
-<td>Symbol of atom, e.g., &#8216;C&#8217; for carbon.
-It will be automatically changed when property <code class="docutils literal"><span class="pre">atomicNumber</span></code> is set.</td>
+<tr class="row-odd"><td><p>symbol</p></td>
+<td><p>string</p></td>
+<td><p>Symbol of atom, e.g., ‘C’ for carbon.
+It will be automatically changed when property <code class="docutils literal notranslate"><span class="pre">atomicNumber</span></code> is set.</p></td>
 </tr>
-<tr class="row-even"><td>massNumber</td>
-<td>int</td>
-<td>Mass number of the isotope.</td>
+<tr class="row-even"><td><p>massNumber</p></td>
+<td><p>int</p></td>
+<td><p>Mass number of the isotope.</p></td>
 </tr>
-<tr class="row-odd"><td>isotopeId</td>
-<td>string</td>
-<td>A shortcut property to set atomic number and mass
-number all at once, e.g. &#8216;13C&#8217; or &#8216;C13&#8217;.</td>
+<tr class="row-odd"><td><p>isotopeId</p></td>
+<td><p>string</p></td>
+<td><p>A shortcut property to set atomic number and mass
+number all at once, e.g. ‘13C’ or ‘C13’.</p></td>
 </tr>
-<tr class="row-even"><td>charge</td>
-<td>float</td>
-<td>Charge on this atom. Partial charge (e.g. +0.5) is allowed.</td>
+<tr class="row-even"><td><p>charge</p></td>
+<td><p>float</p></td>
+<td><p>Charge on this atom. Partial charge (e.g. +0.5) is allowed.</p></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// set atom to represent C13</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// set atom to represent C13</span>
 <span class="nx">atom</span><span class="p">.</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setMassNumber</span><span class="p">(</span><span class="mi">13</span><span class="p">);</span>  <span class="c1">// note that the property can be set cascadedly</span>
 <span class="c1">// same effect as the previous line</span>
 <span class="nx">atom</span><span class="p">.</span><span class="nx">setIsotopeId</span><span class="p">(</span><span class="s1">&#39;C13&#39;</span><span class="p">);</span>
@@ -136,47 +125,47 @@ number all at once, e.g. &#8216;13C&#8217; or &#8216;C13&#8217;.</td>
 </pre></div>
 </div>
 <p>Some property values can be set during the creation of atom:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">13</span><span class="p">);</span>   <span class="c1">// create C13 atom</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">atom</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">(</span><span class="s1">&#39;atom1&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">13</span><span class="p">);</span>   <span class="c1">// create C13 atom</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="working-with-bond">
 <h2>Working with Bond<a class="headerlink" href="#working-with-bond" title="Permalink to this headline">¶</a></h2>
 <p>To create a bond:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">bond</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">(</span><span class="s1">&#39;bond1&#39;</span><span class="p">);</span>  <span class="c1">// create a bond with an id</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">bond</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">(</span><span class="s1">&#39;bond1&#39;</span><span class="p">);</span>  <span class="c1">// create a bond with an id</span>
 </pre></div>
 </div>
 <p>Two of the most important properties of bond is its type and order:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="12%" />
-<col width="12%" />
-<col width="76%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 76%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Value Type</th>
-<th class="head">Description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Value Type</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>bondType</td>
-<td>string</td>
-<td>Type of bond, can be set to
-<code class="docutils literal"><span class="pre">Kekule.BondType.COVALENT/IONIC/COORDINATE/METALLIC/HYDROGEN.</span></code></td>
+<tbody>
+<tr class="row-even"><td><p>bondType</p></td>
+<td><p>string</p></td>
+<td><p>Type of bond, can be set to
+<code class="docutils literal notranslate"><span class="pre">Kekule.BondType.COVALENT/IONIC/COORDINATE/METALLIC/HYDROGEN.</span></code></p></td>
 </tr>
-<tr class="row-odd"><td>bondOrder</td>
-<td>int</td>
-<td>Order of covalence bond, can be set to
-<code class="docutils literal"><span class="pre">Kekule.BondOrder.SINGLE/DOUBLE/TRIPLE</span></code> and so on.</td>
+<tr class="row-odd"><td><p>bondOrder</p></td>
+<td><p>int</p></td>
+<td><p>Order of covalence bond, can be set to
+<code class="docutils literal notranslate"><span class="pre">Kekule.BondOrder.SINGLE/DOUBLE/TRIPLE</span></code> and so on.</p></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// create a double covalent bond</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create a double covalent bond</span>
 <span class="nx">bond</span><span class="p">.</span><span class="nx">setBondType</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">COVALENT</span><span class="p">).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>If <code class="docutils literal"><span class="pre">bondType</span></code> or <code class="docutils literal"><span class="pre">bondOrder</span></code> property is not set, the bond will be considered
+<p>If <code class="docutils literal notranslate"><span class="pre">bondType</span></code> or <code class="docutils literal notranslate"><span class="pre">bondOrder</span></code> property is not set, the bond will be considered
 as a single covalent bond by default.</p>
 <p>Atoms can be connected together by bonds, thus a molecule is created. This will
 be discussed in the next part of this tutorial.</p>
@@ -201,12 +190,12 @@ be discussed in the next part of this tutorial.</p>
         <li class="right" >
           <a href="objSys.html" title="Object and Class System of Kekule.js"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>

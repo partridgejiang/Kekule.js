@@ -1,33 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Loading and Saving Molecule &mdash; Kekule Tutorial 2016.4 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>Loading and Saving Molecule &#8212; Kekule Tutorial 2019.6 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2016.4',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Kekule Tutorial 2016.4 documentation" href="../index.html" />
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Get Molecule Information" href="getMolInfo.html" />
     <link rel="prev" title="Creating Molecule" href="molCreation.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -40,12 +29,12 @@
         <li class="right" >
           <a href="molCreation.html" title="Creating Molecule"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Loading and Saving Molecule</a><ul>
 <li><a class="reference internal" href="#saving-molecule">Saving Molecule </a></li>
@@ -66,13 +55,13 @@
   <p class="topless"><a href="getMolInfo.html"
                         title="next chapter">Get Molecule Information</a></p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -88,9 +77,9 @@
 <p>Module Kekule.IO provides a series of methods to perform input
 and output of molecule (and other chemistry objects).</p>
 <div class="section" id="saving-molecule">
-<h2>Saving Molecule <a class="footnote-reference" href="#module" id="id1">[1]</a><a class="headerlink" href="#saving-molecule" title="Permalink to this headline">¶</a></h2>
-<p>To save molecule, just use <code class="docutils literal"><span class="pre">saveFormatData</span></code>:<a class="footnote-reference" href="#example" id="id2">[3]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;cml&#39;</span><span class="p">);</span>
+<h2>Saving Molecule <a class="footnote-reference brackets" href="#module" id="id1">1</a><a class="headerlink" href="#saving-molecule" title="Permalink to this headline">¶</a></h2>
+<p>To save molecule, just use <code class="docutils literal notranslate"><span class="pre">saveFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id2">3</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;cml&#39;</span><span class="p">);</span>
         <span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-cml&#39;);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;mol&#39;</span><span class="p">);</span>
@@ -104,13 +93,13 @@ and output of molecule (and other chemistry objects).</p>
 <p>The return data usually is a string.</p>
 </div>
 <div class="section" id="loading-molecule">
-<h2>Loading Molecule <a class="footnote-reference" href="#module" id="id3">[1]</a><a class="headerlink" href="#loading-molecule" title="Permalink to this headline">¶</a></h2>
+<h2>Loading Molecule <a class="footnote-reference brackets" href="#module" id="id3">1</a><a class="headerlink" href="#loading-molecule" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="loading-from-string-variable">
 <h3>Loading from String Variable<a class="headerlink" href="#loading-from-string-variable" title="Permalink to this headline">¶</a></h3>
 <p>Saving molecule is rather simple, but loading is another story.
 The data source may be a string, in that case, loading process
-is quite simple by just calling <code class="docutils literal"><span class="pre">Kekule.IO.loadFormatData</span></code>:<a class="footnote-reference" href="#example" id="id4">[3]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmlData</span> <span class="o">=</span> <span class="s1">&#39;&lt;cml xmlns=&quot;http://www.xml-cml.org/schema&quot;&gt;&lt;molecule id=&quot;m1&quot;&gt;&lt;atomArray&gt;&lt;atom id=&quot;a2&quot; elementType=&quot;C&quot; x2=&quot;7.493264658965051&quot; y2=&quot;35.58088907877604&quot;/&gt;&lt;atom id=&quot;a3&quot; elementType=&quot;O&quot; x2=&quot;8.186084981992602&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;atom id=&quot;a1&quot; elementType=&quot;C&quot; x2=&quot;6.800444335937501&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;/atomArray&gt;&lt;bondArray&gt;&lt;bond id=&quot;b2&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a3&quot;/&gt;&lt;bond id=&quot;b1&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a1&quot;/&gt;&lt;/bondArray&gt;&lt;/molecule&gt;&lt;/cml&gt;&#39;</span><span class="p">;</span>
+is quite simple by just calling <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id4">3</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmlData</span> <span class="o">=</span> <span class="s1">&#39;&lt;cml xmlns=&quot;http://www.xml-cml.org/schema&quot;&gt;&lt;molecule id=&quot;m1&quot;&gt;&lt;atomArray&gt;&lt;atom id=&quot;a2&quot; elementType=&quot;C&quot; x2=&quot;7.493264658965051&quot; y2=&quot;35.58088907877604&quot;/&gt;&lt;atom id=&quot;a3&quot; elementType=&quot;O&quot; x2=&quot;8.186084981992602&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;atom id=&quot;a1&quot; elementType=&quot;C&quot; x2=&quot;6.800444335937501&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;/atomArray&gt;&lt;bondArray&gt;&lt;bond id=&quot;b2&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a3&quot;/&gt;&lt;bond id=&quot;b1&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a1&quot;/&gt;&lt;/bondArray&gt;&lt;/molecule&gt;&lt;/cml&gt;&#39;</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFormatData</span><span class="p">(</span><span class="nx">cmlData</span><span class="p">,</span> <span class="s1">&#39;cml&#39;</span><span class="p">);</span>
   <span class="c1">// or Kekule.IO.loadMimeData(cmlData, &#39;chemical/x-cml&#39;);</span>
 </pre></div>
@@ -122,18 +111,18 @@ For example, the ethanol molecule loaded in the above example:</p>
 <div class="section" id="loading-from-file">
 <h3>Loading from File<a class="headerlink" href="#loading-from-file" title="Permalink to this headline">¶</a></h3>
 <p>It is a common request to load molecule from source file. The toolkit provides
-two methods for that task: <code class="docutils literal"><span class="pre">Kekule.IO.loadUrlData</span></code> and <code class="docutils literal"><span class="pre">Kekule.IO.loadFileData</span></code>.</p>
-<p>The <code class="docutils literal"><span class="pre">loadUrlData</span></code> method fetches data from a remote file URL, either a absolute path (like
+two methods for that task: <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadUrlData</span></code> and <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFileData</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">loadUrlData</span></code> method fetches data from a remote file URL, either a absolute path (like
 <em>http://www.mysite.com/myMolecule.cml</em>) or a relative path (like <em>data/myMolecule.cml</em>). The
 method loads source file by <a class="reference external" href="https://developer.mozilla.org/en-US/docs/AJAX">AJAX</a>, so it
 shares the same limitations with AJAX (e.g.,
 <a class="reference external" href="https://en.wikipedia.org/wiki/Same-origin_policy">same-origin policy</a>). Local files usually
 can not be loaded by this method either.</p>
-<p>Since transferring data through network may cost quite a long time, <code class="docutils literal"><span class="pre">loadUrlData</span></code> use the
+<p>Since transferring data through network may cost quite a long time, <code class="docutils literal notranslate"><span class="pre">loadUrlData</span></code> use the
 asynchronous model to return result. It accept two parameter, first one is the URL of source,
 the second one is a callback function which will be called when the loading process is done.
-User should check the molecule loaded in this callback function:<a class="footnote-reference" href="#example" id="id5">[3]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;data/mol2D/quinone.mol&#39;</span><span class="p">;</span>
+User should check the molecule loaded in this callback function:<a class="footnote-reference brackets" href="#example" id="id5">3</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;data/mol2D/quinone.mol&#39;</span><span class="p">;</span>
 <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
   <span class="p">{</span>
@@ -147,10 +136,10 @@ User should check the molecule loaded in this callback function:<a class="footno
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>In modern web browsers, local source file can also be loaded by <code class="docutils literal"><span class="pre">Kekule.IO.loadFileData</span></code> and
+<p>In modern web browsers, local source file can also be loaded by <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFileData</span></code> and
 <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/API/File">File API</a>.
-Here is the example:<a class="footnote-reference" href="#example" id="id6">[3]</a></p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span>
+Here is the example:<a class="footnote-reference brackets" href="#example" id="id6">3</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span>
   <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">file</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span>
@@ -164,14 +153,14 @@ Here is the example:<a class="footnote-reference" href="#example" id="id6">[3]</
   <span class="p">});</span>
 </pre></div>
 </div>
-<p>It is notable that <code class="docutils literal"><span class="pre">loadFileData</span></code> also uses the asynchronous model and needs a callback function.</p>
+<p>It is notable that <code class="docutils literal notranslate"><span class="pre">loadFileData</span></code> also uses the asynchronous model and needs a callback function.</p>
 </div>
 <div class="section" id="loading-from-resource">
-<span id="loadingfromresource"></span><h3>Loading from Resource <a class="footnote-reference" href="#module2" id="id7">[2]</a><a class="headerlink" href="#loading-from-resource" title="Permalink to this headline">¶</a></h3>
+<span id="loadingfromresource"></span><h3>Loading from Resource <a class="footnote-reference brackets" href="#module2" id="id7">2</a><a class="headerlink" href="#loading-from-resource" title="Permalink to this headline">¶</a></h3>
 <p>Kekule.js provides another way to utilize source data: the resource identifier.
 With this form, user can even embed molecule data into HTML element. For example,
-HTML <code class="docutils literal"><span class="pre">&lt;script&gt;</span></code> tag is ideal to embed a piece of molecule data:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResInsideElem&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span><span class="p">&gt;</span>
+HTML <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag is ideal to embed a piece of molecule data:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResInsideElem&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span><span class="p">&gt;</span>
 
   <span class="nx">CDK</span>    <span class="mi">9</span><span class="o">/</span><span class="mi">19</span><span class="o">/</span><span class="mi">06</span><span class="p">,</span><span class="mi">14</span><span class="o">:</span><span class="mi">29</span>
 
@@ -205,16 +194,16 @@ HTML <code class="docutils literal"><span class="pre">&lt;script&gt;</span></cod
 </pre></div>
 </div>
 <p>The example above actually embeds a MOL2000 file data into HTML and later the data
-can be easily accessed by <code class="docutils literal"><span class="pre">id</span></code> of the <code class="docutils literal"><span class="pre">&lt;script&gt;</span></code> tag. Note the <code class="docutils literal"><span class="pre">type</span></code> attribute
-of <code class="docutils literal"><span class="pre">&lt;script&gt;</span></code> tag, it should be set to the right MIME type of data, otherwise
+can be easily accessed by <code class="docutils literal notranslate"><span class="pre">id</span></code> of the <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag. Note the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute
+of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag, it should be set to the right MIME type of data, otherwise
 molecule can not be successfully loaded. This type of data block is called <em>resource</em>
 in Kekule.js.</p>
 <p>The <em>resource</em> may link to external file as well:</p>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResExternalLink&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;./data/mol2D/porphyrin.mol&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span> <span class="p">/&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResExternalLink&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;./data/mol2D/porphyrin.mol&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span> <span class="p">/&gt;</span>
 </pre></div>
 </div>
-<p><em>Resource</em> can be loaded and parsed by <code class="docutils literal"><span class="pre">Kekule.IO.loadResourceData</span></code>:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// resource is referred by url(#id), similar to CSS URI</span>
+<p><em>Resource</em> can be loaded and parsed by <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadResourceData</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// resource is referred by url(#id), similar to CSS URI</span>
 <span class="kd">var</span> <span class="nx">resId</span> <span class="o">=</span> <span class="s1">&#39;url(#molResInsideElem)&#39;</span><span class="p">;</span>
 <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadResourceData</span><span class="p">(</span><span class="nx">resId</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span>
 <span class="p">{</span>
@@ -245,30 +234,27 @@ in Kekule.js.</p>
 </pre></div>
 </div>
 <p>Note the resource loading process is also asynchronous and requires a callback.</p>
-<table class="docutils footnote" frame="void" id="module" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> To read and write molecule, IO module must be loaded, e.g.:</td></tr>
-</tbody>
-</table>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<dl class="footnote brackets">
+<dt class="label" id="module"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id3">2</a>)</span></dt>
+<dd><p>To read and write molecule, IO module must be loaded, e.g.:</p>
+</dd>
+</dl>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<table class="docutils footnote" frame="void" id="module2" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id7">[2]</a></td><td>To load data from resource, both IO and HTML module must be used, e.g.:</td></tr>
-</tbody>
-</table>
-<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io,html&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<dl class="footnote brackets">
+<dt class="label" id="module2"><span class="brackets"><a class="fn-backref" href="#id7">2</a></span></dt>
+<dd><p>To load data from resource, both IO and HTML module must be used, e.g.:</p>
+</dd>
+</dl>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io,html&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<table class="docutils footnote" frame="void" id="example" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>, <a class="fn-backref" href="#id5">3</a>, <a class="fn-backref" href="#id6">4</a>)</em> Example of this chapter can be found and run at <a class="reference external" href="../examples/molIO.html">here</a>.</td></tr>
-</tbody>
-</table>
+<dl class="footnote brackets">
+<dt class="label" id="example"><span class="brackets">3</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id4">2</a>,<a href="#id5">3</a>,<a href="#id6">4</a>)</span></dt>
+<dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/molIO.html">here</a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 </div>
@@ -291,12 +277,12 @@ in Kekule.js.</p>
         <li class="right" >
           <a href="molCreation.html" title="Creating Molecule"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2016.4 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2019.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2016, Partridge Jiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>
