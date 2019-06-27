@@ -135,33 +135,60 @@ Kekule.IO.Mdl2kUtils = {
 	 * Convert a {@link Kekule.BondStereo} value to MDL bond stereo value in bond line.
 	 * @param {Int} value Value from {@link Kekule.BondStereo}.
 	 * @param {Int} bondOrder Note this value is a Kekule order, not a MDL one.
-	 * @returns {Int}
+	 * @returns {Hash}
 	 * @private
 	 */
-	bondStereoToMdlBondLineValue: function(value, bondOrder)
+	bondStereoToMdlBondLineValue: function(value, bondOrder, allowInverted)
 	{
+		var BS = Kekule.BondStereo;
+		var result = {};
 		if (bondOrder == Kekule.BondOrder.SINGLE)
 		{
-			switch (value)
+			if (allowInverted && [BS.UP_INVERTED, BS.DOWN_INVERTED].indexOf(value) >= 0)
+				result.inverted = true;
+			if (result.inverted)
 			{
-				case Kekule.BondStereo.UP: return 1;
-				case Kekule.BondStereo.UP_OR_DOWN: return 4;
-				case Kekule.BondStereo.DOWN: return 6;
-				default: // Kekule.BondStereo.NONE
-					return 0;
+				if (value === BS.UP_INVERTED)
+					result.stereo = 1;
+				else if (value === BS.DOWN_INVERTED)
+					result.stereo = 6;
+			}
+			else
+			{
+				switch (value)
+				{
+					case BS.DOWN_INVERTED:
+					case BS.UP:
+						result.stereo = 1;
+						break;
+					case BS.UP_INVERTED:
+					case BS.DOWN:
+						result.stereo = 6;
+						break;
+					case BS.UP_OR_DOWN_INVERTED:
+					case BS.UP_OR_DOWN:
+						result.stereo = 4;
+						break;
+					default: // Kekule.BondStereo.NONE
+						result.stereo = 0;
+						break;
+				}
 			}
 		}
 		else if (bondOrder == Kekule.BondOrder.DOUBLE)
 		{
 			switch (value)
 			{
-				case Kekule.BondStereo.E_Z_BY_COORDINATES: return 3; // cis or trans by coord
+				case Kekule.BondStereo.E_Z_BY_COORDINATES:
+					result.stereo = 3; // cis or trans by coord
+					break;
 				default: // Kekule.BondStereo.NONE
-					return 0;
+					result.stereo = 0;
 			}
 		}
 		else
-			return 0;
+			result.stereo = 0;
+		return result;
 	},
 
 	/**
@@ -1011,20 +1038,37 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	{
 		var s = '';
 		// format: 111222tttsssxxxrrrccc
+
+		// check bond stereo first, since it may cause the inverted order of atoms
+		var sBondStereo, stereoInfo;
+		if (bond.getStereo && bond.getBondOrder)
+		{
+			stereoInfo = Kekule.IO.Mdl2kUtils.bondStereoToMdlBondLineValue(bond.getStereo(), bond.getBondOrder(), true);
+			sBondStereo = stereoInfo.stereo.toString().lpad(3);
+		}
+		else
+		{
+			stereoInfo = {};
+			sBondStereo += '0'.lpad(3);
+		}
+
 		// 111222: first and second atom number
 		var nodeGroup = Kekule.IO.MdlStructureUtils.splitConnectedNodes(bond);
-		s += (atomList.indexOf(nodeGroup.primaryNodes[0]) + 1).toString().lpad(3);
-		s += (atomList.indexOf(nodeGroup.primaryNodes[1]) + 1).toString().lpad(3);
+		sAtom1 = (atomList.indexOf(nodeGroup.primaryNodes[0]) + 1).toString().lpad(3);
+		sAtom2 = (atomList.indexOf(nodeGroup.primaryNodes[1]) + 1).toString().lpad(3);
+		var sAtom1, sAtom2;
+		if (stereoInfo && stereoInfo.inverted)
+			s += (sAtom2 + sAtom1);
+		else
+			s += (sAtom1 + sAtom2);
+
 		//ttt: bond type
 		if (bond.getBondOrder)
 			s += Kekule.IO.MdlUtils.kekuleBondOrderToMdlType(bond.getBondOrder()).toString().lpad(3);
 		else
 			s += '0'.lpad(3);
 		//sss: bond stereo
-		if (bond.getStereo && bond.getBondOrder)
-			s += Kekule.IO.Mdl2kUtils.bondStereoToMdlBondLineValue(bond.getStereo(), bond.getBondOrder()).toString().lpad(3);
-		else
-			s += '0'.lpad(3);
+		s += sBondStereo;
 		// xxx: not used
 		s += '0'.lpad(3);
 		// rrr: bond topology, 0 = Either, 1 = Ring, 2 = Chain, SSS queries only, ignored

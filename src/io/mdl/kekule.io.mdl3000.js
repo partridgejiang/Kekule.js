@@ -101,19 +101,44 @@ Kekule.IO.Mdl3kUtils = {
 	/**
 	 * Convert a {@link Kekule.BondStereo} value to MDL 3000 bond configuration value.
 	 * @param {Int} value Value from  {@link Kekule.BondStereo}.
-	 * @returns {Int}
+	 * @returns {Hash}
 	 * @private
 	 */
-	bondStereoToMdlCfg: function(value)
+	bondStereoToMdlCfg: function(value, allowInverted)
 	{
-		switch (value)
+		var BS = Kekule.BondStereo;
+		var result = {};
+		if (allowInverted && [BS.UP_INVERTED, BS.DOWN_INVERTED].indexOf(value) >= 0)
+			result.inverted = true;
+		if (result.inverted)
 		{
-			case Kekule.BondStereo.UP: return 1;
-			case Kekule.BondStereo.UP_OR_DOWN: return 2;
-			case Kekule.BondStereo.DOWN: return 3;
-			//case Kekule.BondStereo.NONE: return 0;
-			default: return 0;
+			if (value === BS.UP_INVERTED)
+				result.cfg = 1;
+			else if (value === BS.DOWN_INVERTED)
+				result.cfg = 3;
 		}
+		else
+		{
+			switch (value)
+			{
+				case BS.UP:
+				case BS.DOWN_INVERTED:
+					result.cfg = 1;
+					break;
+				case BS.UP_OR_DOWN:
+					result.cfg = 2;
+					break;
+				case BS.DOWN:
+				case BS.UP_INVERTED:
+					result.cfg = 3;
+					break;
+				//case Kekule.BondStereo.NONE: return 0;
+				default:
+					result.cfg = 0;
+					break;
+			}
+		}
+		return result;
 	},
 	/**
 	 * Turn a float coordinate value to a MDL V3000 string.
@@ -1285,13 +1310,21 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 			Kekule.IO.MdlUtils.kekuleBondOrderToMdlType(
 				bond.getBondOrder? bond.getBondOrder(): Kekule.BondOrder.UNSET
 			)];
+		// check bond stereo first, since it may cause the inverted order of atoms
+		var stereoInfo = (bond.getStereo && bond.getStereo())? Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo(), true): {};
 		// atom1 atom2
 		var count = 0;
 		var atoms = [];
 		var endPoints = [];
 		var nodeGroup = Kekule.IO.MdlStructureUtils.splitConnectedNodes(bond);
-		atoms = [atomList.indexOf(nodeGroup.primaryNodes[0]) + 1, atomList.indexOf(nodeGroup.primaryNodes[1]) + 1];
-		  // if indexOf not found, it will returns -1, plus 1 just got zero
+		// if indexOf not found, it will returns -1, plus 1 just got zero
+		var atomIndex1 = atomList.indexOf(nodeGroup.primaryNodes[0]) + 1;
+		var atomIndex2 = atomList.indexOf(nodeGroup.primaryNodes[1]) + 1;
+		if (stereoInfo.inverted)
+			atoms = [atomIndex2, atomIndex1];
+		else
+			atoms = [atomIndex1, atomIndex2];
+		// remaining
 		if (nodeGroup.remainNodes && nodeGroup.remainNodes.length)
 		{
 			for (var i = 0, l = nodeGroup.remainNodes.length; i < l; ++i)
@@ -1299,8 +1332,12 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		}
 		values = values.concat(atoms);
 		// optional values
-		if (bond.getStereo && bond.getStereo())
-			values.push({'key': 'CFG', 'value': Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo())});
+		//if (bond.getStereo && bond.getStereo())
+		if (stereoInfo && stereoInfo.cfg)
+		{
+			//values.push({'key': 'CFG', 'value': Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo())});
+			values.push({'key': 'CFG', 'value': stereoInfo.cfg});
+		}
 		if (endPoints.length > 0)
 		{
 			values.push({'key': 'ENDPTS', 'value': endPoints});
