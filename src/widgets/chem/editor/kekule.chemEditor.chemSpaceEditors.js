@@ -2460,7 +2460,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 										this.createNodeMergeOperation(obj, dest, true);
 									this.getMergePreviewOperations()[index] = mergePreviewOper;
 								}
-								else
+								//else  // always need to create concrete merge oper to execute at the end
 								{
 									var mergeOper = (mergeType === MagneticOperTypes.MERGE_BOND)?
 										this.createConnectorMergeOperation(obj, dest):
@@ -2476,7 +2476,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 						if (needCreateNewMerge)
 							this.executeMergeOpers(this.getMergeOperationsInManipulating());
 						if (needCreateNewStick)
-							this.executeMergeOpers(this.getStickOperations());
+							this.executeStickOpers(this.getStickOperations());
 
 						if (unstickedObjRecords.length)  // set coord of unsticked objects after unstick operation executed
 						{
@@ -5267,7 +5267,9 @@ Kekule.Editor.MolFlexChainIaController = Class.create(Kekule.Editor.MolFlexStruc
 			var lastNode = mol.getNodeAt(mol.getNodeCount() - 1);
 			var firstCoord = editor.getObjectContextCoord(firstNode);
 			currCoord = editor.getObjectContextCoord(lastNode);
-			var v = CU.substract(currCoord, firstCoord);
+			var v;
+			if (currCoord && firstCoord)
+				v = CU.substract(currCoord, firstCoord);
 			if (v)
 			{
 				var fontSize = style.fontSize || 10;
