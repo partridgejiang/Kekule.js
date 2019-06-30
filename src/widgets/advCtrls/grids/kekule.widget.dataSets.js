@@ -503,6 +503,7 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 	initialize: function($super, dataSet)
 	{
 		$super();
+		this.setPropStoreFieldValue('pageSize', 10);  // default value
 		this.setDataSet(dataSet);
 	},
 	/** @private */
