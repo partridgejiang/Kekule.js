@@ -755,6 +755,7 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
  * @augments Kekule.Action
  *
  * @property filters {Array} Filters of open file dialog.
+ * @property binaryDetector {Func} A function to determinate whether the loaded file is in binary format. It accept params (fileName, file) and returns bool.
  */
 /**
  * Invoked when file(s) is loaded from dialog and data is loaded. Has one additional fields: {data, fileName, success}
@@ -776,6 +777,7 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	initProperties: function()
 	{
 		this.defineProp('filters', {'dataType': DataType.ARRAY});
+		this.defineProp('binaryDetector', {'dataType': DataType.FUNCTION, 'serializable': false});
 	},
 	/** @private */
 	doUpdate: function($super)
@@ -804,7 +806,8 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	{
 		//console.log('load file data', this.getFilters());
 		return Kekule.NativeServices.loadFileData(doc, callback, {
-			'filters': this.getFilters()
+			'filters': this.getFilters(),
+			'binaryDetector': this.getBinaryDetector(),
 		});
 	},
 
