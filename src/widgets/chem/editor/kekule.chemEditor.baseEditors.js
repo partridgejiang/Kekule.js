@@ -6854,7 +6854,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
 			distanceFromLast = dis;
-			if (dis < 2)  // less than 2 px, too tiny to react
+			if (dis < 4)  // less than 4 px, too tiny to react
 			{
 				return true;
 			}
