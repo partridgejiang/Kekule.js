@@ -2410,7 +2410,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	/** @private */
 	isObjRefProperty: function(prop)
 	{
-		return !!prop.objRef;
+		return !!(prop && prop.objRef);
 	},
 	/** @ignore */
 	notifyPropSet: function($super, propName, newValue, doNotEvokeObjChange)
@@ -2418,7 +2418,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		$super(propName, newValue, doNotEvokeObjChange);
 		// if a obj ref property is modified, inform the owner
 		var prop = this.getPropInfo(propName);
-		if (this.isObjRefProperty(prop))
+		if (prop && this.isObjRefProperty(prop))
 		{
 			var owner = this.getOwner();
 			if (owner && owner.modifyObjRefRelation)
