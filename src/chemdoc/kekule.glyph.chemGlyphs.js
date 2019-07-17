@@ -313,6 +313,28 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 				conn.setPathParams(params);
 			}
 		});
+		this.defineProp('receptor', {
+			'dataType': 'Kekule.ChemStructureObject',
+			'getter': function() {
+				var node = this.getNodeAt(1);
+				return this._getValidElectronTarget(node);
+			},
+			'setter': function(value) {
+				var node = this.getNodeAt(1);
+				this._setValidElectronTarget(node, value);
+			}
+		});
+		this.defineProp('donor', {
+			'dataType': 'Kekule.ChemStructureObject',
+			'getter': function() {
+				var node = this.getNodeAt(0);
+				return this._getValidElectronTarget(node);
+			},
+			'setter': function(value) {
+				var node = this.getNodeAt(0);
+				this._setValidElectronTarget(node, value);
+			}
+		});
 	},
 	/** @ignore */
 	doCreateDefaultStructure: function($super, refLength, initialParams)
@@ -323,6 +345,31 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 			this.setElectronCount(initialParams.electronCount);
 		}
 		return result;
+	},
+	/** @private */
+	_isValidElectronTarget: function(obj)
+	{
+		return (obj instanceof Kekule.ChemStructureNode) || (obj instanceof Kekule.ChemStructureConnector);
+	},
+	/** @private */
+	_getValidElectronTarget: function(glyphNode)
+	{
+		var stickTarget = glyphNode && glyphNode.getCoordStickTarget && glyphNode.getCoordStickTarget();
+		if (stickTarget && this._isValidElectronTarget(stickTarget))
+			return stickTarget;
+		else
+			return null;
+	},
+	_setValidElectronTarget: function(glyphNode, target)
+	{
+		if (glyphNode.getAllowCoordStickTo && glyphNode.getAllowCoordStickTo(target))
+		{
+			if (!target)
+				glyphNode.setCoordStickTarget(null);
+			else if (this._isValidElectronTarget(target))
+				glyphNode.setCoordStickTarget(target);
+		}
+		return this;
 	},
 	/** @private */
 	_getValidArrowPos: function()
