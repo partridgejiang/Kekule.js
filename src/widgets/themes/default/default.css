@@ -869,6 +869,23 @@ table.K-Widget
 
 }
 
+@supports (display: inline-flex) {
+    .K-TextEditor
+    {
+        display: inline-flex;
+        flex-direction: column;
+    }
+    .K-TextEditor .K-TextEditor-Toolbar
+    {
+        display: flex;
+        flex: 0 0 auto;
+    }
+    .K-TextEditor .K-TextEditor-TextArea
+    {
+        flex: 1 1 auto;
+    }
+}
+
 
 /* Color Picker */
 .K-ColorPicker
