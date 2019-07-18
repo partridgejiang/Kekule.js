@@ -824,6 +824,24 @@ table.K-Widget
 {
     margin: 0.5em 0.25em;
 }
+
+@supports (display: inline-flex) {
+    .K-Dialog
+    {
+        display: inline-flex;
+        flex-direction: column;
+    }
+    .K-Dialog .K-Dialog-Caption,
+    .K-Dialog .K-Dialog-Button-Panel
+    {
+        flex: 0 0 auto;
+    }
+    .K-Dialog .K-Dialog-Client
+    {
+        flex: 1 1 auto;
+    }
+}
+
 .K-Modal-Background
 {
     z-index: 20000;
