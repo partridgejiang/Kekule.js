@@ -834,19 +834,25 @@ table.K-Widget
     margin: 0.5em 0.25em;
 }
 
-@supports (display: inline-flex) {
+@supports (display: -webkit-inline-flex) or
+          (display: inline-flex)
+{
     .K-Dialog
     {
+        display: -webkit-inline-flex;
         display: inline-flex;
+        -webkit-flex-direction: column;
         flex-direction: column;
     }
     .K-Dialog .K-Dialog-Caption,
     .K-Dialog .K-Dialog-Button-Panel
     {
+        -webkit-flex: 0 0 auto;
         flex: 0 0 auto;
     }
     .K-Dialog .K-Dialog-Client
     {
+        -webkit-flex: 1 1 auto;
         flex: 1 1 auto;
     }
 }
@@ -896,19 +902,26 @@ table.K-Widget
 
 }
 
-@supports (display: inline-flex) {
+@supports (display: -webkit-inline-flex) or
+          (display: inline-flex)
+{
     .K-TextEditor
     {
+        display: -webkit-inline-flex;
         display: inline-flex;
+        -webkit-flex-direction: column;
         flex-direction: column;
     }
     .K-TextEditor .K-TextEditor-Toolbar
     {
         display: flex;
+        display: -webkit-flex;
+        -webkit-flex: 0 0 auto;
         flex: 0 0 auto;
     }
     .K-TextEditor .K-TextEditor-TextArea
     {
+        -webkit-flex: 1 1 auto;
         flex: 1 1 auto;
     }
 }
