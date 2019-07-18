@@ -375,6 +375,15 @@ table.K-Widget
     margin: 0.3em auto;
 }
 
+@supports (transform: translateX(-50%)) {
+    .K-SysMsgGroup
+    {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+    }
+}
+
 /* Buttons */
 .K-Button,
 .K-PageNavigator > .K-PageNavigator-PageIndexer
