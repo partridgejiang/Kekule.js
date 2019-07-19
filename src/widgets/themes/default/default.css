@@ -1034,6 +1034,54 @@ table.K-Widget
 }
 */
 
+@supports (display: -webkit-inline-flex) or
+          (display: inline-flex)
+{
+    .K-ColorPicker
+    {
+        display: -webkit-inline-flex;
+        display: inline-flex;
+        -webkit-flex-direction: column;
+        -moz-flex-direction: column;
+        flex-direction: column;
+    }
+    .K-ColorPicker .K-ColorPicker-Header
+    {
+        -webkit-flex: 0 0 auto;
+        -moz-flex: 0 0 auto;
+        flex: 0 0 auto;
+    }
+    .K-ColorPicker .K-ColorPicker-Palette
+    {
+        -webkit-flex: 1 1 auto;
+        -moz-flex: 1 1 auto;
+        flex: 1 1 auto;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        -moz-flex-direction: column;
+        flex-direction: column;
+    }
+    .K-ColorPicker .K-ColorPicker-Palette-Line
+    {
+        -webkit-flex: 1 1 auto;
+        -moz-flex: 1 1 auto;
+        flex: 1 1 auto;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+    }
+    .K-ColorPicker .K-ColorPicker-Palette-Cell
+    {
+        flex: 1 1 auto;
+        width: auto;
+        height: auto;
+        min-width: 9px;
+        min-height: 9px;
+    }
+}
+
 .K-ColorDropTextBox .K-ColorPreviewer
 {
     border: 1px solid;
