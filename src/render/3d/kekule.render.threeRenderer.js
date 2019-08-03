@@ -838,7 +838,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	exportToDataUri: function(context, dataType, options)
 	{
 		var renderer = context.getRenderer();
-		if (renderer instanceof THREE.SVGRenderer)
+		if (THREE.SVGRenderer && (renderer instanceof THREE.SVGRenderer))
 		{
 			var domElem = context.getRenderer().domElement;
 			//var svg = (new XMLSerializer()).serializeToString(domElem);
