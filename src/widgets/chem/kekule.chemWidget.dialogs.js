@@ -32,6 +32,7 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	DIALOG_LOADDATA: 'K-Chem-Dialog-LoadData',
 	DIALOG_LOADDATA_FORMATBOX: 'K-Chem-Dialog-LoadData-FormatBox',
+	DIALOG_LOADDATA_SRCEDITOR_REGION: 'K-Chem-Dialog-LoadData-SrcEditorRegion',
 	DIALOG_LOADDATA_SRCEDITOR: 'K-Chem-Dialog-LoadData-SrcEditor',
 	DIALOG_LOADDATA_BTN_LOADFROMFILE: 'K-Chem-Dialog-LoadData-Btn-LoadFromFile',
 	DIALOG_LOADAPPENDDATA: 'K-Chem-Dialog-LoadAppendData',
@@ -126,6 +127,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		clientElem.appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
+		elem.className = CCNS.DIALOG_LOADDATA_SRCEDITOR_REGION;
 		clientElem.appendChild(elem);
 		var dataEditor = new Kekule.Widget.TextEditor(this); //new Kekule.Widget.TextArea(result);
 		dataEditor.setWrap('off').setFileDroppable(true);  // enable file drop in editor
