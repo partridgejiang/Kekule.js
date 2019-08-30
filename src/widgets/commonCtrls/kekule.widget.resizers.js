@@ -100,7 +100,7 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		// change parent of curr widget
 		if (this.targetIsWidget(value))
 		{
-			elem = value.getResizerElement? value.getResizerElement(): value.getCoreElement();
+			elem = value.getResizerElement? value.getResizerElement(): value.getChildrenHolderElement();
 		}
 		else // HTML element
 		{

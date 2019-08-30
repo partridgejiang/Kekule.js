@@ -33,7 +33,8 @@ Kekule.Glyph.HeatSymbol = Class.create(Kekule.Glyph.Polygon,
 	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
 	{
 		$super(id, refLength, initialParams, coord2D, coord3D);
-		this.setRenderOption('strokeWidth', 1.5);
+		if (this.setRenderOption)  // avoid error if render module is not loaded
+			this.setRenderOption('strokeWidth', 1.5);
 	},
 	/** @ignore */
 	getRefLengthRatio: function()
@@ -69,7 +70,8 @@ Kekule.Glyph.AddSymbol = Class.create(Kekule.Glyph.PathGlyph,
 	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
 	{
 		$super(id, refLength, initialParams, coord2D, coord3D);
-		this.setRenderOption('strokeWidth', 1.5);
+		if (this.setRenderOption)  // avoid error if render module is not loaded
+			this.setRenderOption('strokeWidth', 1.5);
 	},
 	/** @private */
 	getRefLengthRatio: function()

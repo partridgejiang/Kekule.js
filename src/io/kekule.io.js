@@ -1403,7 +1403,7 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
  * @param {String} content
  * @param {String} formatId
  * @param {Hash} options Additional options to save data. Different data format may have different options.
- * @returns {Kekule.ChemObject}
+ * @returns {Variant}
  */
 Kekule.IO.saveFormatData = function(chemObj, formatId, options)
 {
@@ -1425,7 +1425,7 @@ Kekule.IO.saveFormatData = function(chemObj, formatId, options)
  * @param {Kekule.ChemObject} chemObj
  * @param {String} mimeType
  * @param {Hash} options Additional options to save data. Different data format may have different options.
- * @returns {String}
+ * @returns {Variant}
  */
 Kekule.IO.saveMimeData = function(chemObj, mimeType, options)
 {
