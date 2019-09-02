@@ -5561,7 +5561,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
 		{
-			var viewPortVisibleBox = Kekule.DocumentUtils.getClientVisibleBox((invokerWidget || popupWidget).getDocument());
+			var baseWidgetOrElem = invokerWidget || popupWidget;
+			var doc = baseWidgetOrElem.getDocument? baseWidgetOrElem.getDocument(): baseWidgetOrElem.ownerDocument;
+			var viewPortVisibleBox = Kekule.DocumentUtils.getClientVisibleBox(doc);
 			var visibleWidth = viewPortVisibleBox.right - viewPortVisibleBox.left;
 			var visibleHeight = viewPortVisibleBox.bottom - viewPortVisibleBox.top;
 			var widgetBox = posInfo.rect;
