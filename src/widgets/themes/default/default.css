@@ -793,6 +793,22 @@ table.K-Widget
     vertical-align: middle;
 }
 
+@supports (display: -webkit-flex) or
+          (display: flex)
+{
+    .K-Widget-Grid .K-Widget-Grid-Cell
+    {
+        display: -webkit-flex;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .K-Widget-Grid-Widget-Parent
+    {
+        position: static;  /* ignore top/left settings of inline style set by code */
+    }
+}
+
 /* Dialog */
 .K-Dialog
 {
