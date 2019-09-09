@@ -102,6 +102,7 @@ Kekule.BrowserFeature = {
 			}
 	},
 	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
+	resizeObserver: !!window.ResizeObserver,
 	touchEvent: !!window.touchEvent,
 	pointerEvent: !!window.PointerEvent,
 	draggable: (function() {
