@@ -541,6 +541,12 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
+
+	/** @ignore */
 	relayEvent: function($super, eventName, event)
 	{
 		var invokerWidget = event.widget;

@@ -605,6 +605,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
 	},
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
 
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)

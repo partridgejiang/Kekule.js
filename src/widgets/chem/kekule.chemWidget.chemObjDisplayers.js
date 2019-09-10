@@ -449,10 +449,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'getter': function() { var p = this.getRootRenderer(); return p && p.getBoundInfoRecorder(); }
 		});
 	},
+	/** @ignore */
 	initPropValues: function($super)
 	{
 		$super();
-		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false, });    // do not auto clear explicit H
+		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false});    // do not auto clear explicit H
+	},
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
 	},
 
 	/** @ignore */
