@@ -2851,6 +2851,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			// add a field to element to quick access widget from element itself
 			element[widgetBindingField] = this;
 
+			this.elementBound(element);
 			this.invokeEvent('bind', {'widget': this, 'element': element});
 		}
 	},
@@ -2861,6 +2862,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doBindElement: function(element)
 	{
 		// do nothing here
+	},
+	/**
+	 * Called when the element binding is done.
+	 * Descendants can override this method to take some actions on bound element.
+	 * @private
+	 */
+	elementBound: function(element)
+	{
+
 	},
 	/**
 	 * Unbind current widget from a HTML element, uninstall event handlers.
@@ -2890,6 +2900,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 			}
 
+			this.elementUnbound(element);
 			this.invokeEvent('unbind', {'widget': this, 'element': element});
 		}
 	},
@@ -2900,6 +2911,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doUnbindElement: function(element)
 	{
 		// do nothing here
+	},
+	/**
+	 * Called when the element unbinding is done.
+	 * Descendants can override this method to take some actions on unbound element.
+	 * @private
+	 */
+	elementUnbound: function(element)
+	{
+
 	},
 
 	/** @private */
