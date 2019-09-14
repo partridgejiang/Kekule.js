@@ -221,7 +221,7 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 
 		if (compNames.indexOf(BNS.nodeDisplayMode) >= 0)
 		{
-			var comboBox = new Kekule.Widget.ComboBox(panel);
+			var comboBox = new Kekule.Widget.SelectBox(panel);
 			this.fillNodeDisplayModeBox(comboBox);
 			comboBox.addClassName(CCNS.COMPOSER_NODEDISPLAYMODE_BOX);
 			comboBox.setHint(Kekule.$L('ChemWidgetTexts.HINT_NODE_LABEL_DISPLAY_MODE'));
