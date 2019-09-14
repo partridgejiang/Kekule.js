@@ -50,6 +50,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_OBJMODIFIER_TOOLBAR: 'K-Chem-Composer-ObjModifier-Toolbar',
 	COMPOSER_FONTNAME_BOX: 'K-Chem-Composer-FontName-Box',
 	COMPOSER_FONTSIZE_BOX: 'K-Chem-Composer-FontSize-Box',
+	COMPOSER_NODEDISPLAYMODE_BOX: 'K-Chem-Composer-NodeDisplayMode-Box',
 	COMPOSER_COLOR_BOX: 'K-Chem-Composer-Color-Box',
 
 	COMPOSER_TEXTDIRECTION_BUTTON: 'K-Chem-Composer-TextDirection-Button',

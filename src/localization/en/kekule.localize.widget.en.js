@@ -257,6 +257,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	// modifiers
 	CAPTION_TEXT_FORMAT: 'Text format',
 	CAPTION_PICK_COLOR: 'Color',
 	CAPTION_FONTNAME: 'Font name',
@@ -278,6 +279,12 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_TEXT_ALIGN_RIGHT: 'Right',
 	CAPTION_TEXT_ALIGN_TOP: 'Top',
 	CAPTION_TEXT_ALIGN_BOTTOM: 'Bottom',
+
+	CAPTION_NODE_LABEL_DISPLAY_MODE: 'Atom label display mode',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_DEFAULT: 'Default',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_SHOWN: 'Show label',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_HIDDEN: 'Hide label',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_SMART: 'Smart',
 
 	CAPTION_ATOM_MODIFIER: 'Atom',
 	CAPTION_ATOM_MODIFIER_MIXED: '[A]',
@@ -394,6 +401,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REACTION_ARROW_RESONANCE: 'Resonance reaction arrow',
 	HINT_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
 	*/
+
+	// modifiers
+	HINT_NODE_LABEL_DISPLAY_MODE: 'Atom label display mode',
 
 	HINT_TEXT_FORMAT: 'Set text format',
 	HINT_FONTNAME: 'Set font name',

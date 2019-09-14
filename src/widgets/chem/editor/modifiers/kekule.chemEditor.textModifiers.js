@@ -40,7 +40,8 @@ Kekule.globalOptions.add('chemWidget.composer.objModifier.richText', {
 		BNS.fontName,
 		BNS.fontSize,
 		BNS.textDirection,
-		BNS.textAlign
+		BNS.textAlign,
+		BNS.nodeDisplayMode
 	]
 });
 
@@ -60,6 +61,7 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 	{
 		$super(editor);
 		this._valueStorage = {};
+		this._nodeLabelDisplayModeGroup = null;
 	},
 	/** @private */
 	initProperties: function()
@@ -81,6 +83,9 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
 		});
 		this.defineProp('textVerticalAlignBox', {
+			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
+		});
+		this.defineProp('nodeLabelDisplayModeBox', {
 			'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'setter': null
 		});
 	},
@@ -213,18 +218,35 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			this.setPropStoreFieldValue('textVerticalAlignBox', selBox);
 			this._createCtrlGroup(doc, rootElem, Kekule.$L('ChemWidgetTexts.CAPTION_TEXT_VERTICAL_ALIGN'), selBox);
 		}
+
+		if (compNames.indexOf(BNS.nodeDisplayMode) >= 0)
+		{
+			var comboBox = new Kekule.Widget.ComboBox(panel);
+			this.fillNodeDisplayModeBox(comboBox);
+			comboBox.addClassName(CCNS.COMPOSER_NODEDISPLAYMODE_BOX);
+			comboBox.setHint(Kekule.$L('ChemWidgetTexts.HINT_NODE_LABEL_DISPLAY_MODE'));
+			comboBox.addEventListener('valueChange', function(e)
+			{
+				this.getEditor().modifyObjectsRenderOptions(this.getTargetObjs(), {'nodeDisplayMode': this.getNodeLabelDisplayModeBox().getValue()}, false, true);
+			}, this);
+			this.setPropStoreFieldValue('nodeLabelDisplayModeBox', comboBox);
+			this._nodeLabelDisplayModeGroup = this._createCtrlGroup(doc, rootElem, Kekule.$L('ChemWidgetTexts.CAPTION_NODE_LABEL_DISPLAY_MODE'), comboBox);
+		}
 		this.setPropStoreFieldValue('fontPanel', panel);
 
 		// set stored field values
 		var valueStorage = this._valueStorage;
 		if (valueStorage)
 		{
+			this._updateUiValuesFromStorage(valueStorage);
+			/*
 			this.getFontNameBox().setValue(valueStorage.fontName);
 			this.getFontSizeBox().setValue(valueStorage.fontSize);
 
 			this.getTextDirectionBox().setValue(valueStorage.textDirection);
 			this.getTextHorizontalAlignBox().setValue(valueStorage.textHAlign);
 			this.getTextVerticalAlignBox().setValue(valueStorage.textVAlign);
+			*/
 		}
 
 		return panel;
@@ -246,6 +268,55 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 		result.setDropDownWidgetGetter(this._doCreateDropDownPanel.bind(this));
 		return result;
 	},
+
+	/** @private */
+	_filterNodeLabelDisplayModeTargets: function(targets)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			var obj = targets[i];
+			if (obj instanceof Kekule.ChemStructureNode)
+			{
+				if (obj instanceof Kekule.StructureFragment && obj.hasCtab())
+					result.push(obj);
+				else
+					result.push(obj);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_hasNodeLabelDisplayModeTarget: function(targets)
+	{
+		return !!this._filterNodeLabelDisplayModeTargets(targets).length;
+	},
+
+	/** @private */
+	_updateUiValuesFromStorage: function(valueStorage)
+	{
+		if (this.getFontPanel())
+		{
+			//console.log('do load from target');
+			if (this.getFontNameBox())
+				this.getFontNameBox().setValue(valueStorage.fontName);
+			if (this.getFontSizeBox())
+				this.getFontSizeBox().setValue(valueStorage.fontSize);
+
+			if (this.getTextDirectionBox())
+				this.getTextDirectionBox().setValue(valueStorage.textDirection);
+			if (this.getTextHorizontalAlignBox())
+				this.getTextHorizontalAlignBox().setValue(valueStorage.textHAlign);
+			if (this.getTextVerticalAlignBox())
+				this.getTextVerticalAlignBox().setValue(valueStorage.textVAlign);
+
+			if (this.getNodeLabelDisplayModeBox())
+				this.getNodeLabelDisplayModeBox().setValue(valueStorage.nodeDisplayMode);
+			if (this._nodeLabelDisplayModeGroup)
+				Kekule.StyleUtils.setDisplay(this._nodeLabelDisplayModeGroup, valueStorage.hasNodeLabelDisplayModeTarget);
+		}
+	},
+
 	/** @ignore */
 	doLoadFromTargets: function(editor, targets)
 	{
@@ -257,16 +328,12 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			valueStorage.textDirection = this.getRenderOptionValue(targets, 'charDirection') || Kekule.Render.TextDirection.DEFAULT;
 			valueStorage.textHAlign = this.getRenderOptionValue(targets, 'horizontalAlign') || Kekule.Render.TextAlign.DEFAULT;
 			valueStorage.textVAlign = this.getRenderOptionValue(targets, 'verticalAlign') || Kekule.Render.TextAlign.DEFAULT;
+			valueStorage.nodeDisplayMode = this.getRenderOptionValue(this._filterNodeLabelDisplayModeTargets(targets), 'nodeDisplayMode') || Kekule.Render.NodeLabelDisplayMode.DEFAULT;
+			valueStorage.hasNodeLabelDisplayModeTarget = this._hasNodeLabelDisplayModeTarget(targets);
 
 			if (this.getFontPanel())
 			{
-				//console.log('do load from target');
-				this.getFontNameBox().setValue(valueStorage.fontName);
-				this.getFontSizeBox().setValue(valueStorage.fontSize);
-
-				this.getTextDirectionBox().setValue(valueStorage.textDirection);
-				this.getTextHorizontalAlignBox().setValue(valueStorage.textHAlign);
-				this.getTextVerticalAlignBox().setValue(valueStorage.textVAlign);
+				this._updateUiValuesFromStorage(valueStorage);
 			}
 		}
 	},
@@ -305,6 +372,18 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 			boxItems.push({'text': listedNames[i], 'value': listedNames[i]});
 		}
 		fontComboBox.setItems(boxItems);
+	},
+	/** @private */
+	fillNodeDisplayModeBox: function(nodeDisplayModeComboBox)
+	{
+		var M = Kekule.Render.NodeLabelDisplayMode;
+		var boxItems = [
+			{'text': Kekule.$L('ChemWidgetTexts.CAPTION_NODE_LABEL_DISPLAY_MODE_DEFAULT'), 'value': M.DEFAULT},
+			{'text': Kekule.$L('ChemWidgetTexts.CAPTION_NODE_LABEL_DISPLAY_MODE_SHOWN'), 'value': M.SHOWN},
+			{'text': Kekule.$L('ChemWidgetTexts.CAPTION_NODE_LABEL_DISPLAY_MODE_HIDDEN'), 'value': M.HIDDEN},
+			{'text': Kekule.$L('ChemWidgetTexts.CAPTION_NODE_LABEL_DISPLAY_MODE_SMART'), 'value': M.SMART}
+		];
+		nodeDisplayModeComboBox.setItems(boxItems);
 	}
 });
 

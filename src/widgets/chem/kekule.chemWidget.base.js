@@ -80,7 +80,9 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	fontSize: 'fontSize',
 	color: 'color',
 	textDirection: 'textDirection',
-	textAlign: 'textAlign'
+	textAlign: 'textAlign',
+
+	nodeDisplayMode: 'nodeDisplayMode'
 };
 
 /** @ignore */
