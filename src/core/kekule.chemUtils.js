@@ -460,7 +460,7 @@ Kekule.ChemStructureUtils = {
 		if (l === 0)
 			return 0;
 		else if (l === 1)  // only one connector
-			return -angles[0];
+			return Kekule.GeometryUtils.standardizeAngle(Math.PI + angles[0]);
 		else  // more than two connectors
 		{
 			var max = 0;
