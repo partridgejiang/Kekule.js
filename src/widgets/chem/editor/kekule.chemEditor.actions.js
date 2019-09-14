@@ -1694,6 +1694,7 @@ Kekule.Editor.ActionComposerSetAtomAndFormulaController = Kekule.Editor.createCo
 	null,
 	[
 		Kekule.Editor.ActionComposerSetAtomController,
+		Kekule.Editor.ActionComposerSetRepositoryMethaneController,
 		Kekule.Editor.ActionComposerSetFormulaController
 	]
 	,null,
