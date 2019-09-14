@@ -76,7 +76,7 @@ more options may be displayed at the bottom or the left side of the editor.
   |B25|       ring              Input typical ring structures with 3-9 atoms.
   |B26|       charge            Input negative or positive charge on atom.
   |B27|       glyph             Input glyphs and symbols such as reaction arrow and heat symbol.
-  |B28|       textAndImage      Input text or image block.
+  |B28|       textImage         Input text or image block.
   ==========  ================  =============
 
 .. |B20| image:: images/widgets/btnSelect.png
