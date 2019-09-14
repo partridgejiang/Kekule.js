@@ -1265,13 +1265,34 @@ X.Ajax = {
 
 	/**
 	 * Send an AJAX request to URL.
+	 * @param {Hash} params The request params, may including the following fields:
+	 *   {
+	 *     callback: Call back function with params (data, requestObj, success),
+	 *     url: string,
+	 *     postData: Hash or string,
+	 *     xhrProps: Hash, properties that overriding the default ones of XMLHttpRequest object.
+	 *       e.g. {responseType, overwriteMimeType, withCredentials}.
+	 *   }
+	 * @returns {XMLHttpRequest}
+	 */
+	request: function(params)
+	{
+		return X.Ajax.sendRequest(params.url, params.callback, params.postData, params.xhrProps);
+	},
+
+	/**
+	 * Send an AJAX request to URL.
+	 * This method is deprecated, since the input  paramters are not well organized.
+	 * Now user should use method {@link Kekule.X.Ajax.request} instead.
 	 * @param {String} url
 	 * @param {Function} callback Call back function with params (data, requestObj, success)
 	 * @param {Array} postData Optional.
-	 * @param {String} responseType Value of responseType property of XMLHttpRequest(V2).
-	 * @param {String} overwriteMimeType Value to call overwriteMimeType method of XMLHttpRequest(V2).
+	 * //@param {String} responseType Value of responseType property of XMLHttpRequest(V2).
+	 * //@param {String} overwriteMimeType Value to call overwriteMimeType method of XMLHttpRequest(V2).
+	 * @param {Hash} xhrProps Property settings of XHR object, e.g. {withCredentials: true}.
+	 * @deprecated
 	 */
-	sendRequest: function(url, callback, postData, responseType, overwriteMimeType)
+	sendRequest: function(url, callback, postData, responseTypeOrXhrProps, overwriteMimeType)
 	{
 		var isBinary = false;
 		var supportResponseType = true;
@@ -1282,6 +1303,18 @@ X.Ajax = {
 		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		var responseType, xhrProps;
+		if (responseTypeOrXhrProps)  // for backward compatible, here we check if the fourth param is a hash(xhrProps) or string (responseType)
+		{
+			if (typeof(responseTypeOrXhrProps) === 'object')
+			{
+				xhrProps = responseTypeOrXhrProps;
+				responseType = xhrProps.responseType;
+				overwriteMimeType = xhrProps.overwriteMimeType;  // overwriteMimeType is also set in xhrProps
+			}
+			else if (typeof(responseTypeOrXhrProps) === 'string')
+				responseType = responseTypeOrXhrProps;
+		}
 		if (responseType)
 		{
 			try
@@ -1297,10 +1330,27 @@ X.Ajax = {
 			if (req.responseType !== responseType)  // old fashion browser, do not support this feature
 				supportResponseType = false;
 		}
-		if (isBinary && (!supportResponseType) & req.overwriteMimeType)
+		if (isBinary && (!supportResponseType) && req.overwriteMimeType)
 			req.overrideMimeType('text/plain; charset=x-user-defined');  // old browser, need to transform binary data by string
 		if (overwriteMimeType && req.overwriteMimeType)
 			req.overwriteMimeType(overwriteMimeType);
+		if (xhrProps)
+		{
+			for (var key in xhrProps)
+			{
+				if (key in req)
+				{
+					try
+					{
+						req[key] = xhrProps[key];
+					}
+					catch(e)
+					{
+
+					}
+				}
+			}
+		}
 		req.onreadystatechange = function ()
 			{
 				if (req.readyState != 4) return;
