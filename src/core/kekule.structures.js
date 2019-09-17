@@ -5746,6 +5746,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/**
+	 * Returns an array of all isotope, count and charge map.
+	 * @private
+	 */
+	getIsotopeMaps: function()
+	{
+		return this.hasCtab()? this.getCtab().getIsotopeMaps(): [];
+	},
+
+	/**
 	 * Clear all CTab and formula struuctures.
 	 */
 	clear: function()
