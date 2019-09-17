@@ -2798,6 +2798,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
 				this.setEnabled(false);
 
+			var cname = this.getWidgetClassName();
+			EU.addClass(element, cname);
+			cname = this.getCustomHtmlClassName();
+			if (cname)
+				EU.addClass(element, cname);
+			if (!this.getTextSelectable())
+				EU.addClass(element, CNS.NONSELECTABLE);
+			if (this._pendingHtmlClassNames)
+			{
+				EU.addClass(element, this._pendingHtmlClassNames);
+				this._pendingHtmlClassNames = '';
+			}
+
 			// check dataset properties of element, and use them to set self's properties
 			// width/height attribute should also be regarded as property settings
 			var w = element.getAttribute('width');
@@ -2825,19 +2838,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 						//throw e;
 					}
 				}
-			}
-
-			var cname = this.getWidgetClassName();
-			EU.addClass(element, cname);
-			cname = this.getCustomHtmlClassName();
-			if (cname)
-				EU.addClass(element, cname);
-			if (!this.getTextSelectable())
-				EU.addClass(element, CNS.NONSELECTABLE);
-			if (this._pendingHtmlClassNames)
-			{
-				EU.addClass(element, this._pendingHtmlClassNames);
-				this._pendingHtmlClassNames = '';
 			}
 
 			// ensure touch action value applied to element
