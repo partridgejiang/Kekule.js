@@ -505,6 +505,44 @@ Kekule.ChemStructureUtils = {
 		var result = Kekule.ChemStructureUtils._getMostEmptyDirectionOfExistingAngles(angles);
 		//console.log('angle', result * 180 / Math.PI, Math.cos(result), Math.sin(result));
 		return result;
+	},
+
+	/**
+	 * Check if two rings are the same. Param ring1/ring2 are object wth fields: {nodes, connectors}
+	 * @param {Object} ring1
+	 * @param {Object} ring2
+	 * @returns {Bool}
+	 */
+	isSameRing: function(ring1, ring2)
+	{
+		if (ring1.nodes.length !== ring2.nodes.length)
+			return false;
+		if (ring1.connectors.length !== ring2.connectors.length)
+			return false;
+		if (AU.exclude(ring1.nodes, ring2.nodes).length > 0)
+			return false;
+		if (AU.exclude(ring1.connectors, ring2.connectors).length > 0)
+			return false;
+		return true;
+	},
+
+	/**
+	 * Check if targetRing is in rings.
+	 * @param {Object} targetRing
+	 * @param {Array} rings
+	 * @returns false;
+	 */
+	isInRings: function(targetRing, rings)
+	{
+		for (var i = 0, l = rings.length; i < l; ++i)
+		{
+			var ring = rings[i];
+			if (targetRing === ring)
+				return true;
+			else if (Kekule.ChemStructureUtils.isSameRing(targetRing, ring))
+				return true;
+		}
+		return false;
 	}
 };
 
