@@ -431,7 +431,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	needAutoClearStructureCache: function()
 	{
 		var p = this.getParent();
-		return this.getAutoClearStructureCache() && (!p || (p.needAutoClearStructureCache && p.needAutoClearStructureCache()));
+		return this.getAutoClearStructureCache() && (!p || !p.needAutoClearStructureCache || p.needAutoClearStructureCache());
 	},
 
 	/** @private */
@@ -768,7 +768,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	 */
 	structureChange: function(originObj)
 	{
-		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
+		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName(), this.needAutoClearStructureCache());
 		if (this.needAutoClearStructureCache())
 		{
 			this.clearStructureFlags();
