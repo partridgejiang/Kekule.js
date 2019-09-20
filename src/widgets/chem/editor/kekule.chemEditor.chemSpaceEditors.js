@@ -3786,6 +3786,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 			e.preventDefault();
 			if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // click
 			{
+				this.manipulateBeforeStopping();
 				// wrap up, add bond and append operation
 				this.addOperationToEditor();
 				this.stopManipulate();
@@ -5125,6 +5126,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 		{
 			if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // click
 			{
+				this.manipulateBeforeStopping();
 				this.addOperationToEditor();
 				this.stopManipulate();
 				this.setState(S.NORMAL);
