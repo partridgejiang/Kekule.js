@@ -271,15 +271,21 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 	/**
 	 * Check if a ring is a aromatic one.
 	 * @param {Object} ring
+	 * @param {Kekule.MapEx} piECountMap
+	 * @param {Array} sssRings in this molecule.
 	 * @returns {Hash} A {result, eMap} Hash, where result is a value from {@link Kekule.AromaticTypes},
 	 *   while the eMap stores the possible aromatic pi electron count of each node in ring.
 	 * @private
 	 */
-	_checkRingAromaticType: function(ring, piECountMap)
+	_checkRingAromaticType: function(ring, piECountMap, sssRings)
 	{
 		if (piECountMap)
 		{
+			var isInSSSR = sssRings && Kekule.ChemStructureUtils.isInRings(ring, sssRings);
+
 			var nodes = ring.nodes;
+			var nodeCount = nodes.length;
+			var isMedRing = (nodeCount > 6 && nodeCount < 16);  // med ring, usually has no aromatic
 			var nodeECounts = [];
 			var currIndexes = [];
 
@@ -349,7 +355,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 				{
 					var times = parseInt(eSum / 4);
 					var mod = eSum % 4;
-					if ((times <= 5) && (times !== 2))  // times = 2, 10 carbon ring, not aromatic
+					var isMed = isMedRing && isInSSSR;
+					if ((times <= 5) && (times !== 2 || !isMed))  // times = 2, e.g. 10 carbon sssRing, not aromatic
 					{
 						if (mod === 2)
 						{
@@ -506,7 +513,8 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 			allowUncertainRings = Kekule.globalOptions.algorithm.aromaticRingsPerception.allowUncertainRings;
 
 		// TODO: need to detect azulene and some other special aromatic rings
-		var rings = candidateRings || this.findSSSR();
+		var sssRings = this.findSSSR();
+		var rings = candidateRings || sssRings;
 		var result = [];
 
 		/*
@@ -541,7 +549,7 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 					aromaticType = ring.aromaticType;
 				else
 				{
-					var checkResult = this._checkRingAromaticType(ring, piECountMap);
+					var checkResult = this._checkRingAromaticType(ring, piECountMap, sssRings);
 					aromaticType = checkResult.result;
 					//if (aromaticType === Kekule.AromaticTypes.EXPLICIT_AROMATIC)
 					this._storeAromaticCacheToRingInfo(ring, aromaticType, checkResult.eMap);
@@ -583,14 +591,15 @@ ClassEx.extend(Kekule.StructureConnectionTable,
 		// restore from cache first
 		if (Kekule.ObjUtils.notUnset(ring.aromaticType))
 			return ring.aromaticType;
+		var sssRings = this.findSSSR();
 		if (!refRings)
-			refRings = this.findSSSR();
+			refRings = sssRings;
 		var result;
 		var piECountMap = new Kekule.MapEx();
 		try
 		{
 			this._calcPossibleRingNodesPElectronCounts(piECountMap, [ring], refRings);
-			var checkResult = this._checkRingAromaticType(ring, piECountMap);
+			var checkResult = this._checkRingAromaticType(ring, piECountMap, sssRings);
 			result = checkResult.result;
 			this._storeAromaticCacheToRingInfo(ring, result, checkResult.eMap);
 		}
