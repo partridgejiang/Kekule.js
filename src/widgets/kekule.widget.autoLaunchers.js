@@ -475,7 +475,9 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	 */
 	isElemLaunchable: function(elem)
 	{
-		if (elem.isContentEditable && !Kekule.Widget.AutoLauncher.enableOnEditable)
+		if (elem.isContentEditable
+				&& !Kekule.HtmlElementUtils.isFormCtrlElement(elem)  // The isContentEditable property of form control in IE is alway true
+				&& !Kekule.Widget.AutoLauncher.enableOnEditable)
 			return false;
 		else
 			return true;
