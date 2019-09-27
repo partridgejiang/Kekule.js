@@ -1276,7 +1276,7 @@ Kekule.IO.loadTypedData = function(content, mimeType, url, options)
  * Load chem object from a File object.
  * Note this function relies on FileApi support.
  * @param {File} file
- * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
+ * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success, srcData).
  * @param {String} formatId If not set, format will be get from file name automatically.
  * @param {Hash} options Additional options to read data. Different data format may have different options.
  */
@@ -1319,7 +1319,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId, options)
 				}
 				//var success = !!chemObj;
 				var success = (chemObj !== false);
-				callback(chemObj, success);
+				callback(chemObj, success, content);
 			};
 
 			if (isBinary)
@@ -1403,7 +1403,7 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
  * @param {String} content
  * @param {String} formatId
  * @param {Hash} options Additional options to save data. Different data format may have different options.
- * @returns {Kekule.ChemObject}
+ * @returns {Variant}
  */
 Kekule.IO.saveFormatData = function(chemObj, formatId, options)
 {
@@ -1425,7 +1425,7 @@ Kekule.IO.saveFormatData = function(chemObj, formatId, options)
  * @param {Kekule.ChemObject} chemObj
  * @param {String} mimeType
  * @param {Hash} options Additional options to save data. Different data format may have different options.
- * @returns {String}
+ * @returns {Variant}
  */
 Kekule.IO.saveMimeData = function(chemObj, mimeType, options)
 {

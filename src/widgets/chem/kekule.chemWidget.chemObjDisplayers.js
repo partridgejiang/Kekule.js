@@ -57,6 +57,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 
 	DIALOG_CHOOSE_FILE_FORAMT: 'K-Chem-Dialog-Choose-File-Format',
 	DIALOG_CHOOSE_FILE_FORAMT_FORMATBOX: 'K-Chem-Dialog-Choose-File-Format-FormatBox',
+	DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER_REGION: 'K-Chem-Dialog-Choose-File-Format-PreviewerRegion',
 	DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER: 'K-Chem-Dialog-Choose-File-Format-Previewer'
 });
 
@@ -448,10 +449,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'getter': function() { var p = this.getRootRenderer(); return p && p.getBoundInfoRecorder(); }
 		});
 	},
+	/** @ignore */
 	initPropValues: function($super)
 	{
 		$super();
-		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false, });    // do not auto clear explicit H
+		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false});    // do not auto clear explicit H
+	},
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
 	},
 
 	/** @ignore */
@@ -1855,6 +1862,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		result.getClientElem().appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
+		elem.className = CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER_REGION;
 		result.getClientElem().appendChild(elem);
 		var previewTextArea = new Kekule.Widget.TextEditor(result); //new Kekule.Widget.TextArea(result);
 		previewTextArea.setReadOnly(true);

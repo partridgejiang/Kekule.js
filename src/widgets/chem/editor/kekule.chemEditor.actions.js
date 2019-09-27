@@ -308,7 +308,7 @@ Kekule.Editor.ActionEditorUndo = Class.create(Kekule.Editor.ActionOnEditor,
 	{
 		$super();
 		if (this.getEnabled())
-			this.setEnabled(this.getEditor().canUndo());
+			this.setEnabled(this.getEditor().getEnableOperHistory() && this.getEditor().canUndo());
 	},
 	/** @private */
 	doExecute: function()
@@ -342,7 +342,7 @@ Kekule.Editor.ActionEditorRedo = Class.create(Kekule.Editor.ActionOnEditor,
 	{
 		$super();
 		if (this.getEnabled())
-			this.setEnabled(this.getEditor().canRedo());
+			this.setEnabled(this.getEditor().getEnableOperHistory() && this.getEditor().canRedo());
 	},
 	/** @private */
 	doExecute: function()
@@ -1694,6 +1694,7 @@ Kekule.Editor.ActionComposerSetAtomAndFormulaController = Kekule.Editor.createCo
 	null,
 	[
 		Kekule.Editor.ActionComposerSetAtomController,
+		Kekule.Editor.ActionComposerSetRepositoryMethaneController,
 		Kekule.Editor.ActionComposerSetFormulaController
 	]
 	,null,

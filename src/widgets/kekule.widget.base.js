@@ -343,6 +343,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Hash} autoResizeConstraints A hash of {width, height}, each value from 0-1 indicating the ratio of widget width/height to client.
  *   If this property is set, widget will automatically adjust its size when the browser window is resized.
  * @property {Bool} autoAdjustSizeOnPopup Whether shrink to browser visible client size when popping up or dropping down.
+ * @property {Bool} observeElemResize Whether use a resize observer to detect the resizing of element and evoke the resized method in supported browser.
  * @property {Bool} isPopup Whether this is a "popup" widget, when click elsewhere on window, the widget will automatically hide itself.
  * @property {Bool} isDialog Whether this is a "dialog" widget, when press ESC key, the widget will automatically hide itself.
  * @property {Kekule.HashEx} iaControllerMap Interaction controller map (id= > controller) linked to this component. Read only.
@@ -1037,6 +1038,28 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('observeElemResize', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('observeElemResize') && Kekule.BrowserFeature.resizeObserver;
+			},
+			'setter': function(value)
+			{
+				if (this.getPropStoreFieldValue('observeElemResize') != (!!value))
+				{
+					this.setPropStoreFieldValue('observeElemResize', !!value);
+					if (value)
+					{
+						this._installElemResizeObserver();
+					}
+					else
+					{
+						this._uninstallElemResizeObserver();
+					}
+				}
+			}
+		});
+
 		this.defineProp('autoAdjustSizeOnPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isDialog', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('isPopup', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
@@ -1118,6 +1141,13 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	doFinalize: function($super)
 	{
+		if (this._elemResizeObserver)
+		{
+			if (this._elemResizeObserver.disconnect)
+				this._elemResizeObserver.disconnect();
+			this._elemResizeObserver = null;
+		}
+
 		this.setAction(null);
 		this.setParent(null);
 		this.releaseChildWidgets();
@@ -2199,7 +2229,10 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			doResize = true;
 		}
 		if (doResize && (!suppressResize))
-			this.resized();
+		{
+			if (!this.getObserveElemResize())  // if installed elem resize observer, the change of width/height will automatically evoke resized method
+				this.resized();
+		}
 		this.objectChange(['width', 'height']);
 		return this;
 	},
@@ -2251,8 +2284,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	resized: function()
 	{
-		this.doResize();
-		this.invokeEvent('resize', {'widget': this});
+		if (!this._isResizing)
+		{
+			this._isResizing = true;
+			try
+			{
+				this.doResize();
+				this.invokeEvent('resize', {'widget': this});
+			}
+			finally
+			{
+				this._isResizing = false;
+			}
+		}
 	},
 	/**
 	 * Called when width or height of widget changed.
@@ -2262,6 +2306,40 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doResize: function()
 	{
 
+	},
+
+	/** @private */
+	_installElemResizeObserver: function()
+	{
+		if (Kekule.BrowserFeature.resizeObserver)
+		{
+			if (!this._elemResizeObserver)
+			{
+				var self = this;
+				this._elemResizeObserver = new ResizeObserver(function(entries) {
+					for (var i = 0, l = entries.length; i < l; ++i)
+					{
+						var entry = entries[i];
+						if (entry.target && entry.contentBoxSize && entry.target === self.getElement())
+						{
+							self.resized();
+						}
+					}
+				});
+			}
+			this._elemResizeObserver.observe(this.getElement());
+		}
+	},
+	/** @private */
+	_uninstallElemResizeObserver: function()
+	{
+		if (Kekule.BrowserFeature.resizeObserver)
+		{
+			if (this._elemResizeObserver)
+			{
+				this._elemResizeObserver.unobserve(this.getElement());
+			}
+		}
 	},
 
 	/**
@@ -2720,6 +2798,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
 				this.setEnabled(false);
 
+			var cname = this.getWidgetClassName();
+			EU.addClass(element, cname);
+			cname = this.getCustomHtmlClassName();
+			if (cname)
+				EU.addClass(element, cname);
+			if (!this.getTextSelectable())
+				EU.addClass(element, CNS.NONSELECTABLE);
+			if (this._pendingHtmlClassNames)
+			{
+				EU.addClass(element, this._pendingHtmlClassNames);
+				this._pendingHtmlClassNames = '';
+			}
+
 			// check dataset properties of element, and use them to set self's properties
 			// width/height attribute should also be regarded as property settings
 			var w = element.getAttribute('width');
@@ -2749,19 +2840,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 
-			var cname = this.getWidgetClassName();
-			EU.addClass(element, cname);
-			cname = this.getCustomHtmlClassName();
-			if (cname)
-				EU.addClass(element, cname);
-			if (!this.getTextSelectable())
-				EU.addClass(element, CNS.NONSELECTABLE);
-			if (this._pendingHtmlClassNames)
-			{
-				EU.addClass(element, this._pendingHtmlClassNames);
-				this._pendingHtmlClassNames = '';
-			}
-
 			// ensure touch action value applied to element
 			var touchAction = this.getTouchAction();
 			if (Kekule.ObjUtils.notUnset(touchAction))
@@ -2773,6 +2851,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			// add a field to element to quick access widget from element itself
 			element[widgetBindingField] = this;
 
+			this.elementBound(element);
 			this.invokeEvent('bind', {'widget': this, 'element': element});
 		}
 	},
@@ -2783,6 +2862,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doBindElement: function(element)
 	{
 		// do nothing here
+	},
+	/**
+	 * Called when the element binding is done.
+	 * Descendants can override this method to take some actions on bound element.
+	 * @private
+	 */
+	elementBound: function(element)
+	{
+
 	},
 	/**
 	 * Unbind current widget from a HTML element, uninstall event handlers.
@@ -2812,6 +2900,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 			}
 
+			this.elementUnbound(element);
 			this.invokeEvent('unbind', {'widget': this, 'element': element});
 		}
 	},
@@ -2822,6 +2911,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	doUnbindElement: function(element)
 	{
 		// do nothing here
+	},
+	/**
+	 * Called when the element unbinding is done.
+	 * Descendants can override this method to take some actions on unbound element.
+	 * @private
+	 */
+	elementUnbound: function(element)
+	{
+
 	},
 
 	/** @private */
@@ -5561,7 +5659,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
 		{
-			var viewPortVisibleBox = Kekule.DocumentUtils.getClientVisibleBox((invokerWidget || popupWidget).getDocument());
+			var baseWidgetOrElem = invokerWidget || popupWidget;
+			var doc = baseWidgetOrElem.getDocument? baseWidgetOrElem.getDocument(): baseWidgetOrElem.ownerDocument;
+			var viewPortVisibleBox = Kekule.DocumentUtils.getClientVisibleBox(doc);
 			var visibleWidth = viewPortVisibleBox.right - viewPortVisibleBox.left;
 			var visibleHeight = viewPortVisibleBox.bottom - viewPortVisibleBox.top;
 			var widgetBox = posInfo.rect;

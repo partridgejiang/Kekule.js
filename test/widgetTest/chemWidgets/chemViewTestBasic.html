@@ -61,6 +61,27 @@ M  END
 </script>
 <link id="externalRes" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/cyclohextone.mol" />
 <link id="externalResFake" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/Radicals.cdx.mol" />
+<script type="chemical/x-mdl-molfile" id="internalRes">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+</script>
 <style>
     canvas
     {
@@ -272,7 +293,7 @@ M  END
 	function init()
 	{
     var elem = document.getElementById('chemViewer');
-    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
+    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
     chemViewer.setEnableToolbar(true).setFileDroppable(true);
     //chemViewer.setRenderType(Kekule.Render.RendererType.R3D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
@@ -305,7 +326,7 @@ M  END
 	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
 	<div id="report"></div>
     <div id="drawParent">
-      <div id="chemViewer" data-chem-obj="url('#externalRes')" data-toolbar-evoke-modes="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
+      <div id="chemViewer" data-chem-obj="url('#internalRes')" data-toolbar-evoke-modes="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
 					 data-draw-options='{"autofitContextPadding":20,"zoom":1.5,"rotateX":0,"rotateY":0,"rotateZ":0,"rotateAngle":0.48869219055841223,"rotateAxisVector":null,"rotateMatrix":null,"autofit":false}'
 					 data-predefined-setting="fullFunc"
 					 data-molecule-display-type1="34"

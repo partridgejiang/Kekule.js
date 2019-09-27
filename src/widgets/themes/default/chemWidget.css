@@ -247,9 +247,10 @@
 
 .K-Chem-Viewer-Editor-FullClient
 {
+    /* important, override the adjusted popup settings (maybe absolute positioned) by global manager */
     position: fixed !important;
-    top: 0px;
-    left: 0px;
+    top: 0px !important;
+    left: 0px !important;
 }
 
 .K-Chem-StructureNodeSelectPanel, .K-Chem-StructureConnectorSelectPanel
@@ -903,6 +904,60 @@
 {
     float: left;
     white-space: nowrap;
+}
+
+@supports (display: -webkit-flex) or
+          (display: -moz-flex) or
+          (display: flex) {
+    .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client,
+    .K-Chem-Dialog-LoadData .K-Dialog-Client
+    {
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        -moz-flex-direction: column;
+        flex-direction: column;
+    }
+    .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client div,
+    .K-Chem-Dialog-LoadData .K-Dialog-Client div,
+    .K-Chem-Dialog-LoadData .K-Chem-Dialog-LoadAppendData-AppendCheckBox
+    {
+        -webkit-flex: 0 0 auto;
+        -moz-flex: 0 0 auto;
+        flex: 0 0 auto;
+        margin: 0.25em 0;  /* flex layout won't collapse margin */
+    }
+    .K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-SrcEditorRegion,
+    .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-PreviewerRegion
+    {
+        -webkit-flex: 1 1 auto;
+        -moz-flex: 1 1 auto;
+        flex: 1 1 auto;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+    }
+    .K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-SrcEditor,
+    .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-Previewer
+    {
+        -webkit-flex: 1 1 auto;
+        -moz-flex: 1 1 auto;
+        flex: 1 1 auto;
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+    }
+    .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client textarea,
+    .K-Chem-Dialog-LoadData .K-Dialog-Client textarea
+    {
+        height: auto;  /* the height can variant now by flex layout */
+    }
+    .K-Chem-Dialog-Choose-File-Format,
+    .K-Chem-Dialog-LoadData
+    {
+        height: 350px;
+    }
 }
 
 .K-Chem-ComposerFrame

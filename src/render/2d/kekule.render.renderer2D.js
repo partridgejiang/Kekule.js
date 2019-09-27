@@ -811,6 +811,10 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		{
 			objBox = this.estimateObjBox(context, drawOptions, result.allowCoordBorrow);
 		}
+		if (!objBox)  // object is actually empty, use a fake one to avoid exceptions
+		{
+			objBox = {'x1': 0, 'x2': 1, 'y1': 0, 'y2': 1};
+		}
 		var boxCenter = {'x': (objBox.x1 + objBox.x2) / 2, 'y': (objBox.y1 + objBox.y2) / 2};
 
 		var O = Kekule.ObjUtils;

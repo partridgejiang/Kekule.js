@@ -184,7 +184,7 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 			textArea.finalize();
 		}
 	},
-	/** @ignore */
+	/* @ignore */
 	getCoreElement: function($super)
 	{
 		var textArea = this.getTextArea();
@@ -192,6 +192,11 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 			return textArea.getElement();
 		else
 			return $super();
+	},
+	/** @ignore */
+	getChildrenHolderElement: function($super)
+	{
+		return this.getElement();
 	},
 
 	/** @ignore */

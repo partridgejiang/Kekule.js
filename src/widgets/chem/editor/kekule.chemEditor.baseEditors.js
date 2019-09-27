@@ -605,6 +605,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
 	},
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
 
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
@@ -3246,6 +3251,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	isInSelection: function(obj)
 	{
+		if (!obj)
+			return false;
 		return this.getSelection().indexOf(obj) >= 0;
 	},
 	/**
@@ -3255,6 +3262,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	addObjToSelection: function(obj)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
 		Kekule.ArrayUtils.pushUnique(selection, obj.getNearestSelectableObject());
 		this._addSelectRenderOptions(obj);
@@ -3268,6 +3277,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	removeObjFromSelection: function(obj, doNotNotifySelectionChange)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
 		var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
 		if (relObj === obj)
@@ -6193,44 +6204,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	_isSameTransformParams: function(p1, p2, threshold, coordMode)
 	{
-		/*
-		var isUnset = OU.isUnset;
-		var equal = Kekule.NumUtils.isFloatEqual;
 		if (!threshold)
-			threshold = 0.05;  // TODO: currently fixed
-		if (coordMode === (Kekule.CoordMode.COORD2D))
-		{
-			var result = false;
-			// check center
-			var c1 = p1.center, c2 = p2.center;
-			if (c1 && c2)
-			{
-				result = equal(c1.x, c2.x, threshold) && equal(c1.y, c2.y, threshold);
-			}
-			else
-				result = false;
-			if (result)  // further check scale, translate and rotate
-			{
-				var fields = ['scale', 'scaleX', 'scaleY', 'rotateAngle', 'translateX', 'translateY'];
-				for (var i = 0, l = fields.length; i < l; ++i)
-				{
-					var fname = fields[i];
-					var v1 = p1[fname], v2 = p2[fname];
-					if (isUnset(v1) && isUnset(v2))
-						continue;
-					else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
-						result = equal(v1, v2, threshold);
-					else
-						result = false;
-					if (!result)
-						break;
-				}
-			}
-			return result;
-		}
-	  else  // TODO: now handles 2D params only
-	  	return false;
-		*/
+			threshold = 0.1;  // TODO: currently fixed
 		if (coordMode === Kekule.CoordMode.COORD2D)
 			return CU.isSameTransform2DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
 		else
@@ -6884,7 +6859,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
 			distanceFromLast = dis;
-			if (dis < 2)  // less than 2 px, too tiny to react
+			if (dis < 4)  // less than 4 px, too tiny to react
 			{
 				return true;
 			}

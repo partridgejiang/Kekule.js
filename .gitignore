@@ -103,6 +103,7 @@ jsDoc
 *DECPRECATED
 *.deprecated.*
 *.config
+*.lock
 src/_extras/MoodleExtensions/moodle/*.bat
 src/_extras/MoodleExtensions/utils
 demos/chemFiles/2D/acenaphthylene.mol.log

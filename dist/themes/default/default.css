@@ -50,6 +50,7 @@ table.K-Widget{display:table}
 .K-MsgGroup.K-Widget-MsgGroup{position:absolute;bottom:0;top:100%;left:0;right:0;text-align:center;background-color:transparent}
 .K-SysMsgGroup{position:fixed;bottom:3em;z-index:30000;margin:0 auto;left:0;right:0;text-align:center;background-color:transparent}
 .K-MsgGroup .K-MsgPanel{margin:.3em auto}
+@supports(transform:translateX(-50%)){.K-SysMsgGroup{left:50%;right:auto;transform:translateX(-50%)}}
 .K-Button,.K-PageNavigator > .K-PageNavigator-PageIndexer{position:relative;padding:.4em .6em;line-height:normal;cursor:pointer;vertical-align:middle;text-align:center;overflow:visible;border:1px solid;outline:none}
 .K-Button,.K-Button:link,.K-Button:visited,.K-Button:hover,.K-Button:active{text-decoration:none}
 .K-Button .K-DropDownMark{font-size:70%;margin-left:.5em;margin-right:0}
@@ -106,6 +107,8 @@ table.K-Widget{display:table}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Assoc-Glyph-Content{display:none}
 .K-Widget-Grid-Widget-Parent{position:absolute;display:block}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget{display:inline-block;vertical-align:middle}
+@supports(display:-webkit-flex) or (display:flex){.K-Widget-Grid .K-Widget-Grid-Cell{display:-webkit-flex;display:flex;justify-content:center;align-items:center}
+.K-Widget-Grid-Widget-Parent{position:static}}
 .K-Dialog{border:1px solid;overflow:hidden;position:absolute;position:fixed}
 .K-Dialog.K-Dialog-Overflow{position:absolute}
 .K-Dialog.K-Dialog-Inside{position:absolute;position:fixed}
@@ -113,6 +116,9 @@ table.K-Widget{display:table}
 .K-Dialog .K-Dialog-Client{padding:.5em}
 .K-Dialog .K-Dialog-Button-Panel{padding:0 .25em;text-align:right;overflow:hidden}
 .K-Dialog .K-Dialog-Button-Panel .K-Widget{margin:.5em .25em}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-Dialog{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;flex-direction:column}
+.K-Dialog .K-Dialog-Caption,.K-Dialog .K-Dialog-Button-Panel{-webkit-flex:0 0 auto;flex:0 0 auto}
+.K-Dialog .K-Dialog-Client{-webkit-flex:1 1 auto;flex:1 1 auto}}
 .K-Modal-Background{z-index:20000;position:absolute;position:fixed;top:0;left:0;right:0;bottom:0}
 .K-TextEditor{}
 .K-TextEditor .K-TextEditor-Toolbar,.K-TextEditor .K-TextEditor-TextArea{display:block;margin:0;width:100%}
@@ -120,6 +126,9 @@ table.K-Widget{display:table}
 .K-TextEditor .K-TextEditor-TextArea{}
 .K-TextEditor .K-TextEditor-Toolbar .K-Button{padding:.2em .4em}
 .K-TextEditor .K-TextEditor-Toolbar .K-TextEditor-FontBox{}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-TextEditor{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;flex-direction:column}
+.K-TextEditor .K-TextEditor-Toolbar{display:flex;display:-webkit-flex;-webkit-flex:0 0 auto;flex:0 0 auto}
+.K-TextEditor .K-TextEditor-TextArea{-webkit-flex:1 1 auto;flex:1 1 auto}}
 .K-ColorPicker{border:1px solid;padding:.2em .5em}
 .K-ColorPicker .K-ColorPicker-Header{overflow:hidden;padding:.2em 0}
 .K-ColorPicker .K-ColorPicker-Input{visibility:hidden;width:0;height:0;margin:0;padding:0}
@@ -135,6 +144,11 @@ table.K-Widget{display:table}
 .K-ColorPicker .K-ColorPicker-Palette-Line{font-size:0}
 .K-ColorPicker .K-ColorPicker-Palette-Line,.K-ColorPicker .K-ColorPicker-Palette-Cell{margin:0;padding:0;line-height:1}
 .K-ColorPicker .K-ColorPicker-Palette-Cell{display:inline-block;width:9px;height:9px;border-top:1px solid;border-left:1px solid}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-ColorPicker{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
+.K-ColorPicker .K-ColorPicker-Header{-webkit-flex:0 0 auto;-moz-flex:0 0 auto;flex:0 0 auto}
+.K-ColorPicker .K-ColorPicker-Palette{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
+.K-ColorPicker .K-ColorPicker-Palette-Line{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex}
+.K-ColorPicker .K-ColorPicker-Palette-Cell{flex:1 1 auto;width:auto;height:auto;min-width:9px;min-height:9px}}
 .K-ColorDropTextBox .K-ColorPreviewer{border:1px solid;box-sizing:border-box;width:1.5em;height:80%;padding:0 .1em}
 .K-ColorDropButton .K-Pri-Glyph-Content{outline:1px solid}
 .K-ValueListEditor{display:table;border:1px solid;border-collapse:collapse;padding:0;line-height:normal;cursor:default;vertical-align:top;empty-cells:show;table-layout:fixed;width:25em}
@@ -187,4 +201,4 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"190623082536,mae,334"}
+#CssGaga{content:"190902103552,mae,334"}

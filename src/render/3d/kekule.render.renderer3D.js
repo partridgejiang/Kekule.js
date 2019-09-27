@@ -632,6 +632,10 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 			objBox = this.estimateObjBox(context, drawOptions, result.allowCoordBorrow);
 			//console.log('OBJ BOX CALC', objBox);
 		}
+		if (!objBox)  // object is actually empty, use a fake one to avoid exceptions
+		{
+			objBox = {'x1': 0, 'x2': 1, 'y1': 0, 'y2': 1, 'z1': 0, 'z2': 1};
+		}
 		var boxCenter = {'x': (objBox.x1 + objBox.x2) / 2, 'y': (objBox.y1 + objBox.y2) / 2, 'z': (objBox.z1 + objBox.z2) / 2};
 
 		var O = Kekule.ObjUtils;

@@ -130,7 +130,7 @@ Kekule.IO.MdlUtils = {
 	{
 		var s = '';
 		// MMDDYYHHmm or MMDDYYYYHHmm
-		s += date.getMonth().toString().lpad(2, '0');
+		s += (date.getMonth() + 1).toString().lpad(2, '0');
 		s += date.getDate().toString().lpad(2, '0');
 		if (useLongFormat)
 			s += date.getFullYear().toString().lpad(4, '0');

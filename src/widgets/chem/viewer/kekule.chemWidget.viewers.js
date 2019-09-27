@@ -596,6 +596,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
+
+	/** @ignore */
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('div');
@@ -964,7 +970,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			chemObj.setSrcInfo(null);
 			//self.repaint();
 			this.setChemObj(chemObj); // force repaint, as repaint() will not reflect to object changes
-		} 
+		}
 		else // not restrain, load object in composer directy into viewer
 		{
 			//console.log(newObj);

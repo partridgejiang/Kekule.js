@@ -196,7 +196,7 @@ function _initCustomizationSystem(concreteComposer, commonBtnZoneParent, chemBtn
 				createButtonInfo('N.glyphReactionArrowReversible'),
 				createButtonInfo('N.glyphReactionArrowResonance'),
 				createButtonInfo('N.glyphReactionArrowRetrosynthesis'),
-				createButtonInfo('N.glyphSegment'),
+				createButtonInfo('N.glyphRepSegment'),
 				createButtonInfo('N.glyphElectronPushingArrowDouble'),
 				createButtonInfo('N.glyphElectronPushingArrowSingle'),
 				createButtonInfo('N.glyphRepHeatSymbol'),

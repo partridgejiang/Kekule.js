@@ -431,7 +431,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	needAutoClearStructureCache: function()
 	{
 		var p = this.getParent();
-		return this.getAutoClearStructureCache() && (!p || (p.needAutoClearStructureCache && p.needAutoClearStructureCache()));
+		return this.getAutoClearStructureCache() && (!p || !p.needAutoClearStructureCache || p.needAutoClearStructureCache());
 	},
 
 	/** @private */
@@ -768,7 +768,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	 */
 	structureChange: function(originObj)
 	{
-		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName());
+		//console.log('structure change', originObj && originObj.getClassName(), this.getClassName(), this.needAutoClearStructureCache());
 		if (this.needAutoClearStructureCache())
 		{
 			this.clearStructureFlags();
@@ -5743,6 +5743,15 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	getAllContainingConnectors: function()
 	{
 		return this.hasCtab()? this.getCtab().getAllContainingConnectors(): [];
+	},
+
+	/**
+	 * Returns an array of all isotope, count and charge map.
+	 * @private
+	 */
+	getIsotopeMaps: function()
+	{
+		return this.hasCtab()? this.getCtab().getIsotopeMaps(): [];
 	},
 
 	/**
