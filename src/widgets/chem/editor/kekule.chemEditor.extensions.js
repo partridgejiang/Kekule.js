@@ -129,6 +129,14 @@ ClassEx.extend(Kekule.ChemObject,
 				result = result.concat(markers[i].getCoordDependentObjects());
 			}
 		}
+		var coordStickNodes = this.getAttachedCoordStickNodes();
+		for (var i = 0, l = coordStickNodes.length; i < l; ++i)
+		{
+			var node = coordStickNodes[i];
+			AU.pushUnique(result, node);
+			AU.pushUnique(result, node.getCoordDeterminateObjects());
+		}
+		//console.log(this.getClassName(), result);
 		return result;
 	},
 
@@ -288,6 +296,7 @@ ClassEx.extend(Kekule.ChemStructureObject,
 			AU.pushUnique(result, connector);
 			AU.pushUnique(result, connector.getCoordDeterminateObjects());
 		}
+		/*
 		var coordStickNodes = this.getAttachedCoordStickNodes();
 		for (var i = 0, l = coordStickNodes.length; i < l; ++i)
 		{
@@ -295,6 +304,7 @@ ClassEx.extend(Kekule.ChemStructureObject,
 			AU.pushUnique(result, node);
 			AU.pushUnique(result, node.getCoordDeterminateObjects());
 		}
+		*/
 		return result;
 	}
 });
