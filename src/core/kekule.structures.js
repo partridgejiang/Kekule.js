@@ -929,10 +929,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			{
 				if (value)
 				{
-					console.log('has stick target', this.getClassName(), this.getParent(), value && value.getClassName());
+					//console.log('has stick target', this.getClassName(), this.getParent(), value && value.getClassName());
 					if (!this.getAllowCoordStickTo(value))
 					{
-						console.log('not allowed', this.getClassName(), this.getParent(), value && value.getClassName());
+						//console.log('not allowed', this.getClassName(), this.getParent(), value && value.getClassName());
 						Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
 						return;
 					}

@@ -189,6 +189,18 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 		//node2.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
 	},
 	/** @private */
+	_isValidChemNodeOrConnectorStickTarget: function(targetObj)
+	{
+		var result = (targetObj instanceof Kekule.ChemStructureNode) || (targetObj instanceof Kekule.ChemStructureConnector);
+		if (!result && (targetObj instanceof Kekule.ChemMarker.BaseMarker))
+		{
+			var parent = targetObj.getParent && targetObj.getParent();
+			if (parent)  // the marker of node/connector (e.g., electron pair) can also be a valid target
+				result = (parent instanceof Kekule.ChemStructureNode) || (parent instanceof Kekule.ChemStructureConnector);
+		}
+		return result;
+	},
+	/** @private */
 	_applyParamsToConnector: function(connector, initialParams)
 	{
 		connector.setPathParams(initialParams);
@@ -196,9 +208,14 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 	/** @ignore */
 	getAllowChildCoordStickTo: function(child, dest)
 	{
-
-		return !dest ||  // dest not set, a general test, just returns true
-			((dest instanceof Kekule.ChemStructureNode) || (dest instanceof Kekule.ChemStructureConnector)) && (!this._isChildrenStickingTo(dest, [child]));
+		var result = !dest  // dest not set, a general test, just returns true
+			|| (this._isValidChemNodeOrConnectorStickTarget(dest, child) && !this._isChildrenStickingTo(dest, [child]));
+			/*
+			|| ((dest instanceof Kekule.ChemStructureNode) || (dest instanceof Kekule.ChemStructureConnector)) && (!this._isChildrenStickingTo(dest, [child]))
+			|| (dest instanceof Kekule.ChemMarker.BaseMarker);
+			*/
+		//console.log('allow stick to', dest && dest.getClassName(), result);
+		return result;
 	},
 	/** @ignore */
 	getChildUseCoordStickOffset: function($super, child, stickDest)

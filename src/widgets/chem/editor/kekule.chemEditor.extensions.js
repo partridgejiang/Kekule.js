@@ -727,7 +727,8 @@ ClassEx.extend(Kekule.Glyph.BaseArc,
 		{
 			var node = this.getNodeAt(i);
 			var stickTarget = node.getCoordStickTarget();
-			if (stickTarget && (stickTarget instanceof Kekule.ChemStructureNode || stickTarget instanceof Kekule.ChemStructureConnector))
+			//if (stickTarget && (stickTarget instanceof Kekule.ChemStructureNode || stickTarget instanceof Kekule.ChemStructureConnector))
+			if (this._isValidChemNodeOrConnectorStickTarget(stickTarget))
 				result.push(stickTarget);
 		}
 		return result;

@@ -273,6 +273,11 @@ Kekule.Glyph.Arc = Class.create(Kekule.Glyph.BaseArc,
  * Electron pushing arrow (usually connected with two bonds or bond/atom) in reaction.
  * @class
  * @augments Kekule.Glyph.BaseArc
+ *
+ * @property {Kekule.ChemStructureObject} Donor The electron donor node or connector.
+ * @property {Kekule.ChemStructureObject} Receptor The electron receptor node or connector.
+ * @property {Kekule.ChemStructureObject} DirectDonor The direct electron donor object (e.g., the lone pair) of donor node/connector.
+ * @property {Kekule.ChemStructureObject} DirectReceptor The direct electron receptor object (e.g., the lone pair) of donor node/connector.
  */
 Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 /** @lends Kekule.Glyph.ElectronPushingArrow# */
@@ -315,7 +320,7 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 				conn.setPathParams(params);
 			}
 		});
-		this.defineProp('receptor', {
+		this.defineProp('directReceptor', {
 			'dataType': 'Kekule.ChemStructureObject',
 			'getter': function() {
 				var node = this.getNodeAt(1);
@@ -326,11 +331,33 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 				this._setValidElectronTarget(node, value);
 			}
 		});
-		this.defineProp('donor', {
+		this.defineProp('directDonor', {
 			'dataType': 'Kekule.ChemStructureObject',
 			'getter': function() {
 				var node = this.getNodeAt(0);
 				return this._getValidElectronTarget(node);
+			},
+			'setter': function(value) {
+				var node = this.getNodeAt(0);
+				this._setValidElectronTarget(node, value);
+			}
+		});
+		this.defineProp('receptor', {
+			'dataType': 'Kekule.ChemStructureObject',
+			'getter': function() {
+				var node = this.getNodeAt(1);
+				return this._getValidElectronTargetNodeOrConnector(node);
+			},
+			'setter': function(value) {
+				var node = this.getNodeAt(1);
+				this._setValidElectronTarget(node, value);
+			}
+		});
+		this.defineProp('donor', {
+			'dataType': 'Kekule.ChemStructureObject',
+			'getter': function() {
+				var node = this.getNodeAt(0);
+				return this._getValidElectronTargetNodeOrConnector(node);
 			},
 			'setter': function(value) {
 				var node = this.getNodeAt(0);
@@ -351,7 +378,17 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 	/** @private */
 	_isValidElectronTarget: function(obj)
 	{
-		return (obj instanceof Kekule.ChemStructureNode) || (obj instanceof Kekule.ChemStructureConnector);
+		/*
+		var result = (obj instanceof Kekule.ChemStructureNode) || (obj instanceof Kekule.ChemStructureConnector);
+		if (!result)
+		{
+			var parent = obj.getParent && obj.getParent();
+			if (parent)  // the marker of node/connector (e.g., electron pair) can also be a valid target
+				result = (parent instanceof Kekule.ChemStructureNode) || (parent instanceof Kekule.ChemStructureConnector);
+		}
+		return result;
+		*/
+		return this._isValidChemNodeOrConnectorStickTarget(obj);
 	},
 	/** @private */
 	_getValidElectronTarget: function(glyphNode)
@@ -372,6 +409,20 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 				glyphNode.setCoordStickTarget(target);
 		}
 		return this;
+	},
+	/** @private */
+	_getValidElectronTargetNodeOrConnector: function(glyphNode)
+	{
+		var result = null;
+		var target = this._getValidElectronTarget(glyphNode);
+		if (target)
+		{
+			if (target instanceof Kekule.ChemMarker.BaseMarker)
+				result = target.getParent();
+			else
+				result = target;
+		}
+		return result;
 	},
 	/** @private */
 	_getValidArrowPos: function()
