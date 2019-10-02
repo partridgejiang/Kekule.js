@@ -177,13 +177,11 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	initialize: function($super, id)
 	{
 		this.setPropStoreFieldValue('autoClearStructureCache', true);
-		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super(id);
 	},
 	/** @ignore */
 	doFinalize: function($super)
 	{
-		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
 		$super();
 	},
 	/** @private */
@@ -272,9 +270,6 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			}
 		});
 		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
-
-		// private
-		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -785,32 +780,6 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		// do nothing here
 	},
 
-	/**
-	 * Called when new coord stick nodes are attached to this object.
-	 * @param {Variant} nodes Node or node array.
-	 * @private
-	 */
-	attachCoordStickNodes: function(nodes)
-	{
-		var ns = AU.toArray(nodes);
-		var currStickNodes = this.getAttachedCoordStickNodes();
-		AU.pushUnique(currStickNodes, ns);
-		return this;
-	},
-	/**
-	 * Called when coord stick nodes are detached from this object.
-	 * @param {Variant} nodes Node or node array.
-	 * @private
-	 */
-	detachCoordStickNodes: function(nodes)
-	{
-		var ns = AU.toArray(nodes);
-		var currStickNodes = this.getAttachedCoordStickNodes();
-		for (var i = 0, l = ns.length; i < l; ++i)
-			AU.remove(currStickNodes, ns[i]);
-		return this;
-	},
-
 	/** @ignore */
 	relayEvent: function($super, eventName, event)
 	{
@@ -960,8 +929,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			{
 				if (value)
 				{
+					//console.log('has stick target', this.getClassName(), this.getParent(), value && value.getClassName());
 					if (!this.getAllowCoordStickTo(value))
 					{
+						//console.log('not allowed', this.getClassName(), this.getParent(), value && value.getClassName());
 						Kekule.chemError(Kekule.$L('ErrorMsg.COORD_STICK_NOT_ALLOWED_ON_CLASS'));
 						return;
 					}
@@ -3119,8 +3090,21 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 	},
 	/**
+	 * Insert a node before refNode.
+	 * @param {Kekule.SimpleStructureNode} node
+	 * @param {Kekule.SimpleStructureNode} refNode
+	 */
+	insertNodeBefore: function(node, refNode)
+	{
+		var refIndex = this.indexOfNode(refNode);
+		if (refIndex)
+			this.insertNodeAt(node, refIndex);
+		else
+			this.appendNode(node);
+	},
+	/**
 	 * Add node to connection table. If node already inside, nothing will be done.
-	 * @param {Kekule.BaseStructureNode} node
+	 * @param {Kekule.SimpleStructureNode} node
 	 */
 	appendNode: function(node)
 	{
@@ -3521,6 +3505,19 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Insert a connector before refConnector.
+	 * @param {Kekule.BaseStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} refConnector
+	 */
+	insertConnectorBefore: function(connector, refConnector)
+	{
+		var refIndex = this.indexOfConnector(refConnector);
+		if (refIndex)
+			this.insertConnectorAt(connector, refIndex);
+		else
+			this.appendConnector(connector);
+	},
+	/**
 	 * Add connector to connection table.
 	 * @param {Kekule.BaseStructureConnector} connector
 	 */
@@ -3891,7 +3888,13 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		if (index < nodeCount)
 			return this.getNodeAt(index);
 		else
-			return this.getConnectorAt(index - nodeCount);
+		{
+			var connectorCount = this.getConnectorCount();
+			if (index < nodeCount + connectorCount)
+				return this.getConnectorAt(index - nodeCount);
+			else
+				return null;
+		}
 	},
 	/**
 	 * Get the index of obj in children list.
@@ -3913,7 +3916,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 			}
 		}
 		else
+		{
 			result = -1;
+		}
 		return result;
 	},
 
@@ -5161,6 +5166,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				return null;
 		}
 	},
+
+	/**
+	 * Insert a node before refNode.
+	 * @param {Kekule.SimpleStructureConnector} node
+	 * @param {Kekule.SimpleStructureConnector} refNode
+	 */
+	insertNodeBefore: function(node, refNode)
+	{
+		return this.doGetCtab(true).insertNodeBefore(node, refNode);
+	},
 	/**
 	 * Add node to container. If node already in container, nothing will be done.
 	 * @param {Kekule.BaseStructureNode} node
@@ -5430,6 +5445,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	{
 		return this.hasCtab()? this.getCtab().hasConnector(connector, checkNestedStructure): null;
 	},
+
+	/**
+	 * Insert a connector before refConnector.
+	 * @param {Kekule.BaseStructureConnector} connector
+	 * @param {Kekule.BaseStructureConnector} refConnector
+	 */
+	insertConnectorBefore: function(connector, refConnector)
+	{
+		return this.doGetCtab(true).insertConnectorBefore(connector, refConnector);
+	},
 	/**
 	 * Add connector to container.
 	 * @param {Kekule.BaseStructureConnector} connector
@@ -5538,13 +5563,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return this.doGetCtab(true).appendBond(nodesOrIndexes, bondOrder, bondType);
 	},
 
-	/**
+	/*
 	 * Insert obj before refChild in node or connector list of ctab.
 	 * If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Variant} obj A node or connector.
 	 * @param {Variant} refChild Ref node or connector
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function($super, obj, refChild)
 	{
 		var result = -1;
@@ -5555,7 +5581,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			result = $super(obj, refChild);
 		return result;
 	},
-
+  */
 
 	/**
 	 * Returns nodes or connectors that should be removed cascadely with childObj.
@@ -5582,14 +5608,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		if (this.hasCtab())
 			this.getCtab().removeChildObj(childObj, cascadeRemove, freeRemoved);
 	},
-	/**
+	/*
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.removeChildObj(obj) || $super(obj);
 	},
+	*/
 
 	/**
 	 * Check if childObj is a child node or connector of this fragment's ctab.
@@ -5611,49 +5639,77 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * @param {Variant} childObj Node or connector.
 	 * @returns {Variant}
 	 */
-	getNextSiblingOfChild: function(childObj)
+	getNextSiblingOfChild: function($super, childObj)
 	{
 		if (this.hasCtab())
-			return this.getCtab().getNextSiblingOfChild(childObj);
+			return this.getCtab().getNextSiblingOfChild(childObj) || $super(childObj);
 		else
-			return null;
+			return $super(childObj);
 	},
 
-	/**
+	/** @ignore */
+	getChildSubgroupNames: function($super)
+	{
+		return ['node', 'connector'].concat($super());
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function($super, obj)
+	{
+		if (obj instanceof Kekule.SimpleStructureNode)
+			return 'node';
+		else if (obj instanceof Kekule.BaseStructureConnector)
+			return 'connector';
+		else
+			return $super(obj);
+	},
+
+	/*
 	 * Get count of child objects (including both nodes and connectors).
 	 * @returns {Int}
 	 */
-	getChildCount: function()
+	/*
+	getChildCount: function($super)
 	{
 		if (this.hasCtab())
-			return this.getCtab().getChildCount();
+			return this.getCtab().getChildCount() + $super();
 		else
-			return 0;
+			return $super(); // 0;
 	},
-	/**
+	*/
+	/*
 	 * Get child object (including both nodes and connectors) at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
-	getChildAt: function(index)
+	/*
+	getChildAt: function($super, index)
 	{
 		if (this.hasCtab())
-			return this.getCtab().getChildAt(index);
+			return this.getCtab().getChildAt(index) || $super(index - this.getCtab().getChildCount());
 		else
-			return null;
+			return $super(index);
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj in children list.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
-	indexOfChild: function(obj)
+	/*
+	indexOfChild: function($super, obj)
 	{
+		var result = -1;
 		if (this.hasCtab())
-			return this.getCtab().indexOfChild(obj);
+		{
+			result = this.getCtab().indexOfChild(obj);
+			if (result < 0)
+				result = $super(obj) + this.getCtab().getChildCount();
+		}
 		else
-			return -1;
+			result = $super(obj);
+		return result;
 	},
+	*/
 
 	/**
 	 * Check if a node has a sub structure (has child nodes).
@@ -7645,6 +7701,15 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 */
 	insertItem: function(item, index)
 	{
+		return this.insertItemAt(item, index);
+	},
+	/**
+	 * Insert an attrib-object pair item in group at index.
+	 * @param {Hash} item
+	 * @param {Int} index
+	 */
+	insertItemAt: function(item, index)
+	{
 		return Kekule.ArrayUtils.insertUniqueEx(this.getItems(), item, index).index;
 	},
 	/**
@@ -7688,6 +7753,16 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	 * @param {Hash} attributes Additional attributes of this object. Can be null.
 	 */
 	insertObj: function(obj, index, attributes)
+	{
+		return this.insertObjAt(obj, index, attributes);
+	},
+	/**
+	 * Insert an attrib-object pair item in group at index.
+	 * @param {Hash} item
+	 * @param {Int} index
+	 * @param {Hash} attributes Additional attributes of this object. Can be null.
+	 */
+	insertObjAt: function(obj, index, attributes)
 	{
 		if (!obj)
 			return;
@@ -7780,28 +7855,43 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		return result;
 	},
 
-	/**
+	/** @ignore */
+	getChildSubgroupNames: function($super)
+	{
+		return ['item'].concat($super());
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function(obj)
+	{
+		return 'item';
+	},
+	/*
 	 * Get count of child objects in root.
 	 * @returns {Int}
 	 */
+	/*
 	getChildCount: function()
 	{
 		return this.getItemCount();
 	},
-	/**
+	*/
+	/*
 	 * Get child object at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
+	/*
 	getChildAt: function(index)
 	{
 		return this.getObjAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj (object or object-attribute item) in children list of root.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
+	/*
 	indexOfChild: function(obj)
 	{
 		var result = this.indexOfObj(obj);
@@ -7809,6 +7899,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			result = this.indexOfItem(obj);
 		return result;
 	},
+	*/
 	/**
 	 * Returns next sibling item to child item or object.
 	 * @param {Variant} child Item or object.
@@ -7858,20 +7949,23 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		if (refIndex < 0)
 			refIndex = this.indexOfObj(refChild);
 		return this.insertChild(item, refIndex);
-	},
-	/**
+	}
+	/*
 	 * Remove a child at index.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChildAt: function(index)
 	{
 		return this.removeItemAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Remove an object or attrib-object pair item from group.
 	 * @param {Variant} obj
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		var result;
@@ -7882,6 +7976,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			result = this.removeItemAt(index);
 		return result || $super(obj);
 	}
+	*/
 });
 
 /**
@@ -8050,32 +8145,51 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	/** @private */
 	doSetFormula: function() {},
 
-	/**
+	/** @ignore */
+	getChildSubgroupNames: function($super)
+	{
+		return ['subMolecule'].concat($super());
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function($super, obj)
+	{
+		if (obj instanceof Kekule.Molecule)
+			return 'subMolecule';
+		else
+			return $super(obj);
+	},
+	/*
 	 * Get count of child molecules.
 	 * @returns {Int}
 	 */
+	/*
 	getChildCount: function()
 	{
 		return this.getSubMolecules().getChildCount();
 	},
-	/**
+	*/
+	/*
 	 * Get child object at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
+	/*
 	getChildAt: function(index)
 	{
 		return this.getSubMolecules().getChildAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj in children list of root.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
+	/*
 	indexOfChild: function(obj)
 	{
 		return this.getSubMolecules().indexOfChild(obj);
 	},
+	*/
 	/**
 	 * Returns next sibling object to childObj.
 	 * @param {Object} childObj
@@ -8085,16 +8199,18 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	{
 		return this.getSubMolecules().getNextSiblingOfChild(childObj);
 	},
-	/**
+	/*
 	 * Append obj to children list of root. If obj already inside, nothing will be done.
 	 * @param {Object} obj
 	 * @returns {Int} Index of obj after appending.
 	 */
+	/*
 	appendChild: function($super, obj)
 	{
 		return $super(obj);
 		//return this.getSubMolecules().appendChild(obj);
 	},
+	*/
 	/**
 	 * Insert obj to index of children list of root. If obj already inside, its position will be changed.
 	 * @param {Object} obj
@@ -8103,14 +8219,16 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	 */
 	insertChild: function(obj, index)
 	{
-		return this.getSubMolecules().insertChild(obj, index);
+		//return this.getSubMolecules().insertChild(obj, index);
+		return this.insertChildAt(obj, index);
 	},
-	/**
+	/*
 	 * Insert obj before refChild in list of root. If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Object} obj
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function($super, obj, refChild)
 	{
 		if (obj instanceof Kekule.StructureFragment)
@@ -8118,24 +8236,29 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 		else
 			return $super(obj, refChild);
 	},
-	/**
+	*/
+	/*
 	 * Remove a child at index.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChildAt: function(index)
 	{
 		return this.getSubMolecules().removeChildAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Remove obj from children list of root.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.getSubMolecules().removeChild(obj) || $super(obj);
 	}
+	*/
 });
 
 /**

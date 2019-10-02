@@ -2001,7 +2001,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	/** @constructs */
 	initialize: function($super, id)
 	{
-		$super();
+		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super();
 		if (id)
 			this.setId(id);
@@ -2044,6 +2044,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			}
 		}, this);
 
+		// debug
+		//this._ensureSubGroupChildMethodsExist();
 	},
 	/** @private */
 	doFinalize: function($super)
@@ -2054,6 +2056,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		*/
 		this.__load_owner_objRef_props__ = null;
 		this.__load_parent_objRef_props__ = null;
+		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
 		this.removeSelf();
 		$super();
 	},
@@ -2154,6 +2157,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			}
 		});
 		// prop isEditing should never be saved, it should set by editor when loading chem space
+
+		// private
+		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -2695,6 +2701,154 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/**
+	 * If the child objects are hold by another object, this method should returns it.
+	 * E.g., ChemObjList of ChemSpaceElement.
+	 * @returns {Object}
+	 */
+	getChildHolder: function()
+	{
+		return this;
+	},
+	/**
+	 * This method related to getChildCount/getChildAt/indexOfChild.
+	 * A chem object may have several child lists (e.g., molecule has nodes and connectors),
+	 * when counting on children, all those child lists should be considered.
+	 * Each subgroup should has corresponding getXXXXCount/getXXXXAt/indexOfXXXX/removeXXXX/removeXXXXAt/insertXXXXBefore/insertXXXXAt methods.
+	 * For instance, for StructureFragment.getChildSubgroups returns ['node', 'connector'],
+	 * then StructureFragment.getChildCount() === StructureFragment.getNodeCount() + StructureFragment.getConnectorCount()
+	 * @returns {Array}
+	 * @private
+	 */
+	getChildSubgroupNames: function()
+	{
+		return [];
+	},
+	/**
+	 * Returns the child subgroup that obj belongs.
+	 * @param {Object} obj
+	 * @returns {String}
+	 * @private
+	 */
+	getBelongChildSubGroupName: function(obj)
+	{
+		/*
+		var subgroups = this.getChildSubgroupNames();
+		if (subgroups.length === 1)
+			return subgroups[1];
+		*/
+		return null;
+	},
+	/** @private */
+	_getPrevSubgroupChildrenCount: function(subgroupName)
+	{
+		var subgroups = this.getChildSubgroupNames();
+		var prevCount = 0;
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			if (subgroups[i] === subgroupName)
+				return prevCount;
+			else
+			{
+				var countMethod = this._getSubGroupChildCountMethod(subgroups[i]);
+				var subCount = (countMethod && countMethod.apply(this)) || 0;
+				prevCount += subCount;
+			}
+		}
+		// subgroupName not in actual sub groups
+		return prevCount;
+	},
+	/** @private */
+	_getSubgroupChildIndexInfoFromChildIndex: function(index)
+	{
+		var subgroups = this.getChildSubgroupNames();
+		var prevCount = 0;
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			var countMethod = this._getSubGroupChildCountMethod(subgroups[i]);
+			var subCount = (countMethod && countMethod.apply(this)) || 0;
+			if (index < prevCount + subCount)
+			{
+				return {'name': subgroups[i], 'index': index - prevCount};
+			}
+			prevCount += subCount;
+		}
+		return null;
+	},
+	/** @private */
+	_getSubGroupChildCountMethod: function(subgroupName)
+	{
+		var name = 'get' + subgroupName.upperFirst() + 'Count';
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildAtMethod: function(subgroupName)
+	{
+		var name = 'get' + subgroupName.upperFirst() + 'At';
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildIndexOfMethod: function(subgroupName)
+	{
+		var name = 'indexOf' + subgroupName.upperFirst();
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildRemoveMethod: function(subgroupName)
+	{
+		var name = 'remove' + subgroupName.upperFirst();
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildRemoveAtMethod: function(subgroupName)
+	{
+		var name = 'remove' + subgroupName.upperFirst() + 'At';
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildAppendMethod: function(subgroupName)
+	{
+		var name = 'append' + subgroupName.upperFirst();
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildInsertBeforeMethod: function(subgroupName)
+	{
+		var name = 'insert' + subgroupName.upperFirst() + 'Before';
+		return this[name];
+	},
+	/** @private */
+	_getSubGroupChildInsertAtMethod: function(subgroupName)
+	{
+		var name = 'insert' + subgroupName.upperFirst() + 'At';
+		return this[name];
+	},
+	/** @private */
+	_ensureSubGroupChildMethodsExist: function()
+	{
+		var methodGetters = [
+			'_getSubGroupChildCountMethod',
+			'_getSubGroupChildAtMethod',
+			'_getSubGroupChildIndexOfMethod',
+			'_getSubGroupChildRemoveMethod',
+			'_getSubGroupChildRemoveAtMethod',
+			'_getSubGroupChildInsertBeforeMethod',
+			'_getSubGroupChildInsertAtMethod'
+		];
+		var subgroups = this.getChildSubgroupNames();
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			for (var j = 0, k = methodGetters.length; j < k; ++j)
+			{
+				var m = this[methodGetters[j]].apply(this, [subgroups[i]]);
+				if (!m)
+				{
+					Kekule.warn('Subgroup child method not exisits: ' + methodGetters[j] + ' / ' + this.getClassName());
+				}
+			}
+		}
+	},
+
+	/**
 	 * Get count of child objects.
 	 * To a simple chem object without any child, this method will always return 0.
 	 * Descendants need to override this method if they has children.
@@ -2702,7 +2856,24 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	getChildCount: function()
 	{
-		return 0;
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.getChildCount();
+		else
+			return this.doGetChildCount();
+	},
+	/** @private */
+	doGetChildCount: function()
+	{
+		var result = 0;
+		var subgroups = this.getChildSubgroupNames();
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			var m = this._getSubGroupChildCountMethod(subgroups[i]);
+			if (m)
+				result += m.apply(this);
+		}
+		return result;
 	},
 	/**
 	 * Get child object at index.
@@ -2713,7 +2884,39 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	getChildAt: function(index)
 	{
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.getChildAt(index);
+		else
+			return this.doGetChildAt(index);
+	},
+	/** @private */
+	doGetChildAt: function(index)
+	{
+		/*
+		var prevCount = 0;
+		var subgroups = this.getChildSubgroupNames();
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			var countMethod = this._getSubGroupChildCountMethod(subgroups[i]);
+			var subCount = (countMethod && countMethod.apply(this)) || 0;
+			if (index < prevCount + subCount)
+			{
+				var atMethod = this._getSubGroupChildAtMethod(subgroups[i]);
+				return atMethod && atMethod.apply(this, [index - prevCount]);
+			}
+			prevCount += subCount;
+		}
 		return null;
+		*/
+		var info = this._getSubgroupChildIndexInfoFromChildIndex(index);
+		if (info)
+		{
+			var atMethod = this._getSubGroupChildAtMethod(info.name);
+			return atMethod && atMethod.apply(this, [info.index]);
+		}
+		else
+			return null;
 	},
 	/**
 	 * Get the index of obj in children list.
@@ -2724,16 +2927,88 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	indexOfChild: function(obj)
 	{
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.indexOfChild(obj);
+		else
+			return this.doIndexOfChild(obj);
+	},
+	/** @private */
+	doIndexOfChild: function(obj)
+	{
+		var subgroups = this.getChildSubgroupNames();
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			var indexOfMethod = this._getSubGroupChildIndexOfMethod(subgroups[i]);
+			if (indexOfMethod)
+			{
+				var result = indexOfMethod.apply(this, [obj]);
+				if (result >= 0)
+					return result;
+			}
+		}
 		return -1;
 	},
+
 	/**
-	 * Remove obj from children.
+	 * Check if obj is a child of this one.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 */
+	hasChild: function(obj)
+	{
+		return this.indexOfChild(obj) >= 0;
+	},
+
+	/**
+	 * Remove child at index from children list.
+	 * @param {Int} index
+	 * @returns {Variant} Child object removed.
+	 */
+	removeChildAt: function(index)
+	{
+		return this.doRemoveChildAt(index);
+	},
+	/** @private */
+	doRemoveChildAt: function(index)
+	{
+		var info = this._getSubgroupChildIndexInfoFromChildIndex(index);
+		if (info)
+		{
+			var m = this._getSubGroupChildRemoveAtMethod(info.name);
+			return m && m.apply(this, [info.index]);
+		}
+		else
+			return null;
+	},
+	/**
+	 * Remove a child object from chilren list.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
 	removeChild: function(obj)
 	{
-		// do nothing here
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.removeChild(obj);
+		else
+			return this.doRemoveChild(obj);
+	},
+	/** @private */
+	doRemoveChild: function(obj)
+	{
+		var removedObj;
+		var subgroups = this.getChildSubgroupNames();
+		for (var i = 0, l = subgroups.length; i < l; ++i)
+		{
+			var removeMethod = this._getSubGroupChildRemoveMethod(subgroups[i]);
+			if (removeMethod)
+			{
+				removedObj = removeMethod.apply(this, [obj]);
+				if (removedObj)
+					return removedObj;
+			}
+		}
 		return null;
 	},
 	/**
@@ -2746,6 +3021,44 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			this.removeChild(objs[i]);
 	},
 	/**
+	 * Insert obj to index of children array. If obj already inside, its position will be changed.
+	 * @param {Object} obj
+	 * @param {Object} index
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertChildAt: function(obj, index)
+	{
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.insertChildAt(obj, index);
+		else
+			return this.doInsertChildAt(obj, index);
+	},
+	/** @private */
+	doInsertChildAt: function(obj, index)
+	{
+		if (index >= this.getChildCount())
+		{
+			return this.appendChild(obj);
+		}
+		else
+		{
+			var info = this._getSubgroupChildIndexInfoFromChildIndex(index);
+			if (info)
+			{
+				var m = this._getSubGroupChildInsertAtMethod(info.name);
+				if (m)
+				{
+					var insertIndex = m.apply(this, [obj, info.index]);
+					if (insertIndex >= 0)
+						return this._getPrevSubgroupChildrenCount(info.name) + insertIndex;
+				}
+
+			}
+			return -1;  // not actually inserted
+		}
+	},
+	/**
 	 * Insert obj before refChild in children list.
 	 * If refChild is null or does not exists, obj will be append to tail of list.
 	 * Descendants may override this method.
@@ -2755,9 +3068,43 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	insertBefore: function(obj, refChild)
 	{
-		// do nothing here
+		return this.insertChildBefore(obj, refChild);
+	},
+	/**
+	 * Insert obj before refChild in children list.
+	 * If refChild is null or does not exists, obj will be append to tail of list.
+	 * Descendants may override this method.
+	 * @param {Variant} obj
+	 * @param {Variant} refChildr
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertChildBefore: function(obj, refChild)
+	{
+		var holder = this.getChildHolder();
+		if (holder && holder !== this)
+			return holder.insertChildBefore(obj, refChild);
+		else
+			return this.doInsertChildBefore(obj, refChild);
+	},
+	/** @private */
+	doInsertChildBefore: function(obj, refChild)
+	{
+		var subGroup = this.getBelongChildSubGroupName(obj);
+		if (!subGroup)
+			return -1;
+		if (refChild && subGroup !== this.getBelongChildSubGroupName(refChild))  // not belongs to the same group, halt
+			return -1;
+
+		var allSubGroups = this.getChildSubgroupNames();
+		var m = this._getSubGroupChildInsertBeforeMethod(subGroup);
+		if (m)
+		{
+			var prevCount = this._getPrevSubgroupChildrenCount(subGroup);
+			return prevCount + m.apply(this, [obj, refChild]);
+		}
 		return -1;
 	},
+
 	/**
 	 * Add obj to the tail of children list.
 	 * @param {Variant} obj
@@ -2765,8 +3112,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	appendChild: function(obj)
 	{
-		return this.insertBefore(obj, null);
+		return this.insertChildBefore(obj, null);
 	},
+
 	/**
 	 * Add objs to the tail of children list.
 	 * @param {Array} objs
@@ -3273,6 +3621,34 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	doCompareOnValue: function(v1, v2, options)
 	{
 		return Kekule.ObjComparer._compareValue(v1, v2, options);
+	},
+
+	/**
+	 * Called when new coord stick nodes are attached to this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	attachCoordStickNodes: function(nodes)
+	{
+		var AU = Kekule.ArrayUtils;
+		var ns = AU.toArray(nodes);
+		var currStickNodes = this.getAttachedCoordStickNodes();
+		AU.pushUnique(currStickNodes, ns);
+		return this;
+	},
+	/**
+	 * Called when coord stick nodes are detached from this object.
+	 * @param {Variant} nodes Node or node array.
+	 * @private
+	 */
+	detachCoordStickNodes: function(nodes)
+	{
+		var AU = Kekule.ArrayUtils;
+		var ns = AU.toArray(nodes);
+		var currStickNodes = this.getAttachedCoordStickNodes();
+		for (var i = 0, l = ns.length; i < l; ++i)
+			AU.remove(currStickNodes, ns[i]);
+		return this;
 	}
 });
 
@@ -3341,6 +3717,7 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	{
 		$super(id);
 		this.setPropStoreFieldValue('itemBaseClass', itemBaseClass);
+		this.setPropStoreFieldValue('items', []);
 		this._transparent = !!transparent;
 	},
 	/** @private */
@@ -3396,10 +3773,16 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	checkItemType: function(item)
+	isValidItemType: function(item)
 	{
 		var c = this.getItemBaseClass();
 		var r = c? item instanceof c: true;
+		return r;
+	},
+	/** @private */
+	checkItemType: function(item)
+	{
+		var r = this.isValidItemType(item);
 		if (!r)
 			Kekule.raise(Kekule.$L('ErrorMsg.LIST_ITEM_CLASS_MISMATCH')/*Kekule.ErrorMsg.LIST_ITEM_CLASS_MISMATCH*/);
 		return r;
@@ -3482,6 +3865,15 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		return a? a.indexOf(obj): -1;
 	},
 	/**
+	 * Get the index of obj in children array.
+	 * @param {Variant} obj
+	 * @returns {Int} Index of obj or -1 when not found.
+	 */
+	indexOfItem: function(obj)
+	{
+		return this.indexOf(obj);
+	},
+	/**
 	 * Returns next sibling object to childObj.
 	 * @param {Object} childObj
 	 * @returns {Object}
@@ -3493,20 +3885,46 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 
 	/** @ignore */
-	getChildCount: function()
+	getChildSubgroupNames: function($super)
 	{
-		return this.getItemCount();
+		return ['item'].concat($super());
 	},
 	/** @ignore */
-	getChildAt: function(index)
+	getBelongChildSubGroupName: function($super, obj)
 	{
-		return this.getItemAt(index);
+		var isValid = this.isValidItemType(obj);
+		if (isValid)
+			return 'item';
+		else
+			return $super(obj);
 	},
+
 	/** @ignore */
-	indexOfChild: function(obj)
+	/*
+	getChildCount: function($super)
 	{
-		return this.indexOf(obj);
+		return $super() + this.getItemCount();
 	},
+	getChildAt: function($super, index)
+	{
+		var itemCount = this.getItemCount();
+		if (index < itemCount)
+			return this.getItemAt(index);
+		else
+			return $super(index - itemCount);
+	},
+	indexOfChild: function($super, obj)
+	{
+		var result = this.indexOf(obj);
+		if (result < 0)
+		{
+			result = $super(obj);
+			if (result >= 0)
+				result += this.getItemCount();
+		}
+		return result;
+	},
+	*/
 
 	/**
 	 * Append obj to children array. If obj already inside, nothing will be done.
@@ -3558,11 +3976,22 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 			return -1;
 	},
 	/**
+	 * Insert obj to index of children array. If obj already inside, its position will be changed.
+	 * @param {Object} obj
+	 * @param {Object} index
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertItemAt: function(obj, index)
+	{
+		return this.insert(obj, index);
+	},
+	/*
 	 * Insert obj before refChild in list. If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Object} obj
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function(obj, refChild)
 	{
 		if (!refChild)
@@ -3571,6 +4000,24 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		{
 			var refIndex = this.indexOf(refChild);
 			return (refIndex >= 0)? this.insert(obj, refIndex): this.append(obj);
+		}
+		return this.insertItemBefore(obj, refChild);
+	},
+	*/
+	/**
+	 * Insert obj before refChild in list. If refChild is null or does not exists, obj will be append to tail of list.
+	 * @param {Object} obj
+	 * @param {Object} refChild
+	 * @return {Int} Index of obj after inserting.
+	 */
+	insertItemBefore: function(obj, refChild)
+	{
+		if (!refChild)
+			return this.append(obj);
+		else
+		{
+			var refIndex = this.indexOfItem(refChild);
+			return (refIndex >= 0)? this.insertItemAt(obj, refIndex): this.appendItem(obj);
 		}
 	},
 	/**
@@ -3599,10 +4046,21 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
 	 */
+	removeItemAt: function(index)
+	{
+		return this.removeAt(index);
+	},
+	/*
+	 * Remove a child at index.
+	 * @param {Int} index
+	 * @returns {Variant} Child object removed.
+	 */
+	/*
 	removeChildAt: function(index)
 	{
 		return this.removeAt(index);
 	},
+	*/
 	/**
 	 * Remove obj from children array.
 	 * @param {Variant} obj
@@ -3625,14 +4083,25 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 		}
 	},
 	/**
+	 * Remove obj from children array.
+	 * @param {Variant} obj
+	 * @returns {Variant} Child object removed.
+	 */
+	removeItem: function(obj)
+	{
+		return this.remove(obj);
+	},
+	/*
 	 * Remove obj from children array. Same as method remove.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.remove(obj) || $super(obj);
 	},
+	*/
 
 	/**
 	 * Return array contains all objects in list.
@@ -3755,32 +4224,43 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	},
 	*/
 
-	/**
+	/** @ignore */
+	getChildHolder: function()
+	{
+		return this.getChildren();
+	},
+	/*
 	 * Get count of child objects.
 	 * @returns {Int}
 	 */
+	/*
 	getChildCount: function()
 	{
 		return this.getChildren().getItemCount();
 	},
-	/**
+  */
+	/*
 	 * Get child object at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
+	/*
 	getChildAt: function(index)
 	{
 		return this.getChildren().getItemAt(index);
 	},
-	/**
+  */
+	/*
 	 * Get the index of obj in children list.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
+	/*
 	indexOfChild: function(obj)
 	{
 		return this.getChildren().indexOf(obj);
 	},
+	*/
 	/**
 	 * Returns next sibling object to childObj.
 	 * @param {Object} childObj
@@ -3790,15 +4270,18 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	{
 		return this.getChildren().getNextSiblingOfChild(childObj);
 	},
-	/**
+	/*
 	 * Append obj to children list. If obj already inside, nothing will be done.
 	 * @param {Object} obj
 	 * @returns {Int} Index of obj after appending.
 	 */
+	/*
 	appendChild: function(obj)
 	{
 		return this.getChildren().append(obj);
 	},
+	*/
+
 	/**
 	 * Insert obj to index of children list. If obj already inside, its position will be changed.
 	 * @param {Object} obj
@@ -3809,34 +4292,40 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	{
 		return this.getChildren().insert(obj, index);
 	},
-	/**
+	/*
 	 * Insert obj before refChild in list. If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Object} obj
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function(obj, refChild)
 	{
 		return this.getChildren().insertBefore(obj, refChild);
 	},
-	/**
+  */
+	/*
 	 * Remove a child at index.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChildAt: function(index)
 	{
 		return this.getChildren().removeChildAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Remove obj from children list.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.getChildren().removeChild(obj) || $super(obj);
 	}
+	*/
 });
 
 /**
@@ -3985,32 +4474,44 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	{
 		return this.getRoot().getChildren().toArray();
 	},
-	/**
+
+	/** @ignore */
+	getChildHolder: function()
+	{
+		return this.getRoot();
+	},
+	/*
 	 * Get count of child objects in root.
 	 * @returns {Int}
 	 */
+	/*
 	getChildCount: function()
 	{
 		return this.getRoot().getChildCount();
 	},
-	/**
+	*/
+	/*
 	 * Get child object at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
+	/*
 	getChildAt: function(index)
 	{
 		return this.getRoot().getChildAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj in children list of root.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
+	/*
 	indexOfChild: function(obj)
 	{
 		return this.getRoot().indexOfChild(obj);
 	},
+	*/
 	/**
 	 * Returns next sibling object to childObj.
 	 * @param {Object} childObj
@@ -4020,15 +4521,17 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	{
 		return this.getRoot().getNextSiblingOfChild(childObj);
 	},
-	/**
+	/*
 	 * Append obj to children list of root. If obj already inside, nothing will be done.
 	 * @param {Object} obj
 	 * @returns {Int} Index of obj after appending.
 	 */
+	/*
 	appendChild: function(obj)
 	{
 		return this.getRoot().appendChild(obj);
 	},
+	*/
 	/**
 	 * Insert obj to index of children list of root. If obj already inside, its position will be changed.
 	 * @param {Object} obj
@@ -4039,34 +4542,40 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	{
 		return this.getRoot().insertChild(obj, index);
 	},
-	/**
+	/*
 	 * Insert obj before refChild in list of root. If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Object} obj
 	 * @param {Object} refChild
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function(obj, refChild)
 	{
 		return this.getRoot().insertBefore(obj, refChild);
 	},
-	/**
+	*/
+	/*
 	 * Remove a child at index.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChildAt: function(index)
 	{
 		return this.getRoot().removeChildAt(index);
 	},
-	/**
+	*/
+	/*
 	 * Remove obj from children list of root.
 	 * @param {Variant} obj
 	 * @returns {Variant} Child object removed.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.getRoot().removeChild(obj) || $super(obj);
 	},
+	*/
 
 	/** @ignore */
 	indexStackOfChild: function(obj)

@@ -355,47 +355,166 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 
 	// methods about children
+	/** @ignore */
+	getChildSubgroupNames: function($super)
+	{
+		return ['controlPoint'].concat($super());
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function($super, obj)
+	{
+		if (obj instanceof Kekule.Glyph.PathGlyphArcConnectorControlNode)
+			return 'controlPoint';
+		else
+			return $super(obj);
+	},
 	/**
-	 * Remove childObj from connector.
-	 * @param {Variant} childObj A child control point.
-	 * @param {Bool} cascadeRemove Whether remove related objects (e.g., bond connected to an atom).
-	 * @param {Bool} freeRemoved Whether free all removed objects.
+	 * Returns the count of child control points.
+	 * @returns {Int}
 	 */
-	removeChildObj: function(childObj, cascadeRemove, freeRemoved)
+	getControlPointCount: function()
+	{
+		var ps = this.getControlPoints();
+		return ((ps && ps.length) || 0);
+	},
+	/**
+	 * Returns child control point at index.
+	 * @param {Int} index
+	 * @returns {Kekule.Glyph.PathGlyphArcConnectorControlNode}
+	 */
+	getControlPointAt: function(index)
+	{
+		var ps = this.getControlPoints() || [];
+		return ps[index];
+	},
+	/**
+	 * Returns the index of a child control point.
+	 * @param {Kekule.Glyph.PathGlyphArcConnectorControlNode} point
+	 */
+	indexOfControlPoint: function(point)
+	{
+		var ps = this.getControlPoints();
+		var result = ps? ps.indexOf(point): -1;
+		return result;
+	},
+	/**
+	 * Removes the child control point at index.
+	 * @param {Int} index
+	 * @returns {Kekule.Glyph.PathGlyphArcConnectorControlNode} Removed point or null if nothing is removed.
+	 */
+	removeControlPointAt: function(index)
+	{
+		var result = null;
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			if (index >= 0 && index < ps.length)
+			{
+				result = ps.splice(index, 1);
+				if (result.setOwner)
+					result.setOwner(null);
+				if (result.setParent)
+					result.setParent(null);
+				this.notifyPropSet('controlPoints', this.getControlPoints());
+			}
+		}
+		return result;
+	},
+	/**
+	 * Remove a child control point.
+	 * @param {Kekule.Glyph.PathGlyphArcConnectorControlNode} point
+	 * @returns {Kekule.Glyph.PathGlyphArcConnectorControlNode} Actually removed object.
+	 */
+	removeControlPoint: function(point)
+	{
+		var result = null;
+		var ps = this.getControlPoints();
+		if (ps)
+		{
+			var index = ps.indexOf(point);
+			if (index >= 0)
+			{
+				ps.splice(index, 1);
+				if (point.setOwner)
+					point.setOwner(null);
+				if (point.setParent)
+					point.setParent(null);
+				result = point;
+				this.notifyPropSet('controlPoints', this.getControlPoints());
+			}
+		}
+		return result;
+	},
+	/**
+	 * Insert a control point at index.
+	 * @param {Kekule.Glyph.PathGlyphArcConnectorControlNode} point
+	 * @param {Int} index
+	 */
+	insertControlPointAt: function(point, index)
+	{
+		var ps = this.getControlPoints();
+		if (ps && index < ps.length)
+		{
+			var r = Kekule.ArrayUtils.insertUniqueEx(ps, point, index);
+			if (r.isInserted)
+			{
+				if (point.setOwner)
+					point.setOwner(this.getOwner());
+				if (point.setParent)
+					point.setParent(this);
+				this.notifyPropSet('controlPoints', this.getControlPoints());
+			}
+			return r.index;
+		}
+		return -1;
+	},
+	/**
+	 * Insert a control point before refPoint.
+	 * If refPoint is not set, point will be appended to the tail.
+	 * @param {Kekule.Glyph.PathGlyphArcConnectorControlNode} point
+	 * @param {Kekule.Glyph.PathGlyphArcConnectorControlNode} refPoint
+	 */
+	insertControlPointBefore: function(point, refPoint)
 	{
 		var ps = this.getControlPoints();
 		if (ps)
 		{
-			var index = ps.indexOf(childObj);
-			if (index >= 0)
-			{
-				ps.splice(index, 1);
-				if (childObj.setOwner)
-					childObj.setOwner(null);
-				if (childObj.setParent)
-					childObj.setParent(null);
-				this.notifyPropSet('controlPoints', this.getControlPoints());
-			}
+			var index = refPoint ? this.indexOfControlPoint(refPoint) : -1;
+			if (index < 0)
+				index = ps.length;
+			return this.insertControlPointAt(point, index);
 		}
+		return -1;
 	},
 	/**
+	 * Remove childObj from connector.
+	 * @param {Variant} childObj A child control point.
+	 */
+	removeChildObj: function(childObj)
+	{
+		return this.removeControlPoint(childObj);
+	},
+	/*
 	 * Remove child obj directly.
 	 * @param {Variant} childObj A child node or connector.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.removeChildObj(obj) || $super(obj);
 	},
+	*/
 
 	/**
-	 * Check if childObj is a child node or connector of this fragment's ctab.
+	 * Check if childObj is a child control point of this connector.
 	 * @param {Kekule.ChemObject} childObj
 	 * @returns {Bool}
 	 */
 	hasChildObj: function(childObj)
 	{
-		var ps = this.getControlPoints();
-		return ps && ps.indexOf(childObj) >= 0;
+		//var ps = this.getControlPoints();
+		//return ps && ps.indexOf(childObj) >= 0;
+		return this.hasChild(childObj);
 	},
 
 	/**
@@ -410,35 +529,43 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 		return this.getChildAt(index);
 	},
 
-	/**
+	/*
 	 * Get count of child objects.
 	 * @returns {Int}
 	 */
-	getChildCount: function()
+	/*
+	getChildCount: function($super)
 	{
 		var ps = this.getControlPoints();
-		return (ps && ps.length) || 0;
+		return ((ps && ps.length) || 0) + $super();
 	},
-	/**
+	*/
+	/*
 	 * Get child control point at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
-	getChildAt: function(index)
+	/*
+	getChildAt: function($super, index)
 	{
 		var ps = this.getControlPoints() || [];
-		return ps[index];
+		return ps[index] || $super(index - ps.length);
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj in children list.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
-	indexOfChild: function(obj)
+	/*
+	indexOfChild: function($super, obj)
 	{
 		var ps = this.getControlPoints();
-		return ps? ps.indexOf(obj): -1;
+		var result = ps? ps.indexOf(obj): -1;
+		if (result < 0)
+			result = (ps? ps.length: 0) + $super(obj);
 	},
+	*/
 
 
 	/** @private */
@@ -909,7 +1036,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	/**
 	 * Get node at index.
 	 * @param {Int} index
-	 * @returns {Kekule.ChemStructureNode}
+	 * @returns {Kekule.Glyph.PathGlyphNode}
 	 */
 	getNodeAt: function(index)
 	{
@@ -917,7 +1044,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Get index of node.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.Glyph.PathGlyphNode} node
 	 * @returns {Int}
 	 */
 	indexOfNode: function(node)
@@ -926,7 +1053,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Check if a node exists in structure.
-	 * @param {Kekule.ChemStructureNode} node Node to seek.
+	 * @param {Kekule.Glyph.PathGlyphNode} node Node to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -936,7 +1063,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Add node to container. If node already in container, nothing will be done.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.Glyph.PathGlyphNode} node
 	 */
 	appendNode: function(node)
 	{
@@ -954,12 +1081,25 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Insert node to index. If index is not set, node will be inserted as the first node of ctab.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.Glyph.PathGlyphNode} node
 	 * @param {Int} index
 	 */
 	insertNodeAt: function(node, index)
 	{
 		return this.doGetCtab(true).insertNodeAt(node, index);
+	},
+	/**
+	 * Insert node before refNode. If refNode is not set, node will be appended to the tail.
+	 * @param {Kekule.Glyph.PathGlyphNode} node
+	 * @param {Int} index
+	 */
+	insertNodeBefore: function(node, refNode)
+	{
+		var index = refNode? this.indexOfNode(refNode): -1;
+		if (index < 0)
+			return this.appendNode(node);
+		else
+			return this.doGetCtab(true).insertNodeAt(node, index);
 	},
 	/**
 	 * Remove node at index in container.
@@ -984,7 +1124,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Remove a node in container.
-	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.Glyph.PathGlyphNode} node
 	 * @param {Bool} preserveLinkedConnectors Whether remove relations between this node and linked connectors.
 	 */
 	removeNode: function(node, preserveLinkedConnectors)
@@ -1000,8 +1140,8 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Replace oldNode with new one, preserve coords and all linked connectors.
-	 * @param {Kekule.ChemStructureNode} oldNode Must be direct child of current fragment (node in nested structure fragment will be ignored).
-	 * @param {Kekule.ChemStructureNode} newNode
+	 * @param {Kekule.Glyph.PathGlyphNode} oldNode Must be direct child of current fragment (node in nested structure fragment will be ignored).
+	 * @param {Kekule.Glyph.PathGlyphNode} newNode
 	 */
 	replaceNode: function(oldNode, newNode)
 	{
@@ -1050,7 +1190,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	/**
 	 * Get connector at index.
 	 * @param {Int} index
-	 * @returns {Kekule.ChemStructureConnector}
+	 * @returns {Kekule.Glyph.PathGlyphConnector}
 	 */
 	getConnectorAt: function(index)
 	{
@@ -1059,7 +1199,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Get index of connector inside fragment.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector
 	 * @returns {Int}
 	 */
 	indexOfConnector: function(connector)
@@ -1068,7 +1208,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Check if a connector exists in structure.
-	 * @param {Kekule.ChemStructureConnector} connector Connector to seek.
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector Connector to seek.
 	 * @param {Bool} checkNestedStructure If true the nested sub groups will also be checked.
 	 * @returns {Bool}
 	 */
@@ -1078,7 +1218,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Add connector to container.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector
 	 */
 	appendConnector: function(connector)
 	{
@@ -1094,13 +1234,27 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		return this.doGetCtab(true).appendConnector(connector);
 	},
 	/**
-	 * Insert connector to index. If index is not set, node will be inserted as the first connector of ctab.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * Insert connector to index. If index is not set, connector will be inserted as the first connector of ctab.
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector
 	 * @param {Int} index
 	 */
 	insertConnectorAt: function(connector, index)
 	{
 		return this.doGetCtab(true).insertConnectorAt(connector, index);
+	},
+	/**
+	 * Insert connector before refConnector. If refConnector is not set, connector will be appended.
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector
+	 * @param {Kekule.Glyph.PathGlyphConnector} refConnector
+	 * @param {Int} index
+	 */
+	insertConnectorBefore: function(connector, refConnector)
+	{
+		var index = refConnector? this.indexOfConnector(refConnector): -1;
+		if (index < 0)
+			return this.appendConnector(connector);
+		else
+			return this.doGetCtab(true).insertConnectorAt(connector, index);
 	},
 	/**
 	 * Remove connector at index of connectors.
@@ -1123,7 +1277,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 	/**
 	 * Remove a connector in container.
-	 * @param {Kekule.ChemStructureConnector} connector
+	 * @param {Kekule.Glyph.PathGlyphConnector} connector
 	 * @param {Bool} preserveConnectedObjs Whether delte relations between this connector and related nodes.
 	 */
 	removeConnector: function(connector, preserveConnectedObjs)
@@ -1146,22 +1300,20 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return this.getCtab().clearConnectors();
 	},
 
-	/**
+	/*
 	 * Insert obj before refChild in node or connector list of ctab.
 	 * If refChild is null or does not exists, obj will be append to tail of list.
 	 * @param {Variant} obj A node or connector.
 	 * @param {Variant} refChild Ref node or connector
 	 * @return {Int} Index of obj after inserting.
 	 */
+	/*
 	insertBefore: function(obj, refChild)
 	{
 		if (this.hasCtab())
 			return this.getCtab().insertBefore(obj, refChild);
-		/*
-		else
-			console.log('no ctab');
-		*/
 	},
+	*/
 
 	/**
 	 * Returns nodes or connectors that should be removed cascadely with childObj.
@@ -1177,6 +1329,22 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return [];
 	},
 
+	/** @ignore */
+	getChildSubgroupNames: function($super)
+	{
+		return ['node', 'connector'].concat($super());
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function($super, obj)
+	{
+		if (obj instanceof Kekule.Glyph.PathGlyphNode)
+			return 'node';
+		else if (obj instanceof Kekule.Glyph.PathGlyphConnector)
+			return 'connector';
+		else
+			return $super(obj);
+	},
+
 	/**
 	 * Remove childObj from connection table.
 	 * @param {Variant} childObj A child node or connector.
@@ -1188,14 +1356,16 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		if (this.hasCtab())
 			this.getCtab().removeChildObj(childObj, cascadeRemove, freeRemoved);
 	},
-	/**
+	/*
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
+	/*
 	removeChild: function($super, obj)
 	{
 		return this.removeChildObj(obj) || $super(obj);
 	},
+	*/
 
 	/**
 	 * Check if childObj is a child node or connector of this fragment's ctab.
@@ -1223,12 +1393,13 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return this.getCtab().getNextSiblingOfChild(childObj);
 		else
 			return null;
-	},
+	}
 
-	/**
+	/*
 	 * Get count of child objects (including both nodes and connectors).
 	 * @returns {Int}
 	 */
+	/*
 	getChildCount: function()
 	{
 		if (this.hasCtab())
@@ -1236,11 +1407,13 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		else
 			return 0;
 	},
-	/**
+	*/
+	/*
 	 * Get child object (including both nodes and connectors) at index.
 	 * @param {Int} index
 	 * @returns {Variant}
 	 */
+	/*
 	getChildAt: function(index)
 	{
 		if (this.hasCtab())
@@ -1248,11 +1421,13 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		else
 			return null;
 	},
-	/**
+	*/
+	/*
 	 * Get the index of obj in children list.
 	 * @param {Variant} obj
 	 * @returns {Int} Index of obj or -1 when not found.
 	 */
+	/*
 	indexOfChild: function(obj)
 	{
 		if (this.hasCtab())
@@ -1260,6 +1435,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		else
 			return -1;
 	}
+	*/
 });
 
 })();
