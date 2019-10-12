@@ -2001,7 +2001,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	/** @constructs */
 	initialize: function($super, id)
 	{
-		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
+		//this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super();
 		if (id)
 			this.setId(id);
@@ -2159,7 +2159,17 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		// prop isEditing should never be saved, it should set by editor when loading chem space
 
 		// private
-		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false,
+			'getter': function() {
+			  var result = this.getPropStoreFieldValue('attachedCoordStickNodes');
+			  if (!result)
+			  {
+			  	result = [];
+			  	this.setPropStoreFieldValue('attachedCoordStickNodes', result);
+			  }
+			  return result;
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
