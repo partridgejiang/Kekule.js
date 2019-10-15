@@ -545,120 +545,141 @@ function getEssentialFiles(modules, useMinFile)
 function analysisEntranceScriptSrc(doc)
 {
 	var entranceSrc = /^(.*\/?)kekule\.js(\?.*)?$/;
+	var scriptSrcPattern = /^(.*[\/\\])[^\/\\]*\.js(\?.*)?$/;
 	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
 	var paramLocalDatas = /^locals\=(.+)$/;
 	var paramLanguage = /^language\=(.+)$/;
-	var scriptElems = doc.getElementsByTagName('script');
-	var loc;
-	for (var j = scriptElems.length - 1; j >= 0; --j)
+
+	var matchResult;
+	// try get current script info by document.currentScript
+	if (doc && doc.currentScript && doc.currentScript.src)
 	{
-		var elem = scriptElems[j];
-		var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+		var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 		if (scriptSrc)
 		{
-			var matchResult = scriptSrc.match(entranceSrc);
-			if (matchResult)
+			matchResult = scriptSrc.match(scriptSrcPattern);
+		}
+	}
+	else  // use the traditional way, detect each <script> tags
+	{
+		var scriptElems = doc.getElementsByTagName('script');
+		for (var j = scriptElems.length - 1; j >= 0; --j)
+		{
+			var elem = scriptElems[j];
+			var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			if (scriptSrc)
 			{
-				var pstr = matchResult[2];
-				if (pstr)
-					pstr = pstr.substr(1);  // eliminate starting '?'
-				var result = {
-					'src': scriptSrc,
-					'path': matchResult[1],
-					'paramStr': pstr,
-					'useMinFile': true
-				};
-
-				if (result.paramStr)  // analysis params
+				matchResult = scriptSrc.match(entranceSrc);
+				if (matchResult)
 				{
-					var modules;
-					var params = result.paramStr.split('&');
-					for (var i = 0, l = params.length; i < l; ++i)
-					{
-						// check min file usage
-						var minFileMatch = params[i].match(paramMinFile);
-						if (minFileMatch)
-						{
-							var pvalue = minFileMatch[1].toLowerCase();
-							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
-							//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
-							//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
-							result.useMinFile = value;
-							continue;
-						}
-						// check module param
-						var moduleMatch = params[i].match(paramModules);
-						if (moduleMatch)
-						{
-							var moduleStr = moduleMatch[1];
-							var modules = moduleStr.split(',');
-							continue;
-						}
-						// force dom loader
-						var forceDomLoaderMatch = params[i].match(paramForceDomLoader);
-						if (forceDomLoaderMatch)
-						{
-							var pvalue = forceDomLoaderMatch[1].toLowerCase();
-							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
-							result.forceDomLoader = value;
-							continue;
-						}
-						// check required local data
-						var localsMatch = params[i].match(paramLocalDatas);
-						if (localsMatch)
-						{
-							var localsStr = localsMatch[1];
-							var locals = localsStr.split(',');
-							result.locals = locals;
-							continue;
-						}
-						// language
-						var forceLanguage = params[i].match(paramLanguage);
-						if (forceLanguage)
-						{
-							var pvalue = forceLanguage[1];
-							result.language = pvalue;
-							continue;
-						}
-					}
-					if (modules)
-						result.modules = modules;
-					else
-						result.modules = usualModules;  // no modules appointed, use default setting
-
-					// handle local data
-					if (!result.locals)
-						result.locals = defaultLocals;
-					if (result.locals || result.language)
-					{
-						var localNames = [].concat(result.locals || []);
-						if (result.language && localNames.indexOf(result.language) < 0)  // local resources of forced language should always be loaded
-						{
-							localNames.push(result.language);
-						}
-						if (localNames.length)
-						{
-							var localizationModuleIndex = result.modules.indexOf('localizationData');
-							if (localizationModuleIndex < 0)  // local data module not listed, put local data as first module
-								localizationModuleIndex = -1;
-							for (var i = 0, l = localNames.length; i < l; ++i)
-							{
-								var localName = localNames[i];
-								if (localName === 'en')  // default local resource, already be loaded, by pass
-									continue;
-								// insert resources, right after localization module, before other widget modules
-								result.modules.splice(localizationModuleIndex + 1, 0, 'localizationData.' + localName);
-							}
-						}
-					}
+					break;
 				}
-
-				return result;
 			}
 		}
 	}
+
+	if (matchResult)
+	{
+		var pstr = matchResult[2];
+		if (pstr)
+			pstr = pstr.substr(1);  // eliminate starting '?'
+		var result = {
+			'src': scriptSrc,
+			'path': matchResult[1],
+			'paramStr': pstr,
+			'useMinFile': true
+		};
+
+		if (result.paramStr)  // analysis params
+		{
+			var modules;
+			var params = result.paramStr.split('&');
+			for (var i = 0, l = params.length; i < l; ++i)
+			{
+				// check min file usage
+				var minFileMatch = params[i].match(paramMinFile);
+				if (minFileMatch)
+				{
+					var pvalue = minFileMatch[1].toLowerCase();
+					var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+					//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
+					//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
+					result.useMinFile = value;
+					continue;
+				}
+				// check module param
+				var moduleMatch = params[i].match(paramModules);
+				if (moduleMatch)
+				{
+					var moduleStr = moduleMatch[1];
+					var modules = moduleStr.split(',');
+					continue;
+				}
+				// force dom loader
+				var forceDomLoaderMatch = params[i].match(paramForceDomLoader);
+				if (forceDomLoaderMatch)
+				{
+					var pvalue = forceDomLoaderMatch[1].toLowerCase();
+					var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+					result.forceDomLoader = value;
+					continue;
+				}
+				// check required local data
+				var localsMatch = params[i].match(paramLocalDatas);
+				if (localsMatch)
+				{
+					var localsStr = localsMatch[1];
+					var locals = localsStr.split(',');
+					result.locals = locals;
+					continue;
+				}
+				// language
+				var forceLanguage = params[i].match(paramLanguage);
+				if (forceLanguage)
+				{
+					var pvalue = forceLanguage[1];
+					result.language = pvalue;
+					continue;
+				}
+			}
+			if (modules)
+				result.modules = modules;
+			else
+				result.modules = usualModules;  // no modules appointed, use default setting
+
+			// handle local data
+			if (!result.locals)
+				result.locals = defaultLocals;
+			if (result.locals || result.language)
+			{
+				var localNames = [].concat(result.locals || []);
+				if (result.language && localNames.indexOf(result.language) < 0)  // local resources of forced language should always be loaded
+				{
+					localNames.push(result.language);
+				}
+				if (localNames.length)
+				{
+					var localizationModuleIndex = result.modules.indexOf('localizationData');
+					if (localizationModuleIndex < 0)  // local data module not listed, put local data as first module
+						localizationModuleIndex = -1;
+					for (var i = 0, l = localNames.length; i < l; ++i)
+					{
+						var localName = localNames[i];
+						if (localName === 'en')  // default local resource, already be loaded, by pass
+							continue;
+						// insert resources, right after localization module, before other widget modules
+						result.modules.splice(localizationModuleIndex + 1, 0, 'localizationData.' + localName);
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+
 	//return null;
 	return {
 		'src': '',
