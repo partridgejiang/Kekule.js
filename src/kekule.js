@@ -77,8 +77,7 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var data = fs.readFileSync(url);
-			//console.log('[k] node append', url, data.length);
+			var data = fs.readFileSync(url, 'utf8');
 			vm.runInThisContext(data, {'filename': url});
 			//vm.runInNewContext(data, __nodeContext, {'filename': url});
 			//eval(data);
@@ -762,7 +761,9 @@ function init()
 			'path': __dirname + '/',
 			'modules': nodeModules,
 			//'useMinFile': false  // for debug
-			'useMinFile': true
+			'useMinFile': true,
+			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
+			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
 
 		// if min files not found, use dev files instead
