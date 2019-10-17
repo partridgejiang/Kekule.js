@@ -45,7 +45,9 @@ Kekule._loaded = function()
 	{
 		var proc = procs.shift();
 		if (proc)
+		{
 			proc();
+		}
 	}
 
 	var procs = Kekule._afterLoadUserProcedures;
@@ -85,7 +87,7 @@ Kekule._registerAfterLoadSysProc = function(proc)
 	if (proc)
 	{
 		if (Kekule.LOADED)
-			proc.defer();
+			proc();
 		else
 			Kekule._afterLoadSysProcedures.push(proc);
 	}
@@ -100,7 +102,7 @@ Kekule._ready = function(proc)
 	if (proc)
 	{
 		if (Kekule.LOADED)
-			proc.defer();
+			proc();
 		else
 			Kekule._afterLoadUserProcedures.push(proc);
 	}
@@ -167,9 +169,21 @@ if (!Kekule.scriptSrcInfo && Kekule.$jsRoot.document)  // script info not found,
 	})();
 }
 
+Kekule.environment = {
+	isNode: !!((typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined')),
+	isWeb: !!(typeof window === 'object' && window.document)
+};  // current runtime environment details
+
+if (Kekule.scriptSrcInfo)
+{
+	Kekule.environment.nodeModule = Kekule.scriptSrcInfo.nodeModule;
+	Kekule.environment.nodeRequire = Kekule.scriptSrcInfo.nodeRequire;
+}
+
 if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
 {
 	Kekule._ScriptFileUtils_ = Kekule.$jsRoot['__$kekule_scriptfile_utils__'];
+	Kekule.ScriptFileUtils = Kekule._ScriptFileUtils_;  // a default ScriptFileUtils impl, overrided by domUtils.js file
 	Kekule.modules = function(modules, callback)   // util function to load additional modules in a existing Kekule environment, useful in node.js
 	{
 		var actualModules = [];
