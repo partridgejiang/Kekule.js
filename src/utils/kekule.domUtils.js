@@ -1626,37 +1626,47 @@ Kekule.ScriptFileUtils = {
 	 */
 	appendScriptFile: function(doc, url, callback)
 	{
-		var exists = Kekule.ScriptFileUtils._existedScriptUrls.get(doc);
-		if (!exists)
+		var exists;
+		if (doc)
 		{
-			exists = [];
-			Kekule.ScriptFileUtils._existedScriptUrls.set(doc, exists);
-		}
-		if (exists.indexOf(url) >= 0)  // already loaded
-		{
-			if (callback)
-				callback();
-			return;
-		}
-		var result = doc.createElement('script');
-		result.src = url;
-		result.onload = result.onreadystatechange = function(e)
-		{
-			if (result._loaded)
-				return;
-			var readyState = result.readyState;
-			if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+			exists = Kekule.ScriptFileUtils._existedScriptUrls.get(doc);
+			if (!exists)
 			{
-				result._loaded = true;
-				result.onload = result.onreadystatechange = null;
-				exists.push(url);
+				exists = [];
+				Kekule.ScriptFileUtils._existedScriptUrls.set(doc, exists);
+			}
+
+			if (exists.indexOf(url) >= 0)  // already loaded
+			{
 				if (callback)
 					callback();
+				return;
 			}
-		};
-		(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
-		//console.log('load script', url);
-		return result;
+			var result = doc.createElement('script');
+			result.src = url;
+			result.onload = result.onreadystatechange = function(e) {
+				if (result._loaded)
+					return;
+				var readyState = result.readyState;
+				if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+				{
+					result._loaded = true;
+					result.onload = result.onreadystatechange = null;
+					exists.push(url);
+					if (callback)
+						callback();
+				}
+			};
+			(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+			//console.log('load script', url);
+			return result;
+		}
+		else // doc is null, maybe in node environment
+		{
+			var rawUtil = Kekule.$jsRoot['__$kekule_scriptfile_utils__'];
+			if (rawUtil && rawUtil.appendScriptFile)
+				return rawUtil.appendScriptFile(doc, url, callback);
+		}
 	},
 	/**
 	 * Append script files to document. When the all scripts are loaded, callback is then called.
