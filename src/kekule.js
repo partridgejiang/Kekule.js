@@ -1,6 +1,5 @@
 (function($root){
 
-
 // IE8 does not support array.indexOf
 if (!Array.prototype.indexOf)
 {
@@ -48,6 +47,24 @@ if (!isNode)
 	var isIE = window.attachEvent && !window.opera;
 	var docReady = (readyState === 'complete' || readyState === 'loaded' ||
 		(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
+}
+
+if (isNode && typeof(global) !== 'undefined')
+{
+	$root = global;  // set root as global object, share with the context of running Kekule code
+}
+
+function isDocReady()
+{
+	if (!isNode)
+	{
+		var readyState = document && document.readyState;
+		var isIE = window.attachEvent && !window.opera;
+		return (readyState === 'complete' || readyState === 'loaded' ||
+			(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
+	}
+	else // no doc
+		return true;
 }
 
 function directAppend(doc, libName)
@@ -160,7 +177,7 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 	}
 	else  // in normal browser environment
 	{
-		if (!docReady && !forceDomLoader)  // can directly write to document
+		if (!isDocReady() && !forceDomLoader)  // can directly write to document
 		{
 			for (var i = 0, l = scriptUrls.length; i < l; ++i)
 				directAppend(document, scriptUrls[i]);
@@ -388,7 +405,6 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.utilWidgets.js',
 			'widgets/chem/editor/kekule.chemEditor.chemSpaceEditors.js',
 			'widgets/chem/editor/kekule.chemEditor.nexus.js',
-			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 			'widgets/chem/editor/kekule.chemEditor.trackParser.js',
 
@@ -398,7 +414,9 @@ var kekuleFiles = {
 			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js',
 
-			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
+			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
+
+			'widgets/chem/editor/kekule.chemEditor.composers.js',
 		],
 		'category': 'chemWidget'
 	},
@@ -679,7 +697,6 @@ function analysisEntranceScriptSrc(doc)
 		return result;
 	}
 
-
 	//return null;
 	return {
 		'src': '',
@@ -688,6 +705,51 @@ function analysisEntranceScriptSrc(doc)
 		//'useMinFile': false  // for debug
 		'useMinFile': true
 	}; // return a default setting
+}
+
+function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, callback)  // return loaded files
+{
+	if (typeof Kekule !== "undefined" && Kekule.LOADED)
+		Kekule.LOADED = false;   // a flag, indicating now are loading script files
+
+	var loadedModules = kekuleScriptInfo.modules || [];
+	var essentialModules = [];
+	for (var i = 0, l = modules.length; i < l; ++i)
+	{
+		if (loadedModules.indexOf(modules[i]) < 0)
+			essentialModules.push(modules[i]);
+	}
+
+	var files = getEssentialFiles(essentialModules, useMinFile);
+	var essentialFiles = [];
+	var path = rootPath;
+
+	var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
+	var essentialUrls = [];
+	for (var i = 0, l = files.length; i < l; ++i)
+	{
+		var url = path + files[i];
+		if (loadedScriptUrls.indexOf(url) < 0)
+		{
+			essentialUrls.push(url);
+			essentialFiles.push(files[i]);
+		}
+	}
+	essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+	loadChildScriptFiles(essentialUrls, null, function(){
+		kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
+		kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
+		kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
+		if (callback)
+			callback();
+	});
+
+	return {
+		'modules': essentialModules,
+		'files': essentialFiles,
+		'fileUrls': essentialUrls
+	};
 }
 
 function init()
@@ -720,26 +782,23 @@ function init()
 		scriptInfo = analysisEntranceScriptSrc(document);
 	}
 
-	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
-	path = scriptInfo.path;
-
-	var scriptUrls = [];
-	for (var i = 0, l = files.length; i < l; ++i)
-	{
-		scriptUrls.push(path + files[i]);
-	}
-	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+	scriptInfo.explicitModules = scriptInfo.modules;
+	var modules = getEssentialModules(scriptInfo.modules);
+	//scriptInfo.modules = modules;
+	scriptInfo.modules = [];
+	scriptInfo.files = [];
+	scriptInfo.fileUrls = [];
 
 	// save loaded module and file information
-	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
 	$root['__$kekule_load_info__'] = scriptInfo;
 	$root['__$kekule_scriptfile_utils__'] = {
 		'appendScriptFile': appendScriptFile,
-		'appendScriptFiles': appendScriptFiles
+		'appendScriptFiles': appendScriptFiles,
+		'loadModuleScriptFiles': loadModuleScriptFiles
 	};
 
-		loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+	loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(){
 		if (isNode)  // export Kekule namespace
 		{
 			// export Kekule in module
@@ -757,6 +816,49 @@ function init()
 			this.Kekule.scriptSrcInfo = scriptInfo;
 		}
 	});
+
+	//console.log('ROOT', $root);
+
+	/*
+	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
+	path = scriptInfo.path;
+
+	var scriptUrls = [];
+	for (var i = 0, l = files.length; i < l; ++i)
+	{
+		scriptUrls.push(path + files[i]);
+	}
+	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+	// save loaded module and file information
+	scriptInfo.files = files;
+	scriptInfo.fileUrls = scriptUrls;  // already loaded file urls
+	scriptInfo.allModuleStructures = kekuleFiles;
+	$root['__$kekule_load_info__'] = scriptInfo;
+	$root['__$kekule_scriptfile_utils__'] = {
+		'appendScriptFile': appendScriptFile,
+		'appendScriptFiles': appendScriptFiles
+	};
+
+	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		if (isNode)  // export Kekule namespace
+		{
+			// export Kekule in module
+			exports.Kekule = this.Kekule || __nodeContext.Kekule;
+			exports.Class = this.Class || __nodeContext.Class;
+			exports.ClassEx = this.ClassEx || __nodeContext.ClassEx;
+			exports.ObjectEx = this.ObjectEx || __nodeContext.ObjectEx;
+			exports.DataType = this.DataType || __nodeContext.DataType;
+			// and these common vars in global
+			this.Class = exports.Class;
+			this.ClassEx = exports.ClassEx;
+			this.ObjectEx = exports.ObjectEx;
+			this.DataType = exports.DataType;
+			// then store script info of Kekule
+			this.Kekule.scriptSrcInfo = scriptInfo;
+		}
+	});
+	*/
 }
 
 if (isWebpack)
