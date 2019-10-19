@@ -1621,7 +1621,7 @@ Kekule.ScriptFileUtils = {
 	 * Append script file to document. When the script is loaded, callback is then called.
 	 * @param {HTMLDocument} doc
 	 * @param {String} url
-	 * @param {Func} callback
+	 * @param {Func} callback Callback(error). If error is null, the loading process is success.
 	 * @returns {HTMLElement} New created script element.
 	 */
 	appendScriptFile: function(doc, url, callback)
@@ -1639,11 +1639,15 @@ Kekule.ScriptFileUtils = {
 			if (exists.indexOf(url) >= 0)  // already loaded
 			{
 				if (callback)
-					callback();
+					callback(null);
 				return;
 			}
 			var result = doc.createElement('script');
 			result.src = url;
+			result.onerror = function(error){
+				if (callback)
+					callback(error);
+			};
 			result.onload = result.onreadystatechange = function(e) {
 				if (result._loaded)
 					return;
@@ -1654,7 +1658,7 @@ Kekule.ScriptFileUtils = {
 					result.onload = result.onreadystatechange = null;
 					exists.push(url);
 					if (callback)
-						callback();
+						callback(null);
 				}
 			};
 			(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
@@ -1678,23 +1682,31 @@ Kekule.ScriptFileUtils = {
 	{
 		var dupUrls = [].concat(urls);
 
-		var _appendScriptFilesCore = function(doc, urls, callback)
+		var _appendScriptFilesCore = function(doc, urls, callback, errors)
 		{
 			if (urls.length <= 0)
 			{
 				if (callback)
-					callback();
+				{
+					if (!errors.length)
+						callback(null);
+					else
+						callback(new Error('Error in loading: ' + errors.join('; ')));
+				}
 				return;
 			}
 			var file = urls.shift();
-			Kekule.ScriptFileUtils.appendScriptFile(doc, file, function()
+			Kekule.ScriptFileUtils.appendScriptFile(doc, file, function(error)
+			{
+				if (error)
 				{
-					Kekule.ScriptFileUtils.appendScriptFiles(doc, urls, callback);
+					errors.push(file + ': ' + error? (error.message || error): '');
 				}
-			);
+				_appendScriptFilesCore(doc, urls, callback, errors);
+			});
 		};
 
-		_appendScriptFilesCore(doc, dupUrls, callback);
+		_appendScriptFilesCore(doc, dupUrls, callback, []);
 	}
 };
 

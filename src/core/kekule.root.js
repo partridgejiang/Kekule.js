@@ -195,7 +195,10 @@ if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
 		var scriptSrcInfo = Kekule.scriptSrcInfo;
 		if (scriptSrcInfo)
 		{
-			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules, scriptSrcInfo.useMinFile, Kekule.scriptSrcInfo.path, scriptSrcInfo, callback);
+			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules, scriptSrcInfo.useMinFile, Kekule.scriptSrcInfo.path, scriptSrcInfo, function(error){
+				if (callback)
+					callback(error);
+			});
 			//console.log(details);
 			return this;
 		}
