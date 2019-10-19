@@ -27,8 +27,7 @@ Kekule.EmscriptenUtils = {
 	getRootModule: function(moduleName, creationOptions)
 	{
 		// if already created, returns
-		var name = EU._getActualModule(moduleName);
-		var result = EU._createdModules[name];
+		var result = EU._createdModules[moduleName];;
 		if (result)
 		{
 			return result;
@@ -40,8 +39,10 @@ Kekule.EmscriptenUtils = {
 		if (typeof(m) === 'function')  // compiled with modularized option
 		{
 			result = m(creationOptions);
-			EU._createdModules[name] = result;
 		}
+		if (result)
+			EU._createdModules[moduleName] = result;
+
 		return result;
 	},
 	getModuleObj: function(moduleNameOrObj)
@@ -74,16 +75,164 @@ Kekule.EmscriptenUtils = {
 	},
 
 	/**
-	 * Load an emscripten script file. When ready, callback() will be called
+	 * Init an emscripten module, when the runtime is ready, callback() will be calld.
+	 * @param {HTMLDocument} doc
+	 * @param {Hash} options
+	 * @param {Func} callback
+	 */
+	initModule: function(doc, options, callback)
+	{
+		if (!doc)
+			doc = Kekule.$jsRoot.document;
+		var moduleName = options.moduleName;
+		var moduleInitEventName = options.moduleInitEventName;
+		var moduleInitCallbackName = options.moduleInitCallbackName;
+		var callCallback = function(error)
+		{
+			if (callback)
+				callback(error);
+		};
+
+		if (EU.isModuleReady(moduleName))  // module already inited
+		{
+			callCallback();
+			return;
+		}
+
+		try
+		{
+			if (moduleInitEventName && doc)
+			{
+				var reactLoadEvent = function() {
+					callCallback();
+					Kekule.X.Event.removeListener(doc, moduleInitEventName, reactLoadEvent);  // ensure call only once
+					//console.log('EModule inited', moduleInitEventName);
+				};
+				// listen to module inited event
+				Kekule.X.Event.addListener(doc, moduleInitEventName, reactLoadEvent);
+			}
+			else if (moduleInitCallbackName)
+			{
+				Kekule.$jsRoot[moduleInitCallbackName] = function() {
+					callCallback();
+				};
+			}
+			if (moduleName)
+			{
+				EU.getRootModule(moduleName);  // ensure the module is actually created and registered
+			}
+		}
+		catch(e)
+		{
+			callCallback(e);
+			throw e;
+		}
+	},
+
+	/**
+	 * Check if a em module is ready.
+	 * @param {String} moduleName
+	 * @returns {Bool}
+	 */
+	isModuleReady: function(moduleName)
+	{
+		return !!EU._createdModules[moduleName];
+	},
+	/**
+	 * Ensure module is loaded and runtime is built.
+	 * @param {HTMLDocument} doc
+	 * @param {Hash} options
+	 * @param {Func} callback
+	 */
+	ensureModuleReady: function(doc, options, callback)
+	{
+		return EU.initModule(doc, options, callback);
+	},
+
+	/**
+	 * Load an emscripten script file. When script is loaded and runtime is initialized, callback() will be called
 	 * @param {String} url
 	 * @param {Func} callback
 	 * @param {Object} doc
+	 * @param {Hash} options
 	 */
-	loadScript: function(url, callback, doc)
+	loadScript: function(url, callback, doc, options)
 	{
 		if (!doc)
-			doc = document;
-		Kekule.ScriptFileUtils.appendScriptFile(doc, url, callback);
+			doc = Kekule.$jsRoot.document;
+		/*
+		var moduleName = options.moduleName;
+		var moduleInitEventName = options.moduleLoadEventName;
+		var moduleInitCallbackName = options.moduleInitCallbackName;
+		var callCallback = function()
+		{
+			if (callback)
+				callback();
+		};
+		var done = function()
+		{
+			// when script is loaded, some initialization process should be done
+			if (moduleInitEventName && doc)
+			{
+				var reactLoadEvent = function(){
+					callCallback();
+					Kekule.X.Event.removeListener(doc, moduleInitEventName, reactLoadEvent);  // ensure call only once
+					console.log('EModule inited', moduleInitEventName);
+				};
+				// listen to module inited event
+				Kekule.X.Event.addListener(doc, moduleInitEventName, reactLoadEvent);
+			}
+			else if (moduleInitCallbackName)
+			{
+				Kekule.$jsRoot[moduleInitCallbackName] = function() { callCallback();};
+			}
+			if (moduleName)
+			{
+				EU.getRootModule(moduleName);  // ensure the module is actually created
+			}
+		};
+		*/
+		var done = function(error)
+		{
+			if (error)
+				callback(error);
+			else  // success
+				EU.initModule(doc, options, callback);
+		};
+
+		//console.log('module', Kekule.scriptSrcInfo.nodeModule);
+		if (Kekule.environment.isNode)  // in node environment, the emscripten file should be loaded by "require" rather than other methods
+		{
+			try
+			{
+				var m = Kekule.environment.nodeRequire(url);
+				if (options.moduleName)
+				{
+					/*
+					if (m && typeof (m) === 'function')
+					{
+						Kekule.$jsRoot[options.moduleName] = m();
+					}
+					else
+					{
+						Kekule.$jsRoot[options.moduleName] = m;
+					}
+					//EU._createdModules[options.moduleName] = Kekule.$jsRoot[options.moduleName];  // register this module
+					*/
+					Kekule.$jsRoot[options.moduleName] = m;
+				}
+				done();
+			}
+			catch(e)
+			{
+				done(e);
+				throw e;
+			}
+		}
+		else
+		{
+			Kekule.ScriptFileUtils.appendScriptFile(doc, url, done);
+		}
 	}
 };
 
