@@ -11,15 +11,23 @@
  * require /utils/kekule.domUtils.js
  */
 
-(function (window, document)
+(function ($root)
 {
 
 "use strict";
 
-var $root = window;
+//var $root = window;
+var	window = $root, document = window && window.document;
 
-if (!$root.Kekule)
+if (typeof(Kekule) === 'undefined')
 	Kekule = {};
+
+if (typeof(navigator) === "undefined")   // not in browser environment, node.js?
+{
+	Kekule.Browser = {};
+	Kekule.BrowserFeature = {};
+	return;
+}
 
 /**
  * Browser Check.
@@ -1495,4 +1503,4 @@ var DOM = Kekule.X.DomReady
  */
 Kekule.X.domReady = DOM.domReady;
 
-})(window, document);
+})(this);
