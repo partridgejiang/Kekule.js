@@ -101,6 +101,7 @@ function nodeAppend(url)
 					require('./' + fileName);
 			}
 			*/
+			//console.error(url, e.message);
 			return e;
 		}
 	}
@@ -296,7 +297,9 @@ var kekuleFiles = {
 		'files': [
 			'core/kekule.common.js',
 			'core/kekule.exceptions.js',
-			'utils/kekule.utils.js'
+			'utils/kekule.utils.js',
+			'utils/kekule.domHelper.js',
+			'utils/kekule.domUtils.js'
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'
@@ -331,8 +334,7 @@ var kekuleFiles = {
 			'xbrowsers/kekule.x.js',
 			'html/kekule.nativeServices.js',
 			'html/kekule.predefinedResLoaders.js',
-			'utils/kekule.domUtils.js',
-			'utils/kekule.domHelper.js'
+			'utils/kekule.htmlDomUtils.js'
 		],
 		'category': 'core'
 	},
