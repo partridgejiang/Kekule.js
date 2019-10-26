@@ -6,9 +6,12 @@
 
 (function($root)
 {
+var importedScriptUrls = [];
 var obScriptLoaded = false;
+var runtimeInited = false;
 var initOps;
 var Module;
+var pendingFuncs = [];
 
 function initEnv()
 {
@@ -19,7 +22,16 @@ function initEnv()
 	if (initOps)
 	{
 		var moduleName = initOps.moduleName;
+		var initCallbackName = initOps.initCallbackName;
 		var module = $root[moduleName];
+		if (module && initCallbackName)
+		{
+			$root[initCallbackName] = function()  // init callback function, 3D generation can only done after wasm runtime is done
+			{
+				runtimeInited = true;
+				execPendingFuncs(pendingFuncs);
+			}
+		}
 		if (initOps.usingModulaize && typeof(module) === 'function')
 		{
 			module = module();
@@ -41,6 +53,13 @@ function initModule(module)
 	};
 }
 
+function execPendingFuncs(funcs)
+{
+	var func = funcs.shift();
+	if (func)
+		func.apply($root);
+}
+
 addEventListener('message', function(e)
 {
 	handleMessages(e.data);
@@ -51,11 +70,15 @@ function handleMessages(msgData)
 	var msgType = msgData.type;
 	if (msgType === 'importScript')
 	{
-		//console.log('import script', msgData.url);
-		importScripts(msgData.url);
-		obScriptLoaded = true;
-		// after import, set intial data
-		initEnv();
+		if (importedScriptUrls.indexOf(msgData.url) < 0)
+		{
+			//console.log('import script', msgData.url);
+			importScripts(msgData.url);
+			obScriptLoaded = true;
+			importedScriptUrls.push(msgData.url);
+			// after import, set intial data
+			initEnv();
+		}
 	}
 	else if (msgType === 'obInit')  // set up initial environment
 	{
@@ -66,9 +89,15 @@ function handleMessages(msgData)
 	{
 		var molData = msgData.molData;
 		var forceFieldName = msgData.forceField;
-		var genData = generate3DMolData(molData, forceFieldName);
-		// feedback
-		postMessage({'type': 'output3D', 'molData': genData});
+		var execFunc = function() {
+			var genData = generate3DMolData(molData, forceFieldName);
+			// feedback
+			postMessage({'type': 'output3D', 'molData': genData});
+		}
+		if (runtimeInited)
+			execFunc();
+		else
+			pendingFuncs.push(execFunc);
 	}
 };
 

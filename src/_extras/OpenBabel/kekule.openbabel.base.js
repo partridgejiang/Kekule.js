@@ -27,7 +27,9 @@ var EU = Kekule.EmscriptenUtils;
  */
 var obInitOptions = {
 	usingModulaize: true,  // whether using modularize option to build OpenBabel.js
-	moduleName: 'OpenBabelModule' // the name of OpenBabl module
+	moduleName: 'OpenBabelModule', // the name of OpenBabl module,
+	moduleInitEventName: 'OpenBabel.Initialized',
+	moduleInitCallbackName: '__$openBabelInitialized$__'
 };
 
 /**
@@ -36,7 +38,7 @@ var obInitOptions = {
  */
 Kekule.OpenBabel = {
 	/**
-	 * A flag, whether auto enable InChI function when find InChI lib is already loaded.
+	 * A flag, whether auto enable OB function when find OpenBabel lib is already loaded.
 	 */
 	_autoEnabled: true,
 	/** @private */
@@ -72,19 +74,25 @@ Kekule.OpenBabel = {
 	{
 		return EU.isSupported(obInitOptions.moduleName);
 	},
+	isModuleReady: function()
+	{
+		return EU.isModuleReady(obInitOptions.moduleName);
+	},
 
 	/**
-	 * Load OpenBabel.js lib and enable all related functions
+	 * Load OpenBabel.js lib and enable all related functions.
+	 * @params {Func} callback Callback(error). Success when error is empty.
 	 */
 	enable: function(callback)
 	{
 		if (!OB.isScriptLoaded())  // OpenBabel not loaded?
 		{
-			OB.loadObScript(document, function(){
+			OB.loadObScript(Kekule.$jsRoot.document, function(error){
 				//Kekule.IO.registerAllInChIFormats();
-				OB._enableAllFunctions();
+				if (!error)
+					OB._enableAllFunctions();
 				if (callback)
-					callback();
+					callback(error);
 			});
 		}
 		else
@@ -96,7 +104,8 @@ Kekule.OpenBabel = {
 	},
 	_enableAllFunctions: function()
 	{
-		if (OB.isScriptLoaded())
+		//if (OB.isScriptLoaded())
+		if (OB.isModuleReady())
 		{
 			var funcs = OB._enableFuncs;
 			for (var i = 0, l = funcs.length; i < l; ++i)
@@ -109,7 +118,18 @@ Kekule.OpenBabel = {
 	}
 };
 
-Kekule._registerAfterLoadProc(function() {if (OB._autoEnabled) OB._enableAllFunctions()} );
+var OB = Kekule.OpenBabel;
+
+Kekule._registerAfterLoadSysProc(function() {
+	//var OB = Kekule.OpenBabel;
+	if (OB._autoEnabled)
+	{
+		if (OB.isScriptLoaded())
+		{
+			EU.ensureModuleReady(Kekule.$jsRoot.document, obInitOptions, OB._enableAllFunctions);
+		}
+	}
+});
 
 /** @ignore */
 Kekule.OpenBabel.getObPath = function()
@@ -132,23 +152,23 @@ Kekule.OpenBabel.getObScriptUrl = function()
 Kekule.OpenBabel.loadObScript = function(doc, callback)
 {
 	if (!doc)
-		doc = document;
+		doc = Kekule.$jsRoot.document;
+	var done = function(error){
+		OB._obScriptLoadedBySelf = !error;
+		if (callback)
+			callback(error);
+	};
 	if (!OB._obScriptLoadedBySelf && !OB.isScriptLoaded())
 	{
-		//console.log('load');
 		var filePath = Kekule.OpenBabel.getObScriptUrl();
-		EU.loadScript(filePath, callback, doc);
-		OB._obScriptLoadedBySelf = true;
+
+		EU.loadScript(filePath, done, doc, obInitOptions);
 	}
 	else
 	{
-		OB._obScriptLoadedBySelf = true;
-		if (callback)
-			callback();
+		done();
 	}
 };
-
-var OB = Kekule.OpenBabel;
 
 /**
  * Util class to convert object between OpenBabel and Kekule.

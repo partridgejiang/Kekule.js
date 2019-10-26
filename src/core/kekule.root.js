@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.3.19092400',
+	VERSION: '0.9.4.19102200',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -45,7 +45,9 @@ Kekule._loaded = function()
 	{
 		var proc = procs.shift();
 		if (proc)
+		{
 			proc();
+		}
 	}
 
 	var procs = Kekule._afterLoadUserProcedures;
@@ -165,6 +167,45 @@ if (!Kekule.scriptSrcInfo && Kekule.$jsRoot.document)  // script info not found,
 		}
 		return null;
 	})();
+}
+
+Kekule.environment = {
+	isNode: !!((typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined')),
+	isWeb: !!(typeof window === 'object' && window.document)
+};  // current runtime environment details
+
+if (Kekule.scriptSrcInfo)
+{
+	Kekule.environment.nodeModule = Kekule.scriptSrcInfo.nodeModule;
+	Kekule.environment.nodeRequire = Kekule.scriptSrcInfo.nodeRequire;
+}
+
+if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
+{
+	Kekule._ScriptFileUtils_ = Kekule.$jsRoot['__$kekule_scriptfile_utils__'];
+	Kekule.ScriptFileUtils = Kekule._ScriptFileUtils_;  // a default ScriptFileUtils impl, overrided by domUtils.js file
+	Kekule.modules = function(modules, callback)   // util function to load additional modules in a existing Kekule environment, useful in node.js
+	{
+		var actualModules = [];
+		if (typeof(modules) === 'string')  // a single string module param
+			actualModules = [modules];
+		else
+			actualModules = modules;  // array param
+
+		var scriptSrcInfo = Kekule.scriptSrcInfo;
+		if (scriptSrcInfo)
+		{
+			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules, scriptSrcInfo.useMinFile, Kekule.scriptSrcInfo.path, scriptSrcInfo, function(error){
+				if (callback)
+					callback(error);
+			});
+			//console.log(details);
+			return this;
+		}
+		else
+			return this;
+	};
+	Kekule.loadModules = Kekule.modules;  // alias of function Kekule.modules
 }
 
 Kekule.getScriptPath = function()

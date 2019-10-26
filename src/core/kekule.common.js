@@ -2001,7 +2001,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	/** @constructs */
 	initialize: function($super, id)
 	{
-		this.setPropStoreFieldValue('attachedCoordStickNodes', []);
+		//this.setPropStoreFieldValue('attachedCoordStickNodes', []);
 		$super();
 		if (id)
 			this.setId(id);
@@ -2159,7 +2159,17 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		// prop isEditing should never be saved, it should set by editor when loading chem space
 
 		// private
-		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('attachedCoordStickNodes', {'dataType': DataType.ARRAY, 'serializable': false,
+			'getter': function() {
+			  var result = this.getPropStoreFieldValue('attachedCoordStickNodes');
+			  if (!result)
+			  {
+			  	result = [];
+			  	this.setPropStoreFieldValue('attachedCoordStickNodes', result);
+			  }
+			  return result;
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function($super)
@@ -2233,6 +2243,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 							}
 							else
 								values.push(undefined);
+							//console.log('ref handle load array', rootObj.getId(), propName, indexStack, values);
 						}
 						this.setPropValue(propName, values);
 					}
@@ -2246,7 +2257,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 							;
 						if (value)
 						{
-							//console.log('set ref prop value', propName, indexStack, value);
+							//console.log('ref handle load simple', rootObj.getId(), propName, indexStack, value);
 							this.setPropValue(propName, value);
 						}
 					}
@@ -2944,7 +2955,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			{
 				var result = indexOfMethod.apply(this, [obj]);
 				if (result >= 0)
-					return result;
+				{
+					return this._getPrevSubgroupChildrenCount(subgroups[i]) + result;
+				}
 			}
 		}
 		return -1;

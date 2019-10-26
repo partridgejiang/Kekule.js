@@ -1,6 +1,5 @@
 (function($root){
 
-
 // IE8 does not support array.indexOf
 if (!Array.prototype.indexOf)
 {
@@ -50,6 +49,24 @@ if (!isNode)
 		(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
 }
 
+if (isNode && typeof(global) !== 'undefined')
+{
+	$root = global;  // set root as global object, share with the context of running Kekule code
+}
+
+function isDocReady()
+{
+	if (!isNode)
+	{
+		var readyState = document && document.readyState;
+		var isIE = window.attachEvent && !window.opera;
+		return (readyState === 'complete' || readyState === 'loaded' ||
+			(readyState === 'interactive' && !isIE));  // in IE8-10, handling this script cause readyState to 'interaction' but the whole page is not loaded yet
+	}
+	else // no doc
+		return true;
+}
+
 function directAppend(doc, libName)
 {
   doc.write('<script type="text/javascript" src="'+libName+'"><\/script>');
@@ -60,11 +77,11 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var data = fs.readFileSync(url);
-			//console.log('[k] node append', url, data.length);
+			var data = fs.readFileSync(url, 'utf8');
 			vm.runInThisContext(data, {'filename': url});
 			//vm.runInNewContext(data, __nodeContext, {'filename': url});
 			//eval(data);
+			return true;
 		}
 		catch(e)
 		{
@@ -84,6 +101,8 @@ function nodeAppend(url)
 					require('./' + fileName);
 			}
 			*/
+			//console.error(url, e.message);
+			return e;
 		}
 	}
 }
@@ -94,54 +113,81 @@ function appendScriptFile(doc, url, callback)
 	if (existedScriptUrls.indexOf(url) >= 0)  // already loaded
 	{
 		if (callback)
-			callback();
+			callback(null);
 		return;
 	}
 	if (isNode)
 	{
-		nodeAppend(url);
-		callback();
+		var appendResult = nodeAppend(url);
+		if (callback)
+		{
+			if (appendResult === true)
+				callback(null);
+			else
+				callback(appendResult);  // error
+		}
+		return appendResult;
 	}
 	else // browser
 	{
-		var result = doc.createElement('script');
-		result.src = url;
-		result.onload = result.onreadystatechange = function(e)
+		try
 		{
-			if (result._loaded)
-				return;
-			var readyState = result.readyState;
-			if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
-			{
-				result._loaded = true;
-				result.onload = result.onreadystatechange = null;
-				existedScriptUrls.push(url);
+			var result = doc.createElement('script');
+			result.src = url;
+			result.onerror = function(error){
 				if (callback)
-					callback();
-			}
-		};
-		(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+					callback(new Error('Loading script file ' + url + ' failed'));
+			};
+			result.onload = result.onreadystatechange = function(e) {
+				if (result._loaded)
+					return;
+				var readyState = result.readyState;
+				if (readyState === undefined || readyState === 'loaded' || readyState === 'complete')
+				{
+					result._loaded = true;
+					result.onload = result.onreadystatechange = null;
+					existedScriptUrls.push(url);
+					if (callback)
+						callback(null);
+				}
+			};
+			(doc.getElementsByTagName('head')[0] || doc.body).appendChild(result);
+			return result;
+		}
+		catch(e)
+		{
+			if (callback)
+				callback(e);
+		}
 		//console.log('load script', url);
-		return result;
 	}
 }
 function appendScriptFiles(doc, urls, callback)
 {
 	var dupUrls = [].concat(urls);
-	_appendScriptFilesCore(doc, dupUrls, callback);
+	_appendScriptFilesCore(doc, dupUrls, callback, []);
 }
-function _appendScriptFilesCore(doc, urls, callback)
+function _appendScriptFilesCore(doc, urls, callback, errors)
 {
 	if (urls.length <= 0)
 	{
 		if (callback)
-			callback();
+		{
+			if (!errors.length)
+				callback(null);
+			else
+				callback(new Error(errors.join(', ')));
+		}
 		return;
 	}
 	var file = urls.shift();
-	appendScriptFile(doc, file, function()
+	appendScriptFile(doc, file, function(error)
 		{
-			appendScriptFiles(doc, urls, callback);
+			if (error)
+			{
+				errors.push(error? (error.message || error): '');
+			}
+			_appendScriptFilesCore(doc, urls, callback, errors);
 		}
 	);
 }
@@ -150,43 +196,53 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 {
 	if (isNode)  // Node.js environment
 	{
-		appendScriptFiles(document, scriptUrls, function()
+		appendScriptFiles(document, scriptUrls, function(error)
 		{
 			// set a marker indicate that all modules are loaded
 			(this.Kekule || __nodeContext.Kekule)._loaded();
 			if (callback)
-				callback();
+				callback(error);
 		});
 	}
 	else  // in normal browser environment
 	{
-		if (!docReady && !forceDomLoader)  // can directly write to document
+		if (!isDocReady() && !forceDomLoader)  // can directly write to document
 		{
-			for (var i = 0, l = scriptUrls.length; i < l; ++i)
-				directAppend(document, scriptUrls[i]);
+			try
+			{
+				for (var i = 0, l = scriptUrls.length; i < l; ++i)
+					directAppend(document, scriptUrls[i]);
 
-			var sloadedCode = 'if (this.Kekule) Kekule._loaded();';
-			/*
-			 if (window.btoa)  // use data uri to insert loaded code, avoid inline script problem in Chrome extension (still no use in Chrome)
-			 {
-			 var sBase64 = btoa(sloadedCode);
-			 var sdataUri = 'data:;base64,' + sBase64;
-			 directAppend(document, sdataUri);
-			 }
-			 else  // use simple inline code in IE below 10 (which do not support data uri)
-			 */
-			//directAppend(document, 'kekule.loaded.js');  // manully add small file to mark lib loaded
-			document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
-			if (callback)
-				callback();
+				var sloadedCode = 'if (this.Kekule) Kekule._loaded();';
+				/*
+				 if (window.btoa)  // use data uri to insert loaded code, avoid inline script problem in Chrome extension (still no use in Chrome)
+				 {
+				 var sBase64 = btoa(sloadedCode);
+				 var sdataUri = 'data:;base64,' + sBase64;
+				 directAppend(document, sdataUri);
+				 }
+				 else  // use simple inline code in IE below 10 (which do not support data uri)
+				 */
+				//directAppend(document, 'kekule.loaded.js');  // manully add small file to mark lib loaded
+				document.write('<script type="text/javascript">' + sloadedCode + '<\/script>');
+				if (callback)
+					callback(null);
+			}
+			catch(e)
+			{
+				callback(e);
+			}
 		}
 		else
-			appendScriptFiles(document, scriptUrls, function()
+			appendScriptFiles(document, scriptUrls, function(error)
 			{
-				// set a marker indicate that all modules are loaded
-				Kekule._loaded();
+				if (!error)
+				{
+					// set a marker indicate that all modules are loaded
+					Kekule._loaded();
+				}
 				if (callback)
-					callback();
+					callback(error);
 			});
 	}
 }
@@ -241,7 +297,9 @@ var kekuleFiles = {
 		'files': [
 			'core/kekule.common.js',
 			'core/kekule.exceptions.js',
-			'utils/kekule.utils.js'
+			'utils/kekule.utils.js',
+			'utils/kekule.domHelper.js',
+			'utils/kekule.domUtils.js'
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'
@@ -276,8 +334,7 @@ var kekuleFiles = {
 			'xbrowsers/kekule.x.js',
 			'html/kekule.nativeServices.js',
 			'html/kekule.predefinedResLoaders.js',
-			'utils/kekule.domUtils.js',
-			'utils/kekule.domHelper.js'
+			'utils/kekule.htmlDomUtils.js'
 		],
 		'category': 'core'
 	},
@@ -388,7 +445,6 @@ var kekuleFiles = {
 			'widgets/chem/editor/kekule.chemEditor.utilWidgets.js',
 			'widgets/chem/editor/kekule.chemEditor.chemSpaceEditors.js',
 			'widgets/chem/editor/kekule.chemEditor.nexus.js',
-			'widgets/chem/editor/kekule.chemEditor.composers.js',
 			'widgets/chem/editor/kekule.chemEditor.actions.js',
 			'widgets/chem/editor/kekule.chemEditor.trackParser.js',
 
@@ -398,7 +454,9 @@ var kekuleFiles = {
 			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js',
 
-			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js'
+			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
+
+			'widgets/chem/editor/kekule.chemEditor.composers.js',
 		],
 		'category': 'chemWidget'
 	},
@@ -545,120 +603,140 @@ function getEssentialFiles(modules, useMinFile)
 function analysisEntranceScriptSrc(doc)
 {
 	var entranceSrc = /^(.*\/?)kekule\.js(\?.*)?$/;
+	var scriptSrcPattern = /^(.*[\/\\])[^\/\\]*\.js(\?.*)?$/;
 	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
 	var paramLocalDatas = /^locals\=(.+)$/;
 	var paramLanguage = /^language\=(.+)$/;
-	var scriptElems = doc.getElementsByTagName('script');
-	var loc;
-	for (var j = scriptElems.length - 1; j >= 0; --j)
+
+	var matchResult;
+	// try get current script info by document.currentScript
+	if (doc && doc.currentScript && doc.currentScript.src)
 	{
-		var elem = scriptElems[j];
-		var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+		var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 		if (scriptSrc)
 		{
-			var matchResult = scriptSrc.match(entranceSrc);
-			if (matchResult)
+			matchResult = scriptSrc.match(scriptSrcPattern);
+		}
+	}
+	else  // use the traditional way, detect each <script> tags
+	{
+		var scriptElems = doc.getElementsByTagName('script');
+		for (var j = scriptElems.length - 1; j >= 0; --j)
+		{
+			var elem = scriptElems[j];
+			var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			if (scriptSrc)
 			{
-				var pstr = matchResult[2];
-				if (pstr)
-					pstr = pstr.substr(1);  // eliminate starting '?'
-				var result = {
-					'src': scriptSrc,
-					'path': matchResult[1],
-					'paramStr': pstr,
-					'useMinFile': true
-				};
-
-				if (result.paramStr)  // analysis params
+				matchResult = scriptSrc.match(entranceSrc);
+				if (matchResult)
 				{
-					var modules;
-					var params = result.paramStr.split('&');
-					for (var i = 0, l = params.length; i < l; ++i)
-					{
-						// check min file usage
-						var minFileMatch = params[i].match(paramMinFile);
-						if (minFileMatch)
-						{
-							var pvalue = minFileMatch[1].toLowerCase();
-							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
-							//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
-							//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
-							result.useMinFile = value;
-							continue;
-						}
-						// check module param
-						var moduleMatch = params[i].match(paramModules);
-						if (moduleMatch)
-						{
-							var moduleStr = moduleMatch[1];
-							var modules = moduleStr.split(',');
-							continue;
-						}
-						// force dom loader
-						var forceDomLoaderMatch = params[i].match(paramForceDomLoader);
-						if (forceDomLoaderMatch)
-						{
-							var pvalue = forceDomLoaderMatch[1].toLowerCase();
-							var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
-							result.forceDomLoader = value;
-							continue;
-						}
-						// check required local data
-						var localsMatch = params[i].match(paramLocalDatas);
-						if (localsMatch)
-						{
-							var localsStr = localsMatch[1];
-							var locals = localsStr.split(',');
-							result.locals = locals;
-							continue;
-						}
-						// language
-						var forceLanguage = params[i].match(paramLanguage);
-						if (forceLanguage)
-						{
-							var pvalue = forceLanguage[1];
-							result.language = pvalue;
-							continue;
-						}
-					}
-					if (modules)
-						result.modules = modules;
-					else
-						result.modules = usualModules;  // no modules appointed, use default setting
-
-					// handle local data
-					if (!result.locals)
-						result.locals = defaultLocals;
-					if (result.locals || result.language)
-					{
-						var localNames = [].concat(result.locals || []);
-						if (result.language && localNames.indexOf(result.language) < 0)  // local resources of forced language should always be loaded
-						{
-							localNames.push(result.language);
-						}
-						if (localNames.length)
-						{
-							var localizationModuleIndex = result.modules.indexOf('localizationData');
-							if (localizationModuleIndex < 0)  // local data module not listed, put local data as first module
-								localizationModuleIndex = -1;
-							for (var i = 0, l = localNames.length; i < l; ++i)
-							{
-								var localName = localNames[i];
-								if (localName === 'en')  // default local resource, already be loaded, by pass
-									continue;
-								// insert resources, right after localization module, before other widget modules
-								result.modules.splice(localizationModuleIndex + 1, 0, 'localizationData.' + localName);
-							}
-						}
-					}
+					break;
 				}
-
-				return result;
 			}
 		}
 	}
+
+	if (matchResult)
+	{
+		var pstr = matchResult[2];
+		if (pstr)
+			pstr = pstr.substr(1);  // eliminate starting '?'
+		var result = {
+			'src': scriptSrc,
+			'path': matchResult[1],
+			'paramStr': pstr,
+			'useMinFile': true
+		};
+
+		if (result.paramStr)  // analysis params
+		{
+			var modules;
+			var params = result.paramStr.split('&');
+			for (var i = 0, l = params.length; i < l; ++i)
+			{
+				// check min file usage
+				var minFileMatch = params[i].match(paramMinFile);
+				if (minFileMatch)
+				{
+					var pvalue = minFileMatch[1].toLowerCase();
+					var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+					//var value = (pvalue === 'false') || (pvalue === 'f') || (pvalue === 'no') || (pvalue === 'n');
+					//var value = ['true', 'yes', 't', 'y'].indexOf(pvalue) >= 0;
+					result.useMinFile = value;
+					continue;
+				}
+				// check module param
+				var moduleMatch = params[i].match(paramModules);
+				if (moduleMatch)
+				{
+					var moduleStr = moduleMatch[1];
+					var modules = moduleStr.split(',');
+					continue;
+				}
+				// force dom loader
+				var forceDomLoaderMatch = params[i].match(paramForceDomLoader);
+				if (forceDomLoaderMatch)
+				{
+					var pvalue = forceDomLoaderMatch[1].toLowerCase();
+					var value = ['false', 'no', 'f', 'n'].indexOf(pvalue) < 0;
+					result.forceDomLoader = value;
+					continue;
+				}
+				// check required local data
+				var localsMatch = params[i].match(paramLocalDatas);
+				if (localsMatch)
+				{
+					var localsStr = localsMatch[1];
+					var locals = localsStr.split(',');
+					result.locals = locals;
+					continue;
+				}
+				// language
+				var forceLanguage = params[i].match(paramLanguage);
+				if (forceLanguage)
+				{
+					var pvalue = forceLanguage[1];
+					result.language = pvalue;
+					continue;
+				}
+			}
+			if (modules)
+				result.modules = modules;
+			else
+				result.modules = usualModules;  // no modules appointed, use default setting
+
+			// handle local data
+			if (!result.locals)
+				result.locals = defaultLocals;
+			if (result.locals || result.language)
+			{
+				var localNames = [].concat(result.locals || []);
+				if (result.language && localNames.indexOf(result.language) < 0)  // local resources of forced language should always be loaded
+				{
+					localNames.push(result.language);
+				}
+				if (localNames.length)
+				{
+					var localizationModuleIndex = result.modules.indexOf('localizationData');
+					if (localizationModuleIndex < 0)  // local data module not listed, put local data as first module
+						localizationModuleIndex = -1;
+					for (var i = 0, l = localNames.length; i < l; ++i)
+					{
+						var localName = localNames[i];
+						if (localName === 'en')  // default local resource, already be loaded, by pass
+							continue;
+						// insert resources, right after localization module, before other widget modules
+						result.modules.splice(localizationModuleIndex + 1, 0, 'localizationData.' + localName);
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
 	//return null;
 	return {
 		'src': '',
@@ -667,6 +745,51 @@ function analysisEntranceScriptSrc(doc)
 		//'useMinFile': false  // for debug
 		'useMinFile': true
 	}; // return a default setting
+}
+
+function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, callback)  // return loaded files
+{
+	if (typeof Kekule !== "undefined" && Kekule.LOADED)
+		Kekule.LOADED = false;   // a flag, indicating now are loading script files
+
+	var loadedModules = kekuleScriptInfo.modules || [];
+	var essentialModules = [];
+	for (var i = 0, l = modules.length; i < l; ++i)
+	{
+		if (loadedModules.indexOf(modules[i]) < 0)
+			essentialModules.push(modules[i]);
+	}
+
+	var files = getEssentialFiles(essentialModules, useMinFile);
+	var essentialFiles = [];
+	var path = rootPath;
+
+	var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
+	var essentialUrls = [];
+	for (var i = 0, l = files.length; i < l; ++i)
+	{
+		var url = path + files[i];
+		if (loadedScriptUrls.indexOf(url) < 0)
+		{
+			essentialUrls.push(url);
+			essentialFiles.push(files[i]);
+		}
+	}
+	essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+	loadChildScriptFiles(essentialUrls, null, function(error){
+		kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
+		kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
+		kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
+		if (callback)
+			callback(error);
+	});
+
+	return {
+		'modules': essentialModules,
+		'files': essentialFiles,
+		'fileUrls': essentialUrls
+	};
 }
 
 function init()
@@ -679,7 +802,9 @@ function init()
 			'path': __dirname + '/',
 			'modules': nodeModules,
 			//'useMinFile': false  // for debug
-			'useMinFile': true
+			'useMinFile': true,
+			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
+			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
 
 		// if min files not found, use dev files instead
@@ -699,26 +824,23 @@ function init()
 		scriptInfo = analysisEntranceScriptSrc(document);
 	}
 
-	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
-	path = scriptInfo.path;
-
-	var scriptUrls = [];
-	for (var i = 0, l = files.length; i < l; ++i)
-	{
-		scriptUrls.push(path + files[i]);
-	}
-	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+	scriptInfo.explicitModules = scriptInfo.modules;
+	var modules = getEssentialModules(scriptInfo.modules);
+	//scriptInfo.modules = modules;
+	scriptInfo.modules = [];
+	scriptInfo.files = [];
+	scriptInfo.fileUrls = [];
 
 	// save loaded module and file information
-	scriptInfo.files = files;
 	scriptInfo.allModuleStructures = kekuleFiles;
 	$root['__$kekule_load_info__'] = scriptInfo;
 	$root['__$kekule_scriptfile_utils__'] = {
 		'appendScriptFile': appendScriptFile,
-		'appendScriptFiles': appendScriptFiles
+		'appendScriptFiles': appendScriptFiles,
+		'loadModuleScriptFiles': loadModuleScriptFiles
 	};
 
-		loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+	loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
 		if (isNode)  // export Kekule namespace
 		{
 			// export Kekule in module
@@ -736,6 +858,49 @@ function init()
 			this.Kekule.scriptSrcInfo = scriptInfo;
 		}
 	});
+
+	//console.log('ROOT', $root);
+
+	/*
+	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
+	path = scriptInfo.path;
+
+	var scriptUrls = [];
+	for (var i = 0, l = files.length; i < l; ++i)
+	{
+		scriptUrls.push(path + files[i]);
+	}
+	scriptUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+	// save loaded module and file information
+	scriptInfo.files = files;
+	scriptInfo.fileUrls = scriptUrls;  // already loaded file urls
+	scriptInfo.allModuleStructures = kekuleFiles;
+	$root['__$kekule_load_info__'] = scriptInfo;
+	$root['__$kekule_scriptfile_utils__'] = {
+		'appendScriptFile': appendScriptFile,
+		'appendScriptFiles': appendScriptFiles
+	};
+
+	loadChildScriptFiles(scriptUrls, scriptInfo.forceDomLoader, function(){
+		if (isNode)  // export Kekule namespace
+		{
+			// export Kekule in module
+			exports.Kekule = this.Kekule || __nodeContext.Kekule;
+			exports.Class = this.Class || __nodeContext.Class;
+			exports.ClassEx = this.ClassEx || __nodeContext.ClassEx;
+			exports.ObjectEx = this.ObjectEx || __nodeContext.ObjectEx;
+			exports.DataType = this.DataType || __nodeContext.DataType;
+			// and these common vars in global
+			this.Class = exports.Class;
+			this.ClassEx = exports.ClassEx;
+			this.ObjectEx = exports.ObjectEx;
+			this.DataType = exports.DataType;
+			// then store script info of Kekule
+			this.Kekule.scriptSrcInfo = scriptInfo;
+		}
+	});
+	*/
 }
 
 if (isWebpack)

@@ -160,14 +160,18 @@ Kekule.Dev.PackageUtils = {
 			],
 			openbabel: [
 				['_extras/OpenBabel/openbabel.js.dev', 'extra/openbabel.js'],
-				['_extras/OpenBabel/workers/kekule.worker.obStructure3DGenerator.js', 'extra/workers/kekule.worker.obStructure3DGenerator.js']
+				['_extras/OpenBabel/openbabel.wasm', 'extra/openbabel.wasm'],
+				//['_extras/OpenBabel/workers/kekule.worker.obStructure3DGenerator.js', 'extra/workers/kekule.worker.obStructure3DGenerator.js']
+				['_extras/OpenBabel/kekule.worker.obStructure3DGenerator.js', 'extra/kekule.worker.obStructure3DGenerator.js']
 			],
 			indigo: [
 				['_extras/Indigo/indigo.js.dev', 'extra/indigo.js'],
+				['_extras/Indigo/indigo.wasm', 'extra/indigo.wasm'],
 				['_extras/Indigo/indigoAdapter.js', 'extra/indigoAdapter.js']
 			],
 			inchi: [
-				['_extras/InChI/inchi.js.dev', 'extra/inchi.js']
+				['_extras/InChI/inchi.js.dev', 'extra/inchi.js'],
+				['_extras/InChI/inchi.wasm', 'extra/inchi.wasm']
 			]
 		};
 		var result = [];

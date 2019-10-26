@@ -6,7 +6,7 @@ More details about this project can be found in [Kekule.js website](http://partr
 
 ## Installation
 
-For web applications, Kekule.js can be simply included in HTML page by `<script>` tag:
+For web applications, Kekule.js can be used in a traditional way by simply including it in the HTML page with `<script>` tag:
 
 ```xml
 <script src="kekule.js?module=io,chemWidget,algorithm"></script>
@@ -20,13 +20,13 @@ If widget or chem widget modules are used, additional style sheet file also need
 <link rel="stylesheet" type="text/css" href="themes/default/kekule.css" />
 ```
 
-For node applications, the whole package can be installed by npm install command:
+The whole package can also be installed by npm in both web and node applications:
 
 ```bash
 $ npm install kekule
 ```
 
-Then Kekule namespace should be imported into the application:
+In Node or Webpack environment, the Kekule namespace should be imported into the application:
 
 ```javascript
 var Kekule = require('kekule').Kekule;
@@ -56,6 +56,20 @@ var mol2k = Kekule.IO.saveFormatData(mol, 'mol');
 console.log('MOL 2000: \n', mol2k);
 ```
 
+## Dynamic Module Loading
+
+The Kekule.js package is divided into several independent modules. Instead of loading all of them at the beginning,
+a dynamic loading approach can be used for better performance in both web and Node environment. For example:
+  
+```javascript
+Kekule.modules(['algorithm', 'calculation'], function(error) {
+    if (!error)
+    {
+        // algorithm and calculation modules loaded successfully, functions can be used now.
+    }
+});
+```
+  
 ## Documentations and Demos
 
 A set of [tutorials](http://partridgejiang.github.io/Kekule.js/documents/tutorial/index.html) and [demos](http://partridgejiang.github.io/Kekule.js/demos/index.html) are built to explain the basic operations in Kekule.js (e.g. creating molecule, loading and saving chemical objects, getting molecule information and usage of chem widgets).   

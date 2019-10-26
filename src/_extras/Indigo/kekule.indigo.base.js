@@ -22,8 +22,10 @@ var EU = Kekule.EmscriptenUtils;
  * @ignore
  */
 var indigoInitOptions = {
-	usingModulaize: true,  // whether using modularize option to build OpenBabel.js
+	usingModulaize: true,  // whether using modularize option to build Indigo.js
 	moduleName: 'IndigoModule', // the name of OpenBabl module
+	moduleInitEventName: 'Indigo.Initialized',
+	moduleInitCallbackName: '__$indigoInitialized$__',
 	indigoAdaptFuncName: 'CreateIndigo'
 };
 
@@ -92,11 +94,12 @@ Kekule.Indigo = {
 	{
 		if (!KI.isScriptLoaded())  // Indigo not loaded?
 		{
-			KI.loadIndigoScript(document, function(){
+			KI.loadIndigoScript(Kekule.$jsRoot.document, function(error){
 				//Kekule.IO.registerAllInChIFormats();
-				KI._enableAllFunctions();
+				if (!error)
+					KI._enableAllFunctions();
 				if (callback)
-					callback();
+					callback(error);
 			});
 		}
 		else
@@ -108,7 +111,8 @@ Kekule.Indigo = {
 	},
 	_enableAllFunctions: function()
 	{
-		if (KI.isScriptLoaded())
+		//if (KI.isScriptLoaded())
+		if (EU.isModuleReady(indigoInitOptions.moduleName))
 		{
 			var funcs = KI._enableFuncs;
 			for (var i = 0, l = funcs.length; i < l; ++i)
@@ -147,18 +151,44 @@ Kekule.Indigo.getIndigoHelperScriptUrl = function()
 Kekule.Indigo.loadIndigoScript = function(doc, callback)
 {
 	if (!doc)
-		doc = document;
-	var done = function()
+		doc = Kekule.$jsRoot.document;
+	var done = function(error)
 	{
-		Kekule.Indigo.getIndigo();
+		KI._scriptLoadedBySelf = !error;
+		if (!error)
+			Kekule.Indigo.getIndigo();
 		if (callback)
-			callback();
+			callback(error);
 	};
+
+	if (!KI._scriptLoadedBySelf && !KI.isScriptLoaded())
+	{
+		var filePath = KI.getIndigoScriptUrl();
+
+		EU.loadScript(filePath,
+			function(error){
+				if (!error)
+					Kekule.ScriptFileUtils.appendScriptFiles(doc, [KI.getIndigoHelperScriptUrl()], done);
+				else
+					done(error);
+			},
+			doc, indigoInitOptions);
+	}
+	else
+	{
+		done();
+	}
+
+	/*
 	if (!KI._scriptLoadedBySelf && !KI.isScriptLoaded())
 	{
 		//console.log('load');
-		var urls = [KI.getIndigoScriptUrl(), KI.getIndigoHelperScriptUrl()];
-		Kekule.ScriptFileUtils.appendScriptFiles(doc, urls, done);
+		//var urls = [KI.getIndigoScriptUrl(), KI.getIndigoHelperScriptUrl()];
+		//Kekule.ScriptFileUtils.appendScriptFiles(doc, urls, done);
+		EU.loadScript(KI.getIndigoScriptUrl(), function(){
+			// when finish initialize indigo.js, load the adapter
+			Kekule.ScriptFileUtils.appendScriptFiles(doc, [KI.getIndigoHelperScriptUrl()], done);
+		}, doc, indigoInitOptions);
 		KI._scriptLoadedBySelf = true;
 	}
 	else
@@ -167,7 +197,7 @@ Kekule.Indigo.loadIndigoScript = function(doc, callback)
 		if (callback)
 			callback();
 	}
-
+	*/
 };
 
 var KI = Kekule.Indigo;
@@ -181,6 +211,11 @@ var KI = Kekule.Indigo;
 Kekule.Indigo.AdaptUtils = {
 };
 
-Kekule._registerAfterLoadSysProc(function() {if (KI._autoEnabled) KI._enableAllFunctions()} );
+Kekule._registerAfterLoadSysProc(function() {
+	if (KI._autoEnabled && KI.isScriptLoaded())
+	{
+		EU.ensureModuleReady(Kekule.$jsRoot.document, indigoInitOptions, KI._enableAllFunctions);
+	}
+});
 
 })(this);

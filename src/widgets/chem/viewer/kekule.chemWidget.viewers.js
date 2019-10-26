@@ -163,6 +163,12 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  *
  * @property {Array} allowedMolDisplayTypes Molecule types can be changed in tool bar.
  */
+/**
+ * Invoked when the chem object (or null) in viewer has been edited by the popup editor.
+ *   event param of it has one fields: {obj: Object}
+ * @name Kekule.ChemWidget.Viewer#editingDone
+ * @event
+ */
 Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 /** @lends Kekule.ChemWidget.Viewer# */
 {
@@ -976,6 +982,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			//console.log(newObj);
 			this.setChemObj(newObj);
 		}
+		this.invokeEvent('editingDone', {'obj': this.getChemObj()});
 	},
 	/** @private */
 	_openEditComposerDialog: function(callerWidget, chemObj, restrainObj, editFromVoid, editFromEmpty)
