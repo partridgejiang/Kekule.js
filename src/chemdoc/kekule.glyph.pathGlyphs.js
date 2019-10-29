@@ -14,6 +14,9 @@
 (function(){
 "use strict";
 
+var CU = Kekule.CoordUtils;
+var CM = Kekule.CoordMode;
+
 /**
  * Represent an node in glyph path.
  * @class
@@ -184,7 +187,10 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 	{
 		return false;  // ensure other node can not stick to this control node
 	},
-	/** @private */
+	/**
+	 * Returns the parent connector object.
+	 * @returns {Kekule.Glyph.PathGlyphConnector}
+	 */
 	getParentConnector: function()
 	{
 		var p = this.getParent();
@@ -661,18 +667,121 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnectorControlNode',
-	/** @private */
+	/* @private */
+	/*
 	initProperties: function()
 	{
 		this.defineProp('distanceToChord', {
 			'dataType': DataType.FLOAT
 		});
 	},
+	*/
+	/** @ignore */
+	doGetEnableRelativeCoord: function()
+	{
+		return true;  // force always use relative coord
+	},
 
 	/** @ignore */
+	getRelativeCoordRefCoords: function($super, coordMode, allowCoordBorrow)
+	{
+		var connector = this.getParentConnector();
+		if (connector)
+		{
+			// use abs coord to calculate the arc, since there may be shadow node in connector
+			var c1 = connector.getConnectedObjAt(0).getAbsCoordOfMode(allowCoordBorrow);
+			var c2 = connector.getConnectedObjAt(1).getAbsCoordOfMode(allowCoordBorrow);
+			return [c1, c2];
+		}
+		else
+			return $super(coordMode);
+	},
+	/** @ignore */
+	calcRelativeCoordValue: function($super, coordMode, allowCoordBorrow)
+	{
+		if (coordMode === CM.COORD2D)
+		{
+			// coord 2D is determinated by distance to chord
+			var ratio = this.getRelativeCoordRatioStorage()[coordMode];
+			var d = ratio && ratio.distanceToChord;
+			if (Kekule.ObjUtils.notUnset(d))
+			{
+				var refCoords = this.getRelativeCoordRefCoords();
+				if (refCoords)
+				{
+					// use abs coord to calculate the arc, since there may be shadow node in connector
+					var arcStartCoord = refCoords[0];
+					var arcEndCoord = refCoords[1];
+					if (arcStartCoord && arcEndCoord)
+					{
+						//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
+						var chordVector = CU.substract(arcEndCoord, arcStartCoord);
+						var signX = Math.sign(chordVector.x);
+						var signY = Math.sign(chordVector.y);
+						if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
+						{
+							result = {'x': -d * signY, 'y': 0};
+						}
+						else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
+						{
+							result = {'x': 0, 'y': d * signX};
+						}
+						else
+						{
+							var chordSlope = chordVector.y / chordVector.x;
+							var refSlope = -1 / chordSlope;
+							var result = {'x': -signY * d / Math.sqrt(1 + Math.sqr(refSlope))};
+							result.y = result.x * refSlope;
+						}
+						return result;
+					}
+				}
+			}
+		}
+
+		return $super(coordMode, allowCoordBorrow);
+	},
+	/** @ignore */
+	saveRelativeCoordValue: function($super, coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+	{
+		if (coordMode === CM.COORD2D)
+		{
+			// the control point of arc should always be at the middle of arc, so do this constraint
+			var oldCoord = oldCoordValue;
+			var refCoords = this.getRelativeCoordRefCoords();
+			if (refCoords)
+			{
+				var ratio = this.getRelativeCoordRatioStorage()[coordMode];
+				if (ratio)
+				{
+					var arcStartCoord = refCoords[0];
+					var arcEndCoord = refCoords[1];
+					var baseVector = CU.substract(arcEndCoord, arcStartCoord);
+					var baseAngle = Math.atan2(baseVector.y, baseVector.x);
+
+					var valueDeltaVector = CU.substract(coordValue, oldCoord);
+					var valueDeltaAngle = Math.atan2(valueDeltaVector.y, valueDeltaVector.x);
+					var valueDeltaLength = CU.getDistance(coordValue, oldCoord);
+
+					var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
+
+					var distanceToChord = ratio.distanceToChord || 0;
+					var newDistanceToChord = (distanceToChord || 0) + actualMovement;
+					//this.setDistanceToChord(newDistanceToChord);
+					this.getRelativeCoordRatioStorage()[coordMode].distanceToChord = newDistanceToChord;
+
+					return this.getRelativeCoordRatioStorage()[coordMode];
+				}
+			}
+		}
+
+		return $super(coordMode, coordValue);
+	}
+
+	/* @ignore */
+	/*
 	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
 	{
-		var CU = Kekule.CoordUtils;
 		// coord 2D is determinated by distance to chord
 		var d = this.getDistanceToChord();
 		if (Kekule.ObjUtils.notUnset(d))
@@ -680,10 +789,6 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var connector = this.getParentConnector();
 			if (connector)
 			{
-				/*
-				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D(allowCoordBorrow);
-				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D(allowCoordBorrow);
-				*/
 				// use abs coord to calculate the arc, since there may be shadow node in connector
 				var arcStartCoord = connector.getConnectedObjAt(0).getAbsCoord2D(allowCoordBorrow);
 				var arcEndCoord = connector.getConnectedObjAt(1).getAbsCoord2D(allowCoordBorrow);
@@ -717,11 +822,12 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 
 		return $super(allowCoordBorrow, allowCreateNew);
 	},
+	*/
 
-	/** @ignore */
+	/* @ignore */
+	/*
 	doSetCoord2D: function($super, value)
 	{
-		var CU = Kekule.CoordUtils;
 		// the control point of arc should alway be at the middle of arc, so do this constraint
 		var oldCoord = this.getCoord2D();
 		var connector = this.getParentConnector();
@@ -739,18 +845,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
 			var newDistanceToChord = (this.getDistanceToChord() || 0) + actualMovement;
 			this.setDistanceToChord(newDistanceToChord);
-			/*
-			var angle = Math.PI / 2 - baseAngle;
-			var actualDelta = {'x': actualMovement * Math.cos(angle), 'y': actualMovement * Math.sin(angle)};
-			var newCoord = CU.add(oldCoord, actualDelta);
 
-			return $super(newCoord);
-			*/
 			return;
 		}
 
 		return $super(value);
 	}
+	*/
 });
 
 /**
