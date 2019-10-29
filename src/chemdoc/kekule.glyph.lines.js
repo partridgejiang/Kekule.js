@@ -170,18 +170,23 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 		var coord3D = {'x': 0, 'y': 0, 'z': 0};
 		var delta = {'x': refLength * (initialParams.lineLength || 1)};
 		var controllerDelta = {'x': 0, 'y': delta.x / 2};
+
 		var node1 = new Kekule.Glyph.PathGlyphNode(null, null, coord2D, coord3D);  // starting node
 		var node2 = new Kekule.Glyph.PathGlyphNode(null, null, C.add(coord2D, delta), C.add(coord3D, delta));  // ending node
+		this.appendNode(node1);
+		this.appendNode(node2);
+
 		//var node3 = new Kekule.Glyph.PathGlyphNode(null, Kekule.Glyph.NodeType.CONTROLLER, C.add(coord2D, controllerDelta), C.add(coord3D, controllerDelta));  // control node
 		var connector = new Kekule.Glyph.PathGlyphArcConnector(null, [node1, node2]);
 		this._applyParamsToConnector(connector, initialParams);
+
+		/*
 		var controlPoint = connector.getControlPoint();
 		//controlPoint.setDistanceToChord(delta.x)
 		controlPoint.setCoord2D(controllerDelta)
 				.setCoord3D(controllerDelta);
+		*/
 
-		this.appendNode(node1);
-		this.appendNode(node2);
 		this.appendConnector(connector);
 
 		connector.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
