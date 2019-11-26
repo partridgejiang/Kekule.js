@@ -6,7 +6,7 @@ It is helpful to build custom JS min files.
 You may run the application in the following command line:
 
 ```
-node run.js -m=module1,module2,... -d=destinationPath --minifier=minifierName
+node run.js -m module1,module2,... -d destinationPath --minifier=minifierName
 ```
 
 where the -d arg appoint the output path and the -m arg limits the modules needed to be outputted.
@@ -16,7 +16,7 @@ For example, the following command line will compress files related to ```io``` 
 and output them in ```../dist``` directory:
 
 ```
-node run.js -m=io,widget -d=../dist
+node run.js -m io,widget -d ../dist
 ```
 
 To generate all min js files in default path, just call:
