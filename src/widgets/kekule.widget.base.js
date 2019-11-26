@@ -3368,7 +3368,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	 */
 	_supportGestureEvent: function()
 	{
-		return (typeof(Kekule.$jsRoot.Hammer) !== 'undefined') && (document && document.addEventListener);  // hammer need addEventListener to install event handlers
+		return (typeof(Kekule.$jsRoot.Hammer) !== 'undefined') && (Kekule.$jsRoot.document && Kekule.$jsRoot.document.addEventListener);  // hammer need addEventListener to install event handlers
 	},
 	/**
 	 * Start observing gesture events.
@@ -4357,7 +4357,7 @@ Kekule.Widget.Utils = {
 	getWidgetById: function(id, doc)
 	{
 		if (!doc)
-			doc = document;
+			doc = Kekule.$jsRoot.document;
 		var elem = doc.getElementById(id);
 		if (elem)
 			return Kekule.Widget.Utils.getWidgetOnElem(elem);
@@ -4606,7 +4606,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	initialize: function($super, doc)
 	{
 		$super();
-		this._document = doc || document;
+		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
 		this.setPropStoreFieldValue('popupWidgets', []);
