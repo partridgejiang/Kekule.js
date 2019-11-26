@@ -1157,20 +1157,44 @@ Kekule.ClassDefineUtils = {
 		},
 
 		/**
+		 * Returns the indirect coord data storage object in coordMode.
+		 * @param {Int} coordMode
+		 * @returns {Hash}
+		 */
+		getIndirectCoordStorageOfMode: function(coordMode)
+		{
+			var s = this.getIndirectCoordStorage && this.getIndirectCoordStorage();
+			return s && s[coordMode];
+		},
+		/**
+		 * Set the indirect coord data storage object in coordMode.
+		 * @param {Int} coordMode
+		 * @param {Hash} data
+		 */
+		setIndirectCoordStorageOfMode: function(coordMode, data)
+		{
+			var s = this.getIndirectCoordStorage && this.getIndirectCoordStorage();
+			if (s)
+				s[coordMode] = data;
+			return this;
+		},
+		/**
 		 * Default methods of getting relative coord values.
 		 * Desendants can override this method.
 		 * @returns {Hash}
 		 * @private
 		 */
-		calcRelativeCoordValue: function(coordMode, allowCoordBorrow)
+		calcIndirectCoordValue: function(coordMode, allowCoordBorrow)
 		{
 			var coordFields = ['x', 'y'];
 			if (coordMode === Kekule.CoordMode.COORD3D)
 				coordFields.push('z');
-			var ratios = this.getRelativeCoordRatioStorage()[coordMode];
-			var refCoords = this.getRelativeCoordRefCoords(coordMode, allowCoordBorrow);
-			var refLengthes = this.getRelativeCoordRefLengths(coordMode, allowCoordBorrow);
-			if (ratios && refCoord && refLengthes)
+			var ratios = this.getIndirectCoordStorage()[coordMode];
+			var refCoords = this.getIndirectCoordRefCoords(coordMode, allowCoordBorrow);
+			if (Kekule.ArrayUtils.isArray(refCoords))
+				refCoords = refCoords[0];
+			var refLengthes = this.getIndirectCoordRefLengths(coordMode, allowCoordBorrow);
+			if (ratios && refCoords && refLengthes)
 			{
 				var result = {};
 				var notUnset = Kekule.ObjUtils.notUnset;
@@ -1182,33 +1206,43 @@ Kekule.ClassDefineUtils = {
 					var refLength = refLengthes[field];
 					if (notUnset(ratio) && notUnset(refCoord) && notUnset(refLength))
 					{
-						var v = refCoord + refLength * ratio;
+						var v;
+						if (refLength === 0)  // ratio maybe infinite, avoid a NaN result
+							v = refCoord;
+						else
+							v = refCoord + refLength * ratio;
 						result[field] = v;
 					}
+					/*
 					else
 					{
 						return null;
 					}
+					*/
 				}
+				//console.log('calc', coordMode, refCoords, refLengthes, ratios, coordFields, result);
 				return result;
 			}
 			else
 				return null;
 		},
 		/**
-		 * Default methods of updating the relative coord ratios.
+		 * Default methods of getting relative coord ratios from coord value.
 		 * Desendants can override this method.
+		 * @returns {Hash}
 		 * @private
 		 */
-		saveRelativeCoordValue: function(coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+		calcIndirectCoordStorage: function(coordMode, coordValue, oldCoordValue, allowCoordBorrow)
 		{
 			var coordFields = ['x', 'y'];
 			if (coordMode === Kekule.CoordMode.COORD3D)
 				coordFields.push('z');
-			var ratios = this.getRelativeCoordRatioStorage()[coordMode];
-			var refCoords = this.getRelativeCoordRefCoords(coordMode, allowCoordBorrow);
-			var refLengthes = this.getRelativeCoordRefLengths(coordMode, allowCoordBorrow);
-			if (ratios && refCoord && refLengthes)
+			var ratios = this.getIndirectCoordStorageOfMode(coordMode);
+			var refCoords = this.getIndirectCoordRefCoords(coordMode, allowCoordBorrow);
+			if (Kekule.ArrayUtils.isArray(refCoords))
+				refCoords = refCoords[0];
+			var refLengthes = this.getIndirectCoordRefLengths(coordMode, allowCoordBorrow);
+			if (ratios && refCoords && refLengthes)
 			{
 				var newRatios = {};
 				var notUnset = Kekule.ObjUtils.notUnset;
@@ -1220,7 +1254,11 @@ Kekule.ClassDefineUtils = {
 					var refLength = refLengthes[field];
 					if (notUnset(coord) && notUnset(refCoord) && notUnset(refLength))
 					{
-						var ratio = (coord - refCoord) / refLength;
+						var ratio;
+						if (refLength !== 0)  // avoid divided by zero
+							ratio = (coord - refCoord) / refLength;
+						else
+							ratio = 1;
 						newRatios[field] = ratio;
 					}
 					else
@@ -1228,18 +1266,36 @@ Kekule.ClassDefineUtils = {
 						return null;
 					}
 				}
-				ratios[coordMode] = newRatios;
 				return newRatios;
 			}
 			else
 				return null;
 		},
 		/**
+		 * Default methods of updating the relative coord ratios.
+		 * Desendants can override this method.
+		 * @private
+		 */
+		saveIndirectCoordValue: function(coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+		{
+			if (coordValue)
+			{
+				var newRatios = this.calcIndirectCoordStorage(coordMode, coordValue, oldCoordValue, allowCoordBorrow);
+				if (newRatios)
+				{
+					this.setIndirectCoordStorageOfMode(coordMode, newRatios);
+					return newRatios;
+				}
+			}
+
+			return null;
+		},
+		/**
 		 * Method to return the reference lengths used by using relative mode coord.
 		 * @returns {Variant} A numberic length or hash.
 		 * @private
 		 */
-		getRelativeCoordRefLengths: function(coordMode, allowCoordBorrow)
+		getIndirectCoordRefLengths: function(coordMode, allowCoordBorrow)
 		{
 			return null;
 		},
@@ -1248,7 +1304,7 @@ Kekule.ClassDefineUtils = {
 		 * @returns {Array}
 		 * @private
 		 */
-		getRelativeCoordRefCoords: function(coordMode, allowCoordBorrow)
+		getIndirectCoordRefCoords: function(coordMode, allowCoordBorrow)
 		{
 			return null;
 		}
@@ -1482,9 +1538,9 @@ Kekule.ClassDefineUtils = {
 				// clone result object so that user can not modify x/y directly from getter
 				'getter': function(allowCoordBorrow, allowCreateNew)
 				{
-					if (this.getEnableRelativeCoord())
+					if (this.getEnableIndirectCoord())
 					{
-						var rc = this.calcRelativeCoordValue(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+						var rc = this.calcIndirectCoordValue(Kekule.CoordMode.COORD2D, allowCoordBorrow);
 						if (rc)
 							return rc;
 					}
@@ -1525,8 +1581,11 @@ Kekule.ClassDefineUtils = {
 				{
 					var c = this.fetchCoord2D();
 
-					if (this.getEnableRelativeCoord())
-						this.saveRelativeCoordValue(Kekule.CoordMode.COORD2D, value, c);
+					if (this.getEnableIndirectCoord())
+					{
+						//console.log('save relative', value);
+						this.saveIndirectCoordValue(Kekule.CoordMode.COORD2D, value, c);
+					}
 
 					if (value.x !== undefined)
 						c.x = value.x;
@@ -1545,9 +1604,9 @@ Kekule.ClassDefineUtils = {
 				// clone result object so that user can not modify x/y directly from getter
 				'getter': function(allowCoordBorrow, allowCreateNew)
 				{
-					if (this.getEnableRelativeCoord())
+					if (this.getEnableIndirectCoord())
 					{
-						var rc = this.calcRelativeCoordValue(Kekule.CoordMode.COORD2D, allowCoordBorrow);
+						var rc = this.calcIndirectCoordValue(Kekule.CoordMode.COORD2D, allowCoordBorrow);
 						if (rc)
 							return rc;
 					}
@@ -1586,8 +1645,8 @@ Kekule.ClassDefineUtils = {
 				'setter': function(value){
 					var c = this.fetchCoord3D();
 
-					if (this.getEnableRelativeCoord())
-						this.saveRelativeCoordValue(Kekule.CoordMode.COORD3D, value, c);
+					if (this.getEnableIndirectCoord())
+						this.saveIndirectCoordValue(Kekule.CoordMode.COORD3D, value, c);
 
 					if (value.x !== undefined)
 						c.x = value.x;
@@ -1654,30 +1713,46 @@ Kekule.ClassDefineUtils = {
 				}
 			});
 		}
-		if (!props || (props.indexOf('enableRelativeCoord') >= 0))
+		if (!props || (props.indexOf('enableIndirectCoord') >= 0))
 		{
-			ClassEx.defineProp(aClass, 'enableRelativeCoord', {
+			ClassEx.defineProp(aClass, 'enableIndirectCoord', {
 				'scope': Class.PropertyScope.PUBLIC,
 				'dataType': DataType.BOOL,
-				'serializable': true
+				'serializable': true,
+				'setter': function(value)
+				{
+					if (this.getPropStoreFieldValue('enableIndirectCoord') != value)
+					{
+						if (value)  // when enable relative coord, save the coord ratio first
+						{
+							var coord2D = this.getCoord2D();
+							var coord3D = this.getCoord3D();
+							if (coord2D)
+								this.saveIndirectCoordValue(Kekule.CoordMode.COORD2D, coord2D, coord2D, true);
+							if (coord3D)
+								this.saveIndirectCoordValue(Kekule.CoordMode.COORD3D, coord3D, coord3D, true);
+						}
+						this.setPropStoreFieldValue('enableIndirectCoord', value);
+					}
+				}
 			});
 		}
-		if (!props || (props.indexOf('relativeCoordRatioStorage') >= 0))
+		if (!props || (props.indexOf('indirectCoordStorage') >= 0))
 		{
-			ClassEx.defineProp(aClass, 'relativeCoordRatioStorage', {
-				'scope': Class.PropertyScope.PUBLIC,
+			ClassEx.defineProp(aClass, 'indirectCoordStorage', {
+				//'scope': Class.PropertyScope.PUBLIC,
 				'dataType': DataType.HASH,
 				'serializable': true,
 				'setter': null,
 				'getter': function()
 				{
-					var result = this.getPropStoreFieldValue('relativeCoordRatioStorage');
+					var result = this.getPropStoreFieldValue('indirectCoordStorage');
 					if (!result)
 					{
 						result = {};
 						result[Kekule.CoordMode.COORD2D] = {};
 						result[Kekule.CoordMode.COORD3D] = {};
-						this.setPropStoreFieldValue('relativeCoordRatioStorage', result);
+						this.setPropStoreFieldValue('indirectCoordStorage', result);
 					}
 					return result;
 				}

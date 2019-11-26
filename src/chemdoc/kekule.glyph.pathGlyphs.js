@@ -770,14 +770,14 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 	/** @ignore */
 	doCheckIsPositioned: function(coordMode, allowCoordBorrow)
 	{
-		return this.getRelativeCoordRefCoords(coordMode, allowCoordBorrow) && Kekule.ObjUtils.notUnset(this.getDistanceToChord());
+		return this.getIndirectCoordRefCoords(coordMode, allowCoordBorrow) && Kekule.ObjUtils.notUnset(this.getDistanceToChord());
 	},
 	/** @ignore */
 	doResetPosition: function(coordMode)
 	{
 		if (coordMode === CM.COORD2D)  // only apply to 2D glyph
 		{
-			var coords = this.getRelativeCoordRefCoords(coordMode, true);
+			var coords = this.getIndirectCoordRefCoords(coordMode, true);
 			if (coords && coords[0] && coords[1])
 			{
 				var refLength = CU.getDistance(coords[0], coords[1]);
@@ -788,15 +788,15 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 	},
 
 	/** @ignore */
-	doGetEnableRelativeCoord: function()
+	doGetEnableIndirectCoord: function()
 	{
 		return true;  // force always use relative coord
 	},
 	/** @ignore */
-	getRelativeCoordRefCoords: function($super, coordMode, allowCoordBorrow)
+	getIndirectCoordRefCoords: function($super, coordMode, allowCoordBorrow)
 	{
 		var connector = this.getParentConnector();
-		if (connector)
+		if (connector && connector.getConnectedObjCount() >= 2)
 		{
 			// use abs coord to calculate the arc, since there may be shadow node in connector
 			var c1 = connector.getConnectedObjAt(0).getAbsCoordOfMode(allowCoordBorrow);
@@ -807,19 +807,19 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			return $super(coordMode);
 	},
 	/** @ignore */
-	calcRelativeCoordValue: function($super, coordMode, allowCoordBorrow)
+	calcIndirectCoordValue: function($super, coordMode, allowCoordBorrow)
 	{
 		if (coordMode === CM.COORD2D)
 		{
 			// coord 2D is determinated by distance to chord
 			/*
-			var ratio = this.getRelativeCoordRatioStorage()[coordMode];
+			var ratio = this.getIndirectCoordStorageOfMode(coordMode);
 			var d = ratio && ratio.distanceToChord;
 			*/
 			var d = this.getDistanceToChord();
 			if (Kekule.ObjUtils.notUnset(d))
 			{
-				var refCoords = this.getRelativeCoordRefCoords();
+				var refCoords = this.getIndirectCoordRefCoords();
 				if (refCoords)
 				{
 					// use abs coord to calculate the arc, since there may be shadow node in connector
@@ -855,13 +855,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 		return $super(coordMode, allowCoordBorrow);
 	},
 	/** @ignore */
-	saveRelativeCoordValue: function($super, coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+	saveIndirectCoordValue: function($super, coordMode, coordValue, oldCoordValue, allowCoordBorrow)
 	{
 		if (coordMode === CM.COORD2D)
 		{
 			// the control point of arc should always be at the middle of arc, so do this constraint
 			var oldCoord = oldCoordValue;
-			var refCoords = this.getRelativeCoordRefCoords();
+			var refCoords = this.getIndirectCoordRefCoords();
 			if (refCoords)
 			{
 				var arcStartCoord = refCoords[0];
