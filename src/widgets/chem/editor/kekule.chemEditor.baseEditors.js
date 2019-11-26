@@ -4469,9 +4469,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			if (obj.getContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
+			if (obj.getExposedContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
 			{
-				var box = obj.getContainerBox(this.getCoordMode());
+				var box = obj.getExposedContainerBox(this.getCoordMode());
 				if (box)
 				{
 					containerBoxes.push(box);
