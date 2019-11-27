@@ -4464,6 +4464,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!rootObj)
 			return this;
 		var objs = AU.toArray(targetObjOrObjs);
+
+		/*
 		var containerBoxes = [];
 		var totalContainerBox = null;
 		for (var i = 0, l = objs.length; i < l; ++i)
@@ -4482,11 +4484,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 		}
+		*/
+		var boxInfo = this._getTargetObjsExposedContainerBoxInfo(objs, rootObj);
+		var totalContainerBox = boxInfo.totalBox;
+		var containerBoxes = boxInfo.boxes;
 
 		if (totalContainerBox)
 		{
 			var ops = Object.extend({scrollToCenter: true, coverMostObjs: true}, options || {});
 
+			/*
 			var actualBox;
 			// if scroll to centerCoord and none of the obj can be seen in current state, we need another approach
 			var visibleBox = this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
@@ -4501,9 +4508,67 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 			var scrollCoord = ops.scrollToCenter? BU.getCenterCoord(actualBox): {x: actualBox.x1, y: actualBox.y2};
 			return this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM, ops);
+			*/
+			return this._scrollClientToContainerBox(totalContainerBox, containerBoxes, ops);
 		}
 		else
 			return this;
+	},
+
+	/** @private */
+	_scrollClientToContainerBox: function(totalContainerBox, allContainerBoxes, options)
+	{
+		var BU = Kekule.BoxUtils;
+
+		var actualBox;
+		// if scroll to centerCoord and none of the obj can be seen in current state, we need another approach
+		var visibleBox = this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
+		if (((totalContainerBox.x2 - totalContainerBox.x1 > visibleBox.x2 - visibleBox.x1)
+			|| (totalContainerBox.y2 - totalContainerBox.y1 > visibleBox.y2 - visibleBox.y1))
+			&& options.coverMostObjs)
+		{
+			actualBox = this._getMostIntersectedContainerBox(visibleBox.x2 - visibleBox.x1, visibleBox.y2 - visibleBox.y1, allContainerBoxes, totalContainerBox);
+		}
+		else
+			actualBox = totalContainerBox;
+
+		var scrollCoord = options.scrollToCenter? BU.getCenterCoord(actualBox): {x: actualBox.x1, y: actualBox.y2};
+		return this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM, options);
+	},
+
+	/**
+	 * Returns the exposed container box of each object and the total container box.
+	 * @param {Array} objs
+	 * @returns {Hash}
+	 * @private
+	 */
+	_getTargetObjsExposedContainerBoxInfo: function(objs, rootObj)
+	{
+		var BU = Kekule.BoxUtils;
+		if (!rootObj)
+			rootObj = this.getChemObj();
+		if (rootObj)
+		{
+			var totalContainerBox = null;
+			var containerBoxes = [];
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				if (obj.getExposedContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
+				{
+					var box = obj.getExposedContainerBox(this.getCoordMode());
+					if (box)
+					{
+						containerBoxes.push(box);
+						if (!totalContainerBox)
+							totalContainerBox = box;
+						else
+							totalContainerBox = BU.getContainerBox(totalContainerBox, box);
+					}
+				}
+			}
+		}
+		return {'totalBox': totalContainerBox, 'boxes': containerBoxes};
 	},
 
 	/** @private */
