@@ -87,6 +87,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  *
  * @property {Float} editorInitialZoom Initial zoom level of chem editor.
  * @property {Bool} scrollToObjAfterLoading Whether automatically scroll to the newly loaded chem object in editor.
+ * @property {Bool} autoExpandSizeAfterLoading Whether automatically enlarge the editor size to display all loaded chem objects.
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
@@ -139,6 +140,7 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableHotTrack', true);
 
 		this.addBoolConfigProp('scrollToObjAfterLoading', true);
+		this.addBoolConfigProp('autoExpandSizeAfterLoading', true);
 		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', !true);
 		this.addBoolConfigProp('autoSelectNewlyInsertedObjectsOnTouch', true);
 
@@ -453,6 +455,8 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
  *
  * @property {Hash} defScreenSize2D Default 2D screen size of space, based on px.
  * @property {Hash} defScreenSize3D Default 3D size of space.
+ * @property {Hash} autoExpandScreenSize2D The 2D delta used when auto expanding the space size.
+ * @property {Hash} autoExpandScreenSize3D The 3D delta used when auto expanding the space size.
  * @property {Num} defPadding Padding on top when adding an unpositioned object to container chem space.
  */
 Kekule.Editor.ChemSpaceConfigs = Class.create(Kekule.AbstractConfigs,
@@ -465,6 +469,8 @@ Kekule.Editor.ChemSpaceConfigs = Class.create(Kekule.AbstractConfigs,
 	{
 		this.addHashConfigProp('defScreenSize2D');
 		this.addHashConfigProp('defScreenSize3D');
+		this.addHashConfigProp('autoExpandScreenSize2D');
+		this.addHashConfigProp('autoExpandScreenSize3D');
 		this.addNumConfigProp('defPadding', 50);
 	},
 	/** @private */
@@ -473,6 +479,8 @@ Kekule.Editor.ChemSpaceConfigs = Class.create(Kekule.AbstractConfigs,
 		$super();
 		this.setDefScreenSize2D({'x': 900, 'y': 1500});
 		this.setDefScreenSize3D({'x': 600, 'y': 600, 'z': 600});
+		this.setAutoExpandScreenSize2D({'x': 200, 'y': 200});
+		this.setAutoExpandScreenSize3D({'x': 100, 'y': 100, 'z': 100});
 	}
 });
 
