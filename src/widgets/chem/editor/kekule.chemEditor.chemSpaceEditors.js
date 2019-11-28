@@ -134,20 +134,13 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				old.finalize();
 				this._containerChemSpace = null;
 			}
+
 			if (value)
 			{
 				if (value instanceof Kekule.ChemSpace)
 				{
 					this._initChemSpaceDefProps(value);
-					var result = $super(value);
-					// auto scroll
-					if (this.getEditorConfigs().getInteractionConfigs().getScrollToObjAfterLoading())
-					{
-						var objs = value.getChildren();
-						if (objs && objs.length)
-							this.scrollClientToObject(objs);
-					}
-					return result;
+					$super(value);
 				}
 				else
 				{
@@ -156,6 +149,21 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					//space.appendChild(value);
 					this._containerChemSpace = space;
 					$super(space);
+				}
+				if (this.getEditorConfigs().getInteractionConfigs().getAutoExpandSizeAfterLoading())
+				{
+					this.autoExpandChemSpaceSize();
+				}
+
+				if (value instanceof Kekule.ChemSpace)
+				{
+					// auto scroll
+					if (this.getEditorConfigs().getInteractionConfigs().getScrollToObjAfterLoading())
+					{
+						var objs = value.getChildren();
+						if (objs && objs.length)
+							this.scrollClientToObject(objs);
+					}
 				}
 			}
 			else
@@ -495,6 +503,19 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			chemSpace.setIsEditing(true);
 	},
 
+	/** @private */
+	_getChemSpaceObjScreenLengthRatio: function()
+	{
+		var chemSpace = this.getChemSpace();
+		var ratio = chemSpace.getObjScreenLengthRatio();
+		if (!ratio)
+		{
+			var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
+			ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
+		}
+		return ratio;
+	},
+
 	/**
 	 * Change the size of current chemspace.
 	 * The screen size of the space will also be modified in 2D coord mode.
@@ -509,12 +530,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		// now only change screen size in 2D mode
 		if (coordMode === Kekule.CoordMode.COORD2D)
 		{
+			/*
 			var ratio = chemSpace.getObjScreenLengthRatio();
 			if (!ratio)
 			{
 				var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
 				ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
 			}
+			*/
+			var ratio = this._getChemSpaceObjScreenLengthRatio();
 			if (ratio)
 			{
 				chemSpace.setScreenSize({'x': size.x / ratio, 'y': size.y / ratio});
@@ -530,12 +554,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	changeChemSpaceScreenSize: function(screenSize)
 	{
 		var chemSpace = this.getChemSpace();
+		/*
 		var ratio = chemSpace.getObjScreenLengthRatio();
 		if (!ratio)
 		{
 			var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
 			ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
 		}
+		*/
+		var ratio = this._getChemSpaceObjScreenLengthRatio();
 		if (ratio)
 		{
 			// change size 2D
@@ -543,6 +570,144 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		}
 		chemSpace.setScreenSize(screenSize);
 		this.resetClientDisplay();
+	},
+
+	/**
+	 * Shift coords of all direct children of chem space.
+	 * @private
+	 */
+	_shiftChemSpaceChildCoord: function(coordDelta, coordMode)
+	{
+		var chemSpace = this.getChemSpace();
+		var children = chemSpace.getChildren();
+		if (children)
+		{
+			this.beginUpdateObject();
+			try
+			{
+				chemSpace.beginUpdate();
+				try
+				{
+					var allowCoordBorrow = this.getAllowCoordBorrow();
+					for (var i = 0, l = children.length; i < l; ++i)
+					{
+						var child = children[i];
+						if (child && child.setCoordOfMode)
+							child.setCoordOfMode(CU.add(child.getCoordOfMode(coordMode, allowCoordBorrow), coordDelta));
+						/*
+						if (coordDelta2D && child && child.setCoord2D)
+							child.setCoord2D(CU.add(child.getCoord2D(), coordDelta2D));
+						if (coordDelta3D && child && child.setCoord3D)
+							child.setCoord3D(CU.add(child.getCoord3D(), coordDelta3D));
+						*/
+					}
+				}
+				finally
+				{
+					chemSpace.endUpdate();
+				}
+			}
+			finally
+			{
+				this.endUpdateObject();
+			}
+		}
+	},
+	/** @private */
+	_expandChemSpaceSizeToContainerBox: function(containerBox, coordMode)
+	{
+		var CM = Kekule.CoordMode;
+		var space = this.getChemSpace();
+		var is3D = (coordMode === CM.COORD3D);
+		var coordFields = ['x', 'y'];
+		if (is3D)
+			coordFields.push('z');
+
+		var chemSpaceConfigs = this.getEditorConfigs().getChemSpaceConfigs();
+		var ObjScreenLengthRatio = this._getChemSpaceObjScreenLengthRatio();
+		var screenPadding = chemSpaceConfigs.getDefPadding();
+		var objSysPadding = screenPadding * ObjScreenLengthRatio;
+
+		var currSize = is3D? space.getSize3D(): space.getSize2D();
+		var minMaxCoords = Kekule.BoxUtils.getMinMaxCoords(containerBox);
+		// check minCoord, if coord less than zero + padding, need to expand
+		var minCoord = minMaxCoords.min;
+		var minShift = {};
+		var needMinShift = false;
+		for (var i = 0, l = coordFields.length; i < l; ++i)
+		{
+			var coordValue = minCoord[coordFields[i]];
+			if (coordValue < objSysPadding)
+			{
+				minShift[coordFields[i]] = objSysPadding - coordValue;
+				needMinShift = true;
+			}
+			else
+				minShift[coordFields[i]] = 0;
+		}
+		// check maxCoord, if coord greater than size - padding, need to expand
+		var maxCoord = minMaxCoords.max;
+		var maxDelta = {};
+		var needMaxExpand = false;
+		for (var i = 0, l = coordFields.length; i < l; ++i)
+		{
+			var coordValue = maxCoord[coordFields[i]];
+			if (coordValue > currSize[coordFields[i]] - objSysPadding)
+			{
+				maxDelta[coordFields[i]] = coordValue - (currSize[coordFields[i]] - objSysPadding);
+				needMaxExpand = true;
+			}
+			else
+				maxDelta[coordFields[i]] = 0;
+		}
+
+		// prepare to expand
+		var expands = {};
+		var actualExpands = {};
+		if (needMinShift || needMaxExpand)
+		{
+			var autoExpandScreenSize = is3D? chemSpaceConfigs.getAutoExpandScreenSize2D(): chemSpaceConfigs.getAutoExpandScreenSize3D();
+			var autoExpandSize = CU.multiply(autoExpandScreenSize, ObjScreenLengthRatio);
+			for (var i = 0, l = coordFields.length; i < l; ++i)
+			{
+				var field = coordFields[i];
+				expands[field] = minShift[field] + maxDelta[field];
+				var scale = Math.ceil(expands[field] / autoExpandSize[field]);
+				actualExpands[field] = scale * autoExpandSize[field];
+			}
+			// do expand and shift
+			var newSize = CU.add(currSize, actualExpands);
+			this.changeChemSpaceSize(newSize, coordMode);
+			if (needMinShift)
+				this._shiftChemSpaceChildCoord(minShift, coordMode);
+		}
+	},
+
+	/**
+	 * Change the size of current chemspace, automatically expand it to display all targetObjs.
+	 * @param {Array} targetObjs
+	 * @param {Int} coordMode
+	 */
+	expandChemSpaceSizeToTargetObjs: function(targetObjs, coordMode)
+	{
+		if (Kekule.ObjUtils.isUnset(coordMode))
+			coordMode = this.getCoordMode();
+		if (targetObjs && targetObjs.length)
+		{
+			var containerBoxInfo = this._getTargetObjsExposedContainerBoxInfo(targetObjs);
+			var totalContainerBox = containerBoxInfo.totalBox;
+			this._expandChemSpaceSizeToContainerBox(totalContainerBox, coordMode);
+		}
+		return this;
+	},
+	/**
+	 * Automatically expand the size of current chem space to display all child objects.
+	 */
+	autoExpandChemSpaceSize: function()
+	{
+		var space = this.getChemSpace();
+		var targetObjs = space.getChildren();
+		return this.expandChemSpaceSizeToTargetObjs(targetObjs, this.getCoordMode());
 	},
 
 	/**
