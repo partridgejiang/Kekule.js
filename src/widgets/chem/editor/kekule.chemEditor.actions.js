@@ -184,7 +184,8 @@ Kekule.Editor.ActionOperUtils = {
 				if (appendableObjs && appendableObjs.length)
 					AU.pushUnique(actualObjs, appendableObjs);
 			}
-			editor.beginUpdateObject();
+			//editor.beginUpdateObject();
+			editor.beginManipulateAndUpdateObject();
 			try
 			{
 				var marcoOper = new Kekule.MacroOperation();
@@ -226,7 +227,8 @@ Kekule.Editor.ActionOperUtils = {
 			}
 			finally
 			{
-				editor.endUpdateObject();
+				//editor.endUpdateObject();
+				editor.endManipulateAndUpdateObject();
 			}
 		}
 	}
