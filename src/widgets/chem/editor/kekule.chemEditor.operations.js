@@ -1907,4 +1907,268 @@ Kekule.ChemStructOperation.StandardizeStructFragment = Class.create(Kekule.ChemO
 	}
 });
 
-	})();
+/**
+ * A namespace for operation about ChemSpace editor.
+ * @namespace
+ */
+Kekule.ChemSpaceEditorOperation = {};
+
+/**
+ * An operation of changing the size of chem space in editor.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.ChemSpace} chemSpace.
+ * @param {Hash} newSize
+ * @param {Int} coordMode
+ * @param {Kekule.Editor.ChemSpaceEditor} editor
+ *
+ * @property {Hash} newSize
+ * @property {Int} coordMode
+ */
+Kekule.ChemSpaceEditorOperation.ChangeSpaceSize = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemSpaceEditorOperation.ChangeSpaceSize# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemSpaceEditorOperation.ChangeSpaceSize',
+	/** @constructs */
+	initialize: function($super, chemSpace, newSize, coordMode, editor)
+	{
+		$super(chemSpace, editor);
+		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
+		if (newSize)
+			this.setNewSize(newSize);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('coordMode', {'dataType': DataType.INT});
+		this.defineProp('newSize', {'dataType': DataType.HASH});
+		this.defineProp('oldSize', {'dataType': DataType.HASH});  // private
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		//space.beginUpdate();
+		try
+		{
+			var coordMode = this.getCoordMode();
+			if (!this.getOldSize())
+				this.setOldSize(Object.extend({}, space.getSizeOfMode(coordMode, editor.getAllowCoordBorrow())));
+			editor.changeChemSpaceSize(this.getNewSize(), coordMode);
+		}
+		finally
+		{
+			//space.endUpdate();
+		}
+	},
+	/** @private */
+	doReverse: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		if (this.getOldSize())
+		{
+			//space.beginUpdate();
+			try
+			{
+				var coordMode = this.getCoordMode();
+				editor.changeChemSpaceSize(this.getOldSize(), coordMode);
+			}
+			finally
+			{
+				//space.endUpdate();
+			}
+		}
+	}
+});
+
+/**
+ * An operation of shifting the coords of all direct children of chem space.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.ChemSpace} chemSpace.
+ * @param {Hash} newSize
+ * @param {Int} coordMode
+ * @param {Kekule.Editor.ChemSpaceEditor} editor
+ *
+ * @property {Hash} newSize
+ * @property {Int} coordMode
+ */
+Kekule.ChemSpaceEditorOperation.ShiftChildrenCoords = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemSpaceEditorOperation.ShiftChildrenCoords# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemSpaceEditorOperation.ShiftChildrenCoords',
+	/** @constructs */
+	initialize: function($super, chemSpace, coordDelta, coordMode, editor)
+	{
+		$super(chemSpace, editor);
+		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
+		if (coordDelta)
+			this.setCoordDelta(coordDelta);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('coordMode', {'dataType': DataType.INT});
+		this.defineProp('coordDelta', {'dataType': DataType.HASH});
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		var coordDelta = this.getCoordDelta();
+		var coordMode = this.getCoordMode();
+		//space.beginUpdate();
+		try
+		{
+			editor._shiftChemSpaceChildCoord(coordDelta, coordMode);
+		}
+		finally
+		{
+			//space.endUpdate();
+		}
+	},
+	/** @private */
+	doReverse: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		var coordDelta = Kekule.CoordUtils.multiply(this.getCoordDelta(), -1);
+		var coordMode = this.getCoordMode();
+		//space.beginUpdate();
+		try
+		{
+			editor._shiftChemSpaceChildCoord(coordDelta, coordMode);
+		}
+		finally
+		{
+			//space.endUpdate();
+		}
+	}
+});
+
+/**
+ * An operation of changing the size of chem space in editor and shift the coords of direct children.
+ * This operation is used by the auto expand feature of chem space editor.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Kekule.ChemSpace} chemSpace.
+ * @param {Hash} newSize
+ * @param {Hash} coordDelta
+ * @param {Int} coordMode
+ * @param {Kekule.Editor.ChemSpaceEditor} editor
+ *
+ * @property {Hash} newSize
+ * @property {Hash} coordDelta
+ * @property {Int} coordMode
+ * @property {Bool} restoreScrollPosition
+ */
+Kekule.ChemSpaceEditorOperation.ChangeSpaceSizeAndShiftChildrenCoords = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemSpaceEditorOperation.ChangeSpaceSizeAndShiftChildrenCoords# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemSpaceEditorOperation.ChangeSpaceSizeAndShiftChildrenCoords',
+	/** @constructs */
+	initialize: function($super, chemSpace, newSize, coordDelta, coordMode, editor)
+	{
+		this.setPropStoreFieldValue('restoreScrollPosition', true);
+		$super(chemSpace, editor);
+		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
+		if (newSize)
+			this.setNewSize(newSize);
+		if (coordDelta)
+			this.setCoordDelta(coordDelta);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('restoreScrollPosition', {'dataType': DataType.BOOL});
+		this.defineProp('coordMode', {'dataType': DataType.INT});
+		this.defineProp('coordDelta', {'dataType': DataType.HASH});
+		this.defineProp('newSize', {'dataType': DataType.HASH});
+		this.defineProp('oldSize', {'dataType': DataType.HASH, 'serializable': false});  // private
+		//this.defineProp('oldScrollCoord', {'dataType': DataType.HASH, 'serializable': false});  // private
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		//space.beginUpdate();
+		try
+		{
+			var coordMode = this.getCoordMode();
+			var restoreScrollPosition = this.getRestoreScrollPosition();
+			var scrollCoord;
+			if (restoreScrollPosition)
+			{
+				scrollCoord = editor.getClientScrollCoord(Kekule.Editor.CoordSys.CHEM);
+				//this.setOldScrollCoord(scrollCoord);
+			}
+			if (this.getNewSize())
+			{
+				if (!this.getOldSize())
+					this.setOldSize(Object.extend({}, space.getSizeOfMode(coordMode, editor.getAllowCoordBorrow())));
+				editor.changeChemSpaceSize(this.getNewSize(), coordMode);
+			}
+			if (this.getCoordDelta())
+			{
+				editor._shiftChemSpaceChildCoord(this.getCoordDelta(), coordMode);
+				scrollCoord = Kekule.CoordUtils.add(scrollCoord, this.getCoordDelta());
+			}
+			if (restoreScrollPosition)
+			{
+				editor._registerAfterUpdateObjectProc(function(){editor.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM);});
+			}
+		}
+		finally
+		{
+			//space.endUpdate();
+		}
+	},
+	/** @private */
+	doReverse: function()
+	{
+		var editor = this.getEditor();
+		var space = this.getTarget();
+		if (this.getOldSize() || this.getCoordDelta())
+		{
+			//space.beginUpdate();
+			try
+			{
+				var restoreScrollPosition = this.getRestoreScrollPosition();
+				var coordMode = this.getCoordMode();
+				var scrollCoord;
+				if (restoreScrollPosition)
+				{
+					scrollCoord = editor.getClientScrollCoord(Kekule.Editor.CoordSys.CHEM);
+					//this.setOldScrollCoord(scrollCoord);
+				}
+				if (this.getCoordDelta())
+				{
+					editor._shiftChemSpaceChildCoord(Kekule.CoordUtils.multiply(this.getCoordDelta(), -1), coordMode);
+					scrollCoord = Kekule.CoordUtils.substract(scrollCoord, this.getCoordDelta());
+				}
+				if (this.getOldSize())
+					editor.changeChemSpaceSize(this.getOldSize(), coordMode);
+				if (this.getRestoreScrollPosition() && scrollCoord)
+				{
+					editor._registerAfterUpdateObjectProc(function(){editor.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM);});
+				}
+			}
+			finally
+			{
+				//space.endUpdate();
+			}
+		}
+	}
+});
+
+})();
