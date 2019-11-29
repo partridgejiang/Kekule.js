@@ -391,7 +391,8 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 			operation = opers[0];
 
 		var editor = this.getEditor();
-		editor.beginUpdateObject();
+		//editor.beginUpdateObject();
+		editor.beginManipulateAndUpdateObject();
 		try
 		{
 			if (operation)  // only execute when there is real modification
@@ -409,7 +410,8 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		}
 		finally
 		{
-			editor.endUpdateObject();
+			//editor.endUpdateObject();
+			editor.endManipulateAndUpdateObject();
 		}
 		//console.log('do apply end');
 	},

@@ -320,6 +320,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			},
 			'setter': null
 		});
+		this.defineProp('operationsInCurrManipulation', {'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PRIVATE, 'serializable': false}); // private
 
 		this.defineProp('selection', {'dataType': DataType.ARRAY, 'serializable': false,
 			'getter': function()
@@ -605,6 +606,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
 	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setOperationsInCurrManipulation([]);
+	},
+
 	/** @ignore */
 	elementBound: function(element)
 	{
@@ -1505,6 +1513,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.objectsChanged(this._updatedObjectDetails);
 				this._updatedObjectDetails = [];
 			}
+			this._execAfterUpdateObjectProcs();
 			this.invokeEvent('endUpdateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
 	},
@@ -1515,6 +1524,37 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		return (this._objectUpdateFlag < 0);
 	},
+
+	/**
+	 * Register suspended function called right after endUpdateObject method.
+	 * @private
+	 */
+	_registerAfterUpdateObjectProc: function(proc)
+	{
+		if (this.isUpdatingObject())
+		{
+			if (!this.endUpdateObject.suspendedProcs)
+				this.endUpdateObject.suspendedProcs = [];
+			this.endUpdateObject.suspendedProcs.push(proc);
+		}
+		else
+			proc.apply(this);
+	},
+	/** @private */
+	_execAfterUpdateObjectProcs: function()
+	{
+		var procs = this.endUpdateObject.suspendedProcs;
+		if (procs)
+		{
+			while (procs.length)
+			{
+				var proc = procs.shift();
+				if (proc)
+					proc.apply(this);
+			}
+		}
+	},
+
 	/** @private */
 	_mergeObjUpdatedDetails: function(dest, target)
 	{
@@ -1667,10 +1707,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	beginManipulateObject: function()
 	{
+		//console.log('[BEGIN MANIPULATE]');
 		//console.log('[Call begin update]', this._objectManipulateFlag);
 		if (this._objectManipulateFlag >= 0)
 		{
-			//console.log('[BEGIN MANIPULATE]');
 			this.invokeEvent('beginManipulateObject');
 		}
 		--this._objectManipulateFlag;
@@ -1685,8 +1725,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!this.isManipulatingObject())
 		{
 			this._objectManipulateFlag = 0;
+			this.doManipulationEnd();
 			//console.log('[MANIPULATE DONE]');
-			this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+			//this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
 	},
 	/**
@@ -1695,6 +1736,33 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	isManipulatingObject: function()
 	{
 		return (this._objectManipulateFlag < 0);
+	},
+	/**
+	 * Called when endManipulateObject is called and the object manipulation is really done.
+	 * @private
+	 */
+	doManipulationEnd: function()
+	{
+		//console.log('[MANIPULATE END]');
+		this.setOperationsInCurrManipulation([]);
+		this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+	},
+
+	/**
+	 * A combination of method beginUpdateObject/beginManipulateObject.
+	 */
+	beginManipulateAndUpdateObject: function()
+	{
+		this.beginManipulateObject();
+		this.beginUpdateObject();
+	},
+	/**
+	 * A combination of method endUpdateObject/endManipulateObject.
+	 */
+	endManipulateAndUpdateObject: function()
+	{
+		this.endUpdateObject();
+		this.endManipulateObject();
 	},
 
 	/** @private */
@@ -4124,21 +4192,26 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	pushOperation: function(operation, autoExec)
 	{
-		var h = this.getOperHistory();
-		if (h && operation)
+		// console.log('push operation');
+		if (operation)
 		{
-			h.push(operation);
-		}
-		if (autoExec)
-		{
-			this.beginUpdateObject();
-			try
+			var h = this.getOperHistory();
+			if (h)
 			{
-				operation.execute();
+				h.push(operation);
 			}
-			finally
+			this.getOperationsInCurrManipulation().push(operation);
+			if (autoExec)
 			{
-				this.endUpdateObject();
+				this.beginUpdateObject();
+				try
+				{
+					operation.execute();
+				}
+				finally
+				{
+					this.endUpdateObject();
+				}
 			}
 		}
 	},
@@ -4166,6 +4239,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					this.endUpdateObject();
 				}
 			}
+			// if r in operationsInCurrManipulation, removes it
+			var currOpers = this.getOperationsInCurrManipulation();
+			var index = currOpers.indexOf(r);
+			if (index >= 0)
+				currOpers.splice(index, 1);
+
 			return r;
 		}
 		else
@@ -4173,21 +4252,33 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 	/**
 	 * Execute an operation in editor.
-	 * @param {Kekule.Operation} operation
+	 * @param {Kekule.Operation} operation A single operation, or an array of operations.
 	 */
 	execOperation: function(operation)
 	{
-		this.beginUpdateObject();
+		//this.beginUpdateObject();
+		var opers = AU.toArray(operation);
+		this.beginManipulateAndUpdateObject();
 		try
 		{
-			operation.execute();
+			for (var i = 0, l = opers.length; i < l; ++i)
+			{
+				var o = opers[i];
+				o.execute();
+				if (this.getEnableOperHistory())
+					this.pushOperation(o, false);  // push but not execute
+			}
+			//operation.execute();
 		}
 		finally
 		{
-			this.endUpdateObject();
+			//this.endUpdateObject();
+			this.endManipulateAndUpdateObject();
 		}
+		/*
 		if (this.getEnableOperHistory())
 			this.pushOperation(operation, false);  // push but not execute
+		*/
 		return this;
 	},
 
@@ -4335,12 +4426,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					macro.add(oper);
 				}
 			}
+
+			this.beginManipulateAndUpdateObject();
 			macro.execute();
 		}
 		finally
 		{
 			if (putInOperHistory && this.getEnableOperHistory() && macro.getChildCount())
 				this.pushOperation(macro);
+			this.endManipulateAndUpdateObject();
 		}
 		return this;
 	},
@@ -4367,6 +4461,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'x': elem.scrollLeft,
 			'y': elem.scrollTop
 		}: null;
+	},
+	/**
+	 * Returns the top left corner coord of client in coordSys.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getClientScrollCoord: function(coordSys)
+	{
+		var screenCoord = this.getClientScrollPosition();
+		if (OU.isUnset(coordSys) || coordSys === Kekule.Editor.CoordSys.SCREEN)
+			return screenCoord;
+		else
+			return this.translateCoord(screenCoord, Kekule.Editor.CoordSys.SCREEN, coordSys);
 	},
 	/**
 	 * Returns the screen rect/box of editor client element.
@@ -4427,6 +4534,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	scrollClientToCoord: function(coord, coordSys, options)
 	{
 		var scrollX = OU.notUnset(coord.x);
+
 		var scrollY = OU.notUnset(coord.y);
 		var scrollToCenter = options && options.scrollToCenter;
 		var screenCoord;

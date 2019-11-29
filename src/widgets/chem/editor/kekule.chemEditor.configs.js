@@ -87,7 +87,8 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  *
  * @property {Float} editorInitialZoom Initial zoom level of chem editor.
  * @property {Bool} scrollToObjAfterLoading Whether automatically scroll to the newly loaded chem object in editor.
- * @property {Bool} autoExpandSizeAfterLoading Whether automatically enlarge the editor size to display all loaded chem objects.
+ * @property {Bool} autoExpandClientSizeAfterLoading Whether automatically enlarge the editor size to display all chem objects after loading.
+ * @property {Bool} autoExpandClientSizeAfterManipulation Whether automatically enlarge the editor size to display all chem objects after manipulating.
  * @property {Bool} enableTrackOnNearest If true, hot track or selection will focus on object nearest to coord,
  *   otherwise, focus on topmost object around coord.
  * @property {Bool} enableHotTrack Whether highlighting objects under mouse when mouse moves over editor.
@@ -140,7 +141,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('enableHotTrack', true);
 
 		this.addBoolConfigProp('scrollToObjAfterLoading', true);
-		this.addBoolConfigProp('autoExpandSizeAfterLoading', true);
+		this.addBoolConfigProp('autoExpandClientSizeAfterLoading', true);
+		this.addBoolConfigProp('autoExpandClientSizeAfterManipulation', false);
 		this.addBoolConfigProp('autoSelectNewlyInsertedObjects', !true);
 		this.addBoolConfigProp('autoSelectNewlyInsertedObjectsOnTouch', true);
 
