@@ -150,7 +150,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					this._containerChemSpace = space;
 					$super(space);
 				}
-				if (this.getEditorConfigs().getInteractionConfigs().getAutoExpandSizeAfterLoading())
+				if (this.getEditorConfigs().getInteractionConfigs().getAutoExpandClientSizeAfterLoading())
 				{
 					this.autoExpandChemSpaceSize();
 				}
@@ -271,20 +271,54 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		$super();
 		this.resetClientDisplay();
 	},
+	/**
+	 * Reset the transform params of context and repaint the client.
+	 * @private
+	 */
+	resetClientDisplay: function(restoreScrollPosition)
+	{
+		// run rest later after updating object in editor, to ensure the context is really updated (even in begin/endUpdateObject block, e.g., in undo change space size operation)
+		// IMPORTANT: if not called in a defer way, the resetClientDisplay may be run before endUpdateObject. In reset process, the
+		// object is actually not updated in draw context (e.g., the box of text block is still the old one and returns a old container box),
+		// then the _initialTransformParams are recalculated in resetClientDisplay but got a wrong result.
+		// So, here we must ensure the resetClientDisplay run after endUpdateObject.
+		if (this.isUpdatingObject())  // suspend the reset process after updating is done
+		{
+			var self = this;
+			/*
+			this.once('endUpdateObject', function(e){
+				if (e.target === self)
+					self._resetClientDisplayCore(restoreScrollPosition);
+			});
+			*/
+			this._registerAfterUpdateObjectProc(function(){
+				self._resetClientDisplayCore(restoreScrollPosition);
+			});
+		}
+		else
+			return this._resetClientDisplayCore(restoreScrollPosition);
+	},
 	/** @private */
-	resetClientDisplay: function()
+	_resetClientDisplayCore: function(restoreScrollPosition)
 	{
 		// adjust editor size
 		var space = this.getChemObj();
 		if (space)
 		{
-			//console.log('decide size', space, space.getScreenSize);
+			var scrollPos;
+			if (restoreScrollPosition)
+				scrollPos = this.getClientScrollPosition();
+
+			//console.log('decide size', space.getScreenSize());
 			var screenSize = space.getScreenSize();
 			this.changeClientSize(screenSize.x, screenSize.y, this.getCurrZoom());
 			// scroll to top center
 			var elem = this.getEditClientElem().parentNode;
 			var visibleClientSize = Kekule.HtmlElementUtils.getElemClientDimension(elem);
-			this.scrollClientTo(0, (screenSize.x * this.getCurrZoom() - visibleClientSize.width) / 2);
+			if (!restoreScrollPosition)
+				this.scrollClientTo(0, (screenSize.x * this.getCurrZoom() - visibleClientSize.width) / 2);
+			else
+				this.scrollClientTo(scrollPos.y, scrollPos.x);
 		}
 	},
 
@@ -336,8 +370,69 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 		}
 		*/
-		return $super(obj, changedPropNames);
+		var result = $super(obj, changedPropNames);
+		//this.autoExpandChemSpaceSize();
+		return result;
 	},
+
+	/** @ignore */
+	doManipulationEnd: function($super)
+	{
+		if (this.getEditorConfigs().getInteractionConfigs().getAutoExpandClientSizeAfterManipulation())
+		{
+			//this.autoExpandChemSpaceSize();
+			var autoExpandInfo = this._calcChemSpaceAutoExpandInfo();
+			if (autoExpandInfo)  // need to expand
+			{
+				var opers = this._createChemSpaceAutoExpandOperations(autoExpandInfo);
+				if (opers)
+				{
+					if (this.getEnableOperHistory())
+					{
+						//console.log('append resize oper', opers);
+						this._appendOpersToLastManipulationOperation(opers);
+					}
+					for (var i = 0, l = opers.length; i < l; ++i)
+					{
+						opers[i].execute();  // execute but not push to history
+					}
+				}
+			}
+		}
+		return $super();
+	},
+	/** @private */
+	_appendOpersToLastManipulationOperation: function(opers)
+	{
+		var currManipulationOpers = this.getOperationsInCurrManipulation();
+		if (currManipulationOpers && currManipulationOpers.length)
+		{
+			var lastOper = currManipulationOpers[currManipulationOpers.length - 1];
+			var operHistory = this.getOperHistory();
+			if (operHistory)
+			{
+				var historyOperations = operHistory.getOperations();   // TODO: here we use the internal array structure of OperationHistory, may change in the future
+				var historyIndex = historyOperations.indexOf(lastOper);
+				if (historyIndex >= 0)  // replace oper in history
+				{
+					var macroOperation;
+					if (lastOper instanceof Kekule.MacroOperation)
+						macroOperation = lastOper;
+					else
+					{
+						macroOperation = new Kekule.MacroOperation([lastOper]);
+						historyOperations.splice(historyIndex, 1, macroOperation);
+						currManipulationOpers.splice(currManipulationOpers.length - 1, 1, macroOperation);
+					}
+					for (var i = 0, l = opers.length; i < l; ++i)
+					{
+						macroOperation.add(opers[i]);
+					}
+				}
+			}
+		}
+	},
+
 	/** @private */
 	updateTextBlockSize: function(textBlock, boundInfo)
 	{
@@ -525,10 +620,46 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	changeChemSpaceSize: function(size, coordMode)
 	{
 		var chemSpace = this.getChemSpace();
-		chemSpace.setSizeOfMode(size, coordMode);
+		chemSpace.beginUpdate();
+		try
+		{
+			chemSpace.setSizeOfMode(size, coordMode);
 
-		// now only change screen size in 2D mode
-		if (coordMode === Kekule.CoordMode.COORD2D)
+			// now only change screen size in 2D mode
+			if (coordMode === Kekule.CoordMode.COORD2D)
+			{
+				/*
+				var ratio = chemSpace.getObjScreenLengthRatio();
+				if (!ratio)
+				{
+					var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
+					ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
+				}
+				*/
+				var ratio = this._getChemSpaceObjScreenLengthRatio();
+				if (ratio)
+				{
+					chemSpace.setScreenSize({'x': size.x / ratio, 'y': size.y / ratio});
+				}
+			}
+		}
+		finally
+		{
+			chemSpace.endUpdate();
+		}
+
+		this.resetClientDisplay(true);
+	},
+	/**
+	 * Change the screen size of current chem space in editor.
+	 * The size2D of chemSpace will also be modified.
+	 * @param {Hash} screenSize
+	 */
+	changeChemSpaceScreenSize: function(screenSize)
+	{
+		var chemSpace = this.getChemSpace();
+		chemSpace.beginUpdate();
+		try
 		{
 			/*
 			var ratio = chemSpace.getObjScreenLengthRatio();
@@ -541,47 +672,35 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			var ratio = this._getChemSpaceObjScreenLengthRatio();
 			if (ratio)
 			{
-				chemSpace.setScreenSize({'x': size.x / ratio, 'y': size.y / ratio});
+				// change size 2D
+				chemSpace.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
 			}
+			chemSpace.setScreenSize(screenSize);
 		}
-		this.resetClientDisplay();
-	},
-	/**
-	 * Change the screen size of current chem space in editor.
-	 * The size2D of chemSpace will also be modified.
-	 * @param {Hash} screenSize
-	 */
-	changeChemSpaceScreenSize: function(screenSize)
-	{
-		var chemSpace = this.getChemSpace();
-		/*
-		var ratio = chemSpace.getObjScreenLengthRatio();
-		if (!ratio)
+		finally
 		{
-			var refScreenLength = this.getRenderConfigs().getLengthConfigs().getDefBondLength();
-			ratio = chemSpace.getDefAutoScaleRefLength() / refScreenLength;
+			chemSpace.endUpdate();
 		}
-		*/
-		var ratio = this._getChemSpaceObjScreenLengthRatio();
-		if (ratio)
-		{
-			// change size 2D
-			chemSpace.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
-		}
-		chemSpace.setScreenSize(screenSize);
-		this.resetClientDisplay();
+		this.resetClientDisplay(true);
 	},
 
 	/**
 	 * Shift coords of all direct children of chem space.
 	 * @private
 	 */
-	_shiftChemSpaceChildCoord: function(coordDelta, coordMode)
+	_shiftChemSpaceChildCoord: function(coordDelta, coordMode, scrollToNewPosition)
 	{
 		var chemSpace = this.getChemSpace();
 		var children = chemSpace.getChildren();
 		if (children)
 		{
+			var scrollCoord;
+			if (scrollToNewPosition)
+			{
+				scrollCoord = this.getClientScrollCoord(Kekule.Editor.CoordSys.CHEM);
+				//scrollCoord = CU.multiply(scrollCoord, -1);
+			}
+
 			this.beginUpdateObject();
 			try
 			{
@@ -601,6 +720,11 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 							child.setCoord3D(CU.add(child.getCoord3D(), coordDelta3D));
 						*/
 					}
+					if (scrollToNewPosition)
+					{
+						//console.log('scrollToNewPosition', scrollCoord);
+						this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM);
+					}
 				}
 				finally
 				{
@@ -614,7 +738,19 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		}
 	},
 	/** @private */
-	_expandChemSpaceSizeToContainerBox: function(containerBox, coordMode)
+	_calcExpandChemSpaceSizeToTargetObjsInfo: function(targetObjs, coordMode)
+	{
+		if (targetObjs && targetObjs.length)
+		{
+			var containerBoxInfo = this._getTargetObjsExposedContainerBoxInfo(targetObjs);
+			var totalContainerBox = containerBoxInfo.totalBox;
+			if (totalContainerBox)
+				return this._calcExpandChemSpaceSizeToContainerBoxInfo(totalContainerBox, coordMode);
+		}
+		return null;
+	},
+	/** @private */
+	_calcExpandChemSpaceSizeToContainerBoxInfo: function(containerBox, coordMode)
 	{
 		var CM = Kekule.CoordMode;
 		var space = this.getChemSpace();
@@ -666,6 +802,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		var actualExpands = {};
 		if (needMinShift || needMaxExpand)
 		{
+			//console.log('do expand', needMinShift, minShift, needMaxExpand, maxDelta);
 			var autoExpandScreenSize = is3D? chemSpaceConfigs.getAutoExpandScreenSize2D(): chemSpaceConfigs.getAutoExpandScreenSize3D();
 			var autoExpandSize = CU.multiply(autoExpandScreenSize, ObjScreenLengthRatio);
 			for (var i = 0, l = coordFields.length; i < l; ++i)
@@ -677,10 +814,38 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			}
 			// do expand and shift
 			var newSize = CU.add(currSize, actualExpands);
-			this.changeChemSpaceSize(newSize, coordMode);
+			var result = {'newSize': newSize};
 			if (needMinShift)
-				this._shiftChemSpaceChildCoord(minShift, coordMode);
+				result.coordShift = minShift;
+			return result;
 		}
+		else
+			return null;
+	},
+	/** @private */
+	_expandChemSpaceSizeAndShiftChildrenCoords: function(newSize, coordShift, coordMode)
+	{
+		this.beginUpdateObject();
+		try
+		{
+			if (coordShift)
+				this._shiftChemSpaceChildCoord(coordShift, coordMode, true);
+			this.changeChemSpaceSize(newSize, coordMode);
+		}
+		finally
+		{
+			this.endUpdateObject();
+		}
+	},
+	/** @private */
+	_expandChemSpaceSizeToContainerBox: function(containerBox, coordMode)
+	{
+		var detail = this._calcExpandChemSpaceSizeToContainerBoxInfo(containerBox, coordMode);
+		if (detail)
+		{
+			this._expandChemSpaceSizeAndShiftChildrenCoords(detail.newSize, detail.coordShift, coordMode);
+		}
+		return detail;
 	},
 
 	/**
@@ -696,7 +861,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		{
 			var containerBoxInfo = this._getTargetObjsExposedContainerBoxInfo(targetObjs);
 			var totalContainerBox = containerBoxInfo.totalBox;
-			this._expandChemSpaceSizeToContainerBox(totalContainerBox, coordMode);
+			if (totalContainerBox)
+				this._expandChemSpaceSizeToContainerBox(totalContainerBox, coordMode);
 		}
 		return this;
 	},
@@ -705,9 +871,54 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	 */
 	autoExpandChemSpaceSize: function()
 	{
+		if (this._isAutoExpandingChemSpace)  // a flag, avoid recursion calls
+			return this;
+		this._isAutoExpandingChemSpace = true;
+		try
+		{
+			var space = this.getChemSpace();
+			var targetObjs = space.getChildren();
+			if (targetObjs)
+				this.expandChemSpaceSizeToTargetObjs(targetObjs, this.getCoordMode());
+		}
+		finally
+		{
+			this._isAutoExpandingChemSpace = false;
+		}
+		return this;
+	},
+	/**
+	 * Returns the new size and coord shift to auto expand chem space.
+	 * @private
+	 */
+	_calcChemSpaceAutoExpandInfo: function()
+	{
 		var space = this.getChemSpace();
 		var targetObjs = space.getChildren();
-		return this.expandChemSpaceSizeToTargetObjs(targetObjs, this.getCoordMode());
+		if (targetObjs)
+			return this._calcExpandChemSpaceSizeToTargetObjsInfo(targetObjs, this.getCoordMode);
+		else
+			return null;
+	},
+	/** @private */
+	_createChemSpaceAutoExpandOperations(expandInfo)
+	{
+		if (expandInfo)
+		{
+			var result = [];
+			var space = this.getChemSpace();
+			var coordMode = this.getCoordMode();
+			/*
+			if (expandInfo.coordShift)
+				result.push(new Kekule.ChemSpaceEditorOperation.ShiftChildrenCoords(space, expandInfo.coordShift, coordMode, this));
+			if (expandInfo.newSize)
+				result.push(new Kekule.ChemSpaceEditorOperation.ChangeSpaceSize(space, expandInfo.newSize, coordMode, this));
+			*/
+			result.push(new Kekule.ChemSpaceEditorOperation.ChangeSpaceSizeAndShiftChildrenCoords(space, expandInfo.newSize, expandInfo.coordShift, coordMode, this));
+			return result;
+		}
+		else
+			return null;
 	},
 
 	/**
@@ -4437,7 +4648,7 @@ Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaC
 		if (operation)  // only execute when there is real modification
 		{
 			var editor = this.getEditor();
-			editor.beginUpdateObject();
+			editor.beginManipulateAndUpdateObject();
 			try
 			{
 				operation.execute();
@@ -4449,7 +4660,7 @@ Kekule.Editor.MolAtomIaController_OLD = Class.create(Kekule.Editor.BaseEditorIaC
 			}
 			finally
 			{
-				editor.endUpdateObject();
+				editor.endManipulateAndUpdateObject();
 			}
 
 			if (editor && editor.getEnableOperHistory() && operation)
@@ -4861,7 +5072,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		if (operation)  // only execute when there is real modification
 		{
 			var editor = this.getEditor();
-			editor.beginUpdateObject();
+			editor.beginManipulateAndUpdateObject();
 			try
 			{
 				operation.execute();
@@ -4873,7 +5084,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			}
 			finally
 			{
-				editor.endUpdateObject();
+				editor.endManipulateAndUpdateObject();
 			}
 
 			if (editor && editor.getEnableOperHistory() && operation)
@@ -6766,25 +6977,33 @@ Kekule.Editor.FormulaIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		{
 			var oper = new Kekule.ChemObjOperation.Modify(mol.getFormula(), {'text': text}, this.getEditor());
 		}
-		if (oper)
+
+		var editor = this.getEditor();
+		if (editor && oper)
 		{
-			oper.execute();
-
-			var editor = this.getEditor();
-			if (editor && editor.getEnableOperHistory())
+			editor.beginManipulateAndUpdateObject();
+			try
 			{
-				if (this._operAddBlock)
+				oper.execute();
+				if (editor.getEnableOperHistory())
 				{
-					var group = new Kekule.MacroOperation();
-					group.add(this._operAddBlock);
-					group.add(oper);
-					editor.pushOperation(group);
-					this._operAddBlock = null;
-				}
-				else
-					editor.pushOperation(oper);
+					if (this._operAddBlock)
+					{
+						var group = new Kekule.MacroOperation();
+						group.add(this._operAddBlock);
+						group.add(oper);
+						editor.pushOperation(group);
+						this._operAddBlock = null;
+					}
+					else
+						editor.pushOperation(oper);
 
-				this.doneInsertOrModifyBasicObjects([mol]);
+					this.doneInsertOrModifyBasicObjects([mol]);
+				}
+			}
+			finally
+			{
+				editor.endManipulateAndUpdateObject();
 			}
 		}
 
@@ -7159,23 +7378,31 @@ Kekule.Editor.TextBlockIaController = Class.create(Kekule.Editor.ContentBlockIaC
 		else
 			oper = new Kekule.ChemObjOperation.Modify(block, {'text': text}, this.getEditor());
 
-		if (oper)
+		var editor = this.getEditor();
+		if (oper && editor)
 		{
-			oper.execute();
-
-			var editor = this.getEditor();
-			if (editor && editor.getEnableOperHistory())
+			editor.beginManipulateAndUpdateObject();
+			try
 			{
-				if (this._operAddBlock)
+				oper.execute();
+
+				if (editor.getEnableOperHistory())
 				{
-					var group = new Kekule.MacroOperation();
-					group.add(this._operAddBlock);
-					group.add(oper);
-					editor.pushOperation(group);
-					this._operAddBlock = null;
+					if (this._operAddBlock)
+					{
+						var group = new Kekule.MacroOperation();
+						group.add(this._operAddBlock);
+						group.add(oper);
+						editor.pushOperation(group);
+						this._operAddBlock = null;
+					}
+					else
+						editor.pushOperation(oper);
 				}
-				else
-					editor.pushOperation(oper);
+			}
+			finally
+			{
+				editor.endManipulateAndUpdateObject();
 			}
 
 			this.doneInsertOrModifyBasicObjects([block]);
@@ -7405,7 +7632,7 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 					}
 					if (oper)
 					{
-						//editor.beginUpdateObject();
+						editor.beginManipulateAndUpdateObject();
 						try
 						{
 							oper.execute();
@@ -7416,7 +7643,7 @@ Kekule.Editor.ImageBlockIaController = Class.create(Kekule.Editor.ContentBlockIa
 						}
 						finally
 						{
-							//editor.endUpdateObject();
+							editor.endManipulateAndUpdateObject();
 						}
 					}
 				}).defer();  // execute later, get accurate image size
