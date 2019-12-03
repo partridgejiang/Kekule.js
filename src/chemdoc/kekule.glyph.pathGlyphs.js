@@ -1604,7 +1604,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return this.getCtab().getNextSiblingOfChild(childObj);
 		else
 			return null;
-	}
+	},
 
 	/*
 	 * Get count of child objects (including both nodes and connectors).
@@ -1647,6 +1647,15 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return -1;
 	}
 	*/
+	/**
+	 * Returns the object that will be directly manipulated after inserting into editor.
+	 * Descendants may override this methods.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getDirectManipulationTarget: function()
+	{
+		return null;
+	}
 });
 
 })();
