@@ -2448,13 +2448,13 @@ Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowControll
 	'ArrowLineIaController',
 	'ArrowLineIaController-BondFormingElectronPushingArrowSingle',
 	{
-		'glyphClass': Kekule.Glyph.BaseTwinArc,
+		'glyphClass': Kekule.Glyph.BondFormingElectronPushingArrow,
 		'glyphInitialParams': {
-			'electronCount': 1,
+			//'electronCount': 2,
 			'endArrowWidth': 0.25,
 			'endArrowLength': 0.25,
 			'lineLength': 1,
-			'lineGap': 0.1,
+			'pathEndGap': 0.1,
 			'lineCount': 1
 		}
 	},

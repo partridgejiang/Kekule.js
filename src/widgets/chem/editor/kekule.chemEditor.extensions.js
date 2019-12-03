@@ -770,4 +770,64 @@ ClassEx.extendMethod(Kekule.Glyph.BaseArc, 'createDefaultStructure', function($o
 	return result;
 });
 
+ClassEx.extend(Kekule.Glyph.BaseTwinArc,
+/** @lends Kekule.Glyph.BaseTwinArc# */
+{
+	/** @ignore */
+	ownerChanged: function($super, newOwner, oldOwner)
+	{
+		var needAutoAdjustClass = (!oldOwner && newOwner);  // when first inserting to a space, may need to adjust class
+		var result = $super(newOwner, oldOwner);
+		if (needAutoAdjustClass && this.getIsEditing())
+		{
+			this._autoAdjustClass();
+		}
+		return result;
+	},
+	/** @private */
+	_getChemStickTargets: function()
+	{
+		var result = [];
+		var nodes = this._getArrowStartingNodes();
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			var stickTarget = node.getCoordStickTarget();
+			if (this._isValidChemNodeOrConnectorStickTarget(stickTarget))
+				result.push(stickTarget);
+		}
+		return result;
+	},
+	/** @ignore */
+	notifyChildCoordStickTargetChanged: function(child, oldTarget, newTarget)
+	{
+		this._autoAdjustClass();
+	},
+	/** @private */
+	_autoAdjustClass: function()
+	{
+		if (this.getIsEditing())
+		{
+			var stickTargets = this._getChemStickTargets();
+			var isEPushingArrow = stickTargets.length >= 2;
+			if (isEPushingArrow)
+			{
+				if (!(this instanceof Kekule.Glyph.BondFormingElectronPushingArrow))
+				{
+					//console.log('change to e arrow');
+					this.__changeClass__(Kekule.Glyph.BondFormingElectronPushingArrow);
+				}
+			}
+			else
+			{
+				if (this instanceof Kekule.Glyph.BondFormingElectronPushingArrow)
+				{
+					//console.log('change to arc');
+					this.__changeClass__(Kekule.Glyph.TwinArc);
+				}
+			}
+		}
+	}
+});
+
 })();

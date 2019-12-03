@@ -10,6 +10,7 @@
  * requires /core/kekule.structures.js
  * requires /chemdoc/kekule.glyph.base.js
  * requires /chemdoc/kekule.glyph.pathGlyphs.js
+ * requires /chemdoc/kekule.glyph.utils.js
  */
 
 (function(){
@@ -61,6 +62,12 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 		if (Kekule.ObjUtils.isUnset(initialParams.autoOffset))
 			p.autoOffset = false;
 		connector.setPathParams(p);
+	},
+
+	/** @ignore */
+	getDirectManipulationTarget: function()
+	{
+		return this.getNodeAt(this.getNodeCount() - 1);
 	}
 	/* @ignore */
 	/*
@@ -195,9 +202,17 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 		//node1.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
 		//node2.setInteractMode(Kekule.ChemObjInteractMode.HIDDEN);
 	},
+
+	/** @ignore */
+	getDirectManipulationTarget: function()
+	{
+		return this.getNodeAt(this.getNodeCount() - 1);
+	},
+
 	/** @private */
 	_isValidChemNodeOrConnectorStickTarget: function(targetObj)
 	{
+		/*
 		var result = (targetObj instanceof Kekule.ChemStructureNode) || (targetObj instanceof Kekule.ChemStructureConnector);
 		if (!result && (targetObj instanceof Kekule.ChemMarker.BaseMarker))
 		{
@@ -206,6 +221,8 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 				result = (parent instanceof Kekule.ChemStructureNode) || (parent instanceof Kekule.ChemStructureConnector);
 		}
 		return result;
+		*/
+		return Kekule.Glyph.ElectronArrowGlyphUtils.isValidChemNodeOrConnectorStickTarget(targetObj);
 	},
 	/** @private */
 	_applyParamsToConnector: function(connector, initialParams)
@@ -262,6 +279,12 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.BaseTwinArc',
+	/** @private */
+	DEF_MIN_PATH_END_DISTANCE_RATIO: 0.05,
+	/** @private */
+	DEF_INIT_PATH_END_GAP_RATIO: 0.2,
+	/** @private */
+	FIELD_ARC_END_NODE_FLAG: '__$arcEndNode$__',
 	/**
 	 * @constructs
 	 */
@@ -273,8 +296,40 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 		this._insideNodeCalcIndirectCoordStorageBind = this._insideNodeCalcIndirectCoordStorage.bind(this);
 		this._insideNodeCalcIndirectCoordValueBind = this._insideNodeCalcIndirectCoordValue.bind(this);
 		*/
-		$super(id, id, refLength, initialParams, coord2D, coord3D);
+		this.setPropStoreFieldValue('minPathEndDistanceRatio', this.DEF_MIN_PATH_END_DISTANCE_RATIO);
+		$super(id, refLength, initialParams, coord2D, coord3D);
 	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('minPathEndDistanceRatio', {'dataType': DataType.FLOAT});
+	},
+
+	/** @ignore */
+	loaded: function($super)
+	{
+		var result = $super();
+		// when add new child object, and the two arcs are ready, handle the arc end nodes
+		if (this._isTwinArcSetup())
+		{
+			this._setupArcEndNode(this.getNodeAt(1));
+			this._setupArcEndNode(this.getNodeAt(2));
+		}
+		return result;
+	},
+
+	/** @private */
+	_isTwinArcSetup: function()
+	{
+		return (this.getConnectorCount() === 2) && (this.getNodeCount() === 4);
+	},
+
+	/** @ignore */
+	getDirectManipulationTarget: function()
+	{
+		return this.getNodeAt(this.getNodeCount() - 1);
+	},
+
 	/** @ignore */
 	doCreateDefaultStructure: function(refLength, initialParams)
 	{
@@ -284,21 +339,26 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 		var coord2D = {'x': 0, 'y': 0};
 		var coord3D = {'x': 0, 'y': 0, 'z': 0};
 		var lineLength = initialParams.lineLength || 1;
-		var lineGap = (initialParams.lineGap || lineLength / 5);
-		var deltaLine = {'x': refLength * ((lineLength - lineGap) / 2)};
-		var deltaGap = {'x': refLength * lineGap};
-		var deltaTotal = {'x': lineLength};
+		var minPathEndDistanceRatio = (initialParams.minPathEndDistanceRatio || this.getMinPathEndDistanceRatio() || this.DEF_MIN_PATH_END_DISTANCE_RATIO);  // min distance bewteen arc ends
+		var minPathEndDistance = lineLength * minPathEndDistanceRatio;
+		this.setMinPathEndDistanceRatio(minPathEndDistanceRatio);
+
+		var pathEndGap = (initialParams.pathEndGap || lineLength * this.DEF_INIT_PATH_END_GAP_RATIO);
+		pathEndGap = Math.max(pathEndGap, minPathEndDistance);
+
+
+		var deltaLine = {'x': refLength * ((lineLength - pathEndGap) / 2)};
+		var deltaGap = {'x': refLength * pathEndGap};
+		var deltaTotal = {'x': refLength * lineLength};
 
 		var node1 = new Kekule.Glyph.PathGlyphNode(null, null, coord2D, coord3D);  // starting node of first arc
 		var node2 = new Kekule.Glyph.PathGlyphNode(null, null);  // ending node of first arc
-		node2.setEnableIndirectCoord(true)
-			.overwriteMethod('getIndirectCoordRefLengths', this._insideNodeGetIndirectCoordRefLengths)
-			.overwriteMethod('getIndirectCoordRefCoords', this._insideNodeGetIndirectCoordRefCoords)
-			.overwriteMethod('calcIndirectCoordStorage', this._insideNodeCalcIndirectCoordStorage)
-			.overwriteMethod('calcIndirectCoordValue', this._insideNodeCalcIndirectCoordValue);
-		var node3 = new Kekule.Glyph.PathGlyphNode(null, null);  // starting node of second arc
-		//node3.setEnableIndirectCoord(true);
-		var node4 = new Kekule.Glyph.PathGlyphNode(null, null, C.add(coord2D, deltaTotal), C.add(coord3D, deltaTotal));  // ending node of second arc
+		this._setupArcEndNode(node2);
+
+		var node3 = new Kekule.Glyph.PathGlyphNode(null, null);  // ending node of second arc
+		var node4 = new Kekule.Glyph.PathGlyphNode(null, null, C.add(coord2D, deltaTotal), C.add(coord3D, deltaTotal));  // starting node of second arc
+		this._setupArcEndNode(node3);
+
 		this.appendNode(node1);
 		this.appendNode(node2);
 		this.appendNode(node3);
@@ -311,6 +371,7 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 		var connector2 = new Kekule.Glyph.PathGlyphArcConnector(null, [node4, node3]);
 		this._applyParamsToConnector(connector1, initialParams);
 		this._applyParamsToConnector(connector2, initialParams);
+		connector2.getControlPointAt(0).setDistanceToChord(-connector2.getControlPointAt(0).getDistanceToChord());  // ensure the two arc arrow at same side
 
 		this.appendConnector(connector1);
 		this.appendConnector(connector2);
@@ -323,8 +384,60 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	{
 		connector.setPathParams(initialParams);
 	},
+	/** @private */
+	_setupArcEndNode: function(node)
+	{
+		if (!node[this.FIELD_ARC_END_NODE_FLAG])
+		{
+			this._overwriteChildPathNodeMethods(node);
+			node.setEnableIndirectCoord(true);
+			node[this.FIELD_ARC_END_NODE_FLAG] = true;
+		}
+	},
+	/** @private */
+	_overwriteChildPathNodeMethods: function(node)
+	{
+		node.overwriteMethod('getIndirectCoordRefLengths', this._insideNodeGetIndirectCoordRefLengths)
+			.overwriteMethod('getIndirectCoordRefCoords', this._insideNodeGetIndirectCoordRefCoords)
+			.overwriteMethod('calcIndirectCoordStorage', this._insideNodeCalcIndirectCoordStorage)
+			.overwriteMethod('calcIndirectCoordValue', this._insideNodeCalcIndirectCoordValue)
+			.overwriteMethod('_childPathNodeGetParentGlyph', this._childPathNodeGetParentGlyph)
+			.overwriteMethod('_childPathNodeGetGlyphMinPathEndDistanceRatio', this._childPathNodeGetGlyphMinPathEndDistanceRatio);
+	},
+
+	/** @private */
+	_getArrowStartingNodes: function()
+	{
+		var result = [];
+		if (this._isTwinArcSetup())
+		{
+			for (var i = 0, l = this.getConnectorCount(); i < l; ++i)
+			{
+				var connector = this.getConnectorAt(i);
+				var node = connector.getConnectedObjAt(0);
+				if (node)
+					result.push(node);
+			}
+		}
+		return result;
+	},
 
 	// overwrite methods of two inside nodes of arcs, so this these methods, this var refers to the node but not the glyph
+	/** @private */
+	_childPathNodeGetParentGlyph: function($old)  // return this parent glyph of path node
+	{
+		var p = this.getParent();
+		if (p instanceof Kekule.Glyph.BaseTwinArc)
+			return p;
+		else
+			return null;
+	},
+	/** @private */
+	_childPathNodeGetGlyphMinPathEndDistanceRatio: function($old)
+	{
+		var p = this._childPathNodeGetParentGlyph();
+		return p && p.getMinPathEndDistanceRatio();
+	},
 	/** @private */
 	_insideNodeGetIndirectCoordRefLengths: function($old, coordMode, allowCoordBorrow)
 	{
@@ -397,14 +510,15 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 				var refDistance = CU.getDistance(refCoords[1], refCoords[0]);
 
 				var ratio = refDistance? crossPointDistance / refDistance: 0;
+				var minDistanceRatio = this._childPathNodeGetGlyphMinPathEndDistanceRatio() || 0;
 
-				if (ratio < 0)
+				if (ratio < minDistanceRatio)
 				{
-					ratio = 0;
+					ratio = minDistanceRatio;
 				}
-				else if (ratio > 1)
+				else if (ratio > 1 - minDistanceRatio)
 				{
-					ratio = 1;
+					ratio = 1 - minDistanceRatio;
 				}
 
 				return {'x': ratio, 'y': ratio, 'ratio': ratio};
@@ -438,7 +552,6 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 
 		return $old(coordMode, allowCoordBorrow);
 	},
-
 
 	/** @private */
 	_isValidChemNodeOrConnectorStickTarget: function(targetObj)
@@ -480,7 +593,7 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	_isChildrenStickingTo: function(dest, excludeChildren)
 	{
-		var nodes = this.getNodes();
+		var nodes = this._getArrowStartingNodes();
 		nodes = Kekule.ArrayUtils.exclude(nodes, excludeChildren || []);
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
@@ -490,6 +603,31 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 		}
 		return false;
 	}
+});
+
+
+/**
+ * A general arc glyph.
+ * @class
+ * @augments Kekule.Glyph.BaseArc
+ */
+Kekule.Glyph.Arc = Class.create(Kekule.Glyph.BaseArc,
+/** @lends Kekule.Glyph.Arc# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.Arc'
+});
+
+/**
+ * A general twin arc glyph.
+ * @class
+ * @augments Kekule.Glyph.BaseTwinArc
+ */
+Kekule.Glyph.TwinArc = Class.create(Kekule.Glyph.BaseTwinArc,
+/** @lends Kekule.Glyph.TwinArc# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Glyph.TwinArc'
 });
 
 
