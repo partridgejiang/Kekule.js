@@ -2289,7 +2289,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		this.defineProp('id', {'dataType': DataType.STRING});
-		this.defineProp('interactMode', {'dataType': DataType.INT});
+		this.defineProp('interactMode', {'dataType': DataType.INT, 'enumSource': Kekule.ChemObjInteractMode});
 		/*
 		this.defineProp('iid', {
 			'dataType': DataType.STRING, 'scope': Class.PropertyScope.PRIVATE
