@@ -4283,6 +4283,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Replace an operation in operation history.
+	 * @param {Kekule.Operation} oldOperation
+	 * @param {Kekule.Operation} newOperation
+	 * @returns {Kekule.Operation} The replaced old operation object.
+	 */
+	replaceOperationInHistory: function(oldOperation, newOperation)
+	{
+		var h = this.getOperHistory();
+		return h && h.replaceOperation(oldOperation, newOperation);
+	},
+
+	/**
 	 * Undo last operation.
 	 */
 	undo: function()
