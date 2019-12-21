@@ -310,7 +310,8 @@ Kekule.ChemObjOperation.ModifyHashProp = Class.create(Kekule.ChemObjOperation.Ba
 		var propName = this.getPropName();
 		var oldValue = this.getOldPropValue();
 		var nowValue = obj.getPropValue(propName);
-		var reverseValue = Object.extend(Object.extend({}, nowValue), oldValue, !true);
+		//var reverseValue = Object.extend(Object.extend({}, nowValue), oldValue, !true);
+		var reverseValue = oldValue;
 		var valueMap = {};
 		valueMap[propName] = reverseValue;
 
