@@ -814,15 +814,15 @@ ClassEx.extend(Kekule.Glyph.BaseTwinArc,
 			{
 				if (!(this instanceof Kekule.Glyph.BondFormingElectronPushingArrow))
 				{
-					//console.log('change to e arrow');
 					this.__changeClass__(Kekule.Glyph.BondFormingElectronPushingArrow);
+					if (!this.getElectronCount())
+						this.setElectronCount(1);
 				}
 			}
 			else
 			{
 				if (this instanceof Kekule.Glyph.BondFormingElectronPushingArrow)
 				{
-					//console.log('change to arc');
 					this.__changeClass__(Kekule.Glyph.TwinArc);
 				}
 			}

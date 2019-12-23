@@ -16,6 +16,7 @@
 (function(){
 "use strict";
 
+var OU = Kekule.ObjUtils;
 var NT = Kekule.Glyph.NodeType;
 var PT = Kekule.Glyph.PathType;
 var CU = Kekule.CoordUtils;
@@ -303,6 +304,28 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	initProperties: function()
 	{
 		this.defineProp('minPathEndDistanceRatio', {'dataType': DataType.FLOAT});
+		this.defineProp('oppositePathEndArrowSides', {
+			'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				return this._isPathArrowSideOpposite('end');
+			},
+			'setter': function(value)
+			{
+				this._setPathArrowSideOpposite('end', !!value);
+			}
+		});
+		this.defineProp('oppositePathStartArrowSides', {
+			'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				return this._isPathArrowSideOpposite('start');
+			},
+			'setter': function(value)
+			{
+				this._setPathArrowSideOpposite('start', !!value);
+			}
+		});
 	},
 
 	/** @ignore */
@@ -316,6 +339,88 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 			this._setupArcEndNode(this.getNodeAt(2));
 		}
 		return result;
+	},
+
+	/** @private */
+	_isPathArrowSideOpposite: function(arrowPos)
+	{
+		// arrowPos is a string, either of 'start' or 'end'
+		var connCount = this.getConnectorCount();
+		if (connCount < 2)
+			return null;  // undeterminated
+		else
+		{
+			var lastSide;
+			var result = null;
+			for (var i = 0; i < connCount; ++i)
+			{
+				var conn = this.getConnectorAt(i);
+				var pathParam = conn.getPathParams();
+				var arrowType = pathParam[arrowPos + 'ArrowType'];
+				if (arrowType === Kekule.Glyph.ArrowType.NONE)  // no side
+					return null;
+				var arrowSide = pathParam[arrowPos + 'ArrowSide'];
+				if (arrowSide === Kekule.Glyph.ArrowSide.BOTH)
+					return null;
+				if (i === 0)
+					lastSide = arrowSide;
+				else
+				{
+					var currResult = (lastSide === arrowSide)? false: true;
+					if (OU.isUnset(result))
+						result = currResult;
+					else if (result !== currResult)
+						return null;
+					lastSide = arrowSide;
+				}
+			}
+			return result;
+		}
+	},
+	/** @private */
+	_setPathArrowSideOpposite: function(arrowPos, reversed)
+	{
+		// arrowPos is a string, either of 'start' or 'end'
+		var connCount = this.getConnectorCount();
+		if (connCount < 2)
+			return null;  // undeterminated
+		else
+		{
+			var ASide = Kekule.Glyph.ArrowSide;
+			var lastSide;
+			var applicable = true;
+			for (var i = 0; i < connCount; ++i)
+			{
+				var conn = this.getConnectorAt(i);
+				var pathParam = conn.getPathParams();
+				var arrowType = pathParam[arrowPos + 'ArrowType'];
+				if (arrowType === Kekule.Glyph.ArrowType.NONE)  // no side
+					applicable = false;
+				var arrowSide = pathParam[arrowPos + 'ArrowSide'];
+				if (arrowSide === Kekule.Glyph.ArrowSide.BOTH)
+					applicable = false;
+				if (!applicable)
+				{
+					lastSide = null;
+				}
+				else
+				{
+					if (OU.isUnset(lastSide))
+						lastSide = arrowSide;
+					else
+					{
+						var currSide;
+						if (reversed)
+							currSide = (lastSide === ASide.SINGLE)?	ASide.REVERSED: ASide.SINGLE;
+						else
+							currSide = lastSide;
+						pathParam[arrowPos + 'ArrowSide'] = currSide;
+						lastSide = currSide;
+					}
+				}
+			}
+			return null;
+		}
 	},
 
 	/** @private */

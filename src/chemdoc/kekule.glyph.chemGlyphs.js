@@ -284,7 +284,7 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 				var ASide = Kekule.Glyph.ArrowSide;
 				if (arrowSide === ASide.BOTH)
 					return 2;
-				else if ([ASide.SINGLE || ASide.REVERSED].indexOf(arrowSide) >= 0)
+				else if ([ASide.SINGLE, ASide.REVERSED].indexOf(arrowSide) >= 0)
 					return 1;
 				else
 					return null;
@@ -496,6 +496,8 @@ Kekule.Glyph.BondFormingElectronPushingArrow = Class.create(Kekule.Glyph.BaseTwi
 				return result;
 			},
 			'setter': function(value) {
+				if (value === this.getElectronCount())
+					return;
 				var ASide = Kekule.Glyph.ArrowSide;
 				//var arrowPos = this._getValidArrowPos();
 				var connectors = this.getConnectors();
@@ -575,7 +577,7 @@ Kekule.Glyph.BondFormingElectronPushingArrow = Class.create(Kekule.Glyph.BaseTwi
 			var arrowSide = (params.endArrowType)? params.endArrowSide || Kekule.Glyph.ArrowSide.DEFAULT: null;
 			if (arrowSide === ASide.BOTH)
 				return 2;
-			else if ([ASide.SINGLE || ASide.REVERSED].indexOf(arrowSide) >= 0)
+			else if ([ASide.SINGLE, ASide.REVERSED].indexOf(arrowSide) >= 0)
 				return 1;
 		}
 		return null;

@@ -15,6 +15,7 @@
 .K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content,
 .K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanelAdv-ExtraSection-Button .K-Pri-Glyph-Content,
 .K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-StyleButtonGroup .K-Button .K-Pri-Glyph-Content,
+.K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-ContinuousSidesButtonGroup .K-Button .K-Pri-Glyph-Content,
 .K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button .K-Pri-Glyph-Content,
 .K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button .K-Pri-Glyph-Content,
 .K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button .K-Pri-Glyph-Content
@@ -427,6 +428,11 @@
 {
   background-image: url("images/slice/iconsSmall/arrowSingleSideOpenArc.gif");
 }
+
+.K-Chem-ArrowLineIaController-BondFormingElectronPushingArrowSingle > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowTwinArc.gif");
+}
 .K-Chem-ArrowLineIaController-HeatSymbol > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/heatSymbol.gif");
@@ -485,6 +491,15 @@
 .K-Chem-GlyphPath-Arrow-StyleButton-Triangle-Reversed > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/arrowTriangleSingleReversed.gif");
+}
+
+.K-Chem-GlyphPath-Arrow-ContinuousSidesButton-Same > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowContinuousSameSide.gif");
+}
+.K-Chem-GlyphPath-Arrow-ContinuousSidesButton-Opposite > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/arrowContinuousOppositeSide.gif");
 }
 
 .K-Chem-Glyph-ReactionArrow-PresetSelector-Button-Unset > .K-Pri-Glyph-Content

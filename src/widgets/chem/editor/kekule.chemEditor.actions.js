@@ -2443,8 +2443,8 @@ Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController = 
 
 Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowController',
-	Kekule.$L('ChemWidgetTexts.CAPTION_ELECTRON_PUSHING_ARROW_1'),
-	Kekule.$L('ChemWidgetTexts.HINT_ELECTRON_PUSHING_ARROW_1'),
+	Kekule.$L('ChemWidgetTexts.CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_1'),
+	Kekule.$L('ChemWidgetTexts.HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_1'),
 	'ArrowLineIaController',
 	'ArrowLineIaController-BondFormingElectronPushingArrowSingle',
 	{
