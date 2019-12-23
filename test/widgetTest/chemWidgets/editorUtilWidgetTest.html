@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
   <script>
     var objInspector, nodeSelectPanel, nodeSetter, bondSelectPanel, bondSelectPanelAdv, chargeSelectPanel,
-      glyphArrowPanel, glyphLinePanel, glyphSettingPanel, reactionArrowSettingPanel;
+      glyphArrowPanel, glyphLinePanel, glyphSettingPanel, reactionArrowSettingPanel, glyphMultiPathSettingPanel, multiElectronPushingArrowSettingPanel;
 
     function refreshWidgetList()
     {
@@ -129,6 +129,10 @@
 	    glyphSettingPanel = Kekule.Widget.getWidgetById('glyphSettingPanel');
 	    reactionArrowSettingPanel = Kekule.Widget.getWidgetById('reactionArrowSettingPanel');
 
+	    glyphMultiPathSettingPanel = Kekule.Widget.getWidgetById('glyphMultiPathSettingPanel');
+
+	    multiElectronPushingArrowSettingPanel = Kekule.Widget.getWidgetById('multiElectronPushingArrowSettingPanel');
+
       objInspector = Kekule.Widget.getWidgetById('objInspector'); // new Kekule.Widget.ObjectInspector();
       objInspector.setObjects(nodeSetter);
 
@@ -159,11 +163,13 @@
     <div id="glyphArrowPanel" data-widget="Kekule.ChemWidget.GlyphPathArrowSettingPanel" style="vertical-align:middle"></div>
     <div id="glyphLinePanel" data-widget="Kekule.ChemWidget.GlyphPathLineSettingPanel" style="vertical-align:middle"></div>
     <div id="glyphSettingPanel" data-widget="Kekule.ChemWidget.GlyphPathSettingPanel" style="vertical-align:middle"></div>
+    <div id="glyphMultiPathSettingPanel" data-widget="Kekule.ChemWidget.GlyphMultiPathSettingPanel" data-path-count1="3" style="vertical-align:middle"></div>
   </div>
   <div>
     <div id="glyphReactionArrowPresetSelector" data-widget="Kekule.ChemWidget.GlyphReactionArrowPresetSelector" style="vertical-align:middle"></div>
     <div id="reactionArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphReactionArrowPathSettingPanel" style="vertical-align:middle"></div>
     <div id="electronPushingArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphElectronPushingArrowSettingPanel" style="vertical-align:middle"></div>
+    <div id="multiElectronPushingArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphMultiElectronPushingArrowSettingPanel" style="vertical-align:middle"></div>
   </div>
 </body>
 </html>
