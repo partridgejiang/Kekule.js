@@ -293,7 +293,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_GLYPH_PATH_MODIFIER: 'Path',
 	CAPTION_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Reaction arrow & segment',
 	CAPTION_ARC_PATH_MODIFIER: 'Arc',
+	CAPTION_MULTI_ARC_PATH_MODIFIER: 'Multi-Arc',
 	CAPTION_ELECTRON_PUSHING_ARROW_MODIFIER: 'Electron pushing arrow',
+	CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_MODIFIER: 'Bond forming arrow',
 
 	TEXT_CHARGE_POSITIVE: '+',
 	TEXT_CHARGE_NEGATIVE: '-',
@@ -421,7 +423,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_GLYPH_PATH_MODIFIER: 'Set path properties',
 	HINT_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Set reaction arrow and segment properties',
 	HINT_ARC_PATH_MODIFIER: 'Set arc properties',
+	HINT_MULTI_ARC_PATH_MODIFIER: 'Set multi-arc properties',
 	HINT_ELECTRON_PUSHING_ARROW_MODIFIER: 'Set electron pushing arrow properties',
+	HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_MODIFIER: 'Set bond forming arrow properties',
 
 	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
 
@@ -466,6 +470,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	// Glyph arrow param setter panel
 	CAPTION_WIDTH: 'Width',
 	CAPTION_LENGTH: 'Length',
+	// Glyph path param setter panel
+	CAPTION_PATH_INDEX: 'Path {0}',
+	HINT_PATH_INDEX: 'Path {0}',
 	// Reaction arrow preset selector
 	CAPTION_REACTION_ARROW_UNSET: '(Unset)',
 	CAPTION_REACTION_ARROW_CUSTOM: 'Custom',
@@ -488,6 +495,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ENDING_ARROW: 'Ending arrow',
 	CAPTION_REACTION_ARROW_TYPE: 'Reaction arrow type',
 	CAPTION_ELECTRON_PUSHING_ARROW_TYPE: 'Arrow type',
+	//CAPTION_MULTI_ARROW_SIDE_RELATION: 'Arrow sides relation',
+	CAPTION_OPPOSITE_ARROW_SIDES: 'Opposite arrow sides',
+	CAPTION_SAME_ARROW_SIDES: 'Same arrow sides',
 	// electron pushing arrow panel
 	CAPTION_ELECTRON_PUSHING_ARROW_1: 'Single electron pushing arrow',
 	CAPTION_ELECTRON_PUSHING_ARROW_1_ABBR: 'Single',
@@ -495,6 +505,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
 	CAPTION_ELECTRON_PUSHING_ARROW_2_ABBR: 'Double',
 	HINT_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
+	CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_1: 'Bond forming electron pushing arrow',
+	HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_1: 'Bond forming electron pushing arrow',
 
 	// Periodic table
 	LEGEND_CAPTION: 'Legend',

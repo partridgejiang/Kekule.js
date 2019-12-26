@@ -6731,8 +6731,11 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 			// if parent has two node (e.g., arrow), allow to move the end point of it directly
 			if (parent.getNodeAt && parent.getNodeCount)
 			{
-				if (parent.getNodeCount() === 2)
-					return [parent.getNodeAt(parent.getNodeCount() - 1)];
+				var nodeCount = parent.getNodeCount();
+				//if (nodeCount === 2)
+				//  return [parent.getNodeAt(nodeCount - 1)];
+				if (parent.getDirectManipulationTarget)
+					return parent.getDirectManipulationTarget();
 			}
 		}
 		// default

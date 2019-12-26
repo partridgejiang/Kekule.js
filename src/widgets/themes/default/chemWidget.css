@@ -444,12 +444,19 @@
 {
     display: block;
 }
-.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Title
+.K-Chem-GlyphPath-SettingPanel-Section-Title
 {
     display: block;
     font-size: 1em;
     font-weight: bold;
 }
+.K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title
+{
+    display: inline;
+    margin-right: 0.5em;
+}
+
+
 .K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Panel
 {
     border: none;
@@ -457,12 +464,12 @@
     padding: 0;
 }
 
-.K-Chem-ReactionArrow-SettingPanel .K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title
+.K-Chem-GlyphMultiPath-SettingPanel .K-Chem-GlyphMultiPath-SettingPanel-PathTabGroup,
+.K-Chem-GlyphMultiPath-SettingPanel .K-Chem-GlyphMultiPath-SettingPanel-PathSettingPanel
 {
-    display: inline;
-    margin-right: 0.5em;
+    float: left;
+    clear: left;
 }
-
 .K-Chem-Editor
 {
     overflow: auto;

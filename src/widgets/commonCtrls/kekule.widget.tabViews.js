@@ -132,6 +132,26 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 				}
 			}
 		});
+		this.defineProp('activeTabIndex', {'dataType': DataType.INT,
+			'getter': function()
+			{
+				var buttons = this.getTabButtons();
+				for (var i = 0, l = buttons.length; i < l; ++i)
+				{
+					if (buttons[i].getChecked())
+						return i;
+				}
+				return -1;
+			},
+			'setter': function(value)
+			{
+				var buttons = this.getTabButtons();
+				for (var i = 0, l = buttons.length; i < l; ++i)
+				{
+					buttons[i].setChecked(i === value);
+				}
+			}
+		});
 	},
 	/** @private */
 	initPropValues: function($super)
@@ -143,6 +163,23 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 	doGetWidgetClassName: function($super)
 	{
 		return $super() + ' ' + CNS.TABBUTTONGROUP;
+	},
+
+	/**
+	 * Returns the array of child tab buttons.
+	 * @returns {Array}
+	 */
+	getTabButtons: function()
+	{
+		var result = [];
+		var children = this.getChildWidgets();
+		for (var i = 0, l = children.length; i < l; ++i)
+		{
+			var child = children[i];
+			if (child instanceof Kekule.Widget.RadioButton)
+				result.push(child);
+		}
+		return result;
 	},
 
 	/** @private */

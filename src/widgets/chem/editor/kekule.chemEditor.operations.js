@@ -310,7 +310,8 @@ Kekule.ChemObjOperation.ModifyHashProp = Class.create(Kekule.ChemObjOperation.Ba
 		var propName = this.getPropName();
 		var oldValue = this.getOldPropValue();
 		var nowValue = obj.getPropValue(propName);
-		var reverseValue = Object.extend(Object.extend({}, nowValue), oldValue, !true);
+		//var reverseValue = Object.extend(Object.extend({}, nowValue), oldValue, !true);
+		var reverseValue = oldValue;
 		var valueMap = {};
 		valueMap[propName] = reverseValue;
 
@@ -382,6 +383,7 @@ Kekule.ChemObjOperation.MoveTo = Class.create(Kekule.ChemObjOperation.Base,
 				*/
 				if (obj.setAbsBaseCoord)
 				{
+					// console.log('set coord', obj.id, coord);
 					obj.setAbsBaseCoord(coord, coordMode, this.getAllowCoordBorrow());
 					success = true;
 				}
@@ -511,6 +513,165 @@ Kekule.ChemObjOperation.MoveAndResize = Class.create(Kekule.ChemObjOperation.Mov
 	{
 		if (this.getOldDimension())
 			this.setObjSize(this.getTarget(), this.getOldDimension(), this.getCoordMode());
+		$super();
+	}
+});
+
+/**
+ * Operation of changing a chemObject's coord.
+ * @class
+ * @augments Kekule.ChemObjOperation.Base
+ *
+ * @param {Array} objCoordAndSizeInfo
+ * @param {Int} coordMode
+ * @param {Bool} useAbsCoord
+ *
+ * @param {Array} objCoordAndSizeInfo A array of all moved/resized objects infos. Each item should include fields: {obj, oldCoord, newCoord, oldDimension, newDimension}
+ * @param {Int} coordMode
+ * @param {Bool} useAbsCoord
+ * @param {Bool} DisableIndirectCoord Whether disable indirect coord during moving object, preventing potential coord errors.
+ */
+Kekule.ChemObjOperation.MoveAndResizeObjs = Class.create(Kekule.ChemObjOperation.Base,
+/** @lends Kekule.ChemObjOperation.MoveAndResizeObjs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemObjOperation.MoveAndResizeObjs',
+	/** @constructs */
+	initialize: function($super, objCoordAndSizeInfo, coordMode, useAbsCoord, editor)
+	{
+		$super(null, editor);
+		if (objCoordAndSizeInfo)
+			this.setObjCoordAndSizeInfo(objCoordAndSizeInfo);
+		this.setCoordMode(coordMode || Kekule.CoordMode.COORD2D);
+		this.setUseAbsCoord(!!useAbsCoord);
+		this.setPropStoreFieldValue('childOperations', []);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('objCoordAndSizeInfo', {'dataType': DataType.ARRAY, 'serializable': false});
+		this.defineProp('coordMode', {'dataType': DataType.INT});
+		this.defineProp('useAbsCoord', {'dataType': DataType.BOOL});
+		this.defineProp('disableIndirectCoord', {'dataType': DataType.BOOL});
+
+		this.defineProp('childOperations', {'dataType': DataType.ARRAY, /*'setter': null,*/ 'serializable': false});  // private
+		this.defineProp('indirectCoordObjs', {'dataType': DataType.ARRAY, 'serializable': false});  // private
+	},
+	/** @private */
+	_setEnableIndirectCoordOfObjs: function(objs, enabled)
+	{
+		if (!objs)
+			return;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			//console.log('set indirect enabled', objs[i].id, enabled);
+			objs[i].setEnableIndirectCoord(enabled);
+		}
+	},
+	/** @private */
+	_prepareIndirectCoordObjs: function(childOpers)
+	{
+		var disableIndirectCoord = this.getDisableIndirectCoord();
+		var indirectCoordObjs = [];
+		// try disable indirect coord first
+		if (disableIndirectCoord)
+		{
+			for (var i = 0, l = childOpers.length; i < l; ++i)
+			{
+				var oper = childOpers[i];
+				if (oper && oper instanceof Kekule.ChemObjOperation.MoveAndResize)
+				{
+					var target = oper.getTarget();
+					if (target.hasProperty('enableIndirectCoord') && target.getEnableIndirectCoord())
+					{
+						target.setEnableIndirectCoord(false);
+						indirectCoordObjs.push(target);
+					}
+				}
+			}
+		}
+		this.setIndirectCoordObjs(indirectCoordObjs);
+	},
+	/** @private */
+	_prepareExecute: function()
+	{
+		var childOpers = this.getChildOperations();
+		if (!childOpers.length)  // child move operation is empty, preparing new ones. Otherwise use the exisiting ones.
+		{
+			childOpers.length = 0;  // clear first
+			var objInfos = this.getObjCoordAndSizeInfo();
+			for (var i = 0, l = objInfos.length; i < l; ++i)
+			{
+				var info = objInfos[i];
+				var obj = info.obj;
+				// create child move and resize operation
+				var oper = new Kekule.ChemObjOperation.MoveAndResize(obj, info.newDimension, info.newCoord, this.getCoordMode(), this.getUseAbsCoord(), this.getEditor());
+				oper.setAllowCoordBorrow(this.getAllowCoordBorrow());
+				if (info.oldDimension)
+					oper.setOldDimension(info.oldDimension);
+				if (info.oldCoord)
+					oper.setOldCoord(info.oldCoord);
+				childOpers.push(oper);
+				/*
+				if (disableIndirectCoord && obj.hasProperty('enableIndirectCoord'))
+				{
+					obj.setEnableIndirectCoord(false);
+					indirectCoordObjs.push(obj);
+				}
+				*/
+			}
+		}
+		this._prepareIndirectCoordObjs(childOpers);
+	},
+	/** @private */
+	_prepareReverse: function()
+	{
+		if (this.getDisableIndirectCoord())
+		{
+			if (!this.getIndirectCoordObjs())
+				this._prepareIndirectCoordObjs(this.getChildOperations());
+			this._setEnableIndirectCoordOfObjs(this.getIndirectCoordObjs(), false);
+		}
+	},
+	/** @private */
+	_doneMoveAndResize: function()
+	{
+		this._setEnableIndirectCoordOfObjs(this.getIndirectCoordObjs(), true);
+	},
+	/** @private */
+	doExecute: function($super)
+	{
+		$super();
+		try
+		{
+			this._prepareExecute();
+			var opers = this.getChildOperations();
+			for (var i = 0, l = opers.length; i < l; ++i)
+			{
+				opers[i].execute();
+			}
+		}
+		finally
+		{
+			this._doneMoveAndResize();
+		}
+	},
+	/** @private */
+	doReverse: function($super)
+	{
+		try
+		{
+			this._prepareReverse();
+			var opers = this.getChildOperations();
+			for (var i = opers.length - 1; i >= 0; --i)
+			{
+				opers[i].reverse();
+			}
+		}
+		finally
+		{
+			this._doneMoveAndResize();
+		}
 		$super();
 	}
 });

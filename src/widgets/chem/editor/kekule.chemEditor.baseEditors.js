@@ -4283,6 +4283,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Replace an operation in operation history.
+	 * @param {Kekule.Operation} oldOperation
+	 * @param {Kekule.Operation} newOperation
+	 * @returns {Kekule.Operation} The replaced old operation object.
+	 */
+	replaceOperationInHistory: function(oldOperation, newOperation)
+	{
+		var h = this.getOperHistory();
+		return h && h.replaceOperation(oldOperation, newOperation);
+	},
+
+	/**
 	 * Undo last operation.
 	 */
 	undo: function()
@@ -5552,6 +5564,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this.defineProp('moveOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of moving
 		//this.defineProp('mergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging
+		this.defineProp('moveWrapperOperation', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 
 		this.defineProp('objOperationMap', {'dataType': 'Kekule.MapEx', 'serializable': false,
 			'getter': function()
@@ -5682,6 +5695,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var map = this.getManipulateObjInfoMap();
 		var operMap = this.getObjOperationMap();
 		operMap.clear();
+		var objsMoveInfo = [];
+		var totalOperation = new Kekule.ChemObjOperation.MoveAndResizeObjs([], objsMoveInfo, this.getEditor().getCoordMode(), true, this.getEditor());
+		totalOperation.setDisableIndirectCoord(true);
 		//console.log('init operations');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
@@ -5696,11 +5712,22 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			//oper.add(sub);
 			//operMap.set(obj, sub);
 			opers.push(sub);
+			/*
+			objsMoveInfo.push({
+				'obj': obj,
+				'oldCoord': item.objCoord,
+				'oldDimension': item.size
+			});
+			*/
+			totalOperation.getChildOperations().push(sub);
+			this.setMoveWrapperOperation(totalOperation);
 		}
+
 		//this.setManipulateOperation(oper);
 		//this.setActiveOperation(oper);
 		//return oper;
-		return opers;
+		//return opers;
+		return [totalOperation];
 	},
 	/* @private */
 	/*
@@ -5747,7 +5774,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//var opers = this.getObjOperationMap().getValues();
 		var op = this.getMoveOperations();
 		var opers = op? Kekule.ArrayUtils.clone(op): [];
-		return opers;
+		if (opers.length)
+		{
+			var wrapper = this.getMoveWrapperOperation();
+			wrapper.setChildOperations(opers);
+			//return opers;
+			return [wrapper];
+		}
+		else
+			return [];
 	},
 
 	/** @private */
@@ -5884,6 +5919,12 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var obj = actualObjs[i];
 			var info = this.createManipulateObjInfo(obj, i, startScreenCoord);
 			map.set(obj, info);
+
+			/*
+			// disable indirect coord during coord move
+			if (info.enableIndirectCoord)
+				obj.setEnableIndirectCoord(false);
+			*/
 		}
 	},
 	/** @private */
@@ -5893,7 +5934,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setRotateCenter(rotateCenter);
 		this.setRotateRefCoord(rotateRefCoord);
 		this.setLastRotateAngle(null);
-	}, /**
+	},
+	/**
 	 * Prepare to move movingObjs.
 	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
 	 * @param {Hash} startContextCoord Mouse position when starting to move objects. This coord is based on context.
@@ -5976,13 +6018,50 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	applyManipulatingObjsInfo: function(endScreenCoord)
 	{
+		//this._moveResizeOperExecPending = false;
 		var objs = this.getManipulateObjs();
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+
+		var indirectCoordObjs = this._getIndirectCoordObjs(objs);
+		this._setEnableIndirectCoordOfObjs(indirectCoordObjs, false);  // important, disable indirect coord first, avoid calculating during moving and position error
+		try
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				var newInfo = newInfoMap.get(obj);
+				this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			}
+			/*
+			if (this._moveResizeOperExecPending)
+				this.getMoveWrapperOperation().execute();
+			*/
+		}
+		finally
+		{
+			this._setEnableIndirectCoordOfObjs(indirectCoordObjs, true);
+		}
+	},
+	/** @private */
+	_getIndirectCoordObjs: function(objs)
+	{
+		var result = [];
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			var newInfo = newInfoMap.get(obj);
-			this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			if (obj.getEnableIndirectCoord && obj.getEnableIndirectCoord())
+				result.push(obj);
+		}
+		return result;
+	},
+	/** @private */
+	_setEnableIndirectCoordOfObjs: function(objs, enabled)
+	{
+		if (!objs)
+			return;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			objs[i].setEnableIndirectCoord(enabled);
 		}
 	},
 	/** @private */
@@ -6469,6 +6548,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var editor = this.getEditor();
 		this.updateChildMoveOperation(objIndex, obj, editor.screenCoordToObj(newScreenCoord));
 		editor.setObjectScreenCoord(obj, newScreenCoord);
+		//this._moveResizeOperExecPending = true;
 	},
 	/**
 	 * Resize a single object to newDimension.
@@ -6479,6 +6559,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.updateChildResizeOperation(objIndex, obj, newSize);
 		if (obj.setSizeOfMode)
 			obj.setSizeOfMode(newSize, this.getEditor().getCoordMode());
+		//this._moveResizeOperExecPending = true;
 	},
 	/*
 	 * Moving complete, do the wrap up job.
@@ -6524,6 +6605,25 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		// do nothing here
 	},
+
+	/** @private */
+	doManipulateObjectsEnd: function(manipulatingObjs)
+	{
+		var map = this.getManipulateObjInfoMap();
+		for (var i = manipulatingObjs.length - 1; i >= 0; --i)
+		{
+			this.doManipulateObjectEnd(manipulatingObjs[i], map.get(manipulatingObjs[i]));
+		}
+	},
+	/** @private */
+	doManipulateObjectEnd: function(manipulateObj, objInfo)
+	{
+		/*
+		if (objInfo.enableIndirectCoord && manipulateObj.setEnableIndirectCoord)
+			manipulateObj.setEnableIndirectCoord(true);
+		*/
+	},
+
 	/**
 	 * Called when a manipulation is ended (stopped or cancelled).
 	 * Descendants may override this method.
@@ -6536,10 +6636,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			window.cancelAnimationFrame(this._runManipulationStepId);
 			this._runManipulationStepId = null;
 		}
+		this.doManipulateObjectsEnd(this.getManipulateObjs());
 		var editor = this.getEditor();
 		editor.endManipulateObject();
 		this._lastTransformParams = null;
 		this.setIsOffsetManipulating(false);
+
+		this.setManipulateObjs(null);
+		this.getManipulateObjInfoMap().clear();
+		this.getObjOperationMap().clear();
 	},
 	/**
 	 * Called before method stopManipulate.
@@ -6556,9 +6661,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	stopManipulate: function()
 	{
-		this.setManipulateObjs(null);
-		this.getManipulateObjInfoMap().clear();
-		this.getObjOperationMap().clear();
 		this.manipulateEnd();
 	},
 	/** @private */
@@ -6575,7 +6677,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			'objCoord': editor.getObjCoord(obj),  // abs base coord
 			//'objSelfCoord': obj.getCoordOfMode? obj.getCoordOfMode(editor.getCoordMode()): null,
 			'screenCoord': editor.getObjectScreenCoord(obj),
-			'size': editor.getObjSize(obj)
+			'size': editor.getObjSize(obj),
+			'enableIndirectCoord': !!(obj.getEnableIndirectCoord && obj.getEnableIndirectCoord())
 		};
 		info.hasNoCoord = !info.objCoord;
 		if (!info.hasNoCoord && startScreenCoord)
@@ -6584,6 +6687,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			info.stickTarget = obj.getCoordStickTarget();
 		}
+
 		return info;
 	},
 

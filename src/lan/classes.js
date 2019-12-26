@@ -3333,7 +3333,7 @@ ObjectEx = Class.create(
     this[methodName] = function _delegator_()
     {
       var args = Array.prototype.slice.call(arguments);
-      args.unshift(oldMethod.bind(self));
+      args.unshift(oldMethod && oldMethod.bind(self));
       return newMethod.apply(self, args);
     };
     return this;

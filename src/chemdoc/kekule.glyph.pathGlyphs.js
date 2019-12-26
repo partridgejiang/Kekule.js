@@ -14,6 +14,9 @@
 (function(){
 "use strict";
 
+var CU = Kekule.CoordUtils;
+var CM = Kekule.CoordMode;
+
 /**
  * Represent an node in glyph path.
  * @class
@@ -184,7 +187,10 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 	{
 		return false;  // ensure other node can not stick to this control node
 	},
-	/** @private */
+	/**
+	 * Returns the parent connector object.
+	 * @returns {Kekule.Glyph.PathGlyphConnector}
+	 */
 	getParentConnector: function()
 	{
 		var p = this.getParent();
@@ -192,7 +198,51 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 			return p;
 		else
 			return null;
-	}
+	},
+
+	/**
+	 * Returns whether the position of control point is set in coordMode.
+	 * @returns {Bool}
+	 */
+	isPositioned: function(coordMode, allowCoordBorrow)
+	{
+		if (!coordMode)
+			coordMode = CM.COORD2D;
+		return this.doCheckIsPositioned(coordMode, allowCoordBorrow);
+	},
+	/**
+	 * Do actual work of method isPositioned.
+	 * Descendants should override this method.
+	 * @returns {Bool}
+	 * @private
+	 */
+	doCheckIsPositioned: function(coordMode, allowCoordBorrow)
+	{
+		return true;
+	},
+	/**
+	 * Reset the position of this control node in coordMode.
+	 */
+	resetPosition: function(coordMode)
+	{
+		if (!coordMode)
+		{
+			this.doResetPosition(CM.COORD2D);
+			this.doResetPosition(CM.COORD3D);
+		}
+		else
+			this.doResetPosition(coordMode);
+		return this;
+	},
+	/**
+	 * Do actual work of method resetPosition.
+	 * Descendants should override this method.
+	 * @private
+	 */
+	doResetPosition: function(coordMode)
+	{
+		// do nothing here
+	},
 });
 
 /**
@@ -317,6 +367,28 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	{
 		$super();
 		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
+	},
+
+	/** @ignore */
+	_appendChildObj: function($super, obj)
+	{
+		var result = $super(obj);
+		// when add new child control point, try reset its position
+		if (obj instanceof Kekule.Glyph.PathGlyphConnectorControlNode)
+		{
+			this.tryResetControlPointPosition(obj);
+		}
+		return result;
+	},
+	/** @ignore */
+	doPropChanged: function($super, propName, newValue)
+	{
+		// reset position of all control points when connected objs are set
+		if (propName === 'connectedObjs')
+		{
+			this.tryResetAllControlPointPositions();
+		}
+		return $super(propName, newValue);
 	},
 
 	// methods about coords
@@ -486,6 +558,33 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 		}
 		return -1;
 	},
+
+	/** @private */
+	tryResetControlPointPosition: function(point)
+	{
+		if (point.isPositioned && point.resetPosition)
+		{
+			var cms = [CM.COORD2D, CM.COORD3D];
+			for (var i = 0, l = cms.length; i < l; ++i)
+			{
+				var coordMode = cms[i];
+				if (!point.isPositioned(coordMode, true))
+				{
+					point.resetPosition(coordMode);
+				}
+			}
+		}
+	},
+	/** @private */
+	tryResetAllControlPointPositions: function()
+	{
+		for (var i = 0, l = this.getControlPointCount(); i < l; ++i)
+		{
+			var p = this.getControlPointAt(i);
+			this.tryResetControlPointPosition(p);
+		}
+	},
+
 	/**
 	 * Remove childObj from connector.
 	 * @param {Variant} childObj A child control point.
@@ -668,11 +767,130 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			'dataType': DataType.FLOAT
 		});
 	},
+	/** @ignore */
+	doCheckIsPositioned: function(coordMode, allowCoordBorrow)
+	{
+		return this.getIndirectCoordRefCoords(coordMode, allowCoordBorrow) && Kekule.ObjUtils.notUnset(this.getDistanceToChord());
+	},
+	/** @ignore */
+	doResetPosition: function(coordMode)
+	{
+		if (coordMode === CM.COORD2D)  // only apply to 2D glyph
+		{
+			var coords = this.getIndirectCoordRefCoords(coordMode, true);
+			if (coords && coords[0] && coords[1])
+			{
+				var refLength = CU.getDistance(coords[0], coords[1]);
+				this.setDistanceToChord(refLength * 0.5);  // default 1/2 of ref length
+				this.notifyPropSet('coord2D', this.getCoord2D());  // notify the value of coord has been changed
+			}
+		}
+	},
 
 	/** @ignore */
+	doGetEnableIndirectCoord: function()
+	{
+		return true;  // force always use relative coord
+	},
+	/** @ignore */
+	getIndirectCoordRefCoords: function($super, coordMode, allowCoordBorrow)
+	{
+		var connector = this.getParentConnector();
+		if (connector && connector.getConnectedObjCount() >= 2)
+		{
+			// use abs coord to calculate the arc, since there may be shadow node in connector
+			var c1 = connector.getConnectedObjAt(0).getAbsCoordOfMode(allowCoordBorrow);
+			var c2 = connector.getConnectedObjAt(1).getAbsCoordOfMode(allowCoordBorrow);
+			return [c1, c2];
+		}
+		else
+			return $super(coordMode);
+	},
+	/** @ignore */
+	calcIndirectCoordValue: function($super, coordMode, allowCoordBorrow)
+	{
+		if (coordMode === CM.COORD2D)
+		{
+			// coord 2D is determinated by distance to chord
+			/*
+			var ratio = this.getIndirectCoordStorageOfMode(coordMode);
+			var d = ratio && ratio.distanceToChord;
+			*/
+			var d = this.getDistanceToChord();
+			if (Kekule.ObjUtils.notUnset(d))
+			{
+				var refCoords = this.getIndirectCoordRefCoords();
+				if (refCoords)
+				{
+					// use abs coord to calculate the arc, since there may be shadow node in connector
+					var arcStartCoord = refCoords[0];
+					var arcEndCoord = refCoords[1];
+					if (arcStartCoord && arcEndCoord)
+					{
+						//var midCoord = CU.divide(CU.add(arcStartCoord, arcEndCoord), 2);
+						var chordVector = CU.substract(arcEndCoord, arcStartCoord);
+						var signX = Math.sign(chordVector.x);
+						var signY = Math.sign(chordVector.y);
+						if (Kekule.NumUtils.isFloatEqual(chordVector.x, 0, 1e-10))  // vertical line
+						{
+							result = {'x': -d * signY, 'y': 0};
+						}
+						else if (Kekule.NumUtils.isFloatEqual(chordVector.y, 0, 1e-10))  // horizontal line
+						{
+							result = {'x': 0, 'y': d * signX};
+						}
+						else
+						{
+							var chordSlope = chordVector.y / chordVector.x;
+							var refSlope = -1 / chordSlope;
+							var result = {'x': -signY * d / Math.sqrt(1 + Math.sqr(refSlope))};
+							result.y = result.x * refSlope;
+						}
+						return result;
+					}
+				}
+			}
+		}
+
+		return $super(coordMode, allowCoordBorrow);
+	},
+	/** @ignore */
+	saveIndirectCoordValue: function($super, coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+	{
+		if (coordMode === CM.COORD2D)
+		{
+			// the control point of arc should always be at the middle of arc, so do this constraint
+			var oldCoord = oldCoordValue;
+			var refCoords = this.getIndirectCoordRefCoords();
+			if (refCoords)
+			{
+				var arcStartCoord = refCoords[0];
+				var arcEndCoord = refCoords[1];
+				var baseVector = CU.substract(arcEndCoord, arcStartCoord);
+				var baseAngle = Math.atan2(baseVector.y, baseVector.x);
+				var refLength = CU.getDistance(arcStartCoord, arcEndCoord);
+
+				var valueDeltaVector = CU.substract(coordValue, oldCoord);
+				var valueDeltaAngle = Math.atan2(valueDeltaVector.y, valueDeltaVector.x);
+				var valueDeltaLength = CU.getDistance(coordValue, oldCoord);
+
+				var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
+
+				var distanceToChord = this.getDistanceToChord() || 0;
+				var newDistanceToChord = distanceToChord + actualMovement;
+				this.setDistanceToChord(newDistanceToChord);
+
+				return newDistanceToChord;
+			}
+		}
+
+		return $super(coordMode, coordValue);
+	}
+
+	/* @ignore */
+	/*
 	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
 	{
-		var CU = Kekule.CoordUtils;
 		// coord 2D is determinated by distance to chord
 		var d = this.getDistanceToChord();
 		if (Kekule.ObjUtils.notUnset(d))
@@ -680,10 +898,6 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var connector = this.getParentConnector();
 			if (connector)
 			{
-				/*
-				var arcStartCoord = connector.getConnectedObjAt(0).getCoord2D(allowCoordBorrow);
-				var arcEndCoord = connector.getConnectedObjAt(1).getCoord2D(allowCoordBorrow);
-				*/
 				// use abs coord to calculate the arc, since there may be shadow node in connector
 				var arcStartCoord = connector.getConnectedObjAt(0).getAbsCoord2D(allowCoordBorrow);
 				var arcEndCoord = connector.getConnectedObjAt(1).getAbsCoord2D(allowCoordBorrow);
@@ -717,11 +931,12 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 
 		return $super(allowCoordBorrow, allowCreateNew);
 	},
+	*/
 
-	/** @ignore */
+	/* @ignore */
+	/*
 	doSetCoord2D: function($super, value)
 	{
-		var CU = Kekule.CoordUtils;
 		// the control point of arc should alway be at the middle of arc, so do this constraint
 		var oldCoord = this.getCoord2D();
 		var connector = this.getParentConnector();
@@ -739,18 +954,13 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			var actualMovement = valueDeltaLength * Math.sin(valueDeltaAngle - baseAngle);
 			var newDistanceToChord = (this.getDistanceToChord() || 0) + actualMovement;
 			this.setDistanceToChord(newDistanceToChord);
-			/*
-			var angle = Math.PI / 2 - baseAngle;
-			var actualDelta = {'x': actualMovement * Math.cos(angle), 'y': actualMovement * Math.sin(angle)};
-			var newCoord = CU.add(oldCoord, actualDelta);
 
-			return $super(newCoord);
-			*/
 			return;
 		}
 
 		return $super(value);
 	}
+	*/
 });
 
 /**
@@ -770,7 +980,8 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	{
 		$super(id, Kekule.Glyph.PathType.ARC, connectedObjs);
 		// add control point to control the arc
-		this.setControlPoints([new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0})]);
+		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
+		this.setControlPoints([controlPoint]);
 	},
 	/**
 	 * Returns the arc control point.
@@ -1393,7 +1604,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return this.getCtab().getNextSiblingOfChild(childObj);
 		else
 			return null;
-	}
+	},
 
 	/*
 	 * Get count of child objects (including both nodes and connectors).
@@ -1436,6 +1647,15 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 			return -1;
 	}
 	*/
+	/**
+	 * Returns the object that will be directly manipulated after inserting into editor.
+	 * Descendants may override this methods.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getDirectManipulationTarget: function()
+	{
+		return null;
+	}
 });
 
 })();

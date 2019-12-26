@@ -107,6 +107,7 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	glyphElectronPushingArrow: 'repElectronPushingArrow',
 	glyphElectronPushingArrowDouble: 'repElectronPushingArrowDouble',
 	glyphElectronPushingArrowSingle: 'repElectronPushingArrowSingle',
+	glyphElectronPushingArrowBondForming: 'repElectronPushingArrowBondForming',
 	glyphRepSegment: 'repGlyphSegment',
 	glyphReactionArrowNormal: 'repGlyphReactionArrowNormal',
 	glyphReactionArrowReversible: 'glyphReactionArrowReversible',
@@ -2440,6 +2441,27 @@ Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController = 
 	BNS.glyphElectronPushingArrowSingle
 );
 
+Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowController = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowController',
+	Kekule.$L('ChemWidgetTexts.CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_1'),
+	Kekule.$L('ChemWidgetTexts.HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_1'),
+	'ArrowLineIaController',
+	'ArrowLineIaController-BondFormingElectronPushingArrowSingle',
+	{
+		'glyphClass': Kekule.Glyph.BondFormingElectronPushingArrow,
+		'glyphInitialParams': {
+			//'electronCount': 2,
+			'endArrowWidth': 0.25,
+			'endArrowLength': 0.25,
+			'lineLength': 1,
+			'pathEndGap': 0.1,
+			'lineCount': 1
+		}
+	},
+	null, null,
+	BNS.glyphElectronPushingArrowBondForming
+);
+
 Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetRepositoryGlyphController',
 	Kekule.$L('ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE'), //Kekule.ChemWidgetTexts.CAPTION_REPOSITORY_ARROWLINE,
@@ -2466,6 +2488,7 @@ Kekule.Editor.ActionComposerSetRepositoryGlyphController = Kekule.Editor.createC
 		Kekule.Editor.ActionComposerSetRepositoryLineSegmentController,
 		Kekule.Editor.ActionComposerSetRepositoryDoubleElectronPushingArrowController,
 		Kekule.Editor.ActionComposerSetRepositorySingleElectronPushingArrowController,
+		Kekule.Editor.ActionComposerSetRepositoryBondFormingElectronPushingArrowController,
 		Kekule.Editor.ActionComposerSetRepositoryHeatSymbolController,
 		Kekule.Editor.ActionComposerSetRepositoryAddSymbolController
 	],
