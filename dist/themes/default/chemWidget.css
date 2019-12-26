@@ -42,7 +42,7 @@
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container{height:22em;overflow-y:auto}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page{}
 .K-Chem-StructureNodeSelectPanel .K-Chem-StructureNodeSelectPanel-SetButton{min-width:3em}
-@supports(display:-webkit-flex) or (display:-moz-flex) or (display:-ms-flex) or (display:flex){.K-Chem-StructureNodeSelectPanel{display:inline-block;position:relative;height:20em}
+@supports(display:-webkit-flex) or (display:-moz-flex) or (display:-ms-flex) or (display:flex) {.K-Chem-StructureNodeSelectPanel{display:inline-block;position:relative;height:20em}
 .K-Chem-StructureNodeSelectPanel .K-TabView{height:100%;display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container{height:auto;-webkit-flex:auto;-moz-flex:auto;flex:auto;display:-webkit-flex;display:-moz-flex;display:flex}
 .K-Chem-StructureNodeSelectPanel .K-TabView .K-TabView-Page-Container .K-TabView-Page{position:absolute;top:0;left:0;bottom:0;right:0;overflow-y:auto}
@@ -62,9 +62,10 @@
 .K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button,.K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button{text-align:left}
 .K-Chem-GlyphPath-Line-SettingPanel .K-NumInput{width:6em}
 .K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section{display:block}
-.K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Title{display:block;font-size:1em;font-weight:bold}
+.K-Chem-GlyphPath-SettingPanel-Section-Title{display:block;font-size:1em;font-weight:bold}
+.K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title{display:inline;margin-right:.5em}
 .K-Chem-GlyphPath-SettingPanel .K-Chem-GlyphPath-SettingPanel-Section .K-Chem-GlyphPath-SettingPanel-Section-Panel{border:none;margin:.5em;padding:0}
-.K-Chem-ReactionArrow-SettingPanel .K-Chem-ReactionArrow-SettingPanel-ArrowPresetSection .K-Chem-GlyphPath-SettingPanel-Section-Title{display:inline;margin-right:.5em}
+.K-Chem-GlyphMultiPath-SettingPanel .K-Chem-GlyphMultiPath-SettingPanel-PathTabGroup,.K-Chem-GlyphMultiPath-SettingPanel .K-Chem-GlyphMultiPath-SettingPanel-PathSettingPanel{float:left;clear:left}
 .K-Chem-Editor{overflow:auto}
 .K-Chem-Editor .K-Chem-Editor-Client{position:relative;width:100%;height:100%;margin:0 auto}
 .K-Chem-Editor .K-Chem-Editor-UiEvent-Receiver{background:#fff;opacity:0;filter:Alpha(Opacity=0);position:absolute;left:0;top:0;width:100%;height:100%}
@@ -129,7 +130,7 @@
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client div,.K-Chem-Dialog-LoadData .K-Dialog-Client div{margin:.5em 0}
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client textarea,.K-Chem-Dialog-LoadData .K-Dialog-Client textarea{height:150px}
 .K-Chem-Dialog-LoadData .K-Chem-Dialog-LoadData-Btn-LoadFromFile{float:left;white-space:nowrap}
-@supports(display:-webkit-flex) or (display:-moz-flex) or (display:flex){.K-Chem-Dialog-Choose-File-Format .K-Dialog-Client,.K-Chem-Dialog-LoadData .K-Dialog-Client{display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
+@supports(display:-webkit-flex) or (display:-moz-flex) or (display:flex) {.K-Chem-Dialog-Choose-File-Format .K-Dialog-Client,.K-Chem-Dialog-LoadData .K-Dialog-Client{display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
 .K-Chem-Dialog-Choose-File-Format .K-Dialog-Client div,.K-Chem-Dialog-LoadData .K-Dialog-Client div,.K-Chem-Dialog-LoadData .K-Chem-Dialog-LoadAppendData-AppendCheckBox{-webkit-flex:0 0 auto;-moz-flex:0 0 auto;flex:0 0 auto;margin:.25em 0}
 .K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-SrcEditorRegion,.K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-PreviewerRegion{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex}
 .K-Chem-Dialog-LoadData .K-Dialog-Client .K-Chem-Dialog-LoadData-SrcEditor,.K-Chem-Dialog-Choose-File-Format .K-Dialog-Client .K-Chem-Dialog-Choose-File-Format-Previewer{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex}
@@ -138,4 +139,4 @@
 .K-Chem-ComposerFrame{border:none}
 .K-Chem-ComposerFrame-ContentDoc,.K-Chem-ComposerFrame-ContentBody{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
 .K-Chem-ComposerFrame-ContentBody .K-Chem-Composer{margin:0;width:100%;height:100%}
-#CssGaga{content:"190902103550,mae,334"}
+#CssGaga{content:"191226221825,mae,334"}
