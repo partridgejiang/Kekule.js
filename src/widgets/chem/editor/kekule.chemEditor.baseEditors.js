@@ -5564,6 +5564,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		this.defineProp('moveOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of moving
 		//this.defineProp('mergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging
+		this.defineProp('moveWrapperOperation', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 
 		this.defineProp('objOperationMap', {'dataType': 'Kekule.MapEx', 'serializable': false,
 			'getter': function()
@@ -5694,6 +5695,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var map = this.getManipulateObjInfoMap();
 		var operMap = this.getObjOperationMap();
 		operMap.clear();
+		var objsMoveInfo = [];
+		var totalOperation = new Kekule.ChemObjOperation.MoveAndResizeObjs([], objsMoveInfo, this.getEditor().getCoordMode(), true, this.getEditor());
+		totalOperation.setDisableIndirectCoord(true);
 		//console.log('init operations');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
@@ -5708,11 +5712,22 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			//oper.add(sub);
 			//operMap.set(obj, sub);
 			opers.push(sub);
+			/*
+			objsMoveInfo.push({
+				'obj': obj,
+				'oldCoord': item.objCoord,
+				'oldDimension': item.size
+			});
+			*/
+			totalOperation.getChildOperations().push(sub);
+			this.setMoveWrapperOperation(totalOperation);
 		}
+
 		//this.setManipulateOperation(oper);
 		//this.setActiveOperation(oper);
 		//return oper;
-		return opers;
+		//return opers;
+		return [totalOperation];
 	},
 	/* @private */
 	/*
@@ -5759,7 +5774,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//var opers = this.getObjOperationMap().getValues();
 		var op = this.getMoveOperations();
 		var opers = op? Kekule.ArrayUtils.clone(op): [];
-		return opers;
+		if (opers.length)
+		{
+			var wrapper = this.getMoveWrapperOperation();
+			wrapper.setChildOperations(opers);
+			//return opers;
+			return [wrapper];
+		}
+		else
+			return [];
 	},
 
 	/** @private */
@@ -5995,13 +6018,50 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	applyManipulatingObjsInfo: function(endScreenCoord)
 	{
+		//this._moveResizeOperExecPending = false;
 		var objs = this.getManipulateObjs();
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+
+		var indirectCoordObjs = this._getIndirectCoordObjs(objs);
+		this._setEnableIndirectCoordOfObjs(indirectCoordObjs, false);  // important, disable indirect coord first, avoid calculating during moving and position error
+		try
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				var newInfo = newInfoMap.get(obj);
+				this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			}
+			/*
+			if (this._moveResizeOperExecPending)
+				this.getMoveWrapperOperation().execute();
+			*/
+		}
+		finally
+		{
+			this._setEnableIndirectCoordOfObjs(indirectCoordObjs, true);
+		}
+	},
+	/** @private */
+	_getIndirectCoordObjs: function(objs)
+	{
+		var result = [];
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			var newInfo = newInfoMap.get(obj);
-			this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			if (obj.getEnableIndirectCoord && obj.getEnableIndirectCoord())
+				result.push(obj);
+		}
+		return result;
+	},
+	/** @private */
+	_setEnableIndirectCoordOfObjs: function(objs, enabled)
+	{
+		if (!objs)
+			return;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			objs[i].setEnableIndirectCoord(enabled);
 		}
 	},
 	/** @private */
@@ -6488,6 +6548,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var editor = this.getEditor();
 		this.updateChildMoveOperation(objIndex, obj, editor.screenCoordToObj(newScreenCoord));
 		editor.setObjectScreenCoord(obj, newScreenCoord);
+		//this._moveResizeOperExecPending = true;
 	},
 	/**
 	 * Resize a single object to newDimension.
@@ -6498,6 +6559,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.updateChildResizeOperation(objIndex, obj, newSize);
 		if (obj.setSizeOfMode)
 			obj.setSizeOfMode(newSize, this.getEditor().getCoordMode());
+		//this._moveResizeOperExecPending = true;
 	},
 	/*
 	 * Moving complete, do the wrap up job.
