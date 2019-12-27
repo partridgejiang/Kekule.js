@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.7.5.170624',
+	VERSION: '0.9.4.19122601',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -19,7 +19,12 @@ var Kekule = {
 	 * An array of functions that need be called after load all Kekule modules.
 	 * @private
 	 */
-	_afterLoadProcedures: [],
+	_afterLoadSysProcedures: [],
+	/**
+	 * An array of user functions that need be called after load all Kekule modules.
+	 * @private
+	 */
+	_afterLoadUserProcedures: [],
 	// Whether auto find title and description text for object property
 	/** @ignore */
 	PROP_AUTO_TITLE: true
@@ -32,13 +37,34 @@ var Kekule = {
  */
 Kekule._loaded = function()
 {
+	if (Kekule.LOADED)
+		return;
 	Kekule.LOADED = true;
-	var procs = Kekule._afterLoadProcedures;
+	var procs = Kekule._afterLoadSysProcedures;
+	while (procs.length)
+	{
+		var proc = procs.shift();
+		if (proc)
+		{
+			proc();
+		}
+	}
+
+	var procs = Kekule._afterLoadUserProcedures;
 	while (procs.length)
 	{
 		var proc = procs.shift();
 		if (proc)
 			proc();
+	}
+
+	// at last try fire a custom event
+	var doc = Kekule.$jsRoot && Kekule.$jsRoot.document;
+	if (doc && doc.createEvent && doc.body && doc.body.dispatchEvent)
+	{
+		var event = doc.createEvent('Event');
+		event.initEvent('kekuleload', true, true);
+		doc.body.dispatchEvent(event);
 	}
 };
 /**
@@ -51,27 +77,62 @@ Kekule._isLoaded = function()
 	return Kekule.LOADED;
 };
 /**
- * Register procedure that need to be called after all modules are loaded.
+ * Register system procedure that need to be called after all modules are loaded.
+ * User should not call this method directly.
  * @param {Func} proc
  * @private
  */
-Kekule._registerAfterLoadProc = function(proc)
+Kekule._registerAfterLoadSysProc = function(proc)
 {
 	if (proc)
-		Kekule._afterLoadProcedures.push(proc);
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadSysProcedures.push(proc);
+	}
 };
+/**
+ * Register procedure that need to be called after all modules are loaded and all initial operations has been done.
+ * @param {Func} proc
+ * @private
+ */
+Kekule._ready = function(proc)
+{
+	if (proc)
+	{
+		if (Kekule.LOADED)
+			proc();
+		else
+			Kekule._afterLoadUserProcedures.push(proc);
+	}
+};
+Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
 
 /**
  * Root object of JavaScript environment, usually window.
  */
 Kekule.$jsRoot = this;
+
+if (typeof(self) === 'object')
+	Kekule.$jsRoot = self;
+else if (typeof(window) === 'object' && window && window.document)
+	Kekule.$jsRoot = window;
+else if (typeof(global) === 'object')  // node env
+	Kekule.$jsRoot = global;
+
+Kekule.$jsRoot.Kekule = Kekule;
+
 /**
  * Root document of JavaScript environment.
  * Can be null in Node.js.
  */
-Kekule.$document = this.document || null;
+Kekule.$document = (this && this.document) || null;
 
-Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+if (!Kekule.scriptSrcInfo)  // scriptSrcInfo maybe set already in node.js environment
+{
+	Kekule.scriptSrcInfo = Kekule.$jsRoot['__$kekule_load_info__'];
+}
 if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language
 {
 	Kekule.language = Kekule.scriptSrcInfo.language;
@@ -108,9 +169,68 @@ if (!Kekule.scriptSrcInfo && Kekule.$jsRoot.document)  // script info not found,
 	})();
 }
 
+Kekule.environment = {
+	isNode: !!((typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined')),
+	isWeb: !!(typeof window === 'object' && window.document)
+};  // current runtime environment details
+
+if (Kekule.scriptSrcInfo)
+{
+	Kekule.environment.nodeModule = Kekule.scriptSrcInfo.nodeModule;
+	Kekule.environment.nodeRequire = Kekule.scriptSrcInfo.nodeRequire;
+}
+
+if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
+{
+	Kekule._ScriptFileUtils_ = Kekule.$jsRoot['__$kekule_scriptfile_utils__'];
+	Kekule.ScriptFileUtils = Kekule._ScriptFileUtils_;  // a default ScriptFileUtils impl, overrided by domUtils.js file
+	Kekule.modules = function(modules, callback)   // util function to load additional modules in a existing Kekule environment, useful in node.js
+	{
+		var actualModules = [];
+		if (typeof(modules) === 'string')  // a single string module param
+			actualModules = [modules];
+		else
+			actualModules = modules;  // array param
+
+		var scriptSrcInfo = Kekule.scriptSrcInfo;
+		if (scriptSrcInfo)
+		{
+			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules, scriptSrcInfo.useMinFile, Kekule.scriptSrcInfo.path, scriptSrcInfo, function(error){
+				if (callback)
+					callback(error);
+			});
+			//console.log(details);
+			return this;
+		}
+		else
+			return this;
+	};
+	Kekule.loadModules = Kekule.modules;  // alias of function Kekule.modules
+}
+
 Kekule.getScriptPath = function()
 {
 	return Kekule.scriptSrcInfo.path;
+};
+Kekule.getScriptSrc = function()
+{
+	return Kekule.scriptSrcInfo.src;
+};
+Kekule.getStyleSheetPath = function()
+{
+	//var cssFileName = 'themes/default/kekule.css';
+	var cssPath;
+	var scriptInfo = Kekule.scriptSrcInfo;
+	if (scriptInfo.useMinFile)
+		cssPath = scriptInfo.path;
+	else
+		cssPath = scriptInfo.path + 'widgets/';
+	return cssPath;
+};
+Kekule.getStyleSheetUrl = function()
+{
+	var path = Kekule.getStyleSheetPath();
+	return path + 'themes/default/kekule.css';
 };
 
 if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMessage)
@@ -131,3 +251,16 @@ if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMess
 		}
 	}, false);
 }
+
+/**
+ * A namespace for development tools.
+ * @namespace
+ */
+Kekule.Dev = {};
+
+// Also store Class/ClassEx/ObjectEx/DataType in Kekule namespace
+/** @ignore */
+Kekule.Class = Class;
+Kekule.ClassEx = ClassEx;
+Kekule.ObjectEx = ObjectEx;
+Kekule.DataType = DataType;

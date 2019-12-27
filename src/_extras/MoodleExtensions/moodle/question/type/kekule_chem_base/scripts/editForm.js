@@ -89,12 +89,14 @@ function createChemViewer(placeHolder, molData, molDataType, className, inputTyp
 		}
 
 		var container = document.createElement('span');
+		var linebreak = document.createElement('br');
 		/*
 		if (molData)
 			container.setAttribute('data-chem-obj', molData);
 		*/
 		var parentElem = placeHolder.parentNode;
 		parentElem.insertBefore(container, placeHolder);
+		parentElem.insertBefore(linebreak, placeHolder);
 		//parentElem.removeChild(placeHolder);
 		hideElem(placeHolder);
 		var result = new Kekule.ChemWidget.Viewer(container);
@@ -144,15 +146,16 @@ function reactChemObjLoad(e)
 		var answerElem = ansRelElems.answer;
 		if (/*molDataElem && smilesElem &&*/ answerElem)
 		{
-			var molData = '', smiles = '';
+			var molData = '', smiles = '', smilesNoStereo = '';
 			var chemObj = viewer.getChemObj();
 			if (chemObj)
-			{
+			{				
 				var sAnswer = '';
 				try
 				{
 					molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES);
+					smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
+					smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
 				}
 				catch(e)
 				{
@@ -160,6 +163,7 @@ function reactChemObjLoad(e)
 				}
 				var saveObj = {
 					'smiles': smiles,
+					'smilesNoStereo': smilesNoStereo,
 					'molDataType': Kekule.IO.MimeType.KEKULE_JSON,
 					'molData': molData
 				};

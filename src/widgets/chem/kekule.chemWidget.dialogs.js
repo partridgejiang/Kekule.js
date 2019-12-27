@@ -32,8 +32,11 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	DIALOG_LOADDATA: 'K-Chem-Dialog-LoadData',
 	DIALOG_LOADDATA_FORMATBOX: 'K-Chem-Dialog-LoadData-FormatBox',
+	DIALOG_LOADDATA_SRCEDITOR_REGION: 'K-Chem-Dialog-LoadData-SrcEditorRegion',
 	DIALOG_LOADDATA_SRCEDITOR: 'K-Chem-Dialog-LoadData-SrcEditor',
-	DIALOG_LOADDATA_BTN_LOADFROMFILE: 'K-Chem-Dialog-LoadData-Btn-LoadFromFile'
+	DIALOG_LOADDATA_BTN_LOADFROMFILE: 'K-Chem-Dialog-LoadData-Btn-LoadFromFile',
+	DIALOG_LOADAPPENDDATA: 'K-Chem-Dialog-LoadAppendData',
+	DIALOG_LOADAPPENDDATA_APPENDCHECKBOX: 'K-Chem-Dialog-LoadAppendData-AppendCheckBox'
 });
 
 /**
@@ -61,6 +64,9 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 
 		$super(parentOrElementOrDocument, caption || /*CWT.CAPTION_LOADDATA*/ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG'),
 			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+
+		if (this.setResizable)
+			this.setResizable(true);
 	},
 	/** @ignore */
 	finalize: function($super)
@@ -85,6 +91,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	initPropValues: function($super)
 	{
 		$super();
+		this.setAutoAdjustSizeOnPopup(true);
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 
@@ -120,9 +127,10 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		clientElem.appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
+		elem.className = CCNS.DIALOG_LOADDATA_SRCEDITOR_REGION;
 		clientElem.appendChild(elem);
 		var dataEditor = new Kekule.Widget.TextEditor(this); //new Kekule.Widget.TextArea(result);
-		dataEditor.setWrap('off');
+		dataEditor.setWrap('off').setAutoWrapThreshold(true).setFileDroppable(true);  // enable file drop in editor
 		dataEditor.setToolbarPos(Kekule.Widget.Position.BOTTOM);
 		dataEditor.addClassName(CCNS.DIALOG_LOADDATA_SRCEDITOR);
 		dataEditor.appendToElem(elem);
@@ -321,5 +329,62 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		return $super(result);
 	}
 });
+
+
+/**
+ * A dialog to load or append new chem object from external file or user input data.
+ * @class
+ * @augments Kekule.ChemWidget.LoadDataDialog
+ *
+ * @property {Bool} displayAppendCheckBox Whether show append check box in dialog.
+ * @property {Bool} isAppending Whether the append check box is checked
+ */
+Kekule.ChemWidget.LoadOrAppendDataDialog = Class.create(Kekule.ChemWidget.LoadDataDialog,
+/** @lends Kekule.ChemWidget.LoadOrAppendDataDialog# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.LoadOrAppendDataDialog',
+	/** @construct */
+	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	{
+		this._appendCheckBox = null;
+		$super(parentOrElementOrDocument, caption, buttons);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('displayAppendCheckBox', {'dataType': DataType.BOOL});
+		this.defineProp('isAppending', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this._appendCheckBox && this._appendCheckBox.getChecked(); },
+			'setter': function(value) { if (this._appendCheckBox) this._appendCheckBox.setChecked(!!value); }
+		});
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.DIALOG_LOADAPPENDDATA;
+	},
+	/** @ignore */
+	doCreateClientContents: function($super, clientElem)
+	{
+		$super(clientElem);
+		var doc = this.getDocument();
+		// append check box
+		var appendCheckBox = new Kekule.Widget.CheckBox(this);
+		appendCheckBox.addClassName(CCNS.DIALOG_LOADAPPENDDATA_APPENDCHECKBOX);
+		appendCheckBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG_APPENDMODE'));
+		appendCheckBox.appendToElem(clientElem);
+		appendCheckBox.setDisplayed(this.getDisplayAppendCheckBox());
+		this._appendCheckBox = appendCheckBox;
+	},
+	/** @ignore */
+	open: function($super, callback, caller, showType)
+	{
+		this.setIsAppending(false);  // always auto uncheck append
+		this._appendCheckBox.setDisplayed(this.getDisplayAppendCheckBox());
+		return $super(callback, caller, showType);
+	}
+});
+
 
 })();

@@ -399,7 +399,7 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
     }
 
     public function is_same_response(array $prevresponse, array $newresponse) {
-        //return false;
+        return false;
         $prevAns = $this->getResponseAnswerData($prevresponse);
         $newAns = $this->getResponseAnswerData($newresponse);
         if (empty($prevAns) || empty($newAns))
@@ -523,13 +523,19 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         {
             $resData = $response[$this->getAnswerFieldName($i)];
             $blank = $this->blanks[$i];
+            $actualResponseData = $this->getActualResponseForClassification($resData);
             if (isset($blank->matchAnswerKey))
                 $result[$i] = new question_classified_response($blank->matchAnswerKey->id,
-                    $resData, $blank->matchAnswerKey->fraction * $blank->matchRatio);
+                    $actualResponseData, $blank->matchAnswerKey->fraction * $blank->matchRatio);
+            else if (empty($actualResponseData)) {
+                $result[$i] = question_classified_response::no_response();
+            }
             else
-                $result[$i] = new question_classified_response(0, $resData, 0);
+                $result[$i] = new question_classified_response(0,
+                    $actualResponseData, 0);
 
         }
+        //var_dump($result);
         return $result;
         /*
         if (empty($response['answer'])) {
@@ -545,6 +551,12 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         return array($this->id => new question_classified_response(
             $ans->id, $response['answer'], $ans->fraction));
         */
+    }
+
+    // returns actual response string for classification process in static
+    protected function getActualResponseForClassification($responseData)
+    {
+        return $responseData;
     }
 }
 

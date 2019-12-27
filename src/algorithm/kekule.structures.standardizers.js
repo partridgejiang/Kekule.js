@@ -24,6 +24,8 @@
  * @object
  */
 Kekule.globalOptions.add('algorithm.molStandardization', {
+	cleanStructure: true,
+	clearHydrogens: true,
 	unmarshalSubFragments: true,
 	doCanonicalization: true,
 	doAromaticPerception: true,
@@ -41,6 +43,8 @@ Kekule.MolStandardizer = {
 	 * @param {Kekule.StructureFragment} structureFragment
 	 * @param {Hash} options Standardization options, including the following fields:
 	 *   {
+	 *     cleanStructure: bool, whether clean the structure before standardization.
+	 *     clearHydrogens: bool, whether removes all explicit hydrogen atoms (and related bonds)
 	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
 	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
 	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
@@ -56,15 +60,27 @@ Kekule.MolStandardizer = {
 		var op = Object.extend(defOptions, options);
 		if (op.unmarshalSubFragments)
 			mol.unmarshalAllSubFragments(true);
-		if (op.doCanonicalization)
+		if (op.cleanStructure)
+			mol.clean();
+		if (op.clearHydrogens)
+			mol.clearExplicitHydrogens();
+
+		/*
+		if (op.doStereoPerception)
+		{
 			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+			mol.perceiveStereos(null, true);  // stereo detection should do canonicalization first
+		}
+		else*/ if (op.doCanonicalization)
+			Kekule.canonicalizer.canonicalize(mol, op.canonicalizerExecutorId || null);
+
 		if (op.doAromaticPerception)
 		{
 			mol.perceiveAromaticRings();
 			//console.log('perceive aromatics');
 		}
 		if (op.doStereoPerception)
-			mol.perceiveStereos(null, true);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
+			mol.perceiveStereos(null, true, op);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
 
 		return mol;
 	}
@@ -85,12 +101,19 @@ Object.extend(Kekule.ChemStructureUtils,
 		// clone the structure to avoid change original molecule objects
 		var m1 = mol1.clone(false);
 		var m2 = mol2.clone(false);
-		// standardize each
-		m1 = Kekule.MolStandardizer.standardize(m1);
-		m2 = Kekule.MolStandardizer.standardize(m2);
-		// compare options
+		// set cano index of two root molecules to null, avoid affect the following comparison
+		m1.setCanonicalizationIndex(null);
+		m2.setCanonicalizationIndex(null);
+
+		// compare options, may also containing standardization options (e.g. stereo perception options)
 		var op = Object.create(compareOptions || {}); //Object.extend(compareOptions || {});
+
+		// standardize each
+		m1 = Kekule.MolStandardizer.standardize(m1, op);
+		m2 = Kekule.MolStandardizer.standardize(m2, op);
+
 		op.doStandardize = false;  // flag that notify the molecule do not do standardize again (that will invoke recursion)
+		op.extraComparisonProperties = ['canonicalizationIndex'];  // flag that indicate the cano step has been done and the canoIndex can be used in comparison
 		// compare
 		//return Kekule.UnivChemStructObjComparer.compare(m1, m2, op) === 0;
 		return m1.compareStructure(m2, op);

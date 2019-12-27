@@ -233,6 +233,7 @@ ClassEx.defineProps(Kekule.StructureConnectionTable, [
 		'name': 'ringInfo', 'dataType': DataType.HASH, 'serializable': false,
 		'getter': function(doNotCreate)
 		{
+			/*
 			var result = this.getPropStoreFieldValue('ringInfo');
 			if (!result && !doNotCreate)
 			{
@@ -241,17 +242,27 @@ ClassEx.defineProps(Kekule.StructureConnectionTable, [
 				this.setPropStoreFieldValue('ringInfo', result);
 			}
 			return result;
+			*/
+			var result = this.getStructureCacheData('ringInfo');
+			if (!result && !doNotCreate)
+			{
+				result = this.analysisRings();
+				this.setStructureCacheData('ringInfo', result);
+			}
+			return result;
 		},
 		'setter': null
 	}
 ]);
 /** @ignore */
+/*
 ClassEx.extendMethod(Kekule.StructureConnectionTable, 'objectChange', function($origin, modifiedPropNames)
 	{
 		this.setPropStoreFieldValue('ringInfo', null);  // clear rings cache when connection table changed
 		return $origin(modifiedPropNames);
 	}
 );
+*/
 
 ClassEx.extend(Kekule.StructureFragment,
 /** @lends Kekule.StructureFragment# */
@@ -380,7 +391,7 @@ ClassEx.defineProps(Kekule.StructureFragment, [
 			}
 			// hack
 			shadowFragment.setPropStoreFieldValue('ringInfo', shadowRingInfo);
-			console.log('set ringInfo', srcRingInfo, shadowRingInfo);
+			//console.log('set ringInfo', srcRingInfo, shadowRingInfo);
 		}
 	});
 }
@@ -437,6 +448,44 @@ ClassEx.extend(Kekule.ChemStructureObject,
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Check if this object is on ring system.
+	 * @param {Array} candidateRings If not set, object will be checked in all rings of parent structure, otherwise, only these rings will be checked.
+	 * @returns {Bool}
+	 */
+	isInRing: function(candidateRings)
+	{
+		var rings = candidateRings && AU.toArray(candidateRings);
+		if (!rings)  // use SSSR of parent
+		{
+			var parent = this.getParent();
+			if (parent && parent.findSSSR)
+			{
+				rings = parent.findSSSR();
+			}
+		}
+		if (!rings || !rings.length)
+			return false;
+		else
+		{
+			for (var i = 0, l = rings.length; i < l; ++i)
+			{
+				var ring = rings[i];
+				if (this instanceof Kekule.BaseStructureConnector)
+				{
+					if (ring.connectors.indexOf(this) >= 0)
+						return true;
+				}
+				else
+				{
+					if (ring.nodes.indexOf(this) >= 0)
+						return true;
+				}
+			}
+			return false;
+		}
 	}
 });
 

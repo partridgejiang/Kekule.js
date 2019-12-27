@@ -56,12 +56,18 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		$super();
 		this.setPropStoreFieldValue('boundInfos', new Kekule.TwoTupleMapEx(true));
 		this._renderer = rendererOrPainter;  // used internally
+		if (rendererOrPainter && rendererOrPainter.setBoundInfoRecorder)
+		{
+			rendererOrPainter.setBoundInfoRecorder(this);
+		}
 		//console.log('boundInfoCreated', rendererOrPainter);
 		this.installEventListener(rendererOrPainter);
 	},
 	/** @ignore */
 	finalize: function($super)
 	{
+		if (this._renderer)
+			this.uninstallEventListener(this._renderer);
 		var infos = this.getPropStoreFieldValue('boundInfos');
 		if (infos)
 			infos.clear();
@@ -84,42 +90,51 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 	/** @private */
 	installEventListener: function(renderer)
 	{
-		renderer.addEventListener('updateBasicDrawObject', function(e)
+		renderer.addEventListener('updateBasicDrawObject', this._reactRendererUpdateBasicDrawObject, this);
+		renderer.addEventListener('clear', this._reactRendererClear, this);
+	},
+	/** @private */
+	uninstallEventListener: function(renderer)
+	{
+		renderer.removeEventListener('updateBasicDrawObject', this._reactRendererUpdateBasicDrawObject, this);
+		renderer.removeEventListener('clear', this._reactRendererClear, this);
+	},
+	/** @private */
+	_reactRendererUpdateBasicDrawObject: function(e)
+	{
+		var OT = Kekule.Render.ObjectUpdateType;
+		if (this.needRecordOnContext(e.context))
+		{
+			//console.log('update', this._renderer.getClassName());
+			var utype = e.updateType;
+			if (utype === OT.ADD)
+				this.add(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
+			else if (utype === OT.MODIFY)
+				this.modify(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
+			else if (utype === OT.REMOVE)
 			{
-				var OT = Kekule.Render.ObjectUpdateType;
-				if (this.needRecordOnContext(e.context))
-				{
-					var utype = e.updateType;
-					if (utype === OT.ADD)
-						this.add(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
-					else if (utype === OT.MODIFY)
-						this.modify(e.context, e.obj, e.parentObj, e.boundInfo, e.target);
-					else if (utype === OT.REMOVE)
-					{
-						//console.log('object removed', e.obj.getClassName());
-						this.remove(e.context, e.obj);
-					}
-					else if (utype === OT.CLEAR)
-						this.clear(e.context);
-					//console.log(utype, e.context.canvas.parentNode.className, e.obj.getClassName(), e.parentObj.getClassName(), e.boundInfo);
-					/*
-					if (!e.boundInfo)
-						console.log('no boundInfo', e);
-					*/
-					this.invokeEvent('updateBasicDrawObject', e);
-				}
-			}, this
-		);
-		renderer.addEventListener('clear', function(e)
-			{
-				//console.log('[RECEIVE CLEAR]', e.target.getClassName());
-				if (this.needRecordOnContext(e.context))
-					//this.clear(e.context);
-					this.clearOnRenderer(e.context, e.target);
-				var infos = this.getAllRecordedInfoOfContext(e.context);
-				//console.log(infos.length, infos);
-			}, this
-		);
+				//console.log('object removed', e.obj.getClassName());
+				this.remove(e.context, e.obj);
+			}
+			else if (utype === OT.CLEAR)
+				this.clear(e.context);
+			//console.log(utype, e.context.canvas.parentNode.className, e.obj.getClassName(), e.parentObj.getClassName(), e.boundInfo);
+			/*
+			if (!e.boundInfo)
+				console.log('no boundInfo', e);
+			*/
+			this.invokeEvent('updateBasicDrawObject', e);
+		}
+	},
+	/** @private */
+	_reactRendererClear: function(e)
+	{
+		//console.log('[RECEIVE CLEAR]', this._renderer.getClassName());
+		if (this.needRecordOnContext(e.context))
+		//this.clear(e.context);
+			this.clearOnRenderer(e.context, e.target);
+		var infos = this.getAllRecordedInfoOfContext(e.context);
+		//console.log(infos.length, infos);
 	},
 
 	/**
@@ -310,7 +325,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		else
 		{
 			// since this is not a weak map, we can get its array properties
-			return map.values; // TODO: here we use the internal structure of map, should change in the future
+			return map.getValues();
 		}
 	},
 	/**
@@ -343,7 +358,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		var infos = this.getAllBoundInfosOfContext(context);
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
-			var box = MU.getContainerBox(info[i], 0);
+			var box = MU.getContainerBox(infos[i], 0);
 			result = BU.getContainerBox(result, box);
 		}
 		return result;

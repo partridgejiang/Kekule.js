@@ -156,7 +156,7 @@ Kekule.Glyph.Base = Class.create(Kekule.ChemObject,
 	getAutoIdPrefix: function()
 	{
 		return 'g';
-	}
+	},
 	/* @private */
 	/*
 	notifyDimension2DChanged: function(newValue)
@@ -189,6 +189,41 @@ Kekule.Glyph.Base = Class.create(Kekule.ChemObject,
 		}
 	}
 	*/
+	/**
+	 * Controls whether coord stick is allowed for a child node.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} child
+	 * @param {Kekule.ChemObject} dest
+	 * @returns {Bool}
+	 * @private
+	 */
+	getAllowChildCoordStickTo: function(child, dest)
+	{
+		return false;
+	},
+	/**
+	 * Controls whether a child object can be a coord stick target.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} child
+	 * @returns {Bool}
+	 * @private
+	 */
+	getChildAcceptCoordStickFrom: function(child, fromObj)
+	{
+		return false;
+	},
+	/**
+	 * Controls whether coord offset should be used in rendering when a child sticking to another target.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} child
+	 * @param {Kekule.ChemObject} stickDest
+	 * @returns {Bool}
+	 * @private
+	 */
+	getChildUseCoordStickOffset: function(child, stickDest)
+	{
+		return null;
+	}
 });
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Glyph.Base);
 //Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Glyph);

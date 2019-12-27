@@ -489,10 +489,12 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	 * Clear the whole context.
 	 * @param {Object} context
 	 */
+	/*
 	clearContext: function(context)
 	{
 		context.clear();
 	},
+	*/
 
 	/**
 	 * Indicate whether this bridge and context can change glyph content or position after drawing it.
@@ -503,18 +505,6 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	canModifyGraphic: function(context)
 	{
 		return true;
-	},
-
-	/**
-	 * Transform a 3D context based coord to screen based one (usually 2D in pixel).
-	 * @param {Object} context
-	 * @param {Hash} coord
-	 * @return {Hash}
-	 */
-	// TODO: unfinished yet.
-	transformContextCoordToScreen: function(context, coord)
-	{
-		return {x: coord.x, y: coord.y};
 	},
 
 	/**
@@ -548,20 +538,30 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	setClearColor: function(context, color)
 	{
 		var r = context.getRenderer();
-		if (r && r.setClearColorHex)
+		if (r)
 		{
-			if (color)
-				context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
-			else // color not set, transparent
-				context.getRenderer().setClearColorHex(null, 0);
+			if (r.setClearColorHex)
+			{
+				if (color)
+					context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColorHex(null, 0);
+			}
+			else if (r.setClearColor)   // in new version, setClearColorHex method has been removed
+			{
+				if (color)
+					context.getRenderer().setClearColor(this.colorStrToHex(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColor(null, 0);
+			}
 		}
 	},
 
 	/** @private */
 	clearContext: function(context)
 	{
-		context.getScene().clearMesh();
-		this.renderContext(context);
+	 	context.getScene().clearMesh();
+	 	this.renderContext(context);
 	},
 	/** @private */
 	renderContext: function(context)
@@ -606,7 +606,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		geom.vertices.push(new THREE.Vector3(coord1.x, coord1.y, coord1.z));
 		geom.vertices.push(new THREE.Vector3(coord2.x, coord2.y, coord2.z));
 
-		line = new THREE.Line(geom, lineMat);
+		var line = new THREE.Line(geom, lineMat);
 		context.getScene().add(line);
 		return line;
 	},
@@ -636,9 +636,14 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 
 		if (quaternion)
 		{
-			result.useQuaternion = true;
-			result.quaternion = quaternion;
-			result.updateMatrix();
+			if (result.applyQuaternion)  // new version of THREE
+				result.applyQuaternion(quaternion);
+			else  // old version
+			{
+				result.useQuaternion = true;
+				result.quaternion = quaternion;
+				result.updateMatrix();
+			}
 		}
 
 		// adjust position
@@ -833,11 +838,11 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	exportToDataUri: function(context, dataType, options)
 	{
 		var renderer = context.getRenderer();
-		if (renderer instanceof THREE.SVGRenderer)
+		if (THREE.SVGRenderer && (renderer instanceof THREE.SVGRenderer))
 		{
 			var domElem = context.getRenderer().domElement;
 			//var svg = (new XMLSerializer()).serializeToString(domElem);
-			var svg = XmlUtility.serializeNode(domElem);
+			var svg = DataType.XmlUtility.serializeNode(domElem);
 			return 'data:image/svg+xml;base64,' + btoa(svg);
 		}
 		else  // canvas or webgl

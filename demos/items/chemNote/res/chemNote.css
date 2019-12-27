@@ -1,0 +1,350 @@
+html, body
+{
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 18px;
+  background: #fff;
+}
+
+section.Panel
+{
+  /*float: left;*/
+  display: block;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+
+  background: #fff;
+
+  display: -webkit-flex;
+  display: -moz-flex;
+  display:flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+section.Panel .SectionTitle
+{
+  display: block;
+  width: 100%;
+  font-size: 1.3em;
+  font-weight: bold;
+  background-color: #ccc;
+  margin: 0;
+  padding: 0.3em;
+}
+section.Panel .SectionTitle .Caption
+{
+  padding: 0.5em;
+}
+section.Panel .TitleToolbar
+{
+  float: right;
+  margin: 0em 0.5em;
+}
+
+section.Panel .TitleToolbar .K-Button
+{
+  background-color: transparent;
+  color: #555;
+  font-size: 1em;
+  font-weight: bold;
+  margin: 0;
+  padding: 0 0.3em;
+  width: 40px;
+}
+
+section.Panel .SectionContent
+{
+  flex: auto;
+  overflow-x: hidden;;
+  overflow-y: auto;
+}
+
+.ChemNote-NoteListView
+{
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem
+{
+  display: block;
+  float: left;
+  width: 24%;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem:hover .ChemNote-NoteItem-Container,
+.ChemNote-NoteListView .ChemNote-NoteItem:active .ChemNote-NoteItem-Container
+{
+  background-color: #eee;
+  cursor: pointer;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-Container
+{
+  display: -webkit-flex;
+  display: -moz-flex;
+  display:flex;
+  flex-direction: row;
+}
+
+.ChemNote-NoteItem-Container
+{
+  display: block;
+  height: 9em;
+  margin: 0.5em;
+  padding: 0.5em 0.5em;
+  border: 1px solid #ccc;
+  -ms-border-radius: 0.3em;
+  -webkit-border-radius: 0.3em;
+  -moz-border-radius: 0.3em;
+  border-radius: 0.3em;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextRegion
+{
+  /* float: left; */
+  flex: auto;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextRegion
+{
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemRegion
+{
+  /* float: right; */
+  width: 40%;
+  min-width: 100px;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextRegion,
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemRegion
+{
+  position: relative;
+  height: 100%;
+}
+
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-Title,
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-DateTime,
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextContent
+{
+  font-weight: normal;
+  margin: 0.5em 0;
+  margin-top: 0.2em;
+  padding: 0;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-Title
+{
+  font-weight: bold;
+  font-size: 1.2em;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-DateTime
+{
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-TextContent
+{
+  max-height: 5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: auto;
+}
+.ChemNote-NoteListView .ChemNote-NoteItem .ChemNote-NoteItem-ChemContent
+{
+  border: 1px solid #ccc;
+  -ms-border-radius: 0.3em;
+  -webkit-border-radius: 0.3em;
+  -moz-border-radius: 0.3em;
+  border-radius: 0.3em;
+
+  position: absolute;
+  display: block;
+  top: 0.2em;
+  left: 0.2em;
+  bottom: 0.2em;
+  right: 0.2em;
+  padding: 0;
+  margin: 0;
+
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.ChemNote-NoteEditor,
+#noteEditor
+{
+  /*display: block;*/
+  width: 100%;
+  /*height: 100%;*/
+  display: -webkit-flex;
+  display: -moz-flex;
+  display:flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  flex-direction: column;
+}
+
+.ChemNote-NoteEditor .ChemNote-NoteEditor-TextRegion,
+.ChemNote-NoteEditor .ChemNote-NoteEditor-ChemRegion
+{
+  /*
+  margin: 0 1%;
+  height: 49%;
+  */
+  display: -webkit-flex;
+  display: -moz-flex;
+  display:flex;
+  -webkit-flex-direction: column;
+  -moz-flex-direction: column;
+  flex-direction: column;
+  -webkit-flex: 1.0;
+  -moz-flex: 1.0;
+  flex: 1.0;
+  flex-shrink: 1.0;
+
+  padding: 0.5em;
+}
+
+.ChemNote-NoteEditor .ChemNote-NoteEditor-TextRegion
+{
+  min-width: 10em;
+}
+
+.ChemNote-NoteEditor .K-TextBox,
+.ChemNote-NoteEditor .K-TextArea
+{
+  display: block;
+  margin: 0.5em 0em;
+  padding: 0.2em;
+  width: 100%;
+}
+.ChemNote-NoteEditor .K-TextBox
+{
+  padding: 0.2em;
+  font-size: 1.3em;
+  font-weight: bold;
+  border: none;
+  border-bottom: 2px solid #ccc;
+}
+.ChemNote-NoteEditor .K-TextArea
+{
+  border: 1px solid #ccc;  /* none; */
+  -webkit-flex: auto;
+  -moz-flex: auto;
+  flex: auto;
+}
+.ChemNote-NoteEditor .K-Chem-Viewer
+{
+  display: block;
+  margin: 0.2em;
+  width: auto;
+  height: 1em;  /* override 15em height */
+  min-height: 100px;
+  min-width: 100px;
+  border: 1px solid #ccc;
+  flex: auto;
+  -webkit-flex: auto;
+  -moz-flex: auto;
+}
+.ChemNote-NoteEditor .ChemNote-NoteEditor-ChemEditButton
+{
+  position: absolute;;
+  bottom: 0.5em;
+  right: 0.5em;
+}
+.ChemNote-NoteEditor .ChemNote-NoteEditor-ChemEditButton .K-Pri-Glyph-Content
+{
+  width: 24px;
+  height: 24px;
+}
+
+@media screen and (min-aspect-ratio: 1/1)
+{
+  .ChemNote-NoteEditor,
+  #noteEditor
+  {
+    -webkit-flex-direction: row;
+    -moz-flex-direction: row;
+    flex-direction: row;
+  }
+  .ChemNote-NoteEditor .ChemNote-NoteEditor-TextRegion,
+  .ChemNote-NoteEditor .ChemNote-NoteEditor-ChemRegion
+  {
+    /*
+    width: 48%;
+    height: 99%;
+    */
+  }
+  .ChemNote-NoteEditor .ChemNote-NoteEditor-TextRegion
+  {
+    /*
+    float: left;
+    -webkit-flex: auto;
+    -moz-flex: auto;
+    flex: auto;
+    */
+  }
+  .ChemNote-NoteEditor .ChemNote-NoteEditor-ChemRegion
+  {
+    /*
+    float: right;
+    */
+  }
+}
+
+#composerRegion
+{
+  overflow: hidden;
+}
+.K-Chem-Composer
+{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+@media screen and (max-width: 1600px)
+{
+  .ChemNote-NoteListView .ChemNote-NoteItem
+  {
+    width: 24%;
+  }
+}
+@media screen and (max-width: 1200px)
+{
+  .ChemNote-NoteListView .ChemNote-NoteItem
+  {
+    width: 33%;
+  }
+}
+@media screen and (max-width: 800px)
+{
+  .ChemNote-NoteListView .ChemNote-NoteItem
+  {
+    width: 49%;
+  }
+}
+@media screen and (max-width: 400px)
+{
+  .ChemNote-NoteListView .ChemNote-NoteItem
+  {
+    float: none;
+    width: 100%;
+  }
+}
+
+

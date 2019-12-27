@@ -18,11 +18,14 @@
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	CONTAINER: 'K-Container',
 	PANEL: 'K-Panel',
+	PANEL_CAPTION: 'K-Panel-Caption',
 	TOOLBAR: 'K-Toolbar'
 });
 
+var DU = Kekule.DomUtils;
 var EU = Kekule.HtmlElementUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
+var SU = Kekule.StyleUtils;
 
 /**
  * An abstract widget container.
@@ -321,6 +324,36 @@ Kekule.Widget.Panel = Class.create(Kekule.Widget.Container,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Panel',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('caption', {'dataType': DataType.STRING,
+			'getter': function() {
+				var elem = this.getCaptionElem(false);
+				return elem && DU.getElementText(this.getCaptionElem());
+			},
+			'setter': function(value)
+			{
+				DU.setElementText(this.getCaptionElem(true), value);
+				SU.setDisplay(this.getCaptionElem(), !!value);
+			}
+		});
+		this.defineProp('captionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
+			'getter': function(canCreate){
+				var result = this.getPropStoreFieldValue('captionElem');
+				if (!result && canCreate)
+				{
+					result = this.getDocument().createElement('div');
+					result.className = CNS.PANEL_CAPTION;
+					// insert at the head of root elem
+					var rootElem = this.getElement();
+					rootElem.insertBefore(result, DU.getFirstChildElem(rootElem));
+					this.setPropStoreFieldValue('captionElem', result);
+				}
+				return result;
+			}
+		})
+	},
 	/** @private */
 	initPropValues: function($super)
 	{

@@ -20,7 +20,7 @@
   <script src="../../../src/kekule.js?min=false"></script>
 
 	<!--
-	<script src="../../../release/kekule.js"></script>
+	<script src="../../../dist/kekule.js"></script>
 	-->
   <script>
 		function refreshWidgetList()
@@ -52,7 +52,9 @@
       document.getElementById('dynInsertRegion').innerHTML += s;
     };
     Kekule.X.domReady(function()
+		//Kekule.Widget.ready(function()
       {
+				console.log('Widget ready');
         Kekule.Widget.globalManager.addEventListener('valueChange', function(e)
           {
             //console.log('change on', e.widget.getId());
@@ -82,7 +84,7 @@
 		A line of text.
     <button id="btn11" data-widget="Kekule.Widget.Button" data-text="Button 1" data-observe-element-attrib-changes="true"></button>
     <button id="btn12" data-widget="Kekule.Widget.Button" data-text="Button 2"></button>
-    <a id="btn13" data-widget="Kekule.Widget.Button" data-text="Button 3 On A"></a>
+    <a id="btn13" data-widget="Kekule.Widget.Button" data-text="Button 3 On A">A Text</a>
     <!--<div id="btn14" data-widget="Kekule.Widget.Button" data-text="Button 3 On div"></div>-->
 		<button id="btn15" data-widget="Kekule.Widget.Button">Button with <sup>sup</sup> and <sub>sub</sub></button>
 		<a id="btn16" data-widget="Kekule.Widget.Button">Button(A) with <sup>sup</sup> and <sub>sub</sub></a>
@@ -91,15 +93,15 @@
   <div id="dropDownGroupButtons" data-widget="Kekule.Widget.ButtonGroup" data-layout="2">
     <button id="btn31" data-widget="Kekule.Widget.RadioButton" data-text="Compact 1"></button>
     <button id="btn32" data-widget="Kekule.Widget.RadioButton" data-text="Compact 2"></button>
-    <a id="btn33" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A"></a>
+    <a id="btn33" data-widget="Kekule.Widget.RadioButton" data-text="Compact 3 On A">Compact On A</a>
   </div>
 
   <div id="groupedButtons" data-widget="Kekule.Widget.ButtonGroup"  data-layout="2">
     <button id="btn21" data-widget="Kekule.Widget.RadioButton" data-text="Radio 1"></button>
     <button id="btn22" data-widget="Kekule.Widget.RadioButton" data-text="Radio 2" data-checked="true"></button>
-    <a id="btn23" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On A"></a>
-    <a id="btn24" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithPrevWidget" data-drop-down-widget="#dropDownGroupButtons"></a>
-    <a id="btn25" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithNextWidget" data-drop-down-widget="#dropDownGroupButtons2"></a>
+    <a id="btn23" data-widget="Kekule.Widget.RadioButton" data-text="Radio 3 On A">RRRR</a>
+    <a id="btn24" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithPrevWidget" data-drop-down-widget="#dropDownGroupButtons">RRRR</a>
+    <a id="btn25" data-widget="Kekule.Widget.DropDownButton" data-text="DropDownWithNextWidget" data-drop-down-widget="#dropDownGroupButtons2">RRRR</a>
   </div>
 
   <div id="dropDownGroupButtons2" data-widget="Kekule.Widget.ButtonGroup">
@@ -123,8 +125,10 @@
     <input id="textbox11" data-widget="Kekule.Widget.TextBox" data-placeholder="A Placeholder" data-text1="A Text"/>
   </div>
 
-  <div id="textboxExes" data-widget="Kekule.Widget.Panel">
+  <div id="textboxExes" data-widget="Kekule.Widget.Panel" data-caption="Text box ex">
+		<!--
     <span id="textboxEx11" data-widget="Kekule.Widget.TextBoxEx" data-placeholder="A Placeholder" data-text="A Text"/>
+    -->
     <span id="buttonTextBox1" data-widget="Kekule.Widget.ButtonTextBox" data-placeholder="A Placeholder" data-text="A Button Text" data-button-kind="K-Kind-Popup"/>
   </div>
 
@@ -154,6 +158,12 @@
          data-checked="false" data-text="Checkbox in span"></span>
   </div>
 
+	<div id="miscFormWidgets">
+		<input id="range1" data-widget="Kekule.Widget.NumInput" />
+		<input id="range2" data-widget="Kekule.Widget.NumInput" data-min-value="10" data-max-value="50" data-step="10" />
+		<input id="range3" data-widget="Kekule.Widget.NumInput" data-min-value="0.1" data-max-value="1" data-step="0.1" data-value="0.2" />
+	</div>
+
     <div id="resizers" style="background:yellow;width:200px;height:100px;position:relative">
         <div id="resizeGripper1" data-widget="Kekule.Widget.ResizeGripper"></div>
     </div>
@@ -180,14 +190,14 @@
 
   <div id="colorPickers">
 		Color Picker
-		<div id="colorPicker1" data-widget="Kekule.Widget.ColorPicker" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
+		<div id="colorPicker1" data-widget="Kekule.Widget.ColorPicker" data-resizable="true" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
 		<div id="colorTextBox1" data-widget="Kekule.Widget.ColorDropTextBox" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></div>
 		<button id="colorButton1" data-widget="Kekule.Widget.ColorDropButton" data-special-colors='["#ff0000", "unset", {"value":"(default)", "className":"K-Res-Icon-Color-NotSet"}]'></button>
 	</div>
 
 	<div id="textEditors">
 		Text Editor
-		<div id="textEditor1" data-widget="Kekule.Widget.TextEditor"></div>
+		<div id="textEditor1" data-widget="Kekule.Widget.TextEditor" data-resizable="true"></div>
 	</div>
 
 	<div id="menus" style="height: 300px">

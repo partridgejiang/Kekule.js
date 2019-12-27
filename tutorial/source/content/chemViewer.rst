@@ -123,7 +123,7 @@ The following code demonstrates switching 2D/3D or different models to display m
   chemViewer.setMoleculeDisplayType(Kekule.Render.Molecule3DDisplayType.SPACE_FILL);
 
 
-The display model can also be changed by tool button in viewer.
+The displaying model can also be changed by tool button in viewer.
 
 
 Changing Zoom Level and Rotation of Object
@@ -145,7 +145,6 @@ The zoom level and rotation angle of object can be changed in the following code
   // rotate object by 90, 60 and 45 degrees on X/Y/Z axis
   getChemViewer().rotate3DBy(dx, dy, dz);
 
-The isplay model can also be switched by tool button in viewer.
 
 
 Customizing Toolbar
@@ -178,6 +177,7 @@ time (timeout):[#example]_
 The position of toolbar can be set by ``toolbarPos`` property:
 
 ::
+
   // Move toolbar to top left corner of viewer
   chemViewer.setToolbarPos(Kekule.Widget.Position.TOP_LEFT);
   // Move toolbar to bottom and outside the viewer

@@ -87,7 +87,7 @@ Kekule.Localization.addResource('en', 'WidgetTexts', {
 	TITLE_IMG_FORMAT_PNG: 'PNG format image',
 	TITLE_IMG_FORMAT_JPG: 'Jpeg format image',
 	TITLE_IMG_FORMAT_GIF: 'GIF format image',
-	TITLE_IMG_FORMAT_SVG: 'SVG format image',
+	TITLE_IMG_FORMAT_SVG: 'SVG format image'
 });
 
 /* @ignore */
@@ -120,6 +120,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_SPACEFILL: 'Space Fill',
 	CAPTION_HIDEHYDROGENS: 'Show/hide hydrogens',
 	CAPTION_OPENEDITOR: 'Edit...',
+	CAPTION_EDITOR_DONE: 'Done',
+	CAPTION_EDITOR_CANCEL: 'Cancel',
 
 	CAPTION_EDIT_OBJ: 'Edit',
 
@@ -146,6 +148,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_SPACEFILL: 'Show molecule in space-fill style',
 	HINT_HIDEHYDROGENS: 'Show/hide hydrogen atoms in model',
 	HINT_OPENEDITOR: 'Open an editor to modify displayed object',
+	HINT_EDITOR_DONE: 'Save the modification',
+	HINT_EDITOR_CANCEL: 'Discard the modification',
 
 	// chem editor
 	CAPTION_NEWDOC: 'New',
@@ -154,31 +158,55 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_COPY: 'Copy',
 	CAPTION_CUT: 'Cut',
 	CAPTION_PASTE: 'Paste',
+	CAPTION_TOGGLE_SELECT: 'Toggle select',
 	CAPTION_CLONE_SELECTION: 'Clone selection',
 	CAPTION_TOGGLE_INSPECTOR: 'Object inspector',
 	CAPTION_MANIPULATE: 'Select',
+	CAPTION_MANIPULATE_MARQUEE: 'Marquee select',
+	CAPTION_MANIPULATE_LASSO: 'Lasso select',
+	CAPTION_MANIPULATE_BRUSH: 'Brush select',
+	CAPTION_MANIPULATE_ANCESTOR: 'Select molecule',
+	CAPTION_CLIENT_DRAGSCROLL: 'Scroll',
 	CAPTION_ERASE: 'Erase',
+	CAPTION_TRACK_INPUT: 'Track',
 	CAPTION_MOL_BOND: 'Bond',
 	CAPTION_MOL_BOND_SINGLE: 'Single bond',
 	CAPTION_MOL_BOND_DOUBLE: 'Double bond',
 	CAPTION_MOL_BOND_TRIPLE: 'Triple bond',
+	CAPTION_MOL_BOND_QUAD: 'Quad bond',
+	CAPTION_MOL_BOND_EXPLICIT_AROMATIC: 'Aromatic bond',
 	CAPTION_MOL_BOND_WEDGEUP: 'Wedge up bond',
+	CAPTION_MOL_BOND_WEDGEUP_INVERTED: 'Wedge up bond 2',
 	CAPTION_MOL_BOND_WEDGEDOWN: 'Wedge down bond',
+	CAPTION_MOL_BOND_WEDGEDOWN_INVERTED: 'Wedge down bond 2',
 	CAPTION_MOL_BOND_CLOSER: 'Outer bond',
 	CAPTION_MOL_BOND_WAVY: 'Wavy bond',
 	CAPTION_MOL_BOND_DOUBLE_EITHER: 'Double Either bond',
+	CAPTION_MOL_BOND_IONIC: 'Ionic bond',
+	CAPTION_MOL_BOND_COORDINATE: 'Coordinate bond',
+	CAPTION_MOL_BOND_METALLIC: 'Metallic bond',
+	CAPTION_MOL_BOND_HYDROGEN: 'Hydrogen bond',
+
+	CAPTION_MOL_BOND_KEKULIZE: 'Kekulize',
+	CAPTION_MOL_BOND_HUCKLIZE: 'Hucklize',
+
 	CAPTION_MOL_ATOM: 'Atom',
 	CAPTION_MOL_FORMULA: 'Formula',
+	CAPTION_MOL_ATOM_AND_FORMULA: 'Atom & formula',
 	CAPTION_MOL_CHARGE: 'Charge',
 	CAPTION_MOL_CHARGE_CLEAR: 'Charge clear',
 	CAPTION_MOL_CHARGE_POSITIVE: 'Positive charge',
 	CAPTION_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	CAPTION_MOL_CHARGE_SINGLET: 'Singlet radical',
-	CAPTION_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	CAPTION_MOL_CHARGE_DOUBLET: 'Monoradical',
 	CAPTION_MOL_CHARGE_TRIPLET: 'Triplet radical',
-	CAPTION_TEXT_BLOCK: 'Text Block',
-	CAPTION_IMAGE_BLOCK: 'Image Block',
-	CAPTION_TEXT_IMAGE: 'Text and Image',
+	CAPTION_MOL_ELECTRON_LONEPAIR: 'Lone pair',
+	CAPTION_TEXT_BLOCK: 'Text block',
+	CAPTION_IMAGE_BLOCK: 'Image block',
+	CAPTION_TEXT_IMAGE: 'Text & image',
+
+	CAPTION_MOL_FLEXCHAIN: 'Flex chain',
+	CAPTION_MOL_FLEXRING: 'Flex ring',
 
 	CAPTION_REPOSITORY_RING: 'Rings',
 	CAPTION_REPOSITORY_RING_3: 'Cyclopropane',
@@ -205,7 +233,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	CAPTION_REPOSITORY_SUBBOND_MARK: 'Substituent bond',
 
-	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & lines',
+	CAPTION_REPOSITORY_ARROWLINE: 'Arrows & symbols',
 	CAPTION_REPOSITORY_GLYPH: 'Glyphs',
 	CAPTION_REPOSITORY_GLYPH_LINE: 'Line',
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
@@ -214,11 +242,26 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	CAPTION_REPOSITORY_GLYPH_REV_ARROW_LINE: 'Reversible arrow line',
 	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
+	CAPTION_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	CAPTION_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
+	CAPTION_ELECTRON_PUSHING_ARROW: 'Electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_DOUBLE: 'Double electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_SINGLE: 'Single electron pushing arrow',
+	/*
+	CAPTION_REACTION_ARROW_NORMAL: 'Normal reaction arrow',
+	CAPTION_REACTION_ARROW_REVERSIBLE: 'Reversible reaction arrow',
+	CAPTION_REACTION_ARROW_RESONANCE: 'Resonance reaction arrow',
+	CAPTION_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+  */
 
 	CAPTION_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	CAPTION_REPOSITORY_ADD_SYMBOL: 'Add symbol',
 
+	// modifiers
+	CAPTION_TEXT_FORMAT: 'Text format',
 	CAPTION_PICK_COLOR: 'Color',
+	CAPTION_FONTNAME: 'Font name',
+	CAPTION_FONTSIZE: 'Font size',
 	CAPTION_TEXT_DIRECTION: 'Text direction',
 	CAPTION_TEXT_DIRECTION_DEFAULT: 'Default',
 	CAPTION_TEXT_DIRECTION_LTR: 'Left to right',
@@ -237,6 +280,28 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_TEXT_ALIGN_TOP: 'Top',
 	CAPTION_TEXT_ALIGN_BOTTOM: 'Bottom',
 
+	CAPTION_NODE_LABEL_DISPLAY_MODE: 'Atom label display mode',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_DEFAULT: 'Default',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_SHOWN: 'Show label',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_HIDDEN: 'Hide label',
+	CAPTION_NODE_LABEL_DISPLAY_MODE_SMART: 'Smart',
+
+	CAPTION_ATOM_MODIFIER: 'Atom',
+	CAPTION_ATOM_MODIFIER_MIXED: '[A]',
+	CAPTION_BOND_MODIFIER: 'Bond',
+	CAPTION_CHARGE_MODIFIER: 'Charge',
+	CAPTION_GLYPH_PATH_MODIFIER: 'Path',
+	CAPTION_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Reaction arrow & segment',
+	CAPTION_ARC_PATH_MODIFIER: 'Arc',
+	CAPTION_MULTI_ARC_PATH_MODIFIER: 'Multi-Arc',
+	CAPTION_ELECTRON_PUSHING_ARROW_MODIFIER: 'Electron pushing arrow',
+	CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_MODIFIER: 'Bond forming arrow',
+
+	TEXT_CHARGE_POSITIVE: '+',
+	TEXT_CHARGE_NEGATIVE: '-',
+	TEXT_CHARGE_UNKNOWN: '<sup>+</sup>/<sub>-</sub>', //'&#x207a;&#x2044;&#x208b;',  // '+/-',
+	TEXT_CHARGE_NONE: '&#8709;',
+
 	HINT_NEWDOC: 'Create new document',
 	HINT_UNDO: 'Undo',
 	HINT_REDO: 'Redo',
@@ -244,32 +309,56 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_CUT: 'Cut selection to internal clipboard',
 	HINT_PASTE: 'Paste from internal clipboard',
 	HINT_CLONE_SELECTION: 'Clone selection',
+	HINT_TOGGLE_SELECT: 'Toggle select',
 	HINT_TOGGLE_INSPECTOR: 'Show or hide object inspector panel',
 	HINT_MANIPULATE: 'Select tool',
+	HINT_MANIPULATE_MARQUEE: 'Marquee select',
+	HINT_MANIPULATE_LASSO: 'Lasso select',
+	HINT_MANIPULATE_BRUSH: 'Brush select',
+	HINT_MANIPULATE_ANCESTOR: 'Select molecule',
+	HINT_CLIENT_DRAGSCROLL: 'Scroll',
 	HINT_ERASE: 'Erase tool',
+	HINT_TRACK_INPUT: 'Track tool',
 	HINT_MOL_BOND: 'Bond tool',
 	HINT_MOL_BOND_SINGLE: 'Single bond',
 	HINT_MOL_BOND_DOUBLE: 'Double bond',
 	HINT_MOL_BOND_TRIPLE: 'Triple bond',
+	HINT_MOL_BOND_QUAD: 'Quad bond',
+	HINT_MOL_BOND_EXPLICIT_AROMATIC: 'Explicit aromatic bond',
 	HINT_MOL_BOND_WEDGEUP: 'Wedge up bond',
+	HINT_MOL_BOND_WEDGEUP_INVERTED: 'Wedge up bond 2',
 	HINT_MOL_BOND_WEDGEDOWN: 'Wedge down bond',
+	HINT_MOL_BOND_WEDGEDOWN_INVERTED: 'Wedge down bond 2',
 	HINT_MOL_BOND_CLOSER: 'Outer bond',
 	HINT_MOL_BOND_WAVY: 'Wavy bond',
-	HINT_MOL_BOND_DOUBLE_EITHER: 'Double Either bond',
+	HINT_MOL_BOND_DOUBLE_EITHER: 'Double either bond',
+	HINT_MOL_BOND_IONIC: 'Ionic bond',
+	HINT_MOL_BOND_COORDINATE: 'Coordinate bond',
+	HINT_MOL_BOND_METALLIC: 'Metallic bond',
+	HINT_MOL_BOND_HYDROGEN: 'Hydrogen bond',
+
+	HINT_MOL_BOND_KEKULIZE: 'Kekulize, convert explicit aromatic bonds to compartmental single and double ones',
+	HINT_MOL_BOND_HUCKLIZE: 'Hucklize, mark bonds on aromatic rings as explicit aromatic ones',
+
 	HINT_MOL_ATOM: 'Atom tool',
 	HINT_MOL_FORMULA: 'Formula tool',
+	HINT_MOL_ATOM_AND_FORMULA: 'Atom and formula tool',
 	HINT_MOL_CHARGE: 'Charge tool',
 	HINT_MOL_CHARGE_CLEAR: 'Clear charge and radical',
 	HINT_MOL_CHARGE_POSITIVE: 'Positive charge',
 	HINT_MOL_CHARGE_NEGATIVE: 'Negative charge',
 	HINT_MOL_CHARGE_SINGLET: 'Singlet radical',
-	HINT_MOL_CHARGE_DOUBLET: 'Doublet radical',
+	HINT_MOL_CHARGE_DOUBLET: 'Monoradical',
 	HINT_MOL_CHARGE_TRIPLET: 'Triplet radical',
+	HINT_MOL_ELECTRON_LONEPAIR: 'Lone pair electrons',
 	HINT_TEXT_BLOCK: 'Text block tool',
 	HINT_IMAGE_BLOCK: 'Image block tool',
 	HINT_TEXT_IMAGE: 'Text and image tool',
 
-	HINT_REPOSITORY_RING: 'Ring structures',
+	HINT_MOL_FLEXCHAIN: 'Flex carbon chain',
+	HINT_MOL_FLEXRING: 'Flex carbon ring',
+
+	HINT_REPOSITORY_RING: 'Ring structures tool',
 	HINT_REPOSITORY_RING_3: 'Cyclopropane',
 	HINT_REPOSITORY_RING_4: 'Cyclobutane',
 	HINT_REPOSITORY_RING_5: 'Cyclopentane',
@@ -294,7 +383,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_SAWHORSE_STAGGERED: 'Sawhorse staggered',
 	HINT_REPOSITORY_SAWHORSE_ECLIPSED: 'Sawhorse eclipsed',
 
-	HINT_REPOSITORY_ARROWLINE: 'Arrows and lines',
+	HINT_REPOSITORY_ARROWLINE: 'Arrows and symbols tool',
 	HINT_REPOSITORY_GLYPH: 'Glyphs',
 	HINT_REPOSITORY_GLYPH_LINE: 'Line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_LINE: 'Open arrow line',
@@ -303,9 +392,22 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_REPOSITORY_GLYPH_DI_TRIANGLE_ARROW_LINE: 'Bidirectional triangle arrow line',
 	HINT_REPOSITORY_GLYPH_REV_ARROW_LINE: 'Reversible arrow line',
 	HINT_REPOSITORY_GLYPH_OPEN_ARROW_DILINE: 'Open arrow double line',
+	HINT_REPOSITORY_GLYPH_OPEN_ARROW_ARC: 'Open arrow arc',
+	HINT_REPOSITORY_GLYPH_SINGLE_SIDE_OPEN_ARROW_ARC: 'Single side open arrow arc',
 	HINT_REPOSITORY_HEAT_SYMBOL: 'Heat symbol',
 	HINT_REPOSITORY_ADD_SYMBOL: 'Add symbol',
+	HINT_ELECTRON_PUSHING_ARROW: 'Electron pushing arrow',
+	/*
+	HINT_REACTION_ARROW_NORMAL: 'Normal reaction arrow',
+	HINT_REACTION_ARROW_REVERSIBLE: 'Reversible reaction arrow',
+	HINT_REACTION_ARROW_RESONANCE: 'Resonance reaction arrow',
+	HINT_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+	*/
 
+	// modifiers
+	HINT_NODE_LABEL_DISPLAY_MODE: 'Atom label display mode',
+
+	HINT_TEXT_FORMAT: 'Set text format',
 	HINT_FONTNAME: 'Set font name',
 	HINT_FONTSIZE: 'Set font size',
 	HINT_PICK_COLOR: 'Select color',
@@ -313,8 +415,24 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_TEXT_HORIZONTAL_ALIGN: 'Set text horizontal alignment',
 	HINT_TEXT_VERTICAL_ALIGN: 'Set text vertical alignment',
 
-	// load data dialog
+	HINT_CHARGE_NONE: 'No charge',
+
+	HINT_ATOM_MODIFIER: 'Set atom',
+	HINT_BOND_MODIFIER: 'Set bond',
+	HINT_CHARGE_MODIFIER: 'Set charge',
+	HINT_GLYPH_PATH_MODIFIER: 'Set path properties',
+	HINT_REACTION_ARROW_AND_SEGMENT_PATH_MODIFIER: 'Set reaction arrow and segment properties',
+	HINT_ARC_PATH_MODIFIER: 'Set arc properties',
+	HINT_MULTI_ARC_PATH_MODIFIER: 'Set multi-arc properties',
+	HINT_ELECTRON_PUSHING_ARROW_MODIFIER: 'Set electron pushing arrow properties',
+	HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_MODIFIER: 'Set bond forming arrow properties',
+
+	HINT_USE_ATOM_CUSTOM_COLOR: '(use atom custom color)',
+
+	// load / save data dialog
 	CAPTION_LOADDATA_DIALOG: 'Load data',
+	CAPTION_LOADDATA_DIALOG_APPENDMODE: 'Append to current',
+	CAPTION_SAVEDATA_DIALOG: 'Save data',
 	CAPTION_DATA_FORMAT: 'Data format:',
 	CAPTION_DATA_SRC: 'Input or paste data below:',
 	CAPTION_LOADDATA_FROM_FILE: 'Load from file',
@@ -337,6 +455,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_HETERO_ATOM: 'Hetero Atom',
 	CAPTION_ANY_ATOM: 'Any Atom',
 
+	// Structure node selector
+	CAPTION_ATOM: 'Atom',
+	CAPTION_SUBGROUP: 'Subgroup',
+
 	// Periodic table dialog in editor
 	CAPTION_PERIODIC_TABLE_DIALOG: 'Periodic table',
 	CAPTION_PERIODIC_TABLE_DIALOG_SEL_ELEM: 'Select element',
@@ -344,6 +466,47 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 
 	// Text block editor
 	CAPTION_TEXTBLOCK_INIT: 'Enter text here',
+
+	// Glyph arrow param setter panel
+	CAPTION_WIDTH: 'Width',
+	CAPTION_LENGTH: 'Length',
+	// Glyph path param setter panel
+	CAPTION_PATH_INDEX: 'Path {0}',
+	HINT_PATH_INDEX: 'Path {0}',
+	// Reaction arrow preset selector
+	CAPTION_REACTION_ARROW_UNSET: '(Unset)',
+	CAPTION_REACTION_ARROW_CUSTOM: 'Custom',
+	CAPTION_REACTION_ARROW_NORMAL: 'Normal',
+	CAPTION_REACTION_ARROW_RESONANCE: 'Resonance',
+	CAPTION_REACTION_ARROW_REVERSIBLE: 'Reversible',
+	CAPTION_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis',
+	HINT_REACTION_ARROW_UNSET: 'Unset',
+	HINT_REACTION_ARROW_CUSTOM: 'Custom',
+	HINT_REACTION_ARROW_NORMAL: 'Normal arrow',
+	HINT_REACTION_ARROW_RESONANCE: 'Resonance arrow',
+	HINT_REACTION_ARROW_REVERSIBLE: 'Reversible arrow',
+	HINT_REACTION_ARROW_RETROSYNTHESIS: 'Retrosynthesis arrow',
+	// Glyph line param setter panel
+	CAPTION_LINE_COUNT: 'Line count',
+	CAPTION_LINE_GAP: 'Line gap',
+	// Path glyph param setter panel
+	CAPTION_LINE: 'Line',
+	CAPTION_STARTING_ARROW: 'Starting arrow',
+	CAPTION_ENDING_ARROW: 'Ending arrow',
+	CAPTION_REACTION_ARROW_TYPE: 'Reaction arrow type',
+	CAPTION_ELECTRON_PUSHING_ARROW_TYPE: 'Arrow type',
+	//CAPTION_MULTI_ARROW_SIDE_RELATION: 'Arrow sides relation',
+	CAPTION_OPPOSITE_ARROW_SIDES: 'Opposite arrow sides',
+	CAPTION_SAME_ARROW_SIDES: 'Same arrow sides',
+	// electron pushing arrow panel
+	CAPTION_ELECTRON_PUSHING_ARROW_1: 'Single electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_1_ABBR: 'Single',
+	HINT_ELECTRON_PUSHING_ARROW_1: 'Single electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
+	CAPTION_ELECTRON_PUSHING_ARROW_2_ABBR: 'Double',
+	HINT_ELECTRON_PUSHING_ARROW_2: 'Double electron pushing arrow',
+	CAPTION_BOND_FORMING_ELECTRON_PUSHING_ARROW_1: 'Bond forming electron pushing arrow',
+	HINT_BOND_FORMING_ELECTRON_PUSHING_ARROW_1: 'Bond forming electron pushing arrow',
 
 	// Periodic table
 	LEGEND_CAPTION: 'Legend',
@@ -410,4 +573,6 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	NOT_A_VALID_ATOM: 'Not a valid atom',
 	INVALID_ATOM_SYMBOL: 'Invalid atom symbol',
 	INVALID_OR_EMPTY_IMAGE: 'Image is empty or invalidate'
+
+	//WIDGET_UNAVAILABLE_FOR_PLACEHOLDER: 'Widget of this placeholder is unavailable'
 });

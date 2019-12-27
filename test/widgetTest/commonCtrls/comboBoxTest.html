@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ComboBox Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/default.css" />
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/defaultColor.css" />
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    var selBox;
+    function fillItems(target)
+    {
+      var items = [];
+      for (var i = 0; i < 10; ++i)
+      {
+        items.push({text: 'text ' + i, value: i, title: 'title ' + i});
+      }
+      target.setItems(items);
+    }
+    function open(elem) {
+      if (document.createEvent) {
+        var e = document.createEvent("MouseEvents");
+        e.initMouseEvent("mousedown", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        elem[0].dispatchEvent(e);
+      } else if (element.fireEvent) {
+        elem[0].fireEvent("onmousedown");
+      }
+    }
+    function dropSelBox()
+    {
+      open(selBox.getCoreElement());
+    }
+    function init()
+    {
+      selBox = Kekule.Widget.getWidgetById('selBox');
+      fillItems(selBox);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="toolbar">
+    <button data-widget="Kekule.Widget.Button" onclick="dropSelBox()">Auto drop sel box</button>
+  </div>
+  <div id="stage">
+    <select id="selBox" data-widget="Kekule.Widget.SelectBox"></select>
+  </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+src/_devUtils
+src/_extras/browserAddOns
+src/_extras/Indigo
+src/_extras/CKEditorPlugins
+src/_extras/MoodleExtensions
+src/_extras/OpenBabel/workers
+src/**/hammer.min.js
+src/lib/polyfill/pep.js
+src/lan/sizzle.js
+
+dist
+demos
+tutorial
+test
+unitTests
+

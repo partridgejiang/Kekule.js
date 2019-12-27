@@ -691,7 +691,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 		if (row === this.getActiveRow())
 		{
 			this.setActiveRow(null);
-			this.setActiveRow(activeRow);  // force update the active row
+			this.setActiveRow(row);  // force update the active row
 		}
 	},
 
@@ -799,7 +799,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 
 	// event handlers
 	/*
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -813,7 +813,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 			}
 		}
 	},
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -825,7 +825,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 			this._isActivitingRow = false;
 		}
 	},
-	react_mousemove: function(e)
+	react_pointermove: function(e)
 	{
 		var target = e.getTarget();
 		// get nearest row

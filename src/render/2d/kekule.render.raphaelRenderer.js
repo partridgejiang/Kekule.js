@@ -249,7 +249,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 			}
 		}
 		var result = context.path(sPath);
-		this.setBasicElemAttribs(result, options)
+		this.setBasicElemAttribs(result, options);
 		return result;
 	},
 	drawLine: function(context, coord1, coord2, options)
@@ -279,6 +279,35 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	drawCircle: function(context, baseCoord, radius, options)
 	{
 		var result = context.circle(baseCoord.x, baseCoord.y, radius);
+		this.setBasicElemAttribs(result, options);
+		return result;
+	},
+	drawArc: function(context, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+		var pToC = Kekule.GeometryUtils.polarToCartesian;
+		var stAngle = Kekule.GeometryUtils.standardizeAngle;
+		var CU = Kekule.CoordUtils;
+		var start = pToC(centerCoord.x, centerCoord.y, radius, endAngle);
+		var end = pToC(centerCoord.x, centerCoord.y, radius, startAngle);
+
+		var aStart = stAngle(startAngle, 0);
+		var aEnd = stAngle(endAngle, 0);
+
+		var aDelta = aEnd - aStart;
+		var largeArc = ((stAngle(aDelta) <= Math.PI) && !anticlockwise)
+				|| ((stAngle(aDelta) > Math.PI) && anticlockwise);
+
+		var largeArcFlag = largeArc ? '0' : '1';
+		var sweepFlag = anticlockwise? '1': '0';
+
+		var d = [
+			'M', start.x, start.y,
+			'A', radius, radius, 0, largeArcFlag, sweepFlag, end.x, end.y
+		].join(' ');
+
+		//console.log(d);
+
+		var result = context.path(d);
 		this.setBasicElemAttribs(result, options);
 		return result;
 	},
@@ -326,6 +355,10 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 				'fill-opacity': options.opacity
 			});
 		}
+		if (options.lineCap)
+			elem.attr('stroke-linecap', options.linecap);
+		if (options.lineJoin)
+			elem.attr('stroke-linejoin', options.linejoin);
 	},
 
 	/** @private */
@@ -488,7 +521,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 		}
 		else if (context.canvas && (context.canvas.tagName.toLowerCase() === 'svg'))
 		{
-			var svg = XmlUtility.serializeNode(context.canvas);
+			var svg = DataType.XmlUtility.serializeNode(context.canvas);
 			return 'data:image/svg+xml;base64,' + btoa(svg);
 		}
 	}

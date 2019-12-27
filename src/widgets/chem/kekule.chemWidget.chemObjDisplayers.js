@@ -57,6 +57,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 
 	DIALOG_CHOOSE_FILE_FORAMT: 'K-Chem-Dialog-Choose-File-Format',
 	DIALOG_CHOOSE_FILE_FORAMT_FORMATBOX: 'K-Chem-Dialog-Choose-File-Format-FormatBox',
+	DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER_REGION: 'K-Chem-Dialog-Choose-File-Format-PreviewerRegion',
 	DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER: 'K-Chem-Dialog-Choose-File-Format-Previewer'
 });
 
@@ -122,13 +123,15 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
  * @property {Bool} resetAfterLoad Whether reset display (remove rotate, zoom and so on) after set a new chem obj.
  * @property {Object} renderConfigs Configuration for rendering.
  * @property {Int} moleculeDisplayType Display type of molecule in displayer. Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
- * @property {Hash} drawOptions
+ * @property {Hash} drawOptions A series of params to render chem object.
  * @property {Float} zoom Zoom ratio to draw chem object, equal to drawOptions.zoom.
+ * @property {Float} initialZoom Initial zoom when just loading a chem object. Default is 1.
  * @property {Bool} autoSize Whether the widget change its size to fit the dimension of chem object.
  * @property {Int} padding Padding between chem object and edge of widget, in px. Only works when autoSize is true.
  * @property {Hash} baseCoordOffset Usually displayer draw object at center of widget, use this property to make
  *   the drawing center moved from widget center.
  *   Note: this property is useless when autoSize == true.
+ * @property {Hash} transformParams A combination of (@link Kekule.ChemWidget.ChemObjDisplayer.drawOptions} and (@link Kekule.ChemWidget.ChemObjDisplayer.baseCoordOffset}.
  * @property {String} backgroundColor Get or set background color of displayer. Default is transparent.
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
  * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
@@ -167,13 +170,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	doFinalize: function($super)
 	{
-		this.setChemObj(null);
+		//this.setChemObj(null);
+
+		/*
+		var r = this.getPropStoreFieldValue('boundInfoRecorder');
+		if (r)
+			r.finalize();
+		this.setPropStoreFieldValue('boundInfoRecorder', null);
+		*/
+
+		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
 		var b = this.getPropStoreFieldValue('drawBridge');
 		var ctx = this.getPropStoreFieldValue('drawContext');
 		if (ctx && b)
 			b.releaseContext(ctx);
-		if (b.finalize)
+		if (b && b.finalize)
 			b.finalize();
 		this.setPropStoreFieldValue('drawBridge', null);
 		this.setPropStoreFieldValue('drawContext', null);
@@ -234,6 +246,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 						Kekule.Render.Render3DConfigs.getInstance():
 						Kekule.Render.Render2DConfigs.getInstance();
 				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('renderConfigs', value);
+				var painter = this.getPropStoreFieldValue('painter');
+				if (painter)
+					painter.setRenderConfigs(this.getRenderConfigs());
 			}
 		});
 		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
@@ -243,6 +262,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				//this.setBackgroundColorOfType(value, this.getRenderType());
 				this._bgColorMap[this.getRenderType().toString()] = value;
 				this.backgroundColorChanged();
+			}
+		});
+		this.defineProp('transformParams', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
+			'getter': function()
+			{
+				var result = Object.extend({}, this.getDrawOptions());
+				result.screenCoordOffset = this.getBaseCoordOffset();
+				return result;
+			},
+			'setter': function(value)
+			{
+				var param = value || {};
+				this.setDrawOptions(param);
+				this.setBaseCoordOffset(param.baseCoordOffset);
+				this.drawOptionChanged();
 			}
 		});
 		this.defineProp('drawOptions', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
@@ -274,6 +308,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return this;
 			}
 		});
+		this.defineProp('initialZoom', {'dataType': DataType.FLOAT});
 		this.defineProp('autofit', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function()
 			{
@@ -409,11 +444,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return p? p.getRenderer(): null;
 			}
 		});
+		// private object to record all bound infos
+		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null,
+			'getter': function() { var p = this.getRootRenderer(); return p && p.getBoundInfoRecorder(); }
+		});
 	},
+	/** @ignore */
 	initPropValues: function($super)
 	{
 		$super();
-		this.setStandardizationOptions({'unmarshalSubFragments': false});
+		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false});    // do not auto clear explicit H
+	},
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
 	},
 
 	/** @ignore */
@@ -426,6 +471,29 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		 */
 		if (isShown)
 			this.setChemObj(this.getChemObj());
+	},
+
+	/** @ignore */
+	doFileDragDrop: function($super, files)
+	{
+		if (!files /* || files.length > 1 */)
+			return $super();
+		else  // if only one file is dropped in, output the file content
+		{
+			var self = this;
+			(function()
+			{
+				Kekule.IO.loadFileData(files[0], function(chemObj, success)
+				{
+					if (success)
+					{
+						self.setChemObj(chemObj);
+					}
+				});
+			}).defer(); // call load later, avoid error in load process that prevent result true is returned
+
+			return true;
+		}
 	},
 
 	/**
@@ -681,7 +749,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			var p = this.getPropStoreFieldValue('painter');
 			if (p)
 				p.clear(c);
-
 			this.getDrawBridge().clearContext(c);
 		}
 	},
@@ -695,8 +762,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		var result = new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj, this.getDrawBridge());
 		this.setPropStoreFieldValue('painter', result);
+		// create new bound info recorder
+		//this.createNewBoundInfoRecorder(result);
 		return result;
 	},
+	/* @private */
+	/*
+	createNewBoundInfoRecorder: function(renderer)
+	{
+		var old = this.getPropStoreFieldValue('boundInfoRecorder');
+		if (old)
+			old.finalize();
+		var recorder = new Kekule.Render.BoundInfoRecorder(renderer);
+		//recorder.setTargetContext(this.getObjContext());
+		this.setPropStoreFieldValue('boundInfoRecorder', recorder);
+	},
+	*/
 
 	/**
 	 * Called when chemObj property has been changed.
@@ -1227,7 +1308,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	resetDisplay: function()
 	{
 		var op = this.getDrawOptions();
-		op.zoom = 1;
+		op.zoom = this.getInitialZoom() || 1;
 		op.rotateX = 0;
 		op.rotateY = 0;
 		op.rotateZ = 0;
@@ -1284,7 +1365,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	resetZoom: function()
 	{
-		return this.zoomTo(1);
+		return this.zoomTo(this.getInitialZoom() || 1);
 	},
 
 	/**
@@ -1669,10 +1750,19 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					var displayer = self.getDisplayer();
 					displayer.loadFromData(data, mimeType);
 					*/
+					/*
 					var displayer = self.getDisplayer();
 					displayer.load(dialog.getChemObj());
+					*/
+					self.doLoadToDisplayer(dialog.getChemObj(), dialog);
 				}
 			}, target, showType]);
+	},
+	/** @private */
+	doLoadToDisplayer: function(chemObj, dialog)
+	{
+		var displayer = this.getDisplayer();
+		displayer.load(chemObj);
 	}
 });
 
@@ -1751,8 +1841,9 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 	createFormatDialog: function()
 	{
 		var doc = this.getDisplayer().getDocument();
-		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_CHOOSEFILEFORMAT'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		var result = new Kekule.Widget.Dialog(doc, /*CWT.CAPTION_CHOOSEFILEFORMAT*/Kekule.$L('ChemWidgetTexts.CAPTION_SAVEDATA_DIALOG'), [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 		result.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT);
+		result.setAutoAdjustSizeOnPopup(true);
 		// label
 		var elem = doc.createElement('div');
 		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_FORMAT'); //CWT.CAPTION_SELECT_FORMAT;
@@ -1771,14 +1862,19 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		result.getClientElem().appendChild(elem);
 		// preview textarea
 		elem = doc.createElement('div');
+		elem.className = CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER_REGION;
 		result.getClientElem().appendChild(elem);
 		var previewTextArea = new Kekule.Widget.TextEditor(result); //new Kekule.Widget.TextArea(result);
 		previewTextArea.setReadOnly(true);
-		previewTextArea.setWrap('off');
+		previewTextArea.setWrap('off').setAutoWrapThreshold(true);
 		previewTextArea.setToolbarPos(Kekule.Widget.Position.BOTTOM);
 		previewTextArea.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER);
 		previewTextArea.appendToElem(elem);
 		result._previewTextArea = previewTextArea;
+
+		if (result.setResizable)
+			result.setResizable(true);
+
 		return result;
 	},
 	/** @private */
@@ -2083,7 +2179,7 @@ Kekule.ChemWidget.ActionDisplayerResetZoom = Class.create(Kekule.ChemWidget.Acti
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerResetZoom',
 	/** @private */
-	HTML_CLASSNAME: CCNS.ACTION_RESETZOOM,
+	HTML_CLASSNAME: CCNS.ACTION_RESET_ZOOM,
 	/** @constructs */
 	initialize: function($super, displayer)
 	{

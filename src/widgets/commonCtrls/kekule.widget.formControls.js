@@ -33,7 +33,8 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	TEXTAREA: 'K-TextArea',
 	SELECTBOX: 'K-SelectBox',
 	COMBOBOX: 'K-ComboBox',
-	COMBOBOX_TEXTWRAPPER: 'K-ComboBox-TextWrapper'
+	COMBOBOX_TEXTWRAPPER: 'K-ComboBox-TextWrapper',
+	NUMINPUT: 'K-NumInput'
 });
 
 /**
@@ -52,8 +53,16 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * This event will actually be fired when "change" event occurs on form element.
  * Instead of simply "change", the event name is "valueChange" to avoid conflict with
  * change event of ObjectEx.
- *   event param of it has field: {widget}
+ *   event param of it has field: {widget, value}
  * @name Kekule.Widget.FormWidget#valueChange
+ * @event
+ */
+/**
+ * Invoked when the value of form control element is input by user.
+ * This event will actually be fired when "input" event occurs on form element.
+ * Instead of simply "input", the event name is "valueInput" to match the "valueChange" event.
+ *   event param of it has field: {widget, value}
+ * @name Kekule.Widget.FormWidget#valueInput
  * @event
  */
 Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
@@ -104,8 +113,18 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		var coreElem = this.getCoreElement();
 		if (coreElem)
 		{
+			var ie8Fix = Kekule.Browser.IE && (Kekule.Browser.IEVersion === 8);
+
 			Kekule.X.Event.addListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.addListener(coreElem, 'input', this.reactInputBind);
+
+			if (ie8Fix)  // for IE 8, change or input event can not evoked on input, so we use keyup to detect
+			{
+				this._bindKeyupEvent = true;
+				Kekule.X.Event.addListener(coreElem, 'keyup', this.reactInputBind);
+			}
+			else
+				this._bindKeyupEvent = false;
 		}
 	},
 	/** @ignore */
@@ -116,6 +135,8 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		{
 			Kekule.X.Event.removeListener(coreElem, 'change', this.reactValueChangeBind);
 			Kekule.X.Event.removeListener(coreElem, 'input', this.reactInputBind);
+			if (this._bindKeyupEvent)
+				Kekule.X.Event.removeListener(coreElem, 'keyup', this.reactInputBind);  // for IE6-8
 		}
 		$super(element);
 	},
@@ -123,7 +144,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 	{
 		//console.log('value change', this.getClassName());
 		this.setIsDirty(true);
-		this.invokeEvent('valueChange', {'widget': this});
+		this.invokeEvent('valueChange', {'widget': this, 'value':this.getValue()});
 	},
 	/**
 	 * Select all content in widget.
@@ -141,10 +162,10 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		this.notifyValueChanged();
 	},
 	/** @private */
-	reactInput: function()
+	reactInput: function(e)
 	{
-		//console.log('value input', this.getClassName());
 		this.setIsDirty(true);
+		this.invokeEvent('valueInput', {'widget': this, 'value':this.getValue()});
 	}
 });
 
@@ -327,7 +348,6 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('input');
-		result.setAttribute('type', 'text');
 		return result;
 	},
 
@@ -335,6 +355,7 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	doBindElement: function($super, element)
 	{
 		$super(element);
+		element.setAttribute('type', 'text');
 	}
 });
 
@@ -520,6 +541,12 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
+
+	/** @ignore */
 	relayEvent: function($super, eventName, event)
 	{
 		var invokerWidget = event.widget;
@@ -549,9 +576,9 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown)
+	widgetShowStateChanged: function($super, isShown, byDomChange)
 	{
-		$super(isShown);
+		$super(isShown, byDomChange);
 		if (isShown)
 			this.adjustWidgetsSize();
 	},
@@ -579,7 +606,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 		var textElem = this.getTextBox().getElement();
 		if (!textElem)  // textbox disposed, may be in finalize phase, no need to adjust
 			return;
-		var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		//var textRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(textElem);
+		var textRect = Kekule.HtmlElementUtils.getElemPageRect(textElem);
 
 		// heading
 		var widget = this.getHeadingWidget();
@@ -590,7 +618,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.left = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';
@@ -618,7 +647,8 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 			style.position = position;
 			if (overlap)
 			{
-				var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 				style.right = 0;
 				style.top = //(rect.height - textRect.height) / 2;
 					((textRect.height - rect.height) / 2) + 'px';
@@ -677,7 +707,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 		});
 		this.defineProp('buttonText', {'dataType': DataType.STRING,
 			'getter': function() { return this.getButton().getText(); },
-			'setter': function(value) { this.getButton().setText(value); }
+			'setter': function(value) { this.getButton().setText(value).setShowText(!!value); }
 		});
 	},
 	/** @ignore */
@@ -700,6 +730,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	createAssocButton: function()
 	{
 		var btn = new Kekule.Widget.Button(this);
+		btn.setShowText(false);
 		this.setTailingWidget(btn);
 		btn.addEventListener('change', this.adjustWidgetsSize, this);
 		btn.addEventListener('execute', function(e)
@@ -753,7 +784,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
  * @property {String} placeholder Placeholder text of text box.
  * //@property {Int} rows Rows in textarea.
  * //@property {Int} cols Cols in textarea.
- * @property {String} wrap Wrap mode of textarea, value between "physical", "virtual" and "off".
+ * @property {String} wrap Wrap mode of textarea, value between "hard", "soft" and "off".
  * @property {Bool} autoSizeX
  * @property {Bool} autoSizeY
  */
@@ -849,11 +880,34 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown)
+	widgetShowStateChanged: function($super, isShown, byDomChange)
 	{
-		$super(isShown);
+		$super(isShown, byDomChange);
 		if (isShown)
 			this.adjustAutoSize();
+	},
+
+	/** @ignore */
+	doFileDragDrop: function($super, files)
+	{
+		if (!files /* || files.length > 1 */)
+			return $super();
+		else  // if only one file is dropped in, output the file content
+		{
+			if (Kekule.BrowserFeature.fileapi)
+			{
+				var self = this;
+				// try open it the file by FileReader
+				var reader = new FileReader();
+				reader.onload = function(e)
+				{
+					var content = reader.result;
+					self.setText(content);
+				};
+				reader.readAsText(files[0]);
+			}
+			return true;
+		}
 	},
 
 	/** @ignore */
@@ -1406,7 +1460,11 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	{
 		var invokerWidget = event.widget;
 		if ((invokerWidget === this.getTextBox()) || (invokerWidget === this.getSelectBox()))
+		{
 			event.widget = this;
+			if (eventName === 'valueChange')  // avoid call value change twice
+				return;
+		}
 		return $super(eventName, event);
 	},
 
@@ -1474,6 +1532,104 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 			}
 		}
 		$super(text);  // set value of core element(text box)
+	}
+});
+
+/**
+ * An widget to input number, based on input element.
+ * Can be in to forms: slider (type=range) or number inputter (type=number).
+ * @class
+ * @augments Kekule.Widget.FormWidget
+ *
+ * @property {Number} minValue
+ * @property {Number} maxValue
+ * @property {Number} step
+ * @property {String} controlType Type of input element, should be either 'range' or 'number'.
+ */
+Kekule.Widget.NumInput = Class.create(Kekule.Widget.FormWidget,
+/** @lends Kekule.Widget.NumInput# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.NumInput',
+	/** @private */
+	BINDABLE_TAG_NAMES: ['input'],
+	/** @private */
+	DEF_MIN_VALUE: 0,
+	/** @private */
+	DEF_MAX_VALUE: 100,
+	/** @private */
+	DEF_STEP: 1,
+	/** @constructs */
+	initialize: function($super, parentOrElementOrDocument, minValue, maxValue, step, controlType)
+	{
+		$super(parentOrElementOrDocument);
+		if (OU.notUnset(minValue))
+			this.setMinValue(minValue);
+		if (OU.notUnset(maxValue))
+			this.setMaxValue(maxValue);
+		if (OU.notUnset(step))
+			this.setStep(step);
+		if (controlType)
+			this.setControlType(controlType);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('minValue', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().min) || null; },
+			'setter': function(value)
+			{
+				this.getElement().min = value;
+			}
+		});
+		this.defineProp('maxValue', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().max) || null; },
+			'setter': function(value)
+			{
+				this.getElement().max = value;
+			}
+		});
+		this.defineProp('step', {'dataType': DataType.NUMBER,
+			'getter': function() { return parseFloat(this.getElement().step) || null; },
+			'setter': function(value)
+			{
+				this.getElement().step = value;
+			}
+		});
+		this.defineProp('controlType', {'dataType': DataType.STRING,
+			'getter': function() { return this.getElement().getAttribute('type'); },
+			'setter': function(value)
+			{
+				this.getElement().setAttribute('type', value);
+			}
+		});
+	},
+	/** @ignore */
+	doGetValue: function($super)  // convert the type of value to number
+	{
+		var v = $super();
+		if (v)
+			return parseFloat(v);
+		else
+			return 0;
+	},
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CNS.NUMINPUT;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('input');
+		return result;
+	},
+
+	/** @ignore */
+	doBindElement: function($super, element)
+	{
+		$super(element);
+		element.setAttribute('type', 'range');
 	}
 });
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="question/type/kekule_chem_base/db" VERSION="2016091100" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
+<XMLDB PATH="question/type/kekule_chem_base/db" VERSION="20170831" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -11,6 +11,7 @@
         <FIELD NAME="manualgraded" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether answers graded manually."/>
         <FIELD NAME="defcomparemethod" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Default method to compare molecules"/>
         <FIELD NAME="inputtype" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Restrict input one molecule or a chem document"/>
+        <FIELD NAME="defcomparelevel" TYPE="int" LENGTH="4" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -24,6 +25,7 @@
         <FIELD NAME="blankindex" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Index of blank in question body."/>
         <FIELD NAME="smiles" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="SMILES value of answer molecule."/>
         <FIELD NAME="moldata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Raw molecule data of answer molecule."/>
+        <FIELD NAME="comparelevel" TYPE="int" LENGTH="4" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="comparemethod" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Method to compare molecules, override value of question"/>
         <FIELD NAME="compareoptions" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>

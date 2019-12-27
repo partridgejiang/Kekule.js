@@ -11,8 +11,15 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function(){
+(function($root){
 "use strict";
+
+var hasWindow = true;
+if (typeof(window) === "undefined") // window not defined, may be not a browser environment (node.js env instead)
+{
+	// TODO: may add node.js implementation later
+	hasWindow = false;
+}
 
 /**
  * The class to call native services (e.g., open file picker dialog).
@@ -285,7 +292,7 @@ Kekule.HtmlNativeServiceImpl = {
 	{
 		var fileName = options.initialFileName || null;
 		//console.log('save ie');
-		if (Kekule.BrowserFeature.blob && window.navigator.msSaveOrOpenBlob)  // IE 10 and above, use blob to save
+		if (Kekule.BrowserFeature.blob && hasWindow && window.navigator.msSaveOrOpenBlob)  // IE 10 and above, use blob to save
 		{
 			var blobObject = new Blob([data]);
 			window.navigator.msSaveBlob(blobObject, fileName);
@@ -322,9 +329,9 @@ Kekule.HtmlNativeServiceImpl = {
 // register
 if (Kekule.BrowserFeature.fileapi)
 	KNS.doShowFilePickerDialog = Kekule.HtmlNativeServiceImpl.doShowFilePickerDialog;
-if (Kekule.Browser.IE || window.navigator.msSaveOrOpenBlob)
+if (Kekule.Browser.IE || (hasWindow && window.navigator.msSaveOrOpenBlob))
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileDataIe;
 else if (Kekule.BrowserFeature.downloadHref)
 	KNS.doSaveFileData = Kekule.HtmlNativeServiceImpl.doSaveFileData;
 
-})();
+})(this);

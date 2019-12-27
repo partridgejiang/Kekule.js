@@ -34,7 +34,7 @@ Kekule.ReactionRole = {
 	// for conditions
 	TEMPERATURE: 'temperature',
 	DURATION: 'duration'
-}
+};
 
 /**
  * Enumeration of reaction direction.
@@ -147,7 +147,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner)
+	ownerChanged: function($super, newOwner, oldOwner)
 	{
 		var components = ['reactants', 'products', 'substances', 'conditions'];
 		for (var i = 0, l = components.length; i < l; ++i)
@@ -164,7 +164,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 				}
 			}
 		}
-		$super(newOwner);
+		$super(newOwner, oldOwner);
 	},
 
 	/** @private */
@@ -717,7 +717,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	 */
 	appendCondition: function(item, role, additionalInfo)
 	{
-		return this.appendItem(Kekule.ReactionComponent.CONDITION, item, role, info);
+		return this.appendItem(Kekule.ReactionComponent.CONDITION, item, role, additionalInfo);
 	},
 	/**
 	 * remove reactant at index of {@link Kekule.Reaction#reactants} array.
@@ -892,7 +892,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 				var item = this.getMapItemAt(comp, j);
 				if (item.getAllContainingConnectors)
 				{
-					var a = mols[i].getAllContainingConnectors();
+					var a = item.getAllContainingConnectors();
 					if (a && a.length)
 						result = result.concat(a);
 				}

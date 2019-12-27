@@ -33,14 +33,21 @@ $string['pluginnamesummary'] = 'A question type which allows the students to inp
 // molecule or other chem object
 $string['captionMolecule'] = 'Molecule';
 // compare method
-$string['captionCompareMethod'] = 'Structure comparisn method';
-$string['captionDefCompareMethod'] = 'Default structure comparisn method';
+$string['captionCompareMethod'] = 'Comparison method';
+$string['captionDefCompareMethod'] = 'Default comparison method';
 $string['molCompareMethodDefault'] = 'Default';
-$string['molCompareMethodSmiles'] = 'SMILES';
+$string['molCompareMethodSmiles'] = 'Equal'; // 'SMILES';
 $string['molCompareMethodMolData'] = 'Mol data';
-$string['molCompareMethodParentOf'] = 'Parent of';
-$string['molCompareMethodChildOf'] = 'Child of';
+$string['molCompareMethodParentOf'] = 'Super structure'; //'Parent of';
+$string['molCompareMethodChildOf'] = 'Sub structure'; // 'Child of';
 $string['molCompareMethodManual'] = 'Manual';
+// compare level
+$string['captionCompareLevel'] = 'Comparison Level';
+$string['captionDefCompareLevel'] = 'Default comparison level';
+$string['molCompareLevelDefault'] = 'Default';
+$string['molCompareLevelConstitution'] = 'Constitution';
+$string['molCompareLevelConfiguration'] = 'Configuration';
+
 // molecule input type
 $string['captionMolInputType'] = 'Chemistry input type';
 $string['molInputTypeMol'] = 'Molecule';

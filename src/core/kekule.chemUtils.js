@@ -14,6 +14,8 @@
 
 "use strict";
 
+var AU = Kekule.ArrayUtils;
+
 /**
  * Util class to manipulate ctab based chem structures.
  * @class
@@ -394,6 +396,153 @@ Kekule.ChemStructureUtils = {
 		var coord1 = obj1.getAbsCoordOfMode(coordMode, allowCoordBorrow);
 		var coord2 = obj2.getAbsCoordOfMode(coordMode, allowCoordBorrow);
 		return Kekule.CoordUtils.substract(coord2, coord1);
+	},
+
+	/** @private */
+	_getRef2DCoordOfObj: function(obj, allowCoordBorrow)
+	{
+		var coord = obj.getAbsBaseCoord2D? obj.getAbsBaseCoord2D(allowCoordBorrow):
+				obj.getAbsCoord2D? obj.getAbsCoord2D(allowCoordBorrow): obj.getCoord2D(allowCoordBorrow);
+		return coord;
+	},
+	/** @private */
+	_getStandardizedLinkedObj2DRelCoords: function(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings)
+	{
+		var result = [];
+		var baseCoord = Kekule.ChemStructureUtils._getRef2DCoordOfObj(baseObj, allowCoordBorrow);
+		var linkedObjs = includeUnexposedSiblings? baseObj.getLinkedObjs(): baseObj.getLinkedExposedObjs();
+
+		if (includeAttachedMarkers && baseObj.getAttachedMarkers)
+		{
+			linkedObjs = linkedObjs.concat(baseObj.getAttachedMarkers() || []);
+		}
+
+		if (excludeObjs && excludeObjs.length)
+			linkedObjs = AU.exclude(linkedObjs, excludeObjs);
+
+		for (var i = 0, l = linkedObjs.length; i < l; ++i)
+		{
+			var obj = linkedObjs[i];
+
+			var coord = Kekule.ChemStructureUtils._getRef2DCoordOfObj(obj, allowCoordBorrow);
+			var newCoord = Kekule.CoordUtils.substract(coord, baseCoord);
+			newCoord = Kekule.CoordUtils.standardize(newCoord);
+			result.push(newCoord);
+		}
+		return result;
+	},
+	/**
+	 * Returns an array of connector (and attachedMarkers) angles ( to X-axis ) of object.
+	 * @returns {Array}
+	 * @private
+	 */
+	_calcLinkedObj2DAnglesOfObj: function(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings)
+	{
+		var result = [];
+		var linkedObjCoords = Kekule.ChemStructureUtils._getStandardizedLinkedObj2DRelCoords(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings);
+		for (var i = 0, l = linkedObjCoords.length; i < l; ++i)
+		{
+			var c = linkedObjCoords[i];
+			if (c.x === 0 && c.y === 0)  // zero coord, bypass
+				continue;
+			var angle = Math.atan2(c.y, c.x);
+			if (angle < 0)
+				angle = Math.PI * 2 + angle;
+			result.push(angle);
+		}
+		result.sort();
+		return result;
+	},
+	/** @private */
+	_getMostEmptyDirectionOfExistingAngles: function(angles)  // angles must be sorted first
+	{
+		var l = angles.length;
+		if (l === 0)
+			return 0;
+		else if (l === 1)  // only one connector
+			return Kekule.GeometryUtils.standardizeAngle(Math.PI + angles[0]);
+		else  // more than two connectors
+		{
+			var max = 0;
+			var index = 0;
+			for (var i = 0; i < l; ++i)
+			{
+				var a1 = angles[i];
+				var a2 = angles[(i + 1) % l];
+				var delta = a2 - a1;
+				if (delta < 0)
+					delta += Math.PI * 2;
+				if (delta > max)
+				{
+					max = delta;
+					index = i;
+				}
+			}
+			var result = angles[index] + max / 2;
+			/* debug
+			var msg = 'Angles: [';
+			for (var i = 0; i < l; ++i)
+				msg += (angles[i] * 180 / Math.PI) + ' '
+			msg + ']';
+			console.log(msg, result * 180 / Math.PI);
+      */
+			return result;
+		}
+	},
+	/**
+	 * Get the emptiest 2D direction around obj. Returns angle of that direction.
+	 * @returns {Float}
+	 * @private
+	 */
+	getMostEmptyDirection2DAngleOfObj: function(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings, avoidDirectionAngles)
+	{
+		var angles = Kekule.ChemStructureUtils._calcLinkedObj2DAnglesOfObj(baseObj, excludeObjs, allowCoordBorrow, includeAttachedMarkers, includeUnexposedSiblings);
+		if (avoidDirectionAngles)
+		{
+			angles = angles.concat(avoidDirectionAngles);
+			angles.sort();
+		}
+		var result = Kekule.ChemStructureUtils._getMostEmptyDirectionOfExistingAngles(angles);
+		//console.log('angle', result * 180 / Math.PI, Math.cos(result), Math.sin(result));
+		return result;
+	},
+
+	/**
+	 * Check if two rings are the same. Param ring1/ring2 are object wth fields: {nodes, connectors}
+	 * @param {Object} ring1
+	 * @param {Object} ring2
+	 * @returns {Bool}
+	 */
+	isSameRing: function(ring1, ring2)
+	{
+		if (ring1.nodes.length !== ring2.nodes.length)
+			return false;
+		if (ring1.connectors.length !== ring2.connectors.length)
+			return false;
+		if (AU.exclude(ring1.nodes, ring2.nodes).length > 0)
+			return false;
+		if (AU.exclude(ring1.connectors, ring2.connectors).length > 0)
+			return false;
+		return true;
+	},
+
+	/**
+	 * Check if targetRing is in rings.
+	 * @param {Object} targetRing
+	 * @param {Array} rings
+	 * @returns false;
+	 */
+	isInRings: function(targetRing, rings)
+	{
+		for (var i = 0, l = rings.length; i < l; ++i)
+		{
+			var ring = rings[i];
+			if (targetRing === ring)
+				return true;
+			else if (Kekule.ChemStructureUtils.isSameRing(targetRing, ring))
+				return true;
+		}
+		return false;
 	}
 };
 

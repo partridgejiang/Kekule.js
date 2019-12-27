@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chem Editor Util Widgets Test</title>
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <script>
+    var objInspector, nodeSelectPanel, nodeSetter, bondSelectPanel, bondSelectPanelAdv, chargeSelectPanel,
+      glyphArrowPanel, glyphLinePanel, glyphSettingPanel, reactionArrowSettingPanel, glyphMultiPathSettingPanel, multiElectronPushingArrowSettingPanel;
+
+    function refreshWidgetList()
+    {
+      var selector = Kekule.Widget.getWidgetById('selectboxWidgets');
+      var widgets = Kekule.Widget.globalManager.getWidgets();
+      var selectorItems = [];
+      for (var i = 0, l = widgets.length; i < l; ++i)
+      {
+        var w = widgets[i];
+        var id = w.getId();
+        if (id)  // by pass dynamicly created child widgets
+        {
+          var text = id + ': '+ w.getClassName();
+          var value = w;
+          selectorItems.push({'text': text, 'value': value});
+        }
+      }
+      selector.setItems(selectorItems);
+    };
+    function refreshInspector(widget)
+    {
+      var inspector = Kekule.Widget.getWidgetById('objInspector');
+      inspector.setObjects(widget);
+    };
+
+    function init()
+    {
+      var nonElementInfos = [];
+      var labelConfigs = Kekule.Render.getRender2DConfigs().getDisplayLabelConfigs();
+      // R group
+      nonElementInfos.push({
+        'text': labelConfigs.getRgroup(), 'nodeClass': Kekule.RGroup,
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_RGROUP') //Kekule.ChemWidgetTexts.CAPTION_RGROUP
+      });
+      // Kekule.Pseudoatom
+      nonElementInfos.push({
+        'text': labelConfigs.getDummyAtom(), 'nodeClass': Kekule.Pseudoatom,
+        'props': {'atomType': Kekule.PseudoatomType.DUMMY},
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_DUMMY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_DUMMY_ATOM
+      });
+      nonElementInfos.push({
+        'text': labelConfigs.getHeteroAtom(), 'nodeClass': Kekule.Pseudoatom,
+        'props': {'atomType': Kekule.PseudoatomType.HETERO},
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_HETERO_ATOM') //Kekule.ChemWidgetTexts.CAPTION_HETERO_ATOM
+      });
+      nonElementInfos.push({
+        'text': labelConfigs.getAnyAtom(), 'nodeClass': Kekule.Pseudoatom,
+        'props': {'atomType': Kekule.PseudoatomType.ANY},
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_ANY_ATOM') //Kekule.ChemWidgetTexts.CAPTION_ANY_ATOM
+      });
+
+      // Kekule.VariableAtom List and Not List
+      nonElementInfos.push({
+        'text': 'L', 'nodeClass': Kekule.VariableAtom, 'isVarList': true,
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_ATOM
+      });
+      nonElementInfos.push({
+        'text': '~L', 'nodeClass': Kekule.VariableAtom, 'isVarNotList': true,
+        'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
+      });
+
+      var elementSymbols = ['C','H','O','N','S','P','Cl','Br','F','I', '...'];
+      var subGroupRepItems = Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems();
+
+      nodeSelectPanel = Kekule.Widget.getWidgetById('nodeSelectPanel');
+      nodeSelectPanel
+        .setElementSymbols(elementSymbols)
+        .setNonElementInfos(nonElementInfos)
+        .setSubGroupRepItems(subGroupRepItems)
+        .setResizable(true)
+        .on('valueChange', function(e){
+           console.log('selector', e.value);
+        });
+
+      nodeSetter = Kekule.Widget.getWidgetById('nodeSetter');
+      nodeSetter.setUseDropDownSelectPanel(!true);
+      nodeSetter
+        .setSelectableElementSymbols(elementSymbols)
+        .setSelectableNonElementInfos(nonElementInfos)
+        .setSelectableSubGroupRepItems(subGroupRepItems)
+        .setResizable(true)
+        .on('valueChange', function(e){
+          console.log('setter', e.value);
+        });
+
+      bondSelectPanel = Kekule.Widget.getWidgetById('bondSelectPanel');
+      var bondData = (new Kekule.Editor.ChemSpaceEditor(document)).getEnabledBondFormData();
+      console.log(bondData);
+      /*
+      bondSelectPanel.setBondData([
+        {
+          bondProps: {'bondType': Kekule.BondType.COVALENT, 'bondOrder': Kekule.BondOrder.SINGLE, 'bondStereo': Kekule.BondStereo.NONE},
+          'text': 'Single Bond', 'description': 'Single bond'
+        },
+        {
+          bondProps: {'bondType': Kekule.BondType.COVALENT, 'bondOrder': Kekule.BondOrder.DOUBLE, 'bondStereo': Kekule.BondStereo.NONE},
+          'text': 'Double Bond', 'description': 'Double bond'
+        }
+      ]);
+      */
+      bondSelectPanel.setBondData(bondData);
+      bondSelectPanel.on('valueChange', function(e){
+        console.log('bond selected', e.value);
+      });
+
+	    bondSelectPanelAdv = Kekule.Widget.getWidgetById('bondSelectPanelAdv');
+	    bondSelectPanelAdv.setBondData(bondData);
+	    bondSelectPanelAdv.on('command', function(e){
+	    	console.log('bond command', e.command);
+      });
+
+      chargeSelectPanel = Kekule.Widget.getWidgetById('chargeSelectPanel');
+      chargeSelectPanel.on('valueChange', function(e){
+        console.log('charge selected', e.value);
+      });
+
+	    glyphArrowPanel = Kekule.Widget.getWidgetById('glyphArrowPanel');
+	    glyphLinePanel = Kekule.Widget.getWidgetById('glyphLinePanel');
+	    glyphSettingPanel = Kekule.Widget.getWidgetById('glyphSettingPanel');
+	    reactionArrowSettingPanel = Kekule.Widget.getWidgetById('reactionArrowSettingPanel');
+
+	    glyphMultiPathSettingPanel = Kekule.Widget.getWidgetById('glyphMultiPathSettingPanel');
+
+	    multiElectronPushingArrowSettingPanel = Kekule.Widget.getWidgetById('multiElectronPushingArrowSettingPanel');
+
+      objInspector = Kekule.Widget.getWidgetById('objInspector'); // new Kekule.Widget.ObjectInspector();
+      objInspector.setObjects(nodeSetter);
+
+      refreshWidgetList();
+
+      Kekule.Widget.getWidgetById('selectboxWidgets').addEventListener('valueChange', function(e){
+        var widget = Kekule.Widget.getWidgetById('selectboxWidgets').getValue();
+        refreshInspector(widget);
+      });
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="inspector" style="float:right">
+    <select id="selectboxWidgets" data-widget="Kekule.Widget.SelectBox"></select>
+    <br />
+    <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+    <br />
+  </div>
+  <div style="vertical-align:middle">
+    <div id="refPanel" data-widget="Kekule.Widget.Panel" style="vertical-align:middle">A Panel</div>
+    <div id="nodeSelectPanel" data-widget="Kekule.ChemWidget.StructureNodeSelectPanel" style="vertical-align:middle"></div>
+    <div id="nodeSetter" data-widget="Kekule.ChemWidget.StructureNodeSetter" style="vertical-align:middle"></div>
+    <div id="bondSelectPanel" data-widget="Kekule.ChemWidget.StructureConnectorSelectPanel" style="vertical-align:middle"></div>
+    <div id="bondSelectPanelAdv" data-widget="Kekule.ChemWidget.StructureConnectorSelectPanelAdv" style="vertical-align:middle"></div>
+    <div id="chargeSelectPanel" data-widget="Kekule.ChemWidget.ChargeSelectPanel" style="vertical-align:middle"></div>
+    <div id="glyphArrowPanel" data-widget="Kekule.ChemWidget.GlyphPathArrowSettingPanel" style="vertical-align:middle"></div>
+    <div id="glyphLinePanel" data-widget="Kekule.ChemWidget.GlyphPathLineSettingPanel" style="vertical-align:middle"></div>
+    <div id="glyphSettingPanel" data-widget="Kekule.ChemWidget.GlyphPathSettingPanel" style="vertical-align:middle"></div>
+    <div id="glyphMultiPathSettingPanel" data-widget="Kekule.ChemWidget.GlyphMultiPathSettingPanel" data-path-count1="3" style="vertical-align:middle"></div>
+  </div>
+  <div>
+    <div id="glyphReactionArrowPresetSelector" data-widget="Kekule.ChemWidget.GlyphReactionArrowPresetSelector" style="vertical-align:middle"></div>
+    <div id="reactionArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphReactionArrowPathSettingPanel" style="vertical-align:middle"></div>
+    <div id="electronPushingArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphElectronPushingArrowSettingPanel" style="vertical-align:middle"></div>
+    <div id="multiElectronPushingArrowSettingPanel" data-widget="Kekule.ChemWidget.GlyphMultiElectronPushingArrowSettingPanel" style="vertical-align:middle"></div>
+  </div>
+</body>
+</html>

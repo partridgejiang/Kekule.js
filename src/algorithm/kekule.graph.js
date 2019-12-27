@@ -197,6 +197,7 @@ Kekule.GraphVertex = Class.create(Kekule.GraphElement,
  *
  * @property {Hash} data Extra data assocaited with this edge (e.g., weight).
  * @property {Array} vertexes Connected vertexes on this edge.
+ * @property {Number} weight Edge weight, default is 1.
  */
 Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 /** @lends Kekule.GraphEdge# */
@@ -206,6 +207,7 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	/** @constructs */
 	initialize: function($super)
 	{
+		this.setPropStoreFieldValue('weight', 1);  // default weight
 		$super();
 		this.setPropStoreFieldValue('vertexes', []);
 		//this.setData({});
@@ -215,6 +217,26 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	{
 		//this.defineProp('data', {'dataType': DataType.HASH});
 		this.defineProp('vertexes', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		this.defineProp('weight', {'dataType': DataType.NUMBER});
+	},
+	/**
+	 * Replace a linked vertex
+	 * @param {Kekule.GraphVertex} oldVertex
+	 * @param {Kekule.GraphVertex} newVertex
+	 */
+	replaceVertex: function(oldVertex, newVertex)
+	{
+		var vs = this.getVertexes();
+		var oldIndex = vs.indexOf(oldVertex);
+		var newIndex = vs.indexOf(newVertex);
+		if (oldIndex < 0 || newIndex >= 0)
+			return;
+		else
+		{
+			vs.splice(oldIndex, 1, newVertex);
+		}
+		oldVertex.doRemoveEdge(this);
+		newVertex.doAppendEdge(this);
 	}
 });
 
@@ -285,7 +307,7 @@ Kekule.Graph = Class.create(ObjectEx,
 	{
 		if (Kekule.ArrayUtils.remove(this.getVertexes(), vertex))  // remove successful
 		{
-			var edges = vertex.getEdges();
+			var edges = Kekule.ArrayUtils.clone(vertex.getEdges());
 			for (var i = 0, l = edges.length; i < l; ++i)
 				this.removeEdge(edges[i]);
 		}
@@ -733,6 +755,92 @@ Kekule.GraphAlgorithmUtils = {
 	},
 
 	/**
+	 * Returns the minimal distance of all vertexes to from vertex.
+	 * @param {Kekule.Graph} graph
+	 * @param {Variant} fromVertexOrIndex A vertex or vertex index.
+	 * @returns {Array} The distance result. Result[0] is the distance from vertexes[0] to fromVertex.
+	 */
+	calcMinDistances: function(graph, fromVertexOrIndex)
+	{
+		var allVertexes = graph.getVertexes();
+		var fromVertex, fromIndex;
+		if (DataType.isSimpleValue(fromVertexOrIndex))
+		{
+			fromIndex = fromVertexOrIndex;
+			fromVertex = allVertexes[fromIndex];
+		}
+		else
+		{
+			fromVertex = fromVertexOrIndex;
+			fromIndex = allVertexes.indexOf(fromVertex);
+		}
+
+		// using the dijkstra algorithm
+		var distances = [];
+		var minPath = [];
+
+		// init distance array
+		for (var i = 0, l = allVertexes.length; i < l; ++i)
+		{
+			var currVertex = allVertexes[i];
+			if (i === fromIndex)
+			{
+				distances[i] = 0;
+				minPath[i] = fromVertex;
+			}
+			else
+			{
+				var currEdge = fromVertex.getEdgeTo(currVertex);
+				if (currEdge)
+				{
+					distances[i] = currEdge.getWeight();
+					minPath[i] = fromVertex
+				}
+				else
+				{
+					distances[i] = Infinity;
+					minPath[i] = null;
+				}
+			}
+		}
+		var visited = [fromIndex];
+
+		// iterate
+		for (var i = 0, l = allVertexes.length; i < l; ++i)
+		{
+			if (i === fromIndex)
+				continue;
+			var minDistance = Infinity;
+			var minVertexIndex = -1, minVertex;
+			for (var j = 0, k = allVertexes.length; j < k; ++j)
+			{
+				if (j === fromIndex)
+					continue;
+				if (visited.indexOf(j) < 0 && distances[j] < minDistance)  // not visited
+				{
+					minDistance = distances[j];
+					minVertexIndex = j;
+					minVertex = allVertexes[j];
+				}
+			}
+			visited.push(minVertexIndex);
+			for (var j = 0, k = allVertexes.length; j < k; ++j)
+			{
+				if (visited.indexOf(j) < 0)
+				{
+					var currEdge = minVertex.getEdgeTo(allVertexes[j]);
+					var delta = currEdge? currEdge.getWeight(): Infinity;
+					var currDistance = minDistance + delta;
+					if (currDistance < distances[j])
+						distances[j] = currDistance;
+				}
+			}
+		}
+
+		return distances;
+	},
+
+	/**
 	 * Returns all vertexes and edges in cylce block.
 	 * @param {Kekule.Graph} graph
 	 * @returns {Array} An array containing a series of hash with fields:
@@ -1139,7 +1247,7 @@ Kekule.GraphAlgorithmUtils = {
 		//console.log('before', graph.getVertexes().length, graph.getEdges().length);
 		for (var i = 0, l = bridgeElems.vertexes.length; i < l; ++i)
 		{
-			graph.removeVertex(chainElems.vertexes[i]);
+			graph.removeVertex(bridgeElems.vertexes[i]);
 		}
 		//console.log('after', graph.getVertexes().length, graph.getEdges().length, l);
 		return bridgeElems;
@@ -1389,11 +1497,11 @@ Kekule.GraphAlgorithmUtils = {
 		var findSSSROfPart_wrong = 1 || function(cycle)
 		{
 			var result = [];
-			var SSSRCount = cycleBlock.edges.length - cycleBlock.vertexes.length + 1;
+			var SSSRCount = cycle.edges.length - cycle.vertexes.length + 1;
 			if (SSSRCount <= 0)
 				return [];
 
-			var rings = U.findAllRings(cycleBlock);
+			var rings = U.findAllRings(cycle);
 
 			// prepare and sort rings
 			var ringGroupMap = new Kekule.MapEx(true);
@@ -1422,7 +1530,7 @@ Kekule.GraphAlgorithmUtils = {
 			*/
 
 			var ring;
-			var remainEdges = AU.clone(cycleBlock.edges);
+			var remainEdges = AU.clone(cycle.edges);
 
 			var getUncheckedEdgeCount = function(remainEdges, ring)
 			{
@@ -2142,8 +2250,8 @@ Kekule.RingVectorUtils = {
 					}
 					if ((overlapedVectorGroups.length === 4)/* && (selVectors.length === 5)*/)
 					{
-						console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
-						console.log(selVectors);
+						//console.log('new vector edge count', overlapedVectorGroups.length, 'selVector count', selVectors.length);
+						//console.log(selVectors);
 					}
 					var combineVector = RU.ringVectorXorAll(selVectors);
 					if (!RU.vectorNotNull(RU.ringVectorXor(combineVector, vector)))  // found
@@ -2157,7 +2265,7 @@ Kekule.RingVectorUtils = {
 						break;
 					}
 				}
-				console.log('tried ', count, result);
+				//console.log('tried ', count, result);
 				return result;
 			}
 			finally

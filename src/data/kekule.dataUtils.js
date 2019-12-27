@@ -168,12 +168,8 @@ Kekule.IsotopeAliasUtil = {
  *  @class Kekule.IsotopeDataUtil
  */
 Kekule.IsotopesDataUtil = {
-	/**
-	 *  Get all available isotope information object of an element.
-	 *  @param {Varaint} symbolOrAtomicNumber Element symbol(String) or atomic number(Integer).
-	 *  @returns {Array} A array contains hash objects of isotope properties.
-	 */
-	getAllIsotopeInfos: function(symbolOrAtomicNumber)
+	/** @private */
+	_getElementItem: function(symbolOrAtomicNumber)
 	{
 		var atomicNumber;
 		if (typeof(symbolOrAtomicNumber) == 'number')
@@ -194,6 +190,37 @@ Kekule.IsotopesDataUtil = {
 				}
 			}
 		}
+		return element;
+	},
+	/**
+	 *  Get all available isotope information object of an element.
+	 *  @param {Varaint} symbolOrAtomicNumber Element symbol(String) or atomic number(Integer).
+	 *  @returns {Array} A array contains hash objects of isotope properties.
+	 */
+	getAllIsotopeInfos: function(symbolOrAtomicNumber)
+	{
+		/*
+		var atomicNumber;
+		if (typeof(symbolOrAtomicNumber) == 'number')
+			atomicNumber = symbolOrAtomicNumber;
+		else
+			atomicNumber = Kekule.ChemicalElementsDataUtil.getAtomicNumber(symbolOrAtomicNumber);
+		//var elemInfo = Kekule.ChemicalElementsDataUtil.getElementInfo(symbolOrAtomicNumber);
+		var element = Kekule.isotopesData[atomicNumber - 1];
+
+		if ((!element) || (element.atomicNumber != atomicNumber))
+		{
+			for (var i = 0, l = Kekule.isotopesData.length; i < l; ++i)
+			{
+				var element = Kekule.isotopesData[i];
+				if (element && (element.atomicNumber == atomicNumber))
+				{
+					break;
+				}
+			}
+		}
+		*/
+		var element = Kekule.IsotopesDataUtil._getElementItem(symbolOrAtomicNumber);
 		if (element)
 			return element.isotopes;
 		else
@@ -216,7 +243,10 @@ Kekule.IsotopesDataUtil = {
 				return result;
 		}
 
-		var isotopes = Kekule.IsotopesDataUtil.getAllIsotopeInfos(symbolOrAtomicNumber);
+
+		var elementItem = Kekule.IsotopesDataUtil._getElementItem(symbolOrAtomicNumber);
+		var isotopes = elementItem.isotopes;
+		//var isotopes = Kekule.IsotopesDataUtil.getAllIsotopeInfos(symbolOrAtomicNumber);
 		if (isotopes)
 		{
 			if (massNumber)
@@ -233,7 +263,11 @@ Kekule.IsotopesDataUtil = {
 			else if (isotopes.length === 1)
 				result = isotopes[0];
 			if (result)
+			{
+				// add element symbol to result
+				result.elementSymbol = elementItem.elementSymbol;
 				return result;
+			}
 		}
 		return null;
 	},
@@ -351,6 +385,7 @@ Kekule.AtomTypeDataUtil = {
 	 */
 	getAtomTypeInfoObj: function(symbolOrAtomicNumber)
 	{
+		var atomicNumber;
 		if (typeof(symbolOrAtomicNumber) == 'number')
 			atomicNumber = symbolOrAtomicNumber;
 		else

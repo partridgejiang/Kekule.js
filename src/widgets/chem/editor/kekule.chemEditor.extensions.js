@@ -15,6 +15,7 @@
 
 var K = Kekule;
 var C = Kekule.CoordMode;
+var AU = Kekule.ArrayUtils;
 
 ClassEx.extend(Kekule.ChemObject,
 /** @lends Kekule.ChemObject# */
@@ -25,7 +26,8 @@ ClassEx.extend(Kekule.ChemObject,
 	 */
 	isStandalone: function()
 	{
-		return true;
+		//return true;
+		return !this.getIsAttachedToParent();
 	},
 	/**
 	 * If this object is standalone, this method will return this directly.
@@ -93,12 +95,80 @@ ClassEx.extend(Kekule.ChemObject,
 	},
 
 	/**
+	 * Whether the coord of chem object is calculated from other object (like connector).
+	 * @returns {Bool}
+	 */
+	isCoordDependent: function()
+	{
+		return false;
+	},
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * If this object is coord independent, this function will return object itself.
+	 * @return {Array}
+	 */
+	getCoordDependentObjects: function()
+	{
+		var result = [];
+		if (!this.isCoordDependent())
+			result.push(this);
+		return result;
+	},
+	/**
+	 * If this object determinate other object's coord, this method should returns them.
+	 * @return {Array}
+	 */
+	getCoordDeterminateObjects: function()
+	{
+		var result = [];
+		if (this.getAttachedMarkers)
+		{
+			var markers = this.getAttachedMarkers() || [];
+			for (var i = 0, l = markers.length; i < l; ++i)
+			{
+				result = result.concat(markers[i].getCoordDependentObjects());
+			}
+		}
+		var coordStickNodes = this.getAttachedCoordStickNodes();
+		for (var i = 0, l = coordStickNodes.length; i < l; ++i)
+		{
+			var node = coordStickNodes[i];
+			AU.pushUnique(result, node);
+			AU.pushUnique(result, node.getCoordDeterminateObjects());
+		}
+		//console.log(this.getClassName(), result);
+		return result;
+	},
+
+	/**
 	 * Return all bonds in this chemObject as well as in child objects.
 	 * @returns {Array} Array of {Kekule.ChemStructureConnector}.
 	 */
 	getAllContainingConnectors: function()
 	{
 		return [];
+	},
+
+	/**
+	 * Returns the stub object (e.g. the rotation center object in constraint bond rotation) in constraint manipulation.
+	 * Null means constraint manipulation is not available.
+	 * Descendants may override this method.
+	 * @returns {Object}
+	 * @private
+	 */
+	getConstraintManipulationBaseObj: function()
+	{
+		if (this.isAttachedMarker && this.isAttachedMarker())
+		{
+			var p = this.getParent();
+			if (p instanceof Kekule.StructureFragment) // molecule total charge will be be constrainted
+				return null;
+			else
+				return p;
+			//return p;
+		}
+		else
+			return null;
 	},
 
 	/**
@@ -166,9 +236,23 @@ ClassEx.extend(Kekule.ChemObject,
 		}
 	}
 });
+ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerAdded', function($origin, marker){
+	var result = $origin(marker);
+	if (marker)
+		marker.setIsAttachedToParent(true);
+	return result;
+});
+ClassEx.extendMethod(Kekule.ChemObject, '_attachedMarkerRemoved', function($origin, marker){
+	var result = $origin(marker);
+	if (marker)
+		marker.setIsAttachedToParent(false);
+	return result;
+});
 ClassEx.defineProps(Kekule.ChemObject, [
 	// If this value is true, on cascade deleting, this object will not be deleted even if it is empty (without any children and data).
-	{'name': 'keepEmptyEvenOnCascadeRemove', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC}
+	{'name': 'keepEmptyEvenOnCascadeRemove', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC},
+	// Explicit whether this object is attached to another one as an attached marker
+	{'name': 'isAttachedToParent', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC}
 ]);
 
 ClassEx.extend(Kekule.ChemStructureObject,
@@ -193,34 +277,35 @@ ClassEx.extend(Kekule.ChemStructureObject,
 		return result;
 	},
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
 		return false;  // structure object usually is child of struct fragment
 	},
-	/**
-	 * Whether the coord of chem object is calculated from other object (like connector).
-	 * @returns {Bool}
-	 */
-	isCoordDependent: function()
-	{
-		return false;
-	},
-	/**
-	 * If coord is calculated from other objects, this function will return them.
-	 * If this object is coord independent, this function will return object itself.
-	 * @return {Array}
-	 */
-	getCoordDependentObjects: function()
-	{
-		return [this];
-	},
+
 	/**
 	 * If this object determinate other object's coord, this method should returns them.
 	 * @return {Array}
 	 */
-	getCoordDeterminateObjects: function()
+	getCoordDeterminateObjects: function($super)
 	{
-		return this.getLinkedConnectors();
+		var result = $super();
+		var connectors = this.getLinkedConnectors();
+		for (var i = 0, l = connectors.length; i < l; ++i)
+		{
+			var connector = connectors[i];
+			AU.pushUnique(result, connector);
+			AU.pushUnique(result, connector.getCoordDeterminateObjects());
+		}
+		/*
+		var coordStickNodes = this.getAttachedCoordStickNodes();
+		for (var i = 0, l = coordStickNodes.length; i < l; ++i)
+		{
+			var node = coordStickNodes[i];
+			AU.pushUnique(result, node);
+			AU.pushUnique(result, node.getCoordDeterminateObjects());
+		}
+		*/
+		return result;
 	}
 });
 
@@ -239,6 +324,25 @@ ClassEx.extend(/*Kekule.ChemStructureNode*/Kekule.BaseStructureNode,
 	isCoordDependent: function()
 	{
 		return false;
+		//return !!this.getCoordStickTarget();
+	},
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 */
+	getCoordDependentObjects: function($super)
+	{
+		return $super();
+		/*
+		if (this.getCoordStickTarget())  // has coord stick target
+		{
+			var result = $super() || [];
+			result = result.concat(this.getCoordStickTarget());
+			return result;
+		}
+		else
+			return $super();
+		*/
 	},
 	/**
 	 * Move node by delta.
@@ -304,23 +408,32 @@ ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector,
 	 * If coord is calculated from other objects, this function will return them.
 	 * @return {Array}
 	 */
-	getCoordDependentObjects: function()
+	getCoordDependentObjects: function($super)
 	{
-		var result = [];
+		var result = $super();  // []
 		var objs = this.getConnectedObjs();
 		// if objs is a nested node in fragment and the fragment is not expanded, return the fragment instead
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
+			var connObj;
 			if (obj.isExposed)
 			{
+				var connObj = obj.isExposed()? obj: obj.getExposedAncestor();
+				/*
 				if (obj.isExposed())
 					result.push(obj);
 				else
 					result.push(obj.getExposedAncestor());
+				*/
 			}
 			else
-				result.push(obj);
+				connObj = obj;
+				//result.push(obj);
+				//result = result.concat(obj);
+			if (connObj)
+				AU.pushUnique(result, connObj.getCoordDependentObjects());
+				//result.push(connObj);
 		}
 		return result;
 	},
@@ -378,6 +491,17 @@ ClassEx.extend(/*Kekule.ChemStructureConnector*/Kekule.BaseStructureConnector,
 	}
 });
 
+ClassEx.extend(Kekule.ChemStructureNode,
+/** @lends Kekule.ChemStructureNode# */
+{
+	/** @ignore */
+	getConstraintManipulationBaseObj: function($super)
+	{
+		var linkedObjs = this.getLinkedObjs();
+		return (linkedObjs.length === 1)? linkedObjs[0]: $super();
+	}
+});
+
 ClassEx.extend(Kekule.Glyph.PathGlyphNode,
 /** @lends Kekule.Glyph.PathGlyphNode# */
 {
@@ -390,7 +514,44 @@ ClassEx.extend(Kekule.Glyph.PathGlyphNode,
 		*/
 		var result = [this.getParent()];
 		return result;
+	},
+	/** @ignore */
+	getConstraintManipulationBaseObj: function($super)
+	{
+		var linkedObjs = this.getLinkedObjs();
+		return (linkedObjs.length === 1)? linkedObjs[0]: $super();
 	}
+});
+ClassEx.extend(Kekule.Glyph.PathGlyphConnectorControlNode,
+/** @lends Kekule.Glyph.PathGlyphConnectorControlNode# */
+{
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 */
+	/*
+	getCoordDependentObjects: function($super)
+	{
+		var result = $super();  // []
+		var connector = this.getParentConnector();
+		if (connector)
+			result = (result || []).concat([connector]);
+		return result;
+	}
+	*/
+	/**
+	 * If this object determinate other object's coord, this method should returns them.
+	 * @return {Array}
+	 * @ignore
+	 */
+	getCoordDeterminateObjects: function($super)
+	{
+		var result = $super();  // []
+		var connector = this.getParentConnector();
+		if (connector)
+			result = (result || []).concat([connector]);
+		return result;
+	},
 });
 ClassEx.extend(Kekule.Glyph.PathGlyphConnector,
 /** @lends Kekule.Glyph.PathGlyphConnector# */
@@ -404,6 +565,21 @@ ClassEx.extend(Kekule.Glyph.PathGlyphConnector,
 		*/
 		var result = [this.getParent()];
 		return result;
+	},
+	/**
+	 * If coord is calculated from other objects, this function will return them.
+	 * @return {Array}
+	 * @ignore
+	 */
+	getCoordDependentObjects: function($super)
+	{
+		var result = $super();  // []
+		var controlPoints = this.getControlPoints && this.getControlPoints();
+		if (controlPoints && controlPoints.length)
+		{
+			result = (result || []).concat(controlPoints);
+		}
+		return result;
 	}
 });
 
@@ -411,7 +587,7 @@ ClassEx.extend(Kekule.StructureFragment,
 /** @lends Kekule.StructureFragment# */
 {
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
 		return !this.getCrossConnectors().length;  // cross connector means this fragment is child of another fragment
 	},
@@ -435,22 +611,22 @@ ClassEx.extend(Kekule.StructureFragment,
 		$super(childToBeDeleted, freeObj);
 	},
 	/** @private */
-	getCoordDependentObjects: function()
+	getCoordDependentObjects: function($super)  // when manipulate mol in editor, actually the nodes are moved or rotated
 	{
 		if (this.isExpanded && !this.isExpanded())
 		{
-			return [this];
+			return $super();
 		}
 		else if (!this.hasCtab())
-			return [this];
+			return $super();
 		else
 		{
-			var result = [];
-			var nodeCount = this.getNodeCount();
-			for (var i = 0; i < nodeCount; ++i)
+			var result = []; // $super();
+			var childCount = this.getChildCount();
+			for (var i = 0; i < childCount; ++i)
 			{
-				var node = this.getNodeAt(i);
-				result.push(node);
+				var child = this.getChildAt(i);
+				AU.pushUnique(result, child.getCoordDependentObjects());
 			}
 			return result;
 		}
@@ -490,9 +666,9 @@ ClassEx.extend(Kekule.Glyph.Base,
 /** @lends Kekule.Glyph.Base# */
 {
 	/** @ignore */
-	isStandalone: function()
+	isStandalone: function($super)
 	{
-		return true;
+		return /*true && */ $super();
 	}
 });
 
@@ -526,6 +702,131 @@ ClassEx.extend(Kekule.Glyph.PathGlyph,
 		}
 		// then transform self
 		$super(transformMatrix, childTransformMatrix, coordMode, false, allowCoordBorrow, _useChildCoord);
+	}
+});
+
+ClassEx.extend(Kekule.Glyph.BaseArc,
+/** @lends Kekule.Glyph.BaseArc# */
+{
+	/** @ignore */
+	ownerChanged: function($super, newOwner, oldOwner)
+	{
+		var needAutoAdjustClass = (!oldOwner && newOwner);  // when first inserting to a space, may need to adjust class
+		var result = $super(newOwner, oldOwner);
+		if (needAutoAdjustClass && this.getIsEditing())
+		{
+			this._autoAdjustClass();
+		}
+		return result;
+	},
+	/** @private */
+	_getChemStickTargets: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
+		{
+			var node = this.getNodeAt(i);
+			var stickTarget = node.getCoordStickTarget();
+			//if (stickTarget && (stickTarget instanceof Kekule.ChemStructureNode || stickTarget instanceof Kekule.ChemStructureConnector))
+			if (this._isValidChemNodeOrConnectorStickTarget(stickTarget))
+				result.push(stickTarget);
+		}
+		return result;
+	},
+	/** @ignore */
+	notifyChildCoordStickTargetChanged: function(child, oldTarget, newTarget)
+	{
+		this._autoAdjustClass();
+	},
+	_autoAdjustClass: function()
+	{
+		if (this.getIsEditing())
+		{
+			var stickTargets = this._getChemStickTargets();
+			var isEPushingArrow = stickTargets.length >= 2;
+			if (isEPushingArrow)
+			{
+				if (!(this instanceof Kekule.Glyph.ElectronPushingArrow))
+				{
+					//console.log('change to e arrow');
+					this.__changeClass__(Kekule.Glyph.ElectronPushingArrow);
+				}
+			}
+			else
+			{
+				if (this instanceof Kekule.Glyph.ElectronPushingArrow)
+				{
+					//console.log('change to arc');
+					this.__changeClass__(Kekule.Glyph.Arc);
+				}
+			}
+		}
+	}
+});
+ClassEx.extendMethod(Kekule.Glyph.BaseArc, 'createDefaultStructure', function($origin, refLength, initialParams)
+{
+	var result = $origin(refLength, initialParams);
+	this._autoAdjustClass();
+	return result;
+});
+
+ClassEx.extend(Kekule.Glyph.BaseTwinArc,
+/** @lends Kekule.Glyph.BaseTwinArc# */
+{
+	/** @ignore */
+	ownerChanged: function($super, newOwner, oldOwner)
+	{
+		var needAutoAdjustClass = (!oldOwner && newOwner);  // when first inserting to a space, may need to adjust class
+		var result = $super(newOwner, oldOwner);
+		if (needAutoAdjustClass && this.getIsEditing())
+		{
+			this._autoAdjustClass();
+		}
+		return result;
+	},
+	/** @private */
+	_getChemStickTargets: function()
+	{
+		var result = [];
+		var nodes = this._getArrowStartingNodes();
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			var node = nodes[i];
+			var stickTarget = node.getCoordStickTarget();
+			if (this._isValidChemNodeOrConnectorStickTarget(stickTarget))
+				result.push(stickTarget);
+		}
+		return result;
+	},
+	/** @ignore */
+	notifyChildCoordStickTargetChanged: function(child, oldTarget, newTarget)
+	{
+		this._autoAdjustClass();
+	},
+	/** @private */
+	_autoAdjustClass: function()
+	{
+		if (this.getIsEditing())
+		{
+			var stickTargets = this._getChemStickTargets();
+			var isEPushingArrow = stickTargets.length >= 2;
+			if (isEPushingArrow)
+			{
+				if (!(this instanceof Kekule.Glyph.BondFormingElectronPushingArrow))
+				{
+					this.__changeClass__(Kekule.Glyph.BondFormingElectronPushingArrow);
+					if (!this.getElectronCount())
+						this.setElectronCount(1);
+				}
+			}
+			else
+			{
+				if (this instanceof Kekule.Glyph.BondFormingElectronPushingArrow)
+				{
+					this.__changeClass__(Kekule.Glyph.TwinArc);
+				}
+			}
+		}
 	}
 });
 

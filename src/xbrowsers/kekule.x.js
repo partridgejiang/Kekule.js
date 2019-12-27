@@ -8,15 +8,27 @@
  * requires /lan/classes.js
  * require /core/kekule.root.js
  * require /utils/kekule.utils.js
+ * require /utils/kekule.domUtils.js
  */
 
-(function ()
+(function ($root)
 {
 
-var $root = window;
+"use strict";
 
-if (!$root.Kekule)
+//var $root = window;
+var	window = $root, document = window && window.document;
+
+if (typeof(Kekule) === 'undefined')
 	Kekule = {};
+
+if (typeof(navigator) === "undefined")   // not in browser environment, node.js?
+{
+	Kekule.Browser = {};
+	Kekule.BrowserFeature = {};
+}
+else
+{     // start of browser detect part
 
 /**
  * Browser Check.
@@ -30,6 +42,10 @@ Kekule.Browser = {
   MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
 	language: navigator.language || navigator.browserLanguage  // language of broweser
 };
+Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
+	var agent = navigator.userAgent.toLowerCase();
+	return (agent.indexOf('msie') !== -1) ? parseInt(agent.split('msie')[1]) : false
+})();
 
 /**
  * Browser HTML5 feature check.
@@ -74,6 +90,9 @@ Kekule.BrowserFeature = {
 	cssTranform: (function(s) {
 		return 'transform' in s || 'WebkitTransform' in s || 'MozTransform' in s || 'msTransform' in s || 'OTransform' in s;
 	})(document.createElement('div').style),
+	cssFlex: (function(s) {
+		return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
+	})(document.createElement('div').style),
 	html5Form: {
 		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
 		supportType: function(typeName)
@@ -91,8 +110,45 @@ Kekule.BrowserFeature = {
 				return result;
 			}
 	},
-	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver
+	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
+	resizeObserver: !!window.ResizeObserver,
+	touchEvent: !!window.touchEvent,
+	pointerEvent: !!window.PointerEvent,
+	draggable: (function() {
+		var div = document.createElement('div');
+		return ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
+	})()
 };
+
+}   // end of browser detect part
+
+
+// polyfill of requestAnimationFrame / cancelAnimationFrame
+(function() {
+	var lastTime = 0;
+	var vendors = ['ms', 'moz', 'webkit', 'o'];
+	for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+		window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+		window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+				|| window[vendors[x]+'CancelRequestAnimationFrame'];
+	}
+
+	if (!window.requestAnimationFrame)
+		window.requestAnimationFrame = function(callback, element) {
+			var currTime = new Date().getTime();
+			var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+			var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+					timeToCall);
+			lastTime = currTime + timeToCall;
+			return id;
+		};
+
+	if (!window.cancelAnimationFrame)
+		window.cancelAnimationFrame = function(id) {
+			clearTimeout(id);
+		};
+}());
+
 
 /**
  * Namespace for XBrowser lib.
@@ -156,6 +212,15 @@ X.Event = {
 };
 
 /**
+ * A serials of constants of pointer types.
+ */
+X.Event.PointerType = {
+	MOUSE: 'mouse',
+	TOUCH: 'touch',
+	PEN: 'pen'
+};
+
+/**
  * A serials of constants of mouse button flags.
  */
 X.Event.MouseButton = {
@@ -163,7 +228,7 @@ X.Event.MouseButton = {
 	RIGHT: 2,
 	MID: 1,
 	LR: 3
-}
+};
 
 /**
  * A serials of constants of key codes
@@ -218,6 +283,11 @@ X.Event.isSupported = (function()
 	var cache = {};
 
 	return function(eventName) {
+		if (eventName.indexOf('touch') === 0)  // touch events
+			return Kekule.BrowserFeature.touchEvent;
+		if (eventName.indexOf('pointer') === 0)  // pointer events
+			return Kekule.BrowserFeature.pointerEvent;
+
 		var TAGNAMES = {
 				'select': 'input',
 				'change': 'input',
@@ -258,6 +328,23 @@ X.Event.Methods = {
 	{
 		return event.__$type__ || event.type;
 	},
+	/** @ignore */
+	setType: function(event, value)
+	{
+		event.__$type__ = value;
+		try
+		{
+			event.type = value;
+		}
+		catch(e)
+		{
+
+		}
+	},
+	getPointerType: function(event)
+	{
+		return event.pointerType;
+	},
 	/**
 	 * Get event.target element.
 	 * @param {Object} event
@@ -265,10 +352,27 @@ X.Event.Methods = {
 	 */
 	getTarget: function(event)
 	{
-		var target = event.target || event.srcElement;
+		var target = event.__$target__ || event.target || event.srcElement;
 		if (target.nodeType == 3) // defeat Safari bug
 			target = target.parentNode;
 		return target;
+	},
+	/**
+	 * Some times we may need to overwrite the target of event (e.g., in mapping touch event to pointer).
+	 * Writing directly to event.target often does not change the actual value, so we use a special field to store it.
+	 * @param {Object} event
+	 */
+	setTarget: function(event, newTarget)
+	{
+		event.__$target__ = newTarget;
+		try
+		{
+			event.target = newTarget;
+		}
+		catch(e)
+		{
+
+		}
 	},
 	/*
 	 * Get event.currTarget element.
@@ -362,7 +466,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientX;
 		}
-		else
+		if (result === undefined)
 			result = event.clientX;
 		return result;
 	},
@@ -379,7 +483,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.clientY;
 		}
-		else
+		if (result === undefined)
 			result = event.clientY;
 		return result;
 	},
@@ -396,7 +500,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenX;
 		}
-		else
+		if (result === undefined)
 			result = event.screenX;
 		return result;
 	},
@@ -413,7 +517,7 @@ X.Event.Methods = {
 			var touch = event.touches[0];
 			result = touch && touch.screenY;
 		}
-		else
+		if (result === undefined)
 			result = event.screenY;
 		return result;
 	},
@@ -424,20 +528,23 @@ X.Event.Methods = {
 	 */
 	getPageX: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageX))
-				return touch.pageX;
+				result = touch.pageX;
 		}
-		else if (notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
-			return event.pageX;
+		if (result === undefined && notUnset(event.pageX))  // touchmove event may still has pageX/Y property, so check this afterward
+			result = event.pageX;
 		//else  // fallback
+		if (result === undefined)
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
+			result = X.Event.getClientX(event) +  (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft  || body && body.clientLeft || 0);
 		}
+		return result;
 	},
 	/**
 	 * Get Y coordinate related to document page.
@@ -446,20 +553,22 @@ X.Event.Methods = {
 	 */
 	getPageY: function(event)
 	{
+		var result;
 		if (event.touches)
 		{
 			var touch = event.touches[0];
 			if (touch && notUnset(touch.pageY))
 				return touch.pageY;
 		}
-		else if (notUnset(event.pageY))
+		else if (result === undefined && notUnset(event.pageY))
 			return event.pageY;
-		//else  // fallback
+		if (result === undefined)  // fallback
 		{
 			var doc = X.Event.getTarget(event).ownerDocument || X.Event.getTarget(event);
 			var body = doc? doc.body: null;
-			return X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+			result = X.Event.getClientY(event) +  (doc && doc.scrollTop  ||  body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
 		}
+		return result;
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the event's target.
@@ -473,7 +582,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerX) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -482,7 +591,8 @@ X.Event.Methods = {
 			else
 			{
 				var clientX = X.Event.getClientX(event);
-				return Math.round(clientX - elem.getBoundingClientRect().left);
+				//return Math.round(clientX - elem.getBoundingClientRect().left);
+				return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).x);
 			}
 		}
 	},
@@ -498,7 +608,7 @@ X.Event.Methods = {
 		else // Gecko
 		{
 			var elem = X.Event.getTarget(event);
-			if (elem.defaultView && elem.body)  // is document
+			if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 				elem = elem.body;
 			if (notUnset(event.layerY) && isElemPositioned(elem) && !event.touches) // check if target is a relative or absolute element, if so layerX ~= offsetX
 			{
@@ -507,9 +617,48 @@ X.Event.Methods = {
 			else
 			{
 				var clientY = X.Event.getClientY(event);
-				return Math.round(clientY - elem.getBoundingClientRect().top);
+				//return Math.round(clientY - elem.getBoundingClientRect().top);
+				return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).y);
 			}
 		}
+	},
+	/**
+	 * Returns x/y coord of event.
+	 * @param {Object} event
+	 * @param {Bool} considerCssTransform
+	 */
+	getOffsetCoord: function(event, considerCssTransform)
+	{
+		var elem = X.Event.getTarget(event);
+		var transformMatrix;
+		if (considerCssTransform && Kekule.ObjUtils.isUnset(event.offsetX)) // has no native offsetX, may need calculation
+		{
+			transformMatrix = Kekule.StyleUtils.getTotalTransformMatrix(elem);
+		}
+		if (transformMatrix)   // elem has transform, calculate
+		{
+			// calculation
+			var clientX = X.Event.getClientX(event);
+			var clientY = X.Event.getClientY(event);
+			var coord = {
+				x: clientX - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).x,
+				y: clientY - Kekule.HtmlElementUtils.getElemBoundingClientRect(elem).y
+			};
+			var invertMatrix = Kekule.StyleUtils.calcInvertTransformMatrix(transformMatrix);
+			if (invertMatrix)
+			{
+				var vector = Kekule.MatrixUtils.create(3, 1);
+				vector[0][0] = coord.x;
+				vector[1][0] = coord.y;
+				vector[2][0] = 1;
+				var result = Kekule.MatrixUtils.multiply(invertMatrix, vector);
+				coord.x = result[0][0];
+				coord.y = result[1][0];
+				return coord;
+			}
+		}
+		// when calculation fails or has no transform
+		return {'x': X.Event.getOffsetX(event), 'y': X.Event.getOffsetY(event)};
 	},
 	/**
 	 * Returns the mouse X coordinates relative to the top-left of window.
@@ -520,7 +669,7 @@ X.Event.Methods = {
 	{
 		var x = X.Event.getPageX(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollX) || 0;
 		return x - delta;
 	},
@@ -533,7 +682,7 @@ X.Event.Methods = {
 	{
 		var y = X.Event.getPageY(event);
 		var doc = event.target.ownerDocument || event.target;
-		var win = doc && doc.defaultView;
+		var win = doc && (doc.defaultView || doc.parentWindow);
 		var delta = (win && win.scrollY) || 0;
 		return y - delta;
 	},
@@ -545,10 +694,11 @@ X.Event.Methods = {
 	getRelXToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientX = X.Event.getClientX(event);
-		return Math.round(clientX - elem.getBoundingClientRect().left);
+		//return Math.round(clientX - elem.getBoundingClientRect().left);
+		return Math.round(clientX - Kekule.HtmlElementUtils.getElemPagePos(elem, true).left);
 	},
 	/**
 	 * Returns the mouse Y coordinates relative to the event's currTarget.
@@ -558,11 +708,12 @@ X.Event.Methods = {
 	getRelYToCurrTarget: function(event)
 	{
 		var elem = X.Event.getCurrentTarget(event);
-		if (elem.defaultView && elem.body)  // is document
+		if ((elem.defaultView || elem.parentWindow) && elem.body)  // is document
 			elem = elem.body;
 		var clientY = X.Event.getClientY(event);
 		//console.log('y', clientY, elem.getBoundingClientRect().top, elem.tagName);
-		return Math.round(clientY - elem.getBoundingClientRect().top);
+		//return Math.round(clientY - elem.getBoundingClientRect().top);
+		return Math.round(clientY - Kekule.HtmlElementUtils.getElemPagePos(elem, true).top);
 	},
 	/**
 	 * Returns touches array of event in touch.
@@ -644,7 +795,7 @@ X.Event._MouseEventEx = {
 					}
           */
 				}
-			}
+			};
 			handler.__$mouseExListenerWrapper__ = wrapper;
 			var newType = (eventType === 'mouseenter')? 'mouseover': 'mouseout';
 			//return X.Event.addListener(element, newType, wrapper, useCapture);
@@ -657,7 +808,7 @@ X.Event._MouseEventEx = {
 			|| ((eventType === 'mouseleave') && X.Event.isSupported('mouseleave'));
 		if (isSupported)
 			//return Kekule.X.Event.removeListener(element, eventType, handler);
-			return element.removeEventListener(eventType, handler, useCapture);  // IE support leave/enter event and has no extra code added, so we can use w3c method directly
+			return element.removeEventListener(eventType, handler);  // IE support leave/enter event and has no extra code added, so we can use w3c method directly
 		else
 		{
 			var newType = (eventType === 'mouseenter')? 'mouseover': 'mouseout';
@@ -675,28 +826,28 @@ X.Event._W3C =
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Hash} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	addListener: function(element, eventType, handler, useCapture)
+	addListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType))
-			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, useCapture);
+			return X.Event._MouseEventEx.addMouseEnterLeaveListener(element, eventType, handler, options);
 		else
-			return element.addEventListener(eventType, handler, useCapture);
+			return element.addEventListener(eventType, handler, options);
 	},
 	/**
 	 * Remove an event listener from element.
 	 * @param {Object} element HTML element.
 	 * @param {String} eventType W3C name of event, such as 'click'.
 	 * @param {Function} handler Event handler.
-	 * @param {Bool} useCapture Whether to use capture event handle. IE (attachEvent) will ignore this paramter.
+	 * @param {Bool} options Listener options. IE (attachEvent) will ignore this paramter.
 	 */
-	removeListener: function(element, eventType, handler, useCapture)
+	removeListener: function(element, eventType, handler, options)
 	{
 		if (X.Event._MouseEventEx.isMouseEnterLeaveEvent(eventType) && handler.__$listenerWrapper__)
 			return X.Event._MouseEventEx.removeMouseEnterLeaveListener(element, eventType, handler.__$listenerWrapper__);
 		else
-			return element.removeEventListener(eventType, handler, useCapture);
+			return element.removeEventListener(eventType, handler, options);
 	},
 	/**
 	 * Stop the propagation of event.
@@ -759,7 +910,7 @@ X.Event._Gecko = {
 					e.wheelDeltaY = e.wheelDelta = -e.detail * 40;  // detail usually be 3 while delta be 120, direction is opposed
 					e.__$type__ = 'mousewheel';  // e.type can not be changed, so use another field to save the new type
 					handler.call(element, e);
-				}
+				};
 			handler.__$mousewheelListenerWrapper__ = wrapper;
 			element.addEventListener('DOMMouseScroll', wrapper, useCapture);
 		}
@@ -898,9 +1049,9 @@ X.Event._IE = {
 	/** @private */
 	unregisterHandler: function(element, eventType, handler)
 	{
-		if (!handlers[eventType])
+		if (!handler[eventType])
 			return;
-		var hs = handlers[eventType];
+		var hs = handler[eventType];
 		var index = X.Event.findHandlerIndex(element, eventType, handler);
 		if (index >= 0)
 			hs.splice(index, 1);
@@ -946,7 +1097,11 @@ X.Event._IE = {
 X.Event._IEMethods = {
 	getRelatedTarget: function(event)
 	{
-		return event.fromElement || event.toElement;
+		var etype = event.type;
+		if (['focusin', 'mouseenter', 'mouseover', 'pointerenter', 'pointerover', 'dragenter'].indexOf(etype) >= 0)
+			return event.fromElement || event.toElement;
+		else
+			return event.toElement || event.fromElement;
 	},
 	// methods to get mouse event information
 	getButton: function(event)
@@ -969,26 +1124,29 @@ X.Event._IEMethods = {
 	{
 		event.returnValue = false;
 	}
-}
+};
 
-if (document.addEventListener)  // W3C browser
+if (document)
 {
-	X.Event = Object.extend(X.Event, X.Event._W3C);
-	X.Event.Methods = Object.extend(X.Event.Methods, X.Event._W3CMethods);
-	if (Kekule.Browser.Gecko)  // fix Firefox mousewheel event lacking
+	if (document.addEventListener)  // W3C browser
 	{
-		X.Event = Object.extend(X.Event, X.Event._Gecko);
+		X.Event = Object.extend(X.Event, X.Event._W3C);
+		X.Event.Methods = Object.extend(X.Event.Methods, X.Event._W3CMethods);
+		if (Kekule.Browser.Gecko)  // fix Firefox mousewheel event lacking
+		{
+			X.Event = Object.extend(X.Event, X.Event._Gecko);
+		}
 	}
-}
-else if (document.attachEvent)  // IE 8
-{
-	X.Event = Object.extend(X.Event, X.Event._IE);
-	X.Event.Methods = Object.extend(X.Event.Methods, X.Event._IEMethods);
-	if (window.Element)
+	else if (document.attachEvent)  // IE 8
 	{
-		var elemPrototype = window.Element.prototype;
-		elemPrototype.addEventListener = X.Event.addListener.methodize();
-		elemPrototype.removeEventListener = X.Event.removeListener.methodize();
+		X.Event = Object.extend(X.Event, X.Event._IE);
+		X.Event.Methods = Object.extend(X.Event.Methods, X.Event._IEMethods);
+		if (window.Element)
+		{
+			var elemPrototype = window.Element.prototype;
+			elemPrototype.addEventListener = X.Event.addListener.methodize();
+			elemPrototype.removeEventListener = X.Event.removeListener.methodize();
+		}
 	}
 }
 
@@ -999,13 +1157,13 @@ if (window.Event)
 	eproto = window.Event.prototype;
 if (!eproto)
 {
-	if (document.createEvent)
+	if (document && document.createEvent)
 		eproto = document.createEvent('HTMLEvents').__proto__;
 }
 var hasEventPrototype = !!eproto;
 var eventObjMethods = {};
 var methods = X.Event.Methods;
-for (name in methods)
+for (var name in methods)
 {
 	if (methods.hasOwnProperty(name) && (typeof(methods[name]) === 'function'))
 	{
@@ -1029,6 +1187,33 @@ if (eproto)  // IE7 can not get event prototype, sucks
 	*/
 	Object.extend(eproto, eventObjMethods);
 };
+
+
+// enable drag draggable element in IE
+(function(){
+	if (typeof(document) !== 'undefined')
+	{
+		var div = document.createElement('div');
+		var needPolyfill = !('draggable' in div) && ('ondragstart' in div && 'ondrop' in div);
+		//var needPolyfill = !!Kekule.Browser.IE;
+		if (needPolyfill)
+		{
+			Kekule.X.Event.addListener(document, 'selectstart', function(e){
+				for (var el = e.target; el; el = el.parentNode) {
+					if (el.attributes && el.attributes['draggable']) {
+						e.preventDefault();
+						if (e.stopImmediatePropagation)
+							e.stopImmediatePropagation();
+						else
+							e.stopPropagation();
+						el.dragDrop();
+						return false;
+					}
+				}
+			});
+		}
+	}
+})();
 
 
 /////////////////////////////////////////////////////////////
@@ -1095,13 +1280,34 @@ X.Ajax = {
 
 	/**
 	 * Send an AJAX request to URL.
+	 * @param {Hash} params The request params, may including the following fields:
+	 *   {
+	 *     callback: Call back function with params (data, requestObj, success),
+	 *     url: string,
+	 *     postData: Hash or string,
+	 *     xhrProps: Hash, properties that overriding the default ones of XMLHttpRequest object.
+	 *       e.g. {responseType, overwriteMimeType, withCredentials}.
+	 *   }
+	 * @returns {XMLHttpRequest}
+	 */
+	request: function(params)
+	{
+		return X.Ajax.sendRequest(params.url, params.callback, params.postData, params.xhrProps);
+	},
+
+	/**
+	 * Send an AJAX request to URL.
+	 * This method is deprecated, since the input  paramters are not well organized.
+	 * Now user should use method {@link Kekule.X.Ajax.request} instead.
 	 * @param {String} url
 	 * @param {Function} callback Call back function with params (data, requestObj, success)
 	 * @param {Array} postData Optional.
-	 * @param {String} responseType Value of responseType property of XMLHttpRequest(V2).
-	 * @param {String} overwriteMimeType Value to call overwriteMimeType method of XMLHttpRequest(V2).
+	 * //@param {String} responseType Value of responseType property of XMLHttpRequest(V2).
+	 * //@param {String} overwriteMimeType Value to call overwriteMimeType method of XMLHttpRequest(V2).
+	 * @param {Hash} xhrProps Property settings of XHR object, e.g. {withCredentials: true}.
+	 * @deprecated
 	 */
-	sendRequest: function(url, callback, postData, responseType, overwriteMimeType)
+	sendRequest: function(url, callback, postData, responseTypeOrXhrProps, overwriteMimeType)
 	{
 		var isBinary = false;
 		var supportResponseType = true;
@@ -1112,6 +1318,18 @@ X.Ajax = {
 		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		var responseType, xhrProps;
+		if (responseTypeOrXhrProps)  // for backward compatible, here we check if the fourth param is a hash(xhrProps) or string (responseType)
+		{
+			if (typeof(responseTypeOrXhrProps) === 'object')
+			{
+				xhrProps = responseTypeOrXhrProps;
+				responseType = xhrProps.responseType;
+				overwriteMimeType = xhrProps.overwriteMimeType;  // overwriteMimeType is also set in xhrProps
+			}
+			else if (typeof(responseTypeOrXhrProps) === 'string')
+				responseType = responseTypeOrXhrProps;
+		}
 		if (responseType)
 		{
 			try
@@ -1127,10 +1345,27 @@ X.Ajax = {
 			if (req.responseType !== responseType)  // old fashion browser, do not support this feature
 				supportResponseType = false;
 		}
-		if (isBinary && (!supportResponseType) & req.overwriteMimeType)
+		if (isBinary && (!supportResponseType) && req.overwriteMimeType)
 			req.overrideMimeType('text/plain; charset=x-user-defined');  // old browser, need to transform binary data by string
 		if (overwriteMimeType && req.overwriteMimeType)
 			req.overwriteMimeType(overwriteMimeType);
+		if (xhrProps)
+		{
+			for (var key in xhrProps)
+			{
+				if (key in req)
+				{
+					try
+					{
+						req[key] = xhrProps[key];
+					}
+					catch(e)
+					{
+
+					}
+				}
+			}
+		}
 		req.onreadystatechange = function ()
 			{
 				if (req.readyState != 4) return;
@@ -1173,6 +1408,7 @@ Kekule.Ajax = Kekule.X.Ajax;
 /** @ignore */
 Kekule.X.DomReady = {
 	isReady: false,
+	suspendFlag: 0,
 	funcs: [],
 	domReady: function(fn)
 	{
@@ -1201,24 +1437,57 @@ Kekule.X.DomReady = {
     if (DOM.isReady)
     	return;
     DOM.isReady = true;
+		/*
     for (var i = 0, l = DOM.funcs.length; i < l; ++i)
     {
       var fn = DOM.funcs[i];
       fn();
     }
     DOM.funcs.length = 0;//清空事件
- },
- initReady: function()
- {
-    if (document.addEventListener) {
+    */
+		DOM._execFuncs();
+  },
+	_execFuncs: function()
+	{
+		var funcs = DOM.funcs;
+		if (funcs && funcs.length)
+		{
+			while (funcs.length && !DOM.isSuspending())
+			{
+				var fn = funcs.shift();
+				if (fn)
+					fn();
+			}
+		}
+	},
+  suspend: function()
+  {
+	  ++DOM.suspendFlag;
+  },
+	resume: function()
+	{
+		if (DOM.suspendFlag > 0)
+			--DOM.suspendFlag;
+		if (!DOM.isSuspending())
+		{
+			DOM._execFuncs();
+		}
+	},
+	isSuspending: function()
+	{
+		return DOM.suspendFlag > 0;
+	},
+  initReady: function initReady()
+  {
+    if (document && document.addEventListener) {
       document.addEventListener( "DOMContentLoaded", function(){
-        document.removeEventListener( "DOMContentLoaded", arguments.callee, false );//清除加载函数
+	      document.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
         DOM.fireReady();
       }, false);
     }
     else
     {
-      if (document.getElementById) {
+      if (document && document.getElementById) {
         document.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
         document.getElementById("ie-domReady").onreadystatechange = function() {
           if (this.readyState === "complete") {
@@ -1233,7 +1502,7 @@ Kekule.X.DomReady = {
 };
 
 /** @ignore */
-var DOM = Kekule.X.DomReady
+var DOM = Kekule.X.DomReady;
 /**
  * Invoke when page DOM is loaded.
  * @param {Func} fn Callback function.
@@ -1241,4 +1510,4 @@ var DOM = Kekule.X.DomReady
  */
 Kekule.X.domReady = DOM.domReady;
 
-})();
+})(this);

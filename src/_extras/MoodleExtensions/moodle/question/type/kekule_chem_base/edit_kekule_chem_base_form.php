@@ -76,11 +76,21 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
                 qtype_kekule_chem_input_type::DOCUMENT => get_string('molInputTypeDoc', 'qtype_kekule_chem_base')
             )
         );
+
+        $mform->addElement('select', 'defcomparelevel',
+            get_string('captionDefCompareLevel', 'qtype_kekule_chem_base'),
+            array(
+                //qtype_kekule_chem_compare_levels::DEF_LEVEL => get_string('molCompareLevelDefault', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_levels::CONFIGURATION => get_string('molCompareLevelConfiguration', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_levels::CONSTITUTION => get_string('molCompareLevelConstitution', 'qtype_kekule_chem_base')
+            )
+        );
+
         $mform->addElement('select', 'defcomparemethod',
             get_string('captionDefCompareMethod', 'qtype_kekule_chem_base'),
             array(
                 qtype_kekule_chem_compare_methods::SMILES => get_string('molCompareMethodSmiles', 'qtype_kekule_chem_base'),
-                qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
+                //qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
                 qtype_kekule_chem_compare_methods::PARENTOF => get_string('molCompareMethodParentOf', 'qtype_kekule_chem_base'),
                 qtype_kekule_chem_compare_methods::CHILDOF => get_string('molCompareMethodChildOf', 'qtype_kekule_chem_base')
             )
@@ -92,6 +102,7 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
         $result = parent::get_per_answer_fields($mform, $label, $gradeoptions, $repeatedoptions, $answersoption);
 
         $repeatedoptions['comparemethod']['type'] = PARAM_INT;
+        $repeatedoptions['comparelevel']['default'] = qtype_kekule_chem_compare_levels::DEF_LEVEL;
         $repeatedoptions['comparemethod']['default'] = qtype_kekule_chem_compare_methods::DEF_METHOD;
 
         return $result;
@@ -129,13 +140,23 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
         $result[] = $mform->createElement('text', 'smiles',
             'SMILES', array('size' => 20));
         */
+
+        $result[] = $mform->createElement('select', 'comparelevel',
+            get_string('captionCompareLevel', 'qtype_kekule_chem_base'),
+            array(
+                qtype_kekule_chem_compare_levels::DEF_LEVEL => get_string('molCompareLevelDefault', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_levels::CONSTITUTION => get_string('molCompareLevelConstitution', 'qtype_kekule_chem_base'),
+                qtype_kekule_chem_compare_levels::CONFIGURATION => get_string('molCompareLevelConfiguration', 'qtype_kekule_chem_base')
+            )
+        );
+
         $result[] = $mform->createElement('select', 'comparemethod',
             get_string('captionCompareMethod', 'qtype_kekule_chem_base'),
             array(
                 qtype_kekule_chem_compare_methods::DEF_METHOD => get_string('molCompareMethodDefault', 'qtype_kekule_chem_base'),
                 qtype_kekule_chem_compare_methods::SMILES => get_string('molCompareMethodSmiles', 'qtype_kekule_chem_base'),
                 //qtype_kekule_chem_compare_methods::MANUAL => get_string('molCompareMethodManual', 'qtype_kekule_chem_base')
-                qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
+                //qtype_kekule_chem_compare_methods::MOLDATA => get_string('molCompareMethodMolData', 'qtype_kekule_chem_base'),
                 qtype_kekule_chem_compare_methods::PARENTOF => get_string('molCompareMethodParentOf', 'qtype_kekule_chem_base'),
                 qtype_kekule_chem_compare_methods::CHILDOF => get_string('molCompareMethodChildOf', 'qtype_kekule_chem_base')
             )

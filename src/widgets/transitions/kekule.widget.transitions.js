@@ -17,7 +17,7 @@
 /** @ignore */
 var D = Kekule.Widget.Direction;
 /** @ignore */
-SU = Kekule.StyleUtils;
+var SU = Kekule.StyleUtils;
 
 /**
  * Class to execute transition on HTML elements.
@@ -551,6 +551,7 @@ Kekule.Widget.Css3SlideRightTransExecutor = TCC.create('Kekule.Widget.Css3SlideR
 });
 */
 
+
 /**
  * Opacity transition executor based on CSS3 transition.
  * @class
@@ -563,6 +564,11 @@ Kekule.Widget.Css3OpacityTrans = Class.create(Kekule.Widget.Css3Transition,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3OpacityTrans',
+	/** @private */
+	canExecute: function($super, element, options)
+	{
+		return !!Kekule.BrowserFeature.cssTranform;
+	},
 	/** @private */
 	getAffectedCssPropNames: function(transOptions)
 	{
@@ -768,6 +774,7 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 			};
 			*/
 			result = EU.getElemPageRect(this.getCaller());
+			//result = EU.getElemBoundingClientRect(this.getCaller(), true);
 			if (Kekule.RectUtils.isZero(result))  // rect is null, maybe the caller widget is hidden, use cached one instead
 			{
 				result = (transOptions || {}).callerPageRect || null;
@@ -886,7 +893,8 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 				'height': dim.height
 			};
 			*/
-			result = EU.getElemPageRect(this.getCaller());
+			//result = EU.getElemPageRect(this.getCaller());
+			result = EU.getElemBoundingClientRect(this.getCaller(), true);
 			if (Kekule.RectUtils.isZero(result))
 				result = (transOptions || {}).callerPageRect || null;
 		}
@@ -926,11 +934,20 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 
 		// calculate delta information
 		var EU = Kekule.HtmlElementUtils;
+		/*
 		var opos = EU.getElemPagePos(element);
 		var odim = EU.getElemClientDimension(element);
 		var delta = {
 			x: opos.x - refRect.x,
 			y: opos.y - refRect.y,
+			width: odim.width - refRect.width,
+			height: odim.height - refRect.height
+		};
+		*/
+		var odim = EU.getElemBoundingClientRect(element, true);
+		var delta = {
+			x: odim.x - refRect.x,
+			y: odim.y - refRect.y,
 			width: odim.width - refRect.width,
 			height: odim.height - refRect.height
 		};
@@ -995,6 +1012,198 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 		return ['left', 'top', 'width', 'height', 'position'];
 	}
 });
+
+if (Kekule.BrowserFeature && Kekule.BrowserFeature.cssTranform)
+{
+
+/**
+ * Base transform transition executor based on CSS3 transition.
+ * This is a base class, so do not use it directly.
+ * @class
+ * @arguments {Kekule.Widget.Css3Transition}
+ *
+ * @property {Int} direction The direction of slide transition.
+ */
+Kekule.Widget.Css3TransformTrans = Class.create(Kekule.Widget.Css3Transition,
+/** @lends Kekule.Widget.Css3TransformTrans# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Css3TransformTrans',
+	/** @private */
+	getAffectedCssPropNames: function(transOptions)
+	{
+		return ['transform', 'transformOrigin'];
+	},
+	/** @private */
+	getTransCssPropNames: function(transOptions)
+	{
+		return ['transform', 'transformOrigin'];
+	},
+	/** @ignore */
+	prepare: function($super, element, caller, options)
+	{
+		$super(element, caller, options);
+		var computedTransMatrixInfo =	Kekule.StyleUtils.getTransformMatrixValues(element);
+		if (computedTransMatrixInfo)
+		{
+			computedTransMatrixInfo.scaleX = computedTransMatrixInfo.a;
+			computedTransMatrixInfo.scaleY = computedTransMatrixInfo.d;
+		}
+		this._computedTransMatrixInfo = computedTransMatrixInfo;
+	},
+	/** @private */
+	setElemTransform: function(elem, tx, ty, sx, sy)
+	{
+		var values = [sx, 0, 0, sy, tx, ty];
+		Kekule.StyleUtils.setTransformMatrixArrayValues(elem, values);
+	}
+});
+/**
+ * Grow/shrink transition executor based on CSS3 transform transition.
+ * @class
+ * @arguments {Kekule.Widget.Css3TransformTrans}
+ *
+ * @property {Hash} baseRect. The starting rectangle to grow or the ending rectangle to shrink.
+ *   Note the x/y value is relative to top-left corner of HTML page.
+ *   If this property is not set, rect calculated from caller will be used.
+ * //@property {HTMLElement} baseElement The baseRect can be calculated from this element.
+ */
+Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3TransformTrans,
+/** @lends Kekule.Widget.Css3TransformGrowTransition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Css3TransformGrowTransition',
+	/** @constructs */
+	initialize: function($super, baseRectOrCaller)
+	{
+		$super();
+		if (baseRectOrCaller)
+		{
+			if (baseRectOrCaller.ownerDocument)  // is element
+			{
+				this.setBaseElement(baseRectOrCaller);
+			}
+			else
+			{
+				this.setCaller(baseRectOrCaller);
+			}
+		}
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('baseRect', {'dataType': DataType.HASH});
+		//this.defineProp('baseElement', {'dataType': DataType.OBJECT, 'serializable': false});
+	},
+
+	/** @private */
+	getRefRect: function(transOptions)
+	{
+		var EU = Kekule.HtmlElementUtils;
+		var result = null;
+		if (this.getBaseRect())
+			result = this.getBaseRect();
+		else if (this.getCaller())
+		{
+			//result = EU.getElemPageRect(this.getCaller());
+			result = EU.getElemBoundingClientRect(this.getCaller(), true);
+			if (Kekule.RectUtils.isZero(result))
+				result = (transOptions || {}).callerPageRect || null;
+		}
+
+		if (!result)
+		{
+			result = {'x': 0, 'y': 0, 'width': 0, 'height': 0};
+		}
+		return result;
+	},
+
+	/** @private */
+	prepare: function($super, element, caller, options)
+	{
+		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
+
+		$super(element, caller, options);
+		element.style.overflow = 'hidden';
+		Kekule.HtmlElementUtils.makePositioned(element);
+
+		var refRect = this.getRefRect(options);
+
+		// calculate delta information
+		var EU = Kekule.HtmlElementUtils;
+		//var opos = EU.getElemPagePos(element);
+		//var odim = EU.getElemClientDimension(element);
+		var odim = EU.getElemBoundingClientRect(element, true);
+		//var odim = EU.getElemPageRect(element);
+		var transDelta = {
+			x: odim.x - refRect.x,
+			y: odim.y - refRect.y
+			//width: odim.width - refRect.width,
+			//height: odim.height - refRect.height
+		};
+		/*
+		var transDelta = {
+			x: odim.x + odim.width / 2 - refRect.x - refRect.width / 2,
+			y: odim.y + odim.height / 2 - refRect.y - refRect.height / 2
+			//width: odim.width - refRect.width,
+			//height: odim.height - refRect.height
+		};
+		*/
+		this._translateDelta = transDelta;
+		this._initialScale = {
+			x: refRect.width / odim.width,
+			y: refRect.height / odim.height
+		};
+		if (this._computedTransMatrixInfo)
+		{
+			this._endScale = {
+				x: this._computedTransMatrixInfo.scaleX,
+				y: this._computedTransMatrixInfo.scaleY
+			};
+			this._endTranslate = {
+				x: this._computedTransMatrixInfo.tx,
+				y: this._computedTransMatrixInfo.ty
+			}
+		}
+		else
+		{
+			this._endScale = {x: 1, y: 1};
+			this._endTranslate = {x: 0, y: 0};
+		}
+		//console.log(this._translateDelta, refRect, odim);
+	},
+
+	/** @private */
+	setElementProp: function(element, position, options)
+	{
+		var compStyles = this.getComputedCssValues();
+		var transDelta = this._translateDelta;
+		var initialScale = this._initialScale;
+		var endScale = this._endScale;
+
+		var translateInfo = {
+			'x': this._endTranslate.x -(1 - position) * transDelta.x, // + 'px',
+			'y': this._endTranslate.y -(1 - position) * transDelta.y // + 'px'
+		};
+		var scaleInfo = {
+			'x': position * endScale.x + (1 - position) * initialScale.x,
+			'y': position * endScale.y + (1 - position) * initialScale.y
+		};
+
+		//var curr = {};
+		var style = element.style;
+		style.transformOrigin = '0 0 0';
+		//style.transformOrigin = '50% 50% 0';
+		/*
+		var sTransform = 'translate(' + translateInfo.x + ',' +translateInfo.y + ') ' + 'scaleX(' + scaleInfo.x + ') scaleY(' + scaleInfo.y + ')';
+		style.transform = sTransform;
+		*/
+		this.setElemTransform(element, translateInfo.x, translateInfo.y, scaleInfo.x, scaleInfo.y);
+		//console.log('set transform', position, sTransform);
+	}
+});
+
+};
 
 /**
  * A helper to create simple CSS3 transition executor class.

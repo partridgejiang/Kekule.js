@@ -197,15 +197,20 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	clearContext: function(context)
 	{
 		var elem = context.canvas;
-		elem.width = elem.width;
+		elem.setAttribute('width', elem.width); // clears the canvas for more info see: https://www.w3.org/TR/2011/WD-html5-20110525/the-canvas-element.html
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)
-			shadowCanvas.width = shadowCanvas.width;
+			shadowCanvas.width = elem.width;
 
 		var clearColor = context.__$clearColor__;
 		if (clearColor)
 		{
 			context.save();
+			/*
+			var oldFillColor = context.fillStyle;
+			var oldStrokeColor = context.strokeStyle;
+			console.log(oldFillColor, oldStrokeColor);
+			*/
 			try
 			{
 				var dim = this.getContextDimension(context);
@@ -214,6 +219,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			finally
 			{
 				context.restore();
+				/*
+				context.fillStyle = oldFillColor;
+				context.strokeStyle = oldStrokeColor;
+				*/
 			}
 		}
 	},
@@ -221,7 +230,10 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	setClearColor: function(context, color)
 	{
 		if (context)
+		{
+			//console.log('set clear color', color);
 			context.__$clearColor__ = color;
+		}
 	},
 
 	renderContext: function(context)
@@ -344,7 +356,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	{
 		var context = this.getOperatingContext(ctx);
 
-		context.beginPath()
+		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.moveTo(coord1.x, coord1.y);
 		context.lineTo(coord2.x, coord2.y);
@@ -381,6 +393,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		context.beginPath();
 		this.setDrawStyle(context, options);
 		context.arc(baseCoord.x, baseCoord.y, radius, 0, 2 * Math.PI, false);
+		this.doneDraw(context, options);
+	},
+	drawArc: function(ctx, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		context.beginPath();
+		this.setDrawStyle(context, options);
+		context.arc(centerCoord.x, centerCoord.y, radius, startAngle, endAngle, anticlockwise);
 		this.doneDraw(context, options);
 	},
 
@@ -459,17 +479,32 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	/** @private */
 	isLineDashSupported: function(context)
 	{
-		return (context.setLineDash && (typeof(context.lineDashOffset) == "number"));
+		// using cached value
+		if (Kekule.ObjUtils.isUnset(this.isLineDashSupported._cachedValue))
+		{
+			this.isLineDashSupported._cachedValue = (context.setLineDash && (typeof(context.lineDashOffset) == "number"));
+		}
+		return this.isLineDashSupported._cachedValue;
 	},
 
 	setDrawStyle: function(context, options)
 	{
 		if (Kekule.ObjUtils.notUnset(options.strokeWidth))
+		{
+			//if (context.lineWidth !== options.strokeWidth)
 			context.lineWidth = options.strokeWidth;
+		}
 		else  // default
+		{
+			//if (context.lineWidth !== 1)
 			context.lineWidth = 1;
-		if (options.strokeColor)
+		}
+		if (options.strokeColor /* && context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
+
+		// line cap and line join, has default value
+		context.lineCap = options.lineCap || 'butt';
+		context.lineJoin = options.lineJoin || 'miter';
 
 		//console.log('draw style', options, context.strokeStyle);
 
@@ -643,6 +678,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 Kekule.Render.CanvasRendererBridge.isSupported = function()
 {
 	var result = false;
+	var document = Kekule.$jsRoot.document;
 	if (document && document.createElement)
 	{
 		result = !!document.createElement('canvas').getContext;

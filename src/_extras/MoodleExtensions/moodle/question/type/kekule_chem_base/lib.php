@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 $kekulePluginsPath = get_config('mod_kekule', 'kekule_dir');
 
 if (empty($kekulePluginsPath))
-    $kekulePluginsPath = self::DEF_KEKULE_DIR;
+    $kekulePluginsPath = '/local/kekulejs/';  // default location;
 require_once($CFG->dirroot . $kekulePluginsPath . 'lib.php');
 
 // consts
@@ -40,6 +40,11 @@ class qtype_kekule_chem_compare_methods {
     const PARENTOF = 11; // answer is parent structure of key molecule
     const CHILDOF = 12;  // answer is sub structure of key molecule
     //const MANUAL = 10;  // manually compare, not grade automatically
+}
+class qtype_kekule_chem_compare_levels {
+    const DEF_LEVEL = 0;  // default
+    const CONSTITUTION = 1;  // match with Constitution, ingore steroe
+    const CONFIGURATION = 2;  // match with stereo
 }
 
 class qtype_kekule_chem_input_type {

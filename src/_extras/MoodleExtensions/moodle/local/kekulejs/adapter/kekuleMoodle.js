@@ -76,7 +76,7 @@
 				if (elem.isContentEditable)
 					return;
 				// if elem already binded with a widget, do nothing
-				if (Kekule.Widget.getWidgetOnElem(elem))
+				if (Kekule.Widget.getWidgetOnElem(elem, true))  // retain placeholder
 					return;
 				// check if elem has widget specified attribute.
 				if (Kekule.HtmlElementUtils.hasClass(elem, KekuleMoodle.WidgetDataWrapper.WRAPPER_HTML_CLASS))  // is a wrapper

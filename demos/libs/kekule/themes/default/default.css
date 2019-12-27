@@ -1,4 +1,5 @@
-.K-Top-Layer{background-color:transparent;z-index:100;position:absolute;top:0;left:0;right:0;bottom:0}
+.K-Top-Layer{display:block;background-color:transparent;z-index:100;position:absolute;top:0;left:0;right:0;bottom:0}
+.K-Isolated-Layer{display:block;background-color:transparent;visibility:hidden;z-index:-100000;position:absolute;top:0;left:0;right:0;bottom:0}
 .K-State-Disabled{cursor:default!important}
 .K-Text-Content,.K-Img-Content,.K-Glyph-Content,.K-Decoration-Content{display:inline-block;vertical-align:middle}
 .K-Layout-H>.K-Widget,.K-Layout-H>.K-Content{display:inline-block;vertical-align:middle}
@@ -16,8 +17,10 @@
 .K-Widget,input.K-Widget,button.K-Widget{display:inline-block}
 table.K-Widget{display:table}
 .K-Widget .K-Widget{font-size:1em}
+.K-Widget .K-Section{padding-top:.2em;padding-bottom:.2em}
 .K-Container .K-Widget{}
 .K-Panel{padding:.7em}
+.K-Panel .K-Panel-Caption{display:block;margin:-0.3em;margin-bottom:.7em;padding:.3em;padding-top:0;border-bottom:1px solid;font-size:1.1em;font-family:Verdana,Arial;font-weight:bold}
 .K-Panel,.K-Toolbar{border:1px solid}
 .K-Toolbar.K-Button-Group{border:none}
 .K-Button-Group .K-Widget{margin:0}
@@ -47,6 +50,7 @@ table.K-Widget{display:table}
 .K-MsgGroup.K-Widget-MsgGroup{position:absolute;bottom:0;top:100%;left:0;right:0;text-align:center;background-color:transparent}
 .K-SysMsgGroup{position:fixed;bottom:3em;z-index:30000;margin:0 auto;left:0;right:0;text-align:center;background-color:transparent}
 .K-MsgGroup .K-MsgPanel{margin:.3em auto}
+@supports(transform:translateX(-50%)){.K-SysMsgGroup{left:50%;right:auto;transform:translateX(-50%)}}
 .K-Button,.K-PageNavigator > .K-PageNavigator-PageIndexer{position:relative;padding:.4em .6em;line-height:normal;cursor:pointer;vertical-align:middle;text-align:center;overflow:visible;border:1px solid;outline:none}
 .K-Button,.K-Button:link,.K-Button:visited,.K-Button:hover,.K-Button:active{text-decoration:none}
 .K-Button .K-DropDownMark{font-size:70%;margin-left:.5em;margin-right:0}
@@ -103,6 +107,8 @@ table.K-Widget{display:table}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Interaction-Area .K-Button .K-Assoc-Glyph-Content{display:none}
 .K-Widget-Grid-Widget-Parent{position:absolute;display:block}
 .K-Widget-Grid .K-Widget-Grid-Cell .K-Widget-Grid-Widget-Parent>.K-Widget{display:inline-block;vertical-align:middle}
+@supports(display:-webkit-flex) or (display:flex){.K-Widget-Grid .K-Widget-Grid-Cell{display:-webkit-flex;display:flex;justify-content:center;align-items:center}
+.K-Widget-Grid-Widget-Parent{position:static}}
 .K-Dialog{border:1px solid;overflow:hidden;position:absolute;position:fixed}
 .K-Dialog.K-Dialog-Overflow{position:absolute}
 .K-Dialog.K-Dialog-Inside{position:absolute;position:fixed}
@@ -110,6 +116,9 @@ table.K-Widget{display:table}
 .K-Dialog .K-Dialog-Client{padding:.5em}
 .K-Dialog .K-Dialog-Button-Panel{padding:0 .25em;text-align:right;overflow:hidden}
 .K-Dialog .K-Dialog-Button-Panel .K-Widget{margin:.5em .25em}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-Dialog{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;flex-direction:column}
+.K-Dialog .K-Dialog-Caption,.K-Dialog .K-Dialog-Button-Panel{-webkit-flex:0 0 auto;flex:0 0 auto}
+.K-Dialog .K-Dialog-Client{-webkit-flex:1 1 auto;flex:1 1 auto}}
 .K-Modal-Background{z-index:20000;position:absolute;position:fixed;top:0;left:0;right:0;bottom:0}
 .K-TextEditor{}
 .K-TextEditor .K-TextEditor-Toolbar,.K-TextEditor .K-TextEditor-TextArea{display:block;margin:0;width:100%}
@@ -117,6 +126,9 @@ table.K-Widget{display:table}
 .K-TextEditor .K-TextEditor-TextArea{}
 .K-TextEditor .K-TextEditor-Toolbar .K-Button{padding:.2em .4em}
 .K-TextEditor .K-TextEditor-Toolbar .K-TextEditor-FontBox{}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-TextEditor{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;flex-direction:column}
+.K-TextEditor .K-TextEditor-Toolbar{display:flex;display:-webkit-flex;-webkit-flex:0 0 auto;flex:0 0 auto}
+.K-TextEditor .K-TextEditor-TextArea{-webkit-flex:1 1 auto;flex:1 1 auto}}
 .K-ColorPicker{border:1px solid;padding:.2em .5em}
 .K-ColorPicker .K-ColorPicker-Header{overflow:hidden;padding:.2em 0}
 .K-ColorPicker .K-ColorPicker-Input{visibility:hidden;width:0;height:0;margin:0;padding:0}
@@ -128,12 +140,17 @@ table.K-Widget{display:table}
 .K-ColorPicker .K-ColorPicker-Spec-Color-Palette{padding:0;margin:0;margin-right:.3em}
 .K-ColorPicker .K-ColorPicker-Spec-Color-Palette .K-ColorPicker-Palette-Cell{float:left;height:1.4em;width:1.4em}
 .K-ColorPicker .K-ColorPicker-Palette,.K-ColorPicker .K-ColorPicker-Spec-Color-Palette{float:left;border-right:1px solid;border-bottom:1px solid;cursor:pointer}
-.K-ColorPicker .K-ColorPicker-Palette{min-width:180px}
+.K-ColorPicker .K-ColorPicker-Palette{min-width:180px;touch-action:none}
 .K-ColorPicker .K-ColorPicker-Palette-Line{font-size:0}
 .K-ColorPicker .K-ColorPicker-Palette-Line,.K-ColorPicker .K-ColorPicker-Palette-Cell{margin:0;padding:0;line-height:1}
 .K-ColorPicker .K-ColorPicker-Palette-Cell{display:inline-block;width:9px;height:9px;border-top:1px solid;border-left:1px solid}
+@supports(display:-webkit-inline-flex) or (display:inline-flex){.K-ColorPicker{display:-webkit-inline-flex;display:inline-flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
+.K-ColorPicker .K-ColorPicker-Header{-webkit-flex:0 0 auto;-moz-flex:0 0 auto;flex:0 0 auto}
+.K-ColorPicker .K-ColorPicker-Palette{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex;-webkit-flex-direction:column;-moz-flex-direction:column;flex-direction:column}
+.K-ColorPicker .K-ColorPicker-Palette-Line{-webkit-flex:1 1 auto;-moz-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:-moz-flex;display:flex}
+.K-ColorPicker .K-ColorPicker-Palette-Cell{flex:1 1 auto;width:auto;height:auto;min-width:9px;min-height:9px}}
 .K-ColorDropTextBox .K-ColorPreviewer{border:1px solid;box-sizing:border-box;width:1.5em;height:80%;padding:0 .1em}
-.K-ColorDropButton .K-Pri-Glyph-Content{border:1px solid}
+.K-ColorDropButton .K-Pri-Glyph-Content{outline:1px solid}
 .K-ValueListEditor{display:table;border:1px solid;border-collapse:collapse;padding:0;line-height:normal;cursor:default;vertical-align:top;empty-cells:show;table-layout:fixed;width:25em}
 .K-ValueListEditor .K-ValueListEditor-Row{border-collapse:collapse;border-top:1px dotted;border-bottom:1px dotted}
 .K-ValueListEditor .K-ValueListEditor-Cell{border-collapse:collapse;padding:.2em .4em;margin:0;vertical-align:middle;white-space:nowrap;overflow:hidden}
@@ -176,13 +193,12 @@ input.K-Button::-moz-focus-inner,button.K-Button::-moz-focus-inner{border:0;padd
 .K-State-Hover{}
 .K-State-Active{}
 .K-State-Selected{}
-.K-Show-Dialog{z-index:10000}
-.K-Show-Popup{position:absolute;z-index:21000}
-.K-Show-ActiveModal{z-index:20500}
+.K-Show-Popup{position:absolute}
+.K-Show-Dialog,.K-Show-Popup,.K-Show-ActiveModal{z-index:20000}
 .K-Corner-All,.K-Corner-Top,.K-Corner-Left,.K-Layout-H > .K-Corner-Leading,.K-Layout-V > .K-Corner-Leading,.K-Corner-TL{border-top-left-radius:4px}
 .K-Corner-All,.K-Corner-Top,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Leading,.K-Corner-TR{border-top-right-radius:4px}
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Left,.K-Layout-H > .K-Corner-Leading,.K-Layout-V > .K-Corner-Tailing,.K-Corner-BL{border-bottom-left-radius:4px}
 .K-Corner-All,.K-Corner-Bottom,.K-Corner-Right,.K-Layout-H > .K-Corner-Tailing,.K-Layout-V > .K-Corner-Tailing,.K-Corner-Br{border-bottom-right-radius:4px}
 .K-Fulfill{width:100%;height:100%;padding:0;margin:0;border:0;display:block}
 .K-No-Wrap{white-space:nowrap}
-#CssGaga{content:"170228204152,swt,334"}
+#CssGaga{content:"190902103552,mae,334"}

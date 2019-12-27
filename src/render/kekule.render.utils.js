@@ -499,8 +499,11 @@ Kekule.Render.RichTextUtils = {
 		return result;
 	},
 
+	/** @private */
 	_toDebugHtml: function(richText)
 	{
+		if (!richText.items)  // only one text part
+			return richText.text;
 		var result = '';
 		for (var i = 0, l = richText.items.length; i < l; ++i)
 		{
@@ -523,6 +526,16 @@ Kekule.Render.RichTextUtils = {
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Convert rich text to HTML code in a simple way.
+	 * @param {Object} richText
+	 * @returns {HTMLElement}
+	 */
+	toSimpleHtmlCode: function(richText)
+	{
+		return Kekule.Render.RichTextUtils._toDebugHtml(richText);
 	},
 
 	/**
@@ -775,27 +788,31 @@ Kekule.Render.RichTextUtils = {
  */
 Kekule.Render.ChemDisplayTextUtils = {
 	/** @private */
-	//RADICAL_LABEL: ['', '••', '•', '••'],
-	RADICAL_LABEL: ['', '\u2022\u2022', '\u2022', '\u2022\u2022'],
+	//RADICAL_LABELS: ['', '••', '•', '••'],
+	RADICAL_LABELS: ['', '\u2022\u2022', '\u2022', '\u2022\u2022'],
+	RADICAL_TRIPLET_ALTER_LABEL: '^^',
 	/**
 	 * Returns suitable text to indicate the radical.
 	 * @param {Int} radical
 	 * @returns {String}
 	 */
-	getRadicalDisplayText: function(radical)
+	getRadicalDisplayText: function(radical, useAlterTripletRadicalMark)
 	{
-		return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABEL[radical];
+		if (useAlterTripletRadicalMark && radical === Kekule.RadicalOrder.TRIPLET)
+			return Kekule.Render.ChemDisplayTextUtils.RADICAL_TRIPLET_ALTER_LABEL;
+		else
+			return Kekule.Render.ChemDisplayTextUtils.RADICAL_LABELS[radical];
 	},
 	/**
-	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * Returns text to represent atom charge and radical (e.g., 2+).
 	 * @param {Number} charge
 	 * @param {Int} radical
 	 * @param {Int} partialChargeDecimalsLength
-	 * @returns {Object}
+	 * @param {Int} chargeMarkType
+	 * @returns {String}
 	 */
-	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength)
+	getChargeDisplayText: function(charge, partialChargeDecimalsLength, chargeMarkType)
 	{
-		var result = null;
 		var slabel = '';
 		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
 		if (showCharge)
@@ -806,12 +823,52 @@ Kekule.Render.ChemDisplayTextUtils = {
 			{
 				slabel += partialChargeDecimalsLength? Kekule.NumUtils.toDecimals(chargeAmount, partialChargeDecimalsLength): chargeAmount.toString();
 			}
+			else  // +1 or -1, may use different charge sign char
+			{
+				if (chargeMarkType === Kekule.Render.ChargeMarkRenderType.CIRCLE_AROUND)
+					chargeSign = (charge > 0)? '\u2295': '\u2296';
+			}
 			slabel += chargeSign;
 		}
-
+		return slabel;
+	},
+	/**
+	 * Create a rich text section (usually superscript) to display atom charge and radical.
+	 * @param {Number} charge
+	 * @param {Int} radical
+	 * @param {Int} partialChargeDecimalsLength
+	 * @param {Int} chargeMarkType
+	 * @returns {Object}
+	 */
+	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	{
+		var result = null;
+		var slabel = '';
+		/*
+		var showCharge = (!!charge) && (!partialChargeDecimalsLength || (Math.abs(charge) > Math.pow(10, -partialChargeDecimalsLength)/2));
+		if (showCharge)
+		{
+			var chargeSign = (charge > 0)? '+': '-';
+			var chargeAmount = Math.abs(charge);
+			if (chargeAmount != 1)
+			{
+				slabel += partialChargeDecimalsLength? Kekule.NumUtils.toDecimals(chargeAmount, partialChargeDecimalsLength): chargeAmount.toString();
+			}
+			else  // +1 or -1, may use different charge sign char
+			{
+				if (chargeMarkType === Kekule.Render.ChargeMarkRenderType.CIRCLE_AROUND)
+					chargeSign = (charge > 0)? '\u2295': '\u2296';
+			}
+			slabel += chargeSign;
+		}
+		*/
+		if (charge)
+		{
+			slabel = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+		}
 		if (radical)
 		{
-			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical) || '';
+			slabel += Kekule.Render.ChemDisplayTextUtils.getRadicalDisplayText(radical, useAlterTripletRadicalMark) || '';
 		}
 
 		if (slabel)
@@ -829,15 +886,15 @@ Kekule.Render.ChemDisplayTextUtils = {
 	 * @param {Int} partialChargeDecimalsLength
 	 * @returns {Object}
 	 */
-	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs)
+	formulaToRichText: function(formula, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		//var result = Kekule.Render.RichTextUtils.create();
-		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs);
+		var result = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(formula, false, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical);
 		return result;
 	},
 
 	/** @private */
-	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs)
+	_convFormulaToRichTextGroup: function(formula, showBracket, showCharge, showRadical, partialChargeDecimalsLength, displayConfigs, chargeMarkType, distinguishSingletAndTripletRadical)
 	{
 		var result = Kekule.Render.RichTextUtils.createGroup();
 		var sections = formula.getSections();
@@ -856,11 +913,11 @@ Kekule.Render.ChemDisplayTextUtils = {
 			if (obj instanceof Kekule.MolecularFormula)  // a sub-formula
 			{
 				// TODO: sometimes bracket is unessential, such as SO42- and so on, need more judge here
-				subgroup = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(obj, true, false, false, partialChargeDecimalsLength, displayConfigs); // do not show charge right after, we will add it later
+				subgroup = Kekule.Render.ChemDisplayTextUtils._convFormulaToRichTextGroup(obj, true, false, false, partialChargeDecimalsLength, displayConfigs, chargeMarkType); // do not show charge right after, we will add it later
 			}
 			else if (obj.getDisplayRichText) // an atom/isotope
 			{
-				var subgroup = obj.getDisplayRichText(Kekule.Render.HydrogenDisplayLevel.NONE, false, null, displayConfigs, partialChargeDecimalsLength);  // do not show charge right after symbol
+				var subgroup = obj.getDisplayRichText(Kekule.Render.HydrogenDisplayLevel.NONE, false, null, displayConfigs, partialChargeDecimalsLength, chargeMarkType);  // do not show charge right after symbol
 			}
 
 			if (subgroup)
@@ -875,7 +932,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 				// charge is draw after count
 				if (showCharge && charge)
 				{
-					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength);
+					var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, null, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
 					if (chargeSection)
 					{
 						Kekule.Render.RichTextUtils.append(subgroup, chargeSection);
@@ -892,7 +949,7 @@ Kekule.Render.ChemDisplayTextUtils = {
 		{
 			var charge = formula.getCharge();
 			var radical = formula.getRadical();
-			var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, radical, partialChargeDecimalsLength);
+			var chargeSection = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, radical, partialChargeDecimalsLength, chargeMarkType);
 			if (chargeSection)
 			{
 				Kekule.Render.RichTextUtils.append(result, chargeSection);
@@ -966,6 +1023,7 @@ Kekule.Render.TextDrawUtils = {
 	 */
 	getActualDirection: function(direction, parentDirection)
 	{
+		var TD = Kekule.Render.TextDirection;
 		if (direction === TD.LINE_BREAK)
 		{
 			return ((parentDirection === TD.TTB) || (parentDirection === TD.BTT))? TD.LTR:
@@ -1301,9 +1359,11 @@ Kekule.Render.MetaShapeUtils = {
 	createShapeInfo: function(shapeType, coords, additionalInfos)
 	//createBoundInfo: function(boundType, coords, additionalInfos)
 	{
-		var result = {};
+		var result = {'shapeType': shapeType, 'coords': coords};
+		/*
 		result.shapeType = shapeType;
 		result.coords = coords;
+		*/
 		if (additionalInfos)
 			result = Object.extend(result, additionalInfos);
 		return result;
@@ -1352,6 +1412,7 @@ Kekule.Render.MetaShapeUtils = {
 			case T.LINE: newBound = B._inflateLineShape(originalShape, delta); break;
 			case T.RECT: newBound = B._inflateRectShape(originalShape, delta); break;
 			case T.POLYGON: newBound = B._inflatePolygonShape(originalShape, delta); break;
+			case T.ARC: newBound = B._inflateArcShape(originalShape, delta); break;
 		}
 		return newBound;
 	},
@@ -1375,6 +1436,13 @@ Kekule.Render.MetaShapeUtils = {
 		var newBound = Kekule.Render.MetaShapeUtils.createShapeInfo(
 			Kekule.Render.BoundShapeType.LINE,
 			[originalShape.coords[0], originalShape.coords[1]], {'width': (originalShape.width || 0) + delta * 2});
+		return newBound;
+	},
+	/** @private*/
+	_inflateArcShape: function(originalShape, delta)
+	{
+		var newBound = Object.extend({}, originalShape);
+		newBound.width = (originalShape.width || 0) + delta * 2;
 		return newBound;
 	},
 	/** @private */
@@ -1404,7 +1472,7 @@ Kekule.Render.MetaShapeUtils = {
 		{
 			var coord = coords[i];
 			var vec = C.substract(coord, center);
-			var distance = C.getDistance(coord);
+			var distance = C.getDistance(vec);
 			var deltaVec = C.multiply(vec, delta / distance);
 			var newCoord = C.add(coord, deltaVec);
 			result.push(newCoord);
@@ -1450,6 +1518,7 @@ Kekule.Render.MetaShapeUtils = {
 				case T.LINE: return B._getDistanceToLine(coord, newBound);
 				case T.RECT: return B._getDistanceToRect(coord, newBound);
 				case T.POLYGON: return B._getDistanceToPolygon(coord, newBound);
+				case T.ARC: return B._getDistanceToArc(coord, newBound);
 				default: return false;
 			}
 		}
@@ -1465,6 +1534,55 @@ Kekule.Render.MetaShapeUtils = {
 		var C = Kekule.CoordUtils;
 		var d = C.getDistance(coord, shapeInfo.coords[0]);
 		return d - shapeInfo.radius;
+	},
+	/** @private */
+	_getDistanceToArc: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var radiusVector = C.substract(coord, shapeInfo.coords[0]);
+		var currAngle = Math.atan2(radiusVector.y, radiusVector.x);
+		if (Kekule.Render.MetaShapeUtils.isAngleInArcRange(currAngle, shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise))
+		{
+			// coord in arc range, check distance to arc
+			var d = C.getDistance(coord, shapeInfo.coords[0]);
+			var d = Math.abs(d - shapeInfo.radius);
+			if (shapeInfo.width && shapeInfo.width > 1)
+				d = d - shapeInfo.width / 2;
+			return Math.max(0, d);
+		}
+		else  // outside arc range, check the min distance to two end points
+		{
+			var centerCoord = shapeInfo.coords[0];
+			var rs;
+			if (shapeInfo.width && shapeInfo.width > 1)
+			{
+				rs = [shapeInfo.radius - shapeInfo.width / 2, shapeInfo.radius + shapeInfo.width / 2];
+			}
+			else
+			{
+				rs = [shapeInfo.radius];
+			}
+
+			var testPoints = [];
+			var startAngle = shapeInfo.startAngle;
+			var endAngle = shapeInfo.endAngle;
+			for (var i = 0, l = rs.length; i <l; ++i)
+			{
+				var r = rs[i];
+				var startCoord = C.add(centerCoord, {'x': r * Math.cos(startAngle), 'y': r * Math.sin(startAngle)});
+				var endCoord = C.add(centerCoord, {'x': r * Math.cos(endAngle), 'y': r * Math.sin(endAngle)});
+				testPoints.push(startCoord);
+				testPoints.push(endCoord);
+			}
+			var result = null;
+			for (var i = 0, l = testPoints.length; i < l; ++i)
+			{
+				var d = C.getDistance(testPoints[i], coord);
+				if (result === null || result > d)
+					result = d;
+			}
+			return result;
+		}
 	},
 	/** @private */
 	_getDistanceToLine: function(coord, shapeInfo)
@@ -1568,6 +1686,20 @@ Kekule.Render.MetaShapeUtils = {
 			distance = -distance;
 		return distance;
 	},
+	/** @private */
+	_getDistanceOfTwoLines: function(lineCoords1, lineCoords2)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var GU = Kekule.GeometryUtils;
+		// distance is 0 if two line segments cross
+		if (GU.getCrossPointOfLines(lineCoords1[0], lineCoords1[1], lineCoords2[0], lineCoords2[1]))
+			return 0;
+		var d1 = GU.getDistanceFromPointToLine(lineCoords1[0], lineCoords2[0], lineCoords2[1]);
+		var d2 = GU.getDistanceFromPointToLine(lineCoords1[1], lineCoords2[0], lineCoords2[1]);
+		var d3 = GU.getDistanceFromPointToLine(lineCoords2[0], lineCoords1[0], lineCoords1[1]);
+		var d4 = GU.getDistanceFromPointToLine(lineCoords2[1], lineCoords1[0], lineCoords1[1]);
+		return Math.min(d1, d2, d3, d4);
+	},
 
 	/**
 	 * Check if a point is inside a bound.
@@ -1584,6 +1716,8 @@ Kekule.Render.MetaShapeUtils = {
 	 */
 	isCoordInside: function(coord, shapeInfo, inflate)
 	{
+		if (!coord)
+			return false;
 		//if (Kekule.ArrayUtils.isArray(shapeInfo))
 		if (Kekule.Render.MetaShapeUtils.isCompositeShape(shapeInfo))
 		{
@@ -1600,6 +1734,8 @@ Kekule.Render.MetaShapeUtils = {
 			var T = Kekule.Render.MetaShapeType;
 			var B = Kekule.Render.MetaShapeUtils;
 			var newBound = inflate? B.inflateShape(shapeInfo, inflate): shapeInfo;
+			if (!newBound)
+				return false;
 			switch (shapeInfo.shapeType)
 			{
 				case T.POINT: return (inflate? B._isInsideCircle(coord, newBound): B._isInsidePoint(coord, newBound));
@@ -1607,6 +1743,7 @@ Kekule.Render.MetaShapeUtils = {
 				case T.LINE: return B._isInsideLine(coord, newBound);
 				case T.RECT: return B._isInsideRect(coord, newBound);
 				case T.POLYGON: return B._isInsidePolygon(coord, newBound);
+				case T.ARC: return B._isInsideArc(coord, newBound);
 				default: return false;
 			}
 		}
@@ -1670,6 +1807,27 @@ Kekule.Render.MetaShapeUtils = {
 			//console.log('distance', distance, boundInfo.width);
 			return (distance <= shapeInfo.width / 2);
 		}
+	},
+	/** @private */
+	_isInsideArc: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var G = Kekule.GeometryUtils;
+		var d = C.getDistance(coord, shapeInfo.coords[0]);
+		var result = (Math.abs(d - shapeInfo.radius) < shapeInfo.width / 2);  // check if in arc circle
+		if (result)  // if true, further check the position if on the angle range of arc
+		{
+			var radiusVector = C.substract(coord, shapeInfo.coords[0]);
+			var currAngle = G.standardizeAngle(Math.atan2(radiusVector.y, radiusVector.x), 0);
+			/*
+			var startAngle = G.standardizeAngle(shapeInfo.startAngle);
+			var endAngle = G.standardizeAngle(shapeInfo.endAngle);
+			var sign = Math.sign(currAngle - startAngle) * Math.sign(currAngle - endAngle) * Math.sign(endAngle - startAngle);
+			result = shapeInfo.anticlockwise? (sign >= 0): sign <= 0;
+			*/
+			result = Kekule.Render.MetaShapeUtils.isAngleInArcRange(currAngle, shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise);
+		}
+		return result;
 	},
 	/** @private */
 	_isInsideRect: function(coord, shapeInfo)
@@ -1754,6 +1912,10 @@ Kekule.Render.MetaShapeUtils = {
 		var T = Kekule.Render.MetaShapeType;
 		var U = Kekule.Render.MetaShapeUtils;
 		var C = Kekule.BoxUtils;
+
+		if (!shapeInfo)
+			return null;
+
 		var coords = shapeInfo.coords;
 		inflation = inflation || 0;
 		var result;
@@ -1785,9 +1947,14 @@ Kekule.Render.MetaShapeUtils = {
 					}
 				case T.LINE:
 					{
-						var result = C.createBox(coords[0], coords[1]);
+						result = C.createBox(coords[0], coords[1]);
 						// TODO: a rough calculate
 						result = Kekule.BoxUtils.inflateBox(result, (shapeInfo.width || 0) / 2);
+						break;
+					}
+				case T.ARC:
+					{
+						result = Kekule.Render.MetaShapeUtils._getArcContainerBox(shapeInfo);
 						break;
 					}
 				case T.RECT:
@@ -1819,7 +1986,134 @@ Kekule.Render.MetaShapeUtils = {
 		}
 		return result;
 	},
+	/** @private */
+	_getArcContainerBox: function(shapeInfo)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var CU = Kekule.CoordUtils;
 
+		var radius;
+		if (shapeInfo.width && shapeInfo.width > 1)
+		{
+			radius = [shapeInfo.radius + shapeInfo.width / 2, shapeInfo.radius - shapeInfo.width / 2];
+		}
+		else
+		{
+			radius = [shapeInfo.radius];
+		}
+		var centerCoord = shapeInfo.coords[0];
+		var degree90 = Math.PI / 2;
+
+		var getCoordOfAngle = function(angle, radius)
+		{
+			return CU.add(centerCoord, {'x': radius * Math.cos(angle), 'y': radius * Math.sin(angle)});
+		};
+
+		var anchorPoints = [];
+
+		for (var i = 0, l = radius.length; i < l; ++i)
+		{
+			var currRadius = radius[i];
+			var startPoint = getCoordOfAngle(shapeInfo.startAngle, currRadius);
+			var endPoint = getCoordOfAngle(shapeInfo.endAngle, currRadius);
+			anchorPoints = anchorPoints.concat([startPoint, endPoint]);
+
+			var testAngles = [0, degree90, degree90 * 2, degree90 * 3];
+			for (var j = 0, k = testAngles.length; j < k; ++j)
+			{
+				if (U.isAngleInArcRange(testAngles[j], shapeInfo.startAngle, shapeInfo.endAngle, shapeInfo.anticlockwise))
+				{
+					anchorPoints.push(getCoordOfAngle(testAngles[j], currRadius));
+				}
+			}
+		}
+
+		return CU.getContainerBox(anchorPoints);
+	},
+
+	/**
+	 * Check if testAngle is in the arc sector.
+	 * @param {Float} testAngle
+	 * @param {Float} startAngle
+	 * @param {Float} endAngle
+	 * @param {Bool} anticlockwise
+	 * @returns {Bool}
+	 */
+	isAngleInArcRange: function(testAngle, startAngle, endAngle, anticlockwise)
+	{
+		var s = Kekule.GeometryUtils.standardizeAngle;
+		var aS = s(startAngle);
+		var aE = s(endAngle);
+		var aT = s(testAngle);
+		var sign = Math.sign(aT - aS) * Math.sign(aT - aE) * Math.sign(aE - aS);
+		return anticlockwise? (sign >= 0): sign <= 0;
+	},
+
+	/**
+	 * Check if a shape is intersecting with a line with a certain stroke width.
+	 * @param {Object} shapeInfo
+	 * @param {Array} lineCoords
+	 * @param {Number} lineWidth
+	 * @returns {Bool}
+	 */
+	isIntersectingLine: function(shapeInfo, lineCoords, lineWidth)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		if (U.isCompositeShape(shapeInfo))
+		{
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				if (U.isIntersectingLine(childShape, lineCoords, lineWidth))
+					return true;
+			}
+			return false;
+		}
+		else
+		{
+			var lineShape = U.createShapeInfo(T.LINE, lineCoords);
+			var halfWidth = lineWidth / 2;
+			var shapeCoords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
+					return d <= halfWidth;
+				}
+				case T.CIRCLE:
+				{
+					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
+					return d <= halfWidth + (lineShape.radius || 0);
+				}
+				case T.LINE:
+				{
+					var d = U._getDistanceOfTwoLines(shapeCoords, lineCoords);
+					return d <= halfWidth + (lineShape.width || 0);
+				}
+				case T.RECT:
+				case T.POLYGON:
+				{
+					var coords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+					// calc min distance of each polygon edge to line
+					var d = null;
+					var j = coords.length - 1;
+					for (var i = 0, l = coords.length; i < l; ++i)
+					{
+						var edgeCoords = [coords[i], coords[j]];
+						var currDistance = U._getDistanceOfTwoLines(edgeCoords, lineCoords);
+						if (d === null || currDistance < d)
+							d = currDistance;
+						j = i;
+					}
+					return d <= halfWidth;
+				}
+			}
+			return false;
+		}
+	},
 	/**
 	 * Check if a shape is inside a rect box.
 	 * @param {Object} shapeInfo
@@ -1839,6 +2133,7 @@ Kekule.Render.MetaShapeUtils = {
 	 */
 	isIntersectingBox: function(shapeInfo, box)
 	{
+		var U = Kekule.Render.MetaShapeUtils;
 		if (U.isCompositeShape(shapeInfo))
 		{
 			for (var i = 0, l = shapeInfo.length; i < l; ++i)
@@ -1861,6 +2156,326 @@ Kekule.Render.MetaShapeUtils = {
 			}
 			return false;
 		}
+	},
+	/**
+	 * Check if a 2D point inside a polygon.
+	 * The algorithm is from https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
+	 * @param {Hash} pointCoord
+	 * @param {Array} polygonCoords
+	 */
+	isPointInsidePolygon: function(pointCoord, polygonCoords)
+	{
+		var result = false;
+		var length = polygonCoords.length;
+		var j = length - 1;
+		for (var i = 0; i < length; ++i)
+		{
+			if (((polygonCoords[i].y > pointCoord.y) !== (polygonCoords[j].y > pointCoord.y)) &&
+					(pointCoord.x < (polygonCoords[j].x - polygonCoords[i].x) * (pointCoord.y - polygonCoords[i].y) / (polygonCoords[j].y - polygonCoords[i].y) + polygonCoords[i].x))
+			  result = !result;
+			j = i;
+		}
+		return result;
+	},
+	/**
+	 * Check if a shape is inside a polygon defined by polygonCoords.
+	 * @param {Object} shapeInfo
+	 * @param {Array} polygonCoords
+	 * @returns {Bool}
+	 */
+	isInsidePolygon: function(shapeInfo, polygonCoords)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var testCoords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+		if (!testCoords)
+			return false;
+		// every test coords should be in polygon
+		for (var i = 0, l = testCoords.length; i < l; ++i)
+		{
+			var c = testCoords[i];
+			if (!U.isPointInsidePolygon(c, polygonCoords))
+				return false;
+		}
+		return true;
+	},
+	/**
+	 * Check if a shape is intersecting with a polygon defined by polygonCoords.
+	 * @param {Object} shapeInfo
+	 * @param {Array} polygonCoords
+	 * @returns {Bool}
+	 */
+	isIntersectingPolygon: function(shapeInfo, polygonCoords)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		var testCoords = U._getCoordsForShapeInComparingWithPolygon(shapeInfo);
+		if (!testCoords)
+			return false;
+		// at least one test coord should be in polygon
+		for (var i = 0, l = testCoords.length; i < l; ++i)
+		{
+			var c = testCoords[i];
+			if (U.isPointInsidePolygon(c, polygonCoords))
+				return true;
+		}
+		return false;
+	},
+	/**
+	 * Check if a shape is intersecting with a polyline with a certain stroke width.
+	 * @param {Object} shapeInfo
+	 * @param {Array} lineCoords
+	 * @param {Number} lineWidth
+	 * @returns {Bool}
+	 */
+	isIntersectingPolyline: function(shapeInfo, polylineCoords, lineWidth)
+	{
+		var U = Kekule.Render.MetaShapeUtils;
+		for (var i = 0, l = polylineCoords.length - 1; i < l; ++i)
+		{
+			var lineCoords = [polylineCoords[i], polylineCoords[i + 1]];
+			if (U.isIntersectingLine(shapeInfo, lineCoords, lineWidth))
+				return true;
+		}
+		return false;
+	},
+	/** @private */
+	_getCoordsForShapeInComparingWithPolygon: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result;
+		if (U.isCompositeShape(shapeInfo))
+		{
+			result = [];
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childCoords = U._getCoordsForShapeInComparingWithPolygon(childShape);
+				result = result.concat(childCoords);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result = [coords[0]];
+					break;
+				}
+				case T.CIRCLE:
+				{
+					var radius = shapeInfo.radius || 0;
+					if (!radius)
+						result = [coords[0]];
+					else // create a octagon to simulate the circle
+					{
+						var r = radius;
+						var a = r / Math.sqrt(2);
+						result = [{x: r, y: 0}, {x: a, y: a}, {x: 0, y: r}, {x: -a, y: a}, {x: -r, y: 0}, {x: -a, y: -a}, {
+							x: 0,
+							y: -r
+						}, {x: a, y: -a}];
+					}
+					break;
+				}
+				case T.LINE:
+				{
+					result = [coords[0], coords[1]];
+					break;
+				}
+				case T.RECT:
+				{
+					var c0 = coords[0], c1 = coords[1];
+					result = [c0, {x: c1.x, y: c0.y}, c1, {x: c0.x, y: c1.y}];
+					break;
+				}
+				case T.POLYGON:
+				{
+					result = coords;
+					break;
+				}
+			}
+			return result;
+		}
+	},
+
+	/**
+	 * Returns all edge line vectors of a shape.
+	 * Note that not all shape edge can be decomposited to vectors (e.g. circle).
+	 * @param {Object} shapeInfo
+	 * @returns {Array} Array of [coord0, coord1] of vectors
+	 */
+	getEdgeVectors: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+		var CU = Kekule.CoordUtils;
+
+		var result;
+		if (U.isCompositeShape(shapeInfo))
+		{
+			result = [];
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childVectors = U.getEdgeVectors(childShape);
+				result = result.concat(childVectors);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result = [[coords[0], coords[0]]];
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result = null;  // Circle has no line edge
+					break;
+				}
+				case T.LINE:
+				{
+					// console.log(shapeInfo);
+					var w = shapeInfo.width;
+					if (!w)
+						result = [[coords[0], coords[1]]];
+					else
+					{
+						var c1 = coords[0];
+						var c2 = coords[1];
+						var delta = CU.substract(c2, c1);
+						var d = CU.getDistance(c1, c2);
+						var sinAngle = delta.y / d;
+						var cosAngle = delta.x / d;
+						var halfWidth = w / 2;
+						var widthDeltaX = halfWidth * sinAngle;
+						var widthDeltaY = halfWidth * cosAngle;
+						var polyCoords = [
+							{x: c1.x - widthDeltaX, y: c1.y + widthDeltaY},
+							{x: c1.x + widthDeltaX, y: c1.y - widthDeltaY},
+							{x: c2.x + widthDeltaX, y: c2.y - widthDeltaY},
+							{x: c2.x - widthDeltaX, y: c2.y + widthDeltaY}
+						];
+						var pc = polyCoords;
+						result = [
+							[pc[0], pc[1]], [pc[1], pc[2]], [pc[2], pc[3]], [pc[3], pc[0]]
+						]
+					}
+					break;
+				}
+				case T.RECT:
+				{
+					var c0 = coords[0], c2 = coords[1];
+					var c1 = {x: c2.x, y: c0.y}, c3 = {x: c0.x, y: c2.y};
+					result = [[c0, c1], [c1, c2], [c2, c3], [c3, c0]];
+					break;
+				}
+				case T.POLYGON:
+				{
+					result = [];
+					for (var i = 0, l = coords.length - 1; i < l; ++i)
+					{
+						var nextIndex = ++i;
+						if (nextIndex >= l)
+							nextIndex = 0;
+						result.push([coords[i], coords[nextIndex]]);
+					}
+					break;
+				}
+			}
+			return result;
+		}
+	},
+	/**
+	 * Returns all basic edge elements, including vectors and circles of a shape.
+	 * @param {Object} shapeInfo
+	 * @returns {Hash} Hash of {vectors: [{coord1, coord2}], circles: [{center, radius}]}
+	 */
+	getEdgeBasicElements: function(shapeInfo)
+	{
+		var T = Kekule.Render.MetaShapeType;
+		var U = Kekule.Render.MetaShapeUtils;
+
+		var result = {vectors: [], circles: []};
+		if (U.isCompositeShape(shapeInfo))
+		{
+			for (var i = 0, l = shapeInfo.length; i < l; ++i)
+			{
+				var childShape = shapeInfo[i];
+				var childResult = U.getEdgeBasicElements(childShape);
+				result.vectors = result.concat(childResult.vectors);
+				result.circles = result.concat(childResult.circles);
+			}
+			return result;
+		}
+		else
+		{
+			var coords = shapeInfo.coords;
+			switch (shapeInfo.shapeType)
+			{
+				case T.POINT:
+				{
+					result.circles.push({center: coords[0], radius: 0});
+					break;
+				}
+				case T.CIRCLE:
+				{
+					result.circles.push({center: coords[0], radius: shapeInfo.radius});
+					break;
+				}
+				default:
+				{
+					result.vectors = result.vectors.concat(Kekule.Render.MetaShapeUtils.getEdgeVectors(shapeInfo));
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns the cross point of a vector line to shape edges.
+	 * @param {Array} vectorCoords
+	 * @param {Object} shapeInfo
+	 * @param {Bool} shortcut If true, returns directly when finding cross point and bypassing all rest vectors.
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToShapeEdges: function(vectorCoords, shapeInfo, shortcut, floatEqualThreshold)
+	{
+		var edgeElems = Kekule.Render.MetaShapeUtils.getEdgeBasicElements(shapeInfo);
+		var edgeVectors = edgeElems.vectors;
+		var edgeCircles = edgeElems.circles;
+		var result = [];
+
+		for (var i = 0, l = edgeVectors.length; i < l; ++i)
+		{
+			var edge = edgeVectors[i];
+			var crossPoint = Kekule.GeometryUtils.getCrossPointOfVectors(vectorCoords, edge);
+			if (crossPoint)
+			{
+				result.push(crossPoint);
+				if (shortcut)
+					return result;
+			}
+		}
+		for (var i = 0, l = edgeCircles.length; i < l; ++i)
+		{
+			var circle = edgeCircles[i];
+			var crossPoints = Kekule.GeometryUtils.getCrossPointsOfVectorToCircle(vectorCoords, circle.center, circle.radius, floatEqualThreshold)
+			if (crossPoints && crossPoints.length)
+			{
+				result = result.concat(crossPoints);
+				if (shortcut)
+					return result;
+			}
+		}
+		return result;
 	}
 };
 
@@ -2000,7 +2615,7 @@ Kekule.Render.RenderOptionUtils = {
 	 */
 	getConnectorRenderType: function(renderOptions)
 	{
-		return renderOptions? renderOption.renderType: null;
+		return renderOptions? renderOptions.renderType: null;
 	},
 	/**
 	 * Retrieve params for drawing connectors.
@@ -2302,539 +2917,5 @@ Kekule.Render.UpdateObjUtils = {
 			result.push({'obj': updatedObjs[i]});
 		}
 		return result;
-	}
-};
-
-
-/**
- * Helper class to define some common methods of renderer.
- * @class
- */
-Kekule.Render.RendererDefineUtils = {
-	/// Methods to expand support for compositeObjRenderer
-	/**
-	 * @class
-	 * @private
-	 */
-	CompositeObjRendererMethods:
-	/** @lends Kekule.Render.RendererDefineUtil.CompositeObjRendererMethods# */
-	{
-		/*
-		initialize: function($super, chemObj, drawBridge, parent)
-		{
-			$super(chemObj, drawBridge, parent);
-		},
-		*/
-		/** @ignore */
-		finalize: function($super)
-		{
-			this.reset();
-			$super();
-		},
-		/** @private */
-		doEstimateObjBox: function(context, options, allowCoordBorrow)
-		{
-			var result = null;
-			var renderers = this.prepareChildRenderers();
-			var BU = Kekule.BoxUtils;
-			for (var i = 0, l = renderers.length; i < l; ++i)
-			{
-				var r = renderers[i];
-				if (r)
-				{
-					var b = r.estimateObjBox(context, options, allowCoordBorrow);
-					if (b)
-					{
-						if (!result)
-							result = Object.extend({}, b);
-						else
-							result = BU.getContainerBox(result, b);
-					}
-				}
-			}
-			return result;
-		},
-		/** @ignore */
-		isChemObjRenderedBySelf: function($super, context, obj)
-		{
-			var result = $super(context, obj);
-			if (!result)
-			{
-				var childRenderers = this.getChildRenderers();
-				for (var i = 0, l = childRenderers.length; i < l; ++i)
-				{
-					var r = childRenderers[i];
-					if (r.isChemObjRenderedBySelf(context, obj))
-						return true;
-				}
-			}
-			if (!result)
-			{
-				this.refreshChildObjs();
-				var objs = this.getTargetChildObjs();
-				result = (objs && objs.indexOf(obj) >= 0);
-				//console.log('here', this.getClassName(), obj.getClassName(), result);
-			}
-			return result;
-		},
-		/** @ignore */
-		isChemObjRenderedDirectlyBySelf: function($super, context, obj)
-		{
-			return $super(context, obj);
-		},
-		/**
-		 * Returns all children of this.getChemObj(). Descendants must override this method.
-		 * If no children is found, null should be returned.
-		 * @returns {Array}
-		 * @private
-		 */
-		getChildObjs: function()
-		{
-			return null;
-		},
-		/**
-		 * Prepare all child objects to be drawn.
-		 * @private
-		 */
-		prepareChildObjs: function()
-		{
-			var childObjs = this.getTargetChildObjs();
-			if (childObjs)  // already prepared
-				return childObjs;
-
-			this.setTargetChildObjs(this.getChildObjs());
-			return this.getTargetChildObjs();
-		},
-		/** @private */
-		refreshChildObjs: function()
-		{
-			this.setTargetChildObjs(null);
-			this.prepareChildObjs();
-		},
-		/** @private */
-		getChildRenderers: function()
-		{
-			return this.getChildRendererMap().getValues();
-		},
-		/** @private */
-		getRendererForChild: function(childObj, canCreate)
-		{
-			var renderSelector = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-				Kekule.Render.get3DRendererClass: Kekule.Render.get2DRendererClass;
-			var rendererMap = this.getChildRendererMap();
-			var result = rendererMap.get(childObj);
-			if (!result && canCreate)
-			{
-				var c = renderSelector(childObj) || Kekule.Render.DummyRenderer;  // dummy renderer, do nothing
-				var result = c? new c(childObj, this.getDrawBridge(), /*this.getRenderConfigs(),*/ this): null;  // renderer may be null for some unregistered objects
-				rendererMap.set(childObj, result);
-				result.setRedirectContext(this.getRedirectContext());
-			}
-			return result;
-		},
-		/**
-		 * Prepare renders to draw child objects.
-		 * @private
-		 */
-		prepareChildRenderers: function()
-		{
-			/*
-			var childRenderers = this.getChildRenderers();
-			if (childRenderers)
-				return childRenderers;
-			childRenderers = [];
-			this.setChildRenderers(childRenderers);
-			*/
-			var rendererMap = this.getChildRendererMap();
-
-			var childObjs = this.prepareChildObjs() || [];
-
-			// remove unneed renderers
-			var oldRenderedObjs = rendererMap.getKeys();
-			for (var i = 0, l = oldRenderedObjs.length; i < l; ++i)
-			{
-				var obj = oldRenderedObjs[i];
-				if (childObjs.indexOf(obj) < 0)
-					rendererMap.remove(obj);
-			}
-			// add new renderers if needed
-			for (var i = 0, l = childObjs.length; i < l; ++i)
-			{
-				var childObj = childObjs[i];
-				/*
-				if (!rendererMap.get(childObj))
-				{
-					var c = renderSelector(childObj);
-					var r = c? new c(childObj, this.getDrawBridge(), this): null;  // renderer may be null for some unregistered objects
-					//console.log('prepare new child renderer', r.getClassName(), childObj.getClassName(), childObj.getNodeCount? childObj.getNodeCount(): -1);
-					//childRenderers.push(r);
-					rendererMap.set(childObj, r);
-				}
-				*/
-				this.getRendererForChild(childObj, true);
-			}
-
-			//return childRenderers;
-			return rendererMap.getValues();
-		},
-		/**
-		 * Release all child renderer instance.
-		 * @private
-		 */
-		releaseChildRenderers: function()
-		{
-			var rendererMap = this.getChildRendererMap();
-			//var childRenderers = this.getChildRenderers();
-			var childRenderers = rendererMap.getValues();
-			if (!childRenderers)
-				return;
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				childRenderers[i].finalize();
-			}
-			//this.setChildRenderers(null);
-			rendererMap.clear();
-		},
-
-		/**
-		 * Prepare child objects and renderers, a must have step before draw.
-		 * @private
-		 */
-		prepare: function()
-		{
-			this.prepareChildObjs();
-			this.prepareChildRenderers();
-		},
-
-		/**
-		 * Set renderer to initialized state, clear childObjs and childRenderers.
-		 * @private
-		 */
-		reset: function()
-		{
-			this.setTargetChildObjs(null);
-			this.releaseChildRenderers();
-		},
-
-		/** @private */
-		doDraw: function($super, context, baseCoord, options)
-		{
-			// prepare, calc transform options and so on
-			//this.reset();
-			this.prepare();
-			$super(context, baseCoord, options);
-
-			// then draw each child objects by child renderers
-			return this.doDrawCore(context, options);
-		},
-		/** @private */
-		doDrawCore: function(context, options)
-		{
-			var group = this.createDrawGroup(context);
-			var childRenderers = this.getChildRenderers();
-			/*
-			 var coordMode = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-			 Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
-			 var transformFunc = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-			 Kekule.CoordUtils.transform3D: Kekule.CoordUtils.transform2D;
-			 */
-
-			var ops = Object.create(options);
-			/*
-			var chemObj = this.getChemObj();
-			var objOptions = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
-				chemObj.getOverriddenRender3DOptions(): chemObj.getOverriddenRenderOptions();
-
-			ops = Object.extend(ops, objOptions || {});
-			*/
-
-			//console.log('overrided ops', chemObj.getClassName(), ops, objOptions);
-
-			this.getRenderCache(context).childDrawOptions = ops;
-
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				var baseCoord = null;
-				/*
-				 var chemObj = r.getChemObj();
-				 if (chemObj.getAbsBaseCoordOfMode)
-				 {
-				 var baseCoord = chemObj.getAbsBaseCoordMode(coordMode);
-				 baseCoord = transformFunc(baseCoord, options.transformParams);
-				 }
-				 //console.log('drawOptions', options);
-				 */
-				var elem = r.draw(context, baseCoord, ops);
-				if (group && elem)
-					this.addToDrawGroup(elem, group);
-			}
-			//console.log('drawn group', group);
-			return group;
-		},
-		/* @private */
-		/*
-		doRedraw: function(context)
-		{
-			//console.log('redraw', this.getClassName());
-			return this.doRedrawCore(context);
-		},
-		*/
-		/* @private */
-		/*
-		doRedrawCore: function(context, options)
-		{
-			var group = this.createDrawGroup(context);
-			var childRenderers = this.getChildRenderers();
-
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				var elem = r.redraw(context)
-				if (group && elem)
-					this.addToDrawGroup(elem, group);
-			}
-			return group;
-		},
-		*/
-
-		/** @private */
-		doClear: function(context)
-		{
-			var childRenderers = this.getChildRendererMap().getValues();
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				if (childRenderers[i])
-				{
-					childRenderers[i].clear(context);
-				}
-			}
-			return true;
-		},
-		/** @private */
-		doUpdate: function(context, updateObjDetails, updateType)
-		{
-			var updatedObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updateObjDetails);
-			//console.log(this.getClassName(), updateType, updateObjDetails);
-
-			//console.log(updatedObjs);
-
-			//this.setTargetChildObjs(null);
-			//this.prepareChildObjs();  // update childObjs
-
-			//var directChildren = this.getChildObjs();
-			var directChildren = this.getTargetChildObjs();
-			var childRendererMap = this.getChildRendererMap();
-			var objs = Kekule.ArrayUtils.toArray(updatedObjs);
-			var objsMap = new Kekule.MapEx(false);
-			var renderers = [];
-			var redrawRoot = false;
-
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-				if (this.isChemObjRenderedDirectlyBySelf(context, obj))  // need redraw self
-				{
-					redrawRoot = true;
-				}
-			}
-			if (redrawRoot)
-			{
-				//console.log('redraw root', this.getClassName());
-				this.doClear(context);
-				this.redraw(context);
-				return true;
-			}
-
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-
-				/*
-				// debug
-				var isMol = false;
-				if (obj instanceof Kekule.StructureFragment)
-				{
-					console.log('obj update here', obj.getId());
-					isMol = true;
-				}
-				*/
-
-				/*  // TODO: now has bugs, disable it currently
-				if (this.isChemObjRenderedDirectlyBySelf(context, obj))  // the root object it self updated, need re-render self
-				{
-					//console.log('do redraw');
-					redrawRoot = true;
-					//return true;
-				}
-				*/
-
-				var renderer = childRendererMap.get(obj);
-
-				if (renderer)  // is direct child and has a corresponding renderer
-				{
-					/*
-					// debug
-					if (isMol)
-					{
-						console.log('find renderer', renderer.getClassName(), updateType, obj.getId());
-						if (!renderer.id)
-							renderer.id = obj.getId();
-						else if (renderer.id !== obj.getId())
-							console.log('id conflivt', renderer.id, obj.getId())
-					}
-					*/
-					// check update type, if updateType is remove, just remove the renderer
-					if (updateType === Kekule.Render.ObjectUpdateType.REMOVE)
-					{
-						renderer.clear();
-						childRendererMap.remove(obj);
-					}
-					else
-					{
-						Kekule.ArrayUtils.pushUnique(renderers, renderer);
-						//renderers.push(renderer);
-						olds = [obj];
-						objsMap.set(renderer, olds);
-					}
-				}
-				else
-				{
-					var rs = this._getRenderersForChildObj(context, obj);
-					if (!rs.length)
-					{
-						if (directChildren.indexOf(obj) >= 0)  // still can not find
-						{
-							var r = this.getRendererForChild(obj, true);
-							/*
-							if (r)
-								rs.push(r);
-							*/
-
-							//console.log('here', r.getClassName());
-							// draw directly
-							var drawnResult = r.draw(context, null, this.getRenderCache(context).childDrawOptions);
-							if (drawnResult)
-							{
-								var drawnElem = this.getCachedDrawnElem(context);
-								if (drawnElem)
-									this.addToDrawGroup(drawnResult, drawnElem);
-							}
-						}
-					}
-					for (var j = 0, k = rs.length; j < k; ++j)
-					{
-						var renderer = rs[j];
-						var olds = objsMap.get(renderer);
-						if (!olds)
-						{
-							renderers.push(renderer);
-							olds = [];
-							objsMap.set(renderer, olds);
-						}
-						olds.push(obj);
-					}
-				}
-			}
-
-			//console.log('do update', this.getClassName(), renderers);
-
-			// apply update in each renderer
-			var result = true;
-			for (var i = 0, l = renderers.length; i < l; ++i)
-			{
-				var renderer = renderers[i];
-				//console.log(renderer);
-				var o = objsMap.get(renderer);
-				//console.log('call update', renderer.getClassName(), o);
-				var details = Kekule.Render.UpdateObjUtils._createUpdateObjDetailsFromObjs(o);
-				/*
-				// debug
-				if (renderer.id)
-					console.log('renderer id', renderer.id);
-				if (renderer.getChemObj() instanceof Kekule.StructureFragment)
-				{
-					console.log('update renderer', renderer.getClassName(), updateType, o);
-				}
-				*/
-				var r = renderer.update(context, details, updateType);
-				result = result && r;
-
-				/*
-				if (!result)  // fail to update part, need to repaint whole
-				{
-					break;
-				}
-				*/
-			}
-
-			var result = renderers && renderers.length > 0;
-
-			/*
-			//if (redrawRoot)
-			if (!result)
-			{
-
-				this.doClear(context);
-				this.redraw(context);
-				result = true;
-
-			}
-			*/
-			if (!result)
-			{
-				result = true;
-			}
-
-			//console.log('update', updatedObjs[0].getClassName(), this.getChemObj().getClassName(), updatedObjs[0] === this.getChemObj(), renderers.length);
-
-			return result;
-		},
-		/** @private */
-		_getRenderersForChildObj: function(context, childObj)
-		{
-			var result = [];
-			var childRenderers = this.getChildRenderers();
-			for (var i = 0, l = childRenderers.length; i < l; ++i)
-			{
-				var r = childRenderers[i];
-				if (r.isChemObjRenderedBySelf(context, childObj))
-					result.push(r);
-			}
-			return result;
-		}
-	},
-
-	/**
-	 * Define composite render properties and methods to a class.
-	 * @param {Object} aClass Should be class object.
-	 */
-	addCompositeRenderSupport: function(aClass)
-	{
-		ClassEx.defineProp(aClass, 'targetChildObjs', {
-			'dataType': DataType.ARRAY,
-			'serializable': false
-		});
-		/*
-		ClassEx.defineProp(aClass, 'childRenderers', {
-			'dataType': DataType.ARRAY,
-			'serializable': false
-		});
-		*/
-		ClassEx.defineProp(aClass, 'childRendererMap', {
-			'dataType': DataType.OBJECT,
-			'serializable': false,
-			'getter': function()
-			{
-				var result = this.getPropStoreFieldValue('childRendererMap');
-				if (!result)
-				{
-					result = new Kekule.MapEx(true);  // non-weak map, as we should store the renderers
-					this.setPropStoreFieldValue('childRendererMap', result);
-				}
-				return result;
-			}
-		});
-		ClassEx.extend(aClass, Kekule.Render.RendererDefineUtils.CompositeObjRendererMethods);
 	}
 };

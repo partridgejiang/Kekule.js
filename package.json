@@ -1,0 +1,49 @@
+{
+  "name": "kekule",
+  "version": "0.9.3",
+  "description": "Open source JavaScript toolkit for chemoinformatics",
+  "main": "dist/kekule.js",
+  "author": {
+    "name": "Chen Jiang",
+    "email": "partridge@cpu.edu.cn"
+  },
+  "scripts": {
+    "lint": "eslint ./src"
+  },
+  "contributors": [
+    {
+      "name": "Aaron Llanos",
+      "email": "aaronllanos93@gmail.com"
+    },
+    {
+      "name": "Joshua Williams"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Chen Jiang",
+      "email": "partridge@cpu.edu.cn"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/partridgejiang/Kekule.js/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ],
+  "engines": {
+    "node": ">=0.10"
+  },
+  "directories": {},
+  "keywords": [
+    "chemistry",
+    "cheminformatics",
+    "chemoinformatics",
+    "molecule"
+  ],
+  "devDependencies": {
+    "eslint": "^5.7.0"
+  }
+}

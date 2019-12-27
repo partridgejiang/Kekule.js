@@ -5,10 +5,13 @@
 	<title>Molecule Compare</title>
 
 	<script src="../../libs/raphael-min.2.0.1.js"></script>
+
 	<script src="../../libs/kekule/kekule.js?module=chemWidget,algorithm"></script>
+
 	<!--
 	<script src="../../../../project/src/kekule.js?modules=chemWidget,algorithm&min=false"></script>
 	-->
+
 	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
 
 	<script  id="compareMol1" type="chemical/x-mdl-molfile">
@@ -76,6 +79,11 @@ M  END
 	</script>
 
 	<script>
+		function $(id)
+		{
+			return document.getElementById(id);
+		}
+
 		var chemEditors = [];
 		var chemComposers = [];
 		function init()
@@ -99,9 +107,27 @@ M  END
 		}
 		function compare()
 		{
+			var ops = {};
+			/*
+			var level;
+			var CL = Kekule.StructureComparationLevel;
+			var levelValue = $('listCompareLevel').value;
+			if (levelValue === 'Skeletal')
+				level = CL.SKELETAL;
+			else if (levelValue === 'Constitution')
+				level = CL.CONSTITUTION;
+			else if (levelValue === 'Configuration')
+				level = CL.CONFIGURATION;
+			else
+				level = CL.EXACT;
+			ops.level = level;
+			ops.compareMass = !($('checkboxIgnoreMass').checked);
+			*/
+			ops.strictStereoBondGeometry = $('checkboxStrictBondGeometry').checked;
+
 			var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
 			var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
-			var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
+			var isSame = mol1 && mol2 && mol1.equalStructure(mol2, ops);
 			var sResult = isSame? 'Same molecules': 'Different molecules';
 			var sClass = isSame? 'Same': 'Diff';
 			var elem = document.getElementById('labelResult');
@@ -138,13 +164,31 @@ M  END
 		.Editor { width: 650px; height: 400px; }
 		.Same { color: green; }
 		.Diff { color: red; }
+
+		#compareOptionPanel
+		{
+			width: 20em;
+		}
 	</style>
 </head>
 <body>
 	<p>Draw or load molecules in both editors and click on "compare" button to check whether molecules are same.</p>
 	<div>
+		<button id="btnOptions" data-widget="Kekule.Widget.DropDownButton" data-drop-down-widget="#compareOptionPanel">Options</button>
 		<button id="btnCompare" data-widget="Kekule.Widget.Button">Compare Molecules</button>
 		<span id="labelResult"></span>
+	</div>
+	<div id="compareOptionPanel" data-widget="Kekule.Widget.Panel">
+		<!--
+		<label for="listCompareLevel">Comparation Level: </label>
+		<select id="listCompareLevel">
+			<option value="Skeletal">Skeletal</option>
+			<option value="Constitution">Constitution</option>
+			<option value="Configuration" selected="selected">Configuration</option>
+		</select><br />
+		<input type="checkbox" id="checkboxIgnoreMass" checked="true" /><label for="checkboxIgnoreMass">Ignore mass number</label><br />
+		-->
+		<input type="checkbox" id="checkboxStrictBondGeometry" /><label for="checkboxStrictBondGeometry">Strict bond geometry</label><br />
 	</div>
 	<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>
 	<div class="Editor" id="chemComposer1" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol2)"></div>

@@ -117,7 +117,8 @@ if (Kekule.Calculator)
 				this.postWorkerMessage({
 					'type': 'obInit',
 					'usingModulaize': initOps.usingModulaize,
-					'moduleName': initOps.moduleName
+					'moduleName': initOps.moduleName,
+					'initCallbackName': initOps.moduleInitCallbackName
 				});
 			}
 			return w;
@@ -126,12 +127,13 @@ if (Kekule.Calculator)
 		getWorkerScriptFile: function()
 		{
 			//return this.getWorkerBasePath() + 'kekule.worker.obStructure3DGenerator.js';
-			var result = Kekule.OpenBabel.getObPath() + 'workers/kekule.worker.obStructure3DGenerator.js';
+			var result = Kekule.OpenBabel.getObPath() + 'kekule.worker.obStructure3DGenerator.js'; //'workers/kekule.worker.obStructure3DGenerator.js';
 			return result;
 		},
 		/** @ignore */
-		doReactWorkerMessage: function(data, e)
+		doReactWorkerMessage: function($super, data, e)
 		{
+			$super(data, e);
 			if (data.type === 'output3D')  // receive generated structure
 			{
 				var genData = data.molData;

@@ -1,7 +1,11 @@
 /**
  * Created by ginger on 2017/3/1.
  */
-
+if (Kekule.Widget.AutoLauncher)
+{
+	Kekule.Widget.AutoLauncher.deferring = true;
+	Kekule.Widget.AutoLauncher.placeHolderStrategy = Kekule.Widget.AutoLauncher.PlaceHolderStrategies.IMPLICIT;	
+}
 if (Kekule.globalOptions && Kekule.ChemWidget)
 {
 	var BNS = Kekule.ChemWidget.ComponentWidgetNames;
@@ -11,18 +15,23 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 			BNS.erase,
 			{'name': BNS.molBond, 'attached': [
 				BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple,
-				BNS.molBondCloser, BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+				/*BNS.molBondCloser,*/ BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+				BNS.molChain,
+				BNS.trackInput,
+				/*
 				BNS.molRepSubBondMark,
 				BNS.molRepMethane,
+				*/				
 				BNS.molRepFischer1, BNS.molRepFischer2,
 				BNS.molRepSawhorseStaggered, BNS.molRepSawhorseEclipsed
 			]},
-			BNS.molAtom,
-			BNS.molFormula,
+			BNS.molAtomAndFormula,			
 			{'name': BNS.molRing, 'attached': [
-				BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6, BNS.molRing7, BNS.molRing8, BNS.molRingAr6,
-				BNS.molRepCyclopentaneHaworth1, BNS.molRepCyclopentaneHaworth2,
-				BNS.molRepCyclohexaneHaworth1, BNS.molRepCyclohexaneHaworth2,
+				BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6, 
+				BNS.molFlexRing, 
+				BNS.molRingAr6,
+				BNS.molRepCyclopentaneHaworth1, /* BNS.molRepCyclopentaneHaworth2,*/
+				BNS.molRepCyclohexaneHaworth1, /* BNS.molRepCyclohexaneHaworth2, */
 				BNS.molRepCyclohexaneChair1, BNS.molRepCyclohexaneChair2
 			]},
 			BNS.molCharge,
@@ -33,6 +42,7 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 	var SM = Kekule.ObjPropSettingManager;
 	if (SM)
 	{
+		var EMC = Kekule.Editor.ObjModifier.Category;
 		// overwrite molOnly setting of composer
 		SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
 			enableStyleToolbar: true,
@@ -46,23 +56,30 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 				BNS.erase,
 				{'name': BNS.molBond, 'attached': [
 					BNS.molBondSingle, BNS.molBondDouble, BNS.molBondTriple,
-					BNS.molBondCloser, BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+					/*BNS.molBondCloser,*/ BNS.molBondWedgeUp, BNS.molBondWedgeDown,
+					BNS.molChain,
+					BNS.trackInput,
+					/*
 					BNS.molRepSubBondMark,
 					BNS.molRepMethane,
+					*/
 					BNS.molRepFischer1, BNS.molRepFischer2,
 					BNS.molRepSawhorseStaggered, BNS.molRepSawhorseEclipsed
 				]},
 				BNS.molAtom,
-				BNS.molFormula,
+				/*BNS.molFormula,*/
 				{'name': BNS.molRing, 'attached': [
-					BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6, BNS.molRing7, BNS.molRing8, BNS.molRingAr6,
-					BNS.molRepCyclopentaneHaworth1, BNS.molRepCyclopentaneHaworth2,
-					BNS.molRepCyclohexaneHaworth1, BNS.molRepCyclohexaneHaworth2,
+					BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6, 
+					BNS.molFlexRing, 
+					BNS.molRingAr6,
+					BNS.molRepCyclopentaneHaworth1, /* BNS.molRepCyclopentaneHaworth2,*/
+					BNS.molRepCyclohexaneHaworth1, /* BNS.molRepCyclohexaneHaworth2, */
 					BNS.molRepCyclohexaneChair1, BNS.molRepCyclohexaneChair2
 				]},
 				BNS.molCharge
 			],   // create only chem tool buttons related with molecule
-			styleToolComponentNames: null  // create all default style components
+			styleToolComponentNames: null,  // create all default style components
+			allowedObjModifierCategories: [EMC.GENERAL, EMC.CHEM_STRUCTURE]  // only all chem structure modifiers
 		});
 	}
 }

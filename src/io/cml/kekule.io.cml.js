@@ -182,7 +182,7 @@ Kekule.IO.CmlUtils = {
 		{
 			case R.REAGENT: return 'reagent';
 			case R.CATALYST: return 'catalyst';
-			case R.CATALYST: return 'solvent';
+			case R.SOLVENT: return 'solvent';
 			default: return kekuleRole;
 		}
 	},
@@ -261,6 +261,7 @@ Kekule.IO.CmlUtils = {
 	 */
 	createNodeByCmdElementType: function(id, elemType, massNumber)
 	{
+		var result;
 		if (Kekule.IO.CmlUtils.isDummyElementType(elemType))
 				result = new Kekule.Pseudoatom(id, Kekule.PseudoatomType.DUMMY);
 		else if (Kekule.IO.CmlUtils.isRGroupElementType(elemType))
@@ -356,8 +357,7 @@ Kekule.IO.CmlDomUtils = {
 	 */
 	getCmlBuiltinElemInfo: function(elem, namespaceURI, domHelper)
 	{
-		var propName;
-		propName = elem.getAttribute('builtin');
+		var propName = elem.getAttribute('builtin');
 		if ((!propName) && namespaceURI)
 		{
 			if (elem.getAttributeNS)
@@ -367,7 +367,7 @@ Kekule.IO.CmlDomUtils = {
 		}
 		if (propName)
 		{
-			var propValue = Kekule.DomUtils.getElementText(node);
+			var propValue = Kekule.DomUtils.getElementText(elem);
 			return {'name': propName, 'value': propValue};
 		}
 		else
@@ -434,7 +434,7 @@ Kekule.IO.CmlDomUtils = {
 
 		if (propName)
 		{
-			var propValue = Kekule.DomUtils.getElementText(node);
+			var propValue = Kekule.DomUtils.getElementText(elem);
 			var values = Kekule.IO.CmlDomUtils.splitCmlArrayValue(propValue);
 			switch (Kekule.DomUtils.getLocalName(elem))
 			{
@@ -1316,14 +1316,6 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 					case 'xsd:float':
 					case 'xsd:double':
 					case 'xsd:duration':
-					/*
-					{
-						jsonObj.value = parseFloat(jsonObj.value);
-						if (jsonObj.errorValue)
-							jsonObj.errorValue = parseFloat(jsonObj.errorValue);
-						break;
-					}
-					*/
 					case 'xsd:decimal':
 					case 'xsd:integer':
 					case 'xsd:nonPositiveInteger':
@@ -1632,10 +1624,10 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					default:
 						{
 							// bypass CML1 style typed elements
-							if (Kekule.IO.CmlDomUtils.isCmlTypedElem(node) || Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(node))
+							if (Kekule.IO.CmlDomUtils.isCmlTypedElem(elem) || Kekule.IO.CmlDomUtils.isCmlTypedArrayElem(elem))
 								;
 							else
-								this.readChildElementDef(node, result);
+								this.readChildElementDef(elem, result);
 						}
 				}
 			}
@@ -2250,7 +2242,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 		//var attribs = []; // store properties of this atom
 		//var hasChildInfoElems = false;  // in mode I, atom may has scalar, electron, atomParity... to store additional information
 		// check if elem has string/integer/float children, if so, the old CML1 mode
-		hasChildInfoElems = !Kekule.IO.CmlDomUtils.hasDirectCmlTypedElemChildren(elem, this.getCoreNamespaceURI());
+		var hasChildInfoElems = !Kekule.IO.CmlDomUtils.hasDirectCmlTypedElemChildren(elem, this.getCoreNamespaceURI());
 		//attribs = Kekule.IO.CmlDomUtils.fetchCmlElemAttributeValuesToJson(elem, Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, true, domHelper);
 		var attribs = this.atomInfoToJSON(elem, domHelper);
 
@@ -3692,7 +3684,7 @@ Kekule.IO.CmlReader = Class.create(Kekule.IO.ChemDataReader,
 		var rootElem;
 		if (dataType != Kekule.IO.ChemDataType.DOM) // not a dom doc, parse it first
 		{
-			var doc = XmlUtility.parse(data);
+			var doc = DataType.XmlUtility.parse(data);
 			rootElem = doc.documentElement;
 		}
 		else
@@ -3735,7 +3727,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		var nsUri = Kekule.IO.CML.CML3_SCHEMA_NAMESPACE_URI;
 		// create a new XML document
-		var xmlDoc = XmlUtility.newDocument('cml', nsUri);
+		var xmlDoc = DataType.XmlUtility.newDocument('cml', nsUri);
 		var writer = Kekule.IO.CmlElementWriterFactory.getWriter('Kekule.ChemDocument');
 		if (writer)
 		{
@@ -3744,7 +3736,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result = writer.writeObject(obj, xmlDoc.documentElement);
 			if (dataType == Kekule.IO.ChemDataType.TEXT) // convert DOM to text
 			{
-				result = XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': this.getPrettyPrint()});
+				result = DataType.XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': this.getPrettyPrint()});
 			}
 			return result;
 		}
@@ -3784,6 +3776,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	WF.register('Kekule.ChemDocument', Kekule.IO.CmlRootWriter);
 
 	// register chem data formats
+	Kekule.IO.DataFormat.CML = 'cml';
 	Kekule.IO.DataFormatsManager.register('cml', Kekule.IO.MimeType.CML, 'cml', Kekule.IO.ChemDataType.TEXT, 'Chemical Markup Language');
 
 	// register ChemData reader and writer

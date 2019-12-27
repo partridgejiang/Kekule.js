@@ -322,7 +322,12 @@ Kekule.PropertyEditor.ChemRender2DOptionsEditor = Class.create(Kekule.PropertyEd
 		{'name': 'chargeMarkType', dataType: DataType.INT, 'enumSource':  Kekule.Render.ChargeMarkRenderType, 'targetClass': Kekule.ChemStructureNode},
 		{'name': 'chargeMarkFontSize', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
 		{'name': 'chargeMarkMargin', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
+		/*
 		{'name': 'chargeMarkCircleWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
+		*/
+		{'name': 'chemMarkerFontSize', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
+		{'name': 'chemMarkerMargin', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
+		{'name': 'distinguishSingletAndTripletRadical', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
 
 		{'name': 'fontSize', dataType: DataType.NUMBER},
 		//{'name': 'atomFontSize', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
@@ -420,8 +425,28 @@ Kekule.PropertyEditor.GlyphPathParamsEditor = Class.create(Kekule.PropertyEditor
 		{'name': 'endArrowSide', dataType: DataType.INT, 'enumSource': Kekule.Glyph.ArrowSide, 'targetClass': Kekule.Glyph.PathGlyphConnector},
 		{'name': 'endArrowLength', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector},
 		{'name': 'endArrowWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector}
+		//{'name': 'autoOffset', dataType: DataType.BOOL, 'targetClass': Kekule.Glyph.PathGlyphConnector},
+		//{'name': 'glyphStickOffsetRelLength', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphConnector}
 	]
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.GlyphPathParamsEditor, null, Kekule.Glyph.PathGlyphConnector, 'pathParams');
+
+/**
+ * A property editor that to edit pathNodeParams property of PathGlyphNode.
+ * @class
+ * @augments Kekule.PropertyEditor.ChemOptionObjectEditor
+ */
+Kekule.PropertyEditor.GlyphPathNodeParamsEditor = Class.create(Kekule.PropertyEditor.ChemOptionObjectEditor,
+/** @lends Kekule.PropertyEditor.GlyphPathNodeParamsEditor# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.PropertyEditor.GlyphPathNodeParamsEditor',
+	/** @private */
+	CHILD_FIELD_INFOS: [
+		{'name': 'useStickingOffset', dataType: DataType.BOOL, 'targetClass': Kekule.Glyph.PathGlyphNode},
+		{'name': 'stickingOffsetRelLength', dataType: DataType.FLOAT, 'targetClass': Kekule.Glyph.PathGlyphNode}
+	]
+});
+Kekule.PropertyEditor.register(Kekule.PropertyEditor.GlyphPathNodeParamsEditor, null, Kekule.Glyph.PathGlyphNode, 'pathNodeParams');
 
 })();

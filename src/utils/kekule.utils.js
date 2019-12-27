@@ -136,6 +136,26 @@ Kekule.NumUtils = {
 		if (Kekule.ObjUtils.isUnset(threshold))
 			threshold = 1e-100;
 		return Math.abs(f1 - f2) <= threshold;
+	},
+
+	/**
+	 * Returns a primes array from 2 to max number.
+	 * @param {Int} max
+	 * @returns {Array}
+	 */
+	getPrimes: function(max)
+	{
+		var sieve = [], i, j, primes = [];
+		for (i = 2; i <= max; ++i) {
+			if (!sieve[i]) {
+				// i has not been marked -- it is prime
+				primes.push(i);
+				for (j = i << 1; j <= max; j += i) {
+					sieve[j] = true;
+				}
+			}
+		}
+		return primes;
 	}
 };
 
@@ -331,6 +351,30 @@ Kekule.ArrayUtils = {
 	clone: function(src)
 	{
 		return src.slice(0);
+	},
+	/**
+	 * creates a new array with all elements that pass the test implemented by the provided function.
+	 * @param {Array} src
+	 * @param {Func} filterFunc
+	 * @param {Object} thisArg
+	 */
+	filter: function(src, filterFunc, thisArg)
+	{
+		if (!filterFunc)
+			return Kekule.ArrayUtils.clone(src);
+		if (src.filter)  // built-in support
+			return src.filter(filterFunc, thisArg);
+		else
+		{
+			var result = [];
+			for (var i = 0, l = src.length; i < l; ++i)
+			{
+				var item = src[i];
+				if (filterFunc.apply(thisArg, [item, i, src]))
+					result.push(item);
+			}
+			return result;
+		}
 	},
 	/**
 	 * Divide array into several small ones, each containing memberCount numbers of elements.
@@ -635,6 +679,29 @@ Kekule.ArrayUtils = {
 		}
 		return result;
 	},
+
+	/**
+	 * Convert a nested array to one-dimension array.
+	 * @param {Array} src
+	 * @returns {Array}
+	 */
+	flatten: function(src)
+	{
+		var result = [];
+		for (var i = 0, l = src.length; i < l; ++i)
+		{
+			var child = src[i];
+			if (Kekule.ArrayUtils.isArray(child))
+			{
+				var flattened = Kekule.ArrayUtils.flatten(child);
+				result = result.concat(flattened);
+			}
+			else
+				result.push(child);
+		}
+		return result;
+	},
+
 	/**
 	 * Compare two arrays, from first to last items. If two items in each array is different,
 	 * the one with the smaller item will be regarded as smaller array.
@@ -753,6 +820,61 @@ Kekule.ArrayUtils = {
 		}
 		return result;
 	},
+
+	/**
+	 * Returns the index stack of elem in a nested array.
+	 * For example, getIndexStack(2, [1, [1, 2], 3]) returns [1,1]; getIndexStack(3, [1, [1, 2], 3]) returns [2].
+	 * If elem is not found in arr, null will be returned.
+	 * @param {Variant} elem
+	 * @param {Array} arr
+	 * @returns {Array}
+	 */
+	indexStackOfElem: function(elem, arr)
+	{
+		for (var i = 0, l = arr.length; i < l; ++i)
+		{
+			var curr = arr[i];
+			if (curr === elem)
+				return [i];
+			else if (Kekule.ArrayUtils.isArray(curr))
+			{
+				var childResult = Kekule.ArrayUtils.indexStackOfElem(elem, curr);
+				if (childResult)
+				{
+					childResult.unshift(i);
+					return childResult;
+				}
+			}
+		}
+		return null;
+	},
+	/**
+	 * Returns an element by indexStack from a nested array.
+	 * @param {Array} arr
+	 * @param {Array} indexStack
+	 * @returns {Variant}
+	 */
+	getElemByIndexStack: function(arr, indexStack)
+	{
+		var stack = Kekule.ArrayUtils.isArray(indexStack)? Kekule.ArrayUtils.clone(indexStack): [indexStack];
+		var index = stack.shift();
+		var curr = arr[index];
+		if (curr)
+		{
+			if (stack.length)
+			{
+				if (Kekule.ArrayUtils.isArray(curr))
+					return Kekule.ArrayUtils.getElemByIndexStack(curr, stack);
+				else
+					return null;
+			}
+			else
+				return curr;
+		}
+		else
+			return null;
+	},
+
 	/**
 	 * Returns median number of a numberic array.
 	 * @param {Array} arr
@@ -1077,6 +1199,36 @@ Kekule.StrUtils = {
 			result = Math.max(line.length, result);
 		}
 		return result;
+	},
+
+	/**
+	 * Check if str is in number format.
+	 * @param {String} str
+	 * @returns {Bool}
+	 */
+	isNumbericStr: function(str)
+	{
+		var a = Number(str);
+		return !isNaN(a);
+	},
+	/**
+	 * Split a number ending string (e.g. 'str3') to two part, a prefix and an index.
+	 * If the str is not ending with number, null will be returned.
+	 * @param {String} str
+	 * @returns {Object} A object of {prefix, index}
+	 */
+	splitIndexEndingStr: function(str)
+	{
+		var pos = str.length - 1;
+		var c = str.charAt(pos);
+		var indexStr = '';
+		while (c && Kekule.StrUtils.isNumbericStr(c))
+		{
+			--pos;
+			indexStr = c + indexStr;
+			c = str.charAt(pos);
+		}
+		return indexStr? {'prefix': str.substring(0, pos + 1), 'index': parseInt(indexStr)}: null;
 	}
 };
 
@@ -1494,6 +1646,7 @@ Kekule.MatrixUtils = {
 			for (var j = 0; j < colCount; ++j)
 				r[j] = -(m[j] || 0);
 		}
+		return result;
 	},
 	/**
 	 * Add two matrix.
@@ -1572,6 +1725,18 @@ Kekule.CoordUtils = {
 		var result = {'x': x, 'y': y};
 		if (z || (z === 0))
 			result.z = z;
+		return result;
+	},
+	/**
+	 * Clone a coord.
+	 * @param {Hash} coord
+	 * @returns {Hash}
+	 */
+	clone: function(coord)
+	{
+		var result = {'x': coord.x, 'y': coord.y};
+		if (coord.z || (coord.z === 0))
+			result.z = coord.z;
 		return result;
 	},
 	/**
@@ -1698,7 +1863,7 @@ Kekule.CoordUtils = {
 	standardize: function(coord)
 	{
 		var len = Math.sqrt(Math.sqr(coord.x || 0) + Math.sqr(coord.y || 0) + Math.sqr(coord.z || 0));
-		return Kekule.CoordUtils.divide(coord, len);
+		return Kekule.CoordUtils.divide(coord, len || 1);  // if len is 0, returns {0, 0, 0}
 	},
 	/**
 	 * Convert coord to a 2D or 3D array of values
@@ -1711,6 +1876,127 @@ Kekule.CoordUtils = {
 		result.push(coord.x, coord.y);
 		if (Kekule.CoordUtils.is3D(coord))
 			result.push(coord.z);
+	},
+	/**
+	 * Returns whether two transform 2D options are numberic same.
+	 * @param {Hash} p1
+	 * @param {Hash} p2
+	 * @param {Hash} thresholds Thresholds for comparing, including fields {scale, translate, rotate}.
+	 */
+	isSameTransform2DOptions: function(p1, p2, thresholds)
+	{
+		var DEF_THRESHOLDS = 0.01;
+
+		var isUnset = Kekule.ObjUtils.isUnset;
+		var equal = Kekule.NumUtils.isFloatEqual;
+
+		if (!thresholds)
+			thresholds = {};
+
+		var thresTranslate = thresholds.translate || DEF_THRESHOLDS;
+		var thresScale = thresholds.scale || DEF_THRESHOLDS;
+		var thresRotate = thresholds.rotate || DEF_THRESHOLDS;
+
+		var result = false;
+		// check center
+		var c1 = p1.center, c2 = p2.center;
+		if (c1 && c2)
+		{
+			result = equal(c1.x, c2.x, thresTranslate) && equal(c1.y, c2.y, thresTranslate);
+		}
+		else
+			result = false;
+		if (result)  // further check scale, translate and rotate
+		{
+			var fields = ['scale', 'scaleX', 'scaleY', 'rotateAngle', 'translateX', 'translateY'];
+			for (var i = 0, l = fields.length; i < l; ++i)
+			{
+				var fname = fields[i];
+				var v1 = p1[fname], v2 = p2[fname];
+				if (isUnset(v1) && isUnset(v2))
+					continue;
+				else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
+				{
+					var thres = (fname.indexOf('scale') === 0)? thresScale:
+						(fname.indexOf('rotate') === 0)? thresRotate:
+							thresTranslate;
+					result = equal(v1, v2, thres);
+				}
+				else
+					result = false;
+				if (!result)
+					break;
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns whether two transform 3D options are numberic same.
+	 * @param {Hash} p1
+	 * @param {Hash} p2
+	 * @param {Hash} thresholds Thresholds for comparing, including fields {scale, translate, rotate}.
+	 */
+	isSameTransform3DOptions: function(p1, p2, thresholds)
+	{
+		var DEF_THRESHOLDS = 0.01;
+
+		var isUnset = Kekule.ObjUtils.isUnset;
+		var equal = Kekule.NumUtils.isFloatEqual;
+
+		if (!thresholds)
+			thresholds = {};
+
+		var thresTranslate = thresholds.translate || DEF_THRESHOLDS;
+		var thresScale = thresholds.scale || DEF_THRESHOLDS;
+		var thresRotate = thresholds.rotate || DEF_THRESHOLDS;
+
+		var result = false;
+		// check center
+		var c1 = p1.center, c2 = p2.center;
+		if (c1 && c2)
+		{
+			result = equal(c1.x, c2.x, thresTranslate) && equal(c1.y, c2.y, thresTranslate) && equal(c1.z, c2.z, thresTranslate);
+		}
+		else if (!c1 && !c2)
+			result = true;
+		else
+			result = false;
+		// check rotateAxisVector
+		if (result)
+		{
+			var a1 = p1.rotateAxisVector, a2 = p2.rotateAxisVector;
+			if (a1 && a2)
+			{
+				result = equal(a1.x, a2.x, thresTranslate) && equal(a1.y, a2.y, thresTranslate) && equal(a1.z, a2.z, thresTranslate);
+			}
+			else if (!a1 && !a2)
+				result = true;
+			else
+				result = false;
+		}
+		if (result)  // further check scale, translate and rotate
+		{
+			var fields = ['scale', 'scaleX', 'scaleY', 'scaleZ', 'rotateAngle', 'rotateX', 'rotateY', 'rotateZ', 'translateX', 'translateY', 'translateZ'];
+			for (var i = 0, l = fields.length; i < l; ++i)
+			{
+				var fname = fields[i];
+				var v1 = p1[fname], v2 = p2[fname];
+				if (isUnset(v1) && isUnset(v2))
+					continue;
+				else if (!isUnset(v1) && !isUnset(v2))  // v1, v2 all have value
+				{
+					var thres = (fname.indexOf('scale') === 0)? thresScale:
+						(fname.indexOf('rotate') === 0)? thresRotate:
+							thresTranslate;
+					result = equal(v1, v2, thres);
+				}
+				else
+					result = false;
+				if (!result)
+					break;
+			}
+		}
+		return result;
 	},
 	/**
 	 * Do a 2d transform to a coord.
@@ -2063,7 +2349,8 @@ Kekule.CoordUtils = {
 	calcRotate3DMatrix: function(options)
 	{
 		var M = Kekule.MatrixUtils;
-		var op = Object.extend({}, options || {});
+		//var op = Object.extend({}, options || {});
+		var op = Object.create(options || {});
 
 		var rotateMatrix;
 		if (op.rotateMatrix)
@@ -2458,8 +2745,8 @@ Kekule.CoordUtils = {
 		var l = coords.length;
 		if (l > 0)
 		{
-			minCoord = Object.extend({}, coords[0]);
-			maxCoord = Object.extend({}, coords[0]);
+			minCoord = Kekule.CoordUtils.clone(coords[0]); //Object.extend({}, coords[0]);
+			maxCoord = Kekule.CoordUtils.clone(coords[0]); // Object.extend({}, coords[0]);
 		}
 		else
 			return null;
@@ -2486,6 +2773,33 @@ Kekule.CoordUtils = {
  * @class
  */
 Kekule.GeometryUtils = {
+	/**
+	 * Add or substract 2Pi to angle, ensure the angle in range rangeMin to rangeMin + 2Pi
+	 * @param {Float} angle
+	 * @param {Float} rangeMin Default is 0.
+	 */
+	standardizeAngle: function(angle, rangeMin, rangeMax)
+	{
+		rangeMin = rangeMin || 0;
+		var rangeMax = rangeMin + Math.PI * 2;
+		var times = Math.floor((angle - rangeMin) / Math.PI / 2);
+		return angle - times * Math.PI * 2;
+	},
+	/**
+	 * Convert a polar coord to cartesian one.
+	 * @param {Float} centerX
+	 * @param {Float} centerY
+	 * @param {Float} radius
+	 * @param {Float} angle
+	 * @returns {Hash}
+	 */
+	polarToCartesian: function(centerX, centerY, radius, angle)
+	{
+		return {
+			x: centerX + (radius * Math.cos(angle)),
+			y: centerY + (radius * Math.sin(angle))
+		};
+	},
 	/**
 	 * Returns the cross product (v1.v2) of two vectors represented by coord1 and coord2.
 	 * @param {Hash} coord1
@@ -2514,17 +2828,18 @@ Kekule.GeometryUtils = {
 		return result;
 	},
 	/**
-	 * Returns included angle of two vectors represented by coord1 and coord2.
-	 * @param {Hash} coord1
-	 * @param {Hash} coord2
+	 * Returns included angle of two vectors represented by vector1 and vector2.
+	 * Note this method always returns result less than Math.PI / 2.
+	 * @param {Hash} vector1
+	 * @param {Hash} vector2
 	 * @returns {Number}
 	 */
-	getVectorIncludedAngle: function(coord1, coord2)
+	getVectorIncludedAngle: function(vector1, vector2)
 	{
 		var CU = Kekule.CoordUtils;
-		var cross = Kekule.GeometryUtils.getVectorCrossProduct(coord1, coord2);
+		var cross = Kekule.GeometryUtils.getVectorCrossProduct(vector1, vector2);
 		var zeroCoord = {'x': 0, 'y': 0, 'z': 0};
-		var divV = (CU.getDistance(coord1, zeroCoord) * CU.getDistance(coord2, zeroCoord));
+		var divV = (CU.getDistance(vector1, zeroCoord) * CU.getDistance(vector2, zeroCoord));
 		var sinAngleV = CU.getDistance(cross, zeroCoord) / divV;
 		//var cosAngleV = Kekule.GeometryUtils.getVectorScalarProduct(coord1, coord2) / divV;
 		var result = Math.asin(sinAngleV);  // asin always returns value between -Pi/2 ~ Pi / 2
@@ -2535,7 +2850,17 @@ Kekule.GeometryUtils = {
 		*/
 		return result;
 	},
-
+	/**
+	 * Returns included angle of two vectors represented by vector1 and vector2.
+	 * Note this method always returns result between 0 to 2pi.
+	 * @param {Hash} vector1
+	 * @param {Hash} vector2
+	 * @returns {Number}
+	 */
+	getVectorIncludedAngle2: function(vector1, vector2)
+	{
+		return Kekule.GeometryUtils.standardizeAngle(Math.atan2(vector2.y, vector2.x) - Math.atan2(vector1.y, vector1.x));
+	},
 	/*
 	 * Returns sin and cos value of dihedral angle of plane (c1, c2, c3) and (c2, c3, c4) while c1-4 are coords of 3D.
 	 * This method is based on formula (when A1, A2, A3 and B1, B2, B3 are three points in each plane):
@@ -2630,6 +2955,332 @@ Kekule.GeometryUtils = {
 		var v2 = CU.substract(c3, c2);
 		var v3 = CU.substract(c4, c3);
 		return Kekule.GeometryUtils.getDihedralAngleOfVectors(v1, v2, v3);
+	},
+
+	/**
+	 * Returns the cross point of a vertical line from coord to a existing line (lineCoord1-lineCoord2)
+	 * @param {Hash} coord
+	 * @param {Hash} lineCoord1
+	 * @param {Hash} lineCoord2
+	 * @param {Bool} isUnlimitedLine If true, the line length will not be considered.
+	 * @returns {Hash}
+	 */
+	getPerpendicularCrossPointFromCoordToLine: function(coord, lineCoord1, lineCoord2, isUnlimitedLine)
+	{
+		// method from http://blog.sina.com.cn/s/blog_4bf793ad0100gudn.html
+		var result = {};
+		if (Math.abs(lineCoord1.x - lineCoord2.x) < 1e-10)  // a vertical line or near vertical line
+		{
+			result.x = lineCoord1.x;
+			result.y = coord.y;
+		}
+		else
+		{
+			var k = (lineCoord2.y - lineCoord1.y) / (lineCoord2.x - lineCoord1.x);
+			// 垂线的斜率为 - 1 / k，垂线方程为：y = (-1/k) * (x - coord.x) + coord.y
+			// calc cross point
+			// x = ( k^2 * pt1.x + k * (point.y - pt1.y ) + point.x ) / ( k^2 + 1) ，y = k * ( x - pt1.x) + pt1.y
+			result.x = (k * k * lineCoord1.x + k * (coord.y - lineCoord1.y) + coord.x) / (k * k + 1);
+			result.y = k * (result.x - lineCoord1.x) + lineCoord1.y;
+		}
+
+		// check if cross point is between two coords of line
+		var betweenFlag;
+		if (isUnlimitedLine)
+			betweenFlag = true;
+		else
+		{
+			var vector = {'x': lineCoord1.x - lineCoord2.x, 'y': lineCoord1.y - lineCoord2.y};
+			if (Math.abs(vector.y) > Math.abs(vector.x))
+				betweenFlag = (Math.sign(result.y - lineCoord1.y) * Math.sign(result.y - lineCoord2.y) <= 0);
+			else
+				betweenFlag = (Math.sign(result.x - lineCoord1.x) * Math.sign(result.x - lineCoord2.x) <= 0);
+		}
+		if (!betweenFlag)  // not inside with limited line
+			return null;
+		else
+			return result;
+	},
+
+	/**
+	 * Returns the minial distance from point (coord) to line (lineCoord1, lineCoord2)
+	 * @param {Hash} coord
+	 * @param {Hash} lineCoord1
+	 * @param {Hash}lineCoord2
+	 * @param {Bool} isUnlimitedLine If true, the line length will not be considered.
+	 * @returns {Hash}
+	 */
+	getDistanceFromPointToLine: function(coord, lineCoord1, lineCoord2, isUnlimitedLine)
+	{
+		var crossPoint = Kekule.GeometryUtils.getPerpendicularCrossPointFromCoordToLine(coord, lineCoord1, lineCoord2, isUnlimitedLine);
+		/*
+		// check if cross point is between two coords of line
+		var betweenFlag;
+
+		var vector = {'x': lineCoord1.x - lineCoord2.x, 'y': lineCoord1.y - lineCoord2.y};
+		if (isUnlimitedLine)
+			betweenFlag = true;
+		else
+		{
+			if (Math.abs(vector.y) > Math.abs(vector.x))
+				betweenFlag = (Math.sign(crossPoint.y - lineCoord1.y) * Math.sign(crossPoint.y - lineCoord2.y) <= 0);
+			else
+				betweenFlag = (Math.sign(crossPoint.x - lineCoord1.x) * Math.sign(crossPoint.x - lineCoord2.x) <= 0);
+		}
+		*/
+
+		if (!crossPoint)  // not inside
+		{
+			var d0 = Kekule.CoordUtils.getDistance(coord, lineCoord1);
+			var d1 = Kekule.CoordUtils.getDistance(coord, lineCoord2);
+			return Math.min(d0, d1);
+		}
+		else  // inside line
+		{
+			var distance = Kekule.CoordUtils.getDistance(coord, crossPoint);
+			return distance;
+		}
+	},
+
+	/**
+	 * Returns the cross point coord of line1 and line2. If no cross point or the point out of lines, null will be returned.
+	 * The algorithm is explained in https://www.jb51.net/article/90104.htm.
+	 * @param {Hash} line1Coord1
+	 * @param {Hash} line1Coord2
+	 * @param {Hash} line2Coord1
+	 * @param {Hash} line2Coord2
+	 * @returns {Hash}
+	 */
+	getCrossPointOfLines: function(line1Coord1, line1Coord2, line2Coord1, line2Coord2)
+	{
+		// 三角形abc 面积的2倍
+		var area_abc = (line1Coord1.x - line2Coord1.x) * (line1Coord2.y - line2Coord1.y) - (line1Coord1.y - line2Coord1.y) * (line1Coord2.x - line2Coord1.x);
+
+		// 三角形abd 面积的2倍
+		var area_abd = (line1Coord1.x - line2Coord2.x) * (line1Coord2.y - line2Coord2.y) - (line1Coord1.y - line2Coord2.y) * (line1Coord2.x - line2Coord2.x);
+
+		// 面积符号相同则两点在线段同侧,不相交 (对点在线段上的情况,本例当作不相交处理);
+		if ( area_abc*area_abd>=0 ) {
+			return null;
+		}
+
+		// 三角形cda 面积的2倍
+		var area_cda = (line2Coord1.x - line1Coord1.x) * (line2Coord2.y - line1Coord1.y) - (line2Coord1.y - line1Coord1.y) * (line2Coord2.x - line1Coord1.x);
+		// 三角形cdb 面积的2倍
+		// 注意: 这里有一个小优化.不需要再用公式计算面积,而是通过已知的三个面积加减得出.
+		var area_cdb = area_cda + area_abc - area_abd ;
+		if ( area_cda * area_cdb >= 0 ) {
+			return null;
+		}
+
+		//计算交点坐标
+		var t = area_cda / ( area_abd - area_abc );
+		var dx= t*(line1Coord2.x - line1Coord1.x),
+				dy= t*(line1Coord2.y - line1Coord1.y);
+		return { x: line1Coord1.x + dx , y: line1Coord1.y + dy };
+	},
+
+	/**
+	 * Returns the cross point coord of two vectors. If no cross point or the point out of vectors, null will be returned.
+	 * The algorithm is explained in https://www.jb51.net/article/90104.htm.
+	 * @param {Array} vectorCoords1
+	 * @param {Array} vectorCoords2
+	 * @returns {Hash}
+	 */
+	getCrossPointOfVectors: function(vectorCoords1, vectorCoords2)
+	{
+		return Kekule.GeometryUtils.getCrossPointOfLines(vectorCoords1[0], vectorCoords1[1], vectorCoords2[0], vectorCoords2[1]);
+	},
+	/**
+	 * Returns the cross points of a vector to circle.
+	 * @param {Array} vectorCoords
+	 * @param {Hash} circleCenterCoord
+	 * @param {Float} circleRadius
+	 * @returns {Array}
+	 */
+	getCrossPointsOfVectorToCircle: function(vectorCoords, circleCenterCoord, circleRadius, floatEqualThreshold)
+	{
+		var result = [];
+
+		var CU = Kekule.CoordUtils;
+		var isFloatEqual = Kekule.NumUtils.isFloatEqual;
+		var THRESHOLD = floatEqualThreshold;
+		// translate with circle center coord first
+		var transCoords = [CU.substract(vectorCoords[0], circleCenterCoord), CU.substract(vectorCoords[1], circleCenterCoord)];
+		// suppose the vector line is ax + by + c = 0, y = -(ax + c) / b
+		var a = transCoords[1].y - transCoords[0].y;
+		var b = transCoords[0].x - transCoords[1].x;
+		var c = transCoords[1].x * transCoords[0].y - transCoords[0].x * transCoords[1].y;
+		// r = radius
+		var r = circleRadius;
+		// the solution x = (-2ac +- sqrt(4a^2c62 - 4(a^2 + b^2)(c^2 - r^2b^2)) / 2(a^2 + b^2)
+		var xs = [];
+		var sqrItem = 4 * a * a * c * c - 4 * (a * a + b * b) * (c * c - r * r * b * b);
+		if (isFloatEqual(sqrItem, 0, THRESHOLD))  // one solution
+		{
+			xs = [-a * c / (a * a + b * b)];
+		}
+		else if (sqrItem < 0)  // no solution
+		{
+			xs = [];
+		}
+		else  // two solution
+		{
+			var sqrtItem = Math.sqrt(sqrItem);
+			xs = [
+				(-2 * a * c + sqrtItem) / (2 * (a * a + b * b)),
+				(-2 * a * c - sqrtItem) / (2 * (a * a + b * b))
+			]
+		}
+		if (xs && xs.length)  // has solution
+		{
+			var ys = [];
+			if (xs.length === 1 && isFloatEqual(b, 0, THRESHOLD))  // vertical line, may has two cross points even if xs.length === 1
+			{
+				var absY = Math.sqrt(r * r - xs[0] * xs[0]);
+				if (isFloatEqual(absY, 0, THRESHOLD))
+					ys = [0];
+				else  // two cross points
+				{
+					ys[0] = absY;
+					ys[1] = -absY;
+					xs[1] = xs[0];
+				}
+			}
+			else
+			{
+				for (var i = 0, l = xs.length; i < l; ++i)
+				{
+					ys[i] = (-(a * xs[i] + c) / b);
+				}
+			}
+
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				// filter out the point out of vector
+				var xCheck = (xs[i] - transCoords[0].x) * (xs[i] - transCoords[1].x);
+				var yCheck = (ys[i] - transCoords[0].y) * (ys[i] - transCoords[1].y);
+				if ((isFloatEqual(a, 0, THRESHOLD) && xCheck <= 0)
+					|| (isFloatEqual(b, 0, THRESHOLD) && yCheck <= 0)
+					|| (xCheck <= 0 && yCheck <= 0))
+					result.push(CU.add({x: xs[i], y: ys[i]}, circleCenterCoord));  // translate back to original coord sys
+			}
+
+			/*
+			// translate result back to original coord sys
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				result[i] = CU.add(result[i], circleCenterCoord);
+			}
+			*/
+		}
+		return result;
+	},
+	/**
+	 * Returns the cross point coords of two circles.
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @param {Array} centerCoord1
+	 * @param {Hash} radius1
+	 * @returns {Array}
+	 */
+	getCrossPointsOfCircles: function(centerCoord1, radius1, centerCoord2, radius2, floatEqualThreshold)
+	{
+		var CU = Kekule.CoordUtils;
+		var distance = CU.getDistance(centerCoord1, centerCoord2);
+		if (distance > (radius1 + radius2))
+			return [];
+		/*
+		else if (Kekule.NumUtils.isFloatEqual(distance, radius1 + radius2))
+		{
+
+		}
+		*/
+		else
+		{
+			// algorithm from https://wenku.baidu.com/view/b5b9194ca9114431b90d6c85ec3a87c241288a5d.html
+			var r1 = radius1, r2 = radius2;
+			var x1 = centerCoord1.x, x2 = centerCoord2.x;
+			var y1 = centerCoord1.y, y2 = centerCoord2.y;
+
+			var a1 = (r1*r1 - r2*r2) + (x2*x2 - x1*x1) + (y2*y2 - y1*y1);
+			var a2 = a1 / (2 * (y2 - y1));
+			var b2 = (x2 - x1) / (y2 - y1);
+			var a3 = 1 + b2 * b2;
+			var b3 = -(2 * x1 + 2 * (a2 - y1) * b2);
+			var c3 = x1 * x1 + Math.sqr(a2 - y1) - r1 * r1;
+			var sqrtItem = Math.sqrt(b3 * b3 - 4 * a3 * c3);
+			var divItem = 2 * a3;
+
+			var xs = Kekule.NumUtils.isFloatEqual(sqrtItem, 0, floatEqualThreshold)?
+				[-b3]:
+				[
+					(-b3 + sqrtItem) / divItem,
+					(-b3 - sqrtItem) / divItem
+				];
+			var ys = [];
+			var result = [];
+			for (var i = 0, l = xs.length; i < l; ++i)
+			{
+				//ys[i] = Math.sqrt(r1 * r1 - Math.pow(xs[i] - x1, 2)) + y1;
+				ys[i] = a2 - b2 * xs[i];
+				result.push({x: xs[i], y: ys[i]});
+			}
+			return result;
+		}
+	},
+
+	/**
+	 * Simplify curve to line segments using Ramer–Douglas–Peucker algorithm.
+	 * @param {Array} curvePoints Array of {x, y} coords to define a curve.
+	 * @param {Float} distanceThreshold
+	 * @returns {Array} Array of {x, y} coords, every two points define a line segment.
+	 * @private
+	 */
+	simplifyCurveToLineSegments: function(curvePoints, distanceThreshold)
+	{
+		//distanceThreshold = distanceThreshold || this.getLineSimplificationDistanceThreshold();
+		if (!distanceThreshold)
+			return curvePoints;
+
+		if (curvePoints.length <= 2)
+			return Kekule.ArrayUtils.clone(curvePoints);
+		return Kekule.GeometryUtils._simplifyCurvePartToLineSegments(curvePoints, 0, curvePoints.length - 1, distanceThreshold);
+	},
+	/** @private */
+	_simplifyCurvePartToLineSegments: function(curvePoints, startIndex, endIndex, distanceThreshold)
+	{
+		var GU = Kekule.GeometryUtils;
+		var startCoord = curvePoints[startIndex];
+		var endCoord = curvePoints[endIndex];
+
+		if (endIndex - startIndex <= 1)
+		{
+			return [startCoord, endCoord];
+		}
+
+		var maxDistance = distanceThreshold, maxIndex = null;
+		for (var i = startIndex + 1; i < endIndex; ++i)
+		{
+			var d = Kekule.GeometryUtils.getDistanceFromPointToLine(curvePoints[i], startCoord, endCoord);
+			if (d > maxDistance)
+			{
+				maxDistance = d;
+				maxIndex = i;
+			}
+		}
+		if (maxIndex === null)  // no max distance point
+		{
+			return [startCoord, endCoord];
+		}
+		else  // split track to two
+		{
+			var lines1 = GU._simplifyCurvePartToLineSegments(curvePoints, startIndex, maxIndex, distanceThreshold);
+			var lines2 = GU._simplifyCurvePartToLineSegments(curvePoints, maxIndex, endIndex, distanceThreshold);
+			lines2.shift();  // remove the common point between lines1 and lines2
+			var result = [].concat(lines1).concat(lines2);
+			return result;
+		}
 	}
 };
 
@@ -2664,6 +3315,24 @@ Kekule.BoxUtils = {
 			(coord1.z <= coord2.z)?
 				(result.z1 = coord1.z, result.z2 = coord2.z):
 				(result.z1 = coord2.z, result.z2 = coord1.z);
+		}
+		return result;
+	},
+	/**
+	 * Clone a box.
+	 * @param {Hash} box
+	 * @returns {Hash}
+	 */
+	clone: function(box)
+	{
+		var result = {
+			'x1': box.x1, 'y1': box.y1,
+			'x2': box.x2, 'y2': box.y2
+		};
+		if (Kekule.ObjUtils.notUnset(box.z1) && Kekule.ObjUtils.notUnset(box.z2))
+		{
+			result.z1 = box.z1;
+			result.z2 = box.z2;
 		}
 		return result;
 	},
@@ -2758,9 +3427,9 @@ Kekule.BoxUtils = {
 	getContainerBox: function(box1, box2)
 	{
 		if (!box1)
-			return Object.extend({}, box2);
+			return Kekule.BoxUtils.clone(box2); //Object.extend({}, box2);
 		else if (!box2)
-			return Object.extend({}, box1);
+			return Kekule.BoxUtils.clone(box1); //Object.extend({}, box1);
 		var b1 = Kekule.BoxUtils.normalize(box1);
 		var b2 = Kekule.BoxUtils.normalize(box2);
 		var result = {
@@ -2791,9 +3460,9 @@ Kekule.BoxUtils = {
 			'x1': Math.max(b1.x1, b2.x1),
 			'y1': Math.max(b1.y1, b2.y1),
 			'x2': Math.min(b1.x2, b2.x2),
-			'y2': Math.max(b1.y2, b2.y2)
+			'y2': Math.min(b1.y2, b2.y2)
 		};
-		if ((r.x1 >= r.x2) || (r.y1 >= r.y2))
+		if ((r.x1 > r.x2) || (r.y1 > r.y2))
 			return null;
 
 		if (Kekule.ObjUtils.notUnset(b1.z1) && Kekule.ObjUtils.notUnset(b1.z2)
@@ -2801,7 +3470,7 @@ Kekule.BoxUtils = {
 		{
 			r.z1 = Math.max(b1.z1, b2.z1);
 			r.z2 = Math.min(b1.z2, b2.z2);
-			if (r.z1 >= r.z2)
+			if (r.z1 > r.z2)
 				return null;
 		}
 		return r;
@@ -2855,8 +3524,8 @@ Kekule.BoxUtils = {
 	getCenterCoord: function(box)
 	{
 		var result = {
-			'x': (box.x1 || 0 + box.x2 || 0) / 2,
-			'y': (box.y1 || 0 + box.y2 || 0) / 2
+			'x': ((box.x1 || 0) + (box.x2 || 0)) / 2,
+			'y': ((box.y1 || 0) + (box.y2 || 0)) / 2
 		};
 		if (Kekule.ObjUtils.notUnset(box.z1) || Kekule.ObjUtils.notUnset(box.z2))
 			result.z = (box.z1 || 0 + box.z2 || 0) / 2;
@@ -2979,6 +3648,20 @@ Kekule.RectUtils = {
 		return result;
 	},
 	/**
+	 * Clone a rect object.
+	 * @param {Hash} rect
+	 * @returns {Hash}
+	 */
+	clone: function(rect)
+	{
+		return {
+			'left': rect.left,
+			'top': rect.top,
+			'width': rect.width,
+			'height': rect.height
+		};
+	},
+	/**
 	 * Returns if the width/height of rect is zero
 	 * @param rect
 	 */
@@ -3073,16 +3756,47 @@ Kekule.ZoomUtils = {
 	/** @private */
 	PREDEFINED_ZOOM_RATIOS: [0.1, 0.3, 0.5, 0.66, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 7, 10, 15, 20],
 	/**
+	 * Returns nearest zoom level to current ratio.
+	 * @param {Float} currRatio
+	 * @param {Array} constraintZoomLevels
+	 * @returns {Float}
+	 */
+	getNearestZoomLevel: function(currRatio, constraintZoomLevels)
+	{
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var len = rs.length;
+		if (currRatio > rs[len - 1])  // larger than the max one
+			return rs[len - 1];
+		else if (currRatio < rs[0])  // smaller than one of predefined ones
+			return rs[0];
+		else
+		{
+			for (var i = 0; i < len - 1; ++i)
+			{
+				var ps0 = rs[i];
+				var ps1 = rs[i + 1];
+				if (currRatio >= ps0 && currRatio <= ps1)
+				{
+					if (ps0 === 1 || ps1 === 1)
+						return 1;
+					var r = (currRatio - ps0) / (ps1 - ps0);
+					return (r <= 0.5)? ps0: ps1;
+				}
+			}
+		}
+	},
+	/**
 	 * Get a predefined ratio that bigger than currRatio, which can be used in usual zoom in function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomInRatio: function(currRatio, step)
+	getNextZoomInRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio < rs[len - 1])  // smaller than one of predefined ones
 		{
@@ -3101,13 +3815,14 @@ Kekule.ZoomUtils = {
 	 * Get a predefined ratio that smaller than currRatio, which can be used in usual zoom out function.
 	 * @param {Float} currRatio
 	 * @param {Int} step
+	 * @param {Array} constraintZoomLevels
 	 * @returns {Float}
 	 */
-	getNextZoomOutRatio: function(currRatio, step)
+	getNextZoomOutRatio: function(currRatio, step, constraintZoomLevels)
 	{
 		if (!step)
 			step = 1;
-		var rs = Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
+		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
 		if (currRatio > rs[0])  // smaller than one of predefined ones
 		{

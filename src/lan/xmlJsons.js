@@ -4,6 +4,10 @@
  * @author Partridge Jiang
  */
 
+(function($root){
+
+"use strict";
+
 var
 /**
  *  Class to handle JSON file and data.
@@ -100,7 +104,7 @@ JsonUtility = {
   /** Load a file that containers JSON string only, use WebShow.XHRLoader for AJAX loading. */
   loadJson: function(url, callback, options)
   {
-    loptions = options || {};
+    var loptions = options || {};
     if (!loptions.timeout)
       loptions.timeout = JsonUtility.DEF_LOAD_TIMEOUT;
 
@@ -167,6 +171,10 @@ var
  *  @class XmlUtility
  */
 XmlUtility = {
+  // appoint explicit DOMParser/DOMImplementation/XMLSerializer classes
+  DOM_PARSER: null,
+  DOM_IMPLEMENTATION: null,
+  XML_SERIALIZER: null,
 	/** @private */
   DEF_INCLUDE_TAG_NAME: 'include',
   /** @private */
@@ -188,84 +196,104 @@ XmlUtility = {
     if (!rootTagName) rootTagName = "";
     if (!namespaceURL) namespaceURL = "";
 
-    if (document.implementation && document.implementation.createDocument) {
+    if (XmlUtility.DOM_IMPLEMENTATION)  // node enviroment
+    {
+      var doc = (new XmlUtility.DOM_IMPLEMENTATION()).createDocument(namespaceURL, rootTagName, null);
+      return doc;
+    }
+    else if (typeof(document) !== 'undefined')  // is in web browser environment
+    {
+      if (document.implementation && document.implementation.createDocument)
+      {
         // This is the W3C standard way to do it
         var doc = document.implementation.createDocument(namespaceURL,
-                                                      rootTagName, null);
-				//console.log('Here: ', doc);
-				return doc;
-				/*
-        if (doc.load)
-          return doc;
-        else   // Safari adn Google Chrome do not support xmldoc.load
-        {
-          var xmlhttp = new XMLHttpRequest();
+          rootTagName, null);
+        //console.log('Here: ', doc);
+        return doc;
+        /*
+				if (doc.load)
+					return doc;
+				else   // Safari adn Google Chrome do not support xmldoc.load
+				{
+					var xmlhttp = new XMLHttpRequest();
 					doc = xmlhttp;
-          return doc;
-        }
-        */
-    }
-    else { // This is the IE way to do it
+					return doc;
+				}
+				*/
+      }
+      else if (typeof(ActiveXObject) !== "undefined")
+      { // This is the IE way to do it
         // Create an empty document as an ActiveX object
         // If there is no root element, this is all we have to do
         var doc = new ActiveXObject("MSXML2.DOMDocument");
 
         // If there is a root tag, initialize the document
-        if (rootTagName) {
-            // Look for a namespace prefix
-            var prefix = "";
-            var tagname = rootTagName;
-            var p = rootTagName.indexOf(':');
-            if (p != -1) {
-                prefix = rootTagName.substring(0, p);
-                tagname = rootTagName.substring(p+1);
-            }
+        if (rootTagName)
+        {
+          // Look for a namespace prefix
+          var prefix = "";
+          var tagname = rootTagName;
+          var p = rootTagName.indexOf(':');
+          if (p != -1)
+          {
+            prefix = rootTagName.substring(0, p);
+            tagname = rootTagName.substring(p + 1);
+          }
 
-						/*
-            // If we have a namespace, we must have a namespace prefix
-            // If we don't have a namespace, we discard any prefix
-            if (namespaceURL) {
-                if (!prefix) prefix = "a0"; // What Firefox uses
-            }
-            else prefix = "";
-            */
+          /*
+					// If we have a namespace, we must have a namespace prefix
+					// If we don't have a namespace, we discard any prefix
+					if (namespaceURL) {
+							if (!prefix) prefix = "a0"; // What Firefox uses
+					}
+					else prefix = "";
+					*/
 
-            // Create the root element (with optional namespace) as a
-            // string of text
-            var text = "<" + (prefix?(prefix+":"):"") +  tagname +
-                (namespaceURL?
-                 ((prefix? " xmlns:": " xmlns") + prefix + '="' + namespaceURL +'"')
-                 :"") +
-                "/>";
-            // And parse that text into the empty document
-            doc.loadXML(text);
+          // Create the root element (with optional namespace) as a
+          // string of text
+          var text = "<" + (prefix ? (prefix + ":") : "") + tagname +
+            (namespaceURL ?
+              ((prefix ? " xmlns:" : " xmlns") + prefix + '="' + namespaceURL + '"')
+              : "") +
+            "/>";
+          // And parse that text into the empty document
+          doc.loadXML(text);
         }
         return doc;
+      }
     }
   },
 
   /** parse Xml DOM from text, return XMLDocument */
   parse: function(text)
   {
-    if (typeof DOMParser != "undefined") {
+    if (XmlUtility.DOM_PARSER)
+      return (new XmlUtility.DOM_PARSER()).parseFromString(text, "application/xml");
+    else if (typeof(document) !== 'undefined')  // is in web browser environment
+    {
+      if (typeof DOMParser != "undefined")
+      {
         // Mozilla Firefox, Google Chrome and related browsers
-        return (new DOMParser( )).parseFromString(text, "application/xml");
-    }
-    else if (typeof ActiveXObject != "undefined") {
+        return (new DOMParser()).parseFromString(text, "application/xml");
+      }
+      else if (typeof ActiveXObject != "undefined")
+      {
         // Internet Explorer.
-        var doc = XmlUtility.newDocument( );  // Create an empty document
+        var doc = XmlUtility.newDocument();  // Create an empty document
         doc.loadXML(text);            // Parse text into it
         return doc;                   // Return it
-    }
-    else {
+      }
+      else
+      {
         // As a last resort, try loading the document from a data: URL
         // This is supposed to work in Safari. Thanks to Manos Batsis and
         // his Sarissa library (sarissa.sourceforge.net) for this technique.
         var url = "data:text/xml;charset=utf-8," + encodeURIComponent(text);
-        var request = new XMLHttpRequest( );
+        var request = new XMLHttpRequest();
         request.open("GET", url, false);
         request.send(null);
         return request.responseXML;
+      }
     }
   },
 
@@ -282,8 +310,7 @@ XmlUtility = {
   //   timeout: Integer, in ms
   {
     // check file ext first, if is a Xml-Js-Wrapper, call corresponding method
-    var ext = WebShow.URL.getFileExt(url);
-    if (ext.toLowerCase() == XmlUtility.FILE_EXT_XML_JS_WRAPPER)
+    if (url.lastIndexOf(XmlUtility.FILE_EXT_XML_JS_WRAPPER) === url.length - XmlUtility.FILE_EXT_XML_JS_WRAPPER.length)  // end with this ext
       return XmlUtility.loadHelper.loadJsWrapper(url, callback, options);
     if (!options)
       options = {disableInclude: false};
@@ -295,6 +322,7 @@ XmlUtility = {
 
   /** @private */
   loadHelper: {
+    // TODO: this method is unable to be used in Node.js environment
     /////////////////////////////////////////////////////////////////////
     //  Internal method for load to use
     ///////////////
@@ -613,7 +641,9 @@ XmlUtility = {
 		{
 			return XmlUtility.serializeNodePretty(node);
 		}
-    if (typeof XMLSerializer != "undefined")
+    if (XmlUtility.XML_SERIALIZER)
+      return (new XmlUtility.XML_SERIALIZER()).serializeToString(node);
+    else if (typeof XMLSerializer != "undefined")
       return (new XMLSerializer( )).serializeToString(node);
     else if (node.xml) return node.xml;
     else throw "XML.serialize is not supported or can't serialize " + node;
@@ -624,8 +654,11 @@ XmlUtility = {
   {
     try
     {
-      return XML((new XMLSerializer( )).serializeToString(node)).toXMLString();  // firefox
-			// TODO: E4X is deprecated in firefox 21, so need other methods
+      if (XmlUtility.XML_SERIALIZER)
+        return (new XmlUtility.XML_SERIALIZER()).serializeToString(node).toXMLString();
+      else
+        return new XMLSerializer().serializeToString(node).toXMLString();  // firefox
+			  // TODO: E4X is deprecated in firefox 21, so need other methods
     }
     catch(e)
     {
@@ -668,3 +701,9 @@ XmlUtility = {
       || xmlDoc.location;  // Opera
   }
 };
+
+// export those two util class to DataType namespace
+DataType.JsonUtility = JsonUtility;
+DataType.XmlUtility = XmlUtility;
+
+})(this);

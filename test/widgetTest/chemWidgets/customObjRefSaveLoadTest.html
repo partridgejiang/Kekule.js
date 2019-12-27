@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test of Object Ref Prop I/O of ChemObject</title>
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,algorithm,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+  <link type="chemical/x-mdl-molfile" id="cyclopropene" href="../../../demos/chemFiles/2D/cyclopropene.mol" />
+  <script>
+    var CustomClass = Class.create(Kekule.ChemObject, {
+	    /** @private */
+	    CLASS_NAME: 'CustomClass',
+	    /** @private */
+	    initProperties: function()
+      {
+		    this.defineProp('testRefObj', {'dataType': 'ObjectEx', 'objRef': true, 'autoUpdate': true});
+	      this.defineProp('testRefObjId', {'dataType': DataType.STRING, 'serializable': false,
+          'setter': null,
+          'getter': function(){ var obj = this.getTestRefObj(); return obj&&obj.getId();}
+        });
+	      this.defineProp('testRefObjArray', {'dataType': DataType.ARRAY, 'objRef': true, 'objRefRoot': 'parent', 'autoUpdate': true});
+	      this.defineProp('testRefObjArrayIds', {'dataType': DataType.STRING, 'serializable': false,
+		      'setter': null,
+		      'getter': function(){
+	      	  var ids = [];
+	      	  var objs = this.getTestRefObjArray();
+	      	  if (objs)
+              objs.forEach(function(obj) {
+                ids.push(obj && obj.getId());
+              });
+	      	  return ids.join(', ');
+	        }
+	      });
+	    },
+
+	    objSpaceOfOwnerUpdated: function($super, obj, owner, operation)
+      {
+      	return $super(obj, owner, operation);
+      	if (operation === Kekule.ObjectTreeOperation.REMOVE)
+        {
+        	if (obj === this.getTestRefObj())
+        		this.setTestRefObj(null);
+        	var objs = this.getTestRefObjArray();
+        	var index = objs.indexOf(obj);
+        	if (index >= 0)
+        		objs.splice(index, 1);
+        }
+      }
+    });
+
+    function addObjects()
+    {
+    	var space = composer.getChemObj();
+    	var mol = space.getChildAt(0);
+    	var atom = mol.getNodeAt(1);
+    	var atoms = mol.getNodes();
+    	var obj = new CustomClass();
+    	space.appendChild(obj);
+    	obj.setTestRefObj(atom);
+    	obj.setTestRefObjArray(Kekule.ArrayUtils.clone(atoms));
+    }
+
+    var composer;
+    Kekule.X.domReady(function(){
+    	composer = Kekule.Widget.getWidgetById('composer');
+    	Kekule.Widget.getWidgetById('btnAddObjs').on('execute', function(e){ addObjects(); });
+    });
+  </script>
+</head>
+<body>
+  <div id="toolbar" data-widget="Kekule.Widget.ButtonGroup">
+    <button id="btnAddObjs" data-widget="Kekule.Widget.Button">Add Objects</button>
+  </div>
+  <br />
+  <div id="composer" style="width:800px;height:600px" data-widget="Kekule.Editor.Composer" data-resizable="true" data-chem-obj="url(#cyclopropene)"></div>
+</body>
+</html>

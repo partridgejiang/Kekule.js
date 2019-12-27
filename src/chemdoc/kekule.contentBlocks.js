@@ -84,7 +84,9 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 	/** @private */
 	initProperties: function()
 	{
-
+		// special property, indicate whether the block has been changed and
+		// the size should be recalculated
+		this.defineProp('needRecalcSize', {'dataType': DataType.BOOL});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -206,6 +208,13 @@ Kekule.TextBlock = Class.create(Kekule.ContentBlock,
 	getAutoIdPrefix: function()
 	{
 		return 't';
+	},
+	/** @ignore */
+	doObjectChange: function($super, modifiedPropNames)
+	{
+		// when text block changed, size may need to be recalculated
+		if (Kekule.ArrayUtils.intersect(['text', 'renderOptions'], modifiedPropNames).length)
+			this.setNeedRecalcSize(true);
 	}
 });
 

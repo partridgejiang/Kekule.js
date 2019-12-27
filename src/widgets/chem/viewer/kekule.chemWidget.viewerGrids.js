@@ -191,7 +191,10 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 		{
 			var pair = this._shadowedPropPairs[i];
 			var value = this.getPropValue(pair.prop);
-			viewer.setPropValue(pair.viewerProp, value);
+			if (value !== undefined)
+			{
+				viewer.setPropValue(pair.viewerProp, value);
+			}
 		}
 	},
 

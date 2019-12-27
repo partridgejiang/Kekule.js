@@ -224,7 +224,7 @@ Kekule.Render.Abstract3DDrawBridge = Class.create(
  * @property {Object} drawBridge A object that implements the actual draw job. Read only.
  * @class
  */
-Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
+Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.CompositeRenderer,  // Kekule.Render.AbstractRenderer,
 /** @lends Kekule.Render.Base3DRenderer# */
 {
 	/** @private */
@@ -354,7 +354,8 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 				var info = cylinderInfos[i];
 				var obj = this.drawCylinderEx(context, info.coord1, info.coord2, info.radius,
 					{'color': info.color, 'withEndCaps': drawEndCaps});
-				this.addToDrawGroup(obj, result);
+				if (obj)
+					this.addToDrawGroup(obj, result);
 			}
 			return result;
 		}
@@ -373,7 +374,7 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	 * @returns {Variant}
 	 * @private
 	 */
-	drawParallelLines: function(context, lineInfos)
+	drawParallelLines: function(context, lineInfos, drawEndCaps)
 	{
 		var b = this.getDrawBridge();
 		if (b.drawParallelLines)
@@ -397,7 +398,7 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 			}
 			else*/
 			{
-				var result = [];  //this.createDrawGroup(context);
+				var lines = [];  //this.createDrawGroup(context);
 				for (var i = 0; i < count; ++i)
 				{
 					var info = lineInfos[i];
@@ -408,7 +409,19 @@ Kekule.Render.Base3DRenderer = Class.create(Kekule.Render.AbstractRenderer,
 							'opacity': info.opacity
 						});
 					//this.addToDrawGroup(elem, result);
-					result.push(elem);
+					if (elem)
+						lines.push(elem);
+				}
+				var result;
+				if (lines.length <= 1)
+					result = lines[0];
+				else
+				{
+					result = this.createDrawGroup(context);
+					for (var i = 0, l = lines.length; i < l; ++i)
+					{
+						this.addToDrawGroup(lines[i], result);
+					}
 				}
 				return result;
 			}
@@ -457,8 +470,9 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 	},
 
 	/** @private */
-	doEstimateObjBox: function(context, options, allowCoordBorrow)
+	doEstimateSelfObjBox: function(context, options, allowCoordBorrow)
 	{
+		/*
 		var o = this.getChemObj();
 		if (o.getExposedContainerBox3D)
 			return o.getExposedContainerBox3D(allowCoordBorrow);
@@ -466,6 +480,8 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 			return o.getContainerBox3D(allowCoordBorrow);
 		else
 			return null;
+		*/
+		return Kekule.Render.ObjUtils.getContainerBox(this.getChemObj(), this.getCoordMode(), allowCoordBorrow);
 	},
 
 	/** @private */
@@ -513,9 +529,10 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 	/** @ignore */
 	doDraw: function($super, context, baseCoord, options)
 	{
-		// since options passed by draw method is already proteced, we are not worry about change it here.
+		// since options passed by draw method is already protected, we are not worry about change it here.
 		this.prepareTransformParams(context, baseCoord, options);
 		var result = $super(context, baseCoord, options);
+		return result;
 	},
 
 	/**
@@ -573,6 +590,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		this.getRenderCache(context).invTransformMatrix = invTransformMatrix;
 
 		this.getRenderCache(context).transformParams = result;
+
 		return result;
 	},
 
@@ -613,6 +631,10 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		{
 			objBox = this.estimateObjBox(context, drawOptions, result.allowCoordBorrow);
 			//console.log('OBJ BOX CALC', objBox);
+		}
+		if (!objBox)  // object is actually empty, use a fake one to avoid exceptions
+		{
+			objBox = {'x1': 0, 'x2': 1, 'y1': 0, 'y2': 1, 'z1': 0, 'z2': 1};
 		}
 		var boxCenter = {'x': (objBox.x1 + objBox.x2) / 2, 'y': (objBox.y1 + objBox.y2) / 2, 'z': (objBox.z1 + objBox.z2) / 2};
 
@@ -992,7 +1014,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	},
 
 	/** @private */
-	doEstimateObjBox: function(context, options, allowCoordBorrow)
+	doEstimateSelfObjBox: function(context, options, allowCoordBorrow)
 	{
 		// TODO: just a rough calc
 		var box = this.getChemObj().getExposedContainerBox3D(allowCoordBorrow);
@@ -1178,6 +1200,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	/** @private */
 	calcNodeBaseRadius: function(node, renderOptions)
 	{
+		var radius;
 		var localOptions = node.getOverriddenRender3DOptions() || {};
 		var atomicNumber = node.getAtomicNumber? node.getAtomicNumber(): null;
 		if (localOptions.nodeRadius || renderOptions.nodeRadius)  // radius explicitly set
@@ -1196,11 +1219,13 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	},
 
 	/** @private */
-	doDraw: function($super, context, baseCoord, options)
+	doDrawSelf: function($super, context, baseCoord, options)
 	{
 		$super(context, baseCoord, options);
 
 		var chemObj = this.getChemObj();
+
+		//console.log('draw ctab', baseCoord, options);
 
 		//var transformOptions = this.getFinalTransformParams(context, options.transformParams);
 		var transformOptions = options.transformParams;
@@ -1272,6 +1297,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 */
 	transformObjCoord3DToContext: function(context, obj, transformMatrix, childTransformMatrix, allowCoordBorrow)
 	{
+		var result, coord;
 		if (obj && obj.getAbsBaseCoord3D)
 		{
 			coord = obj.getAbsBaseCoord3D(allowCoordBorrow);
@@ -1279,6 +1305,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 			{
 				var newCoord = Kekule.CoordUtils.transform3DByMatrix(coord, transformMatrix);
 				this.setTransformedCoord3D(context, obj, newCoord);
+				result = newCoord;
 			}
 			if (obj.getNodes)  // has child nodes
 			{
@@ -1287,6 +1314,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 					this.transformObjCoord3DToContext(context, obj.getNodeAt(i), childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 		}
+		return result;
 	},
 
 	/**
@@ -1311,12 +1339,13 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 			//this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix);
 			if (ctab && (ctab.hasNode(obj, false) || ctab.hasConnector(obj, false)))  // is direct child of ctab
 			{
-				this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord3DToContext(obj, transformMatrix, childTransformMatrix, allowCoordBorrow);
 			}
 			else  // is nested child
-				this.transformObjCoord3DToContext(obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
+				result = this.transformObjCoord3DToContext(obj, childTransformMatrix, childTransformMatrix, allowCoordBorrow);
 		}
-		return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		//return this.getExtraProp2(context, obj, this.TRANSFORM_COORD_FIELD);
+		return result;
 	},
 	/**
 	 * Set transformed coord.
@@ -1379,7 +1408,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 */
 	doDrawNode: function(context, group, node, parentChemObj, options, finalTransformOptions)
 	{
-		var result;
+		var result, op;
 		var nodeRenderMode = this.getRenderCache(context).nodeRenderMode;
 		if (nodeRenderMode === NRM.NONE)  // do not need to render node
 			return null;
@@ -1480,7 +1509,7 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 					coord2 = this.getTransformedCoord3D(context, obj2, finalTransformOptions.allowCoordBorrow);
 					if (coord2)
 					{
-						elem = this.doDrawConnectorShape(context, connector, obj1, obj2, parentChemObj, coord1, coord2, op, finalTransformOptions);
+						elem = this.doDrawConnectorShape(context, connector, [obj1, obj2], parentChemObj, coord1, coord2, op, finalTransformOptions);
 						if (elem && subGroup)
 							this.addToDrawGroup(elem, subGroup);
 					}
@@ -1495,11 +1524,10 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	},
 
 	/**
-	 * Draw a connector (bond) connecting node1 and node2 with a specified shape on context.
+	 * Draw a connector (bond) connecting nodes with a specified shape on context.
 	 * @param {Object} context
 	 * @param {Kekule.ChemStructureConnector} connector
-	 * @param {Kekule.ChemStructureNode} node1
-	 * @param {Kekule.ChemStructureNode} node2
+	 * @param {Array} nodes
 	 * @param {Object} parentChemObj
 	 * @param {Hash} coord1
 	 * @param {Hash} coord2
@@ -1507,11 +1535,14 @@ Kekule.Render.ChemCtab3DRenderer = Class.create(Kekule.Render.ChemObj3DRenderer,
 	 * @param {Object} finalTransformOptions
 	 * @private
 	 */
-	doDrawConnectorShape: function(context, connector, node1, node2, parentChemObj, coord1, coord2, options, finalTransformOptions)
+	doDrawConnectorShape: function(context, connector, nodes, parentChemObj, coord1, coord2, options, finalTransformOptions)
 	{
 		var C = Kekule.CoordUtils;
 		var localOptions = connector.getOverriddenRender3DOptions() || {};
 		var unitLength = options.unitLength;
+
+		var node1 = nodes[0];
+		var node2 = nodes[1];
 
 		var spliceMode = oneOf(localOptions.bondSpliceMode, options.bondSpliceMode/*, options.defBondSpliceMode*/);
 
@@ -1799,7 +1830,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 	},
 
 	/** @ignore */
-	doDraw: function($super, context, baseCoord, options)
+	doDrawSelf: function($super, context, baseCoord, options)
 	{
 		//this.applyConfigs();
 		$super(context, baseCoord, options);
@@ -1812,7 +1843,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 		return this._concreteRenderer.redraw(context);
 	},
 	/** @ignore */
-	doUpdate: function(context, updatedObjDetails, updateType)
+	doUpdateSelf: function(context, updatedObjDetails, updateType)
 	{
 		var objs = this._extractObjsOfUpdateObjDetails(updatedObjDetails);
 
@@ -1826,10 +1857,58 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 		return this._concreteRenderer.doUpdate(context, updatedObjDetails, updateType);
 	},
 	/** @ignore */
+	doClearSelf: function(context)
+	{
+		var r = this._concreteRenderer;
+		if (r)
+			return r.clear(context);
+	},
+	/** @ignore */
 	estimateRenderBox: function(context, options, allowCoordBorrow)
 	{
 		return this._concreteRenderer.estimateRenderBox(context, this._getConcreteRendererDrawOptions(options), allowCoordBorrow);
 	},
+
+	/** @ignore */
+	getChildObjs: function($super)
+	{
+		var chemObj = this.getChemObj();
+		if (chemObj && chemObj.getAttachedMarkers)
+		{
+			var r = [];
+			var childObjs = (chemObj.getExposedNodes() || []).concat(chemObj.getExposedConnectors() || []);
+			for (var i = 0, l = childObjs.length; i < l; ++i)
+			{
+				var obj = childObjs[i];
+				r = r.concat(obj.getAttachedMarkers() || []);
+			}
+			return r.concat($super());
+		}
+		else
+			return $super();
+	},
+	/** @ignore */
+	_needWholelyDraw: function($super, partialDrawObjs, context)
+	{
+		var result = $super(partialDrawObjs, context);
+		if (!result)
+		{
+			var chemObj = this.getChemObj();
+			var hasStructObjs = false;
+			for (var i = 0, l = partialDrawObjs.length; i < l; ++i)
+			{
+				var pObj = partialDrawObjs[i];
+				if (pObj.isChildOf(chemObj) /* && (pObj instanceof Kekule.ChemStructureObject)*/)  // child attachers also need redraw whole
+				{
+					hasStructObjs = true;
+					break;
+				}
+			}
+			result = hasStructObjs;
+		}
+		return result;
+	},
+
 	/** @ignore */
 	transformCoordToObj: function(context, chemObj, coord)
 	{
@@ -1865,7 +1944,7 @@ Kekule.Render.CompositeObj3DRenderer = Class.create(Kekule.Render.ChemObj3DRende
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.CompositeObj3DRenderer'
 });
-Kekule.Render.RendererDefineUtils.addCompositeRenderSupport(Kekule.Render.CompositeObj3DRenderer);
+//Kekule.Render.RendererDefineUtils.addCompositeRenderSupport(Kekule.Render.CompositeObj3DRenderer);
 
 /**
  * Class to render composite molecule.
@@ -1879,7 +1958,7 @@ Kekule.Render.CompositeMolecule3DRenderer = Class.create(Kekule.Render.Composite
 	CLASS_NAME: 'Kekule.Render.CompositeMolecule3DRenderer',
 
 	/** @ignore */
-	getChildObjs: function()
+	getChildObjs: function($super)
 	{
 		var r = [];
 		var group = this.getChemObj().getSubMolecules();
@@ -1888,7 +1967,7 @@ Kekule.Render.CompositeMolecule3DRenderer = Class.create(Kekule.Render.Composite
 			var o = group.getObjAt(i);
 			r.push(o);
 		}
-		return r;
+		return r.concat($super());
 	}
 });
 
@@ -1904,7 +1983,7 @@ Kekule.Render.ChemObjGroupList3DRenderer = Class.create(Kekule.Render.CompositeO
 	CLASS_NAME: 'Kekule.Render.ChemObjGroupList3DRenderer',
 
 	/** @ignore */
-	getChildObjs: function()
+	getChildObjs: function($super)
 	{
 		var obj = this.getChemObj();
 		if (obj instanceof Kekule.ChemObjList)
@@ -1920,7 +1999,7 @@ Kekule.Render.ChemObjGroupList3DRenderer = Class.create(Kekule.Render.CompositeO
 			r = obj.getAllObjs();
 		}
 
-		return r;
+		return (r || []).concat($super());
 	}
 });
 
@@ -1942,9 +2021,9 @@ Kekule.Render.ChemSpaceElement3DRenderer = Class.create(Kekule.Render.CompositeO
 	CLASS_NAME: 'Kekule.Render.ChemSpaceElement3DRenderer',
 
 	/** @ignore */
-	getChildObjs: function()
+	getChildObjs: function($super)
 	{
-		return this.getChemObj().getChildren().toArray();
+		return (this.getChemObj().getChildren().toArray() || []).concat($super());
 	}
 });
 
@@ -1961,10 +2040,10 @@ Kekule.Render.ChemSpace3DRenderer = Class.create(Kekule.Render.CompositeObj3DRen
 	CLASS_NAME: 'Kekule.Render.ChemSpace3DRenderer',
 
 	/** @ignore */
-	getChildObjs: function()
+	getChildObjs: function($super)
 	{
 		//return this.getChemObj().getRoot().getChildren().toArray();
-		return [this.getChemObj().getRoot()];
+		return [this.getChemObj().getRoot()].concat($super());
 	}
 });
 

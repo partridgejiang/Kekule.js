@@ -97,7 +97,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		else  // object
 		{
 			var jsonObj = {};
-			ObjSerializerFactory.getSerializer('json').save(data, jsonObj);
+			Class.ObjSerializerFactory.getSerializer('json').save(data, jsonObj);
 			result = JSON.stringify(jsonObj);
 		}
 		return result;
@@ -109,7 +109,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		if (DataType.isSimpleValue(jsonObj))
 			return jsonObj;
 		else
-			return ObjSerializerFactory.getSerializer('json').load(null, jsonObj);
+			return Class.ObjSerializerFactory.getSerializer('json').load(null, jsonObj);
 	},
 
 	/**
@@ -123,13 +123,25 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		if (this._useSessionClipboard())
 		{
 			var s = this.serializeData(data);
-			this._crossPageStorage.setItem(this.STORAGE_KEY + dataType, s);
+			var success;
+			try
+			{
+				this._crossPageStorage.setItem(this.STORAGE_KEY + dataType, s);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (!success)
+				this._data.set(dataType, data);  // fallback approach
 		}
 		else
 		{
 			this._data.set(dataType, data);
 		}
 		this.invokeEvent('setData', {'dataType': dataType, 'data': data});
+
 		return this;
 	},
 	/**
@@ -142,11 +154,21 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	{
 		if (this._useSessionClipboard())
 		{
-			var s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
-			return s? this.deserializeData(s): null;
+			var s, success;
+			try
+			{
+				s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (success)
+				return s? this.deserializeData(s): null;
 		}
-		else
-			return this._data.get(dataType);
+		//else
+		return this._data.get(dataType);  // fallback approach
 	},
 	/**
 	 * Check there are data in clipboard.
@@ -155,7 +177,23 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	 */
 	hasData: function(dataType)
 	{
-		return Kekule.ObjUtils.notUnset(this.getData(dataType));
+		if (this._useSessionClipboard())
+		{
+			var s, success;
+			try
+			{
+				s = this._crossPageStorage.getItem(this.STORAGE_KEY + dataType);
+				success = true;
+			}
+			catch(err)  // avoid possible failure of local storage in Firefox
+			{
+				Kekule.warn(err);
+			}
+			if (success)
+				return Kekule.ObjUtils.notUnset(s);
+		}
+		//else
+		return Kekule.ObjUtils.notUnset(this._data.get(dataType));  // fallback approach
 	},
 	/**
 	 * Clear all data in clipboard.
@@ -204,7 +242,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	setObjects: function(dataType, objs)
 	{
 		var jsonObjs = [];
-		var serializer = ObjSerializerFactory.getSerializer('json');
+		var serializer = Class.ObjSerializerFactory.getSerializer('json');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
@@ -230,7 +268,7 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 			if (!DataType.isArrayValue(jsonObjs))
 				jsonObjs = [jsonObjs];
 			var result = [];
-			var serializer = ObjSerializerFactory.getSerializer('json');
+			var serializer = Class.ObjSerializerFactory.getSerializer('json');
 			for (var i = 0, l = jsonObjs.length; i < l; ++i)
 			{
 				var jsonObj = jsonObjs[i];

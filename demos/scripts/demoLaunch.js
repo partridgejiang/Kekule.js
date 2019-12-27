@@ -21,11 +21,13 @@ Kekule.DemoUtils = {
 		Kekule.DemoUtils.DEMO_INFOS.push(result);
 		return result;
 	},
-	newConcreteDemo: function(id, title, shortDesc, url, introUrl)
+	newConcreteDemo: function(id, title, shortDesc, url, introUrl, extraOptions)
 	{
 		var result = DU.newDemoItem(id, title, shortDesc);
 		result.url = url;
 		result.introUrl = introUrl;
+		if (extraOptions)
+			result.options = extraOptions;
 		return result;
 	},
 
@@ -206,9 +208,9 @@ Kekule.Demos.LaunchUtils = {
 		demoFrameElem.ownerDocument.title = demoInfo.title + ' - Kekule.js Demo';
 		var rootElem = demoFrameElem.ownerDocument.documentElement;
 		/*
-		if (rootElem)  // add offline manifest		
+		if (rootElem)  // add offline manifest
 		{
-			var manifestUrl = ILU.DEMO_ITEM_BASE_PATH + url.replace('.html', '.manifest'); 
+			var manifestUrl = ILU.DEMO_ITEM_BASE_PATH + url.replace('.html', '.manifest');
 			rootElem.setAttribute('manifest', manifestUrl);
 		}
 		*/

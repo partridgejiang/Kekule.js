@@ -9,6 +9,7 @@
  * requires /widgets/operation/kekule.operations.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.boundInfoRecorder.js
+ * requires /html/xbrowsers/kekule.x.js
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
  * requires /widgets/chem/editor/kekule.chemEditor.extensions.js
@@ -21,8 +22,10 @@
 
 "use strict";
 
+var OU = Kekule.ObjUtils;
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
+var CU = Kekule.CoordUtils;
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
@@ -75,7 +78,21 @@ Kekule.Editor.BoxRegion = {
 	INSIDE: 20
 };
 
-
+/**
+ * Enumeration of mode in selecting object in editor.
+ * @enum
+ * @ignore
+ */
+Kekule.Editor.SelectMode = {
+	/** Draw a box in editor when selecting, select all object inside a box. **/
+	RECT: 0,
+	/** Draw a curve in editor when selecting, select all object inside this curve polygon. **/
+	POLYGON: 1,
+	/** Draw a curve in editor when selecting, select all object intersecting this curve. **/
+	POLYLINE: 2,
+	/** Click on a child object to select the whole standalone ancestor. **/
+	ANCESTOR: 10
+};
 
 /**
  * A base chem editor.
@@ -101,7 +118,9 @@ Kekule.Editor.BoxRegion = {
  * @property {Object} uiContext Context to draw UI marks. Usually this is a 2D context.
  * @property {Object} objDrawBridge Bridge to draw chem objects. Alias of property drawBridge.
  * @property {Object} uiDrawBridge Bridge to draw UI markers.
+ * @property {Int} selectMode Value from Kekule.Editor.SelectMode, set the mode of selecting operation in editor.
  * @property {Array} selection An array of selected basic object.
+ * @property {Hash} zoomCenter The center coord (based on client element) when zooming editor.
  * //@property {Bool} standardizeObjectsBeforeSaving Whether standardize molecules (and other possible objects) before saving them.
  */
 
@@ -129,6 +148,13 @@ Kekule.Editor.BoxRegion = {
  * Note: this event is not the same as editObjsChanged. When beginUpdateObj is called, editObjsChanged
  * event still will be invoked but editObjsUpdated event will be suppressed.
  * @name Kekule.Editor.BaseEditor#editObjsUpdated
+ * @event
+ */
+/**
+ * Invoked when the selected objects in editor has been changed.
+ * When beginUpdateObj is called, selectedObjsUpdated event will be suppressed.
+ *   event param of it has one fields: {objs}.
+ * @name Kekule.Editor.BaseEditor#selectedObjsUpdated
  * @event
  */
 /**
@@ -178,11 +204,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	CLASS_NAME: 'Kekule.Editor.BaseEditor',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
+	/** @private */
+	OBSERVING_GESTURES: ['rotate', 'rotatestart', 'rotatemove', 'rotateend', 'rotatecancel',
+		'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout'],
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, editorConfigs)
 	{
 		this._objSelectFlag = 0;  // used internally
 		this._objectUpdateFlag = 0;  // used internally
+		this._objectManipulateFlag = 0;  // used internally
 		this._uiMarkerUpdateFlag = 0;  // used internally
 		this._updatedObjectDetails = []; // used internally
 		this._operatingObjs = [];  // used internally
@@ -190,11 +220,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._initialRenderTransformParams = null;  // used internally, must init before $super
 		  // as in $super, chemObj may be loaded and _initialRenderTransformParams will be set at that time
 		this._objChanged = false;   // used internally, mark whether some changes has been made to chem object
+		this._lengthCaches = {};  // used internally, stores some value related to distance and length
 
 		this.setPropStoreFieldValue('enableCreateNewDoc', true);
 		this.setPropStoreFieldValue('enableOperHistory', true);
 		this.setPropStoreFieldValue('enableOperContext', true);
 		this.setPropStoreFieldValue('initOnNewDoc', true);
+		//this.setPropStoreFieldValue('initialZoom', 1.5);
+
+		//this.setPropStoreFieldValue('selectMode', Kekule.Editor.SelectMode.POLYGON);  // debug
 
 		$super(parentOrElementOrDocument, chemObj, renderType);
 		//this.initEventHandlers();
@@ -204,6 +238,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.setPropStoreFieldValue('editorConfigs', editorConfigs || this.createDefaultConfigs());
 		//this.setPropStoreFieldValue('uiMarkers', []);
+		this.setEnableGesture(true);
 	},
 	/** @private */
 	initProperties: function()
@@ -212,6 +247,48 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getDisplayerConfigs(); },
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
 		});
+		this.defineProp('defBondLength', {'dataType': DataType.FLOAT, 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('defBondLength');
+				if (!result)
+					result = this.getEditorConfigs().getStructureConfigs().getDefBondLength();
+				return result;
+			}
+		});
+		this.defineProp('defBondScreenLength', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				/*
+				var result = this.getPropStoreFieldValue('defBondScreenLength');
+				if (!result)
+				{
+					var bLength = this.getDefBondLength();
+					result = this.translateDistance(bLength, Kekule.Render.CoordSys.CHEM, Kekule.Render.CoordSys.SCREEN);
+				}
+				return result;
+				*/
+				var cached = this._lengthCaches.defBondScreenLength;
+				if (cached)
+					return cached;
+				else
+				{
+					var bLength = this.getDefBondLength() || 0;
+					var result = this.translateDistance(bLength, Kekule.Render.CoordSystem.CHEM, Kekule.Render.CoordSystem.SCREEN);
+					this._lengthCaches.defBondScreenLength = result;
+					return result;
+				}
+			}
+		});
+		// Different pointer event (mouse, touch) has different bound inflation settings, stores here
+		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false, 'setter': null,
+			'getter': function(){
+				var pType = this.getCurrPointerType();
+				return this.getInteractionBoundInflation(pType);
+			}
+		});
+		// The recent pointer device interacted with this editor
+		this.defineProp('currPointerType', {'dataType': DataType.STRING, 'serializable': false});
 
 		//this.defineProp('standardizeObjectsBeforeSaving', {'dataType': DataType.BOOL});
 
@@ -243,6 +320,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			},
 			'setter': null
 		});
+		this.defineProp('operationsInCurrManipulation', {'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PRIVATE, 'serializable': false}); // private
 
 		this.defineProp('selection', {'dataType': DataType.ARRAY, 'serializable': false,
 			'getter': function()
@@ -261,6 +339,27 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.selectionChanged();
 			}
 		});
+		this.defineProp('selectMode', {'dataType': DataType.INT,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('selectMode');
+				if (Kekule.ObjUtils.isUnset(result))
+					result = Kekule.Editor.SelectMode.RECT;  // default value
+				return result;
+			},
+			'setter': function(value)
+			{
+				if (this.getSelectMode() !== value)
+				{
+					//console.log('set select mode', value);
+					this.setPropStoreFieldValue('selectMode', value);
+					this.hideSelectingMarker();
+				}
+			}
+		});
+		// private, whether defaultly select in toggle mode
+		this.defineProp('isToggleSelectOn', {'dataType': DataType.BOOL});
+
 
 		this.defineProp('hotTrackedObjs', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
@@ -318,6 +417,25 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					var b = this.getPropStoreFieldValue('drawBridge');
 					if (b && ctx)
 						b.releaseContext(ctx);
+				}
+			}
+		});
+
+		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				if (this.getEnableGesture() !== bValue)
+				{
+					this.setPropStoreFieldValue('enableGesture', bValue);
+					if (bValue)
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
+					else
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
 				}
 			}
 		});
@@ -411,6 +529,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					// ui painter will always in 2D mode
 					var markers = this.getUiMarkers();
 					result = new Kekule.Render.ChemObjPainter(Kekule.Render.RendererType.R2D, markers, this.getUiDrawBridge());
+					result.setCanModifyTargetObj(true);
 					this.setPropStoreFieldValue('uiPainter', result);
 					return result;
 				}
@@ -483,7 +602,21 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		// private object to record all bound infos
-		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
+		//this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null});
+
+		this.defineProp('zoomCenter', {'dataType': DataType.HASH});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setOperationsInCurrManipulation([]);
+	},
+
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
 	},
 
 	/** @private */
@@ -538,11 +671,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		this.setPropStoreFieldValue('uiDrawBridge', null);
 		this.setPropStoreFieldValue('uiContext', null);
-
-		var r = this.getPropStoreFieldValue('boundInfoRecorder');
-		if (r)
-			r.finalize();
-		this.setPropStoreFieldValue('boundInfoRecorder', null);
 
 		var m = this.getPropStoreFieldValue('objRendererMap');
 		if (m)
@@ -604,6 +732,78 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.createUiEventReceiverElem();
 	},
 
+	// override getter and setter of intialZoom property
+	/** @ignore */
+	doGetInitialZoom: function($super)
+	{
+		var result;
+		var config = this.getEditorConfigs();
+		if (config)
+			result = config.getInteractionConfigs().getEditorInitialZoom();
+		if (!result)
+			result = $super();
+		return result;
+	},
+	/** @ignore */
+	doSetInitialZoom: function($super, value)
+	{
+		var config = this.getEditorConfigs();
+		if (config)
+			config.getInteractionConfigs().setEditorInitialZoom(value);
+		$super(value);
+	},
+
+	/** @ignore */
+	zoomTo: function($super, value, suspendRendering, zoomCenterCoord)
+	{
+		var CU = Kekule.CoordUtils;
+		var currZoomLevel = this.getCurrZoom();
+		var zoomLevel = value;
+		var result = $super(value, suspendRendering);
+		// adjust zoom center
+		var selfElem = this.getElement();
+		var currScrollCoord = {'x': selfElem.scrollLeft, 'y': selfElem.scrollTop};
+		if (!zoomCenterCoord)
+			zoomCenterCoord = this.getZoomCenter();
+		if (!zoomCenterCoord )  // use the center of client as the zoom center
+		{
+			zoomCenterCoord = CU.add(currScrollCoord, {'x': selfElem.clientWidth / 2, 'y': selfElem.clientHeight / 2});
+		}
+		//console.log('zoom center info', this.getZoomCenter(), zoomCenterCoord);
+		//if (zoomCenterCoord)
+		{
+			var scrollDelta = CU.multiply(zoomCenterCoord, zoomLevel / currZoomLevel - 1);
+			selfElem.scrollLeft += scrollDelta.x;
+			selfElem.scrollTop += scrollDelta.y;
+		}
+		return result;
+	},
+	/**
+	 * Zoom in.
+	 */
+	zoomIn: function(step, zoomCenterCoord)
+	{
+		var curr = this.getCurrZoom();
+		var ratio = Kekule.ZoomUtils.getNextZoomInRatio(curr, step || 1);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
+	},
+	/**
+	 * Zoom out.
+	 */
+	zoomOut: function(step, zoomCenterCoord)
+	{
+		var curr = this.getCurrZoom();
+		var ratio = Kekule.ZoomUtils.getNextZoomOutRatio(curr, step || 1);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
+	},
+	/**
+	 * Reset to normal size.
+	 */
+	resetZoom: function(zoomCenterCoord)
+	{
+		return this.zoomTo(this.getInitialZoom() || 1, null, zoomCenterCoord);
+	},
+
 	/**
 	 * Change the size of client element.
 	 * Width and height is based on px.
@@ -637,6 +837,45 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		}
 		this.repaint();
+	},
+
+	/**
+	 * Returns the screen box (x1, y1, x2, y2) of current visible client area in editor.
+	 * @returns {Hash}
+	 */
+	getVisibleClientScreenBox: function()
+	{
+		var elem = this.getEditClientElem().parentNode;
+		var result = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		var pos = this.getClientScrollPosition();
+		result.x1 = pos.x;
+		result.y1 = pos.y;
+		result.x2 = result.x1 + result.width;
+		result.y2 = result.y1 + result.height;
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in a specified coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientBoxOfSys: function(coordSys)
+	{
+		var screenBox = this.getVisibleClientScreenBox();
+		var coords = Kekule.BoxUtils.getMinMaxCoords(screenBox);
+		var c1 = this.translateCoord(coords.min, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var c2 = this.translateCoord(coords.max, Kekule.Editor.CoordSys.SCREEN, coordSys);
+		var result = Kekule.BoxUtils.createBox(c1, c2);
+		return result;
+	},
+	/**
+	 * Returns the context box (x1, y1, x2, y2, in object coord system) of current visible client area in editor.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getVisibleClientObjBox: function(coordSys)
+	{
+		return this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
 	},
 
 	/**
@@ -703,7 +942,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	repaint: function($super, overrideOptions)
 	{
 		var ops = overrideOptions;
-		//console.log('repaint called');
+		//console.log('repaint called', overrideOptions);
 		//console.log('repaint', this._initialRenderTransformParams);
 		/*
 		if (this._initialRenderTransformParams)
@@ -874,6 +1113,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var zoom = this.getDrawOptions().zoom;
 		this.zoomChanged(zoom);
+		// clear some length related caches
+		this._clearLengthCaches();
 		$super();
 	},
 
@@ -881,6 +1122,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	zoomChanged: function(zoomLevel)
 	{
 		// do nothing here
+	},
+
+	/** @private */
+	_clearLengthCaches: function()
+	{
+		this._lengthCaches = {};
 	},
 
 	/**
@@ -974,13 +1221,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = $super(chemObj);
 		if (result)
 		{
+			result.setCanModifyTargetObj(true);
 			this.installPainterEventHandlers(result);
+			/* Moved up to class ChemObjDisplayer
 			// create new bound info recorder
 			this.createNewBoundInfoRecorder(this.getPainter());
+			*/
 		}
 		return result;
 	},
 	/** @private */
+	/* Moved up to class ChemObjDisplayer
 	createNewBoundInfoRecorder: function(renderer)
 	{
 		var old = this.getPropStoreFieldValue('boundInfoRecorder');
@@ -990,6 +1241,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//recorder.setTargetContext(this.getObjContext());
 		this.setPropStoreFieldValue('boundInfoRecorder', recorder);
 	},
+	*/
 
 	/** @private */
 	getDrawContextParentElem: function()
@@ -1051,7 +1303,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	clearObjContext: function()
 	{
-		//console.log('clear obj context');
+		//console.log('clear obj context', this.getObjContext() === this.getDrawContext());
 		this._clearSpecContext(this.getObjContext(), this.getDrawBridge());
 		if (this.getBoundInfoRecorder())
 			this.getBoundInfoRecorder().clear(this.getObjContext());
@@ -1197,7 +1449,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var target = e.target;
 		var propNames = e.changedPropNames || [];
-		var bypassPropNames = ['owner', 'ownedObjs'];  // these properties do not affect rendering
+		var bypassPropNames = ['id', 'owner', 'ownedObjs'];  // these properties do not affect rendering
 		propNames = Kekule.ArrayUtils.exclude(propNames, bypassPropNames);
 		if (propNames.length || !e.changedPropNames)  // when changedPropNames is not set, may be change event invoked by parent when suppressing child objects
 		{
@@ -1242,6 +1494,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	beginUpdateObject: function()
 	{
+		if (this._objectUpdateFlag >= 0)
+		{
+			this.invokeEvent('beginUpdateObject');
+		}
 		--this._objectUpdateFlag;
 	},
 	/**
@@ -1257,6 +1513,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.objectsChanged(this._updatedObjectDetails);
 				this._updatedObjectDetails = [];
 			}
+			this._execAfterUpdateObjectProcs();
+			this.invokeEvent('endUpdateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
 	},
 	/**
@@ -1265,6 +1523,75 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	isUpdatingObject: function()
 	{
 		return (this._objectUpdateFlag < 0);
+	},
+
+	/**
+	 * Register suspended function called right after endUpdateObject method.
+	 * @private
+	 */
+	_registerAfterUpdateObjectProc: function(proc)
+	{
+		if (this.isUpdatingObject())
+		{
+			if (!this.endUpdateObject.suspendedProcs)
+				this.endUpdateObject.suspendedProcs = [];
+			this.endUpdateObject.suspendedProcs.push(proc);
+		}
+		else
+			proc.apply(this);
+	},
+	/** @private */
+	_execAfterUpdateObjectProcs: function()
+	{
+		var procs = this.endUpdateObject.suspendedProcs;
+		if (procs)
+		{
+			while (procs.length)
+			{
+				var proc = procs.shift();
+				if (proc)
+					proc.apply(this);
+			}
+		}
+	},
+
+	/** @private */
+	_mergeObjUpdatedDetails: function(dest, target)
+	{
+		for (var i = 0, l = target.length; i < l; ++i)
+		{
+			this._mergeObjUpdatedDetailItem(dest, target[i]);
+		}
+	},
+	/** @private */
+	_mergeObjUpdatedDetailItem: function(dest, targetItem)
+	{
+		for (var i = 0, l = dest.length; i < l; ++i)
+		{
+			var destItem = dest[i];
+			// can merge
+			if (destItem.obj === targetItem.obj)
+			{
+				if (!destItem.propNames)
+					destItem.propNames = [];
+				if (targetItem.propNames)
+					Kekule.ArrayUtils.pushUnique(destItem.propNames, targetItem.propNames);
+				return;
+			}
+		}
+		// can not merge
+		dest.push(targetItem);
+	},
+	/** @private */
+	_logUpdatedDetail: function(details)
+	{
+		var msg = '';
+		details.forEach(function(d){
+			msg += 'Obj: ' + d.obj.getId() + '[' + d.obj.getClassName() + ']     ';
+			msg += 'Props: [' + d.propNames.join(', ') + ']';
+			msg += '\n';
+		});
+		console.log(msg);
 	},
 	/**
 	 * Notify the object(s) property has been changed and need to be updated.
@@ -1275,7 +1602,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	objectChanged: function(obj, changedPropNames)
 	{
 		var data = {'obj': obj, 'propNames': changedPropNames};
-		//console.log('obj changed', obj.getClassName(), changedPropNames);
+		//console.log('obj changed', obj.getClassName(), obj.getId(), changedPropNames);
 		var result = this.objectsChanged(data);
 		this.invokeEvent('editObjChanged', Object.extend({}, data));  // avoid change data
 		return result;
@@ -1290,28 +1617,41 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var a = DataType.isArrayValue(objDetails)? objDetails: [objDetails];
 		if (this.isUpdatingObject())  // suspend notification, just push objs in cache
 		{
-			Kekule.ArrayUtils.pushUnique(this._updatedObjectDetails, a);
-			//console.log('updating objects, suspending...')
+			//Kekule.ArrayUtils.pushUnique(this._updatedObjectDetails, a);
+			this._mergeObjUpdatedDetails(this._updatedObjectDetails, a);
+			//console.log('updating objects, suspending...', this._updatedObjectDetails);
+			//this._logUpdatedDetail(this._updatedObjectDetails);
 		}
 		else
 		{
-			//console.log('do change job');
-			this.doObjectsChanged(a);
-			this.invokeEvent('editObjsUpdated', Object.extend({}, objDetails));
+			//console.log('object changed');
+			var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(a);
+			this.doObjectsChanged(a, updateObjs);
+			this.invokeEvent('editObjsUpdated', {'details': Object.extend({}, objDetails)});
 		}
 
 		this._objChanged = true;  // mark object changed
-		this.invokeEvent('editObjsChanged', Object.extend({}, objDetails));
+		this.invokeEvent('editObjsChanged', {'details': Object.extend({}, objDetails)});
+
+		var selectedObjs = this.getSelection();
+		if (selectedObjs && updateObjs)
+		{
+			var changedSelectedObjs = AU.intersect(selectedObjs, updateObjs);
+			if (changedSelectedObjs.length)
+				this.invokeEvent('selectedObjsUpdated', {'objs': changedSelectedObjs});
+		}
 	},
 	/**
 	 * Do actual job of objectsChanged. Descendants should override this method.
 	 * @private
 	 */
-	doObjectsChanged: function(objDetails)
+	doObjectsChanged: function(objDetails, updateObjs)
 	{
 		var oDetails = Kekule.ArrayUtils.clone(objDetails);
-		var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
-		//console.log('changed objects', updateObjs);
+		if (!updateObjs)
+			updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(oDetails);
+
+		//console.log('origin updateObjs', updateObjs);
 
 		var additionalObjs = this._getAdditionalRenderRelatedObjs(updateObjs);
 
@@ -1326,10 +1666,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//updateObjs = updateObjs.concat(additionalObjs);
 		Kekule.ArrayUtils.pushUnique(updateObjs, additionalObjs);
 
+		//console.log('changed objects', updateObjs);
+
 		var operRenderers = this._operatingRenderers;
 		var updateOperContextOnly = operRenderers && this._isAllObjsRenderedByRenderers(this.getObjContext(), updateObjs, operRenderers);
 		var canDoPartialUpdate = this.canModifyPartialGraphic();
 
+		//console.log('update objs and operRenderers', updateObjs, operRenderers);
 		//console.log('object changed', updateOperContextOnly, canDoPartialUpdate);
 
 		if (canDoPartialUpdate)  // partial update
@@ -1338,7 +1681,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getRootRenderer().modify(this.getObjContext(),/* updateObjDetails*/oDetails);
 			// always repaint UI markers
 			this.recalcUiMarkers();
-			//console.log('partial update');
+			//console.log('partial update', oDetails);
 		}
 		else  // update whole context
 		{
@@ -1351,8 +1694,75 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				//console.log('[repaint whole]');
 				this.repaint();
+				/*
+				var self = this;
+				(function(){ self.repaint(); }).defer();
+				*/
 			}
 		}
+	},
+
+	/**
+	 * Call this method to indicate a continuous manipulation operation is doing (e.g. moving or rotating objects).
+	 */
+	beginManipulateObject: function()
+	{
+		//console.log('[BEGIN MANIPULATE]');
+		//console.log('[Call begin update]', this._objectManipulateFlag);
+		if (this._objectManipulateFlag >= 0)
+		{
+			this.invokeEvent('beginManipulateObject');
+		}
+		--this._objectManipulateFlag;
+	},
+	/**
+	 * Call this method to indicate the update process is over and objectChanged will be immediately called.
+	 */
+	endManipulateObject: function()
+	{
+		++this._objectManipulateFlag;
+		//console.log('[END MANIPULATE]');
+		if (!this.isManipulatingObject())
+		{
+			this._objectManipulateFlag = 0;
+			this.doManipulationEnd();
+			//console.log('[MANIPULATE DONE]');
+			//this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+		}
+	},
+	/**
+	 * Check if beginUpdateObject is called and should not send object change notification immediately.
+	 */
+	isManipulatingObject: function()
+	{
+		return (this._objectManipulateFlag < 0);
+	},
+	/**
+	 * Called when endManipulateObject is called and the object manipulation is really done.
+	 * @private
+	 */
+	doManipulationEnd: function()
+	{
+		//console.log('[MANIPULATE END]');
+		this.setOperationsInCurrManipulation([]);
+		this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+	},
+
+	/**
+	 * A combination of method beginUpdateObject/beginManipulateObject.
+	 */
+	beginManipulateAndUpdateObject: function()
+	{
+		this.beginManipulateObject();
+		this.beginUpdateObject();
+	},
+	/**
+	 * A combination of method endUpdateObject/endManipulateObject.
+	 */
+	endManipulateAndUpdateObject: function()
+	{
+		this.endUpdateObject();
+		this.endManipulateObject();
 	},
 
 	/** @private */
@@ -1416,6 +1826,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			// prepare operating renderers
 			this._prepareRenderObjsInOperContext(objs);
 			this._operatingObjs = objs;
+			//console.log('oper objs', this._operatingObjs);
 			//console.log('oper renderers', this._operatingRenderers);
 		}
 		// finally force repaint the whole client area, both objContext and operContext
@@ -1555,6 +1966,60 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////// methods about bound maps ////////////////////////////
+	/**
+	 * Returns bound inflation for interaction with a certain pointer device (mouse, touch, etc.)
+	 * @param {String} pointerType
+	 */
+	getInteractionBoundInflation: function(pointerType)
+	{
+		var cache = this._lengthCaches.interactionBoundInflations;
+		var cacheKey = pointerType || 'default';
+		if (cache)
+		{
+			if (cache[cacheKey])
+			{
+				//console.log('cached!')
+				return cache[cacheKey];
+			}
+		}
+
+		// no cache, calculate
+		var iaConfigs = this.getEditorConfigs().getInteractionConfigs();
+		var defRatioPropName = 'objBoundTrackInflationRatio';
+		var typedRatio, defRatio = iaConfigs.getPropValue(defRatioPropName);
+		if (pointerType)
+		{
+			var sPointerType = pointerType.upperFirst();
+			var typedRatioPropName = defRatioPropName + sPointerType;
+			if (iaConfigs.hasProperty(typedRatioPropName))
+				typedRatio = iaConfigs.getPropValue(typedRatioPropName);
+		}
+		var actualRatio = typedRatio || defRatio;
+		var ratioValue = actualRatio && this.getDefBondScreenLength() * actualRatio;
+
+		var minValuePropName = 'objBoundTrackMinInflation';
+		var typedMinValue, defMinValue = iaConfigs.getPropValue(minValuePropName);
+		if (pointerType)
+		{
+			var typedMinValuePropName = minValuePropName + sPointerType;
+			if (iaConfigs.hasProperty(typedMinValuePropName))
+				typedMinValue = iaConfigs.getPropValue(typedMinValuePropName);
+		}
+		var actualMinValue = typedMinValue || defMinValue;
+
+		var actualValue = Math.max(ratioValue || 0, actualMinValue);
+
+		// stores to cache
+		if (!cache)
+		{
+			cache = {};
+			this._lengthCaches.interactionBoundInflations = cache;
+		}
+		cache[cacheKey] = actualValue;
+		//console.log('to cache');
+
+		return actualValue;
+	},
 	/** @private */
 	clearBoundMap: function()
 	{
@@ -1591,10 +2056,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @returns {Array}
 	 * @private
 	 */
-	getBoundInfosAtCoord: function(screenCoord, filterFunc)
+	getBoundInfosAtCoord: function(screenCoord, filterFunc, boundInflation)
 	{
+		/*
+		if (!boundInflation)
+			throw 'boundInflation not set!';
+		*/
 		var boundRecorder = this.getBoundInfoRecorder();
-		var delta = this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
 		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), screenCoord);
 		var coord = this.screenCoordToContext(screenCoord);
 		var refCoord = (this.getRenderType() === Kekule.Render.RendererType.R3D)? {'x': 0, 'y': 0}: null;
@@ -1609,15 +2078,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Array} excludeObjs Objects in this array will not be returned.
 	 * @returns {Object}
 	 */
-	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs)
+	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs, boundInflation)
 	{
 		var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
 		if (!enableTrackNearest)
-			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord), excludeObjs);
+			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
 		// else, track on nearest
 		// new approach, find nearest boundInfo at coord
 		var SU = Kekule.Render.MetaShapeUtils;
-		var boundInfos = this.getBoundInfosAtCoord(screenCoord);
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
 		//var filteredBoundInfos = [];
 		var result, lastShapeInfo, lastDistance;
 		var setResult = function(boundInfo, shapeInfo, distance)
@@ -1654,16 +2123,137 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		return result;
 	},
+
+	/**
+	 * Returns all basic drawn object at coord (with inflation) based on screen system.
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} excludeObjs
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
+	 * @returns {Array}
+	 * @private
+	 */
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, filterObjClasses)
+	{
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		var result = [];
+		if (boundInfos)
+		{
+			if (excludeObjs)
+			{
+				boundInfos = AU.filter(boundInfos, function(boundInfo){
+					var obj = boundInfos[i].obj;
+					if (!obj)
+						return false;
+					if (obj)
+					{
+						if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+							return false;
+					}
+					return true;
+				});
+			}
+
+			// the coord sticked obj should be firstly selected for unstick operation, even it is under the back layer
+			var _getStickLevel = function(obj){
+				var stickTarget = obj && obj.getCoordStickTarget && obj.getCoordStickTarget();
+				return stickTarget? 1: 0;
+			};
+			boundInfos.sort(function(b1, b2){
+				var stickLevel1 = _getStickLevel(b1.obj);
+				var stickLevel2 = _getStickLevel(b2.obj);
+				return (stickLevel1 - stickLevel2);
+			});
+
+			var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+			if (enableTrackNearest)  // sort by bound distances to screenCoord
+			{
+				var SU = Kekule.Render.MetaShapeUtils;
+				boundInfos.sort(function(b1, b2){  // the topmost boundinfo at tail
+					var result = 0;
+					var shapeInfo1 = b1.boundInfo;
+					var shapeInfo2 = b2.boundInfo;
+					result = -(shapeInfo1.shapeType - shapeInfo2.shapeType);
+					if (!result)
+					{
+						var d1 = SU.getDistance(screenCoord, shapeInfo1);
+						var d2 = SU.getDistance(screenCoord, shapeInfo2);
+						result = -(d1 - d2);
+					}
+					return result;
+				});
+			}
+
+			for (var i = boundInfos.length - 1; i >= 0; --i)
+			{
+				var obj = boundInfos[i].obj;
+				if (obj)
+				{
+					if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+						continue;
+				}
+				result.push(obj);
+			}
+
+			if (result && filterObjClasses)  // filter
+			{
+				result = AU.filter(result, function(obj)
+				{
+					for (var i = 0, l = filterObjClasses.length; i < l; ++i)
+					{
+						if (obj instanceof filterObjClasses[i])
+							return true;
+					}
+					return false;
+				});
+			}
+		}
+		return result;
+	},
 	/**
 	 * Returns the topmost basic drawn object at coord based on screen system.
-	 * @params {Hash} coord
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
 	 * @returns {Object}
 	 * @private
 	 */
-	getTopmostBasicObjectAtCoord: function(screenCoord)
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, filterObjClasses)
 	{
-		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord);
+		/*
+		var boundItem = this.getTopmostBoundInfoAtCoord(screenCoord, null, boundInflation);
 		return boundItem? boundItem.obj: null;
+		*/
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, filterObjClasses);
+
+		return objs && objs[0];
+	},
+
+	/**
+	 * Returns geometry bounds of a obj in editor.
+	 * @param {Kekule.ChemObject} obj
+	 * @param {Number} boundInflation
+	 * @returns {Array}
+	 */
+	getChemObjBounds: function(obj, boundInflation)
+	{
+		var bounds = [];
+		var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getObjContext(), obj);
+		if (infos && infos.length)
+		{
+			for (var j = 0, k = infos.length; j < k; ++j)
+			{
+				var info = infos[j];
+				var bound = info.boundInfo;
+				if (bound)
+				{
+					// inflate
+					bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, boundInflation);
+					bounds.push(bound);
+				}
+			}
+		}
+		return bounds;
 	},
 
 	//////////////////// methods about UI markers ///////////////////////////////
@@ -1744,7 +2334,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	modifyShapeBasedMarker: function(marker, newShapeInfo, drawStyles, updateRenderer)
 	{
 		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
-		marker.setShapeInfo(newShapeInfo);
+		if (newShapeInfo)
+			marker.setShapeInfo(newShapeInfo);
 		if (drawStyles)
 			marker.setDrawStyles(drawStyles);
 		// notify change and update renderer
@@ -1821,7 +2412,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'color': styleConfigs.getHotTrackerColor(),
 			'opacity': styleConfigs.getHotTrackerOpacity()
 		};
-		var inflation = this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		var inflation = this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
 		var bounds = [];
 		for (var i = 0, l = infos.length; i < l; ++i)
 		{
@@ -1891,7 +2482,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 			*/
 			//console.log('hot track here');
-			this.setHotTrackedObj(this.getTopmostBasicObjectAtCoord(screenCoord));
+			this.setHotTrackedObj(this.getTopmostBasicObjectAtCoord(screenCoord, this.getCurrBoundInflation()));
 		}
 		return this;
 	},
@@ -1906,11 +2497,21 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 	/**
 	 * Remove all hot track markers.
+	 * @param {Bool} doNotClearHotTrackedObjs If false, the hotTrackedObjs property will also be set to empty.
 	 */
-	hideHotTrack: function()
+	hideHotTrack: function(doNotClearHotTrackedObjs)
 	{
 		this.hideHotTrackMarker();
+		if (!doNotClearHotTrackedObjs)
+			this.clearHotTrackedObjs();
 		return this;
+	},
+	/**
+	 * Set hot tracked objects to empty.
+	 */
+	clearHotTrackedObjs: function()
+	{
+		this.setHotTrackedObjs([]);
 	},
 	/**
 	 * Add a obj to hot tracked objects.
@@ -1935,19 +2536,23 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Modify hot track marker to bind to newBoundInfo.
 	 * @private
 	 */
-	changeSelectionAreaMarkerBound: function(newBoundInfo)
+	changeSelectionAreaMarkerBound: function(newBoundInfo, drawStyles)
 	{
 		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
-		var drawStyles = {
-			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
-			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
-			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
-			'opacity': styleConfigs.getSelectionMarkerOpacity()
-		};
+		if (!drawStyles)
+			drawStyles = {
+				'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+				'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+				'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+				'opacity': styleConfigs.getSelectionMarkerOpacity()
+			};
 		//console.log(drawStyles);
 		var marker = this.getUiSelectionAreaMarker();
-		marker.setVisible(true);
-		this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
+		if (marker)
+		{
+			marker.setVisible(true);
+			this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
+		}
 		return this;
 	},
 	/** @private */
@@ -2037,6 +2642,215 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.endUpdateUiMarkers();
 		}
 	},
+	/** @private */
+	_highlightSelectionAreaMarker: function()
+	{
+		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+		var highlightStyles = {
+			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+			'opacity': styleConfigs.getSelectionMarkerEmphasisOpacity()
+		};
+		this.changeSelectionAreaMarkerBound(null, highlightStyles);  // change draw styles without the modification of bound
+	},
+	/** @private */
+	_restoreSelectionAreaMarker: function()
+	{
+		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+		var highlightStyles = {
+			'strokeColor': styleConfigs.getSelectionMarkerStrokeColor(),
+			'strokeWidth': styleConfigs.getSelectionMarkerStrokeWidth(),
+			'fillColor': styleConfigs.getSelectionMarkerFillColor(),
+			'opacity': styleConfigs.getSelectionMarkerOpacity()
+		};
+		this.changeSelectionAreaMarkerBound(null, highlightStyles);  // change draw styles without the modification of bound
+	},
+	/**
+	 * Pulse selection marker several times to get the attention of user.
+	 * @param {Int} duration Duration of the whole process, in ms.
+	 * @param {Int} pulseCount The times of highlighting marker.
+	 */
+	pulseSelectionAreaMarker: function(duration, pulseCount)
+	{
+		if (this.getUiSelectionAreaMarker())
+		{
+			if (!duration)
+				duration = this.getEditorConfigs().getInteractionConfigs().getSelectionMarkerDefPulseDuration() || 0;
+			if (!pulseCount)
+				pulseCount = this.getEditorConfigs().getInteractionConfigs().getSelectionMarkerDefPulseCount() || 1;
+			if (!duration)
+				return;
+
+			var interval = duration / pulseCount;
+			this.doPulseSelectionAreaMarker(interval, pulseCount);
+		}
+		return this;
+	},
+	/** @private */
+	doPulseSelectionAreaMarker: function(interval, pulseCount)
+	{
+		this._highlightSelectionAreaMarker();
+		//if (pulseCount <= 1)
+		setTimeout(this._restoreSelectionAreaMarker.bind(this), interval);
+		if (pulseCount > 1)
+			setTimeout(this.doPulseSelectionAreaMarker.bind(this, interval, pulseCount - 1), interval * 2);
+	},
+
+
+	///////////////////////// Methods about selecting region ////////////////////////////////////
+	/**
+	 * Start a selecting operation from coord.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the selecting region will toggle selecting state inside it rather than select them directly.
+	 */
+	startSelecting: function(screenCoord, toggleFlag)
+	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
+
+		if (!toggleFlag)
+			this.deselectAll();
+
+		var M = Kekule.Editor.SelectMode;
+		var mode = this.getSelectMode();
+		this._currSelectMode = mode;
+
+		return (mode === M.POLYLINE || mode === M.POLYGON)?
+				this.startSelectingCurveDrag(screenCoord, toggleFlag):
+				this.startSelectingBoxDrag(screenCoord, toggleFlag);
+	},
+	/**
+	 * Add a new anchor coord of selecting region.
+	 * This method is called when pointer device moving in selecting.
+	 * @param {Hash} screenCoord
+	 */
+	addSelectingAnchorCoord: function(screenCoord)
+	{
+		var M = Kekule.Editor.SelectMode;
+		var mode = this._currSelectMode;
+		return (mode === M.POLYLINE || mode === M.POLYGON)?
+				this.dragSelectingCurveToCoord(screenCoord):
+				this.dragSelectingBoxToCoord(screenCoord);
+	},
+	/**
+	 * Selecting operation end.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the selecting region will toggle selecting state inside it rather than select them directly.
+	 */
+	endSelecting: function(screenCoord, toggleFlag)
+	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
+
+		var M = Kekule.Editor.SelectMode;
+		var mode = this._currSelectMode;
+		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
+		var objs;
+		if (mode === M.POLYLINE || mode === M.POLYGON)
+		{
+			var polygonCoords = this._selectingCurveCoords;
+			// simplify the polygon first
+			var threshold = this.getEditorConfigs().getInteractionConfigs().getSelectingCurveSimplificationDistanceThreshold();
+			var simpilfiedCoords = Kekule.GeometryUtils.simplifyCurveToLineSegments(polygonCoords, threshold);
+			//console.log('simplify selection', polygonCoords.length, simpilfiedCoords.length);
+
+			this.endSelectingCurveDrag(screenCoord, toggleFlag);
+
+			if (mode === M.POLYLINE)
+			{
+				var lineWidth = this.getEditorConfigs().getInteractionConfigs().getSelectingBrushWidth();
+				objs = this.getObjectsIntersetExtendedPolyline(simpilfiedCoords, lineWidth);
+			}
+			else  // if (mode === M.POLYGON)
+			{
+				objs = this.getObjectsInPolygon(simpilfiedCoords, enablePartial);
+				this.endSelectingCurveDrag(screenCoord, toggleFlag);
+			}
+		}
+		else // M.RECT or M.ANCESTOR
+		{
+			var startCoord = this._selectingBoxStartCoord;
+			var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
+			objs = this.getObjectsInScreenBox(box, enablePartial);
+			this.endSelectingBoxDrag(screenCoord, toggleFlag);
+		}
+		/*
+		if (objs && objs.length)
+		{
+			if (this._isInAncestorSelectMode())  // need to change to select standalone ancestors
+			{
+				objs = this._getAllStandaloneAncestorObjs(objs);  // get standalone ancestors (e.g. molecule)
+				//objs = this._getAllCoordDependantObjs(objs);  // but select there coord dependant children (e.g. atoms and bonds)
+			}
+			if (toggleFlag)
+				this.toggleSelectingState(objs);
+			else
+				this.select(objs);
+		}
+		*/
+		objs = this._getActualSelectedObjsInSelecting(objs);
+		if (toggleFlag)
+			this.toggleSelectingState(objs);
+		else
+			this.select(objs);
+		this.hideSelectingMarker();
+	},
+	/**
+	 * Cancel current selecting operation.
+	 */
+	cancelSelecting: function()
+	{
+		this.hideSelectingMarker();
+	},
+
+	/** @private */
+	_getActualSelectedObjsInSelecting: function(objs)
+	{
+		if (objs && objs.length)
+		{
+			if (this._isInAncestorSelectMode())  // need to change to select standalone ancestors
+			{
+				objs = this._getAllStandaloneAncestorObjs(objs);  // get standalone ancestors (e.g. molecule)
+				//objs = this._getAllCoordDependantObjs(objs);  // but select there coord dependant children (e.g. atoms and bonds)
+			}
+			return objs;
+		}
+		else
+			return [];
+	},
+	/** @private */
+	_isInAncestorSelectMode: function()
+	{
+		return this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR;
+	},
+	/** @private */
+	_getAllStandaloneAncestorObjs: function(objs)
+	{
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj && obj.getStandaloneAncestor)
+				obj = obj.getStandaloneAncestor();
+			AU.pushUnique(result, obj);
+		}
+		return result;
+	},
+	/* @private */
+	/*
+	_getAllCoordDependantObjs: function(objs)
+	{
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj && obj.getCoordDependentObjects)
+				AU.pushUnique(result, obj.getCoordDependentObjects());
+		}
+		return result;
+	},
+	*/
 
 	/**
 	 * Start to drag a selecting box from coord.
@@ -2047,8 +2861,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		//this.setInteractionStartCoord(screenCoord);
 		this._selectingBoxStartCoord = screenCoord;
+		/*
 		if (!toggleFlag)
 			this.deselectAll();
+		*/
 		//this.setEditorState(Kekule.Editor.EditorState.SELECTING);
 	},
 	/**
@@ -2073,7 +2889,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var startCoord = this._selectingBoxStartCoord;
 		//this.setInteractionEndCoord(coord);
 		this._selectingBoxEndCoord = screenCoord;
-
+		/*
 		var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
 		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
 		if (toggleFlag)
@@ -2081,7 +2897,50 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		else
 			this.selectObjectsInScreenBox(box, enablePartial);
 		this.hideSelectingMarker();
+		*/
 	},
+
+	/**
+	 * Start to drag a selecting curve from coord.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the box will toggle selecting state inside it rather than select them directly.
+	 */
+	startSelectingCurveDrag: function(screenCoord, toggleFlag)
+	{
+		//this.setInteractionStartCoord(screenCoord);
+		this._selectingCurveCoords = [screenCoord];
+		//this.setEditorState(Kekule.Editor.EditorState.SELECTING);
+	},
+	/**
+	 * Drag selecting curve to a new coord.
+	 * @param {Hash} screenCoord
+	 */
+	dragSelectingCurveToCoord: function(screenCoord)
+	{
+		//var startCoord = this.getInteractionStartCoord();
+		this._selectingCurveCoords.push(screenCoord);
+		this.changeSelectingMarkerCurve(this._selectingCurveCoords, this._currSelectMode === Kekule.Editor.SelectMode.POLYGON);
+	},
+	/**
+	 * Selecting curve drag end.
+	 * @param {Hash} coord
+	 * @param {Bool} toggleFlag If true, the box will toggle selecting state inside it rather than select them directly.
+	 */
+	endSelectingCurveDrag: function(screenCoord, toggleFlag)
+	{
+		this._selectingCurveCoords.push(screenCoord);
+
+		/*
+		var box = Kekule.BoxUtils.createBox(startCoord, screenCoord);
+		var enablePartial = this.getEditorConfigs().getInteractionConfigs().getEnablePartialAreaSelecting();
+		if (toggleFlag)
+			this.toggleSelectingStateOfObjectsInScreenBox(box, enablePartial);
+		else
+			this.selectObjectsInScreenBox(box, enablePartial);
+		this.hideSelectingMarker();
+		*/
+	},
+
 	/**
 	 * Try select a object on coord directly.
 	 * @param {Hash} coord
@@ -2089,14 +2948,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	selectOnCoord: function(coord, toggleFlag)
 	{
+		if (toggleFlag === undefined)
+			toggleFlag = this.getIsToggleSelectOn();
 		//console.log('select on coord');
-		var obj = this.getTopmostBasicObjectAtCoord(coord);
+		var obj = this.getTopmostBasicObjectAtCoord(coord, this.getCurrBoundInflation());
 		if (obj)
 		{
-			if (toggleFlag)
-				this.toggleSelectingState(obj);
-			else
-				this.select(obj);
+			var objs = this._getActualSelectedObjsInSelecting([obj]);
+			if (objs)
+			{
+				if (toggleFlag)
+					this.toggleSelectingState(objs);
+				else
+					this.select(objs);
+			}
 		}
 	},
 
@@ -2105,21 +2970,49 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Modify hot track marker to bind to newBoundInfo.
 	 * @private
 	 */
-	changeSelectingMarkerBound: function(newBoundInfo)
+	changeSelectingMarkerBound: function(newBoundInfo, drawStyles)
 	{
 		var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
-		var drawStyles = {
-			'strokeColor': styleConfigs.getSelectingMarkerStrokeColor(),
-			'strokeWidth': styleConfigs.getSelectingMarkerStrokeWidth(),
-			'strokeDash':  styleConfigs.getSelectingMarkerStrokeDash(),
-			'fillColor': styleConfigs.getSelectingMarkerFillColor(),
-			'opacity': styleConfigs.getSelectingMarkerOpacity()
-		};
+		if (!drawStyles)  // use the default one
+			drawStyles = {
+				'strokeColor': styleConfigs.getSelectingMarkerStrokeColor(),
+				'strokeWidth': styleConfigs.getSelectingMarkerStrokeWidth(),
+				'strokeDash':  styleConfigs.getSelectingMarkerStrokeDash(),
+				'fillColor': styleConfigs.getSelectingMarkerFillColor(),
+				'opacity': styleConfigs.getSelectingMarkerOpacity()
+			};
 		var marker = this.getUiSelectingMarker();
 		marker.setVisible(true);
 		//console.log('change hot track', bound, drawStyles);
 		this.modifyShapeBasedMarker(marker, newBoundInfo, drawStyles, true);
 		return this;
+	},
+	changeSelectingMarkerCurve: function(screenCoords, isPolygon)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = screenCoords.length - 1; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(screenCoords[i]));
+		}
+		var shapeInfo = Kekule.Render.MetaShapeUtils.createShapeInfo(
+				isPolygon? Kekule.Render.MetaShapeType.POLYGON: Kekule.Render.MetaShapeType.POLYLINE,
+				ctxCoords
+		);
+		var drawStyle;
+		if (!isPolygon)
+		{
+			var styleConfigs = this.getEditorConfigs().getUiMarkerConfigs();
+			drawStyle = {
+				'strokeColor': styleConfigs.getSelectingBrushMarkerStrokeColor(),
+				'strokeWidth': this.getEditorConfigs().getInteractionConfigs().getSelectingBrushWidth(),
+				'strokeDash':  styleConfigs.getSelectingBrushMarkerStrokeDash(),
+				//'fillColor': styleConfigs.getSelectingMarkerFillColor(),
+				'lineCap': styleConfigs.getSelectingBrushMarkerStrokeLineCap(),
+				'lineJoin': styleConfigs.getSelectingBrushMarkerStrokeLineJoin(),
+				'opacity': styleConfigs.getSelectingBrushMarkerOpacity()
+			};
+		}
+		return this.changeSelectingMarkerBound(shapeInfo, drawStyle);
 	},
 	/**
 	 * Change the rect box of selection marker.
@@ -2308,18 +3201,30 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	_addSelectRenderOptions: function(chemObj)
 	{
-		//console.log('_addSelectRenderOptions', chemObj);
-		var method = this._getObjRenderOptionItemAppendMethod(chemObj);
-		//if (!method)
-		//console.log(chemObj.getClassName());
-		return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		var selOps = this.getObjSelectedRenderOptions();
+		if (selOps)
+		{
+			//console.log('_addSelectRenderOptions', chemObj);
+			var method = this._getObjRenderOptionItemAppendMethod(chemObj);
+			//if (!method)
+			//console.log(chemObj.getClassName());
+			return method.apply(chemObj, [selOps]);
+		}
+		else
+			return null;
 	},
 	/** @private */
 	_removeSelectRenderOptions: function(chemObj)
 	{
-		//console.log('_removeSelectRenderOptions', chemObj);
-		var method = this._getObjRenderOptionItemRemoveMethod(chemObj);
-		return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		var selOps = this.getObjSelectedRenderOptions();
+		if (selOps)
+		{
+			//console.log('_removeSelectRenderOptions', chemObj);
+			var method = this._getObjRenderOptionItemRemoveMethod(chemObj);
+			return method.apply(chemObj, [this.getObjSelectedRenderOptions()]);
+		}
+		else
+			return null;
 	},
 
 	/** Notify that a continuous selection update is underway. UI need not to be changed. */
@@ -2414,6 +3319,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	isInSelection: function(obj)
 	{
+		if (!obj)
+			return false;
 		return this.getSelection().indexOf(obj) >= 0;
 	},
 	/**
@@ -2423,6 +3330,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	addObjToSelection: function(obj)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
 		Kekule.ArrayUtils.pushUnique(selection, obj.getNearestSelectableObject());
 		this._addSelectRenderOptions(obj);
@@ -2430,16 +3339,34 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return this;
 	},
 	/**
-	 * Remove an object from selection.
+	 * Remove an object (and all its child objects) from selection.
 	 * Descendants can override this method.
 	 * @param {Kekule.ChemObject} obj
 	 */
-	removeObjFromSelection: function(obj)
+	removeObjFromSelection: function(obj, doNotNotifySelectionChange)
 	{
+		if (!obj)
+			return this;
 		var selection = this.getSelection();
+		var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
+		if (relObj === obj)
+			relObj === null;
 		Kekule.ArrayUtils.remove(selection, obj);
 		this._removeSelectRenderOptions(obj);
-		this.selectionChanged();
+		if (relObj)
+		{
+			Kekule.ArrayUtils.remove(selection, relObj);
+			this._removeSelectRenderOptions(relObj);
+		}
+		// remove possible child objects
+		for (var i = selection.length - 1; i >= 0; --i)
+		{
+			var remainObj = selection[i];
+			if (remainObj.isChildOf && (remainObj.isChildOf(obj) || (relObj && remainObj.isChildOf(relObj))))
+				this.removeObjFromSelection(remainObj, true);
+		}
+		if (!doNotNotifySelectionChange)
+			this.selectionChanged();
 		return this;
 	},
 	/**
@@ -2531,8 +3458,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = objs.length; i < l; ++i)
 			{
 				var obj = objs[i];
+				var relObj = obj.getNearestSelectableObject && obj.getNearestSelectableObject();
 				if (this.isInSelection(obj))
 					this.removeObjFromSelection(obj);
+				else if (relObj && this.isInSelection(relObj))
+					this.removeObjFromSelection(relObj);
 				else
 					this.addObjToSelection(obj);
 			}
@@ -2562,6 +3492,72 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
+	 * Get all objects interset a polyline defined by a set of screen coords.
+	 * Here Object partial in the polyline width range will also be put in result.
+	 * @param {Array} polylineScreenCoords
+	 * @param {Number} lineWidth
+	 * @returns {Array} All interseting objects.
+	 */
+	getObjectsIntersetExtendedPolyline: function(polylineScreenCoords, lineWidth)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = polylineScreenCoords.length; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(polylineScreenCoords[i]));
+		}
+
+		var objs = [];
+		var boundInfos = this.getBoundInfoRecorder().getAllRecordedInfoOfContext(this.getObjContext());
+		var compareFunc = Kekule.Render.MetaShapeUtils.isIntersectingPolyline;
+		for (var i = 0, l = boundInfos.length; i < l; ++i)
+		{
+			var boundInfo = boundInfos[i];
+			var shapeInfo = boundInfo.boundInfo;
+			/*
+			 if (!shapeInfo)
+			 console.log(boundInfo);
+			 */
+			if (shapeInfo)
+				if (compareFunc(shapeInfo, ctxCoords, lineWidth))
+					objs.push(boundInfo.obj);
+		}
+		//console.log('selected', objs);
+		return objs;
+	},
+	/**
+	 * Get all objects inside a polygon defined by a set of screen coords.
+	 * @param {Array} polygonScreenCoords
+	 * @param {Bool} allowPartialAreaSelecting If this value is true, object partial in the box will also be selected.
+	 * @returns {Array} All inside objects.
+	 */
+	getObjectsInPolygon: function(polygonScreenCoords, allowPartialAreaSelecting)
+	{
+		var ctxCoords = [];
+		for (var i = 0, l = polygonScreenCoords.length; i < l; ++i)
+		{
+			ctxCoords.push(this.screenCoordToContext(polygonScreenCoords[i]));
+		}
+
+		var objs = [];
+		var boundInfos = this.getBoundInfoRecorder().getAllRecordedInfoOfContext(this.getObjContext());
+		var compareFunc = allowPartialAreaSelecting? Kekule.Render.MetaShapeUtils.isIntersectingPolygon: Kekule.Render.MetaShapeUtils.isInsidePolygon;
+		for (var i = 0, l = boundInfos.length; i < l; ++i)
+		{
+			var boundInfo = boundInfos[i];
+			var shapeInfo = boundInfo.boundInfo;
+			/*
+			 if (!shapeInfo)
+			 console.log(boundInfo);
+			 */
+			if (shapeInfo)
+				if (compareFunc(shapeInfo, ctxCoords))
+					objs.push(boundInfo.obj);
+		}
+		//console.log('selected', objs);
+		return objs;
+	},
+
+	/**
 	 * Get all objects inside a screen box.
 	 * @param {Hash} screenBox
 	 * @param {Bool} allowPartialAreaSelecting If this value is true, object partial in the box will also be selected.
@@ -2588,6 +3584,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log('selected', objs);
 		return objs;
 	},
+
 	/**
 	 * Select all objects inside a screen box.
 	 * @param {Hash} box
@@ -2642,7 +3639,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/**
-	 * Returns a minimal box containing all objects' bounds in editor.
+	 * Returns a minimal box (in screen coord system) containing all objects' bounds in editor.
 	 * @param {Array} objects
 	 * @param {Float} objBoundInflation Inflation of each object's bound.
 	 * @returns {Hash}
@@ -2678,13 +3675,35 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return containerBox;
 	},
 	/**
-	 * Returns container box that contains all objects in selection.
+	 * Returns container box (in screen coord system) that contains all objects in selection.
 	 * @param {Number} objBoundInflation
 	 * @returns {Hash}
 	 */
 	getSelectionContainerBox: function(objBoundInflation)
 	{
 		return this.getObjectsContainerBox(this.getSelection(), objBoundInflation);
+	},
+
+	/**
+	 * Returns whether current selected objects can be seen from screen (not all of them
+	 * are in hidden scroll area).
+	 */
+	isSelectionVisible: function()
+	{
+		var selectionBox = this.getSelectionContainerBox();
+		if (selectionBox)
+		{
+			var editorDim = this.getClientDimension();
+			var editorOffset = this.getClientScrollPosition();
+			var editorBox = {
+				'x1': editorOffset.x, 'y1': editorOffset.y,
+				'x2': editorOffset.x + editorDim.width, 'y2': editorOffset.y + editorDim.height
+			};
+			//console.log(selectionBox, editorBox, Kekule.BoxUtils.getIntersection(selectionBox, editorBox));
+			return Kekule.BoxUtils.hasIntersection(selectionBox, editorBox);
+		}
+		else
+			return false;
 	},
 
 	/////////// methods about object manipulations  /////////////////////////////
@@ -2725,7 +3744,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Object} obj
 	 * @param {Hash} size
 	 */
-	doSetObjSize: function(obj, size)
+	doSetObjSize: function(obj, dimension)
 	{
 		if (obj.setSizeOfMode)
 			obj.setSizeOfMode(dimension, this.getCoordMode());
@@ -2747,6 +3766,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	doGetObjCoord: function(obj, coordPos)
 	{
+		if (!obj)
+			return null;
 		var coordMode = this.getCoordMode();
 		var allowCoordBorrow = this.getAllowCoordBorrow();
 		var result = obj.getAbsBaseCoord? obj.getAbsBaseCoord(coordMode, allowCoordBorrow):
@@ -2988,6 +4009,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return coord;
 		}
 	},
+	/**
+	 * Translate a distance value to a distance in another coord system.
+	 * @param {Hash} coord
+	 * @param {Int} fromSys
+	 * @param {Int} toSys
+	 */
+	translateDistance: function(distance, fromSys, toSys)
+	{
+		var coord0 = {'x': 0, 'y': 0, 'z': 0};
+		var coord1 = {'x': distance, 'y': 0, 'z': 0};
+		var transCoord0 = this.translateCoord(coord0, fromSys, toSys);
+		var transCoord1 = this.translateCoord(coord1, fromSys, toSys);
+		return Kekule.CoordUtils.getDistance(transCoord0, transCoord1);
+	},
 
 	/**
 	 * Transform sizes and coords of objects based on coord sys of current editor.
@@ -3157,13 +4192,28 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	pushOperation: function(operation, autoExec)
 	{
-		var h = this.getOperHistory();
-		if (h && operation)
+		// console.log('push operation');
+		if (operation)
 		{
-			h.push(operation);
+			var h = this.getOperHistory();
+			if (h)
+			{
+				h.push(operation);
+			}
+			this.getOperationsInCurrManipulation().push(operation);
+			if (autoExec)
+			{
+				this.beginUpdateObject();
+				try
+				{
+					operation.execute();
+				}
+				finally
+				{
+					this.endUpdateObject();
+				}
+			}
 		}
-		if (autoExec)
-			operation.execute();
 	},
 	/**
 	 * Manually pop an operation from the tail of operation history.
@@ -3176,12 +4226,72 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var h = this.getOperHistory();
 		if (h)
 		{
-			r = h.pop(operation);
+			r = h.pop();
 			if (autoReverse)
-				r.reverse();
+			{
+				this.beginUpdateObject();
+				try
+				{
+					r.reverse();
+				}
+				finally
+				{
+					this.endUpdateObject();
+				}
+			}
+			// if r in operationsInCurrManipulation, removes it
+			var currOpers = this.getOperationsInCurrManipulation();
+			var index = currOpers.indexOf(r);
+			if (index >= 0)
+				currOpers.splice(index, 1);
+
+			return r;
 		}
 		else
 			return null;
+	},
+	/**
+	 * Execute an operation in editor.
+	 * @param {Kekule.Operation} operation A single operation, or an array of operations.
+	 */
+	execOperation: function(operation)
+	{
+		//this.beginUpdateObject();
+		var opers = AU.toArray(operation);
+		this.beginManipulateAndUpdateObject();
+		try
+		{
+			for (var i = 0, l = opers.length; i < l; ++i)
+			{
+				var o = opers[i];
+				o.execute();
+				if (this.getEnableOperHistory())
+					this.pushOperation(o, false);  // push but not execute
+			}
+			//operation.execute();
+		}
+		finally
+		{
+			//this.endUpdateObject();
+			this.endManipulateAndUpdateObject();
+		}
+		/*
+		if (this.getEnableOperHistory())
+			this.pushOperation(operation, false);  // push but not execute
+		*/
+		return this;
+	},
+
+	/**
+	 * Replace an operation in operation history.
+	 * @param {Kekule.Operation} oldOperation
+	 * @param {Kekule.Operation} newOperation
+	 * @returns {Kekule.Operation} The replaced old operation object.
+	 */
+	replaceOperationInHistory: function(oldOperation, newOperation)
+	{
+		var h = this.getOperHistory();
+		return h && h.replaceOperation(oldOperation, newOperation);
 	},
 
 	/**
@@ -3285,7 +4395,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = objs.length; i < l; ++i)
 			{
 				var obj = objs[i];
-				var oper = new Kekule.ChemObjOperation.Modify(obj, modifiedPropInfos);
+				var oper = new Kekule.ChemObjOperation.Modify(obj, modifiedPropInfos, this);
 				macro.add(oper);
 			}
 			macro.execute();
@@ -3323,21 +4433,35 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					newOps = Object.extend(newOps, modifiedValues);
 					var hash = {};
 					hash[renderPropName] = newOps;
-					var oper = new Kekule.ChemObjOperation.Modify(obj, hash);
+					var oper = new Kekule.ChemObjOperation.Modify(obj, hash, this);
 					//oper.execute();
 					macro.add(oper);
 				}
 			}
+
+			this.beginManipulateAndUpdateObject();
 			macro.execute();
 		}
 		finally
 		{
 			if (putInOperHistory && this.getEnableOperHistory() && macro.getChildCount())
 				this.pushOperation(macro);
+			this.endManipulateAndUpdateObject();
 		}
 		return this;
 	},
 
+	/**
+	 * Returns the dimension of current visible client area of editor.
+	 */
+	getClientDimension: function()
+	{
+		var elem = this.getElement();
+		return {
+			'width': elem.clientWidth,
+			'height': elem.clientHeight
+		};
+	},
 	/**
 	 * Returns current scroll position of edit client element.
 	 * @returns {Hash} {x, y}
@@ -3351,18 +4475,48 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}: null;
 	},
 	/**
+	 * Returns the top left corner coord of client in coordSys.
+	 * @param {Int} coordSys
+	 * @returns {Hash}
+	 */
+	getClientScrollCoord: function(coordSys)
+	{
+		var screenCoord = this.getClientScrollPosition();
+		if (OU.isUnset(coordSys) || coordSys === Kekule.Editor.CoordSys.SCREEN)
+			return screenCoord;
+		else
+			return this.translateCoord(screenCoord, Kekule.Editor.CoordSys.SCREEN, coordSys);
+	},
+	/**
+	 * Returns the screen rect/box of editor client element.
+	 * @returns {Hash} {x1, y1, x2, y2, left, top, width, height}
+	 */
+	getClientVisibleRect: function()
+	{
+		var result = this.getClientDimension();
+		var p = this.getClientScrollPosition();
+		result.x1 = result.left = p.x;
+		result.y1 = result.top = p.y;
+		result.x2 = result.x1 + result.width;
+		result.y2 = result.y1 + result.height;
+		return result;
+	},
+	/**
 	 * Scroll edit client to a position.
 	 * @param {Int} yPosition, in px.
 	 * @param {Int} xPosition, in px.
 	 */
 	scrollClientTo: function(yPosition, xPosition)
 	{
+		/*
 		var elem = this.getEditClientElem().parentNode;
 		if (Kekule.ObjUtils.notUnset(yPosition))
 			elem.scrollTop = yPosition;
 		if (Kekule.ObjUtils.notUnset(xPosition))
 			elem.scrollLeft = xPosition;
 		return this;
+		*/
+		return this.scrollClientToCoord({'y': yPosition, 'x': xPosition});
 	},
 	/**
 	 * Scroll edit client to top.
@@ -3370,6 +4524,241 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	scrollClientToTop: function()
 	{
 		return this.scrollClientTo(0, null);
+	},
+	/**
+	 * Scroll edit client to bottom.
+	 */
+	scrollClientToBottom: function()
+	{
+		var elem = this.getEditClientElem();
+		var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+		return this.scrollClientTo(dim.height, null);
+	},
+
+	/**
+	 * Scroll edit client to coord (based on coordSys).
+	 * @param {Hash} coord
+	 * @param {Int} coordSys If not set, screen coord system will be used.
+	 * @param {Hash} options A hash object that contains the options of scrolling.
+	 *   Currently it may has one field: scrollToCenter. If scrollToCenter is true,
+	 *   the coord will be at the center of edit area rather than top-left.
+	 */
+	scrollClientToCoord: function(coord, coordSys, options)
+	{
+		var scrollX = OU.notUnset(coord.x);
+
+		var scrollY = OU.notUnset(coord.y);
+		var scrollToCenter = options && options.scrollToCenter;
+		var screenCoord;
+		if (OU.isUnset(coordSys))
+			screenCoord = coord;
+		else
+			screenCoord = this.translateCoord(coord, coordSys, Kekule.Editor.CoordSys.SCREEN);
+		if (scrollToCenter)
+		{
+			var visibleClientBox = this.getVisibleClientScreenBox();
+			var delta = {'x': visibleClientBox.width / 2, 'y': visibleClientBox.height / 2};
+			screenCoord = Kekule.CoordUtils.substract(screenCoord, delta);
+		}
+		var elem = this.getEditClientElem().parentNode;
+		if (scrollY)
+			elem.scrollTop = screenCoord.y;
+		if (scrollX)
+			elem.scrollLeft = screenCoord.x;
+
+		return this;
+	},
+
+	/**
+	 * Scroll edit client to target object or objects in editor.
+	 * @param {Variant} targetObjOrObjs Target object or objects array.
+	 * @param {Hash} options Scroll options, can including two fields: scrollToCenter, coverMostObjs.
+	 *   The default value of both of those options are true.
+	 */
+	scrollClientToObject: function(targetObjOrObjs, options)
+	{
+		var BU = Kekule.BoxUtils;
+		if (!targetObjOrObjs)
+			return this;
+		var rootObj = this.getChemObj();
+		if (!rootObj)
+			return this;
+		var objs = AU.toArray(targetObjOrObjs);
+
+		/*
+		var containerBoxes = [];
+		var totalContainerBox = null;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj.getExposedContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
+			{
+				var box = obj.getExposedContainerBox(this.getCoordMode());
+				if (box)
+				{
+					containerBoxes.push(box);
+					if (!totalContainerBox)
+						totalContainerBox = box;
+					else
+						totalContainerBox = BU.getContainerBox(totalContainerBox, box);
+				}
+			}
+		}
+		*/
+		var boxInfo = this._getTargetObjsExposedContainerBoxInfo(objs, rootObj);
+		var totalContainerBox = boxInfo.totalBox;
+		var containerBoxes = boxInfo.boxes;
+
+		if (totalContainerBox)
+		{
+			var ops = Object.extend({scrollToCenter: true, coverMostObjs: true}, options || {});
+
+			/*
+			var actualBox;
+			// if scroll to centerCoord and none of the obj can be seen in current state, we need another approach
+			var visibleBox = this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
+			if (((totalContainerBox.x2 - totalContainerBox.x1 > visibleBox.x2 - visibleBox.x1)
+				|| (totalContainerBox.y2 - totalContainerBox.y1 > visibleBox.y2 - visibleBox.y1))
+				&& ops.coverMostObjs)
+			{
+				actualBox = this._getMostIntersectedContainerBox(visibleBox.x2 - visibleBox.x1, visibleBox.y2 - visibleBox.y1, containerBoxes, totalContainerBox);
+			}
+			else
+				actualBox = totalContainerBox;
+
+			var scrollCoord = ops.scrollToCenter? BU.getCenterCoord(actualBox): {x: actualBox.x1, y: actualBox.y2};
+			return this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM, ops);
+			*/
+			return this._scrollClientToContainerBox(totalContainerBox, containerBoxes, ops);
+		}
+		else
+			return this;
+	},
+
+	/** @private */
+	_scrollClientToContainerBox: function(totalContainerBox, allContainerBoxes, options)
+	{
+		var BU = Kekule.BoxUtils;
+
+		var actualBox;
+		// if scroll to centerCoord and none of the obj can be seen in current state, we need another approach
+		var visibleBox = this.getVisibleClientBoxOfSys(Kekule.Editor.CoordSys.CHEM);
+		if (((totalContainerBox.x2 - totalContainerBox.x1 > visibleBox.x2 - visibleBox.x1)
+			|| (totalContainerBox.y2 - totalContainerBox.y1 > visibleBox.y2 - visibleBox.y1))
+			&& options.coverMostObjs)
+		{
+			actualBox = this._getMostIntersectedContainerBox(visibleBox.x2 - visibleBox.x1, visibleBox.y2 - visibleBox.y1, allContainerBoxes, totalContainerBox);
+		}
+		else
+			actualBox = totalContainerBox;
+
+		var scrollCoord = options.scrollToCenter? BU.getCenterCoord(actualBox): {x: actualBox.x1, y: actualBox.y2};
+		return this.scrollClientToCoord(scrollCoord, Kekule.Editor.CoordSys.CHEM, options);
+	},
+
+	/**
+	 * Returns the exposed container box of each object and the total container box.
+	 * @param {Array} objs
+	 * @returns {Hash}
+	 * @private
+	 */
+	_getTargetObjsExposedContainerBoxInfo: function(objs, rootObj)
+	{
+		var BU = Kekule.BoxUtils;
+		if (!rootObj)
+			rootObj = this.getChemObj();
+		if (rootObj)
+		{
+			var totalContainerBox = null;
+			var containerBoxes = [];
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				if (obj.getExposedContainerBox && obj.isChildOf && obj.isChildOf(rootObj))
+				{
+					var box = obj.getExposedContainerBox(this.getCoordMode());
+					if (box)
+					{
+						containerBoxes.push(box);
+						if (!totalContainerBox)
+							totalContainerBox = box;
+						else
+							totalContainerBox = BU.getContainerBox(totalContainerBox, box);
+					}
+				}
+			}
+		}
+		return {'totalBox': totalContainerBox, 'boxes': containerBoxes};
+	},
+
+	/** @private */
+	_getMostIntersectedContainerBox: function(width, height, boxes, totalContainerBox)
+	{
+		var BU = Kekule.BoxUtils;
+
+		var generateTestBox = function(startingCoord, directions)
+		{
+			var endingCoord = CU.add(startingCoord, {'x': width * directions.x, 'y': height * directions.y});
+			if (endingCoord.x < totalContainerBox.x1)
+				endingCoord.x = totalContainerBox.x1;
+			else if (endingCoord.x > totalContainerBox.x2)
+				endingCoord.x = totalContainerBox.x2;
+			if (endingCoord.y < totalContainerBox.y1)
+				endingCoord.y = totalContainerBox.y1;
+			else if (endingCoord.y > totalContainerBox.y2)
+				endingCoord.y = totalContainerBox.y2;
+			var actualStartingCoord = CU.add(endingCoord, {'x': -width * directions.x, 'y': -height * directions.y});
+			var result = BU.createBox(actualStartingCoord, endingCoord);
+			return result;
+		};
+
+		var getIntersectedBoxCount = function(testBox, boxes)
+		{
+			var result = 0;
+			for (var i = 0, l = boxes.length; i < l; ++i)
+			{
+				var box = boxes[i];
+				if (BU.hasIntersection(box, testBox))
+					++result;
+			}
+			return result;
+		};
+
+		var maxIntersectCount = 0;
+		var currContainerBox;
+		for (var i = 0, l = boxes.length; i < l; ++i)
+		{
+			var corners = BU.getCornerCoords(boxes[i]);
+			var testBoxes = [
+				generateTestBox(corners[0], {x: 1, y: 1}),
+				generateTestBox(corners[1], {x: 1, y: -1}),
+				generateTestBox(corners[2], {x: -1, y: 1}),
+				generateTestBox(corners[3], {x: -1, y: -1}),
+			];
+			for (var j = 0, k = testBoxes.length; j < k; ++j)
+			{
+				var count = getIntersectedBoxCount(testBoxes[j], boxes);
+				if (count > maxIntersectCount)
+				{
+					maxIntersectCount = count;
+					currContainerBox = testBoxes[j];
+				}
+			}
+		}
+		return currContainerBox;
+	},
+
+	/////// Event handle  //////////////////////
+
+	doBeforeDispatchUiEvent: function($super, e)
+	{
+		// get pointer type information here
+		var evType = e.getType();
+		if (['pointerdown', 'pointermove', 'pointerup'].indexOf(evType) >= 0)
+		{
+			this.setCurrPointerType(e.pointerType);
+		}
+		return $super(e);
 	}
 });
 
@@ -3484,6 +4873,28 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	initProperties: function()
 	{
 		this.defineProp('manuallyHotTrack', {'dataType': DataType.BOOL, 'serializable': false});
+
+		// in mouse or touch interaction, we may have different bound inflation
+		this.defineProp('currBoundInflation', {'dataType': DataType.NUMBER, 'serializable': false,
+			'getter': function() { return this.getEditor().getCurrBoundInflation(); },
+			'setter': null  // function(value) { return this.getEditor().setCurrBoundInflation(value); }
+		});
+
+		this.defineProp('activePointerType', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var editor = this.getEditor();
+				return (editor && editor.getCurrPointerType()) || this.getStoreFieldValue('activePointerType');
+			},
+			'setter': function(value)
+			{
+				var editor = this.getEditor();
+				if (editor)
+					editor.setCurrPointerType(value);
+				else
+					this.setStoreFieldValue('activePointerType', value);
+			}
+		});  // private
 	},
 	/**
 	 * Returns the preferred id for this controller.
@@ -3517,12 +4928,17 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		var editor = this.getEditor();
 		return editor? editor.getEditorConfigs(): null;
 	},
+	/** @private */
+	getInteractionBoundInflation: function(pointerType)
+	{
+		return this.getEditor().getInteractionBoundInflation(pointerType);
+	},
 
 	/** @ignore */
 	handleUiEvent: function($super, e)
 	{
 		var handle = false;
-		var targetElem = e.getTarget();
+		var targetElem = (e.getTarget && e.getTarget()) || e.target;  // hammer event does not have getTarget method
 		var uiElem = this.getEditor().getUiEventReceiverElem();
 		if (uiElem)
 		{
@@ -3549,38 +4965,174 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		return !!obj;
 	},
+	/**
+	 * Returns all interactable object classes for this IA controller in editor.
+	 * If can interact will all objects, simply returns null.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	getInteractableTargetClasses: function()
+	{
+		return null;
+	},
+	/** @private */
+	getAllInteractableObjsAtScreenCoord: function(coord)
+	{
+		return this.getEditor().getBasicObjectsAtCoord(coord, this.getCurrBoundInflation(), null, this.getInteractableTargetClasses());
+	},
+	/** @private */
+	getTopmostInteractableObjAtScreenCoord: function(coord)
+	{
+		var objs = this.getAllInteractableObjsAtScreenCoord(coord);
+		if (objs)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				if (this.canInteractWithObj(objs[i]))
+					return objs[i];
+			}
+		}
+		return null;
+	},
+
+	/**
+	 * Show a hot track marker on obj in editor.
+	 * @param {Kekule.ChemObject} obj
+	 */
+	hotTrackOnObj: function(obj)
+	{
+		this.getEditor().hotTrackOnObj(obj);
+	},
 
 	// zoom functions
 	/** @private */
-	zoomEditor: function(zoomLevel)
+	zoomEditor: function(zoomLevel, zoomCenterCoord)
 	{
 		if (zoomLevel > 0)
-			this.getEditor().zoomIn(zoomLevel);
+			this.getEditor().zoomIn(zoomLevel, zoomCenterCoord);
 		else if (zoomLevel < 0)
-			this.getEditor().zoomOut(-zoomLevel);
+			this.getEditor().zoomOut(-zoomLevel, zoomCenterCoord);
 	},
 
 	/** @private */
-	react_mousemove: function(e)
+	/*
+	updateCurrBoundInflation: function(evt)
 	{
+	*/
+		/*
+		var editor = this.getEditor();
+		var pointerType = evt && evt.pointerType;
+		var iaConfigs = this.getEditorConfigs().getInteractionConfigs();
+		var defRatio = iaConfigs.getObjBoundTrackInflationRatio();
+		var currRatio, ratioValue;
+		if (pointerType === 'mouse')
+			currRatio = iaConfigs.getObjBoundTrackInflationRatioMouse();
+		else if (pointerType === 'pen')
+			currRatio = iaConfigs.getObjBoundTrackInflationRatioPen();
+		else if (pointerType === 'touch')
+			currRatio =	iaConfigs.getObjBoundTrackInflationRatioTouch();
+		currRatio = currRatio || defRatio;
+		if (currRatio)
+		{
+			var bondScreenLength = editor.getDefBondScreenLength();
+			ratioValue = bondScreenLength * currRatio;
+		}
+
+		var defMinValue = iaConfigs.getObjBoundTrackMinInflation();
+		var currMinValue;
+		if (pointerType === 'mouse')
+			currMinValue = iaConfigs.getObjBoundTrackMinInflationMouse();
+		else if (pointerType === 'pen')
+			currMinValue = iaConfigs.getObjBoundTrackMinInflationPen();
+		else if (pointerType === 'touch')
+			currMinValue =	iaConfigs.getObjBoundTrackMinInflationTouch();
+		currMinValue = currMinValue || defMinValue;
+
+		var actualValue = Math.max(ratioValue || 0, currMinValue);
+		*/
+	  /*
+		//this.setCurrBoundInflation(actualValue);
+		var value = this.getEditor().getInteractionBoundInflation(evt && evt.pointerType);
+		this.setCurrBoundInflation(value);
+		//console.log('update bound inflation', pointerType, this.getCurrBoundInflation());
+	},
+	*/
+
+	/** @private */
+	_filterBasicObjectsInEditor: function(objs)
+	{
+		var editor = this.getEditor();
+		var rootObj = editor.getChemObj();
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (obj.isChildOf(rootObj))
+				result.push(obj);
+		}
+		return result;
+	},
+
+	/**
+	 * Notify the manipulation is done and objs are inserted into or modified in editor.
+	 * This method should be called by descendants at the end of their manipulation.
+	 * Objs will be automatically selected if autoSelectNewlyInsertedObjects option is true.
+	 * @param {Array} objs
+	 * @private
+	 */
+	doneInsertOrModifyBasicObjects: function(objs)
+	{
+		if (this.needAutoSelectNewlyInsertedObjects())
+		{
+			var filteredObjs = this._filterBasicObjectsInEditor(objs);
+			this.getEditor().select(filteredObjs);
+		}
+	},
+	/** @private */
+	needAutoSelectNewlyInsertedObjects: function()
+	{
+		var pointerType = this.getActivePointerType();
+		var ic = this.getEditorConfigs().getInteractionConfigs();
+		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
+				|| ic.getAutoSelectNewlyInsertedObjects();
+	},
+
+	/** @private */
+	react_pointerdown: function(e)
+	{
+		//this.updateCurrBoundInflation(e);
+		//this.getEditor().setCurrPointerType(e.pointerType);
+		this.setActivePointerType(e.pointerType);
+		e.preventDefault();
+		return true;
+	},
+	/** @private */
+	react_pointermove: function(e)
+	{
+		//if (!this.getCurrBoundInflation())
+		//this.updateCurrBoundInflation(e);
+		//this.getEditor().setCurrPointerType(e.pointerType);
+
 		//console.log(e.getTarget().id);
 		var coord = this._getEventMouseCoord(e);
-		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
+		var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
 		if (!this.getManuallyHotTrack())
 		{
 			/*
 			if (obj)
 				console.log('point to', obj.getClassName(), obj.getId());
 			*/
-			if (obj && this.canInteractWithObj(obj))
+			if (obj /* && this.canInteractWithObj(obj)*/)   // canInteractWithObj check now already done in getTopmostInteractableObjAtScreenCoord
 			{
-				this.getEditor().hotTrackOnObj(obj);
+				this.hotTrackOnObj(obj);
 			}
 			else
 			{
-				this.getEditor().hotTrackOnObj(null);
+				this.hotTrackOnObj(null);
 			}
+			//e.preventDefault();
 		}
+		e.preventDefault();
 		return true;
 	},
 	/** @private */
@@ -3588,10 +5140,20 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 	{
 		if (e.getCtrlKey())
 		{
-			var delta = e.wheelDeltaY || e.wheelDelta;
-			if (delta)
-				delta /= 120;
-			this.zoomEditor(delta);
+			var currScreenCoord = this._getEventMouseCoord(e);
+			//this.getEditor().setZoomCenter(currScreenCoord);
+			try
+			{
+				var delta = e.wheelDeltaY || e.wheelDelta;
+				if (delta)
+					delta /= 120;
+				//console.log('zoom', this.getEditor().getZoomCenter())
+				this.zoomEditor(delta, currScreenCoord);
+			}
+			finally
+			{
+				//this.getEditor().setZoomCenter(null);
+			}
 			e.preventDefault();
 			return true;
 		}
@@ -3604,6 +5166,120 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		return $super(e, elem);
 	}
 });
+
+/**
+ * Controller for drag and scroll (by mouse, touch...) client element in editor.
+ * @class
+ * @augments Kekule.Widget.BaseEditorIaController
+ *
+ * @param {Kekule.Editor.BaseEditor} widget Editor of current object being installed to.
+ */
+Kekule.Editor.ClientDragScrollIaController = Class.create(Kekule.Editor.BaseEditorIaController,
+/** @lends Kekule.Editor.ClientDragScrollIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ClientDragScrollIaController',
+	/** @constructs */
+	initialize: function($super, widget)
+	{
+		$super(widget);
+		this._isExecuting = false;
+	},
+	/** @ignore */
+	canInteractWithObj: function(obj)
+	{
+		return false;  // do not interact directly with objects in editor
+	},
+	/** @ignore */
+	doTestMouseCursor: function(coord, e)
+	{
+		//console.log(this.isExecuting(), coord);
+		return this.isExecuting()?
+				['grabbing', '-webkit-grabbing', '-moz-grabbing', 'move']:
+				['grab', '-webkit-grab', '-moz-grab', 'pointer'];
+		//return this.isExecuting()? '-webkit-grabbing': '-webkit-grab';
+	},
+
+	/** @private */
+	isExecuting: function()
+	{
+		return this._isExecuting;
+	},
+	/** @private */
+	startScroll: function(screenCoord)
+	{
+		this._startCoord = screenCoord;
+		this._originalScrollPos = this.getEditor().getClientScrollPosition();
+		this._isExecuting = true;
+	},
+	/** @private */
+	endScroll: function()
+	{
+		this._isExecuting = false;
+		this._startCoord = null;
+		this._originalScrollPos = null;
+	},
+	/** @private */
+	scrollTo: function(screenCoord)
+	{
+		if (this.isExecuting())
+		{
+			var startCoord = this._startCoord;
+			var delta = Kekule.CoordUtils.substract(startCoord, screenCoord);
+			var newScrollPos = Kekule.CoordUtils.add(this._originalScrollPos, delta);
+			this.getEditor().scrollClientTo(newScrollPos.y, newScrollPos.x);  // note the params of this method is y, x
+		}
+	},
+
+	/** @private */
+	react_pointerdown: function(e)
+	{
+		this.setActivePointerType(e.pointerType);
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)  // begin scroll
+		{
+			if (!this.isExecuting())
+			{
+				var coord = {x: e.getScreenX(), y: e.getScreenY()};
+				this.startScroll(coord);
+				e.preventDefault();
+			}
+		}
+		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
+		{
+			if (this.isExecuting())
+			{
+				this.endScroll();
+				e.preventDefault();
+			}
+		}
+	},
+	/** @private */
+	react_pointerup: function(e)
+	{
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
+		{
+			if (this.isExecuting())
+			{
+				this.endScroll();
+				e.preventDefault();
+			}
+		}
+	},
+	/** @private */
+	react_pointermove: function($super, e)
+	{
+		$super(e);
+		if (this.isExecuting())
+		{
+			var coord = {x: e.getScreenX(), y: e.getScreenY()};
+			this.scrollTo(coord);
+			e.preventDefault();
+		}
+		return true;
+	}
+});
+/** @ignore */
+Kekule.Editor.IaControllerManager.register(Kekule.Editor.ClientDragScrollIaController, Kekule.Editor.BaseEditor);
 
 /**
  * Controller for deleting objects in editor.
@@ -3704,31 +5380,40 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	},
 
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function(e)
 	{
+		this.setActivePointerType(e.pointerType);
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			this.startRemove();
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		else if (e.getButton() === Kekule.X.Event.MOUSE_BTN_RIGHT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		{
 			this.endRemove();
+			e.preventDefault();
+		}
 	},
 	/** @private */
-	react_mousemove: function($super, e)
+	react_pointermove: function($super, e)
 	{
 		$super(e);
 		if (this.isRemoving())
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
+			e.preventDefault();
 		}
 		return true;
 	}
@@ -3737,18 +5422,20 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 /** @ignore */
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicEraserIaController, Kekule.Editor.BaseEditor);
 
-		/**
+/**
  * Controller for selecting, moving or rotating objects in editor.
  * @class
  * @augments Kekule.Widget.BaseEditorIaController
  *
  * @param {Kekule.Editor.BaseEditor} widget Editor of current object being installed to.
  *
+ * @property {Int} selectMode Set the selectMode property of editor.
  * @property {Bool} enableSelect Whether select function is enabled.
  * @property {Bool} enableMove Whether move function is enabled.
  * //@property {Bool} enableRemove Whether remove function is enabled.
  * @property {Bool} enableResize Whether resize of selection is allowed.
  * @property {Bool} enableRotate Whether rotate of selection is allowed.
+ * @property {Bool} enableGestureManipulation Whether rotate and resize by touch gestures are allowed.
  */
 Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEditorIaController,
 /** @lends Kekule.Editor.BasicManipulationIaController# */
@@ -3760,24 +5447,33 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		$super(widget);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
-		// debug
-		this.setEnableSelect(true);
+
+		this.setEnableSelect(false);
+		this.setEnableGestureManipulation(false);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
-		this.setEnableConstrainedResize(true);
+		this.setEnableAspectRatioLockedResize(true);
 		this.setEnableRotate(true);
 
 		this._suppressConstrainedResize = false;
+		this._manipulationStepBuffer = {};
+		this._suspendedOperations = null;
+		this.execManipulationStepBind = this.execManipulationStep.bind(this);
 	},
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('selectMode', {'dataType': DataType.INT, 'serializable': false});
 		this.defineProp('enableSelect', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableMove', {'dataType': DataType.BOOL, 'serializable': false});
 		//this.defineProp('enableRemove', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableResize', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('enableRotate', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableGestureManipulation', {'dataType': DataType.BOOL, 'serializable': false});
 		this.defineProp('state', {'dataType': DataType.INT, 'serializable': false});
+		// the screen coord that start this manipulation, since startCoord may be changed during rotation, use this
+		// to get the inital coord of mouse down
+		this.defineProp('baseCoord', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('startCoord', {'dataType': DataType.HASH, 'serializable': false/*,
 		 'setter': function(value)
 		 {
@@ -3790,6 +5486,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('startBox', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('endBox', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('lastRotateAngle', {'dataType': DataType.FLOAT, 'serializable': false});  // private
+		// private, such as {x: 1, y: 0}, plays as the initial base direction of rotation
+		this.defineProp('rotateRefCoord', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('rotateCenter', {'dataType': DataType.HASH, 'serializable': false,
 			'getter': function()
 			{
@@ -3810,7 +5508,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		});
 
 		this.defineProp('resizeStartingRegion', {'dataType': DataType.INT, 'serializable': false});  // private
-		this.defineProp('enableConstrainedResize', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableAspectRatioLockedResize', {'dataType': DataType.BOOL, 'serializable': false});
 
 		this.defineProp('rotateStartingRegion', {'dataType': DataType.INT, 'serializable': false});  // private
 
@@ -3854,12 +5552,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.defineProp('manipulationType', {'dataType': DataType.INT, 'serializable': false});  // private
 
 		this.defineProp('isManipulatingSelection', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('isOffsetManipulating', {'dataType': DataType.BOOL, 'serializable': false});
+
+		this.defineProp('manipulationPointerType', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getActivePointerType(); },
+			'setter': function(value) { this.setActivePointerType(value); }
+		});  // private, alias of property activePointerType
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
 		//this.defineProp('activeOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false}); // store operation that should be add to history
 
 		this.defineProp('moveOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of moving
 		//this.defineProp('mergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging
+		this.defineProp('moveWrapperOperation', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 
 		this.defineProp('objOperationMap', {'dataType': 'Kekule.MapEx', 'serializable': false,
 			'getter': function()
@@ -3886,10 +5591,45 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		$super();
 	},
 
-	/** @private */
-	isConstrainedResize: function()
+	/* @ignore */
+	/*
+	activated: function($super, widget)
 	{
-		return this.getEnableConstrainedResize() && (!this._suppressConstrainedResize);
+		$super(widget);
+		//console.log('activated', this.getSelectMode());
+		// set select mode when be activated
+		if (this.getEnableSelect())
+			this.getEditor().setSelectMode(this.getSelectMode());
+	},
+	*/
+
+	/** @ignore */
+	hotTrackOnObj: function($super, obj)
+	{
+		// override parent method, is selectMode is ANCESTOR, hot track the whole ancestor object
+		if (this.getEnableSelect() && this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR)
+		{
+			var concreteObj = this.getStandaloneAncestor(obj); (obj && obj.getStandaloneAncestor) ? obj.getStandaloneAncestor() : obj;
+			return $super(concreteObj);
+		}
+		else
+			return $super(obj);
+	},
+	/** @private */
+	getStandaloneAncestor: function(obj)
+	{
+		return (obj && obj.getStandaloneAncestor) ? obj.getStandaloneAncestor() : obj;
+	},
+	/** @private */
+	isInAncestorSelectMode: function()
+	{
+		return this.getEnableSelect() && (this.getSelectMode() === Kekule.Editor.SelectMode.ANCESTOR);
+	},
+
+	/** @private */
+	isAspectRatioLockedResize: function()
+	{
+		return this.getEnableAspectRatioLockedResize() && (!this._suppressConstrainedResize);
 	},
 
 	/**
@@ -3943,6 +5683,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	createManipulateOperation: function()
 	{
+		return this.doCreateManipulateMoveAndResizeOperation();
+	},
+	/** @private */
+	doCreateManipulateMoveAndResizeOperation: function()
+	{
 		//var oper = new Kekule.MacroOperation();
 		var opers = [];
 		this.setMoveOperations(opers);
@@ -3950,24 +5695,39 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var map = this.getManipulateObjInfoMap();
 		var operMap = this.getObjOperationMap();
 		operMap.clear();
+		var objsMoveInfo = [];
+		var totalOperation = new Kekule.ChemObjOperation.MoveAndResizeObjs([], objsMoveInfo, this.getEditor().getCoordMode(), true, this.getEditor());
+		totalOperation.setDisableIndirectCoord(true);
+		//console.log('init operations');
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
 			var item = map.get(obj);
 			//var sub = new Kekule.EditorOperation.OpSetObjCoord(this.getEditor(), obj, null, item.objCoord, Kekule.Editor.CoordSys.OBJ);
 			//var sub = new Kekule.ChemObjOperation.MoveTo(obj, null, this.getEditor().getCoordMode());
-			var sub = new Kekule.ChemObjOperation.MoveAndResize(obj, null, null, this.getEditor().getCoordMode(), true);  // use abs coord
+			var sub = new Kekule.ChemObjOperation.MoveAndResize(obj, null, null, this.getEditor().getCoordMode(), true, this.getEditor());  // use abs coord
 			sub.setAllowCoordBorrow(this.getEditor().getAllowCoordBorrow());
 			sub.setOldCoord(item.objCoord);
 			sub.setOldDimension(item.size);
 			//oper.add(sub);
 			//operMap.set(obj, sub);
 			opers.push(sub);
+			/*
+			objsMoveInfo.push({
+				'obj': obj,
+				'oldCoord': item.objCoord,
+				'oldDimension': item.size
+			});
+			*/
+			totalOperation.getChildOperations().push(sub);
+			this.setMoveWrapperOperation(totalOperation);
 		}
+
 		//this.setManipulateOperation(oper);
 		//this.setActiveOperation(oper);
 		//return oper;
-		return opers;
+		//return opers;
+		return [totalOperation];
 	},
 	/* @private */
 	/*
@@ -4009,17 +5769,27 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	getAllObjOperations: function()
+	getAllObjOperations: function(isTheFinalOperationToEditor)
 	{
 		//var opers = this.getObjOperationMap().getValues();
-		var opers = this.getMoveOperations();
-		return opers;
+		var op = this.getMoveOperations();
+		var opers = op? Kekule.ArrayUtils.clone(op): [];
+		if (opers.length)
+		{
+			var wrapper = this.getMoveWrapperOperation();
+			wrapper.setChildOperations(opers);
+			//return opers;
+			return [wrapper];
+		}
+		else
+			return [];
 	},
 
 	/** @private */
-	getActiveOperation: function()
+	getActiveOperation: function(isTheFinalOperationToEditor)
 	{
-		var opers = this.getAllObjOperations();
+		//console.log('get active operation', isTheFinalOperationToEditor);
+		var opers = this.getAllObjOperations(isTheFinalOperationToEditor);
 		opers = Kekule.ArrayUtils.toUnique(opers);
 		if (opers.length <= 0)
 			return null;
@@ -4034,7 +5804,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	reverseActiveOperation: function()
 	{
-		return this.getActiveOperation().reverse();
+		var oper = this.getActiveOperation();
+		return oper.reverse();
 	},
 	/* @private */
 	/*
@@ -4057,11 +5828,41 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var macro = new Kekule.MacroOperation(opers);
 			editor.pushOperation(macro);
 			*/
-			editor.pushOperation(this.getActiveOperation());
+			var op = this.getActiveOperation(true);
+			if (op)
+				editor.pushOperation(op);
 		}
 	},
 
 	// methods about object move / resize
+	/** @private */
+	getCurrAvailableManipulationTypes: function()
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var box = this.getEditor().getSelectionContainerBox();
+		if (!box)
+		{
+			return [];
+		}
+		else
+		{
+			var result = [];
+			if (this.getEnableMove())
+				result.push(T.MOVE);
+			// if box is a single point, can not resize or rotate
+			if (!Kekule.NumUtils.isFloatEqual(box.x1, box.x2, 1e-10) || !Kekule.NumUtils.isFloatEqual(box.y1, box.y2, 1e-10))
+			{
+				if (this.getEnableResize())
+					result.push(T.RESIZE);
+				if (this.getEnableRotate())
+					result.push(T.ROTATE);
+				if (this.getEnableResize() || this.getEnableRotate())
+					result.push(T.TRANSFORM);
+			}
+			return result;
+		}
+	},
+
 	/** @private */
 	getActualManipulatingObjects: function(objs)
 	{
@@ -4101,6 +5902,39 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 	*/
 
+	/** @private */
+	doPrepareManipulatingObjects: function(manipulatingObjs, startScreenCoord)
+	{
+		var actualObjs = this.getActualManipulatingObjects(manipulatingObjs);
+		//console.log(manipulatingObjs, actualObjs);
+		this.setManipulateOriginObjs(manipulatingObjs);
+		this.setManipulateObjs(actualObjs);
+		var map = this.getManipulateObjInfoMap();
+		map.clear();
+		//this.getManipulateObjCurrInfoMap().clear();
+		var editor = this.getEditor();
+		// store original objs coords info into map
+		for (var i = 0, l = actualObjs.length; i < l; ++i)
+		{
+			var obj = actualObjs[i];
+			var info = this.createManipulateObjInfo(obj, i, startScreenCoord);
+			map.set(obj, info);
+
+			/*
+			// disable indirect coord during coord move
+			if (info.enableIndirectCoord)
+				obj.setEnableIndirectCoord(false);
+			*/
+		}
+	},
+	/** @private */
+	doPrepareManipulatingStartingCoords: function(startScreenCoord, startBox, rotateCenter, rotateRefCoord)
+	{
+		this.setStartBox(startBox);
+		this.setRotateCenter(rotateCenter);
+		this.setRotateRefCoord(rotateRefCoord);
+		this.setLastRotateAngle(null);
+	},
 	/**
 	 * Prepare to move movingObjs.
 	 * Note that movingObjs may differ from actual moved objects (for instance, move a bond actually move its connected atoms).
@@ -4110,36 +5944,22 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 * @param {Hash} rotateCenter
 	 * @private
 	 */
-	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter)
+	prepareManipulating: function(manipulationType, manipulatingObjs, startScreenCoord, startBox, rotateCenter, rotateRefCoord)
 	{
 		this.setManipulationType(manipulationType);
-		var actualObjs = this.getActualManipulatingObjects(manipulatingObjs);
-		//console.log(manipulatingObjs, actualObjs);
-		this.setManipulateOriginObjs(manipulatingObjs);
-		this.setManipulateObjs(actualObjs);
-		var map = this.getManipulateObjInfoMap();
-		map.clear();
-		this.getManipulateObjCurrInfoMap().clear();
-		var editor = this.getEditor();
-		// store original objs coords info into map
-		for (var i = 0, l = actualObjs.length; i < l; ++i)
-		{
-			var obj = actualObjs[i];
-			var info = this.createManipulateObjInfo(obj, startScreenCoord);
-			map.set(obj, info);
-		}
-		this.setStartBox(startBox);
-		this.setRotateCenter(rotateCenter);
-		this.setLastRotateAngle(null);
+		this.doPrepareManipulatingObjects(manipulatingObjs, startScreenCoord);
+		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
+		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
+
 	/**
 	 * Cancel the moving process and set objects to its original position.
 	 * @private
 	 */
-	cancelManipulatingObjs: function()
+	cancelManipulate: function()
 	{
 		var editor = this.getEditor();
 		var objs = this.getManipulateObjs();
@@ -4151,6 +5971,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		//this.setActiveOperation(null);
 		//this.clearActiveOperation();
 		//this.setManuallyHotTrack(false);
+		this.manipulateEnd();
 	},
 	/**
 	 * Returns center coord of manipulate objs.
@@ -4197,13 +6018,50 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @private */
 	applyManipulatingObjsInfo: function(endScreenCoord)
 	{
+		//this._moveResizeOperExecPending = false;
 		var objs = this.getManipulateObjs();
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+
+		var indirectCoordObjs = this._getIndirectCoordObjs(objs);
+		this._setEnableIndirectCoordOfObjs(indirectCoordObjs, false);  // important, disable indirect coord first, avoid calculating during moving and position error
+		try
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				var obj = objs[i];
+				var newInfo = newInfoMap.get(obj);
+				this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			}
+			/*
+			if (this._moveResizeOperExecPending)
+				this.getMoveWrapperOperation().execute();
+			*/
+		}
+		finally
+		{
+			this._setEnableIndirectCoordOfObjs(indirectCoordObjs, true);
+		}
+	},
+	/** @private */
+	_getIndirectCoordObjs: function(objs)
+	{
+		var result = [];
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			var newInfo = newInfoMap.get(obj);
-			this.applySingleManipulatingObjInfo(i, obj, newInfo, endScreenCoord);
+			if (obj.getEnableIndirectCoord && obj.getEnableIndirectCoord())
+				result.push(obj);
+		}
+		return result;
+	},
+	/** @private */
+	_setEnableIndirectCoordOfObjs: function(objs, enabled)
+	{
+		if (!objs)
+			return;
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			objs[i].setEnableIndirectCoord(enabled);
 		}
 	},
 	/** @private */
@@ -4219,24 +6077,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/** @private */
-	_calcActualRotateAngle: function(objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
-	{
-		return newDeltaAngle;
-	},
-
-	/** @private */
-	_calcManipulateObjsRotationInfo: function(manipulatingObjs, endScreenCoord)
+	_calcRotateAngle: function(endScreenCoord)
 	{
 		var C = Kekule.CoordUtils;
-
-		/*
-		var box = this.getStartBox();
-		var rotateCenter = {'x': (box.x1 + box.x2) / 2, 'y': (box.y1 + box.y2) / 2};
-		*/
 		var angle;
 		var angleCalculated = false;
 		var rotateCenter = this.getRotateCenter();
-		var startCoord = this.getStartCoord();
+		var startCoord = this.getRotateRefCoord() || this.getStartCoord();
 
 		// ensure startCoord large than threshold
 		var threshold = this.getEditorConfigs().getInteractionConfigs().getRotationLocationPointDistanceThreshold();
@@ -4267,50 +6114,47 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			vector = C.substract(startCoord, rotateCenter);
 			var startAngle = Math.atan2(vector.y, vector.x);
 			angle = endAngle - startAngle;
-			angle = this._calcActualRotateAngle(manipulatingObjs, angle, startAngle, endAngle);
-			var lastAngle = this.getLastRotateAngle();
-			if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 1e-5))
-				return false;  // no angle change, do not rotate
-			this.setLastRotateAngle(angle);
 		}
 
-		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({
-			'center': rotateCenter,
-			'rotateAngle': angle
-		});
+		return {'angle': angle, 'startAngle': startAngle, 'endAngle': endAngle};
+	},
+	/** @private */
+	_calcActualRotateAngle: function(objs, newDeltaAngle, oldAbsAngle, newAbsAngle)
+	{
+		return newDeltaAngle;
+	},
+	/** @private */
+	_calcManipulateObjsRotationParams: function(manipulatingObjs, endScreenCoord)
+	{
+		if (!this.getEnableRotate())
+			return false;
 
-		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
+		var rotateCenter = this.getRotateCenter();
+
+		var angleInfo = this._calcRotateAngle(endScreenCoord);
+		if (!angleInfo)  // need not to rotate
+			return false;
+
+		// get actual rotation angle
+		var angle = this._calcActualRotateAngle(manipulatingObjs, angleInfo.angle, angleInfo.startAngle, angleInfo.endAngle);
+
+		var lastAngle = this.getLastRotateAngle();
+		if (Kekule.ObjUtils.notUnset(lastAngle) && Kekule.NumUtils.isFloatEqual(angle, lastAngle, 0.0175))  // ignore angle change under 1 degree
 		{
-			var obj = manipulatingObjs[i];
-			var info = this.getManipulateObjInfoMap().get(obj);
-			if (!info.hasNoCoord)  // this object has coord property and can be rotated
-			{
-				var oldCoord = info.screenCoord;
-				var newCoord = C.transform2DByMatrix(oldCoord, transformMatrix);
-				this._addManipultingObjNewInfo(obj, {'screenCoord': newCoord});
-			}
-			// TODO: may need change dimension also
-			if (info.size)
-			{
-
-			}
+			return false;  // no angle change, do not rotate
 		}
-		return true;
+		//console.log('rotateAngle', angle, lastAngle);
+		this.setLastRotateAngle(angle);
+
+		return {'center': rotateCenter, 'rotateAngle': angle};
 	},
 
-	/**
-	 * Rotate manupulatedObjs according to endScreenCoord.
-	 * @private
-	 */
-	rotateManipulatedObjs: function(endScreenCoord)
+
+	/* @private */
+	/*
+	doRotateManipulatedObjs: function(endScreenCoord, transformParams)
 	{
-		var R = Kekule.Editor.BoxRegion;
-		var C = Kekule.CoordUtils;
-		var editor = this.getEditor();
-		var objs = this.getManipulateObjs();
-		var changedObjs = [];
-		//console.log('rotate', this.getRotateCenter(), endScreenCoord);
-		var byPassRotate = !this._calcManipulateObjsRotationInfo(objs, endScreenCoord);
+		var byPassRotate = !this._calcManipulateObjsTransformInfo(this.getManipulateObjs(), transformParams);
 		if (byPassRotate)  // need not to rotate
 		{
 			//console.log('bypass rotate');
@@ -4320,33 +6164,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var objNewInfo = this.getManipulateObjCurrInfoMap();
 
+		var editor = this.getEditor();
 		editor.beginUpdateObject();
 		try
 		{
-
-			/*
-			 for (var i = 0, l = objs.length; i < l; ++i)
-			 {
-			 var obj = objs[i];
-			 * /
-			 var info = this.getManipulateObjInfoMap().get(obj);
-			 if (!info.hasNoCoord)  // this object has coord property and can be scaled
-			 {
-			 var oldCoord = info.screenCoord;
-			 var newCoord = C.transform2DByMatrix(oldCoord, transformMatrix);
-			 this.doMoveManipulatedObj(i, obj, newCoord, endScreenCoord);
-			 }
-			 // TODO: need change dimension also
-			 if (info.size)
-			 {
-
-			 }
-			 * /
-			 var newInfo = objNewInfo.get(obj);
-			 if (newInfo && newInfo.coord)
-			 this.doMoveManipulatedObj(i, obj, newInfo.coord, endScreenCoord);
-			 }
-			 */
+			var objs = this.getManipulateObjs();
 			this.applyManipulatingObjsInfo(endScreenCoord);
 			this._maniplateObjsFrameEnd(objs);
 			this.notifyCoordChangeOfObjects(objs);
@@ -4357,10 +6179,39 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			this.manipulateStepDone();
 		}
 	},
+	*/
+
+	/*
+	 * Rotate manupulatedObjs according to endScreenCoord.
+	 * @private
+	 */
+	/*
+	rotateManipulatedObjs: function(endScreenCoord)
+	{
+		var R = Kekule.Editor.BoxRegion;
+		var C = Kekule.CoordUtils;
+		//var editor = this.getEditor();
+		var changedObjs = [];
+		//console.log('rotate', this.getRotateCenter(), endScreenCoord);
+		var rotateParams = this._calcManipulateObjsRotationParams(this.getManipulateObjs(), endScreenCoord);
+		if (!rotateParams)
+			return;
+
+		this.doRotateManipulatedObjs(endScreenCoord, rotateParams);
+	},
+	*/
+	/** @private */
+	_calcActualResizeScales: function(objs, newScales)
+	{
+		return newScales;
+	},
 
 	/** @private */
-	_calcManipulateObjsResizeInfo: function(manipulatingObjs, startingRegion, endScreenCoord)
+	_calcManipulateObjsResizeParams: function(manipulatingObjs, startingRegion, endScreenCoord)
 	{
+		if (!this.getEnableResize())
+			return false;
+
 		var R = Kekule.Editor.BoxRegion;
 		var C = Kekule.CoordUtils;
 
@@ -4368,6 +6219,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var coordDelta = C.substract(endScreenCoord, this.getStartCoord());
 		var scaleCenter;
+		var doConstraint, doConstraintOnX, doConstraintOnY;
 		if (startingRegion === R.EDGE_TOP)
 		{
 			coordDelta.x = 0;
@@ -4390,14 +6242,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else // resize from corner
 		{
-			if (this.isConstrainedResize())
+			if (this.isAspectRatioLockedResize())
 			{
+				doConstraint = true;
+				/*
 				var widthHeightRatio = (box.x2 - box.x1) / (box.y2 - box.y1);
 				var currRatio = coordDelta.x / coordDelta.y;
 				if (Math.abs(currRatio) > widthHeightRatio)
-					coordDelta.x = coordDelta.y * widthHeightRatio * (Math.sign(currRatio) || 1);
+					//coordDelta.x = coordDelta.y * widthHeightRatio * (Math.sign(currRatio) || 1);
+					doConstraintOnY = true;
 				else
-					coordDelta.y = coordDelta.x / widthHeightRatio * (Math.sign(currRatio) || 1);
+					//coordDelta.y = coordDelta.x / widthHeightRatio * (Math.sign(currRatio) || 1);
+					doConstraintOnX = true;
+				*/
 			}
 
 			scaleCenter = (startingRegion === R.CORNER_TL)? {'x': box.x2, 'y': box.y2}:
@@ -4409,12 +6266,64 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var reversedY = (startingRegion === R.CORNER_TL) || (startingRegion === R.CORNER_TR) || (startingRegion === R.EDGE_TOP);
 
 		// calc transform matrix
-		var scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
-		var scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
-		var transformOps = {'center': scaleCenter, 'scaleX': scaleX, 'scaleY': scaleY};
+		var scaleX, scaleY;
+		if (Kekule.NumUtils.isFloatEqual(box.x1, box.x2, 1e-10))  // box has no x size, can not scale on x
+			scaleX = 1;
+		else
+			scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
+		if (Kekule.NumUtils.isFloatEqual(box.y1, box.y2, 1e-10))   // box has no y size, can not scale on y
+			scaleY = 1;
+		else
+			scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
+
+		if (doConstraint)
+		{
+			var absX = Math.abs(scaleX), absY = Math.abs(scaleY);
+			if (absX >= absY)
+				scaleY = (Math.sign(scaleY) || 1) * absX;    // avoid sign = 0
+			else
+				scaleX = (Math.sign(scaleX) || 1) * absY;
+		}
+
+		var actualScales = this._calcActualResizeScales(manipulatingObjs, {'scaleX': scaleX, 'scaleY': scaleY});
+		var transformParams = {'center': scaleCenter, 'scaleX': actualScales.scaleX, 'scaleY': actualScales.scaleY};
+		//console.log(this.isAspectRatioLockedResize(), scaleX, scaleY);
+		//console.log('startBox', box);
+		//console.log('transformParams', transformParams);
+
+		return transformParams;
+	},
+
+	/* @private */
+	/*
+	_calcManipulateObjsResizeInfo: function(manipulatingObjs, startingRegion, endScreenCoord)
+	{
+		var R = Kekule.Editor.BoxRegion;
+		var C = Kekule.CoordUtils;
+
+		var transformOps = this._calcManipulateObjsResizeParams(manipulatingObjs, startingRegion, endScreenCoord);
+		//console.log(scaleX, scaleY);
+
+		this._calcManipulateObjsTransformInfo(manipulatingObjs, transformOps);
+
+		return true;
+	},
+	*/
+
+	/** @private */
+	_calcManipulateObjsTransformInfo: function(manipulatingObjs, transformParams)
+	{
+		var C = Kekule.CoordUtils;
+
 		// since we transform screen coord, it will always be in 2D mode
+		// and now the editor only supports 2D
 		var is3D = false;  // this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D;
-		var transformMatrix = is3D? C.calcTransform3DMatrix(transformOps): C.calcTransform2DMatrix(transformOps);
+		var transformMatrix = is3D? C.calcTransform3DMatrix(transformParams): C.calcTransform2DMatrix(transformParams);
+
+		var scaleX = transformParams.scaleX || transformParams.scale;
+		var scaleY = transformParams.scaleY || transformParams.scale;
+
+		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
 
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{
@@ -4424,127 +6333,65 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			if (!info.hasNoCoord)  // this object has coord property and can be rotated
 			{
 				var oldCoord = info.screenCoord;
-				var newCoord = is3D? C.transform3DByMatrix(oldCoord, transformMatrix):
-						C.transform2DByMatrix(oldCoord, transformMatrix);
-				newInfo.screenCoord = newCoord;
+				if (!info.stickTarget || isMovingOneStickNode)
+				{
+					var newCoord = C.transform2DByMatrix(oldCoord, transformMatrix);
+					newInfo.screenCoord = newCoord;
+				}
+				else
+					newInfo.screenCoord = oldCoord;
+				//this._addManipultingObjNewInfo(obj, {'screenCoord': newCoord});
 			}
-			if (info.size)
+			// TODO: may need change dimension also
+			if (info.size && (scaleX || scaleY))
 			{
-				var newSize = {'x': info.size.x * Math.abs(scaleX), 'y': info.size.y * Math.abs(scaleY)};
+				var newSize = {'x': info.size.x * Math.abs(scaleX || 1), 'y': info.size.y * Math.abs(scaleY || 1)};
 				newInfo.size = newSize;
 			}
 			this._addManipultingObjNewInfo(obj, newInfo);
 		}
+
+		return true;
 	},
 
-
 	/**
+	 * Whether an object is sticking to another one.
+	 * @private
+	 */
+	_isStickedObj: function(obj)
+	{
+		return obj && obj.getCoordStickTarget && obj.getCoordStickTarget();
+	},
+	/** @private */
+	_isManipulatingSingleStickedObj: function(manipulatingObjs)
+	{
+		var result = false;
+		if (manipulatingObjs.length === 1)
+		{
+			var oneObj = manipulatingObjs[0];
+			var info = this.getManipulateObjInfoMap().get(oneObj);
+			result = !!info.stickTarget;
+		}
+		return result;
+	},
+
+	/*
 	 * Resize manupulatedObjs according to endScreenCoord.
 	 * @private
 	 */
-	resizeManipulatedObjs: function(endScreenCoord)
+	/*
+	doResizeManipulatedObjs: function(endScreenCoord)
 	{
-		/*
-		var R = Kekule.Editor.BoxRegion;
-		var C = Kekule.CoordUtils;
-		*/
 		var editor = this.getEditor();
 		var objs = this.getManipulateObjs();
 		//var changedObjs = [];
 
 		this._calcManipulateObjsResizeInfo(objs, this.getResizeStartingRegion(), endScreenCoord);
 
-		/*
-		var box = this.getStartBox();
-
-		var coordDelta = C.substract(endScreenCoord, this.getStartCoord());
-		var startingRegion = this.getResizeStartingRegion();
-		var scaleCenter;
-		if (startingRegion === R.EDGE_TOP)
-		{
-			coordDelta.x = 0;
-			scaleCenter = {'x': (box.x1 + box.x2) / 2, 'y': box.y2};
-		}
-		else if (startingRegion === R.EDGE_BOTTOM)
-		{
-			coordDelta.x = 0;
-			scaleCenter = {'x': (box.x1 + box.x2) / 2, 'y': box.y1};
-		}
-		else if (startingRegion === R.EDGE_LEFT)
-		{
-			coordDelta.y = 0;
-			scaleCenter = {'x': box.x2, 'y': (box.y1 + box.y2) / 2};
-		}
-		else if (startingRegion === R.EDGE_RIGHT)
-		{
-			coordDelta.y = 0;
-			scaleCenter = {'x': box.x1, 'y': (box.y1 + box.y2) / 2};
-		}
-		else // resize from corner
-		{
-			if (this.isConstrainedResize())
-			{
-				var widthHeightRatio = (box.x2 - box.x1) / (box.y2 - box.y1);
-				var currRatio = coordDelta.x / coordDelta.y;
-				if (Math.abs(currRatio) > widthHeightRatio)
-					coordDelta.x = coordDelta.y * widthHeightRatio * Math.sign(currRatio);
-				else
-					coordDelta.y = coordDelta.x / widthHeightRatio * Math.sign(currRatio);
-			}
-
-			scaleCenter = (startingRegion === R.CORNER_TL)? {'x': box.x2, 'y': box.y2}:
-				(startingRegion === R.CORNER_TR)? {'x': box.x1, 'y': box.y2}:
-				(startingRegion === R.CORNER_BL)? {'x': box.x2, 'y': box.y1}:
-				{'x': box.x1, 'y': box.y1};
-		}
-		var reversedX = (startingRegion === R.CORNER_TL) || (startingRegion === R.CORNER_BL) || (startingRegion === R.EDGE_LEFT);
-		var reversedY = (startingRegion === R.CORNER_TL) || (startingRegion === R.CORNER_TR) || (startingRegion === R.EDGE_TOP);
-
-		// calc transform matrix
-		var scaleX = 1 + coordDelta.x / (box.x2 - box.x1) * (reversedX? -1: 1);
-		var scaleY = 1 + coordDelta.y / (box.y2 - box.y1) * (reversedY? -1: 1);
-		var transformOps = {'center': scaleCenter, 'scaleX': scaleX, 'scaleY': scaleY};
-		// since we transform screen coord, it will always be in 2D mode
-		var is3D = false;  // this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D;
-		var transformMatrix = is3D? C.calcTransform3DMatrix(transformOps): C.calcTransform2DMatrix(transformOps);
-		*/
-
 		editor.beginUpdateObject();
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
 		try
 		{
-			/*
-			for (var i = 0, l = objs.length; i < l; ++i)
-			{
-				var obj = objs[i];
-				/ *
-				var info = this.getManipulateObjInfoMap().get(obj);
-				if (!info.hasNoCoord)  // this object has coord property and can be scaled
-				{
-					var oldCoord = info.screenCoord;
-					var newCoord = is3D? C.transform3DByMatrix(oldCoord, transformMatrix):
-						C.transform2DByMatrix(oldCoord, transformMatrix);
-					this.doMoveManipulatedObj(i, obj, newCoord, endScreenCoord);
-					//console.log(this.getManipulateObjs().length, oldCoord, newCoord);
-				}
-				// TODO: need change dimension also
-				if (info.size)
-				{
-					//var newDimension = {'width': info.dimension.width * Math.abs(scaleX), 'height': info.dimension.height * Math.abs(scaleY)};
-					var newSize = {'x': info.size.x * Math.abs(scaleX), 'y': info.size.y * Math.abs(scaleY)};
-					this.doResizeManipulatedObj(i, obj, newSize);
-				}
-				* /
-				var newInfo = newInfoMap.get(obj);
-				if (newInfo)
-				{
-					if (newInfo.coord)
-						this.doMoveManipulatedObj(i, obj, newInfo.coord, endScreenCoord);
-					if (newInfo.size)
-						this.doResizeManipulatedObj(i, obj, newInfo.Size);
-				}
-			}
-			*/
 			this.applyManipulatingObjsInfo(endScreenCoord);
 			this._maniplateObjsFrameEnd(objs);
 			this.notifyCoordChangeOfObjects(objs);
@@ -4554,6 +6401,67 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			editor.endUpdateObject();
 			this.manipulateStepDone();
 		}
+	},
+	*/
+
+	/**
+	 * Transform manupulatedObjs according to manipulateType(rotate/resize) endScreenCoord.
+	 * @private
+	 */
+	doTransformManipulatedObjs: function(manipulateType, endScreenCoord, explicitTransformParams)
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+
+		var editor = this.getEditor();
+		var objs = this.getManipulateObjs();
+		//var changedObjs = [];
+
+		var transformParams = explicitTransformParams;
+		if (!transformParams)
+		{
+			if (manipulateType === T.RESIZE)
+				transformParams = this._calcManipulateObjsResizeParams(objs, this.getResizeStartingRegion(), endScreenCoord);
+			else if (manipulateType === T.ROTATE)
+				transformParams = this._calcManipulateObjsRotationParams(objs, endScreenCoord);
+		}
+
+		if (this._lastTransformParams && this._isSameTransformParams(this._lastTransformParams, transformParams, null, editor.getCoordMode())) // not a significant change, do not transform
+		{
+			//console.log('bypass transform');
+			return;
+		}
+
+		//console.log('do transform', transformParams);
+
+		var doConcreteTransform = transformParams && this._calcManipulateObjsTransformInfo(objs, transformParams);
+		if (!doConcreteTransform)
+			return;
+
+		this._lastTransformParams = transformParams;
+
+		editor.beginUpdateObject();
+		var newInfoMap = this.getManipulateObjCurrInfoMap();
+		try
+		{
+			this.applyManipulatingObjsInfo(endScreenCoord);
+			this._maniplateObjsFrameEnd(objs);
+			this.notifyCoordChangeOfObjects(objs);
+		}
+		finally
+		{
+			editor.endUpdateObject();
+			this.manipulateStepDone();
+		}
+	},
+	/** @private */
+	_isSameTransformParams: function(p1, p2, threshold, coordMode)
+	{
+		if (!threshold)
+			threshold = 0.1;  // TODO: currently fixed
+		if (coordMode === Kekule.CoordMode.COORD2D)
+			return CU.isSameTransform2DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
+		else
+			return CU.isSameTransform3DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
 	},
 
 	/* @private */
@@ -4567,13 +6475,34 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var C = Kekule.CoordUtils;
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+
+		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
+
+		var isDirectManipulateSingleObj = this.isDirectManipulating() && (manipulatingObjs.length === 1);
+		var followPointerCoord = isDirectManipulateSingleObj && this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
+		if (followPointerCoord)
+		{
+			var startCoord = this.getStartCoord();
+			var moveDistance = C.getDistance(endScreenCoord, startCoord);
+			if (moveDistance <= this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObjDistanceThreshold())
+			{
+				followPointerCoord = false;
+			}
+		}
+
 		for (var i = 0, l = manipulatingObjs.length; i < l; ++i)
 		{
 			var obj = manipulatingObjs[i];
 			var info = this.getManipulateObjInfoMap().get(obj);
 			if (info.hasNoCoord)  // this object has no coord property and can not be moved
 				continue;
-			var newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
+			if (info.stickTarget && !isMovingOneStickNode)
+				continue;
+			var newScreenCoord;
+			if (followPointerCoord)
+				newScreenCoord = endScreenCoord;
+			else
+				newScreenCoord = C.add(endScreenCoord, info.screenCoordOffset);
 			newScreenCoord = this._calcActualMovedScreenCoord(obj, info, newScreenCoord);
 			this._addManipultingObjNewInfo(obj, {'screenCoord': newScreenCoord});
 		}
@@ -4619,6 +6548,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var editor = this.getEditor();
 		this.updateChildMoveOperation(objIndex, obj, editor.screenCoordToObj(newScreenCoord));
 		editor.setObjectScreenCoord(obj, newScreenCoord);
+		//this._moveResizeOperExecPending = true;
 	},
 	/**
 	 * Resize a single object to newDimension.
@@ -4629,6 +6559,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.updateChildResizeOperation(objIndex, obj, newSize);
 		if (obj.setSizeOfMode)
 			obj.setSizeOfMode(newSize, this.getEditor().getCoordMode());
+		//this._moveResizeOperExecPending = true;
 	},
 	/*
 	 * Moving complete, do the wrap up job.
@@ -4640,18 +6571,30 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.stopManipulate();
 	},
 	*/
+
+	/**
+	 * Returns whether the controller is in direct manipulating state.
+	 */
+	isDirectManipulating: function()
+	{
+		return (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			&& (!this.getIsManipulatingSelection());
+	},
+
 	/**
 	 * Click on a object or objects and manipulate it directly.
 	 * @private
 	 */
-	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter)
+	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord)
 	{
 		var objs = Kekule.ArrayUtils.toArray(objOrObjs);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.MANIPULATING);
+		this.setBaseCoord(startCoord);
 		this.setStartCoord(startCoord);
+		this.setRotateRefCoord(rotateRefCoord);
 		this.setIsManipulatingSelection(false);
 		//console.log('call prepareManipulating', startCoord, manipulateType, objOrObjs);
-		this.prepareManipulating(manipulateType || Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE, objs, startCoord, startBox, rotateCenter);
+		this.prepareManipulating(manipulateType || Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE, objs, startCoord, startBox, rotateCenter, rotateRefCoord);
 	},
 	/**
 	 * Called when a manipulation is applied and the changes has been reflected in editor (editor redrawn done).
@@ -4662,15 +6605,63 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		// do nothing here
 	},
+
+	/** @private */
+	doManipulateObjectsEnd: function(manipulatingObjs)
+	{
+		var map = this.getManipulateObjInfoMap();
+		for (var i = manipulatingObjs.length - 1; i >= 0; --i)
+		{
+			this.doManipulateObjectEnd(manipulatingObjs[i], map.get(manipulatingObjs[i]));
+		}
+	},
+	/** @private */
+	doManipulateObjectEnd: function(manipulateObj, objInfo)
+	{
+		/*
+		if (objInfo.enableIndirectCoord && manipulateObj.setEnableIndirectCoord)
+			manipulateObj.setEnableIndirectCoord(true);
+		*/
+	},
+
+	/**
+	 * Called when a manipulation is ended (stopped or cancelled).
+	 * Descendants may override this method.
+	 * @private
+	 */
+	manipulateEnd: function()
+	{
+		if (this._runManipulationStepId)
+		{
+			window.cancelAnimationFrame(this._runManipulationStepId);
+			this._runManipulationStepId = null;
+		}
+		this.doManipulateObjectsEnd(this.getManipulateObjs());
+		var editor = this.getEditor();
+		editor.endManipulateObject();
+		this._lastTransformParams = null;
+		this.setIsOffsetManipulating(false);
+
+		this.setManipulateObjs(null);
+		this.getManipulateObjInfoMap().clear();
+		this.getObjOperationMap().clear();
+	},
+	/**
+	 * Called before method stopManipulate.
+	 * Descendants may do some round-off work here.
+	 * @private
+	 */
+	manipulateBeforeStopping: function()
+	{
+		// do nothing here
+	},
 	/**
 	 * Stop manipulate of objects.
 	 * @private
 	 */
 	stopManipulate: function()
 	{
-		this.setManipulateObjs(null);
-		this.getManipulateObjInfoMap().clear();
-		this.getObjOperationMap().clear();
+		this.manipulateEnd();
 	},
 	/** @private */
 	refreshManipulateObjs: function()
@@ -4678,7 +6669,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setManipulateObjs(this.getManipulateObjs());
 	},
 	/** @private */
-	createManipulateObjInfo: function(obj, startScreenCoord)
+	createManipulateObjInfo: function(obj, objIndex, startScreenCoord)
 	{
 		var editor = this.getEditor();
 		var info = {
@@ -4686,28 +6677,36 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			'objCoord': editor.getObjCoord(obj),  // abs base coord
 			//'objSelfCoord': obj.getCoordOfMode? obj.getCoordOfMode(editor.getCoordMode()): null,
 			'screenCoord': editor.getObjectScreenCoord(obj),
-			'size': editor.getObjSize(obj)
+			'size': editor.getObjSize(obj),
+			'enableIndirectCoord': !!(obj.getEnableIndirectCoord && obj.getEnableIndirectCoord())
 		};
 		info.hasNoCoord = !info.objCoord;
-		if (!info.hasNoCoord)
+		if (!info.hasNoCoord && startScreenCoord)
 			info.screenCoordOffset = Kekule.CoordUtils.substract(info.screenCoord, startScreenCoord);
+		if (obj.getCoordStickTarget)  // wether is a sticking object
+		{
+			info.stickTarget = obj.getCoordStickTarget();
+		}
+
 		return info;
 	},
 
 	/** @private */
 	notifyCoordChangeOfObjects: function(objs)
 	{
-		var changedObjs = [];
+		var changedDetails = [];
 		var editor = this.getEditor();
+		var coordPropName = this.getEditor().getCoordMode() === Kekule.CoordMode.COORD3D? 'coord3D': 'coord2D';
 		for (var i = 0, l = objs.length; i < l; ++i)
 		{
 			var obj = objs[i];
-			Kekule.ArrayUtils.pushUnique(changedObjs, obj);
+			Kekule.ArrayUtils.pushUnique(changedDetails, {'obj': obj, 'propNames': [coordPropName]});
 			var relatedObjs = obj.getCoordDeterminateObjects? obj.getCoordDeterminateObjects(): [obj];
-			Kekule.ArrayUtils.pushUnique(changedObjs, relatedObjs);
+			for (var j = 0, k = relatedObjs.length; j < k; ++j)
+				Kekule.ArrayUtils.pushUnique(changedDetails, {'obj': relatedObjs[j], 'propNames': [coordPropName]});
 		}
 		// notify
-		editor.objectsChanged(changedObjs);
+		editor.objectsChanged(changedDetails);
 	},
 
 	/** @private */
@@ -4724,33 +6723,46 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var c = this._getEventMouseCoord(e, this.getEditor().getEditClientElem());
 		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.NORMAL)
 		{
-			if (this.getEnableResize())
+			var R = Kekule.Editor.BoxRegion;
+			var region = this.getEditor().getCoordRegionInSelectionMarker(c);
+			var result;
+			if (this.getEnableSelect())   // show move/rotate/resize marker in select ia controller only
 			{
-				var R = Kekule.Editor.BoxRegion;
-				var region = this.getEditor().getCoordRegionInSelectionMarker(c);
-				var result = (region === R.INSIDE)? 'move':
-					(region === R.CORNER_TL)? 'nwse-resize':
-					(region === R.CORNER_TR)? 'nesw-resize':
-					(region === R.CORNER_BL)? 'nesw-resize':
-					(region === R.CORNER_BR)? 'nwse-resize':
-					(region === R.EDGE_TOP) || (region === R.EDGE_BOTTOM)? 'ns-resize':
-					(region === R.EDGE_LEFT) || (region === R.EDGE_RIGHT)? 'ew-resize':
-					'';
-			}
-			if (!result)
-			{
-				if (this.getEnableRotate())
+				var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+				var availManipulationTypes = this.getCurrAvailableManipulationTypes();
+				//if (this.getEnableMove())
+				if (availManipulationTypes.indexOf(T.MOVE) >= 0)
 				{
-					var region = this.getCoordOnSelectionRotationRegion(c);
-					if (!!region)
+					result = (region === R.INSIDE)? 'move': '';
+				}
+				//if (!result && this.getEnableResize())
+				if (!result && (availManipulationTypes.indexOf(T.RESIZE) >= 0))
+				{
+					var result =
+						(region === R.CORNER_TL)? 'nwse-resize':
+						(region === R.CORNER_TR)? 'nesw-resize':
+						(region === R.CORNER_BL)? 'nesw-resize':
+						(region === R.CORNER_BR)? 'nwse-resize':
+						(region === R.EDGE_TOP) || (region === R.EDGE_BOTTOM)? 'ns-resize':
+						(region === R.EDGE_LEFT) || (region === R.EDGE_RIGHT)? 'ew-resize':
+						'';
+				}
+				if (!result)
+				{
+					//if (this.getEnableRotate())
+					if (availManipulationTypes.indexOf(T.ROTATE) >= 0)
 					{
-						var SN = Kekule.Widget.StyleResourceNames;
-						result = (region === R.CORNER_TL)? SN.CURSOR_ROTATE_NW:
-							(region === R.CORNER_TR)? SN.CURSOR_ROTATE_NE:
-							(region === R.CORNER_BL)? SN.CURSOR_ROTATE_SW:
-							(region === R.CORNER_BR)? SN.CURSOR_ROTATE_SE:
-							SN.CURSOR_ROTATE;
-						//console.log('rotate cursor', result);
+						var region = this.getCoordOnSelectionRotationRegion(c);
+						if (!!region)
+						{
+							var SN = Kekule.Widget.StyleResourceNames;
+							result = (region === R.CORNER_TL)? SN.CURSOR_ROTATE_NW:
+								(region === R.CORNER_TR)? SN.CURSOR_ROTATE_NE:
+								(region === R.CORNER_BL)? SN.CURSOR_ROTATE_SW:
+								(region === R.CORNER_BR)? SN.CURSOR_ROTATE_SE:
+								SN.CURSOR_ROTATE;
+							//console.log('rotate cursor', result);
+						}
 					}
 				}
 			}
@@ -4758,9 +6770,355 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		return result;
 	},
 
-	// event handle methods
+	/**
+	 * Set operations in suspended state.
+	 * @param {Func} immediateOper
+	 * @param {Func} delayedOper
+	 * @param {Int} delay In ms.
+	 * @private
+	 */
+	setSuspendedOperations: function(immediateOper, delayedOper, delay)
+	{
+		if (this._suspendedOperations)
+			this.haltSuspendedOperations();  // halt old
+		var self = this;
+		this._suspendedOperations = {
+			'immediate': immediateOper,
+			'delayed': delayedOper,
+			'delayExecId': setTimeout(this.execSuspendedDelayOperation.bind(this), delay)
+		};
+		return this._suspendedOperations;
+	},
+	/**
+	 * Execute the immediate operation in suspended operations, cancelling the delayed one.
+	 * @private
+	 */
+	execSuspendedImmediateOperation: function()
+	{
+		if (this._suspendedOperations)
+		{
+			//console.log('exec immediate');
+			clearTimeout(this._suspendedOperations.delayExecId);
+			var oper = this._suspendedOperations.immediate;
+			this._suspendedOperations = null;  // clear old
+			return oper.apply(this);
+		}
+	},
+	/**
+	 * Execute the delayed operation in suspended operations, cancelling the immediate one.
+	 * @private
+	 */
+	execSuspendedDelayOperation: function()
+	{
+		if (this._suspendedOperations)
+		{
+			//console.log('exec delayed');
+			clearTimeout(this._suspendedOperations.delayExecId);
+			var oper = this._suspendedOperations.delayed;
+			this._suspendedOperations = null;  // clear old
+			return oper.apply(this);
+		}
+	},
+	/**
+	 * Halt all suspend operations.
+	 * @private
+	 */
+	haltSuspendedOperations: function()
+	{
+		if (this._suspendedOperations)
+		{
+			clearTimeout(this._suspendedOperations.delayExecId);
+			this._suspendedOperations = null;  // clear old
+		}
+	},
+
 	/** @private */
-	react_mousemove: function($super, e)
+	_startNewSelecting: function(startCoord, shifted)
+	{
+		if (this.getEnableSelect())
+		{
+			this.getEditor().startSelecting(startCoord, shifted || this.getEditor().getIsToggleSelectOn());
+			this.setState(Kekule.Editor.BasicManipulationIaController.State.SELECTING);
+		}
+	},
+	/** @private */
+	_startOffSelectionManipulation: function(currCoord)
+	{
+		//console.log('off selection!');
+		this.setIsOffsetManipulating(true);
+		this.beginManipulation(currCoord, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE);
+		this.getEditor().pulseSelectionAreaMarker();  // pulse selection, reach the user's attention
+	},
+
+	/**
+	 * Begin a manipulation.
+	 * Descendants may override this method.
+	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	beginManipulation: function(currCoord, e, explicitManipulationType)
+	{
+		var S = Kekule.Editor.BasicManipulationIaController.State;
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var availManipulationTypes = this.getCurrAvailableManipulationTypes();
+
+		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
+		if (e)
+			this.setManipulationPointerType(e && e.pointerType);
+
+		var editor = this.getEditor();
+		editor.beginManipulateObject();
+
+		this.setBaseCoord(currCoord);
+		this.setStartCoord(currCoord);
+
+		// check if mouse just on an object, if so, direct manipulation mode
+		var hoveredObj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
+		if (hoveredObj && !evokedByTouch)  // mouse down directly on a object
+		{
+			//hoveredObj = hoveredObj.getNearestSelectableObject();
+			if (this.isInAncestorSelectMode())
+				hoveredObj = this.getStandaloneAncestor(hoveredObj);
+			hoveredObj = hoveredObj.getNearestMovableObject();
+			if (this.getEnableMove())
+			{
+				this.startDirectManipulate(null, hoveredObj, currCoord);
+				return;
+			}
+		}
+
+		this._lastTransformParams = null;
+
+		var coordRegion = currCoord && this.getEditor().getCoordRegionInSelectionMarker(currCoord);
+		var R = Kekule.Editor.BoxRegion;
+		var rotateRegion = currCoord && this.getCoordOnSelectionRotationRegion(currCoord);
+
+		// test manipulate type
+		/*
+		var isTransform = (this.getEnableResize() || this.getEnableRotate())
+				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
+		*/
+		var isTransform = (availManipulationTypes.indexOf(T.TRANSFORM) >= 0)
+				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
+		if (!isTransform)
+		{
+			var isResize = !evokedByTouch && (availManipulationTypes.indexOf(T.RESIZE) >= 0) //&& this.getEnableResize()
+					&& ((explicitManipulationType === T.RESIZE) || ((coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE)));
+			var isMove = !isResize && (availManipulationTypes.indexOf(T.MOVE) >= 0) // this.getEnableMove()
+					&& ((explicitManipulationType === T.MOVE) || (coordRegion !== R.OUTSIDE));
+			var isRotate = !evokedByTouch && !isResize && !isMove && (availManipulationTypes.indexOf(T.ROTATE) >= 0)//this.getEnableRotate()
+					&& ((explicitManipulationType === T.ROTATE) || !!rotateRegion);
+		}
+		else // transform
+		{
+			this._availTransformTypes = availManipulationTypes;  // stores the available transform types
+		}
+
+		// check if already has selection and mouse in selection rect first
+		//if (this.getEditor().isCoordInSelectionMarkerBound(coord))
+		if (isTransform)
+		{
+			this.setState(S.MANIPULATING);
+			this.setIsManipulatingSelection(true);
+			this.setResizeStartingRegion(coordRegion);
+			this.setRotateStartingRegion(rotateRegion);
+			this.prepareManipulating(T.TRANSFORM, this.getEditor().getSelection(), currCoord, this.getEditor().getSelectionContainerBox());
+		}
+		else if (isResize)
+		{
+			this.setState(S.MANIPULATING);
+			this.setIsManipulatingSelection(true);
+			this.setResizeStartingRegion(/*this.getEditor().getCoordRegionInSelectionMarker(coord)*/coordRegion);
+			//console.log('box', this.getEditor().getUiSelectionAreaContainerBox());
+			this.prepareManipulating(T.RESIZE, this.getEditor().getSelection(), currCoord, this.getEditor().getSelectionContainerBox());
+			//console.log('Resize');
+		}
+		else if (isMove)
+		{
+			//if (this.getEnableMove())
+			{
+				this.setState(S.MANIPULATING);
+				this.setIsManipulatingSelection(true);
+				this.prepareManipulating(T.MOVE, this.getEditor().getSelection(), currCoord);
+			}
+		}
+		else if (isRotate)
+		{
+			this.setState(S.MANIPULATING);
+			this.setIsManipulatingSelection(true);
+			this.setRotateStartingRegion(rotateRegion);
+			this.prepareManipulating(T.ROTATE, this.getEditor().getSelection(), currCoord, this.getEditor().getSelectionContainerBox());
+		}
+		else
+		{
+			/*
+			var obj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
+			if (obj)  // mouse down directly on a object
+			{
+				obj = obj.getNearestSelectableObject();
+				if (this.isInAncestorSelectMode())
+					obj = this.getStandaloneAncestor(obj);
+				// only mouse down and moved will cause manupulating
+				if (this.getEnableMove())
+					this.startDirectManipulate(null, obj, currCoord);
+			}
+			*/
+			if (hoveredObj)  // point on an object, direct move
+			{
+				if (this.getEnableMove())
+					this.startDirectManipulate(null, hoveredObj, currCoord);
+			}
+			else  // pointer down on empty region, deselect old selection and prepare for new selecting
+			{
+				if (this.getEnableMove() && this.getEnableSelect()
+						&& this.getEditorConfigs().getInteractionConfigs().getEnableOffSelectionManipulation()
+						&& this.getEditor().hasSelection() && this.getEditor().isSelectionVisible())
+				{
+					//console.log('enter suspend');
+					this.setState(S.SUSPENDING);
+					// need wait for a while to determinate the actual operation
+					var delay = this.getEditorConfigs().getInteractionConfigs().getOffSelectionManipulationActivatingTimeThreshold();
+					var shifted = e && e.getShiftKey();
+					this.setSuspendedOperations(
+					  this._startNewSelecting.bind(this, currCoord, shifted),
+						this._startOffSelectionManipulation.bind(this, currCoord),
+						delay
+					);
+					//this._startOffSelectionManipulation(currCoord);
+				}
+				else if (this.getEnableSelect())
+				{
+					var shifted = e && e.getShiftKey();
+					/*
+					//this.getEditor().startSelectingBoxDrag(currCoord, shifted);
+					//this.getEditor().setSelectMode(this.getSelectMode());
+					this.getEditor().startSelecting(currCoord, shifted);
+					this.setState(S.SELECTING);
+					*/
+					this._startNewSelecting(currCoord, shifted);
+				}
+			}
+		}
+	},
+	/**
+	 * Do manipulation based on mouse/touch move step.
+	 * //@param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * //@param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	execManipulationStep: function(/*currCoord, e*/timeStamp)
+	{
+		if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			return false;
+
+		var	currCoord = this._manipulationStepBuffer.coord;
+		var	e = this._manipulationStepBuffer.event;
+		var explicitTransformParams = this._manipulationStepBuffer.explicitTransformParams;
+
+		if (currCoord && e)
+		{
+			//console.log('do actual manipulate');
+			this.doExecManipulationStep(currCoord, e, this._manipulationStepBuffer);
+			// empty buffer, indicating that the event has been handled
+		}
+		else if (explicitTransformParams)  // has transform params explicitly in gesture transform
+		{
+			this.doExecManipulationStepWithExplicitTransformParams(explicitTransformParams, this._manipulationStepBuffer);
+		}
+		this._manipulationStepBuffer.coord = null;
+		this._manipulationStepBuffer.event = null;
+		this._manipulationStepBuffer.explicitTransformParams = null;
+
+		/*
+		if (this._lastTimeStamp)
+			console.log('elpase', timeStamp - this._lastTimeStamp);
+		this._lastTimeStamp = timeStamp;
+		*/
+
+		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
+	},
+	/**
+	 * Do actual manipulation based on mouse/touch move step.
+	 * Descendants may override this method.
+	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	doExecManipulationStep: function(currCoord, e, manipulationStepBuffer)
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var manipulateType = this.getManipulationType();
+
+		var editor = this.getEditor();
+		editor.beginUpdateObject();
+		try
+		{
+			this._isBusy = true;
+			if (manipulateType === T.MOVE)
+			{
+				this.moveManipulatedObjs(currCoord);
+			}
+			else if (manipulateType === T.RESIZE)
+			{
+				this._suppressConstrainedResize = e.getAltKey();
+				//this.doResizeManipulatedObjs(currCoord);
+				this.doTransformManipulatedObjs(manipulateType, currCoord);
+			}
+			else if (manipulateType === T.ROTATE)
+			{
+				//this.rotateManipulatedObjs(currCoord);
+				this.doTransformManipulatedObjs(manipulateType, currCoord);
+			}
+		}
+		finally
+		{
+			editor.endUpdateObject();
+			this._isBusy = false;
+		}
+	},
+	/**
+	 * Do actual manipulation based on mouse/touch move step.
+	 * Descendants may override this method.
+	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 */
+	doExecManipulationStepWithExplicitTransformParams: function(transformParams, manipulationStepBuffer)
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var manipulateType = this.getManipulationType();
+
+		if (manipulateType === T.TRANSFORM)
+		{
+			var editor = this.getEditor();
+			editor.beginUpdateObject();
+			try
+			{
+				this._isBusy = true;
+				this.doTransformManipulatedObjs(manipulateType, null, transformParams);
+			}
+			finally
+			{
+				editor.endUpdateObject();
+				this._isBusy = false;
+			}
+		}
+	},
+	/**
+	 * Refill the manipulationStepBuffer.
+	 * Descendants may override this method.
+	 * @param {Object} e Pointer (mouse or touch) event parameter.
+	 * @private
+	 */
+	updateManipulationStepBuffer: function(buffer, value)
+	{
+		Object.extend(buffer, value);
+		/*
+		buffer.coord = coord;
+		buffer.event = e;
+		*/
+	},
+
+		// event handle methods
+	/** @ignore */
+	react_pointermove: function($super, e)
 	{
 		$super(e);
 		if (this._isBusy)
@@ -4768,21 +7126,23 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			return true;
 		}
 
+		var S = Kekule.Editor.BasicManipulationIaController.State;
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+
 		var coord = this._getEventMouseCoord(e);
 
+		var distanceFromLast;
 		if (this._lastMouseMoveCoord)
 		{
 			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
-			if (dis < 2)  // less than 2 px, too tiny to react
+			distanceFromLast = dis;
+			if (dis < 4)  // less than 4 px, too tiny to react
 			{
 				return true;
 			}
 		}
 		this._lastMouseMoveCoord = coord;
 
-		var S = Kekule.Editor.BasicManipulationIaController.State;
-		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
-		var state = this.getState();
 		/*
 		if (state !== S.NORMAL)
 			this.getEditor().hideHotTrack();
@@ -4793,104 +7153,58 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		*/
+		if (this.getState() === S.SUSPENDING)
+		{
+			var disThreshold = this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold() || 0;
+			if (Kekule.ObjUtils.notUnset(distanceFromLast) && (distanceFromLast > disThreshold))
+				this.execSuspendedImmediateOperation();
+		}
+
+		var state = this.getState();
+
 		if (state === S.SELECTING)
 		{
 			if (this.getEnableSelect())
-				this.getEditor().dragSelectingBoxToCoord(coord);
+			{
+				//this.getEditor().dragSelectingBoxToCoord(coord);
+				this.getEditor().addSelectingAnchorCoord(coord);
+			}
+			e.preventDefault();
 		}
 		else if (state === S.MANIPULATING)  // move or resize objects
 		{
-			var manipulateType = this.getManipulationType();
-			try
-			{
-				this._isBusy = true;
-				if (manipulateType === T.MOVE)
-				{
-					this.moveManipulatedObjs(coord);
-				}
-				else if (manipulateType === T.RESIZE)
-				{
-					this._suppressConstrainedResize = e.getAltKey();
-					this.resizeManipulatedObjs(coord);
-				}
-				else if (manipulateType === T.ROTATE)
-				{
-					this.rotateManipulatedObjs(coord);
-				}
-			}
-			finally
-			{
-				this._isBusy = false;
-			}
+			//console.log('mouse move', coord);
+			this.updateManipulationStepBuffer(this._manipulationStepBuffer, {'coord': coord, 'event': e});
+			//this.execManipulationStep(coord, e);
+			e.preventDefault();
 		}
 		return true;
 	},
 	/** @private */
-	react_mousedown: function(e)
+	react_pointerdown: function($super, e)
 	{
+		$super(e);
+		//console.log('pointerdown', e);
 		var S = Kekule.Editor.BasicManipulationIaController.State;
-		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
-		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
+		//var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			this._lastMouseMoveCoord = null;
 
 			var coord = this._getEventMouseCoord(e);
 			if ((this.getState() === S.NORMAL)/* && (this.getEditor().getMouseLBtnDown()) */)
 			{
-				this.setStartCoord(coord);
-				var coordRegion = this.getEditor().getCoordRegionInSelectionMarker(coord);
-				var R = Kekule.Editor.BoxRegion;
-				var isResize = this.getEnableResize() && (coordRegion !== R.INSIDE) && (coordRegion !== R.OUTSIDE);
-				var isMove = !isResize && this.getEnableMove() && (coordRegion !== R.OUTSIDE);
-				var rotateRegion = this.getCoordOnSelectionRotationRegion(coord);
-				var isRotate = !isResize && !isMove && this.getEnableRotate() && !!rotateRegion;
-				// check if already has selection and mouse in selection rect first
-				//if (this.getEditor().isCoordInSelectionMarkerBound(coord))
-				if (isResize)
-				{
-					this.setState(S.MANIPULATING);
-					this.setIsManipulatingSelection(true);
-					this.setResizeStartingRegion(/*this.getEditor().getCoordRegionInSelectionMarker(coord)*/coordRegion);
-					//console.log('box', this.getEditor().getUiSelectionAreaContainerBox());
-					this.prepareManipulating(T.RESIZE, this.getEditor().getSelection(), coord, this.getEditor().getSelectionContainerBox());
-					//console.log('Resize');
-				}
-				else if (isMove)
-				{
-					//if (this.getEnableMove())
+				//var evokedByTouch = e && e.pointerType === 'touch';
+				var self = this;
+				var beginNormalManipulation = function(){
+					if (self.getState() === S.NORMAL)
 					{
-						this.setState(S.MANIPULATING);
-						this.setIsManipulatingSelection(true);
-						this.prepareManipulating(T.MOVE, this.getEditor().getSelection(), coord);
+						self.beginManipulation(coord, e);
+						e.preventDefault();
 					}
-				}
-				else if (isRotate)
-				{
-					this.setState(S.MANIPULATING);
-					this.setIsManipulatingSelection(true);
-					this.setRotateStartingRegion(rotateRegion);
-					this.prepareManipulating(T.ROTATE, this.getEditor().getSelection(), coord, this.getEditor().getSelectionContainerBox());
-				}
-				else
-				{
-					var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
-					if (obj)  // mouse down directly on a object
-					{
-						obj = obj.getNearestSelectableObject();
-						// only mouse down and moved will cause manupulating
-						if (this.getEnableMove())
-							this.startDirectManipulate(null, obj, coord);
-					}
-					else  // mouse down on empty region, deselect old selection and prepare for new rect selecting
-					{
-						if (this.getEnableSelect())
-						{
-							var shifted = e.getShiftKey();
-							this.getEditor().startSelectingBoxDrag(coord, shifted);
-							this.setState(S.SELECTING);
-						}
-					}
-				}
+				};
+				// wait for a while for the possible gesture operations
+				this.setSuspendedOperations(beginNormalManipulation, beginNormalManipulation, 50);
 			}
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
@@ -4899,16 +7213,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				if (this.getState() === S.MANIPULATING) // when click right button on manipulating, just cancel it.
 				{
-					this.cancelManipulatingObjs();
+					this.cancelManipulate();
 					this.setState(S.NORMAL);
 					e.stopPropagation();
+					e.preventDefault();
 				}
+				else if (this.getState() === S.SUSPENDING)
+					this.haltSuspendedOperations();
 			}
 		}
 		return true;
 	},
 	/** @private */
-	react_mouseup: function(e)
+	react_pointerup: function(e)
 	{
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -4917,23 +7234,35 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			var startCoord = this.getStartCoord();
 			var endCoord = coord;
 			var shifted = e.getShiftKey();
-			var state = this.getState();
 			var S = Kekule.Editor.BasicManipulationIaController.State;
+
+			if (this.getState() === S.SUSPENDING)   // done suspended first, then finish the operation
+				this.execSuspendedImmediateOperation();
+
+			var state = this.getState();
 
 			if (state === S.SELECTING)  // mouse up, end selecting
 			{
-				this.getEditor().endSelectingBoxDrag(coord, shifted);
+				//this.getEditor().endSelectingBoxDrag(coord, shifted);
+				this.getEditor().endSelecting(coord, shifted || this.getEditor().getIsToggleSelectOn());
 				this.setState(S.NORMAL);
+				e.preventDefault();
+				var editor = this.getEditor();
+				editor.endManipulateObject();
 			}
 			else if (state === S.MANIPULATING)
 			{
+				//var dis = Kekule.CoordUtils.getDistance(startCoord, endCoord);
+				//if (dis <= this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold())
 				if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // mouse down and up in same point, not manupulate, just select a object
 				{
 					if (this.getEnableSelect())
-						this.getEditor().selectOnCoord(startCoord, shifted);
+						this.getEditor().selectOnCoord(startCoord, shifted || this.getEditor().getIsToggleSelectOn());
 				}
 				else  // move objects to new pos
 				{
+					this.manipulateBeforeStopping();
+					/*
 					if (this.getEnableMove())
 					{
 						//this.moveManipulatedObjs(coord);
@@ -4941,13 +7270,30 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 						// add operation to editor's historys
 						this.addOperationToEditor();
 					}
+					*/
+					this.addOperationToEditor();
 				}
 				this.stopManipulate();
 				this.setState(S.NORMAL);
+				e.preventDefault();
 			}
 		}
 		return true;
-	}
+	},
+	/** @private */
+	react_mousewheel: function($super, e)
+	{
+		if (e.getCtrlKey())
+		{
+			var state = this.getState();
+			if (state === Kekule.Editor.BasicManipulationIaController.State.NORMAL)
+			{
+				// disallow mouse zoom during manipulation
+				return $super(e);
+			}
+			e.preventDefault();
+		}
+	},
 
 	/* @private */
 	/*
@@ -4964,6 +7310,191 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 	}
 	*/
+
+	//////////////////// Hammer Gesture event handlers ///////////////////////////
+	/** @private */
+	_isGestureManipulationEnabled: function()
+	{
+		return this.getEditorConfigs().getInteractionConfigs().getEnableGestureManipulation();
+	},
+	/** @private */
+	_isGestureZoomOnEditorEnabled: function()
+	{
+		return this.getEditorConfigs().getInteractionConfigs().getEnableGestureZoomOnEditor();
+	},
+	/** @private */
+	_isInGestureManipulation: function()
+	{
+		return !!this._initialGestureTransformParams;
+	},
+	/** @private */
+	_isGestureZoomOnEditor: function()
+	{
+		return !!this._initialGestureZoomLevel;
+	},
+	/**
+	 * Starts a gesture transform.
+	 * @param {Object} event
+	 * @private
+	 */
+	beginGestureTransform: function(event)
+	{
+		if (this.getEditor().hasSelection())
+		{
+			this._initialGestureZoomLevel = null;
+			if (this._isGestureManipulationEnabled())
+			{
+				this.haltSuspendedOperations(); // halt possible touch hold manipulations
+				// stores initial gesture transform params
+				this._initialGestureTransformParams = {
+					'angle': (event.rotation * Math.PI / 180) || 0
+				};
+				// start a brand new one
+				if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+					this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				else
+				{
+					if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
+						this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				}
+			}
+			else
+				this._initialGestureTransformParams = null;
+		}
+		else if (this._isGestureZoomOnEditorEnabled())  // zoom on editor
+		{
+			this.getEditor().cancelSelecting();   // force store the selecting
+			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+			this._initialGestureZoomLevel = this.getEditor().getZoom();
+		}
+	},
+	/**
+	 * Ends a gesture transform.
+	 * @private
+	 */
+	endGestureTransform: function()
+	{
+		if (this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)  // stop prev manipulation first
+		{
+			if (this._isInGestureManipulation())
+			{
+				this.manipulateBeforeStopping();
+				this.addOperationToEditor();
+				this.stopManipulate();
+				this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
+				this._initialGestureTransformParams = null;
+			}
+		}
+		if (this._isGestureZoomOnEditor())
+		{
+			this._initialGestureZoomLevel = null;
+		}
+	},
+	/**
+	 * Do a new transform step according to received event.
+	 * @param {Object} e Gesture event received.
+	 * @private
+	 */
+	doGestureTransformStep: function(e)
+	{
+		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		if ((this.getState() === Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+			&& (this.getManipulationType() === T.TRANSFORM)
+			&& (this._isInGestureManipulation()))
+		{
+			var availTransformTypes = this._availTransformTypes || [];
+			// get transform params from event directly
+			var center = this.getRotateCenter();  // use the center of current editor selection
+
+			var resizeScales, rotateAngle;
+			if (availTransformTypes.indexOf(T.RESIZE) >= 0)
+			{
+				var scale = e.scale;
+				resizeScales = this._calcActualResizeScales(this.getManipulateObjs(), {'scaleX': scale, 'scaleY': scale});
+			}
+			else
+				resizeScales = {'scaleX': 1, 'scaleY': 1};
+			if (availTransformTypes.indexOf(T.ROTATE) >= 0)
+			{
+				var absAngle = e.rotation * Math.PI / 180;
+				var rotateAngle = absAngle - this._initialGestureTransformParams.angle;
+
+				// get actual rotation angle
+				rotateAngle = this._calcActualRotateAngle(this.getManipulateObjs(), rotateAngle, this._initialGestureTransformParams.angle, absAngle);
+			}
+			else
+			{
+				rotateAngle = 0;
+			}
+
+			this.updateManipulationStepBuffer(this._manipulationStepBuffer, {
+				'explicitTransformParams': {
+					'center': center,
+					'scaleX': resizeScales.scaleX, 'scaleY': resizeScales.scaleY,
+					'rotateAngle': rotateAngle
+					//'rotateDegree': e.rotation,
+					//'event': e
+				}
+			});
+			e.preventDefault();
+		}
+		else if (this._isGestureZoomOnEditor())
+		{
+			var editor = this.getEditor();
+			var scale = e.scale;
+			var initZoom = this._initialGestureZoomLevel;
+			editor.zoomTo(initZoom * scale, null, e.center);
+		}
+	},
+
+	/** @ignore */
+	react_rotatestart: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.beginGestureTransform(e);
+	},
+	/** @ignore */
+	react_rotate: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.doGestureTransformStep(e);
+	},
+	/** @ignore */
+	react_rotateend: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
+	},
+	/** @ignore */
+	react_rotatecancel: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
+	},
+	/** @ignore */
+	react_pinchstart: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.beginGestureTransform(e);
+	},
+	/** @ignore */
+	react_pinchmove: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.doGestureTransformStep(e);
+	},
+	/** @ignore */
+	react_pinchend: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
+	},
+	/** @ignore */
+	react_pinchcancel: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+			this.endGestureTransform();
+	}
 });
 
 
@@ -4977,7 +7508,12 @@ Kekule.Editor.BasicManipulationIaController.State = {
 	/** Is selecting objects. */
 	SELECTING: 1,
 	/** Is manipulating objects (e.g. changing object position). */
-	MANIPULATING: 2
+	MANIPULATING: 2,
+	/**
+	 * Just put down pointer, if move the pointer immediately, selecting state will be open.
+	 * But if hold down still for a while, it may turn to manipulating state to move current selected objects.
+	 */
+	SUSPENDING: 11
 };
 /**
  * Enumeration of manipulation types of a {@link Kekule.Editor.BasicManipulationIaController}.
@@ -4986,7 +7522,8 @@ Kekule.Editor.BasicManipulationIaController.State = {
 Kekule.Editor.BasicManipulationIaController.ManipulationType = {
 	MOVE: 0,
 	ROTATE: 1,
-	RESIZE: 2
+	RESIZE: 2,
+	TRANSFORM: 4  // scale and rotate simultaneously by touch
 };
 /** @ignore */
 Kekule.Editor.IaControllerManager.register(Kekule.Editor.BasicManipulationIaController, Kekule.Editor.BaseEditor);

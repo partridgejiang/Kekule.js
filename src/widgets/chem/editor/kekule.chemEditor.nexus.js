@@ -27,10 +27,10 @@
  * @property {Bool} enableLiveUpdate If set to true, the tree view will automatically updated when chem objects changed.
  */
 Kekule.Editor.EditorNexus = Class.create(ObjectEx,
-/** @lends Kekule.ChemWidget.StructureTreeView# */
+/** @lends Kekule.Editor.EditorNexus# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemWidget.StructureTreeView',
+	CLASS_NAME: 'Kekule.Editor.EditorNexus',
 	/** @construct */
 	initialize: function($super, components)
 	{
@@ -119,10 +119,14 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 	{
 		//editor.setEnablePropValueSetEvent(true);
 		editor.addEventListener('change', this._reactEditorChanged, this);
+		editor.addEventListener('beginUpdateObject', this._reactEditorBeginUpdateObject, this);
+		editor.addEventListener('endUpdateObject', this._reactEditorEndUpdateObject, this);
 	},
 	_uninstallEditorEventHandler: function(editor)
 	{
 		editor.removeEventListener('change', this._reactEditorChanged, this);
+		editor.removeEventListener('beginUpdateObject', this._reactEditorBeginUpdateObject, this);
+		editor.removeEventListener('endUpdateObject', this._reactEditorEndUpdateObject, this);
 	},
 	_installStructureTreeViewEventHandler: function(treeView)
 	{
@@ -161,6 +165,18 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
+	_reactEditorBeginUpdateObject: function(e)
+	{
+		// disable live update of structure tree view
+		this.pauseLiveUpdate();
+	},
+	/** @private */
+	_reactEditorEndUpdateObject: function(e)
+	{
+		// restore live update of structure tree view
+		this.resumeLiveUpdate();
+	},
+	/** @private */
 	_updateByEditor: function()
 	{
 		this._reactEditorChanged({'target': this.getEditor(), 'changedPropNames': ['chemObj', 'selection', 'operHistory']});
@@ -180,6 +196,29 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 			var objs = target.getSelectedChemObjs();
 			this.changeSelection(objs, target);
 		}
+	},
+
+	/**
+	 * Pause live update of structure tree view.
+	 * @private
+	 */
+	pauseLiveUpdate: function()
+	{
+		var treeView = this.getStructureTreeView();
+		if (treeView)
+		{
+			treeView.pauseLiveUpdate();
+		}
+	},
+	/**
+	 * Resume the live update status of structure tree view.
+	 * @private
+	 */
+	resumeLiveUpdate: function()
+	{
+		var treeView = this.getStructureTreeView();
+		if (treeView)
+			treeView.resumeLiveUpdate();
 	},
 
 	/**

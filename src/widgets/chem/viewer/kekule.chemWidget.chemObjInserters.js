@@ -289,6 +289,12 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	},
 
 	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
+
+	/** @ignore */
 	doResize: function($super)
 	{
 		// notify children
@@ -352,13 +358,17 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 */
 	adjustChildrenSizes: function()
 	{
-		var selfRect = this.getBoundingClientRect();
-		var toolbarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this._toolbarParentElem);
+		//var selfRect = this.getBoundingClientRect();
+		var selfRect = this.getPageRect();
+		//var toolbarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this._toolbarParentElem);
+		var toolbarRect = Kekule.HtmlElementUtils.getElemPageRect(this._toolbarParentElem);
 		var tabs = this.getTabs();
-		var tabRect = tabs && tabs.getBoundingClientRect();
+		//var tabRect = tabs && tabs.getBoundingClientRect();
+		var tabRect = tabs && tabs.getPageRect();
 		var h = tabRect.top - toolbarRect.bottom;
 		//console.log(selfRect.height, toolbarRect.height, tabRect.height, h);
 		this.getClientPanel().setHeight(h + 'px');
+		//console.log('set height', h, tabRect, toolbarRect);
 		this.getViewer().resized();
 		//var clientRect = this.getClientPanel().getBoundingClientRect();
 		/*
@@ -658,21 +668,21 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	importFromElemAttribs: function(attribs)
 	{
 		//if (!attribs.width)
-		attribs.width = JsonUtility.parse(attribs.width);
+		attribs.width = DataType.JsonUtility.parse(attribs.width);
 		//if (!attribs.height)
-		attribs.height = JsonUtility.parse(attribs.height);
+		attribs.height = DataType.JsonUtility.parse(attribs.height);
 		var chemObjJson = attribs['data-chem-obj'];
 		var chemObj = chemObjJson? Kekule.IO.loadMimeData(chemObjJson, 'chemical/x-kekule-json'): null;
 		if (attribs['data-render-type'])
-			attribs.renderType = JsonUtility.parse(attribs['data-render-type']);
+			attribs.renderType = DataType.JsonUtility.parse(attribs['data-render-type']);
 		if (attribs['data-draw-options'])
-			attribs.drawOptions = JsonUtility.parse(attribs['data-draw-options']);
+			attribs.drawOptions = DataType.JsonUtility.parse(attribs['data-draw-options']);
 		if (attribs['data-auto-size'])
-			attribs.autoSize = JsonUtility.parse(attribs['data-auto-size']);
+			attribs.autoSize = DataType.JsonUtility.parse(attribs['data-auto-size']);
 		if (attribs['data-autofit'])
-			attribs.autofit = JsonUtility.parse(attribs['data-autofit']);
-		if (attribs['backgroundColor'])
-			attribs.backgroundColor = attribs['backgroundColor'];
+			attribs.autofit = DataType.JsonUtility.parse(attribs['data-autofit']);
+		if (attribs['data-background-color'])
+			attribs.backgroundColor = attribs['data-background-color'];
 		return this.importChemObjWithDetails(chemObj, attribs);
 	},
 
@@ -682,7 +692,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 */
 	importFromElem: function(element)
 	{
-		var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
+		//var dim = Kekule.HtmlElementUtils.getElemBoundingClientRect(element);
+		var dim = Kekule.HtmlElementUtils.getElemPageRect(element);
 		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
 		if (!attribs.width)
 			attribs.width = dim.width;

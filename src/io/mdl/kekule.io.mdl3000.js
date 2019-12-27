@@ -101,19 +101,44 @@ Kekule.IO.Mdl3kUtils = {
 	/**
 	 * Convert a {@link Kekule.BondStereo} value to MDL 3000 bond configuration value.
 	 * @param {Int} value Value from  {@link Kekule.BondStereo}.
-	 * @returns {Int}
+	 * @returns {Hash}
 	 * @private
 	 */
-	bondStereoToMdlCfg: function(value)
+	bondStereoToMdlCfg: function(value, allowInverted)
 	{
-		switch (value)
+		var BS = Kekule.BondStereo;
+		var result = {};
+		if (allowInverted && [BS.UP_INVERTED, BS.DOWN_INVERTED].indexOf(value) >= 0)
+			result.inverted = true;
+		if (result.inverted)
 		{
-			case Kekule.BondStereo.UP: return 1;
-			case Kekule.BondStereo.UP_OR_DOWN: return 2;
-			case Kekule.BondStereo.DOWN: return 3;
-			//case Kekule.BondStereo.NONE: return 0;
-			default: return 0;
+			if (value === BS.UP_INVERTED)
+				result.cfg = 1;
+			else if (value === BS.DOWN_INVERTED)
+				result.cfg = 3;
 		}
+		else
+		{
+			switch (value)
+			{
+				case BS.UP:
+				case BS.DOWN_INVERTED:
+					result.cfg = 1;
+					break;
+				case BS.UP_OR_DOWN:
+					result.cfg = 2;
+					break;
+				case BS.DOWN:
+				case BS.UP_INVERTED:
+					result.cfg = 3;
+					break;
+				//case Kekule.BondStereo.NONE: return 0;
+				default:
+					result.cfg = 0;
+					break;
+			}
+		}
+		return result;
 	},
 	/**
 	 * Turn a float coordinate value to a MDL V3000 string.
@@ -569,8 +594,8 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 			result = null;
 		else  // find end tag
 		{
-			var startPos = this.getCurrLineNo();
-			endPos = this.getCurrLineNo();
+			var startPos = this.getCurrLineNo(),
+			endPos = this.getCurrLineNo(),
 			line = this.readLine().trim();
 			while ((line != endTag) && (!this.eof()))
 			{
@@ -801,7 +826,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		//for (var i = 0; i < countInfo.atomCount; ++i)
 		while (!textBuffer.eof())
 		{
-			line = textBuffer.readLine();
+			var line = textBuffer.readLine();
 			var atomInfo = this.analysisAtomLine(line);
 			var actualIndex = atomInfos.push(atomInfo) - 1;
 			// as index of atom in MDL file may be disordered, here use a map to keep
@@ -932,7 +957,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		//for (var i = 0; i < countInfo.bondCount; ++i)
 		while (!textBuffer.eof())
 		{
-			line = textBuffer.readLine();
+			var line = textBuffer.readLine();
 			var bondInfo = this.analysisBondLine(line, atomIndexMap);
 			bondInfos[bondInfo.index] = bondInfo;
 		}
@@ -979,6 +1004,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 					}
 					else  // number value?
 						result.endAtomIndexes = [atomIndexMap[parseInt(value, 10)]];
+					break;
 				}
 				case 'TOPO': // topological query property, chain or ring, ignore
 				case 'RXCTR': // Reacting center status, ignore
@@ -998,7 +1024,7 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		// check if the first line is default value
 		// [M  V30 DEFAULT [CLASS=class] -]
 		var pos = textBuffer.getCurrLineNo();
-		line = textBuffer.readLine();
+		var line = textBuffer.readLine();
 		var values = Kekule.IO.Mdl3kValueUtils.splitValues(line);
 		if (values.shift().value == 'DEFAULT')  // default line, fetch all default values
 			defValues = this.fetchSGroupOptionalValues(line, atomIndexMap);
@@ -1284,13 +1310,21 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 			Kekule.IO.MdlUtils.kekuleBondOrderToMdlType(
 				bond.getBondOrder? bond.getBondOrder(): Kekule.BondOrder.UNSET
 			)];
+		// check bond stereo first, since it may cause the inverted order of atoms
+		var stereoInfo = (bond.getStereo && bond.getStereo())? Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo(), true): {};
 		// atom1 atom2
 		var count = 0;
 		var atoms = [];
 		var endPoints = [];
 		var nodeGroup = Kekule.IO.MdlStructureUtils.splitConnectedNodes(bond);
-		atoms = [atomList.indexOf(nodeGroup.primaryNodes[0]) + 1, atomList.indexOf(nodeGroup.primaryNodes[1]) + 1];
-		  // if indexOf not found, it will returns -1, plus 1 just got zero
+		// if indexOf not found, it will returns -1, plus 1 just got zero
+		var atomIndex1 = atomList.indexOf(nodeGroup.primaryNodes[0]) + 1;
+		var atomIndex2 = atomList.indexOf(nodeGroup.primaryNodes[1]) + 1;
+		if (stereoInfo.inverted)
+			atoms = [atomIndex2, atomIndex1];
+		else
+			atoms = [atomIndex1, atomIndex2];
+		// remaining
 		if (nodeGroup.remainNodes && nodeGroup.remainNodes.length)
 		{
 			for (var i = 0, l = nodeGroup.remainNodes.length; i < l; ++i)
@@ -1298,8 +1332,12 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		}
 		values = values.concat(atoms);
 		// optional values
-		if (bond.getStereo && bond.getStereo())
-			values.push({'key': 'CFG', 'value': Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo())});
+		//if (bond.getStereo && bond.getStereo())
+		if (stereoInfo && stereoInfo.cfg)
+		{
+			//values.push({'key': 'CFG', 'value': Kekule.IO.Mdl3kUtils.bondStereoToMdlCfg(bond.getStereo())});
+			values.push({'key': 'CFG', 'value': stereoInfo.cfg});
+		}
 		if (endPoints.length > 0)
 		{
 			values.push({'key': 'ENDPTS', 'value': endPoints});

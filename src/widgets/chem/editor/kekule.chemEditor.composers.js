@@ -18,12 +18,14 @@
  * requires /widgets/chem/structureTreeView/kekule.chemWidget.structureTreeViews.js
  * requires /widgets/chem/editor/kekule.chemEditor.baseEditors.js
  * requires /widgets/chem/editor/kekule.chemEditor.nexus.js
+ * requires /widgets/chem/editor/kekule.chemEditor.objModifiers.js
  * requires /localization
  */
 
 (function(){
 
 var PS = Class.PropertyScope;
+var AU = Kekule.ArrayUtils;
 var CW = Kekule.ChemWidget;
 var CE = Kekule.Editor;
 var CNS = Kekule.Widget.HtmlClassNames;
@@ -36,14 +38,19 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER: 'K-Chem-Composer',
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
+	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
+	COMPOSER_LEFT_REGION: 'K-Chem-Composer-Left-Region',
+	COMPOSER_BOTTOM_REGION: 'K-Chem-Composer-Bottom-Region',
 	COMPOSER_TOOLBAR: 'K-Chem-Composer-Toolbar',
 	COMPOSER_COMMON_TOOLBAR: 'K-Chem-Composer-Common-Toolbar',
 	COMPOSER_ZOOM_TOOLBAR: 'K-Chem-Composer-Zoom-Toolbar',
 	COMPOSER_CHEM_TOOLBAR: 'K-Chem-Composer-Chem-Toolbar',
 	COMPOSER_ASSOC_TOOLBAR: 'K-Chem-Composer-Assoc-Toolbar',
 	COMPOSER_STYLE_TOOLBAR: 'K-Chem-Composer-Style-Toolbar',
+	COMPOSER_OBJMODIFIER_TOOLBAR: 'K-Chem-Composer-ObjModifier-Toolbar',
 	COMPOSER_FONTNAME_BOX: 'K-Chem-Composer-FontName-Box',
 	COMPOSER_FONTSIZE_BOX: 'K-Chem-Composer-FontSize-Box',
+	COMPOSER_NODEDISPLAYMODE_BOX: 'K-Chem-Composer-NodeDisplayMode-Box',
 	COMPOSER_COLOR_BOX: 'K-Chem-Composer-Color-Box',
 
 	COMPOSER_TEXTDIRECTION_BUTTON: 'K-Chem-Composer-TextDirection-Button',
@@ -65,7 +72,11 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_TEXTALIGN_BUTTON_TOP: 'K-Chem-Composer-TextAlign-Top',
 	COMPOSER_TEXTALIGN_BUTTON_BOTTOM: 'K-Chem-Composer-TextAlign-Bottom',
 
-	COMPOSER_DIALOG: 'K-Chem-ComposerDialog'  //'K-Chem-Viewer-Assoc-Editor'
+	COMPOSER_DIALOG: 'K-Chem-ComposerDialog',  //'K-Chem-Viewer-Assoc-Editor'
+
+	COMPOSER_FRAME: 'K-Chem-ComposerFrame',
+	COMPOSER_FRAME_CONTENT_DOC: 'K-Chem-ComposerFrame-ContentDoc',
+	COMPOSER_FRAME_CONTENT_BODY: 'K-Chem-ComposerFrame-ContentBody'
 });
 
 Kekule.globalOptions.add('chemWidget.composer', {
@@ -81,7 +92,8 @@ Kekule.globalOptions.add('chemWidget.composer', {
 		BNS.paste,
 		//BNS.cloneSelection,
 		BNS.zoomIn,
-		BNS.reset,
+		//BNS.reset,
+		//BNS.resetZoom,
 		BNS.zoomOut,
 		BNS.config,
 		BNS.objInspector
@@ -90,8 +102,9 @@ Kekule.globalOptions.add('chemWidget.composer', {
 		BNS.manipulate,
 		BNS.erase,
 		BNS.molBond,
-		BNS.molAtom,
-		BNS.molFormula,
+		//BNS.molAtom,
+		//BNS.molFormula,
+		BNS.molAtomAndFormula,
 		BNS.molRing,
 		BNS.molCharge,
 		BNS.glyph,
@@ -129,7 +142,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	 * @ignore
 	 */
 	ATOM_COLOR_SPECIAL_VALUE_INFO: {
-		text: '(use atom custom color)',
+		text: Kekule.$L('ChemWidgetTexts.HINT_USE_ATOM_CUSTOM_COLOR'),
 		value: 'Atom',
 		className: CNS.COLORPICKER_SPEC_COLOR_MIXED
 	},
@@ -252,6 +265,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			this.setPropStoreFieldValue('fontNameBox', null);
 		if (widget === this.getFontSizeBox())
 			this.setPropStoreFieldValue('fontSizeBox', null);
+		if (widget === this.getColorBox())
+			this.setPropStoreFieldValue('colorBox', null);
+		if (widget === this.getTextDirectionButtonSet())
+			this.setPropStoreFieldValue('textDirectionButtonSet', null);
+		if (widget === this.getTextHorizontalAlignButtonSet())
+			this.setPropStoreFieldValue('textHorizontalAlignButtonSet', null);
+		if (widget === this.getTextVerticalAlignButtonSet())
+			this.setPropStoreFieldValue('textVerticalAlignButtonSet', null);
 		$super(widget, doNotFinalize);
 	},
 
@@ -734,6 +755,235 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	}
 });
 
+/**
+ * The style toolbar for composer.
+ * @class
+ * @augments Kekule.Widget.Toolbar
+ * @param {Kekule.Editor.Composer} composer Parent composer.
+ *
+ * @property {Kekule.Editor.Composer} composer Parent composer.
+ * @property {Array} components Array of component names that shows in tool bar.
+ */
+Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
+/** @lends Kekule.Editor.ComposerObjModifierToolbar# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ComposerObjModifierToolbar',
+	/** @constructs */
+	initialize: function($super, composer)
+	{
+		$super(composer);
+		this.setPropStoreFieldValue('modifiers', []);
+		this.setPropStoreFieldValue('modifierMap', new Kekule.MapEx());
+		this.setPropStoreFieldValue('composer', composer);
+		this.appendToWidget(composer);
+
+		composer.addEventListener('selectionChange', function(e){
+			if (!this._isApplying)
+				this.updateModifierValues();
+		}, this);
+		composer.addEventListener('selectedObjsUpdated', function(e){
+			/*
+			var propNames = e.propNames;
+			if (!propNames || !propNames.length || !Kekule.ArrayUtils.intersect(this._relatedPropNames, propNames).length)  // not changing render options
+			{
+				return;
+			}
+			*/
+			if (!this._isApplying)
+			{
+				if (composer.getEditor().isManipulatingObject())
+					this._suppressUpdateModifierValuesInManipulation = true;
+				else
+				{
+					//console.log('selectedObjsUpdated', composer.getEditor()._objectManipulateFlag, e);
+					this.updateModifierValues();
+				}
+			}
+		}, this);
+		composer.addEventListener('endManipulateObject', function(e){
+			if (this._suppressUpdateModifierValuesInManipulation)
+			{
+				this.updateModifierValues();
+				this._suppressUpdateModifierValuesInManipulation = false;
+			}
+		}, this);
+
+		this._isApplying = false;  // private
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false, 'setter': null});
+		this.defineProp('modifierMap', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('modifiers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setShowGlyph(true);
+	},
+	/** @private */
+	doFinalize: function($super)
+	{
+		this.clearWidgets();
+		this.getModifierMap().finalize();
+		var modifiers = this.getModifiers();
+		for (var i = 0, l = modifiers.length; i < l; ++i)
+			modifiers[i].finalize();
+		$super();
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		var result = $super() + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_OBJMODIFIER_TOOLBAR;
+		return result;
+	},
+
+	/** @private */
+	getEditor: function()
+	{
+		return this.getComposer().getEditor();
+	},
+	/** @private */
+	getEditorConfigs: function()
+	{
+		return this.getEditor().getEditorConfigs();
+	},
+	/** @private */
+	getAllowedModifierCategories: function()
+	{
+		var c = this.getComposer();
+		return c && c.getAllowedObjModifierCategories();
+	},
+	/**
+	 * Returns selection of editor.
+	 * @returns {Array}
+	 * @private
+	 */
+	getTargetObjs: function()
+	{
+		return this.getEditor().getSelection();
+	},
+	/**
+	 * Returns modifier classes that can be displayed on toolbar.
+	 * @returns {Array}
+	 * @private
+	 */
+	getAvailableModifierClasses: function()
+	{
+		var targetClasses = [];
+		var targets = this.getTargetObjs();
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			if (targets[i].getClass)
+				AU.pushUnique(targetClasses, targets[i].getClass());
+		}
+		var result = [];
+		var allowedCategories = this.getAllowedModifierCategories();
+		for (var i = 0, l = targetClasses.length; i < l; ++i)
+		{
+			var modifierClasses = Kekule.Editor.ObjModifierManager.getModifierClasses(targetClasses[i], allowedCategories);
+			if (modifierClasses)
+				AU.pushUnique(result, modifierClasses);
+		}
+		if (result.length)
+			result.sort(function(a, b){
+				var protoA = a && ClassEx.getPrototype(a);
+				var protoB = b && ClassEx.getPrototype(b);
+				var nameA = protoA && protoA.getModifierName && protoA.getModifierName();
+				var nameB = protoB && protoB.getModifierName && protoB.getModifierName();
+				return (nameA === nameB)? 0:
+						(nameA < nameB)? -1: 1;
+			});
+		return result;
+	},
+	/**
+	 * Return a cached or newly created modifier instance of class.
+	 * @param {Class} modifierClass
+	 * @param {Bool} autoCreate
+	 * @return {Kekule.Editor.ObjModifier.Base}
+	 */
+	getModifierInstanceOfClass: function(modifierClass, autoCreate)
+	{
+		var map = this.getModifierMap();
+		var result = map.get(modifierClass);
+		if (!result && autoCreate)
+		{
+			result = new modifierClass(this.getEditor());
+			map.set(modifierClass, result);
+		}
+		return result;
+	},
+	/**
+	 * Refresh displayed modifier widgets on toolbar.
+	 */
+	updateModifierWidgets: function()
+	{
+		var modifiers = [];
+		this.clearWidgets(true);  // clear old widgets but do not finalize
+		var modifierClasses = this.getAvailableModifierClasses();
+		for (var i = 0, l = modifierClasses.length; i < l; ++i)
+		{
+			var mClass = modifierClasses[i];
+			var modifier = this.getModifierInstanceOfClass(mClass, true);  // auto create
+			var widget = modifier.getWidget();
+			if (widget)
+			{
+				this.appendWidget(widget);
+				modifiers.push(modifier);
+			}
+		}
+		this.setPropStoreFieldValue('modifiers', modifiers);
+		this.updateModifierValues();
+
+		if (this._isAllModifierWidgetButtons(modifiers))  // if all modifiers are buttons, use btnGroup style rather than toolbar
+		{
+			this.removeClassName(CNS.TOOLBAR).addClassName(CNS.BUTTON_GROUP);
+		}
+		else
+		{
+			this.removeClassName(CNS.BUTTON_GROUP).addClassName(CNS.TOOLBAR);
+		}
+	},
+	/**
+	 * Update toolbar and child widget outlook and other settings according to editor's state.
+	 */
+	updateState: function()
+	{
+		this.updateModifierWidgets();
+	},
+
+	/**
+	 * Refresh modifier widget according to current state of selection in editor.
+	 */
+	updateModifierValues: function()
+	{
+		var modifiers = this.getModifiers();
+		for (var i = 0, l = modifiers.length; i < l; ++i)
+		{
+			modifiers[i].loadFromTargets();
+		}
+	},
+
+	/** @private */
+	_isAllModifierWidgetButtons: function(modifiers)
+	{
+		for (var i = 0, l = modifiers.length; i < l; ++i)
+		{
+			var m = modifiers[i];
+			var w = m && m.getWidget();
+			if (!w || !w.getDisplayed() || w instanceof Kekule.Widget.Button)
+				continue;
+			else
+				return false
+		}
+		return true;
+	}
+});
+
 
 /**
  * A editor with essential UI for end users.
@@ -767,7 +1017,10 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  *     ]<br />
  * @property {Array} styleToolComponentNames Array of component names that shows in style tool bar.
  * @property {Bool} enableStyleToolbar
+ * @property {Bool} enableObjModifierToolbar
+ * @property {Array} allowedObjModifierCategories
  * @property {Bool} showInspector Whether show advanced object inspector and structure view.
+ * @property {Bool} autoSetMinDimension
  *
  * @property {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
  * @property {Bool} enableOperHistory Whether undo/redo is enabled.
@@ -787,6 +1040,7 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Bool} enableCreateNewDoc Whether create new object in editor is allowed.
  * @property {Bool} allowCreateNewChild Whether new direct child of space can be created.
  *   Note: if the space is empty, one new child will always be allowed to create.
+ * @property {Bool} allowAppendDataToCurr Whether display "append data" check box in the data load dialog.
  */
 Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 /** @lends Kekule.Editor.Composer# */
@@ -800,9 +1054,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @constructs */
 	initialize: function($super, parentOrElementOrDocument, editor)
 	{
+		/*
 		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
+		this.updateObjModifierToolbarStateBind = this.updateObjModifierToolbarState.bind(this);
+		*/
+		this.updateSelectionAssocToolbarStateBind = this.updateSelectionAssocToolbarState.bind(this);
 
 		this.setPropStoreFieldValue('enableStyleToolbar', true);
+		this.setPropStoreFieldValue('enableObjModifierToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
 		$super(parentOrElementOrDocument);
@@ -811,7 +1070,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (!editor)
 			editor = this.createDefaultEditor();
 		*/
-		this.bindEditor();
+		this.bindEditor(editor);
+		var ed = this.getEditor();
+		if (ed)  // editor is newly created
+			ed.setChemObj(ed.getChemObj());  // a force readjust size, otherwise there will be size problem in IE8
+
 
 		// tool bars may already be created by setting buttons property
 		if (!this.getCommonBtnGroup())
@@ -866,9 +1129,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				}
 			}});
 
+		this.defineProp('autoSetMinDimension', {'dataType': DataType.BOOL});
+
 		// private property
 		this.defineProp('editorStageElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('advPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('topRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('leftRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('bottomRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
 		this.defineProp('editorNexus', {'dataType': 'Kekule.Editor.EditorNexus', 'serializable': false, 'setter': null});
 		this.defineProp('objInspector', {'dataType': 'Kekule.Widget.ObjectInspector', 'serializable': false, 'setter': null});
@@ -883,7 +1151,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		// a private property, toolbar of association chem tools (such as single, double bound form for bond tool)
 		this.defineProp('assocBtnGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false});
 		// a private property, toolbar of style settings (such as font name, font size, color)
-		this.defineProp('styleToolbar', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false,
+		this.defineProp('styleToolbar', {'dataType': 'Kekule.Widget.Toolbar', 'serializable': false,
 			'getter': function()
 			{
 				var result = this.getPropStoreFieldValue('styleToolbar');
@@ -912,15 +1180,54 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return this;
 			}
 		});
-
 		this.defineProp('enableStyleToolbar', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				// if obj modifier toolbar is enabled, old fashioned style toolbar will not be displayed
+				return this.getPropStoreFieldValue('enableStyleToolbar') && !this.getEnableObjModifierToolbar();
+			},
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('enableStyleToolbar', value);
-				this.updateStyleToolbarState();
+				if (value)  // enable style bar should disable modifier bar
+					this.setPropStoreFieldValue('enableObjModifierToolbar', false);
+				this.updateSelectionAssocToolbarState();
 			}
 		});
 
+		// a private property, toolbar of style settings (such as font name, font size, color)
+		this.defineProp('objModifierToolbar', {'dataType': 'Kekule.Widget.Toolbar', 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('objModifierToolbar');
+				if (!result)
+				{
+					if (this.getEnableObjModifierToolbar())
+					{
+						result = this.createObjModifierToolbar();
+						this.setPropStoreFieldValue('objModifierToolbar', result);
+					}
+				}
+				return result;
+			}
+		});
+		this.defineProp('enableObjModifierToolbar', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('enableObjModifierToolbar', value);
+				if (value)  // enable modifier bar should disable style bar
+					this.setPropStoreFieldValue('enableStyleToolbar', false);
+				this.updateSelectionAssocToolbarState();
+			}
+		});
+
+		this.defineProp('allowedObjModifierCategories', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('allowedObjModifierCategories', value);
+				this.updateObjModifierToolbarState();
+			}
+		});
 
 		this.defineProp('commonToolButtons', {'dataType': DataType.HASH, 'serializable': false,
 			'getter': function()
@@ -1055,6 +1362,20 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return this;
 			}
 		});
+		this.defineProp('allowAppendDataToCurr', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				var ed = this.getEditor();
+				return (ed && ed.getAllowAppendDataToCurr)? ed.getAllowAppendDataToCurr(): null;
+			},
+			'setter': function(value)
+			{
+				var ed = this.getEditor();
+				if (ed.setAllowAppendDataToCurr)
+					ed.setAllowAppendDataToCurr(value);
+				return this;
+			}
+		});
 
 
 		// editor delegated property
@@ -1145,12 +1466,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	initPropValues: function($super)
-	{
-		$super();
-	},
-
-	/** @ignore */
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('div');
@@ -1160,16 +1475,27 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	doCreateSubElements: function(doc, rootElem)
 	{
 		var result = [];
-		var elem = doc.createElement('div');
-		elem.className = CCNS.COMPOSER_EDITOR_STAGE;
-		rootElem.appendChild(elem);
-		this.setPropStoreFieldValue('editorStageElem', elem);
+		var elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_EDITOR_STAGE, 'editorStageElem');
 		result.push(elem);
-		var elem = doc.createElement('div');
-		elem.className = CCNS.COMPOSER_ADV_PANEL;
-		rootElem.appendChild(elem);
-		this.setPropStoreFieldValue('advPanelElem', elem);
+
+		elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_ADV_PANEL, 'advPanelElem');
 		result.push(elem);
+
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_TOP_REGION, 'topRegionElem'));
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_LEFT_REGION, 'leftRegionElem'));
+		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_BOTTOM_REGION, 'bottomRegionElem'));
+
+		return result;
+	},
+	/** @private */
+	_doCreateSubElement: function(doc, parentElem, tagName, htmlClass, propStoreFieldName)
+	{
+		var result = doc.createElement(tagName);
+		result.className = htmlClass;
+		if (parentElem)
+			parentElem.appendChild(result);
+		if (propStoreFieldName)
+			this.setPropStoreFieldValue(propStoreFieldName, result);
 		return result;
 	},
 	/** @ignore */
@@ -1178,6 +1504,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var result = $super() + ' ' + CCNS.COMPOSER;
 		return result;
 	},
+
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
+	},
+
 	/** @ignore */
 	doWidgetShowStateChanged: function($super, isShown)
 	{
@@ -1318,10 +1651,24 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/**
+	 * Repaint the objects in editor.
+	 */
+	repaint: function(overrideOptions)
+	{
+		this.getEditor().repaint(overrideOptions);
+		return this;
+	},
+
+	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
 	 * @private
 	 */
 	uiLayoutChanged: function()
+	{
+		this.adjustComponentPositions();
+	},
+	/** @ignore */
+	doResize: function($super)
 	{
 		this.adjustComponentPositions();
 	},
@@ -1341,49 +1688,70 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			return;
 
 		if (commonToolbarElem)
-			var commonRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem);
+			var commonRect = Kekule.HtmlElementUtils.getElemPageRect(commonToolbarElem);
 		if (zoomToolbarElem)
-			var zoomRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(zoomToolbarElem);
+			var zoomRect = Kekule.HtmlElementUtils.getElemPageRect(zoomToolbarElem);
 		if (chemToolbarElem)
-			var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
+			var chemRect = Kekule.HtmlElementUtils.getElemPageRect(chemToolbarElem);
 
 		if (!commonRect.width || !chemRect.width)  // rect is zero, the widget may not be displayed
 			return;
 
+		/*
 		var style = commonToolbarElem.style;
 		style.top = '0px';
 		style.left = chemRect.width + 'px';
 		style = chemToolbarElem.style;
 		style.top = commonRect.height + 'px';
 		style.left = '0px';
-
-		// editor
-		var top, left, right, bottom;
-		// calc top
-		//var elem = this.getCommonBtnGroup().getElement();
-		var rect = commonRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-		top = rect.height;
-		// calc left
-		//var elem = this.getChemBtnGroup().getElement();
-		var rect = chemRect; //Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-		left = rect.width;
-		// calc bottom
-		var bottom = zoomRect? zoomRect.height: 0;
-
-		/*
-		if (this.isAssocToolbarShown())
-		{
-			var elem = this.getAssocBtnGroup().getElement();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-			bottom += rect.height;
-		}
-		if (this.isStyleToolbarShown())
-		{
-			var elem = this.getStyleToolbar().getElement();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
-			bottom += rect.height;
-		}
 		*/
+
+		var topRegionHeight = commonRect.height;
+		var leftRegionWidth = chemRect.width;
+		var bottomRegionHeight = (zoomRect && zoomRect.height) || topRegionHeight;  // zoom toolbar may be invisible
+
+		// top region
+		var elem = this.getTopRegionElem();
+		var style = elem.style;
+		style.top = '0px';
+		style.left = leftRegionWidth + 'px';
+		style.right = '0px';
+		style.height = topRegionHeight + 'px';
+
+		// bottom region
+		elem = this.getBottomRegionElem();
+		style = elem.style;
+		style.bottom = '0px';
+		style.height = bottomRegionHeight + 'px';
+		style.left = leftRegionWidth + 'px';
+		style.right = '0px';
+		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var bottomFreeWidth = bottomRect.width - (zoomRect? zoomRect.width: 0);
+
+		// left region
+		elem = this.getLeftRegionElem();
+		style = elem.style;
+		style.left = '0px';
+		style.top = topRegionHeight + 'px';
+		style.bottom = '0px';
+		style.width = leftRegionWidth + 'px';
+		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var leftFreeHeight = leftRect.height - chemRect.height;
+
+		// now we can decide whether shown assoc toolbar on bottom or left side
+		if (leftFreeHeight / bottomFreeWidth > 0.9)  // TODO: now fixed
+		{
+			// assoc bar shown in left
+			this.changeAssocToolbarRegion(true);
+		}
+		else
+		{
+			// assoc bar shown in bottom
+			this.changeAssocToolbarRegion(false);
+		}
+
+		// editor stage
+		var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
 
 		// calc right
 		if (!this.getShowInspector())
@@ -1391,7 +1759,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		else
 		{
 			var elem = this.getAdvPanelElem();
-			var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem);
+			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
 			right = rect.width;
 		}
 
@@ -1409,27 +1777,66 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		style.position = 'absolute';
 		style.top = top + 'px';
 		style.bottom = bottom + 'px';
+
+		if (this.getAutoSetMinDimension())
+		{
+			var minDim = {
+				'width': leftRegionWidth + commonRect.width,
+				'height': topRegionHeight + chemRect.height
+			};
+			//console.log('get minDim', minDim);
+			if (minDim.width && minDim.height)
+				this.setMinDimension(minDim);
+			/*
+			var currDim = this.getDimension();
+			this.setDimension(currDim.width, currDim.height, true);  // update size, but do not need to adjust component position again
+			*/
+		}
 	},
 
 	/** @private */
 	adjustAssocToolbarPositions: function()
 	{
+		/*
 		//var commonToolbarElem = this.getCommonBtnGroup().getElement();
 		var chemToolbarElem = this.getChemBtnGroup().getElement();
 		//var commonRect= Kekule.HtmlElementUtils.getElemBoundingClientRect(commonToolbarElem)
 		var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
-		// assoc and style toolbar
+		// assoc toolbar
 		if (this.isAssocToolbarShown())
 		{
 			var elem = this.getAssocBtnGroup().getElement();
 			elem.style.left = chemRect.width + 'px';
 			//elem.style.top = commonRect.height + 'px';
 		}
-		if (this.isStyleToolbarShown())
+		*/
+		this.adjustStyleAndObjModifierToolbarPosition();
+	},
+	/** @private */
+	adjustStyleAndObjModifierToolbarPosition: function()
+	{
+		/*
+		var chemToolbarElem = this.getChemBtnGroup().getElement();
+		var chemRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(chemToolbarElem);
+		var assocRect;
+		if (this.isAssocToolbarShown())
+		{
+			assocRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(this.getAssocBtnGroup().getElement());
+		}
+		//console.log('adjust pos', assocRect);
+		//if (this.isStyleToolbarShown())
+		if (this.getPropStoreFieldValue('styleToolbar'))  // stylebar created
 		{
 			var elem = this.getStyleToolbar().getElement();
-			elem.style.left = chemRect.width + 'px';
+			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
 		}
+		//if (this.isObjModifierToolbarShown())
+		if (this.getPropStoreFieldValue('objModifierToolbar'))  // modifier toolbar created
+		{
+			var elem = this.getObjModifierToolbar().getElement();
+			elem.style.left = (assocRect? (assocRect.left + assocRect.width): chemRect.width) + 'px';
+		}
+		*/
 	},
 
 	////////////////// methods about inner editor  ///////////////////////
@@ -1440,6 +1847,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			editor = this.getEditor();
 		else
 			editor.setParent(this);
+
+		editor.setTouchAction('none');  // disable default touch scroll on editor
+
 		var self = this;
 		var commonActions = this.getCommonActions();
 		var chemActions = this.getChemActions();
@@ -1480,6 +1890,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		*/
 		editor.appendToElem(this.getEditorStageElem());
 		this.getEditorNexus().setEditor(editor);
+		//this.newDoc();
 	},
 	/** @private */
 	createDefaultEditor: function()
@@ -1628,7 +2039,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return [
 			BNS.zoomIn,
 			BNS.zoomOut,
-			BNS.reset
+			BNS.reset,
+			BNS.resetZoom
 		];
 	},
 	/** @private */
@@ -1668,13 +2080,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/**
 	 * Create a tool button inside parent button group.
 	 * //@param {Kekule.Widget} targetWidget
-	 * @param {String} btnName
+	 * @param {Variant} btnNameOrHash
 	 * @param {Kekule.Widget.ButtonGroup} parentGroup
 	 * @param {Kekule.Action} actions
 	 * @returns {Kekule.Widget.Button}
 	 * @private
 	 */
-	createToolButton: function(btnName, parentGroup, actions, checkGroup)
+	createToolButton: function(btnNameOrHash, parentGroup, actions, checkGroup)
 	{
 		/*
 		var result = null;
@@ -1722,37 +2134,67 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 		*/
 		var result = null;
-		var name = DataType.isObjectValue(btnName)? btnName.name: btnName;
-		var actionClass = this.getCompActionClass(name);
-		var action = this._createToolButtonAction(btnName, actions, checkGroup);
+		var name = DataType.isObjectValue(btnNameOrHash)? btnNameOrHash.name: btnNameOrHash;
+		var defActionClass = this.getCompActionClass(name);  // || (DataType.isObjectValue(btnName)? btnName.actionClass: null);
+		var action = this._createToolButtonAction(btnNameOrHash, actions, checkGroup);
 
-		if (DataType.isObjectValue(btnName) && !actionClass)  // custom button
+		if (DataType.isObjectValue(btnNameOrHash) && !defActionClass)  // custom button, has not default action class
 		{
-			if (!actionClass)  // no binded action, custom button
-				var objDefHash = Object.extend({'widget': Kekule.Widget.Button}, btnName);
+			var defWidgetClass = checkGroup? Kekule.Widget.RadioButton: Kekule.Widget.Button;
+
+			var objDefHash;
+			/*
+			if (!defActionClass)  // no binded action, custom button
+				objDefHash = Object.extend({'widget': defWidgetClass}, btnNameOrHash);
+			else
+				objDefHash = btnNameOrHash;
+			*/
+			objDefHash = Object.extend({'widget': defWidgetClass}, btnNameOrHash);
+
 			result = Kekule.Widget.Utils.createFromHash(parentGroup, objDefHash);
 		}
 		else  // predefined names
 		{
-			var btnClass = (btnName === BNS.objInspector) ? Kekule.Widget.CheckButton :
+			var preferredWidgetClass = action.getPreferredWidgetClass && action.getPreferredWidgetClass();
+			//console.log(action.getClassName(), preferredWidgetClass);
+			var btnClass =
+					preferredWidgetClass? preferredWidgetClass:
+					(btnNameOrHash === BNS.objInspector) ? Kekule.Widget.CheckButton :
 					(!!checkGroup) ? Kekule.Widget.RadioButton :
 					Kekule.Widget.Button;
 			result = new btnClass(parentGroup);
 		}
 		if (action)
 			result.setAction(action);
+
+		return result;
+	},
+	/** @private */
+	_createActionButton: function(action, parentWidget)
+	{
+		var checkGroup = action.getCheckGroup();
+		var preferredClass = action.getPreferredWidgetClass && action.getPreferredWidgetClass();
+		var btnClass =
+				preferredClass? preferredClass:
+				(!!checkGroup) ? Kekule.Widget.RadioButton:
+						Kekule.Widget.Button;
+		var btn = new btnClass(parentWidget);
+		btn.setAction(action);
+		return btn;
 	},
 	/** @private */
 	_createToolButtonAction: function(actionNameOrHash, defActions, checkGroup)
 	{
+		var isActionHash = DataType.isObjectValue(actionNameOrHash);
+
 		var result = null;
-		var name = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.name: actionNameOrHash;
-		var children = DataType.isObjectValue(actionNameOrHash)? actionNameOrHash.attached: null;
+		var name = isActionHash? actionNameOrHash.name: actionNameOrHash;
+		var children = isActionHash? actionNameOrHash.attached: null;
 		var actionClass = this.getCompActionClass(name);
 
 		var result;
 
-		if (DataType.isObjectValue(actionNameOrHash) && !actionClass)  // custom button
+		if (isActionHash && !actionClass)  // custom button
 		{
 			var objDefHash = actionNameOrHash;
 			var actionClass = objDefHash.actionClass;
@@ -1771,11 +2213,26 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			if (!result)
 			{
 				var result = new actionClass(this._getActionTargetWidget(actionClass));
+				if (isActionHash)  // if has custom text and hint, overwirte the default on in actionClass
+				{
+					if (actionNameOrHash.text)
+						result.setText(actionNameOrHash.text);
+					if (actionNameOrHash.hint)
+						result.setHint(actionNameOrHash.hint);
+					if (actionNameOrHash.htmlClass || actionNameOrHash.htmlClassName)
+						result.setHtmlClassName((result.getHtmlClassName() || '') + (actionNameOrHash.htmlClass || actionNameOrHash.htmlClassName));
+				}
 				//this.getActions().add(action);
 				actionMap.set(actionClass, result);
 			}
-			if (checkGroup)
-				result.setCheckGroup(checkGroup);
+			var actualGroup = checkGroup || '';
+			var actionExplicitGroup = result.getExplicitGroup && result.getExplicitGroup();
+			if (Kekule.ObjUtils.notUnset(actionExplicitGroup))
+			{
+				actualGroup = actionExplicitGroup;
+			}
+			if (actualGroup)
+				result.setCheckGroup(actualGroup);
 
 			if (result && defActions)
 				defActions.add(result);
@@ -1787,18 +2244,23 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				// result.clearAttachedActions();
 				var oldAttachedActions = Kekule.ArrayUtils.clone(result.getAttachedActions().getActions() || []);
 
-				var attachChildAction = function(action, childAction, oldAttachedActions, asDefault)
+				var attachChildAction = function(action, childAction, oldAttachedActions, asDefault, childIndex)
 				{
 					if (!childAction)
 						return null;
 					var oldIndex = oldAttachedActions.indexOf(childAction);
-					if (oldIndex >= 0)  // action already attached, bypass
+					if (oldIndex >= 0)  // action already attached, change position
 					{
-						oldAttachedActions[oldIndex] = null;
+						oldAttachedActions[oldIndex] = null;  // indicating this action has been used
 						//console.log('use old action', oldIndex, childAction.getClassName());
 					}
 					else
 						action.addAttachedAction(childAction, asDefault);
+
+					if (Kekule.ObjUtils.notUnset(childIndex))  // change position
+					{
+						action.setAttachedActionIndex(childAction, childIndex);
+					}
 				};
 
 				if (children)  // has custom defined chem tool children buttons
@@ -1807,7 +2269,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 					{
 						var child = children[i];
 						var childAction = this._createToolButtonAction(child, null, subGroupName); // do not add to default action list
-						attachChildAction(result, childAction, oldAttachedActions, i === 0);
+						attachChildAction(result, childAction, oldAttachedActions, i === 0, i);
 					}
 				}
 				else  // use default attached classes
@@ -1822,7 +2284,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							if (!childAction)
 							{
 								childAction = new aClass(this._getActionTargetWidget(aClass));
-								childAction.setCheckGroup(subGroupName);
+								var childExplicitGroup = (childAction.getExplicitGroup && childAction.getExplicitGroup());
+								if (Kekule.ObjUtils.notUnset(childExplicitGroup))
+								{
+									childAction.setCheckGroup(childExplicitGroup);
+									// console.log('set check group', childAction.getClassName(), childExplicitGroup);
+								}
+								else
+									childAction.setCheckGroup(subGroupName);
 								actionMap.set(aClass, childAction);
 							}
 							/*
@@ -1834,7 +2303,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							}
 							*/
 							//result.addAttachedAction(childAction, i === 0);
-							attachChildAction(result, childAction, oldAttachedActions, i === 0);
+							attachChildAction(result, childAction, oldAttachedActions, i === 0, i);
 						}
 					}
 				}
@@ -1851,7 +2320,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 							//actions.remove(unusedAction);
 							actionMap.remove(unusedAction.getClass());
 							//unusedAction.finalize();
-							console.log('remove action', unusedAction.getClassName(), unusedAction.getAttachedActions().getActions());
 						}
 					}
 				}
@@ -1866,7 +2334,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 * @returns {Kekule.Widget.ButtonGroup}
 	 * @private
 	 */
-	createInnerToolbar: function()
+	createInnerToolbar: function(parentElem, asFirstChildren)
 	{
 		var toolBar = new Kekule.Widget.ButtonGroup(this);
 		toolBar.addClassName(CCNS.COMPOSER_TOOLBAR);
@@ -1874,7 +2342,17 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		toolBar.addClassName(CNS.DYN_CREATED);
 		toolBar.setShowText(false);
 		toolBar.doSetShowGlyph(true);
-		toolBar.appendToElem(this.getElement());
+		var pElem = parentElem || this.getElement();
+		if (asFirstChildren)
+		{
+			var refElem = Kekule.DomUtils.getFirstChildElem(pElem);
+			if (refElem)
+				toolBar.insertToElem(pElem, refElem);
+			else
+				toolBar.appendToElem(pElem);
+		}
+		else
+			toolBar.appendToElem(pElem);
 		return toolBar;
 	},
 	/**
@@ -1884,7 +2362,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createCommonToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getTopRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem);
 		toolbar.addClassName(CCNS.COMPOSER_COMMON_TOOLBAR);
 		// add buttons
 		var btns = this.getCommonToolButtons();
@@ -1916,7 +2395,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var btns = Kekule.ArrayUtils.intersect(this.getCommonToolButtons(), this.getZoomButtonNames());
 		if (btns.length)
 		{
-			var toolbar = this.createInnerToolbar();
+			var parentElem = this.getBottomRegionElem();
+			var toolbar = this.createInnerToolbar(parentElem);
 			toolbar.addClassName(CCNS.COMPOSER_ZOOM_TOOLBAR);
 			var actions = this.getZoomActions();
 			var editor = this.getEditor();
@@ -1966,7 +2446,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createChemToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getLeftRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem, true);  // chem toolbar should be the first child on the left region
 		toolbar.addClassName(CCNS.COMPOSER_CHEM_TOOLBAR);
 		toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
 		// add buttons
@@ -1974,16 +2455,35 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var actions = this.getChemActions();
 		actions.clear();
 		var checkGroup = 'chemTools';
+		var firstBtn;
 		for (var i = 0, l = btns.length; i < l; ++i)
 		{
 			var name = btns[i];
 			var btn = this.createToolButton(name, toolbar, actions, checkGroup);
+			if (i === 0)
+				firstBtn = btn;
 		}
 		this.setChemBtnGroup(toolbar);
 		toolbar.addClassName(CNS.DYN_CREATED);
-		// TODO: when change chem toolbar, associate toolbar should also change. Now we only simply clear it.
-		this.bindAssocActions(null);
+
 		this.adjustComponentPositions();
+		if (firstBtn)
+		{
+			var action = firstBtn.getAction();
+			if (action)
+			{
+				action.setChecked(true);
+				var attachedActions = action.getAttachedActions && action.getAttachedActions();
+				this.bindAssocActions(attachedActions || null);
+				/*
+				// force update the assoc actions
+				if (!action.getChecked())
+					action.setChecked(true);
+				else
+					action.setChecked(false).setChecked(true);
+				*/
+			}
+		}
 		return toolbar;
 	},
 	/**
@@ -2005,13 +2505,42 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 */
 	createAssocToolbar: function()
 	{
-		var toolbar = this.createInnerToolbar();
+		var parentElem = this.getBottomRegionElem();
+		var toolbar = this.createInnerToolbar(parentElem);
 		//toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
 		toolbar.addClassName(CCNS.COMPOSER_ASSOC_TOOLBAR);
 		this.setAssocBtnGroup(toolbar);
 		this.adjustAssocToolbarPositions();
 		toolbar.addClassName(CNS.DYN_CREATED);
 		return toolbar;
+	},
+	/** @private */
+	changeAssocToolbarRegion: function(toLeftRegion)
+	{
+		var toolbar = this.getAssocBtnGroup();
+		if (!toolbar)
+			toolbar = this.createAssocToolbar();
+		var parent;
+		if (toLeftRegion)
+		{
+			parent = this.getLeftRegionElem();
+			if (toolbar.getElement().parentNode !== parent)
+			{
+				toolbar.setLayout(Kekule.Widget.Layout.VERTICAL);
+				toolbar.appendToElem(parent);
+			}
+		}
+		else // to bottom region
+		{
+			parent = this.getBottomRegionElem();
+			if (toolbar.getElement().parentNode !== parent)
+			{
+				toolbar.setLayout(Kekule.Widget.Layout.HORIZONTAL);
+				var refElem = Kekule.DomUtils.getFirstChildElem(parent);
+				// insert as the first elem
+				parent.insertBefore(toolbar.getElement(), refElem);
+			}
+		}
 	},
 	/**
 	 * Show assoc chem tool bar.
@@ -2035,7 +2564,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			self.uiLayoutChanged();
 			//self.updateStyleToolbarState();
-			setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+			//setTimeout(self.updateObjModifierToolbarStateBind, 0);
+			//setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+			setTimeout(self.updateSelectionAssocToolbarStateBind, 0);
 		});
 		return this;
 	},
@@ -2052,7 +2583,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				{
 					self.uiLayoutChanged();
 					//self.updateStyleToolbarState(); // may need to reopen style toolbar
-					setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+					//setTimeout(self.updateObjModifierToolbarStateBind, 0);
+					//setTimeout(self.updateStyleToolbarStateBind, 0);  // IMPORTANT, defer call to update style toolbar, avoid show/hide it too quickly
+					setTimeout(self.updateSelectionAssocToolbarStateBind, 0);
 				}
 			);
 		}
@@ -2083,17 +2616,126 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			for (var i = 0, l = actions.getActionCount(); i < l; ++i)
 			{
 				var action = actions.getActionAt(i);
+				/*
 				var checkGroup = action.getCheckGroup();
 				var btnClass = (!!checkGroup) ? Kekule.Widget.RadioButton : Kekule.Widget.Button;
 				var btn = new btnClass(toolbar);
 				btn.setAction(action);
+				*/
+				var btn = this._createActionButton(action, toolbar);
 			}
 		}
 	},
 
 	/**
+	 * Create obj modifier tool bar.
+	 * @returns {Kekule.Widget.Toolbar}
+	 * @private
+	 */
+	createObjModifierToolbar: function()
+	{
+		if (this.getEnableObjModifierToolbar())
+		{
+			var toolbar = new Kekule.Editor.ComposerObjModifierToolbar(this);
+			toolbar.appendToElem(this.getBottomRegionElem());
+			this.setObjModifierToolbar(toolbar);
+			this.adjustAssocToolbarPositions();
+			this.updateObjModifierToolbarState();
+			return toolbar;
+		}
+		else
+			return null;
+	},
+	/**
+	 * Show obj modifier tool bar.
+	 */
+	showObjModifierToolbar: function()
+	{
+		//console.log('show');
+		if (this.getEnableObjModifierToolbar())
+		{
+			var toolbar = this.getObjModifierToolbar();
+			if (!toolbar.isShown())
+			{
+				var self = this;
+				toolbar.show(null, function()
+				{
+					self.uiLayoutChanged();
+				});
+			}
+		}
+		return this;
+	},
+	/**
+	 * Hide obj modifier tool bar.
+	 */
+	hideObjModifierToolbar: function()
+	{
+		var toolbar = this.getPropStoreFieldValue('objModifierToolbar');
+		if (toolbar)
+		{
+			if (toolbar.isShown())
+			{
+				var self = this;
+				toolbar.hide(null, function()
+						{
+							self.uiLayoutChanged();
+						}, null, {instantly: true}
+				);
+			}
+		}
+		return this;
+	},
+	/**
+	 * Check if obj modifier tool bar is visible.
+	 * @returns {Bool}
+	 */
+	isObjModifierToolbarShown: function()
+	{
+		var toolbar = this.getPropStoreFieldValue('objModifierToolbar');
+		return (toolbar && toolbar.isShown());
+	},
+	/**
+	 * Update obj modifier toolbar show/hide state according to editor's state.
+	 * @private
+	 */
+	updateObjModifierToolbarState: function()
+	{
+		var showToolbar = false;
+		if (this.getEnableObjModifierToolbar() && this.needShowSelectionAssocToolbar())
+		{
+			/*
+			// further check if currently is select series IA controllers
+			var iaController = this.getEditor().getActiveIaController();
+			showToolbar = ((iaController instanceof Kekule.Editor.BasicManipulationIaController) && (iaController.getEnableSelect()))
+					|| (iaController instanceof Kekule.Editor.ClientDragScrollIaController);
+			*/
+			showToolbar = true;
+			/*
+			// check if currently the space can fullfill a modifier toolbar
+			var toolbar = this.getObjModifierToolbar();
+			var modifierRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(toolbar.getElement());
+			var zoomBar = this.getZoomBtnGroup();
+			var zoomBarRect = Kekule.HtmlElementUtils.getElemBoundingClientRect(zoomBar.getElement());
+			var gap = 50;  // TODO: current fixed, gap between modifier bar and zoom bar
+			showToolbar = (modifierRect.left + modifierRect.width + gap < zoomBarRect.left);  // if can fullfill, just show it
+			console.log(showToolbar, modifierRect, zoomBarRect);
+			*/
+		}
+		if (showToolbar)
+		{
+			this.showObjModifierToolbar();
+			this.getObjModifierToolbar().updateState();
+		}
+		else
+		{
+			this.hideObjModifierToolbar();
+		}
+	},
+
+	/**
 	 * Create style setting tool bar.
-	 * @returns {Kekule.Widget.ButtonGroup}
+	 * @returns {Kekule.Widget.Toolbar}
 	 * @private
 	 */
 	createStyleToolbar: function()
@@ -2102,6 +2744,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var toolbar = new Kekule.Editor.ComposerStyleToolbar(this);
 			toolbar.setComponentNames(this.getStyleBarComponents());
+			toolbar.appendToElem(this.getBottomRegionElem());
 			this.setStyleToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
 			this.updateStyleToolbarState();
@@ -2161,22 +2804,12 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return (toolbar && toolbar.isShown());
 	},
 	/**
-	 * Check if style toolbar should be shown.
-	 * @private
-	 */
-	needShowStyleToolbar: function()
-	{
-		var editor = this.getEditor();
-		return editor && editor.hasSelection() && (!this.isAssocToolbarShown());
-	},
-
-	/**
 	 * Update style toolbar show/hide state according to editor's state.
 	 * @private
 	 */
 	updateStyleToolbarState: function()
 	{
-		if (this.getEnableStyleToolbar() && this.needShowStyleToolbar())
+		if (this.getEnableStyleToolbar() && this.needShowSelectionAssocToolbar())
 		{
 			this.showStyleToolbar();
 			this.getStyleToolbar().updateState();
@@ -2185,6 +2818,27 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			this.hideStyleToolbar();
 		}
+	},
+
+	/**
+	 * Check if the assoc selection to set properties of selected objects (style or obj modifier toolbar) should be shown.
+	 * @returns {Bool}
+	 * @private
+	 */
+	needShowSelectionAssocToolbar: function()
+	{
+		var editor = this.getEditor();
+		return editor && editor.hasSelection();
+	},
+	/**
+	 * Update style & obj modifier toolbar show/hide state according to editor's state.
+	 * @private
+	 */
+	updateSelectionAssocToolbarState: function()
+	{
+		this.adjustStyleAndObjModifierToolbarPosition();
+		this.updateStyleToolbarState();
+		this.updateObjModifierToolbarState();
 	},
 
 	/**
@@ -2204,6 +2858,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	updateUiWidgets: function()
 	{
 		this.updateStyleToolbarState();
+		this.updateObjModifierToolbarState();
 	},
 
 	////// about configurator
@@ -2218,6 +2873,14 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	}
 });
+/**
+ * A class method to returns the preferred min dimension of composer widget.
+ */
+Kekule.Editor.Composer.getMinPreferredDimension = function()
+{
+	return {width: 630, height: 350};  // current fixed
+};
+
 
 /**
  * A special class to give a setting facade for Chem Composer.
@@ -2239,7 +2902,10 @@ Kekule.Editor.Composer.Settings = Class.create(Kekule.Widget.BaseWidget.Settings
 	initProperties: function()
 	{
 		//this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false, 'scope': PS.PUBLIC});
-		this.defineDelegatedProps(['enableCreateNewDoc', 'enableLoadNewFile', 'initOnNewDoc', 'enableOperHistory', 'allowCreateNewChild', 'enableStyleToolbar']);
+		this.defineDelegatedProps([
+			'enableCreateNewDoc', 'enableLoadNewFile', 'initOnNewDoc', 'enableOperHistory', 'allowCreateNewChild', 'allowAppendDataToCurr',
+			'enableStyleToolbar', 'enableObjModifierToolbar'
+		]);
 	}
 });
 
@@ -2312,50 +2978,59 @@ Kekule.Editor.Composer.Configurator = Class.create(Kekule.Widget.Configurator,
 });
 
 // register predefined settings of viewer
-var SM = Kekule.ObjPropSettingManager;
-SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
-	enableStyleToolbar: true,
-	enableOperHistory: true,
-	enableLoadNewFile: true,
-	enableCreateNewDoc: true,
-	allowCreateNewChild: true,
-	commonToolButtons: null,   // create all default common tool buttons
-	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null  // create all default style components
+Kekule._registerAfterLoadSysProc(function(){
+	var EMC = Kekule.Editor.ObjModifier.Category;
+	var SM = Kekule.ObjPropSettingManager;
+	SM.register('Kekule.Editor.Composer.fullFunc', {  // composer with all functions
+		enableObjModifierToolbar: true,
+		enableOperHistory: true,
+		enableLoadNewFile: true,
+		enableCreateNewDoc: true,
+		allowCreateNewChild: true,
+		commonToolButtons: null,   // create all default common tool buttons
+		chemToolButtons: null,   // create all default chem tool buttons
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: null  // allow modifiers of all categories
+	});
+	SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
+		enableObjModifierToolbar: true,
+		enableOperHistor: true,
+		enableLoadNewFile: true,
+		enableCreateNewDoc: true,
+		allowCreateNewChild: true,
+		commonToolButtons: null,   // create all default common tool buttons
+		chemToolButtons: [
+			BNS.manipulate,
+			BNS.erase,
+			BNS.molBond,
+			BNS.molAtom,
+			// BNS.molFormula,
+			BNS.molRing,
+			BNS.molCharge
+		],   // create only chem tool buttons related with molecule
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: [EMC.GENERAL, EMC.CHEM_STRUCTURE]  // only all chem structure modifiers
+	});
+	SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
+		enableObjModifierToolbar: true,
+		commonToolButtons: [
+			BNS.newDoc,
+			BNS.loadData,
+			BNS.saveData,
+			BNS.undo,
+			BNS.redo,
+			BNS.zoomIn,
+			BNS.zoomOut
+		],
+		chemToolButtons: null,   // create all default chem tool buttons
+		styleToolComponentNames: null,  // create all default style components
+		allowedObjModifierCategories: null  // allow modifiers of all categories
+	});
+	SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
+		allowCreateNewChild: false
+	});
 });
-SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
-	enableStyleToolbar: true,
-	enableOperHistor: true,
-	enableLoadNewFile: true,
-	enableCreateNewDoc: true,
-	allowCreateNewChild: true,
-	commonToolButtons: null,   // create all default common tool buttons
-	chemToolButtons: [
-		BNS.manipulate,
-		BNS.erase,
-		BNS.molBond,
-		BNS.molAtom,
-		BNS.molFormula,
-		BNS.molRing,
-		BNS.molCharge
-	],   // create only chem tool buttons related with molecule
-	styleToolComponentNames: null  // create all default style components
-});
-SM.register('Kekule.Editor.Composer.compact', {  // composer with less tool buttons
-	enableStyleToolbar: false,
-	commonToolButtons: [
-		BNS.newDoc,
-		BNS.loadData,
-		BNS.saveData,
-		BNS.undo,
-		BNS.redo
-	],
-	chemToolButtons: null,   // create all default chem tool buttons
-	styleToolComponentNames: null  // create all default style components
-});
-SM.register('Kekule.Editor.Composer.singleObj', {  // only allows create one object in composer
-	allowCreateNewChild: false
-});
+
 
 /**
  * A dialog with a composer, executed to edit or create new chem object.
@@ -2446,6 +3121,153 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		*/
 		editor.addClassName(CNS.DYN_CREATED);
 		return result;
+	}
+});
+
+/**
+ * An iframe containing a composer widget.
+ * @class
+ * @augments Kekule.ChemWidget.AbstractWidget
+ *
+ * @property {Kekule.Editor.Composer} composer Composer widget in frame.
+ *
+ */
+Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
+/** @lends Kekule.Editor.ComposerFrame# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ComposerFrame',
+	/** @private */
+	BINDABLE_TAG_NAMES: ['iframe'],
+	initialize: function($super, parentOrElementOrDocument)
+	{
+		$super(parentOrElementOrDocument);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer',
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null
+		});
+
+		// private
+		this.defineProp('frameDocument', {'dataType': DataType.OBJECT,
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null,
+			'getter': function(){
+				return this.getElement().contentDocument;
+			}
+		});
+		this.defineProp('frameWindow', {'dataType': DataType.OBJECT,
+			'scope': Class.PropertyScope.PUBLIC, 'serializable': false,
+			'setter': null,
+			'getter': function(){
+				return Kekule.DocumentUtils.getDefaultView(this.getFrameDocument());
+			}
+		});
+	},
+	/** @ignore */
+	initPropValues: function($super)
+	{
+		$super();
+		this.setMinDimension({'width': 550, height: 350});
+		this.setEnableDimensionTransform(true);
+	},
+
+	/** @ignore */
+	doGetWidgetClassName: function($super)
+	{
+		return $super() + ' ' + CCNS.COMPOSER_FRAME;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('iframe');
+		return result;
+	},
+	/** @ignore */
+	doBindElement: function($super, element)
+	{
+		$super(element);
+
+		var notInDom = !element.parentNode;
+		if (notInDom) // add to DOM first, otherwise the frame document will be null
+		{
+			this.setDisplayed(false);
+			var doc = element.ownerDocument;
+			doc.body.appendChild(element);
+		}
+		//console.log(this.getElement(), this.getElement().contentDocument);
+		this._createComposerWidgetInFrame();
+	},
+
+	/** @private */
+	_initFrame: function()
+	{
+		var content = '<!DOCTYPE html><html><head></head><body></body></html>';
+		var doc = this.getFrameDocument();
+		doc.open('text/htmlreplace');
+		doc.write(content);
+		doc.close();
+	},
+	/** @private */
+	_createComposerWidgetInFrame: function(callback)
+	{
+		this._initFrame();  // replace the quirk mode empty document with a standard one
+
+		var self = this;
+		var doc = this.getFrameDocument();
+
+		doc.documentElement.className = CCNS.COMPOSER_FRAME_CONTENT_DOC;
+		doc.body.className = CCNS.COMPOSER_FRAME_CONTENT_BODY;
+		// doc type
+		/*
+		if (doc.implementation && doc.implementation.createDocumentType)
+		{
+			var nodeDoctype = doc.implementation.createDocumentType('html', '', '');
+			if (doc.doctype)
+			{
+				doc.replaceChild(nodeDoctype, doc.doctype);
+			}
+			else
+			{
+				doc.insertBefore(nodeDoctype, doc.childNodes[0]);
+			}
+		}
+		// <meta charset="UTF-8">
+		var metaElem = doc.createElement('meta');
+		metaElem.setAttribute('charset', 'UTF-8');
+		doc.head.insertBefore(metaElem, Kekule.DomUtils.getFirstChildElem(doc.head));
+    */
+		Kekule.X.Event.addListener(doc.body, 'kekuleload', function(e){
+			var composer = new Kekule.Editor.Composer(doc);
+			/*
+			var style = composer.getElement().style;
+			style.width = '100%';
+			style.height = '100%';
+			*/
+			composer.appendToElem(doc.body);
+			self.setPropStoreFieldValue('composer', composer);
+			if (callback)
+				callback(composer);
+		});
+		// assume element is an iframe, and insert Kekule.js script/css files into it
+		this._insertKekuleScriptAndStyleSheetFiles(doc);
+	},
+	/** @private */
+	_insertKekuleScriptAndStyleSheetFiles: function(frameDoc, callback)
+	{
+		var srcInfo = Kekule.scriptSrcInfo;
+		var headElem = frameDoc.head;
+
+		var cssLinkElem = frameDoc.createElement('link');
+		cssLinkElem.setAttribute('rel', 'stylesheet');
+		cssLinkElem.setAttribute('type', 'text/css');
+		cssLinkElem.setAttribute('href', Kekule.getStyleSheetUrl());
+		headElem.appendChild(cssLinkElem);
+
+		Kekule.ScriptFileUtils.appendScriptFile(frameDoc, Kekule.getScriptSrc(), callback);
 	}
 });
 

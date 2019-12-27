@@ -26,7 +26,9 @@ var EU = Kekule.EmscriptenUtils;
  */
 var inchiInitOptions = {
 	usingModulaize: true,  // whether using modularize option to build OpenBabel.js
-	moduleName: 'InChIModule' // the name of OpenBabl module
+	moduleName: 'InChIModule', // the name of OpenBabl module
+	moduleInitEventName: 'InChI.Initialized',
+	moduleInitCallbackName: '__$inChIInitialized$__'
 };
 
 /**
@@ -76,11 +78,27 @@ Kekule.InChI = {
 	loadInChIScript: function(doc, callback)
 	{
 		if (!doc)
-			doc = document;
+			doc = Kekule.$jsRoot.document;
+		var done = function(error){
+			InChI._scriptLoadedBySelf = !error;
+			if (callback)
+				callback(error);
+		};
+		if (!InChI._scriptLoadedBySelf && !InChI.isScriptLoaded())
+		{
+			var filePath = InChI.getInChIScriptUrl();
+			EU.loadScript(filePath, done, doc, inchiInitOptions);
+		}
+		else
+		{
+			done();
+		}
+
+		/*
 		if (!InChI.isScriptLoaded() && !InChI._scriptLoadedBySelf)
 		{
 			var filePath = InChI.getInChIScriptUrl();
-			EU.loadScript(filePath, callback, doc);
+			EU.loadScript(filePath, callback, doc, inchiInitOptions);
 			InChI._scriptLoadedBySelf = true;
 		}
 		else
@@ -89,6 +107,7 @@ Kekule.InChI = {
 			if (callback)
 				callback();
 		}
+		*/
 	},
 
 	/**
@@ -101,7 +120,11 @@ Kekule.InChI = {
 	{
 		var convFunc = InChI._molToInChI;
 		if (!convFunc)
-			convFunc = InChI.getModule().cwrap('molToInchiJson', 'string', ['string', 'string']);
+		{
+			var module = InChI.getModule();
+			convFunc = module.cwrap('molToInchiJson', 'string', ['string', 'string']);
+		}
+
 		var sInChIResult = convFunc(molData, options);
 		return JSON.parse(sInChIResult);
 	},
@@ -127,11 +150,12 @@ Kekule.InChI = {
 	{
 		if (!InChI.isScriptLoaded())  // InChI not loaded?
 		{
-			InChI.loadInChIScript(document, function(){
+			InChI.loadInChIScript(Kekule.$jsRoot.document, function(error){
 				//Kekule.IO.registerAllInChIFormats();
-				InChI._enableAllFunctions();
+				if (!error)
+					InChI._enableAllFunctions();
 				if (callback)
-					callback();
+					callback(error);
 			});
 		}
 		else
@@ -143,7 +167,8 @@ Kekule.InChI = {
 	},
 	_enableAllFunctions: function()
 	{
-		if (InChI.isScriptLoaded())
+		//if (InChI.isScriptLoaded())
+		if (EU.isModuleReady(inchiInitOptions.moduleName))
 		{
 			var funcs = InChI._enableFuncs;
 			for (var i = 0, l = funcs.length; i < l; ++i)
@@ -216,6 +241,11 @@ Kekule.IO.enableInChIFormats = function()
 };
 InChI._enableFuncs.push(Kekule.IO.registerAllInChIFormats);
 
-Kekule._registerAfterLoadProc(function() {if (InChI._autoEnabled) InChI._enableAllFunctions()} );
+Kekule._registerAfterLoadSysProc(function() {
+	if (InChI._autoEnabled && InChI.isScriptLoaded())
+	{
+		EU.ensureModuleReady(Kekule.$jsRoot.document, inchiInitOptions, InChI._enableAllFunctions);
+	}
+});
 
 })();

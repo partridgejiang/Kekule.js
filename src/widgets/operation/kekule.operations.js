@@ -423,6 +423,26 @@ Kekule.OperationHistory = Class.create(ObjectEx,
 		var index = this.getCurrIndex();
 		return (index < this.getOperations().length - 1);
 	},
+
+	/**
+	 * Replace an operation in history.
+	 * @param {Kekule.Operation} oldOperation
+	 * @param {Kekule.Operation} newOperation
+	 * @returns {Kekule.Operation} The replaced old operation object.
+	 */
+	replaceOperation: function(oldOperation, newOperation)
+	{
+		var opers = this.getOperations();
+		var index = opers.lastIndexOf(oldOperation);
+		if (index >= 0)
+		{
+			console.log('replace operation', index === opers.length - 1);
+			return opers.splice(index, 1, newOperation);
+		}
+		else
+			return null;
+	},
+
 	/**
 	 * Undo current operation.
 	 * @returns {Kekule.Operation} Operation undone.
