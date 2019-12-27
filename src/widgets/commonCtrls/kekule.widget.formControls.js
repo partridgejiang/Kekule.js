@@ -784,7 +784,7 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
  * @property {String} placeholder Placeholder text of text box.
  * //@property {Int} rows Rows in textarea.
  * //@property {Int} cols Cols in textarea.
- * @property {String} wrap Wrap mode of textarea, value between "physical", "virtual" and "off".
+ * @property {String} wrap Wrap mode of textarea, value between "hard", "soft" and "off".
  * @property {Bool} autoSizeX
  * @property {Bool} autoSizeY
  */
