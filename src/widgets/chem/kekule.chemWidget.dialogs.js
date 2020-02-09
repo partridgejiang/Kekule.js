@@ -56,6 +56,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	initialize: function($super, parentOrElementOrDocument, caption, buttons)
 	{
 		this._openFileAction = new Kekule.ActionLoadFileData(); //new Kekule.ActionFileOpen();
+		this._openFileAction.setBinaryDetector(this._detectBinaryFormat);
 		this._openFileAction.update();
 		//this._openFileAction.addEventListener('open', this.reactFileLoad, this);
 		this._openFileAction.addEventListener('load', this.reactFileLoad, this);
@@ -283,6 +284,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		{
 			if (e.success && data && fileName)
 			{
+				//console.log('load', data);
 				chemObj = Kekule.IO.loadTypedData(data, null, fileName);
 				this.setPropStoreFieldValue('chemObj', chemObj);
 				var dialogResult = Kekule.Widget.DialogButtons.OK;
@@ -327,6 +329,25 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			}
 		}
 		return $super(result);
+	},
+
+	/**
+	 * A custom method returns whether a file is in binary format.
+	 * @private
+	 */
+	_detectBinaryFormat: function(fileName, file)
+	{
+		if (file && fileName)
+		{
+			var ext = Kekule.UrlUtils.extractFileExt(fileName);
+			var formatInfo = Kekule.IO.DataFormatsManager.findFormat(null, ext);
+			if (formatInfo)
+			{
+				var isBinary = Kekule.IO.ChemDataType.isBinaryType(formatInfo.dataType);
+				return isBinary;
+			}
+		}
+		return false;
 	}
 });
 

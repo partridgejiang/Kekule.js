@@ -134,7 +134,7 @@ Kekule.NativeServices = {
 					}
 
 					if (isBinary)
-					//reader.readAsBinaryString(file);
+						//reader.readAsBinaryString(file);
 						reader.readAsArrayBuffer(file);
 					else
 						reader.readAsText(file);
