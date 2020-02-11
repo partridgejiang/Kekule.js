@@ -158,17 +158,54 @@ var CssCompressor = class {
 		{
 			var buffer = fs.readFileSync(imgFileName);
 			var strBase64 = buffer.toString('base64');
-			var fileExt = path.extname(imgFileName);
-			var dataType = 'data:image/' + fileExt.substr(1) + ';base64,';
+			var fileExt = path.extname(imgFileName).substr(1).toLowerCase();
+			var mimeType = fileExt === 'cur'? 'x-icon': fileExt;
+			var dataType = 'data:image/' + mimeType + ';base64,';
 			return dataType + strBase64;
 		}
 		return null;
 	}
 
+	_convertExternalCursorImageInline(cssLines, cssPath)
+	{
+		var propertyPattern = /(.*)cursor:\s*(url\(["'](.*)["']\))+/g;
+		var urlPattern = /url\(["'](.*?)["']\)+/g;
+		var result = [];
+		var self = this;
+		cssLines.forEach(function(line){
+			var propMatch = line.match(propertyPattern);
+			if (propMatch)
+			{
+				var newLine = line;
+				var matches = line.matchAll(urlPattern);
+				for (const match of matches) {
+					var url = match[1];
+					if (url)
+					{
+						if (url.indexOf('data:') !== 0)  // not already base64
+						{
+							var imgFileName = path.resolve(cssPath, url);
+							var strBase64 = self._imgToBase64DataString(imgFileName);
+							if (strBase64)
+							{
+								newLine = newLine.replace(url, strBase64);
+							}
+						}
+					}
+				}
+				//console.log('convert to new cursor line', newLine);
+				result.push(newLine);
+			}
+			else
+				result.push(line);
+		});
+		return result;
+	}
+
 	_convertExternalBackgroundImageInline(cssLines, cssPath)
 	{
 		var self = this;
-		var pattern = /(.*)background-image: url\(["'](.*)["']\)/;
+		var pattern = /(.*)background-image:\s*url\(["'](.*)["']\)/;
 		var result = [];
 		//cssLines.forEach(function(line){
 		var i = 0, l = cssLines.length;
@@ -255,6 +292,7 @@ var CssCompressor = class {
 				//var rawLines = rawContent.split('\n');
 				var lines = self._fetchImportFilesInline(rawLines, cssPath);
 				lines = self._convertExternalBackgroundImageInline(lines, cssPath);
+				lines = self._convertExternalCursorImageInline(lines, cssPath);
 				if (lines && lines.length)
 					result = result.concat(lines);
 			}
@@ -307,7 +345,7 @@ var CssCompressor = class {
 
 		var result = output.styles;
 
-		if (result && destFileName)
+		if (result && outputPath && destFileName)
 		{
 			if (!fs.existsSync(outputPath)){
 				fs.mkdirSync(outputPath, {recursive: true});
