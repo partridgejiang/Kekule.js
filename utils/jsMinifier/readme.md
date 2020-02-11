@@ -2,7 +2,7 @@ Kekule.js JS file compressor
 ===================================
 
 This application is a simple JavaScript compressor for Kekule.js source files.
-It is helpful to build custom JS min files.
+It is helpful to build custom JS/CSS min files of the whole toolkit.
 You may run the application in the following command line:
 
 ```
@@ -32,6 +32,4 @@ with the gcc minifier:
 ```
 node run.js --minifier gcc
 ```
-
-Note this application only creates min JS files. CSS files and sprite images are not handled by this tool.
 

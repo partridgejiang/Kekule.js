@@ -166,7 +166,7 @@ var Compressor = class {
 		if (destPath)
 		{
 			if (!fs.existsSync(destPath)){
-				fs.mkdirSync(destPath);
+				fs.mkdirSync(destPath, {recursive: true});
 			}
 			var compressFileDetails = Kekule.Dev.PackageUtils.getCompressFileDetails(targetModuleNames, true);
 			this._compress(compressFileDetails, destPath);
