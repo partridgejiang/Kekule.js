@@ -16,8 +16,10 @@
 
 "use strict";
 
-//var $root = window;
-var	window = $root, document = window && window.document;
+if (typeof(window) !== undefined)  // has window object
+	$root = window;
+
+var	win = $root, document = win && win.document;
 
 if (typeof(Kekule) === 'undefined')
 	Kekule = {};
@@ -35,8 +37,8 @@ else
  * @class
  */
 Kekule.Browser = {
-	IE:     !!(window.attachEvent && !window.opera),
-  Opera:  !!window.opera,
+	IE:     !!(win.attachEvent && !win.opera),
+  Opera:  !!win.opera,
   WebKit: navigator.userAgent.indexOf('AppleWebKit/') > -1,
   Gecko:  navigator.userAgent.indexOf('Gecko') > -1 && navigator.userAgent.indexOf('like Gecko') < 0 && navigator.userAgent.indexOf('KHTML') == -1,
   MobileSafari: !!navigator.userAgent.match(/Apple.*Mobile.*Safari/),
@@ -54,8 +56,8 @@ Kekule.Browser.IEVersion = Kekule.Browser.IE && (function(){
  */
 Kekule.BrowserFeature = {
 	typedArray: (typeof(ArrayBuffer) !== 'undefined'),
-	svg: !!window.SVGSVGElement,
-	canvas: !! window.CanvasRenderingContext2D,
+	svg: !!win.SVGSVGElement,
+	canvas: !! win.CanvasRenderingContext2D,
 	webgl: (function()
 	{
 		//if (Kekule.BrowserFeature.webgl === undefined)
@@ -66,7 +68,7 @@ Kekule.BrowserFeature = {
 					try
 					{
 						var canvas = document.createElement('canvas');
-						return !!window.WebGLRenderingContext && ( canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
+						return !!win.WebGLRenderingContext && ( canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
 					}
 					catch (e)
 					{
@@ -79,11 +81,11 @@ Kekule.BrowserFeature = {
 		return !!result;
 	})(),
 	downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
-	blob: !!window.Blob,
-	workers: !! window.Worker,
-	fileapi: !!(window.File && window.FileReader && window.FileList && window.Blob),
-	sessionStorage: (function() { try { return !!window.sessionStorage} catch(e) { return false} })(),  // directly call session storage locally on Firefox now will cause exception
-	localStorage: (function() { try { return !!window.localStorage} catch(e) { return false} })(),  // !!window.localStorage,
+	blob: !!win.Blob,
+	workers: !! win.Worker,
+	fileapi: !!(win.File && win.FileReader && win.FileList && win.Blob),
+	sessionStorage: (function() { try { return !!win.sessionStorage} catch(e) { return false} })(),  // directly call session storage locally on Firefox now will cause exception
+	localStorage: (function() { try { return !!win.localStorage} catch(e) { return false} })(),  // !!win.localStorage,
 	cssTransition: (function(s) {
 		return 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
 	})(document.createElement('div').style),
@@ -110,10 +112,10 @@ Kekule.BrowserFeature = {
 				return result;
 			}
 	},
-	mutationObserver: window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver,
-	resizeObserver: !!window.ResizeObserver,
-	touchEvent: !!window.touchEvent,
-	pointerEvent: !!window.PointerEvent,
+	mutationObserver: win.MutationObserver || win.MozMutationObserver || win.WebkitMutationObserver,
+	resizeObserver: !!win.ResizeObserver,
+	touchEvent: !!win.touchEvent,
+	pointerEvent: !!win.PointerEvent,
 	draggable: (function() {
 		var div = document.createElement('div');
 		return ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
@@ -127,24 +129,24 @@ Kekule.BrowserFeature = {
 (function() {
 	var lastTime = 0;
 	var vendors = ['ms', 'moz', 'webkit', 'o'];
-	for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-		window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-		window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-				|| window[vendors[x]+'CancelRequestAnimationFrame'];
+	for(var x = 0; x < vendors.length && !win.requestAnimationFrame; ++x) {
+		win.requestAnimationFrame = win[vendors[x]+'RequestAnimationFrame'];
+		win.cancelAnimationFrame = win[vendors[x]+'CancelAnimationFrame']
+				|| win[vendors[x]+'CancelRequestAnimationFrame'];
 	}
 
-	if (!window.requestAnimationFrame)
-		window.requestAnimationFrame = function(callback, element) {
+	if (!win.requestAnimationFrame)
+		win.requestAnimationFrame = function(callback, element) {
 			var currTime = new Date().getTime();
 			var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-			var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+			var id = win.setTimeout(function() { callback(currTime + timeToCall); },
 					timeToCall);
 			lastTime = currTime + timeToCall;
 			return id;
 		};
 
-	if (!window.cancelAnimationFrame)
-		window.cancelAnimationFrame = function(id) {
+	if (!win.cancelAnimationFrame)
+		win.cancelAnimationFrame = function(id) {
 			clearTimeout(id);
 		};
 }());
@@ -168,7 +170,7 @@ var notUnset = function(o)
 	};
 var isElemPositioned = function(element)
 	{
-		var pos = window.getComputedStyle? window.getComputedStyle(element, null).position:
+		var pos = win.getComputedStyle? win.getComputedStyle(element, null).position:
 			element.currentStyle? element.currentStyle.position: null;
 		if (!pos)
 			return false;
@@ -188,7 +190,7 @@ var isElemPositioned = function(element)
 /////////////////////////////////////////////////////////////
 //   DOM mutation observer
 /////////////////////////////////////////////////////////////
-X.MutationObserver = window.MutationObserver || window.MozMutationObserver || window.WebkitMutationObserver;
+X.MutationObserver = win.MutationObserver || win.MozMutationObserver || win.WebkitMutationObserver;
 
 /////////////////////////////////////////////////////////////
 //   Cross browser event handling supporting
@@ -302,7 +304,7 @@ X.Event.isSupported = (function()
 			shortEventName = eventName.replace(/^on/, '');
 		if(cache[shortEventName]) { return cache[shortEventName]; }
 		var elt = TAGNAMES[shortEventName] == 'win'
-			? window
+			? win
 			: document.createElement(TAGNAMES[shortEventName] || 'div');
 		eventName = 'on'+shortEventName;
 		var eventIsSupported = (eventName in elt);
@@ -767,7 +769,7 @@ X.Event._MouseEventEx = {
 
 						// use a new event object, avoid overwrite the original mouseover/mouseout infos
 						var event = new MouseEvent(eventType, {
-							'view': window,
+							'view': win,
 							'bubbles': false,
 							'cancelable': true,
 							'target': currTarget,
@@ -943,7 +945,7 @@ X.Event._IE = {
 		var wrapper = (function(e)
 			{
 				if (!e)
-					e = window.event;
+					e = win.event;
 				// add essential W3C fields
 				e.currentTarget = element;
 				e.eventPhase = (e.srcElement === element)? 2: 3;
@@ -1141,9 +1143,9 @@ if (document)
 	{
 		X.Event = Object.extend(X.Event, X.Event._IE);
 		X.Event.Methods = Object.extend(X.Event.Methods, X.Event._IEMethods);
-		if (window.Element)
+		if (win.Element)
 		{
-			var elemPrototype = window.Element.prototype;
+			var elemPrototype = win.Element.prototype;
 			elemPrototype.addEventListener = X.Event.addListener.methodize();
 			elemPrototype.removeEventListener = X.Event.removeListener.methodize();
 		}
@@ -1153,8 +1155,8 @@ if (document)
 Object.extend(X.Event, X.Event.Methods);
 // insert new methods to Event class
 var eproto = null;
-if (window.Event)
-	eproto = window.Event.prototype;
+if (win.Event)
+	eproto = win.Event.prototype;
 if (!eproto)
 {
 	if (document && document.createEvent)

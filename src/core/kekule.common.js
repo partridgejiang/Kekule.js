@@ -430,7 +430,9 @@ Kekule.MapEx = Class.create(
 			this._cache = {};
 
 		if (this._implementation)
-			return this._implementation['delete'](key);  // avoid IE regard delete as a reserved word
+		{
+			return this._implementation[!this._implementation || 'delete'](key);  // avoid IE regard delete as a reserved word
+		}
 		else
 		{
 			var index = this._keys.indexOf(key);
