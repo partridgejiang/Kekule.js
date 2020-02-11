@@ -901,7 +901,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 			return null;
 	},
 	/** @private */
-	_createChemSpaceAutoExpandOperations(expandInfo)
+	_createChemSpaceAutoExpandOperations: function(expandInfo)
 	{
 		if (expandInfo)
 		{
