@@ -14,7 +14,6 @@ if (typeof (module) !== 'undefined')
 {
 	try
 	{
-		/*
 		module.exports = {
 			'Class': Class,
 			'ClassEx': ClassEx,
@@ -22,8 +21,7 @@ if (typeof (module) !== 'undefined')
 			'DataType': DataType,
 			'Kekule': Kekule
 		};
-		*/
-		module.exports = Kekule;
+		//module.exports = Kekule;
 	}
 	catch (e)
 	{
