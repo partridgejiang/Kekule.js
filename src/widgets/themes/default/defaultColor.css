@@ -463,11 +463,7 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 
 .K-PropListEditor .K-PropListEditor-PropExpandMarker
 {
-    /*
-    background-image: url("icons/generalUiIcons.png");
-    background-position: 1000px 1000px;
-    background-repeat: no-repeat;
-    */
+
 }
 
 .K-PropListEditor .K-PropListEditor-PropExpanded .K-PropListEditor-PropExpandMarker
@@ -532,9 +528,6 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc,
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Desc
 {
-    /*
-    background-image: url("icons/generalUiIcons.png");
-    */
     opacity: 0.5;
 }
 .K-DataTable th .K-DataTable-SortMark.K-Sort-Asc
@@ -574,9 +567,6 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 16px;
     height: 16px;
-    /*
-    background-image: url("icons/generalUiIcons.png");
-    */
 }
 .K-DataTable-Edit > .K-Pri-Glyph-Content
 {
@@ -690,5 +680,8 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     width: 24px;
     height: 24px;
+}
+.K-Res-Icon-Remove .K-Pri-Glyph-Content
+{
     background-image: url("images/slice/icons/trash.png");
 }
