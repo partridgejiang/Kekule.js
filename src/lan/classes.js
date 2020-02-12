@@ -2571,6 +2571,7 @@ ObjectEx = Class.create(
 	 *  	getter: getter function,
 	 *  	setter: setter function, if set to null, the property will be read-only,
 	 *  	serializable: boolean, whether the property should be save or restore in serialization. Default is true.
+	 *      This field can also be set by a function returning boolean. When serializing object, this function will be called.
 	 *  	defaultValue: default value of property, can only be simple type (number, string, bool...)
 	 *  }
 	 *  @return {Object} Property info object added to property list.
