@@ -218,11 +218,14 @@ Kekule.StyleUtils = {
 	/** @private */
 	_fillAbsOrFixedPositionStyleStack: function(elem, stack)
 	{
-		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
-		position = position.toLowerCase();
-		if ((position === 'absolute') || (position === 'fixed'))
+		if (Kekule.DomUtils.isElement(elem))  // if elem is not readlly an element (e.g., shadowRoot), bypass the style compute to avoid error
 		{
-			stack.push(position.toLocaleLowerCase());
+			var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+			position = position.toLowerCase();
+			if ((position === 'absolute') || (position === 'fixed'))
+			{
+				stack.push(position.toLocaleLowerCase());
+			}
 		}
 		var parent = elem.parentNode;
 		if (parent && parent.ownerDocument)
