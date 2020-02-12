@@ -1412,12 +1412,14 @@ Kekule.X.DomReady = {
 	isReady: false,
 	suspendFlag: 0,
 	funcs: [],
-	domReady: function(fn)
+	domReady: function(fn, doc)
 	{
-		DOM.initReady();//如果没有建成DOM树，则走第二步，存储起来一起杀
+		if (!doc)
+			doc = document;
+		DOM.initReady(doc);//如果没有建成DOM树，则走第二步，存储起来一起杀
 		if (!DOM.isReady)
 		{
-			var readyState = document && document.readyState;
+			var readyState = doc && doc.readyState;
 			if (readyState === 'complete' || readyState === 'loaded'    // document already loaded, call fn directly
 				|| (readyState === 'interactive' && !Kekule.Browser.IE))
 			{
@@ -1479,19 +1481,21 @@ Kekule.X.DomReady = {
 	{
 		return DOM.suspendFlag > 0;
 	},
-  initReady: function initReady()
+  initReady: function initReady(doc)
   {
-    if (document && document.addEventListener) {
-      document.addEventListener( "DOMContentLoaded", function(){
-	      document.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
+  	if (!doc)
+  		doc = document;
+    if (doc && doc.addEventListener) {
+	    doc.addEventListener( "DOMContentLoaded", function(){
+		    doc.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
         DOM.fireReady();
       }, false);
     }
     else
     {
-      if (document && document.getElementById) {
-        document.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
-        document.getElementById("ie-domReady").onreadystatechange = function() {
+      if (doc && doc.getElementById) {
+	      doc.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
+	      doc.getElementById("ie-domReady").onreadystatechange = function() {
           if (this.readyState === "complete") {
             DOM.fireReady();
             this.onreadystatechange = null;
