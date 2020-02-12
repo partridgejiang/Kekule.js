@@ -1744,7 +1744,7 @@ Kekule.ClassDefineUtils = {
 			ClassEx.defineProp(aClass, 'indirectCoordStorage', {
 				//'scope': Class.PropertyScope.PUBLIC,
 				'dataType': DataType.HASH,
-				'serializable': true,
+				'serializable': function(){ return !!this.getEnableIndirectCoord(); },
 				'setter': null,
 				'getter': function()
 				{
