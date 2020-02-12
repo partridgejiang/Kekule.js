@@ -4564,10 +4564,233 @@ Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
 Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
 
 /**
- * A singleton class to manage some global settings of widgets on HTML document.
+ * An abstract class to receive UI and other events on web page document or other destination (e.g., shadowRoot).
  * User should not use this class directly.
  * @class
  * @augments ObjectEx
+ */
+Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
+/** @lends Kekule.Widget.BaseEventsReceiver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.BaseEventsReceiver',
+	/** @constructs */
+	initialize: function($super, doc, eventRootObj)
+	{
+		this._document = doc || Kekule.$jsRoot.document;
+		this._eventRootObj = eventRootObj || this._document.documentElement;
+
+		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		this.reactDomNodeInsertEventBind = this.reactDomNodeInsertEvent.bind(this);
+		this.reactDomNodeRemoveEventBind = this.reactDomNodeRemoveEvent.bind(this);
+
+		$super();
+
+		var self = this;
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+		(function() { Kekule.X.domReady(self.domReadyInit.bind(self), this._document); }).defer();
+	},
+	/** @ignore */
+	finalize: function($super)
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.uninstallGlobalDomMutationHandlers(rootObj);
+			this.uninstallGlobalEventHandlers(rootObj);
+		}
+		$super();
+	},
+
+	/** @private */
+	getEventRootObj: function()
+	{
+		return this._eventRootObj;
+	},
+
+	/** @private */
+	domReadyInit: function()
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.installGlobalEventHandlers(rootObj);
+			this.installGlobalDomMutationHandlers(rootObj);
+		}
+	},
+
+	/**
+	 * Install UI event (mousemove, click...) handlers to target.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalEventHandlers: function(target)
+	{
+		if (!this._globalEventInstalled)
+		{
+			var events = Kekule.Widget.UiEvents;
+			for (var i = 0, l = events.length; i < l; ++i)
+			{
+				if (events[i] === 'touchstart' || events[i] === 'touchmove' || events[i] === 'touchend')  // explicit set passive to true for scroll performance on mobile devices
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind, {passive: true});
+				else
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
+			}
+			this._globalEventInstalled = true;
+		}
+	},
+	/**
+	 * Uninstall UI event (mousemove, click...) handlers from target.
+	 * @param {HTMLElement} element
+	 * @private
+	 */
+	uninstallGlobalEventHandlers: function(target)
+	{
+		var events = Kekule.Widget.UiEvents;
+		for (var i = 0, l = events.length; i < l; ++i)
+		{
+			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
+		}
+	},
+
+	/**
+	 * Install handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalDomMutationHandlers: function(target)
+	{
+		var self = this;
+		if (Kekule.X.MutationObserver && Kekule.DomUtils.isElement(target))
+		{
+			var observer = new Kekule.X.MutationObserver(
+				function(mutations)
+				{
+					self.reactDomMutation(mutations);
+					/*
+					for (var i = 0, l = mutations.length; i < l; ++i)
+					{
+						var m = mutations[i];
+						if (m.type === 'childList')  // dom tree changes
+						{
+							var nodes = m.addedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomAddedElem(node);
+								}
+							}
+							var nodes = m.removedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomRemovedElem(node);
+								}
+							}
+						}
+					}
+					*/
+				});
+			observer.observe(target, {
+				childList: true,
+				subtree: true
+			});
+			this._domMutationObserver = observer;
+		}
+		else // traditional DOM event method
+		{
+			/*
+			this._reactDomNodeInserted = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomAddedElem(target);
+				}
+			};
+			this._reactDomNodeRemoved = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomRemovedElem(target);
+				}
+			};
+			*/
+			Kekule.X.Event.addListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+		}
+	},
+	/**
+	 * Uninstall handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	uninstallGlobalDomMutationHandlers: function(target)
+	{
+		if (this._domMutationObserver)
+			this._domMutationObserver.disconnect();
+		if (this._reactDomNodeInserted)
+			Kekule.X.Event.removeListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+		if (this._reactDomNodeRemoved)
+			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+	},
+
+	/**
+	 * React to UI events.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactUiEvent: function(e)
+	{
+		// do nothing here, descendants should override this method
+	},
+
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeInsertEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeRemoveEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM mutations in mutation observer.
+	 * This function is used only when DOM mutation observer is available in browser.
+	 * Descendants should override this method.
+	 * @param {Array} mutations
+	 * @private
+	 */
+	reactDomMutation: function(mutations)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * A singleton class to manage some global settings of widgets on HTML document.
+ * User should not use this class directly.
+ * @class
+ * @augments Kekule.Widget.BaseEventsReceiver
  *
  * @param {HTMLDocument} doc
  *
@@ -4593,7 +4816,7 @@ Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
  * @name Kekule.Widget.GlobalManager#widgetFinalize
  * @event
  */
-Kekule.Widget.GlobalManager = Class.create(ObjectEx,
+Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 /** @lends Kekule.Widget.GlobalManager# */
 {
 	/** @private */
@@ -4605,7 +4828,6 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	/** @constructs */
 	initialize: function($super, doc)
 	{
-		$super();
 		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
@@ -4624,7 +4846,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.react_keydown_binding = this.react_keydown.bind(this);
 		this.react_touchstart_binding = this.react_touchstart.bind(this);
 		*/
-		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		//this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
 		this.reactWindowResizeBind = this.reactWindowResize.bind(this);
 		/*
@@ -4633,16 +4855,18 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (window)
 			this.installWindowEventHandlers(window);
 		*/
-		Kekule.X.domReady(this.domReadyInit.bind(this));
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+
+		$super(this._document, this._document.documentElement);
 	},
 	/** @ignore */
 	finalize: function($super)
 	{
 		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
-		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
-		this.uninstallGlobalEventHandlers(this._document.body);
+		//this.uninstallGlobalEventHandlers(this._document.documentElement);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
@@ -4683,13 +4907,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	domReadyInit: function()
+	domReadyInit: function($super)
 	{
-		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		$super();
+		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
 		//this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
-		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		this.installWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
 	},
 
@@ -4883,11 +5108,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	*/
-	/**
+	/*
 	 * Install UI event (mousemove, click...) handlers to element.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalEventHandlers: function(target)
 	{
 		if (!this._globalEventInstalled)
@@ -4903,11 +5129,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._globalEventInstalled = true;
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall UI event (mousemove, click...) handlers from old mainContextElement.
 	 * @param {HTMLElement} element
 	 * @private
 	 */
+	/*
 	uninstallGlobalEventHandlers: function(target)
 	{
 		var events = Kekule.Widget.UiEvents;
@@ -4916,6 +5144,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
 		}
 	},
+	*/
 	/**
 	 * Install event handlers on window object.
 	 * @param {Window} win
@@ -4965,11 +5194,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._hammertime.off(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
 	},
 
-	/**
+	/*
 	 * Install handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalDomMutationHandlers: function(target)
 	{
 		var self = this;
@@ -5032,11 +5262,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	uninstallGlobalDomMutationHandlers: function(target)
 	{
 		if (this._domMutationObserver)
@@ -5046,6 +5278,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this._reactDomNodeRemoved)
 			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 	},
+	*/
 	/** @private */
 	_handleDomAddedElem: function(elem)
 	{
@@ -5175,9 +5408,62 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return null;  // no mapping event, returns null
 	},
 
-	/** @private */
-	reactUiEvent: function(e)
+	/** @ignore */
+	reactDomNodeInsertEvent: function($super, e)
 	{
+		$super(e);
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			this._handleDomAddedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomNodeRemoveEvent: function($super, e)
+	{
+		$super(e);
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			this._handleDomRemovedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomMutation: function($super, mutations)
+	{
+		$super(mutations);
+		for (var i = 0, l = mutations.length; i < l; ++i)
+		{
+			var m = mutations[i];
+			if (m.type === 'childList')  // dom tree changes
+			{
+				var nodes = m.addedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						this._handleDomAddedElem(node);
+					}
+				}
+				var nodes = m.removedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						this._handleDomRemovedElem(node);
+					}
+				}
+			}
+		}
+	},
+
+	/** @ignore */
+	reactUiEvent: function($super, e)
+	{
+		$super(e);
+
 		var evType = e.getType();
 
 		// get target widget to dispatch event
