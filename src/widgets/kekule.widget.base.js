@@ -4476,8 +4476,16 @@ Kekule.Widget.Utils = {
 		// get widget property type first
 		var dtype = widget.getPropertyDataType(propName);
 
-		if (!dtype)  // can not find property, exit
-			return;
+		if (!dtype)
+		{
+			if (attribName.startsWith('data-'))  // maybe a data- attribute?
+			{
+				propName = attribName.substr(5).camelize();
+				dtype = widget.getPropertyDataType(propName);
+			}
+			if (!dtype)
+				return;   // can not find property, exit
+		}
 
 		if (dtype === DataType.STRING)
 			widget.setPropValue(propName, attribValue);
@@ -4496,7 +4504,7 @@ Kekule.Widget.Utils = {
 					}
 				}, null, widget.getDocument());
 			}
-			else if (attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
+			else if (attribValue && attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
 			{
 				var id = attribValue.substr(1).trim();
 				Kekule.Widget.Utils._setWidgetRefPropFromId(widget, propName, id);
