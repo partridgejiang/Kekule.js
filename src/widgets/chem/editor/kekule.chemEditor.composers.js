@@ -36,6 +36,7 @@ var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	COMPOSER: 'K-Chem-Composer',
+	COMPOSER_GRID_LAYOUT: 'K-Chem-Composer-Grid-Layout',  // a special class indicating that the composer is using CSS grid layout
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
 	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
@@ -1502,7 +1503,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	doGetWidgetClassName: function($super)
 	{
 		var result = $super() + ' ' + CCNS.COMPOSER;
+		if (this._isUsingGridLayout())
+			result += ' ' + CCNS.COMPOSER_GRID_LAYOUT;
 		return result;
+	},
+
+	/** @private */
+	_isUsingGridLayout: function()
+	{
+		return Kekule.BrowserFeature.cssGrid;
 	},
 
 	/** @ignore */
@@ -1710,33 +1719,67 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var leftRegionWidth = chemRect.width;
 		var bottomRegionHeight = (zoomRect && zoomRect.height) || topRegionHeight;  // zoom toolbar may be invisible
 
-		// top region
-		var elem = this.getTopRegionElem();
-		var style = elem.style;
-		style.top = '0px';
-		style.left = leftRegionWidth + 'px';
-		style.right = '0px';
-		style.height = topRegionHeight + 'px';
+		var isUsingAbsoluteLayout = !this._isUsingGridLayout();   // if true, need to use absolute layout the set the position of regions
 
-		// bottom region
-		elem = this.getBottomRegionElem();
-		style = elem.style;
-		style.bottom = '0px';
-		style.height = bottomRegionHeight + 'px';
-		style.left = leftRegionWidth + 'px';
-		style.right = '0px';
-		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
-		var bottomFreeWidth = bottomRect.width - (zoomRect? zoomRect.width: 0);
-
-		// left region
-		elem = this.getLeftRegionElem();
-		style = elem.style;
-		style.left = '0px';
-		style.top = topRegionHeight + 'px';
-		style.bottom = '0px';
-		style.width = leftRegionWidth + 'px';
-		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var topRegionElem = this.getTopRegionElem();
+		var bottomRegionElem = this.getBottomRegionElem();
+		var leftRegionElem = this.getLeftRegionElem();
+		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(bottomRegionElem);
+		var bottomFreeWidth = bottomRect.width - (zoomRect ? zoomRect.width : 0);
+		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(leftRegionElem);
 		var leftFreeHeight = leftRect.height - chemRect.height;
+
+		if (isUsingAbsoluteLayout)
+		{
+			// top region
+			var style = topRegionElem.style;
+			style.top = '0px';
+			style.left = leftRegionWidth + 'px';
+			style.right = '0px';
+			style.height = topRegionHeight + 'px';
+
+			// bottom region
+			style = bottomRegionElem.style;
+			style.bottom = '0px';
+			style.height = bottomRegionHeight + 'px';
+			style.left = leftRegionWidth + 'px';
+			style.right = '0px';
+
+			// left region
+			style = leftRegionElem.style;
+			style.left = '0px';
+			style.top = topRegionHeight + 'px';
+			style.bottom = '0px';
+			style.width = leftRegionWidth + 'px';
+
+			// editor stage
+			var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
+
+			// calc right
+			if (!this.getShowInspector())
+				right = 0;
+			else
+			{
+				var elem = this.getAdvPanelElem();
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+				right = rect.width;
+			}
+
+			var stageElem = this.getEditorStageElem();
+			var style = stageElem.style;
+			style.position = 'absolute';
+			style.top = top + 'px';
+			style.left = left + 'px';
+			style.bottom = bottom + 'px';
+			style.right = right + 'px';
+
+			// advPanel
+			elem = this.getAdvPanelElem();
+			style = elem.style;
+			style.position = 'absolute';
+			style.top = top + 'px';
+			style.bottom = bottom + 'px';
+		}
 
 		// now we can decide whether shown assoc toolbar on bottom or left side
 		if (leftFreeHeight / bottomFreeWidth > 0.9)  // TODO: now fixed
@@ -1749,34 +1792,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			// assoc bar shown in bottom
 			this.changeAssocToolbarRegion(false);
 		}
-
-		// editor stage
-		var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
-
-		// calc right
-		if (!this.getShowInspector())
-			right = 0;
-		else
-		{
-			var elem = this.getAdvPanelElem();
-			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
-			right = rect.width;
-		}
-
-		var stageElem = this.getEditorStageElem();
-		var style = stageElem.style;
-		style.position = 'absolute';
-		style.top = top + 'px';
-		style.left = left + 'px';
-		style.bottom = bottom + 'px';
-		style.right = right + 'px';
-
-		// advPanel
-		elem = this.getAdvPanelElem();
-		style = elem.style;
-		style.position = 'absolute';
-		style.top = top + 'px';
-		style.bottom = bottom + 'px';
 
 		if (this.getAutoSetMinDimension())
 		{
