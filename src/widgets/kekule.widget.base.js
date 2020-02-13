@@ -757,6 +757,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.defineProp('showHideType', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCaller', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCallerPageRect', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
+		this.defineProp('standaloneOnShowHide', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});  // whether the caller widget is ignored when execute show/hide animation
 
 		this.defineProp('finalizeAfterHiding', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 
