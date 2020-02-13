@@ -4530,6 +4530,29 @@ Kekule.Widget.Utils = {
 			if (refWidget)
 				widget.setPropValue(propName, refWidget);
 		}
+	},
+
+	/**
+	 * Returns the url of CSS of the widget system.
+	 * @param {String} themeName If not set, the default theme will be returned.
+	 */
+	getThemeUrl: function(themeName)
+	{
+		var result = null;
+		if (!themeName)
+			themeName = 'default';
+		var scriptInfo = Kekule.scriptSrcInfo;
+		if (scriptInfo)
+		{
+			var scriptPath = scriptInfo.path;
+			if (scriptPath)
+			{
+				var useMinJs = scriptPath.useMinFile;
+				var cssPath = (useMinJs ? 'themes/' : 'widgets/themes/') + themeName;
+				result = scriptPath + cssPath + '/kekule.css';
+			}
+		}
+		return result;
 	}
 };
 
@@ -4836,6 +4859,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	ISOLATED_LAYER_FIELD: '__$isolated_layer__',
 	/** @private */
 	TOPMOST_LAYER_FIELD: '__$topmost_layer__',
+	/** @private */
+	THEME_LOADED_FIELD: '__$theme_loaded__',
 	/** @constructs */
 	initialize: function($super, doc)
 	{
@@ -4927,6 +4952,58 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
 		//this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		this.installWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
+	},
+
+	/** @private */
+	getDefaultContextRootElem: function()
+	{
+		return this._document.body;
+	},
+
+	/** @private */
+	_detectIfThemeLoaded: function(contextRootElem)
+	{
+		// check if Kekule theme css is loaded in context
+		var result = contextRootElem[this.THEME_LOADED_FIELD];
+		if (!result)  // further check
+		{
+			var doc = contextRootElem.ownerDocument;
+			var detectorElem = doc.createElement('span');
+			detectorElem.className = 'K-StyleSheet-Detector';  // a fixed detector class
+			detectorElem.style.visibility = 'hidden';
+			contextRootElem.appendChild(detectorElem);
+			var zIndex = Kekule.StyleUtils.getComputedStyle(detectorElem, 'z-index');
+			if (zIndex == -88888)  // a fixed probe value, if equal, the stylesheet is loaded
+			{
+				result = true;
+				contextRootElem[this.THEME_LOADED_FIELD] = result;
+			}
+			else
+				result = false;
+			contextRootElem.removeChild(detectorElem);
+		}
+		return result;
+	},
+
+	/**
+	 * Load the theme CSS file in context.
+	 * @param {HTMLElement} contextRootElem
+	 * @param {String} themeName
+	 */
+	loadTheme: function(contextRootElem, themeName)
+	{
+		if (!contextRootElem)
+			contextRootElem = this.getDefaultContextRootElem();
+		var loaded = this._detectIfThemeLoaded(contextRootElem);
+		if (!loaded)
+		{
+			var themeUrl = Kekule.Widget.Utils.getThemeUrl(themeName);
+			var doc = contextRootElem.ownerDocument;
+			var styleElem = doc.createElement('style');
+			styleElem.innerHTML = '@import "' + themeUrl + '"';
+			contextRootElem.appendChild(styleElem);
+			contextRootElem[this.THEME_LOADED_FIELD] = true;
+		}
 	},
 
 	/**
