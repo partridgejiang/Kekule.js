@@ -47,7 +47,7 @@ Kekule.Widget.HtmlClassNames = {
 	/** Child widget dynamic created by parent widget. */
 	DYN_CREATED: 'K-Dynamic-Created',
 	/* A top most layer. */
-	/*TOP_LAYER: 'K-Top-Layer',*/
+	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
 	ISOLATED_LAYER: 'K-Isolated-Layer',
 	NORMAL_BACKGROUND: 'K-Normal-Background',
@@ -4833,6 +4833,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	INFO_FIELD: '__$info__',
 	/** @private */
 	ISOLATED_LAYER_FIELD: '__$isolated_layer__',
+	/** @private */
+	TOPMOST_LAYER_FIELD: '__$topmost_layer__',
 	/** @constructs */
 	initialize: function($super, doc)
 	{
@@ -5913,7 +5915,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
-		var topmostLayer = this.getTopmostLayer(doc, true);
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+		var topmostLayer = this.getTopmostLayer(doc, true, contextRootElem);
 		var isOnTopLayer = popupElem.parentNode === topmostLayer;
 
 		// calc widget position
@@ -5974,9 +5977,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 
 		if (!isOnTopLayer)
-			this.moveElemToTopmostLayer(popupElem);
+			this.moveElemToTopmostLayer(popupElem, null, contextRootElem);
 		else  // even is elem is on topmost layer, still append it to tail
-			this.moveElemToTopmostLayer(popupElem, true);
+			this.moveElemToTopmostLayer(popupElem, true, contextRootElem);
 		if (posInfo)
 		{
 			// set style
@@ -6052,6 +6055,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
 		//var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
@@ -6062,7 +6066,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		dropElem.style.display = '';
 		var manualAppended = false;
 		//var topmostLayer = this.getTopmostLayer(dropElem.ownerDocument);
-		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true);
+		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true, contextRootElem);
 		//if (!dropElem.parentNode)
 		{
 			//invokerElem.appendChild(dropElem);
@@ -6525,14 +6529,47 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	},
 
 	/**
+	 * Returns the root element of widget context, usually the document.documentElement.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @returns {HTMLElement}
+	 */
+	getWidgetContextRootElement: function(widget)
+	{
+		if (widget && widget.getDocument)
+			return widget.getDocument().body;
+		else  // widget is null
+			return this._document.body;
+	},
+
+	/**
 	 * Get top most layer previous created in document.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 */
-	getTopmostLayer: function(doc, canCreate)
+	getTopmostLayer: function(doc, canCreate, contextRootElem)
 	{
+		/*
 		var body = doc.body;
 		return body;
+		*/
+		var doc = contextRootElem.ownerDocument;
+		var result = contextRootElem[this.TOPMOST_LAYER_FIELD];
+		if (!result)
+		{
+			if (canCreate)
+			{
+				result = this._createTopmostLayer(doc, contextRootElem);
+				contextRootElem.appendChild(result);
+				contextRootElem[this.TOPMOST_LAYER_FIELD] = result;
+			}
+		}
+		else
+		{
+			// check if oldLayer is the last child of root
+			if (contextRootElem.lastChild !== result)
+				contextRootElem.appendChild(result);
+		}
+		return result;
 
 		/*
 		var child = body.lastChild;
@@ -6545,43 +6582,41 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		return child;
 		*/
 	},
-	/*
+	/**
 	 * Create a topmost transparent element in document to put drop down and popup widgets.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
-	 * @deprecated
+	 * @private
 	 */
-	/*
-	createTopmostLayer: function(doc)
+	_createTopmostLayer: function(doc, contextRootElem)
 	{
 		var div = doc.createElement('div');
 		div.className = CNS.TOP_LAYER;
-		doc.body.appendChild(div);
 		return div;
 	},
-	*/
 	/**
 	 * Get isolated layer previous created in document.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 * @private
 	 */
-	getIsolatedLayer: function(doc, canCreate)
+	getIsolatedLayer: function(doc, canCreate, contextRootElem)
 	{
-		var result = doc[this.ISOLATED_LAYER_FIELD];
+		var result = contextRootElem[this.ISOLATED_LAYER_FIELD];
 		if (!result && canCreate)
 		{
-			result = this._createIsolatedLayer(doc);
-			doc[this.ISOLATED_LAYER_FIELD] = result;
+			result = this._createIsolatedLayer(doc, contextRootElem);
+			contextRootElem.appendChild(result);
+			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
 		return result;
 	},
 	/** @private */
-	_createIsolatedLayer: function(doc)
+	_createIsolatedLayer: function(doc, contextRootElem)
 	{
 		var div = doc.createElement('div');
 		div.className = CNS.ISOLATED_LAYER;
-		doc.body.appendChild(div);
+		//doc.body.appendChild(div);
 		return div;
 	},
 
@@ -6610,7 +6645,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	 * @param {HTMLElement} elem
 	 * @private
 	 */
-	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo)
+	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo, contextRootElem)
 	{
 		// store elem's old position info first
 		/*
@@ -6627,7 +6662,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			info.nextSibling = elem.nextSibling;
 		}
 
-		var layer = this.getTopmostLayer(elem.ownerDocument);
+		var layer = this.getTopmostLayer(elem.ownerDocument, true, contextRootElem);
 		layer.appendChild(elem);
 	},
 	/**
