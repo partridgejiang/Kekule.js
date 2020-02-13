@@ -21,6 +21,7 @@ require("../src/core/kekule.structureBuilder.js");
 require("../src/core/kekule.reactions.js");
 require("../src/core/kekule.chemUtils.js");
 require("../src/chemdoc/kekule.glyph.base.js");
+require("../src/chemdoc/kekule.glyph.utils.js");
 require("../src/chemdoc/kekule.glyph.pathGlyphs.js");
 require("../src/chemdoc/kekule.glyph.lines.js");
 require("../src/chemdoc/kekule.glyph.chemGlyphs.js");

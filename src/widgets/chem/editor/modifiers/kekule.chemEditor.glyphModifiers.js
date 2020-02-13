@@ -1315,9 +1315,14 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 			{
 				if (glyph.getElectronCount)
 				{
-					var eCount = glyph.getElectronCount();
+					var connectorCount = glyph.getConnectorCount() || 1;
+					var eCount = Math.round((glyph.getElectronCount() || 0) / connectorCount);
 					if (OU.isUnset(electronCount))
+					{
 						electronCount = eCount;
+						if (electronCount <= 0)
+							electronCount = 1;
+					}
 					else if (electronCount !== eCount)
 					{
 						electronCount = 0;  // Mix value
@@ -1369,7 +1374,11 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 				var glyph = glyphs[i];
 				if (glyph.hasProperty('electronCount'))
 				{
-					opers.push(new Kekule.ChemObjOperation.Modify(glyph, {'electronCount': paramGroup.glyphParams.electronCount}, editor));
+					var connectorCount = glyph.getConnectorCount() || 1;
+					var perECount = Math.round(paramGroup.glyphParams.electronCount * connectorCount);
+					if (perECount <= 0)
+						perECount = 1;
+					opers.push(new Kekule.ChemObjOperation.Modify(glyph, {'electronCount': perECount}, editor));
 				}
 			}
 		}

@@ -1866,7 +1866,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		result.getClientElem().appendChild(elem);
 		var previewTextArea = new Kekule.Widget.TextEditor(result); //new Kekule.Widget.TextArea(result);
 		previewTextArea.setReadOnly(true);
-		previewTextArea.setWrap('off');
+		previewTextArea.setWrap('off').setAutoWrapThreshold(true);
 		previewTextArea.setToolbarPos(Kekule.Widget.Position.BOTTOM);
 		previewTextArea.addClassName(CCNS.DIALOG_CHOOSE_FILE_FORAMT_PREVIEWER);
 		previewTextArea.appendToElem(elem);

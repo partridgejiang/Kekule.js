@@ -493,11 +493,15 @@ Kekule.Glyph.BondFormingElectronPushingArrow = Class.create(Kekule.Glyph.BaseTwi
 							return null;
 					}
 				}
-				return result;
+				return result * this.getConnectorCount();
 			},
 			'setter': function(value) {
 				if (value === this.getElectronCount())
 					return;
+				var perValue = this.getConnectorCount()? value / this.getConnectorCount(): value;
+				perValue = Math.round(perValue);
+				if (perValue <= 0)
+					perValue = 1;
 				var ASide = Kekule.Glyph.ArrowSide;
 				//var arrowPos = this._getValidArrowPos();
 				var connectors = this.getConnectors();
@@ -511,11 +515,11 @@ Kekule.Glyph.BondFormingElectronPushingArrow = Class.create(Kekule.Glyph.BaseTwi
 						arrowPos = 'end';
 					}
 					var params = conn.getPathParams();
-					if (value >= 2)
+					if (perValue >= 2)
 					{
 						params[arrowPos + 'ArrowSide'] = ASide.BOTH;
 					}
-					else if (value === 1)
+					else if (perValue === 1)
 					{
 						params[arrowPos + 'ArrowSide'] = (i % 2)? ASide.SINGLE: ASide.REVERSED;
 					}

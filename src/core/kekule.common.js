@@ -430,7 +430,9 @@ Kekule.MapEx = Class.create(
 			this._cache = {};
 
 		if (this._implementation)
-			return this._implementation['delete'](key);  // avoid IE regard delete as a reserved word
+		{
+			return this._implementation[!this._implementation || 'delete'](key);  // avoid IE regard delete as a reserved word
+		}
 		else
 		{
 			var index = this._keys.indexOf(key);
@@ -1742,7 +1744,7 @@ Kekule.ClassDefineUtils = {
 			ClassEx.defineProp(aClass, 'indirectCoordStorage', {
 				//'scope': Class.PropertyScope.PUBLIC,
 				'dataType': DataType.HASH,
-				'serializable': true,
+				'serializable': function(){ return !!this.getEnableIndirectCoord(); },
 				'setter': null,
 				'getter': function()
 				{

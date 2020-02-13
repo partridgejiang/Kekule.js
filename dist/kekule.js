@@ -318,6 +318,7 @@ var kekuleFiles = {
 			'core/kekule.chemUtils.js',
 
 			'chemdoc/kekule.glyph.base.js',
+			'chemdoc/kekule.glyph.utils.js',
 			'chemdoc/kekule.glyph.pathGlyphs.js',
 			'chemdoc/kekule.glyph.lines.js',
 			'chemdoc/kekule.glyph.chemGlyphs.js',

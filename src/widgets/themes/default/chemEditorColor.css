@@ -38,11 +38,9 @@
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
 .K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
 {
-  /* Disable this background-size setting, because of sprite image auto generation
   -webkit-background-size: 100% 100%;
   -moz-background-size: 100% 100%;
   background-size: 100% 100%;
-  */
 }
 
 .K-Chem-Obj-Setter .K-Chem-Obj-Setter-Viewer,
