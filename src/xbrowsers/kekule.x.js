@@ -95,6 +95,9 @@ Kekule.BrowserFeature = {
 	cssFlex: (function(s) {
 		return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
 	})(document.createElement('div').style),
+	cssGrid: (function(s) {
+		return 'grid' in s || 'WebkitGrid' in s || 'MozGrid' in s || 'msGrid' in s || 'OGrid' in s;
+	})(document.createElement('div').style),
 	html5Form: {
 		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
 		supportType: function(typeName)

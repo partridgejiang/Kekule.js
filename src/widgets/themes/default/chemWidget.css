@@ -516,7 +516,7 @@
 {
     position: relative;
     /* default width/height */
-    width: 550px;
+    width: 600px;
     height: 400px;
     min-width: 300px;
     min-height: 200px;
@@ -660,6 +660,65 @@
     bottom: 0px;
 }
 */
+
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout
+{
+    display: inline-grid;
+    grid-template-rows: min-content 1fr min-content;
+    grid-template-columns: min-content 1fr min-content;
+}
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region
+{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region
+{
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 4;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region
+{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    grid-row-start: 3;
+    grid-row-end: 4;
+}
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Editor-Stage
+{
+    position: relative;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
+
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel
+{
+    grid-column-start: 3;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
 
 .K-Chem-Composer-Toolbar
 {
