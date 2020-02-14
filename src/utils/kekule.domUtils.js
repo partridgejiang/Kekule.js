@@ -561,6 +561,29 @@ Kekule.DomUtils = {
 		}
 		else
 			return false;
+	},
+
+	/**
+	 * Check if node is in a shadow root context.
+	 * @param {Node} node
+	 * @returns {Bool}
+	 */
+	isInShadowRoot: function(node)
+	{
+		if (typeof(ShadowRoot) !== 'undefined')
+		{
+			try
+			{
+				var rootNode = node.getRootNode && node.getRootNode();
+				return rootNode instanceof ShadowRoot;
+			}
+			catch(e)
+			{
+				return false;
+			}
+		}
+		else
+			return false;
 	}
 };
 
