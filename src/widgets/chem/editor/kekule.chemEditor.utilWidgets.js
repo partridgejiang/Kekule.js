@@ -801,13 +801,14 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 		{
 			inputBox.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 			selectPanel.removeFromDom();
+			selectPanel.hide(null, null, Kekule.Widget.ShowHideType.DEFAULT);
 		}
 		else
 		{
 			inputBox.setButtonKind(Kekule.Widget.Button.Kinds.ENTER);
 			selectPanel.appendToElem(this.getCoreElement());
 			selectPanel.setStyleProperty('position', '');  // clear position:absolute value from previous dropdown show
-			selectPanel.show(null, null,  Kekule.Widget.ShowHideType.DEFAULT);
+			selectPanel.show(null, null, Kekule.Widget.ShowHideType.DEFAULT);
 		}
 	},
 
