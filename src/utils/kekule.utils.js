@@ -173,6 +173,26 @@ Kekule.ObjUtils = {
 		return Object.getPrototypeOf? Object.getPrototypeOf(obj): (obj.prototype || obj.__proto__);
 	},
 	/**
+	 * Returns the property descriptor of propName in obj (and its prototypes if param checkPrototype is true).
+	 * @param {Object} obj
+	 * @param {String} propName
+	 * @param {Bool} checkPrototype
+	 * @returns {Hash}
+	 */
+	getPropertyDescriptor: function(obj, propName, checkPrototype)
+	{
+		var getOwn = Object.getOwnPropertyDescriptor;
+		if (getOwn)
+		{
+			var result = getOwn(obj, propName);
+			if (!result && checkPrototype && (obj.prototype || obj.__proto__))
+				result = Kekule.ObjUtils.getPropertyDescriptor(obj.prototype || obj.__proto__, propName, checkPrototype);
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
 	 * Return all name of direct fields of obj. Note that functions will not be included.
 	 * @param {Object} obj
 	 * @param {Bool} includeFuncFields Set to true to include function fields in obj.
