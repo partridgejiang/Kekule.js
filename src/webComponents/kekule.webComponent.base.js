@@ -129,7 +129,7 @@ class WebComponentContextPopupHost extends HTMLElement
 	{
 		super();
 		var shadow = this.attachShadow(Kekule.globalOptions.webComponent.init.shadowInitOptions);
-		//this._initStyles();
+		this._initStyles(shadow);
 		this._importStyleSheet(shadow);
 		this._createSubElements(shadow);
 
@@ -148,12 +148,20 @@ class WebComponentContextPopupHost extends HTMLElement
 		Kekule.Widget.globalManager.loadTheme(shadow);
 	}
 
-	_initStyles()
+	_initStyles(shadow)
 	{
-		var styles = this.styles;
-		styles.position = 'static';
-		styles.width = '0px';
-		styles.height = '0px';
+		var styleElem = shadow.ownerDocument.createElement('style');
+		styleElem.innerHTML = ':host { position: static; width: 0px; height: 0px; }';
+		shadow.appendChild(styleElem);
+	}
+
+	ensureToBeLast()
+	{
+		var body = this.ownerDocument.body;
+		if (body.lastChild !== this)
+		{
+			body.appendChild(this);
+		}
 	}
 
 	get hostElem()
@@ -178,6 +186,7 @@ ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getWidgetContextRootElement',
 			Kekule.WebComponent.widgetWrapperPopupHost = new WebComponentContextPopupHost();
 			document.body.appendChild(Kekule.WebComponent.widgetWrapperPopupHost);
 		}
+		Kekule.WebComponent.widgetWrapperPopupHost.ensureToBeLast(); // ensure it is always the last element in body
 		return Kekule.WebComponent.widgetWrapperPopupHost.hostElem;
 	}
 	else
