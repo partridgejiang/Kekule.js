@@ -902,6 +902,45 @@
     position: absolute;
     bottom: 5px;
 }
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout
+{
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    flex-direction: column;
+}
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Toolbar-Area,
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-TabGroup
+{
+    -webkit-flex: 0 0 auto;
+    -moz-flex: 0 0 auto;
+    flex: 0 0 auto;
+    position: relative;
+}
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-TabGroup
+{
+    bottom: auto;
+}
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Client
+{
+    -webkit-flex: 1 1 auto;
+    -moz-flex: 1 1 auto;
+    flex: 1 1 auto;
+    position: relative;
+    width: auto;
+    height: auto;
+    padding: 5px;
+}
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Client .K-Chem-Viewer.K-Chem-Obj-Setter-Viewer
+{
+
+}
+
 .K-Chem-Obj-Setter-Configurator
 {
     padding-left: 2em;
