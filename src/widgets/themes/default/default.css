@@ -549,6 +549,11 @@ table.K-Widget
     padding: 0;
     position: relative;
 }
+.K-Toolbar.K-TabButtonGroup
+{
+    background-color: transparent;
+}
+
 .K-TabButtonGroup .K-Button
 {
     /*
