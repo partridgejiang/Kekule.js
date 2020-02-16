@@ -39,7 +39,6 @@ function wrapWidgets()
 			var widgetShortName = Kekule.ClassUtils.getLastClassName(config.widgetClassName);
 			var wrapper = Kekule.WebComponent.Utils.wrapWidget(widgetClass, htmlTagName);
 			compNamespace[widgetShortName] = wrapper;  // add to namespace
-			console.log('wrap', widgetShortName);
 		}
 	}
 }
