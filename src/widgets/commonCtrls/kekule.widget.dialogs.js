@@ -535,12 +535,17 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	prepareShow: function(callback)
+	prepareShow: function(callback, caller)
 	{
 		// if this dialog has no element parent, just append it to body
 		var elem = this.getElement();
 		if (!elem.parentNode)
-			this.getDocument().body.appendChild(elem);
+		{
+			//this.getDocument().body.appendChild(elem);
+			var gm = this.getGlobalManager();
+			var contextRootElem = gm.getWidgetContextRootElement(caller);
+			contextRootElem.appendChild(elem);
+		}
 
 		var self = this;
 		// defer the function, make sure it be called when elem really in DOM tree
@@ -564,7 +569,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	openModal: function(callback, caller)
 	{
 		//this.prepareModal();
-		this.getGlobalManager().prepareModalWidget(this);
+		this.getGlobalManager().prepareModalWidget(this, caller);
 		  // important, must called before prepareShow, or DOM tree change will cause doWidgetShowStateChanged
 		  // and make callback called even before dialog showing
 		/*
@@ -596,7 +601,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	open: function(callback, caller, showType)
 	{
-		this.prepareShow(callback);
+		this.prepareShow(callback, caller);
 		this.show(caller, null, showType || Kekule.Widget.ShowHideType.DIALOG);
 		this._dialogOpened = true;
 		return this;

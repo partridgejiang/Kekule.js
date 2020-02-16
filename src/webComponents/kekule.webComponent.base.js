@@ -151,7 +151,7 @@ class WebComponentContextPopupHost extends HTMLElement
 	_initStyles(shadow)
 	{
 		var styleElem = shadow.ownerDocument.createElement('style');
-		styleElem.innerHTML = ':host { position: static; width: 0px; height: 0px; }';
+		styleElem.innerHTML = ':host { position: static; width: 0px; height: 0px; left: 0px; top: 0px; }';
 		shadow.appendChild(styleElem);
 	}
 
@@ -179,7 +179,7 @@ if (typeof(customElements) !== 'undefined')
 Kekule.WebComponent.widgetWrapperPopupHost = null;
 
 ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getWidgetContextRootElement', function($origin, widget){
-	if (widget.isWrappedInWebComponent())
+	if (widget && widget.isWrappedInWebComponent())
 	{
 		if (!Kekule.WebComponent.widgetWrapperPopupHost)
 		{
