@@ -1256,7 +1256,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		var parent = this.getParent();
 		if (this.getBubbleUiEvents())
-			return true
+			return true;
 		else if (this.getInheritBubbleUiEvents() && parent && parent.getActualBubbleUiEvents)
 			return parent.getActualBubbleUiEvents();
 		else
