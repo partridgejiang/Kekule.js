@@ -1,14 +1,25 @@
+/* A special rule to detect if the stylesheet is loaded. */
+span.K-StyleSheet-Detector
+{
+    position: absolute;
+    width: 0px;
+    height: 0px;
+    z-index: -88888;
+}
+
 /* top layer */
 .K-Top-Layer
 {
-    display: block;
     background-color: transparent;
+    /*
+    display: block;
     z-index: 100;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    */
 }
 
 .K-Isolated-Layer

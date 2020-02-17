@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Component Basic Test</title>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+  <script src="../../src/kekule.js?min=false"></script>
+  <script src="webCompTest1.js"></script>
+  <style>
+    body
+    {
+      font-variant: small-caps;
+    }
+    button
+    {
+      background-color: red;
+      border-color: red;
+      border: 5px solid;
+      outline: 2px solid green !important;
+      font-family: "Courier New", Courier, monospace;
+    }
+    /*
+    div div
+    {
+      font-size: 2em;
+    }
+    */
+    input
+    {
+      border: 3px solid green;
+    }
+  </style>
+  <script>
+    function init()
+    {
+    	Kekule.X.Event.addListener(document.documentElement, 'click', function(e){
+    		console.log('Click on ', e.getTarget(), e.composedPath());
+      });
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <p>A Paragraph</p>
+  <kekule-composer id="composer" predefined-setting="fullFunc" width="800px" data-height="300px" chem-obj="null" style="display:inline-block"></kekule-composer>
+  <div data-widget="Kekule.Editor.Composer"></div>
+  <!--
+  <kekule-popup-layer></kekule-popup-layer>
+  -->
+</body>
+</html>

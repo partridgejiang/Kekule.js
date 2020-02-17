@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sys Object Inherit Test</title>
+  <script src="../../src/kekule.js?min=false&module=core"></script>
+  <script>
+
+    var TestClass = Class.create(HTMLElement,
+    {
+      FIELD: 'fieldName',
+      initialize: function($super)
+      {
+      	console.log('init');
+      	$super();
+      },
+      bar: function() {
+      	console.log('bar');
+      }
+    });
+
+    var instance = new TestClass();
+
+  </script>
+</head>
+<body>
+
+</body>
+</html>

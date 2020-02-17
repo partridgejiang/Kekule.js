@@ -659,11 +659,21 @@ Object._extendSupportMethods(String.prototype, {
   },
 
   underscore: function() {
-    return this.gsub(/::/, '/').gsub(/([A-Z]+)([A-Z][a-z])/,'#{1}_#{2}').gsub(/([a-z\d])([A-Z])/,'#{1}_#{2}').gsub(/-/,'_').toLowerCase();
+    //return this.gsub(/::/, '/').gsub(/([A-Z]+)([A-Z][a-z])/,'#{1}_#{2}').gsub(/([a-z\d])([A-Z])/,'#{1}_#{2}').gsub(/-/,'_').toLowerCase();
+	  return this.replace(/::/g, '/')
+		  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+		  .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+		  .replace(/-/g, '_')
+		  .toLowerCase();
   },
 
   dasherize: function() {
-    return this.gsub(/_/,'-');
+    //return this.gsub(/_/,'-');
+	  return this.replace(/::/g, '/')
+		  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+		  .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+		  .replace(/-/g, '-')
+		  .toLowerCase();
   },
 
   inspect: function(useDoubleQuotes) {

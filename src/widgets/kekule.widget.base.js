@@ -47,7 +47,7 @@ Kekule.Widget.HtmlClassNames = {
 	/** Child widget dynamic created by parent widget. */
 	DYN_CREATED: 'K-Dynamic-Created',
 	/* A top most layer. */
-	/*TOP_LAYER: 'K-Top-Layer',*/
+	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
 	ISOLATED_LAYER: 'K-Isolated-Layer',
 	NORMAL_BACKGROUND: 'K-Normal-Background',
@@ -757,6 +757,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.defineProp('showHideType', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCaller', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCallerPageRect', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
+		this.defineProp('standaloneOnShowHide', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});  // whether the caller widget is ignored when execute show/hide animation
 
 		this.defineProp('finalizeAfterHiding', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 
@@ -1255,7 +1256,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		var parent = this.getParent();
 		if (this.getBubbleUiEvents())
-			return true
+			return true;
 		else if (this.getInheritBubbleUiEvents() && parent && parent.getActualBubbleUiEvents)
 			return parent.getActualBubbleUiEvents();
 		else
@@ -1814,7 +1815,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			this.setShowHideCallerPageRect(EU.getElemBoundingClientRect((caller.getElement && caller.getElement()) || caller));
 		}
 
-		this.widgetShowStateChanged(true);
+		//this.widgetShowStateChanged(true);
+		(function(){self.widgetShowStateChanged(true);}).defer();  // important defer, called after DOM mutation events, ensure the true param is finally passed
 	},
 	/**
 	 * Show widget then hide it after a period of time.
@@ -1931,7 +1933,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this.setDisplayed(false, true);
 			done();
 		}
-		this.widgetShowStateChanged(false);
+		//this.widgetShowStateChanged(false);
+		(function(){self.widgetShowStateChanged(false);}).defer();  // important defer, called after DOM mutation events, ensure the false param is finally passed
 	},
 
 	/*
@@ -2058,7 +2061,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	isInDomTree: function()
 	{
 		var elem = this.getElement();
-		return Kekule.DomUtils.isInDomTree(elem);
+		return Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true});
 	},
 
 	/**
@@ -4476,8 +4479,16 @@ Kekule.Widget.Utils = {
 		// get widget property type first
 		var dtype = widget.getPropertyDataType(propName);
 
-		if (!dtype)  // can not find property, exit
-			return;
+		if (!dtype)
+		{
+			if (attribName.startsWith('data-'))  // maybe a data- attribute?
+			{
+				propName = attribName.substr(5).camelize();
+				dtype = widget.getPropertyDataType(propName);
+			}
+			if (!dtype)
+				return;   // can not find property, exit
+		}
 
 		if (dtype === DataType.STRING)
 			widget.setPropValue(propName, attribValue);
@@ -4496,7 +4507,7 @@ Kekule.Widget.Utils = {
 					}
 				}, null, widget.getDocument());
 			}
-			else if (attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
+			else if (attribValue && attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
 			{
 				var id = attribValue.substr(1).trim();
 				Kekule.Widget.Utils._setWidgetRefPropFromId(widget, propName, id);
@@ -4521,6 +4532,29 @@ Kekule.Widget.Utils = {
 			if (refWidget)
 				widget.setPropValue(propName, refWidget);
 		}
+	},
+
+	/**
+	 * Returns the url of CSS of the widget system.
+	 * @param {String} themeName If not set, the default theme will be returned.
+	 */
+	getThemeUrl: function(themeName)
+	{
+		var result = null;
+		if (!themeName)
+			themeName = 'default';
+		var scriptInfo = Kekule.scriptSrcInfo;
+		if (scriptInfo)
+		{
+			var scriptPath = scriptInfo.path;
+			if (scriptPath)
+			{
+				var useMinJs = scriptPath.useMinFile;
+				var cssPath = (useMinJs ? 'themes/' : 'widgets/themes/') + themeName;
+				result = scriptPath + cssPath + '/kekule.css';
+			}
+		}
+		return result;
 	}
 };
 
@@ -4564,10 +4598,233 @@ Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
 Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
 
 /**
- * A singleton class to manage some global settings of widgets on HTML document.
+ * An abstract class to receive UI and other events on web page document or other destination (e.g., shadowRoot).
  * User should not use this class directly.
  * @class
  * @augments ObjectEx
+ */
+Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
+/** @lends Kekule.Widget.BaseEventsReceiver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.BaseEventsReceiver',
+	/** @constructs */
+	initialize: function($super, doc, eventRootObj)
+	{
+		this._document = doc || Kekule.$jsRoot.document;
+		this._eventRootObj = eventRootObj || this._document.documentElement;
+
+		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		this.reactDomNodeInsertEventBind = this.reactDomNodeInsertEvent.bind(this);
+		this.reactDomNodeRemoveEventBind = this.reactDomNodeRemoveEvent.bind(this);
+
+		$super();
+
+		var self = this;
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+		(function() { Kekule.X.domReady(self.domReadyInit.bind(self), this._document); }).defer();
+	},
+	/** @ignore */
+	finalize: function($super)
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.uninstallGlobalDomMutationHandlers(rootObj);
+			this.uninstallGlobalEventHandlers(rootObj);
+		}
+		$super();
+	},
+
+	/** @private */
+	getEventRootObj: function()
+	{
+		return this._eventRootObj;
+	},
+
+	/** @private */
+	domReadyInit: function()
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.installGlobalEventHandlers(rootObj);
+			this.installGlobalDomMutationHandlers(rootObj);
+		}
+	},
+
+	/**
+	 * Install UI event (mousemove, click...) handlers to target.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalEventHandlers: function(target)
+	{
+		if (!this._globalEventInstalled)
+		{
+			var events = Kekule.Widget.UiEvents;
+			for (var i = 0, l = events.length; i < l; ++i)
+			{
+				if (events[i] === 'touchstart' || events[i] === 'touchmove' || events[i] === 'touchend')  // explicit set passive to true for scroll performance on mobile devices
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind, {passive: true});
+				else
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
+			}
+			this._globalEventInstalled = true;
+		}
+	},
+	/**
+	 * Uninstall UI event (mousemove, click...) handlers from target.
+	 * @param {HTMLElement} element
+	 * @private
+	 */
+	uninstallGlobalEventHandlers: function(target)
+	{
+		var events = Kekule.Widget.UiEvents;
+		for (var i = 0, l = events.length; i < l; ++i)
+		{
+			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
+		}
+	},
+
+	/**
+	 * Install handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalDomMutationHandlers: function(target)
+	{
+		var self = this;
+		if (Kekule.X.MutationObserver && Kekule.DomUtils.isElement(target))
+		{
+			var observer = new Kekule.X.MutationObserver(
+				function(mutations)
+				{
+					self.reactDomMutation(mutations);
+					/*
+					for (var i = 0, l = mutations.length; i < l; ++i)
+					{
+						var m = mutations[i];
+						if (m.type === 'childList')  // dom tree changes
+						{
+							var nodes = m.addedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomAddedElem(node);
+								}
+							}
+							var nodes = m.removedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomRemovedElem(node);
+								}
+							}
+						}
+					}
+					*/
+				});
+			observer.observe(target, {
+				childList: true,
+				subtree: true
+			});
+			this._domMutationObserver = observer;
+		}
+		else // traditional DOM event method
+		{
+			/*
+			this._reactDomNodeInserted = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomAddedElem(target);
+				}
+			};
+			this._reactDomNodeRemoved = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomRemovedElem(target);
+				}
+			};
+			*/
+			Kekule.X.Event.addListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+		}
+	},
+	/**
+	 * Uninstall handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	uninstallGlobalDomMutationHandlers: function(target)
+	{
+		if (this._domMutationObserver)
+			this._domMutationObserver.disconnect();
+		if (this._reactDomNodeInserted)
+			Kekule.X.Event.removeListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+		if (this._reactDomNodeRemoved)
+			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+	},
+
+	/**
+	 * React to UI events.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactUiEvent: function(e)
+	{
+		// do nothing here, descendants should override this method
+	},
+
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeInsertEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeRemoveEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM mutations in mutation observer.
+	 * This function is used only when DOM mutation observer is available in browser.
+	 * Descendants should override this method.
+	 * @param {Array} mutations
+	 * @private
+	 */
+	reactDomMutation: function(mutations)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * A singleton class to manage some global settings of widgets on HTML document.
+ * User should not use this class directly.
+ * @class
+ * @augments Kekule.Widget.BaseEventsReceiver
  *
  * @param {HTMLDocument} doc
  *
@@ -4593,7 +4850,7 @@ Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
  * @name Kekule.Widget.GlobalManager#widgetFinalize
  * @event
  */
-Kekule.Widget.GlobalManager = Class.create(ObjectEx,
+Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 /** @lends Kekule.Widget.GlobalManager# */
 {
 	/** @private */
@@ -4602,13 +4859,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	INFO_FIELD: '__$info__',
 	/** @private */
 	ISOLATED_LAYER_FIELD: '__$isolated_layer__',
+	/** @private */
+	TOPMOST_LAYER_FIELD: '__$topmost_layer__',
+	/** @private */
+	THEME_LOADED_FIELD: '__$theme_loaded__',
 	/** @constructs */
 	initialize: function($super, doc)
 	{
-		$super();
 		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
+		this._globalSysElems = [];  // private, system elements such as top layer, isolated layer, etc.
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
 		this.setPropStoreFieldValue('modalWidgets', []);
@@ -4624,7 +4885,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.react_keydown_binding = this.react_keydown.bind(this);
 		this.react_touchstart_binding = this.react_touchstart.bind(this);
 		*/
-		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		//this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
 		this.reactWindowResizeBind = this.reactWindowResize.bind(this);
 		/*
@@ -4633,16 +4894,18 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (window)
 			this.installWindowEventHandlers(window);
 		*/
-		Kekule.X.domReady(this.domReadyInit.bind(this));
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+
+		$super(this._document, this._document.documentElement);
 	},
 	/** @ignore */
 	finalize: function($super)
 	{
 		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
-		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
-		this.uninstallGlobalEventHandlers(this._document.body);
+		//this.uninstallGlobalEventHandlers(this._document.documentElement);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
@@ -4683,14 +4946,72 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	domReadyInit: function()
+	domReadyInit: function($super)
 	{
-		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		$super();
+		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
 		//this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
-		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		this.installWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
+	},
+
+	/** @private */
+	getDefaultContextRootElem: function()
+	{
+		return this.getDocContextRootElem();
+	},
+	/** @private */
+	getDocContextRootElem: function()
+	{
+		return this._document.body;
+	},
+
+	/** @private */
+	_detectIfThemeLoaded: function(contextRootElem)
+	{
+		// check if Kekule theme css is loaded in context
+		var result = contextRootElem[this.THEME_LOADED_FIELD];
+		if (!result)  // further check
+		{
+			var doc = contextRootElem.ownerDocument;
+			var detectorElem = doc.createElement('span');
+			detectorElem.className = 'K-StyleSheet-Detector';  // a fixed detector class
+			detectorElem.style.visibility = 'hidden';
+			contextRootElem.appendChild(detectorElem);
+			var zIndex = Kekule.StyleUtils.getComputedStyle(detectorElem, 'z-index');
+			if (zIndex == -88888)  // a fixed probe value, if equal, the stylesheet is loaded
+			{
+				result = true;
+				contextRootElem[this.THEME_LOADED_FIELD] = result;
+			}
+			else
+				result = false;
+			contextRootElem.removeChild(detectorElem);
+		}
+		return result;
+	},
+
+	/**
+	 * Load the theme CSS file in context.
+	 * @param {HTMLElement} contextRootElem
+	 * @param {String} themeName
+	 */
+	loadTheme: function(contextRootElem, themeName)
+	{
+		if (!contextRootElem)
+			contextRootElem = this.getDefaultContextRootElem();
+		var loaded = this._detectIfThemeLoaded(contextRootElem);
+		if (!loaded)
+		{
+			var themeUrl = Kekule.Widget.Utils.getThemeUrl(themeName);
+			var doc = contextRootElem.ownerDocument;
+			var styleElem = doc.createElement('style');
+			styleElem.innerHTML = '@import "' + themeUrl + '"';
+			contextRootElem.appendChild(styleElem);
+			contextRootElem[this.THEME_LOADED_FIELD] = true;
+		}
 	},
 
 	/**
@@ -4883,11 +5204,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	*/
-	/**
+	/*
 	 * Install UI event (mousemove, click...) handlers to element.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalEventHandlers: function(target)
 	{
 		if (!this._globalEventInstalled)
@@ -4903,11 +5225,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._globalEventInstalled = true;
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall UI event (mousemove, click...) handlers from old mainContextElement.
 	 * @param {HTMLElement} element
 	 * @private
 	 */
+	/*
 	uninstallGlobalEventHandlers: function(target)
 	{
 		var events = Kekule.Widget.UiEvents;
@@ -4916,6 +5240,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
 		}
 	},
+	*/
 	/**
 	 * Install event handlers on window object.
 	 * @param {Window} win
@@ -4965,11 +5290,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._hammertime.off(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
 	},
 
-	/**
+	/*
 	 * Install handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalDomMutationHandlers: function(target)
 	{
 		var self = this;
@@ -5032,11 +5358,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	uninstallGlobalDomMutationHandlers: function(target)
 	{
 		if (this._domMutationObserver)
@@ -5046,6 +5374,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this._reactDomNodeRemoved)
 			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 	},
+	*/
 	/** @private */
 	_handleDomAddedElem: function(elem)
 	{
@@ -5175,9 +5504,74 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return null;  // no mapping event, returns null
 	},
 
-	/** @private */
-	reactUiEvent: function(e)
+	/** @ignore */
+	reactDomNodeInsertEvent: function($super, e)
 	{
+		$super(e);
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			if (!this._isGlobalSysElement(target))
+				this._handleDomAddedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomNodeRemoveEvent: function($super, e)
+	{
+		$super(e);
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			if (!this._isGlobalSysElement(target))
+				this._handleDomRemovedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomMutation: function($super, mutations)
+	{
+		$super(mutations);
+		for (var i = 0, l = mutations.length; i < l; ++i)
+		{
+			var m = mutations[i];
+			if (m.type === 'childList')  // dom tree changes
+			{
+				//console.log('---------------------- Mutation --------------------');
+				//console.log(m, m.addedNodes, m.removedNodes);
+				var nodes = m.addedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node added', node, node.parentNode);
+							this._handleDomAddedElem(node);
+						}
+					}
+				}
+				var nodes = m.removedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node removed', node, node.parentNode);
+							this._handleDomRemovedElem(node);
+						}
+					}
+				}
+			}
+		}
+	},
+
+	/** @ignore */
+	reactUiEvent: function($super, e)
+	{
+		$super(e);
+
 		var evType = e.getType();
 
 		// get target widget to dispatch event
@@ -5619,7 +6013,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
-		var topmostLayer = this.getTopmostLayer(doc, true);
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+		var topmostLayer = this.getTopmostLayer(doc, true, contextRootElem);
+
 		var isOnTopLayer = popupElem.parentNode === topmostLayer;
 
 		// calc widget position
@@ -5654,7 +6050,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 		else  // if (showType === ST.POPUP)
 		{
-			posInfo = this._calcPopupWidgetPosInfo(popupWidget, isOnTopLayer);
+			posInfo = this._calcPopupWidgetPosInfo(popupWidget, invokerWidget, isOnTopLayer);
 		}
 
 		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
@@ -5680,9 +6076,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 
 		if (!isOnTopLayer)
-			this.moveElemToTopmostLayer(popupElem);
+			this.moveElemToTopmostLayer(popupElem, null, contextRootElem);
 		else  // even is elem is on topmost layer, still append it to tail
-			this.moveElemToTopmostLayer(popupElem, true);
+			this.moveElemToTopmostLayer(popupElem, true, contextRootElem);
+
 		if (posInfo)
 		{
 			// set style
@@ -5717,7 +6114,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	_calcPopupWidgetPosInfo: function(widget, isOnTopLayer)
+	_calcPopupWidgetPosInfo: function(widget, invokerWidget, isOnTopLayer)
 	{
 		var result;
 		var EU = Kekule.HtmlElementUtils;
@@ -5727,6 +6124,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			elem.style.visible = 'hidden';
 			elem.style.display = '';
+		}
+
+		var manualAppended = false;
+		var isolatedLayer;
+		//if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
+		if (!Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true}))  // not in DOM, put in isolate layer first to calculate dimensions
+		{
+			var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+			isolatedLayer = this.getIsolatedLayer(widget.getDocument(), true, contextRootElem);
+			isolatedLayer.appendChild(elem);
+			manualAppended = true;
 		}
 
 		var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
@@ -5743,6 +6151,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				result.left = clientRect.left + 'px';
 			}
 		}
+
+		// then remove from DOM tree
+		if (manualAppended)
+		{
+			isolatedLayer.removeChild(elem);
+		}
+
 		return result;
 	},
 	/** @private */
@@ -5758,6 +6173,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
 		//var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
@@ -5768,7 +6184,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		dropElem.style.display = '';
 		var manualAppended = false;
 		//var topmostLayer = this.getTopmostLayer(dropElem.ownerDocument);
-		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true);
+		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true, contextRootElem);
 		//if (!dropElem.parentNode)
 		{
 			//invokerElem.appendChild(dropElem);
@@ -6068,6 +6484,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
     widget.addClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.pushUnique(this.getPopupWidgets(), widget);
+		//console.log('register', this.getPopupWidgets(), widget.getClassName());
 	},
 	/**
 	 * Notify the manager that an popup widget is hidden.
@@ -6082,6 +6499,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
     widget.removeClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
+		//console.log('unregister', this.getPopupWidgets(), widget.getClassName());
 	},
 	/**
 	 * Notify the manager that an dialog widget is shown.
@@ -6143,7 +6561,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 
 	/** @private */
-	prepareModalWidget: function(widget)
+	prepareModalWidget: function(widget, caller)
 	{
 		// create a modal background and then relocate dialog element on it
 		var doc = widget.getDocument();
@@ -6154,6 +6572,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			bgElem = doc.createElement('div');
 			bgElem.className = CNS.MODAL_BACKGROUND;
 			this.setPropStoreFieldValue('modalBackgroundElem', bgElem);
+			this._globalSysElems.push(bgElem);
 		}
 		var elem = widget.getElement();
 		widget.setModalInfo({
@@ -6167,8 +6586,15 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		if (bgElem.parentNode)
 			bgElem.parentNode.removeChild(bgElem);
+		/*
 		doc.body.appendChild(bgElem);
 		doc.body.appendChild(elem);  // append widget elem on background
+		*/
+
+		var rootElem = this.getWidgetContextRootElement(caller);
+		//console.log(rootElem, widget);
+		rootElem.appendChild(bgElem);
+		rootElem.appendChild(elem);
 
 		this.registerModalWidget(widget);
 	},
@@ -6231,14 +6657,48 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns the root element of widget context, usually the document.documentElement.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @returns {HTMLElement}
+	 */
+	getWidgetContextRootElement: function(widget)
+	{
+		if (widget && widget.getDocument)
+			return widget.getDocument().body;
+		else  // widget is null
+			return this._document.body;
+	},
+
+	/**
 	 * Get top most layer previous created in document.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 */
-	getTopmostLayer: function(doc, canCreate)
+	getTopmostLayer: function(doc, canCreate, contextRootElem)
 	{
+		/*
 		var body = doc.body;
 		return body;
+		*/
+		var doc = contextRootElem.ownerDocument;
+		var result = contextRootElem[this.TOPMOST_LAYER_FIELD];
+		if (!result)
+		{
+			if (canCreate)
+			{
+				result = this._createTopmostLayer(doc, contextRootElem);
+				contextRootElem.appendChild(result);
+				contextRootElem[this.TOPMOST_LAYER_FIELD] = result;
+				this._globalSysElems.push(result);
+			}
+		}
+		else
+		{
+			// check if oldLayer is the last child of root
+			if (contextRootElem.lastChild !== result)
+				contextRootElem.appendChild(result);
+		}
+		return result;
 
 		/*
 		var child = body.lastChild;
@@ -6251,44 +6711,49 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return child;
 		*/
 	},
-	/*
+	/**
 	 * Create a topmost transparent element in document to put drop down and popup widgets.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
-	 * @deprecated
+	 * @private
 	 */
-	/*
-	createTopmostLayer: function(doc)
+	_createTopmostLayer: function(doc, contextRootElem)
 	{
 		var div = doc.createElement('div');
 		div.className = CNS.TOP_LAYER;
-		doc.body.appendChild(div);
 		return div;
 	},
-	*/
 	/**
 	 * Get isolated layer previous created in document.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 * @private
 	 */
-	getIsolatedLayer: function(doc, canCreate)
+	getIsolatedLayer: function(doc, canCreate, contextRootElem)
 	{
-		var result = doc[this.ISOLATED_LAYER_FIELD];
+		var result = contextRootElem[this.ISOLATED_LAYER_FIELD];
 		if (!result && canCreate)
 		{
-			result = this._createIsolatedLayer(doc);
-			doc[this.ISOLATED_LAYER_FIELD] = result;
+			result = this._createIsolatedLayer(doc, contextRootElem);
+			this._globalSysElems.push(result);
+			contextRootElem.appendChild(result);
+			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
 		return result;
 	},
 	/** @private */
-	_createIsolatedLayer: function(doc)
+	_createIsolatedLayer: function(doc, contextRootElem)
 	{
 		var div = doc.createElement('div');
 		div.className = CNS.ISOLATED_LAYER;
-		doc.body.appendChild(div);
+		//doc.body.appendChild(div);
 		return div;
+	},
+
+	/** @private */
+	_isGlobalSysElement: function(elem)
+	{
+		return this._globalSysElems.indexOf(elem) >= 0;
 	},
 
 	/** @private */
@@ -6316,7 +6781,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 * @param {HTMLElement} elem
 	 * @private
 	 */
-	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo)
+	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo, contextRootElem)
 	{
 		// store elem's old position info first
 		/*
@@ -6333,7 +6798,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			info.nextSibling = elem.nextSibling;
 		}
 
-		var layer = this.getTopmostLayer(elem.ownerDocument);
+		var layer = this.getTopmostLayer(elem.ownerDocument, true, contextRootElem);
 		layer.appendChild(elem);
 	},
 	/**

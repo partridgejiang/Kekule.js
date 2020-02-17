@@ -186,13 +186,32 @@ Kekule.DomUtils = {
 		return result;
 	},
 	/**
+	 * Returns the parent node of node.
+	 * @param {Node} node
+	 * @param {Hash} options Currently the options can be {acrossShadowRoot: bool}.
+	 * @returns {Node}
+	 */
+	getParentNode: function(node, options)
+	{
+		var op = options || {};
+		var result = node.parentNode;
+		if (result)
+			return result;
+		else if (op.acrossShadowRoot && node.host)  // host of shadow node
+			return node.host;
+		else
+			return null;
+	},
+	/**
 	 * Check if childElem is inside parentElem.
 	 * @param {Object} childElem
 	 * @param {Object} parentElem
+	 * @param {Hash} options Currently the options can be {acrossShadowRoot: bool}.
 	 * @returns {Bool}
 	 */
-	isDescendantOf: function(childElem, parentElem)
+	isDescendantOf: function(childElem, parentElem, options)
 	{
+		var op = options || {};
 		try
 		{
 			if (childElem && parentElem)
@@ -202,12 +221,13 @@ Kekule.DomUtils = {
 				if (childElem.ownerDocument === parentElem)   // parent is document
 					return true;
 
-				var parent = childElem.parentNode;
+				var getParent = Kekule.DomUtils.getParentNode;
+				var parent =  getParent(childElem, op); // childElem.parentNode;
 				while (parent)
 				{
 					if (parent === parentElem)
 						return true;
-					parent = parent.parentNode;
+					parent = getParent(parent, op); //parent.parentNode;
 				}
 			}
 			return false;
@@ -221,11 +241,12 @@ Kekule.DomUtils = {
 	 * Check if childElem is inside parentElem or is parentElem itself.
 	 * @param {Object} childElem
 	 * @param {Object} parentElem
+	 * @param {Hash} options Currently the options can be {acrossShadowRoot: bool}.
 	 * @returns {Bool}
 	 */
-	isOrIsDescendantOf: function(childElem, parentElem)
+	isOrIsDescendantOf: function(childElem, parentElem, options)
 	{
-		return (childElem === parentElem) || Kekule.DomUtils.isDescendantOf(childElem, parentElem);
+		return (childElem === parentElem) || Kekule.DomUtils.isDescendantOf(childElem, parentElem, options);
 	},
 	/**
 	 * Get nearest ancestor element with specified tag name.
@@ -516,18 +537,50 @@ Kekule.DomUtils = {
 	 * Check if node has been inserted to DOM tree of document.
 	 * @param {DOMNode} node
 	 * @param {Document} doc
+	 * @param {Hash} options Currently the options can be {acrossShadowRoot: bool}.
 	 * @returns {Bool}
 	 */
-	isInDomTree: function(node, doc)
+	isInDomTree: function(node, doc, options)
 	{
+		var op = options || {};
 		if (!node)
 			return false;
 		if (!doc)
 			doc = node.ownerDocument;
 		if (doc)
 		{
-			var docElem = doc.documentElement;
-			return Kekule.DomUtils.isDescendantOf(node, docElem) || node === docElem;
+			if (!op.acrossShadowRoot && node.getRootNode)
+			{
+				return (node.getRootNode() === doc);
+			}
+			else
+			{
+				var docElem = doc.documentElement;
+				return Kekule.DomUtils.isDescendantOf(node, docElem, options) || node === docElem;
+			}
+		}
+		else
+			return false;
+	},
+
+	/**
+	 * Check if node is in a shadow root context.
+	 * @param {Node} node
+	 * @returns {Bool}
+	 */
+	isInShadowRoot: function(node)
+	{
+		if (typeof(ShadowRoot) !== 'undefined')
+		{
+			try
+			{
+				var rootNode = node.getRootNode && node.getRootNode();
+				return rootNode instanceof ShadowRoot;
+			}
+			catch(e)
+			{
+				return false;
+			}
 		}
 		else
 			return false;
