@@ -274,6 +274,20 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		this._reflectingChangedAttributes = [];
 	}
 
+	connectedCallback()
+	{
+		// set up prop values from attribute
+		var attribNames = this.getAttributeNames();
+		var observedAttribNames = this.constructor.observedAttributes;
+		attribNames = Kekule.ArrayUtils.intersect(attribNames, observedAttribNames);
+		for (var i = 0, l = attribNames.length; i < l; ++i)
+		{
+			var value = this.getAttribute(attribNames[i]);
+			console.log('connectedCallback', this.widget.getClassName(), attribNames[i], value);
+			Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, attribNames[i], value);
+		}
+	}
+
 	static get observedAttributes()
 	{
 		var attributes = [];
@@ -290,15 +304,6 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		return attributes;
 	}
 
-	connectedCallback()
-	{
-		/*
-		this.style.display = 'inline-block';
-		this.style.position = 'relative';
-		this.style.verticalAlign = 'bottom';
-		*/
-	}
-
 	attributeChangedCallback(name, oldVal, newVal)
 	{
 		if (!this._isChangingPropFromAttribute(name))  // avoid recurse
@@ -306,6 +311,7 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 			try
 			{
 				this._reflectingChangedAttributes.push(name);
+				console.log('attributeChangedCallback', this.widget.getClassName(), name, newVal);
 				Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, name, newVal);
 			}
 			finally
@@ -491,10 +497,18 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 	_createWidget(widgetClass, shadow)
 	{
 		this._widget = new widgetClass(this.ownerDocument);
-		var style = this._widget.getElement().style;
-		style.width = '100%';
-		style.height = '100%';  // widget fulfill the component element
-		this._widget.appendToElem(shadow);
+		this._widget.beginUpdate();
+		try
+		{
+			var style = this._widget.getElement().style;
+			style.width = '100%';
+			style.height = '100%';  // widget fulfill the component element
+			this._widget.appendToElem(shadow);
+		}
+		finally
+		{
+			this._widget.endUpdate();
+		}
 		return this._widget;
 	}
 
