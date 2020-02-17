@@ -283,7 +283,6 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		for (var i = 0, l = attribNames.length; i < l; ++i)
 		{
 			var value = this.getAttribute(attribNames[i]);
-			console.log('connectedCallback', this.widget.getClassName(), attribNames[i], value);
 			Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, attribNames[i], value);
 		}
 	}
@@ -311,7 +310,6 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 			try
 			{
 				this._reflectingChangedAttributes.push(name);
-				console.log('attributeChangedCallback', this.widget.getClassName(), name, newVal);
 				Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, name, newVal);
 			}
 			finally
