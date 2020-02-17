@@ -82,7 +82,9 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 				if (!result)
 				{
 					result = new Kekule.Widget.SysMsgGroup(this.getDocument());
-					result.appendToElem(this.getDocument().body);
+					//result.appendToElem(this.getDocument().body);
+					var GM = result.getGlobalManager();
+					result.appendToElem(GM.getDefaultContextRootElem());
 					this.setPropStoreFieldValue('sysMsgGroup', result);
 				}
 				return result;
