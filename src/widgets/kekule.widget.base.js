@@ -4869,6 +4869,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
+		this._globalSysElems = [];  // private, system elements such as top layer, isolated layer, etc.
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
 		this.setPropStoreFieldValue('modalWidgets', []);
@@ -5505,7 +5506,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		var target = e.getTarget();
 		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
 		{
-			this._handleDomAddedElem(target);
+			if (!this._isGlobalSysElement(target))
+				this._handleDomAddedElem(target);
 		}
 	},
 	/** @ignore */
@@ -5515,7 +5517,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		var target = e.getTarget();
 		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
 		{
-			this._handleDomRemovedElem(target);
+			if (!this._isGlobalSysElement(target))
+				this._handleDomRemovedElem(target);
 		}
 	},
 	/** @ignore */
@@ -5535,8 +5538,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 					var node = nodes[j];
 					if (node.nodeType === Node.ELEMENT_NODE)
 					{
-						//console.log('DOM node added', node, node.parentNode);
-						this._handleDomAddedElem(node);
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node added', node, node.parentNode);
+							this._handleDomAddedElem(node);
+						}
 					}
 				}
 				var nodes = m.removedNodes;
@@ -5545,8 +5551,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 					var node = nodes[j];
 					if (node.nodeType === Node.ELEMENT_NODE)
 					{
-						//console.log('DOM node removed', node, node.parentNode);
-						this._handleDomRemovedElem(node);
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node removed', node, node.parentNode);
+							this._handleDomRemovedElem(node);
+						}
 					}
 				}
 			}
@@ -6674,6 +6683,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 				result = this._createTopmostLayer(doc, contextRootElem);
 				contextRootElem.appendChild(result);
 				contextRootElem[this.TOPMOST_LAYER_FIELD] = result;
+				this._globalSysElems.push(result);
 			}
 		}
 		else
@@ -6719,6 +6729,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		if (!result && canCreate)
 		{
 			result = this._createIsolatedLayer(doc, contextRootElem);
+			this._globalSysElems.push(result);
 			contextRootElem.appendChild(result);
 			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
@@ -6731,6 +6742,12 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		div.className = CNS.ISOLATED_LAYER;
 		//doc.body.appendChild(div);
 		return div;
+	},
+
+	/** @private */
+	_isGlobalSysElement: function(elem)
+	{
+		return this._globalSysElems.indexOf(elem) >= 0;
 	},
 
 	/** @private */
