@@ -4960,6 +4960,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	/** @private */
 	getDefaultContextRootElem: function()
 	{
+		return this.getDocContextRootElem();
+	},
+	/** @private */
+	getDocContextRootElem: function()
+	{
 		return this._document.body;
 	},
 

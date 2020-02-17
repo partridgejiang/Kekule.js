@@ -59,6 +59,7 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 		this._globalManager = globalManager;
 		$super(doc, eventRoot);
 		this._isInShadow = eventRoot && DU.isInShadowRoot(eventRoot);
+		this._globalManager.setHasWebComponentContext(true);  // notify GM that web component context has been built
 	},
 
 	/**
@@ -178,8 +179,9 @@ if (typeof(customElements) !== 'undefined')
 /** @ignore */
 Kekule.WebComponent.widgetWrapperPopupHost = null;
 
-ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getWidgetContextRootElement', function($origin, widget){
-	if (widget && widget.isWrappedInWebComponent())
+ClassEx.extend(Kekule.Widget.GlobalManager, {
+	/** @private */
+	getWebComponentContextRootElem: function()
 	{
 		if (!Kekule.WebComponent.widgetWrapperPopupHost)
 		{
@@ -188,10 +190,56 @@ ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getWidgetContextRootElement',
 		}
 		Kekule.WebComponent.widgetWrapperPopupHost.ensureToBeLast(); // ensure it is always the last element in body
 		return Kekule.WebComponent.widgetWrapperPopupHost.hostElem;
+	},
+	isWidgetEnvironmentSetupIn: function(contextName)
+	{
+		if (contextName === 'webComponent')
+			return !!this.getHasWebComponentContext();
+		else   // default, document context
+		{
+			if (!this._docContextEnvironmentSetup)
+			{
+				var defThemeLoaded = this._detectIfThemeLoaded(this.getDocContextRootElem());
+				if (defThemeLoaded)  // document context already setup, store it
+				{
+					this._docContextEnvironmentSetup = true;
+				}
+			}
+			return this._docContextEnvironmentSetup;
+		}
+	}
+});
+
+ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getWidgetContextRootElement', function($origin, widget){
+	if (widget && widget.isWrappedInWebComponent())
+	{
+		/*
+		if (!Kekule.WebComponent.widgetWrapperPopupHost)
+		{
+			Kekule.WebComponent.widgetWrapperPopupHost = new WebComponentContextPopupHost();
+			document.body.appendChild(Kekule.WebComponent.widgetWrapperPopupHost);
+		}
+		Kekule.WebComponent.widgetWrapperPopupHost.ensureToBeLast(); // ensure it is always the last element in body
+		return Kekule.WebComponent.widgetWrapperPopupHost.hostElem;
+		*/
+		return this.getWebComponentContextRootElem();
 	}
 	else
 		return $origin(widget);
 });
+ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getDefaultContextRootElem', function($origin){
+	if (this.isWidgetEnvironmentSetupIn('document'))
+		return this.getDocContextRootElem();
+	else if (this.isWidgetEnvironmentSetupIn('webComponent'))
+		return this.getWebComponentContextRootElem();
+	else
+		return $origin();
+});
+
+
+// A special property indicating whether the web component context has been built
+ClassEx.defineProp(Kekule.Widget.GlobalManager, 'hasWebComponentContext', {'dataType': DataType.BOOL, 'serializable': false});
+
 
 ClassEx.extend(Kekule.Widget.BaseWidget, {
 	isWrappedInWebComponent: function()
