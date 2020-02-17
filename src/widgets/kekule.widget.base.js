@@ -6114,7 +6114,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		var manualAppended = false;
 		var isolatedLayer;
-		if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
+		//if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
+		if (!Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true}))  // not in DOM, put in isolate layer first to calculate dimensions
 		{
 			var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
 			isolatedLayer = this.getIsolatedLayer(widget.getDocument(), true, contextRootElem);
@@ -6576,7 +6577,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		*/
 
 		var rootElem = this.getWidgetContextRootElement(caller);
-		console.log(rootElem, widget);
+		//console.log(rootElem, widget);
 		rootElem.appendChild(bgElem);
 		rootElem.appendChild(elem);
 
