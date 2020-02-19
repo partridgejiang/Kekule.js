@@ -176,6 +176,25 @@ Kekule.WebComponent.WebComponentContextPopupHost = WebComponentContextPopupHost;
 if (typeof(customElements) !== 'undefined')
 	customElements.define('kekule-webcomponent-popup-host', WebComponentContextPopupHost);
 
+////////////// Extend Container /////////////////
+/*
+ClassEx.extendMethod(Kekule.Widget.Container, 'getChildHolderSlot', function($origin){
+	if (Kekule.BrowserFeature.htmlSlot)
+	{
+		var elem = this.getChildrenHolderElement();
+		if (elem && elem.tagName.toLowerCase() === 'slot')
+			return elem;
+	}
+	return null;
+});
+ClassEx.defineProp(Kekule.Widget.Container, 'childHolderSlotName', {
+	'dataType': DataType.STRING, 'serializable': false,
+	'getter': function() { var elem = this.getChildHolderSlot(); return elem && elem.name; },
+	'setter': function(value) { var elem = this.getChildHolderSlot(); if (elem) elem.name = value; }
+});
+*/
+
+////////////// Extend GlobalManager /////////////////
 /** @ignore */
 Kekule.WebComponent.widgetWrapperPopupHost = null;
 
@@ -283,7 +302,8 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		for (var i = 0, l = attribNames.length; i < l; ++i)
 		{
 			var value = this.getAttribute(attribNames[i]);
-			Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, attribNames[i], value);
+			//Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, attribNames[i], value);
+			this._setWidgetPropValueFromAttribute(attribNames[i], value);
 		}
 	}
 
@@ -300,6 +320,7 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 				attributes.push('data-' + pname.dasherize());
 			}
 		}
+		//Kekule.ArrayUtils.pushUnique(attributes, 'slot-name');  // always observe this
 		return attributes;
 	}
 
@@ -310,13 +331,23 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 			try
 			{
 				this._reflectingChangedAttributes.push(name);
-				Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, name, newVal);
+				this._setWidgetPropValueFromAttribute(name, newVal);
 			}
 			finally
 			{
 				Kekule.ArrayUtils.remove(this._reflectingChangedAttributes, name);
 			}
 		}
+	}
+
+	_setWidgetPropValueFromAttribute(attribName, value)
+	{
+		/*
+		if (attribName === 'slot-name')
+			this.slotName = value;
+		else
+		*/
+		Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this.widget, attribName, value);
 	}
 
 	_isChangingPropFromAttribute(attribName)
@@ -501,6 +532,7 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 			var style = this._widget.getElement().style;
 			style.width = '100%';
 			style.height = '100%';  // widget fulfill the component element
+			//this._installSlotEventHandler(this._widget);
 			this._widget.appendToElem(shadow);
 		}
 		finally
@@ -510,11 +542,44 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		return this._widget;
 	}
 
+	/*
+	_installSlotEventHandler(widget)
+	{
+		//var EU = Kekule.
+		if (widget.getChildHolderSlot)
+		{
+			widget.getElement().addEventListener('slotchange', function(e){
+				var slot = widget.getChildHolderSlot()
+				if (slot && slot === e.target)
+				{
+					if (Kekule.DomUtils.isElement(e.currentTarget))
+					{
+						var currTargetWidget = Kekule.Widget.getWidgetOnElem(e.currentTarget);
+						if (currTargetWidget)
+						{
+							var assignedNodes = slot.assignedNodes();
+							if (assignedNodes.indexOf(e.currentTarget) < 0)  // a new node added
+							{
+								//widget.childWidgetAdded(currTargetWidget);
+								//console.log('widget inserted', currTargetWidget.getClassName(), e.currentTarget);
+							}
+							else  // old node removed
+							{
+								widget.childWidgetRemoved(currTargetWidget);
+							}
+							//console.log(e.target, slot.assignedNodes(), e.target in slot.assignedNodes());
+						}
+					}
+				}
+			});
+		}
+	}
+  */
 	_prepareStyles(shadow)
 	{
 		Kekule.Widget.globalManager.loadTheme(shadow);
 		var styleElem = shadow.ownerDocument.createElement('style');
-		styleElem.innerHTML = ':host { display: inline-block; position: relative; vertical-align: bottom }\n' +
+		styleElem.innerHTML = ':host { display: inline-block; position: relative; vertical-align: bottom; }\n' +
 			':host([hidden]) { display: none }';
 		shadow.appendChild(styleElem);
 	}
@@ -537,6 +602,16 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 	{
 		return this._widget;
 	}
+	/*
+	get slotName()
+	{
+		return this.widget.getChildHolderSlotName();
+	}
+	set slotName(value)
+	{
+		this.widget.setChildHolderSlotName(value);
+	}
+	*/
 };
 
 /**
