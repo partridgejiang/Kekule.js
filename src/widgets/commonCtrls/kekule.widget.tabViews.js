@@ -342,7 +342,8 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	{
 		var tabBtnContainer = doc.createElement('div');
 		tabBtnContainer.className = CNS.TABVIEW_TABBUTTON_CONTAINER;
-		var pageContainer = doc.createElement('div');
+		//var pageContainer = doc.createElement('div');
+		var pageContainer = this.doCreateContainerElement(doc, null, 'div');
 		pageContainer.className = CNS.TABVIEW_PAGE_CONTAINER;
 		this._tabBtnContainer = tabBtnContainer;
 		this._pageContainer = pageContainer;
