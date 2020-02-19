@@ -80,6 +80,8 @@ Kekule.BrowserFeature = {
 		//return Kekule.BrowserFeature.webgl;
 		return !!result;
 	})(),
+	htmlTemplate: !!win.HTMLTemplateElement,
+	htmlSlot: !!win.HTMLSlotElement,
 	downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
 	blob: !!win.Blob,
 	workers: !! win.Worker,
