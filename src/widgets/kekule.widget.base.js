@@ -38,6 +38,23 @@ Kekule.Widget = {
 };
 
 /**
+ * Enumeration of predefined widget html element tag names.
+ * @ignore
+ */
+Kekule.Widget.HtmlTagNames = {
+	CHILD_SLOT_HOLDER: 'slot',
+	CHILD_HOLDER: 'span'
+};
+
+/**
+ * Enumeration of predefined widget html element names.
+ * @ignore
+ */
+Kekule.Widget.HtmlNames = {
+	CHILD_HOLDER: 'children'
+};
+
+/**
  * Enumeration of predefined widget element class names.
  * @ignore
  */
@@ -46,6 +63,8 @@ Kekule.Widget.HtmlClassNames = {
 	BASE: 'K-Widget',
 	/** Child widget dynamic created by parent widget. */
 	DYN_CREATED: 'K-Dynamic-Created',
+	/** Container element to hold child widgets */
+	CHILD_HOLDER: 'K-Child-Holder',
 	/* A top most layer. */
 	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */

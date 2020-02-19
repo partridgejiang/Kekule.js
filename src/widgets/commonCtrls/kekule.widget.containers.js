@@ -45,6 +45,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	/** @construct */
 	initialize: function($super, parentOrElementOrDocument)
 	{
+		this._defContainerElem = null;
 	  $super(parentOrElementOrDocument);
 		this.reactShowStateChangeBind = this.reactShowStateChange.bind(this);
 		this.addEventListener('showStateChange', this.reactShowStateChangeBind);
@@ -111,6 +112,31 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		var result = doc.createElement('span');
 		return result;
 	},
+	/** @ignore */
+	doCreateSubElements: function($super, doc, docFragment)
+	{
+		var result = $super(doc, docFragment) || [];
+		var containerElem = this.doCreateContainerElement(doc);
+		this._defContainerElem = containerElem;
+		result.push(containerElem);
+		docFragment.appendChild(containerElem);
+		return result;
+	},
+	/**
+	 * Create a element to hold the child widgets.
+	 * @param {HTMLDocument} doc
+	 * @param {String} name Container name, used for <slot> if possible.
+	 * @param {String} fallbackTagName If <slot> is not available in browser, this tag name will be used to create element.
+	 * @returns {HTMLElement}
+	 */
+	doCreateContainerElement: function(doc, name, fallbackTagName)
+	{
+		var tagName = Kekule.BrowserFeature.htmlSlot? Kekule.Widget.HtmlTagNames.CHILD_HOLDER: (fallbackTagName || 'span');
+		var result = doc.createElement(tagName);
+		result.className = CNS.CHILD_HOLDER;
+		//result.setAttribute('name', name || Kekule.Widget.HtmlNames.CHILD_HOLDER);
+		return result;
+	},
 	/**
 	 * Returns the parent HTML element to hold all child widgets.
 	 * Descendants can override this method.
@@ -118,7 +144,13 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	getContainerElement: function()
 	{
-		return this.getElement();
+		//return this.getElement();
+		return this._defContainerElem || this.getElement();
+	},
+	/** @ignore */
+	getChildrenHolderElement: function()
+	{
+		return this.getContainerElement();
 	},
 
 	/**
@@ -189,7 +221,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	_insertChildWidget: function(widget, refWidget)
 	{
 		var refElem = refWidget? refWidget.getElement(): null;
-		var containerElem = this.getContainerElement();
+		var containerElem = this.getChildrenHolderElement();
 		if (containerElem)
 		{
 			if (refElem)
