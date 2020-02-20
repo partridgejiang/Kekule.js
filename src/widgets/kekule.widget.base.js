@@ -1658,13 +1658,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/**
 	 * Check if widget is a child of current widget.
 	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} cascade If true, the child's children will also be checked.
 	 * @returns {Bool}
 	 */
-	hasChild: function(widget)
+	hasChild: function(widget, cascade)
 	{
-		var index = this.indexOfChild(widget);
+		var children = this.getChildWidgets();
+		var index = children.indexOf(widget);
 		//console.log('Child index: ', index, this.getChildWidgets());
-		return (index >= 0);
+		var result = (index >= 0);
+		if (!result)
+		{
+			for (var i = 0, l = children.length; i < l; ++i)
+			{
+				var child = children[i];
+				if (child.hasChild)
+				{
+					result = child.hasChild(widget, cascade);
+					if (result)
+						break;
+				}
+			}
+		}
+		return result;
 	},
 	/**
 	 * Returns child widget at index
