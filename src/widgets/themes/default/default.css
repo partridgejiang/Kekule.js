@@ -1199,6 +1199,7 @@ table.K-Widget
 {
     width: 12em;
 }
+
 .K-ValueListEditor .K-ValueListEditor-KeyCell, .K-ValueListEditor .K-ValueListEditor-ValueCell
 {
     overflow: hidden;
@@ -1363,6 +1364,45 @@ table.K-Widget
     margin-left: 0.5em;
     white-space: normal;
 }
+
+.K-ObjInspector.K-ObjInspector-Flex-Layout
+{
+    display: inline-flex;
+    flex-direction: column;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-ObjsInfoPanel,
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropInfoPanel,
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-ObjsInfoPanel
+{
+    flex: 0 0 2em;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropInfoPanel
+{
+    flex: 0 0 5em;
+    order: +1;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer
+{
+    flex: 1 1 auto;
+    display: flex;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer .K-PropListEditor
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
 
 /* DataGrid related widgets */
 .K-DataTable table
