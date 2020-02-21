@@ -66,6 +66,10 @@ DU.newRootCategory('chemEditor', 'Chem Editor', 'Demos about the composer (chem 
 	DU.newConcreteDemo('composerCustomization', 'Composer Customization', 'Demo of the UI customization of chemistry editor.', 'chemEditor/composerCustomization.html', null, {'newWindow': false}),
 	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
 ]);	
+DU.newRootCategory('webComponent', 'Web Component', 'Demos about web component wrapper of Kekule.js widgets', [	
+	DU.newConcreteDemo('commonWidgetWrapper', 'Widget Wrapper', 'Demo of the usage of wrapper tool to wrap widget into web component', 'webComponent/commonWidgetWrapper.html', null, {'newWindow': false}),
+	DU.newConcreteDemo('chemWidgetWrapper', 'Chem Widget Component', 'Demo of shipped web component of Viewer, Composer and Periodic Table', 'webComponent/chemWidgetWrapper.html', null, {'newWindow': false}),	
+]);	
 DU.newRootCategory('extra', 'Extra', 'Demos some extra functions of Kekule.js', [
 	DU.newConcreteDemo('ckEditorPlugins', 'Plugins for CKEditor', 'Demonstrates the integration of Kekule.js with web rich text editor.', 'CKEditor/ckeditorDemo.html', 'CKEditor/ckeditorDemo_intro.html'),
 	DU.newConcreteDemo('openBabelGen3D', '3D Structure Generator', 'Generate 3D molecule structure from 2D connection table by force field calculation totally inside web browser.', 'calculation/gen3D.html')
