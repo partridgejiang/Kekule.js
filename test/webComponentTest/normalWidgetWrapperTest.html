@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Component Normal Widget Wrapper Test</title>
+  <style>
+    #stage
+    {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    #stage fieldset
+    {
+      flex: 0 0 auto;
+    }
+  </style>
+  <script src="../../src/kekule.js?min=false&modules=webComponent"></script>
+  <script>
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.Button, 'kekule-button');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.CheckButton, 'kekule-check-button');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.RadioButton, 'kekule-radio-button');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ButtonGroup, 'kekule-button-group');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.Panel, 'kekule-panel');
+
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.TextBox, 'kekule-text-box');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ButtonTextBox, 'kekule-button-text-box');
+
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.TextEditor, 'kekule-text-editor');
+
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ColorPicker, 'kekule-color-picker');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ColorDropTextBox, 'kekule-color-drop-text-box');
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ColorDropButton, 'kekule-color-drop-button');
+
+		Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.ObjectInspector, 'kekule-object-inspector');
+
+		Kekule.X.domReady(function(){
+			var objInspector = document.getElementById('objInspector');
+			Kekule.Widget.globalManager.on('click', function(e){
+				var event = e.htmlEvent;
+				{
+					var widget = e.widget;
+					if (widget !== objInspector.widget && !objInspector.widget.hasChild(widget, true))
+					  objInspector.widget.setObjects(widget);
+				}
+      });
+    });
+  </script>
+</head>
+<body>
+  <kekule-object-inspector id="objInspector" show-objs-info-panel="true" show-prop-info-panel="true" style="float: right; width: 20em; height: 40em;"></kekule-object-inspector>
+  <div id="stage">
+  <fieldset>
+    <legend>Buttons</legend>
+    <kekule-button text="Simple Button 1"></kekule-button>
+    <kekule-button text="Simple Button 2"></kekule-button>
+    <br />
+    <kekule-check-button text="Check Button 1"></kekule-check-button>
+    <kekule-check-button text="Check Button 2"></kekule-check-button>
+    <br />
+    <kekule-button text="Styled Button 1" button-kind="K-Kind-Edit"></kekule-button>
+    <kekule-button text="Styled Button 1" button-kind="K-Kind-Popup"></kekule-button>
+  </fieldset>
+  <fieldset>
+    <legend>Text Input</legend>
+    <kekule-text-box placeholder="Text box"></kekule-text-box>
+    <kekule-button-text-box placeholder="Combo text box" button-kind="K-Kind-Search"></kekule-button-text-box>
+  </fieldset>
+  <fieldset>
+    <legend>Text Editor</legend>
+    <kekule-text-editor style="width:30em;height:10em" text="Font family, font size can be changed in text editor."></kekule-text-editor>
+  </fieldset>
+  <fieldset>
+    <legend>Color Picker</legend>
+    <label>Color picker: </label>
+    <kekule-color-picker></kekule-color-picker><br />
+    <label>Color drop text box: </label>
+    <kekule-color-drop-text-box></kekule-color-drop-text-box><br />
+    <label>Color drop button: </label>
+    <kekule-color-drop-button></kekule-color-drop-button>
+  </fieldset>
+  </div>
+</body>
+</html>
