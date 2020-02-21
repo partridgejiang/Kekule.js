@@ -462,6 +462,14 @@ var kekuleFiles = {
 		'category': 'chemWidget'
 	},
 
+	'webComponent': {
+		'requires': ['lan', 'root', 'common', 'core', 'html', 'io', 'render', 'algorithm', 'widget', 'chemWidget'],
+		'files': [
+			'webComponents/kekule.webComponent.base.js',
+			'webComponents/kekule.webComponent.widgetWrappers.js'
+		]
+	},
+
 	'algorithm': {
 		'requires': ['lan', 'root', 'common', 'core'],
 		'files': [
