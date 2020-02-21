@@ -22,7 +22,7 @@ Contents:
    content/widgetIntro
    content/chemViewer
    content/composer
-
+   content/webComponent
 
 
 Indices and tables
