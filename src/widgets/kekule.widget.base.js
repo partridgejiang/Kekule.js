@@ -38,6 +38,23 @@ Kekule.Widget = {
 };
 
 /**
+ * Enumeration of predefined widget html element tag names.
+ * @ignore
+ */
+Kekule.Widget.HtmlTagNames = {
+	CHILD_SLOT_HOLDER: 'slot',
+	CHILD_HOLDER: 'span'
+};
+
+/**
+ * Enumeration of predefined widget html element names.
+ * @ignore
+ */
+Kekule.Widget.HtmlNames = {
+	CHILD_HOLDER: 'children'
+};
+
+/**
  * Enumeration of predefined widget element class names.
  * @ignore
  */
@@ -46,6 +63,8 @@ Kekule.Widget.HtmlClassNames = {
 	BASE: 'K-Widget',
 	/** Child widget dynamic created by parent widget. */
 	DYN_CREATED: 'K-Dynamic-Created',
+	/** Container element to hold child widgets */
+	CHILD_HOLDER: 'K-Child-Holder',
 	/* A top most layer. */
 	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
@@ -1639,13 +1658,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/**
 	 * Check if widget is a child of current widget.
 	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} cascade If true, the child's children will also be checked.
 	 * @returns {Bool}
 	 */
-	hasChild: function(widget)
+	hasChild: function(widget, cascade)
 	{
-		var index = this.indexOfChild(widget);
+		var children = this.getChildWidgets();
+		var index = children.indexOf(widget);
 		//console.log('Child index: ', index, this.getChildWidgets());
-		return (index >= 0);
+		var result = (index >= 0);
+		if (!result)
+		{
+			for (var i = 0, l = children.length; i < l; ++i)
+			{
+				var child = children[i];
+				if (child.hasChild)
+				{
+					result = child.hasChild(widget, cascade);
+					if (result)
+						break;
+				}
+			}
+		}
+		return result;
 	},
 	/**
 	 * Returns child widget at index
@@ -5672,6 +5707,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		// dispatch to widget
 		if (targetWidget)
 		{
+			this._htmlEventOnWidgetInvoked(targetWidget, e);
 			//console.log('event', e.getTarget().tagName, widget.getClassName());
 			targetWidget.reactUiEvent(e);
 		}
@@ -5726,6 +5762,13 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			if (widgets[i].isShown())
 				widgets[i].autoResizeToClient();
 		}
+	},
+
+	/** @private */
+	_htmlEventOnWidgetInvoked: function(widget, event)
+	{
+		this.invokeEvent('htmlEventOnWidget', {'widget': widget, 'htmlEvent': event});
+		this.invokeEvent(event.getType(), {widget: widget, htmlEvent: event});
 	},
 
 	/** @private */
