@@ -31,6 +31,7 @@ M  END
   <script>
     //var ComposerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.Editor.Composer, 'kekule-composer');
     //var ViewerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.ChemWidget.Viewer, 'kekule-viewer');
+    Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.Button, 'kekule-button');
 
     function addElement()
     {
@@ -38,11 +39,16 @@ M  END
     	div.innerHTML = 'A Div';
     	document.body.appendChild(div);
     }
+
+    Kekule.X.domReady(function(){
+	    var btnAddElem = document.getElementById('btnAddElem');
+	    btnAddElem.widget.on('click', addElement);
+    });
   </script>
 </head>
 <body>
   <p>
-    <button onclick="addElement()">Add Element</button>
+    <kekule-button id="btnAddElem" text="Add Element"></kekule-button>
   </p>
   <p>
     <kekule-composer id="composerComp" resizable="true" chem-obj="url(#resMol)" style="width:500px;height:500px"></kekule-composer>

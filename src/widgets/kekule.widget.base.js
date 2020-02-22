@@ -4584,7 +4584,7 @@ Kekule.Widget.Utils = {
 			var scriptPath = scriptInfo.path;
 			if (scriptPath)
 			{
-				var useMinJs = scriptPath.useMinFile;
+				var useMinJs = scriptInfo.useMinFile;
 				var cssPath = (useMinJs ? 'themes/' : 'widgets/themes/') + themeName;
 				result = scriptPath + cssPath + '/kekule.css';
 			}
