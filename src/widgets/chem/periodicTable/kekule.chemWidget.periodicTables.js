@@ -194,9 +194,9 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @ignore */
 	doCreateSubElements: function($super, doc, rootElem)
 	{
-		$super(doc, rootElem);
+		var result = $super(doc, rootElem);
 		var elem = this.createMainTable(doc, rootElem);
-		return [elem];
+		return result.concat([elem]);
 	},
 
 	/** @ignore */

@@ -112,7 +112,8 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		var result = doc.createElement('span');
 		return result;
 	},
-	/** @ignore */
+	/* @ignore */
+	/*
 	doCreateSubElements: function($super, doc, docFragment)
 	{
 		var result = $super(doc, docFragment) || [];
@@ -122,8 +123,11 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		docFragment.appendChild(containerElem);
 		return result;
 	},
+	*/
 	/**
 	 * Create a element to hold the child widgets.
+	 * Note: Container itself does not use this method by default, the child elements are directly appended to the core element.
+	 * Descendants may utilize it although.
 	 * @param {HTMLDocument} doc
 	 * @param {String} name Container name, used for <slot> if possible.
 	 * @param {String} fallbackTagName If <slot> is not available in browser, this tag name will be used to create element.
@@ -144,8 +148,8 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	getContainerElement: function()
 	{
-		//return this.getElement();
-		return this._defContainerElem || this.getElement();
+		return this.getElement();
+		//return this._defContainerElem || this.getElement();
 	},
 	/** @ignore */
 	getChildrenHolderElement: function()

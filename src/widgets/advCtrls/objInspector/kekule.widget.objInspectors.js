@@ -1279,7 +1279,7 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 	/** @ignore */
 	doCreateSubElements: function($super, doc, element)
 	{
-		$super(doc, element);
+		var result = $super(doc, element) || [];
 
 		var objsInfoElem = this._createSubPartElem(doc);
 		EU.addClass(objsInfoElem, CNS.OBJINSPECTOR_OBJSINFOPANEL);
@@ -1297,7 +1297,7 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 		this._propListElem = propListEditorContainer;
 		this._createChildWidgets(propListEditorContainer);
 
-		return [objsInfoElem, propInfoElem, propListEditorContainer];
+		return result.concat([objsInfoElem, propInfoElem, propListEditorContainer]);
 	},
 	/** @private */
 	_createSubPartElem: function(doc)

@@ -135,6 +135,7 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 	/** @ignore */
 	doCreateSubElements: function($super, doc, rootElem)
 	{
+		var result = $(doc, rootElem) || [];
 		var text = EU.getInnerText(rootElem);
 		rootElem.innerHTML = '';  // clear old content first
 		var element = doc.createElement('span');
@@ -144,6 +145,8 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 		this._elemTextPart = this.createTextContent(text, element);
 		this._elemLeadingGlyphPart = this.createGlyphContent(element, this._elemTextPart, CNS.PART_PRI_GLYPH_CONTENT);
 		this._elemTailingGlyphPart = this.createGlyphContent(element, null, CNS.PART_ASSOC_GLYPH_CONTENT);
+		result.push(element);
+		return result;
 	},
 	/** @ignore */
 	doSetUseCornerDecoration: function($super, value)
