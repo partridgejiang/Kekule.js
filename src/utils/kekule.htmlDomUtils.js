@@ -385,9 +385,12 @@ Kekule.StyleUtils = {
 		var currElem = elem;
 		while (currElem)
 		{
-			var m = Kekule.StyleUtils.getTransformMatrix(currElem);
-			if (m)
-				result.unshift(m);
+			if (currElem.nodeType === 1)  // Node.ELEMENT_NODE, if not element (e.g., shadow root), bypass to parent
+			{
+				var m = Kekule.StyleUtils.getTransformMatrix(currElem);
+				if (m)
+					result.unshift(m);
+			}
 			currElem = currElem.parentNode;
 		}
 		return result;
