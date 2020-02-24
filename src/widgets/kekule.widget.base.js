@@ -5508,10 +5508,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 				}
 				// all event type (except touchstart), currentTarget is always the touch evoker,
 				// should be transformed to element under touch pos
-				if (evType !== 'touchstart')
+				//if (evType !== 'touchstart')
 				{
 					var doc = this._document;
-					var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
+					//var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
+					var currElement = this._retrieveTouchEventActualTarget(newEventObj);
 					newEventObj.setTarget(currElement);
 					//console.log('save touch data 1', currElement, newEventObj.getTarget());
 				}
@@ -5537,6 +5538,45 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 
 		return null;  // no mapping event, returns null
+	},
+
+	/** @private */
+	_retrieveTouchEventActualTarget: function(event)
+	{
+		var elem = event.getTarget();
+		var result = elem;
+		// Currently in Firefox, the touchEvent.target is always the parent element of shadow root (not the direct child)
+		// So here we must find the actual target manually
+		/*
+		if (elem.shadowRoot && elem.getRootNode)
+		{
+			var shadow = elem.shadowRoot;
+			if (shadow.elementFromPoint)
+			{
+				result = shadow.elementFromPoint(event.getClientX(), event.getClientY()) || elem;
+			}
+		}
+		*/
+		result = this._retrieveElementFromClientCoord(elem, event.getClientX(), event.getClientY());
+		return result;
+	},
+	/** @private */
+	_retrieveElementFromClientCoord: function(baseElem, x, y)
+	{
+		var result = baseElem;
+		if (baseElem.shadowRoot && baseElem.getRootNode)
+		{
+			var shadow = baseElem.shadowRoot;
+			if (shadow.elementFromPoint)
+			{
+				var newElem = shadow.elementFromPoint(x, y);
+				if (newElem && newElem !== baseElem)  // find new elem, may result.shadowRoot?
+				{
+					result = this._retrieveElementFromClientCoord(newElem, x, y);
+				}
+			}
+		}
+		return result;
 	},
 
 	/** @ignore */
@@ -5698,6 +5738,36 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 		*/
 
+		this.doReactUiEvent(e, targetWidget);
+
+		if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
+		{
+			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
+			var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
+			var pointerEvents = ['pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'];
+			var index = mouseEvents.indexOf(evType);
+			if (index >= 0)
+			{
+				e.setType(pointerEvents[index]);
+				e.pointerType = 'mouse';
+				//this.reactUiEvent(e);
+				this.doReactUiEvent(e, targetWidget);
+			}
+			else if (touchEvents.indexOf(evType) >= 0)  // touch events, need further polyfill
+			{
+				//console.log('prepare map', evType);
+				var newEvent = this.mapTouchToPointerEvent(e);
+				if (newEvent)
+				{
+					this.reactUiEvent(newEvent);  // call reactUiEvent rather than doReact, since the targetWidget may change
+					//this.doReactUiEvent(newEvent, targetWidget);
+				}
+			}
+		}
+	},
+	/** @private */
+	doReactUiEvent: function(e, targetWidget)
+	{
 		// check first if the component has event handler itself
 		var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
 
@@ -5710,27 +5780,6 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			this._htmlEventOnWidgetInvoked(targetWidget, e);
 			//console.log('event', e.getTarget().tagName, widget.getClassName());
 			targetWidget.reactUiEvent(e);
-		}
-
-		if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
-		{
-			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
-			var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
-			var pointerEvents = ['pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup'];
-			var index = mouseEvents.indexOf(evType);
-			if (index >= 0)
-			{
-				e.setType(pointerEvents[index]);
-				e.pointerType = 'mouse';
-				this.reactUiEvent(e);
-			}
-			else if (touchEvents.indexOf(evType) >= 0)  // touch events, need further polyfill
-			{
-				//console.log('prepare map', evType);
-				var newEvent = this.mapTouchToPointerEvent(e);
-				if (newEvent)
-					this.reactUiEvent(newEvent);
-			}
 		}
 	},
 	/** @private */

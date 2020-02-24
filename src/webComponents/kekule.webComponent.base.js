@@ -254,6 +254,21 @@ ClassEx.extendMethod(Kekule.Widget.GlobalManager, 'getDefaultContextRootElem', f
 	else
 		return $origin();
 });
+/*
+ClassEx.extendMethod(Kekule.Widget.GlobalManager, '_retrieveTouchEventActualTarget', function($origin, event){
+	var result = $origin(event);
+	if (result.shadowRoot)  // has shadow DOM, event may be evoked by child in the shadow
+	{
+		if (result.widget && result.widget instanceof Kekule.Widget.BaseWidget)  // has wrapped widget
+		{
+			var shadow = result.shadowRoot;
+			var actualTarget = shadow.elementFromPoint(event.clientX, event.clientY) || result;
+			return actualTarget;
+		}
+	}
+	return result;
+});
+*/
 
 
 // A special property indicating whether the web component context has been built
@@ -288,7 +303,7 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		var widget = this._createWidget(this.constructor.widgetClass, shadow);
 		this._prepareStyles(shadow);
 
-		var eventRelayer = new Kekule.WebComponent.WebComponentContextEventRelayer(this.ownerDocument, widget.getElement(), Kekule.Widget.globalManager);
+		var eventRelayer = new Kekule.WebComponent.WebComponentContextEventRelayer(this.ownerDocument, widget.getElement()/*shadow*/, Kekule.Widget.globalManager);
 
 		this._reflectingChangedAttributes = [];
 	}

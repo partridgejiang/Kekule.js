@@ -28,10 +28,36 @@ cyclohextone.mol
 M  END
   </script>
 
+  <style>
+    #panelLog
+    {
+      width: 90%;
+      height: 20em;
+      overflow: scroll;
+    }
+  </style>
+
   <script>
     //var ComposerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.Editor.Composer, 'kekule-composer');
     //var ViewerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.ChemWidget.Viewer, 'kekule-viewer');
     Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.Button, 'kekule-button');
+
+    Kekule.log = function(e, exceptionLevel)
+    {
+    	var elem = document.createElement('div');
+    	elem.innerText = e.message || e;
+    	var parent = document.getElementById('panelLog');
+    	var refElem = Kekule.DomUtils.getFirstChildElem(parent);
+    	if (refElem)
+    		parent.insertBefore(elem, refElem);
+    	else
+        parent.appendChild(elem);
+    };
+
+    window.onerror = function(message, source, lineno, colno, error)
+    {
+      Kekule.log('[error]' + message);
+    };
 
     function addElement()
     {
@@ -42,21 +68,29 @@ M  END
 
     Kekule.X.domReady(function(){
 	    var btnAddElem = document.getElementById('btnAddElem');
-	    btnAddElem.widget.on('click', addElement);
+	    //btnAddElem.widget.on('click', addElement);
+	    //Kekule.log(Kekule.BrowserFeature.pointerEvent);
     });
   </script>
 </head>
 <body>
+  <!--
   <p>
     <kekule-button id="btnAddElem" text="Add Element"></kekule-button>
   </p>
+  -->
   <p>
-    <kekule-composer id="composerComp" resizable="true" chem-obj="url(#resMol)" style="width:500px;height:500px"></kekule-composer>
+    <kekule-composer id="composerComp" resizable="true" chem-obj="url(#resMol)" style="width:600px;height:400px"></kekule-composer>
+    <!--
     <kekule-viewer id="viewerComp" style="width:500px;height:500px" width1="300px" height1="200px" predefined-setting="fullFunc" chem-obj="url(#resMol)" render-type="3"></kekule-viewer>
     <kekule-chem-obj-inserter style="width: 300px; height: 500px"  chem-obj="url(#resMol)"></kekule-chem-obj-inserter>
+    -->
     <!--
     <kekule-periodic-table></kekule-periodic-table>
     -->
   </p>
+  <div id="panelLog">
+
+  </div>
 </body>
 </html>
