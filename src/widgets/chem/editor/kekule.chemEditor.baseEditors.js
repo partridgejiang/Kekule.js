@@ -4884,7 +4884,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 			'getter': function()
 			{
 				var editor = this.getEditor();
-				return (editor && editor.getCurrPointerType()) || this.getStoreFieldValue('activePointerType');
+				return (editor && editor.getCurrPointerType()) || this.getPropStoreFieldValue('activePointerType');
 			},
 			'setter': function(value)
 			{
@@ -5094,7 +5094,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 		var pointerType = this.getActivePointerType();
 		var ic = this.getEditorConfigs().getInteractionConfigs();
 		return (ic.getAutoSelectNewlyInsertedObjectsOnTouch() && pointerType === 'touch')
-				|| ic.getAutoSelectNewlyInsertedObjects();
+			|| ic.getAutoSelectNewlyInsertedObjects();
 	},
 
 	/** @private */
@@ -5377,6 +5377,17 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	isRemoving: function()
 	{
 		return this._isExecuting;
+	},
+
+	/** @ignore */
+	reactUiEvent: function($super, e)
+	{
+		var result = $super(e);
+		var evType = e.getType();
+		// prevent default touch action (may change UI) in mobile browsers
+		if (['touchstart', 'touchend', 'touchcancel', 'touchmove'].indexOf(evType) >= 0)
+			e.preventDefault();
+		return result;
 	},
 
 	/** @private */
