@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Web Component Wrapper Test</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+
   <script src="../_libs/three_new/Three.min.js"></script>
   <script src="../../src/kekule.js?min=false&modules=webComponent"></script>
 
@@ -56,7 +59,7 @@ M  END
 
     window.onerror = function(message, source, lineno, colno, error)
     {
-      Kekule.log('[error]' + message);
+      Kekule.log('[error]' + message + ' / ' + error.stack.toString());
     };
 
     function addElement()
