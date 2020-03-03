@@ -2505,6 +2505,32 @@ ObjectEx = Class.create(
 			return null;
 	},
 	/**
+	 * Returns the method in the super class.
+	 * If methodName is not provided, the super class prototype will be returned instead.
+	 * @param {String} methodName
+	 * @param {Bool} returnEmptyFunctionIfNotFound
+	 * @returns {Function}
+	 */
+	$super: function(methodName, returnEmptyFunctionIfNotFound)
+	{
+		var superProto = this.getSuperClassPrototype();
+		if (!methodName)
+		{
+			return superProto;
+		}
+		else
+		{
+			var result = superProto[methodName];
+			if (result)
+			{
+				result = result.bind(this);
+			}
+			else if (returnEmptyFunctionIfNotFound)
+				result = emptyFunction;
+			return result;
+		}
+	},
+	/**
 	 * Change the class of an existing object.
 	 * This method is quite dangerous, call it with caution.
 	 * @param {Class} aClass
