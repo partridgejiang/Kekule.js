@@ -7,6 +7,7 @@
 /*
  * requires /lan/classes.js
  * requires /core/kekule.common.js
+ * requires /core/kekule.externalResMgr.js
  * requires /render/kekule.render.utils.js
  */
 
@@ -2286,12 +2287,15 @@ Kekule.Render.DrawBridgeManager = Class.create({
 			priorityLevel = 0;
 		var index = this._indexOfBridgeClass(bridgeClass);
 		var item;
-		if (index >= 0)
+		if (index >= 0)  // already exists, update
 		{
+			/*
 			item = this._items[index];
 			item.priorityLevel = priorityLevel;
+			*/
+			this._items.splice(index, 1);
 		}
-		else
+		//else
 		{
 			item = {'bridgeClass': bridgeClass, 'priorityLevel': priorityLevel};
 			item.isSupported = bridgeClass.isSupported? bridgeClass.isSupported(): false;
@@ -2369,3 +2373,18 @@ Kekule.Render.DrawBridge2DMananger = new Kekule.Render.DrawBridgeManager();
  * @object
  */
 Kekule.Render.DrawBridge3DMananger = new Kekule.Render.DrawBridgeManager();
+
+/**
+ * A helper function to register external js lib (e.g., Three.js) for the render system.
+ */
+Kekule.Render.registerExternalModule = function(name, rootObj)
+{
+	Kekule.externalResourceManager.register(name, rootObj);
+};
+/**
+ * Returns registered external js lib (e.g., Three.js) object for the render system.
+ */
+Kekule.Render.getExternalModule = function(name)
+{
+	return Kekule.externalResourceManager.getResource(name);
+};

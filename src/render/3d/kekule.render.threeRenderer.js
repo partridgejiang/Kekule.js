@@ -11,39 +11,11 @@
  * requires /render/2d/kekule.render.renderer3D.js
  * requires /xbrowsers/kekule.x.js
  */
-Kekule.X.domReady(function(){
-	if (Kekule.$jsRoot.THREE)
-	{
-		if (!THREE.Object3D.prototype.clear)
-			/** @ignore */
-			THREE.Object3D.prototype.clear = function(){
-				var children = this.children;
-				for (var i = children.length - 1; i >= 0; i--)
-				{
-					var child = children[i];
-					child.clear();
-					this.remove(child);
-				}
-			};
+(function(){
+"use strict";
 
-		if (!THREE.Scene.prototype.clearMesh)
-			/** @ignore */
-			THREE.Scene.prototype.clearMesh = function()
-			{
-				var children = this.children;
-				for (var i = children.length - 1; i >= 0; i--)
-				{
-					var child = children[i];
-					if ((child instanceof THREE.Mesh) || (child instanceof THREE.Line)
-						|| (child.__objGroup__))  // a special flag to indicate that this is a object created by createGroup
-					{
-						child.clear();
-						this.remove(child);
-					}
-				}
-			}
-	}
-});
+var THREE_MODULE_NAME = 'three.js';
+var THREE;
 
 /** @ignore */
 Kekule.Render.ThreeObjectCache = Class.create(
@@ -861,7 +833,8 @@ Kekule.Render.ThreeRendererBridge = Class.create(
  */
 Kekule.Render.ThreeRendererBridge.isSupported = function()
 {
-	var result = (typeof(Kekule.$jsRoot.THREE) !== 'undefined');
+	//var result = (typeof(Kekule.$jsRoot.THREE) !== 'undefined');
+	var result = (typeof(Kekule.Render.getExternalModule(THREE_MODULE_NAME)) !== 'undefined');
 	if (result)
 	{
 		var F = Kekule.BrowserFeature;
@@ -902,6 +875,69 @@ Kekule.Render.ThreeRendererBridge.CheckSupporting = function()
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.ThreeRendererBridge);
 
 
-Kekule.X.domReady(function(){
-	Kekule.Render.DrawBridge3DMananger.register(Kekule.Render.ThreeRendererBridge, 20);
-});
+var _threeRegistered = function(){
+	THREE = Kekule.externalResourceManager.getResource(THREE_MODULE_NAME);  // set the global variable used by classes
+	//if (Kekule.$jsRoot.THREE)
+	if (THREE)
+	{
+		if (!THREE.Object3D.prototype.clear)
+			/** @ignore */
+			THREE.Object3D.prototype.clear = function(){
+				var children = this.children;
+				for (var i = children.length - 1; i >= 0; i--)
+				{
+					var child = children[i];
+					child.clear();
+					this.remove(child);
+				}
+			};
+
+		if (!THREE.Scene.prototype.clearMesh)
+			/** @ignore */
+			THREE.Scene.prototype.clearMesh = function()
+			{
+				var children = this.children;
+				for (var i = children.length - 1; i >= 0; i--)
+				{
+					var child = children[i];
+					if ((child instanceof THREE.Mesh) || (child instanceof THREE.Line)
+						|| (child.__objGroup__))  // a special flag to indicate that this is a object created by createGroup
+					{
+						child.clear();
+						this.remove(child);
+					}
+				}
+			};
+		Kekule.Render.DrawBridge3DMananger.register(Kekule.Render.ThreeRendererBridge, 20);
+	}
+};
+var _threeUnregistered = function()
+{
+	Kekule.Render.DrawBridge3DMananger.unregister(Kekule.Render.ThreeRendererBridge);
+};
+
+var _registerThree = function(threeRoot)
+{
+	Kekule.Render.registerExternalModule(THREE_MODULE_NAME, threeRoot);
+};
+
+var _tryRegisterThree = function()
+{
+	if (!_tryRegisterThree.registered)
+	{
+		if (Kekule.$jsRoot.THREE && Kekule.$jsRoot.THREE.Object3D)  // Three.js loaded
+		{
+			_registerThree(Kekule.$jsRoot.THREE);
+			_tryRegisterThree.registered = true;
+		}
+	}
+};
+
+Kekule.externalResourceManager.on(THREE_MODULE_NAME + 'Registered', _threeRegistered);
+Kekule.externalResourceManager.on(THREE_MODULE_NAME + 'Unregistered', _threeUnregistered);
+
+// try register Three.js on execute and on DOM load
+_tryRegisterThree();
+Kekule.X.domReady(_tryRegisterThree);
+
+})();
