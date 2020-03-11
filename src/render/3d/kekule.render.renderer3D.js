@@ -1797,7 +1797,7 @@ Kekule.Render.StructFragment3DRenderer = Class.create(Kekule.Render.ChemObj3DRen
 	/** @private */
 	_getConcreteRendererDrawOptions: function(options)
 	{
-		var ops = Object.create(options);
+		var ops = Object.create(options || {});
 		var chemObj = this.getChemObj();
 		var objOptions = (this.getRendererType() === Kekule.Render.RendererType.R3D)?
 			chemObj.getOverriddenRender3DOptions(): chemObj.getOverriddenRenderOptions();

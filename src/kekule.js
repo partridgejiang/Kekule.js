@@ -299,7 +299,8 @@ var kekuleFiles = {
 			'core/kekule.exceptions.js',
 			'utils/kekule.utils.js',
 			'utils/kekule.domHelper.js',
-			'utils/kekule.domUtils.js'
+			'utils/kekule.domUtils.js',
+			'core/kekule.externalResMgr.js',
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'

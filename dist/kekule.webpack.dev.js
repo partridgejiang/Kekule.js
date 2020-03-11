@@ -12,6 +12,7 @@ require("../src/core/kekule.exceptions.js");
 require("../src/utils/kekule.utils.js");
 require("../src/utils/kekule.domHelper.js");
 require("../src/utils/kekule.domUtils.js");
+require("../src/core/kekule.externalResMgr.js");
 require("../src/core/kekule.configs.js");
 require("../src/core/kekule.elements.js");
 require("../src/core/kekule.electrons.js");
