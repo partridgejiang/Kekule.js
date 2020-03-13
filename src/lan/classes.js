@@ -2505,11 +2505,10 @@ ObjectEx = Class.create(
 			return null;
 	},
 	/**
-	 * Returns the method in the super class.
+	 * Call the inherited method in the super class.
 	 * If methodName is not provided, the super class prototype will be returned instead.
 	 * @param {String} methodName
-	 * @param {Bool} returnEmptyFunctionIfNotFound
-	 * @returns {Function}
+	 * @returns {Variant}
 	 */
 	$super: function(methodName, returnEmptyFunctionIfNotFound)
 	{
@@ -2520,6 +2519,8 @@ ObjectEx = Class.create(
 		}
 		else
 		{
+			return this.tryCallSuper.apply(this, arguments);
+			/*
 			var result = superProto[methodName];
 			if (result)
 			{
@@ -2528,6 +2529,7 @@ ObjectEx = Class.create(
 			else if (returnEmptyFunctionIfNotFound)
 				result = emptyFunction;
 			return result;
+			*/
 		}
 	},
 	/**
