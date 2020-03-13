@@ -34,7 +34,7 @@ Kekule.ChemMarker.BaseMarker = Class.create(Kekule.ChemObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function init($super, id, coord2D, coord3D)
+	initialize: function ($super, id, coord2D, coord3D)
 	{
 		$super(id, coord2D, coord3D);
 	},
