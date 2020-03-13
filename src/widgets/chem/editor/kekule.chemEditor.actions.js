@@ -1206,7 +1206,7 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 		var oldDoExecute;
 		if (data.doExecute)  // has set a doExecute in methods
 		  oldDoExecute = data.doExecute;
-		data.doExecute = function($super)
+		data.doExecute = function(/*$super*/)
 		{
 			var editor = this.getEditor();
 			var controller = editor.getIaController(iaControllerId);
@@ -1216,9 +1216,11 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			}
 			//console.log('execute self', this.getClassName());
 			if (oldDoExecute)
-				oldDoExecute.apply(this, [$super]);
+				//oldDoExecute.apply(this, [$super]);
+				oldDoExecute.apply(this);
 			else
-				$super();
+				//$super();
+				this.tryApplySuper('doExecute');
 		}
 	}
 	if (attachedActionClasses)
