@@ -82,6 +82,7 @@ test/misc/touchEventTest.html
 /src/_extras/browserAddOns/firefox
 /src/_extras/browserAddOns/chrome
 /src/_devUtils/compressUtil
+/utils/superRemover
 /website
 /tutorial/build
 Wohler_DEPRECATED
@@ -97,6 +98,7 @@ jsDoc
 *.OLD.*
 *.OLD
 *_OLD*
+*.NEW
 *.removed
 *.lock
 *.DECPRECATED
