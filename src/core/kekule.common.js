@@ -3219,6 +3219,51 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns a subset of children that matches filterFunc.
+	 * @param {Function} filterFunc Function(child, index) returns a bool value indicating whether the child matches the filter.
+	 * @param {Bool} cascade
+	 * @returns {Array}
+	 */
+	filterChildren: function(filterFunc, cascade)
+	{
+		var result = [];
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child)
+			{
+				if (filterFunc(child, i))
+					result.push(child);
+				else if (cascade && child.filterChildren)
+				{
+					var subResult = child.filterChildren(filterFunc, cascade);
+					if (subResult && subResult.length)
+						result = result.concat(subResult);
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Run executor function on each of children.
+	 * @param {Function} executor With params (child, index).
+	 * @param {Bool} cascade
+	 */
+	iterateChildren: function(executor, cascade)
+	{
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child)
+			{
+				executor(child, i);
+				if (cascade && child.iterateChildren)
+					child.iterateChildren(executor, cascade);
+			}
+		}
+	},
+
+	/**
 	 * Remove child at index from children list.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
