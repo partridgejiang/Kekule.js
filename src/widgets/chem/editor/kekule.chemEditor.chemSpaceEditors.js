@@ -181,12 +181,22 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		var space = this.getChemSpace();
 		if (space)
 		{
+			/*
 			for (var i = 0, l = space.getChildCount(); i < l; ++i)
 			{
 				var obj = space.getChildAt(i);
 				if (obj && obj.getClass)
 					Kekule.ArrayUtils.pushUnique(result, obj.getClass());
 			}
+			*/
+			var iteratorFunc = function(child){
+				if (child.isStandalone && child.isStandalone() && child.getClass)
+				{
+					var oClass = child.getClass();
+					Kekule.ArrayUtils.pushUnique(result, oClass);
+				}
+			};
+			space.iterateChildren(iteratorFunc, true);
 		}
 		return result;
 	},
@@ -198,6 +208,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		{
 			result = [];
 			var space = this.getChemSpace();
+			/*
 			if (space)
 			{
 				for (var i = 0, l = space.getChildCount(); i < l; ++i)
@@ -207,6 +218,9 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 						result.push(obj);
 				}
 			}
+			*/
+			var filter = function(child){ return child && (child instanceof objClass); };
+			result = space.filterChildren(filter, true);
 		}
 		return result;
 	},

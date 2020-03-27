@@ -1027,7 +1027,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!obj)
 			return [];
 		else
-			return obj.getClass? obj.getClass(): null;
+			return obj.getClass? [obj.getClass()]: [];
 	},
 	/**
 	 * Returns exportable object for specified class.
