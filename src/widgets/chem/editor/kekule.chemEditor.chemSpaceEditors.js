@@ -726,7 +726,10 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 					{
 						var child = children[i];
 						if (child && child.setCoordOfMode)
-							child.setCoordOfMode(CU.add(child.getCoordOfMode(coordMode, allowCoordBorrow), coordDelta));
+						{
+							var oldCoord = child.getCoordOfMode(coordMode, allowCoordBorrow) || {};
+							child.setCoordOfMode(CU.add(oldCoord, coordDelta));
+						}
 						/*
 						if (coordDelta2D && child && child.setCoord2D)
 							child.setCoord2D(CU.add(child.getCoord2D(), coordDelta2D));
