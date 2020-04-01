@@ -1214,6 +1214,29 @@ Kekule.ChemStructOperation.AnchorNodesPreview = Class.create(Kekule.ChemStructOp
 		finally
 		{
 		}
+		try {
+			if (fromNode instanceof Kekule.Glyph.PathGlyphNode &&  toNode instanceof Kekule.Bond) { // NGA-8759
+				var parent = toNode.getParent();
+				if (parent && parent instanceof Kekule.Molecule) {
+					var connectors = parent.getConnectors();
+					if (connectors && connectors.length) {
+						for (const connector of connectors) {
+							if (connector.id !== toNode.id) {
+								const attachedArcNodeIds = connector.getAttachedArcNodeIds();
+								if (attachedArcNodeIds[fromNode.id]) {
+									//console.log('********************** DUPLICATE Will Robinson!!!');
+									// make sure this Bond is only connected to a single PathGlyphNode (curved arrow)
+									delete attachedArcNodeIds[fromNode.id];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		catch(exception) {
+			console.error(exception);
+		}
 	},
 	/** @ignore */
 	doReverse: function()
