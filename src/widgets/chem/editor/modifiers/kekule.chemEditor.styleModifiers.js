@@ -117,7 +117,7 @@ Kekule.Editor.ObjModifier.Color = Class.create(Kekule.Editor.ObjModifier.BaseRen
 		}
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		// do not use operation, as we can call editor.modifyObjectsRenderOptions directly
 		var color = this.getWidget().getValue();

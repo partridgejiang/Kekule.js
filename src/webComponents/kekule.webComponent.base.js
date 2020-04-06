@@ -54,10 +54,10 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 	/** @private */
 	CLASS_NAME: 'Kekule.WebComponent.WebComponentContextEventRelayer',
 	/** @constructs */
-	initialize: function($super, doc, eventRoot, globalManager)
+	initialize: function(/*$super, */doc, eventRoot, globalManager)
 	{
 		this._globalManager = globalManager;
-		$super(doc, eventRoot);
+		this.tryApplySuper('initialize', [doc, eventRoot])  /* $super(doc, eventRoot) */;
 		this._isInShadow = eventRoot && DU.isInShadowRoot(eventRoot);
 		this._globalManager.setHasWebComponentContext(true);  // notify GM that web component context has been built
 	},
@@ -74,9 +74,9 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 	// here we only relay UI and DOM insert/remove events.
 	// Window event are handled directly by global manager, and hammer touch event are handled directly by widget itself.
 	/** @ignore */
-	reactUiEvent: function($super, e)
+	reactUiEvent: function(/*$super, */e)
 	{
-		var result = $super(e);
+		var result = this.tryApplySuper('reactUiEvent', [e])  /* $super(e) */;
 		if (this.isInShadow())
 		{
 			result = this._globalManager.reactUiEvent(e);
@@ -85,7 +85,7 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 		return result;
 	},
 	/** @ignore */
-	reactDomNodeInsertEvent: function($super, e)
+	reactDomNodeInsertEvent: function(/*$super, */e)
 	{
 		if (this.isInShadow())
 		{
@@ -93,10 +93,10 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 			return this._globalManager.reactDomNodeInsertEvent(e);
 		}
 		else
-			return $super(e);
+			return this.tryApplySuper('reactDomNodeInsertEvent', [e])  /* $super(e) */;
 	},
 	/** @ignore */
-	reactDomNodeRemoveEvent: function($super, e)
+	reactDomNodeRemoveEvent: function(/*$super, */e)
 	{
 		if (this.isInShadow())
 		{
@@ -104,15 +104,15 @@ Kekule.WebComponent.WebComponentContextEventRelayer = Class.create(Kekule.Widget
 			return this._globalManager.reactDomNodeRemoveEvent(e);
 		}
 		else
-			return $super(e);
+			return this.tryApplySuper('reactDomNodeRemoveEvent', [e])  /* $super(e) */;
 	},
 	/** @ignore */
-	reactDomMutation: function($super, mutations)
+	reactDomMutation: function(/*$super, */mutations)
 	{
 		if (this.isInShadow())
 			return this._globalManager.reactDomMutation(mutations);
 		else
-			return $super();
+			return this.tryApplySuper('reactDomMutation')  /* $super() */;
 	}
 });
 

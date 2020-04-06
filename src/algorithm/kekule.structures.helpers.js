@@ -31,9 +31,9 @@ Kekule.ChemStructObjContainer = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructObjContainer',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('nodes', []);
 		this.setPropStoreFieldValue('connectors', []);
 	},

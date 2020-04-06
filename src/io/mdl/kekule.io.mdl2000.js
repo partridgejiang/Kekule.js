@@ -826,9 +826,9 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Mdl2kCTabWriter',
 	/** @constructs */
-	initialize: function($super, coordMode)
+	initialize: function(/*$super, */coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
 	/** @private */

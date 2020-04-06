@@ -68,9 +68,9 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Atom',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 	},
 	/** @private */
@@ -248,7 +248,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 				.setShowText(true).setDisplayed(!!nodes.length);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var data = this.getAtomSetter().getValue();
 		var opers = [];
@@ -359,9 +359,9 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Bond',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._activeSelBtnHtmlClass = null;
 		this._defaultBondTypeData = null;
 		this._valueStorage = {};
@@ -597,7 +597,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		this.getWidget().setDisplayed(!!connectors.length);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var data = this.getBondSelector().getActiveBondPropValues();
 		//console.log('modify data', data);
@@ -684,9 +684,9 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Charge',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 	},
 	/** @private */
@@ -822,7 +822,7 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 		this.getWidget().setDisplayed(showModifier);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var charge = this.getChargeSelector().getValue();
 		var opers = [];

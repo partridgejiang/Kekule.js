@@ -461,9 +461,9 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 	/** @private */
 	MAX_COL_WIDTH: 80,
 	/** @constructs */
-	initialize: function($super, text)
+	initialize: function(/*$super, */text)
 	{
-		$super(text);
+		this.tryApplySuper('initialize', [text])  /* $super(text) */;
 	},
 	/** @private */
 	isStartWithLeadingTag: function(line)
@@ -514,9 +514,9 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 	 * @param {Int} index
 	 * @returns {String}
 	 */
-	getLineAt: function($super, index)
+	getLineAt: function(/*$super, */index)
 	{
-		var line = $super(index);
+		var line = this.tryApplySuper('getLineAt', [index])  /* $super(index) */;
 		return this.getLineWithout3kTag(line);
 	},
 	/**
@@ -535,7 +535,7 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 	 * @param {Bool} not3kMode If in 3k mode, each line will automatically start with M  V30
 	 *   and line longer than 80 cols will be wrapped
 	 */
-	writeLine: function($super, line, not3kMode)
+	writeLine: function(/*$super, */line, not3kMode)
 	{
 		if (!not3kMode)
 		{
@@ -555,19 +555,19 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 				// add continue mark
 				s += /*sep + */cmark;
 			}
-			var r = $super(s);
+			var r = this.tryApplySuper('writeLine', [s])  /* $super(s) */;
 			if (sexceed)
 				r = this.writeLine(sexceed, not3kMode);
 			return r;
 		}
 		else
-			return $super(line);
+			return this.tryApplySuper('writeLine', [line])  /* $super(line) */;
 	},
 	/**
 	 * Insert array of lines at current position and move currLineNo.
 	 * @param {Array} lines
 	 */
-	writeLines: function($super, lines, not3kMode)
+	writeLines: function(/*$super, */lines, not3kMode)
 	{
 		for (var i = 0, l = lines.length; i < l; ++i)
 			this.writeLine(lines[i], not3kMode);
@@ -1157,9 +1157,9 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Mdl3kCTabWriter',
 	/** @constructs */
-	initialize: function($super, coordMode)
+	initialize: function(/*$super, */coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
 	/** @private */

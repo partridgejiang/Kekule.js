@@ -60,10 +60,10 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 	/** @private */
 	SUB_MENU_TAGS: ['ol', 'ul'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
 		//this.setPropStoreFieldValue('useCornerDecoration', true);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 		this._subMenuMarker = null;
@@ -105,16 +105,16 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setUseCornerDecoration(false);
 		this.setIsSeparator(false);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.MENUITEM; // + ' ' + CNS.MENUITEM_NORMAL;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.MENUITEM; // + ' ' + CNS.MENUITEM_NORMAL;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -146,9 +146,9 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		// check if there is sub menu items
 		var children = DU.getDirectChildElems(element);
 		for (var i = 0, l = children.length; i < l; ++i)
@@ -205,9 +205,9 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 	},
 
 	/** @ignore */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 		if (widget instanceof Kekule.Widget.Menu)
 		{
 			widget.setIsSubMenu(true);
@@ -223,9 +223,9 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 		}
 	},
 	/** @ignore */
-	childrenModified: function($super)
+	childrenModified: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('childrenModified')  /* $super() */;
 		this.subMenuChanged();
 	},
 
@@ -364,21 +364,21 @@ Kekule.Widget.MenuItem = Class.create(Kekule.Widget.Container,
 		return !(elem.getElementsByTagName('ul').length || elem.getElementsByTagName('ol').length);
 	},
 	/** @private */
-	isPeriodicalExecuting: function($super)
+	isPeriodicalExecuting: function(/*$super*/)
 	{
-		return $super() && this.getIsActive();
+		return this.tryApplySuper('isPeriodicalExecuting')  /* $super() */ && this.getIsActive();
 	},
 
 	/** @private */
-	doReactActiviting: function($super, e)
+	doReactActiviting: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('doReactActiviting', [e])  /* $super(e) */;
 		if (this.isLeafItem())
 			if (this.getEnablePeriodicalExec())
 				this.startPeriodicalExec(e);
 	},
 	/** @private */
-	doReactDeactiviting: function($super, e)
+	doReactDeactiviting: function(/*$super, */e)
 	{
 		if (this.isLeafItem())
 		{
@@ -464,10 +464,10 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.Container,
 	/** @private */
 	MENU_ITEM_TAG: 'li',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		//this.setPropStoreFieldValue('useCornerDecoration', true);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -482,15 +482,15 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.Container,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setUseCornerDecoration(true);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.MENU;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.MENU;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -499,9 +499,9 @@ Kekule.Widget.Menu = Class.create(Kekule.Widget.Container,
 		return result;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		var children = Kekule.DomUtils.getDirectChildElems(element);
 		for (var i = 0, l = children.length; i < l; ++i)
 		{
@@ -653,15 +653,15 @@ Kekule.Widget.PopupMenu = Class.create(Kekule.Widget.Menu,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.PopupMenu',
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setLayout(Kekule.Widget.Layout.VERTICAL);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.POPUPMENU;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.POPUPMENU;
 	},
 	/** @ignore */
 	childDeactivated: function(childWidget)
@@ -682,9 +682,9 @@ Kekule.Widget.MenuBar = Class.create(Kekule.Widget.Menu,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.MenuBar',
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.MENUBAR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.MENUBAR;
 	}
 });
 

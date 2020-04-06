@@ -33,7 +33,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.KcjReader',
 	/** @private */
-	readData: function($super, data, dataType)
+	readData: function(/*$super, */data, dataType)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		var jsonObj;
@@ -46,7 +46,7 @@ Kekule.IO.KcjReader = Class.create(Kekule.IO.ChemDataReader,
 			Kekule.error(/*Kekule.ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT*/Kekule.$L('ErrorMsg.KCJ_INPUT_DATATYPE_NOT_JSON_OR_TEXT'));
 			return null;
 		}
-		return $super(jsonObj, Kekule.IO.ChemDataType.JSON);
+		return this.tryApplySuper('readData', [jsonObj, Kekule.IO.ChemDataType.JSON])  /* $super(jsonObj, Kekule.IO.ChemDataType.JSON) */;
 	},
 	/** @private */
 	doReadData: function(data, dataType)
@@ -73,9 +73,9 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.KcjWriter',
 	/** @private */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		var op = options || {};
 		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 	},
@@ -85,7 +85,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('prettyPrint', {'dataType': DataType.BOOL, 'defaultValue': true});
 	},
 	/** @private */
-	writeData: function($super, obj, dataType, format, options)
+	writeData: function(/*$super, */obj, dataType, format, options)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if ((dtype != Kekule.IO.ChemDataType.JSON) && (dtype != Kekule.IO.ChemDataType.TEXT))
@@ -95,7 +95,7 @@ Kekule.IO.KcjWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return null;
 		}
 
-		var result = $super(obj, Kekule.IO.ChemDataType.JSON);
+		var result = this.tryApplySuper('writeData', [obj, Kekule.IO.ChemDataType.JSON])  /* $super(obj, Kekule.IO.ChemDataType.JSON) */;
 		if (dtype == Kekule.IO.ChemDataType.JSON)
 			return result;
 		if (dtype == Kekule.IO.ChemDataType.TEXT)
@@ -133,7 +133,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.KcxReader',
 	/** @private */
-	readData: function($super, data, dataType)
+	readData: function(/*$super, */data, dataType)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		var srcElem;
@@ -149,7 +149,7 @@ Kekule.IO.KcxReader = Class.create(Kekule.IO.ChemDataReader,
 			Kekule.error(/*Kekule.ErrorMsg.KCX_INPUT_DATATYPE_NOT_DOM_OR_TEXT*/Kekule.$L('ErrorMsg.KCX_INPUT_DATATYPE_NOT_DOM_OR_TEXT'));
 			return null;
 		}
-		return $super(srcElem, Kekule.IO.ChemDataType.DOM);
+		return this.tryApplySuper('readData', [srcElem, Kekule.IO.ChemDataType.DOM])  /* $super(srcElem, Kekule.IO.ChemDataType.DOM) */;
 	},
 	/** @private */
 	doReadData: function(data, dataType)
@@ -176,9 +176,9 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.KcxWriter',
 	/** @private */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		var op = options || {};
 		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.kekuleNative.prettyPrint: op.prettyPrint);
 		this.setRootTag(op.rootTag || 'kcx');
@@ -190,7 +190,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('rootTag', {'dataType': DataType.STRING});
 	},
 	/** @private */
-	writeData: function($super, obj, dataType)
+	writeData: function(/*$super, */obj, dataType)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if ((dtype != Kekule.IO.ChemDataType.DOM) && (dtype != Kekule.IO.ChemDataType.TEXT))
@@ -200,7 +200,7 @@ Kekule.IO.KcxWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return null;
 		}
 
-		var result = $super(obj, Kekule.IO.ChemDataType.DOM);
+		var result = this.tryApplySuper('writeData', [obj, Kekule.IO.ChemDataType.DOM])  /* $super(obj, Kekule.IO.ChemDataType.DOM) */;
 		if (dtype == Kekule.IO.ChemDataType.DOM)
 			return result;
 		if (dtype == Kekule.IO.ChemDataType.TEXT)

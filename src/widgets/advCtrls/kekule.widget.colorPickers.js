@@ -84,14 +84,14 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		/*
 		this.reactPaletteMouseDownBind = this.reactPaletteMouseDown.bind(this);
 		this.reactPaletteMouseUpBind = this.reactPaletteMouseUp.bind(this);
 		this.reactPaletteMouseMoveBind = this.reactPaletteMouseMove.bind(this);
 		*/
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setUseCornerDecoration(true);
 		this.setValue('#000000');  // default
 		this.setTouchAction('none');  // disable touch scroll, we need touch move on palette
@@ -133,9 +133,9 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COLORPICKER;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COLORPICKER;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -445,9 +445,9 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 
 	/** @private */
 	//react_pointerdown: function($super, e)
-	doReactActiviting: function($super, e)
+	doReactActiviting: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('doReactActiviting', [e])  /* $super(e) */;
 		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
 			var target = e.getTarget();
@@ -462,7 +462,7 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 	},
 	/** @private */
 	//react_pointerup: function($super, e)
-	doReactDeactiviting: function($super, e)
+	doReactDeactiviting: function(/*$super, */e)
 	{
 		//if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
 		{
@@ -476,14 +476,14 @@ Kekule.Widget.ColorPicker = Class.create(Kekule.Widget.BaseWidget,
 				return true;
 			}
 		}
-		$super(e);
+		this.tryApplySuper('doReactDeactiviting', [e])  /* $super(e) */;
 		//return $super(e);
 	},
 	/** @private */
 	//react_pointermove: function($super, e)
-	reactPointerMoving: function($super, e)
+	reactPointerMoving: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('reactPointerMoving', [e])  /* $super(e) */;
 		if (this.getIsPicking())
 		{
 			var target = e.getTarget();
@@ -534,9 +534,9 @@ Kekule.Widget.ColorDropTextBox = Class.create(Kekule.Widget.ButtonTextBox,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ColorDropTextBox',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, value)
+	initialize: function(/*$super, */parentOrElementOrDocument, value)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 		this.addEventListener('buttonExecute', this.reactDropbuttonExecute, this);
 
@@ -596,24 +596,24 @@ Kekule.Widget.ColorDropTextBox = Class.create(Kekule.Widget.ButtonTextBox,
 			}
 		});
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		var picker = this.getPropStoreFieldValue('colorPicker');
 		if (picker)
 		{
 			picker.finalize();
 		}
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COLORDROPTEXTBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COLORDROPTEXTBOX;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		$super(doc, rootElem);
+		this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 		// create preview widget
 		var previewWidget = new Kekule.Widget.DumbWidget(this);
 		previewWidget.addClassName(CNS.COLORPREVIEWER);
@@ -677,9 +677,9 @@ Kekule.Widget.ColorDropTextBox = Class.create(Kekule.Widget.ButtonTextBox,
 	},
 
 	/** @ignore */
-	doSetValue: function($super, value)
+	doSetValue: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetValue', [value])  /* $super(value) */;
 		var elem = this.getPreviewElem();
 		if (elem)
 		{
@@ -707,9 +707,9 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ColorDropButton',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, value)
+	initialize: function(/*$super, */parentOrElementOrDocument, value)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setButtonKind(Kekule.Widget.Button.Kinds.DROPDOWN);
 		//this.setShowDropDownMark(true);
 		//this.setShowLeadingGlyph(true);
@@ -791,17 +791,17 @@ Kekule.Widget.ColorDropButton = Class.create(Kekule.Widget.DropDownButton,
 			'getter': function() { return this.getColorPicker().getIsDirty(); },
 			'setter': function(value) { this.getColorPicker().setIsDirty(value); } });
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		var picker = this.getPropStoreFieldValue('colorPicker');
 		if (picker)
 			picker.finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COLORDROPBUTTON;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COLORDROPBUTTON;
 	},
 	/** @ignore */
 	doGetDropDownWidget: function()

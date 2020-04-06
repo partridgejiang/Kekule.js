@@ -1058,7 +1058,7 @@
 		 * @param {Int} hydrogenDisplayLevel Value from {@link Kekule.Render.HydrogenDisplayLevel}.
 		 * @param {Bool} showCharge Whether display charge of node.
 		 */
-		getDisplayRichText: function($super, hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
+		getDisplayRichText: function(/*$super, */hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
 		{
 			var R = Kekule.Render;
 			if (Kekule.ObjUtils.isUnset(hydrogenDisplayLevel))
@@ -1073,7 +1073,7 @@
 				result.anchorItem = coreGroup.anchorItem || coreGroup;
 			}
 			*/
-			var result = $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
+			var result = this.tryApplySuper('getDisplayRichText', [hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical])  /* $super(hydrogenDisplayLevel, showCharge, displayLabelConfigs, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical) */;
 
 			var hcount = 0;
 			switch (hydrogenDisplayLevel)
@@ -1409,23 +1409,23 @@
 
 	ClassEx.extend(Kekule.ContentBlock, {
 		/** @ignore */
-		getDefCoordPos: function($super, coordMode)
+		getDefCoordPos: function(/*$super, */coordMode)
 		{
 			if (coordMode !== CM.COORD3D)
 				return Kekule.Render.CoordPos.CORNER_TL;
 			else
-				return $super(coordMode);
+				return this.tryApplySuper('getDefCoordPos', [coordMode])  /* $super(coordMode) */;
 		}
 	});
 
 	ClassEx.extend(Kekule.ChemMarker.ChemPropertyMarker, {
 		/** @ignore */
-		getDefCoordPos: function($super, coordMode)
+		getDefCoordPos: function(/*$super, */coordMode)
 		{
 			if (coordMode !== CM.COORD3D)
 				return Kekule.Render.CoordPos.CENTER;
 			else
-				return $super(coordMode);
+				return this.tryApplySuper('getDefCoordPos', [coordMode])  /* $super(coordMode) */;
 		}
 	});
 
@@ -1687,28 +1687,28 @@
 		}
 		*/
 		/** @ignore */
-		doGetAbsCoord2D: function($super, allowCoordBorrow)
+		doGetAbsCoord2D: function(/*$super, */allowCoordBorrow)
 		{
 			this._autoSetSelfCoord(Kekule.CoordMode.COORD2D, allowCoordBorrow);
-			return $super(allowCoordBorrow);
+			return this.tryApplySuper('doGetAbsCoord2D', [allowCoordBorrow])  /* $super(allowCoordBorrow) */;
 		},
 		/** @ignore */
-		doGetAbsCoord3D: function($super, allowCoordBorrow)
+		doGetAbsCoord3D: function(/*$super, */allowCoordBorrow)
 		{
 			this._autoSetSelfCoord(Kekule.CoordMode.COORD3D, allowCoordBorrow);
-			return $super(allowCoordBorrow);
+			return this.tryApplySuper('doGetAbsCoord3D', [allowCoordBorrow])  /* $super(allowCoordBorrow) */;
 		},
 		/** @ignore */
-		doSetAbsCoord2D: function($super, value)
+		doSetAbsCoord2D: function(/*$super, */value)
 		{
 			this._autoSetSelfCoord(Kekule.CoordMode.COORD2D);
-			return $super(value);
+			return this.tryApplySuper('doSetAbsCoord2D', [value])  /* $super(value) */;
 		},
 		/** @ignore */
-		doSetAbsCoord3D: function($super, value)
+		doSetAbsCoord3D: function(/*$super, */value)
 		{
 			this._autoSetSelfCoord(Kekule.CoordMode.COORD3D);
-			return $super(value);
+			return this.tryApplySuper('doSetAbsCoord3D', [value])  /* $super(value) */;
 		}
 	});
 

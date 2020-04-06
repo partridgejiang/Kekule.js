@@ -239,9 +239,9 @@ Kekule.IO.ChemDataReader = Class.create(ObjectEx,
 /** @lends Kekule.IO.ChemDataReader# */
 {
 	/** @constructs */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.ChemDataReader',
@@ -340,9 +340,9 @@ Kekule.IO.ChemDataWriter = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.ChemDataWriter',
 	/** @constructs */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/*
 	 * Read document object of {@link Kekule.ChemDocument} and write it to proper data form.

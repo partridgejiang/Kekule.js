@@ -68,9 +68,9 @@ Kekule.PredefinedResLoader = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.PredefinedResLoader',
 	/** @constructs */
-	initialize: function($super, doc, /*elementOrUrl*/resUri, resType)
+	initialize: function(/*$super, */doc, /*elementOrUrl*/resUri, resType)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		/*
 		if (elementOrUrl)
 		{

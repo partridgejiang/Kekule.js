@@ -1217,9 +1217,9 @@ Kekule.IO.CmlNameReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlNameReader',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 
 	/**
@@ -1486,9 +1486,9 @@ Kekule.IO.CmlChemStructureReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlChemStructureReader',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/**
 	 * Check if a <atomArray> element has child <atom> elements.
@@ -1832,9 +1832,9 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlMoleculeReader',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this._coreNamespaceURI = '';  // used internally
 	},
 	/** @private */
@@ -1870,7 +1870,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	 * Override to handle child elements of molecule.
 	 * @private
 	 */
-	doReadChildElement: function($super, elem, parentObj)
+	doReadChildElement: function(/*$super, */elem, parentObj)
 	{
 		if ((Kekule.DomUtils.getLocalName(elem) == 'molecule') && (this.matchCoreNamespace(elem))) // has sub molecule
 		{
@@ -1892,7 +1892,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				return null;
 		}
 		else
-			return $super(elem, parentObj);
+			return this.tryApplySuper('doReadChildElement', [elem, parentObj])  /* $super(elem, parentObj) */;
 	},
 
 	/**
@@ -3711,9 +3711,9 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlWriter',
 	/** @private */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		var op = options || {};
 		this.setPrettyPrint(Kekule.ObjUtils.isUnset(op.prettyPrint)? Kekule.globalOptions.IO.cml.prettyPrint: op.prettyPrint);
 	},

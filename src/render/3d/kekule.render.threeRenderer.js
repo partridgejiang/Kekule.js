@@ -170,9 +170,9 @@ Kekule.Render.ThreeContext = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ThreeContext',
 	/** @constructs */
-	initialize: function($super, scene, camera, lights, renderer)
+	initialize: function(/*$super, */scene, camera, lights, renderer)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setScene(scene);
 		this.setCamera(camera);
 		this.setLights(lights);

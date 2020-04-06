@@ -70,12 +70,12 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 	/** @ignore */
 	doGetWidgetClassName: function()
 	{
-		return CNS.TREEVIEW;
+		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CNS.TREEVIEW;
 	},
 	/** @private */
-	doCreateChildItemElem: function($super)
+	doCreateChildItemElem: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('doCreateChildItemElem')  /* $super() */;
 		if (result)  // create expand marker
 		{
 			var marker = this.createGlyphContent(result, null, CNS.TREEVIEW_EXPANDMARK);

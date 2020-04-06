@@ -34,9 +34,9 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.BaseTransition',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -201,9 +201,9 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3Transition',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -565,7 +565,7 @@ Kekule.Widget.Css3OpacityTrans = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3OpacityTrans',
 	/** @private */
-	canExecute: function($super, element, options)
+	canExecute: function(/*$super, */element, options)
 	{
 		return !!Kekule.BrowserFeature.cssTranform;
 	},
@@ -602,9 +602,9 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3SlideTransition',
 	/** @constructs */
-	initialize: function($super, direction)
+	initialize: function(/*$super, */direction)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (Kekule.ObjUtils.notUnset(direction))
 			this.setDirection(direction);
 	},
@@ -615,7 +615,7 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	canExecute: function($super, element, options)
+	canExecute: function(/*$super, */element, options)
 	{
 		return true;
 		/*
@@ -632,13 +632,13 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		*/
 	},
 	/** @private */
-	prepare: function($super, element, caller, options)
+	prepare: function(/*$super, */element, caller, options)
 	{
 		//console.log('prepare', options);
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
 		this._direction = this.getActualDirection(element, options);  // save this value, avoid user change direction property during transition
 
-		$super(element, caller, options);
+		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
 
 		/*
 		var direction = this.getDirection();
@@ -852,9 +852,9 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3GrowTransition',
 	/** @constructs */
-	initialize: function($super, baseRectOrCaller)
+	initialize: function(/*$super, */baseRectOrCaller)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (baseRectOrCaller)
 		{
 			if (baseRectOrCaller.ownerDocument)  // is element
@@ -907,7 +907,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	canExecute: function($super, element, options)
+	canExecute: function(/*$super, */element, options)
 	{
 		return true;
 		/*
@@ -922,11 +922,11 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	prepare: function($super, element, caller, options)
+	prepare: function(/*$super, */element, caller, options)
 	{
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
 
-		$super(element, caller, options);
+		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
 		element.style.overflow = 'hidden';
 		Kekule.HtmlElementUtils.makePositioned(element);
 
@@ -1040,9 +1040,9 @@ Kekule.Widget.Css3TransformTrans = Class.create(Kekule.Widget.Css3Transition,
 		return ['transform', 'transformOrigin'];
 	},
 	/** @ignore */
-	prepare: function($super, element, caller, options)
+	prepare: function(/*$super, */element, caller, options)
 	{
-		$super(element, caller, options);
+		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
 		var computedTransMatrixInfo =	Kekule.StyleUtils.getTransformMatrixValues(element);
 		if (computedTransMatrixInfo)
 		{
@@ -1074,9 +1074,9 @@ Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3Trans
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Css3TransformGrowTransition',
 	/** @constructs */
-	initialize: function($super, baseRectOrCaller)
+	initialize: function(/*$super, */baseRectOrCaller)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (baseRectOrCaller)
 		{
 			if (baseRectOrCaller.ownerDocument)  // is element
@@ -1119,11 +1119,11 @@ Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3Trans
 	},
 
 	/** @private */
-	prepare: function($super, element, caller, options)
+	prepare: function(/*$super, */element, caller, options)
 	{
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
 
-		$super(element, caller, options);
+		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
 		element.style.overflow = 'hidden';
 		Kekule.HtmlElementUtils.makePositioned(element);
 
@@ -1223,9 +1223,9 @@ Kekule.Widget.Css3TransitionSimpleClassCreator = {
 		/** @ignore */
 		var result = Class.create(Kekule.Widget.Css3Transition, {
 			CLASS_NAME: className,
-			initialize: function($super)
+			initialize: function(/*$super*/)
 			{
-				$super();
+				this.tryApplySuper('initialize')  /* $super() */;
 				this.setCssProperty(cssProperty);
 				this.setTimingFunc(timingFunc);
 			}

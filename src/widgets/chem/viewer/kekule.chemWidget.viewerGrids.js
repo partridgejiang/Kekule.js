@@ -44,11 +44,11 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ViewerGrid',
-	initialize: function($super, parentOrElementOrDocument, renderType, viewerConfigs)
+	initialize: function(/*$super, */parentOrElementOrDocument, renderType, viewerConfigs)
 	{
 		this.setPropStoreFieldValue('renderType', renderType);
 		this.setPropStoreFieldValue('viewerConfigs', viewerConfigs);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -129,13 +129,13 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.VIEWER_GRID;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.VIEWER_GRID;
 	},
 
 	/** @ignore */
-	createWidget: function($super)
+	createWidget: function(/*$super*/)
 	{
 		var doc = this.getDocument();
 		// react to click on add cell, show a dialog to load or edit chem object
@@ -232,9 +232,9 @@ Kekule.ChemWidget.ViewerGrid2D = Class.create(Kekule.ChemWidget.ViewerGrid,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ViewerGrid2D',
-	initialize: function($super, parentOrElementOrDocument, viewerConfigs)
+	initialize: function(/*$super, */parentOrElementOrDocument, viewerConfigs)
 	{
-		$super(parentOrElementOrDocument, Kekule.Render.RendererType.R2D, viewerConfigs);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, Kekule.Render.RendererType.R2D, viewerConfigs])  /* $super(parentOrElementOrDocument, Kekule.Render.RendererType.R2D, viewerConfigs) */;
 	}
 });
 
@@ -248,9 +248,9 @@ Kekule.ChemWidget.ViewerGrid3D = Class.create(Kekule.ChemWidget.ViewerGrid,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ViewerGrid3D',
-	initialize: function($super, parentOrElementOrDocument, viewerConfigs)
+	initialize: function(/*$super, */parentOrElementOrDocument, viewerConfigs)
 	{
-		$super(parentOrElementOrDocument, Kekule.Render.RendererType.R3D, viewerConfigs);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, Kekule.Render.RendererType.R3D, viewerConfigs])  /* $super(parentOrElementOrDocument, Kekule.Render.RendererType.R3D, viewerConfigs) */;
 	}
 });
 

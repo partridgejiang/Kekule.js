@@ -35,16 +35,16 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.OpenBabelReader',
 	/** @constructs */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		//this._obConv = null;
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/**
 	 * Decide output object type: molecule or reaction.
@@ -204,16 +204,16 @@ Kekule.IO.OpenBabelWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.OpenBabelWriter',
 	/** @constructs */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		//this._obConv = new (OB.getClassCtor('ObConversionWrapper'))();
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		//this._obConv = null;
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	doWriteData: function(obj, dataType, format)

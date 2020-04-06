@@ -1479,7 +1479,7 @@ Kekule.CanonicalizationMorganExIndexer = Class.create(Kekule.CanonicalizationMor
 	/** @private */
 	CLASS_NAME: 'Kekule.CanonicalizationMorganExIndexer',
 	/** @ignore */
-	doExecute: function($super, ctab)
+	doExecute: function(/*$super, */ctab)
 	{
 		// do a normal morgan indexer first
 		//$super(ctab);

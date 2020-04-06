@@ -185,7 +185,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	DEF_TOOLBAR_REVOKE_MODES: [/*EM.ALWAYS,*/ /*EM.EVOKEE_CLICK,*/ EM.EVOKEE_MOUSE_LEAVE, EM.EVOKER_TIMEOUT],
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
+	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
 		//this._errorReportElem = null;  // use internally
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
@@ -199,7 +199,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('showCaption', false);
 		this.setPropStoreFieldValue('useCornerDecoration', true);
 		//this.setUseCornerDecoration(true);
-		$super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType, viewerConfigs])  /* $super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs) */;
 		this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
 		/*
 		if (chemObj)
@@ -223,11 +223,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		//this.getPainter().finalize();
 		var toolBar = this.getToolbar();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 		if (toolBar)
 			toolBar.finalize();
 		if (this._composerDialog)
@@ -543,7 +543,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
 		// debug
 		/*
@@ -567,14 +567,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		this.updateActions();
 	},
 
 	/** @ignore */
-	doSetElement: function($super, element)
+	doSetElement: function(/*$super, */element)
 	{
 		var elem = element;
 		if (elem)
@@ -587,10 +587,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				//console.log('replace img to span');
 			}
 		}
-		return $super(elem);
+		return this.tryApplySuper('doSetElement', [elem])  /* $super(elem) */;
 	},
 	/** @ignore */
-	doUnbindElement: function($super, element)
+	doUnbindElement: function(/*$super, */element)
 	{
 		// unbind old element, the context parent element should be set to null
 		if (this._drawContextParentElem && this._drawContextParentElem.parentNode)
@@ -598,7 +598,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this._drawContextParentElem.parentNode.removeChild(this._drawContextParentElem);
 			this._drawContextParentElem = null;
 		}
-		return $super(element);
+		return this.tryApplySuper('doUnbindElement', [element])  /* $super(element) */;
 	},
 
 	/** @ignore */
@@ -614,9 +614,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.VIEWER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.VIEWER;
 		try  // may raise exception when called with class prototype (required by placeholder related methods)
 		{
 			var renderType = this.getRenderType();
@@ -643,12 +643,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
-	doResize: function($super)
+	doResize: function(/*$super*/)
 	{
 		//$super();
 		this.adjustDrawParentDim();
 		this.adjustToolbarPos();
-		$super();
+		this.tryApplySuper('doResize')  /* $super() */;
 	},
 	/** @ignore */
 	doWidgetShowStateChanged: function(isShown)
@@ -661,10 +661,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 	/** @ignore */
-	refitDrawContext: function($super, doNotRepaint)
+	refitDrawContext: function(/*$super, */doNotRepaint)
 	{
 		// resize context, means client size changed, so toolbar should also be adjusted.
-		$super(doNotRepaint);
+		this.tryApplySuper('refitDrawContext', [doNotRepaint])  /* $super(doNotRepaint) */;
 		this.adjustToolbarPos();
 	},
 
@@ -674,9 +674,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return true;
 	},
 	/** @ignore */
-	resetRenderType: function($super, oldType, newType)
+	resetRenderType: function(/*$super, */oldType, newType)
 	{
-		$super(oldType, newType);
+		this.tryApplySuper('resetRenderType', [oldType, newType])  /* $super(oldType, newType) */;
 		// classname
 		var oldHtmlClassName = this._getRenderTypeSpecifiedHtmlClassName(oldType);
 		var newHtmlClassName = this._getRenderTypeSpecifiedHtmlClassName(newType);
@@ -695,9 +695,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @private */
-	doSetUseCornerDecoration: function($super, value)
+	doSetUseCornerDecoration: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetUseCornerDecoration', [value])  /* $super(value) */;
 		this.useCornerDecorationChanged();
 	},
 	/** @private */
@@ -753,7 +753,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/** @ignore */
-	setDrawDimension: function($super, width, height)
+	setDrawDimension: function(/*$super, */width, height)
 	{
 		var newHeight = height;
 		if (this.captionIsShown())  // height need add the height of caption
@@ -761,7 +761,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			var dimCaption = Kekule.HtmlElementUtils.getElemClientDimension(this.getCaptionElem());
 			newHeight += dimCaption.height || 0;
 		}
-		$super(width, newHeight);
+		this.tryApplySuper('setDrawDimension', [width, newHeight])  /* $super(width, newHeight) */;
 	},
 
 	/// Methods about caption: currently not used ///////////
@@ -1865,9 +1865,9 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ViewerBasicInteractionController',
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer);
+		this.tryApplySuper('initialize', [viewer])  /* $super(viewer) */;
 		this._enableMouseRotate = true;  // private
 		this._transformInfo = {
 			'isTransforming': false,
@@ -2438,9 +2438,9 @@ Kekule.ChemWidget.Viewer2D = Class.create(Kekule.ChemWidget.Viewer,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.Viewer2D',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, chemObj)
+	initialize: function(/*$super, */parentOrElementOrDocument, chemObj)
 	{
-		$super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R2D);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R2D])  /* $super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R2D) */;
 	},
 	/** @ignore */
 	getAllowRenderTypeChange: function()
@@ -2463,9 +2463,9 @@ Kekule.ChemWidget.Viewer3D = Class.create(Kekule.ChemWidget.Viewer,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.Viewer3D',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, chemObj)
+	initialize: function(/*$super, */parentOrElementOrDocument, chemObj)
 	{
-		$super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R3D);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R3D])  /* $super(parentOrElementOrDocument, chemObj, Kekule.Render.RendererType.R3D) */;
 	},
 	/** @ignore */
 	getAllowRenderTypeChange: function()
@@ -2554,9 +2554,9 @@ Kekule.ChemWidget.ActionOnViewer = Class.create(Kekule.ChemWidget.ActionOnDispla
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionOnViewer',
 	/** @constructs */
-	initialize: function($super, viewer, caption, hint)
+	initialize: function(/*$super, */viewer, caption, hint)
 	{
-		$super(viewer, caption, hint);
+		this.tryApplySuper('initialize', [viewer, caption, hint])  /* $super(viewer, caption, hint) */;
 	},
 	/** @private */
 	doUpdate: function()
@@ -2588,9 +2588,9 @@ Kekule.ChemWidget.ActionViewerRotateBase = Class.create(Kekule.ChemWidget.Action
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionViewerRotateBase',
 	/** @constructs */
-	initialize: function($super, viewer, caption, hint)
+	initialize: function(/*$super, */viewer, caption, hint)
 	{
-		$super(viewer, caption, hint);
+		this.tryApplySuper('initialize', [viewer, caption, hint])  /* $super(viewer, caption, hint) */;
 		this.setDelta(2 * Math.PI / 180);  // TODO: this default value should be configurable
 	},
 	/** @private */
@@ -2617,9 +2617,9 @@ Kekule.ChemWidget.ActionViewerRotateBase2D = Class.create(Kekule.ChemWidget.Acti
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionViewerRotateBase2D',
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		var viewer = this.getViewer();
 		var flag = viewer && (viewer.getRenderType() === Kekule.Render.RendererType.R2D);
 		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
@@ -2638,9 +2638,9 @@ Kekule.ChemWidget.ActionViewerRotateBase3D = Class.create(Kekule.ChemWidget.Acti
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionViewerRotateBase3D',
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		var viewer = this.getViewer();
 		var flag = viewer && (viewer.getRenderType() === Kekule.Render.RendererType.R3D);
 		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
@@ -2660,9 +2660,9 @@ Kekule.ChemWidget.ActionViewerRotateLeft = Class.create(Kekule.ChemWidget.Action
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_ROTATE_LEFT,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATELEFT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATELEFT'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATELEFT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATELEFT')])  /* $super(viewer, \*CWT.CAPTION_ROTATELEFT, CWT.HINT_ROTATELEFT*\Kekule.$L('ChemWidgetTexts.CAPTION_ROTATELEFT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATELEFT')) */;
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -2684,9 +2684,9 @@ Kekule.ChemWidget.ActionViewerRotateRight = Class.create(Kekule.ChemWidget.Actio
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_ROTATE_RIGHT,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATERIGHT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATERIGHT'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATERIGHT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATERIGHT')])  /* $super(viewer, \*CWT.CAPTION_ROTATERIGHT, CWT.HINT_ROTATERIGHT*\Kekule.$L('ChemWidgetTexts.CAPTION_ROTATERIGHT'), Kekule.$L('ChemWidgetTexts.HINT_ROTATERIGHT')) */;
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -2708,9 +2708,9 @@ Kekule.ChemWidget.ActionViewerRotateX = Class.create(Kekule.ChemWidget.ActionVie
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_ROTATE_X,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEX'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEX'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEX'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEX')])  /* $super(viewer, \*CWT.CAPTION_ROTATEX, CWT.HINT_ROTATEX*\Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEX'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEX')) */;
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -2735,9 +2735,9 @@ Kekule.ChemWidget.ActionViewerRotateY = Class.create(Kekule.ChemWidget.ActionVie
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_ROTATE_Y,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEY'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEY'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEY'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEY')])  /* $super(viewer, \*CWT.CAPTION_ROTATEY, CWT.HINT_ROTATEY*\Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEY'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEY')) */;
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -2762,9 +2762,9 @@ Kekule.ChemWidget.ActionViewerRotateZ = Class.create(Kekule.ChemWidget.ActionVie
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_ROTATE_Z,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEZ'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEZ'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ*/Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEZ'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEZ')])  /* $super(viewer, \*CWT.CAPTION_ROTATEZ, CWT.HINT_ROTATEZ*\Kekule.$L('ChemWidgetTexts.CAPTION_ROTATEZ'), Kekule.$L('ChemWidgetTexts.HINT_ROTATEZ')) */;
 	},
 	/** @private */
 	doExecute: function(target, htmlEvent)
@@ -2788,9 +2788,9 @@ Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub = Class.create(Kekule.Che
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub',
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_MOL_DISPLAY_TYPE, CWT.HINT_MOL_DISPLAY_TYPE*/Kekule.$L('ChemWidgetTexts.CAPTION_MOL_DISPLAY_TYPE'), Kekule.$L('ChemWidgetTexts.HINT_MOL_DISPLAY_TYPE'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_MOL_DISPLAY_TYPE, CWT.HINT_MOL_DISPLAY_TYPE*/Kekule.$L('ChemWidgetTexts.CAPTION_MOL_DISPLAY_TYPE'), Kekule.$L('ChemWidgetTexts.HINT_MOL_DISPLAY_TYPE')])  /* $super(viewer, \*CWT.CAPTION_MOL_DISPLAY_TYPE, CWT.HINT_MOL_DISPLAY_TYPE*\Kekule.$L('ChemWidgetTexts.CAPTION_MOL_DISPLAY_TYPE'), Kekule.$L('ChemWidgetTexts.HINT_MOL_DISPLAY_TYPE')) */;
 	},
 	/** @private */
 	doExecute: function(target)
@@ -2814,14 +2814,14 @@ Kekule.ChemWidget.ActionViewerEdit = Class.create(Kekule.ChemWidget.ActionOnView
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_VIEWER_EDIT,
 	/** @constructs */
-	initialize: function($super, viewer)
+	initialize: function(/*$super, */viewer)
 	{
-		$super(viewer, /*CWT.CAPTION_OPENEDITOR, CWT.HINT_OPENEDITOR*/Kekule.$L('ChemWidgetTexts.CAPTION_OPENEDITOR'), Kekule.$L('ChemWidgetTexts.HINT_OPENEDITOR'));
+		this.tryApplySuper('initialize', [viewer, /*CWT.CAPTION_OPENEDITOR, CWT.HINT_OPENEDITOR*/Kekule.$L('ChemWidgetTexts.CAPTION_OPENEDITOR'), Kekule.$L('ChemWidgetTexts.HINT_OPENEDITOR')])  /* $super(viewer, \*CWT.CAPTION_OPENEDITOR, CWT.HINT_OPENEDITOR*\Kekule.$L('ChemWidgetTexts.CAPTION_OPENEDITOR'), Kekule.$L('ChemWidgetTexts.HINT_OPENEDITOR')) */;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		var viewer = this.getViewer();
 		//this.setEnabled(this.getEnabled() && viewer.getChemObj() && viewer.getEnableEdit());
 		//this.setEnabled(this.getEnabled() && viewer.getAllowEditing());

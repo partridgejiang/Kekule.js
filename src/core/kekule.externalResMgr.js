@@ -52,16 +52,16 @@ Kekule.ExternalResourceManager = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ExternalResourceManager',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('resources', {});
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.setPropStoreFieldValue('resources', null);
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()

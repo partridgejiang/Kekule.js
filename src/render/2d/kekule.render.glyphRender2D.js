@@ -32,13 +32,13 @@ Kekule.Render.BaseGlyph2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.BaseGlyph2DRenderer',
 	/** @private */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		var ops = Object.create(options);
 		ops.strokeColor = options.strokeColor || options.glyphStrokeColor;
 		ops.fillColor = options.fillColor || options.glyphFillColor;
 		ops.strokeWidth = options.strokeWidth || options.glyphStrokeWidth;
-		return $super(context, baseCoord, ops);
+		return this.tryApplySuper('doDraw', [context, baseCoord, ops])  /* $super(context, baseCoord, ops) */;
 	}
 });
 
@@ -53,16 +53,16 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.PathGlyphCtab2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, parent)
+	initialize: function(/*$super, */chemObj, drawBridge, parent)
 	{
-		$super(chemObj, drawBridge, parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, parent])  /* $super(chemObj, drawBridge, parent) */;
 		this._nodeCoordOverrideMap = new Kekule.MapEx(true);  // non-weak, for clear call
 	},
 	/** @ignore */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this._nodeCoordOverrideMap.finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 
 	/** @private */
@@ -76,10 +76,10 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		}
 	},
 	/** @private */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		//console.log('do draw ctab');
-		var result = $super(context, baseCoord, options);
+		var result = this.tryApplySuper('doDraw', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 		this._nodeCoordOverrideMap.clear();  // clear override map after a full draw
 		return result;
 	},
@@ -101,9 +101,9 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		}
 	},
 	/** @private */
-	doDrawConnector: function($super, context, group, connector, parentChemObj, options, finalTransformOptions)
+	doDrawConnector: function(/*$super, */context, group, connector, parentChemObj, options, finalTransformOptions)
 	{
-		var result = $super(context, group, connector, parentChemObj, options, finalTransformOptions);
+		var result = this.tryApplySuper('doDrawConnector', [context, group, connector, parentChemObj, options, finalTransformOptions])  /* $super(context, group, connector, parentChemObj, options, finalTransformOptions) */;
 
 		// if connector has control point, add bound info
 		var controlPoints = connector.getControlPoints && connector.getControlPoints();
@@ -781,15 +781,15 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.PathGlyph2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, parent)
+	initialize: function(/*$super, */chemObj, drawBridge, parent)
 	{
-		$super(chemObj, drawBridge, parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, parent])  /* $super(chemObj, drawBridge, parent) */;
 		this._concreteChemObj = chemObj.getCtab();
 		this._concreteRenderer = new Kekule.Render.PathGlyphCtab2DRenderer(chemObj.getCtab(), drawBridge, this);
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 		if (this._concreteRenderer)
 		{
 			this._concreteRenderer.finalize();
@@ -797,12 +797,12 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 		}
 	},
 	/** ignore */
-	_getRenderSortIndex: function($super)
+	_getRenderSortIndex: function(/*$super*/)
 	{
 		if (this._concreteRenderer)
 			return this._concreteRenderer._getRenderSortIndex();
 		else
-			return $super();
+			return this.tryApplySuper('_getRenderSortIndex')  /* $super() */;
 	},
 	/** @ignore */
 	getRenderCache: function(context)
@@ -815,27 +815,27 @@ Kekule.Render.PathGlyph2DRenderer = Class.create(Kekule.Render.BaseGlyph2DRender
 		return options;
 	},
 	/** @ignore */
-	isChemObjRenderedBySelf: function($super, context, obj)
+	isChemObjRenderedBySelf: function(/*$super, */context, obj)
 	{
-		var result = $super(context, obj) || (obj === this.getChemObj()) || this._concreteRenderer.isChemObjRenderedBySelf(context, obj);
+		var result = this.tryApplySuper('isChemObjRenderedBySelf', [context, obj])  /* $super(context, obj) */ || (obj === this.getChemObj()) || this._concreteRenderer.isChemObjRenderedBySelf(context, obj);
 		return result;
 	},
 	/** @ignore */
-	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
+	isChemObjRenderedDirectlyBySelf: function(/*$super, */context, obj)
 	{
-		return $super(context, obj) || (obj === this.getChemObj());
+		return this.tryApplySuper('isChemObjRenderedDirectlyBySelf', [context, obj])  /* $super(context, obj) */ || (obj === this.getChemObj());
 	},
 	/** @private */
-	doSetRedirectContext: function($super, value)
+	doSetRedirectContext: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetRedirectContext', [value])  /* $super(value) */;
 		this._concreteRenderer.setRedirectContext(value);
 	},
 	/** @ignore */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		//console.log('dodraw path', this._concreteRenderer.getClassName());
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDraw', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		var chemObj = this.getChemObj();
 		var op = Object.create(options);

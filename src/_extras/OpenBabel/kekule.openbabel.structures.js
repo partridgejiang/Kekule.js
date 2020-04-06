@@ -105,9 +105,9 @@ if (Kekule.Calculator)
 			return this.getOptions().forceField;
 		},
 		/** @ignore */
-		createWorker: function($super)
+		createWorker: function(/*$super*/)
 		{
-			var w = $super();
+			var w = this.tryApplySuper('createWorker')  /* $super() */;
 			if (w)
 			{
 				//var url = Kekule.getScriptPath() + '_extras/OpenBabel/openbabel.js.O1';
@@ -131,9 +131,9 @@ if (Kekule.Calculator)
 			return result;
 		},
 		/** @ignore */
-		doReactWorkerMessage: function($super, data, e)
+		doReactWorkerMessage: function(/*$super, */data, e)
 		{
-			$super(data, e);
+			this.tryApplySuper('doReactWorkerMessage', [data, e])  /* $super(data, e) */;
 			if (data.type === 'output3D')  // receive generated structure
 			{
 				var genData = data.molData;

@@ -55,9 +55,9 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		this.defineProp('worker', {'dataType': DataType.OBJECT, 'setter': null});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAsync(true);
 		this.reactWorkerMessageBind = this.reactWorkerMessage.bind(this);
 		this.reactWorkerErrorBind = this.reactWorkerError.bind(this);

@@ -36,9 +36,9 @@ Kekule.Widget.StyleResource = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.StyleResource',
 	/** @constructs */
-	initialize: function($super, name, cssClassName)
+	initialize: function(/*$super, */name, cssClassName)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('name', name);
 		if (cssClassName)
 			this.setCssClassName(cssClassName);

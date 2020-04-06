@@ -77,9 +77,9 @@ Kekule.Glyph.Base = Class.create(Kekule.ChemObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		/*
 		if (glyphName)
 			this.setGlyphName(glyphName);

@@ -28,9 +28,9 @@ Kekule.ElectronSet = Class.create(Kekule.ChemObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, electronCount)
+	initialize: function(/*$super, */electronCount)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setElectronCount(electronCount || Kekule.ElectronSet.UNSET_ELECTRONCOUNT);
 	},
 	/** @private */
@@ -60,9 +60,9 @@ Kekule.UnbondedElectronSet = Class.create(Kekule.ElectronSet,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, electronCount)
+	initialize: function(/*$super, */electronCount)
 	{
-		$super(electronCount);
+		this.tryApplySuper('initialize', [electronCount])  /* $super(electronCount) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -152,9 +152,9 @@ Kekule.BondForm = Class.create(Kekule.ElectronSet,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, bondOrder, electronCount, bondType)
+	initialize: function(/*$super, */bondOrder, electronCount, bondType)
 	{
-		$super(electronCount);
+		this.tryApplySuper('initialize', [electronCount])  /* $super(electronCount) */;
 		this.setBondOrder(bondOrder || Kekule.BondOrder.DEFAULT);
 		if (Kekule.ObjUtils.notUnset(bondType))
 			this.setBondType(bondType);

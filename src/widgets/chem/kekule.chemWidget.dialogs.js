@@ -53,7 +53,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.LoadDataDialog',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
 		this._openFileAction = new Kekule.ActionLoadFileData(); //new Kekule.ActionFileOpen();
 		this._openFileAction.setBinaryDetector(this._detectBinaryFormat);
@@ -63,17 +63,18 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		this._sBtnLoadFromFile = Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_FROM_FILE'); //CWT.CAPTION_LOADDATA_FROM_FILE
 		this._formatItems = null;
 
-		$super(parentOrElementOrDocument, caption || /*CWT.CAPTION_LOADDATA*/ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG'),
-			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, caption || /*CWT.CAPTION_LOADDATA*/ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG'),
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]])  /* $super(parentOrElementOrDocument, caption || \*CWT.CAPTION_LOADDATA*\ Kekule.$L('ChemWidgetTexts.CAPTION_LOADDATA_DIALOG'),
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]) */;
 
 		if (this.setResizable)
 			this.setResizable(true);
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._openFileAction.finalize();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -89,22 +90,22 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		//this.defineProp('fileFilters', {'dataType': DataType.ARRAY});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAutoAdjustSizeOnPopup(true);
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.DIALOG_LOADDATA;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.DIALOG_LOADDATA;
 	},
 	/** @ignore */
-	doCreateClientContents: function($super, clientElem)
+	doCreateClientContents: function(/*$super, */clientElem)
 	{
-		$super();
+		this.tryApplySuper('doCreateClientContents')  /* $super() */;
 		var doc = this.getDocument();
 		// label
 		var elem = doc.createElement('div');
@@ -231,14 +232,14 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	},
 
 	/** @ignore */
-	doSetButtons: function($super, value)
+	doSetButtons: function(/*$super, */value)
 	{
 		var buttons = value || [];
 		if (buttons.indexOf(this._sBtnLoadFromFile) < 0)
 		{
 			buttons.unshift(this._sBtnLoadFromFile);
 		}
-		$super(buttons);
+		this.tryApplySuper('doSetButtons', [buttons])  /* $super(buttons) */;
 
 		var btnOpenFile = this.getDialogButton(this._sBtnLoadFromFile);
 		btnOpenFile.setAction(this._openFileAction);
@@ -300,13 +301,13 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	},
 
 	/** @ignore */
-	open: function($super, callback, caller, showType)
+	open: function(/*$super, */callback, caller, showType)
 	{
 		this.setPropStoreFieldValue('chemObj', null);
-		return $super(callback, caller, showType);
+		return this.tryApplySuper('open', [callback, caller, showType])  /* $super(callback, caller, showType) */;
 	},
 	/** @ignore */
-	close: function($super, result)
+	close: function(/*$super, */result)
 	{
 		if (!this.getChemObj())  // chemObj not load by file, need to analysis direct input data
 		{
@@ -328,7 +329,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 				}
 			}
 		}
-		return $super(result);
+		return this.tryApplySuper('close', [result])  /* $super(result) */;
 	},
 
 	/**
@@ -366,10 +367,10 @@ Kekule.ChemWidget.LoadOrAppendDataDialog = Class.create(Kekule.ChemWidget.LoadDa
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.LoadOrAppendDataDialog',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
 		this._appendCheckBox = null;
-		$super(parentOrElementOrDocument, caption, buttons);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, caption, buttons])  /* $super(parentOrElementOrDocument, caption, buttons) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -381,14 +382,14 @@ Kekule.ChemWidget.LoadOrAppendDataDialog = Class.create(Kekule.ChemWidget.LoadDa
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.DIALOG_LOADAPPENDDATA;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.DIALOG_LOADAPPENDDATA;
 	},
 	/** @ignore */
-	doCreateClientContents: function($super, clientElem)
+	doCreateClientContents: function(/*$super, */clientElem)
 	{
-		$super(clientElem);
+		this.tryApplySuper('doCreateClientContents', [clientElem])  /* $super(clientElem) */;
 		var doc = this.getDocument();
 		// append check box
 		var appendCheckBox = new Kekule.Widget.CheckBox(this);
@@ -399,11 +400,11 @@ Kekule.ChemWidget.LoadOrAppendDataDialog = Class.create(Kekule.ChemWidget.LoadDa
 		this._appendCheckBox = appendCheckBox;
 	},
 	/** @ignore */
-	open: function($super, callback, caller, showType)
+	open: function(/*$super, */callback, caller, showType)
 	{
 		this.setIsAppending(false);  // always auto uncheck append
 		this._appendCheckBox.setDisplayed(this.getDisplayAppendCheckBox());
-		return $super(callback, caller, showType);
+		return this.tryApplySuper('open', [callback, caller, showType])  /* $super(callback, caller, showType) */;
 	}
 });
 

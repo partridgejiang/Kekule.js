@@ -102,13 +102,13 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	BTN_NAME_FIELD: '__$btnName__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
 		this._dialogCallback = null;
 		this._modalInfo = null;
 		this._childButtons = [];
 		this.setPropStoreFieldValue('location', Kekule.Widget.Location.CENTER);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this._dialogOpened = false;  // used internally
 		this.setUseCornerDecoration(true);
 		if (caption)
@@ -119,14 +119,14 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.setDisplayed(false);
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		//this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
 		if (this.getModalInfo())
 		{
 			this.getGlobalManager().unprepareModalWidget(this);
 		}
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -156,9 +156,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.defineProp('btnPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		if (this.setMovable)
 		{
 			this.setMovable(true);
@@ -637,9 +637,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateBeforeChanging: function($super, isShown)
+	widgetShowStateBeforeChanging: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('widgetShowStateBeforeChanging', [isShown])  /* $super(isShown) */;
 
 		if (isShown /*&& (!this.isShown())*/)  // show
 		{
@@ -657,9 +657,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (!isShown)  // hide
 		{
 			if (this._dialogCallback)
@@ -671,9 +671,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	widgetShowStateDone: function($super, isShown)
+	widgetShowStateDone: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('widgetShowStateDone', [isShown])  /* $super(isShown) */;
 		if (!isShown && this._dialogOpened)  // hide after dialog open
 		{
 			if (this.getModalInfo())

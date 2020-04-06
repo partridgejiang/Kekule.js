@@ -85,9 +85,9 @@ Kekule.Widget.DynamicEvokeHelper = Class.create(ObjectEx,
 	/** @private */
 	DEF_TIMEOUT: 5000,
 	/** @constructs */
-	initialize: function($super, evokee, evoker, evokeModes, revokeModes, timeout)
+	initialize: function(/*$super, */evokee, evoker, evokeModes, revokeModes, timeout)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._timeoutRevokeHandle = null;  // private
 		this.reactEvokeEventsBind = this.reactEvokeEvents.bind(this);  // IMPORTANT, linkWidgets use reactEvokeEventsBind
 		this.checkTimeoutRevokeBind = this.checkTimeoutRevoke.bind(this); // IMPORTAN, timeout settings may be used after linkWidgets
@@ -98,10 +98,10 @@ Kekule.Widget.DynamicEvokeHelper = Class.create(ObjectEx,
 		this.linkWidgets(evokee, evoker);
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.unlinkWidgets(this.getEvokee(), this.getEvoker());
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 
 	/** @private */
@@ -149,9 +149,9 @@ Kekule.Widget.DynamicEvokeHelper = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		var inter = Kekule.ArrayUtils.intersect(modifiedPropNames, ['evokeModes', 'revokeModes']);
 		if (inter.length > 0)
 			this.evokeModesChanged();

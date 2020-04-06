@@ -76,9 +76,9 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	ROW_EDIT_INFO_FIELD: '__$row_edit_info__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this._inlineEdit = null;
 		this._isActivitingRow = false;
 	},
@@ -152,9 +152,9 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 	},
 
 	/**

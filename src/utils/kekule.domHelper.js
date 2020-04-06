@@ -41,9 +41,9 @@ Kekule.DomHelper = Class.create(ObjectEx,
 	/** @private */
 	ERR_ELEMENT_NOTSET: 'Element not set',
 	/** @constructs */
-	initialize: function($super, doc)
+	initialize: function(/*$super, */doc)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._supportNsMethods = null;
 		if (doc)
 			this.setDocument(doc);

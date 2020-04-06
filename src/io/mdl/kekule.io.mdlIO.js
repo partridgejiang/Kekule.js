@@ -40,9 +40,9 @@ Kekule.IO.MdlStructureFragmentReader = Class.create(Kekule.IO.MdlBlockReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlStructureFragmentReader',
 	/** @constructs */
-	initialize: function($super, coordMode)
+	initialize: function(/*$super, */coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
 	/** @private */
@@ -97,7 +97,7 @@ Kekule.IO.MdlStructureFragmentReader = Class.create(Kekule.IO.MdlBlockReader,
 		return fragment;
 	},
 	/** @private */
-	doReadBlock: function($super, textBuffer, parentObj)
+	doReadBlock: function(/*$super, */textBuffer, parentObj)
 	{
 		// check ctab format, V2000 or V3000
 		var version = this.getCtabVersion(textBuffer);
@@ -135,9 +135,9 @@ Kekule.IO.MdlStructureFragmentWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlStructureFragmentWriter',
 	/** @constructs */
-	initialize: function($super, version, coordMode)
+	initialize: function(/*$super, */version, coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setMdlVersion(version || Kekule.IO.MdlVersion.V2000);
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
@@ -156,7 +156,7 @@ Kekule.IO.MdlStructureFragmentWriter = Class.create(Kekule.IO.MdlBlockWriter,
 			return new Kekule.IO.Mdl2kCTabWriter(this.getCoordMode());
 	},
 	/** @private */
-	doWriteBlock: function($super, obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer)
 	{
 		var ctabWriter = this.createCtabWriter(this.getMdlVersion());
 		var text = ctabWriter.writeBlock(obj);
@@ -183,7 +183,7 @@ Kekule.IO.Mdl3kMoleculeCTabReader = Class.create(Kekule.IO.MdlStructureFragmentR
 		return new Kekule.Molecule();
 	},
 	/** @private */
-	doReadBlock: function($super, textBuffer, parentObj)
+	doReadBlock: function(/*$super, */textBuffer, parentObj)
 	{
 		var ctabReader = this.createCtabReader(Kekule.IO.MdlVersion.V3000);
 		//var ctabInfo = ctabReader.readBlock(textBuffer.getUnreadLines(), parentObj);
@@ -206,12 +206,12 @@ Kekule.IO.Mdl3kMoleculeCTabWriter = Class.create(Kekule.IO.MdlStructureFragmentW
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Mdl3kMoleculeCTabWriter',
 	/** @constructs */
-	initialize: function($super, coordMode)
+	initialize: function(/*$super, */coordMode)
 	{
-		$super(Kekule.IO.MdlVersion.V3000, coordMode);
+		this.tryApplySuper('initialize', [Kekule.IO.MdlVersion.V3000, coordMode])  /* $super(Kekule.IO.MdlVersion.V3000, coordMode) */;
 	},
 	/** @private */
-	doWriteBlock: function($super, obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer)
 	{
 		var ctabWriter = new Kekule.IO.Mdl3kCTabWriter(this.getCoordMode());;
 		var text = ctabWriter.writeBlock(obj);
@@ -316,12 +316,12 @@ Kekule.IO.MdlMoleculeReader = Class.create(Kekule.IO.MdlStructureFragmentReader,
 		return result;
 	},
 	/** @private */
-	doReadBlock: function($super, textBuffer, parentObj)
+	doReadBlock: function(/*$super, */textBuffer, parentObj)
 	{
 		var headerInfo = this.readHeaderInfo(textBuffer, parentObj);
 		if (headerInfo && (typeof(headerInfo.coordMode) != 'undefined'))
 			this.setCoordMode(headerInfo.coordMode);
-		var mol = $super(textBuffer, parentObj);
+		var mol = this.tryApplySuper('doReadBlock', [textBuffer, parentObj])  /* $super(textBuffer, parentObj) */;
 		// add header information to mol
 		if (mol && headerInfo)
 		{
@@ -406,7 +406,7 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 		return Kekule.ChemStructureUtils.getTotalStructFragment(obj);
 	},
 	/** @private */
-	doWriteBlock: function($super, obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer)
 	{
 		var mol = this.getMolecule(obj);
 		if (mol)
@@ -418,7 +418,7 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 			if (this.getMdlVersion() == Kekule.IO.MdlVersion.V3000)  // add a compatible count line
 				textBuffer.writeLine(Kekule.IO.MdlStructureUtils.generateClassicStyleCountLine(molInfo, this.getMdlVersion()));
 			// Ctab
-			$super(mol, textBuffer);
+			this.tryApplySuper('doWriteBlock', [mol, textBuffer])  /* $super(mol, textBuffer) */;
 			if (this.getMdlVersion() == Kekule.IO.MdlVersion.V3000)  // 3k compatible end tag
 				textBuffer.writeLine('M  END');
 		}
@@ -577,9 +577,9 @@ Kekule.IO.MdlStructDataWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	/** @private */
 	IGNORED_INFO_FIELDS: ['generator', 'author', 'date', 'comment'],
 	/** @constructs */
-	initialize: function($super, version, coordMode)
+	initialize: function(/*$super, */version, coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setMdlVersion(version || Kekule.IO.MdlVersion.V2000);
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
@@ -774,7 +774,7 @@ Kekule.IO.MdlBaseReactionReader = Class.create(Kekule.IO.MdlBlockReader,
 	},
 
 	/** @private */
-	doReadBlock: function($super, textBuffer, parentObj)
+	doReadBlock: function(/*$super, */textBuffer, parentObj)
 	{
 		var headerInfo = this.readHeaderBlock(textBuffer, null);
 		// read header info success, this is a legal RXN file, do other jobs
@@ -824,9 +824,9 @@ Kekule.IO.Mdl2kReactionReader = Class.create(Kekule.IO.MdlBaseReactionReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Mdl2kReactionReader',
 	/** @private */
-	readHeaderBlock: function($super, textBuffer, parentObj)
+	readHeaderBlock: function(/*$super, */textBuffer, parentObj)
 	{
-		var result = $super(textBuffer, parentObj);
+		var result = this.tryApplySuper('readHeaderBlock', [textBuffer, parentObj])  /* $super(textBuffer, parentObj) */;
 		if (result.version != Kekule.IO.MdlVersion.V2000)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL2000_RXN_DATA*/Kekule.$L('ErrorMsg.NOT_MDL2000_RXN_DATA'));
@@ -890,9 +890,9 @@ Kekule.IO.Mdl3kReactionReader = Class.create(Kekule.IO.MdlBaseReactionReader,
 		return (new Kekule.IO.Mdl3kTextBuffer());
 	},
 	/** @private */
-	readHeaderBlock: function($super, textBuffer, parentObj)
+	readHeaderBlock: function(/*$super, */textBuffer, parentObj)
 	{
-		var result = $super(textBuffer, parentObj);
+		var result = this.tryApplySuper('readHeaderBlock', [textBuffer, parentObj])  /* $super(textBuffer, parentObj) */;
 		if (result.version != Kekule.IO.MdlVersion.V3000)
 		{
 			Kekule.error(/*Kekule.ErrorMsg.NOT_MDL3000_RXN_DATA*/Kekule.$L('ErrorMsg.NOT_MDL3000_RXN_DATA'));
@@ -966,9 +966,9 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlReactionWriter',
 	/** @constructs */
-	initialize: function($super, version, coordMode)
+	initialize: function(/*$super, */version, coordMode)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setMdlVersion(version || Kekule.IO.MdlVersion.V2000);
 		this.setCoordMode(coordMode || Kekule.CoordMode.UNKNOWN);
 	},
@@ -1051,7 +1051,7 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	},
 
 	/** @private */
-	doWriteBlock: function($super, reaction, textBuffer)
+	doWriteBlock: function(/*$super, */reaction, textBuffer)
 	{
 		var is3kMode = this.getMdlVersion() == Kekule.IO.MdlVersion.V3000;
 		  // if in 3k mode, reactant and products should be surrounded by block begin/end tag
@@ -1136,9 +1136,9 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.BaseMdlWriter',
 	/** @private */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		if (!options)
 			options = {};
 		this.setMdlVersion(options.mdlVersion || Kekule.globalOptions.IO.mdl.mdlVersion);
@@ -1151,7 +1151,7 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('coordMode', {'dataType': DataType.INT, 'defaultValue': Kekule.CoordMode.UNKNOWN});
 	},
 	/** @private */
-	doWriteData: function($super, obj, dataType, format)
+	doWriteData: function(/*$super, */obj, dataType, format)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if (dtype != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -1160,7 +1160,7 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return null;
 		}
 		else
-			return $super(obj, dtype, format);
+			return this.tryApplySuper('doWriteData', [obj, dtype, format])  /* $super(obj, dtype, format) */;
 	}
 });
 
@@ -1347,9 +1347,9 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlWriter',
 	/** @private */
-	initialize: function($super, options)
+	initialize: function(/*$super, */options)
 	{
-		$super(options);
+		this.tryApplySuper('initialize', [options])  /* $super(options) */;
 		var op = options || {};
 		this.setMdlVersion(op.mdlVersion || Kekule.globalOptions.IO.mdl.mdlVersion);
 		this.setCoordMode(op.coordMode || Kekule.globalOptions.IO.mdl.coordMode);
