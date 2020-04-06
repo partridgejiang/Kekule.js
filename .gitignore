@@ -97,6 +97,7 @@ jsDoc
 *.OLD.*
 *.OLD
 *_OLD*
+*.NEW
 *.removed
 *.lock
 *.DECPRECATED
