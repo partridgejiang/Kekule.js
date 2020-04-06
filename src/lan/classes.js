@@ -2505,6 +2505,168 @@ ObjectEx = Class.create(
 			return null;
 	},
 	/**
+	 * Call the inherited method in the super class.
+	 * If methodName is not provided, the super class prototype will be returned instead.
+	 * @param {String} methodName
+	 * @returns {Variant}
+	 */
+	$super: function(methodName, returnEmptyFunctionIfNotFound)
+	{
+		var superProto = this.getSuperClassPrototype();
+		if (!methodName)
+		{
+			return superProto;
+		}
+		else
+		{
+			return this.tryCallSuper.apply(this, arguments);
+			/*
+			var result = superProto[methodName];
+			if (result)
+			{
+				result = result.bind(this);
+			}
+			else if (returnEmptyFunctionIfNotFound)
+				result = emptyFunction;
+			return result;
+			*/
+		}
+	},
+	/**
+	 * Call a method from super class.
+	 * @param {String} methodName
+	 * @param {array} params
+	 * @param {Bool} ignoreIfNotFound If true, this function will not raise an exception when super method is not found.
+	 */
+	applySuper: function(methodName, params, ignoreIfNotFound)
+	{
+		var lastTarget = this.__getLastSuperMethodCallTarget__(methodName);
+		//var superProto = this.getSuperClassPrototype();
+		//var superProto = lastTarget.getSuperClassPrototype();
+
+		// The first call of method (this[methodName]) may actually calling the method on prototype of this
+		// so we check here, ensure the method on same prototype won't be called twice
+		var currCallProto = this.__getMethodBelongedPrototype__(methodName, lastTarget);
+		var superProto = this.__getMethodBelongedPrototype__(methodName, lastTarget.getSuperClassPrototype());
+		if (superProto && superProto === currCallProto)
+			superProto = this.__getMethodBelongedPrototype__(methodName, superProto.getSuperClassPrototype());
+
+		var method = superProto && superProto[methodName];
+		if (!method)
+		{
+			if (ignoreIfNotFound)
+				return;
+			else
+				throw 'Super method not found: ' + methodName;
+		}
+		else
+		{
+			var result;
+			try
+			{
+				this.__pushSuperMethodCallTargetStack__(methodName, superProto);
+				if (params)
+					result = method.apply(this, params);
+				else
+					result = method.apply(this);
+			}
+			finally
+			{
+				//targetStack.pop();
+				/*
+				var popped = this.__popSuperMethodCallTargetStack__(methodName);
+				if (popped !== superProto)
+					Kekule.error('unexpected proto');
+				*/
+				this.__popSuperMethodCallTargetStack__(methodName);
+			}
+			return result;
+		}
+	},
+	/**
+	 * Try calling a method from super class, if the method does not exist in super class, nothing will be done.
+	 * @param {String} methodName
+	 * @param {array} params
+	 */
+	tryApplySuper: function(methodName, params)
+	{
+		return this.applySuper(methodName, params, true);
+	},
+	/**
+	 * Try calling a method from super class, if the method does not exist in super class, nothing will be done.
+	 * Different from {@link ObjectEx.tryApplySuper}, this method is called like tryCallSuper('method', param1, param2...)
+	 * @param {String} methodName
+	 */
+	tryCallSuper: function()
+	{
+		var params = __$A__(arguments);
+		var methodName = params.shift();
+		return this.tryApplySuper(methodName, params);
+	},
+
+	/** @private */
+	__getMethodBelongedPrototype__: function(methodName, baseObj)
+	{
+		if (!baseObj)
+			return null;
+		if (baseObj.hasOwnProperty(methodName))
+			return baseObj;
+		else
+		{
+			var proto = baseObj.getSuperClassPrototype && baseObj.getSuperClassPrototype();
+			if (proto && proto.__getMethodBelongedPrototype__)
+				return proto.__getMethodBelongedPrototype__(methodName, proto);
+			else
+				return null;
+		}
+	},
+	/** @private */
+	__getSuperMethodCallTargetStack__: function(methodName)
+	{
+		var stacks = this['__$superMethodCallTargetStacks__'];
+		if (!stacks)
+		{
+			stacks = {};
+			this['__$superMethodCallTargetStacks__'] = stacks;
+		}
+		var result = stacks[methodName];
+		if (!result)
+		{
+			result = [];
+			stacks[methodName] = result;
+		}
+		return result;
+	},
+	/** @private **/
+	__getLastSuperMethodCallTarget__: function(methodName)
+	{
+		var stack = this.__getSuperMethodCallTargetStack__(methodName);
+		return (stack.length)? stack[stack.length - 1]: this.getPrototype();
+	},
+	/** @private */
+	__pushSuperMethodCallTargetStack__: function(methodName, target)
+	{
+		var stack = this.__getSuperMethodCallTargetStack__(methodName);
+		stack.push(target);
+	},
+	/** @private */
+	__popSuperMethodCallTargetStack__: function(methodName)
+	{
+		var result = null;
+		var stacks = this['__$superMethodCallTargetStacks__'];
+		var stack = stacks && stacks[methodName];
+		if (stack)
+		{
+			var result = stack.pop();
+			if (!stack.length)  // empty
+			{
+				delete stacks[methodName];
+			}
+		}
+		return result;
+	},
+
+	/**
 	 * Change the class of an existing object.
 	 * This method is quite dangerous, call it with caution.
 	 * @param {Class} aClass

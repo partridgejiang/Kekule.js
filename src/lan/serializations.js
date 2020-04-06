@@ -31,7 +31,7 @@ var
  *   you can just return null in those methods, and then the default save / load process of serializer will
  *   take the action. Otherwise, please return a true value.
  */
-ObjSerializer = Class.create(
+ObjSerializer = Class.create(ObjectEx,
 /** @lends ObjSerializer# */
 {
 	/** @private */
