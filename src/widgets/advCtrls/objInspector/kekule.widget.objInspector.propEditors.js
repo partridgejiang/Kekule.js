@@ -61,9 +61,9 @@ Kekule.PropertyEditor.BaseEditor = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.BaseEditor',
 	/** @constructs **/
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._editWidget = null;
 	},
 	/** @private */
@@ -98,10 +98,10 @@ Kekule.PropertyEditor.BaseEditor = Class.create(ObjectEx,
 		this.defineProp('allowEmpty', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.finalizeWidget();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	finalizeWidget: function()
@@ -894,13 +894,13 @@ Kekule.PropertyEditor.BoolEditor = Class.create(Kekule.PropertyEditor.BaseEditor
 		return result;
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var v = this.getValue();
 		if (Kekule.ObjUtils.isUnset(v))  // not true or false, value is undefined or null
 			return Kekule.$L('WidgetTexts.S_VALUE_UNSET'); //Kekule.WidgetTexts.S_VALUE_UNSET;
 		else
-			return $super();
+			return this.tryApplySuper('getValueText')  /* $super() */;
 	},
 	/** @ignore */
 	doSaveEditValue: function()
@@ -930,7 +930,7 @@ Kekule.PropertyEditor.SelectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 	CLASS_NAME: 'Kekule.PropertyEditor.SelectEditor',
 
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var v = this.getValue();
 		var items = this.getSelectItems() || [];
@@ -940,7 +940,7 @@ Kekule.PropertyEditor.SelectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 			if (item.value === v)
 				return item.text;
 		}
-		return $super();
+		return this.tryApplySuper('getValueText')  /* $super() */;
 	},
 	/**
 	 * Returns items need to be shown in select box.
@@ -990,9 +990,9 @@ Kekule.PropertyEditor.EnumEditor = Class.create(Kekule.PropertyEditor.SelectEdit
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.EnumEditor',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.enumInfos = [];  // private field
 	},
 	/* @private */
@@ -1003,9 +1003,9 @@ Kekule.PropertyEditor.EnumEditor = Class.create(Kekule.PropertyEditor.SelectEdit
 	},
 	*/
 	/** @ignore */
-	setPropertyInfo: function($super, value)
+	setPropertyInfo: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('setPropertyInfo', [value])  /* $super(value) */;
 		if (value)  // save enum info
 		{
 			var enumSrc = value.enumSource;
@@ -1057,16 +1057,16 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 	CLASS_NAME: 'Kekule.PropertyEditor.ObjectExEditor',
 	// override methods
 	/** @ignore */
-	getAttributes: function($super)
+	getAttributes: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getAttributes')  /* $super() */;
 		result = result | PEA.SUBPROPS;
 		return result;
 	},
 	/** @ignore */
-	hasSubPropertyEditors: function($super)
+	hasSubPropertyEditors: function(/*$super*/)
 	{
-		return $super() && this.getValue();
+		return this.tryApplySuper('hasSubPropertyEditors')  /* $super() */ && this.getValue();
 	},
 	/** @ignore */
 	getSubPropertyEditors: function(propScopes)
@@ -1114,7 +1114,7 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 		return result;
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var v = this.getValue();
 		if (Kekule.ObjUtils.notUnset(v))
@@ -1122,7 +1122,7 @@ Kekule.PropertyEditor.ObjectExEditor = Class.create(Kekule.PropertyEditor.BaseEd
 			if (v.getClassName)
 				return '[' + v.getClassName() + ']';
 			else
-				return $super();
+				return this.tryApplySuper('getValueText')  /* $super() */;
 		}
 		else
 			return Kekule.$L('WidgetTexts.S_OBJECT_UNSET'); //Kekule.WidgetTexts.S_OBJECT_UNSET;
@@ -1184,14 +1184,14 @@ Kekule.PropertyEditor.ObjectFieldEditor = Class.create(Kekule.PropertyEditor.Sim
 	*/
 
 	/** @ignore */
-	doCreateEditWidget: function($super, parentWidget)
+	doCreateEditWidget: function(/*$super, */parentWidget)
 	{
 		if (!this.getPropertyType())  // guess type
 		{
 			var value = this.getValue();
 			this.getPropertyInfo().dataType = DataType.getType(value);
 		}
-		var result = $super(parentWidget);
+		var result = this.tryApplySuper('doCreateEditWidget', [parentWidget])  /* $super(parentWidget) */;
 		return result;
 	}
 });
@@ -1207,9 +1207,9 @@ Kekule.PropertyEditor.ObjectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.ObjectEditor',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._initialObjValue = undefined;  // private
 	},
 
@@ -1306,24 +1306,24 @@ Kekule.PropertyEditor.ObjectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 	},
 	// override methods
 	/** @ignore */
-	getAttributes: function($super)
+	getAttributes: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getAttributes')  /* $super() */;
 		result = result | PEA.SUBPROPS;
 		return result;
 	},
 	/** @ignore */
-	hasSubPropertyEditors: function($super)
+	hasSubPropertyEditors: function(/*$super*/)
 	{
-		return $super() && this.getObjFieldInfos(this.getValue()).length;
+		return this.tryApplySuper('hasSubPropertyEditors')  /* $super() */ && this.getObjFieldInfos(this.getValue()).length;
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var VDM = Kekule.Widget.ValueListEditor.ValueDisplayMode;
 		var mode = this.getValueTextMode();
 		if (mode === VDM.JSON)
-			return $super();
+			return this.tryApplySuper('getValueText')  /* $super() */;
 
 		var value = this.getValue();
 		if (value)
@@ -1333,9 +1333,9 @@ Kekule.PropertyEditor.ObjectEditor = Class.create(Kekule.PropertyEditor.BaseEdit
 		else
 			return '';
 	},
-	setValue: function($super, value)
+	setValue: function(/*$super, */value)
 	{
-		var result = $super(value);
+		var result = this.tryApplySuper('setValue', [value])  /* $super(value) */;
 		this._initialObjValue = value;
 		return result;
 	},
@@ -1380,17 +1380,17 @@ Kekule.PropertyEditor.ArrayEditor = Class.create(Kekule.PropertyEditor.BaseEdito
 	CLASS_NAME: 'Kekule.PropertyEditor.ArrayEditor',
 	// override methods
 	/** @ignore */
-	getAttributes: function($super)
+	getAttributes: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getAttributes')  /* $super() */;
 		result = result | PEA.SUBPROPS;
 		return result;
 	},
 	/** @ignore */
-	hasSubPropertyEditors: function($super)
+	hasSubPropertyEditors: function(/*$super*/)
 	{
 		var v = this.getValue();
-		return $super() && v && v.length;
+		return this.tryApplySuper('hasSubPropertyEditors')  /* $super() */ && v && v.length;
 	},
 	/** @ignore */
 	getSubPropertyEditors: function(propScopes)
@@ -1422,13 +1422,13 @@ Kekule.PropertyEditor.ArrayEditor = Class.create(Kekule.PropertyEditor.BaseEdito
 		return result;
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var v = this.getValue();
 		if (DataType.isArrayValue(v))
 			return '[' + v.length + ' ' + /*Kekule.WidgetTexts.S_ITEMS*/Kekule.$L('WidgetTexts.S_ITEMS') + ']';
 		else
-			return $super();
+			return this.tryApplySuper('getValueText')  /* $super() */;
 	}
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.ArrayEditor, DataType.ARRAY);

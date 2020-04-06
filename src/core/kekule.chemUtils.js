@@ -563,9 +563,9 @@ Kekule.TokenAnalyzer = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, text)
+	initialize: function(/*$super, */text)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setSrcText(text);
 	},
 	/** @private */

@@ -523,9 +523,9 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	/** @private */
 	RENDER_CACHE_FIELD: '__$renderCache$__',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, /*renderConfigs,*/ parent)
+	initialize: function(/*$super, */chemObj, drawBridge, /*renderConfigs,*/ parent)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropValue('chemObj', chemObj, true); // since we have no setChemObj method, use this instead
 		/*
 		if (renderConfigs)
@@ -540,7 +540,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		this._suspendUpdateStatus = 0;  // used internal
 		this._suspendUpdateInfos = [];
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		var boundRecorder = this.getPropStoreFieldValue('boundInfoRecorder');  // do not auto create
 		if (boundRecorder)
@@ -550,7 +550,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		//console.log('release renderer', this.getClassName());
 		this.setPropValue('chemObj', null, true);
 		this.setDrawBridge(null);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1734,16 +1734,16 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		});
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.reset();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 
 	/** ignore */
-	_getRenderSortIndex: function($super)
+	_getRenderSortIndex: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('_getRenderSortIndex')  /* $super() */;
 		var renderers = this.prepareChildRenderers();
 		for (var i = 0, l = renderers.length; i < l; ++i)
 		{
@@ -1756,9 +1756,9 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	},
 
 	/** @ignore */
-	doEstimateObjBox: function($super, context, options, allowCoordBorrow)
+	doEstimateObjBox: function(/*$super, */context, options, allowCoordBorrow)
 	{
-		var result = $super(context, options, allowCoordBorrow);
+		var result = this.tryApplySuper('doEstimateObjBox', [context, options, allowCoordBorrow])  /* $super(context, options, allowCoordBorrow) */;
 		var renderers = this.prepareChildRenderers();
 		var BU = Kekule.BoxUtils;
 		for (var i = 0, l = renderers.length; i < l; ++i)
@@ -1780,9 +1780,9 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	},
 
 	/** @ignore */
-	isChemObjRenderedBySelf: function($super, context, obj)
+	isChemObjRenderedBySelf: function(/*$super, */context, obj)
 	{
-		var result = $super(context, obj);
+		var result = this.tryApplySuper('isChemObjRenderedBySelf', [context, obj])  /* $super(context, obj) */;
 		//console.log('check rendered by self', obj.getClassName(), this.getClassName(), result);
 		if (!result)
 		{
@@ -1804,14 +1804,14 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		return result;
 	},
 	/** @ignore */
-	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
+	isChemObjRenderedDirectlyBySelf: function(/*$super, */context, obj)
 	{
-		return $super(context, obj);
+		return this.tryApplySuper('isChemObjRenderedDirectlyBySelf', [context, obj])  /* $super(context, obj) */;
 	},
 	/** @ignore */
-	doSetRedirectContext: function($super, value)
+	doSetRedirectContext: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetRedirectContext', [value])  /* $super(value) */;
 		// if has child renderers, set redirect context as well
 		var childRenderers = this.getChildRenderers();
 		if (childRenderers && childRenderers.length)
@@ -1967,7 +1967,7 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	},
 
 	/** @private */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		//this.reset();
 		/*
@@ -1984,7 +1984,7 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 
 		//if (!this.hasChildRenderers())
 		if (!this.getTargetChildObjs().length)
-			return $super(context, baseCoord, op);
+			return this.tryApplySuper('doDraw', [context, baseCoord, op])  /* $super(context, baseCoord, op) */;
 		else  // then draw each child objects by child renderers
 		{
 			//console.log('do draw self', this.getClassName());
@@ -2031,9 +2031,9 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		});
 	},
 	/** @private */
-	doClear: function($super, context)
+	doClear: function(/*$super, */context)
 	{
-		$super(context);
+		this.tryApplySuper('doClear', [context])  /* $super(context) */;
 		if (this.hasChildRenderers())
 		{
 			this.doClearChildren(context);
@@ -2053,12 +2053,12 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		}
 	},
 	/** @private */
-	doUpdate: function($super, context, updateObjDetails, updateType)
+	doUpdate: function(/*$super, */context, updateObjDetails, updateType)
 	{
 		this.refreshChildObjs();  // refresh child objects first
 		//this.prepare();
 		// update self
-		$super(context, updateObjDetails, updateType);
+		this.tryApplySuper('doUpdate', [context, updateObjDetails, updateType])  /* $super(context, updateObjDetails, updateType) */;
 		//if (this.hasChildRenderers())
 		if (this.getTargetChildObjs().length)
 		{

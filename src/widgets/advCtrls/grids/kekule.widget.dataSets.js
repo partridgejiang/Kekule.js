@@ -78,19 +78,19 @@ Kekule.Widget.BaseDataSet = Class.create(ObjectEx,
 		this.defineProp('cache', {'dataType': DataType.ARRAY});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setEnableCache(true);
 		this.setCache([]);
 		this.setDefaultTimeout(20000);
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.clearCache();
 		this.setCache(null);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 
 	/**
@@ -366,9 +366,9 @@ Kekule.Widget.ArrayDataSet = Class.create(Kekule.Widget.BaseDataSet,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ArrayDataSet',
 	/** @constructs */
-	initialize: function($super, data)
+	initialize: function(/*$super, */data)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setData(data);
 	},
 	/** @private */
@@ -500,9 +500,9 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.DataPager',
 	/** @constructs */
-	initialize: function($super, dataSet)
+	initialize: function(/*$super, */dataSet)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('pageSize', 10);  // default value
 		this.setDataSet(dataSet);
 	},
@@ -553,9 +553,9 @@ Kekule.Widget.DataPager = Class.create(ObjectEx,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setCurrPageIndex(0);
 	},
 

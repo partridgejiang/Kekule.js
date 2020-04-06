@@ -366,9 +366,9 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.Base2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, /*renderConfigs,*/ parent)
+	initialize: function(/*$super, */chemObj, drawBridge, /*renderConfigs,*/ parent)
 	{
-		$super(chemObj, drawBridge, /*renderConfigs,*/ parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, /*renderConfigs,*/ parent])  /* $super(chemObj, drawBridge, \*renderConfigs,*\ parent) */;
 		/*
 		if (!renderConfigs)
 			this.setRenderConfigs(Kekule.Render.getRender2DConfigs());  // use default config
@@ -670,12 +670,12 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	CLASS_NAME: 'Kekule.Render.ChemObj2DRenderer',
 
 	/** @ignore */
-	_getRenderSortIndex: function($super)
+	_getRenderSortIndex: function(/*$super*/)
 	{
 		var obj = this.getChemObj();
 		if (obj && obj.coordStickTarget && obj.getCoordStickTarget())
 			return 1;
-		return $super();
+		return this.tryApplySuper('_getRenderSortIndex')  /* $super() */;
 	},
 
 	/** @private */
@@ -732,7 +732,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	},
 
 	/** @ignore */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), options.allowCoordBorrow);
 		options.medianObjRefLength = medianObjRefLength || options.defScaleRefLength;
@@ -740,7 +740,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		this.prepareTransformParams(context, baseCoord, options);
 		this.prepareGeneralOptions(context, options);
 
-		return $super(context, baseCoord, options);
+		return this.tryApplySuper('doDraw', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 	},
 
 	prepareGeneralOptions: function(context, options)
@@ -1061,9 +1061,9 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	/** @private */
 	DRAWN_OBJ_FIELD: '__$drawnObj__',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, parent)
+	initialize: function(/*$super, */chemObj, drawBridge, parent)
 	{
-		$super(chemObj, drawBridge, parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, parent])  /* $super(chemObj, drawBridge, parent) */;
 		// flags about size auto recalculation
 		this.__$alwaysRecalcSize__ = false;
 		this.__$isRecalculatingSize = false;
@@ -1118,9 +1118,9 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 	},
 
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		//console.log('draw text options', options);
 
@@ -1231,10 +1231,10 @@ Kekule.Render.TextBlock2DRenderer = Class.create(Kekule.Render.RichTextBased2DRe
 	},
 
 	/** private */
-	extractRichTextDrawOptions: function($super, options)
+	extractRichTextDrawOptions: function(/*$super, */options)
 	{
 		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
-		var ops = $super(options);
+		var ops = this.tryApplySuper('extractRichTextDrawOptions', [options])  /* $super(options) */;
 		ops.fontSize = oneOf(ops.fontSize, ops.labelFontSize);
 		ops.fontFamily = oneOf(ops.fontFamily, ops.labelFontFamily);
 		ops.color = oneOf(ops.color, ops.labelColor);
@@ -1257,14 +1257,14 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 	CLASS_NAME: 'Kekule.Render.Formula2DRenderer',
 
 	/** @ignore */
-	basicDrawObjectUpdated: function($super, context, obj, parentObj, boundInfo, updateType)
+	basicDrawObjectUpdated: function(/*$super, */context, obj, parentObj, boundInfo, updateType)
 	{
 		if (obj === this.getChemObj())
 		{
-			return $super(context, obj.getParent(), obj.getParent(), boundInfo, updateType);  // register with molecule, not formula itself
+			return this.tryApplySuper('basicDrawObjectUpdated', [context, obj.getParent(), obj.getParent(), boundInfo, updateType])  /* $super(context, obj.getParent(), obj.getParent(), boundInfo, updateType) */;  // register with molecule, not formula itself
 		}
 		else
-			return $super(context, obj, parentObj, boundInfo, updateType);
+			return this.tryApplySuper('basicDrawObjectUpdated', [context, obj, parentObj, boundInfo, updateType])  /* $super(context, obj, parentObj, boundInfo, updateType) */;
 	},
 
 	/** @private */
@@ -1287,10 +1287,10 @@ Kekule.Render.Formula2DRenderer = Class.create(Kekule.Render.RichTextBased2DRend
 	},
 
 	/** private */
-	extractRichTextDrawOptions: function($super, options)
+	extractRichTextDrawOptions: function(/*$super, */options)
 	{
 		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
-		var ops = $super(options);
+		var ops = this.tryApplySuper('extractRichTextDrawOptions', [options])  /* $super(options) */;
 		/*
 		ops.fontSize = oneOf(ops.atomFontSize, ops.fontSize);
 		ops.fontFamily = oneOf(ops.atomFontFamily, ops.fontFamily);
@@ -1317,15 +1317,15 @@ Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTex
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.TextBasedChemMarker2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, parent)
+	initialize: function(/*$super, */chemObj, drawBridge, parent)
 	{
-		$super(chemObj, drawBridge, parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, parent])  /* $super(chemObj, drawBridge, parent) */;
 		//this.__$alwaysRecalcSize__ = true;  // always recalc size of marker block
 	},
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
-		return $super(context, baseCoord, options);
+		return this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		/* debug
 		if (!baseCoord)
@@ -1360,17 +1360,17 @@ Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTex
 	},
 
 	/** @private */
-	doEstimateSelfObjBox: function($super, context, options, allowCoordBorrow)
+	doEstimateSelfObjBox: function(/*$super, */context, options, allowCoordBorrow)
 	{
-		return $super(context, options, allowCoordBorrow);
+		return this.tryApplySuper('doEstimateSelfObjBox', [context, options, allowCoordBorrow])  /* $super(context, options, allowCoordBorrow) */;
 		//return this.getChemObj().getBox2D(allowCoordBorrow);
 	},
 
 	/** private */
-	extractRichTextDrawOptions: function($super, options)
+	extractRichTextDrawOptions: function(/*$super, */options)
 	{
 		//var ops = Kekule.Render.RenderOptionUtils.extractRichTextDraw2DOptions(renderConfigs, options || {});
-		var ops = $super(options);
+		var ops = this.tryApplySuper('extractRichTextDrawOptions', [options])  /* $super(options) */;
 		var obj = this.getChemObj();
 		ops.fontSize = oneOf(obj.getRenderOption('fontSize'), ops.chemMarkerFontSize, ops.fontSize, ops.atomFontSize);
 		ops.fontFamily = oneOf(ops.fontFamily, ops.atomFontFamily);
@@ -1393,14 +1393,14 @@ Kekule.Render.ImageBlock2DRenderer = Class.create(Kekule.Render.ChemObj2DRendere
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ImageBlock2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, parent)
+	initialize: function(/*$super, */chemObj, drawBridge, parent)
 	{
-		$super(chemObj, drawBridge, parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, parent])  /* $super(chemObj, drawBridge, parent) */;
 	},
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		//console.log('draw text options', options);
 
@@ -1553,9 +1553,9 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 		return null;
 	},
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		var ops = this._extractActualDrawOptions(options);
 
@@ -1619,7 +1619,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	CHILD_TRANSFORM_MATRIX_FIELD: '__$childTransMatrix__',
 
 	/** ignore */
-	_getRenderSortIndex: function($super)
+	_getRenderSortIndex: function(/*$super*/)
 	{
 		var ctab = this.getChemObj();
 		var nodes = ctab.getExposedNodes();
@@ -1629,7 +1629,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			if (obj && obj.coordStickTarget && obj.getCoordStickTarget())
 				return 1;
 		}
-		return $super();
+		return this.tryApplySuper('_getRenderSortIndex')  /* $super() */;
 	},
 
 	/** @private */
@@ -1689,9 +1689,9 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 
 	/** @private */
-	prepareGeneralOptions: function($super, context, options)
+	prepareGeneralOptions: function(/*$super, */context, options)
 	{
-		return $super(context, options);
+		return this.tryApplySuper('prepareGeneralOptions', [context, options])  /* $super(context, options) */;
 		/*
 		 var configs = this.getRenderConfigs();
 		 if (configs)
@@ -1705,9 +1705,9 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	doPrepare: function($super, context, chemObj, baseCoord, options)
+	doPrepare: function(/*$super, */context, chemObj, baseCoord, options)
 	{
-		$super(context, chemObj, baseCoord, options);
+		this.tryApplySuper('doPrepare', [context, chemObj, baseCoord, options])  /* $super(context, chemObj, baseCoord, options) */;
 		this.doPrepareLayout(context, chemObj, baseCoord, options);
 	},
 	/**
@@ -1730,7 +1730,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/** @private */
-	handleConnectorSpecifiedRenderOptions: function($super, currObj, parentOptions)
+	handleConnectorSpecifiedRenderOptions: function(/*$super, */currObj, parentOptions)
 	{
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
 		var result = Object.create(parentOptions || null);
@@ -1738,16 +1738,16 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/** @ignore */
-	isChemObjRenderedBySelf: function($super, context, obj)
+	isChemObjRenderedBySelf: function(/*$super, */context, obj)
 	{
 		var renderedObjs = this.getRenderedObjs(context);
-		var result = $super(context, obj) || (renderedObjs && (renderedObjs.indexOf(obj) >= 0))
+		var result = this.tryApplySuper('isChemObjRenderedBySelf', [context, obj])  /* $super(context, obj) */ || (renderedObjs && (renderedObjs.indexOf(obj) >= 0))
 			|| (this.getChemObj().hasChildObj(obj) && (!obj.isExposed || obj.isExposed()));
 		//console.log('check if rendered', obj.getClassName(), result);
 		return result;
 	},
 	/** @ignore */
-	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
+	isChemObjRenderedDirectlyBySelf: function(/*$super, */context, obj)
 	{
 		/*
 		var chemObj = this.getChemObj();
@@ -1755,13 +1755,13 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		console.log(parentMol && parentMol.getId());
 		*/
 		var renderedObjs = this.getRenderedObjs(context);
-		return $super(context, obj) || (renderedObjs && (renderedObjs.indexOf(obj) >= 0));  // || (obj === parentMol);
+		return this.tryApplySuper('isChemObjRenderedDirectlyBySelf', [context, obj])  /* $super(context, obj) */ || (renderedObjs && (renderedObjs.indexOf(obj) >= 0));  // || (obj === parentMol);
 	},
 
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 
 		//console.log(options);
 
@@ -1811,7 +1811,7 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	doUpdateSelf: function($super, context, updatedObjDetails, updateType)
+	doUpdateSelf: function(/*$super, */context, updatedObjDetails, updateType)
 	{
 		if (this.canModifyGraphic(context))
 		{
@@ -1829,12 +1829,12 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					r = this.doRemove(context, Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(updatedObjDetails));
 					break;
 				default:  // clear
-					return $super(context, updatedObjDetails, updateType);
+					return this.tryApplySuper('doUpdateSelf', [context, updatedObjDetails, updateType])  /* $super(context, updatedObjDetails, updateType) */;
 			}
 			return r;
 		}
 		else
-			return $super(context, updatedObjDetails, updateType);
+			return this.tryApplySuper('doUpdateSelf', [context, updatedObjDetails, updateType])  /* $super(context, updatedObjDetails, updateType) */;
 	},
 
 	/** @private */
@@ -2090,22 +2090,22 @@ Kekule.Render.Ctab2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	doTransformCoordToObj: function($super, context, chemObj, coord)
+	doTransformCoordToObj: function(/*$super, */context, chemObj, coord)
 	{
 		var matrix = this.getExtraProp2(context, chemObj, this.INV_TRANSFORM_MATRIX_FIELD);
 		if (matrix)
 			return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
 		else
-			return $super(context, chemObj, coord);
+			return this.tryApplySuper('doTransformCoordToObj', [context, chemObj, coord])  /* $super(context, chemObj, coord) */;
 	},
 	/** @private	 */
-	doTransformCoordToContext: function($super, context, chemObj, coord)
+	doTransformCoordToContext: function(/*$super, */context, chemObj, coord)
 	{
 		var matrix = this.getExtraProp2(context, chemObj, this.TRANSFORM_MATRIX_FIELD);
 		if (matrix)
 			return Kekule.CoordUtils.transform2DByMatrix(coord, matrix);
 		else
-			return $super(context, chemObj, coord);
+			return this.tryApplySuper('doTransformCoordToContext', [context, chemObj, coord])  /* $super(context, chemObj, coord) */;
 	},
 
 	/**
@@ -2380,7 +2380,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	},
 
 	/** @private */
-	doPrepare: function($super, context, chemObj, baseCoord, options)
+	doPrepare: function(/*$super, */context, chemObj, baseCoord, options)
 	{
 		/*
 		// generate draw options
@@ -2406,12 +2406,12 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 		//this.getRenderCache(context).appliedOptions = options;
 
-		$super(context, chemObj, baseCoord, options);
+		this.tryApplySuper('doPrepare', [context, chemObj, baseCoord, options])  /* $super(context, chemObj, baseCoord, options) */;
 	},
 	/** @ignore */
-	doPrepareLayout: function($super, context, chemObj, baseCoord, options)
+	doPrepareLayout: function(/*$super, */context, chemObj, baseCoord, options)
 	{
-		$super(context, chemObj, baseCoord, options);
+		this.tryApplySuper('doPrepareLayout', [context, chemObj, baseCoord, options])  /* $super(context, chemObj, baseCoord, options) */;
 
 		// iterate through nodes to see whether node label need to be set
 		var nodes = chemObj.getExposedNodes();
@@ -2477,9 +2477,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	*/
 
 	/** @private */
-	handleNodeSpecifiedRenderOptions: function($super, currObj, parentOptions)
+	handleNodeSpecifiedRenderOptions: function(/*$super, */currObj, parentOptions)
 	{
-		var result = $super(currObj, parentOptions);
+		var result = this.tryApplySuper('handleNodeSpecifiedRenderOptions', [currObj, parentOptions])  /* $super(currObj, parentOptions) */;
 		/*
 		// color
 		//result.atomColor = oneOf(localOptions.atomColor, localOptions.color, result.atomColor, result.color);
@@ -2508,14 +2508,14 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		return result;
 	},
 	/** @private */
-	handleConnectorSpecifiedRenderOptions: function($super, currObj, parentOptions)
+	handleConnectorSpecifiedRenderOptions: function(/*$super, */currObj, parentOptions)
 	{
 		/*
 		var localOptions = (currObj.getOverriddenRenderOptions? currObj.getOverriddenRenderOptions(): null) || {};
 		var result = Object.create(parentOptions);
 		result = Object.extend(result, localOptions);
 		*/
-		var result = $super(currObj, parentOptions);
+		var result = this.tryApplySuper('handleConnectorSpecifiedRenderOptions', [currObj, parentOptions])  /* $super(currObj, parentOptions) */;
 		// color
 		//result.bondColor = oneOf(localOptions.bondColor, localOptions.color, result.bondColor, result.color);
 		//result.bondColor = oneOf(localOptions.bondColor, result.bondColor);
@@ -4178,9 +4178,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.StructFragment2DRenderer',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, /*renderConfigs,*/ parent)
+	initialize: function(/*$super, */chemObj, drawBridge, /*renderConfigs,*/ parent)
 	{
-		$super(chemObj, drawBridge, /*renderConfigs,*/ parent);
+		this.tryApplySuper('initialize', [chemObj, drawBridge, /*renderConfigs,*/ parent])  /* $super(chemObj, drawBridge, \*renderConfigs,*\ parent) */;
 
 		this._concreteRenderer = null;
 		this._concreteChemObj = null;
@@ -4188,9 +4188,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		this.initConcreteRenderer();
 		//this.setMoleculeDisplayType(moleculeDisplayType || Kekule.Render.MoleculeDisplayType.BOND_LINE);
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 		if (this._concreteRenderer)
 		{
 			this._concreteRenderer.finalize();
@@ -4198,12 +4198,12 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		}
 	},
 	/** ignore */
-	_getRenderSortIndex: function($super)
+	_getRenderSortIndex: function(/*$super*/)
 	{
 		if (this._concreteRenderer)
 			return this._concreteRenderer._getRenderSortIndex();
 		else
-			return $super();
+			return this.tryApplySuper('_getRenderSortIndex')  /* $super() */;
 	},
 	/** @private */
 	initConcreteRenderer: function()
@@ -4309,30 +4309,30 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	},
 
 	/** @ignore */
-	isChemObjRenderedBySelf: function($super, context, obj)
+	isChemObjRenderedBySelf: function(/*$super, */context, obj)
 	{
 		var r = this.getConcreteRenderer();
-		var result = $super(context, obj) || (obj === this.getChemObj()) || (r && r.isChemObjRenderedBySelf(context, obj));
+		var result = this.tryApplySuper('isChemObjRenderedBySelf', [context, obj])  /* $super(context, obj) */ || (obj === this.getChemObj()) || (r && r.isChemObjRenderedBySelf(context, obj));
 		return result;
 	},
 	/** @ignore */
-	isChemObjRenderedDirectlyBySelf: function($super, context, obj)
+	isChemObjRenderedDirectlyBySelf: function(/*$super, */context, obj)
 	{
 		var r = this.getConcreteRenderer();
-		return $super(context, obj) || (obj === this.getChemObj()) || (obj === this._concreteChemObj); // || (r && r.isChemObjRenderedDirectlyBySelf(context, obj));
+		return this.tryApplySuper('isChemObjRenderedDirectlyBySelf', [context, obj])  /* $super(context, obj) */ || (obj === this.getChemObj()) || (obj === this._concreteChemObj); // || (r && r.isChemObjRenderedDirectlyBySelf(context, obj));
 	},
 
 	/** @private */
-	doSetRedirectContext: function($super, value)
+	doSetRedirectContext: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetRedirectContext', [value])  /* $super(value) */;
 		var r = this.getConcreteRenderer();
 		if (r)
 			r.setRedirectContext(value);
 	},
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		var chemObj = this.getChemObj();
 		if (chemObj)
@@ -4345,15 +4345,15 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 				if (obj.getAttachedMarkers)
 					r = r.concat(obj.getAttachedMarkers() || []);
 			}
-			return r.concat($super());
+			return r.concat(this.tryApplySuper('getChildObjs')  /* $super() */);
 		}
 		else
-			return $super();
+			return this.tryApplySuper('getChildObjs')  /* $super() */;
 	},
 	/** @ignore */
-	_needWholelyDraw: function($super, partialDrawObjs, context)
+	_needWholelyDraw: function(/*$super, */partialDrawObjs, context)
 	{
-		var result = $super(partialDrawObjs, context);
+		var result = this.tryApplySuper('_needWholelyDraw', [partialDrawObjs, context])  /* $super(partialDrawObjs, context) */;
 		if (!result)
 		{
 			var chemObj = this.getChemObj();
@@ -4409,7 +4409,7 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 	},
 
 	/** @ignore */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		// do some initial jobs on struct fragment
 		var useChargeAndRadicalMarkers = !!options.autoCreateChargeAndRadicalMarker;
@@ -4419,15 +4419,15 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			var mol = this.getChemObj();
 			this._createChargeAndRadicalMarkerOnStructFragment(mol);
 		}
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDraw', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 	},
 
 	/** @ignore */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
 		//this.applyConfigs();
 
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDrawSelf', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 		/*
 		var transformOptions = this.calcActualTransformOptions(context, this.getChemObj(), baseCoord, options);
 		var op = Object.create(options);
@@ -4482,9 +4482,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		}
 	},
 	/** @ignore */
-	doRedraw: function($super, context)
+	doRedraw: function(/*$super, */context)
 	{
-		return $super(context);
+		return this.tryApplySuper('doRedraw', [context])  /* $super(context) */;
 		/*
 		var r = this.getConcreteRenderer();
 		if (r)
@@ -4524,9 +4524,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 			return null;
 	},
 	/** @ignore */
-	transformCoordToObj: function($super, context, chemObj, coord)
+	transformCoordToObj: function(/*$super, */context, chemObj, coord)
 	{
-		return $super(context, chemObj, coord);
+		return this.tryApplySuper('transformCoordToObj', [context, chemObj, coord])  /* $super(context, chemObj, coord) */;
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
 		/*
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
@@ -4538,9 +4538,9 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		*/
 	},
 	/** @ignore */
-	transformCoordToContext: function($super, context, chemObj, coord)
+	transformCoordToContext: function(/*$super, */context, chemObj, coord)
 	{
-		return $super(context, chemObj, coord);
+		return this.tryApplySuper('transformCoordToContext', [context, chemObj, coord])  /* $super(context, chemObj, coord) */;
 		/*
 		//console.log(chemObj, this.getChemObj(), chemObj === this.getChemObj());
 		var obj = (this.getChemObj() === chemObj)? this._concreteChemObj: chemObj;
@@ -4596,7 +4596,7 @@ Kekule.Render.CompositeMolecule2DRenderer = Class.create(Kekule.Render.Composite
 	CLASS_NAME: 'Kekule.Render.CompositeMolecule2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		var r = [];
 		var group = this.getChemObj().getSubMolecules();
@@ -4605,7 +4605,7 @@ Kekule.Render.CompositeMolecule2DRenderer = Class.create(Kekule.Render.Composite
 			var o = group.getObjAt(i);
 			r.push(o);
 		}
-		return r.concat($super());
+		return r.concat(this.tryApplySuper('getChildObjs')  /* $super() */);
 	}
 });
 
@@ -4621,7 +4621,7 @@ Kekule.Render.ChemObjGroupList2DRenderer = Class.create(Kekule.Render.CompositeO
 	CLASS_NAME: 'Kekule.Render.CompositeMolecule2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		var obj = this.getChemObj();
 		if (obj instanceof Kekule.ChemObjList)
@@ -4637,7 +4637,7 @@ Kekule.Render.ChemObjGroupList2DRenderer = Class.create(Kekule.Render.CompositeO
 			r = obj.getAllObjs();
 		}
 
-		return (r || []).concat($super());
+		return (r || []).concat(this.tryApplySuper('getChildObjs')  /* $super() */);
 	}
 });
 
@@ -4654,7 +4654,7 @@ Kekule.Render.Reaction2DRenderer = Class.create(Kekule.Render.CompositeObj2DRend
 	CLASS_NAME: 'Kekule.Render.Reaction2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		var r = [];
 		var reaction = this.getChemObj();
@@ -4671,7 +4671,7 @@ Kekule.Render.Reaction2DRenderer = Class.create(Kekule.Render.CompositeObj2DRend
 			var o = reaction.getProductAt(i);
 			r.push(o);
 		}
-		return (r || []).concat($super());
+		return (r || []).concat(this.tryApplySuper('getChildObjs')  /* $super() */);
 		// TODO: currently the reagent is not considered
 	}
 });
@@ -4694,9 +4694,9 @@ Kekule.Render.ChemSpaceElement2DRenderer = Class.create(Kekule.Render.CompositeO
 	CLASS_NAME: 'Kekule.Render.ChemSpaceElement2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
-		var result = $super() || [];
+		var result = this.tryApplySuper('getChildObjs')  /* $super() */ || [];
 		var elem = this.getChemObj();
 		result = (elem.getChildren().toArray() || []).concat(result);
 		return result;
@@ -4722,14 +4722,14 @@ Kekule.Render.ChemSpace2DRenderer = Class.create(Kekule.Render.CompositeObj2DRen
 	CLASS_NAME: 'Kekule.Render.ChemSpace2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		//return this.getChemObj().getRoot().getChildren().toArray();
-		return [this.getChemObj().getRoot()].concat($super() || []);
+		return [this.getChemObj().getRoot()].concat(this.tryApplySuper('getChildObjs')  /* $super() */ || []);
 	},
 
 	/** @private */
-	doEstimateSelfObjBox: function($super, context, options, allowCoordBorrow)
+	doEstimateSelfObjBox: function(/*$super, */context, options, allowCoordBorrow)
 	{
 		var size = this.getChemObj().getSize2D();
 		if (size.x && size.y && options.useExplicitSpaceSize)
@@ -4744,7 +4744,7 @@ Kekule.Render.ChemSpace2DRenderer = Class.create(Kekule.Render.CompositeObj2DRen
 			return result;
 		}
 		else
-			return $super(context, options, allowCoordBorrow);
+			return this.tryApplySuper('doEstimateSelfObjBox', [context, options, allowCoordBorrow])  /* $super(context, options, allowCoordBorrow) */;
 	}
 
 	/* @private */

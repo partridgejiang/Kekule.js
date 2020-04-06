@@ -43,10 +43,10 @@ Kekule.Widget.Glyph = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Glyph',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, normalImgInfo)
+	initialize: function(/*$super, */parentOrElementOrDocument, normalImgInfo)
 	{
 		this._imgElem = null;  // used internally
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (normalImgInfo)
 			this.setNormalInfo(normalImgInfo);
 	},
@@ -104,9 +104,9 @@ Kekule.Widget.Glyph = Class.create(Kekule.Widget.BaseWidget,
 		return result;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super();
+		this.tryApplySuper('doBindElement')  /* $super() */;
 		this.createImgContainer(element);
 	},
 	/** @ignore */
@@ -126,9 +126,9 @@ Kekule.Widget.Glyph = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	stateChanged: function($super)
+	stateChanged: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('stateChanged')  /* $super() */;
 		this.updateImg();
 	},
 	/** @private */

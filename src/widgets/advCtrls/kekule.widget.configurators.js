@@ -51,12 +51,12 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 	/** @private */
 	DEF_TAB_POSITION: Kekule.Widget.Position.RIGHT,
 	/** @construct */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
 		this.setPropStoreFieldValue('widget', widget);
 		this._objInspector = null;
 		this._tabGroup = null;
-		$super(widget);
+		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -74,15 +74,15 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setLayout(Kekule.Widget.Layout.HORIZONTAL);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.WIDGET_CONFIGURATOR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.WIDGET_CONFIGURATOR;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -91,7 +91,7 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, element)
+	doCreateSubElements: function(/*$super, */doc, element)
 	{
 		var result = [];
 
@@ -152,9 +152,9 @@ Kekule.Widget.Configurator = Class.create(Kekule.Widget.Panel,
 	},
 
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (this.getAutoUpdate())
 		{
 			if (isShown)
@@ -248,9 +248,9 @@ Kekule.Widget.ActionOpenConfigWidget = Class.create(Kekule.Action,
 	/** @private */
 	HTML_CLASSNAME: CNS.ACTION_OPEN_CONFIGURATOR,
 	/** @constructs */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setWidget(widget);
 		this.setText(/*Kekule.WidgetTexts.CAPTION_CONFIG*/Kekule.$L('WidgetTexts.CAPTION_CONFIG'));
 		this.setHint(/*Kekule.WidgetTexts.HINT_CONFIG*/Kekule.$L('WidgetTexts.HINT_CONFIG'));
@@ -378,10 +378,10 @@ Kekule.Widget.BaseWidget.Settings = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.BaseWidget.Settings',
 	/** @construct */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
 		this._basedClass = null;
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setWidget(widget);
 	},
 	/** @private */

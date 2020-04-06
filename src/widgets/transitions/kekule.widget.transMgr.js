@@ -40,9 +40,9 @@ Kekule.Widget.ShowHideManager = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ShowHideManager',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setEnableTransition(true);
 		this.setShowDuration(450);
 		this.setHideDuration(450);
@@ -227,9 +227,9 @@ Kekule.Widget.ShowHideTransitionSelector = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ShowHideTransitionSelector',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setTransitionClassMap({});
 	},
 	/** @private */

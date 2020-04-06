@@ -76,13 +76,13 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	/** @private */
 	DEF_BGCOLOR_3D: '#000000',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
+	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
 		this._configAction = new Kekule.Widget.ActionOpenConfigWidget(this);
 		this._toolbarParentElem = null;
 		this._infoLabel = null;
 		this._infoLabelTemplate = Kekule.$L('ChemWidgetTexts.CAPTION_WIDTH_HEIGHT');
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		var viewer = this.getViewer();
 		if (renderType)
 			viewer.setRenderType(renderType);
@@ -92,11 +92,11 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this.adjustChildrenSizes();
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this._configAction)
 			this._configAction.finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -197,9 +197,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this._defineViewerDelegatedProp('enableTouchInteraction');
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAutoSizeExport(true);
 		this.setBackgroundColor3D(this.DEF_BGCOLOR_3D);
 		this.setExportViewerPredefinedSetting('basic');
@@ -254,9 +254,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.CHEMOBJSETTER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.CHEMOBJSETTER;
 		if (this._isUsingFlexLayout())
 			result += ' ' + CCNS.CHEMOBJSETTER_FLEX_LAYOUT;
 		return result;
@@ -274,9 +274,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		var result = $super(doc, rootElem);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 
 		// create child widgets
 		// toolbar
@@ -303,16 +303,16 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	},
 
 	/** @ignore */
-	doResize: function($super)
+	doResize: function(/*$super*/)
 	{
 		// notify children
 		//this.getViewer().resized();
 		this.adjustChildrenSizes();
 	},
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		this.adjustChildrenSizes();
 	},
 
@@ -730,7 +730,7 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ChemObjInserter.Configurator',
 	/** @construct */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
 		this._checkBoxAutoSize = null;
 		this._checkBoxAutofit = null;
@@ -738,20 +738,20 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		this._textBoxWidth = null;
 		this._textBoxHeight = null;
 		this._colorPicker = null;
-		$super(widget);
+		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
 
 		this.addEventListener('valueChange', function(e){ this.saveConfigValues(); }, this);
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAutoUpdate(true);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.CHEMOBJSETTER_CONFIGURATOR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.CHEMOBJSETTER_CONFIGURATOR;
 	},
 	/** @ignore */
 	doCreateSubElements: function(doc, element)
@@ -824,9 +824,9 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		element.appendChild(region);
 	},
 	/** @private */
-	loadConfigValues: function($super)
+	loadConfigValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('loadConfigValues')  /* $super() */;
 		var w = this.getWidget();
 		if (w)
 		{
@@ -844,9 +844,9 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		}
 	},
 	/** @private */
-	saveConfigValues: function($super)
+	saveConfigValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('saveConfigValues')  /* $super() */;
 		var w = this.getWidget();
 		if (w)
 		{

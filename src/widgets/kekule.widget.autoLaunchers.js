@@ -46,9 +46,9 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 	/** @private */
 	FIELD_PARENT_WIDGET_ELEM: '__$kekule_parent_widget_elem$__',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._executingFlag = 0;  // private
 		this._pendingWidgetRefMap = new Kekule.MapEx(true);  // non-weak, to get all keys
 		this._pendingElems = [];  // elements that need to be launched
@@ -78,11 +78,11 @@ Kekule.Widget.AutoLauncher = Class.create(ObjectEx,
 		};
 	},
 	/** @private */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._pendingElems = null;
 		this._pendingWidgetRefMap = null;
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 
 	// Methods about lanuchingElems

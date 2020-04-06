@@ -43,9 +43,9 @@ Kekule.Editor.BaseEditorConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplaye
 		this.addConfigProp('structureConfigs', 'Kekule.Editor.StructureConfigs');
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('uiMarkerConfigs', new Kekule.Editor.UiMarkerConfigs());
 		this.setPropStoreFieldValue('interactionConfigs', new Kekule.Editor.InteractionConfigs());
 		this.setPropStoreFieldValue('structureConfigs', new Kekule.Editor.StructureConfigs());
@@ -71,9 +71,9 @@ Kekule.Editor.ChemSpaceEditorConfigs = Class.create(Kekule.Editor.BaseEditorConf
 		this.addConfigProp('styleSetterConfigs', 'Kekule.Editor.StyleSetterConfigs', undefined, {'scope': PS.PUBLIC});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('chemSpaceConfigs', new Kekule.Editor.ChemSpaceConfigs());
 		this.setPropStoreFieldValue('styleSetterConfigs', new Kekule.Editor.StyleSetterConfigs());
 	}
@@ -200,9 +200,9 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('editorInitialZoom', 1.5);
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setTrackOptimizationDistanceConstraints([0.5, 1, 3, 4, 5]);
 	}
 });
@@ -368,9 +368,9 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 		});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 
 		var degreeStep = Math.PI / 180;
 
@@ -476,9 +476,9 @@ Kekule.Editor.ChemSpaceConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addNumConfigProp('defPadding', 50);
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setDefScreenSize2D({'x': 900, 'y': 1500});
 		this.setDefScreenSize3D({'x': 600, 'y': 600, 'z': 600});
 		this.setAutoExpandScreenSize2D({'x': 200, 'y': 200});
@@ -506,9 +506,9 @@ Kekule.Editor.StyleSetterConfigs = Class.create(Kekule.AbstractConfigs,
 		this.defineProp('listedFontNames', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setListedFontSizes([8,9,10,11,12,14,16,18,20,24,28,32,36,40,44,48,54,60,66,72,80,88,96]);
 		/*
 		this.setListedFontNames([

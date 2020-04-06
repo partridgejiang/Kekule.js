@@ -57,9 +57,9 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.RichText',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 		this._nodeLabelDisplayModeGroup = null;
 	},
@@ -338,7 +338,7 @@ Kekule.Editor.ObjModifier.RichText = Class.create(Kekule.Editor.ObjModifier.Base
 		}
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		/*
 		var modifications = {};

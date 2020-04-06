@@ -40,9 +40,9 @@ Kekule.CanonicalizationIndexer = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.CanonicalizationIndexer',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/**
 	 * Execute and assign index to each node in connection tab.

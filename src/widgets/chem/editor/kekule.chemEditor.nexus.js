@@ -32,9 +32,9 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.EditorNexus',
 	/** @construct */
-	initialize: function($super, components)
+	initialize: function(/*$super, */components)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._currInvoker = null;
 		if (components)
 		{

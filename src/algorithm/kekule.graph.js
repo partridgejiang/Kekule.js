@@ -28,9 +28,9 @@ Kekule.GraphElement = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.GraphElement',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._data = {};
 	},
 	/** @private */
@@ -89,9 +89,9 @@ Kekule.GraphVertex = Class.create(Kekule.GraphElement,
 	/** @private */
 	CLASS_NAME: 'Kekule.GraphVertex',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('edges', []);
 		//this.setData({});
 	},
@@ -205,10 +205,10 @@ Kekule.GraphEdge = Class.create(Kekule.GraphElement,
 	/** @private */
 	CLASS_NAME: 'Kekule.GraphEdge',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
 		this.setPropStoreFieldValue('weight', 1);  // default weight
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('vertexes', []);
 		//this.setData({});
 	},
@@ -267,9 +267,9 @@ Kekule.Graph = Class.create(ObjectEx,
 	/** @private */
 	VISITED_KEY: '__$visited__',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('vertexes', []);
 		this.setPropStoreFieldValue('edges', []);
 	},

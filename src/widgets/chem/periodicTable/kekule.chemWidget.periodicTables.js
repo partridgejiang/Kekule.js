@@ -102,12 +102,12 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	AC_SERIES: ['Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, displayedComponents)
+	initialize: function(/*$super, */parentOrElementOrDocument, displayedComponents)
 	{
 		this.setPropStoreFieldValue('displayedComponents', displayedComponents || this.getDefaultDisplayedComponents());
 		this._elemCells = [];  // used internally
 		this._selectedElemCells = [];  // used internally
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setEnableSelect(true);
 		this.setEnableMultiSelect(true);
 	},
@@ -181,9 +181,9 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.PERIODIC_TABLE;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.PERIODIC_TABLE;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -192,9 +192,9 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		var result = $super(doc, rootElem);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 		var elem = this.createMainTable(doc, rootElem);
 		return result.concat([elem]);
 	},
@@ -604,7 +604,7 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this;
 	},
 	/** @ignore */
-	react_click: function($super, e)
+	react_click: function(/*$super, */e)
 	{
 		if (this.getEnableSelect())
 		{
@@ -624,7 +624,7 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return true;
 			}
 		}
-		$super(e);
+		this.tryApplySuper('react_click', [e])  /* $super(e) */;
 	}
 });
 

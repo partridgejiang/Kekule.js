@@ -150,9 +150,9 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	LINKED_VALUE_FIELD: '__$value__',
 	/** @constructs */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 		this.setPropStoreFieldValue('composer', composer);
 		this.createChildWidgets();
 		this.appendToWidget(composer);
@@ -176,10 +176,10 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 		this._isApplying = false;  // private
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.clearWidgets();  // already clear in $super()
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -253,14 +253,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setShowGlyph(true);
 	},
 
 	/** @ignore */
-	removeWidget: function($super, widget, doNotFinalize)
+	removeWidget: function(/*$super, */widget, doNotFinalize)
 	{
 		if (widget === this.getFontNameBox())
 			this.setPropStoreFieldValue('fontNameBox', null);
@@ -274,13 +274,13 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			this.setPropStoreFieldValue('textHorizontalAlignButtonSet', null);
 		if (widget === this.getTextVerticalAlignButtonSet())
 			this.setPropStoreFieldValue('textVerticalAlignButtonSet', null);
-		$super(widget, doNotFinalize);
+		this.tryApplySuper('removeWidget', [widget, doNotFinalize])  /* $super(widget, doNotFinalize) */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_STYLE_TOOLBAR;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_STYLE_TOOLBAR;
 		return result;
 	},
 
@@ -771,9 +771,9 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ComposerObjModifierToolbar',
 	/** @constructs */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 		this.setPropStoreFieldValue('modifiers', []);
 		this.setPropStoreFieldValue('modifierMap', new Kekule.MapEx());
 		this.setPropStoreFieldValue('composer', composer);
@@ -820,26 +820,26 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 		this.defineProp('modifiers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setShowGlyph(true);
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.clearWidgets();
 		this.getModifierMap().finalize();
 		var modifiers = this.getModifiers();
 		for (var i = 0, l = modifiers.length; i < l; ++i)
 			modifiers[i].finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_OBJMODIFIER_TOOLBAR;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_OBJMODIFIER_TOOLBAR;
 		return result;
 	},
 
@@ -1053,7 +1053,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	CHEM_TOOL_CHILD_FIELDS: '__$children__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, editor)
+	initialize: function(/*$super, */parentOrElementOrDocument, editor)
 	{
 		/*
 		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
@@ -1065,7 +1065,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.setPropStoreFieldValue('enableObjModifierToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 
 		/*
 		if (!editor)
@@ -1090,7 +1090,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.uiLayoutChanged();
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		//this.getPainter().finalize();
 		var toolBar = this.getCommonBtnGroup();
@@ -1103,7 +1103,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (editor)
 			editor.finalize();
 		this.getEditorNexus().finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1500,9 +1500,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER;
 		if (this._isUsingGridLayout())
 			result += ' ' + CCNS.COMPOSER_GRID_LAYOUT;
 		return result;
@@ -1521,9 +1521,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (isShown)
 			this.adjustComponentPositions();
 	},
@@ -1541,9 +1541,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	getChildActionClass: function($super, actionName, checkSupClasses)
+	getChildActionClass: function(/*$super, */actionName, checkSupClasses)
 	{
-		var result = $super(actionName, checkSupClasses);
+		var result = this.tryApplySuper('getChildActionClass', [actionName, checkSupClasses])  /* $super(actionName, checkSupClasses) */;
 		if (!result)
 			result = this.getEditor().getChildActionClass(actionName, checkSupClasses);
 		return result;
@@ -1677,7 +1677,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.adjustComponentPositions();
 	},
 	/** @ignore */
-	doResize: function($super)
+	doResize: function(/*$super*/)
 	{
 		this.adjustComponentPositions();
 	},
@@ -2878,9 +2878,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 	////// about configurator
 	/** @ignore */
-	createConfigurator: function($super)
+	createConfigurator: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('createConfigurator')  /* $super() */;
 		result.addEventListener('configChange', function(e){
 			// render config change need to repaint context
 			this.getEditor().repaint();
@@ -2909,9 +2909,9 @@ Kekule.Editor.Composer.Settings = Class.create(Kekule.Widget.BaseWidget.Settings
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.Composer.Settings',
 	/** @construct */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -2940,20 +2940,20 @@ Kekule.Editor.Composer.Configurator = Class.create(Kekule.Widget.Configurator,
 	/** @private */
 	TAB_BTN_DATA_FIELD: '__$data__',
 	/** @construct */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setLayout(Kekule.Widget.Layout.HORIZONTAL);
 	},
 	/** @private */
-	getCategoryInfos: function($super)
+	getCategoryInfos: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getCategoryInfos')  /* $super() */;
 		var composer = this.getComposer();
 		var editor = composer.getEditor();
 
@@ -3060,10 +3060,11 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ComposerDialog',
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
-		$super(parentOrElementOrDocument, caption,
-			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, caption,
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]])  /* $super(parentOrElementOrDocument, caption,
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -3084,21 +3085,21 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.COMPOSER_DIALOG;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_DIALOG;
 	},
 	/** @ignore */
-	doCreateClientContents: function($super, clientElem)
+	doCreateClientContents: function(/*$super, */clientElem)
 	{
-		$super();
+		this.tryApplySuper('doCreateClientContents')  /* $super() */;
 		var composer = this.doCreateComposerWidget();
 		this.setPropStoreFieldValue('composer', composer);
 		composer.appendToElem(clientElem);
@@ -3154,9 +3155,9 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	CLASS_NAME: 'Kekule.Editor.ComposerFrame',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['iframe'],
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -3183,17 +3184,17 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setMinDimension({'width': 550, height: 350});
 		this.setEnableDimensionTransform(true);
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.COMPOSER_FRAME;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_FRAME;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -3202,9 +3203,9 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 
 		var notInDom = !element.parentNode;
 		if (notInDom) // add to DOM first, otherwise the frame document will be null

@@ -63,9 +63,9 @@ Kekule.Editor.ObjModifier.Base = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Base',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setEditor(editor);
 		this.modifierWidgetValueChangedBind = this.modifierWidgetValueChanged.bind(this);
 	},

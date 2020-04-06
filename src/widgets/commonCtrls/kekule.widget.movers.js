@@ -44,9 +44,9 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.MoveHelper',
 	/** @constructs */
-	initialize: function($super, target, gripper)
+	initialize: function(/*$super, */target, gripper)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 
 		this.reactMouseDownBind = this.reactMouseDown.bind(this);
 		this.reactMouseUpBind = this.reactMouseUp.bind(this);
@@ -63,10 +63,10 @@ Kekule.Widget.MoveHelper = Class.create(ObjectEx,
 		this.setGripper(gripper);
 		this.setEnabled(true);
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.setGripper(null);  // uninstall all event handlers
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()

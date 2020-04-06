@@ -28,9 +28,9 @@ Kekule.PropertyEditor.ChemIdEditor = Class.create(Kekule.PropertyEditor.SimpleEd
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.ChemIdEditor',
 	/** @ignore */
-	getAttributes: function($super)
+	getAttributes: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getAttributes')  /* $super() */;
 		if (result & PEA.MULTIOBJS)
 			result = result ^ PEA.MULTIOBJS;
 		return result;
@@ -72,7 +72,7 @@ Kekule.PropertyEditor.ChemCoordSizeFieldEditor = Class.create(Kekule.PropertyEdi
 		return result;
 	},
 	/** @ignore */
-	getValue: function($super)
+	getValue: function(/*$super*/)
 	{
 		var parentObjs = this.getParentObjects();
 		var parentPropName = this.getParentPropName();
@@ -84,7 +84,7 @@ Kekule.PropertyEditor.ChemCoordSizeFieldEditor = Class.create(Kekule.PropertyEdi
 		else
 		{
 			//console.log(parentObjs, parentPropName);
-			return $super();
+			return this.tryApplySuper('getValue')  /* $super() */;
 		}
 	}
 });
@@ -111,9 +111,9 @@ Kekule.PropertyEditor.ChemCoordEditor = Class.create(Kekule.PropertyEditor.Objec
 		return Kekule.PropertyEditor.ChemCoordSizeFieldEditor;
 	},
 	/** @ignore */
-	createFieldEditor: function($super, objs, fieldInfo)
+	createFieldEditor: function(/*$super, */objs, fieldInfo)
 	{
-		var result = $super(objs, fieldInfo);
+		var result = this.tryApplySuper('createFieldEditor', [objs, fieldInfo])  /* $super(objs, fieldInfo) */;
 		if (result.setParentObjects)
 			result.setParentObjects(this.getObjects());
 		if (result.setParentPropName)
@@ -131,12 +131,12 @@ Kekule.PropertyEditor.ChemCoordEditor = Class.create(Kekule.PropertyEditor.Objec
 		return this.is3DCoord()? ['x', 'y', 'z']: ['x', 'y'];
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var VDM = Kekule.Widget.ValueListEditor.ValueDisplayMode;
 		var mode = this.getValueTextMode();
 		if (mode === VDM.JSON)
-			return $super();
+			return this.tryApplySuper('getValueText')  /* $super() */;
 
 		var value = this.getValue();
 		if (value)
@@ -186,9 +186,9 @@ Kekule.PropertyEditor.ChemSizeEditor = Class.create(Kekule.PropertyEditor.Object
 		return Kekule.PropertyEditor.ChemCoordSizeFieldEditor;
 	},
 	/** @ignore */
-	createFieldEditor: function($super, objs, fieldInfo)
+	createFieldEditor: function(/*$super, */objs, fieldInfo)
 	{
-		var result = $super(objs, fieldInfo);
+		var result = this.tryApplySuper('createFieldEditor', [objs, fieldInfo])  /* $super(objs, fieldInfo) */;
 		if (result.setParentObjects)
 			result.setParentObjects(this.getObjects());
 		if (result.setParentPropName)
@@ -206,12 +206,12 @@ Kekule.PropertyEditor.ChemSizeEditor = Class.create(Kekule.PropertyEditor.Object
 		return this.is3DSize()? ['x', 'y', 'z']: ['x', 'y'];
 	},
 	/** @ignore */
-	getValueText: function($super)
+	getValueText: function(/*$super*/)
 	{
 		var VDM = Kekule.Widget.ValueListEditor.ValueDisplayMode;
 		var mode = this.getValueTextMode();
 		if (mode === VDM.JSON)
-			return $super();
+			return this.tryApplySuper('getValueText')  /* $super() */;
 
 		var value = this.getValue();
 		if (value)
@@ -253,9 +253,9 @@ Kekule.PropertyEditor.ChemOptionObjectEditor = Class.create(Kekule.PropertyEdito
 	/** @private */
 	CHILD_FIELD_INFOS: null,
 	/** @constructs **/
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setAllowEmpty(true);
 	},
 
@@ -282,7 +282,7 @@ Kekule.PropertyEditor.ChemOptionObjectEditor = Class.create(Kekule.PropertyEdito
 	},
 
 	/** @private */
-	notifyChildEditorValueChange: function($super, fieldName, fieldValue)
+	notifyChildEditorValueChange: function(/*$super, */fieldName, fieldValue)
 	{
 		var old = this.getValue() || this._initialObjValue;
 		old = Object.extend({}, old);

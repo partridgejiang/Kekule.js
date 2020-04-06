@@ -35,14 +35,14 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this.reactMousemoveBind = this.reactMousemove.bind(this);
 		this.reactMouseupBind = this.reactMouseup.bind(this);
 		this.reactTouchmoveBind = this.reactTouchmove.bind(this);
 		this.reactTouchendBind = this.reactTouchend.bind(this);
 
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (!this.getTarget())
 		{
 			if (this.getParent())
@@ -78,9 +78,9 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.RESIZEGRIPPER;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.RESIZEGRIPPER;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -314,9 +314,9 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 
 	/** @ignore */
 	//react_pointerdown: function(e)
-	doReactActiviting: function($super, e)
+	doReactActiviting: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('doReactActiviting', [e])  /* $super(e) */;
 		//var evType = e.getType();
 		{
 			var coord = {'x': e.getScreenX(), 'y': e.getScreenY()};

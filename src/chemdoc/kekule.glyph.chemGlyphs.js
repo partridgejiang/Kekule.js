@@ -33,9 +33,9 @@ Kekule.Glyph.HeatSymbol = Class.create(Kekule.Glyph.Polygon,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.HeatSymbol',
 	/** @constructs */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 		if (this.setRenderOption)  // avoid error if render module is not loaded
 			this.setRenderOption('strokeWidth', 1.5);
 	},
@@ -45,17 +45,17 @@ Kekule.Glyph.HeatSymbol = Class.create(Kekule.Glyph.Polygon,
 		return 0.25;
 	},
 	/** @private */
-	doCreateDefaultStructure: function($super, refLength, initialParams)
+	doCreateDefaultStructure: function(/*$super, */refLength, initialParams)
 	{
 		initialParams.edgeCount = 3;
 		initialParams.nodeProps = Object.extend(initialParams.nodeProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN});
 		initialParams.connectorProps = Object.extend(initialParams.connectorProps || {}, {'interactMode': Kekule.ChemObjInteractMode.HIDDEN});
-		return $super(refLength, initialParams);
+		return this.tryApplySuper('doCreateDefaultStructure', [refLength, initialParams])  /* $super(refLength, initialParams) */;
 	},
 	/** @private */
-	_applyParamsToConnector: function($super, connector, initialParams)
+	_applyParamsToConnector: function(/*$super, */connector, initialParams)
 	{
-		return $super(connector, initialParams);
+		return this.tryApplySuper('_applyParamsToConnector', [connector, initialParams])  /* $super(connector, initialParams) */;
 	}
 });
 
@@ -70,9 +70,9 @@ Kekule.Glyph.AddSymbol = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.AddSymbol',
 	/** @constructs */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 		if (this.setRenderOption)  // avoid error if render module is not loaded
 			this.setRenderOption('strokeWidth', 1.5);
 	},
@@ -218,13 +218,13 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setReactionType(Kekule.Glyph.ReactionArrowType.NORMAL);
 	},
 	/** @ignore */
-	doCreateDefaultStructure: function($super, refLength, initialParams)
+	doCreateDefaultStructure: function(/*$super, */refLength, initialParams)
 	{
 		var creationParams = initialParams;
 		var rType = initialParams.reactionType || this.getReactionType();
@@ -233,7 +233,7 @@ Kekule.Glyph.ReactionArrow = Class.create(Kekule.Glyph.StraightLine,
 			var defParams = this._getPathParamOfArrowType(rType);
 			creationParams = Object.extend(defParams, initialParams);
 		}
-		var result = $super(refLength, creationParams);
+		var result = this.tryApplySuper('doCreateDefaultStructure', [refLength, creationParams])  /* $super(refLength, creationParams) */;
 		if (rType)
 			this.setReactionType(rType);
 		return result;
@@ -356,9 +356,9 @@ Kekule.Glyph.ElectronPushingArrow = Class.create(Kekule.Glyph.BaseArc,
 		});
 	},
 	/** @ignore */
-	doCreateDefaultStructure: function($super, refLength, initialParams)
+	doCreateDefaultStructure: function(/*$super, */refLength, initialParams)
 	{
-		var result = $super(refLength, initialParams);
+		var result = this.tryApplySuper('doCreateDefaultStructure', [refLength, initialParams])  /* $super(refLength, initialParams) */;
 		if (initialParams.electronCount)
 			this.setElectronCount(initialParams.electronCount);
 		return result;
@@ -588,9 +588,9 @@ Kekule.Glyph.BondFormingElectronPushingArrow = Class.create(Kekule.Glyph.BaseTwi
 	},
 
 	/** @ignore */
-	doCreateDefaultStructure: function($super, refLength, initialParams)
+	doCreateDefaultStructure: function(/*$super, */refLength, initialParams)
 	{
-		var result = $super(refLength, initialParams);
+		var result = this.tryApplySuper('doCreateDefaultStructure', [refLength, initialParams])  /* $super(refLength, initialParams) */;
 		this.setElectronCount(initialParams.electronCount || 1);
 		return result;
 	},

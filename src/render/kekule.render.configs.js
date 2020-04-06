@@ -82,9 +82,9 @@ Kekule.Render.Render2DConfigs = Class.create(Kekule.AbstractConfigs,
 		//this.addConfigProp('interactStyleMap', 'Kekule.Render.PredefinedConfigsMap');
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('generalConfigs', new Kekule.Render.GeneralConfigs());
 		this.setPropStoreFieldValue('moleculeDisplayConfigs', new Kekule.Render.MoleculeDisplayConfigs());
 		this.setPropStoreFieldValue('displayLabelConfigs', new Kekule.Render.DisplayLabelConfigs());
@@ -452,9 +452,9 @@ Kekule.Render.Render3DConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addConfigProp('modelConfigs', 'Kekule.Render.Model3DConfigs');
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('generalConfigs', new Kekule.Render.GeneralConfigs());
 		this.setPropStoreFieldValue('environmentConfigs', new Kekule.Render.Render3DEnvironmentConfigs());
 		this.setPropStoreFieldValue('moleculeDisplayConfigs', new Kekule.Render.Molecule3DDisplayConfigs());

@@ -1283,15 +1283,15 @@ XmlObjSerializer = Class.create(ObjSerializer,
 			return result;
 	},
 	/** @private */
-	doSaveSimpleObject: function($super, obj, storageNode)
+	doSaveSimpleObject: function(/*$super, */obj, storageNode)
 	{
-		$super(obj, storageNode);
+		this.tryApplySuper('doSaveSimpleObject', [obj, storageNode])  /* $super(obj, storageNode) */;
 		//storageNode.setAttribute('type', typeof(obj));
 	},
 	/** @private */
-	doSaveArray: function($super, arrayObj, storageNode)
+	doSaveArray: function(/*$super, */arrayObj, storageNode)
 	{
-		$super(arrayObj, storageNode);
+		this.tryApplySuper('doSaveArray', [arrayObj, storageNode])  /* $super(arrayObj, storageNode) */;
 		//storageNode.setAttribute('type', 'array');
 	},
 	/** @private */

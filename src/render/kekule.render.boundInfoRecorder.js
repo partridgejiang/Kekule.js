@@ -51,9 +51,9 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.BoundInfoRecorder',
 	/** @constructs */
-	initialize: function($super, rendererOrPainter)
+	initialize: function(/*$super, */rendererOrPainter)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('boundInfos', new Kekule.TwoTupleMapEx(true));
 		this._renderer = rendererOrPainter;  // used internally
 		if (rendererOrPainter && rendererOrPainter.setBoundInfoRecorder)
@@ -64,14 +64,14 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 		this.installEventListener(rendererOrPainter);
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		if (this._renderer)
 			this.uninstallEventListener(this._renderer);
 		var infos = this.getPropStoreFieldValue('boundInfos');
 		if (infos)
 			infos.clear();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()

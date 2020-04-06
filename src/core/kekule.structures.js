@@ -174,15 +174,15 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructureObject',
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
 		this.setPropStoreFieldValue('autoClearStructureCache', true);
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 	},
 	/** @ignore */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -272,9 +272,9 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		this.defineProp('autoClearStructureCache', {'dataType': DataType.BOOL, 'serializable': false});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('linkedConnectors', []);
 		this.setSuppressChildChangeEventInUpdating(true);
 	},
@@ -297,7 +297,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/** @ignore */
-	doGetActualCompareOptions: function($super, options)
+	doGetActualCompareOptions: function(/*$super, */options)
 	{
 		if (options && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
@@ -309,7 +309,7 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 			return result;
 		}
 		else
-			return $super(options);
+			return this.tryApplySuper('doGetActualCompareOptions', [options])  /* $super(options) */;
 	},
 	/** @private */
 	_getComparisonOptionFlagValue: function(options, flagName)
@@ -321,19 +321,19 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			return [];
 		}
 		else
-			return $super(options);
+			return this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 	},
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in $super
 		{
 			if (this._getComparisonOptionFlagValue(options, 'linkedConnectorCount'))
@@ -781,18 +781,18 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	},
 
 	/** @ignore */
-	relayEvent: function($super, eventName, event)
+	relayEvent: function(/*$super, */eventName, event)
 	{
 		// if structureChange event is received from child object, means the whole structure of self is also changed
 		// invoke a new structureChange on self and "eat" the original one
 		if (eventName === 'structureChange')
 			this.structureChange(event.origin);
 		else
-			$super(eventName, event);
+			this.tryApplySuper('relayEvent', [eventName, event])  /* $super(eventName, event) */;
 	},
 
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames || [], this.getStructureRelatedPropNames()).length)
 		{
@@ -841,9 +841,9 @@ Kekule.SimpleStructureNode = Class.create(Kekule.ChemStructureObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (coord2D)
 			this.setCoord2D(coord2D);
 		if (coord3D)
@@ -854,9 +854,9 @@ Kekule.SimpleStructureNode = Class.create(Kekule.ChemStructureObject,
 		this.defineProp('zIndex2D', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['coord2D', 'coord3D']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['coord2D', 'coord3D']);
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -1052,7 +1052,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 	// override coord getters, returns the coord of target
 	// (the setter should not be overrided here)
 	/** @ignore */
-	doGetCoord2D: function($super, allowCoordBorrow, allowCreateNew)
+	doGetCoord2D: function(/*$super, */allowCoordBorrow, allowCreateNew)
 	{
 		var n = this.getCoordStickTarget();
 		if (n && n.getAbsCoord2D)
@@ -1064,10 +1064,10 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			return result;
 		}
 		else
-			return $super(allowCoordBorrow, allowCreateNew);
+			return this.tryApplySuper('doGetCoord2D', [allowCoordBorrow, allowCreateNew])  /* $super(allowCoordBorrow, allowCreateNew) */;
 	},
 	/** @ignore */
-	doGetCoord3D: function($super, allowCoordBorrow, allowCreateNew)
+	doGetCoord3D: function(/*$super, */allowCoordBorrow, allowCreateNew)
 	{
 		var n = this.getCoordStickTarget();
 		if (n && n.getAbsCoord3D)
@@ -1079,7 +1079,7 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 			return result;
 		}
 		else
-			return $super(allowCoordBorrow, allowCreateNew);
+			return this.tryApplySuper('doGetCoord3D', [allowCoordBorrow, allowCreateNew])  /* $super(allowCoordBorrow, allowCreateNew) */;
 	}
 });
 
@@ -1116,9 +1116,9 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (coord2D)
 			this.setCoord2D(coord2D);
 		if (coord3D)
@@ -1158,9 +1158,9 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		});
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['charge', 'radical']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['charge', 'radical']);
 	},
 	/**
 	 * Returns a label that represents current node.
@@ -1179,9 +1179,9 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'charge'))
@@ -1196,9 +1196,9 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		return result;
 	},
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)  // can not find different in $super
 		{
 			if (this._getComparisonOptionFlagValue(options, 'stereo'))  // parity null/0 should be regard as one in comparison
@@ -1360,9 +1360,9 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1375,15 +1375,15 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 		return 'a';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['explicitHydrogenCount']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['explicitHydrogenCount']);
 	},
 
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'hydrogenCount'))
@@ -1481,9 +1481,9 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
+	initialize: function(/*$super, */id, elemSymbolOrAtomicNumber, massNumber, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		if (elemSymbolOrAtomicNumber || massNumber)
 			this.changeIsotope(elemSymbolOrAtomicNumber, massNumber);
 	},
@@ -1591,15 +1591,15 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		return 'a';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['isotope', 'atomType']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['isotope', 'atomType']);
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -1899,9 +1899,9 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 	/** @private */
 	CLASS_NAME: 'Kekule.Pseudoatom',
 	/** @constructs */
-	initialize: function($super, id, atomType, symbol, coord2D, coord3D)
+	initialize: function(/*$super, */id, atomType, symbol, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		if (atomType)
 			this.setAtomType(atomType);
 		if (symbol && (atomType == Kekule.PseudoatomType.CUSTOM))
@@ -1939,9 +1939,9 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 		});
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['atomType', 'symbol']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['atomType', 'symbol']);
 	},
 	/** @ignore */
 	getPrimaryIsotope: function()
@@ -1955,9 +1955,9 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -1966,9 +1966,9 @@ Kekule.Pseudoatom = Class.create(Kekule.AbstractAtom,
 		return result;
 	},
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -2072,9 +2072,9 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 		});
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['allowedIsotopeIds', 'disallowedIsotopeIds']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['allowedIsotopeIds', 'disallowedIsotopeIds']);
 	},
 
 	/** @ignore */
@@ -2096,9 +2096,9 @@ Kekule.VariableAtom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -2247,9 +2247,9 @@ Kekule.MolecularFormula = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, parent)
+	initialize: function(/*$super, */parent)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('sections', []);
 		if (parent)
 			this.setPropStoreFieldValue('parent', parent);
@@ -2509,9 +2509,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, owner, parent)
+	initialize: function(/*$super, */owner, parent)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (owner)
 			this.setOwner(owner);
 		if (parent)
@@ -2608,9 +2608,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('nodes', []);
 		this.setPropStoreFieldValue('anchorNodes', []);
 		this.setPropStoreFieldValue('connectors', []);
@@ -2787,7 +2787,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
 		// after loaded, set anchorNodes
 		if (this.__load_anchorNodes_indexes)
@@ -2845,7 +2845,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 		this.ownerChanged(this.getOwner());
 		this.parentChanged(this.getParent());  // update owner and parent of child objects
-		$super();
+		this.tryApplySuper('loaded')  /* $super() */;
 	},
 	/**
 	 * Notify {@link Kekule.StructureConnectionTable#nodes} property has been changed
@@ -2890,7 +2890,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Note Connection table is not inherited from ChemObject, so no $super() need to be called.
 	 * @private
 	 */
-	parentChanged: function($super, newParent, oldParent)
+	parentChanged: function(/*$super, */newParent, oldParent)
 	{
 		// change nodes and connectors' parent
 		for (var i = 0, l = this.getNodeCount(); i < l; ++i)
@@ -3791,9 +3791,9 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	 * Remove child obj directly from connection table.
 	 * @param {Variant} childObj A child node or connector.
 	 */
-	removeChild: function($super, obj)
+	removeChild: function(/*$super, */obj)
 	{
-		return this.removeChildObj(obj) || $super(obj);
+		return this.removeChildObj(obj) || this.tryApplySuper('removeChild', [obj])  /* $super(obj) */;
 	},
 
 	/**
@@ -4410,17 +4410,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this.hasFormula())
 			this.getFormula().finalize();
 		if (this.hasCtab())
 			this.getCtab().finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 
 		/*
 		this.addEventListener('change', function(e){
@@ -4668,16 +4668,16 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		return 'f';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['ctab', 'formula', 'nodes', 'anchorNodes', 'connectors']);
 	},
 
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
 		//console.log('do compare structure', options);
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			//if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -4811,7 +4811,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 
 	/** @ignore */
-	structureChange: function($super, originObj)
+	structureChange: function(/*$super, */originObj)
 	{
 		// when structure is changed, clear old shadow fragment
 		this.setPropStoreFieldValue('flattenedShadowOnSelf', null);
@@ -4822,12 +4822,12 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			this.setPropStoreFieldValue('flattenedShadow', null);
 		}
 		// also clear all cached structure info data
-		$super(originObj);
+		this.tryApplySuper('structureChange', [originObj])  /* $super(originObj) */;
 	},
 	/** @ignore */
-	clearStructureFlags: function($super)
+	clearStructureFlags: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('clearStructureFlags')  /* $super() */;
 		/*  Remove these, since now canonicalizationInfo and aromaticRings are already stored in structure cache
 		this.setPropStoreFieldValue('canonicalizationInfo', null);
 		this.setPropStoreFieldValue('aromaticRings', []);
@@ -4842,14 +4842,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		}
 	},
 	/** @private */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 	/** @private */
-	_removeChildObj: function($super, obj)
+	_removeChildObj: function(/*$super, */obj)
 	{
 		if (this.hasFormula())
 		{
@@ -4870,7 +4870,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					ctab.removeChildObj(obj);
 			}
 		}
-		$super(obj);
+		this.tryApplySuper('_removeChildObj', [obj])  /* $super(obj) */;
 	},
 
 	/**
@@ -4911,13 +4911,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	},
 	/* @ignore */
 
-	appendLinkedConnector: function($super, connector)
+	appendLinkedConnector: function(/*$super, */connector)
 	{
 		var actualLinkedNode = this.getCurrConnectableObj();
 		if (actualLinkedNode && actualLinkedNode !== this) // instead of link connector to self, we'd rather link connector to child anchor node
 			return actualLinkedNode.appendLinkedConnector(connector);
 		else  // no child, link to self
-		  return $super(connector);
+		  return this.tryApplySuper('appendLinkedConnector', [connector])  /* $super(connector) */;
 	},
 
 
@@ -5030,14 +5030,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
 	 */
-	getContainerBox: function($super, coordMode, allowCoordBorrow)
+	getContainerBox: function(/*$super, */coordMode, allowCoordBorrow)
 	{
 		if (this.hasCtab())
 		{
 			return this.getCtab().getContainerBox(coordMode, allowCoordBorrow);
 		}
 		else
-			return $super(coordMode);
+			return this.tryApplySuper('getContainerBox', [coordMode])  /* $super(coordMode) */;
 	},
 
 	/**
@@ -5639,28 +5639,28 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 * @param {Variant} childObj Node or connector.
 	 * @returns {Variant}
 	 */
-	getNextSiblingOfChild: function($super, childObj)
+	getNextSiblingOfChild: function(/*$super, */childObj)
 	{
 		if (this.hasCtab())
-			return this.getCtab().getNextSiblingOfChild(childObj) || $super(childObj);
+			return this.getCtab().getNextSiblingOfChild(childObj) || this.tryApplySuper('getNextSiblingOfChild', [childObj])  /* $super(childObj) */;
 		else
-			return $super(childObj);
+			return this.tryApplySuper('getNextSiblingOfChild', [childObj])  /* $super(childObj) */;
 	},
 
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['node', 'connector'].concat($super());
+		return ['node', 'connector'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
-	getBelongChildSubGroupName: function($super, obj)
+	getBelongChildSubGroupName: function(/*$super, */obj)
 	{
 		if (obj instanceof Kekule.SimpleStructureNode)
 			return 'node';
 		else if (obj instanceof Kekule.BaseStructureConnector)
 			return 'connector';
 		else
-			return $super(obj);
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
 	},
 
 	/*
@@ -6398,20 +6398,20 @@ Kekule.StructureFragmentShadow = Class.create(ObjectEx,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.StructureFragmentShadow',
-	initialize: function($super, srcFragment)
+	initialize: function(/*$super, */srcFragment)
 	{
 		if (!srcFragment)
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.SOURCE_FRAGMENT_NOT_SET'));
 			return;
 		}
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('shadowToSourceMap', new Kekule.MapEx());
 		this.setPropStoreFieldValue('sourceToShadowMap', new Kekule.MapEx());
 		var shadowFragment = this._createShadowFragment(srcFragment, this.getSourceToShadowMap(), this.getShadowToSourceMap());
 		this.setPropStoreFieldValue('shadowFragment', shadowFragment);
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.getShadowToSourceMap().finalize();
 		this.getSourceToShadowMap().finalize();
@@ -6419,7 +6419,7 @@ Kekule.StructureFragmentShadow = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('shadowToSourceMap', null);
 		this.setPropStoreFieldValue('sourceToShadowMap', null);
 		this.setPropStoreFieldValue('shadowFragment', null);
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -6500,9 +6500,9 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, abbr, name, coord2D, coord3D)
+	initialize: function(/*$super, */id, abbr, name, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		this.setPropStoreFieldValue('abbr', abbr);
 		this.setPropStoreFieldValue('name', name);
 	},
@@ -6519,13 +6519,13 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 		return 'g';
 	},
 	/** @private */
-	doPropChanged: function($super, propName, newValue)
+	doPropChanged: function(/*$super, */propName, newValue)
 	{
 		if (propName == 'anchorNodes')  // anchor nodes changed, need to recalculate coords of group and child nodes
 		{
 			this.recalcCoords();
 		}
-		return $super(propName, newValue);
+		return this.tryApplySuper('doPropChanged', [propName, newValue])  /* $super(propName, newValue) */;
 	},
 	/** @ignore */
 	getLabel: function()
@@ -6554,9 +6554,9 @@ Kekule.Molecule = Class.create(Kekule.StructureFragment,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, name, withCtab)
+	initialize: function(/*$super, */id, name, withCtab)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this.setPropStoreFieldValue('name', name);
 		if (withCtab)
 			this.setCtab(new Kekule.StructureConnectionTable());
@@ -6595,9 +6595,9 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.BaseStructureConnector',
 	/** @constructs */
-	initialize: function($super, id, connectedObjs)
+	initialize: function(/*$super, */id, connectedObjs)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		//this.setPropStoreFieldValue('connectedObjs', connectedObjs || []);
 		this.setConnectedObjs(connectedObjs || []);
 	},
@@ -6674,15 +6674,15 @@ Kekule.BaseStructureConnector = Class.create(Kekule.ChemStructureObject,
 		return 'c';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['connectedObjs']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['connectedObjs']);
 	},
 
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'connectedObjCount'))
@@ -7048,9 +7048,9 @@ Kekule.ChemStructureConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'stereo'))  // parity null/0 should be regard as one in comparison
@@ -7212,9 +7212,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	/** @private */
 	CLASS_NAME: 'Kekule.Bond',
 	/** @constructs */
-	initialize: function($super, id, connectedObjs, bondOrder, electronCount, bondType)
+	initialize: function(/*$super, */id, connectedObjs, bondOrder, electronCount, bondType)
 	{
-		$super(id, connectedObjs || []);
+		this.tryApplySuper('initialize', [id, connectedObjs || []])  /* $super(id, connectedObjs || []) */;
 		if (bondOrder || electronCount || bondType)
 			this.setBondForm(Kekule.BondFormFactory.getBondForm(bondOrder, electronCount, bondType));
 	},
@@ -7305,9 +7305,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('stereo', Kekule.BondStereo.NONE);
 	},
 	/** @private */
@@ -7316,9 +7316,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		return 'b';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['bondForm', 'stereo']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['bondForm', 'stereo']);
 	},
 	/** @ignore */
 	clearStructureFlags: function()
@@ -7326,18 +7326,18 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		this.setPropStoreFieldValue('isInAromaticRing', null);
 	},
 	/** @ignore */
-	doGetParity: function($super)  // override parity getter, only double bond can have parity value
+	doGetParity: function(/*$super*/)  // override parity getter, only double bond can have parity value
 	{
 		if (this.isDoubleBond())
-			return $super();
+			return this.tryApplySuper('doGetParity')  /* $super() */;
 		else
 			return null;
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'bondType'))
@@ -7350,9 +7350,9 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 		return result;
 	},
 	/** @ignore */
-	doCompare: function($super, targetObj, options)
+	doCompare: function(/*$super, */targetObj, options)
 	{
-		var result = $super(targetObj, options);
+		var result = this.tryApplySuper('doCompare', [targetObj, options])  /* $super(targetObj, options) */;
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			if (this._getComparisonOptionFlagValue(options, 'connectedObjCount'))
@@ -7396,11 +7396,11 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	},
 
 	/** @ignore */
-	reverseConnectedObjOrder: function($super)
+	reverseConnectedObjOrder: function(/*$super*/)
 	{
 		if (this.canInvertBondDirection())
 		{
-			$super();
+			this.tryApplySuper('reverseConnectedObjOrder')  /* $super() */;
 			// direction of bond also need to be reversed
 			this.invertBondDirection();
 		}
@@ -7518,9 +7518,9 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this.setPropStoreFieldValue('items', []);
 		this.setPropStoreFieldValue('raiseExceptionOnTypeMismatch', []);
 	},
@@ -7536,15 +7536,15 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		return 'sg';
 	},
 	/** @ignore */
-	getStructureRelatedPropNames: function($super)
+	getStructureRelatedPropNames: function(/*$super*/)
 	{
-		return $super().concat(['items']);
+		return this.tryApplySuper('getStructureRelatedPropNames')  /* $super() */.concat(['items']);
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			result.push('items');
@@ -7553,7 +7553,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		var items = this.getItems();
 		for (var i = 0, l = items.length; i < l; ++i)
@@ -7562,11 +7562,11 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 			if (obj && obj.setOwner)
 				obj.setOwner(newOwner);
 		}
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 
 	/** @private */
-	_removeChildObj: function($super, obj)
+	_removeChildObj: function(/*$super, */obj)
 	{
 		var index = this.indexOfObj(obj);
 		if (index < 0)
@@ -7575,7 +7575,7 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 		{
 			this.removeObjAt(index);
 		}
-		$super(obj);
+		this.tryApplySuper('_removeChildObj', [obj])  /* $super(obj) */;
 	},
 
 	/** @private */
@@ -7856,9 +7856,9 @@ Kekule.ChemStructureObjectGroup = Class.create(Kekule.ChemStructureObject,
 	},
 
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['item'].concat($super());
+		return ['item'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
 	getBelongChildSubGroupName: function(obj)
@@ -8024,9 +8024,9 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, name)
+	initialize: function(/*$super, */id, name)
 	{
-		$super(id, name);
+		this.tryApplySuper('initialize', [id, name])  /* $super(id, name) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -8042,9 +8042,9 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	},
 
 	/** @ignore */
-	doGetComparisonPropNames: function($super, options)
+	doGetComparisonPropNames: function(/*$super, */options)
 	{
-		var result = $super(options);
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			result.push('subMolecules');
@@ -8053,12 +8053,12 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		var subMols = this.getPropStoreFieldValue('subMolecules');
 		if (subMols)
 			subMols.setOwner(newOwner);
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 
 	/**
@@ -8146,17 +8146,17 @@ Kekule.CompositeMolecule = Class.create(Kekule.Molecule,
 	doSetFormula: function() {},
 
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['subMolecule'].concat($super());
+		return ['subMolecule'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
-	getBelongChildSubGroupName: function($super, obj)
+	getBelongChildSubGroupName: function(/*$super, */obj)
 	{
 		if (obj instanceof Kekule.Molecule)
 			return 'subMolecule';
 		else
-			return $super(obj);
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
 	},
 	/*
 	 * Get count of child molecules.
@@ -8274,9 +8274,9 @@ Kekule.MoleculeList = Class.create(Kekule.ChemObjList,
 	CLASS_NAME: 'Kekule.MoleculeList',
 	/** @private */
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id, Kekule.Molecule);
+		this.tryApplySuper('initialize', [id, Kekule.Molecule])  /* $super(id, Kekule.Molecule) */;
 	}
 });
 

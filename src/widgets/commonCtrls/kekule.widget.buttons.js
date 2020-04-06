@@ -60,14 +60,14 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	DEF_GLYPH_HEIGHT: '16px',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
 		// must init internal part vars before $super, as they may be setted in super constructor
 		this._elemTextPart = null;  // used internally
 		this._elemLeadingGlyphPart = null;
 		this._elemTailingGlyphPart = null;
 
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 	},
@@ -191,9 +191,9 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 			}
 		});
 	},
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 
 		// set style property before create element and appending to parent, important
 		// as parent may set property of self
@@ -240,9 +240,9 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	*/
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.BUTTON; //this.CSS_CLASS_NAME;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.BUTTON; //this.CSS_CLASS_NAME;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -257,9 +257,9 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		//var text = EU.getInnerText(element);
 		var text = element.innerHTML || '';
 		element.innerHTML = '';  // clear old content first
@@ -305,20 +305,20 @@ Kekule.Widget.Button = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	isPeriodicalExecuting: function($super)
+	isPeriodicalExecuting: function(/*$super*/)
 	{
-		return $super() && this.getIsActive();
+		return this.tryApplySuper('isPeriodicalExecuting')  /* $super() */ && this.getIsActive();
 	},
 
 	/** @private */
-	doReactActiviting: function($super, e)
+	doReactActiviting: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('doReactActiviting', [e])  /* $super(e) */;
 		if (this.getEnablePeriodicalExec())
 			this.startPeriodicalExec(e);
 	},
 	/** @private */
-	doReactDeactiviting: function($super, e)
+	doReactDeactiviting: function(/*$super, */e)
 	{
 		//if (this.getEnablePeriodicalExec())
 		this.stopPeriodicalExec();  // stop it anyway
@@ -404,9 +404,9 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.CheckButton',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument, text);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, text])  /* $super(parentOrElementOrDocument, text) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -425,9 +425,9 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 		this.defineProp('autoCheck', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAutoCheck(true);
 	},
 
@@ -446,18 +446,18 @@ Kekule.Widget.CheckButton = Class.create(Kekule.Widget.Button,
 	},
 
 	/** @ignore */
-	getStateClassName: function($super, state)
+	getStateClassName: function(/*$super, */state)
 	{
 		var st = this.getChecked()? Kekule.Widget.State.ACTIVE: state;
-		return $super(st);
+		return this.tryApplySuper('getStateClassName', [st])  /* $super(st) */;
 	},
 	/** @ignore */
-	doReactDeactiviting: function($super, e)
+	doReactDeactiviting: function(/*$super, */e)
 	//doExecute: function($super, invokerHtmlEvent)
 	{
 		//$super(invokerHtmlEvent);
 		var oldChecked = this.getChecked();
-		$super(e);  // execute runs here, may also change checked status
+		this.tryApplySuper('doReactDeactiviting', [e])  /* $super(e) */;  // execute runs here, may also change checked status
 		if (this.getAutoCheck())
 			this._doToggleCheckOnSelf(oldChecked);
 	},
@@ -482,9 +482,9 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.RadioButton',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument, text);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, text])  /* $super(parentOrElementOrDocument, text) */;
 		//this.setGroup('');  // default value, avoid undefined
 	},
 	/** @private */
@@ -494,9 +494,9 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	},
 
 	/** @ignore */
-	checkChanged: function($super)
+	checkChanged: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('checkChanged')  /* $super() */;
 		if (this.getChecked())
 		{
 			//check parent widget, and set all radio button with same group name to unchecked
@@ -522,17 +522,17 @@ Kekule.Widget.RadioButton = Class.create(Kekule.Widget.CheckButton,
 	},
 
 	/** @ignore */
-	doReactDeactiviting: function($super, e)
+	doReactDeactiviting: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('doReactDeactiviting', [e])  /* $super(e) */;
 	},
 	/** @ignore */
-	_doToggleCheckOnSelf: function($super, oldChecked)
+	_doToggleCheckOnSelf: function(/*$super, */oldChecked)
 	{
 		if (oldChecked)
 			return;  // radio button cannot uncheck self
 		else
-			$super(oldChecked);
+			this.tryApplySuper('_doToggleCheckOnSelf', [oldChecked])  /* $super(oldChecked) */;
 	},
 	/** @private */
 	_doCheckOnSelf: function()
@@ -565,9 +565,9 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.DropDownButton',
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 		/*
 		var w = this.getDropDownWidget();
 		if (w)
@@ -607,14 +607,14 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	},
 
 	/** @ignore */
-	doCreateRootElement: function($super, doc)
+	doCreateRootElement: function(/*$super, */doc)
 	{
 		/*
 		var result = doc.createElement('a');
 		result.setAttribute('href', 'javascript:void(0)');
 		return result;  // NOTE: use <button> will cause problem in Firefox
 		*/
-		return $super(doc);
+		return this.tryApplySuper('doCreateRootElement', [doc])  /* $super(doc) */;
 	},
 
 	/** @private */
@@ -726,7 +726,7 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 	},
 
 	/** @private */
-	doExecute: function($super, invokerHtmlEvent)
+	doExecute: function(/*$super, */invokerHtmlEvent)
 	{
 		if (this.getDropDownWidget())
 		{
@@ -740,7 +740,7 @@ Kekule.Widget.DropDownButton = Class.create(Kekule.Widget.Button,
 				this.showDropDownWidget();
 			}
 		}
-		$super(invokerHtmlEvent);
+		this.tryApplySuper('doExecute', [invokerHtmlEvent])  /* $super(invokerHtmlEvent) */;
 	}
 });
 
@@ -758,22 +758,22 @@ Kekule.Widget.ButtonGroup = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ButtonGroup',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('showText', true);
 		this.setPropStoreFieldValue('showGlyph', true);
 		this.setAllowChildWrap(false);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.BUTTON_GROUP;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.BUTTON_GROUP;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -809,13 +809,13 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.CompactButtonSet',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
 		this.reactSetButtonExecuteBind = this.reactSetButtonExecute.bind(this);
 		//this.reactSetButtonCheckBind = this.reactSetButtonCheck.bind(this);
 		this.setPropStoreFieldValue('showCompactMark', true);
 		this.setPropStoreFieldValue('cloneSelectedOutlook', true);
-		$super(parentOrElementOrDocument, text);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, text])  /* $super(parentOrElementOrDocument, text) */;
 		//this._compactMark = this.createCompactMark();
 		if (!this.getButtonSet())
 			this.initButtonGroup();
@@ -875,24 +875,24 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COMPACT_BUTTON; //this.CSS_CLASS_NAME;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COMPACT_BUTTON; //this.CSS_CLASS_NAME;
 	},
 
 	/** @private */
-	doSetShowText: function($super, value)
+	doSetShowText: function(/*$super, */value)
 	{
 		if (this.getButtonSet())
 			this.getButtonSet().setShowText(value);
-		return $super(value);
+		return this.tryApplySuper('doSetShowText', [value])  /* $super(value) */;
 	},
 	/** @private */
-	doSetShowGlyph: function($super, value)
+	doSetShowGlyph: function(/*$super, */value)
 	{
 		if (this.getButtonSet())
 			this.getButtonSet().setShowGlyph(value);
-		return $super(value);
+		return this.tryApplySuper('doSetShowGlyph', [value])  /* $super(value) */;
 	},
 
 	/** @private */
@@ -1017,11 +1017,11 @@ Kekule.Widget.CompactButtonSet = Class.create(Kekule.Widget.DropDownButton,
 	},
 
 	/** @private */
-	showDropDownWidget: function($super)
+	showDropDownWidget: function(/*$super*/)
 	{
 		var layout = this.calcActualButtonSetLayout();
 		this.getButtonSet().setLayout(layout);
-		$super();
+		this.tryApplySuper('showDropDownWidget')  /* $super() */;
 	},
 
 	/** @private */

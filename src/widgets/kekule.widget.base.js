@@ -459,7 +459,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	STYLE_RES_FIELD: '__$style_resources__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, isDumb)
+	initialize: function(/*$super, */parentOrElementOrDocument, isDumb)
 	{
 		this._stateClassName = null;
 		this._isDismissed = false;
@@ -480,7 +480,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 		this._touchActionNoneTouchStartHandlerBind = this._touchActionNoneTouchStartHandler.bind(this);
 
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
 		if (!isDumb)
 			this.reactUiEventBind = this.reactUiEvent.bind(this);
@@ -1159,7 +1159,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this._elemResizeObserver)
 		{
@@ -1178,25 +1178,25 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (this.getGlobalManager())
 			this.getGlobalManager().notifyWidgetFinalized(this);
 
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setEnableObjectChangeEvent(true);
 	},
 
 	/** @ignore */
-	invokeEvent: function($super, eventName, event)
+	invokeEvent: function(/*$super, */eventName, event)
 	{
 		if (!event)
 			event = {};
 		// add a 'widget' param
 		if (!event.widget)
 			event.widget = this;
-		$super(eventName, event);
+		this.tryApplySuper('invokeEvent', [eventName, event])  /* $super(eventName, event) */;
 		// notify global manager when a widget event occurs
 		var m = this.getGlobalManager();  // Kekule.Widget.globalManager;
 		if (m)
@@ -4028,16 +4028,16 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.InteractionController',
 	/** @constructs */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (widget)
 			this.setWidget(widget);
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.setWidget(null);
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4163,14 +4163,14 @@ Kekule.Widget.DumbWidget = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.DumbWidget',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument, true);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, true])  /* $super(parentOrElementOrDocument, true) */;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.DUMB_WIDGET;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.DUMB_WIDGET;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -4192,10 +4192,10 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.PlaceHolder',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, targetWidgetClass)
+	initialize: function(/*$super, */parentOrElementOrDocument, targetWidgetClass)
 	{
 		this.setPropStoreFieldValue('targetWidgetClass', targetWidgetClass);
-		$super(parentOrElementOrDocument, true);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, true])  /* $super(parentOrElementOrDocument, true) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4255,9 +4255,9 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CNS.PLACEHOLDER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.PLACEHOLDER;
 		var targetClass = this.getTargetWidgetClass();
 		if (targetClass)
 		{
@@ -4644,7 +4644,7 @@ Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.BaseEventsReceiver',
 	/** @constructs */
-	initialize: function($super, doc, eventRootObj)
+	initialize: function(/*$super, */doc, eventRootObj)
 	{
 		this._document = doc || Kekule.$jsRoot.document;
 		this._eventRootObj = eventRootObj || this._document.documentElement;
@@ -4653,14 +4653,14 @@ Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
 		this.reactDomNodeInsertEventBind = this.reactDomNodeInsertEvent.bind(this);
 		this.reactDomNodeRemoveEventBind = this.reactDomNodeRemoveEvent.bind(this);
 
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 
 		var self = this;
 		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
 		(function() { Kekule.X.domReady(self.domReadyInit.bind(self), this._document); }).defer();
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		var rootObj = this.getEventRootObj();
 		if (rootObj)
@@ -4668,7 +4668,7 @@ Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
 			this.uninstallGlobalDomMutationHandlers(rootObj);
 			this.uninstallGlobalEventHandlers(rootObj);
 		}
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 
 	/** @private */
@@ -4899,7 +4899,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	/** @private */
 	THEME_LOADED_FIELD: '__$theme_loaded__',
 	/** @constructs */
-	initialize: function($super, doc)
+	initialize: function(/*$super, */doc)
 	{
 		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
@@ -4931,10 +4931,10 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		*/
 		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
 
-		$super(this._document, this._document.documentElement);
+		this.tryApplySuper('initialize', [this._document, this._document.documentElement])  /* $super(this._document, this._document.documentElement) */;
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
 		//this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
@@ -4945,7 +4945,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
 		this.setPropStoreFieldValue('draggingElems', null);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4981,9 +4981,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	},
 
 	/** @private */
-	domReadyInit: function($super)
+	domReadyInit: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('domReadyInit')  /* $super() */;
 		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
 		//this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
@@ -5580,9 +5580,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	},
 
 	/** @ignore */
-	reactDomNodeInsertEvent: function($super, e)
+	reactDomNodeInsertEvent: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('reactDomNodeInsertEvent', [e])  /* $super(e) */;
 		var target = e.getTarget();
 		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
 		{
@@ -5591,9 +5591,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 	},
 	/** @ignore */
-	reactDomNodeRemoveEvent: function($super, e)
+	reactDomNodeRemoveEvent: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('reactDomNodeRemoveEvent', [e])  /* $super(e) */;
 		var target = e.getTarget();
 		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
 		{
@@ -5602,9 +5602,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 	},
 	/** @ignore */
-	reactDomMutation: function($super, mutations)
+	reactDomMutation: function(/*$super, */mutations)
 	{
-		$super(mutations);
+		this.tryApplySuper('reactDomMutation', [mutations])  /* $super(mutations) */;
 		for (var i = 0, l = mutations.length; i < l; ++i)
 		{
 			var m = mutations[i];
@@ -5643,9 +5643,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	},
 
 	/** @ignore */
-	reactUiEvent: function($super, e)
+	reactUiEvent: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('reactUiEvent', [e])  /* $super(e) */;
 
 		var evType = e.getType();
 

@@ -23,9 +23,9 @@ Kekule.Operation = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Operation',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this.setPropStoreFieldValue('state', Kekule.Operation.State.UNEXECUTED);
 	},
 	/** @private */
@@ -128,9 +128,9 @@ Kekule.MacroOperation = Class.create(Kekule.Operation,
 	/** @private */
 	CLASS_NAME: 'Kekule.MacroOperation',
 	/** @constructs */
-	initialize: function($super, childOperations)
+	initialize: function(/*$super, */childOperations)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setChildren(childOperations || []);
 	},
 	/** @private */
@@ -259,9 +259,9 @@ Kekule.OperationHistory = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.OperationHistory',
 	/** @constructs */
-	initialize: function($super, capacity)
+	initialize: function(/*$super, */capacity)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setCapacity(capacity || null);
 	},
 	/** @private */

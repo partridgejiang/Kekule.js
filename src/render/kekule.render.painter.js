@@ -44,9 +44,9 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ChemObjPainter',
 	/** @constructs */
-	initialize: function($super, renderType, chemObj, drawBridge, renderConfigs)
+	initialize: function(/*$super, */renderType, chemObj, drawBridge, renderConfigs)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		var rtype = renderType || Kekule.Render.RendererType.R2D;
 		this.setPropStoreFieldValue('renderType', rtype);
 		this.setPropStoreFieldValue('chemObj', chemObj);
@@ -66,11 +66,11 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 		*/
 		//this.setPropStoreFieldValue('boundInfoRecorder', new Kekule.Render.BoundInfoRecorder(this));
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		if (this.getRenderer())
 			this.getRenderer().finalize();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -452,9 +452,9 @@ Kekule.Render.ChemObjPainter2D = Class.create(Kekule.Render.ChemObjPainter,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ChemObjPainter2D',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, renderConfigs)
+	initialize: function(/*$super, */chemObj, drawBridge, renderConfigs)
 	{
-		$super(Kekule.Render.RendererType.R2D, chemObj, drawBridge, renderConfigs);
+		this.tryApplySuper('initialize', [Kekule.Render.RendererType.R2D, chemObj, drawBridge, renderConfigs])  /* $super(Kekule.Render.RendererType.R2D, chemObj, drawBridge, renderConfigs) */;
 	}
 });
 
@@ -478,9 +478,9 @@ Kekule.Render.ChemObjPainter3D = Class.create(Kekule.Render.ChemObjPainter,
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.ChemObjPainter3D',
 	/** @constructs */
-	initialize: function($super, chemObj, drawBridge, renderConfigs)
+	initialize: function(/*$super, */chemObj, drawBridge, renderConfigs)
 	{
-		$super(Kekule.Render.RendererType.R3D, chemObj, drawBridge, renderConfigs);
+		this.tryApplySuper('initialize', [Kekule.Render.RendererType.R3D, chemObj, drawBridge, renderConfigs])  /* $super(Kekule.Render.RendererType.R3D, chemObj, drawBridge, renderConfigs) */;
 	}
 });
 

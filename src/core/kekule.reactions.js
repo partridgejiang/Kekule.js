@@ -72,9 +72,9 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.Reaction',
 	/** @private */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this.setDirection(Kekule.ReactionDirection.FORWARD);
 	},
 	/** @private */
@@ -147,7 +147,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		var components = ['reactants', 'products', 'substances', 'conditions'];
 		for (var i = 0, l = components.length; i < l; ++i)
@@ -164,7 +164,7 @@ Kekule.Reaction = Class.create(Kekule.ChemObject,
 				}
 			}
 		}
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 
 	/** @private */
@@ -915,8 +915,8 @@ Kekule.ReactionList = Class.create(Kekule.ChemObjList,
 	CLASS_NAME: 'Kekule.ReactionList',
 	/** @private */
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id, Kekule.Reaction);
+		this.tryApplySuper('initialize', [id, Kekule.Reaction])  /* $super(id, Kekule.Reaction) */;
 	}
 });

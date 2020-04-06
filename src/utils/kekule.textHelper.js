@@ -31,9 +31,9 @@ Kekule.TextLinesBuffer = Class.create(ObjectEx,
 	/** @private */
 	LINEBREAK: '\n',
 	/** @constructs */
-	initialize: function($super, textOrLines)
+	initialize: function(/*$super, */textOrLines)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('lines', []);
 		if (textOrLines)
 		{
