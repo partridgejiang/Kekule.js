@@ -101,7 +101,7 @@ Kekule.EmscriptenUtils = {
 
 		try
 		{
-			if (moduleInitEventName && doc)
+			if (moduleInitEventName && doc && Kekule.X)
 			{
 				var reactLoadEvent = function() {
 					callCallback();

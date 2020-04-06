@@ -128,6 +128,24 @@ Kekule.InChI = {
 		var sInChIResult = convFunc(molData, options);
 		return JSON.parse(sInChIResult);
 	},
+	/**
+	 * Returns InChIKey from InChI source string
+	 * @param {String} inchiSource
+	 * @param {Int} xtra1
+	 * @param {Int} xtra2
+	 * @returns {Hash}
+	 */
+	getInChIKeyFromInChI: function(inchiSource, xtra1, xtra2)
+	{
+		var convFunc = InChI._getInChIKeyFromInChI;
+		if (!convFunc)
+		{
+			var module = InChI.getModule();
+			convFunc = module.cwrap('getInChIKeyJson', 'string', ['string', 'number', 'number']);
+		}
+		var sResult = convFunc(inchiSource, xtra1, xtra2);
+		return JSON.parse(sResult);
+	},
 
 	/**
 	 * Returns all InChI info (including inchi and auxInfo) of a molecule.
@@ -202,6 +220,11 @@ Kekule.IO.InChIWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result = info.inchi;
 			if (info.auxInfo)
 				result += '\n' + info.auxInfo;
+
+			// debug, with InChI key
+			var inchiKeyInfo = InChI.getInChIKeyFromInChI(info.inchi, 1, 1);
+			result += '\n' + JSON.stringify(inchiKeyInfo);
+
 			return result;
 		}
 		else
