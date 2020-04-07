@@ -1376,6 +1376,8 @@ Kekule.FactoryUtils = {
  */
 Kekule.UrlUtils = {
 	/** @private */
+	PROTOCAL_DELIMITER: '://',
+	/** @private */
 	EXT_DELIMITER: '.',
 	/** @private */
 	PATH_DELIMITER: '/',
@@ -1387,6 +1389,30 @@ Kekule.UrlUtils = {
 	KEY_VALUE_DELIMITER: '=',
 	/** @private */
 	HASH_DELIMITER: '#',
+	/**
+	 * change all path demiliter from '\' to '/'
+	 * @param {String} path
+	 * @returns {String}
+	 */
+	normalizePath: function(path)  // change path sep from '\' to '/' in windows env
+	{
+		return path.replace(/\\/g, '/');
+	},
+	/**
+	 * Extract protocal name from url.
+	 * @param {String} url
+	 * @returns {String}
+	 */
+	extractProtocal: function(url)
+	{
+		if (!url)
+			return null;
+		var p = url.indexOf(Kekule.UrlUtils.PROTOCAL_DELIMITER);
+		if (p >= 0)
+			return url.substr(0, p);
+		else
+			return '';
+	},
 	/**
 	 * Extract file name from url.
 	 * @param {String} url
