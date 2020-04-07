@@ -406,6 +406,7 @@ var kekuleFiles = {
 			'widgets/commonCtrls/kekule.widget.formControls.js',
 			'widgets/commonCtrls/kekule.widget.nestedContainers.js',
 			'widgets/commonCtrls/kekule.widget.treeViews.js',
+			'widgets/commonCtrls/kekule.widget.listViews.js',
 			'widgets/commonCtrls/kekule.widget.dialogs.js',
 			'widgets/commonCtrls/kekule.widget.msgPanels.js',
 			'widgets/commonCtrls/kekule.widget.tabViews.js',
@@ -835,7 +836,10 @@ function init()
 			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
 			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
+	}
 
+	if (isNode)
+	{
 		// if min files not found, use dev files instead
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
 		try
