@@ -84,6 +84,7 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_FOCUSED: 'K-State-Focused',
 
 	STATE_SELECTED: 'K-State-Selected',
+	STATE_CURRENT_SELECTED: 'K-State-Current-Selected',
 	STATE_CHECKED: 'K-State-Checked',
 
 	// show type
@@ -116,6 +117,7 @@ Kekule.Widget.HtmlClassNames = {
 	// layout
 	LAYOUT_H: 'K-Layout-H',
 	LAYOUT_V: 'K-Layout-V',
+	LAYOUT_G: 'K-Layout-G',  // grid
 	// outlook/decoration classes
 	CORNER_ALL: 'K-Corner-All',
 	CORNER_LEFT: 'K-Corner-Left',
@@ -150,7 +152,8 @@ var CNS = Kekule.Widget.HtmlClassNames;
  */
 Kekule.Widget.Layout = {
 	HORIZONTAL: 1,
-	VERTICAL: 2
+	VERTICAL: 2,
+	GRID: 4,
 };
 
 /**
@@ -2404,6 +2407,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var WL = Kekule.Widget.Layout;
 		return (layout === WL.VERTICAL)? CNS.LAYOUT_V:
 			(layout === WL.HORIZONTAL)? CNS.LAYOUT_H:
+			(layout === WL.GRID)? CNS.LAYOUT_G:
 			null;
 	},
 
@@ -5041,6 +5045,9 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		if (!loaded)
 		{
 			var themeUrl = Kekule.Widget.Utils.getThemeUrl(themeName);
+			var protocal = Kekule.UrlUtils.extractProtocal(themeUrl);
+			if (!protocal)  // protocal not found in path, should be local file
+				themeUrl = Kekule.UrlUtils.normalizePath('file:///' + themeUrl);
 			var doc = contextRootElem.ownerDocument;
 			var styleElem = doc.createElement('style');
 			styleElem.innerHTML = '@import "' + themeUrl + '"';
