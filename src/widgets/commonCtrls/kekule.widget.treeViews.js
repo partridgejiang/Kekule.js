@@ -13,7 +13,7 @@ var CNS = Kekule.Widget.HtmlClassNames;
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	TREEVIEW: 'K-TreeView',
-	//TREEVIEW_ITEM: 'K-TreeView-Item',
+	//TREEVIEW_ITEM_HOLDER: 'K-TreeView-ItemHolder',
 	TREEVIEW_EXPANDMARK: 'K-TreeView-ExpandMark',
 	TREEVIEW_ITEMCONTENT: 'K-TreeView-ItemContent'
 });
@@ -65,7 +65,7 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 				this.select(value);
 			}
 		});
-		this.defineProp('enableMultiSelected', {'dataType': DataType.BOOL});
+		this.defineProp('enableMultiSelect', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	doGetWidgetClassName: function()
@@ -198,7 +198,7 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 			var adds = Kekule.ArrayUtils.toArray(items);
 			if (adds && adds.length)
 			{
-				if (!this.getEnableMultiSelected())
+				if (!this.getEnableMultiSelect())
 				{
 					this.clearSelection();
 					adds = [adds[adds.length - 1]];
@@ -264,7 +264,7 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 			this.clearSelection();
 			if (items)
 			{
-				if (this.getEnableMultiSelected())
+				if (this.getEnableMultiSelect())
 					this.addToSelection(items);
 				else
 				{

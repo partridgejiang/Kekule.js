@@ -47,7 +47,7 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setPropStoreFieldValue('objMap', new Kekule.MapEx(true));
 		this.setEnableLiveUpdate(true);
-		this.setEnableMultiSelected(true);
+		this.setEnableMultiSelect(true);
 		this.setRootObj(rootObj);
 
 		this._pauseLiveUpdateFlag = 0;
