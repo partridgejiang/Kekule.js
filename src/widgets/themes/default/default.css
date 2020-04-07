@@ -708,8 +708,9 @@ table.K-Widget
     display: block;
 }
 
-/* Tree View */
-.K-TreeView
+/* List and Tree View */
+.K-TreeView,
+.K-ListView
 {
     border: 1px solid;
     cursor: default;
@@ -717,23 +718,50 @@ table.K-Widget
     overflow: auto;
 }
 
-.K-TreeView ul
+.K-TreeView ul,
+.K-ListView .K-ListView-ItemHolder
 {
     padding: 0;
     margin: 0;
-    padding-left: 1em;
     line-height: 1.1;
 }
+.K-ListView .K-ListView-ItemHolder
+{
+    overflow: hidden;
+}
 
-.K-TreeView li
+.K-TreeView ul
+{
+    padding-left: 1em;
+}
+
+.K-TreeView li,
+.K-ListView .K-ListView-Item
 {
     list-style: none;
+}
+.K-TreeView li
+{
     white-space: nowrap;
+}
+.K-ListView .K-ListView-Item
+{
+    padding: 0.2em;
 }
 
 .K-TreeView .K-TreeView-ItemContent, .K-TreeView .K-TreeView-ExpandMark
 {
     display: inline-block;
+}
+
+.K-ListView.K-Layout-H .K-ListView-Item
+{
+    display: inline-block;
+
+}
+.K-ListView.K-Layout-V .K-ListView-Item
+{
+    display: block;
 }
 
 /**** Debug settings ****/
@@ -1534,6 +1562,10 @@ button.K-Button::-moz-focus-inner {
 }
 
 .K-State-Selected {
+
+}
+
+.K-State-Current-Selected {
 
 }
 

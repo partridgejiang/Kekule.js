@@ -28,7 +28,10 @@
 }
 
 .K-State-Selected {
-    background-color: #F39814;
+    background-color: rgb(243,152,20);
+}
+.K-State-Selected.K-State-Current-Selected {
+    background-color: rgb(219, 136, 16);
 }
 
 .K-Widget
