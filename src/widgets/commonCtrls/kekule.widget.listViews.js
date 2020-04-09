@@ -162,7 +162,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		return this._holderElem;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
 		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CNS.LISTVIEW;
 	},
@@ -360,7 +360,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 			item = this.createChildItem(item);
 		this.getChildrenHolderElement().appendChild(item);
 		this._itemInserted(item);
-		return this;
+		return item;
 	},
 	/**
 	 * Insert an item element before refItem.
@@ -380,7 +380,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		{
 			this.getChildrenHolderElement().insertBefore(item, ref);
 			this._itemInserted(item);
-			return this;
+			return item;
 		}
 	},
 	/**
@@ -392,7 +392,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		var elem = this.getBelongedChildItem(item);
 		this.getChildrenHolderElement().removeChild(elem);
 		this._itemRemoved(elem);
-		return this;
+		return item;
 	},
 	/**
 	 * Remove items from list.
