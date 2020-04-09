@@ -25,6 +25,12 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * @property {Bool} enableMultiSelect Whether only one item can be selected at same time.
  * @property {Bool} enableSelectInSelection Whether the most active one is allowed to be selected in selection.
  */
+/**
+ * Invoked when the selection is changed in the list view.
+ *   event param of it has one fields: {selection: Array, selectedItem: HTMLElement}
+ * @name Kekule.Widget.ListView#selectionChange
+ * @event
+ */
 Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 /** @lends Kekule.Widget.ListView# */
 {
