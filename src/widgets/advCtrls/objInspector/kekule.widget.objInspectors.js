@@ -857,7 +857,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		var result = propEditor.createEditWidget(this);
 		if (result)
 		{
-			if (propEditor.isReadOnly())
+			if (this.getReadOnly() || propEditor.isReadOnly())
 			{
 				if (result.setReadOnly)
 					result.setReadOnly(true);
@@ -1171,6 +1171,19 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 				var objs = Kekule.ArrayUtils.toArray(value);
 				this.setPropStoreFieldValue('objects', objs);
 				this.inspectedObjectsChanged(objs);
+			}
+		});
+		this.defineProp('readOnly', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				var propEditor = this.getPropEditor();
+				return propEditor && propEditor.getReadOnly();
+			},
+			'setter': function(value)
+			{
+				var propEditor = this.getPropEditor();
+				if (propEditor)
+					propEditor.setReadOnly(value);
 			}
 		});
 		// private properties
