@@ -580,9 +580,11 @@ Object._extendSupportMethods(String.prototype, {
     });
   },
 
+  /*
   evalScripts: function() {
     return this.extractScripts().map(function(script) { return eval(script); });
   },
+  */
 
   escapeHTML: function escapeHTML() {
 		/*
@@ -700,6 +702,7 @@ Object._extendSupportMethods(String.prototype, {
     return (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(str);
   },
 
+  /*
   evalJSON: function(sanitize) {
     var json = this.unfilterJSON();
     try {
@@ -707,6 +710,7 @@ Object._extendSupportMethods(String.prototype, {
     } catch (e) { }
     throw new SyntaxError('Badly formed JSON string: ' + this.inspect());
   },
+  */
 
   include: function(pattern) {
     return this.indexOf(pattern) > -1;
@@ -1668,7 +1672,8 @@ var DataType = {
 			case DataType.DATE: return new Date();
 			case DataType.ARRAY: return new Array();
 			case DataType.OBJECT: return new Object();
-			case DataType.FUNCTION: return new Function();
+			//case DataType.FUNCTION: return new Function();
+      case DataType.FUNCTION: return function(){};
 			default: // maybe a ObjectEx descendant
 				{
 					var classInstance = ClassEx.findClass(typeName.capitalizeFirst()); //eval(typeName.capitalizeFirst());
@@ -2814,7 +2819,9 @@ ObjectEx = Class.create(
 		var actualGetter = this[doGetterName];
   	if (!actualGetter)
 		{
-			actualGetter = getter || new Function('return this["' + prop.storeField + '"];');
+      var propStoreField = prop.storeField;
+      actualGetter = getter || function(){ return this[propStoreField]; };
+			//actualGetter = getter || new Function('return this["' + prop.storeField + '"];');
 			this.getPrototype()[doGetterName] = actualGetter; // doGetXXX, descendant can override this method
 		}
 
@@ -2860,7 +2867,9 @@ ObjectEx = Class.create(
 
 		if (!this[doSetterName])
 		{
-			actualSetter = setter || new Function('value', 'this["' + prop.storeField + '"] = value;');
+      var propStoreField = prop.storeField;
+			//actualSetter = setter || new Function('value', 'this["' + prop.storeField + '"] = value;');
+      actualSetter = setter || function(value) { this[propStoreField] = value; };
   		this.getPrototype()[doSetterName] = actualSetter; // doSetXXX, descendant can override this method
 		}
   	/*

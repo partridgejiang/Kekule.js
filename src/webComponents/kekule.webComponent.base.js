@@ -418,14 +418,20 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 				{
 					var getterName = propInfo.getter;
 					var selfGetterName = 'get' + propInfo.name.upperFirst();
-					var getFunc = this.prototype[selfGetterName] = new Function('return this.widget.getPropValue("' + propInfo.name + '");');
-					descs.get = getFunc;
+					//var getFunc = this.prototype[selfGetterName] = new Function('return this.widget.getPropValue("' + propInfo.name + '");');
+					(function(propName, descs){
+						var getFunc = function(){
+							return this.widget.getPropValue(propName);
+						};
+						descs.get = getFunc;
+					})(propInfo.name, descs);
 					getterSetterMethods.push(selfGetterName);
 				}
 				if (propInfo.setter)
 				{
 					var setterName = propInfo.setter;
 					var selfSetterName = 'set' + propInfo.name.upperFirst();
+					/*
 					var setFunc = this.prototype[selfSetterName]
 						= new Function(
 						'value',
@@ -434,7 +440,16 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 						'this._exposedPropValueChanged("' + propInfo.name + '", newVal);' +
 						'return result;'
 					);
-					descs.set = setFunc;
+					*/
+					(function(propName, descs){
+						var setFunc = function(value){
+							var result = this.widget.setPropValue(propName, value);
+							var newVal = this.widget.getPropValue(propName);
+							this._exposedPropValueChanged(propName, newVal);
+							return result;
+						};
+						descs.set = setFunc;
+					})(propInfo.name, descs);
 					getterSetterMethods.push(selfSetterName);
 				}
 
@@ -528,11 +543,19 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 
 			}
 
+			/*
 			this.prototype[name] = new Function('',
 				'var func = this.widget["' + name +'"];' +
 			  'return func.apply(this.widget, arguments);'
 			);
-			exposedMethodNames.push(name);
+			*/
+			(function(self, name, exposedMethodNames){
+				self.prototype[name] = function(){
+					var func = this.widget[name];
+					return func.apply(this.widget, arguments);
+				};
+				exposedMethodNames.push(name);
+			})(this, name, exposedMethodNames);
 		}
 		//console.log('expose method names', exposedMethodNames);
 		return exposedMethodNames;
