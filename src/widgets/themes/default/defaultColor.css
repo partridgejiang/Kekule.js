@@ -439,6 +439,11 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     background-image: url("images/slice/icons16/pencil.png"); /* pencil mark */
 }
+.K-ValueListEditor.K-State-ReadOnly .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span,
+.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span
+{
+    background-image: url("images/slice/icons16/locked.png"); /* view mark */
+}
 
 .K-ValueListEditor,
 .K-ValueListEditor .K-ValueListEditor-Row:hover,
@@ -476,11 +481,6 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker
 {
     background-image: url("images/slice/icons16/triangleRight.png");
-}
-
-.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span
-{
-    background-image: url("images/slice/icons16/locked.png");  /* lock mark */
 }
 
 .K-ObjInspector /*.K-ObjInspector-PropInfoPanel, .K-ObjInspector .K-ObjInspector-ObjsInfoPanel*/
