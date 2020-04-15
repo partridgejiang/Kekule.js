@@ -87,6 +87,8 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_CURRENT_SELECTED: 'K-State-Current-Selected',
 	STATE_CHECKED: 'K-State-Checked',
 
+	STATE_READONLY: 'K-State-ReadOnly',
+
 	// show type
 	SHOW_POPUP: 'K-Show-Popup',
 	SHOW_DIALOG: 'K-Show-Dialog',
@@ -1189,6 +1191,21 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setEnableObjectChangeEvent(true);
+	},
+
+	/** @ignore */
+	doObjectChange: function(modifiedPropNames)
+	{
+		this.tryApplySuper('doObjectChange', [modifiedPropNames]);
+		if (modifiedPropNames.indexOf('readOnly') >= 0 && this.hasProperty('readOnly'))
+		{
+			// when read only property exists in widget and has been changed, modify the class name
+			var readOnly = this.getPropValue('readOnly');
+			if (readOnly)
+				this.addClassName(CNS.STATE_READONLY);
+			else
+				this.removeClassName(CNS.STATE_READONLY);
+		}
 	},
 
 	/** @ignore */
