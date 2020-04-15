@@ -16,17 +16,20 @@ Defining New Class
 ------------------
 
 Developers can even deprive their own new classes from those existing ones. Traditionally,
-defining class in JavaScript involves in a lot of ugly and clumsy codes. To simplify that
-process, Kekule.js provides a handy way to define new classes (similar as the approach of
-prototype.js):[#example]_
+defining class in JavaScript involves in a lot of ugly and clumsy codes. In ES2015, the
+`*class declaration* <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/class>`
+was introduced but unfortunately not supported by some ancient browsers (e.g., IE).
+
+So in Kekule.js, a special approach is used. That approach provides a easy and neat way
+to define class and is runnable in ancient browsers (even IE8) as well.[#example]_
 
 .. code-block:: javascript
 
   var MyCustomAtom = Class.create(Kekule.Atom, { // Creating a new class deprived from Kekule.Atom
     CLASS_NAME: 'MyCustomAtom',                  // Explicitly set the name of class
-    initialize: function($super, id)             // Method initialize will be regarded as constructor of class
+    initialize: function(id)             // Method initialize will be regarded as constructor of class
     {
-      $super(id);                                // Use $super parameter to call inherited method from ancestor class
+      this.applySuper('initialize', [id]);     // Use applySuper function to call inherited method from ancestor class
       this._customText = 'My value';
     },
     initProperties: function()                   // Special method, defining new properties of class
@@ -55,11 +58,27 @@ prototype.js):[#example]_
     }
   });
 
+.. note::
+
+  In the past versions of Kekule.js, special *$super* argument is utilized to call inherited method,
+  something like:
+
+  .. code-block:: javascript
+
+    initialize: function($super, id)
+    {
+      $super(id);   // Use $super parameter to call inherited method from ancestor class
+      this._customText = 'My value';
+    }
+
+  However, that approach often causes problem in modern package tool like WebPack. So in recent
+  versions, *applySuper* is recommended instead.
+
 Method Class.create is used to create a new class and this method accept two parameters. The first
 parameter is the ancestor class which can be omitted if the new class does not inherit from any existing
 ones. The second parameter is a JavaScript object defining the methods and attributes of new class. Among
 those methods, there are two special ones: *initialize* plays as the constructor of class and *initProperties*
-defines all new properties of class.
+defines all new properties of this class.
 
 In Kekule.js class system, property is a little different from traditional JavaScript property. In order
 to avoid compatiblity problems in different web browsers, property need be accessed by getter and setter

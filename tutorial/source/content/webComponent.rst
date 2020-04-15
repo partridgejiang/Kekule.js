@@ -64,7 +64,7 @@ Users can use those custom elements directly in their HTML codes, e.g.:
 
   <kekule-viewer id="viewer" style="width:500px;height:500px" chem-obj="url(molecule.mol)" render-type="3"></kekule-viewer>
   <script>
-    var viewer = document.getElementById('viewer).widget;
+    var viewer = document.getElementById('viewer').widget;
     viewer.predefinedSetting = 'fullFunc';
   </script>
 
