@@ -1602,10 +1602,10 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		var result = this.tryApplySuper('doGetComparisonPropNames', [options])  /* $super(options) */;
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
-			if (this._getComparisonOptionFlagValue(options, 'atom'))
-				result.push('atomicNumber');
 			if (this._getComparisonOptionFlagValue(options, 'mass'))
-				result.push('massNumber');
+				result.unshift('massNumber');
+			if (this._getComparisonOptionFlagValue(options, 'atom'))
+				result.unshift('atomicNumber');   // atom number is the most important one, must be at the beginning
 		}
 		return result;
 	},
