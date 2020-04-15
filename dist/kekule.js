@@ -24,7 +24,9 @@ if (!document)
 
 
 // check if is in Node.js environment
-var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isInBrowser = (typeof(navigator) !== 'undefined') && (typeof(window) !== 'undefined') && (typeof(document) !== 'undefined');
+var hasNodeEnv = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isNode = hasNodeEnv;
 var isWebpack = (typeof(__webpack_require__) === 'function');
 
 //if (!isWebpack && isNode)
@@ -404,6 +406,7 @@ var kekuleFiles = {
 			'widgets/commonCtrls/kekule.widget.formControls.js',
 			'widgets/commonCtrls/kekule.widget.nestedContainers.js',
 			'widgets/commonCtrls/kekule.widget.treeViews.js',
+			'widgets/commonCtrls/kekule.widget.listViews.js',
 			'widgets/commonCtrls/kekule.widget.dialogs.js',
 			'widgets/commonCtrls/kekule.widget.msgPanels.js',
 			'widgets/commonCtrls/kekule.widget.tabViews.js',
@@ -805,33 +808,52 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 function init()
 {
 	var scriptInfo, files, path;
-	if (isNode)
+
+	// some times there are both browser and node environment (e.g. Electron)
+	if (isInBrowser)   // try get info from <script> tag first
+	{
+		scriptInfo = analysisEntranceScriptSrc(document);
+		var findScriptTag = scriptInfo.src && scriptInfo.path;
+		if (findScriptTag)  // explicitly use script tag, load files in traditional way
+		{
+			isNode = false;
+		}
+		if (!findScriptTag && hasNodeEnv)  // dual env
+		{
+			scriptInfo.src = this.__filename || '';
+			scriptInfo.path = (__dirname || '.') + '/';
+			isNode = true;
+		}
+	}
+	else if (isNode)
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
 			'path': __dirname + '/',
-			'modules': nodeModules,
+			'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
 			//'useMinFile': false  // for debug
 			'useMinFile': true,
 			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
 			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
+	}
 
+	if (isNode)
+	{
 		// if min files not found, use dev files instead
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		var minFileExisted = false;
 		try
 		{
-			fs.statSync(testFileName)
+			minFileExisted = fs.existsSync(testFileName);
 		}
 		catch(e)
 		{
 			//scriptInfo.path += 'src/'
-			scriptInfo.useMinFile = false;
+			minFileExisted = false;
 		}
-	}
-	else  // in browser
-	{
-		scriptInfo = analysisEntranceScriptSrc(document);
+		if (!minFileExisted)
+			scriptInfo.useMinFile = false;
 	}
 
 	scriptInfo.explicitModules = scriptInfo.modules;

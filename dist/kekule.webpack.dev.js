@@ -77,6 +77,7 @@ require("../src/widgets/commonCtrls/kekule.widget.buttons.js");
 require("../src/widgets/commonCtrls/kekule.widget.formControls.js");
 require("../src/widgets/commonCtrls/kekule.widget.nestedContainers.js");
 require("../src/widgets/commonCtrls/kekule.widget.treeViews.js");
+require("../src/widgets/commonCtrls/kekule.widget.listViews.js");
 require("../src/widgets/commonCtrls/kekule.widget.dialogs.js");
 require("../src/widgets/commonCtrls/kekule.widget.msgPanels.js");
 require("../src/widgets/commonCtrls/kekule.widget.tabViews.js");
