@@ -842,15 +842,18 @@ function init()
 	{
 		// if min files not found, use dev files instead
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		var minFileExisted = false;
 		try
 		{
-			fs.statSync(testFileName)
+			minFileExisted = fs.existsSync(testFileName);
 		}
 		catch(e)
 		{
 			//scriptInfo.path += 'src/'
-			scriptInfo.useMinFile = false;
+			minFileExisted = false;
 		}
+		if (!minFileExisted)
+			scriptInfo.useMinFile = false;
 	}
 
 	scriptInfo.explicitModules = scriptInfo.modules;
