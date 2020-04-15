@@ -448,11 +448,17 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 	 * Notify the selection of tree view has been just changed.
 	 * @private
 	 */
-	selectionChanged: function()
+	selectionChanged: function(added, removed)
 	{
+		var eventParams = {
+			'selection': this.getSelection(), 'selectedItem': this.getSelectedItem(),
+			'added': added, 'removed': removed
+		};
+
 		var currSelectedItem = this.getSelectedItem();
 		if (this._prevSelectedItem && this._prevSelectedItem !== currSelectedItem)
 		{
+			eventParams.prevSelectedItem = this._prevSelectedItem;
 			EU.removeClass(this._prevSelectedItem, CNS.STATE_CURRENT_SELECTED);
 			this._prevSelectedItem = null;
 		}
@@ -462,9 +468,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		}
 
 		this.notifyPropSet('selection', this.getSelection());
-		this.invokeEvent('selectionChange', {
-			'selection': this.getSelection(), 'selectedItem': this.getSelectedItem()
-		});
+		this.invokeEvent('selectionChange', eventParams);
 	},
 
 	/**
@@ -477,7 +481,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		{
 			this.prepareChangingSelection();
 			this.doClearSelection();
-			this.selectionChanged();
+			this.selectionChanged(null, selection);
 		}
 		return this;
 	},
@@ -504,6 +508,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 	{
 		if (items)
 		{
+			var removed = [];
 			var removes = Kekule.ArrayUtils.toArray(items);
 			if (removes && removes.length)
 			{
@@ -513,9 +518,12 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 				{
 					var item = removes[i];
 					if (Kekule.ArrayUtils.remove(selection, item))
+					{
 						EU.removeClass(this.getBelongedChildItem(item), [CNS.STATE_SELECTED, CNS.STATE_CURRENT_SELECTED]);
+						removed.push(item);
+					}
 				}
-				this.selectionChanged();
+				this.selectionChanged(null, removed);
 			}
 		}
 		return this;
@@ -533,8 +541,8 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 			if (adds && adds.length)
 			{
 				this.prepareChangingSelection();
-				this.doAddToSelection(adds);
-				this.selectionChanged();
+				var added = this.doAddToSelection(adds);
+				this.selectionChanged(added);
 			}
 		}
 		return this;
@@ -542,13 +550,17 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	doAddToSelection: function(items)
 	{
+		var result = [];
 		var adds = Kekule.ArrayUtils.toArray(items);
 		if (adds && adds.length)
 		{
 			if (!this.getEnableMultiSelect())
 			{
+				/*
 				this.doClearSelection();
 				adds = [adds[adds.length - 1]];
+				*/
+				this.clearSelection();
 			}
 
 			{
@@ -560,10 +572,12 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 					{
 						EU.addClass(this.getBelongedChildItem(item), CNS.STATE_SELECTED);
 						selection.push(item);
+						result.push(item);
 					}
 				}
 			}
 		}
+		return result;
 	},
 
 	/**
@@ -609,10 +623,15 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		{
 			if (this.getSelection().length)
 			{
+				/*
 				if (!items)
 					this.clearSelection();  // since addToSelection will not be called, in here we invoke prepare/done selection methods
 				else
+				{
 					this.doClearSelection();
+				}
+				*/
+				this.clearSelection();
 			}
 			if (items)
 			{
