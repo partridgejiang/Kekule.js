@@ -4109,19 +4109,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return o;
 	},
 	_removeOrphans: function(action) {
-	    try {
-			const chemSpace = this.getChemSpace();
-			if (chemSpace) {
-				const children = chemSpace.getChildren().filter(x => x.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
-				for (const child of children) {
-		            child.getParent().removeChild(child);
-		            // console.log('Removed orphan Kekule.Glyph.PathGlyphArcConnectorControlNode');
-				}
+		const chemSpace = this.getChemSpace();
+		if (chemSpace) {
+			const children = chemSpace.getChildren().filter(x => x.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
+			for (const child of children) {
+	            child.getParent().removeChild(child);
 			}
-	    }
-	    catch(exception) {
-	        console.error(`Failed trying to remove orphans on "${action}" action.`, exception.stack);
-	    }
+		}
 	},
 	/**
 	 * Undo all operations.
