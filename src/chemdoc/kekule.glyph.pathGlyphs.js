@@ -980,8 +980,11 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	{
 		this.tryApplySuper('initialize', [id, Kekule.Glyph.PathType.ARC, connectedObjs])  /* $super(id, Kekule.Glyph.PathType.ARC, connectedObjs) */;
 		// add control point to control the arc
+		/*
 		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
 		this.setControlPoints([controlPoint]);
+		*/
+		this._createDefaultControlPoints();
 	},
 	/**
 	 * Returns the arc control point.
@@ -990,6 +993,22 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	getControlPoint: function()
 	{
 		return (this.getControlPoints() || [])[0]
+	},
+	/** @ignore */
+	doGetControlPoints: function()
+	{
+		var result = this.tryApplySuper('doGetControlPoints');
+		if (!result || !result.length)
+		{
+			result = this._createDefaultControlPoints();
+		}
+		return result;
+	},
+	_createDefaultControlPoints: function()
+	{
+		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
+		this.setPropStoreFieldValue('controlPoints', [controlPoint]);
+		return this.getControlPoints();
 	}
 });
 
