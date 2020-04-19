@@ -1694,7 +1694,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		var action = this.getBoundEditorAction(actionNameOrClass);
 		if (action)
-			action.execute('');
+			action.execute();
 		return action;
 	},
 
