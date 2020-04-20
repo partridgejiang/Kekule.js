@@ -550,7 +550,9 @@ Kekule.ChemObjOperation.Remove = Class.create(Kekule.ChemObjOperation.Base,
 	{
 		var obj = this.getTarget();
 		if (obj instanceof Kekule.Glyph.PathGlyphArcConnectorControlNode) {
-			obj = obj.getParent().getParent();
+			if (obj.getParent()) {
+				obj = obj.getParent().getParent();
+			}
 		}
 		var parent = this.getParentObj();
 		var owner = this.getOwnerObj();
