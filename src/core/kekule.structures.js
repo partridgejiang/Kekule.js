@@ -5018,6 +5018,10 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			result.sort();
 			return result;
 		};
+		var _getWedgeOrDash = function(connector) 
+		{
+			return connector.getStereo() >= 1 && connector.getStereo() <= 4;
+		};
 		if (!result && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			//if (this._getComparisonOptionFlagValue(options, 'atom'))
@@ -5053,16 +5057,42 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							this.hydrateExplicitHydrogenBonds();
 							targetObj.hydrateExplicitHydrogenBonds();
 
-                            if (hydrogen_display_type !== 'BONDED') {
+							if (this._getComparisonOptionFlagValue(options, 'compareStereo')) 
+							{
+								var allNodes1 = this.getNodes();
+								var allNodes2 = targetObj.getNodes();
+								result = allNodes1.length - allNodes2.length;	
+								if (result === 0)
+								{
+									for (var i = 0, l = allNodes1.length; i < l; ++i)
+									{
+										// checking that the amount of wedge or dash bonds is equal comparing stereos
+										const wedgesDashesCount1 = allNodes1[i].getLinkedConnectors().filter(_getWedgeOrDash);
+										const wedgesDashesCount2 = allNodes2[i].getLinkedConnectors().filter(_getWedgeOrDash);
+										result = wedgesDashesCount1.length - wedgesDashesCount2.length;
+										if (result !== 0)
+										{
+											break;
+										}
+									}
+								}
+							
+							}
+
+							if (result === 0 && hydrogen_display_type !== 'BONDED') 
+							{
                                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
                             	Kekule.MolStandardizer.standardize(this, options);
                                 Kekule.MolStandardizer.standardize(targetObj, options);
                                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = false;
-                            }
+							}							
 
-							var nodes1 = this.getNonHydrogenNodes();
-							var nodes2 = targetObj.getNonHydrogenNodes();
-							result = nodes1.length - nodes2.length;
+							if (result === 0) 
+							{
+								var nodes1 = this.getNonHydrogenNodes();
+								var nodes2 = targetObj.getNonHydrogenNodes();
+								result = nodes1.length - nodes2.length;
+							}							
 
                             if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
                                 const stereoBonds1 = this.getConnectors().filter(Kekule.MolStereoUtils.isStereoBond);
@@ -5070,22 +5100,23 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
                                 result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
                             }
 							
-							for (var i = 0, l = nodes1.length; i < l; ++i)
-							{
-								result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
-								if (result !== 0)
-									break;
-								else
+							if (result === 0) {
+								for (var i = 0, l = nodes1.length; i < l; ++i)
 								{
-									// check the neighbor node index to current node, avoid issue #86
-									var neighborNodeIndexes1 = _getNeighorNodeIndexes(nodes1[i], this);
-									var neighborNodeIndexes2 = _getNeighorNodeIndexes(nodes2[i], targetObj);
-									result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+									result = this.doCompareOnValue(nodes1[i], nodes2[i], options);
 									if (result !== 0)
-									{
-										//console.log('diff node', nodes1[i].getId(), neighborNodeIndexes1, nodes2[i].getId(), neighborNodeIndexes2);
 										break;
-									}
+									else
+									{
+										// check the neighbor node index to current node, avoid issue #86
+										var neighborNodeIndexes1 = _getNeighorNodeIndexes(nodes1[i], this);
+										var neighborNodeIndexes2 = _getNeighorNodeIndexes(nodes2[i], targetObj);
+										result = Kekule.ArrayUtils.compare(neighborNodeIndexes1, neighborNodeIndexes2);
+										if (result !== 0)
+										{
+											break;
+										}
+									}																		
 								}
 							}
 						}
