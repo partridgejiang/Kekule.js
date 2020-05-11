@@ -5055,29 +5055,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						if (result === 0)
 						{
 							this.hydrateExplicitHydrogenBonds();
-							targetObj.hydrateExplicitHydrogenBonds();
-
-							if (this._getComparisonOptionFlagValue(options, 'compareStereo')) 
-							{
-								var allNodes1 = this.getNodes();
-								var allNodes2 = targetObj.getNodes();
-								result = allNodes1.length - allNodes2.length;	
-								if (result === 0)
-								{
-									for (var i = 0, l = allNodes1.length; i < l; ++i)
-									{
-										// checking that the amount of wedge or dash bonds is equal comparing stereos
-										const wedgesDashesCount1 = allNodes1[i].getLinkedConnectors().filter(_getWedgeOrDash);
-										const wedgesDashesCount2 = allNodes2[i].getLinkedConnectors().filter(_getWedgeOrDash);
-										result = wedgesDashesCount1.length - wedgesDashesCount2.length;
-										if (result !== 0)
-										{
-											break;
-										}
-									}
-								}
-							
-							}
+							targetObj.hydrateExplicitHydrogenBonds();							
 
 							if (result === 0 && hydrogen_display_type !== 'BONDED') 
 							{
@@ -5116,6 +5094,20 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 										{
 											break;
 										}
+									}
+									if (this._getComparisonOptionFlagValue(options, 'compareStereo')) 
+									{
+										if (nodes1[i].getIsotopeId() === 'C' && nodes2[i].getIsotope() === 'C') 
+										{
+											// checking that the amount of wedge or dash bonds is equal comparing stereos
+											const wedgesDashesCount1 = nodes1[i].getLinkedConnectors().filter(_getWedgeOrDash);
+											const wedgesDashesCount2 = nodes2[i].getLinkedConnectors().filter(_getWedgeOrDash);
+											result = wedgesDashesCount1.length - wedgesDashesCount2.length;
+											if (result !== 0)
+											{
+												break;
+											}
+										}									
 									}																		
 								}
 							}
