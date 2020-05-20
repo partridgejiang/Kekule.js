@@ -1669,6 +1669,36 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/**
+	 * Returns an action bound to composer.
+	 * E.g. calling composer.getBoundAction('glyph') will returns the action correspondig to the glyph tool button.
+	 * @param {Variant} actionNameOrClass
+	 * @returns {Kekule.Action}
+	 */
+	getBoundEditorAction: function(actionNameOrClass)
+	{
+		var aClass;
+		if (typeof(actionNameOrClass) === 'string')
+			aClass = this.getCompActionClass(actionNameOrClass);
+		else if (ClassEx.isClass(actionNameOrClass))
+			aClass = actionNameOrClass;
+
+		return aClass? this.getActionMap().get(aClass): null;
+	},
+	/**
+	 * Execute an action bound to composer.
+	 * E.g. calling composer.execBoundAction('glyph') will activate the glyph tool button.
+	 * @param {Variant} actionNameOrClass
+	 * @returns {Kekule.Action}
+	 */
+	execBoundEditorAction: function(actionNameOrClass)
+	{
+		var action = this.getBoundEditorAction(actionNameOrClass);
+		if (action)
+			action.execute();
+		return action;
+	},
+
+	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
 	 * @private
 	 */

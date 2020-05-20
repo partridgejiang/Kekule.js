@@ -322,6 +322,19 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return this.setDrawOptions(op);
 			}
 		});
+		this.defineProp('autoShrink', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var op = this.getDrawOptions() || {};
+				return op.autoShrink;
+			},
+			'setter': function(value)
+			{
+				var op = this.getDrawOptions() || {};
+				op.autoShrink = value;
+				return this.setDrawOptions(op);
+			}
+		});
 		this.defineProp('moleculeDisplayType', {'dataType': DataType.INT, 'serializable': false,
 			'getter': function()
 			{

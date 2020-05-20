@@ -322,6 +322,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {String} width Width style of element.
  * @property {String} height Height style of element.
  * @property {String} innerHTML Current element's innerHTML value.
+ * @property {Int} tabIndex Tab index of widget element.
  * @property {Object} style CSS style object of current binding element.
  * @property {String} cssText CSS text of current binding element.
  * @property {String} htmlClassName HTML class of current binding element. This property will include all values in element's class attribute.
@@ -699,6 +700,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'setter': null
 		});
 
+		this.defineProp('tabIndex', {'dataType': DataType.INT, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getElement().tabIndex; },
+			'setter': function(value) { this.getElement().tabIndex = value; }
+		});
 		this.defineProp('innerHTML', {'dataType': DataType.STRING, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,  // this prop value usually should not be shown in objInspector to avoid modification of essential HTML structure
 			'getter': function() { return this.getElement().innerHTML; },
@@ -2818,6 +2824,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (originClassName)
 				this.setCustomHtmlClassName(this.getCustomHtmlClassName() || '' + ' ' + originClassName);
 
+			var defTabIndex = this.getDefaultTabIndex();
+			if (Kekule.ObjUtils.notUnset(defTabIndex) && !element.getAttribute('tabindex'))
+			{
+				element.tabIndex = defTabIndex;
+			}
+
 			var DU = Kekule.DomUtils;
 			var HU = Kekule.HtmlElementUtils;
 			// clear possiblely previously created dynamic elements
@@ -2988,6 +3000,23 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			this.unbindElement(oldElem);
 		if (newElem)
 			this.bindElement(newElem);
+	},
+
+	/**
+	 * Returns the default tab index of widget.
+	 * The value will be set to tabindex attribute when binding to an element without explicit setting of tabindex.
+	 * Descendants may override doGetDefaultTabIndex. Returns null if the tab index need not to be changed when binding.
+	 * @returns {Int}
+	 * @private
+	 */
+	getDefaultTabIndex: function()
+	{
+		return this.doGetDefaultTabIndex();
+	},
+	/** @private */
+	doGetDefaultTabIndex: function()
+	{
+		return 0;
 	},
 
 	/**
@@ -4187,6 +4216,11 @@ Kekule.Widget.DumbWidget = Class.create(Kekule.Widget.BaseWidget,
 	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this.tryApplySuper('initialize', [parentOrElementOrDocument, true])  /* $super(parentOrElementOrDocument, true) */;
+	},
+	/** @ignore */
+	doGetDefaultTabIndex: function()
+	{
+		return null;
 	},
 	/** @ignore */
 	doGetWidgetClassName: function(/*$super*/)

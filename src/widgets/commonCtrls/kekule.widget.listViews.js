@@ -571,7 +571,8 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 					if (!this.isItemSelected(item))
 					{
 						EU.addClass(this.getBelongedChildItem(item), CNS.STATE_SELECTED);
-						selection.push(item);
+						//selection.push(item);
+						selection.splice(selection.length - 1, 0, item);  // push before last one, ensure the selectedItem not changed
 						result.push(item);
 					}
 				}

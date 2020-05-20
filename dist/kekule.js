@@ -28,6 +28,7 @@ var isInBrowser = (typeof(navigator) !== 'undefined') && (typeof(window) !== 'un
 var hasNodeEnv = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
 var isNode = hasNodeEnv;
 var isWebpack = (typeof(__webpack_require__) === 'function');
+var loadedByImportOrRequire = (typeof(exports) !== 'undefined');
 
 //if (!isWebpack && isNode)
 if (typeof(__webpack_require__) !== 'function' && isNode)
@@ -624,28 +625,31 @@ function analysisEntranceScriptSrc(doc)
 	var paramLanguage = /^language\=(.+)$/;
 
 	var matchResult;
-	// try get current script info by document.currentScript
-	if (doc && doc.currentScript && doc.currentScript.src)
+	if (!loadedByImportOrRequire)
 	{
-		var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
-		if (scriptSrc)
+		// try get current script info by document.currentScript
+		if (doc && doc.currentScript && doc.currentScript.src)
 		{
-			matchResult = scriptSrc.match(scriptSrcPattern);
-		}
-	}
-	else  // use the traditional way, detect each <script> tags
-	{
-		var scriptElems = doc.getElementsByTagName('script');
-		for (var j = scriptElems.length - 1; j >= 0; --j)
-		{
-			var elem = scriptElems[j];
-			var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 			if (scriptSrc)
 			{
-				matchResult = scriptSrc.match(entranceSrc);
-				if (matchResult)
+				matchResult = scriptSrc.match(scriptSrcPattern);
+			}
+		}
+		else  // use the traditional way, detect each <script> tags
+		{
+			var scriptElems = doc.getElementsByTagName('script');
+			for (var j = scriptElems.length - 1; j >= 0; --j)
+			{
+				var elem = scriptElems[j];
+				var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+				if (scriptSrc)
 				{
-					break;
+					matchResult = scriptSrc.match(entranceSrc);
+					if (matchResult)
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -814,6 +818,7 @@ function init()
 	{
 		scriptInfo = analysisEntranceScriptSrc(document);
 		var findScriptTag = scriptInfo.src && scriptInfo.path;
+
 		if (findScriptTag)  // explicitly use script tag, load files in traditional way
 		{
 			isNode = false;

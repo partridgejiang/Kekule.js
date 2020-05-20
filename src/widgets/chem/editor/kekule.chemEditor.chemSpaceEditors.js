@@ -913,7 +913,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		var space = this.getChemSpace();
 		var targetObjs = space.getChildren();
 		if (targetObjs)
-			return this._calcExpandChemSpaceSizeToTargetObjsInfo(targetObjs, this.getCoordMode);
+			return this._calcExpandChemSpaceSizeToTargetObjsInfo(targetObjs, this.getCoordMode());
 		else
 			return null;
 	},

@@ -235,8 +235,14 @@ Object.getCascadeFieldValue = function(fieldName, root)
   for (var i = 0, l = cascadeNames.length; i < l; ++i)
   {
     result = root[cascadeNames[i]];
+    if (!result && i === 0 && l > 1)   // may be root part is defined in const or let, which won't be registered with global)
+    {
+      try { result = eval(cascadeNames[i]) } catch(e) { result = null; }
+    }
     if (!result)
+    {
       break;
+    }
     else
       root = result;
   }

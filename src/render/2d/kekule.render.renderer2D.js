@@ -341,9 +341,12 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
  * A base implementation of 2D chem object renderer.
  * You can call renderer.draw(context, chemObj, baseCoord, options) to draw the 2D structure,
  * where options can contain the settings of drawing style (strokeWidth, color...) and tranform params
- * (including scale, zoom, translate, rotateAngle...). The options can also have autoScale and autofit (Bool) field,
+ * (including scale, zoom, translate, rotateAngle...).
+ * The options can also have autoScale, autofit and autoShrink (Bool) field,
  * if autoScale is true, the scale value will be determinate by renderer while when autofit is true,
- * the drawn element will try to fullfill the whole context area (without margin). retainAspect will
+ * the drawn element will try to fullfill the whole context area (without margin). The effect of autoShrink
+ * equals to autofit in larger context area and equals to autoScale in smaller context area.
+ * retainAspect will
  * decide whether aspect ratio will be preserved in autofit situation.
  * Note: zoom is not the same as scale. When scale is set or calculated, zoom will multiply on it and get the actual scale ratio.
  *   for example, scale is 100 and zoom is 1.5, then the actual scale value will be 150.
@@ -837,8 +840,20 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 
 		if ((!drawOptions.scale) && (!drawOptions.scaleX) && (!drawOptions.scaleY))
 		{
+			var defaultDrawScale;
+			// calculate the default scale, but in autofit, default scale will not be used, so bypass
+			if (!drawOptions.autofit)
+			{
+				// auto determinate the scale by defBondLength and median of ctab bond length
+				var defDrawRefLength = oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1;
+				//var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
+				var medianObjRefLength = drawOptions.medianObjRefLength;
+				if (Kekule.ObjUtils.isUnset(medianObjRefLength))
+					medianObjRefLength = drawOptions.defScaleRefLength;
+				defaultDrawScale = (defDrawRefLength / medianObjRefLength) || 1;  // medianObjRefLength may be NaN
+			}
 
-			if (drawOptions.autofit)
+			if (drawOptions.autofit || drawOptions.autoShrink)
 			{
 				var contextDim = this.getDrawBridge().getContextDimension(context);
 				contextDim.x = contextDim.width;
@@ -857,16 +872,29 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 				var sy = Math.max(contextDim.height - padding, 0) / (objBox.height || 1);
 				if (O.isUnset(drawOptions.retainAspect) || (drawOptions.retainAspect))
 				{
-					result.scaleX = result.scaleY = Math.min(sx, sy);
+					var adjustedScale = Math.min(sx, sy);
+					if (drawOptions.autofit)
+						result.scaleX = result.scaleY = adjustedScale;
+					else if (drawOptions.autoShrink) // if adjustedScale > 1, auto shrink will not take effect
+						result.scaleX = result.scaleY = ((adjustedScale < defaultDrawScale)? adjustedScale: defaultDrawScale);
 				}
 				else
 				{
-					result.scaleX = sx;
-					result.scaleY = sy;
+					if (drawOptions.autofit)
+					{
+						result.scaleX = sx;
+						result.scaleY = sy;
+					}
+					else if (drawOptions.autoShrink)
+					{
+						result.scaleX = (sx < defaultDrawScale)? sx: defaultDrawScale;
+						result.scaleY = (sy < defaultDrawScale)? sy: defaultDrawScale;
+					}
 				}
 			}
 			else // if (drawOptions.autoScale)  // default is autoScale if no explicit scale set
 			{
+				/*
 				// auto determinate the scale by defBondLength and median of ctab bond length
 				var defDrawRefLength = oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1;
 				//var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
@@ -874,6 +902,8 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 				if (Kekule.ObjUtils.isUnset(medianObjRefLength))
 				  medianObjRefLength = drawOptions.defScaleRefLength;
 				result.scaleX = result.scaleY = (defDrawRefLength / medianObjRefLength) || 1;  // medianObjRefLength may be NaN
+				*/
+				result.scaleX = result.scaleY = defaultDrawScale;
 			}
 		}
 		else

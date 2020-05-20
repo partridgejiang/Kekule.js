@@ -138,13 +138,13 @@ Kekule.Editor.SelectMode = {
  */
 /**
  * Invoked when multiple chem objects inside editor is changed.
- *   event param of it has one fields: {objChangeDetails}.
+ *   event param of it has one fields: {details}.
  * @name Kekule.Editor.BaseEditor#editObjsChanged
  * @event
  */
 /**
  * Invoked when chem objects inside editor is changed and the changes has been updated by editor.
- *   event param of it has one fields: {objChangeDetails}.
+ *   event param of it has one fields: {details}.
  * Note: this event is not the same as editObjsChanged. When beginUpdateObj is called, editObjsChanged
  * event still will be invoked but editObjsUpdated event will be suppressed.
  * @name Kekule.Editor.BaseEditor#editObjsUpdated

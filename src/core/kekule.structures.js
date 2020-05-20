@@ -5879,7 +5879,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Removes all explicit hydrogen atoms and related bonds from this structure.
 	 */
-	clearExplicitHydrogens: function()
+	clearExplicitHydrogens: function(forceKeepStructureCache)
 	{
 		var self = this;
 		var delNodeWithConnectors = function(node, index)
@@ -5894,24 +5894,39 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			self.removeNodeAt(index, false);
 		};
 
-		var nodeCount = this.getNodeCount();
-		for (var i = nodeCount - 1; i >= 0; --i)
+		if (forceKeepStructureCache)
 		{
-			var node = this.getNodeAt(i);
-			if (node instanceof Kekule.ChemStructureNode)
+			var oldAutoClear = this.getAutoClearStructureCache();
+			this.setAutoClearStructureCache(false);  // prevent structure cache be cleared when removing H atoms
+		}
+		this.beginUpdate();
+		try
+		{
+			var nodeCount = this.getNodeCount();
+			for (var i = nodeCount - 1; i >= 0; --i)
 			{
-				if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+				var node = this.getNodeAt(i);
+				if (node instanceof Kekule.ChemStructureNode)
 				{
-					node.clearExplicitHydrogens();
-					if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
-						delNodeWithConnectors(node, i);
-				}
-				else
-				{
-					if (node.isHydrogenAtom())
-						delNodeWithConnectors(node, i);
+					if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+					{
+						node.clearExplicitHydrogens(forceKeepStructureCache);
+						if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
+							delNodeWithConnectors(node, i);
+					}
+					else
+					{
+						if (node.isHydrogenAtom())
+							delNodeWithConnectors(node, i);
+					}
 				}
 			}
+		}
+		finally
+		{
+			this.endUpdate();
+			if (forceKeepStructureCache)
+				this.setAutoClearStructureCache(oldAutoClear);
 		}
 		return this;
 	},

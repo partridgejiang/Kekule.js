@@ -351,14 +351,21 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 					result = [];
 					this.setPropStoreFieldValue('controlPoints', result);
 				}
+				if (result && !result.length)
+				{
+					this.doFillDefaultControlPoints(result);
+				}
 				return result;
 			},
 			'setter': function(value)
 			{
 				this.clearControlPoints();
 				this.setPropStoreFieldValue('controlPoints', value);
+				/*
 				this._updateControlPointsOwner();
 				this._updateControlPointsParent();
+				*/
+				this._controlPointsChanged();
 			}
 		});
 	},
@@ -586,6 +593,16 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 
 	/**
+	 * Fill in default control points when the controlPoints property is empty while creating or loading glyph.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	doFillDefaultControlPoints: function(controlPoints)
+	{
+		// do nothing here
+	},
+
+	/**
 	 * Remove childObj from connector.
 	 * @param {Variant} childObj A child control point.
 	 */
@@ -666,6 +683,12 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 	*/
 
+	/** @private */
+	_controlPointsChanged: function()
+	{
+		this._updateControlPointsOwner();
+		this._updateControlPointsParent();
+	},
 
 	/** @private */
 	_updateControlPointsOwner: function(owner)
@@ -980,8 +1003,12 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	{
 		this.tryApplySuper('initialize', [id, Kekule.Glyph.PathType.ARC, connectedObjs])  /* $super(id, Kekule.Glyph.PathType.ARC, connectedObjs) */;
 		// add control point to control the arc
+		/*
 		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
 		this.setControlPoints([controlPoint]);
+		*/
+		var controlPoints = this._createDefaultControlPoints();
+		this.setControlPoints(controlPoints);
 	},
 	/**
 	 * Returns the arc control point.
@@ -990,6 +1017,17 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	getControlPoint: function()
 	{
 		return (this.getControlPoints() || [])[0]
+	},
+	/** @ignore */
+	doFillDefaultControlPoints: function(controlPoints)
+	{
+		var points = this._createDefaultControlPoints();
+		Kekule.ArrayUtils.pushUnique(controlPoints, points);
+	},
+	_createDefaultControlPoints: function()
+	{
+		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
+		return [controlPoint];
 	}
 });
 

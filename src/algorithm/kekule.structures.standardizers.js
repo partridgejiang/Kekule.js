@@ -86,7 +86,7 @@ Kekule.MolStandardizer = {
 
 		// Hydrongen should be cleared at last, since it may affect stereo perception
 		if (op.clearHydrogens)
-			mol.clearExplicitHydrogens();
+			mol.clearExplicitHydrogens(true);  // do not clear structure flags when removing hydrogen
 
 		return mol;
 	}
