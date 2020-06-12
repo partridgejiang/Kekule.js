@@ -66,6 +66,9 @@ Kekule.globalOptions.add('chemWidget.periodicTable',{
  * @property {Int} endingAtomNum
  * @property {String} startingElementSymbol
  * @property {String} endingElementSymbol
+ * @property {Array} disabledElementSymbols Array of symbols that are unabled to be selected in table.
+ *   If property {@link Kekule.ChemWidget.PeriodicTable.enabledElementSymbols} is set, this property will be ignored.
+ * @property {Array} enabledElementSymbols Array of symbols that are enabled to be selected in table.
  * @property {Bool} useMiniMode If true, table will be in small size and only show atom symbol/number information.
  * @property {Bool} enableSelect Whether user can interact with table and select element on it.
  * @property {Bool} enableMultiSelect Whether user can interact with table and select multiple elements on it.
