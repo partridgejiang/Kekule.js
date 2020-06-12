@@ -64,6 +64,8 @@ Kekule.globalOptions.add('chemWidget.periodicTable',{
  *   ['symbol', 'name', 'atomicNumber', 'atomicWeight', 'groupHead', 'periodHead', 'legend']
  * @property {Int} startingAtomNum
  * @property {Int} endingAtomNum
+ * @property {String} startingElementSymbol
+ * @property {String} endingElementSymbol
  * @property {Bool} useMiniMode If true, table will be in small size and only show atom symbol/number information.
  * @property {Bool} enableSelect Whether user can interact with table and select element on it.
  * @property {Bool} enableMultiSelect Whether user can interact with table and select multiple elements on it.
@@ -122,6 +124,16 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		});
 		this.defineProp('startingAtomNum', {'dataType': DataType.INT});
 		this.defineProp('endingAtomNum', {'dataType': DataType.INT});
+
+		this.defineProp('startingElementSymbol', {'dataType': DataType.INT, 'serializable': false,
+			'getter': function() { var num = this.getStartingAtomNum(); return num && Kekule.ChemicalElementsDataUtil.getElementSymbol(num); },
+			'setter': function(value) { this.setStartingAtomNum((value && Kekule.ChemicalElementsDataUtil.getAtomicNumber(value))  || null); }
+		});
+		this.defineProp('endingElementSymbol', {'dataType': DataType.INT, 'serializable': false,
+			'getter': function() { var num = this.getEndingAtomNum(); return num && Kekule.ChemicalElementsDataUtil.getElementSymbol(num); },
+			'setter': function(value) { this.setEndingAtomNum((value && Kekule.ChemicalElementsDataUtil.getAtomicNumber(value))  || null); }
+		});
+
 		this.defineProp('useMiniMode', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
