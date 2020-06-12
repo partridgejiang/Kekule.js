@@ -107,6 +107,13 @@
     box-shadow: 1px 1px 2px;
     z-index: 5;
 }
+.K-Chem-Periodic-Table td.K-Chem-Periodic-Table-Elem-Cell.K-State-Disabled .K-Chem-Periodic-Table-Elem-Cell-Content:hover
+{
+    transform: none;
+    outline: inherit;
+    box-shadow: inherit;
+    z-index: inherit;
+}
 
 .K-Chem-Periodic-Table-Elem-Cell-Content .K-Chem-Atomic-Num
 {

@@ -134,6 +134,9 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 			'setter': function(value) { this.setEndingAtomNum((value && Kekule.ChemicalElementsDataUtil.getAtomicNumber(value))  || null); }
 		});
 
+		this.defineProp('enabledElementSymbols', {'dataType': DataType.ARRAY});
+		this.defineProp('disabledElementSymbols', {'dataType': DataType.ARRAY});
+
 		this.defineProp('useMiniMode', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -219,6 +222,11 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames, props).length)
 		{
 			this.recreateMainTable();
+		}
+		props = ['enabledElementSymbols', 'disabledElementSymbols'];
+		if (Kekule.ArrayUtils.intersect(modifiedPropNames, props).length)
+		{
+			this.updateCellEnableStates();
 		}
 	},
 
@@ -444,6 +452,8 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		parentElem.appendChild(extraTableElem);
 
+		this.updateCellEnableStates();
+
 		return result;
 	},
 	/**
@@ -532,7 +542,63 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 
+	/** @private */
+	updateCellEnableStates: function()
+	{
+		var enabledSymbols = this.getEnabledElementSymbols() || [];
+		var disabledSymbols = (!enabledSymbols.length && this.getDisabledElementSymbols()) || [];
+
+		if (!disabledSymbols.length && !enabledSymbols.length)
+			return;
+
+		// if enabled symbols is set, disabled symbols will be ignored
+		var cells = this._elemCells;
+		for (var i = 0, l = cells.length; i < l; ++i)
+		{
+			var data = this._getCellData(cells[i]);
+			var currSymbol = data.symbol;
+			if (enabledSymbols.length)
+			{
+				if (enabledSymbols.indexOf(currSymbol) < 0)  // disable current cell
+				{
+					this.setCellEnableState(cells[i], false);
+				}
+			}
+			else if (disabledSymbols.length)
+			{
+				if (disabledSymbols.indexOf(currSymbol) >= 0)  // disable current cell
+				{
+					this.setCellEnableState(cells[i], false);
+				}
+			}
+		}
+	},
+	/** @private */
+	setCellEnableState: function(cellElem, enabled)
+	{
+		if (enabled)
+		{
+			EU.removeClass(cellElem, CNS.STATE_DISABLED);
+			this._getCellData(cellElem).disabled = null;
+		}
+		else
+		{
+			EU.addClass(cellElem, CNS.STATE_DISABLED);
+			this._getCellData(cellElem).disabled = true;
+		}
+	},
+
 	// interaction methods and event handlers
+	/** @private */
+	_getCellData: function(cellElem)
+	{
+		return cellElem[this.ELEM_DATA_FIELD];
+	},
+	/** @private */
+	_isCellDisabled: function(cellElem)
+	{
+		return !!this._getCellData(cellElem).disabled;
+	},
 	/** @private */
 	_getAtomCellElem: function(elem)
 	{
@@ -622,7 +688,7 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var target = e.getTarget();
 			var cellElem = this._getAtomCellElem(target);
-			if (cellElem)
+			if (cellElem && !this._isCellDisabled(cellElem))
 			{
 				if (!this.getEnableMultiSelect())
 				{
