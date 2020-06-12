@@ -3994,7 +3994,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/**
-	 * This method should be called when the primary action is taken on widge
+	 * This method should be called when the primary action is taken on widget
 	 * (such as click on button, select on menu and so on).
 	 * @param {Object} invokerHtmlEvent HTML event object that invokes executing process.
 	 */
