@@ -4755,6 +4755,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 					this.startDirectManipulate(insertResult.manipulateType, insertResult.objects,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
 					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
+					this.getEditor().invokeEvent('objectInserted', { objects: insertResult.objects });
 				}
 				e.preventDefault();
 				return true; // important
