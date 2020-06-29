@@ -1654,8 +1654,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		})
 		// Renderer always assumes second node in list is the arrow head. We make the same assumption here.
 		var isArcHeadToElectron = dest instanceof Kekule.ChemMarker.UnbondedElectronSet && parentArc.getNodes()[1].getId() === targetNode.getId()
-
-		return isArcNode && isValidDest && !isSiblingAlreadyAnchoredToSameDest && !isArcHeadToElectron
+		var isArcTailToAtom = dest instanceof Kekule.Atom && parentArc.getNodes()[0].getId() === targetNode.getId()
+		return isArcNode && isValidDest && !isSiblingAlreadyAnchoredToSameDest && !isArcHeadToElectron && !isArcTailToAtom
 	},
 	/** @private */
 	_canMergeNodes: function(targetNode, destNode)
@@ -4755,6 +4755,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 					this.startDirectManipulate(insertResult.manipulateType, insertResult.objects,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
 					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
+					this.getEditor().invokeEvent('objectInserted', { objects: insertResult.objects });
 				}
 				e.preventDefault();
 				return true; // important
