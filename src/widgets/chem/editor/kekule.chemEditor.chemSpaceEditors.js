@@ -4444,6 +4444,7 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 		this.defineProp('addRepObjsOper', {'dataType': 'Kekule.MacroOperation', 'serializable': false});
 		this.defineProp('initialTransformParams', {'dataType': DataType.HASH, 'serializable': false});
 		this.defineProp('currRepositoryObjects', {'dataType': 'Kekule.ChemObject', 'serializable': false});
+		this.defineProp('insertedRepositoryObjects', {'dataType': 'Kekule.ChemObject', 'serializable': false});
 	},
 
 	/** @ignore */
@@ -4748,14 +4749,14 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 			{
 				var boundItem = this.getEditor().getTopmostBoundInfoAtCoord(coord, null, this.getCurrBoundInflation());
 				var boundObj = boundItem? boundItem.obj: null;
-
+				this.setInsertedRepositoryObjects(null);
 				var insertResult = this.insertRepositoryObjToEditor(coord, boundObj);
 				if (insertResult)
 				{
 					this.startDirectManipulate(insertResult.manipulateType, insertResult.objects,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
 					this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge
-					this.getEditor().invokeEvent('objectInserted', { objects: insertResult.objects });
+					this.setInsertedRepositoryObjects(insertResult.objects);
 				}
 				e.preventDefault();
 				return true; // important
@@ -4771,6 +4772,11 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		if ((state === S.MANIPULATING) && (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT))
 		{
+			var insertedRepositoryObjects = this.getInsertedRepositoryObjects();
+			if (insertedRepositoryObjects) {
+				this.getEditor().invokeEvent('objectInserted', { objects: insertedRepositoryObjects });
+				this.setInsertedRepositoryObjects(null);
+			}
 			if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // click
 			{
 				this.addOperationToEditor();
