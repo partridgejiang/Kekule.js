@@ -1654,8 +1654,8 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		})
 		// Renderer always assumes second node in list is the arrow head. We make the same assumption here.
 		var isArcHeadToElectron = dest instanceof Kekule.ChemMarker.UnbondedElectronSet && parentArc.getNodes()[1].getId() === targetNode.getId()
-
-		return isArcNode && isValidDest && !isSiblingAlreadyAnchoredToSameDest && !isArcHeadToElectron
+		var isArcTailToAtom = dest instanceof Kekule.Atom && parentArc.getNodes()[0].getId() === targetNode.getId()
+		return isArcNode && isValidDest && !isSiblingAlreadyAnchoredToSameDest && !isArcHeadToElectron && !isArcTailToAtom
 	},
 	/** @private */
 	_canMergeNodes: function(targetNode, destNode)
