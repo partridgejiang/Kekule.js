@@ -1282,7 +1282,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				},
 			'setter': function(value)
 				{
-					var newIsotope = Kekule.IsotopeFactory.getIsotopeById(value);
+					var newIsotope = Kekule.IsotopeFactory.getIsotope(value);
 					//this.changeElement(value);
 					if (newIsotope)
 						this.setIsotope(newIsotope);

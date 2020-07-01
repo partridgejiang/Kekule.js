@@ -306,6 +306,8 @@ Kekule.ChemWidget.MetaShapeUiMarker2DRenderer = Class.create(Kekule.ChemWidget.U
 					result = this.drawCircle(context, coords[0], 1, options); break;
 				case T.CIRCLE:
 					result = this.drawCircle(context, coords[0], shape.radius, options); break;
+				case T.ELLIPSE:
+					result = this.drawEllipse(context, coords[0], shape.xRadius, shape.yRadius, options); break;
 				case T.LINE:
 				{
 					var ops = options;

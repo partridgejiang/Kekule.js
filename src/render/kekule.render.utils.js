@@ -1413,6 +1413,7 @@ Kekule.Render.MetaShapeUtils = {
 		{
 			case T.POINT: newBound = B._inflatePointShape(originalShape, delta); break;
 			case T.CIRCLE: newBound = B._inflateCircleShape(originalShape, delta); break;
+			case T.ELLIPSE: newBound = B._inflateEllipseShape(originalShape, delta); break;
 			case T.LINE: newBound = B._inflateLineShape(originalShape, delta); break;
 			case T.RECT: newBound = B._inflateRectShape(originalShape, delta); break;
 			case T.POLYGON: newBound = B._inflatePolygonShape(originalShape, delta); break;
@@ -1432,6 +1433,13 @@ Kekule.Render.MetaShapeUtils = {
 	{
 		var newBound = Kekule.Render.MetaShapeUtils.createShapeInfo(
 			Kekule.Render.BoundShapeType.CIRCLE, [originalShape.coords[0]], {'radius': originalShape.radius + delta});
+		return newBound;
+	},
+	/** @private */
+	_inflateEllipseShape: function(originalShape, delta)
+	{
+		var newBound = Kekule.Render.MetaShapeUtils.createShapeInfo(
+			Kekule.Render.BoundShapeType.ELLIPSE, [originalShape.coords[0]], {'xRadius': originalShape.xRadius + delta, 'yRadius': originalShape.yRadius + delta});
 		return newBound;
 	},
 	/** @private*/
@@ -1519,6 +1527,7 @@ Kekule.Render.MetaShapeUtils = {
 			{
 				case T.POINT: return (inflate? B._getDistanceToCircle(coord, newBound): B._getDistanceToPoint(coord, newBound));
 				case T.CIRCLE: return B._getDistanceToCircle(coord, newBound);
+				case T.ELLIPSE: return B._getDistanceToEllipse(coord, newBound);
 				case T.LINE: return B._getDistanceToLine(coord, newBound);
 				case T.RECT: return B._getDistanceToRect(coord, newBound);
 				case T.POLYGON: return B._getDistanceToPolygon(coord, newBound);
@@ -1538,6 +1547,13 @@ Kekule.Render.MetaShapeUtils = {
 		var C = Kekule.CoordUtils;
 		var d = C.getDistance(coord, shapeInfo.coords[0]);
 		return d - shapeInfo.radius;
+	},
+	/** @private */
+	_getDistanceToEllipse: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var d = C.getDistance(coord, shapeInfo.coords[0]);
+		return d - shapeInfo.xRadius;
 	},
 	/** @private */
 	_getDistanceToArc: function(coord, shapeInfo)
@@ -1744,6 +1760,7 @@ Kekule.Render.MetaShapeUtils = {
 			{
 				case T.POINT: return (inflate? B._isInsideCircle(coord, newBound): B._isInsidePoint(coord, newBound));
 				case T.CIRCLE: return B._isInsideCircle(coord, newBound);
+				case T.ELLIPSE: return B._isInsideEllipse(coord, newBound);
 				case T.LINE: return B._isInsideLine(coord, newBound);
 				case T.RECT: return B._isInsideRect(coord, newBound);
 				case T.POLYGON: return B._isInsidePolygon(coord, newBound);
@@ -1763,6 +1780,13 @@ Kekule.Render.MetaShapeUtils = {
 		var C = Kekule.CoordUtils;
 		var d = C.getDistance(coord, shapeInfo.coords[0]);
 		return (d <= shapeInfo.radius);
+	},
+	/** @private */
+	_isInsideEllipse: function(coord, shapeInfo)
+	{
+		var C = Kekule.CoordUtils;
+		var d = C.getDistance(coord, shapeInfo.coords[0]);
+		return (d <= shapeInfo.xRadius);
 	},
 	/** @private */
 	_isInsideLine: function(coord, shapeInfo)
@@ -1952,6 +1976,13 @@ Kekule.Render.MetaShapeUtils = {
 						result = C.createBox({x: coord.x - radius, y: coord.y - radius}, {x: coord.x + radius, y: coord.y + radius});
 						break;
 					}
+				case T.ELLIPSE:
+					{
+						var radius = (shapeInfo.shapeType === T.POINT)? 0: (shapeInfo.radius || 0);
+						var coord = coords[0];
+						result = C.createBox({x: coord.x - shapeInfo.xRadius, y: coord.y - shapeInfo.yRadius}, {x: coord.x + shapeInfo.xRadius, y: coord.y + shapeInfo.yRadius});
+						break;
+					}
 				case T.LINE:
 					{
 						result = C.createBox(coords[0], coords[1]);
@@ -2094,6 +2125,11 @@ Kekule.Render.MetaShapeUtils = {
 				{
 					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
 					return d <= halfWidth + (lineShape.radius || 0);
+				}
+				case T.ELLIPSE:
+				{
+					var d = U._getDistanceToLine(shapeCoords[0], lineShape);
+					return d <= halfWidth + (lineShape.xRadius || 0);
 				}
 				case T.LINE:
 				{
@@ -2275,6 +2311,22 @@ Kekule.Render.MetaShapeUtils = {
 				case T.CIRCLE:
 				{
 					var radius = shapeInfo.radius || 0;
+					if (!radius)
+						result = [coords[0]];
+					else // create a octagon to simulate the circle
+					{
+						var r = radius;
+						var a = r / Math.sqrt(2);
+						result = [{x: r, y: 0}, {x: a, y: a}, {x: 0, y: r}, {x: -a, y: a}, {x: -r, y: 0}, {x: -a, y: -a}, {
+							x: 0,
+							y: -r
+						}, {x: a, y: -a}];
+					}
+					break;
+				}
+				case T.ELLIPSE:
+				{
+					var radius = shapeInfo.xRadius || 0;
 					if (!radius)
 						result = [coords[0]];
 					else // create a octagon to simulate the circle

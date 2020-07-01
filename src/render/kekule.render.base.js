@@ -430,6 +430,8 @@ Kekule.Render.MetaShapeType = {
 	SPHERE: 101,
 	/** Cylinder in 3D context. Can be determinated by two coords and a radius. ({[coord1, coord2], radius}) */
 	CYLINDER: 102,
+	/** A ellipse on context. Can be determinated by a single coord and two radius. ({[coord], xRadius, yRadius}) */
+	ELLIPSE: 13,
 	/**
 	 * A complex shape composited of a series of child shapes.
 	 * In implementation, an array of meta shapes will map to this type.
@@ -1542,6 +1544,11 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	createCircleBoundInfo: function(coord, radius)
 	{
 		return this.createBoundInfo(Kekule.Render.BoundShapeType.CIRCLE, [coord], {'radius': radius});
+	},
+	/** @private */
+	createEllipseBoundInfo: function(coord, xRadius, yRadius)
+	{
+		return this.createBoundInfo(Kekule.Render.BoundShapeType.ELLIPSE, [coord], {'xRadius': xRadius, 'yRadius': yRadius});
 	},
 	/** @private */
 	createArcBoundInfo: function(coord, radius, startAngle, endAngle, anticlockwise, width)

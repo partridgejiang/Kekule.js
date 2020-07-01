@@ -544,6 +544,10 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	{
 		return this.getDrawBridge().drawCircle(this.getActualTargetContext(context), baseCoord, radius, options);
 	},
+	drawEllipse: function(context, baseCoord, xRadius, yRadius, options)
+	{
+		return this.getDrawBridge().drawEllipse(this.getActualTargetContext(context), baseCoord, xRadius, yRadius, options);
+	},
 	drawArc: function(context, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
 	{
 		return this.getDrawBridge().drawArc(this.getActualTargetContext(context), centerCoord, radius, startAngle, endAngle, anticlockwise, options);
@@ -2589,6 +2593,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D' && node.getCharge() != 0) {
 			node.setCharge(0);
 		}
+		if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D' && node.getExplicitHydrogenCount()) {
+			node.setExplicitHydrogenCount(undefined);
+		}
 		var hasChargeOrRadical = node.getCharge() || node.getRadical();
 		var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
 		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
@@ -2607,13 +2614,27 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var needShowChargeInLabel = !!(needDrawCharge || needDrawRadical);
 			//console.log(node.getCharge(), node.getRadical(), needDrawCharge, needDrawRadical, needShowChargeInLabel);
 			var label = node.getDisplayRichText(hdisplayLevel, needShowChargeInLabel, nodeRenderOptions.displayLabelConfigs /*renderConfigs.getDisplayLabelConfigs()*/, nodeRenderOptions.partialChargeDecimalsLength, nodeRenderOptions.chargeMarkType, nodeRenderOptions.distinguishSingletAndTripletRadical);
-
 			// decide charDirection
 			//label.charDirection = Kekule.ObjUtils.isUnset(nodeRenderOptions.charDirection) ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
 			//console.log('nodeCharDirection', nodeRenderOptions.charDirection);
 			//label.charDirection = !nodeRenderOptions.charDirection ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
 			var labelCharDirection = !nodeRenderOptions.charDirection ? this._decideNodeLabelCharDirection(context, node) : nodeRenderOptions.charDirection;
-
+			if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D' && node.getLinkedConnectors().length === 1) {
+				var splittedMultiatom = labelCharDirection === 1 ? label.anchorItem.anchorItem.text.split("") : label.anchorItem.anchorItem.text.split("").reverse();
+				if (splittedMultiatom.length > 1) {
+					label.anchorItem.anchorItem.text = splittedMultiatom[0];
+					label.anchorItem.items[0].text = splittedMultiatom[0];
+					label.items[0] = label.anchorItem;
+					for (var i = 1; i < splittedMultiatom.length; i++) {
+						var newItem = {charDirection: 0, items: []};
+						newItem.charDirection = label.anchorItem.anchorItem.charDirection;
+						var item = {text: ''};						
+						item.text = splittedMultiatom[i];
+						newItem.items.push(item);
+						label.items.push(newItem);
+					}
+				}
+			}
 			// recalc font size to px
 			//richTextDrawOptions.fontSize *= localLabelDrawOptions.unitLength || renderConfigs.getLengthConfigs().getUnitLength();
 			nodeRenderOptions.fontSize *= nodeRenderOptions.unitLength;
@@ -2626,13 +2647,21 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			//console.log('draw node label', nodeRenderOptions, label);
 			var actualDrawOptions = Object.create(nodeRenderOptions);
 			actualDrawOptions.charDirection = labelCharDirection;
-			actualDrawOptions.verticalAlign = Kekule.Render.TextAlign.CENTER;
 			var elemEx = this.drawRichText(context, coord, label,
 					actualDrawOptions/*nodeRenderOptions/*richTextDrawOptions*/);
 			var elem = elemEx.drawnObj;
 			var rect = elemEx.boundRect;
-			// change boundInfo to a rect
-			boundInfo =this.createCircleBoundInfo(coord, nodeBoundInfoRadius);
+			if (atomicNumber && atomicNumber >= 113 && node.getSymbol() != 'D') {
+				var xRadius = nodeBoundInfoRadius + node.getSymbol().length*2;
+				if (node.getLinkedConnectors().length === 1 && label.items.length > 1) {
+					var shift = (labelCharDirection === 1) ? node.getSymbol().length : -node.getSymbol().length;
+					coord.x = coord.x + shift*3;
+				}
+				boundInfo =this.createEllipseBoundInfo(coord, xRadius, nodeBoundInfoRadius);
+			} else {
+				// change boundInfo to a rect
+				boundInfo =this.createCircleBoundInfo(coord, nodeBoundInfoRadius);				
+			}
 			//console.log(rect);
 			result = elem;
 		}

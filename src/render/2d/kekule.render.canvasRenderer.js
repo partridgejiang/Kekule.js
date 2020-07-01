@@ -395,6 +395,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		context.arc(baseCoord.x, baseCoord.y, radius, 0, 2 * Math.PI, false);
 		this.doneDraw(context, options);
 	},
+	drawEllipse: function(ctx, baseCoord, xRadius, yRadius, options)
+	{
+		var context = this.getOperatingContext(ctx);
+		context.beginPath();
+		this.setDrawStyle(context, options);
+		context.ellipse(baseCoord.x, baseCoord.y, xRadius, yRadius, 0, 2 * Math.PI, false);
+		this.doneDraw(context, options);
+	},
 	drawArc: function(ctx, centerCoord, radius, startAngle, endAngle, anticlockwise, options)
 	{
 		var context = this.getOperatingContext(ctx);
