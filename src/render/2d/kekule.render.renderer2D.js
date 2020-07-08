@@ -2833,15 +2833,11 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var connectors = node.getLinkedBonds();
 			if (connectors.length === 2)
 			{
-				var bonds = node.getLinkedMultipleBonds();
-				if (bonds.length === 2)
+				// we have two bonds of the same order (single, double, triple...)
+				if (connectors[0].getBondOrder() === connectors[1].getBondOrder())
 				{
-					// we have two multiple bonds
-					if (bonds[0].getBondOrder() === bonds[1].getBondOrder())
-					{
-						var bondOrder = bonds[0].getBondOrder();
-						return bondOrder >= BO.DOUBLE && bondOrder < BO.EXPLICIT_AROMATIC;
-					}
+					var bondOrder = connectors[0].getBondOrder();
+					return bondOrder >= BO.SINGLE && bondOrder < BO.EXPLICIT_AROMATIC;
 				}
 			}
 			return false;
