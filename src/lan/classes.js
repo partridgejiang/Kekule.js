@@ -1036,7 +1036,8 @@ if (!Math.sign)
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };
-if (!$jsRoot.Node) $jsRoot.Node = { };
+
+if (typeof($jsRoot.Node) == 'undefined') $jsRoot.Node = function(){};
 
 if (!$jsRoot.Node.ELEMENT_NODE) {
   // DOM level 2 ECMAScript Language Binding
