@@ -952,6 +952,9 @@ var StringUtils = {
 			{
 				if (preferedType)
 				{
+					if (!str && [DataType.NUMBER, DataType.INT, DataType.FLOAT].indexOf(preferedType) >= 0)  // need to convert empty string to num, avoid NaN result
+						return undefined;
+
 					switch (preferedType)
 					{
 						case DataType.FLOAT:
