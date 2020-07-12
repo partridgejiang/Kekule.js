@@ -635,7 +635,8 @@ Kekule.IO.CmlDomUtils = {
 		if (!filter)
 			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
 		var result = Kekule.DomUtils.getSameNSAttributeValue(elem, attribName, domHelper);
-		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		//if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		if (!result)   // attrib not found, check child typed elements
 		{
 			result = Kekule.IO.CmlDomUtils.getCmlTypedElemValue(elem, attribName, filter, domHelper);
 		}
@@ -654,7 +655,8 @@ Kekule.IO.CmlDomUtils = {
 		if (!filter)
 			filter = Kekule.IO.CmlDomUtils.FILTER_ALL;
 		var result = Kekule.DomUtils.getSameNSAttributeValue(elem, attribName, domHelper);
-		if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		//if ((result === null) || (result === undefined))  // attrib not found, check child typed elements
+		if (!result)
 		{
 			result = Kekule.IO.CmlDomUtils.getMultipleCmlTypedElemValues(elem, attribName, filter, domHelper);
 		}
