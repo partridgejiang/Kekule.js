@@ -3251,6 +3251,13 @@ json5@^0.5.0, json5@^0.5.1:
   resolved "http://registry.npmjs.org/json5/-/json5-0.5.1.tgz#1eade7acc012034ad84e2396767ead9fa5495821"
   integrity sha1-Hq3nrMASA0rYTiOWdn6tn6VJWCE=
 
+"kekule@https://github.com/macmillanhighered/Kekule.js.git#moldraw-master":
+  version "0.8.1"
+  resolved "https://github.com/macmillanhighered/Kekule.js.git#9a9d0579be8d4b31318122bda8360b76acb0d0fc"
+  dependencies:
+    hammerjs "^2.0.8"
+    pepjs "^0.4.3"
+
 killable@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/killable/-/killable-1.0.1.tgz#4c8ce441187a061c7474fb87ca08e2a638194892"
