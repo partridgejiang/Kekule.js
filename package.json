@@ -61,7 +61,6 @@
   },
   "dependencies": {
     "hammerjs": "^2.0.8",
-    "kekule": "https://github.com/macmillanhighered/Kekule.js.git#moldraw-master",
     "pepjs": "^0.4.3"
   }
 }
