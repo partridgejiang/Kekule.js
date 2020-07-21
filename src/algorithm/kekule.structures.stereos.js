@@ -194,7 +194,7 @@ Kekule.MolStereoUtils = {
 				if (Math.abs(d) < threshold)
 					result = 0;
 				else
-					result = Math.sign(v1.y);
+					result = Math.sign(v1.y) * refDir;
 			}
 			else
 			{
@@ -231,7 +231,7 @@ Kekule.MolStereoUtils = {
 		var result;
 		if (!sa || !sb)
 			result = SP.UNKNOWN;
-		else if (sa === sb)  // ta1/tb1 on same side of bond
+		else if (sa !== sb)//(sa === sb)  // ta1/tb1 on same side of bond
 			result = SP.ODD;
 		else
 			result = SP.EVEN;
@@ -268,7 +268,26 @@ Kekule.MolStereoUtils = {
 				{
 					var node = endNodes[i];
 					var hydroCount = node.getHydrogenCount(true);  // include explicit bonded H atoms
-					var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
+					//var sideObjs = AU.exclude(node.getLinkedChemNodes(), endNodes);
+					var sideObjs = [];
+					var nodeLinkedBonds = node.getLinkedBonds(Kekule.BondType.COVALENT);
+					for (var j = 0, k = nodeLinkedBonds.length; j < k; ++j)
+					{
+						var linkedBond = nodeLinkedBonds[j];
+						if (linkedBond !== connector)   // check if bond aside current double bond are all single
+						{
+							var linkedBondOrder = linkedBond.getBondOrder();
+							if (linkedBondOrder && linkedBondOrder !== Kekule.BondOrder.SINGLE)   // continuous double bond, this one is not stereo
+								return false;
+							var linkedBondConnectedChemNodes = AU.exclude(linkedBond.getConnectedChemNodes(), endNodes);
+							if (linkedBondConnectedChemNodes.length !== 1)
+								return false;
+							else
+							{
+								sideObjs.push(linkedBondConnectedChemNodes[0]);
+							}
+						}
+					}
 					if ((hydroCount >= 2) || (!sideObjs.length))
 					{
 						result = false;
@@ -367,6 +386,17 @@ Kekule.MolStereoUtils = {
 				result = [refNodes[0], endNodes[0], endNodes[1], refNodes[1]];
 			}
 		}
+		return result;
+	},
+	/**
+	 * Returns connectors connected to key determinating nodes to determine the stereo of a double bond.
+	 * @param {Kekule.ChemStructureConnector} connector
+	 * @returns {Array} Array of connectors.
+	 */
+	getStereoBondKeyNeighborConnectors: function(connector)
+	{
+		var nodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
+		var result = [nodes[1].getConnectorTo(nodes[0]), nodes[2].getConnectorTo(nodes[3])];
 		return result;
 	},
 
