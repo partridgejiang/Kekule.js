@@ -238,6 +238,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var startingVertex = graphVertexes[graphVertexes.length - 1];
 			var depthSpanningTrees = Kekule.IO.SmilesUtils.createGraphDepthSpanningTreesEx(molGraph, startingVertex);
 
+			// mark all stereo bonds
+			var bondStereoDirMap = this._prepareStereoBondsInformation(dupMol.getCtab(), options);
+
 			// mark all the ring edges
 			//var ringEdges = AU.exclude(graphEdges, depthSpanningTree.edges);
 
@@ -254,7 +257,8 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				//var remainingVertexes = AU.clone(depthSpanningTree.vertexes);
 				//var remainingEdges = AU.clone(depthSpanningTree.edges);
 				var currVertex = mainChainPath.vertexes[0]; //startingVertex;
-				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges, ringEdgeRepo, aromaticNodes, aromaticConnectors, options);
+				partResult = this._writeMolVertex(currVertex, null, mainChainPath.edges, depthSpanningTree.edges,
+					ringEdgeRepo, aromaticNodes, aromaticConnectors, {'bondStereoDirMap': bondStereoDirMap}, options);
 
 				if (i === 0)
 					result = partResult;
@@ -267,7 +271,57 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return '';
 	},
 	/** @private */
-	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options)
+	_prepareStereoBondsInformation(ctab, options)
+	{
+		if (options.ignoreStereoBond)
+			return null;
+
+		var stereoBondCount = 0;
+		var result = new Kekule.MapEx();
+		for (var i = 0, l = ctab.getConnectorCount(); i < l; ++i)
+		{
+			var connector = ctab.getConnectorAt(i);
+			if (connector.getParity && connector.getParity())  // connector is stereo double bond
+			{
+				++stereoBondCount;
+				var refConnectors = Kekule.MolStereoUtils.getStereoBondKeyNeighborConnectors(connector);
+				var dirSymbols = this._getStereoDoubleBondInitialDirectionSymbols(connector);
+				// check if the refConnectors has already been marked, if so, may adjust dirSymbols
+				var markedConnectors = [];
+				var invertCount = 0;
+				for (var j = 0, k = refConnectors.length; j < k; ++j)
+				{
+					if (result.has(refConnectors[j]))
+					{
+						//markedConnectorsInfo.push({index: j, dirSymbol: result.get(refConnectors[j])});
+						markedConnectors[j] = true;
+						if (dirSymbols[j] !== result.get(refConnectors[j]))
+						{
+							++invertCount;
+							//console.log('invert', i, connector.getId());
+						}
+					}
+				}
+				if (invertCount < 2)  // if two ref connectors are already marked, ignore
+				{
+					for (var j = 0, k = refConnectors.length; j < k; ++j)
+					{
+						if (markedConnectors[j])
+							continue;
+						else
+						{
+							var connectorDirection = (invertCount === 1)? this._getInvertBondDirectionSymbol(dirSymbols[j]): dirSymbols[j];
+							result.set(refConnectors[j], connectorDirection);
+						}
+					}
+				}
+			}
+		}
+		//console.log('stereo bond', stereoBondCount, result);
+		return stereoBondCount? result: null;
+	},
+	/** @private */
+	_writeMolVertex: function(vertex, prevEdge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, additionalInfos, options)
 	{
 		var node = vertex.getData('object');
 		var edges = vertex.getEdges();
@@ -290,7 +344,8 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				continue;
 
 			var connector = edge.getData('object');
-			if (!ignoreBondStereo && connector.getParity && connector.getParity())  // next is stereo double bond
+			/*
+			if (false && !ignoreBondStereo && connector.getParity && connector.getParity())  // next is stereo double bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
 				if (keyNodes)
@@ -304,11 +359,12 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				}
 				nextBondStereoStr = dirSymbol;
 			}
+			*/
 
 			if (spanningTreeEdges.indexOf(edge) >= 0)  // edge on spanning tree, not ring edge
 			{
 				var nextVertex = vertex.getNeighborOnEdge(edge);
-				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, options);
+				var str = this._writeMolVertex(nextVertex, edge, mainChainEdges, spanningTreeEdges, ringEdgeRepo, aromaticNodes, aromaticRingConnectors, additionalInfos, options);
 				if (mainChainEdges.indexOf(edge) >= 0)  // edge on main chain
 				{
 					mainChainVertex = nextVertex;
@@ -331,7 +387,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				}
 				ringedVertexes.push(vertex.getNeighborOnEdge(edge));
 				var ringStr = this._outputConnectorStr(connector,
-					edge.getVertexes()[0].getData('object'), edge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors);
+					edge.getVertexes()[0].getData('object'), edge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors, additionalInfos.bondStereoDirMap);
 				ringEdgeIndex = ringEdgeIndex + 1;  // avoid index 0
 				ringStr += (ringEdgeIndex < 10)? ringEdgeIndex: SMI.RING_BOND_TWO_DIGIT_NO_PREFIX + ringEdgeIndex;
 				ringStrs.push(ringStr);
@@ -351,7 +407,8 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			prevNode = prevVertex.getData('object');
 			var prevConnector = prevEdge.getData('object');
 
-			if (!ignoreBondStereo && prevConnector.getParity && prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
+			/*
+			if (false && !ignoreBondStereo && prevConnector.getParity && prevConnector.getParity())  // curr vertex is the end vertex of stereo bond
 			{
 				var keyNodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(prevConnector);
 				if (keyNodes)
@@ -363,9 +420,10 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				}
 				prevBondStereoStr += dirSymbol;
 			}
+			*/
 
 			result += this._outputConnectorStr(prevConnector,
-				prevEdge.getVertexes()[0].getData('object'), prevEdge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors); // + result;
+				prevEdge.getVertexes()[0].getData('object'), prevEdge.getVertexes()[1].getData('object'), aromaticNodes, aromaticRingConnectors, additionalInfos.bondStereoDirMap); // + result;
 		}
 		var nextNodes = [];
 		for (var i = 0, l = ringedVertexes.length; i < l; ++i)
@@ -500,7 +558,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		return result;
 	},
 	/** @private */
-	_outputConnectorStr: function(connector, connectedNode1, connectedNode2, aromaticNodes, aromaticConnectors)
+	_outputConnectorStr: function(connector, connectedNode1, connectedNode2, aromaticNodes, aromaticConnectors, stereoDirectionMap)
 	{
 		if (connector instanceof Kekule.Bond)
 		{
@@ -513,11 +571,14 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				  var connectBothAromaticNodes = (aromaticNodes.indexOf(connectedNode1) >= 0) && (aromaticNodes.indexOf(connectedNode2) >= 0);
 					var bondOrder = connector.getBondOrder();
 					var BO = Kekule.BondOrder;
-					return (bondOrder === BO.DOUBLE)? SMI.BOND_DOUBLE:
+					var result = (bondOrder === BO.DOUBLE)? SMI.BOND_DOUBLE:
 						(bondOrder === BO.TRIPLE)? SMI.BOND_TRIPLE:
 						(bondOrder === BO.QUAD)? SMI.BOND_QUAD:
 						connectBothAromaticNodes? SMI.BOND_SINGLE: '';  // default, single, no need to add bond string
 					// TODO: bond stereo
+					if (stereoDirectionMap && stereoDirectionMap.has(connector))
+						result += stereoDirectionMap.get(connector);
+					return result;
 				}
 			}
 		}
@@ -528,7 +589,10 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	_getStereoDoubleBondInitialDirectionSymbols: function(bond)
 	{
 		var parity = bond.getParity();
+		if (!parity)
+			return ['', ''];
 		if (parity === Kekule.StereoParity.EVEN)
+		//if (parity === Kekule.StereoParity.ODD)
 			return [SMI.DIRECTION_BOND_SYMBOLS[0], SMI.DIRECTION_BOND_SYMBOLS[0]];
 		else
 			return [SMI.DIRECTION_BOND_SYMBOLS[0], SMI.DIRECTION_BOND_SYMBOLS[1]];
