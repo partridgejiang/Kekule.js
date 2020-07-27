@@ -574,6 +574,7 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 	{
 		var drawer = this.getRichTextDrawer();
 		options.fontWeight = 'bold';
+
 		// 112 single atoms from 113 multiatoms
 		if (richText.text) {
 			var sign = richText.text;
@@ -583,12 +584,13 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 			if (sign === '-' || sign === '+')
 					options.fontSize = 20;
 			if (sign.includes('+'))
-					options.fillColor = 'rgb(172,219,162)';
+					options.fillColor = 'rgb(172,219,162,0.5)';
 			if (sign.includes('-'))
-					options.fillColor = 'rgb(255,175,175)';
+					options.fillColor = 'rgb(255,175,175,0.5)';
 			richText.text = sign.replace('-', '\u2012');
 			this.drawCircle(context, coord, radius, options);
 		}
+
 		// debug
 		//console.log('draw richText', richText, options);
 		if (this.__$redirectContextDebug__)
@@ -1430,7 +1432,7 @@ Kekule.Render.UnbondedElectronSetRenderer = Class.create(Kekule.Render.ChemObj2D
 	/** @private */
 	_drawSingleElectron: function(context, coord, radius, options)
 	{
-		options.strokeColor = '#ffffff';
+		options.strokeColor = 'rgb(255,255,255,0.3)';
 		options.strokeWidth = 4;
 		options.globalCompositeOperation = 'destination-over';
 		return this.drawCircle(context, coord, radius, options);
@@ -2726,15 +2728,13 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		if (node.getUnplacedMarkers(this.getCoordMode()).length >= 0)
 		{
 			var nodeLabelDirAngle;
-			// calc margin
-			var margin = nodeRenderOptions.chemMarkerMargin;
+
 			// consider node label if exists
 			if (nodeWithLabel)
 			{
 				var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio) ||*/ 1;
 				var fSize = this._getNodeFontSize(context, node) * (finalTransformOptions.zoom || 1);
-				var halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
-				margin += halfBoxWidth - margin / 2;  // shrink margin a little for better outlook
+				nodeRenderOptions.halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
 				//console.log('expand', expandRatio, fSize, halfBoxWidth, margin);
 
 				// consider label direction
@@ -2756,9 +2756,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 						null;
 				//console.log(labelCharDirection, nodeLabelDirAngle * 180 / Math.PI, labelVector, revTransLabelVector);
 			}
-			var objMargin = margin / nodeRenderOptions.defBondLength * nodeRenderOptions.medianObjRefLength;
 
-			this.doAdjustChemPropMarkerPos(node, objMargin, finalTransformOptions.allowCoordBorrow, []);
+			this.doAdjustChemPropMarkerPos(node, finalTransformOptions.allowCoordBorrow, [], nodeRenderOptions);
 		}
 
 		if (result)
@@ -3110,8 +3109,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 * Adjust marker pos, put at the emptiest direction of obj.
 	 * @private
 	 */
-	doAutoAdjustAttachedMarkerPos: function(obj, marker, markerMargin, allowCoordBorrow, avoidDirectionAngles)
+	doAutoAdjustAttachedMarkerPos: function(obj, marker, nodeRenderOptions, allowCoordBorrow, avoidDirectionAngles, chemMarkerType)
 	{
+		const markerMargin = this.getMarkerMargin(nodeRenderOptions, chemMarkerType);
+
 		if (marker && !marker.getCoordOfMode(this.getCoordMode()))  // has no 2D coord, do auto position
 		{
 			obj.autoSetMarker2DPos(marker, markerMargin, allowCoordBorrow, avoidDirectionAngles);
@@ -3121,28 +3122,47 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 	 * Adjust charge or radical pos if needed.
 	 * @private
 	 */
-	doAdjustChemPropMarkerPos: function(obj, markMargin, allowCoordBorrow, avoidDirectionAngles)
+	doAdjustChemPropMarkerPos: function(obj, allowCoordBorrow, avoidDirectionAngles, nodeRenderOptions)
 	{
 		obj.beginUpdate();
 		try
 		{
 			// charge
 			var chargeMarker = obj.getMarkerOfType(Kekule.ChemMarker.Charge);
-			this.doAutoAdjustAttachedMarkerPos(obj, chargeMarker, markMargin, allowCoordBorrow, avoidDirectionAngles);
+			this.doAutoAdjustAttachedMarkerPos(obj, chargeMarker, nodeRenderOptions, allowCoordBorrow, avoidDirectionAngles, Kekule.ChemMarker.Charge);
 			// radical
 			var radicalMarker = obj.getMarkerOfType(Kekule.ChemMarker.Radical);
-			this.doAutoAdjustAttachedMarkerPos(obj, radicalMarker, markMargin, allowCoordBorrow, avoidDirectionAngles);
+			this.doAutoAdjustAttachedMarkerPos(obj, radicalMarker, nodeRenderOptions, allowCoordBorrow, avoidDirectionAngles, Kekule.ChemMarker.Radical);
 			// the rest
 			var markers = obj.getUnplacedMarkers(this.getCoordMode());
 			for (var i = 0, l = markers.length; i < l; ++i)
 			{
-				this.doAutoAdjustAttachedMarkerPos(obj, markers[i], markMargin, allowCoordBorrow, avoidDirectionAngles);
+				this.doAutoAdjustAttachedMarkerPos(obj, markers[i], nodeRenderOptions, allowCoordBorrow, avoidDirectionAngles);
 			}
 		}
 		finally
 		{
 			obj.endUpdate();
 		}
+	},
+
+	/**
+	 * Returns the margin of the marker based in their type
+	 * @param {Object} marginModifiers 
+	 * @param {Number} chemMarkerType 
+	 */
+	getMarkerMargin: function(marginModifiers, chemMarkerType){
+		var result = marginModifiers.chemMarkerMargin;
+
+		if (!chemMarkerType)
+			result = marginModifiers.chargeMarkMargin;
+
+		if (marginModifiers.halfBoxWidth)
+			result += marginModifiers.halfBoxWidth - result / 2
+
+		result = result / marginModifiers.defBondLength * marginModifiers.medianObjRefLength;
+
+		return result;
 	},
 
 	/**
