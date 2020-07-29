@@ -2727,35 +2727,9 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//if (hasChargeOrRadical)  // if has charge or radical marker, adjust their position if needed
 		if (node.getUnplacedMarkers(this.getCoordMode()).length >= 0)
 		{
-			var nodeLabelDirAngle;
-
-			// consider node label if exists
-			if (nodeWithLabel)
-			{
-				var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio) ||*/ 1;
-				var fSize = this._getNodeFontSize(context, node) * (finalTransformOptions.zoom || 1);
-				nodeRenderOptions.halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
-				//console.log('expand', expandRatio, fSize, halfBoxWidth, margin);
-
-				// consider label direction
-				var D = Kekule.Render.TextDirection;
-				var directions = [D.LTR, D.RTL, D.TTB, D.BTT];
-				var labelVector = (labelCharDirection === D.LTR)? {x: 1, y: 0}:
-						(labelCharDirection === D.RTL)? {x: -1, y: 0}:
-						(labelCharDirection === D.TTB)? {x: 0, y: 1}:
-						(labelCharDirection === D.BTT)? {x: 0, y: -1}:
-						{x: 0, y: 0};
-				var revTransLabelVector = {
-					'x': labelVector.x * finalTransformOptions.scaleX,
-					'y': labelVector.y * finalTransformOptions.scaleY
-				};
-				nodeLabelDirAngle = (revTransLabelVector.x > 0)? 0:
-						(revTransLabelVector.x < 0)? Math.PI:
-						(revTransLabelVector.y > 0)? Math.PI / 2:
-						(revTransLabelVector.y < 0)? Math.PI * 3 / 2:
-						null;
-				//console.log(labelCharDirection, nodeLabelDirAngle * 180 / Math.PI, labelVector, revTransLabelVector);
-			}
+			var expandRatio = /*nodeRenderOptions.atomLabelBoxExpandRatio) ||*/ 1;
+			var fSize = this._getNodeFontSize(context, node) * (finalTransformOptions.zoom || 1);
+			nodeRenderOptions.halfBoxWidth = fSize * nodeRenderOptions.unitLength * expandRatio / 2;
 
 			this.doAdjustChemPropMarkerPos(node, finalTransformOptions.allowCoordBorrow, [], nodeRenderOptions);
 		}
