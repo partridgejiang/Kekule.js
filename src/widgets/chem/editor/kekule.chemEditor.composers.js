@@ -2602,6 +2602,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				var btn = new btnClass(toolbar);
 				btn.setAction(action);
 				*/
+				if (action.getClassName() === 'Kekule.Editor.ActionEditorReset') {
+					action.setChecked(false);
+				}
 				var btn = this._createActionButton(action, toolbar);
 			}
 		}
