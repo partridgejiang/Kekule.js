@@ -850,7 +850,9 @@ Kekule.IO.CmlElementWriterFactory = {
 			var typeNames = Kekule.ObjUtils.getOwnedFieldNames(Kekule.IO.CmlElementWriterFactory._writers);
 			for (var i = typeNames.length - 1; i >= 0; --i)  // the later the superior
 			{
-				if (obj instanceof eval(typeNames[i]))
+				var objClass = ClassEx.findClass(typeNames[i]);
+				//if (obj instanceof eval(typeNames[i]))
+				if (objClass && (obj instanceof objClass))
 				{
 					writerClass = Kekule.IO.CmlElementWriterFactory._writers[typeNames[i]];
 					break;
