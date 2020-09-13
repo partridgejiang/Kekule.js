@@ -4,6 +4,13 @@
 
 **/
 
+.K-Widget,
+.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
+{
+    color: #555555;
+    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
+}
+
 /*
 .K-State-Focused, .K-State-Hover
 {
@@ -11,11 +18,6 @@
     border-color: #999999;
 }
 */
-
-.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
-{
-    color: #555555;
-}
 
 .K-State-Focused
 {
@@ -34,11 +36,6 @@
     background-color: rgb(219, 136, 16);
 }
 
-.K-Widget
-{
-    color: #555555;
-    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
-}
 .K-Assoc-Text-Content
 {
     color: #888888;
