@@ -73,6 +73,7 @@ Kekule.Widget.HtmlClassNames = {
 	/** Indicate text in widget can not be selected. */
 	NONSELECTABLE: 'K-NonSelectable',
 	SELECTABLE: 'K-Selectable',
+
 	// State classes
 	/** Class name for all widget elements in normal (enabled) state. */
 	STATE_NORMAL: 'K-State-Normal',
@@ -349,7 +350,9 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Int} state State (normal, focused, hover, active) of widget, value from {@link Kekule.Widget.State}. Readonly.
  * @property {Bool} inheritState If set to true, widget will has the same state value of parent.
  * @property {String} hint Hint of widget, actually mapping to title attribute of HTML element.
- * @property {String} cursor CSS cusor property for widget.
+ * @property {String} cursor CSS cursor property for widget.
+ * @property {Array} inheritedStyles Flags indicating which CSS properties should be set to 'inhertied'.
+ *   e.g. ['color', 'fontSize'] (note: in JavaScript form rather than CSS form like 'font-size').
  *
  * @property {Bool} draggable Whether this widget is draggable, mapping to HTML draggable attribute.
  * @property {Bool} droppable Whether this widget is a target of drag-drop.
@@ -481,6 +484,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
+		this.setPropStoreFieldValue('inheritedStyles', []);
 		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none disable default touch actions
 		this.setPropStoreFieldValue('droppableDataKinds', ['string']);  // defaultly disallow file drop
 
@@ -830,6 +834,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				{
 					this.addClassName(CNS.NORMAL_BACKGROUND);
 				}
+			}
+		});
+		this.defineProp('inheritedStyles', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), false);  // clear old
+				this.setPropStoreFieldValue('inheritedStyles', value || []);
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), true);  // apply new
 			}
 		});
 		this.defineProp('showText', {'dataType': DataType.BOOL,
@@ -1515,16 +1527,142 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		}
+		return this;
 	},
 	/**
 	 * Clear CSS property to widget or another element.
 	 * @param {String} cssPropName CSS property name in JavaScript form.
 	 * @param {HTMLElement} element If not set, style will be set to widget element.
 	 */
-	removeStyleProperty: function(cssPropName, value, element)
+	removeStyleProperty: function(cssPropName, element)
 	{
 		var elem = element || this.getElement();
 		Kekule.StyleUtils.removeStyleProperty(elem.style, cssPropName);
+		return this;
+	},
+
+	/**
+	 * Set CSS property values to widget or another element.
+	 * @param {Hash} cssPropValuePairs
+	 * @param {HTMLElement} element If not set, style will be set to widget element.
+	 */
+	setStyleProperties: function(cssPropValuePairs, element)
+	{
+		var propNames = Object.getOwnPropertyNames(cssPropValuePairs || {});
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var name = propNames[i];
+			var value = cssPropValuePairs[name];
+			this.setStyleProperty(name, value, element);
+		}
+		return this;
+	},
+	/**
+	 * Clear CSS properties to widget or another element.
+	 * @param {String} cssPropName CSS property name in JavaScript form.
+	 * @param {HTMLElement} element If not set, style will be set to widget element.
+	 */
+	removeStyleProperties: function(cssPropNames, element)
+	{
+		var names = AU.toArray(cssPropNames);
+		for (var i = 0, l = names.length; i < l; ++i)
+		{
+			this.removeStyleProperty(name, element);
+		}
+		return this;
+	},
+
+	/**
+	 * Returns whether a CSS property value of this widget is designed to be 'inherit'.
+	 * @param {String} cssPropName
+	 * @returns {Bool}
+	 */
+	isStyleInherited: function(cssPropName)
+	{
+		var props = this.getInheritedStyles() || [];
+		return (props.indexOf(cssPropName) >= 0);
+	},
+	/**
+	 * Set CSS property to 'inherit' or remove it.
+	 * @param {Variant} cssPropNameOrNames
+	 * @param {Bool} value
+	 * @private
+	 */
+	_setInheritedStyleValues: function(cssPropNameOrNames, value, doNotChangeInheritedStylesProperty)
+	{
+		var propNames = AU.toArray(cssPropNameOrNames);
+		var inheritedStyles = this.getInheritedStyles() || {};
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var cssPropName = propNames[i];
+			var index = inheritedStyles.indexOf(cssPropName);
+			if (value)
+			{
+				if (!doNotChangeInheritedStylesProperty && index < 0)  // if index >= 0, the style is already handled
+				{
+					inheritedStyles.push(cssPropName);
+					//this.getInheritedStyles()[cssPropName] = true;
+					this.notifyInheritedStyleChanged(cssPropName, true);
+				}
+				this.setStyleProperty(cssPropName, 'inherit');
+			}
+			else
+			{
+				this.removeStyleProperty(cssPropName);
+				if (!doNotChangeInheritedStylesProperty && index >= 0)   // if index < 0, cssPropName not in inheritedStyles, no need to handle
+				{
+					//delete this.getInheritedStyles()[cssPropName];
+					inheritedStyles.splice(index, 1);
+					this.notifyInheritedStyleChanged(cssPropName, false);
+				}
+			}
+		}
+		return this;
+	},
+	/**
+	 * Notify a CSS property has been set to 'inherited' or removed from the inherited ones.
+	 * Descendants may override this method.
+	 * @param {String} cssPropName
+	 * @param {Bool} inherited
+	 * @private
+	 */
+	notifyInheritedStyleChanged: function(cssPropName, inherited)
+	{
+		// do nothing here
+	},
+	/**
+	 * Add a css style to the inherited set.
+	 * @param {Variant} cssPropNameOrNames
+	 */
+	addInheritedStyle: function(cssPropNameOrNames)
+	{
+		return this._setInheritedStyleValues(cssPropNameOrNames, true);
+	},
+	/**
+	 * Remove a css style from the inherited set.
+	 * @param {Variant} cssPropNameOrNames
+	 */
+	removeInheritedStyle: function(cssPropNameOrNames)
+	{
+		return this._setInheritedStyleValues(cssPropNameOrNames, false);
+	},
+	/**
+	 * Remove all css styles from the inherited set.
+ 	 */
+	clearInheritedStyles: function()
+	{
+		this.setPropStoreFieldValue('inheritedStyles', []);
+	},
+	/** @private */
+	_applyToAllInheritedStyles: function(propNames, value)
+	{
+		if (Kekule.ObjUtils.isUnset(value))
+			value = true;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var prop = propNames[i];
+			this._setInheritedStyleValues(prop, value, true);
+		}
 	},
 
 	/**
@@ -2865,6 +3003,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				element.appendChild(docFrag);
 
 			this.doBindElement(element);
+
+			this._applyToAllInheritedStyles(this.getInheritedStyles(), true);
 
 			if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
 				this.setEnabled(false);
