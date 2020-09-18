@@ -1140,6 +1140,28 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Request a repaint process. The actual repainting will be suspended till idle.
+	 * Use this method rather than directly calling repaint() may reduce the concrete repainting times.
+	 * @param {Hash} overrideOptions Transform options to do repainting.
+	 *   If this param is set to null, all transform options will be recalculated.
+	 *   If overrideOptions.preserveTransformOptions is true, transform options remains same as
+	 *   last painting process (rather than recalculated).
+	 */
+	requestRepaint: function(overrideOptions)
+	{
+		this._requestRepainting = {'overrideOptions': overrideOptions};  // flag indicating need to repaint
+		var self = this;
+		var doConcreteRepaint = function()
+		{
+			if (self._requestRepainting)
+			{
+				self._repaintCore(self._requestRepainting.overrideOptions);
+			}
+			self._requestRepainting = null;
+		};
+		doConcreteRepaint.delay(0);
+	},
+	/**
 	 * Repaint the context with current chem object.
 	 * @param {Hash} overrideOptions Transform options to do repainting.
 	 *   If this param is set to null, all transform options will be recalculated.
@@ -1147,6 +1169,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 *   last painting process (rather than recalculated).
 	 */
 	repaint: function(overrideOptions)
+	{
+		//return this.requestRepaint(overrideOptions);
+		return this._repaintCore(overrideOptions);
+	},
+	/** @private */
+	_repaintCore: function(overrideOptions)
 	{
 		this.beginPaint();
 		try
@@ -1190,6 +1218,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 */
 
 			//console.log(drawParams, drawParams.baseCoord, drawParams.drawOptions);
+			//drawParams.drawOptions.color = '#ff0000';
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
 
 			if (transformOpsChanged)
