@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.5.20091400',
+	VERSION: '0.9.5.20092300',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -139,37 +139,64 @@ if (Kekule.scriptSrcInfo && Kekule.scriptSrcInfo.language)  // force Language
 }
 if (!Kekule.scriptSrcInfo && Kekule.$jsRoot.document)  // script info not found, may be use Kekule.min.js directly
 {
-	Kekule.scriptSrcInfo = (function ()
+	Kekule.scriptSrcInfo = (function (doc)
 	{
+		var matchResult;
+		var scriptSrcPattern = /^(.*[\/\\])[^\/\\]*\.js(\?.*)?$/;
 		var entranceSrc = /^(.*\/?)kekule\..*\.js(\?.*)?$/;
-		var scriptElems = document.getElementsByTagName('script');
-		var loc;
-		for (var i = scriptElems.length - 1; i >= 0; --i)
+		var scriptSrc;
+		if (doc && doc.currentScript && doc.currentScript.src)
 		{
-			var elem = scriptElems[i];
-			if (elem.src)
+			scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			if (scriptSrc)
 			{
-				var matchResult = elem.src.match(entranceSrc);
-				if (matchResult)
+				matchResult = scriptSrc.match(scriptSrcPattern);
+			}
+		}
+		else
+		{
+			var scriptElems = document.getElementsByTagName('script');
+			var loc;
+			for (var i = scriptElems.length - 1; i >= 0; --i)
+			{
+				var elem = scriptElems[i];
+				scriptSrc = decodeURIComponent(elem.src);
+				if (scriptSrc)
 				{
-					var pstr = matchResult[2];
-					if (pstr)
-						pstr = pstr.substr(1);  // eliminate starting '?'
-					var result = {
-						'src': elem.src,
-						'path': matchResult[1],
-						'paramStr': pstr,
-						'useMinFile': true
-					};
-					return result;
+					var matchResult = scriptSrc.match(entranceSrc);
+					if (matchResult)
+					{
+						break;
+					}
 				}
 			}
 		}
+
+		if (matchResult)
+		{
+			var pstr = matchResult[2];
+			if (pstr)
+				pstr = pstr.substr(1);  // eliminate starting '?'
+			var result = {
+				'src': scriptSrc,
+				'path': matchResult[1],
+				'paramStr': pstr,
+				'useMinFile': true
+			};
+			return result;
+		}
+
 		return null;
-	})();
+	})(Kekule.$jsRoot.document);
+}
+
+if (!Kekule.scriptSrcInfo)
+{
+	Kekule.scriptSrcInfo = {useMinFile: true};
 }
 
 Kekule.environment = {
+	scriptInfo: Kekule.scriptSrcInfo,
 	isNode: !!((typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined')),
 	isWeb: !!(typeof window === 'object' && window.document)
 };  // current runtime environment details
@@ -206,6 +233,19 @@ if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
 			return this;
 	};
 	Kekule.loadModules = Kekule.modules;  // alias of function Kekule.modules
+}
+
+// add some util methods about Kekule.scriptSrcInfo
+if (Kekule.scriptSrcInfo)
+{
+	Kekule.scriptSrcInfo.getValue = function(key)
+	{
+		return Kekule.scriptSrcInfo[key];
+	};
+	Kekule.scriptSrcInfo.setValue = function(key, value)
+	{
+		Kekule.scriptSrcInfo[key] = value;
+	}
 }
 
 Kekule.getScriptPath = function()
