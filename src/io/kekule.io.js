@@ -1240,7 +1240,8 @@ Kekule.IO.loadTypedData = function(content, mimeType, url, options)
 		return result;
 	}
 	*/
-	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	//var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType || null, fileExt);
 	var result;
 	if (formatId)
 		result = Kekule.IO.loadFormatData(content, formatId, options);
@@ -1465,7 +1466,8 @@ Kekule.IO.saveTypedData = function(chemObj, mimeType, urlOrFileExt, options)
 		*/
 	}
 
-	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	//var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType, mimeType? null: fileExt);
+	var formatId = Kekule.IO.DataFormatsManager.findFormatId(mimeType || null, fileExt);
 	var result;
 	if (formatId)
 		result = Kekule.IO.saveFormatData(chemObj, formatId, options);
