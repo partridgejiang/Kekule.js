@@ -515,19 +515,20 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		var r = context.getRenderer();
 		if (r)
 		{
-			if (r.setClearColorHex)
+			// TODO: now the clear color opacity is always 1
+			if (r.setClearColor)   // in new version, setClearColorHex method has been removed
+			{
+				if (color)
+					context.getRenderer().setClearColor(new THREE.Color(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColor(null, 0);
+			}
+			else if (r.setClearColorHex)
 			{
 				if (color)
 					context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
 				else // color not set, transparent
 					context.getRenderer().setClearColorHex(null, 0);
-			}
-			else if (r.setClearColor)   // in new version, setClearColorHex method has been removed
-			{
-				if (color)
-					context.getRenderer().setClearColor(this.colorStrToHex(color), 1);
-				else // color not set, transparent
-					context.getRenderer().setClearColor(null, 0);
 			}
 		}
 	},
