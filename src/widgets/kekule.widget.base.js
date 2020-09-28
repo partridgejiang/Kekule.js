@@ -1260,7 +1260,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 
 	/**
 	 * Returns core element of widget.
-	 * Usually core element is the element widget binded to, but in some
+	 * Usually core element is the element widget bound to, but in some
 	 * cases, core element may be a child of widget element. Descendants
 	 * can override this method to reflect that situation.
 	 * @returns {HTMLElement}
@@ -1570,6 +1570,16 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			this.removeStyleProperty(name, element);
 		}
 		return this;
+	},
+
+	/**
+	 * Returns the computed CSS style value of widget's core element.
+	 * @param {String} cssPropName
+	 * @returns {Variant}
+	 */
+	getComputedStyle: function(cssPropName)
+	{
+		return Kekule.StyleUtils.getComputedStyle(this.getCoreElement(), cssPropName);
 	},
 
 	/**
