@@ -74,6 +74,10 @@ Kekule.Widget.HtmlClassNames = {
 	NONSELECTABLE: 'K-NonSelectable',
 	SELECTABLE: 'K-Selectable',
 
+	// widget style mode
+	STYLE_INHERITED: 'K-Style-Inherited',  // the widget has no special styles like color/bgcolor and font, all inherited from document
+	STYLE_UNDEPENDENT: 'K-Style-Undependent',  // the widget do not inherit styles like color/bgcolor and font from document
+
 	// State classes
 	/** Class name for all widget elements in normal (enabled) state. */
 	STATE_NORMAL: 'K-State-Normal',
@@ -151,12 +155,20 @@ Kekule.Widget.HtmlClassNames = {
 var CNS = Kekule.Widget.HtmlClassNames;
 
 /**
+ * Enumeration of widget style dependent mode.
+ */
+Kekule.Widget.StyleMode = {
+	UNDEPENDENT: 0,
+	INHERITED: 1
+};
+
+/**
  * Enumeration of layout of widget group.
  */
 Kekule.Widget.Layout = {
 	HORIZONTAL: 1,
 	VERTICAL: 2,
-	GRID: 4,
+	GRID: 4
 };
 
 /**
@@ -836,6 +848,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		});
+
+		this.defineProp('styleMode', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.StyleMode,
+			'setter': function(value)
+			{
+				if (value !== this.getStyleMode())
+				{
+					if (this.getElement())
+					{
+						if (value === Kekule.Widget.StyleMode.INHERITED)
+						{
+							this.removeClassName(CNS.STYLE_UNDEPENDENT);
+							this.addClassName(CNS.STYLE_INHERITED);
+						}
+						else // if (value === Kekule.Widget.StyleMode.UNDEPENDENT)
+						{
+							this.addClassName(CNS.STYLE_UNDEPENDENT);
+							this.removeClassName(CNS.STYLE_INHERITED);
+						}
+					}
+					this.setPropStoreFieldValue('styleMode', value);
+				}
+			}
+		});
 		this.defineProp('inheritedStyles', {'dataType': DataType.ARRAY,
 			'setter': function(value)
 			{
@@ -844,6 +879,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this._applyToAllInheritedStyles(this.getInheritedStyles(), true);  // apply new
 			}
 		});
+
 		this.defineProp('showText', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -1580,6 +1616,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getComputedStyle: function(cssPropName)
 	{
 		return Kekule.StyleUtils.getComputedStyle(this.getCoreElement(), cssPropName);
+	},
+	/**
+	 * Returns the computed custom CSS style value of widget's core element.
+	 * @param {String} propName Core name of custom property, without the leading '--'
+	 * @returns {Variant}
+	 */
+	getComputedCustomStyle: function(propName)
+	{
+		var n;
+		if (propName.indexOf('-') < 0)  // in JS form
+			n = propName.dasherize();
+		else
+			n = propName;
+		return this.getComputedStyle('--' + n);
 	},
 
 	/**
@@ -2820,6 +2870,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
+		var styleModeClassName = (this.getStyleMode() === Kekule.Widget.StyleMode.INHERITED)? CNS.STYLE_INHERITED: CNS.STYLE_UNDEPENDENT;
+		result += ' ' + styleModeClassName;
 		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()) && !!this.getUseNormalBackground())
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
@@ -2963,117 +3015,126 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (!this.isElementBindable(element))
 			{
 				Kekule.error(/*Kekule.ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM*/
-					Kekule.$L('ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM').format(this.getClassName(), element.tagName));
+						Kekule.$L('ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM').format(this.getClassName(), element.tagName));
 				return;
 			}
 
-			// if element already has class name, regard it as custom HTML class name
-			var originClassName = element.className;
-			if (originClassName)
-				this.setCustomHtmlClassName(this.getCustomHtmlClassName() || '' + ' ' + originClassName);
-
-			var defTabIndex = this.getDefaultTabIndex();
-			if (Kekule.ObjUtils.notUnset(defTabIndex) && !element.getAttribute('tabindex'))
+			this.beginUpdate();
+			try
 			{
-				element.tabIndex = defTabIndex;
-			}
+				// if element already has class name, regard it as custom HTML class name
+				var originClassName = element.className;
+				if (originClassName)
+					this.setCustomHtmlClassName(this.getCustomHtmlClassName() || '' + ' ' + originClassName);
 
-			var DU = Kekule.DomUtils;
-			var HU = Kekule.HtmlElementUtils;
-			// clear possiblely previously created dynamic elements
-			var clearDynElements = function(rootElem)
-			{
-				var children = DU.getDirectChildElems(rootElem);
-				for (var i = children.length - 1; i >= 0; --i)
+				var defTabIndex = this.getDefaultTabIndex();
+				if (Kekule.ObjUtils.notUnset(defTabIndex) && !element.getAttribute('tabindex'))
 				{
-					var child = children[i];
-					if (HU.hasClass(child, CNS.DYN_CREATED))
-						rootElem.removeChild(child);
+					element.tabIndex = defTabIndex;
 				}
-			};
-			clearDynElements(element);
 
-			// create essential sub elements
-			var doc = this.getDocument();
-			var docFrag = doc.createDocumentFragment();
-			//var subElems = this.doCreateSubElements(this.getDocument(), element);
-			var subElems = this.doCreateSubElements(this.getDocument(), docFrag);
-			if (subElems && subElems.length)
-			{
-				for (var i = 0, l = subElems.length; i < l; ++i)
+				var DU = Kekule.DomUtils;
+				var HU = Kekule.HtmlElementUtils;
+				// clear possiblely previously created dynamic elements
+				var clearDynElements = function(rootElem)
 				{
-					var elem = subElems[i];
-					HU.addClass(elem, CNS.DYN_CREATED);
+					var children = DU.getDirectChildElems(rootElem);
+					for (var i = children.length - 1; i >= 0; --i)
+					{
+						var child = children[i];
+						if (HU.hasClass(child, CNS.DYN_CREATED))
+							rootElem.removeChild(child);
+					}
+				};
+				clearDynElements(element);
+
+				// create essential sub elements
+				var doc = this.getDocument();
+				var docFrag = doc.createDocumentFragment();
+				//var subElems = this.doCreateSubElements(this.getDocument(), element);
+				var subElems = this.doCreateSubElements(this.getDocument(), docFrag);
+				if (subElems && subElems.length)
+				{
+					for (var i = 0, l = subElems.length; i < l; ++i)
+					{
+						var elem = subElems[i];
+						HU.addClass(elem, CNS.DYN_CREATED);
+					}
 				}
-			}
 
-			if ((subElems && subElems.length)
-					|| (docFrag.children && docFrag.children.length)
-					|| (docFrag.childNodes && docFrag.childNodes.length))
-				element.appendChild(docFrag);
+				if ((subElems && subElems.length)
+						|| (docFrag.children && docFrag.children.length)
+						|| (docFrag.childNodes && docFrag.childNodes.length))
+					element.appendChild(docFrag);
 
-			this.doBindElement(element);
+				this.doBindElement(element);
 
-			this._applyToAllInheritedStyles(this.getInheritedStyles(), true);
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), true);
 
-			if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
-				this.setEnabled(false);
+				if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
+					this.setEnabled(false);
 
-			var cname = this.getWidgetClassName();
-			EU.addClass(element, cname);
-			cname = this.getCustomHtmlClassName();
-			if (cname)
+				var cname = this.getWidgetClassName();
 				EU.addClass(element, cname);
-			if (!this.getTextSelectable())
-				EU.addClass(element, CNS.NONSELECTABLE);
-			if (this._pendingHtmlClassNames)
-			{
-				EU.addClass(element, this._pendingHtmlClassNames);
-				this._pendingHtmlClassNames = '';
-			}
-
-			// check dataset properties of element, and use them to set self's properties
-			// width/height attribute should also be regarded as property settings
-			var w = element.getAttribute('width');
-			var h = element.getAttribute('height');
-			if (Kekule.ObjUtils.notUnset(w) || Kekule.ObjUtils.notUnset(h))
-			{
-				w = parseFloat((w || '').toString()) || 0;
-				h = parseFloat((h || '').toString()) || 0;
-				this.setDimension(w, h);
-			}
-			var dataset = Kekule.DomUtils.getDataset(element);
-			if (dataset)
-			{
-				for (var attribName in dataset)
+				cname = this.getCustomHtmlClassName();
+				if (cname)
+					EU.addClass(element, cname);
+				if (!this.getTextSelectable())
+					EU.addClass(element, CNS.NONSELECTABLE);
+				if (this._pendingHtmlClassNames)
 				{
-					var value = dataset[attribName];
-					try
+					EU.addClass(element, this._pendingHtmlClassNames);
+					this._pendingHtmlClassNames = '';
+				}
+
+				// check dataset properties of element, and use them to set self's properties
+				// width/height attribute should also be regarded as property settings
+				var w = element.getAttribute('width');
+				var h = element.getAttribute('height');
+				if (Kekule.ObjUtils.notUnset(w) || Kekule.ObjUtils.notUnset(h))
+				{
+					w = parseFloat((w || '').toString()) || 0;
+					h = parseFloat((h || '').toString()) || 0;
+					this.setDimension(w, h);
+				}
+				var dataset = Kekule.DomUtils.getDataset(element);
+				if (dataset)
+				{
+					for (var attribName in dataset)
 					{
-						Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, attribName, value);
-					}
-					catch(e)
-					{
-						//console.warn(e);
-						Kekule.warn(e);
-						//throw e;
+						var value = dataset[attribName];
+						try
+						{
+							Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, attribName, value);
+						}
+						catch (e)
+						{
+							//console.warn(e);
+							Kekule.warn(e);
+							//throw e;
+						}
 					}
 				}
+
+				// ensure touch action value applied to element
+				var touchAction = this.getTouchAction();
+				if (Kekule.ObjUtils.notUnset(touchAction))
+					this.setTouchAction(touchAction);
+
+				if (!this.getIsDumb())
+					this.installUiEventHandlers(element);
+
+				// add a field to element to quick access widget from element itself
+				element[widgetBindingField] = this;
+
+				this.elementBound(element);
+				//this.invokeEvent('bind', {'widget': this, 'element': element});
 			}
-
-			// ensure touch action value applied to element
-			var touchAction = this.getTouchAction();
-			if (Kekule.ObjUtils.notUnset(touchAction))
-				this.setTouchAction(touchAction);
-
-			if (!this.getIsDumb())
-				this.installUiEventHandlers(element);
-
-			// add a field to element to quick access widget from element itself
-			element[widgetBindingField] = this;
-
-			this.elementBound(element);
-			this.invokeEvent('bind', {'widget': this, 'element': element});
+			finally
+			{
+				this.endUpdate();
+				this.invokeEvent('bind', {'widget': this, 'element': element});
+			}
 		}
 	},
 	/**
@@ -3205,25 +3266,44 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	_reactElemAttribMutation: function(mutations)
 	{
 		var elem = this.getElement();
+		var coreElem = this.getCoreElement();
 		for (var i = 0, l = mutations.length; i < l; ++i)
 		{
 			var m = mutations[i];
 			if (m.type !== 'attributes')
 				continue;
-			if (m.target !== elem)
+			if (m.target !== elem && m.target !== coreElem)
 				continue;
 			var attribName = m.attributeName;
-			if (attribName && Kekule.DomUtils.isDataAttribName(attribName))
+			if (attribName)
 			{
-				var coreName = Kekule.DomUtils.getDataAttribCoreName(attribName);
-				if (coreName)
+				if (attribName.toLowerCase() === 'style')  // direct style attribute change
 				{
-					var attribValue = elem.getAttribute(attribName);
-					//console.log('set prop', attribName, attribValue);
-					Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, coreName, attribValue);
+					this.notifyStyleAttribChanged(m.target);
+				}
+				else if (Kekule.DomUtils.isDataAttribName(attribName))
+				{
+					var coreName = Kekule.DomUtils.getDataAttribCoreName(attribName);
+					if (coreName)
+					{
+						var attribValue = elem.getAttribute(attribName);
+						//console.log('set prop', attribName, attribValue);
+						Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, coreName, attribValue);
+					}
 				}
 			}
 		}
+	},
+
+	/**
+	 * Notify the style attribute has been changed in widget element/core element.
+	 * (This indicating that the widget style also changes).
+	 * Descendants may override this method to reflect those changes.
+	 * @param {HTMLElement} targetElem
+	 */
+	notifyStyleAttribChanged: function(targetElem)
+	{
+		// do nothing here.
 	},
 
 
