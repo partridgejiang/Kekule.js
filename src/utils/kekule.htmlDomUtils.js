@@ -235,7 +235,7 @@ Kekule.StyleUtils = {
 	/**
 	 * Returns computed style of element. If propName not set, all computed result will be returned.
 	 * @param {Object} elem
-	 * @param {String} propName
+	 * @param {String} propName Can either by in JS('backgroundColor') or CSS('background-color') form.
 	 * @returns {Variant}
 	 */
 	getComputedStyle: function(elem, propName)
@@ -255,7 +255,18 @@ Kekule.StyleUtils = {
 		}
 
 		if (styles)  // some times IE can not fetch currentStyle
-			return propName? styles[propName]: styles;
+		{
+			if (propName)
+			{
+				var inCssForm = (propName.indexOf('-') >= 0);
+				if (inCssForm && styles.getPropertyValue)
+					return styles.getPropertyValue(propName);
+				else
+					return styles[propName];
+			}
+			else  // return while style object
+				return styles;
+		}
 		else
 		{
 			return null;
