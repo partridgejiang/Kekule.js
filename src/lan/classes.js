@@ -2307,11 +2307,22 @@ ObjectEx = Class.create(
 	initialize: function()
 	{
 		this._initPropertySystem();
-		this.initPropValues();
-		this._updateStatus = 0;  // used internal in begin/endUpdate methods
+
+    this._updateStatus = 0;  // used internal in begin/endUpdate methods
     this._childChangeEventSuppressed = false;
-		this._modifiedProps = [];  // used internal in begin/endUpdate methods
-		this._finalized = false;  // used internally, mark if the object has been freed
+    this._modifiedProps = [];  // used internal in begin/endUpdate methods
+    this._finalized = false;  // used internally, mark if the object has been freed
+
+    this.beginUpdate();
+    try
+    {
+      this.initPropValues();
+    }
+    finally
+    {
+      this.endUpdate();
+    }
+
 		this.afterInitialization();
 	},
 	/**
@@ -3605,8 +3616,16 @@ ObjectEx = Class.create(
 	 */
 	beginUpdate: function()
 	{
-		++this._updateStatus;
+		this.doBeginUpdate();
 	},
+  /**
+   * Do actual work of beginUpdate.
+   * @private
+   */
+  doBeginUpdate: function()
+  {
+    ++this._updateStatus;
+  },
 	/**
 	 * Update end and notify all properties changed after calling of beginUpdate.
 	 */
@@ -3629,6 +3648,7 @@ ObjectEx = Class.create(
 	},
 	/**
 	 * Actual work of endUpdate, just invoke all property change events.
+   * @private
 	 */
 	doEndUpdate: function(modifiedPropNames)
 	{
