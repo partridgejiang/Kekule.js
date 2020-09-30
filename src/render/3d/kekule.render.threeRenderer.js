@@ -521,7 +521,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 				if (color)
 					context.getRenderer().setClearColor(new THREE.Color(color), 1);
 				else // color not set, transparent
-					context.getRenderer().setClearColor(null, 0);
+					context.getRenderer().setClearColor(new THREE.Color(), 0);
 			}
 			else if (r.setClearColorHex)
 			{
