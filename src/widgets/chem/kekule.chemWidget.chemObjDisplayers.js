@@ -9,6 +9,7 @@
  * requires /utils/kekule.utils.js
  * requires /xbrowsers/kekule.x.js
  * requires /render/kekule.render.configs.js
+ * requires /render/kekule.render.utils.js
  * requires /widgets/operation/kekule.actions.js
  * requires /widgets/kekule.widget.base.js
  * requires /widgets/kekule.widget.helpers.js
@@ -205,7 +206,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.defineProp('standardizationOptions', {'dataType': DataType.HASH});
 
 		this.defineProp('resetAfterLoad', {'dataType': DataType.BOOL});
-		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
+		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLISHED,
 			'setter': function(value)
 			{
 				var oldObj = this.getPropStoreFieldValue('chemObj');
@@ -220,7 +221,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': null,
 			'getter': function() { return this.getChemObj() && this.getPropStoreFieldValue('chemObjLoaded'); }
 		});
-		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLISHED,
+		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'enumSource': Kekule.Render.RendererType, 'scope': PS.PUBLISHED,
 			'setter': function(value)
 			{
 				if (!this.getAllowRenderTypeChange())
@@ -264,6 +265,73 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				this.backgroundColorChanged();
 			}
 		});
+
+		this.defineProp('inheritedRenderStyles', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('inheritedRenderStyles');
+				if (!result)
+				{
+					result = [];
+					this.setPropStoreFieldValue('inheritedRenderStyles', result);
+				}
+				return result;
+			},
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('inheritedRenderStyles', value || []);
+				this.requestRepaint();
+			}
+		});
+		this.defineProp('inheritedRenderColor', {'dataType': DataType.BOOL, 'scope': PS.PUBLISHED,
+			'getter': function()
+			{
+				var inheritedStyles = this.getInheritedRenderStyles();
+				return !!(inheritedStyles && (inheritedStyles.indexOf('color') >= 0));
+			},
+			'setter': function(value)
+			{
+				if ((!!value) !== this.getInheritedRenderColor())
+				{
+					var styles = this.getInheritedRenderStyles();
+					if (value)
+						styles.push('color');
+					else
+						Kekule.ArrayUtils.remove(styles, 'color');
+					this.setInheritedRenderStyles(styles);
+				}
+			}
+		});
+		this.defineProp('inheritedRenderBackgroundColor', {'dataType': DataType.BOOL, 'scope': PS.PUBLISHED,
+			'getter': function()
+			{
+				var inheritedStyles = this.getInheritedRenderStyles();
+				return !!(inheritedStyles && (inheritedStyles.indexOf('backgroundColor') >= 0));
+			},
+			'setter': function(value)
+			{
+				if ((!!value) !== this.getInheritedRenderBackgroundColor())
+				{
+					var styles = this.getInheritedRenderStyles();
+					if (value)
+						styles.push('backgroundColor');
+					else
+						Kekule.ArrayUtils.remove(styles, 'backgroundColor');
+					this.setInheritedRenderStyles(styles);
+				}
+			}
+		});
+
+		this.defineProp('enableCustomCssProperties', {'dataType': DataType.BOOL,
+			'setter': function(value){
+				if (value != this.getEnableCustomCssProperties())
+				{
+					this.setEnableCustomCssProperties(!!value);
+					this.requestRepaint();
+				}
+			}
+		});
+
 		this.defineProp('transformParams', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
@@ -506,6 +574,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}).defer(); // call load later, avoid error in load process that prevent result true is returned
 
 			return true;
+		}
+	},
+
+	/** @ignore */
+	notifyStyleAttribChanged: function(targetElem)
+	{
+		this.tryApplySuper('notifyStyleAttribChanged', [targetElem]);
+		var inheritedStyles = this.getInheritedRenderStyles() || [];
+		if (inheritedStyles.length)
+		{
+			this.requestRepaint();
 		}
 	},
 
@@ -1180,6 +1259,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		try
 		{
 			//var start = (new Date()).getTime();
+			// update background color
+			if (this.getInheritedRenderBackgroundColor())
+			{
+				var bgColor = this.getComputedStyle('backgroundColor');
+				this.backgroundColorChanged(true, bgColor || null);
+			}
+			else
+			{
+				this.backgroundColorChanged(true);
+			}
+
 			if (!overrideOptions || !overrideOptions.doNotClear)
 				this.clearContext();
 
@@ -1218,7 +1308,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			 */
 
 			//console.log(drawParams, drawParams.baseCoord, drawParams.drawOptions);
-			//drawParams.drawOptions.color = '#ff0000';
+
+			if (this.getInheritedRenderColor())
+			{
+				var color = this.getComputedStyle('color');
+				drawParams.drawOptions.color = color;
+			}
+			else
+			{
+				drawParams.drawOptions.color = null;
+			}
+
+			console.log('do repaint', this.getId());
+			if (this.getEnableCustomCssProperties())
+				this._applyCustomCssProps(drawParams.drawOptions);
+
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
 
 			if (transformOpsChanged)
@@ -1282,10 +1386,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 	/**
 	 * Called after background color is changed, should repaint the context.
+	 * @private
 	 */
-	backgroundColorChanged: function(doNotRepaint)
+	backgroundColorChanged: function(doNotRepaint, bgColor)
 	{
-		var color = this.getBackgroundColor();
+		var color = bgColor;
+		if (color === undefined)
+			color = this.getBackgroundColor();
 		if (color === 'transparent')
 			color = null;
 		var drawBridge = this.getDrawBridge(true);
@@ -1296,6 +1403,123 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				this.repaint();
 		}
 	},
+
+	/** @private */
+	_getApplicableCustomCssPropNames: function()  // returns in JS form
+	{
+		var result = {
+			r2d: [
+					'unitLength',
+					'moleculeDisplayType',
+					'hydrogenDisplayLevel',
+					'showCharge',
+					'chargeMarkFontSize',
+					'chargeMarkMargin',
+					'chemMarkerFontSize',
+					'chemMarkerMargin',
+					'distinguishSingletAndTripletRadical',
+					'fontSize',
+					'fontFamily',
+					'supFontSizeRatio',
+					'subFontSizeRatio',
+					'superscriptOverhang',
+					'subscriptOversink',
+					'bondLineWidth',
+					'boldBondLineWidth',
+					'hashSpacing',
+					'multipleBondSpacingRatio',
+					'multipleBondSpacingAbs',
+					'multipleBondMaxAbsSpacing',
+					'bondArrowLength',
+					'bondArrowWidth',
+					'bondWedgeWidth',
+					'bondWedgeHashMinWidth',
+					'bondLengthScaleRatio',
+					'color',
+					'atomColor',
+					'bondColor',
+					'useAtomSpecifiedColor',
+					'opacity',
+					'fillColor',
+					'strokeColor',
+					'strokeWidth',
+					'atomRadius'
+			],
+			r3d: [
+					'displayMultipleBond',
+					'useVdWRadius',
+					'nodeRadius',
+					'connectorRadius',
+					'nodeRadiusRatio',
+					'connectorRadiusRatio',
+					//'connectorLineWidth',
+					'color',
+					'atomColor',
+					'bondColor',
+					'useAtomSpecifiedColor',
+					'hideHydrogens',
+					'bondSpliceMode'
+			]
+		};
+		return result;
+	},
+	/** @private */
+	_getRenderOptionDefinitionsHash: function()  // cache returned values
+	{
+		if (!this.__$renderOptionDefinitionsHash__)
+		{
+			this.__$renderOptionDefinitionsHash__ = {};
+			var r2dDefs = Kekule.Render.RenderOptionUtils.getOptionDefinitions();
+			var r3dDefs = Kekule.Render.Render3DOptionUtils.getOptionDefinitions();
+			var i, l;
+			for (i = 0, l = r2dDefs.length; i < l; ++i)
+			{
+				this.__$renderOptionDefinitionsHash__[r2dDefs[i].name] = r2dDefs[i];
+			}
+			for (i = 0, l = r3dDefs.length; i < l; ++i)
+			{
+				this.__$renderOptionDefinitionsHash__[r3dDefs[i].name] = r3dDefs[i];
+			}
+		}
+		return this.__$renderOptionDefinitionsHash__;
+	},
+	/** @private */
+	_applyCustomCssProps: function(drawOptions)
+	{
+		var defHash = this._getRenderOptionDefinitionsHash();
+		var applicableProps = this._getApplicableCustomCssPropNames();
+		var i, l;
+		for (i = 0, l = applicableProps.r2d.length; i < l; ++i)
+		{
+			var name = applicableProps.r2d[i];
+			this._applyCustomCssPropValue(name, defHash, drawOptions);
+		}
+		if (this.getRenderType() === Kekule.Render.RendererType.R3D)
+		{
+			for (i = 0, l = applicableProps.r3d.length; i < l; ++i)
+			{
+				var name = applicableProps.r3d[i];
+				this._applyCustomCssPropValue(name, defHash, drawOptions);
+			}
+		}
+	},
+	/** @private */
+	_applyCustomCssPropValue: function(propName, defHash, drawOptions)
+	{
+		var definition = defHash[propName];
+		if (definition)
+		{
+			var cssValue = this.getComputedCustomStyle(propName);
+			if (cssValue && cssValue.trim)  // ensure is a string value
+			{
+				cssValue = cssValue.trim();  // custom value often contains leading blanks
+				var value = Kekule.StrUtils.convertToType(cssValue, defHash.dataType);
+				if (Kekule.ObjUtils.notUnset(value))
+					drawOptions[propName] = value;
+			}
+		}
+	},
+
 	/**
 	 * Called after draw options are changed. Should repaint the context.
 	 * Repaint is a time-consuming job. So if only rotate/scale/translate options changes,
