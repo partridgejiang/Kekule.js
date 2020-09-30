@@ -536,6 +536,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setStandardizationOptions({'unmarshalSubFragments': false, 'clearHydrogens': false});    // do not auto clear explicit H
 	},
+
+	/** @ignore */
+	doEndUpdate: function(modifiedPropNames)
+	{
+		this.tryApplySuper('doEndUpdate', [modifiedPropNames]);
+		if (this._requestRepainting)  // pending painting job in begin/endUpadte block
+		{
+			this.repaint(this._requestRepainting.overrideOptions);
+		}
+	},
+
 	/** @ignore */
 	elementBound: function(element)
 	{
@@ -1249,12 +1260,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	repaint: function(overrideOptions)
 	{
-		//return this.requestRepaint(overrideOptions);
-		return this._repaintCore(overrideOptions);
+		if (this.isUpdating())
+		{
+			// suspend painting in updating
+			this._requestRepainting = {'overrideOptions': overrideOptions};  // flag indicating need to repaint
+		}
+		else
+		{
+			//return this.requestRepaint(overrideOptions);
+			return this._repaintCore(overrideOptions);
+		}
 	},
 	/** @private */
 	_repaintCore: function(overrideOptions)
 	{
+		if (!this.getElement())  // not bound to element, can not draw
+			return;
 		this.beginPaint();
 		try
 		{
@@ -1319,7 +1340,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				drawParams.drawOptions.color = null;
 			}
 
-			console.log('do repaint', this.getId());
 			if (this.getEnableCustomCssProperties())
 				this._applyCustomCssProps(drawParams.drawOptions);
 
@@ -1400,7 +1420,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		{
 			drawBridge.setClearColor(this.getDrawContext(), color);
 			if (!doNotRepaint)
-				this.repaint();
+				this.requestRepaint();
 		}
 	},
 
