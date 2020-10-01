@@ -326,7 +326,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'setter': function(value){
 				if (value != this.getEnableCustomCssProperties())
 				{
-					this.setEnableCustomCssProperties(!!value);
+					this.setPropStoreFieldValue('enableCustomCssProperties', !!value);
 					this.requestRepaint();
 				}
 			}
@@ -1268,7 +1268,15 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		else
 		{
 			//return this.requestRepaint(overrideOptions);
-			return this._repaintCore(overrideOptions);
+			try
+			{
+				var result = this._repaintCore(overrideOptions);
+			}
+			finally
+			{
+				this._requestRepainting = null;  // clear request painting flag
+			}
+			return result;
 		}
 	},
 	/** @private */
@@ -1276,6 +1284,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		if (!this.getElement())  // not bound to element, can not draw
 			return;
+
 		this.beginPaint();
 		try
 		{
