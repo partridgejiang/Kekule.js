@@ -561,7 +561,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		*/
 		this.setStyleMode(Kekule.Widget.StyleMode.INHERITED);  // embedded in document
 		this.setUseNormalBackground(false);
-		this.setInheritedRenderColor(true);
+		//this.setInheritedRenderColor(true);
 		this.setEnableCustomCssProperties(true);
 
 		this.setModalEdit(true);
