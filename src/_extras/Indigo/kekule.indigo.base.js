@@ -61,6 +61,11 @@ Kekule.Indigo = {
 		}
 		return KI._module;
 	},
+	setModule: function(module)
+	{
+		KI._module = module;
+		EU.setRootModule(indigoInitOptions.moduleName, module);
+	},
 	/**
 	 * Returns Indigo adapter instance.
 	 */

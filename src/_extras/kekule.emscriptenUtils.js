@@ -27,7 +27,7 @@ Kekule.EmscriptenUtils = {
 	getRootModule: function(moduleName, creationOptions)
 	{
 		// if already created, returns
-		var result = EU._createdModules[moduleName];;
+		var result = EU._createdModules[moduleName];
 		if (result)
 		{
 			return result;
@@ -44,6 +44,10 @@ Kekule.EmscriptenUtils = {
 			EU._createdModules[moduleName] = result;
 
 		return result;
+	},
+	setRootModule: function(moduleName, module)
+	{
+		EU._createdModules[moduleName] = module;
 	},
 	getModuleObj: function(moduleNameOrObj)
 	{

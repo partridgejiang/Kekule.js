@@ -60,6 +60,11 @@ Kekule.InChI = {
 		}
 		return InChI._module;
 	},
+	setModule: function(module)
+	{
+		InChI._module = module;
+		EU.setRootModule(inchiInitOptions.moduleName, module);
+	},
 	getInChIPath: function()
 	{
 		var path = Kekule.environment.getEnvVar('inchi.path');

@@ -66,6 +66,11 @@ Kekule.OpenBabel = {
 		}
 		return OB._module;
 	},
+	setModule: function(module)
+	{
+		OB._module = module;
+		EU.setRootModule(obInitOptions.moduleName, module);
+	},
 	getClassCtor: function(className)
 	{
 		return EU.getClassCtor(className, OB.getModule());
