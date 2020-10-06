@@ -145,7 +145,7 @@ Kekule.Indigo.getIndigoPath = function()
 /** @ignore */
 Kekule.Indigo.getIndigoScriptUrl = function()
 {
-	var result = Kekule.environment.getEnvVar('indigo.path');
+	var result = Kekule.environment.getEnvVar('indigo.scriptSrc');
 	if (!result)
 	{
 		result = KI.getIndigoPath() + KI.SCRIPT_FILE;
