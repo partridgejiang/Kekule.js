@@ -62,17 +62,25 @@ Kekule.InChI = {
 	},
 	getInChIPath: function()
 	{
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		var path = isMin? 'extra/': '_extras/InChI/';
-		path = Kekule.scriptSrcInfo.path + path;
+		var path = Kekule.environment.getEnvVar('inchi.path');
+		if (!path)
+		{
+			var isMin = Kekule.scriptSrcInfo.useMinFile;
+			path = isMin ? 'extra/' : '_extras/InChI/';
+			path = Kekule.scriptSrcInfo.path + path;
+		}
 		return path;
 	},
 	getInChIScriptUrl: function()
 	{
-		var result = InChI.getInChIPath() + InChI.SCRIPT_FILE;
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		if (!isMin)
-			result += '.dev';
+		var result = Kekule.environment.getEnvVar('inchi.scriptSrc');
+		if (!result)
+		{
+			result = InChI.getInChIPath() + InChI.SCRIPT_FILE;
+			var isMin = Kekule.scriptSrcInfo.useMinFile;
+			if (!isMin)
+				result += '.dev';
+		}
 		return result;
 	},
 	loadInChIScript: function(doc, callback)
