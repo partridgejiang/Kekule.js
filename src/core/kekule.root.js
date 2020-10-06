@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.5.20100300',
+	VERSION: '0.9.5.20100600',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -198,13 +198,25 @@ if (!Kekule.scriptSrcInfo)
 Kekule.environment = {
 	scriptInfo: Kekule.scriptSrcInfo,
 	isNode: !!((typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined')),
-	isWeb: !!(typeof window === 'object' && window.document)
+	isWeb: !!(typeof window === 'object' && window.document),
+	variables: {},
+	getEnvVar: function(key)
+	{
+		return Kekule.environment.variables[key];
+	},
+	setEnvVar: function(key, value)
+	{
+		Kekule.environment.variables[key] = value;
+	}
 };  // current runtime environment details
 
 if (Kekule.scriptSrcInfo)
 {
 	Kekule.environment.nodeModule = Kekule.scriptSrcInfo.nodeModule;
 	Kekule.environment.nodeRequire = Kekule.scriptSrcInfo.nodeRequire;
+	Kekule.environment.setEnvVar('rootPath', Kekule.scriptSrcInfo.path);
+	Kekule.environment.setEnvVar('rootSrc', Kekule.scriptSrcInfo.src);
+	Kekule.environment.setEnvVar('language', Kekule.scriptSrcInfo.language);
 }
 
 if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
@@ -250,27 +262,32 @@ if (Kekule.scriptSrcInfo)
 
 Kekule.getScriptPath = function()
 {
-	return Kekule.scriptSrcInfo.path;
+	return Kekule.environment.getEnvVar('rootPath') || Kekule.scriptSrcInfo.path;
 };
 Kekule.getScriptSrc = function()
 {
-	return Kekule.scriptSrcInfo.src;
+	return Kekule.environment.getEnvVar('rootSrc') || Kekule.scriptSrcInfo.src;
 };
-Kekule.getStyleSheetPath = function()
+Kekule._getStyleSheetBasePath = function()
 {
 	//var cssFileName = 'themes/default/kekule.css';
 	var cssPath;
 	var scriptInfo = Kekule.scriptSrcInfo;
 	if (scriptInfo.useMinFile)
-		cssPath = scriptInfo.path;
+		cssPath = Kekule.getScriptPath; // scriptInfo.path;
 	else
-		cssPath = scriptInfo.path + 'widgets/';
+		cssPath = Kekule.getScriptPath + 'widgets/';  // scriptInfo.path + 'widgets/';
 	return cssPath;
 };
 Kekule.getStyleSheetUrl = function()
 {
-	var path = Kekule.getStyleSheetPath();
-	return path + 'themes/default/kekule.css';
+	var result = Kekule.environment.getEnvVar('theme.url');
+	if (!result)
+	{
+		var path = Kekule._getStyleSheetBasePath();
+		result = path + 'themes/default/kekule.css';
+	}
+	return result;
 };
 
 if (Kekule.$jsRoot && Kekule.$jsRoot.addEventListener && Kekule.$jsRoot.postMessage)
