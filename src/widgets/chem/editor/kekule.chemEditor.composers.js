@@ -3304,7 +3304,7 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	_insertKekuleScriptAndStyleSheetFiles: function(frameDoc, callback)
 	{
-		var srcInfo = Kekule.scriptSrcInfo;
+		//var srcInfo = Kekule.scriptSrcInfo;
 		var headElem = frameDoc.head;
 
 		var cssLinkElem = frameDoc.createElement('link');

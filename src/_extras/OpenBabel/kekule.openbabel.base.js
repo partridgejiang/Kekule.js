@@ -142,9 +142,9 @@ Kekule.OpenBabel.getObPath = function()
 	var path = Kekule.environment.getEnvVar('openbabel.path');
 	if (!path)
 	{
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
+		var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
 		path = isMin ? 'extra/' : '_extras/OpenBabel/';
-		path = Kekule.scriptSrcInfo.path + path;
+		path = Kekule.getScriptPath() + path; // Kekule.scriptSrcInfo.path + path;
 	}
 	return path;
 };
@@ -155,7 +155,7 @@ Kekule.OpenBabel.getObScriptUrl = function()
 	if (!result)
 	{
 		result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
+		var isMin = Kekule.isUsingMinJs(); //Kekule.scriptSrcInfo.useMinFile;
 		if (!isMin)
 			result += '.dev';
 	}

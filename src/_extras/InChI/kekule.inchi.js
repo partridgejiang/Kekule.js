@@ -70,9 +70,10 @@ Kekule.InChI = {
 		var path = Kekule.environment.getEnvVar('inchi.path');
 		if (!path)
 		{
-			var isMin = Kekule.scriptSrcInfo.useMinFile;
+			//var isMin = Kekule.scriptSrcInfo.useMinFile;
+			var isMin = Kekule.isUsingMinJs();
 			path = isMin ? 'extra/' : '_extras/InChI/';
-			path = Kekule.scriptSrcInfo.path + path;
+			path = Kekule.getScriptPath() + path;  // Kekule.scriptSrcInfo.path + path;
 		}
 		return path;
 	},
@@ -82,7 +83,7 @@ Kekule.InChI = {
 		if (!result)
 		{
 			result = InChI.getInChIPath() + InChI.SCRIPT_FILE;
-			var isMin = Kekule.scriptSrcInfo.useMinFile;
+			var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
 			if (!isMin)
 				result += '.dev';
 		}

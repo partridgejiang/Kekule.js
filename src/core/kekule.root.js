@@ -214,9 +214,10 @@ if (Kekule.scriptSrcInfo)
 {
 	Kekule.environment.nodeModule = Kekule.scriptSrcInfo.nodeModule;
 	Kekule.environment.nodeRequire = Kekule.scriptSrcInfo.nodeRequire;
-	Kekule.environment.setEnvVar('rootPath', Kekule.scriptSrcInfo.path);
-	Kekule.environment.setEnvVar('rootSrc', Kekule.scriptSrcInfo.src);
-	Kekule.environment.setEnvVar('language', Kekule.scriptSrcInfo.language);
+	Kekule.environment.setEnvVar('kekule.path', Kekule.scriptSrcInfo.path);
+	Kekule.environment.setEnvVar('kekule.scriptSrc', Kekule.scriptSrcInfo.src);
+	Kekule.environment.setEnvVar('kekule.useMinJs', Kekule.scriptSrcInfo.useMinFile);
+	Kekule.environment.setEnvVar('kekule.language', Kekule.scriptSrcInfo.language);
 }
 
 if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
@@ -234,7 +235,9 @@ if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
 		var scriptSrcInfo = Kekule.scriptSrcInfo;
 		if (scriptSrcInfo)
 		{
-			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules, scriptSrcInfo.useMinFile, Kekule.scriptSrcInfo.path, scriptSrcInfo, function(error){
+			var details = Kekule._ScriptFileUtils_.loadModuleScriptFiles(actualModules,
+				Kekule.isUsingMinJs(), Kekule.getScriptPath(),
+				scriptSrcInfo, function(error){
 				if (callback)
 					callback(error);
 			});
@@ -262,26 +265,37 @@ if (Kekule.scriptSrcInfo)
 
 Kekule.getScriptPath = function()
 {
-	return Kekule.environment.getEnvVar('rootPath') || Kekule.scriptSrcInfo.path;
+	return Kekule.environment.getEnvVar('kekule.path') || Kekule.scriptSrcInfo.path;
 };
 Kekule.getScriptSrc = function()
 {
-	return Kekule.environment.getEnvVar('rootSrc') || Kekule.scriptSrcInfo.src;
+	return Kekule.environment.getEnvVar('kekule.scriptSrc') || Kekule.scriptSrcInfo.src;
 };
+Kekule.isUsingMinJs = function()
+{
+	return Kekule.environment.getEnvVar('kekule.useMinJs') || Kekule.scriptSrcInfo.useMinFile;
+};
+Kekule.getLanguage = function()
+{
+	return Kekule.environment.getEnvVar('kekule.language') || Kekule.scriptSrcInfo.language;
+};
+
 Kekule._getStyleSheetBasePath = function()
 {
 	//var cssFileName = 'themes/default/kekule.css';
 	var cssPath;
-	var scriptInfo = Kekule.scriptSrcInfo;
-	if (scriptInfo.useMinFile)
-		cssPath = Kekule.getScriptPath; // scriptInfo.path;
+	//var scriptInfo = Kekule.scriptSrcInfo;
+	//if (scriptInfo.useMinFile)
+	if (Kekule.isUsingMinJs())
+		cssPath = Kekule.getScriptPath(); // scriptInfo.path;
 	else
-		cssPath = Kekule.getScriptPath + 'widgets/';  // scriptInfo.path + 'widgets/';
+		cssPath = Kekule.getScriptPath() + 'widgets/';  // scriptInfo.path + 'widgets/';
 	return cssPath;
 };
 Kekule.getStyleSheetUrl = function()
 {
-	var result = Kekule.environment.getEnvVar('theme.url');
+	// TODO: current fixed to default theme
+	var result = Kekule.environment.getEnvVar('kekule.themeUrl');
 	if (!result)
 	{
 		var path = Kekule._getStyleSheetBasePath();

@@ -136,9 +136,9 @@ Kekule.Indigo.getIndigoPath = function()
 	var path = Kekule.environment.getEnvVar('indigo.path');
 	if (!path)
 	{
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		 path = isMin ? 'extra/' : '_extras/Indigo/';
-		path = Kekule.scriptSrcInfo.path + path;
+		var isMin = Kekule.isUsingMinJs(); // Kekule.scriptSrcInfo.useMinFile;
+		path = isMin ? 'extra/' : '_extras/Indigo/';
+		path = Kekule.getScriptPath() + path;  // Kekule.scriptSrcInfo.path + path;
 	}
 	return path;
 };
@@ -149,7 +149,7 @@ Kekule.Indigo.getIndigoScriptUrl = function()
 	if (!result)
 	{
 		result = KI.getIndigoPath() + KI.SCRIPT_FILE;
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
+		var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
 		if (!isMin)
 			result += '.dev';
 	}

@@ -4863,15 +4863,17 @@ Kekule.Widget.Utils = {
 		var result = null;
 		if (!themeName)
 			themeName = 'default';
-		var scriptInfo = Kekule.scriptSrcInfo;
-		if (scriptInfo)
+		//var scriptInfo = Kekule.scriptSrcInfo;
+		var basePath = Kekule.getScriptPath();
+		//if (scriptInfo)
+		if (basePath)
 		{
-			var scriptPath = scriptInfo.path;
-			if (scriptPath)
+			//var scriptPath = scriptInfo.path;
+			//if (scriptPath)
 			{
-				var useMinJs = scriptInfo.useMinFile;
+				var useMinJs = Kekule.isUsingMinJs();  // scriptInfo.useMinFile;
 				var cssPath = (useMinJs ? 'themes/' : 'widgets/themes/') + themeName;
-				result = scriptPath + cssPath + '/kekule.css';
+				result = basePath + cssPath + '/kekule.css';
 			}
 		}
 		return result;
