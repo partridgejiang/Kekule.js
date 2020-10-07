@@ -492,6 +492,7 @@ table.K-Widget
 .K-ComboTextBox
 {
     position: relative;
+    line-height: 0px;   /* ensure the height of widget same as the insider text box. */
 }
 .K-ComboTextBox .K-TextBox
 {
