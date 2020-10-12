@@ -633,6 +633,16 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			'serializable': false,
 			'setter': false
 		});
+		this.defineProp('nodeInputBoxFontSize', {
+			'dataType': DataType.STRING,
+			'serializable': false,
+			'setter': function(value)
+			{
+				var elem = this.getNodeInputBox().getTextBox().getElement();
+				elem.style.fontSize = value;
+				this.setPropStoreFieldValue('nodeInputBoxFontSize', value);
+			}
+		});
 		this.defineProp('nodeSelectPanel', {
 			'dataType': 'Kekule.ChemWidget.StructureNodeSelectPanel',
 			'serializable': false,
@@ -679,7 +689,11 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	doFinalize: function(/*$super*/)
 	{
 		var panel = this.getNodeSelectPanel();
-		panel.finalize();
+		if (panel)
+			panel.finalize();
+		var inputBox = this.getNodeInputBox();
+		if (inputBox)
+			inputBox.finalize();
 		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/**

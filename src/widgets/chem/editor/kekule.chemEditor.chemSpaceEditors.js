@@ -4860,22 +4860,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	{
 		var result = new Kekule.ChemWidget.StructureNodeSetter(this.getEditor());
 		result.setUseDropDownSelectPanel(true);
-		result.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
 
-		var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
-		listAtoms.push('...');  // add periodic table item
-		//result.setSelectableElementSymbols(listAtoms);
-		// non-atom nodes
-		var nonAtomLabelInfos = this.getNonAtomLabelInfos();
-		//result.setSelectableNonElementInfos(nonAtomLabelInfos);
-		// subgroups
-		//result.setSelectableSubGroupRepItems(Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems());
-
-		result.setSelectableInfos({
-			'elementSymbols': listAtoms,
-			'nonElementInfos': nonAtomLabelInfos,
-			'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
-		});
+		this._initAtomSetterWidgetSettings(result);
 
 		// react to value change of setter
 		var self = this;
@@ -4914,10 +4900,32 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			}
 		);
 
-
 		result.appendToElem(parentElem);
 
 		return result;
+	},
+	/** @private */
+	_initAtomSetterWidgetSettings: function(widget)
+	{
+		widget.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
+
+		if (widget.setSelectableInfos)
+		{
+			var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
+			listAtoms.push('...');  // add periodic table item
+			//result.setSelectableElementSymbols(listAtoms);
+			// non-atom nodes
+			var nonAtomLabelInfos = this.getNonAtomLabelInfos();
+			//result.setSelectableNonElementInfos(nonAtomLabelInfos);
+			// subgroups
+			//result.setSelectableSubGroupRepItems(Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems());
+
+			widget.setSelectableInfos({
+				'elementSymbols': listAtoms,
+				'nonElementInfos': nonAtomLabelInfos,
+				'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
+			});
+		}
 	},
 
 	/** @private */
@@ -4989,7 +4997,9 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		style.left = (coord.x - posAdjust) + 'px';
 		style.top = (coord.y - posAdjust) + 'px';
 		style.opacity = 1;
-		inputBox.getElement().style.fontSize = fontSize + 'px';
+		//inputBox.getElement().style.fontSize = fontSize + 'px';
+		if (setter.setNodeInputBoxFontSize)
+			setter.setNodeInputBoxFontSize(fontSize + 'px');
 		/*
 		 style.marginTop = -posAdjust + 'px';
 		 style.marginLeft = -posAdjust + 'px';
