@@ -223,6 +223,8 @@ Kekule.Render.TextBoxAlignmentMode = {
  * @enum
  */
 Kekule.Render.BondRenderType = {
+	/** Default, render according to the bond type and stereo */
+	DEFAULT: null,
 	/** Usual single bond, draw in a thin line */
 	SINGLE: 0,
 	/** Usual double bond, draw in thin double line */

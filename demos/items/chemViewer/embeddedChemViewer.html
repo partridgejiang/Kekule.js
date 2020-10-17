@@ -6,13 +6,16 @@
 
 	<script src="../../libs/Three.js"></script>
 	<script src="../../libs/raphael-min.2.0.1.js"></script>
-  
+
 	<script src="../../libs/kekule/kekule.js?module=chemWidget"></script>
-	<!--
-	<script src="../../../../src/kekule.js?modules=chemWidget,io&min=false"></script>
-	-->
 
 	<link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+
+	<!--
+	<script src="../../../src/kekule.js?modules=chemWidget,io&min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  -->
+
 	<style>
 		.BlockViewer
 		{
@@ -85,6 +88,45 @@ M  END
 <pre class="CodeBlock">&lt;span id=&quot;viewer2D4&quot; style=&quot;vertical-align:middle&quot; data-widget=&quot;Kekule.ChemWidget.Viewer2D&quot;
   data-chem-obj=&quot;url(../../chemFiles/pyrrole.mol)&quot; data-predefined-setting=&quot;basic&quot; data-auto-size=&quot;true&quot; data-zoom=&quot;0.5&quot;&gt;&lt;/span&gt;
 </pre>
+
+
+<h2>Inheriting from CSS Color Style</h2>
+<p>By default, the viewer widget renders chemical object with color configured in renderConfigs property of viewer.
+	Some times, user may want to the embedded viewer widget follows the color of the paragraph in HTML page.
+	For that purpose, you can set the inheritedRenderColor property to true:
+</p>
+<pre class="CodeBlock">&lt;span id="viewer2D2_1" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true" data-inherited-render-color="true"&gt;&lt;/span&gt;
+</pre>
+
+<p>The following paragraph demonstrates the actual effect:</p>
+
+<p style="color: #a00000">
+	The viewer can inherit the color of its parent element, e.g.
+	<span id="viewer2D2_1" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="basic" data-auto-size="true" data-inherited-render-color="true"></span>
+	Here we just set the color style of paragraph to #A00000 and set the inheritedRenderColor property of viewer to true.
+</p>
+
+<h2>Use Custom CSS Properties</h2>
+<p>The custom CSS properties can also be used to control the render options of viewer widget. Most of the render options
+	(including color, stroke width, font size, etc.) can be set by custom properties. A commonly used approach is to set the properties
+	in the parent element of a group of viewers to unify their outlooks.
+</p>
+<fieldset style="--atom-color:#A00000;--bond-color:#2566a0;--bond-line-width:4;--font-size:20">
+	<div>
+		In the parent element of the following viewers, style="--atom-color:#A00000;--bond-color:#2566a0;--bond-line-width:4;--font-size:20" was used.
+		Different from the normal CSS values, here the --bond-line-width and --font-size values are simply numbers without units.
+	</div>
+	<span id="viewer2D2_3" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/benzene.mol)" data-predefined-setting="basic" data-auto-size="true"></span>
+	<span id="viewer2D2_4" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="basic" data-auto-size="true"></span>
+	<div>
+		However, when needing to bypass the custom CSS properties, you can set the enableCustomCssProperties property of viewer widget to false:
+	</div>
+	<pre class="CodeBlock">&lt;span data-widget="Kekule.ChemWidget.Viewer2D" ... data-enable-custom-css-properties="false"&gt;&lt;/span&gt;
+	</pre>
+	<span id="viewer2D2_5" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="basic" data-auto-size="true" data-enable-custom-css-properties="false"></span>
+</fieldset>
+<p>Note the custom CSS properties can also be used in 3D viewers. </p>
+
 <h2>Set Explicit Size of Viewer</h2>
 <p>All the  viewers above are set with attribute data-auto-size to true, so the widge size is calculated and set by molecule. You can also turn off auto-size and set size of widget explicitly by CSS, e.g.:</p>
 <pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;border:1px solid black;width:300px;height:300px&quot; data-widget="Kekule.ChemWidget.Viewer2D"
@@ -107,6 +149,7 @@ M  END
 </pre>
 <span class="BlockViewer"  style="display:block" data-widget="Kekule.ChemWidget.Viewer2D"
   data-chem-obj="url(../../chemFiles/pyrrole.mol)" data-predefined-setting="static" data-auto-size="true"></span>
+
 <h2>3D Viewer Widget</h2>
 <p>3D viewer is similiar to 2D viewer with a little difference: it can not be auto-sized for some consideration, you must set its size explicitly. e.g.:</p>
 <pre class="CodeBlock">&lt;span&#32;style=&quot;display:block;width:400px;height:400px&quot; data-widget="Kekule.ChemWidget.Viewer3D"

@@ -34,9 +34,10 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
+	 * @param {Hash} params Additional params to create context.
 	 * @returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height)
+	createContext: function(parentElem, width, height, params)
 	{
 		return Raphael(parentElem, width, height);
 	},

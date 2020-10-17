@@ -5,17 +5,44 @@
 **/
 
 /*
+.K-Widget.K-Inherit-Color
+{
+    color: inherit;
+}
+.K-Widget.K-Inherit-BgColor
+{
+    background-color: inherit;
+}
+.K-Widget.K-Inherit-BorderColor
+{
+    border-color: inherit;
+}
+.K-Widget.K-Inherit-FontSize
+{
+    font-size: inherit;
+}
+*/
+
+.K-Widget,
+.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
+{
+    color: #555555;
+    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
+}
+
+.K-Widget.K-Style-Inherited,
+.K-State-Normal.K-Style-Inherited, a.K-Widget.K-Style-Inherited, a.K-Widget.K-Style-Inherited:active, a.K-Widget.K-Style-Inherited:visited
+{
+    color: inherit;
+}
+
+/*
 .K-State-Focused, .K-State-Hover
 {
     color: #212121;
     border-color: #999999;
 }
 */
-
-.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
-{
-    color: #555555;
-}
 
 .K-State-Focused
 {
@@ -34,14 +61,14 @@
     background-color: rgb(219, 136, 16);
 }
 
-.K-Widget
-{
-    color: #555555;
-    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
-}
 .K-Assoc-Text-Content
 {
     color: #888888;
+}
+
+.K-Normal-Background.K-Style-Inherited
+{
+    background-color: inherit;
 }
 .K-Normal-Background,
 .K-ComboBox .K-TextBox,

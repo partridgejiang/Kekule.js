@@ -10,9 +10,6 @@
 
 <title>Kekule ChemView Widget Basic Test</title>
 
-	<script src="../../_libs/three_new/Three.min.js"></script>
-	<script src="../../_libs/three_new/CSS3DRenderer.js"></script>
-
 	<!--
 	<script src="../../_libs/three_new/three.min.js"></script>
 	-->
@@ -27,8 +24,10 @@
 <script src="../../../src/_extras/Indigo/indigoAdapter.js"></script>
 -->
 
-
 <script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel,inchi,indigo&min=false"></script>
+
+	<script src="../../_libs/three_new/Three.min.js"></script>
+	<script src="../../_libs/three_new/CSS3DRenderer.js"></script>
 
 	<!--
 	<script src="../../../release/kekule.js"></script>
@@ -295,7 +294,7 @@ M  END
     var elem = document.getElementById('chemViewer');
     chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
     chemViewer.setEnableToolbar(true).setFileDroppable(true);
-    //chemViewer.setRenderType(Kekule.Render.RendererType.R3D);
+    //chemViewer.setRenderType(Kekule.Render.RendererType.R2D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
     //chemViewer.setDraw
 		var btns = chemViewer.getDefaultToolBarButtons();
@@ -309,7 +308,7 @@ M  END
 	}
 </script>
 </head>
-<body onload="init()">
+<body onload="init()" style="background-color: yellow; color: green">
 	<form>
 		<textarea id="memoMolInput" name="memoMolInput" cols="80" rows="10"></textarea>
 		<input type="radio" name="radioBtnMType" id="radioBtnMol" checked="checked">MOL</input>
@@ -325,12 +324,12 @@ M  END
 	<input type="checkbox" id="checkBoxCondensed" name="checkBoxCondensed" onclick="draw()">Condensed</input>
 	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
 	<div id="report"></div>
-    <div id="drawParent">
+    <div id="drawParent" style="color:red">
       <div id="chemViewer" data-chem-obj="url('#internalRes')" data-toolbar-evoke-modes="[0]" data-show-caption="false" data-caption="Molecule" data-resizable='true' data-enable-edit-from-void="true"
 					 data-draw-options='{"autofitContextPadding":20,"zoom":1.5,"rotateX":0,"rotateY":0,"rotateZ":0,"rotateAngle":0.48869219055841223,"rotateAxisVector":null,"rotateMatrix":null,"autofit":false}'
 					 data-predefined-setting="fullFunc"
 					 data-molecule-display-type1="34"
-					 style="width:600px;height:400px;border1:1px solid #666"></div>
+					 style="width:600px;height:400px;background-color:#ff0000a0;border1:1px solid #666;--atom-color:#0f0;--bond-line-width:4"></div>
       <!--
       <div id="chemViewer" data-chem-obj="url(./../../_chemFiles/Mols2D/Radicals.cml)" data-toolbar-evoke-modes="[0]" style="width:40em;height:30em"></div>
       -->

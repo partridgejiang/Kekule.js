@@ -66,6 +66,11 @@ Kekule.OpenBabel = {
 		}
 		return OB._module;
 	},
+	setModule: function(module)
+	{
+		OB._module = module;
+		EU.setRootModule(obInitOptions.moduleName, module);
+	},
 	getClassCtor: function(className)
 	{
 		return EU.getClassCtor(className, OB.getModule());
@@ -134,18 +139,26 @@ Kekule._registerAfterLoadSysProc(function() {
 /** @ignore */
 Kekule.OpenBabel.getObPath = function()
 {
-	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	var path = isMin? 'extra/': '_extras/OpenBabel/';
-	path = Kekule.scriptSrcInfo.path + path;
+	var path = Kekule.environment.getEnvVar('openbabel.path');
+	if (!path)
+	{
+		var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
+		path = isMin ? 'extra/' : '_extras/OpenBabel/';
+		path = Kekule.getScriptPath() + path; // Kekule.scriptSrcInfo.path + path;
+	}
 	return path;
 };
 /** @ignore */
 Kekule.OpenBabel.getObScriptUrl = function()
 {
-	var result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
-	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	if (!isMin)
-		result += '.dev';
+	var result = Kekule.environment.getEnvVar('openbabel.scriptSrc');
+	if (!result)
+	{
+		result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
+		var isMin = Kekule.isUsingMinJs(); //Kekule.scriptSrcInfo.useMinFile;
+		if (!isMin)
+			result += '.dev';
+	}
 	return result;
 };
 /** @ignore */

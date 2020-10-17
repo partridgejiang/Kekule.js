@@ -327,20 +327,27 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
+	 * @param {Hash} params Additional WebGL or 2DCanvas params, e.g. {antialias: true}
 	 * @returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height)
+	createContext: function(parentElem, width, height, params)
 	{
 		var BF = Kekule.BrowserFeature;
+		var createOps = {
+			preserveDrawingBuffer: true,  // use to enable screenshot
+			alpha: true,
+			antialias: true
+		};
+		if (params)
+		{
+			createOps = Object.extend(createOps, params);
+		}
 
 		var renderer = BF.webgl?
-				new THREE.WebGLRenderer({
-					preserveDrawingBuffer: true,  // use to enable screenshot
-					alpha: true
-				}):
+				new THREE.WebGLRenderer(createOps):
 			BF.canvas?
-				new THREE.CanvasRenderer():
-				new THREE.SVGRenderer();
+				new THREE.CanvasRenderer(createOps):
+				new THREE.SVGRenderer(createOps);
 
 		var camera =
 			new THREE.PerspectiveCamera();
@@ -515,19 +522,20 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 		var r = context.getRenderer();
 		if (r)
 		{
-			if (r.setClearColorHex)
+			// TODO: now the clear color opacity is always 1
+			if (r.setClearColor)   // in new version, setClearColorHex method has been removed
+			{
+				if (color)
+					context.getRenderer().setClearColor(new THREE.Color(color), 1);
+				else // color not set, transparent
+					context.getRenderer().setClearColor(new THREE.Color(), 0);
+			}
+			else if (r.setClearColorHex)
 			{
 				if (color)
 					context.getRenderer().setClearColorHex(this.colorStrToHex(color), 1);
 				else // color not set, transparent
 					context.getRenderer().setClearColorHex(null, 0);
-			}
-			else if (r.setClearColor)   // in new version, setClearColorHex method has been removed
-			{
-				if (color)
-					context.getRenderer().setClearColor(this.colorStrToHex(color), 1);
-				else // color not set, transparent
-					context.getRenderer().setClearColor(null, 0);
 			}
 		}
 	},

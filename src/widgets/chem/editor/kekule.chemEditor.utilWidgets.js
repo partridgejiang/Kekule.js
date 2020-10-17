@@ -113,6 +113,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('value', {'dataType': DataType.HASH, 'serializable': false, 'setter': null});
 		this.defineProp('elementSymbols', {
 			'dataType': DataType.ARRAY,
 			'scope': Class.PropertyScope.PUBLIC
@@ -225,7 +226,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 						if (result === Kekule.Widget.DialogButtons.OK)
 						{
 							var symbol = self._periodicTable.getSelectedSymbol();
-							self.notifyValueChange(self.generateSelectableDataFromElementSymbol(symbol));
+							self.doValueChanged(self.generateSelectableDataFromElementSymbol(symbol));
 						}
 					}, {'isSimpleAtom': true});
 				}
@@ -239,13 +240,13 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 							var props = data.isVarList?
 								{'allowedIsotopeIds': symbols, 'disallowedIsotopeIds': null}:
 								{'allowedIsotopeIds': null, 'disallowedIsotopeIds': symbols};
-							self.notifyValueChange({'nodeClass': nodeClass, 'props': props});
+							self.doValueChanged({'nodeClass': nodeClass, 'props': props});
 						}
 					}, {'isVarList': data.isVarList, 'isVarNotList': data.isVarNotList});
 				}
 				else  // normal button
 				{
-					this.notifyValueChange(data);
+					this.doValueChanged(data);
 				}
 			}
 		}
@@ -254,8 +255,9 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 	 * Notify the new atom value has been setted.
 	 * @private
 	 */
-	notifyValueChange: function(newData)
+	doValueChanged: function(newData)
 	{
+		this.setPropStoreFieldValue('value', newData);
 		this.invokeEvent('valueChange', {
 			'value': {
 				'nodeClass': newData.nodeClass,
@@ -524,7 +526,7 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
 			this._periodicTable.setSelectedSymbol(node.getSymbol());
 		}
 
-		dialog.openPopup(callback, this || caller);
+		dialog.openPopup(callback, caller || this);
 	}
 });
 
@@ -631,6 +633,16 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			'serializable': false,
 			'setter': false
 		});
+		this.defineProp('nodeInputBoxFontSize', {
+			'dataType': DataType.STRING,
+			'serializable': false,
+			'setter': function(value)
+			{
+				var elem = this.getNodeInputBox().getTextBox().getElement();
+				elem.style.fontSize = value;
+				this.setPropStoreFieldValue('nodeInputBoxFontSize', value);
+			}
+		});
 		this.defineProp('nodeSelectPanel', {
 			'dataType': 'Kekule.ChemWidget.StructureNodeSelectPanel',
 			'serializable': false,
@@ -677,7 +689,11 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	doFinalize: function(/*$super*/)
 	{
 		var panel = this.getNodeSelectPanel();
-		panel.finalize();
+		if (panel)
+			panel.finalize();
+		var inputBox = this.getNodeInputBox();
+		if (inputBox)
+			inputBox.finalize();
 		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/**
@@ -782,7 +798,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			e.stopPropagation();
 
 			self._valueSetBySelectPanel = true;
-			self.notifyValueChange(e.value, true);
+			self.doValueChanged(e.value, true);
 			// when value is set by button in selector panel, auto hide it in drop down mode
 			if (self.getUseDropDownSelectPanel())
 				panel.hide();
@@ -902,7 +918,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 		var text = inputBox.getValue();
 		var data = this._getValueFromDirectInputText(text);
 
-		this.notifyValueChange(data);
+		this.doValueChanged(data);
 		inputBox.setIsDirty(false);
 	},
 
@@ -985,7 +1001,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	 * Notify the new atom value has been setted.
 	 * @private
 	 */
-	notifyValueChange: function(newData, isSelectedFromPanel)
+	doValueChanged: function(newData, isSelectedFromPanel)
 	{
 		//console.log('value changed', newData);
 		this.setPropStoreFieldValue('value', newData);
@@ -1089,6 +1105,7 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('value', {'dataType': DataType.HASH, 'serializable': false, 'setter': null});
 		this.defineProp('bondData', {
 			'dataType': DataType.ARRAY,
 			'scope': Class.PropertyScope.PUBLIC
@@ -1201,7 +1218,7 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 			if (data)
 			{
 				this.setPropStoreFieldValue('activeBondPropValues', data.bondProps);
-				this.notifyValueChange(data.bondProps);
+				this.doValueChanged(data.bondProps);
 			}
 		}
 	},
@@ -1209,8 +1226,9 @@ Kekule.ChemWidget.StructureConnectorSelectPanel = Class.create(Kekule.Widget.Pan
 	 * Notify the new bond props value has been setted.
 	 * @private
 	 */
-	notifyValueChange: function(newData)
+	doValueChanged: function(newData)
 	{
+		this.setPropStoreFieldValue('value', newData);
 		this.invokeEvent('valueChange', {
 			'value': newData
 		});

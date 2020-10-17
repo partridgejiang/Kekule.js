@@ -27,9 +27,9 @@ Kekule.Calculator = {
  */
 Kekule.Calculator.getWorkerBasePath = function()
 {
-	var isMin = Kekule.scriptSrcInfo.useMinFile;
+	var isMin = Kekule.isUsingMinJs(); //Kekule.scriptSrcInfo.useMinFile;
 	var path = isMin? 'workers/': 'calculation/workers/';
-	path = Kekule.scriptSrcInfo.path + path;
+	path = Kekule.getScriptPath() + path;  // Kekule.scriptSrcInfo.path + path;
 	return path;
 };
 

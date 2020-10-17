@@ -14,14 +14,16 @@
   <script>
     function init()
     {
-      /*
+
       document.body.addEventListener('keydown', function(e){
-        console.log('key down', e.keyCode, e.charCode);
+        console.log('key press', e.keyCode, e.charCode, e.key, e.code);
+      });
+
+      /*
+      document.body.addEventListener('keypress', function(e){
+        console.log('key press', e.keyCode, e.charCode, e.key, e.code);
       });
       */
-      document.body.addEventListener('keypress', function(e){
-        console.log('key press', e.keyCode, e.charCode);
-      });
     }
   </script>
 </head>

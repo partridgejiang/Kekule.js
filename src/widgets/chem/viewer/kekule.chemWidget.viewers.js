@@ -199,26 +199,36 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('showCaption', false);
 		this.setPropStoreFieldValue('useCornerDecoration', true);
 		//this.setUseCornerDecoration(true);
+
 		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType, viewerConfigs])  /* $super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs) */;
-		this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
-		/*
-		if (chemObj)
+
+		this.beginUpdate();
+		try
 		{
-			this.setChemObj(chemObj);
+			this.setPadding(this.getRenderConfigs().getLengthConfigs().getActualLength('autofitContextPadding'));
+			/*
+			 if (chemObj)
+			 {
+			 this.setChemObj(chemObj);
+			 }
+			 */
+
+			this._isContinuousRepainting = false;  // flag, use internally
+			//this._lastRotate3DMatrix = null;  // store the last 3D rotation information
+
+			var RT = Kekule.Render.RendererType;
+			var color2D = (this.getRenderType() === RT.R2D) ? (this.getBackgroundColor() || this.DEF_BGCOLOR_2D) : this.DEF_BGCOLOR_2D;
+			var color3D = (this.getRenderType() === RT.R3D) ? (this.getBackgroundColor() || this.DEF_BGCOLOR_3D) : this.DEF_BGCOLOR_3D;
+			this.setBackgroundColorOfType(color2D, RT.R2D);
+			this.setBackgroundColorOfType(color3D, RT.R3D);
+
+			this.useCornerDecorationChanged();
+			this.doResize();  // adjust caption and drawParent size
 		}
-		*/
-
-		this._isContinuousRepainting = false;  // flag, use internally
-		//this._lastRotate3DMatrix = null;  // store the last 3D rotation information
-
-		var RT = Kekule.Render.RendererType;
-		var color2D = (this.getRenderType() === RT.R2D)? (this.getBackgroundColor() || this.DEF_BGCOLOR_2D): this.DEF_BGCOLOR_2D;
-		var color3D = (this.getRenderType() === RT.R3D)? (this.getBackgroundColor() || this.DEF_BGCOLOR_3D): this.DEF_BGCOLOR_3D;
-		this.setBackgroundColorOfType(color2D, RT.R2D);
-		this.setBackgroundColorOfType(color3D, RT.R3D);
-
-		this.useCornerDecorationChanged();
-		this.doResize();  // adjust caption and drawParent size
+		finally
+		{
+			this.endUpdate();
+		}
 
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
@@ -549,7 +559,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		/*
 		this.setEnableEdit(true);
 		*/
+		this.setStyleMode(Kekule.Widget.StyleMode.INHERITED);  // embedded in document
 		this.setUseNormalBackground(false);
+		//this.setInheritedRenderColor(true);
+		this.setEnableCustomCssProperties(true);
+
 		this.setModalEdit(true);
 		this.setRestrainEditorWithCurrObj(true);
 		this.setRestraintRotation3DEdgeRatio(0.18);

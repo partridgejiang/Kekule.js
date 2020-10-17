@@ -145,7 +145,59 @@ The zoom level and rotation angle of object can be changed in the following code
   // rotate object by 90, 60 and 45 degrees on X/Y/Z axis
   getChemViewer().rotate3DBy(dx, dy, dz);
 
+Changing the Default Render Color
+--------------------------------------------
 
+By default, the viewer widget renders chemical object with color configured in *renderConfigs* property of viewer:[#example]_
+
+::
+
+  // 2D Viewer
+  var color2DConfigs = chemViewer.getRenderConfigs().getColorConfigs();
+  color2DConfigs.setAtomColor('#A00000').setBondColor('#A0A000');  // set the default color for atoms and bonds
+  color2DConfigs.setGlyphStrokeColor('#C0C0C0');   // default color of glyph stroke, e.g. the arrows
+  color2DConfigs.setLabelColor('#C0C0C0');   // default color of text labels
+  chemViewer.requestRepaint();    // repaint
+
+  // 3D Viewer
+  var display3DConfigs = chemViewer.getRenderConfigs().getMoleculeDisplayConfigs();
+  display3DConfigs.setDefAtomColor('#000099').setDefBondColor('#FFFFFF');
+  display3DConfigs.setUseAtomSpecifiedColor(false);  // turn off this to take the color to effect
+  chemViewer.requestRepaint();    // repaint
+
+Besides the JavaScript code above, custom CSS properties can also be used here to control the render options
+(including color and others):
+
+.. code-block:: css
+
+  #chemViewer
+  {
+    --atom-color:#A00000;
+    --bond-color:#A0A000;
+    /* render options other than color */
+    --bond-line-width:4;
+    --font-size:20
+    /* Note the bond width and font size are simply numbers without units */
+  }
+
+Some times, user may want to the embedded viewer widget in a paragraph like a inline image.
+In that case, the render color of viewer is better for following the color of the paragraph.
+For that purpose, you can set the inheritedRenderColor property to true:
+
+::
+
+  chemViewer.setInheritedRenderColor(true);
+
+or in the HTML code:
+
+.. code-block:: html
+
+  <div id="chemViewer" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url(#molecule)" data-inherited-render-color="true"></div>
+
+.. note::
+
+  The approaches introduced above can actually be applied to
+  :doc:`Composer<./composer>` widget too, although not so useful as to Viewer widget.
 
 Customizing Toolbar
 -------------------

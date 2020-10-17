@@ -62,11 +62,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
-	 * @param {Bool} doubleBuffered Whether use double buffer to make smooth drawing.
-	 * @returns {Object} Context used for drawing.
+	 * @param {Hash} params Additional params to create context.
+	 * //@param {Bool} doubleBuffered Whether use double buffer to make smooth drawing.
+	 * //@returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height, id, doubleBuffered)
+	createContext: function(parentElem, width, height, params /* id, doubleBuffered */)
 	{
+		var id = params && params.id;
+		var doubleBuffered = params && params.doubleBuffered;
 
 		if (doubleBuffered === undefined)
 			doubleBuffered = this.DEF_DOUBLE_BUFFERED;
@@ -87,9 +90,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			canvas.style.height = height + 'px';
 		}
 		*/
+
+		var createOps = {'alpha': true};
+		if (params)
+			createOps = Object.extend(createOps, params);
+
 		parentElem.appendChild(canvas);
 
-		var ctx = canvas.getContext('2d');
+		var ctx = canvas.getContext('2d', createOps);
 		if (doubleBuffered)
 		{
 			var shadowCanvas = document.createElement('canvas');

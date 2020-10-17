@@ -9,6 +9,7 @@
  * requires /lan/classes.js
  * requires /utils/kekule.utils.js
  * requires /widgets/advCtrls/objInspector/kekule.widget.objectInspector.propEditors.js
+ * requires /render/kekule.render.utils.js
  */
 
 (function(){
@@ -308,67 +309,7 @@ Kekule.PropertyEditor.ChemRender2DOptionsEditor = Class.create(Kekule.PropertyEd
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.ChemRender2DOptionsEditor',
 	/** @private */
-	CHILD_FIELD_INFOS: [
-		{'name': 'expanded', dataType: DataType.BOOL, 'targetClass': Kekule.StructureFragment},
-
-		{'name': 'unitLength', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemObject},
-
-		{'name': 'moleculeDisplayType', dataType: DataType.INT, 'enumSource':  Kekule.Render.MoleculeDisplayType, 'targetClass': Kekule.StructureFragment},
-		{'name': 'renderType', dataType: DataType.INT, 'enumSource':  Kekule.Render.BondRenderType, 'targetClass': Kekule.ChemStructureConnector},
-		{'name': 'nodeDisplayMode', dataType: DataType.INT, 'enumSource':  Kekule.Render.NodeLabelDisplayMode, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'hydrogenDisplayLevel', dataType: DataType.INT, 'enumSource':  Kekule.Render.HydrogenDisplayLevel, 'targetClass': Kekule.ChemStructureNode},
-
-		{'name': 'showCharge', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'chargeMarkType', dataType: DataType.INT, 'enumSource':  Kekule.Render.ChargeMarkRenderType, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'chargeMarkFontSize', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'chargeMarkMargin', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
-		/*
-		{'name': 'chargeMarkCircleWidth', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
-		*/
-		{'name': 'chemMarkerFontSize', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'chemMarkerMargin', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'distinguishSingletAndTripletRadical', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
-
-		{'name': 'fontSize', dataType: DataType.NUMBER},
-		//{'name': 'atomFontSize', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'fontFamily', dataType: DataType.STRING},
-		//{'name': 'atomFontFamily', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'supFontSizeRatio', dataType: DataType.FLOAT},
-		{'name': 'subFontSizeRatio', dataType: DataType.FLOAT},
-		{'name': 'superscriptOverhang', dataType: DataType.FLOAT},
-		{'name': 'subscriptOversink', dataType: DataType.FLOAT},
-		{'name': 'textBoxXAlignment', dataType: DataType.INT, 'enumSource': Kekule.Render.BoxXAlignment},
-		{'name': 'textBoxYAlignment', dataType: DataType.INT, 'enumSource': Kekule.Render.BoxYAlignment},
-		{'name': 'horizontalAlign', dataType: DataType.INT, 'enumSource': Kekule.Render.TextAlign},
-		{'name': 'verticalAlign', dataType: DataType.INT, 'enumSource': Kekule.Render.TextAlign},
-		{'name': 'charDirection', dataType: DataType.INT, 'enumSource': Kekule.Render.TextDirection},
-		{'name': 'customLabel', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureNode},
-
-		{'name': 'bondLineWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'boldBondLineWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'hashSpacing', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'multipleBondSpacingRatio', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'multipleBondSpacingAbs', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'multipleBondMaxAbsSpacing', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondArrowLength', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondArrowWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondWedgeWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondWedgeHashMinWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondLengthScaleRatio', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-
-		{'name': 'color', dataType: DataType.STRING},
-		{'name': 'atomColor', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'bondColor', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'useAtomSpecifiedColor', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureObject},
-
-		{'name': 'opacity', dataType: DataType.FLOAT, 'targetClass': Kekule.ChemObject},
-
-		{'name': 'fillColor', dataType: DataType.STRING},
-		{'name': 'strokeColor', dataType: DataType.STRING},
-		{'name': 'strokeWidth', dataType: DataType.NUMBER},
-
-		{'name': 'atomRadius', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject}
-	]
+	CHILD_FIELD_INFOS: Kekule.Render.RenderOptionUtils.getOptionDefinitions()
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.ChemRender2DOptionsEditor, null, Kekule.ChemObject, 'renderOptions');
 
@@ -383,23 +324,7 @@ Kekule.PropertyEditor.ChemRender3DOptionsEditor = Class.create(Kekule.PropertyEd
 	/** @private */
 	CLASS_NAME: 'Kekule.PropertyEditor.ChemRender3DOptionsEditor',
 	/** @private */
-	CHILD_FIELD_INFOS: [
-		{'name': 'displayMultipleBond', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'useVdWRadius', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'nodeRadius', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'connectorRadius', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'nodeRadiusRatio', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureNode},
-		{'name': 'connectorRadiusRatio', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'connectorLineWidth', dataType: DataType.NUMBER, 'targetClass': Kekule.ChemStructureObject},
-
-		{'name': 'color', dataType: DataType.STRING},
-		{'name': 'atomColor', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'bondColor', dataType: DataType.STRING, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'useAtomSpecifiedColor', dataType: DataType.BOOL, 'targetClass': Kekule.ChemStructureObject},
-		{'name': 'hideHydrogens', dataType: DataType.BOOL, 'targetClass': Kekule.StructureFragment},
-
-		{'name': 'bondSpliceMode', dataType: DataType.INT, 'enumSource': Kekule.Render.Bond3DSpliceMode, 'targetClass': Kekule.ChemStructureObject}
-	]
+	CHILD_FIELD_INFOS: Kekule.Render.Render3DOptionUtils.getOptionDefinitions()
 });
 Kekule.PropertyEditor.register(Kekule.PropertyEditor.ChemRender3DOptionsEditor, null, Kekule.ChemObject, 'render3DOptions');
 

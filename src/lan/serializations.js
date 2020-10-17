@@ -1312,7 +1312,7 @@ XmlObjSerializer = Class.create(ObjSerializer,
 	/** @private */
 	doLoadSimpleStorageValue: function(storageName, storageNode)
 	{
-		return storageNode.getAttribute(storageName);
+		return storageNode.getAttribute(storageName) || undefined;  // '' may be returned with unexisted attribute valueby xmldom.js, regard it as undefined
 	},
 	/** @private */
 	doGetArrayItemSimpleStorageValue: function(arrayItemStorageNode)

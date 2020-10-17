@@ -22,7 +22,7 @@
 
 	var rootObj = Kekule;
 	var DEF_LANGUAGE = 'en-US';
-	var language = Kekule.language || (($root && $root.navigator)? navigator.language || navigator.browserLanguage: DEF_LANGUAGE);
+	var language = Kekule.getLanguage() || (($root && $root.navigator)? navigator.language || navigator.browserLanguage: DEF_LANGUAGE);
 	rootObj.language = language;  // save language info
 	var lanInfo = analysisLanguage(language);
 	var defLanInfo = analysisLanguage(DEF_LANGUAGE);

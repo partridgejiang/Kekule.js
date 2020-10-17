@@ -8,11 +8,19 @@
 	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidget.css" />
 	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/chemWidgetColor.css" />
 	<script src="../../../src/kekule.js?min=false"></script>
+	<script>
+		var periodicTable;
+		function init()
+		{
+			periodicTable = Kekule.Widget.getWidgetById('periodicTable1');
+		}
+		Kekule.X.domReady(init);
+	</script>
 	<style>
 
 	</style>
 </head>
 <body>
-	<div id="peridicTable1" data-widget="Kekule.ChemWidget.PeriodicTable"></div>
+	<div id="periodicTable1" data-widget="Kekule.ChemWidget.PeriodicTable"></div>
 </body>
 </html>

@@ -76,6 +76,12 @@
       mol.endUpdate();
     }
 
+    function convFischerToWedge()
+    {
+	    var mol = getCurrMol();
+	    Kekule.MolStereoUtils.convertFischerBondsToWedge(mol, {maintainRenderStyle: true});
+    }
+
     function init()
     {
       var elem = document.getElementById('chemEditorUi');
@@ -88,6 +94,7 @@
 <div id="calcPanel">
   <button type="button" onclick="findChiralCenters()">Find Chiral Centers</button>
   <button type="button" onclick="findStereoBonds()">Find Stereo Bonds</button>
+  <button type="button" onclick="convFischerToWedge()">Mark Fischer Projection Wedges</button>
 </div>
 <div id="chemEditorUi" style="width:900px;height:500px"></div>
 

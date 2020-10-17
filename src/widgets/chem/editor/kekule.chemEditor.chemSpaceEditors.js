@@ -4744,8 +4744,19 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	initProperties: function()
 	{
 		this.defineProp('currAtom', {'dataType': DataType.OBJECT, 'serializable': false});  // private
-		this.defineProp('atomSetter', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 		this.defineProp('nonAtomLabelInfos', {'dataType': DataType.ARRAY, 'serializable': false});  // private
+		this.defineProp('atomSetter', {
+			'dataType': DataType.OBJECT, 'serializable': false,
+			'setter': function(value)
+			{
+				var old = this.getAtomSetter();
+				if (old)
+					this.unbindAtomSetter(old);
+				this.setPropStoreFieldValue('atomSetter', value);
+				if (value)
+					this.bindAtomSetter(value);
+			}
+		});  // private
 	},
 
 	/** @private */
@@ -4856,68 +4867,125 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		return result;
 	},
 	/** @private */
+	bindAtomSetter: function(atomSetterWidget)
+	{
+		this._initAtomSetterWidgetSettings(atomSetterWidget);
+		this._setAtomSetterEventListener(atomSetterWidget, true);
+	},
+	/** @private */
+	unbindAtomSetter: function(atomSetterWidget)
+	{
+		this._setAtomSetterEventListener(atomSetterWidget, false);
+	},
+	/** @private */
 	_createAtomSetterWidget: function(doc, parentElem)
 	{
 		var result = new Kekule.ChemWidget.StructureNodeSetter(this.getEditor());
 		result.setUseDropDownSelectPanel(true);
-		result.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
+		//this._initAtomSetterWidgetSettings(result);
+		result.appendToElem(parentElem);
 
-		var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
-		listAtoms.push('...');  // add periodic table item
-		//result.setSelectableElementSymbols(listAtoms);
-		// non-atom nodes
-		var nonAtomLabelInfos = this.getNonAtomLabelInfos();
-		//result.setSelectableNonElementInfos(nonAtomLabelInfos);
-		// subgroups
-		//result.setSelectableSubGroupRepItems(Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems());
+		return result;
+	},
+	/** @private */
+	_initAtomSetterWidgetSettings: function(widget)
+	{
+		widget.addClassName(CCNS.CHEMEDITOR_ATOM_SETTER);
 
-		result.setSelectableInfos({
-			'elementSymbols': listAtoms,
-			'nonElementInfos': nonAtomLabelInfos,
-			'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
-		});
+		if (widget.setSelectableInfos)
+		{
+			var listAtoms = AU.clone(this.getEditor().getEditorConfigs().getStructureConfigs().getPrimaryOrgChemAtoms());
+			listAtoms.push('...');  // add periodic table item
+			//result.setSelectableElementSymbols(listAtoms);
+			// non-atom nodes
+			var nonAtomLabelInfos = this.getNonAtomLabelInfos();
+			//result.setSelectableNonElementInfos(nonAtomLabelInfos);
+			// subgroups
+			//result.setSelectableSubGroupRepItems(Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems());
 
+			widget.setSelectableInfos({
+				'elementSymbols': listAtoms,
+				'nonElementInfos': nonAtomLabelInfos,
+				'subGroupRepItems': Kekule.Editor.StoredSubgroupRepositoryItem2D.getAllRepItems()
+			});
+		}
+	},
+	/** @private */
+	_setAtomSetterEventListener: function(widget, isBind)
+	{
 		// react to value change of setter
-		var self = this;
-		result.addEventListener('keyup', function(e)
-			{
-				var ev = e.htmlEvent;
-				if (ev.getKeyCode() === Kekule.X.Event.KeyCode.ENTER)
-				{
-					self.applySetter(result);
-					result.dismiss();  // avoid call apply setter twice
-				}
-			}
-		);
+		//var self = this;
+		/*
+        widget.addEventListener('keyup', function(e)
+            {
+                var ev = e.htmlEvent;
+                if (ev.getKeyCode() === Kekule.X.Event.KeyCode.ENTER)
+                {
+                    self.applySetter(widget);
+                    widget.dismiss();  // avoid call apply setter twice
+                }
+            }
+        );
 
-		result.addEventListener('valueSelect', function(e){
+		widget.addEventListener('valueChange', function(e){
 			//var data = e.value;
 			//console.log(e.target, e.currentTarget);
 			if (self.getAtomSetter() && self.getAtomSetter().isShown())
 			{
-				self.applySetter(result);
-				result.dismiss();  // avoid call apply setter twice
+				self.applySetter(widget);
+				widget.dismiss();  // avoid call apply setter twice
 			}
 		});
 
-		result.addEventListener('showStateChange', function(e)
+		widget.addEventListener('showStateChange', function(e)
 			{
-				if (e.target === result && !e.byDomChange)
+				if (e.target === widget && !e.byDomChange)
 				{
 					//console.log('show state change', e);
 					if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
 					{
 						if (self.getAtomSetter() && self.getAtomSetter().isShown())
-							self.applySetter(result);
+							self.applySetter(widget);
 					}
 				}
 			}
 		);
+		*/
+		if (!isBind)
+		{
+			widget.removeEventListener('valueChange', this._reactAtomSetterValueChange, this);
+			widget.removeEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
+		}
+		else
+		{
+			widget.addEventListener('valueChange', this._reactAtomSetterValueChange, this);
+			widget.addEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
+		}
+	},
 
-
-		result.appendToElem(parentElem);
-
-		return result;
+	/** @private */
+	_reactAtomSetterValueChange: function(e)
+	{
+		var widget = this.getAtomSetter();
+		if (widget && widget.isShown())
+		{
+			this.applySetter(widget);
+			widget.dismiss();  // avoid call apply setter twice
+		}
+	},
+	/** @private */
+	_reactAtomSetterShowStateChange: function(e)
+	{
+		var widget = this.getAtomSetter();
+		if (e.target === widget && !e.byDomChange)
+		{
+			//console.log('show state change', e);
+			if (!e.isShown && !e.isDismissed)  // widget hidden, feedback the edited value
+			{
+				if (widget && widget.isShown())
+					this.applySetter(widget);
+			}
+		}
 	},
 
 	/** @private */
@@ -4989,7 +5057,9 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		style.left = (coord.x - posAdjust) + 'px';
 		style.top = (coord.y - posAdjust) + 'px';
 		style.opacity = 1;
-		inputBox.getElement().style.fontSize = fontSize + 'px';
+		//inputBox.getElement().style.fontSize = fontSize + 'px';
+		if (setter.setNodeInputBoxFontSize)
+			setter.setNodeInputBoxFontSize(fontSize + 'px');
 		/*
 		 style.marginTop = -posAdjust + 'px';
 		 style.marginLeft = -posAdjust + 'px';

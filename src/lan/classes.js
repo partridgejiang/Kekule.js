@@ -33,6 +33,12 @@ function __$A__(iterable) {
     return results;
 }
 
+/**
+ *  A flag, whether stores all classes with CLASS_NAME field in Class._named_classes
+ *  @ignore
+ */
+var __registerNamedClasses__ = true;
+
 /** @class Class */
 var Class = {
 		/**
@@ -43,12 +49,16 @@ var Class = {
 		 */
     createCore: function() {
         var parent = null, properties = __$A__(arguments);
+        var exProps = (properties.length > 1)? properties[1]: properties[0];
+        var currClassName = (exProps && exProps.CLASS_NAME);
         if (!properties[0])
         {
           if (properties.length > 1)
           {
+            /*
           	var exProps = properties[1];
           	var currClassName = (exProps && exProps.CLASS_NAME);
+          	*/
 	          throw 'Can not create new class' + (currClassName? ' ' + currClassName: '') + ' , base class not found';
           }
         }
@@ -78,6 +88,9 @@ var Class = {
             klass.prototype.initialize = emptyFunction; //Prototype.emptyFunction;
 
         klass.prototype.constructor = klass;
+
+        if (currClassName && __registerNamedClasses__)  // register
+          Class._named_classes[currClassName] = klass;
 
         return klass;
     },
@@ -116,7 +129,28 @@ var Class = {
 		if (obj.finalize)
 			obj.finalize();
 		obj = null;
-	}
+	},
+
+	/**
+   * Find the class by a class name.
+   * @param {String} className
+   * @returns {Class} Found class or null.
+   */
+  findClass: function(className, root)
+  {
+    var result = Class._named_classes[className];
+    if (!result)
+    {
+      var v = Object.getCascadeFieldValue(className, root);
+      result = (v && Object.isFunction(v) && (v.superclass || v.subclasses))? v: null;
+    }
+    return result;
+  },
+
+	/**
+   * Stores created classes with CLASS_NAME property
+   */
+  _named_classes: {}
 };
 
 /** @ignore */
@@ -235,10 +269,12 @@ Object.getCascadeFieldValue = function(fieldName, root)
   for (var i = 0, l = cascadeNames.length; i < l; ++i)
   {
     result = root[cascadeNames[i]];
+    /*
     if (!result && i === 0 && l > 1)   // may be root part is defined in const or let, which won't be registered with global)
     {
       try { result = eval(cascadeNames[i]) } catch(e) { result = null; }
     }
+    */
     if (!result)
     {
       break;
@@ -952,6 +988,9 @@ var StringUtils = {
 			{
 				if (preferedType)
 				{
+					if (!str && [DataType.NUMBER, DataType.INT, DataType.FLOAT].indexOf(preferedType) >= 0)  // need to convert empty string to num, avoid NaN result
+						return undefined;
+
 					switch (preferedType)
 					{
 						case DataType.FLOAT:
@@ -1036,7 +1075,8 @@ if (!Math.sign)
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };
-if (!$jsRoot.Node) $jsRoot.Node = { };
+
+if (typeof($jsRoot.Node) == 'undefined') $jsRoot.Node = function(){};
 
 if (!$jsRoot.Node.ELEMENT_NODE) {
   // DOM level 2 ECMAScript Language Binding
@@ -1731,7 +1771,8 @@ var ClassEx = {
 		}
 		return result;
 		*/
-		return Object.getCascadeFieldValue(className, root || $jsRoot);
+		//return Object.getCascadeFieldValue(className, root || $jsRoot);
+    return Class.findClass(className, root || $jsRoot);
 	},
 	/**
 	 * Get class name of aClass, usually returns CLASS_NAME field of aClass
@@ -2266,11 +2307,22 @@ ObjectEx = Class.create(
 	initialize: function()
 	{
 		this._initPropertySystem();
-		this.initPropValues();
-		this._updateStatus = 0;  // used internal in begin/endUpdate methods
+
+    this._updateStatus = 0;  // used internal in begin/endUpdate methods
     this._childChangeEventSuppressed = false;
-		this._modifiedProps = [];  // used internal in begin/endUpdate methods
-		this._finalized = false;  // used internally, mark if the object has been freed
+    this._modifiedProps = [];  // used internal in begin/endUpdate methods
+    this._finalized = false;  // used internally, mark if the object has been freed
+
+    this.beginUpdate();
+    try
+    {
+      this.initPropValues();
+    }
+    finally
+    {
+      this.endUpdate();
+    }
+
 		this.afterInitialization();
 	},
 	/**
@@ -3564,8 +3616,16 @@ ObjectEx = Class.create(
 	 */
 	beginUpdate: function()
 	{
-		++this._updateStatus;
+		this.doBeginUpdate();
 	},
+  /**
+   * Do actual work of beginUpdate.
+   * @private
+   */
+  doBeginUpdate: function()
+  {
+    ++this._updateStatus;
+  },
 	/**
 	 * Update end and notify all properties changed after calling of beginUpdate.
 	 */
@@ -3588,6 +3648,7 @@ ObjectEx = Class.create(
 	},
 	/**
 	 * Actual work of endUpdate, just invoke all property change events.
+   * @private
 	 */
 	doEndUpdate: function(modifiedPropNames)
 	{

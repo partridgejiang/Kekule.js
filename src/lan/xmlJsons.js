@@ -1,6 +1,6 @@
 /**
  * @fileoverview
- * Utilities to handle XML and JSON data. Borrowed from WebShow.XML and WebShow.JSON.
+ * Utilities to handle XML and JSON data.
  * @author Partridge Jiang
  */
 
@@ -14,117 +14,10 @@ var
  *  @class JsonUtility
  */
 JsonUtility = {
-	/** @private */
-  DEF_LOAD_TIMEOUT: 20000,
-  /** @private */
-  FILE_EXT_JSON: '.json',
-  /** @private */
-  FILE_EXT_JSON_JS_WRAPPER: '.jsonjs',
-  /** @private */
-  DEF_SERIALIZE_TO_JSCODE_VARNAME: '__jsonvar__',
-
   /** Parse JSON object from text, return object. */
   parse: function(text)
   {
-		/*
-    if (window.JSON)  // native support for JSON in browser
-    	return JSON.parse(text);
-		else // try use JSON2 lib
-			return
-		*/
 		return JSON.parse(text);
-  },
-
-  /** Parse a JavaScript var wrapped JSON string */
-  parseFromJsWrappedCode: function(code, jsVarName)
-  {
-    if (!jsVarName)
-      jsVarName = JsonUtility.DEF_SERIALIZE_TO_JSCODE_VARNAME;
-    eval(code);
-    return JsonUtility.parse(eval(jsVarName));
-  },
-
-  /** Load JSON file of URL and return result in callback(jsonObj, isSuccess). */
-  load: function(url, callback, options)
-  // options: object include fields:
-  //   timeout: Integer, in ms
-  {
-    // check file ext first, if is a Xml-Js-Wrapper, call corresponding method
-    var ext = WebShow.URL.getFileExt(url);
-    if (ext.toLowerCase() == JsonUtility.FILE_EXT_JSON_JS_WRAPPER)
-      return JsonUtility.loadJsWrapper(url, callback, options);
-    else
-    {
-      return JsonUtility.loadJson(url, callback, options);
-    }
-  },
-
-  /** Load a JS wrapper JSON file, content like "var _varname = {};" */
-  //   callback(jsonObj, isSuccess)
-  loadJsWrapper: function(url, callback, options)
-    // options: object include fields:
-    //   wrapperVarName: string
-    //   timeout: Integer, in ms
-  {
-    var loptions = options || {};
-    var wrapperVarName = loptions.wrapperVarName || JsonUtility.DEF_SERIALIZE_TO_JSCODE_VARNAME;
-    if (!loptions.timeout)
-      loptions.timeout = JsonUtility.DEF_LOAD_TIMEOUT;
-
-		/** @ignore */
-    var runCallBack = function(jsonObj, isSuccess)
-      {
-        if (callback)
-          callback(jsonObj, isSuccess);
-      };
-		/** @ignore */
-    var wrapperCallback = function(src, isSuccess)
-    {
-      var jsonObj = null;
-      if (isSuccess)
-      {
-        var wrapperVar = eval(wrapperVarName);
-        // get wrappered JSON
-        if (wrapperVar)
-        {
-          if (typeof(wrapperVar) == 'string')  // wrapped a JSON string
-            jsonObj = JsonUtility.parse(wrapperVar);
-          else // a object
-            jsonObj = wrapperVar;
-        }
-        runCallBack(jsonObj, true);
-      }
-      else
-        runCallBack(null, false);
-    };
-
-    WebShow.ScriptLoader.load(url, wrapperCallback, loptions);
-  },
-
-  /** Load a file that containers JSON string only, use WebShow.XHRLoader for AJAX loading. */
-  loadJson: function(url, callback, options)
-  {
-    var loptions = options || {};
-    if (!loptions.timeout)
-      loptions.timeout = JsonUtility.DEF_LOAD_TIMEOUT;
-
-    loptions.resultType = WebShow.FileLoader.ResultType.TEXT;
-    loptions.extractBody = false;
-
-		/** @ignore */
-    var wrapperCallback = function(content, isSuccess, url)
-    {
-      if (isSuccess)
-      {
-        var jsonObj = JsonUtility.parse(content);
-        callback(jsonObj, true);
-      }
-      else
-        callback(null, false);
-    };
-
-    var xhrLoader = new WebShow.XHRLoader();
-    xhrLoader.load(url, wrapperCallback, loptions);
   },
 
   /** Serialize a object to JSON string.
@@ -144,21 +37,6 @@ JsonUtility = {
   		return JSON.stringify(srcObj, null, options.indentSpaces || 2);
   	else
   	  return JSON.stringify(srcObj);
-  },
-
-  /** Serialize a object to JSON string wrapped in JavaScript var*/
-  serializeToJsCode: function(srcObj, jsVarName, quoteChar)
-  {
-    if (!quoteChar)
-      quoteChar = "'";
-    if (!jsVarName)
-      jsVarName = JsonUtility.DEF_SERIALIZE_TO_JSCODE_VARNAME;
-    var jsonStr = JsonUtility.serializeToStr(srcObj);
-
-    var sreg = new RegExp(quoteChar, 'g');
-    jsonStr = jsonStr.replace(sreg, '\\' + quoteChar);
-
-    return 'var ' + jsVarName + ' = ' + quoteChar + jsonStr + quoteChar;
   }
 };
 
@@ -298,18 +176,12 @@ XmlUtility = {
   },
 
   /** load XML document from url. */
-  load: function(url, callback, options)  // return XMLDocument, handle include tags
-  // ATTENTION, currently load can only handle one-level include, that is,
-  //   load(A) while include B, B include C, B but not C will be included in A.
-  //   This limination is to avoid circulate include
+  load: function(url, callback, options)  // return XMLDocument
   // options: object include fields:
-  //   disableInclude: boolean, whether handle include tag, default true
-  //   includeTagName: string,
-  //   srcAttribName: string,
-  //   bypassRootElem: boolean, whether insert the documentElement of the included xml doc
   //   timeout: Integer, in ms
   {
     // check file ext first, if is a Xml-Js-Wrapper, call corresponding method
+    /*
     if (url.lastIndexOf(XmlUtility.FILE_EXT_XML_JS_WRAPPER) === url.length - XmlUtility.FILE_EXT_XML_JS_WRAPPER.length)  // end with this ext
       return XmlUtility.loadHelper.loadJsWrapper(url, callback, options);
     if (!options)
@@ -318,6 +190,8 @@ XmlUtility = {
       return XmlUtility.loadHelper.loadAndHandleIncludeElement(url, callback, options);
     else
       return XmlUtility.loadHelper.loadSimple(url, callback, options.timeout);
+     */
+    return XmlUtility.loadHelper.loadSimple(url, callback, (options || {}).timeout);
   },
 
   /** @private */
@@ -386,7 +260,6 @@ XmlUtility = {
         }
         catch(e)
         {
-          WebShow.reportError(e);
           runCallBack(null, false);  // load failed
         }
 
@@ -421,210 +294,7 @@ XmlUtility = {
       }
       xmldoc.load(url);      // Load and parse
       return xmldoc;         // Return the document
-    },
-    /** @private */
-    loadAndHandleIncludeElement: function(url, callback, options)
-    // options: object include fields:
-    //   includeTagName: string,
-    //   srcAttribName: string,
-    //   bypassRootElem: boolean, whether insert the documentElement of the included xml doc
-    //   timeout: Integer, in ms
-    {
-      var loadTimeout;
-      if (options)
-        loadTimeout = options.timeout;
-      else
-        loadTimeout = null;
-      var sync = (callback == null);
-      if (sync)
-      {
-        var xmldoc = XmlUtility.loadHelper.loadSimple(url, null, loadTimeout);
-        if (xmldoc && xmldoc.documentElement)
-        {
-          XmlUtility.loadHelper.handleIncludedXmlInElement(xmldoc.documentElement, null, options);
-          return xmldoc;
-        }
-        else
-          return null;
-      }
-      else
-        return XmlUtility.loadHelper.loadSimple(url, function(xmldoc, isSuccess)
-          {
-            if (!isSuccess)
-              callback(xmldoc, false);
-            else  // handle include element
-            {
-              XmlUtility.loadHelper.handleIncludedXmlInElement(xmldoc.documentElement, function(count)
-                {
-                  callback(xmldoc, true);  // what ever include, cann always return xmlDoc
-                }, options);
-            }
-          }, loadTimeout);
-    },
-    /** @private */
-    loadJsWrapper: function(url, callback, options)
-    // options: object include fields:
-    //   wrapperVarName: string
-    //   timeout: Integer, in ms
-    {
-      options = options || {};
-      var wrapperVarName = options.wrapperVarName || XmlUtility.DEF_SERIALIZE_TO_JSCODE_VARNAME;
-      var loadTimeout = options.timeout;
-      if ((loadTimeout === null) || (loadTimeout === undefined))
-        loadTimeout = XmlUtility.DEF_LOAD_TIMEOUT;
-			/** @ignore */
-      var runCallBack = function(xmldoc, isSuccess)
-        {
-          /*
-          if (timeoutHandle)  // clear timeout handler
-            clearTimeout(timeoutHandle);
-          */
-          if (callback)
-            callback(xmldoc, isSuccess);
-        };
-			/** @ignore */
-      var wrapperCallback = function(src, isSuccess)
-      {
-        /*
-        if (timeoutHandle)  // clear timeout handler
-          clearTimeout(timeoutHandle);
-        */
-        if (isSuccess)
-        {
-          // get wrappered XML string
-          var xmlContent = eval(wrapperVarName);
-          // parse xml content
-          var doc = XmlUtility.parse(xmlContent);
-          runCallBack(doc, true);
-        }
-        else
-          runCallBack(null, false);
-      };
-
-      /*
-      var timeoutHandle = null;
-        if (loadTimeout)
-          timeoutHandle = setTimeout(function() // timeout, load failed
-            {
-              runCallBack(null, false);
-            }, loadTimeout);
-      */
-      options.timeout = loadTimeout;
-      WebShow.ScriptLoader.load(url, wrapperCallback, options);
-    },
-    /** @private */
-    // for include tag handle
-    getIncludeElements: function(rootElement, includeTagName)
-    {
-      var result = [];
-      if (!includeTagName)
-        includeTagName = XmlUtility.DEF_INCLUDE_TAG_NAME;
-
-      return rootElement.getElementsByTagName(includeTagName);
-    },
-    /** @private */
-    handleIncludedXmlInElement: function(rootElement, callback, options)
-    // callback(includeHandleCount), if not assigned, run in sync mode
-    // options: object include fields:
-    //   includeTagName: string,
-    //   srcAttribName: string,
-    //   bypassRootElem: boolean, whether insert the documentElement of the included xml doc
-    {
-      if (!options)
-        options = {};
-      var includeTagName = options.includeTagName || XmlUtility.DEF_INCLUDE_TAG_NAME;
-      var srcAttribName = options.srcAttribName || XmlUtility.DEF_INCLUDE_SRC_ATTRIB;
-      var bypassRootElem = (options.bypassRootElem != null)? options.bypassRootElem : XmlUtility.DEF_BYPASS_ROOT_ELEM;
-      var sync = (callback == null);
-      var docURL = XmlUtility.getXmlDocUrl(rootElement.ownerDocument);
-      var includeElems = XmlUtility.loadHelper.getIncludeElements(rootElement, includeTagName);
-
-      if (!srcAttribName)
-
-
-      var srcURL = null;
-      var includeElem = null;
-      var finishedLoadCount = 0;
-      var totalLoadCount = includeElems.length;
-
-      if (totalLoadCount <= 0)
-      {
-        if (callback)
-          callback(0);
-        return null;
-      }
-
-      var includedDoc;
-      for (var i = includeElems.length - 1; i >= 0; --i)
-      {
-        includeElem = includeElems[i];
-        srcURL = includeElem.getAttribute(srcAttribName);
-        if (srcURL)  // srcLoc not null
-        {
-          srcURL = WebShow.URL.mergePath(srcURL, docURL);
-          if (sync)
-          {
-            includedDoc = XmlUtility.loadHelper.loadSimple(srcURL);
-            if (includedDoc)
-              XmlUtility.loadHelper.insertIncludedSection(includedDoc, includeElem, bypassRootElem);
-          }
-          else  // async
-            XmlUtility.loadHelper.loadSimple(srcURL, (function(originIncludeElem, doc, isSuccess)
-              {
-                if (isSuccess && doc)
-                {
-                  // replace include tag in parent xml
-                  includedDoc = doc;
-                  XmlUtility.loadHelper.insertIncludedSection(includedDoc, originIncludeElem, bypassRootElem);
-                }
-                //
-                finishedLoadCount++;
-
-                if (finishedLoadCount == totalLoadCount)  // all include xml finished
-                {
-                  callback(finishedLoadCount);
-                }
-              }).bind(this, includeElem));
-        }
-      }
-      return rootElement;
-    },
-    /** @private */
-    insertIncludedSection: function(includedDoc, originIncludeElem, bypassRootElem)
-    {
-      var
-        elems = [];
-      // fill element array that shoul be inserted to origin document
-      if (bypassRootElem)
-      {
-        var child = includedDoc.documentElement.firstChild;
-        while (child)
-        {
-          if (child.nodeType == Node.ELEMENT_NODE)  // child element
-            elems.push(child);
-          child = child.nextSibling;
-        }
-      }
-      else
-        elems.push(includedDoc.documentElement);
-      // insert elements
-      var elem;
-      var originDoc = originIncludeElem.ownerDocument;
-      var docElem = originDoc.documentElement;
-      for (var i = 0, l = elems.length; i < l; ++i)
-      {
-        var elem = elems[i];
-        if (originDoc.importNode)
-          elem = originDoc.importNode(elem, true);
-        originIncludeElem.parentNode.insertBefore(elem, originIncludeElem);
-      }
-      // delete old include tag
-      originIncludeElem.parentNode.removeChild(originIncludeElem);
-      return originDoc;
     }
-    ///////////////
-    //  Internal method for load to use END
-    /////////////////////////////////////////////////////////////////////
   },
 
   /**
@@ -664,31 +334,6 @@ XmlUtility = {
     {
       return XmlUtility.serializeNode(node);
     }
-  },
-
-  /** wrap XML string to a JavaScript var,
-   *  like "var xmlStr = '<xml><data></data></xml>';"
-   */
-  serializeNodeToJsCode: function(node, jsVarName, quoteChar)
-  {
-    if (!quoteChar)
-      quoteChar = "'";
-    if (!jsVarName)
-      jsVarName = XmlUtility.DEF_SERIALIZE_TO_JSCODE_VARNAME;
-    var xmlString = XmlUtility.serializeNode(node);
-    // escape all original quoteChars
-    var sreg = new RegExp(quoteChar, 'g');
-    xmlString = xmlString.replace(sreg, '\\' + quoteChar);
-
-    return 'var ' + jsVarName + ' = ' + quoteChar + xmlString + quoteChar + ';';
-  },
-
-  /** Parse XML from a JavaScript string var */
-  parseFromJsWrappedCode: function(code, jsVarName)
-  {
-    eval(code);
-    var xmlText = eval(jsVarName);
-    return XmlUtility.parse(xmlText);
   },
 
   // utils functions
