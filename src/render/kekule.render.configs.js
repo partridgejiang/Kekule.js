@@ -480,6 +480,7 @@ Kekule.Render.getRender3DConfigs = function()
  * @augments Kekule.AbstractConfigs
  *
  * @property {Int} graphicQuality Value from {@link Kekule.Render.Render3DGraphicQuality}.
+ * @property {Bool} antialias
  */
 Kekule.Render.Render3DEnvironmentConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Render.Render3DEnvironmentConfigs# */
@@ -490,6 +491,7 @@ Kekule.Render.Render3DEnvironmentConfigs = Class.create(Kekule.AbstractConfigs,
 	initProperties: function()
 	{
 		this.addIntConfigProp('graphicQuality', Kekule.Render.Render3DGraphicQuality.MEDIUM, {'enumSource': Kekule.Render.Render3DGraphicQuality});
+		this.addBoolConfigProp('antialias', true);
 	}
 });
 

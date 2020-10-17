@@ -492,7 +492,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 							//var dim = Kekule.HtmlElementUtils.getElemScrollDimension(elem);
 							//var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
 							var dim = Kekule.HtmlElementUtils.getElemOffsetDimension(elem);
-							result = bridge.createContext(elem, dim.width, dim.height);
+							result = bridge.createContext(elem, dim.width, dim.height, this.getContextCreationParams(this.getRenderType(), bridge));
 							/*
 							if (result !== elem)
 								Kekule.HtmlElementUtils.addClass(result, CNS.DYN_CREATED);
@@ -632,6 +632,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.backgroundColorChanged(true);  // notify back color change but not repaint, as painter currently is still old one
 		//if (chemObj)  // repaint
 		this.setChemObj(chemObj || null);
+	},
+	/**
+	 * Force to recreate drawing context and repaint.
+	 */
+	resetRenderEnvironment: function()
+	{
+		this.resetRenderType(null, this.getRenderType());
+		return this;
+	},
+
+	/** @private */
+	getContextCreationParams: function(renderType, drawBridge)
+	{
+		var result;
+		var renderConfig = this.getRenderConfigs();
+		if (renderType === Kekule.Render.RendererType.R3D)
+			result = {
+				'alpha': true,
+				'antialias': renderConfig.getEnvironmentConfigs().getAntialias()
+			};
+		else  // 2D
+			result = {
+				'alpha': true,
+			};
+		return result;
 	},
 
 	/**
