@@ -327,20 +327,27 @@ Kekule.Render.ThreeRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
+	 * @param {Hash} params Additional WebGL or 2DCanvas params, e.g. {antialias: true}
 	 * @returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height)
+	createContext: function(parentElem, width, height, params)
 	{
 		var BF = Kekule.BrowserFeature;
+		var createOps = {
+			preserveDrawingBuffer: true,  // use to enable screenshot
+			alpha: true,
+			antialias: true
+		};
+		if (params)
+		{
+			createOps = Object.extend(createOps, params);
+		}
 
 		var renderer = BF.webgl?
-				new THREE.WebGLRenderer({
-					preserveDrawingBuffer: true,  // use to enable screenshot
-					alpha: true
-				}):
+				new THREE.WebGLRenderer(createOps):
 			BF.canvas?
-				new THREE.CanvasRenderer():
-				new THREE.SVGRenderer();
+				new THREE.CanvasRenderer(createOps):
+				new THREE.SVGRenderer(createOps);
 
 		var camera =
 			new THREE.PerspectiveCamera();
