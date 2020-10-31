@@ -630,6 +630,8 @@ Kekule.OpenBabel.AdaptUtils = {
 							result.SetEnd(v);
 						++curr;
 					}
+					if (v.AddBond)    // important, should manually add bond to atom here
+						v.AddBond(result);
 					if (curr > 1)
 						break;
 				}
