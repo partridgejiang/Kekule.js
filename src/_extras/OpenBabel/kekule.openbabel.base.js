@@ -501,6 +501,10 @@ Kekule.OpenBabel.AdaptUtils = {
 			v = kNode.getHybridizationType();
 			if (v)
 				result.SetHyb(v);
+			// implicit hnydrogen count, from OB3, this value must be explicit set
+			var ihc = kNode.getImplicitHydrogenCount();
+			if (ihc)
+				result.SetImplicitHCount(ihc);
 		}
 		else // subgroup, pseudo atom...
 		{
@@ -597,11 +601,11 @@ Kekule.OpenBabel.AdaptUtils = {
 		var BS = Kekule.BondStereo;
 		v = kBond.getStereo();
 		if (v === BS.UP)
-			result.SetWedge();
+			result.SetWedge(true);
 		else if (v === BS.DOWN)
-			result.SetHash();
+			result.SetHash(true);
 		else if (v === BS.UP_OR_DOWN)
-			result.SetWedgeOrHash();
+			result.SetWedgeOrHash(true);
 
 		// atoms
 		if (atomMapping)
