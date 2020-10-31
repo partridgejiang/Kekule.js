@@ -389,9 +389,12 @@ var kekuleFiles = {
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
 
+			'widgets/kekule.widget.root.js',
 			'widgets/kekule.widget.bindings.js',
+			'widgets/kekule.widget.events.js',
 			'widgets/kekule.widget.base.js',
 			'widgets/kekule.widget.sys.js',
+			'widgets/kekule.widget.keys.js',
 			'widgets/kekule.widget.clipboards.js',
 			'widgets/kekule.widget.helpers.js',
 			'widgets/kekule.widget.styleResources.js',

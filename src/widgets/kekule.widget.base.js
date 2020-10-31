@@ -10,32 +10,14 @@
  * requires /utils/kekule.utils.js
  * requires /utils/kekule.domUtils.js
  * requires /xbrowsers/kekule.x.js
+ * requires /widgets/kekule.widget.root.js
+ * requires /widgets/kekule.widget.events.js
  */
 
 (function(){
 
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
-
-/**
- * Namespace for UI Widgets.
- * @namespace
- */
-Kekule.Widget = {
-	/** @private */
-	DEF_EVENT_HANDLER_PREFIX: 'react_',
-	/** @private */
-	getEventHandleFuncName: function(eventName)
-	{
-		return Kekule.Widget.DEF_EVENT_HANDLER_PREFIX + eventName;
-	},
-	/** @private */
-	getTouchGestureHandleFuncName: function(touchGestureName)
-	{
-		//return Kekule.Widget.DEF_TOUCH_GESTURE_HANDLER_PREFIX + touchGestureName;
-		return Kekule.Widget.DEF_EVENT_HANDLER_PREFIX + touchGestureName;
-	}
-};
 
 /**
  * Enumeration of predefined widget html element tag names.
@@ -259,39 +241,6 @@ Kekule.Widget.DragDrop = {
 	ELEM_INDEX_DATA_TYPE: 'application/x-kekule-dragdrop-elem-index'
 };
 
-/**
- * A series of interactive events that may be handled by widget.
- * @ignore
- */
-Kekule.Widget.UiEvents = [
-	/*'blur', 'focus',*/ 'click', 'dblclick', 'mousedown',/*'mouseenter', 'mouseleave',*/ 'mousemove', 'mouseout', 'mouseover', 'mouseup', //'mousewheel',
-	'keydown', 'keyup', 'keypress',
-	'touchstart', 'touchend', 'touchcancel', 'touchmove',
-	'pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup',
-	'drag', 'dragend', 'dragenter', 'dragexit', 'dragleave', 'dragover', 'dragstart', 'drop'
-];
-/**
- * A series of interactive events that must be listened on local element.
- * @ignore
- */
-Kekule.Widget.UiLocalEvents = [
-	'blur', 'focus', 'mouseenter', 'mouseleave', 'mousewheel', 'pointerenter', 'pointerleave'
-];
-
-/**
- * A series of interactive touch gestures that may be handled by widget.
- * @ignore
- */
-Kekule.Widget.TouchGestures = [
-	//'press', 'pressup'
-	'hold', 'tap', 'doubletap',
-	'swipe', 'swipeup', 'swipedown', 'swipeleft', 'swiperight',
-	'transform', 'transformstart', 'transformend',
-	'rotate', 'rotatestart', 'rotatemove', 'rotateend', 'rotatecancel',
-	'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout',
-	'pan', 'panstart', 'panmove', 'panend', 'pancancel', 'panleft', 'panright', 'panup', 'pandown'
-];
-
 /** @private */
 Kekule.Widget._PointerHoldParams = {
 	DURATION_THRESHOLD: 1000,  // ms
@@ -499,6 +448,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('inheritedStyles', []);
 		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none disable default touch actions
 		this.setPropStoreFieldValue('droppableDataKinds', ['string']);  // defaultly disallow file drop
+		this.setPropStoreFieldValue('htmlEventDispatcher', new Kekule.Widget.HtmlEventDispatcher());
 
 		this._touchActionNoneTouchStartHandlerBind = this._touchActionNoneTouchStartHandler.bind(this);
 
@@ -1211,6 +1161,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'setter': null,
 			'getter': function() { return this.getIaControllerMap().get(this.getActiveIaControllerId()); }});
 
+		this.defineProp('htmlEventDispatcher', {'dataType': 'Kekule.Widget.HtmlEventDispatcher', 'serializable': false,
+			'scope': Class.PropertyScope.PRIVATE,
+			'setter': null
+		});
+
 		this.defineProp('observingGestureEvents', {'dataType': DataType.ARRAY, 'serializable': false,
 					'scope': Class.PropertyScope.PUBLIC,
 					'setter': null
@@ -1226,6 +1181,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this._elemResizeObserver.disconnect();
 			this._elemResizeObserver = null;
 		}
+
+		this.getHtmlEventDispatcher().finalize();
 
 		this.setAction(null);
 		this.setParent(null);
@@ -3406,7 +3363,35 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
-
+	/**
+	 * register an instance of {@link Kekule.Widget.HtmlEventResponser} to handle events of this widget.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	registerHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().registerResponser(responser);
+		return this;
+	},
+	/**
+	 * Unregister an instance of {@link Kekule.Widget.HtmlEventReponser}.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	unregisterHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().unregisterResponser(responser);
+		return this;
+	},
+	/**
+	 * create and register a new instance of {@link Kekule.Widget.HtmlEventResponser} to handle events of this widget.
+	 * @param {Kekule.Widget.HtmlEventMatcher} eventMatcher
+	 * @param {Variant} execTarget
+	 * @param {Bool} exclusive
+	 * @returns {Kekule.Widget.HtmlEventResponser}
+	 */
+	addHtmlEventResponser: function(eventMatcher, execTarget, exclusive)
+	{
+		return this.getHtmlEventDispatcher().addResponser(eventMatcher, execTarget, exclusive);
+	},
 
 	/** @private */
 	reactUiEvent: function(e)
@@ -3629,6 +3614,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					handled = this.dispatchEventToIaControllers(e) || handled;  // avoid shortcircuit
 				}
 			}
+
+			// dispatch to HTML event dispatcher
+			this.getHtmlEventDispatcher().dispatch(e);
 
 			this.doReactUiEvent(e);
 
@@ -5200,6 +5188,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
 		this.setPropStoreFieldValue('enableHammerGesture', !true);
+		this.setPropStoreFieldValue('htmlEventDispatcher', new Kekule.Widget.HtmlEventDispatcher());
 
 		/*
 		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
@@ -5222,6 +5211,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	/** @ignore */
 	finalize: function(/*$super*/)
 	{
+		this.getHtmlEventDispatcher().finalize();
 		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
 		//this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
@@ -5264,6 +5254,12 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		this.defineProp('enableHammerGesture', {'dataType': DataType.BOOL, 'serializable': false});
 		// should always set to be true
 		this.defineProp('enableMouseEventToPointerPolyfill', {'dataType': DataType.BOOL, 'serializable': false});
+
+		// a global HTML event dispatcher
+		this.defineProp('htmlEventDispatcher', {'dataType': 'Kekule.Widget.HtmlEventDispatcher', 'serializable': false,
+			'scope': Class.PropertyScope.PRIVATE,
+			'setter': null
+		});
 	},
 
 	/** @private */
@@ -6026,6 +6022,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 				this.setMouseCaptureWidget(null);
 		}
 		*/
+
+		this.getHtmlEventDispatcher().dispatch(e);
 
 		this.doReactUiEvent(e, targetWidget);
 

@@ -10,24 +10,46 @@
       height: 400px;
       background: red;
     }
+    #stage2
+    {
+      width: 600px;
+      height: 400px;
+      background: green;
+    }
   </style>
   <script>
     function init()
     {
 
       document.body.addEventListener('keydown', function(e){
-        console.log('key press', e.keyCode, e.charCode, e.key, e.code);
+        console.log('key down', e.target.id, e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey, e.metaKey, e.repeat);
       });
+      /*
+      document.body.addEventListener('keypress', function(e){
+        console.log('key press', e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey);
+      });
+      document.body.addEventListener('keyup', function(e){
+        console.log('key up', e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey);
+      });
+      */
 
       /*
       document.body.addEventListener('keypress', function(e){
         console.log('key press', e.keyCode, e.charCode, e.key, e.code);
       });
       */
+
+      document.body.addEventListener('focusin', function(e){
+        console.log('focus', e.target.id);
+      });
+      document.body.addEventListener('focusout', function(e){
+        console.log('blur', e.target.id);
+      });
     }
   </script>
 </head>
-<body onload="init()">
-<div id="stage"></div>
+<body onload="init()" id="body1">
+  <div id="stage" tabindex="0"></div>
+  <div id="stage2" tabindex="0"></div>
 </body>
 </html>

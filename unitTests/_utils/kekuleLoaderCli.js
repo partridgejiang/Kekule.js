@@ -7,7 +7,7 @@ var vm = require("vm");
 var fs = require('fs');
 var path = require('path');
 
-var Kekule = require('../../src/kekule.js').Kekule;
+var Kekule = require('../../src/kekule.js').Kekule.modules(['widget']);
 var XmlUtility = require('../../src/kekule.js').DataType.XmlUtility;
 
 const xmldom = require('./xmldom');

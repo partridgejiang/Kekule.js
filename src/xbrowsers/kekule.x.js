@@ -439,6 +439,24 @@ X.Event.Methods = {
 		return event.shiftKey;
 	},
 	/**
+	 * Get event.mataKey.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getMetaKey: function(event)
+	{
+		return event.metaKey;
+	},
+	/**
+	 * Get event.repeat (key down repeat flag).
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getRepeat: function(event)
+	{
+		return event.repeat;
+	},
+	/**
 	 * Get event.charCode.
 	 * @param {Object} event
 	 * @returns {Int}
@@ -459,6 +477,24 @@ X.Event.Methods = {
 		// TODO: too rough, need further development
 		// ref: http://www.quirksmode.org/js/keys.html
 		return event.keyCode;
+	},
+	/**
+	 * Get event.key.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getKey: function(event)
+	{
+		return event.key;
+	},
+	/**
+	 * Get event.code.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getCode: function(event)
+	{
+		return event.code;
 	},
 	/**
 	 * Get event.clientX.
