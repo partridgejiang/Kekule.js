@@ -89,11 +89,13 @@ function handleMessages(msgData)
 	{
 		var molData = msgData.molData;
 		var forceFieldName = msgData.forceField;
+		var useFFCalc = msgData.applyFFCalc;  // whether use force field calculation or quick approach
+		var speed = msgData.speed;  // speed using OB gen3D operation, can be 1-6 (the larger the faster) or string like 'fastest', 'med', etc.
 		var execFunc = function() {
-			var genData = generate3DMolData(molData, forceFieldName);
+			var genData = generate3DMolData(molData, {'useFFCalc': useFFCalc, 'forceFieldName': forceFieldName, 'speed': speed});
 			// feedback
 			postMessage({'type': 'output3D', 'molData': genData});
-		}
+		};
 		if (runtimeInited)
 			execFunc();
 		else
@@ -101,44 +103,86 @@ function handleMessages(msgData)
 	}
 };
 
-function generate3DMolData(molData, forceFieldName)
+function generate3DMolData(molData, /*forceFieldName*/options)
 {
 	//console.log('Module', Module);
-	var _obGen = new (Module['OB3DGenWrapper'])();
+	var op = options || {};
+	var forceFieldName = op.forceFieldName;
 	var result = null;
-	try
+	var obMol;
+	if (op.useFFCalc)
 	{
-		var obMol = _obGen.generate3DStructureFromMolData(molData, forceFieldName || '');
-		if (!obMol)  // failed
+		var _obGen = new (Module['OB3DGenWrapper'])();
+		try
 		{
-			// Kekule.raise(Kekule.$L('ErrorMsg.OpenBabel.FAIL_TO_GENERATE_3D_STRUCTURE'));
-			throw 'Fail to generate 3D structure';
+			obMol = _obGen.generate3DStructureFromMolData(molData, forceFieldName || '');
 		}
-		else  // success
+		finally
 		{
-			// fetch back coords of obMol to mol
-			//var mol3D = AU.obObjToKekule(obMol);
-			var obConv = new (Module['ObConversionWrapper'])();
-			try
-			{
-				obConv.setOutFormat('chemical/x-mdl-molfile', 'mol');
-				if (obConv.writeToOutput(obMol))
-					result = obConv.getOutStr();
-				else
-					throw 'Fail to save generated 3D data';
-			}
-			finally
-			{
-				obConv['delete']();
-			}
+			_obGen['delete']();
+		}
+	}
+	else
+	{
+		obMol = _gen3DByObOperation(molData, op);
+	}
+	if (!obMol)  // failed
+	{
+		// Kekule.raise(Kekule.$L('ErrorMsg.OpenBabel.FAIL_TO_GENERATE_3D_STRUCTURE'));
+		throw 'Fail to generate 3D structure';
+	}
+	else  // success
+	{
+		// fetch back coords of obMol to mol
+		//var mol3D = AU.obObjToKekule(obMol);
+		var obConv = new (Module['ObConversionWrapper'])();
+		try
+		{
+			obConv.setOutFormat('chemical/x-mdl-molfile', 'mol');
+			if (obConv.writeToOutput(obMol))
+				result = obConv.getOutStr();
+			else
+				throw 'Fail to save generated 3D data';
+		}
+		finally
+		{
+			obConv['delete']();
 		}
 		obMol['delete']();
 	}
-	finally
-	{
-		_obGen['delete']();
-	}
 	return result;
 };
+
+function _gen3DByObOperation(molData, options)
+{
+	var speed = ('' + options.speed) || '';  // ensure speed is string
+	var conv = new (Module['ObConversionWrapper'])();
+	var result = null;
+	try
+	{
+		conv.setInFormat('', 'mol');
+		var mol = new Module['OBMol']();
+		try
+		{
+			conv.readString(mol, molData);
+			var gen3d = Module['OBOp'].FindType('Gen3D');
+			if (gen3d)
+			{
+				gen3d.Do(mol, speed);
+				result = mol;
+			}
+		}
+		finally
+		{
+			if (!result)
+				mol['delete']();
+		}
+	}
+	finally
+	{
+		conv['delete']();
+	}
+	return result;
+}
 
 })(this);
