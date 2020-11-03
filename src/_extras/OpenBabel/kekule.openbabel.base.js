@@ -71,6 +71,10 @@ Kekule.OpenBabel = {
 		OB._module = module;
 		EU.setRootModule(obInitOptions.moduleName, module);
 	},
+	getMember: function(name)
+	{
+		return EU.getMember(name, OB.getModule());
+	},
 	getClassCtor: function(className)
 	{
 		return EU.getClassCtor(className, OB.getModule());
@@ -541,8 +545,9 @@ Kekule.OpenBabel.AdaptUtils = {
 			obBond.IsCisOrTrans()? BS.CIS_OR_TRANS:
 			obBond.IsDoubleBondGeometry()? BS.E_Z_BY_COORDINATES:
 				BS.NONE;
-		// TODO: IsUp/IsDown not handled
 		result.setStereo(v);
+
+		console.log(obBond.GetFlags().toString(2));
 
 		// atom mapping
 		if (atomMapping)
@@ -648,8 +653,32 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	obMolToKekule: function(obMol, kMol)
 	{
-		var result = kMol || new Kekule.Molecule();
-		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obMol, result);
+		//var result = kMol || new Kekule.Molecule();
+		var result = kMol;
+
+		// TODO: The bond of OBMol often has a implicit stereo, wedge/hash and so on must be calculated from
+		//  separate OBStereoData field of OBMol, which is very complex. So here we simply use MOL format string
+		//  to convert from OBMol and Kekule.Molecule
+		var conv = new (OB.getClassCtor('ObConversionWrapper'))();
+		try
+		{
+			conv.setOutFormat('', 'mol');
+			var sMolData = conv.writeString(obMol, false);
+			var mol2 = Kekule.IO.loadFormatData(sMolData, Kekule.IO.DataFormat.MOL);
+			if (!result)
+				result = mol2;
+			else
+				result.assign(mol2);
+			mol2.finalize();
+		}
+		finally
+		{
+			conv['delete']();
+		}
+
+		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obMol, result); // additional data conversion
+		/*
+		OB.getMember('PerceiveStereo')(obMol, false);
 
 		var coordMode = obMol.Has3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 
@@ -691,6 +720,7 @@ Kekule.OpenBabel.AdaptUtils = {
 		}
 		atomMapping.finalize();
 		atomMapping = null;
+		*/
 		return result;
 	},
 
