@@ -56,6 +56,10 @@ Kekule.EmscriptenUtils = {
 		else
 			return EU.getRootModule(moduleNameOrObj);
 	},
+	getMember: function(name, moduleNameOrObj)
+	{
+		return (EU.getModuleObj(moduleNameOrObj) || {}) [name];
+	},
 	getClassCtor: function(className, moduleNameOrObj)
 	{
 		/*

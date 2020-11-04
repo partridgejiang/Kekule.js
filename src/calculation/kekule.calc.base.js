@@ -277,20 +277,20 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 });
 
 /**
- * Abstract class to generate 3D structure from 2D one.
- * TGhe concrete generator should inherit from this class.
+ * Abstract class to generate 2D/3D structure from 0D or 3D/2D one.
+ * The concrete generator should inherit from this class.
  * @class
  * @augments Kekule.Calculator.Base
  *
- * @property {Kekule.StructureFragment} sourceMol Source 2D molecule.
- * @property {Kekule.StructureFragment} generatedMol 3D molecule structure generated from sourceMol.
- * @property {Hash} options Options to generate 3D structure.
+ * @property {Kekule.StructureFragment} sourceMol Source molecule.
+ * @property {Kekule.StructureFragment} generatedMol 2D/3D molecule structure generated from sourceMol.
+ * @property {Hash} options Options to generate 2D/3D structure.
  */
-Kekule.Calculator.AbstractStructure3DGenerator = Class.create(Kekule.Calculator.Base,
-/** @lends Kekule.Calculator.AbstractStructure3DGenerator# */
+Kekule.Calculator.AbstractStructureGenerator = Class.create(Kekule.Calculator.Base,
+/** @lends Kekule.Calculator.AbstractStructureGenerator# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Calculator.AbstractStructure3DGenerator',
+	CLASS_NAME: 'Kekule.Calculator.AbstractStructureGenerator',
 	/** @private */
 	initProperties: function()
 	{
@@ -379,22 +379,24 @@ var CS = Kekule.Calculator.ServiceManager;
  * @enum
  */
 Kekule.Calculator.Services = {
+	GEN2D: '2D structure generator',
 	GEN3D: '3D structure generator'
 };
 
 /**
- * Generate 3D structure based on 2D sourceMol.
- * This method seek for registered 'gen3D' calculation service.
+ * Generate 2D or 3D structure based on sourceMol.
+ * This method seek for registered calculation service with genSeviceName.
  * @param {Kekule.StructureFragment} sourceMol
+ * @param {String} genSeviceName
  * @param {Hash} options
  * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
  * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
  * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
  * @returns {Object} Created calculation object.
  */
-Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallback, msgCallback)
+Kekule.Calculator.generateStructure = function(sourceMol, genSeviceName, options, callback, errCallback, msgCallback)
 {
-	var serviceName = Kekule.Calculator.Services.GEN3D;
+	var serviceName = genSeviceName || Kekule.Calculator.Services.GEN3D;
 	var c = CS.getServiceClass(serviceName);
 	if (c)
 	{
@@ -435,6 +437,36 @@ Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallbac
 		//Kekule.error(errMsg);
 		return null;
 	}
+}
+
+/**
+ * Generate 3D structure based on 2D or 0D sourceMol.
+ * This method seek for registered GEN3D calculation service.
+ * @param {Kekule.StructureFragment} sourceMol
+ * @param {Hash} options
+ * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
+ * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
+ * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
+ * @returns {Object} Created calculation object.
+ */
+Kekule.Calculator.generate3D = function(sourceMol, options, callback, errCallback, msgCallback)
+{
+	return Kekule.Calculator.generateStructure(sourceMol, Kekule.Calculator.Services.GEN3D, options, callback, errCallback, msgCallback);
+}
+
+/**
+ * Generate 2D structure based on 3D or 0D sourceMol.
+ * This method seek for registered GEN2D calculation service.
+ * @param {Kekule.StructureFragment} sourceMol
+ * @param {Hash} options
+ * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
+ * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
+ * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
+ * @returns {Object} Created calculation object.
+ */
+Kekule.Calculator.generate2D = function(sourceMol, options, callback, errCallback, msgCallback)
+{
+	return Kekule.Calculator.generateStructure(sourceMol, Kekule.Calculator.Services.GEN2D, options, callback, errCallback, msgCallback);
 }
 
 })();

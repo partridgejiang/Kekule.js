@@ -217,6 +217,15 @@ M  END
 
     function generate3D()
     {
+      var sync = Kekule.Widget.getWidgetById('checkBoxSync').getChecked();
+      if (sync)
+        return generate3DSync();
+      else
+        return generate3DAsync();
+    }
+
+    function generate3DAsync()
+    {
       var mol = getCurrMol();
       mol = prepareSourceMol(mol);
       var msgs = [];
@@ -229,8 +238,16 @@ M  END
         viewer.setChemObj(mol3D);
       });
       */
-      calculator = Kekule.Calculator.generate3D(mol, {'forceField': ''},
+      var useFFCalc = Kekule.Widget.getWidgetById('checkBoxUseFF').getChecked();
+      var opSpeed = Kekule.Widget.getWidgetById('selSpeed').getValue();
+
+      var tickStart = Date.now();
+      calculator = Kekule.Calculator.generate3D(mol, {'applyFFCalc': useFFCalc, forceField: '', 'speed': opSpeed},
         function(generatedMol){
+          var tickEnd = Date.now();
+          var duration = tickEnd - tickStart;
+          document.getElementById('labelDuration').innerHTML = 'Calculated in ' + duration + ' ms';
+
           console.log(generatedMol);
 
           var newMol = prepareOutputMol(generatedMol);
@@ -259,6 +276,25 @@ M  END
         calculator.halt();
     }
 
+    function generate3DSync()
+    {
+      var mol = getCurrMol();
+      mol = prepareSourceMol(mol);
+      var msgs = [];
+
+      var useFFCalc = Kekule.Widget.getWidgetById('checkBoxUseFF').getChecked();
+      var opSpeed = Kekule.Widget.getWidgetById('selSpeed').getValue();
+
+      var generator = new Kekule.Calculator.ObStructure3DGenerator();
+      generator.setSourceMol(mol);
+      generator.setOptions({'applyFFCalc': useFFCalc, 'speed': opSpeed});
+      generator.executeSync(function(){
+        var mol3D = generator.getGeneratedMol();
+        console.log(mol3D);
+        viewer.setChemObj(mol3D);
+      });
+    }
+
     function init()
     {
 	    fillAcidicGroupList();
@@ -281,9 +317,15 @@ M  END
 <div id="calcPanel">
   <button type="button" onclick="generate3D()">Generate</button>
   <button type="button" onclick="terminate()">Terminate</button>
+  <span id="checkBoxSync" data-widget="Kekule.Widget.CheckBox" data-text="Sync"></span>
+  <span id="checkBoxUseFF" data-widget="Kekule.Widget.CheckBox" data-text="Use FF Calc"></span>
+  <label>Gen3D Operation Speed
+    <select id="selSpeed" data-widget="Kekule.Widget.SelectBox" data-items='[{"value":1},{"value":2},{"value":3,"selected":true},{"value":4},{"value":5},{"value":6}]'></select>
+  </label>
+  <label id="labelDuration"></label>
 </div>
-<div id="chemEditorUi" style="width:900px;height:500px" data-chem-obj="url(#molSrc)"></div>
-<div id="chemViewer" style="width:500px;height:400px" data-widget="Kekule.ChemWidget.Viewer3D" data-predefined-setting="fullFunc"></div>
+<div id="chemEditorUi" style="width:600px;height:400px;float:left" data-chem-obj="url(#molSrc)"></div>
+<div id="chemViewer" style="width:500px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D" data-predefined-setting="fullFunc"></div>
 <div id="logPanel">
   <div id="memoLog" style="width:100em;height:40em" data-widget="Kekule.Widget.TextEditor"></div>
 </div>
