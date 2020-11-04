@@ -85,17 +85,35 @@ function handleMessages(msgData)
 		initOps = msgData;
 		initEnv();
 	}
-	else if (msgType === 'gen3D')
+	else if (msgType === 'gen3D' || msgType === 'gen2D')
 	{
+		//console.log('recieve', msgType, msgData);
 		var molData = msgData.molData;
-		var forceFieldName = msgData.forceField;
-		var useFFCalc = msgData.applyFFCalc;  // whether use force field calculation or quick approach
-		var speed = msgData.speed;  // speed using OB gen3D operation, can be 1-6 (the larger the faster) or string like 'fastest', 'med', etc.
-		var execFunc = function() {
-			var genData = generate3DMolData(molData, {'useFFCalc': useFFCalc, 'forceFieldName': forceFieldName, 'speed': speed});
-			// feedback
-			postMessage({'type': 'output3D', 'molData': genData});
-		};
+		if (msgType === 'gen2D')
+		{
+			var execFunc = function ()
+			{
+				var genData = generate2DMolData(molData, {});
+				// feedback
+				postMessage({'type': 'output2D', 'molData': genData});
+			};
+		}
+		else if (msgType === 'gen3D')
+		{
+			var forceFieldName = msgData.forceField;
+			var useFFCalc = msgData.applyFFCalc;  // whether use force field calculation or quick approach
+			var speed = msgData.speed;  // speed using OB gen3D operation, can be 1-6 (the larger the faster) or string like 'fastest', 'med', etc.
+			var execFunc = function ()
+			{
+				var genData = generate3DMolData(molData, {
+					'useFFCalc': useFFCalc,
+					'forceFieldName': forceFieldName,
+					'speed': speed
+				});
+				// feedback
+				postMessage({'type': 'output3D', 'molData': genData});
+			};
+		}
 		if (runtimeInited)
 			execFunc();
 		else
@@ -103,8 +121,40 @@ function handleMessages(msgData)
 	}
 };
 
+function generate2DMolData(molData, options)
+{
+	var result;
+	var obMol = _gen2DByObOperation(molData, options || {});
+	if (!obMol)  // failed
+	{
+		// Kekule.raise(Kekule.$L('ErrorMsg.OpenBabel.FAIL_TO_GENERATE_3D_STRUCTURE'));
+		throw 'Fail to generate 2D structure';
+	}
+	else  // success
+	{
+		// fetch back coords of obMol to mol
+		//var mol3D = AU.obObjToKekule(obMol);
+		var obConv = new (Module['ObConversionWrapper'])();
+		try
+		{
+			obConv.setOutFormat('chemical/x-mdl-molfile', 'mol');
+			if (obConv.writeToOutput(obMol))
+				result = obConv.getOutStr();
+			else
+				throw 'Fail to save generated 3D data';
+		}
+		finally
+		{
+			obConv['delete']();
+		}
+		obMol['delete']();
+	}
+	return result;
+}
+
 function generate3DMolData(molData, /*forceFieldName*/options)
 {
+	var result;
 	//console.log('Module', Module);
 	var op = options || {};
 	var forceFieldName = op.forceFieldName;
@@ -153,7 +203,7 @@ function generate3DMolData(molData, /*forceFieldName*/options)
 	return result;
 };
 
-function _gen3DByObOperation(molData, options)
+function _genStructByObOperation(molData, dimension, options)
 {
 	var speed = ('' + options.speed) || '';  // ensure speed is string
 	var conv = new (Module['ObConversionWrapper'])();
@@ -165,10 +215,11 @@ function _gen3DByObOperation(molData, options)
 		try
 		{
 			conv.readString(mol, molData);
-			var gen3d = Module['OBOp'].FindType('Gen3D');
-			if (gen3d)
+			var opName = (dimension === 2)? 'Gen2D': 'Gen3D';
+			var generator = Module['OBOp'].FindType(opName);
+			if (generator)
 			{
-				gen3d.Do(mol, speed);
+				generator.Do(mol, speed);
 				result = mol;
 			}
 		}
@@ -183,6 +234,14 @@ function _gen3DByObOperation(molData, options)
 		conv['delete']();
 	}
 	return result;
+}
+function _gen2DByObOperation(molData, options)
+{
+	return _genStructByObOperation(molData, 2, options);
+}
+function _gen3DByObOperation(molData, options)
+{
+	return _genStructByObOperation(molData, 3, options);
 }
 
 })(this);

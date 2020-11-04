@@ -162,8 +162,8 @@ Kekule.Dev.PackageUtils = {
 				['_extras/OpenBabel/openbabel.js.dev', 'extra/openbabel.js'],
 				['_extras/OpenBabel/openbabel.wasm', 'extra/openbabel.wasm'],
 				['_extras/OpenBabel/openbabel.data', 'extra/openbabel.data'],
-				//['_extras/OpenBabel/workers/kekule.worker.obStructure3DGenerator.js', 'extra/workers/kekule.worker.obStructure3DGenerator.js']
-				['_extras/OpenBabel/kekule.worker.obStructure3DGenerator.js', 'extra/kekule.worker.obStructure3DGenerator.js']
+				//['_extras/OpenBabel/workers/kekule.worker.obStructureGenerator.js', 'extra/workers/kekule.worker.obStructureGenerator.js']
+				['_extras/OpenBabel/kekule.worker.obStructureGenerator.js', 'extra/kekule.worker.obStructureGenerator.js']
 			],
 			indigo: [
 				['_extras/Indigo/indigo.js.dev', 'extra/indigo.js'],
