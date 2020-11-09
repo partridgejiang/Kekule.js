@@ -29,7 +29,7 @@ Kekule.IO.IndigoReader = Class.create(Kekule.IO.ChemDataReader,
 /** @lends Kekule.IO.IndigoReader# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.IO.InChIWriter',
+	CLASS_NAME: 'Kekule.IO.IndigoReader',
 	/** @private */
 	doReadData: function(data, dataType, format)
 	{
