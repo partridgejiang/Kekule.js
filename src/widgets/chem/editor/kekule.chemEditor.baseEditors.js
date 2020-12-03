@@ -1284,12 +1284,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		return result;
 	},
-	/** @private */
-	_resizeContext: function(context, bridge, width, height)
-	{
-		if (context && bridge)
-			bridge.setContextDimension(context, width, height);
-	},
 
 	/** @private */
 	_clearSpecContext: function(context, bridge)
@@ -1297,6 +1291,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (bridge && context)
 			bridge.clearContext(context);
 	},
+
+	/** @private */
+	_renderSpecContext: function(context, bridge)
+	{
+		if (bridge && context)
+			bridge.renderContext(context);
+	},
+
 	/**
 	 * Clear the main context.
 	 * @private
@@ -1343,8 +1345,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			this.clearOperContext();
 
-			var options = {'partialDrawObjs': this._operatingObjs, 'doNotClear': true};
-			this.repaint(options);
+			try
+			{
+				var options = {'partialDrawObjs': this._operatingObjs, 'doNotClear': true};
+				this.repaint(options);
+			}
+			finally
+			{
+				this._renderSpecContext(this.getOperContext(), this.getDrawBridge());  // important, done the rendering of oper context
+			}
 
 			/*
 			var context = this.getObjContext();

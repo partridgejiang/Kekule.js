@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Viewer Comparation</title>
+	<script src="../../_libs/three_new/Three.min.js"></script>
+	<script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel,inchi,indigo&min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<link id="externalRes" type="chemical/x-kekule-json" href="./../../_chemFiles/chemSpace/spaceMolTextImage.kcj" />
+	<script type="chemical/x-mdl-molfile" id="internalRes">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+	</script>
+	<script>
+		var viewers = [];
+
+		function setCommonViewerConfigs(viewers)
+		{
+			viewers.forEach(viewer => {
+				viewer.setCoordMode(Kekule.CoordMode.COORD2D);
+			});
+		}
+		function setIndividualViewerConfigs()
+		{
+			// first viewer
+			var viewer = viewers[0];
+
+			// second viewer
+			var viewer = viewers[1];
+			viewer.displayerConfigs.environment2DConfigs.antialias = true;
+			viewer.displayerConfigs.environment2DConfigs.antialiasBlurRatio = 0.25;
+			viewer.displayerConfigs.environment2DConfigs.overSamplingRatio = 2;
+		}
+
+		function init()
+		{
+			viewers = [
+				Kekule.Widget.getWidgetById('chemViewer1'),
+				Kekule.Widget.getWidgetById('chemViewer2')
+			];
+			setCommonViewerConfigs(viewers);
+			setIndividualViewerConfigs();
+			viewers[0].requestRepaint();
+			viewers[1].requestRepaint();
+		}
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div>
+		<div id="chemViewer1" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#externalRes')" data-auto-size="true"></div>
+		<div id="chemViewer2" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#externalRes')" data-auto-size="true"></div>
+	</div>
+</body>
+</html>

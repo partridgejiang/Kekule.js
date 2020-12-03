@@ -79,12 +79,16 @@ Kekule.ChemWidget.ChemObjDisplayerConfigs = Class.create(Kekule.AbstractConfigs,
 	initProperties: function()
 	{
 		this.addConfigProp('ioConfigs', 'Kekule.ChemWidget.ChemObjDisplayerIOConfigs');
+		this.addConfigProp('environment2DConfigs', 'Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs');
+		this.addConfigProp('environment3DConfigs', 'Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs');
 	},
 	/** @private */
 	initPropValues: function(/*$super*/)
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setPropStoreFieldValue('ioConfigs', new Kekule.ChemWidget.ChemObjDisplayerIOConfigs());
+		this.setPropStoreFieldValue('environment2DConfigs', new Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs());
+		this.setPropStoreFieldValue('environment3DConfigs', new Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs());
 	}
 });
 /**
@@ -103,6 +107,30 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
 	initProperties: function()
 	{
 		this.addBoolConfigProp('canonicalizeBeforeSave', true);
+	}
+});
+/**
+ * Config class of 2D rendering environment options for {@link Kekule.ChemWidget.ChemObjDisplayer}.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Bool} antialias Whether use a more aggressive antialias strategy than the browser's default.
+ * @property {Float} antialiasBlurRatio The blur level to make the 2D rendering more smooth.
+ *   Effects will only be take when property {@link Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs.antialias} is true.
+ * @property {Float} overSamplingRatio The oversampling ratio to make the 2D rendering more smooth.
+ *   Effects will only be take when property {@link Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs.antialias} is true.
+ */
+Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.addBoolConfigProp('antialias', false);
+		this.addFloatConfigProp('antialiasBlurRatio', 0);
+		this.addFloatConfigProp('overSamplingRatio', 1);
 	}
 });
 
@@ -159,6 +187,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this._contextTransformOpsMap = new Kekule.MapEx();
 		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
+		this.setPropStoreFieldValue('displayerConfigs', displayerConfigs || this.createDefaultConfigs());
 		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (chemObj)
 		{
@@ -166,7 +195,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		//this.setUseCornerDecoration(true);
 		this.setEnableLoadNewFile(true);
-		this.setPropStoreFieldValue('displayerConfigs', displayerConfigs || this.createDefaultConfigs());
+		//this.setPropStoreFieldValue('displayerConfigs', displayerConfigs || this.createDefaultConfigs());
 	},
 	/** @private */
 	doFinalize: function(/*$super*/)
@@ -331,6 +360,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				}
 			}
 		});
+
+		//this.defineProp('actualOverSamplingRatio', {'dataType': DataType.FLOAT, 'setter': null, 'scope': PS.PRIVATE});  // private
 
 		this.defineProp('transformParams', {'dataType': DataType.HASH, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
@@ -642,11 +673,23 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return this;
 	},
 
+	/**
+	 * Returns environment configs of current render mode.
+	 * @private
+	 */
+	getDisplayerEnvironmentConfigs: function()
+	{
+		var envConfigs = (this.getCoordMode() === Kekule.CoordMode.COORD3D)?
+			this.getDisplayerConfigs().getEnvironment3DConfigs():
+			this.getDisplayerConfigs().getEnvironment2DConfigs();
+		return envConfigs;
+	},
 	/** @private */
 	getContextCreationParams: function(renderType, drawBridge)
 	{
 		var result;
 		var renderConfig = this.getRenderConfigs();
+		var displayerConfig = this.getDisplayerConfigs();
 		if (renderType === Kekule.Render.RendererType.R3D)
 			result = {
 				'alpha': true,
@@ -655,6 +698,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		else  // 2D
 			result = {
 				'alpha': true,
+				'antialias': displayerConfig.getEnvironment2DConfigs().getAntialias(),
+				'antialiasBlurRatio': displayerConfig.getEnvironment2DConfigs().getAntialiasBlurRatio(),
+				'overSamplingRatio': displayerConfig.getEnvironment2DConfigs().getOverSamplingRatio()
 			};
 		return result;
 	},
@@ -852,6 +898,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		else
 			return null;
 	},
+
+	/** @private */
+	_getContextOverSamplingRatio: function()
+	{
+		var envConfigs = this.getDisplayerEnvironmentConfigs();
+		var enableAntialias = envConfigs.getAntialias && envConfigs.getAntialias();
+		var overSamplingRatio = (enableAntialias && envConfigs.getOverSamplingRatio && envConfigs.getOverSamplingRatio()) || 1;
+		return overSamplingRatio;
+	},
+
 	/**
 	 * Change the dimension of context.
 	 * @param {Hash} newDimension
@@ -861,11 +917,43 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		if (this.getDrawBridge() && this.getDrawContext())
 		{
-			this.getDrawBridge().setContextDimension(this.getDrawContext(), newDimension.width, newDimension.height);
+			var width = newDimension.width;
+			var height = newDimension.height;
+			var elem = this.getDrawBridge().getContextElem(this.getDrawContext());
+			if (elem)  // use transform CSS property to do resampling
+			{
+				var overSamplingRatio = this._getContextOverSamplingRatio();
+				if (overSamplingRatio !== 1 && Kekule.BrowserFeature.cssTranform)  // oversampling enabled
+				{
+					/*
+					width *= overSamplingRatio;
+					height *= overSamplingRatio;
+					*/
+					var scale = 1 / overSamplingRatio;
+					elem.style.transform = 'scale(' + scale + ',' + scale + ')';
+					elem.style.transformOrigin = '0 0';
+					//this.setPropStoreFieldValue('actualOverSamplingRatio', overSamplingRatio);  // store the over sampling ratio for rendering
+					this.getDrawBridge().setContextParam(this.getDrawContext(), 'overSamplingRatio', overSamplingRatio);
+				}
+				else
+				{
+					elem.style.transform = '';
+					//this.setPropStoreFieldValue('actualOverSamplingRatio', null);  // store the over sampling ratio for rendering
+					this.getDrawBridge().setContextParam(this.getDrawContext(), 'overSamplingRatio', null);
+				}
+			}
+			this._resizeContext(this.getDrawContext(), this.getDrawBridge(), width, height);
+			//this.getDrawBridge().setContextDimension(this.getDrawContext(), newDimension.width, newDimension.height);
 			return true;
 		}
 		else
 			return false;
+	},
+	/** @private */
+	_resizeContext: function(context, bridge, width, height)
+	{
+		if (context && bridge)
+			bridge.setContextDimension(context, width, height);
 	},
 
 	/** @private */
@@ -1353,6 +1441,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			else
 				drawParams = this.calcDrawParams(overrideOptions);
 
+			//drawParams.drawOptions.unitLength = 2;
+
 			this._lastBaseCoord = drawParams.baseCoord;  // save for next time use in drawOptionChanged
 			//console.log('context center', baseCoord);
 
@@ -1377,6 +1467,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			if (this.getEnableCustomCssProperties())
 				this._applyCustomCssProps(drawParams.drawOptions);
 
+			this._setupRenderingEnvironment(context, this.getDrawBridge());
+
 			painter.draw(context, drawParams.baseCoord, drawParams.drawOptions);
 
 			if (transformOpsChanged)
@@ -1391,6 +1483,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		finally
 		{
 			this.endPaint();
+		}
+	},
+	/** @private */
+	_setupRenderingEnvironment: function(context, drawBridge)
+	{
+		var envConfigs = this.getDisplayerEnvironmentConfigs();
+		if (envConfigs.getAntialias && envConfigs.getAntialias())
+		{
+			// blur
+			var blurRatio = (envConfigs.getAntialiasBlurRatio && envConfigs.getAntialiasBlurRatio()) || 0;
+			if (blurRatio)
+			{
+				var lengthConfigs = this.getRenderConfigs().getLengthConfigs();
+				var blurRatio = envConfigs.getAntialiasBlurRatio() || 0;
+				var blurValue = (lengthConfigs.getActualLength('bondLineWidth') * blurRatio) || 0;
+				//var bridge = this.getDrawBridge();
+				var bridge = drawBridge || this.getDrawBridge();
+				if (bridge.setFilter && bridge.clearFilter)
+				{
+					if (blurValue)
+						bridge.setFilter(context, 'blur(' + blurValue + 'px)');
+					else
+						bridge.clearFilter(context);
+				}
+			}
 		}
 	},
 
