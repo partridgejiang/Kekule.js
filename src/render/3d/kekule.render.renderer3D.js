@@ -50,6 +50,8 @@ Kekule.Render.Abstract3DDrawBridge = Class.create(
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.Abstract3DDrawBridge',
+	/** @private */
+	CONTEXT_PARAMS_FIELD: '__$context_params__',
 
 	getGraphicQualityLevel: function()
 	{
@@ -123,6 +125,34 @@ Kekule.Render.Abstract3DDrawBridge = Class.create(
 	clearContext: function(context)
 	{
 		return null;
+	},
+
+	/**
+	 * Returns an additional param associated with context.
+	 * @param {Object} context
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getContextParam: function(context, key)
+	{
+		return (context[this.CONTEXT_PARAMS_FIELD] || {})[key];
+	},
+	/**
+	 * Set an additional param associated with context.
+	 * @param {Object} context
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setContextParam: function(context, key, value)
+	{
+		if (!context[this.CONTEXT_PARAMS_FIELD])
+			context[this.CONTEXT_PARAMS_FIELD] = {};
+		context[this.CONTEXT_PARAMS_FIELD][key] = value;
+	},
+	/** @private */
+	_getOverSamplingRatio: function(context)
+	{
+		return this.getContextParam(context, 'overSamplingRatio') || null;
 	},
 
 	/**

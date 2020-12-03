@@ -51,17 +51,19 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.Abstract2DDrawBridge',
+	/** @private */
+	CONTEXT_PARAMS_FIELD: '__$context_params__',
 
 	/**
 	 * Create a context element for drawing.
 	 * @param {Element} parentElem
-	 * //@param {Int} contextOffsetX X coord of top-left corner of context, in px.
-	 * //@param {Int} contextOffsetY Y coord of top-left corner of context, in px.
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
-	 * @returns {Object} Context used for drawing.
+	 * @param {Hash} params Additional params to create context.
+	 * //@param {Bool} doubleBuffered Whether use double buffer to make smooth drawing.
+	 * //@returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height)
+	createContext: function(parentElem, width, height, params /* id, doubleBuffered */)
 	{
 		return null;
 	},
@@ -75,11 +77,57 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	},
 
 	/**
+	 * Returns an additional param associated with context.
+	 * @param {Object} context
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getContextParam: function(context, key)
+	{
+		return (context[this.CONTEXT_PARAMS_FIELD] || {})[key];
+	},
+	/**
+	 * Set an additional param associated with context.
+	 * @param {Object} context
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setContextParam: function(context, key, value)
+	{
+		if (!context[this.CONTEXT_PARAMS_FIELD])
+			context[this.CONTEXT_PARAMS_FIELD] = {};
+		context[this.CONTEXT_PARAMS_FIELD][key] = value;
+	},
+	/** @private */
+	_getOverSamplingRatio: function(context)
+	{
+		return this.getContextParam(context, 'overSamplingRatio') || null;
+	},
+
+	/**
 	 * Get width and height of context.
 	 * @param {Object} context
 	 * @returns {Hash} {width, height}
 	 */
 	getContextDimension: function(context)
+	{
+		//return {};
+		var result = this._getContextRawDimension(context);
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+		{
+			result.width /= overSamplingRatio;
+			result.height /= overSamplingRatio;
+		}
+		return result;
+	},
+	/**
+	 * Get the raw width and height of context (regardless of oversampling).
+	 * @param {Object} context
+	 * @returns {Hash} {width, height}
+	 * @private
+	 */
+	_getContextRawDimension: function(context)
 	{
 		return {};
 	},
@@ -91,6 +139,24 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	 * @param {Int} height
 	 */
 	setContextDimension: function(context, width, height)
+	{
+		//return null;
+		var dim = {'width': width, 'height': height};
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+		{
+			dim.width *= overSamplingRatio;
+			dim.height *= overSamplingRatio;
+		}
+		this._setContextRawDimension(context, dim.width, dim.height);
+	},
+	/**
+	 * Set the raw width and height of context (regardless of oversampling).
+	 * @param {Object} context
+	 * @returns {Hash} {width, height}
+	 * @private
+	 */
+	_setContextRawDimension: function(context, width, height)
 	{
 		return null;
 	},
@@ -117,7 +183,14 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	{
 
 	},
+	/**
+	 * Prepare the context for drawing.
+	 * @param {Object} context
+	 */
+	prepareContext: function(context)
+	{
 
+	},
 	/**
 	 * Clear the whole context.
 	 * @param {Object} context
@@ -135,6 +208,23 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	{
 
 	},
+	/**
+	 * Set filter of the content.
+	 * @param {Object} context
+	 * @param {String} filter CSS filter string.
+	 */
+	setFilter: function(context, filter)
+	{
+
+	},
+	/**
+	 * Remove all filters from context.
+	 * @param {Object} context
+	 */
+	clearFilter: function(context)
+	{
+
+	},
 
 	/**
 	 * Transform a context based coord to screen based one (usually in pixel).
@@ -144,7 +234,12 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	 */
 	transformContextCoordToScreen: function(context, coord)
 	{
-		return coord;
+		//return coord;
+		var result = coord;
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+			result = Kekule.CoordUtils.divide(result, overSamplingRatio);
+		return result;
 	},
 	/**
 	 * Transform a screen based coord to context based one.
@@ -154,7 +249,28 @@ Kekule.Render.Abstract2DDrawBridge = Class.create(
 	 */
 	transformScreenCoordToContext: function(context, coord)
 	{
-		return coord;
+		//return coord;
+		var result = coord;
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+			result = Kekule.CoordUtils.multiply(result, overSamplingRatio);
+		return result;
+	},
+	transformContextLengthToScreen: function(context, length)
+	{
+		var result = length;
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+			result /= overSamplingRatio;
+		return result;
+	},
+	transformScreenLengthToContext: function(context, length)
+	{
+		var result = length;
+		var overSamplingRatio = this._getOverSamplingRatio(context);
+		if (overSamplingRatio)
+			result *= overSamplingRatio;
+		return result;
 	},
 
 	/**
@@ -739,6 +855,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	{
 		var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), options.allowCoordBorrow);
 		options.medianObjRefLength = medianObjRefLength || options.defScaleRefLength;
+
 		// since options passed by draw method is already protected, we are not worry about change it here.
 		this.prepareTransformParams(context, baseCoord, options);
 		this.prepareGeneralOptions(context, options);
@@ -774,12 +891,26 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		{
 			result = drawOptions.transformParams;
 		}
-		else
+		else  // transform params not calculated, this is the root renderer
 		{
+			// for the root renderer, consider over sampling, change the unit length here
+			if (!drawOptions.unitLength)
+				drawOptions.unitLength = 1;
+			var overSamplingRatio = this.getDrawBridge()._getOverSamplingRatio(context);
+			if (overSamplingRatio && overSamplingRatio !== 1)
+				drawOptions.unitLength *= overSamplingRatio;
+			//console.log('prepareTransformParams', this.getClassName(), drawOptions.unitLength, drawOptions);
+
 			var p = this.generateTransformParams(context, baseCoord, drawOptions, objBox);
 			drawOptions.transformParams = p;
 			result = p;
 		}
+		/*
+		// since we now have over sampling, the actual zoom(transformParams.zoom) may differ from initial drawOptions.zoom, need to feed it back
+		if (drawOptions.transformParams.zoom)
+			drawOptions.zoom = drawOptions.transformParams.zoom;
+		*/
+
 		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix(result);
 		var invTransformMatrix = Kekule.CoordUtils.calcInverseTransform2DMatrix(result);
 
@@ -829,6 +960,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 				result.translateX = baseCoord.x - boxCenter.x;
 				result.translateY = baseCoord.y - boxCenter.y;
 			}
+			//console.log('calc translate', baseCoord, boxCenter);
 		}
 		else
 		{
@@ -837,6 +969,11 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		}
 
 		result.zoom = drawOptions.zoom || 1;
+		/*
+		var overSamplingRatio = this.getDrawBridge()._getOverSamplingRatio(context);
+		if (overSamplingRatio && overSamplingRatio !== 1)
+			result.zoom *= overSamplingRatio;
+		*/
 
 		if ((!drawOptions.scale) && (!drawOptions.scaleX) && (!drawOptions.scaleY))
 		{
@@ -845,7 +982,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			if (!drawOptions.autofit)
 			{
 				// auto determinate the scale by defBondLength and median of ctab bond length
-				var defDrawRefLength = oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1;
+				var defDrawRefLength = (oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1)  * result.unitLength;
 				//var medianObjRefLength = this.getAutoScaleRefObjLength(this.getChemObj(), result.allowCoordBorrow);
 				var medianObjRefLength = drawOptions.medianObjRefLength;
 				if (Kekule.ObjUtils.isUnset(medianObjRefLength))
@@ -979,11 +1116,14 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 
 		if (result.unitLength)
 		{
+			// the translate and base coord is not related to unitLength!
+			/*
 			result.translateX *= result.unitLength;
 			result.translateY *= result.unitLength;
 
 			result.drawBaseCoord.x *= result.unitLength;
 			result.drawBaseCoord.y *= result.unitLength;
+			*/
 		}
 		return result;
 	},
@@ -1168,8 +1308,13 @@ Kekule.Render.RichTextBased2DRenderer = Class.create(Kekule.Render.ChemObj2DRend
 
 		//console.log('draw text options', Kekule.Render.RichTextUtils.toText(richText), options, this.extractRichTextDrawOptions(options));
 
+		var actualRichTextOptions = this.extractRichTextDrawOptions(options);
+		// font size, consider of unitLength
+		if (actualRichTextOptions.fontSize)
+			actualRichTextOptions.fontSize *= (actualRichTextOptions.unitLength || 1);
+
 		var result = this.drawRichText(context, textCoord, richText,
-			this.extractRichTextDrawOptions(options));
+			actualRichTextOptions);
 
 		//console.log('draw text', textCoord, richText, this.extractRichTextDrawOptions(options));
 		//console.log(result);
@@ -2720,7 +2865,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			// recalc font size to px
 			//richTextDrawOptions.fontSize *= localLabelDrawOptions.unitLength || renderConfigs.getLengthConfigs().getUnitLength();
 			nodeRenderOptions.fontSize *= nodeRenderOptions.unitLength;
-			//console.log('font size', nodeRenderOptions.fontSize);
+			//console.log('font size', nodeRenderOptions.fontSize, nodeRenderOptions);
 			//console.log('drawLabel', label);
 			/*
 			if (nodeRenderOptions.textBoxXAlignment !== Kekule.Render.BoxXAlignment.CENTER)
@@ -2731,6 +2876,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			actualDrawOptions.charDirection = labelCharDirection;
 			var elemEx = this.drawRichText(context, coord, label,
 					actualDrawOptions/*nodeRenderOptions/*richTextDrawOptions*/);
+			//console.log('draw rich text', label, actualDrawOptions);
 			var elem = elemEx.drawnObj;
 			var rect = elemEx.boundRect;
 			// change boundInfo to a rect
@@ -3678,12 +3824,18 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 				arrowParams = {'width': options.bondArrowWidth * options.unitLength, 'length': options.bondArrowLength * options.unitLength};
 			}
 
+			/*
 			var ops = {
 				'strokeWidth': strokeWidth,
 				'strokeColor': Kekule.Render.RenderOptionUtils.getColor(options),
 				'strokeDash': lineParams[0].isDash,
 				'opacity': options.opacity
 			};
+			*/
+			var ops = Object.create(options);
+			ops.strokeWidth = strokeWidth;
+			ops.strokeColor = Kekule.Render.RenderOptionUtils.getColor(options);
+			ops.strokeDash = lineParams[0].isDash;
 			//console.log('draw line options', ops);
 
 			var line = this.drawArrowLine(context, coord1, coord2, arrowParams, ops);

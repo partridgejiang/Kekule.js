@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ChemViewer Transition Test</title>
+	<script src="../../../src/kekule.js?modules=algorithm,chemWidget,openbabel,inchi,indigo&min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" type="chemical/x-mdl-molfile">
+Untitled Document-1
+  ChemDraw10021112262D
+
+ 10  9  0  0  0  0  0  0  0  0999 V2000
+   -3.2151    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5006   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.7862    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0717   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3572    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3572   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0717    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7862   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5006    0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2151   -0.2062    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  2  0
+  5  6  1  0
+  6  7  2  0
+  7  8  1  0
+  8  9  2  0
+  9 10  1  0
+M  END
+	</script>
+	<script type="chemical/x-mdl-molfile" id="internalRes">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+	</script>
+	<link id="externalRes" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/cyclohextone.mol" />
+	<link id="externalResFake" type="chemical/x-mdl-molfile" href="./../../_chemFiles/Mols2D/Radicals.cdx.mol" />
+	<style>
+		#chemViewer0
+		{
+			width: 300px;
+			height: 300px;
+			--bond-line-width: 1.5;
+		}
+		#chemViewer2
+		{
+			width: 600px;
+			height: 600px;
+			transform: scale(0.5, 0.5);
+			--bond-line-width: 2;
+		}
+		#chemViewer4
+		{
+			width: 1200px;
+			height: 1200px;
+			transform: scale(0.25, 0.25);
+			--bond-line-width: 4;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<div id="chemViewer0" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#internalRes')" data-autofit="true"></div>
+		<div id="chemViewer2" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#internalRes')" data-autofit="true"></div>
+		<div id="chemViewer4" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#internalRes')" data-autofit="true"></div>
+	</div>
+</body>
+</html>

@@ -28,10 +28,13 @@
 
 	<script src="../../_libs/three_new/Three.min.js"></script>
 	<script src="../../_libs/three_new/CSS3DRenderer.js"></script>
-
+<!--
+	<script src="../../../dist/kekule.js?modules=algorithm,chemWidget,openbabel,inchi,indigo"></script>
+-->
 	<!--
-	<script src="../../../release/kekule.js"></script>
+	<script src="../../../dist/kekule.min.js"></script>
 	-->
+
 <script name="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" id="(2E,4E,6E,8E)-deca-2,4,6,8-tetraene" type="chemical/x-mdl-molfile">
 Untitled Document-1
   ChemDraw10021112262D
@@ -292,7 +295,7 @@ M  END
 	function init()
 	{
     var elem = document.getElementById('chemViewer');
-    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
     chemViewer.setEnableToolbar(true).setFileDroppable(true);
     //chemViewer.setRenderType(Kekule.Render.RendererType.R2D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
