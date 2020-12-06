@@ -274,9 +274,9 @@ Kekule.Render.RaphaelRendererBridge = Class.create(Kekule.Render.Abstract2DDrawB
 			});
 		}
 		if (options.lineCap)
-			elem.attr('stroke-linecap', options.linecap);
+			elem.attr('stroke-linecap', options.lineCap);
 		if (options.lineJoin)
-			elem.attr('stroke-linejoin', options.linejoin);
+			elem.attr('stroke-linejoin', options.lineJoin);
 	},
 
 	/** @private */

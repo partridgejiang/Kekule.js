@@ -79,7 +79,7 @@ Kekule.Render.Render2DConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addConfigProp('textFontConfigs', 'Kekule.Render.TextFontConfigs');
 		this.addConfigProp('lengthConfigs', 'Kekule.Render.LengthConfigs');
 		this.addConfigProp('colorConfigs', 'Kekule.Render.ColorConfigs');
-		this.addConfigProp('environmentConfigs', 'Kekule.Render.Render2DEnvironmentConfigs');
+		//this.addConfigProp('environmentConfigs', 'Kekule.Render.Render2DEnvironmentConfigs');
 		//this.addConfigProp('interactStyleMap', 'Kekule.Render.PredefinedConfigsMap');
 	},
 	/** @private */
@@ -167,6 +167,10 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);
 		this.addBoolConfigProp('autoCreateChargeAndRadicalMarker', true);
+		this.addStrConfigProp('bondLineCap', 'round');  // possible value: 'butt', 'round' and 'square'
+		this.addStrConfigProp('bondLineJoin', 'miter');
+		this.addStrConfigProp('glyphLineCap', 'round');
+		this.addStrConfigProp('glyphLineJoin', 'miter');
 	}
 });
 
@@ -377,7 +381,6 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('chemMarkerMargin', 5);
 
 		//this.addFloatConfigProp('chargeMarkCircleWidth', 1);
-
 
 		// length for chem structures
 		this.addFloatConfigProp('allenCenterAtomRadius', 3);
