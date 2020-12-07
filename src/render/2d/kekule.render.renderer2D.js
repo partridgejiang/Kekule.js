@@ -904,12 +904,12 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 			var p = this.generateTransformParams(context, baseCoord, drawOptions, objBox);
 			drawOptions.transformParams = p;
 			result = p;
+
+			// since we now have over sampling and autofit, the actual zoom(transformParams.zoom) may differ from initial drawOptions.unitLength, need to feed it back
+			// The drawOptions was already protected and will not affect the one passed to draw()
+			if (drawOptions.transformParams.zoom)
+				drawOptions.zoom = drawOptions.transformParams.zoom;
 		}
-		/*
-		// since we now have over sampling, the actual zoom(transformParams.zoom) may differ from initial drawOptions.zoom, need to feed it back
-		if (drawOptions.transformParams.zoom)
-			drawOptions.zoom = drawOptions.transformParams.zoom;
-		*/
 
 		var transformMatrix = Kekule.CoordUtils.calcTransform2DMatrix(result);
 		var invTransformMatrix = Kekule.CoordUtils.calcInverseTransform2DMatrix(result);
@@ -978,8 +978,8 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		if ((!drawOptions.scale) && (!drawOptions.scaleX) && (!drawOptions.scaleY))
 		{
 			var defaultDrawScale;
-			// calculate the default scale, but in autofit, default scale will not be used, so bypass
-			if (!drawOptions.autofit)
+			// calculate the default scale, /* but in autofit, default scale will not be used, so bypass */
+			//if (!drawOptions.autofit)
 			{
 				// auto determinate the scale by defBondLength and median of ctab bond length
 				var defDrawRefLength = (oneOf(drawOptions.refDrawLength, this.getAutoScaleRefDrawLength(drawOptions)) || 1)  * result.unitLength;
@@ -1007,25 +1007,65 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 
 				var sx = Math.max(contextDim.width - padding, 0) / (objBox.width || 1);  // avoid div by 0
 				var sy = Math.max(contextDim.height - padding, 0) / (objBox.height || 1);
+
+				var adjustedScale = Math.min(sx, sy);
+				var adjustedScaleRatio = adjustedScale / defaultDrawScale;
+
 				if (O.isUnset(drawOptions.retainAspect) || (drawOptions.retainAspect))
 				{
-					var adjustedScale = Math.min(sx, sy);
+					result.scaleX = result.scaleY = defaultDrawScale;
+					// here we should adjust zoom rather than the scaleX/scaleY, since zoom also affects the font size
+					if (drawOptions.autofit)
+						result.zoom *= adjustedScaleRatio;
+					else if (drawOptions.autoShrink) // if adjustedScale > 1, auto shrink will not take effect
+					{
+						if (adjustedScale < defaultDrawScale)
+							result.zoom *= adjustedScaleRatio;
+					}
+					//console.log(result.scaleX, result.unitLength, adjustedScaleRatio);
+					/*
 					if (drawOptions.autofit)
 						result.scaleX = result.scaleY = adjustedScale;
 					else if (drawOptions.autoShrink) // if adjustedScale > 1, auto shrink will not take effect
 						result.scaleX = result.scaleY = ((adjustedScale < defaultDrawScale)? adjustedScale: defaultDrawScale);
+					*/
 				}
 				else
 				{
 					if (drawOptions.autofit)
 					{
+						/*
 						result.scaleX = sx;
 						result.scaleY = sy;
+						*/
+						result.scaleX = ((sx < sy)? 1: sx / sy) * defaultDrawScale;
+						result.scaleY = ((sy < sx)? 1: sy / sx) * defaultDrawScale;
+						result.zoom *= adjustedScaleRatio;
 					}
 					else if (drawOptions.autoShrink)
 					{
+						/*
 						result.scaleX = (sx < defaultDrawScale)? sx: defaultDrawScale;
 						result.scaleY = (sy < defaultDrawScale)? sy: defaultDrawScale;
+						*/
+						result.zoom *= adjustedScaleRatio;
+						if (adjustedScaleRatio < 1)
+						{
+							result.scaleX = result.scaleY = defaultDrawScale;
+						}
+						else
+						{
+							if (sx < sy)
+							{
+								result.scaleX = defaultDrawScale;
+								result.scaleY = defaultDrawScale * sy / sx;
+							}
+							else
+							{
+								result.scaleY = defaultDrawScale;
+								result.scaleX = defaultDrawScale * sx / sy;
+							}
+						}
 					}
 				}
 			}
@@ -3836,6 +3876,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			ops.strokeWidth = strokeWidth;
 			ops.strokeColor = Kekule.Render.RenderOptionUtils.getColor(options);
 			ops.strokeDash = lineParams[0].isDash;
+			ops.lineCap = options.bondLineCap;
+			ops.lineJoin = options.bondLineJoin;
 			//console.log('draw line options', ops);
 
 			var line = this.drawArrowLine(context, coord1, coord2, arrowParams, ops);
@@ -3848,6 +3890,7 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			var lineGap = options.multipleBondSpacingAbs?
 				options.multipleBondSpacingAbs:
 				options.multipleBondSpacingRatio * lineLength;
+
 			if (options.multipleBondMaxAbsSpacing)
 				lineGap = Math.min(lineGap, options.multipleBondMaxAbsSpacing);
 			lineGap *= options.unitLength;
@@ -3940,6 +3983,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 				localOptions.strokeColor = options.color;
 				localOptions.strokeDash = lineParams[i].isDash;
+				localOptions.lineCap = options.bondLineCap;
+				localOptions.lineJoin = options.bondLineJoin;
 
 				/*
 				var line = this.drawArrowLine(context, newCoord1, newCoord2, arrowParams, localOptions);

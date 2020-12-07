@@ -74,7 +74,9 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		return {
 			'strokeColor': renderOptions.strokeColor || renderOptions.color || renderOptions.glyphStrokeColor,
 			'fillColor': renderOptions.fillColor || renderOptions.color || renderOptions.glyphFillColor,
-			'strokeWidth': (renderOptions.strokeWidth || renderOptions.glyphStrokeWidth) * unitLength
+			'strokeWidth': (renderOptions.strokeWidth || renderOptions.glyphStrokeWidth) * unitLength,
+			'lineCap': renderOptions.lineCap || renderOptions.glyphLineCap,
+			'lineJoin': renderOptions.lineJoin || renderOptions.glyphLineJoin
 		}
 	},
 	/** @private */
