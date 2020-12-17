@@ -1823,6 +1823,19 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		*/
 	},
 
+	enableResetDrawingButton: function(chemActions) {
+		for (var chemAction of chemActions) {
+			if (chemAction.getText() === 'More') {
+				var attachedActions = chemAction.getAttachedActions().getActions();
+				for (var attachedAction of attachedActions) {
+					if (attachedAction.getClassName() === 'Kekule.Editor.ActionEditorReset') {
+						attachedAction.doUpdate();
+					}
+				}
+			}
+		}
+	},
+
 	////////////////// methods about inner editor  ///////////////////////
 	/** @private */
 	bindEditor: function(editor)
@@ -1836,7 +1849,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		var self = this;
 		var commonActions = this.getCommonActions();
-		var chemActions = this.getChemActions();
 		this.createIaControllers(editor);
 		editor.addEventListener('load', function(e)
 			{
@@ -1853,6 +1865,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		editor.addEventListener('operChange', function(e)
 			{
 				commonActions.updateAll();
+				this.chemActions.updateAll();
+				this.enableResetDrawingButton(this.getChemActions().getActions());
 				this.updateUiWidgets();
 			},
 			this
@@ -1860,6 +1874,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		editor.addEventListener('selectionChange', function(e)
 			{
 				commonActions.updateAll();
+				this.enableResetDrawingButton(this.getChemActions().getActions());
 				this.updateUiWidgets();
 			},
 			this
@@ -2602,6 +2617,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				var btn = new btnClass(toolbar);
 				btn.setAction(action);
 				*/
+				if (action.getClassName() === 'Kekule.Editor.ActionEditorReset') {
+					action.setChecked(false);
+				}
 				var btn = this._createActionButton(action, toolbar);
 			}
 		}
