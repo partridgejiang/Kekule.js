@@ -4992,7 +4992,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		}
 
 		return 0;
-	},
+  },
   isWedgeOrDash(connector) {
     return connector.getStereo() >= 1 && connector.getStereo() <= 4;
   },
@@ -5072,9 +5072,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							}							
 
               if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
-                const stereoBonds1 = this.getConnectors().filter(this.isWedgeOrDash);
-                const stereoBonds2 = targetObj.getConnectors().filter(this.isWedgeOrDash);
-                result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
+                // const stereoBonds1 = this.getConnectors().filter(this.isWedgeOrDash);
+                // const stereoBonds2 = targetObj.getConnectors().filter(this.isWedgeOrDash);
+                // result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
+                const objSmiles = Kekule.IO.saveMimeData(this, 'chemical/x-daylight-smiles')
+                const targetObjSmiles = Kekule.IO.saveMimeData(this, 'chemical/x-daylight-smiles')
+
+                result = objSmiles === targetObjSmiles ? 0 : 1
+                console.log({objSmiles, targetObjSmiles})
               }
 							
 							if (result === 0) {
