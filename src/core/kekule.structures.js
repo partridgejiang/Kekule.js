@@ -5054,7 +5054,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 						if (result === 0)
 						{
 							this.hydrateExplicitHydrogenBonds();
-							targetObj.hydrateExplicitHydrogenBonds();							
+              targetObj.hydrateExplicitHydrogenBonds();
+              
+              if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
+                const stereoBonds1 = this.getConnectors().filter(this.isWedgeOrDash);
+                const stereoBonds2 = targetObj.getConnectors().filter(this.isWedgeOrDash);
+                result = stereoBonds1.length === stereoBonds2.length ? 0 : 1
+              }
 
 							if (result === 0 && hydrogen_display_type !== 'BONDED') 
 							{
@@ -5069,17 +5075,13 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 								var nodes1 = this.getNonHydrogenNodes();
 								var nodes2 = targetObj.getNonHydrogenNodes();
 								result = nodes1.length - nodes2.length;
-							}							
+              }
 
               if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
-                // const stereoBonds1 = this.getConnectors().filter(this.isWedgeOrDash);
-                // const stereoBonds2 = targetObj.getConnectors().filter(this.isWedgeOrDash);
-                // result = this.compareStereoBonds(stereoBonds1, stereoBonds2);
                 const objSmiles = Kekule.IO.saveMimeData(this, 'chemical/x-daylight-smiles')
                 const targetObjSmiles = Kekule.IO.saveMimeData(this, 'chemical/x-daylight-smiles')
 
                 result = objSmiles === targetObjSmiles ? 0 : 1
-                console.log({objSmiles, targetObjSmiles})
               }
 							
 							if (result === 0) {
