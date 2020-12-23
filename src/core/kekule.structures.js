@@ -5056,12 +5056,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							this.hydrateExplicitHydrogenBonds();
               targetObj.hydrateExplicitHydrogenBonds();
               
-              if (result === 0 && this._getComparisonOptionFlagValue(options, 'compareStereo')) {
-                const stereoBonds1 = this.getConnectors().filter(this.isWedgeOrDash);
-                const stereoBonds2 = targetObj.getConnectors().filter(this.isWedgeOrDash);
-                result = stereoBonds1.length === stereoBonds2.length ? 0 : 1
-              }
-
 							if (result === 0 && hydrogen_display_type !== 'BONDED') 
 							{
                 Kekule.globalOptions.algorithm.molStandardization.clearHydrogens = true;
