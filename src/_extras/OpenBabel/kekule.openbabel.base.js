@@ -249,35 +249,43 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert an OB object to corresponding Kekule one.
 	 * Type of Kekule object is automatically decided by the type of obObj.
 	 * @param {Object} obObj
+	 * @param {Object} kChemObj
+	 * @param {Kekule.MapEx} childObjMap A map of obObj => kObj
 	 * @returns {Kekule.ChemObject}
 	 */
-	obObjToKekule: function(obObj)
+	obObjToKekule: function(obObj, kChemObj, childObjMap)
 	{
 		var AU = Kekule.OpenBabel.AdaptUtils;
 		var obName = Kekule.ObjUtils.getPrototypeOf(obObj).constructor.name;
 		var convFunc = (obName === 'OBReaction')? AU.obReactionToKekule:
 			(obName === 'OBMol')? AU.obMolToKekule:
+			/*
 			(obName === 'OBAtom')? AU.obAtomToKekule:
 			(obName === 'OBBond')? AU.obBondToKekule:
-				AU.obBaseToKekule;
-		return convFunc(obObj);
+			*/
+			AU.obBaseToKekule;
+		return convFunc(obObj, kChemObj, childObjMap);
 	},
 	/**
 	 * Convert an Kekule chem object to corresponding Open Babel one.
 	 * Type of Open Babel object is automatically decided by the type of kChemObj.
+	 * @param {Object} kChemObj
 	 * @param {Object} obObj
+	 * @param {Kekule.MapEx} childObjMap A map of kObj => obObj
 	 * @returns {Kekule.ChemObject}
 	 */
-	kObjToOB: function(kChemObj)
+	kObjToOB: function(kChemObj, obObj, childObjMap)
 	{
 		var AU = Kekule.OpenBabel.AdaptUtils;
 		var convFunc = (kChemObj instanceof Kekule.Reaction)? AU.kReactionToOB:
 			(kChemObj instanceof Kekule.StructureFragment)? AU.kMolToOB:
+			/*
 			(kChemObj instanceof Kekule.ChemStructureNode)? AU.kChemNodeToOB:
 			(kChemObj instanceof Kekule.ChemStructureConnector)? AU.kBondToOB:
+			*/
 				null;  // AU.kChemNodeToOB;
 		if (convFunc)
-			return convFunc(kChemObj);
+			return convFunc(kChemObj, obObj, childObjMap);
 		else
 			return null;
 	},
@@ -649,9 +657,10 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert instance of OBMol to Kekule.Molecule.
 	 * @param {Object} obMol
 	 * @param {Kekule.Molecule} kMol
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Molecule}
 	 */
-	obMolToKekule: function(obMol, kMol)
+	obMolToKekule: function(obMol, kMol, childObjMap)
 	{
 		//var result = kMol || new Kekule.Molecule();
 		var result = kMol;
@@ -677,6 +686,42 @@ Kekule.OpenBabel.AdaptUtils = {
 		}
 
 		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obMol, result); // additional data conversion
+
+		// fill the childObjMap
+		if (childObjMap)
+		{
+			// atoms
+			var count = obMol.NumAtoms();
+			if (count === result.getNodeCount())  // atom count matches, now we can do the mapping
+			{
+				for (var i = 0; i < count; ++i)
+				{
+					var obAtom = obMol.GetAtom(i + 1);  // NOTE: in OpenBabel, currently atom index starts from 1
+					if (obAtom)
+					{
+						var kNode = result.getNodeAt(i);
+						if (kNode)
+							childObjMap.set(obAtom, kNode);
+					}
+				}
+			}
+			// bonds
+			var count = obMol.NumBonds();
+			if (count === result.getConnectorCount())  // bond count matches, now we can do the mapping
+			{
+				for (var i = 0; i < count; ++i)
+				{
+					var obBond = obMol.GetBond(i);  // NOTE: in OpenBabel, bond index starts from 0
+					if (obBond)
+					{
+						var kBond = result.getConnectorAt(i);
+						if (kBond)
+							childObjMap.set(obBond, kBond);
+					}
+				}
+			}
+		}
+
 		/*
 		OB.getMember('PerceiveStereo')(obMol, false);
 
@@ -726,11 +771,12 @@ Kekule.OpenBabel.AdaptUtils = {
 
 	/**
 	 * Convert instance of Kekule.StructureFragment to OBMol.
-	 * @param {Kekule.StructureFragment} kMol
+	 * @param {Kekule.StructureFragment} kekuleMol
 	 * @param {Object} obMol
-	 * @returns {Kekule.Molecule}
+	 * @param {Kekule.MapEx} childObjMap
+	 * @returns {Object}
 	 */
-	kMolToOB: function(kMol, obMol)
+	kMolToOB: function(kekuleMol, obMol, childObjMap)
 	{
 		var coordMode = kMol.nodesHasCoord3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 		var result = obMol || new (OB.getClassCtor('OBMol'))();
@@ -740,6 +786,9 @@ Kekule.OpenBabel.AdaptUtils = {
 			result.Clear();
 
 		var atomMapping = new Kekule.MapEx(false);
+
+		// since this conversion method can not handle subgroup, we need to flatten the kekule molecule first
+		var kMol = kekuleMol.getFlattenedShadowFragment(true);
 
 		// atoms
 		for (var i = 0, l = kMol.getNodeCount(); i < l; ++i)
@@ -752,6 +801,11 @@ Kekule.OpenBabel.AdaptUtils = {
 				{
 					//result.AddAtom(obAtom);
 					atomMapping.set(kNode, obAtom);
+					if (childObjMap)
+					{
+						var srcNode = kekuleMol.getFlatternedShadowSourceObj(kNode);
+						childObjMap.set(srcNode, obAtom);
+					}
 				}
 			}
 		}
@@ -766,6 +820,11 @@ Kekule.OpenBabel.AdaptUtils = {
 				if (obBond)
 					result.AddBond(obBond);
 				*/
+				if (childObjMap && obBond)
+				{
+					var srcBond = kekuleMol.getFlatternedShadowSourceObj(kBond);
+					childObjMap.set(srcBond, obBond);
+				}
 			}
 		}
 		atomMapping.finalize();
@@ -777,9 +836,10 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert instance of OBReaction to Kekule.Reaction.
 	 * @param {Object} obReaction
 	 * @param {Kekule.Reaction} kMol
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Reaction}
 	 */
-	obReactionToKekule: function(obReaction, kReaction)
+	obReactionToKekule: function(obReaction, kReaction, childObjMap)
 	{
 		var result = kReaction || new Kekule.Reaction();
 		result.clearAll();
@@ -793,15 +853,19 @@ Kekule.OpenBabel.AdaptUtils = {
 		for (var i = 0, l = obReaction.NumReactants(); i < l; ++i)
 		{
 			var obMol = obReaction.GetReactant(i);
-			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
+			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol, null, childObjMap);
 			result.appendReactant(kMol);
+			if (childObjMap)
+				childObjMap.set(obMol, kMol);
 		}
 		// products
 		for (var i = 0, l = obReaction.NumProducts(); i < l; ++i)
 		{
 			var obMol = obReaction.GetProduct(i);
-			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
+			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol, null, childObjMap);
 			result.appendProduct(kMol);
+			if (childObjMap)
+				childObjMap.set(obMol, kMol);
 		}
 		// TODO: transition state not handled
 
@@ -809,11 +873,12 @@ Kekule.OpenBabel.AdaptUtils = {
 	},
 	/**
 	 * Convert instance of Kekule.Reaction to OBReaction.
-	 * @param {Kekule.Reaction} kMol
+	 * @param {Kekule.Reaction} kReaction
 	 * @param {Object} obReaction
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Reaction}
 	 */
-	kReactionToOB: function(kReaction, obReaction)
+	kReactionToOB: function(kReaction, obReaction, childObjMap)
 	{
 		var result = obReaction || new (OB.getClassCtor('OBReaction'))();
 		result.Clear();
@@ -834,11 +899,13 @@ Kekule.OpenBabel.AdaptUtils = {
 			var kMol = kReaction.getReactantAt(i);
 			if (kMol)
 			{
-				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol);
+				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol, null, childObjMap);
 				if (isReversed)
 					result.AddProduct(obMol);
 				else
 					result.AddReactant(obMol);
+				if (childObjMap)
+					childObjMap.set(kMol, obMol);
 			}
 		}
 		// products
@@ -847,11 +914,13 @@ Kekule.OpenBabel.AdaptUtils = {
 			var kMol = kReaction.getProductAt(i);
 			if (kMol)
 			{
-				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol);
+				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol, null, childObjMap);
 				if (isReversed)
 					result.AddReactant(obMol);
 				else
 					result.AddProduct(obMol);
+				if (childObjMap)
+					childObjMap.set(kMol, obMol);
 			}
 		}
 	}
