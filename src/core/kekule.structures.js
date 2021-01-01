@@ -3275,10 +3275,12 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 	/**
 	 * Check if child nodes has 2D coord.
 	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
 	 * @returns {Bool}
 	 */
-	nodesHasCoord2D: function(allowCoordBorrow)
+	nodesHasCoord2D: function(allowCoordBorrow, checkZeroCoord)
 	{
+		/*
 		var nodes = this.getNodes();
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
@@ -3286,14 +3288,18 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				return true;
 		}
 		return false;
+		*/
+		return this.nodesHasCoordOfMode(Kekule.CoordMode.COORD2D, allowCoordBorrow, checkZeroCoord);
 	},
 	/**
 	 * Check if child nodes has 3D coord.
 	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
 	 * @returns {Bool}
 	 */
-	nodesHasCoord3D: function(allowCoordBorrow)
+	nodesHasCoord3D: function(allowCoordBorrow, checkZeroCoord)
 	{
+		/*
 		var nodes = this.getNodes();
 		for (var i = 0, l = nodes.length; i < l; ++i)
 		{
@@ -3301,6 +3307,41 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				return true;
 		}
 		return false;
+		*/
+		return this.nodesHasCoordOfMode(Kekule.CoordMode.COORD3D, allowCoordBorrow, checkZeroCoord);
+	},
+	/**
+	 * Check if child nodes has coord on coordMode.
+	 * @param {Int} coordMode
+	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
+	 * @returns {Bool}
+	 */
+	nodesHasCoordOfMode: function(coordMode, allowCoordBorrow, checkZeroCoord)
+	{
+		var isZero = Kekule.CoordUtils.isZero;
+		var zeroCount = 0;
+		var nodes = this.getNodes();
+		for (var i = 0, l = nodes.length; i < l; ++i)
+		{
+			if (nodes[i].hasCoordOfMode(coordMode, allowCoordBorrow))
+			{
+				if (checkZeroCoord)
+				{
+					var coord = nodes[i].getCoordOfMode(coordMode, allowCoordBorrow);
+					if (isZero(coord))
+						++zeroCount;
+					else
+						return true;
+				}
+				else
+					return true;
+			}
+		}
+		if (checkZeroCoord && zeroCount === nodes.length && zeroCount <= 1)  // only one node with zero coord, still returns true
+			return true;
+		else
+			return false;
 	},
 
 	/**
@@ -5271,24 +5312,39 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Check if child nodes has 2D coord.
 	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
 	 * @returns {Bool}
 	 */
-	nodesHasCoord2D: function(allowCoordBorrow)
+	nodesHasCoord2D: function(allowCoordBorrow, checkZeroCoord)
 	{
 		if (!this.hasCtab())
 			return false;
-		return this.getCtab().nodesHasCoord2D(allowCoordBorrow);
+		return this.getCtab().nodesHasCoord2D(allowCoordBorrow, checkZeroCoord);
 	},
 	/**
 	 * Check if child nodes has 3D coord.
 	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
 	 * @returns {Bool}
 	 */
-	nodesHasCoord3D: function(allowCoordBorrow)
+	nodesHasCoord3D: function(allowCoordBorrow, checkZeroCoord)
 	{
 		if (!this.hasCtab())
 			return false;
-		return this.getCtab().nodesHasCoord3D(allowCoordBorrow);
+		return this.getCtab().nodesHasCoord3D(allowCoordBorrow, checkZeroCoord);
+	},
+	/**
+	 * Check if child nodes has coord on coordMode.
+	 * @param {Int} coordMode
+	 * @param {Bool} allowCoordBorrow
+	 * @param {Bool} checkZeroCoord If true, when more than one nodes has coord (0, 0, 0), those nodes will be considered as without coord.
+	 * @returns {Bool}
+	 */
+	nodesHasCoordOfMode: function(coordMode, allowCoordBorrow, checkZeroCoord)
+	{
+		if (!this.hasCtab())
+			return false;
+		return this.getCtab().nodesHasCoordOfMode(coordMode, allowCoordBorrow, checkZeroCoord);
 	},
 
 	/**
