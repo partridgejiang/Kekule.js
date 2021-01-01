@@ -97,6 +97,7 @@ Kekule.ChemWidget.ChemObjDisplayerConfigs = Class.create(Kekule.AbstractConfigs,
  * @augments Kekule.AbstractConfigs
  *
  * @property {Bool} canonicalizeBeforeSave Whether canonicalize molecules in displayer before saving them.
+ * @property {Bool} autoGenerateCoordsAfterLoad Whether generate coords when loading molecule without atom coords (e.g. SMILES).
  */
 Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.ChemWidget.ChemObjDisplayerIOConfigs# */
@@ -107,6 +108,7 @@ Kekule.ChemWidget.ChemObjDisplayerIOConfigs = Class.create(Kekule.AbstractConfig
 	initProperties: function()
 	{
 		this.addBoolConfigProp('canonicalizeBeforeSave', true);
+		this.addBoolConfigProp('autoGenerateCoordsAfterLoad', true);
 	}
 });
 /**
@@ -168,7 +170,7 @@ Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs = Class.create(Kekule.Abstr
  * @property {Hash} standardizationOptions Possible options when do standardization on molecule before saving.
  */
 /**
- * Invoked when the an chem object (or null) is loaded into the displayer.
+ * Invoked when the a chem object (or null) is loaded into the displayer.
  *   event param of it has one fields: {obj: Object}
  * @name Kekule.ChemWidget.ChemObjDisplayer#load
  * @event
@@ -1076,13 +1078,13 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				 */
 				this.repaint();
 				this.setPropStoreFieldValue('chemObjLoaded', true);  // indicate obj loaded successful
-				//this.invokeEvent('load', {'obj': chemObj});
+				this.invokeEvent('load', {'obj': chemObj});
 			}
 			else  // no object, clear
 			{
 				this.clearContext();
+				this.invokeEvent('load', {'obj': chemObj});  // even chemObj is null, this event should also be invoked
 			}
-			this.invokeEvent('load', {'obj': chemObj});  // even chemObj is null, this event should also be invoked
 		}
 		catch(e)
 		{
@@ -1108,6 +1110,49 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		// do nothing here
 	},
 
+	/** @private */
+	_tryAutoGenerateChemObjCoords: function(chemObj, callback)
+	{
+		// check if child nodes has coord and can be displayed
+		if (chemObj instanceof Kekule.Molecule
+			&& this.getDisplayerConfigs().getIoConfigs().getAutoGenerateCoordsAfterLoad()
+			&& Kekule.Calculator && Kekule.Calculator.generateStructure)  // can auto generate coords
+		{
+			//console.log('generate coords');
+			var is3D = this.getCoordMode() === Kekule.CoordMode.COORD3D;
+			var hasCoords = chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+			if (!hasCoords)  // auto generate
+			{
+				var serviceName = is3D? Kekule.Calculator.Services.GEN3D: Kekule.Calculator.Services.GEN2D;
+				Kekule.Calculator.generateStructure(chemObj, serviceName, {modifySource: true},
+					function (generatedMol)
+					{
+						callback(generatedMol);
+					},
+					function (err)
+					{
+						callback(chemObj);
+						Kekule.error(err);
+					}
+				);
+			}
+			else
+				callback(chemObj);
+		}
+		else  // can not generate coords, callback immediately
+		{
+			callback(chemObj);
+		}
+	},
+	/** @private */
+	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
+	{
+		var self = this;
+		console.log('here');
+		var done = function(chemObj) { self.setChemObj(chemObj); console.log('done load', chemObj); };
+		this._tryAutoGenerateChemObjCoords(chemObj, done);
+	},
+
 	/**
 	 * Load chem object from data of special MIME type or file format.
 	 * @param {Variant} data Usually text content.
@@ -1128,7 +1173,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
 				var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
 				if (chemObj)
-					this.setChemObj(chemObj);
+				{
+					//this.setChemObj(chemObj);
+					this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+				}
 				else
 					Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
 				return chemObj;
@@ -1156,7 +1204,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				Kekule.IO.loadFileData(file, function(chemObj, success)
 					{
 						if (success)
-							self.setChemObj(chemObj);
+						{
+							//self.setChemObj(chemObj);
+							self._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+						}
 					}
 				);
 			}
@@ -2191,16 +2242,23 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					var displayer = self.getDisplayer();
 					displayer.load(dialog.getChemObj());
 					*/
-					self.doLoadToDisplayer(dialog.getChemObj(), dialog);
+					//self.doLoadToDisplayer(dialog.getChemObj(), dialog);
+					var dataDetails = dialog.getDataDetails() || {};
+					var displayer = self.getDisplayer();
+					displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName);
 				}
 			}, target, showType]);
-	},
-	/** @private */
+	}
+	/* @private */
+	/*
 	doLoadToDisplayer: function(chemObj, dialog)
 	{
 		var displayer = this.getDisplayer();
-		displayer.load(chemObj);
+		displayer._tryAutoGenerateChemObjCoords(chemObj, function(newChemObj){
+			displayer.load(newChemObj);
+		});
 	}
+	*/
 });
 
 /**
