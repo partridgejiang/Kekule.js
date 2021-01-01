@@ -1581,6 +1581,27 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this.getEditor().load(chemObj);
 	},
 	/**
+	 * Load chem object from data of special MIME type or file format.
+	 * @param {Variant} data Usually text content.
+	 * @param {String} mimeType
+	 * @param {String} fromUrlOrFileName From which file or url is this data loaded.
+	 * @returns {Object} Loaded chem object.
+	 */
+	loadFromData: function(data, mimeType, fromUrlOrFileName)
+	{
+		return this.getEditor().loadFromData(data, mimeType, fromUrlOrFileName);
+	},
+	/**
+	 * Load chem object from file object.
+	 * NOTE: browser must support File Reader API to use this method.
+	 * @param {File} file
+	 */
+	loadFromFile: function(file)
+	{
+		return this.getEditor().loadFromFile(file);
+	},
+
+	/**
 	 * Returns object in dialog that to be saved.
 	 * @returns {Kekule.ChemObject}
 	 * @private
