@@ -231,9 +231,10 @@ Kekule.Render.ThreeContext = Class.create(ObjectEx,
 /**
  * Render bridge class of three.js.
  * In this bridge, context is a {@link Kekule.Render.ThreeContext} object, thus we can handle both scene and camera at the same time.
+ * @argument {Kekule.Render.Abstract3DDrawBridge}
  * @class
  */
-Kekule.Render.ThreeRendererBridge = Class.create(
+Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBridge,
 /** @lends Kekule.Render.ThreeRendererBridge# */
 {
 	/** @private */

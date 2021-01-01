@@ -45,6 +45,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
  * @augments Kekule.Widget.Dialog
  *
  * @property {Kekule.ChemObject} chemObj Loaded chem object.
+ * @property {Hash} dataDetails Loaded data details, including fields: {data, fileName, mimeType, formatId}.
  * @property {Array} allowedFormatIds
  */
 Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
@@ -79,7 +80,18 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'setter': null});
+		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var details = this.getDataDetails();
+				if (details && details.data)
+				{
+					return Kekule.IO.loadTypedData(details.data, details.mimeType, details.fileName);
+				}
+				else
+					return null;
+			}
+		});
 		this.defineProp('allowedFormatIds', {'dataType': DataType.ARRAY,
 			'setter': function(value)
 			{
@@ -88,6 +100,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			}
 		});
 		//this.defineProp('fileFilters', {'dataType': DataType.ARRAY});
+		this.defineProp('dataDetails', {'dataType': DataType.HASH, 'setter': null, 'serializable': false});
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -286,8 +299,11 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			if (e.success && data && fileName)
 			{
 				//console.log('load', data);
+				/*
 				chemObj = Kekule.IO.loadTypedData(data, null, fileName);
 				this.setPropStoreFieldValue('chemObj', chemObj);
+				*/
+				this.setPropStoreFieldValue('dataDetails', {'data': data, 'fileName': fileName});
 				var dialogResult = Kekule.Widget.DialogButtons.OK;
 				this.close(dialogResult);
 			}
@@ -303,7 +319,8 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	/** @ignore */
 	open: function(/*$super, */callback, caller, showType)
 	{
-		this.setPropStoreFieldValue('chemObj', null);
+		//this.setPropStoreFieldValue('chemObj', null);
+		this.setPropStoreFieldValue('dataDetails', {});
 		return this.tryApplySuper('open', [callback, caller, showType])  /* $super(callback, caller, showType) */;
 	},
 	/** @ignore */
@@ -317,11 +334,14 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 				var mimeType = this._formatSelector.getValue();
 				try
 				{
+					/*
 					var chemObj = Kekule.IO.loadTypedData(data, mimeType);
 					if (chemObj)
 						this.setPropStoreFieldValue('chemObj', chemObj);
 					else
-						Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+						Kekule.error(Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+					*/
+					this.setPropStoreFieldValue('dataDetails', {'data': data, 'mimeType': mimeType});
 				}
 				catch(e)
 				{

@@ -38,6 +38,8 @@ Kekule.Render.BaseGlyph2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer
 		ops.strokeColor = options.strokeColor || options.glyphStrokeColor;
 		ops.fillColor = options.fillColor || options.glyphFillColor;
 		ops.strokeWidth = options.strokeWidth || options.glyphStrokeWidth;
+		ops.lineCap = options.glyphLineCap;
+		ops.lineJoin = options.glyphLineJoin;
 		return this.tryApplySuper('doDraw', [context, baseCoord, ops])  /* $super(context, baseCoord, ops) */;
 	}
 });
@@ -72,7 +74,9 @@ Kekule.Render.PathGlyphCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRendere
 		return {
 			'strokeColor': renderOptions.strokeColor || renderOptions.color || renderOptions.glyphStrokeColor,
 			'fillColor': renderOptions.fillColor || renderOptions.color || renderOptions.glyphFillColor,
-			'strokeWidth': (renderOptions.strokeWidth || renderOptions.glyphStrokeWidth) * unitLength
+			'strokeWidth': (renderOptions.strokeWidth || renderOptions.glyphStrokeWidth) * unitLength,
+			'lineCap': renderOptions.lineCap || renderOptions.glyphLineCap,
+			'lineJoin': renderOptions.lineJoin || renderOptions.glyphLineJoin
 		}
 	},
 	/** @private */

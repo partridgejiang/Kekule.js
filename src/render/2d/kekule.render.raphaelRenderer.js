@@ -9,7 +9,7 @@
  * requires /core/kekule.structures.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.baseTextRender.js
- * requires /render/2d/kekule.render.def2DRenderer.js
+ * requires /render/2d/kekule.render.render2D.js
  */
 
 (function(){
@@ -23,7 +23,7 @@ var Raphael;
  * Render bridge class of Raphael.
  * @class
  */
-Kekule.Render.RaphaelRendererBridge = Class.create(
+Kekule.Render.RaphaelRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBridge,
 /** @lends Kekule.Render.RaphaelRendererBridge# */
 {
 	/** @private */
@@ -92,6 +92,19 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	{
 		if (context)
 			context.__$clearColor__ = color;
+	},
+
+	setFilter: function(context, filter)
+	{
+		var elem = this.getContextElem(context);
+		if (elem)
+		{
+			elem.style.filter = filter;
+		}
+	},
+	clearFilter: function(context)
+	{
+		this.setFilter(context, 'none');
 	},
 
 	/**
@@ -261,9 +274,9 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 			});
 		}
 		if (options.lineCap)
-			elem.attr('stroke-linecap', options.linecap);
+			elem.attr('stroke-linecap', options.lineCap);
 		if (options.lineJoin)
-			elem.attr('stroke-linejoin', options.linejoin);
+			elem.attr('stroke-linejoin', options.lineJoin);
 	},
 
 	/** @private */

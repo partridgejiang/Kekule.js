@@ -79,6 +79,7 @@ Kekule.Render.Render2DConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addConfigProp('textFontConfigs', 'Kekule.Render.TextFontConfigs');
 		this.addConfigProp('lengthConfigs', 'Kekule.Render.LengthConfigs');
 		this.addConfigProp('colorConfigs', 'Kekule.Render.ColorConfigs');
+		//this.addConfigProp('environmentConfigs', 'Kekule.Render.Render2DEnvironmentConfigs');
 		//this.addConfigProp('interactStyleMap', 'Kekule.Render.PredefinedConfigsMap');
 	},
 	/** @private */
@@ -91,6 +92,7 @@ Kekule.Render.Render2DConfigs = Class.create(Kekule.AbstractConfigs,
 		this.setPropStoreFieldValue('textFontConfigs', new Kekule.Render.TextFontConfigs());
 		this.setPropStoreFieldValue('lengthConfigs', new Kekule.Render.LengthConfigs());
 		this.setPropStoreFieldValue('colorConfigs', new Kekule.Render.ColorConfigs());
+		this.setPropStoreFieldValue('environmentConfigs', new Kekule.Render.Render2DEnvironmentConfigs());
 		//this.setPropStoreFieldValue('interactStyleMap', new Kekule.Render.PredefinedConfigsMap());
 	},
 
@@ -111,6 +113,30 @@ Kekule.Render.getRender2DConfigs = function()
 {
 	return Kekule.Render.Render2DConfigs.getInstance();
 };
+
+/**
+ * Options of 2D environment (especially 2D render bridge).
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * //@property {Bool} antialias Whether use a more aggressive antialias strategy than the browser's default.
+ * //@property {Float} antialiasBlurRatio The blur level to make the 2D rendering more smooth.
+ */
+Kekule.Render.Render2DEnvironmentConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.Render.Render2DEnvironmentConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Render.Render2DEnvironmentConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		/*
+		this.addBoolConfigProp('antialias', !false);
+		this.addFloatConfigProp('antialiasBlurRatio', 0.18);
+		this.addFloatConfigProp('overSamplingRatio', 2);
+		*/
+	}
+});
 
 /**
  * Options to display a molecule structure.
@@ -141,6 +167,10 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);
 		this.addBoolConfigProp('autoCreateChargeAndRadicalMarker', true);
+		this.addStrConfigProp('bondLineCap', 'round');  // possible value: 'butt', 'round' and 'square'
+		this.addStrConfigProp('bondLineJoin', 'miter');
+		this.addStrConfigProp('glyphLineCap', 'round');
+		this.addStrConfigProp('glyphLineJoin', 'miter');
 	}
 });
 
@@ -351,7 +381,6 @@ Kekule.Render.LengthConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('chemMarkerMargin', 5);
 
 		//this.addFloatConfigProp('chargeMarkCircleWidth', 1);
-
 
 		// length for chem structures
 		this.addFloatConfigProp('allenCenterAtomRadius', 3);

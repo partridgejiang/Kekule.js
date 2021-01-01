@@ -5,11 +5,11 @@
     <title>2D Generator by OpenBabel Test</title>
     <script src="../_libs/Three.js"></script>
     <script src="../../src/_extras/OpenBabel/openbabel.js.dev"></script>
-    <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel"></script>
+    <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel,indigo"></script>
     <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
     <script>
         var OpenBabel;
-        var displayer2D, displayer3D;
+        var displayer2D, displayer3D, displayer2DSrc, displayer3DSrc;
         function getObMol()
         {
             var smiles = document.getElementById('inputSmiles').value;
@@ -22,10 +22,22 @@
         }
         function getSrcMol()
         {
+            /*
             var obMol = getObMol();
             var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
             obMol.delete();
             return kMol;
+            */
+            var result;
+            var fromStruct = Kekule.Widget.getWidgetById('checkBoxFromStruct').getChecked();
+            if (fromStruct)
+                result = displayer2DSrc.exportObj(Kekule.StructureFragment);
+            else
+            {
+                var smiles = document.getElementById('inputSmiles').value;
+                result = Kekule.IO.loadFormatData(smiles, Kekule.IO.DataFormat.SMILES);
+            }
+            return result;
         }
         function gen2D()
         {
@@ -66,6 +78,9 @@
         {
             var srcMol = getSrcMol();
 	          var displayer = (dimension === 2)? displayer2D: displayer3D;
+            var displayerSrc = (dimension === 2)? displayer2DSrc: displayer3DSrc;
+
+	          /*
             if (!async)
             {
                 var generator = (dimension === 2)?
@@ -79,9 +94,10 @@
 		            });
             }
             else // async
+	          */
             {
             	var serviceName = (dimension === 2)? Kekule.Calculator.Services.GEN2D: Kekule.Calculator.Services.GEN3D;
-	            var calculator = Kekule.Calculator.generateStructure(srcMol, serviceName, {},
+	            var calculator = Kekule.Calculator.generateStructure(srcMol, serviceName, {sync: !async, modifySource: true},
 		            function(generatedMol){
 			            //var tickEnd = Date.now();
 			            //var duration = tickEnd - tickStart;
@@ -89,6 +105,7 @@
 
 			            console.log(generatedMol);
 			            displayer.setChemObj(generatedMol);
+			            displayerSrc.setChemObj(srcMol);
 
 			            //viewer.setChemObj(generatedMol);
 		            },
@@ -120,6 +137,8 @@
             Kekule.Widget.getWidgetById('btnExec3D').on('execute', generateStructure.bind(null, 3));
             displayer2D = Kekule.Widget.getWidgetById('composer');
 	          displayer3D = Kekule.Widget.getWidgetById('viewer');
+            displayer2DSrc = Kekule.Widget.getWidgetById('composerSrc');
+            displayer3DSrc = Kekule.Widget.getWidgetById('viewerSrc');
         }
         Kekule.X.domReady(init);
     </script>
@@ -129,10 +148,17 @@
         <label>SMILES: </label>
         <input type="text" id="inputSmiles" />
         <span id="checkBoxSync" data-widget="Kekule.Widget.CheckBox" data-text="Sync"></span>
+        <span id="checkBoxFromStruct" data-widget="Kekule.Widget.CheckBox" data-text="From structure in editor"></span>
         <button id="btnExec" data-widget="Kekule.Widget.Button">Gen2D</button>
         <button id="btnExec3D" data-widget="Kekule.Widget.Button">Gen3D</button>
     </div>
-    <div id="composer" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
-    <div id="viewer" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+    <div style="overflow: hidden">
+        <div id="composerSrc" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
+        <div id="composer" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
+    </div>
+    <div style="overflow: hidden">
+        <div id="viewerSrc" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+        <div id="viewer" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+    </div>
 </body>
 </html>

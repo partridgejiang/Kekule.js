@@ -1159,6 +1159,20 @@ Kekule.ClassDefineUtils = {
 		},
 
 		/**
+		 * Check if this node has a coordinate on coordMode.
+		 * @param {Int} coordMode
+		 * @param {Bool} allowCoordBorrow
+		 * @returns {Bool}
+		 */
+		hasCoordOfMode: function(coordMode, allowCoordBorrow)
+		{
+			if (coordMode === Kekule.CoordMode.COORD3D)
+				return this.hasCoord3D(allowCoordBorrow);
+			else
+				return this.hasCoord2D(allowCoordBorrow);
+		},
+
+		/**
 		 * Returns the indirect coord data storage object in coordMode.
 		 * @param {Int} coordMode
 		 * @returns {Hash}
