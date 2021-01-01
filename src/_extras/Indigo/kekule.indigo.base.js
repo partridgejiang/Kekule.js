@@ -222,6 +222,32 @@ var KI = Kekule.Indigo;
  * @ignore
  */
 Kekule.Indigo.AdaptUtils = {
+	/**
+	 * Convert instance of Indigo molecule to Kekule.Molecule.
+	 * @param {Object} iMol
+	 * @returns {Kekule.Molecule}
+	 */
+	iMolToKekule: function(iMol)
+	{
+		var Indigo = KI.getIndigo();
+		var molData = Indigo.molfile(iMol);
+		Indigo.free(iMol);
+		var result = Kekule.IO.loadFormatData(molData, Kekule.IO.DataFormat.MOL);
+		return result;
+	},
+
+	/**
+	 * Convert instance of Kekule.StructureFragment to Indigo molecule instance.
+	 * @param {Kekule.StructureFragment} kMol
+	 * @returns {Object}
+	 */
+	kMolToIndigo: function(kMol)
+	{
+		var Indigo = KI.getIndigo();
+		var molData = Kekule.IO.saveFormatData(kMol, Kekule.IO.DataFormat.MOL);
+		var result = Indigo.loadMoleculeFromString(molData);
+		return result;
+	},
 };
 
 Kekule._registerAfterLoadSysProc(function() {
