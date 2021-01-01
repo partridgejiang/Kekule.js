@@ -530,7 +530,8 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'_extras/Indigo/kekule.indigo.base.js',
-			'_extras/Indigo/kekule.indigo.io.js'
+			'_extras/Indigo/kekule.indigo.io.js',
+			'_extras/Indigo/kekule.indigo.structures.js'
 		],
 		'category': 'extra'
 	},
