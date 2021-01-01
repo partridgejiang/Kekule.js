@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>2D Diagram Widget Test</title>
+	<script src="../_libs/Three.js"></script>
+	<script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,indigo,openbabel"></script>
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+	<script>
+		function $(id)
+		{
+			return document.getElementById(id);
+		}
+
+		Kekule.Indigo.enable();
+		//Kekule.OpenBabel.enable();
+		function loadMol(mol)
+		{
+			Kekule.Widget.getWidgetById('viewer').load(mol);
+			Kekule.Widget.getWidgetById('composer').load(mol);
+		}
+		function loadSmiles(smiles)
+		{
+			Kekule.Widget.getWidgetById('composer').getEditor().loadFromData(smiles, Kekule.IO.MimeType.SMILES);
+			Kekule.Widget.getWidgetById('viewer').loadFromData(smiles, Kekule.IO.MimeType.SMILES);
+		}
+		function init()
+		{
+			Kekule.Widget.getWidgetById('btnExec').on('execute', function(e){
+				var smiles = $('inputSmiles').value;
+
+				var mol = Kekule.IO.loadFormatData(smiles, Kekule.IO.DataFormat.SMILES, {autoLayout: false});
+				if (Kekule.Widget.getWidgetById('checkBoxAutoLayout').getChecked())
+				{
+					Kekule.Calculator.generateStructure(mol, Kekule.Calculator.Services.GEN2D, null,
+						function(generatedMol){
+							loadMol(generatedMol);
+						},
+						function(err){
+							console.log(err);
+						});
+				}
+				else
+					loadMol(mol);
+
+				//loadSmiles(smiles);
+			});
+		}
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div>
+		<label>SMILES: </label>
+		<input type="text" id="inputSmiles" />
+		<span id="checkBoxAutoLayout" data-widget="Kekule.Widget.CheckBox" data-text="Auto layout"></span>
+		<button id="btnExec" data-widget="Kekule.Widget.Button">Layout</button>
+	</div>
+	<div id="composer" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
+	<div id="viewer" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+</body>
+</html>
