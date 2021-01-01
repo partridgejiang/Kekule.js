@@ -131,6 +131,19 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	executeSync: function(callback)
 	{
+		this._doneCallback = callback;  //done;
+		var result = this.doExecuteSync(callback);
+		if (result)
+			this.done();
+		return result;
+	},
+	/**
+	 * Do actual work of method executeSync.
+	 * Descendants should override this method.
+	 * @returns {Bool}
+	 */
+	doExecuteSync: function(callback)
+	{
 		// do nothing here
 	},
 	/**
@@ -152,7 +165,8 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	{
 		if (this._doneCallback)
 			this._doneCallback.apply(this, arguments);
-		this.workerJobDone();
+		if (this.getWorker())
+			this.workerJobDone();
 	},
 	/**
 	 * Terminate the calculation process in worker.
@@ -284,7 +298,9 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
  *
  * @property {Kekule.StructureFragment} sourceMol Source molecule.
  * @property {Kekule.StructureFragment} generatedMol 2D/3D molecule structure generated from sourceMol.
+ * @property {Kekule.MapEx} childObjMap A map of child objects in sourceMol to generatedMol.
  * @property {Hash} options Options to generate 2D/3D structure.
+ *   A special field { modifySource: bool } can be set to true to change the coordinates of sourceMol as well.
  */
 Kekule.Calculator.AbstractStructureGenerator = Class.create(Kekule.Calculator.Base,
 /** @lends Kekule.Calculator.AbstractStructureGenerator# */
@@ -296,6 +312,7 @@ Kekule.Calculator.AbstractStructureGenerator = Class.create(Kekule.Calculator.Ba
 	{
 		this.defineProp('sourceMol', {'dataType': 'Kekule.StructureFragment', 'serializable': false});
 		this.defineProp('generatedMol', {'dataType': 'Kekule.StructureFragment', 'serializable': false});
+		this.defineProp('childObjMap', {'dataType': 'Kekule.MapEx', 'serializable': false});
 		this.defineProp('options', {'dataType': DataType.HASH,
 			'getter': function()
 			{
@@ -308,6 +325,56 @@ Kekule.Calculator.AbstractStructureGenerator = Class.create(Kekule.Calculator.Ba
 				return result;
 			}
 		});
+	},
+	/**
+	 * Returns the coord mode (2D or 3D) this generator generates.
+	 * Descendants should override this method.
+	 * @returns {Int}
+	 */
+	getGeneratorCoordMode: function()
+	{
+		return Kekule.CoordMode.COORD3D;
+	},
+	/** @ignore */
+	done: function()
+	{
+		this._modifySourceAccordingToGeneratedMol(this.getSourceMol(), this.getGeneratedMol(), this.getChildObjMap());
+		this.tryApplySuper('done');
+	},
+	/**
+	 * Set generatedMol and childObjMap.
+	 * If this.getOptions().modifySource is true, in this method, the sourceMol will be modified.
+	 * @param {Kekule.StructureFragment} generatedMol
+	 * @param {Kekule.MapEx} childObjMap
+	 * @private
+	 */
+	_modifySourceAccordingToGeneratedMol: function(srcMol, generatedMol, childObjMap)
+	{
+		// update coordinates of source mol
+		var map = childObjMap;
+		if (map)
+		{
+			var coordMode = this.getGeneratorCoordMode();
+			var keys = map.getKeys();
+			srcMol.beginUpdate();
+			try
+			{
+				for (var i = 0, l = keys.length; i < l; ++i)
+				{
+					if (keys[i] instanceof Kekule.ChemStructureNode)
+					{
+						var srcNode = keys[i];
+						var destNode = map.get(srcNode);
+						var coord = destNode.getCoordOfMode(coordMode);
+						srcNode.setCoordOfMode(coord, coordMode);
+					}
+				}
+			}
+			finally
+			{
+				srcMol.endUpdate();
+			}
+		}
 	}
 });
 
@@ -317,32 +384,56 @@ Kekule.Calculator.AbstractStructureGenerator = Class.create(Kekule.Calculator.Ba
  */
 Kekule.Calculator.ServiceManager = {
 	/** @private */
-	_services: {},
+	_serviceInfos: {},
 	/** @private */
-	_getServiceClasses: function(serviceName, canCreate)
+	_getServiceClassInfos: function(serviceName, canCreate)
 	{
-		var result = CS._services[serviceName];
+		var result = CS._serviceInfos[serviceName];
 		if (!result && canCreate)
 		{
 			result = [];
-			CS._services[serviceName] = result;
+			CS._serviceInfos[serviceName] = result;
 		}
 		return result;
+	},
+	/** @private */
+	_findServiceClassInfoItemIndex: function(serviceName, serviceClass, serviceId)
+	{
+		var classInfos = CS._getServiceClassInfos(serviceName, false);
+		if (classInfos)
+		{
+			for (var i = classInfos.length - 1; i >= 0; --i)
+			{
+				var info = classInfos[i];
+				if (info)
+				{
+					if (!serviceClass || info.serviceClass === serviceClass)
+					{
+						if (!serviceId || info.id === serviceId)
+							return i;
+					}
+				}
+			}
+		}
+		return -1;
 	},
 	/**
 	 * Register a class to perform calculation service.
 	 * @param {String} serviceName
 	 * @param {Class} serviceClass
+	 * @param {String} serviceId An ID of this service class.
+	 *   The user can use this id to access to service class instance precisely.
+	 * @param {Number} priorityLevel
 	 */
-	register: function(serviceName, serviceClass)
+	register: function(serviceName, serviceClass, serviceId, priorityLevel)
 	{
-		var classes = CS._getServiceClasses(serviceName, true);
-		var index = classes.indexOf(serviceClass);
+		var classInfos = CS._getServiceClassInfos(serviceName, true);
+		var index = CS._findServiceClassInfoItemIndex(serviceName, serviceClass);
 		if (index >= 0)  // already exists, send it to tail
 		{
-			classes.splice(index, 1);
+			classInfos.splice(index, 1);
 		}
-		classes.push(serviceClass);
+		classInfos.push({'serviceClass': serviceClass, 'id': serviceId, 'priorityLevel': priorityLevel || 0});
 	},
 	/**
 	 * Unregister a class to perform calculation service.
@@ -351,24 +442,47 @@ Kekule.Calculator.ServiceManager = {
 	 */
 	unregister: function(serviceName, serviceClass)
 	{
-		var classes = CS._getServiceClasses(serviceName, true);
-		var index = classes.indexOf(serviceClass);
-		if (index >= 0)  // already exists, send it to tail
+		var index = CS._findServiceClassInfoItemIndex(serviceName, serviceClass);
+		if (index >= 0)  // already exists, unregister it
 		{
-			classes.splice(index, 1);
+			var classInfos = CS._getServiceClassInfos(serviceName, false);
+			classInfos.splice(index, 1);
 		}
 	},
 	/**
 	 * Get the most recent registered class for service.
 	 * @param {String} serviceName
+	 * @param {String} serviceId If this id is not set, the class with the highest priority level will be returned.
 	 * @return {Class}
 	 */
-	getServiceClass: function(serviceName)
+	getServiceClass: function(serviceName, serviceId)
 	{
+		var currPriority = -1;
 		var result = null;
-		var classes = CS._getServiceClasses(serviceName);
-		if (classes && classes.length)
-			result = classes[classes.length - 1];
+		var classInfos = CS._getServiceClassInfos(serviceName);
+		if (classInfos)
+		{
+			for (var i = 0, l = classInfos.length - 1; i < l; ++i)
+			{
+				var info = classInfos[i];
+				if (info)
+				{
+					if (serviceId && info.id === serviceId)
+					{
+						result = info.serviceClass;
+						break;
+					}
+					else
+					{
+						if (!result || info.priorityLevel >= currPriority)
+						{
+							result = info.serviceClass;
+							currPriority = info.priorityLevel;
+						}
+					}
+				}
+			}
+		}
 		return result;
 	}
 };
@@ -389,7 +503,7 @@ Kekule.Calculator.Services = {
  * @param {Kekule.StructureFragment} sourceMol
  * @param {String} genSeviceName
  * @param {Hash} options
- * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol).
+ * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol, childObjMap).
  * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
  * @param {Func} msgCallback Callback function that receives log messages from calculator. Callback(msgData).
  * @returns {Object} Created calculation object.
@@ -401,10 +515,16 @@ Kekule.Calculator.generateStructure = function(sourceMol, genSeviceName, options
 	if (c)
 	{
 		var o = new c();
+		var childObjMap;
+		if (o.setChildObjMap)
+		{
+			childObjMap = new Kekule.MapEx(true);
+			o.setChildObjMap(childObjMap);
+		}
 		var done = function()
 		{
 			if (callback)
-				callback(o.getGeneratedMol());
+				callback(o.getGeneratedMol(), childObjMap);
 		};
 		var error = function(err)
 		{
@@ -420,6 +540,8 @@ Kekule.Calculator.generateStructure = function(sourceMol, genSeviceName, options
 		{
 			o.setSourceMol(sourceMol);
 			o.setOptions(options);
+			if (options && options.sync)
+				o.setAsync(false);
 			o.execute(done, error, onMsg);
 		}
 		catch(e)
@@ -432,12 +554,12 @@ Kekule.Calculator.generateStructure = function(sourceMol, genSeviceName, options
 	else
 	{
 		var errMsg = Kekule.$L('ErrorMsg.CALC_SERVICE_UNAVAILABLE').format(serviceName);
-		if (callback)
-			callback(errMsg);
+		if (errCallback)
+			errCallback(errMsg);
 		//Kekule.error(errMsg);
 		return null;
 	}
-}
+};
 
 /**
  * Generate 3D structure based on 2D or 0D sourceMol.
