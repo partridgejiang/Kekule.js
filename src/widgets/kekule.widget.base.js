@@ -3660,6 +3660,12 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					parent.reactUiEvent(e);
 			}
 		}
+
+		// disable event bubble on popup widget, preventing influence other normal widgets
+		if (this.getIsPopup())
+		{
+			e.stopPropagation();
+		}
 	},
 	/**
 	 * For descendants override.
