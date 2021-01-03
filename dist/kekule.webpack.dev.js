@@ -143,6 +143,7 @@ require("../src/_extras/OpenBabel/kekule.openbabel.io.js");
 require("../src/_extras/OpenBabel/kekule.openbabel.structures.js");
 require("../src/_extras/Indigo/kekule.indigo.base.js");
 require("../src/_extras/Indigo/kekule.indigo.io.js");
+require("../src/_extras/Indigo/kekule.indigo.structures.js");
 require("../src/_extras/InChI/kekule.inchi.js");
 require("../src/localization/zh/kekule.localize.general.zh.js");
 require("../src/localization/zh/kekule.localize.widget.zh.js");
