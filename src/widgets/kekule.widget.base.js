@@ -6983,10 +6983,20 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		doc.body.appendChild(elem);  // append widget elem on background
 		*/
 
+		// ensure the modal background and modal element behind the topmost layer (where the popup widget may exist in it)
 		var rootElem = this.getWidgetContextRootElement(caller);
 		//console.log(rootElem, widget);
-		rootElem.appendChild(bgElem);
-		rootElem.appendChild(elem);
+		var topmostLayer = this.getTopmostLayer(doc, false, rootElem);
+		if (topmostLayer && topmostLayer.parentNode === rootElem)
+		{
+		  rootElem.insertBefore(bgElem, topmostLayer);
+			rootElem.insertBefore(elem, topmostLayer);
+		}
+		else
+		{
+			rootElem.appendChild(bgElem);
+			rootElem.appendChild(elem);
+		}
 
 		this.registerModalWidget(widget);
 	},
