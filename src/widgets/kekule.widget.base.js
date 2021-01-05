@@ -43,7 +43,8 @@ Kekule.Widget = {
  */
 Kekule.Widget.HtmlTagNames = {
 	CHILD_SLOT_HOLDER: 'slot',
-	CHILD_HOLDER: 'span'
+	CHILD_HOLDER: 'span',
+	LAYOUT_HOLDER: 'div'
 };
 
 /**
@@ -65,6 +66,8 @@ Kekule.Widget.HtmlClassNames = {
 	DYN_CREATED: 'K-Dynamic-Created',
 	/** Container element to hold child widgets */
 	CHILD_HOLDER: 'K-Child-Holder',
+	/** Element as the layout root of widget */
+	LAYOUT_HOLDER: 'K-Layout-Holder',
 	/* A top most layer. */
 	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
@@ -6577,6 +6580,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		{
 			//invokerElem.appendChild(dropElem);
 			//topmostLayer.appendChild(dropElem);
+			//console.log(isolatedLayer);
 			// move drop elem to an isolated layer first, avoid other CSS styles (e.g. flex) affect the dimension calculation
 			isolatedLayer.appendChild(dropElem);
 			manualAppended = true;
@@ -7082,9 +7086,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 		else
 		{
+			/* Should not change DOM here, otherwise the scroll positions of widgets on topmost layer may be changed
 			// check if oldLayer is the last child of root
 			if (contextRootElem.lastChild !== result)
 				contextRootElem.appendChild(result);
+			*/
 		}
 		return result;
 
@@ -7114,6 +7120,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	/**
 	 * Get isolated layer previous created in document.
 	 * @param {HTMLDocument} doc
+	 * @param {HTMLElement} contextRootElem
 	 * @returns {HTMLElement}
 	 * @private
 	 */
@@ -7124,7 +7131,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		{
 			result = this._createIsolatedLayer(doc, contextRootElem);
 			this._globalSysElems.push(result);
-			contextRootElem.appendChild(result);
+			var firstChild = contextRootElem.firstChild;
+			if (firstChild)
+				contextRootElem.insertBefore(result, firstChild);
+			else
+				contextRootElem.appendChild(result);
 			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
 		return result;
