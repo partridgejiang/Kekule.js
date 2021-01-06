@@ -43,8 +43,7 @@ Kekule.Widget = {
  */
 Kekule.Widget.HtmlTagNames = {
 	CHILD_SLOT_HOLDER: 'slot',
-	CHILD_HOLDER: 'span',
-	LAYOUT_HOLDER: 'div'
+	CHILD_HOLDER: 'span'
 };
 
 /**
@@ -66,8 +65,6 @@ Kekule.Widget.HtmlClassNames = {
 	DYN_CREATED: 'K-Dynamic-Created',
 	/** Container element to hold child widgets */
 	CHILD_HOLDER: 'K-Child-Holder',
-	/** Element as the layout root of widget */
-	LAYOUT_HOLDER: 'K-Layout-Holder',
 	/* A top most layer. */
 	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
@@ -3662,12 +3659,6 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				if (parent && parent.reactUiEvent)
 					parent.reactUiEvent(e);
 			}
-		}
-
-		// disable event bubble on popup widget, preventing influence other normal widgets
-		if (this.getIsPopup())
-		{
-			e.stopPropagation();
 		}
 	},
 	/**
