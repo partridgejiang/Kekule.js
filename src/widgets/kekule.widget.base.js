@@ -6568,6 +6568,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		{
 			//invokerElem.appendChild(dropElem);
 			//topmostLayer.appendChild(dropElem);
+			//console.log(isolatedLayer);
 			// move drop elem to an isolated layer first, avoid other CSS styles (e.g. flex) affect the dimension calculation
 			isolatedLayer.appendChild(dropElem);
 			manualAppended = true;
@@ -6970,10 +6971,20 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		doc.body.appendChild(elem);  // append widget elem on background
 		*/
 
+		// ensure the modal background and modal element behind the topmost layer (where the popup widget may exist in it)
 		var rootElem = this.getWidgetContextRootElement(caller);
 		//console.log(rootElem, widget);
-		rootElem.appendChild(bgElem);
-		rootElem.appendChild(elem);
+		var topmostLayer = this.getTopmostLayer(doc, false, rootElem);
+		if (topmostLayer && topmostLayer.parentNode === rootElem)
+		{
+		  rootElem.insertBefore(bgElem, topmostLayer);
+			rootElem.insertBefore(elem, topmostLayer);
+		}
+		else
+		{
+			rootElem.appendChild(bgElem);
+			rootElem.appendChild(elem);
+		}
 
 		this.registerModalWidget(widget);
 	},
@@ -7073,9 +7084,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		}
 		else
 		{
+			/* Should not change DOM here, otherwise the scroll positions of widgets on topmost layer may be changed
 			// check if oldLayer is the last child of root
 			if (contextRootElem.lastChild !== result)
 				contextRootElem.appendChild(result);
+			*/
 		}
 		return result;
 
@@ -7105,6 +7118,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	/**
 	 * Get isolated layer previous created in document.
 	 * @param {HTMLDocument} doc
+	 * @param {HTMLElement} contextRootElem
 	 * @returns {HTMLElement}
 	 * @private
 	 */
@@ -7115,7 +7129,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		{
 			result = this._createIsolatedLayer(doc, contextRootElem);
 			this._globalSysElems.push(result);
-			contextRootElem.appendChild(result);
+			var firstChild = contextRootElem.firstChild;
+			if (firstChild)
+				contextRootElem.insertBefore(result, firstChild);
+			else
+				contextRootElem.appendChild(result);
 			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
 		return result;
