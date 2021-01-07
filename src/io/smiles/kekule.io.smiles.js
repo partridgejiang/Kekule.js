@@ -271,7 +271,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return '';
 	},
 	/** @private */
-	_prepareStereoBondsInformation(ctab, options)
+	_prepareStereoBondsInformation: function(ctab, options)
 	{
 		if (options.ignoreStereoBond)
 			return null;
