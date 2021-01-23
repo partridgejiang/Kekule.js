@@ -4656,11 +4656,13 @@ Kekule.Widget.Utils = {
 		var result;
 		var widget = Kekule.Widget.Utils.getWidgetOnElem(element);
 		if (widget)
+		{
 			result = [widget];
+			if (!checkElemInsideWidget)
+				return result;
+		}
 		else
 			result = [];
-		if (!checkElemInsideWidget)
-			return result;
 
 		var childElems = Kekule.DomUtils.getDirectChildElems(element);
 		for (var i = 0, l = childElems.length; i < l; ++i)
