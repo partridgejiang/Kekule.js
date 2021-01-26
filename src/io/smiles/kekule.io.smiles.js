@@ -510,8 +510,13 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 
 		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
 		var explicitHCount;
+		var radical = node.getRadical? Math.round(node.getRadical() || 0): 0;
 		if (schiralRot)  // if chiral center, H is always be listed
 			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
+		else if (radical)  // if with radical, we still need to mark out the Hs, e.g. C[CH]C for C-C.-C
+		{
+			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;
+		}
 		else
 		{
 			explicitHCount = node.getExplicitHydrogenCount ? node.getExplicitHydrogenCount() : 0;
