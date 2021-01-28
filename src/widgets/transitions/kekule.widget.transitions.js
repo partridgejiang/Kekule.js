@@ -618,18 +618,6 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	canExecute: function(/*$super, */element, options)
 	{
 		return true;
-		/*
-		var result = $super(element, options);
-		if (result)
-		{
-			var direction = this.getDirection();
-			if (D.isInHorizontal(direction))
-				result = Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'width')).value);
-			if (D.isInVertical(direction))
-				result = result && Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value);
-		}
-		return result;
-		*/
 	},
 	/** @private */
 	prepare: function(/*$super, */element, caller, options)
@@ -639,41 +627,6 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		this._direction = this.getActualDirection(element, options);  // save this value, avoid user change direction property during transition
 
 		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
-
-		/*
-		var direction = this.getDirection();
-		this._direction = direction;  // save this value, avoid user change direction property during transition
-		var props = this.getCssTransPropNames(this.getDirection());
-
-		this.setCssProperty(props.join(','));
-		var storageCssPropNames = [];
-		*/
-		//var storageCompStyleNames = [];
-
-		/*
-		if (D.isInHorizontal(direction))
-		{
-			storageCssPropNames.push('width');
-			if (direction & D.RTL)
-				storageCssPropNames.push('left');
-		}
-		if (D.isInVertical(direction))
-		{
-			storageCssPropNames.push('height');
-			if (direction & D.BTT)
-				storageCssPropNames.push('top');
-		}
-
-		storageCssPropNames.push('overflow');
-
-		this._storageCssPropNames = storageCssPropNames;
-		this._originCssStorage = this.storeCssInlineValues(element, storageCssPropNames);
-		this._computedCssStorage = this.storeCssComputedValues(element, storageCssPropNames);
-		*/
-
-		//console.log(direction, storageCssPropNames);
-		//console.log(this._originCssStorage);
-		//console.log(this._computedCssStorage);
 
 		element.style.overflow = 'hidden';
 		this._clearDimesionConstraints(element);
@@ -759,20 +712,11 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	getRefRect: function(transOptions)
 	{
+		/*
 		var result;
 		var EU = Kekule.HtmlElementUtils;
 		if (this.getCaller())
 		{
-			/*
-			var pos = EU.getElemPagePos(this.getCaller());
-			var dim = EU.getElemClientDimension(this.getCaller());
-			return {
-				'x': pos.x || 0,
-				'y': pos.y || 0,
-				'width': dim.width || 0,
-				'height': dim.height || 0
-			};
-			*/
 			result = EU.getElemPageRect(this.getCaller());
 			//result = EU.getElemBoundingClientRect(this.getCaller(), true);
 			if (Kekule.RectUtils.isZero(result))  // rect is null, maybe the caller widget is hidden, use cached one instead
@@ -785,9 +729,12 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 			result = null;
 		}
 		return result;
+		*/
+		return Kekule.Widget.TransitionUtils.getCallerRefRect(this.getCaller(), transOptions);
 	},
 	getActualDirection: function(element, transOptions)
 	{
+		/*
 		if (!element)
 			element = this.getElement();
 
@@ -832,8 +779,102 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 			}
 		}
 		return result;
+		*/
+		if (!element)
+			element = this.getElement();
+
+		var result = this.getDirection();
+		if (!result || (result === D.AUTO))
+		{
+			result = Kekule.Widget.TransitionUtils.getPreferredSlideDirection(element, this.getCaller(), transOptions);
+		}
+		return result;
 	}
 
+});
+
+/**
+ * A slide transition executor  based on CSS3 clip path transition.
+ * @class
+ * @arguments {Kekule.Widget.Css3Transition}
+ *
+ * @property {Hash} baseRect. The starting rectangle to grow or the ending rectangle to shrink.
+ *   Note the x/y value is relative to top-left corner of HTML page.
+ *   If this property is not set, rect calculated from caller will be used.
+ * //@property {HTMLElement} baseElement The baseRect can be calculated from this element.
+ */
+Kekule.Widget.Css3ClipPathSlideTransition = Class.create(Kekule.Widget.Css3Transition,
+/** @lends Kekule.Widget.Css3ClipPathSlideTransition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Css3ClipPathSlideTransition',
+	/** @constructs */
+	initialize: function(direction)
+	{
+		this.tryApplySuper('initialize');
+		if (Kekule.ObjUtils.notUnset(direction))
+			this.setDirection(direction);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('direction', {'dataType': DataType.INT});
+	},
+
+	/** @private */
+	canExecute: function(element, options)
+	{
+		return true;
+	},
+	/** @ignore */
+	prepare: function(element, caller, options)
+	{
+		this._direction = this.getActualDirection(element, options);  // save this value, avoid user change direction property during transition
+		this.tryApplySuper('prepare', [element, caller, options]);
+	},
+
+	/** @ignore */
+	setElementProp: function(element, position, options)
+	{
+		var direction = this._direction;
+
+		var clipValue = '' + ((1 - position) * 100) + '%';
+		// the clip is in inset(top right bottom left) order
+		var clipEdgeIndex = (direction === D.TTB)? 2:
+			(direction === D.BTT)? 0:
+			(direction === D.RTL)? 3:
+			1;  // default, left to right
+
+		var edgeClips = ['0%', '0%', '0%', '0%'];
+		edgeClips[clipEdgeIndex] = clipValue;
+		var sStyle = 'inset(' + edgeClips.join(' ') + ')';
+		element.style.clipPath = sStyle;
+	},
+
+	/** @ignore */
+	getAffectedCssPropNames: function(transOptions)
+	{
+		return (this.tryApplySuper('getAffectedCssPropNames', [transOptions]) || []).concat(['clip-path']);
+	},
+	/** @ignore */
+	getTransCssPropNames: function(transOptions)
+	{
+		return (this.tryApplySuper('getTransCssPropNames', [transOptions]) || []).concat(['clip-path']);
+	},
+
+	/** @private */
+	getActualDirection: function(element, transOptions)
+	{
+		if (!element)
+			element = this.getElement();
+
+		var result = this.getDirection();
+		if (!result || (result === D.AUTO))
+		{
+			result = Kekule.Widget.TransitionUtils.getPreferredSlideDirection(element, this.getCaller(), transOptions);
+		}
+		return result;
+	}
 });
 
 /**
@@ -1239,5 +1280,97 @@ Kekule.Widget.Css3TransitionSimpleClassCreator = {
 };
 /** @ignore */
 var TCC = Kekule.Widget.Css3TransitionSimpleClassCreator;
+
+/**
+ * A helper class providing util functions for widget transitions.
+ * @class
+ */
+Kekule.Widget.TransitionUtils = {
+	/**
+	 * Returns the reference rect of the transition caller element.
+	 * @param {Hash} transOptions
+	 * @returns {Hash}
+	 * @private
+	 */
+	getCallerRefRect: function(callerElem, transOptions)
+	{
+		var result;
+		var EU = Kekule.HtmlElementUtils;
+		if (callerElem)
+		{
+			/*
+			var pos = EU.getElemPagePos(this.getCaller());
+			var dim = EU.getElemClientDimension(this.getCaller());
+			return {
+				'x': pos.x || 0,
+				'y': pos.y || 0,
+				'width': dim.width || 0,
+				'height': dim.height || 0
+			};
+			*/
+			result = EU.getElemPageRect(callerElem);
+			//result = EU.getElemBoundingClientRect(this.getCaller(), true);
+			if (Kekule.RectUtils.isZero(result))  // rect is null, maybe the caller widget is hidden, use cached one instead
+			{
+				result = (transOptions || {}).callerPageRect || null;
+			}
+		}
+		else
+		{
+			result = null;
+		}
+		return result;
+	},
+	/**
+	 * Returns the preferred direction of a slide transition.
+	 * @param {HTMLElement} element
+	 * @param {HTMLElement} callerElem
+	 * @param {Hash} transOptions
+	 * @returns {Int}
+	 */
+	getPreferredSlideDirection: function(element, callerElem, transOptions)
+	{
+		var D = Kekule.Widget.Direction;
+		var EU = Kekule.HtmlElementUtils;
+		var result = null;
+		{
+			var refRect = Kekule.Widget.TransitionUtils.getCallerRefRect(callerElem, transOptions);
+			//console.log(refRect);
+			if (!refRect)
+				result = D.TTB;  // default
+			else
+			{
+				var refCenter = {'x': refRect.x + refRect.width / 2, 'y': refRect.y + refRect.height / 2};
+				var selfPos = EU.getElemPagePos(element);
+				var selfDim = EU.getElemClientDimension(element);
+				var selfCenter = {'x': selfPos.x + (selfDim.width || 0) / 2, 'y': selfPos.y + (selfDim.height || 0) / 2};
+				var delta = Kekule.CoordUtils.substract(selfCenter, refCenter);
+
+				if (refRect.width < 1)  // very slim refRect
+				{
+					result = (delta.x >= 0)? D.LTR: D.RTL;
+				}
+				else if (delta.x < 1)  // very close to horizontal line
+				{
+					result = (delta.y >= 0)? D.TTB: D.BTT;
+				}
+				else
+				{
+					var r1 = Math.abs(refRect.height / refRect.width);
+					var r2 = Math.abs(delta.y / delta.x);
+					if (r1 > r2)  // left or right side
+					{
+						result = (delta.x >= 0)? D.LTR: D.RTL;
+					}
+					else  // top or bottom side
+					{
+						result = (delta.y >= 0)? D.TTB: D.BTT;
+					}
+				}
+			}
+		}
+		return result;
+	}
+};
 
 })();
