@@ -18,6 +18,8 @@
 var D = Kekule.Widget.Direction;
 /** @ignore */
 var SU = Kekule.StyleUtils;
+/** @ignore */
+var AU = Kekule.ArrayUtils;
 
 /**
  * Class to execute transition on HTML elements.
@@ -27,6 +29,21 @@ var SU = Kekule.StyleUtils;
  *
  * @property {HTMLElement} caller Who calls this transition. Usually a base HTML element of a widget.
  * @property {HTMLElement} element The element to run the transition.
+ */
+/**
+ * Invoked when the transition beginning.
+ * @name Kekule.Widget.BaseTransition#execute
+ * @event
+ */
+/**
+ * Invoked when the transition is finished.
+ * @name Kekule.Widget.BaseTransition#finish
+ * @event
+ */
+/**
+ * Invoked when the transition is halted.
+ * @name Kekule.Widget.BaseTransition#halt
+ * @event
  */
 Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 /** @lends Kekule.Widget.BaseTransition# */
@@ -115,9 +132,11 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 			self.finish(element, caller, ops);
 			if (callback)
 				callback();
+			self.invokeEvent('finish');
 		};
 		done.__$applied__ = false;
 		this.prepare(element, caller, ops);
+		this.invokeEvent('execute');
 
 		var self = this;
 		var result = {
@@ -162,6 +181,7 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 			{
 				transitionInfo.doneCallback();
 			}
+			this.invokeEvent('halt');
 		}
 	},
 	/**
@@ -183,56 +203,8 @@ Kekule.Widget.BaseTransition = Class.create(ObjectEx,
 	setElementProp: function(element, position, options)
 	{
 		// do nothing here
-	}
-});
-
-/**
- * Abstract executor based on CSS3 transition.
- * @class
- * @arguments {Kekule.Widget.BaseTransition}
- *
- * @property {String} cssProperty CSS3 transition-property.
- *   Can use comma to separate multiple properties, e.g. 'width, height'.
- * @property {String} timingFunc CSS3 transition-timing-function.
- */
-Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
-/** @lends Kekule.Widget.Css3Transition# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3Transition',
-	/** @constructs */
-	initialize: function(/*$super*/)
-	{
-		this.tryApplySuper('initialize')  /* $super() */;
-	},
-	/** @private */
-	initProperties: function()
-	{
-		this.defineProp('cssProperty', {'dataType': DataType.STRING});
-		this.defineProp('timingFunc', {'dataType': DataType.STRING});
 	},
 
-	/**
-	 * Returns an array of CSS property names that may be changed during transition.
-	 * Descendants may override this method.
-	 * @param {Hash} transOptions
-	 * @returns {Array}
-	 * @private
-	 */
-	getAffectedCssPropNames: function(transOptions)
-	{
-		// do nothing here
-	},
-	/**
-	 * Determinate the direct CSS transition property names.
-	 * @param {Hash} transOptions
-	 * @returns {Array} Properties to be changed.
-	 * @private
-	 */
-	getTransCssPropNames: function(transOptions)
-	{
-		// do nothing here
-	},
 	/**
 	 * Store CSS element inline style into a JavaScript object.
 	 * @param {HTMLElement} element
@@ -291,284 +263,93 @@ Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
 			result[name] = s;  //SU.analysisUnitsValue(s);
 		}
 		return result;
-	},
-
-	/** @ignore */
-	canExecute: function(element, options)
-	{
-		return Kekule.BrowserFeature.cssTransition;
-	},
-	/**
-	 * Check if CSS3 transition is supported by current browser.
-	 * @returns {Bool}
-	 */
-	isSupported: function()
-	{
-		return Kekule.BrowserFeature.cssTransition;
-	},
-	/**
-	 * Check if option means an appear transition.
-	 * @param {Hash} options
-	 * @returns {Bool}
-	 * @private
-	 */
-	isAppear: function(options)
-	{
-		return !!options.isAppear;
-	},
-	/**
-	 * Check if option means an disappear transition.
-	 * @param {Hash} options
-	 * @returns {Bool}
-	 * @private
-	 */
-	isDisappear: function(options)
-	{
-		return !!options.isDisappear;
-	},
-	/** @private */
-	setTransitionProp: function(styleObj, propName, value)
-	{
-		//console.log(propName, value);
-		// help to set CSS properties with -moz- or -webkit prefix
-		var propNames = [
-			'Moz' + propName.capitalizeFirst(),
-			'Webkit' + propName.capitalizeFirst(),
-			propName
-		];
-		for (var i = 0, l = propNames.length; i < l; ++i)
-		{
-			styleObj[propNames[i]] = value;
-		}
-	},
-
-	/** @private */
-	getOriginCssInlineValues: function()
-	{
-		return this._originCssInlineValues;
-	},
-	/** @private */
-	getComputedCssValues: function()
-	{
-		return this._computedCssValues;
-	},
-
-	/** @private */
-	prepare: function(element, caller, options)
-	{
-		//console.log('prepare', this.getTransCssPropNames());
-		this.setCssProperty(this.getTransCssPropNames(options).join(','));
-		var cssPropNames = this.getAffectedCssPropNames(options);
-		this._affectedCssPropNames = cssPropNames;
-		// store CSS values to future use
-		this._originCssInlineValues = this.storeCssInlineValues(element, cssPropNames);
-		this._computedCssValues = this.storeCssComputedValues(element, cssPropNames);
-	},
-	/** @private */
-	finish: function(element, caller, options)
-	{
-		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
-		{
-			//console.log('finish transition', this._affectedCssPropNames, this._originCssInlineValues);
-			this.restoreCssInlineValues(element, this._affectedCssPropNames, this._originCssInlineValues);
-		}
-	},
-
-	/** @private */
-	doExecute: function(element, caller, callback, options)
-	{
-		//console.log('transition execute', options);
-		var SU = Kekule.StyleUtils;
-
-		var style = element.style;
-		var isAppear = this.isAppear(options);
-		var isDisappear = this.isDisappear(options);
-
-		if (this.isSupported())
-		{
-			this.setElementProp(element, options.from, options);
-			if (!SU.isDisplayed(element))
-				SU.setDisplay(element, true);
-			if (!SU.isVisible(element))
-				SU.setVisibility(element, true);
-
-			// set transition initial CSS properties
-			var s = this.getCssProperty();
-			this.setTransitionProp(style, 'transitionProperty', s);
-
-			s = this.getTimingFunc();
-			if (s)
-			{
-				this.setTransitionProp(style, 'transitionTimingFunction', s);
-			}
-
-			s = options.duration.toString() + 'ms';
-			this.setTransitionProp(style, 'transitionDuration', s);
-
-			/*
-			// check if there is a undismissed event handler.
-			// This situation may occur when a execution process is request before prev execution finished
-			if (this._currEventHandler)
-				Kekule.X.Event.removeListener(element, 'transitionend', this._currEventHandler);
-			*/
-			// TODO: Need find a better solution to avoid transition overlap on one element
-
-			// install transitionend event handler
-			var fallbackTimeout;
-			var self = this;
-			var done = function(e)
-			{
-				//console.log('transition done', callback);
-				Kekule.X.Event.removeListener(element, 'transitionend', done);
-				// clear transition props
-				self.setTransitionProp(style, 'transition', '');
-				// clear fallback
-				if (fallbackTimeout)
-					clearTimeout(fallbackTimeout);
-				if (callback)
-					callback();
-			};
-			this._currEventHandler = done;
-			Kekule.X.Event.addListener(element, 'transitionend', done);
-			// some times the transitionend event will not be evoked
-			// (e.g., transition on element out of document in Chrome)
-			// so we need a fallback
-			fallbackTimeout = setTimeout(done, options.duration + 100);
-
-			//console.log('transition execute');
-			// set "to" property, need use setTimeOut to force browser update DOM
-			setTimeout(function(){
-				self.setElementProp(element, options.to, options);
-			}, 0);
-		}
-		else  // not supported
-		{
-			try
-			{
-				this.setElementProp(element, options.to, options);
-			}
-			catch(e)  // if error occurs, anyway, we will proceed
-			{
-
-			}
-			/*
-			if (callback)
-				callback();
-			*/
-			if (callback)  // delay call callback, after all routines of execute
-				setTimeout(callback, 0);
-		}
-	},
-
-	/** @private */
-	doHalt: function(transitionInfo)
-	{
-		var elem = transitionInfo.element;
-		if (elem)
-		{
-			//console.log('===================');
-			//setTimeout(this.setTransitionProp/*.bind(this)*/, 0, elem.style, 'transitionProperty', 'none');
-			this.setTransitionProp(elem.style, 'transitionProperty', 'none');
-		}
 	}
 });
-
-
-/* @ignore */
-/*
-Kekule.Widget.Css3SlideDownTransExecutor = TCC.create('Kekule.Widget.Css3SlideDownTransExecutor', 'height', null, {
-	canExecute: function($super, element, options)
-	{
-		return ($super(element, options) &&
-			Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value));
-	},
-	prepare: function(element, options)
-	{
-		SU.setDisplay(element, true);  // important, otherwise width info could not be get.
-		var s = SU.getComputedStyle(element, 'height');
-		this._elemHeightInfo = SU.analysisUnitsValue(s);
-		this._originHeight = element.style.height;
-		this._originOverflow = element.style.overflow;
-		element.style.overflow = 'hidden';
-	},
-	finish: function(element, options)
-	{
-		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
-		{
-			if (!this._originWidth)
-				element.style.removeProperty('height');
-			else
-				element.style.height = this._originHeight;
-			if (this._originOverflow)
-				element.style.overflow = this._originOveflow;
-			else
-				element.style.removeProperty('overflow');
-		}
-	},
-	setElementProp: function(element, position, options)
-	{
-		var s = this._elemHeightInfo.value * position + this._elemHeightInfo.units;
-		element.style.height = s;
-	}
-});
-*/
-/* @ignore */
-/*
-Kekule.Widget.Css3SlideRightTransExecutor = TCC.create('Kekule.Widget.Css3SlideRightTransExecutor', 'width', null, {
-	canExecute: function($super, element, options)
-	{
-		return ($super(element, options) &&
-			Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'width')).value));
-	},
-	prepare: function(element, options)
-	{
-		SU.setDisplay(element, true);  // important, otherwise width info could not be get.
-		var s = SU.getComputedStyle(element, 'width');
-		this._elemWidthInfo = SU.analysisUnitsValue(s);
-		this._originWidth = element.style.width;
-		this._originOverflow = element.style.overflow || '';
-		element.style.overflow = 'hidden';
-	},
-	finish: function(element, options)
-	{
-		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
-		{
-			if (!this._originWidth)
-				element.style.removeProperty('width');
-			else
-				element.style.width = this._originWidth;
-			if (this._originOverflow)
-				element.style.overflow = this._originOveflow;
-			else
-				element.style.removeProperty('overflow');
-		}
-	},
-	setElementProp: function(element, position, options)
-	{
-		var s = this._elemWidthInfo.value * position + this._elemWidthInfo.units;
-		element.style.width = s;
-	}
-});
-*/
-
 
 /**
- * Opacity transition executor based on CSS3 transition.
+ * Special base class for calculating the transition properties for {@link Kekule.Widget.Css3Transition}.
  * @class
- * @arguments {Kekule.Widget.Css3Transition}
+ * @arguments {ObjectEx}
+ */
+Kekule.Widget.Css3TransitionRunner = Class.create(ObjectEx,
+/** @lends Kekule.Widget.Css3TransitionRunner# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Css3TransitionRunner',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('parent', {'dataType': 'Kekule.Widget.BaseTransition'});
+	},
+	/** @private */
+	getCaller: function()
+	{
+		var p = this.getParent();
+		return p && p.getCaller();
+	},
+	/** @private */
+	getElement: function()
+	{
+		var p = this.getParent();
+		return p && p.getElement();
+	},
+	/**
+	 * Returns an array of CSS property names that may be changed during transition.
+	 * Descendants may override this method.
+	 * @param {Hash} transOptions
+	 * @returns {Array}
+	 * @private
+	 */
+	getAffectedCssPropNames: function(transOptions)
+	{
+		// do nothing here
+		return [];
+	},
+	/**
+	 * Determinate the direct CSS transition property names.
+	 * Descendants may override this method.
+	 * @param {Hash} transOptions
+	 * @returns {Array} Properties to be changed.
+	 * @private
+	 */
+	getTransCssPropNames: function(transOptions)
+	{
+		// do nothing here
+		return [];
+	},
+	/**
+	 * Prepare before run the execution.
+	 * In most cases, information (position, color and so on) need to be saved before execution.
+	 * Descendants need to override this method to save their own info.
+	 * @param {HTMLElement} element
+	 * @param {HTMLElement} caller
+	 * @param {Hash} options
+	 * @private
+	 */
+	prepare: function(element, caller, options)
+	{
+		//return this.doPrepare(element, options);
+		// do nothing here
+	},
+	/** @private */
+	setElementProp: function(element, position, options)
+	{
+		//do nothing here
+	}
+});
+
+/**
+ * Opacity transition runner based on CSS3 transition.
+ * @class
+ * @arguments {Kekule.Widget.Css3TransitionRunner}
  *
  * @property {Int} direction The direction of slide transition.
  */
-Kekule.Widget.Css3OpacityTrans = Class.create(Kekule.Widget.Css3Transition,
-/** @lends Kekule.Widget.Css3OpacityTrans# */
+Kekule.Widget.Css3OpacityTransRunner = Class.create(Kekule.Widget.Css3TransitionRunner,
+/** @lends Kekule.Widget.Css3OpacityTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3OpacityTrans',
-	/** @private */
-	canExecute: function(/*$super, */element, options)
-	{
-		return !!Kekule.BrowserFeature.cssTranform;
-	},
+	CLASS_NAME: 'Kekule.Widget.Css3OpacityTransRunner',
 	/** @private */
 	getAffectedCssPropNames: function(transOptions)
 	{
@@ -580,31 +361,39 @@ Kekule.Widget.Css3OpacityTrans = Class.create(Kekule.Widget.Css3Transition,
 		return ['opacity'];
 	},
 	/** @private */
+	prepare: function(element, caller, options)
+	{
+		// do nothing here
+	},
+	/** @private */
 	setElementProp: function(element, position, options)
 	{
-		//console.log(this._computedCssValues);
-		var originOpacity = parseFloat(this._computedCssValues.opacity) || 1;
-		element.style.opacity = originOpacity * position;
+		var p = this.getParent();
+		if (p)
+		{
+			//console.log(this._computedCssValues);
+			var originOpacity = parseFloat(p.getComputedCssValues().opacity) || 1;
+			element.style.opacity = originOpacity * position;
+		}
 	}
 });
-
 
 /**
  * Slide transition executor based on CSS3 transition.
  * @class
- * @arguments {Kekule.Widget.Css3Transition}
+ * @arguments {Kekule.Widget.Css3TransitionRunner}
  *
  * @property {Int} direction The direction of slide transition.
  */
-Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
-/** @lends Kekule.Widget.Css3SlideTransition# */
+Kekule.Widget.Css3SlideTransRunner = Class.create(Kekule.Widget.Css3TransitionRunner,
+/** @lends Kekule.Widget.Css3SlideTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3SlideTransition',
+	CLASS_NAME: 'Kekule.Widget.Css3SlideTransRunner',
 	/** @constructs */
-	initialize: function(/*$super, */direction)
+	initialize: function(direction)
 	{
-		this.tryApplySuper('initialize')  /* $super() */;
+		this.tryApplySuper('initialize');
 		if (Kekule.ObjUtils.notUnset(direction))
 			this.setDirection(direction);
 	},
@@ -614,11 +403,6 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		this.defineProp('direction', {'dataType': DataType.INT});
 	},
 
-	/** @private */
-	canExecute: function(/*$super, */element, options)
-	{
-		return true;
-	},
 	/** @private */
 	prepare: function(/*$super, */element, caller, options)
 	{
@@ -639,6 +423,11 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 		style.minHeight = '0';
 		style.maxWidth = 'none';
 		style.maxHeight = 'none';
+	},
+	/** @private */
+	getComputedCssValues: function()
+	{
+		return this.getParent().getComputedCssValues();
 	},
 	/** @private */
 	setElementProp: function(element, position, options)
@@ -794,20 +583,20 @@ Kekule.Widget.Css3SlideTransition = Class.create(Kekule.Widget.Css3Transition,
 });
 
 /**
- * A slide transition executor  based on CSS3 clip path transition.
+ * A slide transition runner based on CSS3 clip path transition.
  * @class
- * @arguments {Kekule.Widget.Css3Transition}
+ * @arguments {Kekule.Widget.Css3TransitionRunner}
  *
  * @property {Hash} baseRect. The starting rectangle to grow or the ending rectangle to shrink.
  *   Note the x/y value is relative to top-left corner of HTML page.
  *   If this property is not set, rect calculated from caller will be used.
  * //@property {HTMLElement} baseElement The baseRect can be calculated from this element.
  */
-Kekule.Widget.Css3ClipPathSlideTransition = Class.create(Kekule.Widget.Css3Transition,
-/** @lends Kekule.Widget.Css3ClipPathSlideTransition# */
+Kekule.Widget.Css3ClipPathSlideTransRunner = Class.create(Kekule.Widget.Css3TransitionRunner,
+/** @lends Kekule.Widget.Css3ClipPathSlideTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3ClipPathSlideTransition',
+	CLASS_NAME: 'Kekule.Widget.Css3ClipPathSlideTransRunner',
 	/** @constructs */
 	initialize: function(direction)
 	{
@@ -821,11 +610,6 @@ Kekule.Widget.Css3ClipPathSlideTransition = Class.create(Kekule.Widget.Css3Trans
 		this.defineProp('direction', {'dataType': DataType.INT});
 	},
 
-	/** @private */
-	canExecute: function(element, options)
-	{
-		return true;
-	},
 	/** @ignore */
 	prepare: function(element, caller, options)
 	{
@@ -849,6 +633,7 @@ Kekule.Widget.Css3ClipPathSlideTransition = Class.create(Kekule.Widget.Css3Trans
 		edgeClips[clipEdgeIndex] = clipValue;
 		var sStyle = 'inset(' + edgeClips.join(' ') + ')';
 		element.style.clipPath = sStyle;
+		//console.log('clipPath', sStyle, position);
 	},
 
 	/** @ignore */
@@ -878,24 +663,24 @@ Kekule.Widget.Css3ClipPathSlideTransition = Class.create(Kekule.Widget.Css3Trans
 });
 
 /**
- * Grow/shrink transition executor based on CSS3 transition.
+ * Grow/shrink transition runner based on CSS3 transition.
  * @class
- * @arguments {Kekule.Widget.Css3Transition}
+ * @arguments {Kekule.Widget.Css3TransitionRunner}
  *
  * @property {Hash} baseRect. The starting rectangle to grow or the ending rectangle to shrink.
  *   Note the x/y value is relative to top-left corner of HTML page.
  *   If this property is not set, rect calculated from caller will be used.
  * //@property {HTMLElement} baseElement The baseRect can be calculated from this element.
  */
-Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
-/** @lends Kekule.Widget.Css3GrowTransition# */
+Kekule.Widget.Css3GrowTransRunner = Class.create(Kekule.Widget.Css3TransitionRunner,
+/** @lends Kekule.Widget.Css3GrowTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3GrowTransition',
+	CLASS_NAME: 'Kekule.Widget.Css3GrowTransRunner',
 	/** @constructs */
-	initialize: function(/*$super, */baseRectOrCaller)
+	initialize: function(baseRectOrCaller)
 	{
-		this.tryApplySuper('initialize')  /* $super() */;
+		this.tryApplySuper('initialize');
 		if (baseRectOrCaller)
 		{
 			if (baseRectOrCaller.ownerDocument)  // is element
@@ -948,21 +733,6 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	},
 
 	/** @private */
-	canExecute: function(/*$super, */element, options)
-	{
-		return true;
-		/*
-		var result = $super(element, options);
-		if (result)
-		{
-			result = Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'width')).value);
-			result = result && Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value);
-		}
-		return result;
-		*/
-	},
-
-	/** @private */
 	prepare: function(/*$super, */element, caller, options)
 	{
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
@@ -1009,7 +779,7 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 	/** @private */
 	setElementProp: function(element, position, options)
 	{
-		var compStyles = this.getComputedCssValues();
+		var compStyles = this.getParent().getComputedCssValues();
 		var delta = this._delta;
 		var ratio = 1 - position;
 		//var curr = {};
@@ -1056,20 +826,17 @@ Kekule.Widget.Css3GrowTransition = Class.create(Kekule.Widget.Css3Transition,
 
 if (Kekule.BrowserFeature && Kekule.BrowserFeature.cssTranform)
 {
-
-/**
- * Base transform transition executor based on CSS3 transition.
+	/**
+ * Base transform transition runner based on CSS3 transition.
  * This is a base class, so do not use it directly.
  * @class
- * @arguments {Kekule.Widget.Css3Transition}
- *
- * @property {Int} direction The direction of slide transition.
+ * @arguments {Kekule.Widget.Css3TransitionRunner}
  */
-Kekule.Widget.Css3TransformTrans = Class.create(Kekule.Widget.Css3Transition,
-/** @lends Kekule.Widget.Css3TransformTrans# */
+Kekule.Widget.Css3TransformTransRunner = Class.create(Kekule.Widget.Css3TransitionRunner,
+/** @lends Kekule.Widget.Css3TransformTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3TransformTrans',
+	CLASS_NAME: 'Kekule.Widget.Css3TransformTransRunner',
 	/** @private */
 	getAffectedCssPropNames: function(transOptions)
 	{
@@ -1099,25 +866,26 @@ Kekule.Widget.Css3TransformTrans = Class.create(Kekule.Widget.Css3Transition,
 		Kekule.StyleUtils.setTransformMatrixArrayValues(elem, values);
 	}
 });
+
 /**
  * Grow/shrink transition executor based on CSS3 transform transition.
  * @class
- * @arguments {Kekule.Widget.Css3TransformTrans}
+ * @arguments {Kekule.Widget.Css3TransformTransRunner}
  *
  * @property {Hash} baseRect. The starting rectangle to grow or the ending rectangle to shrink.
  *   Note the x/y value is relative to top-left corner of HTML page.
  *   If this property is not set, rect calculated from caller will be used.
  * //@property {HTMLElement} baseElement The baseRect can be calculated from this element.
  */
-Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3TransformTrans,
-/** @lends Kekule.Widget.Css3TransformGrowTransition# */
+Kekule.Widget.Css3TransformGrowTransRunner = Class.create(Kekule.Widget.Css3TransformTransRunner,
+/** @lends Kekule.Widget.Css3TransformGrowTransRunner# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Widget.Css3TransformGrowTransition',
+	CLASS_NAME: 'Kekule.Widget.Css3TransformGrowTransRunner',
 	/** @constructs */
-	initialize: function(/*$super, */baseRectOrCaller)
+	initialize: function(baseRectOrCaller)
 	{
-		this.tryApplySuper('initialize')  /* $super() */;
+		this.tryApplySuper('initialize');
 		if (baseRectOrCaller)
 		{
 			if (baseRectOrCaller.ownerDocument)  // is element
@@ -1160,11 +928,11 @@ Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3Trans
 	},
 
 	/** @private */
-	prepare: function(/*$super, */element, caller, options)
+	prepare: function(element, caller, options)
 	{
 		SU.setDisplay(element, true);  // important, otherwise width/height info could not be get.
 
-		this.tryApplySuper('prepare', [element, caller, options])  /* $super(element, caller, options) */;
+		this.tryApplySuper('prepare', [element, caller, options]);
 		element.style.overflow = 'hidden';
 		Kekule.HtmlElementUtils.makePositioned(element);
 
@@ -1217,7 +985,7 @@ Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3Trans
 	/** @private */
 	setElementProp: function(element, position, options)
 	{
-		var compStyles = this.getComputedCssValues();
+		var compStyles = this.getParent().getComputedCssValues();
 		var transDelta = this._translateDelta;
 		var initialScale = this._initialScale;
 		var endScale = this._endScale;
@@ -1244,42 +1012,425 @@ Kekule.Widget.Css3TransformGrowTransition = Class.create(Kekule.Widget.Css3Trans
 	}
 });
 
-};
+}
 
 /**
- * A helper to create simple CSS3 transition executor class.
+ * Executor based on CSS3 transition.
  * @class
+ * @arguments {Kekule.Widget.BaseTransition}
+ *
+ * @property {String} timingFunc CSS3 transition-timing-function.
+ * @property {Array} childRunners A series of transition runner runs synchronously.
  */
-Kekule.Widget.Css3TransitionSimpleClassCreator = {
-	/**
-	 * Create a simple executor class.
-	 * @param {String} className
-	 * @param {String} cssProperty
-	 * @param {String} timingFunc
-	 * @param {Object} methods
-	 * @returns {Class}
-	 */
-	create: function(className, cssProperty, timingFunc, methods)
+Kekule.Widget.Css3Transition = Class.create(Kekule.Widget.BaseTransition,
+/** @lends Kekule.Widget.Css3Transition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.Css3Transition',
+	/** @constructs */
+	initialize: function(/*$super*/)
 	{
-		/** @ignore */
-		var result = Class.create(Kekule.Widget.Css3Transition, {
-			CLASS_NAME: className,
-			initialize: function(/*$super*/)
+		this.tryApplySuper('initialize')  /* $super() */;
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('timingFunc', {'dataType': DataType.STRING});
+		this.defineProp('childRunners', {'dataType': DataType.ARRAY, 'serializable': false});
+
+		this.defineProp('cssProperty', {'dataType': DataType.STRING});  // private
+	},
+
+	/** @private */
+	getRunners: function()
+	{
+		var rs = this.getChildRunners();
+		return rs? AU.toArray(rs): [];
+	},
+	/** @private */
+	iterateRunners: function(func)
+	{
+		var rs = this.getRunners();
+		for (var i = 0, l = rs.length; i < l; ++i)
+		{
+			func(rs[i], i, rs);
+		}
+	},
+	/**
+	 * Returns an array of CSS property names that may be changed during transition.
+	 * Descendants may override this method.
+	 * @param {Hash} transOptions
+	 * @returns {Array}
+	 * @private
+	 */
+	getAffectedCssPropNames: function(transOptions)
+	{
+		var result = [];
+		this.iterateRunners(function(runner){
+			var ps = runner.getAffectedCssPropNames() || [];
+			result = result.concat(ps);
+		});
+		return result;
+	},
+	/**
+	 * Determinate the direct CSS transition property names.
+	 * Descendants may override this method.
+	 * @param {Hash} transOptions
+	 * @returns {Array} Properties to be changed.
+	 * @private
+	 */
+	getTransCssPropNames: function(transOptions)
+	{
+		var result = [];
+		this.iterateRunners(function(runner){
+			var ps = runner.getTransCssPropNames() || [];
+			result = result.concat(ps);
+		});
+		return result;
+	},
+	/** @ignore */
+	setElementProp: function(element, position, options)
+	{
+		this.iterateRunners(function(runner){
+			runner.setElementProp(element, position, options);
+		});
+	},
+
+	/** @ignore */
+	canExecute: function(element, options)
+	{
+		return !!Kekule.BrowserFeature.cssTransition;
+	},
+	/**
+	 * Check if CSS3 transition is supported by current browser.
+	 * @returns {Bool}
+	 */
+	isSupported: function()
+	{
+		return !!Kekule.BrowserFeature.cssTransition;
+	},
+	/**
+	 * Check if option means an appear transition.
+	 * @param {Hash} options
+	 * @returns {Bool}
+	 * @private
+	 */
+	isAppear: function(options)
+	{
+		return !!options.isAppear;
+	},
+	/**
+	 * Check if option means an disappear transition.
+	 * @param {Hash} options
+	 * @returns {Bool}
+	 * @private
+	 */
+	isDisappear: function(options)
+	{
+		return !!options.isDisappear;
+	},
+	/** @private */
+	getTransitionPropValue: function(elem, propName)
+	{
+		var propNames = [
+			propName,
+			'Webkit' + propName.capitalizeFirst(),
+			'Moz' + propName.capitalizeFirst()
+		];
+		var result = null;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			result = Kekule.StyleUtils.getComputedStyle(elem, propNames[i]);
+			if (result)
+				break;
+		}
+		return result;
+	},
+	/** @private */
+	setTransitionPropValue: function(styleObj, propName, value)
+	{
+		//console.log(propName, value);
+		// help to set CSS properties with -moz- or -webkit prefix
+		var propNames = [
+			'Moz' + propName.capitalizeFirst(),
+			'Webkit' + propName.capitalizeFirst(),
+			propName
+		];
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			styleObj[propNames[i]] = value;
+		}
+	},
+
+	/** @private */
+	getOriginCssInlineValues: function()
+	{
+		return this._originCssInlineValues;
+	},
+	/** @private */
+	getComputedCssValues: function()
+	{
+		return this._computedCssValues;
+	},
+
+	/** @private */
+	prepare: function(element, caller, options)
+	{
+		this.tryApplySuper('prepare', [element, caller, options]);
+		//console.log('prepare', this.getTransCssPropNames());
+		this.setCssProperty(this.getTransCssPropNames(options).join(','));
+		var cssPropNames = this.getAffectedCssPropNames(options);
+		this._affectedCssPropNames = cssPropNames;
+		// store CSS values to future use
+		this._originCssInlineValues = this.storeCssInlineValues(element, cssPropNames);
+		this._computedCssValues = this.storeCssComputedValues(element, cssPropNames);
+
+		var self = this;
+		this.iterateRunners(function(runner){
+			runner.setParent(self);
+			runner.prepare(element, caller, options);
+		});
+	},
+	/** @private */
+	finish: function(element, caller, options)
+	{
+		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
+		{
+			//console.log('finish transition', this._affectedCssPropNames, this._originCssInlineValues);
+			this.restoreCssInlineValues(element, this._affectedCssPropNames, this._originCssInlineValues);
+		}
+		this.tryApplySuper('finish', [element, caller, options]);
+	},
+
+	/** @private */
+	doExecute: function(element, caller, callback, options)
+	{
+		//console.log('transition execute', options);
+		var SU = Kekule.StyleUtils;
+
+		var style = element.style;
+		var isAppear = this.isAppear(options);
+		var isDisappear = this.isDisappear(options);
+
+		if (this.isSupported())
+		{
+			this.setElementProp(element, options.from, options);
+			if (!SU.isDisplayed(element))
+				SU.setDisplay(element, true);
+			if (!SU.isVisible(element))
+				SU.setVisibility(element, true);
+
+			// set transition initial CSS properties
+			var s = this.getCssProperty();
+			/*
+			var originTransProp = this.getTransitionPropValue(element, 'transitionProperty');
+			if (originTransProp)  // preserve existing transition properties
+				s = originTransProp + ',' + s;
+			*/
+
+			this.setTransitionPropValue(style, 'transitionProperty', s);
+			//this.setTransitionPropValue(style, 'transitionProperty', 'all');
+
+			s = this.getTimingFunc() || options.timingFunc;
+			if (s)
 			{
-				this.tryApplySuper('initialize')  /* $super() */;
-				this.setCssProperty(cssProperty);
-				this.setTimingFunc(timingFunc);
+				this.setTransitionPropValue(style, 'transitionTimingFunction', s);
+			}
+
+			s = options.duration.toString() + 'ms';
+			this.setTransitionPropValue(style, 'transitionDuration', s);
+
+			/*
+			// check if there is a undismissed event handler.
+			// This situation may occur when a execution process is request before prev execution finished
+			if (this._currEventHandler)
+				Kekule.X.Event.removeListener(element, 'transitionend', this._currEventHandler);
+			*/
+			// TODO: Need find a better solution to avoid transition overlap on one element
+
+			// install transitionend event handler
+			var fallbackTimeout;
+			var self = this;
+			var done = function(e)
+			{
+				//console.log('transition done', callback);
+				Kekule.X.Event.removeListener(element, 'transitionend', done);
+				// clear transition props
+				self.setTransitionPropValue(style, 'transition', '');
+				// clear fallback
+				if (fallbackTimeout)
+					clearTimeout(fallbackTimeout);
+				if (callback)
+					callback();
+			};
+			this._currEventHandler = done;
+			Kekule.X.Event.addListener(element, 'transitionend', done);
+			// some times the transitionend event will not be evoked
+			// (e.g., transition on element out of document in Chrome)
+			// so we need a fallback
+			fallbackTimeout = setTimeout(done, options.duration + 100);
+
+			//console.log('transition execute');
+			// set "to" property, need use setTimeOut to force browser update DOM
+			setTimeout(function(){
+				self.setElementProp(element, options.to, options);
+			}, 0);
+		}
+		else  // not supported
+		{
+			try
+			{
+				this.setElementProp(element, options.to, options);
+			}
+			catch(e)  // if error occurs, anyway, we will proceed
+			{
+
+			}
+			/*
+			if (callback)
+				callback();
+			*/
+			if (callback)  // delay call callback, after all routines of execute
+				setTimeout(callback, 0);
+		}
+	},
+
+	/** @private */
+	doHalt: function(transitionInfo)
+	{
+		var elem = transitionInfo.element;
+		if (elem)
+		{
+			//console.log('===================');
+			//setTimeout(this.setTransitionPropValue/*.bind(this)*/, 0, elem.style, 'transitionProperty', 'none');
+			this.setTransitionPropValue(elem.style, 'transitionProperty', 'none');
+		}
+	}
+});
+
+/**
+ * A helper function to create concrete CSS3 transitions with concrete runners.
+ * @param {String} className
+ * @param {Array} transitionRunnerClasses
+ */
+Kekule.Widget.Css3Transition.createConcreteClass = function(className, transitionRunnerClasses)
+{
+	/** @ignore */
+	var result = Class.create(Kekule.Widget.Css3Transition,
+		{
+			CLASS_NAME: className,
+			CHILD_RUNNER_CLASSES: AU.toArray(transitionRunnerClasses),
+			initialize: function()
+			{
+				this.tryApplySuper('initialize');
+				var runners = [];
+				for (var i = 0, l = this.CHILD_RUNNER_CLASSES.length; i < l; ++i)
+				{
+					runners.push(new this.CHILD_RUNNER_CLASSES[i]());
+				}
+				this.setChildRunners(runners);
 			}
 		});
 
-		if (methods)
-			result = ClassEx.extend(result, methods);
-
-		return result;
-	}
+	/*
+	// automatically set the class entry
+	if (className.startsWith('Kekule'))
+		Object.setCascadeFieldValue(className, result, Kekule.$jsRoot);
+  */
+	return result;
 };
-/** @ignore */
-var TCC = Kekule.Widget.Css3TransitionSimpleClassCreator;
+
+
+/* @ignore */
+/*
+Kekule.Widget.Css3SlideDownTransExecutor = TCC.create('Kekule.Widget.Css3SlideDownTransExecutor', 'height', null, {
+	canExecute: function($super, element, options)
+	{
+		return ($super(element, options) &&
+			Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'height')).value));
+	},
+	prepare: function(element, options)
+	{
+		SU.setDisplay(element, true);  // important, otherwise width info could not be get.
+		var s = SU.getComputedStyle(element, 'height');
+		this._elemHeightInfo = SU.analysisUnitsValue(s);
+		this._originHeight = element.style.height;
+		this._originOverflow = element.style.overflow;
+		element.style.overflow = 'hidden';
+	},
+	finish: function(element, options)
+	{
+		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
+		{
+			if (!this._originWidth)
+				element.style.removeProperty('height');
+			else
+				element.style.height = this._originHeight;
+			if (this._originOverflow)
+				element.style.overflow = this._originOveflow;
+			else
+				element.style.removeProperty('overflow');
+		}
+	},
+	setElementProp: function(element, position, options)
+	{
+		var s = this._elemHeightInfo.value * position + this._elemHeightInfo.units;
+		element.style.height = s;
+	}
+});
+*/
+/* @ignore */
+/*
+Kekule.Widget.Css3SlideRightTransExecutor = TCC.create('Kekule.Widget.Css3SlideRightTransExecutor', 'width', null, {
+	canExecute: function($super, element, options)
+	{
+		return ($super(element, options) &&
+			Kekule.ObjUtils.notUnset(SU.analysisUnitsValue(SU.getComputedStyle(element, 'width')).value));
+	},
+	prepare: function(element, options)
+	{
+		SU.setDisplay(element, true);  // important, otherwise width info could not be get.
+		var s = SU.getComputedStyle(element, 'width');
+		this._elemWidthInfo = SU.analysisUnitsValue(s);
+		this._originWidth = element.style.width;
+		this._originOverflow = element.style.overflow || '';
+		element.style.overflow = 'hidden';
+	},
+	finish: function(element, options)
+	{
+		if ((options.to === 1) || this.isAppear(options) || this.isDisappear(options))
+		{
+			if (!this._originWidth)
+				element.style.removeProperty('width');
+			else
+				element.style.width = this._originWidth;
+			if (this._originOverflow)
+				element.style.overflow = this._originOveflow;
+			else
+				element.style.removeProperty('overflow');
+		}
+	},
+	setElementProp: function(element, position, options)
+	{
+		var s = this._elemWidthInfo.value * position + this._elemWidthInfo.units;
+		element.style.width = s;
+	}
+});
+*/
+
+Kekule.Widget.Css3OpacityTrans = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3OpacityTrans', [Kekule.Widget.Css3OpacityTransRunner]);
+Kekule.Widget.Css3ClipPathSlideTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3ClipPathSlideTransition', [Kekule.Widget.Css3ClipPathSlideTransRunner]);
+Kekule.Widget.Css3SlideTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3SlideTransition', [Kekule.Widget.Css3SlideTransRunner]);
+Kekule.Widget.Css3GrowTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3GrowTransition', [Kekule.Widget.Css3GrowTransRunner]);
+
+Kekule.Widget.Css3ClipPathSlideOpacityTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3ClipPathSlideOpacityTransition', [Kekule.Widget.Css3ClipPathSlideTransRunner, Kekule.Widget.Css3OpacityTransRunner]);
+Kekule.Widget.Css3GrowOpacityTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3GrowOpacityTransition', [Kekule.Widget.Css3GrowTransRunner, Kekule.Widget.Css3OpacityTransRunner]);
+
+if (Kekule.Widget.Css3TransformGrowTransRunner)
+{
+	Kekule.Widget.Css3TransformGrowTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3TransformGrowTransition', [Kekule.Widget.Css3TransformGrowTransRunner]);
+	Kekule.Widget.Css3TransformGrowOpacityTransition = Kekule.Widget.Css3Transition.createConcreteClass('Kekule.Widget.Css3TransformGrowOpacityTransition', [Kekule.Widget.Css3TransformGrowTransRunner, Kekule.Widget.Css3OpacityTransRunner]);
+}
 
 /**
  * A helper class providing util functions for widget transitions.
