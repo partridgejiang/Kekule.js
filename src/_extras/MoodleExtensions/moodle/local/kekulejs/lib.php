@@ -53,7 +53,7 @@ class kekulejs_configs
      */
     static public function getKekuleScriptDir()
     {
-        return self::getScriptDir() . 'kekule.js.0.8.1.19013000/';
+        return self::getScriptDir() . 'kekule.js.0.9.5.21013000/';
     }
     static public function getAdapterDir()
     {
@@ -88,6 +88,14 @@ class kekulejs_utils
             }
         } else  // use default
             $params = 'modules=io,chemWidget,algorithm&locals=zh';
+
+        // language
+	    $currLan = current_language();
+	    if ($currLan)
+	    {
+		    $params .= '&language=' . $currLan;
+		}
+
 
         $p->requires->js($scriptDir . 'raphael-min.js');
         $p->requires->js($scriptDir . 'Three.js');
@@ -130,6 +138,7 @@ class kekulejs_utils
             $p = $PAGE;
         $dir = kekulejs_configs::getAdapterDir();
         $p->requires->js($dir . 'kekuleMoodle.js');
+	    $p->requires->js($dir . 'kekuleChemViewerInterceptor.js');
     }
 
     /**
