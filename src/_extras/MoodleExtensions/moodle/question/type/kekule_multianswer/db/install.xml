@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="question/type/kekule_chem/db" VERSION="2016090100" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
+<XMLDB PATH="question/type/kekule_multianswer/db" VERSION="2016090100" COMMENT="XMLDB file for Moodle question/type/kekule_chem"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
