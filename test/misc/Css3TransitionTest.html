@@ -10,6 +10,10 @@
       -moz-transition: height 3s;
       -webkit-transition: height 3s;
     }
+    .UseTransClip
+    {
+      transition: clip-path 3s;
+    }
     .NoTrans
     {
       transition-property: none;
@@ -31,6 +35,15 @@
       height: 300px;
     }
 
+    .InitialClip
+    {
+      clip-path: inset(0% 100% 100% 0%);
+    }
+    .FinalClip
+    {
+      clip-path: inset(0% 0% 0% 0%);
+    }
+
     #target
     {
       width: 200px;
@@ -50,8 +63,11 @@
 
       elem.classList.remove('NoTrans');
       elem.classList.remove('UseTrans');
+      elem.classList.remove('UseTransClip');
       elem.classList.remove('Final');
+      elem.classList.remove('FinalClip');
       elem.classList.add('Initial');
+
 
       //alert('about to begin');
 
@@ -72,6 +88,34 @@
       elem.classList.add('NoTrans');
     }
 
+    function startClip()
+    {
+      var elem = document.getElementById('target');
+
+      elem.classList.remove('NoTrans');
+      elem.classList.remove('UseTrans');
+      elem.classList.remove('UseTransClip');
+      elem.classList.remove('Final');
+      elem.classList.remove('FinalClip');
+      elem.classList.add('InitialClip');
+
+      setTimeout(function()
+      {
+        console.log('trans clip');
+        elem.classList.add('UseTransClip');
+        //elem.classList.add('Final');
+        //elem.classList.remove('Initial');
+        elem.style.clipPath = 'inset(0% 0% 0% 0%)';
+
+      }, 10);
+    }
+    function haltClip()
+    {
+      var elem = document.getElementById('target');
+      elem.classList.remove('UseTransClip');
+      elem.classList.add('NoTransClip');
+    }
+
     function init()
     {
       var elem = document.getElementById('target');
@@ -85,6 +129,8 @@
     <button type="button" value="start" onclick="start()">Start</button>
     <button type="button" value="halt" onclick="halt()">Halt</button>
 
+    <button type="button" value="start" onclick="startClip()">Start Clip</button>
+    <button type="button" value="halt" onclick="haltClip()">Halt Clip</button>
     <div id="target"></div>
 
 </body>

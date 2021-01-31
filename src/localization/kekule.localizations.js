@@ -13,7 +13,7 @@
 
 	function analysisLanguage(lanName)
 	{
-		var parts = lanName.split('-');
+		var parts = lanName.split(/[-|_]/);
 		return {'language': parts[0], 'local': parts[1]};
 	}
 

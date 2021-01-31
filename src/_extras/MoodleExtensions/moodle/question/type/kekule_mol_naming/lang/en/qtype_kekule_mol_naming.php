@@ -33,6 +33,10 @@ $string['pluginnamesummary'] = 'A question type which allows the students to nam
 // settings
 $string['captionStrReplacements'] = 'Text replacements';
 $string['descStrReplacements'] = 'Each line is in A=B format, where string B will replace A in answer input';
+$string['captionStereoFlags'] = 'Stereo flags';
+$string['descStereoFlags'] = 'Stereo flags (e.g., R/S) in molecule name';
+$string['captionStrictStereoFlags'] = 'Strict stereo flags';
+$string['descStrictStereoFlags'] = 'If checked, the stereo section in name must matches the answer with or without brackets';
 $string['captionRemoveSpaces'] = 'Remove spaces';
 $string['descRemoveSpaces'] = 'Whether remove all spaces in answer input';
 $string['captionReplaceUnstandardChars'] = 'Replace unstandard chars';

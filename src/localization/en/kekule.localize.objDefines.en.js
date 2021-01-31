@@ -53,7 +53,14 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_defChargeMarkType: 'Default charge mark type',
 			DES_defChargeMarkType: null,    // TODO: how to descript this
 			TITLE_partialChargeDecimalsLength: 'Decimal length of partial charge',
-			DES_partialChargeDecimalsLength: 'If an atom has a partical charge (e.g., +1.5), how many digits after decimal point should be displayed'
+			DES_partialChargeDecimalsLength: 'If an atom has a partical charge (e.g., +1.5), how many digits after decimal point should be displayed',
+			TITLE_distinguishSingletAndTripletRadical: 'Distinguish singlet/triplet radical',
+			DES_distinguishSingletAndTripletRadical: 'Whether use different mark to distinguish singlet(..) and triplet(^^) radical',
+
+			TITLE_bondLineCap: 'Bond line cap style',
+			TITLE_bondLineJoin: 'Bond line join style',
+			TITLE_glyphLineCap: 'Glyph line cap style',
+			TITLE_glyphLineJoin: 'Glyph line join style'
 		},
 		DisplayLabelConfigs: {
 			TITLE_enableIsotopeAlias: 'Enable isotope alias',
@@ -100,6 +107,10 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_labelFontSize: 'Size of general label text',
 			TITLE_atomFontSize: 'Atom text size',
 			DES_atomFontSize: 'Size of atom label text',
+			TITLE_chemMarkerFontSize: 'Chem marker text size',
+			DES_chemMarkerFontSize: 'Size of text in chem marker',
+			TITLE_chemMarkerMargin: 'Chem marker margin',
+			DES_chemMarkerMargin: 'Margin of chem marker to main object',
 			TITLE_allenCenterAtomRadius: 'Allen center radius',
 			DES_allenCenterAtomRadius: 'Radius to draw dot on center carbon atom in allen',
 			TITLE_chargeMarkFontSize: 'Charge mark size',
@@ -129,7 +140,12 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_glyphStrokeWidth: 'Glyph stroke width',
 			DES_glyphStrokeWidth: 'The default width of glyph strokes',
 			TITLE_autofitContextPadding: 'Autofit context padding',
-			DES_autofitContextPadding: 'Padding of autofit widget edge and drawn object'
+			DES_autofitContextPadding: 'Padding of autofit widget edge and drawn object',
+
+			TITLE_glyphStickOffsetRelLength: 'Glyph stick offset relative length',  // TODO: need a more precisely title and description
+			DES_glyphStickOffsetRelLength: 'Glyph stick offset relative length',
+			TITLE_defScaleRefLength: 'Default scale reference length',
+			DES_defScaleRefLength: 'Length for calculating the auto-scale'
 		},
 		ColorConfigs:	{
 			TITLE_useAtomSpecifiedColor: 'Use element specified color',
@@ -210,12 +226,27 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 		},
 		ChemObjDisplayerConfigs: {
 			TITLE_ioConfigs: 'I/O settings',
-			DES_ioConfigs: 'Settings of input/output'
+			DES_ioConfigs: 'Settings of input/output',
+			TITLE_environment2DConfigs: '2D environment settings',
+			DES_environment2DConfigs: 'Settings of 2D drawing environment',
+			TITLE_environment3DConfigs: '3D environment settings',
+			DES_environment3DConfigs: 'Settings of 3D drawing environment'
 		},
 		ChemObjDisplayerIOConfigs: {
 			TITLE_canonicalizeBeforeSave: 'Canonicalize before save',
-			DES_canonicalizeBeforeSave: 'Whether canonicalize molecule before saving it'
+			DES_canonicalizeBeforeSave: 'Whether canonicalize molecule before saving it',
+			TITLE_autoGenerateCoordsAfterLoad: 'Auto generate coordinates after loading molecule',
+			DES_autoGenerateCoordsAfterLoad: 'Whether coordinates of atoms are automatically generated when loading a molecule without explicit coordinate information',
 		},
+		ChemObjDisplayerEnvironmentConfigs: {
+			TITLE_antialias: 'Antialias',
+			DES_antialias: 'Whether enable extra antialias strategy additional to the default one of browser',
+			TITLE_antialiasBlurRatio: 'Antialias blur ratio',
+			DES_antialiasBlurRatio: 'Antialias blur ratio', // TODO: need a more precisely description
+			TITLE_overSamplingRatio: 'Over sampling ratio',
+			DES_overSamplingRatio: 'Over sampling ratio of the drawing context'
+		},
+
 		Viewer:	{
 			TITLE_enableDirectInteraction: 'Enable direct interaction',
 			DES_enableDirectInteraction: 'Whether interaction with chem object in viewer is enabled',
@@ -256,8 +287,16 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_enableTrackOnNearest: 'If setting to true, hot track or selection will focus on nearest object to current position, otherwise, the topmost object around will be focused.',
 			TITLE_enableHotTrack: 'Enable hot track',
 			DES_enableHotTrack: 'Whether highlighting objects under mouse position',
+			TITLE_scrollToObjAfterLoading: 'Scroll to object after loading',
+			DES_scrollToObjAfterLoading: 'Whether scroll to the newly loaded object after opening data',
+			TITLE_autoExpandClientSizeAfterLoading: 'Auto expand client size after loading',
+			DES_autoExpandClientSizeAfterLoading: 'Whether expand the client size automatically after loading a large object out of boundary',
+			TITLE_autoExpandClientSizeAfterManipulation: 'Auto expand client size after manipulation',
+			DES_autoExpandClientSizeAfterManipulation: 'Whether expand the client size automatically when moving a object out of the boundary of editor',
 			TITLE_autoSelectNewlyInsertedObjects: 'Auto select new inserted objects',
 			DES_autoSelectNewlyInsertedObjects: 'Whether select objects newly inserted or modified in editor automatically',
+			TITLE_autoSelectNewlyInsertedObjectsOnTouch: 'Auto select new inserted objects in touch device',
+			DES_autoSelectNewlyInsertedObjectsOnTouch: 'Whether select objects newly inserted or modified in editor automatically in touch device',
 			TITLE_objBoundTrackMinInflation: 'Object bound minimal inflation (default)',
 			DES_objBoundTrackMinInflation: 'The default minimal inflation of the bound of object to make it easier to select',
 			TITLE_objBoundTrackMinInflationMouse: 'Object bound minimal inflation (mouse)',
@@ -278,6 +317,12 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_selectionMarkerInflation: 'Inflation of object selection mark, makes it easier to see the containing objects',
 			TITLE_selectionMarkerEdgeInflation: 'Selection edge inflation',
 			DES_selectionMarkerEdgeInflation: 'Inflation when judging if a coord is on selection mark edge',
+			TITLE_followPointerCoordOnDirectManipulatingSingleObj: 'Follow pointer coordinate on direct manipulating object',
+			DES_followPointerCoordOnDirectManipulatingSingleObj: 'If true, the new coordinate of manipulating object will be set directly by the position of pointer (rather than the delta coordinate to the original position)',
+			TITLE_followPointerCoordOnDirectManipulatingSingleObjDistanceThreshold: 'Threshold of following pointer coordinate on direct manipulating object',
+			DES_followPointerCoordOnDirectManipulatingSingleObjDistanceThreshold: 'Threshold when following pointer coordinate on direct manipulating object',
+			TITLE_constrainedResizeStep: 'Constrained resize step',
+			DES_constrainedResizeStep: 'Constrained resize step',
 			TITLE_constrainedRotateStep: 'Constrained rotation step',
 			DES_constrainedRotateStep: 'Constrained rotation step, in arc',
 			TITLE_rotationLocationPointDistanceThreshold: 'Rotation starting min distance',
@@ -328,7 +373,10 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_allowUnknownAtomSymbol: 'Allow unknown atom symbol',
 			DES_allowUnknownAtomSymbol: 'Allow inputting unknown symbol and handle it as pseudo atom in atom setter',
 			TITLE_clonedObjectScreenOffset: 'Copied object coord offset',
-			DES_clonedObjectScreenOffset: 'The distance between copied objects and origin objects when doing paste selection action in editor'
+			DES_clonedObjectScreenOffset: 'The distance between copied objects and origin objects when doing paste selection action in editor',
+
+			TITLE_enableBondKekulizeHucklize: 'Enable Kekulize and Hucklize function of bond',
+			DES_enableBondKekulizeHucklize: 'Whether Kekulize and Hucklize buttons are shown in bond modifier of editor',
 		},
 		UiMarkerConfigs: {
 			TITLE_hotTrackerColor: 'Hot track mark color',
@@ -407,6 +455,10 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 		ChemSpaceConfigs: {
 			TITLE_defScreenSize2D: 'Default 2D screen size',
 			TITLE_defScreenSize3D: 'Default 3D screen size',
+			TITLE_autoExpandScreenSize2D: 'Auto expanding size 2D',
+			DES_autoExpandScreenSize2D: 'The size used when automatically expanding editor client in 2D mode',
+			TITLE_autoExpandScreenSize3D: 'Auto expanding size 3D',
+			DES_autoExpandScreenSize3D: 'The size used when automatically expanding editor client in 3D mode',
 			TITLE_defPadding: 'Default padding',
 			DES_defPadding: 'Padding on top when adding an unpositioned object to container chem space'
 		},
@@ -419,11 +471,19 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_enableOperHistory: 'Enable undo',
 			DES_enableOperHistory: 'Whether undo/redo is enabled'
 		},
+		ChemSpaceEditor: {
+			TITLE_allowAppendDataToCurr: 'Allow appending data',
+			DES_allowAppendDataToCurr: 'Whether allow appending data to current document'
+		},
 		Composer: {
 			TITLE_enableStyleToolbar: 'Enable style toolbar',
 			DES_enableStyleToolbar: 'Whether display style toolbar to set color, font and size of objects',
+			TITLE_enableObjModifierToolbar: 'Enable object modifier toolbar',
+			DES_enableObjModifierToolbar: 'Whether display toolbar with a series of object modification tools',
 			TITLE_allowCreateNewChild: 'Enable create new child object',
-			DES_allowCreateNewChild: 'Whether new direct child of document can be created'
+			DES_allowCreateNewChild: 'Whether new direct child of document can be created',
+			TITLE_allowAppendDataToCurr: 'Allow appending data',
+			DES_allowAppendDataToCurr: 'Whether allow appending data to current document'
 		}
 	}
 });

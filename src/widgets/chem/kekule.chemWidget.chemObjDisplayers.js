@@ -171,8 +171,14 @@ Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs = Class.create(Kekule.Abstr
  */
 /**
  * Invoked when the a chem object (or null) is loaded into the displayer.
- *   event param of it has one fields: {obj: Object}
+ *   event param of it has one fields: {obj: Object}.
  * @name Kekule.ChemWidget.ChemObjDisplayer#load
+ * @event
+ */
+/**
+ * Invoked when the displayer is repainted.
+ *   event param of it has one fields: {obj: Object}.
+ * @name Kekule.ChemWidget.ChemObjDisplayer#repaint
  * @event
  */
 Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidget,
@@ -1449,6 +1455,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		if (!this.getElement())  // not bound to element, can not draw
 			return;
 
+		if (this.isPainting())  // avoid duplicated repainting
+			return;
+
 		this.beginPaint();
 		try
 		{
@@ -1530,6 +1539,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			//var end = (new Date()).getTime();
 			//var duration = end - start;
 			//console.log('draw in ' + duration + ' ms');
+
+			this.invokeEvent('repaint', {'obj': this.getChemObj()});
 		}
 		finally
 		{

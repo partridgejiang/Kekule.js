@@ -166,7 +166,7 @@ Kekule.Render.MoleculeDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addIntConfigProp('defChargeMarkType', Kekule.Render.ChargeMarkRenderType.DEFAULT, {'enumSource': Kekule.Render.ChargeMarkRenderType});
 		this.addBoolConfigProp('distinguishSingletAndTripletRadical', false);
 		this.addIntConfigProp('partialChargeDecimalsLength', 2);
-		this.addBoolConfigProp('autoCreateChargeAndRadicalMarker', true);
+		this.addBoolConfigProp('autoCreateChargeAndRadicalMarker', true, {'scope': Class.PropertyScope.PUBLIC});
 		this.addStrConfigProp('bondLineCap', 'round');  // possible value: 'butt', 'round' and 'square'
 		this.addStrConfigProp('bondLineJoin', 'miter');
 		this.addStrConfigProp('glyphLineCap', 'round');

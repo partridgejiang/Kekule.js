@@ -16,7 +16,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017100501;
+$plugin->version   = 2021013100;
 $plugin->requires  = 2012062500;
 $plugin->cron      = 0;
 $plugin->component = 'qtype_kekule_chem_base';
