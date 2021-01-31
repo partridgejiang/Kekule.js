@@ -112,6 +112,19 @@ function createChemWidget(placeHolder, ansCtrlName, className, widgetType, input
 		}
 	}
 
+	if (widgetClass === Kekule.ChemWidget.Viewer)
+	{
+		// add copy structure button
+		result.setToolButtons([{
+			'widgetClass': Kekule.Widget.DropDownButton,
+			'htmlClass': 'KM-Btn-Copy-Structure',
+			'text': Kekule.$L('KekuleMoodleTexts.CAPTION_COPY_QUESTION_STRUCTURE'),
+			'hint': Kekule.$L('KekuleMoodleTexts.HINT_COPY_QUESTION_STRUCTURE'),
+			'dropDownWidgetGetter': _btnStructureCopyDropDownPanelGetter,
+			'#dropDown': _reactBtnCopyStructureDropdown
+		},
+		Kekule.ChemWidget.ComponentWidgetNames.openEditor]);
+	}
 
 	// TODO: now only handle viewer event
 	if (widgetClass === Kekule.ChemWidget.Viewer)
@@ -154,6 +167,173 @@ function reactViewerChemObjLoad(e)
 			ansElem.value = sAnswer;
 		}
 	}
+}
+
+function _btnStructureCopyDropDownPanelGetter(btn)
+{
+	var doc = btn.getDocument();
+	/*
+	var result = new Kekule.Widget.Panel(doc);
+	var grid = new Kekule.ChemWidget.ViewerGrid2D(result);
+	result._grid = grid;
+	result._parentViewer = btn.getParent().getParent(); // mark
+	*/
+	var result = new KekuleMoodle.Widget.ChemObjSelectorPanel(doc);
+	result._questionElem = getQuestionRootElem(btn.getParent().getParent().getElement());
+	result.setCaption(Kekule.$L('KekuleMoodleTexts.CAPTION_COPY_QUESTION_STRUCTURE'));
+	result.on('select', _reactStructureCopyDropDownPanelSelect);
+	_refreshMoleculesInDropdownPanel(btn, result);
+
+	return result;
+}
+
+function _reactStructureCopyDropDownPanelSelect(e)
+{
+	var panel = e.target;
+	console.log(panel._invokerViewer, e.chemObj);
+	var mol = e.chemObj;
+	if (mol && mol instanceof Kekule.StructureFragment)
+	{
+		var viewer = panel._invokerViewer;
+		viewer.setChemObj(mol.clone());
+	}
+}
+
+function _refreshMoleculesInDropdownPanel(btn, panel)
+{
+	//var grid = panel._grid;
+	var molecules = [];
+	var viewerBlank = btn.getParent().getParent();
+	//var viewerBlank = panel._parentViewer;
+	var viewerBlankElem = viewerBlank.getElement();
+	var questionRootElem = getQuestionRootElem(viewerBlankElem);
+	var viewersInQuestion = getViewerWidgetsInsideElem(questionRootElem);
+	if (viewersInQuestion)
+	{
+		Kekule.ArrayUtils.remove(viewersInQuestion, viewerBlank);  // filter out viewers in question content
+		molecules = molecules.concat(getExistedMoleculesInViewers(viewersInQuestion));
+	}
+	// some <img> elements may has not been created into viewer
+	var proxyElems = getViewerProxiesInsideElem(questionRootElem) || [];
+	for (var i = 0, l = proxyElems.length; i < l; ++i)
+	{
+		var proxy = proxyElems[i];
+		var data = proxy.getAttribute('data-chem-obj');
+		if (data)
+		{
+			//try
+			{
+				var json = JSON.parse(data);
+				var serializer = Class.ObjSerializerFactory.getSerializer('json');
+				var chemObj = serializer.load(null, json)
+				if (chemObj)
+				{
+					molecules = molecules.concat(getMoleculesInChemObj(chemObj));
+				}
+			}
+			//catch(e)
+			{
+
+			}
+		}
+	}
+
+	console.log(molecules);
+	/*
+	grid.clearWidgets();
+	for (var i = 0, l = molecules.length; i < l; ++i)
+	{
+		grid.addChemObj(molecules[i]);
+	}
+	*/
+	panel.setObjects(molecules);
+}
+function _reactBtnCopyStructureDropdown(e)
+{
+	console.log('execute');
+	var btn = e.target;
+	var panel = btn.getDropDownWidget();
+	panel._invokerViewer = btn.getParent().getParent();
+	//var parentViewer = btn.getParent().getParent();
+	var questionElem = getQuestionRootElem(btn.getParent().getParent().getElement());
+	if (questionElem !== panel._questionElem)
+	{
+		console.log('refresh');
+		panel._questionElem = questionElem;
+		_refreshMoleculesInDropdownPanel(btn, panel);
+	}
+}
+
+function isQuestionRootElem(elem)
+{
+	return (elem.className || '').indexOf('que ') >= 0;
+}
+
+function getQuestionRootElem(childElem)  // returns the root of a question section
+{
+	if (isQuestionRootElem(childElem))
+		return childElem;
+	else if (childElem === childElem.ownerDocument.body)
+		return childElem;
+	else
+		return getQuestionRootElem(childElem.parentNode);
+}
+
+function getViewerWidgetsInsideElem(elem)  // returns all viewer widgets under one element
+{
+	var result = [];
+	var widgets = Kekule.Widget.Utils.getWidgetsInsideElem(elem);
+	for (var i = 0, l = widgets.length; i < l; ++i)
+	{
+		if (widgets[i] instanceof Kekule.ChemWidget.Viewer)
+			result.push(widgets[i]);
+	}
+	return result;
+}
+function getViewerProxiesInsideElem(elem)  // return <img> elements that has not been created into viewer
+{
+	var result = [];
+	var imgs = elem.getElementsByTagName('img');
+	for (var i = 0, l = imgs.length; i < l; ++i)
+	{
+		var img = imgs[i];
+		if ((img.getAttribute('data-kekule-widget') || img.getAttribute('data-widget')) === 'Kekule.ChemWidget.Viewer')
+		{
+			result.push(img);
+		}
+	}
+	return result;
+}
+
+function getMoleculesInChemObj(obj)
+{
+	var result = [];
+	var objClass = Kekule.StructureFragment;
+	var filter = function(child){ return child && (child instanceof objClass) && (child.hasCtab && child.hasCtab()); };
+
+	if (obj instanceof objClass)
+		result.push(obj);
+	else if (obj instanceof Kekule.ChemSpace)
+	{
+		var objs = obj.filterChildren(filter, true);
+		result = result.concat(objs);
+	}
+	return result;
+}
+
+function getExistedMoleculesInViewers(viewers)
+{
+	var result = [];
+	for (var i = 0, l = viewers.length; i < l; ++i)
+	{
+		var viewer = viewers[i];
+		var obj = viewer.getChemObj();
+		if (obj)
+		{
+			result = result.concat(getMoleculesInChemObj(obj));
+		}
+	}
+	return result;
 }
 
 function getBlankRelatedElems(ctrlName)
