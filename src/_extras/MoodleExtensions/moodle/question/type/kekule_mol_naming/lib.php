@@ -28,13 +28,12 @@ defined('MOODLE_INTERNAL') || die();
 
 class qtype_kekule_mol_naming_configs
 {
-    const DEF_STR_REPLACEMENT = <<<STR
-　=
+    const DEF_STR_REPLACEMENT = '　= ' . <<<'STR1'
 ，=,
 。=.
 ——=-
 —=-
-–=-
+－=-
 （=(
 ）=)
 【=[
@@ -45,7 +44,23 @@ class qtype_kekule_mol_naming_configs
 ’='
 “="
 ”="
-STR;
+STR1;
+
+    const DEF_STEREO_FLAG_STRS = <<<'STR2'
+R
+S
+r
+s
+Z
+E
+cis
+trans
+顺
+反
+STR2;
+
+	// ['R', 'S', 'r', 's', 'Z', 'E', 'cis', 'trans', '顺', '反'];
+    const DEF_STRICT_STEREO_FLAGS = false;
     const DEF_REMOVE_SPACES = true;
     const DEF_REPLACE_UNSTANDARD_CHARS= true;
     const DEF_IGNORE_CASE = true;
@@ -82,6 +97,25 @@ class qtype_kekule_mol_naming_utils
         }
         return $result;
     }
+	/**
+	 * Returns configured stereo flag strings (e.g., ['R', 'S']).
+	 * @return array
+	 */
+    static public function getStereoFlags()
+    {
+	    $stereoFlagLines = get_config('mod_qtype_kekule_mol_naming', 'stereoflags');
+	    if (empty($stereoFlagLines))
+	    {
+		    $stereoFlagLines = qtype_kekule_mol_naming_configs::DEF_STEREO_FLAG_STRS;
+	    }
+	    $flags = explode("\n", $stereoFlagLines);   // here must be "\n" rather than '\n'
+	    // trim flags
+	    foreach ($flags as $i => $value)
+	    {
+		    $flags[$i] = trim($value);
+	    }
+	    return $flags;
+    }
     /**
      * Clean a molecule name, remove unstandard chars.
      * @param $molName
@@ -100,6 +134,10 @@ class qtype_kekule_mol_naming_utils
         if ($options['removespaces'])
         {
             $result = self::_removeSpaces($result);
+        }
+        if (!$options['strictstereoflags'])
+        {
+        	$result = self::_cleanStereoFlagSection($result);
         }
         //echo 'clean: ', $molName, ' :: ', $result, '<br />';
         return $result;
@@ -149,6 +187,25 @@ class qtype_kekule_mol_naming_utils
             */
             );
         return strtr($text, $arr);
+    }
+    static private function _cleanStereoFlagSection($text)
+    {
+	    $flagGroup = '\d*(' . join('|', self::getStereoFlags()) . ')';
+	    $matchStr = '(^|-)(\(\s*(' . $flagGroup . '\s*(,\s*' . $flagGroup . ')*)\s*\))';
+	    $reg = '/' . $matchStr . '/';
+	    //var_dump($reg);
+	    $matches = [];
+	    if (preg_match($reg, $text, $matches, PREG_OFFSET_CAPTURE))
+	    {
+	    	$matchedSection = $matches[2][0];
+		    $matchedSectionIndex = $matches[2][1];
+	    	$sectionCore = $matches[3][0];
+	    	// replace section with (XXX) to XXX
+		    $result = substr($text, 0, $matchedSectionIndex) . $sectionCore . substr($text, $matchedSectionIndex + strlen($matchedSection), strlen($text));
+	    }
+	    else
+	    	$result = $text;
+	    return $result;
     }
 }
 
