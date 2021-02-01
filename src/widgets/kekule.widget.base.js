@@ -1243,12 +1243,15 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getGlobalManager: function()
 	{
 		//return Kekule.Widget.globalManager;
+		/*
 		var doc = this.getDocument();
 		var win = doc && Kekule.DocumentUtils.getDefaultView(doc);
 		var kekuleRoot = win && win.Kekule;
 		if (!kekuleRoot)
 			kekuleRoot = Kekule;
 		return kekuleRoot.Widget.globalManager;
+		*/
+		return Kekule.Widget.Utils.getGlobalManager(this.getDocument());
 	},
 
 	/**
@@ -4841,6 +4844,20 @@ Kekule.Widget.Utils = {
 			if (refWidget)
 				widget.setPropValue(propName, refWidget);
 		}
+	},
+
+	/**
+	 * Returns global widget manager in document.
+	 * @returns {Object}
+	 */
+	getGlobalManager: function(document)
+	{
+		var doc = document || Kekule.$document;
+		var win = doc && Kekule.DocumentUtils.getDefaultView(doc);
+		var kekuleRoot = win && win.Kekule;
+		if (!kekuleRoot)
+			kekuleRoot = Kekule;
+		return kekuleRoot.Widget.globalManager;
 	},
 
 	/**
