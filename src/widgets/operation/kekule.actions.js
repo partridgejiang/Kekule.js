@@ -73,6 +73,7 @@ Kekule.Action = Class.create(ObjectEx,
 		}
 		this.unlinkAllWidgets();
 		this.setPropStoreFieldValue('linkedWidgets', []);
+		this._lastHtmlEvent = null;
 		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
