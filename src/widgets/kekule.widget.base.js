@@ -12,6 +12,7 @@
  * requires /xbrowsers/kekule.x.js
  * requires /widgets/kekule.widget.root.js
  * requires /widgets/kekule.widget.events.js
+ * requires /widgets/kekule.widget.keys.js
  */
 
 (function(){
@@ -979,6 +980,28 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('shortcuts', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('shortcutKeys', {
+			'dataType': DataType.ARRAY,
+			'getter': function()
+			{
+				var result = [];
+				var shortcuts = this.getShortcuts() || [];
+				for (var i = 0, l = shortcuts.length; i < l; ++i)
+					result.push(shortcuts[i].key);
+				return result;
+			},
+			'setter': function(value)
+			{
+				this._updateShortcuts(value && AU.toArray(value));
+			}
+		});
+		this.defineProp('shortcutKey', {
+			'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getShortCutKeys()[0]; },
+			'setter': function(value) { this.setShortcutKeys(value); }
+		});
+
 		//this.defineElemStyleMappingProp('cursor', 'cursor');
 		this.defineProp('cursor', {
 			'dataType': DataType.VARIANT,
@@ -1181,6 +1204,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this._elemResizeObserver.disconnect();
 			this._elemResizeObserver = null;
 		}
+
+		this._clearShortcuts();
 
 		this.getHtmlEventDispatcher().finalize();
 
@@ -1427,6 +1452,51 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		var result = Kekule.ActionManager.getActionClassOfName(actionName, this, checkSupClasses);
 		return result;
+	},
+
+	// functions about shortcuts
+	/** @private */
+	_updateShortcuts: function(shortcutKeys)
+	{
+		var shortcuts = this.getShortcuts() || [];
+		var currShortcutsCount = shortcuts.length;
+		var count = (shortcutKeys && shortcutKeys.length) || 0;
+		if (count < currShortcutsCount)
+		{
+			for (var i = count; i < currShortcutsCount; ++i)
+			{
+				shortcuts[i].finalzie();
+			}
+		}
+		else
+		{
+			var doc = this.getDocument();
+			for (var i = currShortcutsCount; i < count; ++i)
+			{
+				var newShortcut = new Kekule.Widget.Shortcut(this);
+				shortcuts.push(newShortcut);
+				newShortcut.registerToGlobal(doc);
+			}
+		}
+		for (var i = 0; i < count; ++i)
+		{
+			shortcuts[i].setKey(shortcutKeys[i]);
+		}
+		this.setPropStoreFieldValue('shortcuts', shortcuts);
+	},
+	/** @private */
+	_clearShortcuts: function()
+	{
+		var shortcuts = this.getShortcuts() || [];
+		var count = shortcut.length;
+		if (count)
+		{
+			for (var i = 0; i < count; ++i)
+			{
+				shortcuts[i].finalize();
+			}
+			this.setShortcuts(null);
+		}
 	},
 
 	/**
@@ -5714,6 +5784,26 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 	},
 	*/
+
+	/**
+	 * register an instance of {@link Kekule.Widget.HtmlEventResponser} to handle global events.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	registerHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().registerResponser(responser);
+		return this;
+	},
+	/**
+	 * Unregister an instance of {@link Kekule.Widget.HtmlEventReponser}.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	unregisterHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().unregisterResponser(responser);
+		return this;
+	},
+
 	/** @private */
 	_handleDomAddedElem: function(elem)
 	{

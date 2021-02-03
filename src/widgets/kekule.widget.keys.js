@@ -177,21 +177,24 @@ Kekule.Widget.KeyboardUtils = {
 
 		// main key
 		var mainKey = param.key;
-		if (mainKey === 'Escape')
-			mainKey = 'Esc';
-		else if (mainKey === 'Insert')
-			mainKey = 'Ins';
-		else if (mainKey === 'Delete')
-			mainKey = 'Del';
-		else if (mainKey === 'Control')
-			mainKey = 'Ctrl';
-		if (!strict)
-			mainKey = mainKey.charAt(0).toUpperCase() + mainKey.substr(1);
+		if (mainKey)
+		{
+			if (mainKey === 'Escape')
+				mainKey = 'Esc';
+			else if (mainKey === 'Insert')
+				mainKey = 'Ins';
+			else if (mainKey === 'Delete')
+				mainKey = 'Del';
+			else if (mainKey === 'Control')
+				mainKey = 'Ctrl';
+			if (!strict)
+				mainKey = mainKey.charAt(0).toUpperCase() + mainKey.substr(1);
 
-		var index = labels.indexOf(mainKey);
-		if (index >= 0)  // main key is modifier, remove the one in labels
-			labels.splice(index, 1);
-		labels.push(mainKey);
+			var index = labels.indexOf(mainKey);
+			if (index >= 0)  // main key is modifier, remove the one in labels
+				labels.splice(index, 1);
+			labels.push(mainKey);
+		}
 		return labels.join(delimiter);
 	}
 };
@@ -218,9 +221,16 @@ Kekule.Widget.HtmlKeyEventMatcher = Class.create(Kekule.Widget.HtmlEventMatcher,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.HtmlKeyEventMatcher',
+	/** @constructs */
+	initialize: function(eventParams)
+	{
+		var eparams = Object.extend({'strictMatch': true}, eventParams);  // default do the strict match
+		this.tryApplySuper('initialize', [eparams]);
+	},
 	/** @private */
 	initProperties: function()
 	{
+		/*
 		this._defineEventParamProp('key', DataType.STRING);
 		this._defineEventParamProp('code', DataType.STRING);
 		this._defineEventParamProp('shiftKey', DataType.BOOL);
@@ -229,6 +239,13 @@ Kekule.Widget.HtmlKeyEventMatcher = Class.create(Kekule.Widget.HtmlEventMatcher,
 		this._defineEventParamProp('metaKey', DataType.BOOL);
 		this._defineEventParamProp('repeat', DataType.BOOL);
 		this._defineEventParamProp('strictMatch', DataType.BOOL);
+		*/
+		var propNames = Kekule.Widget.HtmlKeyEventMatcher.KEY_PARAM_PROPS;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var propType = (propNames[i] === 'key' || propNames[i] === 'code')? DataType.STRING: DataType.BOOL;
+			this._defineEventParamProp(propNames[i], propType);
+		}
 	},
 
 	/** @ignore */
@@ -259,20 +276,29 @@ Kekule.Widget.HtmlKeyEventMatcher = Class.create(Kekule.Widget.HtmlEventMatcher,
 	{
 		var evKey = event.getKey();
 		// if key is a printable char, combined with shift may lead to another char
-		if (!event.getShiftKey() || this.getStrictMatch())
+		if (/*!event.getShiftKey() ||*/ this.getStrictMatch())
 			return evKey === key;
 		else
 			return (evKey === key) || (evKey === Kekule.Widget.KeyboardUtils.getShiftedKey(key));
 	}
 });
+/** @ignore */
+Kekule.Widget.HtmlKeyEventMatcher.KEY_PARAM_PROPS = ['key', 'code', 'shiftKey', 'ctrlKey', 'altKey', 'metaKey', 'repeat', 'strictMatch'];
 
 /**
  * Keyboard shortcut in widget system.
  * @class
  * @augments ObjectEx
  *
- * @property {String} shortcut Text represents a combination key, e.g. 'Ctrl+A'.
+ * @property {String} key Text represents a combination key, e.g. 'Ctrl+A'.
  * @property {Bool} strictMatch If true, shift+key('a') will be regarded as different to shift+key('A').
+ */
+/**
+ * Invoked when the shortcut is pressed (and execTarget should be executed).
+ *   event param of it has fields: {htmlEvent, execTarget}.
+ * Note this event will still be invoked even if execTarget is not set.
+ * @name Kekule.Widget.Shortcut#execute
+ * @event
  */
 Kekule.Widget.Shortcut = Class.create(ObjectEx,
 /** @lends Kekule.Widget.Shortcut# */
@@ -284,11 +310,21 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 	{
 		//this.setPropStoreFieldValue('eventMatcher', eventMatcher);
 		//this.setPropStoreFieldValue('execTarget', execTarget);
-		var r = new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher());
+		var self = this;
+		var r = new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({eventType: this._getKeyEventType(), strictMatch: false}));
+		r.addEventListener('execute', function(e){
+			var execTarget = self.getExecTarget();
+			/*   // do not to execute manually, since it is already be runned by responser
+			if (execTarget && execTarget.execute)
+				execTarget.execute();
+			*/
+			self.invokeEvent({'htmlEvent': e.htmlEvent, 'execTarget': execTarget});
+		});
 		this.setPropStoreFieldValue('eventResponser', r);
 		this.tryApplySuper('initialize', []);
 		r.setExclusive(exclusive || false);
 		r.setExecTarget(execTarget);
+		this._registeredDocs = [];
 	},
 	/** @private */
 	initProperties: function()
@@ -297,7 +333,7 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 			'getter': function() { return this.getEventResponser().getEventMatcher().getStrictMatch(); },
 			'setter': function(value) { this.getEventResponser().getEventMatcher().setStrictMatch(value); }
 		});
-		this.defineProp('shortcut', {'dataType': DataType.STRING,
+		this.defineProp('key', {'dataType': DataType.STRING,
 			'getter': function()
 			{
 				var params = this.getEventResponser().getEventParams();
@@ -305,10 +341,23 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 			},
 			'setter': function(value)
 			{
-				if (value !== this.getShortcut())
+				if (value !== this.getKey())
 				{
 					var params = Kekule.Widget.KeyboardUtils.shortcutLabelToKeyParams(value, null, this.getStrictMatch());
+					/*
+					params.eventType = this._getKeyEventType();
+					params.strictMatch = this.getStrictMatch();
 					this.getEventResponser().setEventParams(params);
+					*/
+					var oldParams = this.getEventResponser().getEventParams();
+					var keyProps = Kekule.Widget.HtmlKeyEventMatcher.KEY_PARAM_PROPS;
+					var notUnset = Kekule.ObjUtils.notUnset;
+					for (var i = 0, l = keyProps.length; i < l; ++i)
+					{
+						var propName = keyProps[i];
+						if (notUnset(params[propName]))
+							oldParams[propName] = params[propName];
+					}
 				}
 			}
 		});
@@ -328,6 +377,7 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 	/** @ignore */
 	doFinalize: function()
 	{
+		this.unregisterFromAll();
 		var r = this.getEventResponser();
 		this.setPropStoreFieldValue('eventResponser', null);
 		r.finalize();
@@ -342,6 +392,49 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 			'setter': function(value) { this.getEventResponser().setPropValue(kname, value); }
 		});
 	},
+	/** @private */
+	_getKeyEventType: function()
+	{
+		return 'keydown';
+	},
+
+	/**
+	 * Register the shortcut to global manager of document, set it to be activated.
+	 * @param {HTMLDocument} document
+	 */
+	registerToGlobal: function(document)
+	{
+		var doc = document || Kekule.$document;
+		if (doc && this._registeredDocs.indexOf(doc) < 0)
+		{
+			var globalManager = Kekule.Widget.Utils.getGlobalManager(doc);
+			globalManager.registerHtmlEventResponser(this.getEventResponser());
+			Kekule.ArrayUtils.pushUnique(this._registeredDocs, doc);
+		}
+	},
+	/**
+	 * Unregister the shortcut from global manager of document.
+	 * @param {HTMLDocument} document
+	 */
+	unregisterFromGlobal: function(document)
+	{
+		var doc = document || Kekule.$document;
+		if (doc && this._registeredDocs.indexOf(doc) >= 0)
+		{
+			var globalManager = Kekule.Widget.Utils.getGlobalManager(doc);
+			globalManager.unregisterHtmlEventResponser(this.getEventResponser());
+			Kekule.ArrayUtils.remove(this._registeredDocs, doc);
+		}
+	},
+	/**
+	 * Unregister the shortcut from all previously registered documents.
+	 */
+	unregisterFromAll: function()
+	{
+		var docs = this._registeredDocs;
+		for (var i = 0, l = docs.length; i < l; ++i)
+			this.unregisterFromGlobal(docs[i]);
+	}
 });
 
 

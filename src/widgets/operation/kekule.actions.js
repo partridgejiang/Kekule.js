@@ -141,6 +141,13 @@ Kekule.Action = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('shortcutKeys', {'dataType': DataType.ARRAY});
+		this.defineProp('shortcutKey', {
+			'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getShortCutKeys()[0]; },
+			'setter': function(value) { this.setShortcutKeys(Kekule.ArrayUtils.toArray(value)); }
+		});
+
 		this.defineProp('htmlClassName', {'dataType': DataType.STRING,
 			'setter': function(value)
 			{
@@ -220,6 +227,7 @@ Kekule.Action = Class.create(ObjectEx,
 			this.updateWidgetProp(widget, 'displayed', this.getDisplayed());
 			this.updateWidgetProp(widget, 'visible', this.getVisible());
 			this.updateWidgetProp(widget, 'checked', this.getChecked());
+			this.updateWidgetProp(widget, 'shortcutKeys', this.getShortcutKeys());
 			this.updateWidgetClassName(widget, this.getHtmlClassName(), null);
 
 			// install event handler
