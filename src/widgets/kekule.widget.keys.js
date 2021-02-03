@@ -321,9 +321,13 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 			self.invokeEvent({'htmlEvent': e.htmlEvent, 'execTarget': execTarget});
 		});
 		this.setPropStoreFieldValue('eventResponser', r);
+		if (Kekule.ObjUtils.notUnset(exclusive))
+			r.setExclusive(exclusive);
+		else
+			r.setExclusive(true);   // shortcut default exclusive
+		if (execTarget)
+			r.setExecTarget(execTarget);
 		this.tryApplySuper('initialize', []);
-		r.setExclusive(exclusive || false);
-		r.setExecTarget(execTarget);
 		this._registeredDocs = [];
 	},
 	/** @private */
@@ -332,6 +336,10 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 		this.defineProp('strictMatch', {'dataType': DataType.BOOL,
 			'getter': function() { return this.getEventResponser().getEventMatcher().getStrictMatch(); },
 			'setter': function(value) { this.getEventResponser().getEventMatcher().setStrictMatch(value); }
+		});
+		this.defineProp('exclusive', {'dataType': DataType.BOOL,
+			'getter': function() { return this.getEventResponser().getEventMatcher().getExclusive(); },
+			'setter': function(value) { this.getEventResponser().getEventMatcher().setExclusive(value); }
 		});
 		this.defineProp('key', {'dataType': DataType.STRING,
 			'getter': function()
