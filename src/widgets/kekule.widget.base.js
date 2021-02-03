@@ -5855,6 +5855,11 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 	{
 		return eventName.startsWith('pointer');
 	},
+	/** @private */
+	isKeyEvent: function(eventName)
+	{
+		return eventName.startsWith('key');
+	},
 
 	/**
 	 * Convert a touch event to corresponding pointer event, useful for browsers that does not support pointer events.
@@ -6055,6 +6060,12 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		{
 			var elem = e.getTarget();
 			targetWidget = this.getBelongedResponsiveWidget(elem);
+
+			// if target widget is not set and the event is related to key, then send it to current focused widget
+			if (!targetWidget && this.isKeyEvent(evType))
+			{
+				targetWidget = this.getCurrFocusedWidget() || null;
+			}
 		}
 
 
