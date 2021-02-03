@@ -1488,7 +1488,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	_clearShortcuts: function()
 	{
 		var shortcuts = this.getShortcuts() || [];
-		var count = shortcut.length;
+		var count = shortcuts.length;
 		if (count)
 		{
 			for (var i = 0; i < count; ++i)
