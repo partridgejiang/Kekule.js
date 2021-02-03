@@ -11,9 +11,10 @@
 			var action = new Kekule.Action();
 			action.setShortcutKeys('Shift+G');
 			action.on('execute', function(e){
-				console.log('action executed', e);
+				console.log('action executed', e.invoker.getId());
 			});
-			Kekule.Widget.getWidgetById('btnAction').setAction(action);
+			Kekule.Widget.getWidgetById('btnAction1').setAction(action);
+			Kekule.Widget.getWidgetById('btnAction2').setAction(action);
 
 
 			var ids = ['btn1', 'btn2', 'btn3', 'btnDup1'];
@@ -38,7 +39,8 @@
 		<button id="btn2" data-widget="Kekule.Widget.Button" data-shortcut-keys='["Shift+B", "Shift+C"]'>Shfit+B/C</button>
 		<button id="btn3" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>O</button>
 		<button id="btnDup1" data-widget="Kekule.Widget.Button" data-shortcut-key="Shift-A">Shift+A2</button>
-		<button id="btnAction" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action</button>
+		<button id="btnAction1" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action1</button>
+		<button id="btnAction2" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action2</button>
 	</div>
 </body>
 </html>
