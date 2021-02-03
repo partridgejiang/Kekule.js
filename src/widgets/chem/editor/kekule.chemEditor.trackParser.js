@@ -1596,11 +1596,13 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 
 			this.startTracking(e, coord);
 			e.preventDefault();
+			return true;
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
 		{
 			this.cancelTracking();
 			e.preventDefault();
+			return true;
 		}
 	},
 	/** @private */
@@ -1618,6 +1620,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 			}
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 			e.preventDefault();
+			return true;
 		}
 	},
 	/** @private */
@@ -1629,6 +1632,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 			var coord = this._getEventMouseCoord(e);
 			this.addTrackCoord(coord);
 			e.preventDefault();
+			return true;
 		}
 	}
 });
