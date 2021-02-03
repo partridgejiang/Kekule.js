@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Shortcut Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script src="../../../src/kekule.js?min=false"></script>
+	<script>
+		function init()
+		{
+			var action = new Kekule.Action();
+			action.setShortcutKeys('Shift+G');
+			action.on('execute', function(e){
+				console.log('action executed', e);
+			});
+			Kekule.Widget.getWidgetById('btnAction').setAction(action);
+
+
+			var ids = ['btn1', 'btn2', 'btn3'];
+			for (var i = 0, l = ids.length; i < l; ++i)
+			{
+				var id = ids[i];
+				var widget = Kekule.Widget.getWidgetById(id);
+				widget.on('execute', function(e) {
+					var text = e.target.getText();
+					//alert(text);
+					console.log(text, e.htmlEvent, e.target.getClassName(), e);
+				});
+			}
+			//Kekule.X.Event.addListener(document.body, 'keydown', function(e) { console.log(e); } );
+		}
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div>
+		<button id="btn1" data-widget="Kekule.Widget.Button" data-shortcut-key="Shift-A">Shift+A</button>
+		<button id="btn2" data-widget="Kekule.Widget.Button" data-shortcut-keys='["Shift+B", "Shift+C"]'>Shfit+B/C</button>
+		<button id="btn3" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>O</button>
+		<button id="btnAction" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action</button>
+	</div>
+</body>
+</html>
