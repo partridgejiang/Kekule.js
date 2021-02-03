@@ -281,17 +281,21 @@ Kekule.Action = Class.create(ObjectEx,
 	 */
 	execute: function(target, htmlEvent)
 	{
-		var oldChecked = this.getChecked();
-		if (!this.getCheckGroup() || !oldChecked)
+		if (!htmlEvent || htmlEvent !== this._lastHtmlEvent)  // avoid invoke action multiple times in one HTML event // TODO: we may need a better way
 		{
-			this.doExecute(target, htmlEvent);
-			if (this.getCheckGroup())
+			var oldChecked = this.getChecked();
+			if (!this.getCheckGroup() || !oldChecked)
 			{
-				this.setChecked(true);
+				this.doExecute(target, htmlEvent);
+				if (this.getCheckGroup())
+				{
+					this.setChecked(true);
+				}
 			}
+			this.setPropStoreFieldValue('invoker', target);
+			this._lastHtmlEvent = htmlEvent;
+			this.invokeEvent('execute', {'htmlEvent': htmlEvent, 'invoker': target});
 		}
-		this.setPropStoreFieldValue('invoker', target);
-		this.invokeEvent('execute', {'htmlEvent': htmlEvent});
 		return this;
 	},
 	/**
