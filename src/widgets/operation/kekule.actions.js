@@ -31,6 +31,7 @@
  *   be automatically set to false.
  * @property {String} hint Hint of action. If this value is set, all widgets' hint properties will be updated.
  * @property {Text} text Caption/text of action. If this value is set, all widgets' hint properties will be updated.
+ * @property {Array} shortcutKeys Array of shortcut key strings of this action.
  * @property {String} htmlClassName This value will be added to widget when action is linked and will be removed when action is unlinked.
  * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
  * @property {Kekule.Widget.BaseWidget} invoker Who invokes this action.

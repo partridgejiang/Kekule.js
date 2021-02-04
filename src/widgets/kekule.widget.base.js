@@ -313,6 +313,8 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Bool} inheritState If set to true, widget will has the same state value of parent.
  * @property {String} hint Hint of widget, actually mapping to title attribute of HTML element.
  * @property {String} cursor CSS cursor property for widget.
+ * @property {Array} shortcuts An array of {@link Kekule.Widget.Shortcut}, shortcut keys of this widget.
+ * @property {Array} shortcutKeys Array of shortcut key strings.
  * @property {Array} inheritedStyles Flags indicating which CSS properties should be set to 'inhertied'.
  *   e.g. ['color', 'fontSize'] (note: in JavaScript form rather than CSS form like 'font-size').
  *
