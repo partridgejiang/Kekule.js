@@ -44,6 +44,7 @@
 					console.log(text, e.htmlEvent, e.target.getClassName(), e);
 				});
 			}
+			Kekule.Widget.getWidgetById('btn2').getShortcuts()[0].getEventResponser().getEventParams().altKey = null;
 			//Kekule.X.Event.addListener(document.body, 'keydown', function(e) { console.log(e); } );
 		}
 		Kekule.X.domReady(init);

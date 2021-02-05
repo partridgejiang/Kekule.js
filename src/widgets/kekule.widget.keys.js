@@ -212,6 +212,8 @@ Kekule.Widget.KeyboardUtils._shiftKeyMap = Kekule.Widget.KeyboardUtils._initShif
 
 /**
  * A special class to handle shorcut keys in widget system.
+ * Note the modifier properties (shiftKey, ctrlKey, etc) can be set with a special value null.
+ * If null is set, this modifier key will not be ignored in event matching.
  * @class
  * @augments Kekule.Widget.HtmlEventMatcher
  *
@@ -267,14 +269,20 @@ Kekule.Widget.HtmlKeyEventMatcher = Class.create(Kekule.Widget.HtmlEventMatcher,
 		return result;
 	},
 	/** @private */
+	_isKeyIgnored: function(key)
+	{
+		return key === null;
+	},
+	/** @private */
 	_matchKeyEvent: function(event, params)
 	{
+		var ignored = this._isKeyIgnored;
 		// modifier keys
 		var result =
-			(!!event.getAltKey() === !!params.altKey) &&
-			(!!event.getCtrlKey() === !!params.ctrlKey) &&
-			(!!event.getShiftKey() === !!params.shiftKey) &&
-			(!!event.getMetaKey() === !!params.metaKey) &&
+			(ignored(params.altKey) || !!event.getAltKey() === !!params.altKey) &&
+			(ignored(params.ctrlKey) || !!event.getCtrlKey() === !!params.ctrlKey) &&
+			(ignored(params.shiftKey) || !!event.getShiftKey() === !!params.shiftKey) &&
+			(ignored(params.metaKey) || !!event.getMetaKey() === !!params.metaKey) &&
 			(!params.key || this._matchKey(event, params.key)) &&
 			(!params.code || event.getCode() === params.code) &&
 			(OU.isUnset(params.repeat) || !!event.getRepeat() === !!params.repeat);
