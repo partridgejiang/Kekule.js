@@ -1669,25 +1669,25 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_IONIC'),
 				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_IONIC'),
 				'htmlClass': HTMLCLASS_PREFIX + 'Ionic',
-				'bondProps': {'bondType': BT.IONIC}
+				'bondProps': {'bondType': BT.IONIC, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
 			},
 			'coordinate': {
 				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_COORDINATE'),
 				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_COORDINATE'),
 				'htmlClass': HTMLCLASS_PREFIX + 'Coordinate',
-				'bondProps': {'bondType': BT.COORDINATE}
+				'bondProps': {'bondType': BT.COORDINATE, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
 			},
 			'metallic': {
 				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_METALLIC'),
 				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_METALLIC'),
 				'htmlClass': HTMLCLASS_PREFIX + 'Metallic',
-				'bondProps': {'bondType': BT.METALLIC}
+				'bondProps': {'bondType': BT.METALLIC, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
 			},
 			'hydrogen': {
 				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_HYDROGEN'),
 				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_HYDROGEN'),
 				'htmlClass': HTMLCLASS_PREFIX + 'Hydrogen',
-				'bondProps': {'bondType': BT.HYDROGEN}
+				'bondProps': {'bondType': BT.HYDROGEN, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
 			}
 		};
 		var predefinedExtraData = {
