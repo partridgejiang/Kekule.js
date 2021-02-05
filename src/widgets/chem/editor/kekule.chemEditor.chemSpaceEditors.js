@@ -1559,7 +1559,7 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		if (nonAtomSetting.variableAtomNotList)
 			result.push({
 				'text': this._getVarAtomNotListLabel(), 'nodeClass': Kekule.VariableAtom,
-				'isNotVarList': true,
+				'isVarNotList': true,
 				'description': Kekule.$L('ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM') //Kekule.ChemWidgetTexts.CAPTION_VARIABLE_NOT_ATOM
 			});
 		return result;
