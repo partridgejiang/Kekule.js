@@ -5131,7 +5131,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 */
 	applyModification: function(node, newNode, newNodeClass, modifiedProps)
 	{
-		var newNode;
+		/*
+		//var newNode;
 		var operGroup, oper;
 		var oldNodeClass = node.getClass();
 		if (newNode && !newNodeClass)
@@ -5156,8 +5157,10 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			if (operGroup)
 				operGroup.add(oper);
 		}
-
 		var operation = operGroup || oper;
+		*/
+		var operation = Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, newNodeClass, modifiedProps, this.getEditor());
+
 		if (operation)  // only execute when there is real modification
 		{
 			var editor = this.getEditor();
