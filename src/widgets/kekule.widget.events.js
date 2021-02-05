@@ -82,7 +82,7 @@ Kekule.Widget.HtmlEventMatcher = Class.create(ObjectEx,
 	_defineEventParamProp: function(propName, dataType, paramFieldName)
 	{
 		var kname = propName || paramFieldName;
-		return this.defineProp(propName, {'dataType': dataType,
+		return this.defineProp(propName, {'dataType': dataType, 'serializable': false,
 			'getter': function() { return this.getEventParams()[kname]; },
 			'setter': function(value) { this.getEventParams()[kname] = value; }
 		});
