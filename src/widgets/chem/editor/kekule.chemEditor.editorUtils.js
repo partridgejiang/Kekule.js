@@ -523,7 +523,6 @@ Kekule.Editor.OperationUtils = {
 	 */
 	createNodeModificationOperation: function(node, newNode, newNodeClass, modifiedProps, editor)
 	{
-		var newNode;
 		var operGroup, oper;
 		var oldNodeClass = node.getClass();
 		if (newNode && !newNodeClass)
