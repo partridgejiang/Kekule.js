@@ -317,6 +317,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	 */
 	_createModificationOperation: function(node, newNode, newNodeClass, modifiedProps)
 	{
+		/*
 		var newNode;
 		var operGroup, oper;
 		var oldNodeClass = node.getClass();
@@ -345,6 +346,8 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 
 		var operation = operGroup || oper;
 		return operation;
+		*/
+		return Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, newNodeClass, modifiedProps, this.getEditor());
 	}
 });
 
