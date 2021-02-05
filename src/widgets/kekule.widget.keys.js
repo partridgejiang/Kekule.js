@@ -20,6 +20,14 @@
 
 var OU = Kekule.ObjUtils;
 
+/*
+ * Default options to enable/disable widget shortcut.
+ * @object
+ */
+Kekule.globalOptions.add('widget.shortcut', {
+	enabled: true
+});
+
 /**
  * A util class containing functions about key events.
  * @class
@@ -311,22 +319,20 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 		//this.setPropStoreFieldValue('eventMatcher', eventMatcher);
 		//this.setPropStoreFieldValue('execTarget', execTarget);
 		var self = this;
-		var r = new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({eventType: this._getKeyEventType(), strictMatch: false}));
+		var r = new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({eventType: this._getKeyEventType(), strictMatch: false}), this);
+		/*
 		r.addEventListener('execute', function(e){
 			var execTarget = self.getExecTarget();
-			/*   // do not to execute manually, since it is already be runned by responser
-			if (execTarget && execTarget.execute)
-				execTarget.execute();
-			*/
 			self.invokeEvent({'htmlEvent': e.htmlEvent, 'execTarget': execTarget});
 		});
+		*/
 		this.setPropStoreFieldValue('eventResponser', r);
 		if (Kekule.ObjUtils.notUnset(exclusive))
 			r.setExclusive(exclusive);
 		else
 			r.setExclusive(true);   // shortcut default exclusive
 		if (execTarget)
-			r.setExecTarget(execTarget);
+			this.setPropStoreFieldValue('execTarget', execTarget);
 		this.tryApplySuper('initialize', []);
 		this._registeredDocs = [];
 	},
@@ -369,6 +375,7 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 				}
 			}
 		});
+		this.defineProp('execTarget', {'dataType': DataType.VARIANT, 'serializable': false, 'setter': null});
 		this.defineProp('targetWidget', {'dataType': 'Kekule.Widget.BaseWidget',
 			'setter': null, 'serializable': false,
 			'getter': function()
@@ -378,7 +385,7 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 			}
 		});
 		this._defineEventResponserRelatedProp('eventParams', DataType.HASH);
-		this._defineEventResponserRelatedProp('execTarget', DataType.VARIANT);
+		//this._defineEventResponserRelatedProp('execTarget', DataType.VARIANT);
 		// private
 		this.defineProp('eventResponser', {'dataType': 'Kekule.Widget.HtmlEventResponser', 'serializable': false, 'setter': null});
 	},
@@ -404,6 +411,50 @@ Kekule.Widget.Shortcut = Class.create(ObjectEx,
 	_getKeyEventType: function()
 	{
 		return 'keydown';
+	},
+
+	/**
+	 * The shortcut is pressed and the target widget should be executed.
+	 * @param {HTMLEvent} htmlEvent
+	 */
+	execute: function(htmlEvent)
+	{
+		if (Kekule.globalOptions.widget.shortcut.enabled)
+		{
+			var target = this.getExecTarget();
+			if (target)
+			{
+				this.doExecTarget(htmlEvent, target);
+			}
+			this.invokeEvent({'htmlEvent': htmlEvent, 'execTarget': target});
+			return true;
+		}
+		else  // shortcut disabled, bypass
+			return false;   // explicit indicating we are do nothing
+	},
+	/** @private */
+	doExecTarget: function(htmlEvent, target)
+	{
+		var result = true;
+		if (DataType.isFunctionValue(target))
+			target.apply(null, [htmlEvent, this]);
+		else if (target.execute && DataType.isFunctionValue(target.execute))
+		{
+			if (DataType.isObjectExValue(target))
+			{
+				if (target instanceof Kekule.Widget.BaseWidget)
+					target.execute(htmlEvent);
+				else if (target instanceof Kekule.Action)
+					target.execute(this, htmlEvent);
+				else
+					target.execute(htmlEvent, this);
+			}
+			else
+				target.execute(htmlEvent, this);
+		}
+		else
+			result = false;
+		return result;
 	},
 
 	/**

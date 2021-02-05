@@ -118,18 +118,30 @@ Kekule.Widget.HtmlEventMatcher = Class.create(ObjectEx,
 	/** @private */
 	doExecTarget: function(htmlEvent, target)
 	{
-		var result = true;
+		var result;
 		if (DataType.isFunctionValue(target))
-			target.apply(null, [htmlEvent]);
-		else if (DataType.isObjectExValue(target))
+			result = target.apply(null, [htmlEvent, this]);
+		else if (target.execute && DataType.isFunctionValue(target.execute))
 		{
-			if (target instanceof Kekule.Widget.BaseWidget)
-				target.execute(htmlEvent);
-			else if (target instanceof Kekule.Action)
-				target.execute(this, htmlEvent);
+			if (DataType.isObjectExValue(target))
+			{
+				if (target instanceof Kekule.Widget.BaseWidget)
+					result = target.execute(htmlEvent);
+				else if (target instanceof Kekule.Action)
+					result = target.execute(this, htmlEvent);
+				else
+					result = target.execute(htmlEvent, this);
+			}
+			else
+				result = target.execute(htmlEvent, this);
 		}
 		else
 			result = false;
+
+		// if the return value of target.execute is undefined, we assume it did do something
+		if (Kekule.ObjUtils.isUnset(result))
+			result = true;
+
 		return result;
 	}
 });
