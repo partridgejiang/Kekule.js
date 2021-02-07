@@ -3969,13 +3969,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			var controller = this.getActiveIaController();
 			if (controller)
 			{
-				result = controller.testMouseCursor(coord, e);
+				var cresult = controller.testMouseCursor(coord, e);
+				if (Kekule.ObjUtils.notUnset(cresult))
+					result = cresult;
 			}
 			if (!result)
 			{
 				controller = this.getDefIaController();
 				if (controller)
-					result = controller.testMouseCursor(coord, e);
+				{
+					var cresult = controller.testMouseCursor(coord, e);
+					if (Kekule.ObjUtils.notUnset(cresult))
+						result = cresult;
+				}
 			}
 		}
 		return result;

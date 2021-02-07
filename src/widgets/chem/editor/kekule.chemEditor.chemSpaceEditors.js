@@ -5092,7 +5092,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			return;
 
 		//console.log('apply setter', newData);
-
+		/*
 		var nodeClass = newData.nodeClass;
 		var modifiedProps = newData.props;
 		var repItem = newData.repositoryItem;
@@ -5120,6 +5120,31 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 			this.applyModification(atom, newNode, nodeClass, modifiedProps);
 			setter._applied = true;
 		}
+		*/
+		var operation = Kekule.Editor.OperationUtils.createNodeModificationOperationFromData(atom, newData, this.getEditor());
+		if (operation)  // only execute when there is real modification
+		{
+			var editor = this.getEditor();
+			editor.beginManipulateAndUpdateObject();
+			try
+			{
+				operation.execute();
+			}
+			catch (e)
+			{
+				//Kekule.error(/*Kekule.ErrorMsg.NOT_A_VALID_ATOM*/Kekule.$L('ErrorMsg.NOT_A_VALID_ATOM'));
+				throw(e);
+			}
+			finally
+			{
+				editor.endManipulateAndUpdateObject();
+			}
+
+			if (editor && editor.getEnableOperHistory() && operation)
+			{
+				editor.pushOperation(operation);
+			}
+		}
 	},
 
 	/**
@@ -5128,6 +5153,7 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 	 * @param newNodeClass
 	 * @param modifiedProps
 	 * @private
+	 * @deprecated
 	 */
 	applyModification: function(node, newNode, newNodeClass, modifiedProps)
 	{
