@@ -1000,7 +1000,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		});
 		this.defineProp('shortcutKey', {
 			'dataType': DataType.STRING, 'serializable': false,
-			'getter': function() { return this.getShortCutKeys()[0]; },
+			'getter': function() { return this.getShortcutKeys()[0]; },
 			'setter': function(value) { this.setShortcutKeys(value); }
 		});
 
