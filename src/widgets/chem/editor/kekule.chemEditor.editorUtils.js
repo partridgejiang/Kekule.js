@@ -550,6 +550,46 @@ Kekule.Editor.OperationUtils = {
 
 		var operation = operGroup || oper;
 		return operation;
+	},
+	/**
+	 * Create a node modification operation for editor.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Hash} newData
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Kekule.Operation}
+	 */
+	createNodeModificationOperationFromData: function(node, newData, editor)
+	{
+		if (!newData)
+			return null;
+
+		var nodeClass = newData.nodeClass;
+		var modifiedProps = newData.props;
+		var repItem = newData.repositoryItem;
+		var newNode;
+
+		if (repItem)  // need to apply structure repository item
+		{
+			var repResult = repItem.createObjects(node) || {};
+			var repObjects = repResult.objects;
+			var transformParams = Kekule.Editor.RepositoryStructureUtils.calcRepObjInitialTransformParams(editor, repItem, repResult, node, null);
+			editor.transformCoordAndSizeOfObjects(repObjects, transformParams);
+			newNode = repObjects[0];
+			nodeClass = newNode.getClass();
+		}
+
+		if (newData.isUnknownPseudoatom && !editor.getEditorConfigs().getInteractionConfigs().getAllowUnknownAtomSymbol())
+			nodeClass = null;
+
+		if (!nodeClass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.INVALID_ATOM_SYMBOL'));
+			return null;
+		}
+		else
+		{
+			return Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, nodeClass, modifiedProps, editor);
+		}
 	}
 };
 
