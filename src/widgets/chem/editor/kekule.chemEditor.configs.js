@@ -604,8 +604,8 @@ Kekule.Editor.HotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': 'Ctrl+V', 'action': CWN.paste},
 			{'key': 'Ctrl+Z', 'action': CWN.undo},
 			{'key': 'Ctrl+Shift+Z', 'action': CWN.redo},
-			{'key': 'z', 'action': CWN.zoomIn},
-			{'key': 'Shift+Z', 'action': CWN.zoomOut}
+			{'key': '+', 'action': CWN.zoomIn},
+			{'key': '-', 'action': CWN.zoomOut}
 		]);
 	}
 });

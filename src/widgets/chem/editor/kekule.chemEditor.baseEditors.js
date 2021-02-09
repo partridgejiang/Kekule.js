@@ -4838,6 +4838,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = hotKeys.length - 1; i >= 0; --i)
 			{
 				var keyParams = Kekule.Widget.KeyboardUtils.shortcutLabelToKeyParams(hotKeys[i].key, null, false);
+				keyParams.repeat = hotKeys[i].repeat;
 				if (Kekule.Widget.KeyboardUtils.matchKeyParams(srcParams, keyParams, false))  // not strict match
 				{
 					var actionId = hotKeys[i].action;
