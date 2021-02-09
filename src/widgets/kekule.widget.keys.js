@@ -144,6 +144,8 @@ Kekule.Widget.KeyboardUtils = {
 						result.key = 'PageUp';
 					else if (lpart === 'pgdown' || lpart === 'pgdn')
 						result.key = 'PageDown';
+					else if (lpart === 'space')
+						result.key = ' ';
 					else
 						result.key = part;
 				}
@@ -195,6 +197,8 @@ Kekule.Widget.KeyboardUtils = {
 				mainKey = 'Del';
 			else if (mainKey === 'Control')
 				mainKey = 'Ctrl';
+			else if (mainKey === ' ')
+				mainKey = 'Space';
 			if (!strict)
 				mainKey = mainKey.charAt(0).toUpperCase() + mainKey.substr(1);
 
