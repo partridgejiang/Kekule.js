@@ -1911,7 +1911,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 			if (done)
+			{
+				e.preventDefault();
 				return true;   // already do the modification, returns a flag
+			}
 		}
 	},
 	/** @ignore */
