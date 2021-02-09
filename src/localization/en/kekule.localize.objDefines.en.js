@@ -264,6 +264,15 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_enableEdit: 'Whether edit chem object in viewer is enabled',
 			TITLE_modalEdit: 'Modal editing',
 			DES_modalEdit: 'Using modal dialog or popup dialog to edit chem object'
+		},
+
+		ViewerConfigs: {
+			TITLE_hotKeyConfigs: 'Hot key settings',
+			DES_hotKeyConfigs: 'Setting of the hot key and action map'
+		},
+		ViewerHotKeyConfigs: {
+			TITLE_hotKeys: 'Hot keys',
+			DES_hotKeys: 'Hot key and action settings'
 		}
 	},
 
@@ -274,7 +283,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_interactionConfigs: 'Interaction settings',
 			DES_interactionConfigs: 'Settings about interaction of editor',
 			TITLE_structureConfigs: 'Structure settings',
-			DES_structureConfigs: 'Settings about creating molecule structure'
+			DES_structureConfigs: 'Settings about creating molecule structure',
+			TITLE_hotKeyConfigs: 'Hot key settings',
+			DES_hotKeyConfigs: 'Setting of the hot key and action map'
 		},
 		ChemSpaceEditorConfigs: {
 			TITLE_chemSpaceConfigs: 'Chem space settings',
@@ -461,6 +472,10 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_autoExpandScreenSize3D: 'The size used when automatically expanding editor client in 3D mode',
 			TITLE_defPadding: 'Default padding',
 			DES_defPadding: 'Padding on top when adding an unpositioned object to container chem space'
+		},
+		HotKeyConfigs: {
+			TITLE_hotKeys: 'Hot keys',
+			DES_hotKeys: 'Hot key and action settings'
 		},
 
 		BaseEditor: {
