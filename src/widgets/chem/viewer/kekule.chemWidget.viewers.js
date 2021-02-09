@@ -2663,7 +2663,7 @@ Kekule.ChemWidget.ViewerHotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 		// debug, fetch default ones
 		this.tryApplySuper('initPropValues');
 		this.setHotKeys([
-			//{'key': 'Ctrl+C', 'action': CWN.copy},
+			{'key': 'Ctrl+C', 'action': CWN.copy},
 			{'key': '+', 'action': CWN.zoomIn},
 			{'key': '-', 'action': CWN.zoomOut},
 			{'key': 'Space', 'action': CWN.reset},
