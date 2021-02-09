@@ -4388,6 +4388,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var delay = this.getPeriodicalExecDelay() || 0;
 		this._periodicalExecuting = true;
 		this._periodicalExecHtmlEvent = htmlEvent;
+		this._periodicalExecHtmlEvent.__$periodicalExecuting$__ = true;  // a special flag indicating periodical executing
 		setTimeout(this._periodicalExecBind, delay);
 	},
 	/**

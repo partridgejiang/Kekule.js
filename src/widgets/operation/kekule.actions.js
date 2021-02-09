@@ -283,7 +283,7 @@ Kekule.Action = Class.create(ObjectEx,
 	 */
 	execute: function(target, htmlEvent)
 	{
-		if (!htmlEvent || htmlEvent !== this._lastHtmlEvent)  // avoid invoke action multiple times in one HTML event // TODO: we may need a better way
+		if (!htmlEvent || htmlEvent !== this._lastHtmlEvent || htmlEvent.__$periodicalExecuting$__)  // avoid invoke action multiple times in one HTML event // TODO: we may need a better way
 		{
 			var oldChecked = this.getChecked();
 			if (!this.getCheckGroup() || !oldChecked)
