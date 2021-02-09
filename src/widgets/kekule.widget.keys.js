@@ -204,6 +204,54 @@ Kekule.Widget.KeyboardUtils = {
 			labels.push(mainKey);
 		}
 		return labels.join(delimiter);
+	},
+
+	/**
+	 * Extract key param values from an event object.
+	 * @param {HTMLEvent} event
+	 * @returns {Hash}
+	 */
+	getKeyParamsFromEvent: function(event)
+	{
+		var result = {
+			'altKey': event.getAltKey(),
+			'ctrlKey': event.getCtrlKey(),
+			'shiftKey': event.getShiftKey(),
+			'metaKey': event.getMetaKey(),
+			'key': event.getKey(),
+			'code': event.getCode(),
+			'repeat': event.getRepeat()
+		};
+		return result;
+	},
+
+	/**
+	 * Check if two key param hashes are matached.
+	 * @param {Hash} params1
+	 * @param {Hash} params2
+	 * @param {Bool} strictMatch
+	 * @returns {Bool}
+	 */
+	matchKeyParams: function(params1, params2, strictMatch)
+	{
+		var matchValue = function(value1, value2) { return (value2 === null) || (!value2 === !value1); };
+		var matchKeyValue = function(key1, key2)
+		{
+			if (strictMatch)
+				return key2 === key1;
+			else
+				return (key2 === key1) || (key1 === Kekule.Widget.KeyboardUtils.getShiftedKey(key2));
+		};
+		// modifier keys
+		var result =
+			matchValue(params1.altKey, params2.altKey) &&
+			matchValue(params1.ctrlKey, params2.ctrlKey) &&
+			matchValue(params1.shiftKey, params2.shiftKey) &&
+			matchValue(params1.metaKey, params2.metaKey) &&
+			(!params2.key || matchKeyValue(params1.key, params2.key)) &&
+			(!params2.code || params2.code === params1.code) &&
+			matchValue(params2.repeat, params1.repeat);
+		return result;
 	}
 };
 /** @ignore */
