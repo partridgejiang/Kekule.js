@@ -2937,6 +2937,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			this.getEditor().repaint();
 		}, this);
 		return result;
+	},
+
+	////// Event handlers
+	/** @ignore */
+	react_keydown: function(e)
+	{
+		var result = this.tryApplySuper('react_keydown', [e]);
+		if (!result)  // not handled, maybe a editor hotkey, delegate it to the editor.
+			return !!this.getEditor().reactHotKeys(e);
 	}
 });
 /**

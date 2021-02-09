@@ -16,6 +16,7 @@
  * requires /widgets/chem/editor/kekule.chemEditor.editorUtils.js
  * requires /widgets/chem/editor/kekule.chemEditor.configs.js
  * requires /widgets/chem/editor/kekule.chemEditor.operations.js
+ * requires /widgets/chem/editor/kekule.chemEditor.modifications.js
  */
 
 (function(){
@@ -1773,6 +1774,41 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.endUpdateObject();
 		this.endManipulateObject();
 	},
+
+	/*
+	 * Try apply modification to a series of objects in editor.
+	 * @param {Variant} modificationOrName Modification object or name.
+	 * @param {Variant} targets Target object or objects.
+	 * @returns {Kekule.Operation} operation actually done.
+	 */
+	/*
+	applyModification: function(modificationOrName, targets)
+	{
+		var objs = AU.toArray(targets);
+		var modification = (typeof(modificationOrName) === 'string')? Kekule.Editor.ChemObjModificationManager.getModification(modificationOrName): modificationOrName;
+		if (objs.length && modification)
+		{
+			var opers = [];
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				if (modification.match(objs[i], this))
+				{
+					var oper = modification.createOperation(objs[i], this);
+					if (oper)
+						opers.push(oper);
+				}
+			}
+		}
+		if (opers.length)
+		{
+			var finalOper = (opers.length === 1) ? opers[0] : new Kekule.MacroOperation(opers);
+			this.execOperation(finalOper);
+			return finalOper;
+		}
+		else
+			return null;
+	},
+	*/
 
 	/** @private */
 	_needToCanonicalizeBeforeSaving: function()
@@ -4290,6 +4326,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		*/
 		return this;
 	},
+	/**
+	 * Execute a series of operations in editor.
+	 * @param {Array} operations
+	 */
+	execOperations: function(opers)
+	{
+		if (opers.length === 1)
+			return this.execOperation(opers[0]);
+		else
+		{
+			var oper = new Kekule.MacroOperation(opers);
+			return this.execOperation(oper);
+		}
+	},
 
 	/**
 	 * Replace an operation in operation history.
@@ -4758,7 +4808,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	/////// Event handle  //////////////////////
-
+	/** @ignore */
 	doBeforeDispatchUiEvent: function(/*$super, */e)
 	{
 		// get pointer type information here
@@ -4768,6 +4818,58 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.setCurrPointerType(e.pointerType);
 		}
 		return this.tryApplySuper('doBeforeDispatchUiEvent', [e])  /* $super(e) */;
+	},
+	/**
+	 * React to a HTML event to find if it is a registered hotkey, then react to it when necessary.
+	 * @param {HTMLEvent} e
+	 * @returns {Bool} Returns true if a hot key is found and handled.
+	 * @private
+	 */
+	reactHotKeys: function(e)
+	{
+		var editor = this;
+		// react to hotkeys
+		if (this.getEditorConfigs().getInteractionConfigs().getEnableHotKey())
+		{
+			var hotKeys = this.getEditorConfigs().getHotKeyConfigs().getHotKeys();
+			var srcParams = Kekule.Widget.KeyboardUtils.getKeyParamsFromEvent(e);
+			var done = false;
+			var pendingOperations = [];
+			for (var i = hotKeys.length - 1; i >= 0; --i)
+			{
+				var keyParams = Kekule.Widget.KeyboardUtils.shortcutLabelToKeyParams(hotKeys[i].key, null, false);
+				if (Kekule.Widget.KeyboardUtils.matchKeyParams(srcParams, keyParams, false))  // not strict match
+				{
+					var actionId = hotKeys[i].action;
+					if (actionId)
+					{
+						var action = editor.getChildAction(actionId, true);
+						if (action)
+						{
+							if (action instanceof Kekule.Editor.ActionOperationCreate.Base)  // operation creation actions, handles differently
+							{
+								var opers = action.createOperations(editor);
+								done = !!(opers && opers.length) || done;
+								if (done)
+									pendingOperations = pendingOperations.concat(opers);
+							}
+							else
+								done = action.execute(editor, e) || done;
+						}
+					}
+				}
+			}
+			if (pendingOperations.length)
+				editor.execOperations(pendingOperations);
+			if (done)
+				return true;   // already do the modification, returns a flag
+		}
+	},
+	/** @ignore */
+	react_keydown: function(e)
+	{
+		this.tryApplySuper('react_keydown', [e]);
+		return this.reactHotKeys(e);
 	}
 });
 
@@ -4859,17 +4961,68 @@ Kekule.Editor.IaControllerManager = {
 };
 var ICM = Kekule.Editor.IaControllerManager;
 
+/**
+ * Base controller class for BaseEditor.
+ * This is a base class and should not be used directly.
+ * @class
+ * @augments Kekule.Widget.InteractionController
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Editor of current object being installed to.
+ */
+Kekule.Editor.BaseEditorBaseIaController = Class.create(Kekule.Widget.InteractionController,
+/** @lends Kekule.Editor.BaseEditorBaseIaController# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.BaseEditorIaController',
+	/** @constructs */
+	initialize: function(/*$super, */editor)
+	{
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
+	},
+	/**
+	 * Returns the preferred id for this controller.
+	 */
+	getDefId: function()
+	{
+		return Kekule.ClassUtils.getLastClassName(this.getClassName());
+	},
+	/**
+	 * Return associated editor.
+	 * @returns {Kekule.ChemWidget.BaseEditor}
+	 */
+	getEditor: function()
+	{
+		return this.getWidget();
+	},
+	/**
+	 * Set associated editor.
+	 * @param {Kekule.ChemWidget.BaseEditor} editor
+	 */
+	setEditor: function(editor)
+	{
+		return this.setWidget(editor);
+	},
+	/**
+	 * Get config object of editor.
+	 * @returns {Object}
+	 */
+	getEditorConfigs: function()
+	{
+		var editor = this.getEditor();
+		return editor? editor.getEditorConfigs(): null;
+	}
+});
 
 /**
  * Base Controller class for editor.
  * @class
- * @augments Kekule.Widget.InteractionController
+ * @augments Kekule.Editor.BaseEditorBaseIaController
  *
  * @param {Kekule.Editor.BaseEditor} editor Editor of current object being installed to.
  *
  * @property {Bool} manuallyHotTrack If set to false, hot track will be auto shown in mousemove event listener.
  */
-Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionController,
+Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Editor.BaseEditorBaseIaController,
 /** @lends Kekule.Editor.BaseEditorIaController# */
 {
 	/** @private */
@@ -4904,38 +5057,6 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Widget.InteractionCon
 					this.setStoreFieldValue('activePointerType', value);
 			}
 		});  // private
-	},
-	/**
-	 * Returns the preferred id for this controller.
-	 */
-	getDefId: function()
-	{
-		return Kekule.ClassUtils.getLastClassName(this.getClassName());
-	},
-	/**
-	 * Return associated editor.
-	 * @returns {Kekule.ChemWidget.BaseEditor}
-	 */
-	getEditor: function()
-	{
-		return this.getWidget();
-	},
-	/**
-	 * Set associated editor.
-	 * @param {Kekule.ChemWidget.BaseEditor} editor
-	 */
-	setEditor: function(editor)
-	{
-		return this.setWidget(editor);
-	},
-	/**
-	 * Get config object of editor.
-	 * @returns {Object}
-	 */
-	getEditorConfigs: function()
-	{
-		var editor = this.getEditor();
-		return editor? editor.getEditorConfigs(): null;
 	},
 	/** @private */
 	getInteractionBoundInflation: function(pointerType)
@@ -6745,7 +6866,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			var R = Kekule.Editor.BoxRegion;
 			var region = this.getEditor().getCoordRegionInSelectionMarker(c);
-			var result;
 			if (this.getEnableSelect())   // show move/rotate/resize marker in select ia controller only
 			{
 				var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
