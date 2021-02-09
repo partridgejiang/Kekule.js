@@ -47,6 +47,7 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
 		BNS.rotateLeft, BNS.rotateRight,
 		BNS.reset,
+		BNS.copy,
 		BNS.openEditor
 	],
 	menuItems: [
@@ -66,6 +67,7 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 		},
 		BNS.reset,
 		Kekule.Widget.MenuItem.SEPARATOR_TEXT,
+		BNS.copy,
 		BNS.openEditor,
 		BNS.config
 	]
@@ -2895,6 +2897,9 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
 	reg(BNS.molHideHydrogens, CW.ActionDisplayerHideHydrogens, widgetClass);
 	reg(BNS.molDisplayType, CW.ActionViewerChangeMolDisplayTypeStub, widgetClass);
+
+	reg(BNS.copy, CW.ActionDisplayerCopy, widgetClass);
+
 	reg(BNS.openEditor, CW.ActionViewerEdit, widgetClass);
 	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 
