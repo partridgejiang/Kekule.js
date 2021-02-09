@@ -2116,6 +2116,13 @@ Kekule.ChemWidget.ActionOnDisplayer = Class.create(Kekule.Action,
 	{
 		var displayer = this.getDisplayer();
 		this.setEnabled(displayer && displayer.getChemObj() && displayer.getChemObjLoaded() && displayer.getEnabled());
+	},
+	/** @ignore */
+	execute: function(target, htmlEvent)
+	{
+		if (!this.getDisplayer() && target instanceof Kekule.ChemWidget.ChemObjDisplayer)
+			this.setDisplayer(target);
+		return this.tryApplySuper('execute', [target, htmlEvent]);
 	}
 });
 
