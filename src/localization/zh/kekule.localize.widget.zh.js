@@ -1,6 +1,6 @@
 Kekule.Localization.setCurrModule("widget");
 
-Kekule.Localization.addResource("zh", "WidgetTexts", 
+Kekule.Localization.addResource("zh", "WidgetTexts",
 {
 	"CAPTION_OK": "确定",
 	"CAPTION_CANCEL": "取消",
@@ -57,7 +57,7 @@ Kekule.Localization.addResource("zh", "WidgetTexts",
 	"TITLE_IMG_FORMAT_SVG": "SVG格式图像"
 });
 
-Kekule.Localization.addResource("zh", "ChemWidgetTexts", 
+Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 {
 	"CAPTION_CLEAROBJS": "清除",
 	"CAPTION_LOADFILE": "载入…",
@@ -114,6 +114,7 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 	"CAPTION_UNDO": "撤销",
 	"CAPTION_REDO": "重做",
 	"CAPTION_COPY": "复制",
+	"CAPTION_COPY_WHOLE": "复制",
 	"CAPTION_CUT": "剪切",
 	"CAPTION_PASTE": "粘贴",
 	"CAPTION_TOGGLE_SELECT": "叠加选择",
@@ -242,6 +243,7 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 	"HINT_NEWDOC": "创建新文档",
 	"HINT_UNDO": "撤销",
 	"HINT_REDO": "重做",
+	"HINT_COPY_WHOLE": "将对象复制至内部剪贴板",
 	"HINT_COPY": "将选定对象复制至内部剪贴板",
 	"HINT_CUT": "将选定对象剪切至内部剪贴板",
 	"HINT_PASTE": "自内部剪贴板复制",
@@ -423,7 +425,7 @@ Kekule.Localization.addResource("zh", "ChemWidgetTexts",
 	"S_VALUE_DEFAULT": "(缺省)"
 });
 
-Kekule.Localization.addResource("zh", "ErrorMsg", 
+Kekule.Localization.addResource("zh", "ErrorMsg",
 {
 	"WIDGET_CLASS_NOT_FOUND": "控件类不存在",
 	"WIDGET_CAN_NOT_BIND_TO_ELEM": "控件{0}无法绑定到HTML元素<{1}>",
@@ -442,4 +444,3 @@ Kekule.Localization.addResource("zh", "ErrorMsg",
 	"INVALID_ATOM_SYMBOL": "原子符号无效",
 	"INVALID_OR_EMPTY_IMAGE": "空白或不合法的图像"
 });
-

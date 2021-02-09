@@ -49,6 +49,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_ZOOMIN: 'K-Chem-ZoomIn',
 	ACTION_ZOOMOUT: 'K-Chem-ZoomOut',
 	ACTION_RESET: 'K-Chem-Reset',
+	ACTION_COPY: 'K-Chem-Copy',
 	ACTION_RESET_ZOOM: 'K-Chem-ResetZoom',
 	ACTION_LOADFILE: 'K-Chem-LoadFile',
 	ACTION_LOADDATA: 'K-Chem-LoadData',
@@ -2608,6 +2609,56 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 				}
 			}, target, showType]
 		);
+	}
+});
+
+/**
+ * Action for reset viewer.
+ * @class
+ * @augments Kekule.ChemWidget.ActionOnDisplayer
+ */
+Kekule.ChemWidget.ActionDisplayerCopy = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
+/** @lends Kekule.ChemWidget.ActionDisplayerCopy# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerCopy',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_COPY,
+	/** @constructs */
+	initialize: function(/*$super, */displayer)
+	{
+		this.tryApplySuper('initialize', [displayer, Kekule.$L('ChemWidgetTexts.CAPTION_COPY_WHOLE'), Kekule.$L('ChemWidgetTexts.HINT_COPY_WHOLE')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		if (this.getEnabled())
+		{
+			var srcObj = this.getDisplayer().getChemObj();
+			this.setEnabled(srcObj && srcObj.clone);
+		}
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var displayer = this.getDisplayer();
+		if (displayer)
+		{
+			var srcObj = displayer.getChemObj();
+			var dupObj = srcObj.clone && srcObj.clone();
+
+			var space = new Kekule.IntermediateChemSpace();
+			try
+			{
+				space.appendChildren([dupObj]);  // use a space to keep all objs, to keep the relations
+				Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, [space]);
+			}
+			finally
+			{
+				space.finalize();
+			}
+		}
 	}
 });
 
