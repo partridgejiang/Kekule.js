@@ -250,7 +250,7 @@ Kekule.Widget.KeyboardUtils = {
 			matchValue(params1.metaKey, params2.metaKey) &&
 			(!params2.key || matchKeyValue(params1.key, params2.key)) &&
 			(!params2.code || params2.code === params1.code) &&
-			matchValue(params2.repeat, params1.repeat);
+			matchValue(params1.repeat, params2.repeat);
 		return result;
 	}
 };
