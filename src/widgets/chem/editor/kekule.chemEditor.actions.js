@@ -37,6 +37,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_UNDO: 'K-Chem-Undo',
 	ACTION_REDO: 'K-Chem-Redo',
 	ACTION_NEWDOC: 'K-Chem-NewDoc',
+	ACTION_SELECT_ALL: 'K-Chem-SelectAll',
 	ACTION_CLONE_SELECTION: 'K-Chem-Clone-Selection',
 	ACTION_COPY: 'K-Chem-Copy',
 	ACTION_CUT: 'K-Chem-Cut',
@@ -506,6 +507,39 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 		}
 		else
 			return this.tryApplySuper('doLoadToDisplayer', [chemObj, dialog])  /* $super(chemObj, dialog) */;
+	}
+});
+
+/**
+ * A select-all action for editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionSelectAll = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionSelectAll# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionSelectAll',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_SELECT_ALL,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_ALL'), Kekule.$L('ChemWidgetTexts.HINT_SELECT_ALL')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().getChemObj());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		this.getEditor().selectAll();
 	}
 });
 
@@ -2799,6 +2833,7 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 	reg(BNS.undo, CE.ActionEditorUndo, widgetClass);
 	reg(BNS.redo, CE.ActionEditorRedo, widgetClass);
+	reg(BNS.selectAll, CE.ActionSelectAll, widgetClass);
 	reg(BNS.cloneSelection, CE.ActionCloneSelection, widgetClass);
 	reg(BNS.copy, CE.ActionCopySelection, widgetClass);
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);

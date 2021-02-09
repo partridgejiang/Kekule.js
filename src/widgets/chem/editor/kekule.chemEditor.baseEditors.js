@@ -3415,6 +3415,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return this;
 	},
 	/**
+	 * Select all first-level objects in editor.
+	 */
+	selectAll: function()
+	{
+		var selection = [];
+		var obj = this.getChemObj();
+		if (obj && obj.getChildren())
+		{
+			selection = obj.getChildren() || [];
+		}
+		return this.select(selection);
+	},
+	/**
 	 * Deselect all objects in selection
 	 */
 	deselectAll: function()
@@ -4863,7 +4876,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			if (pendingOperations.length)
 				editor.execOperations(pendingOperations);
 			if (done)
+			{
+				e.preventDefault();
 				return true;   // already do the modification, returns a flag
+			}
 		}
 	},
 	/** @ignore */

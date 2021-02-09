@@ -599,6 +599,7 @@ Kekule.Editor.HotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': 'y', 'action': 'bond_upOrDown'},
 
 			// general
+			{'key': 'Ctrl+A', 'action': CWN.selectAll},
 			{'key': 'Ctrl+C', 'action': CWN.copy},
 			{'key': 'Ctrl+X', 'action': CWN.cut},
 			{'key': 'Ctrl+V', 'action': CWN.paste},
