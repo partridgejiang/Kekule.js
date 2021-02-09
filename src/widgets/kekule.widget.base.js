@@ -1147,6 +1147,32 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		});
+		// private, stores defaulty created child actions
+		this.defineProp('defaultChildActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null,
+			'getter': function(canCreate)
+			{
+			  var result = this.getPropStoreFieldValue('defaultChildActions');
+			  if (!result && canCreate)
+			  {
+				  result = new Kekule.ActionList();
+				  this.setPropStoreFieldValue('defaultChildActions', result);
+			  }
+			  return result;
+			}
+		});
+		// private, stores defaulty created child action and actionClass map
+		this.defineProp('defaultChildActionMap', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
+			'getter': function(canCreate)
+			{
+				var result = this.getPropStoreFieldValue('defaultChildActionMap');
+				if (!result && canCreate)
+				{
+					result = new Kekule.MapEx();
+					this.setPropStoreFieldValue('defaultChildActionMap', result);
+				}
+				return result;
+			}
+		});
 
 		this.defineProp('iaControllerMap', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
 			'scope': Class.PropertyScope.PUBLIC,
@@ -1210,6 +1236,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this._clearShortcuts();
 
 		this.getHtmlEventDispatcher().finalize();
+
+		var childActionMap = this.getDefaultChildActionMap();
+		if (childActionMap)
+		{
+			childActionMap.finalize();
+			this.setPropStoreFieldValue('defaultChildActionMap', null);
+		}
+		var childActions = this.getDefaultChildActions();
+		if (childActions)
+		{
+			childActions.finalize();
+			this.setPropStoreFieldValue('defaultChildActions', null);
+		}
 
 		this.setAction(null);
 		this.setParent(null);
@@ -1453,6 +1492,30 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getChildActionClass: function(actionName, checkSupClasses)
 	{
 		var result = Kekule.ActionManager.getActionClassOfName(actionName, this, checkSupClasses);
+		return result;
+	},
+	/**
+	 * Fetch the named child action instance.
+	 * The child action will be created and added to the default child action list when necessary.
+	 * @param {String} actionName
+	 * @param {Bool} checkSupClasses When true, if action class is not found in current widget class, super classes will also be checked.
+	 * @returns {Kekule.Action}
+	 */
+	getChildAction: function(actionName, checkSupClasses)
+	{
+		var result = null;
+		var aClass = this.getChildActionClass(actionName, checkSupClasses);
+		if (aClass)
+		{
+			var map = this.getDefaultChildActionMap(true);
+			result = map.get(aClass);
+			if (!result)
+			{
+				result = new aClass();
+				this.getDefaultChildActions(true).add(result);
+				map.set(aClass, result);
+			}
+		}
 		return result;
 	},
 
