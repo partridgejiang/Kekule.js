@@ -102,13 +102,13 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	BTN_NAME_FIELD: '__$btnName__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
 		this._dialogCallback = null;
 		this._modalInfo = null;
 		this._childButtons = [];
 		this.setPropStoreFieldValue('location', Kekule.Widget.Location.CENTER);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this._dialogOpened = false;  // used internally
 		this.setUseCornerDecoration(true);
 		if (caption)
@@ -119,14 +119,14 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.setDisplayed(false);
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		//this.unprepareModal();  // if finalize during dialog show, modal preparation should always be unprepared
 		if (this.getModalInfo())
 		{
 			this.getGlobalManager().unprepareModalWidget(this);
 		}
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -156,9 +156,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		this.defineProp('btnPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		if (this.setMovable)
 		{
 			this.setMovable(true);
@@ -535,12 +535,17 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	prepareShow: function(callback)
+	prepareShow: function(callback, caller)
 	{
 		// if this dialog has no element parent, just append it to body
 		var elem = this.getElement();
 		if (!elem.parentNode)
-			this.getDocument().body.appendChild(elem);
+		{
+			//this.getDocument().body.appendChild(elem);
+			var gm = this.getGlobalManager();
+			var contextRootElem = gm.getWidgetContextRootElement(caller);
+			contextRootElem.appendChild(elem);
+		}
 
 		var self = this;
 		// defer the function, make sure it be called when elem really in DOM tree
@@ -564,7 +569,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	openModal: function(callback, caller)
 	{
 		//this.prepareModal();
-		this.getGlobalManager().prepareModalWidget(this);
+		this.getGlobalManager().prepareModalWidget(this, caller);
 		  // important, must called before prepareShow, or DOM tree change will cause doWidgetShowStateChanged
 		  // and make callback called even before dialog showing
 		/*
@@ -596,7 +601,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	open: function(callback, caller, showType)
 	{
-		this.prepareShow(callback);
+		this.prepareShow(callback, caller);
 		this.show(caller, null, showType || Kekule.Widget.ShowHideType.DIALOG);
 		this._dialogOpened = true;
 		return this;
@@ -632,9 +637,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateBeforeChanging: function($super, isShown)
+	widgetShowStateBeforeChanging: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('widgetShowStateBeforeChanging', [isShown])  /* $super(isShown) */;
 
 		if (isShown /*&& (!this.isShown())*/)  // show
 		{
@@ -652,9 +657,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (!isShown)  // hide
 		{
 			if (this._dialogCallback)
@@ -666,9 +671,9 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	widgetShowStateDone: function($super, isShown)
+	widgetShowStateDone: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('widgetShowStateDone', [isShown])  /* $super(isShown) */;
 		if (!isShown && this._dialogOpened)  // hide after dialog open
 		{
 			if (this.getModalInfo())

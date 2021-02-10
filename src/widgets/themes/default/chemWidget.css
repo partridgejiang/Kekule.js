@@ -107,6 +107,13 @@
     box-shadow: 1px 1px 2px;
     z-index: 5;
 }
+.K-Chem-Periodic-Table td.K-Chem-Periodic-Table-Elem-Cell.K-State-Disabled .K-Chem-Periodic-Table-Elem-Cell-Content:hover
+{
+    transform: none;
+    outline: inherit;
+    box-shadow: inherit;
+    z-index: inherit;
+}
 
 .K-Chem-Periodic-Table-Elem-Cell-Content .K-Chem-Atomic-Num
 {
@@ -516,7 +523,7 @@
 {
     position: relative;
     /* default width/height */
-    width: 550px;
+    width: 600px;
     height: 400px;
     min-width: 300px;
     min-height: 200px;
@@ -661,6 +668,76 @@
 }
 */
 
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout
+{
+    display: inline-grid;
+    grid-template-rows: min-content 1fr min-content;
+    grid-template-columns: min-content 1fr min-content;
+}
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region,
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region
+{
+    width: auto;
+    height: auto;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region
+{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region
+{
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 4;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region
+{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    grid-row-start: 3;
+    grid-row-end: 4;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Common-Toolbar
+{
+    position: relative;
+}
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Editor-Stage
+{
+    position: relative;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
+
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel
+{
+    grid-column-start: 3;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
+
 .K-Chem-Composer-Toolbar
 {
     white-space: nowrap;
@@ -776,6 +853,10 @@
     left: 0;
     right: 0;
 }
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector.K-ObjInspector-Flex-Layout
+{
+    display: flex;
+}
 
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
 {
@@ -843,6 +924,45 @@
     position: absolute;
     bottom: 5px;
 }
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout
+{
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    flex-direction: column;
+}
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Toolbar-Area,
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-TabGroup
+{
+    -webkit-flex: 0 0 auto;
+    -moz-flex: 0 0 auto;
+    flex: 0 0 auto;
+    position: relative;
+}
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-TabGroup
+{
+    bottom: auto;
+}
+
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Client
+{
+    -webkit-flex: 1 1 auto;
+    -moz-flex: 1 1 auto;
+    flex: 1 1 auto;
+    position: relative;
+    width: auto;
+    height: auto;
+    padding: 5px;
+}
+.K-Chem-Obj-Setter.K-Chem-Obj-Setter-Flex-Layout .K-Chem-Obj-Setter-Client .K-Chem-Viewer.K-Chem-Obj-Setter-Viewer
+{
+
+}
+
 .K-Chem-Obj-Setter-Configurator
 {
     padding-left: 2em;

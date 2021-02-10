@@ -27,7 +27,7 @@ Kekule.EmscriptenUtils = {
 	getRootModule: function(moduleName, creationOptions)
 	{
 		// if already created, returns
-		var result = EU._createdModules[moduleName];;
+		var result = EU._createdModules[moduleName];
 		if (result)
 		{
 			return result;
@@ -45,12 +45,20 @@ Kekule.EmscriptenUtils = {
 
 		return result;
 	},
+	setRootModule: function(moduleName, module)
+	{
+		EU._createdModules[moduleName] = module;
+	},
 	getModuleObj: function(moduleNameOrObj)
 	{
 		if (typeof(moduleNameOrObj) === 'object')
 			return moduleNameOrObj;
 		else
 			return EU.getRootModule(moduleNameOrObj);
+	},
+	getMember: function(name, moduleNameOrObj)
+	{
+		return (EU.getModuleObj(moduleNameOrObj) || {}) [name];
 	},
 	getClassCtor: function(className, moduleNameOrObj)
 	{
@@ -101,7 +109,7 @@ Kekule.EmscriptenUtils = {
 
 		try
 		{
-			if (moduleInitEventName && doc)
+			if (moduleInitEventName && doc && Kekule.X)
 			{
 				var reactLoadEvent = function() {
 					callCallback();

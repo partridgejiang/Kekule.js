@@ -10,7 +10,12 @@ describe('Test of structure comparison', function(){
 		'compTest2_1.kcj', 'compTest2_2.kcj',
 		'compTest3_1.kcj', 'compTest3_2.kcj',
 		'compTest4_1.mol', 'compTest4_2.mol',
-		'compTestFischer1_1.kcj', 'compTestFischer1_2.kcj'
+		'compTestFischer1_1.kcj', 'compTestFischer1_2.kcj',
+		'chainStereoCenterWithH01.mol', 'chainStereoCenterWithH02.mol',
+		'chainStereoCenterWithH01_01.mol',
+		'wedgeWithH01_1.mol', 'wedgeWithH01_2.mol',
+		'wedgeWithH02_1.mol', 'wedgeWithH02_2.mol',
+		'wedgeWithH03_1.mol', 'wedgeWithH03_2.mol'
 	];
 	beforeAll(function(done){   // load all essential molecules
 		var allUrls = [];
@@ -67,5 +72,25 @@ describe('Test of structure comparison', function(){
 	testComparison('Comparison base on Fischer mol pair 1',
 		'compTestFischer1_1.kcj', 'compTestFischer1_2.kcj', null,
 		true
+	);
+	testComparison('Comparison on stereo centers with H atom -1',
+		'chainStereoCenterWithH01.mol', 'chainStereoCenterWithH02.mol', null,
+		false
+	);
+	testComparison('Comparison on stereo centers with H atom -2',
+		'chainStereoCenterWithH01.mol', 'chainStereoCenterWithH01_01.mol', null,
+		true
+	);
+	testComparison('Comparison base on wedge bonds with H - 1',
+		'wedgeWithH01_1.mol', 'wedgeWithH01_2.mol', null,
+		false
+	);
+	testComparison('Comparison base on wedge bonds with H - 2',
+			'wedgeWithH02_1.mol', 'wedgeWithH02_2.mol', null,
+			false
+	);
+	testComparison('Comparison base on wedge bonds with H - 3',
+			'wedgeWithH03_1.mol', 'wedgeWithH03_2.mol', null,
+			true
 	);
 });

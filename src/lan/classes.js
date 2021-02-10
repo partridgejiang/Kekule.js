@@ -33,6 +33,12 @@ function __$A__(iterable) {
     return results;
 }
 
+/**
+ *  A flag, whether stores all classes with CLASS_NAME field in Class._named_classes
+ *  @ignore
+ */
+var __registerNamedClasses__ = true;
+
 /** @class Class */
 var Class = {
 		/**
@@ -43,12 +49,16 @@ var Class = {
 		 */
     createCore: function() {
         var parent = null, properties = __$A__(arguments);
+        var exProps = (properties.length > 1)? properties[1]: properties[0];
+        var currClassName = (exProps && exProps.CLASS_NAME);
         if (!properties[0])
         {
           if (properties.length > 1)
           {
+            /*
           	var exProps = properties[1];
           	var currClassName = (exProps && exProps.CLASS_NAME);
+          	*/
 	          throw 'Can not create new class' + (currClassName? ' ' + currClassName: '') + ' , base class not found';
           }
         }
@@ -78,6 +88,9 @@ var Class = {
             klass.prototype.initialize = emptyFunction; //Prototype.emptyFunction;
 
         klass.prototype.constructor = klass;
+
+        if (currClassName && __registerNamedClasses__)  // register
+          Class._named_classes[currClassName] = klass;
 
         return klass;
     },
@@ -116,7 +129,28 @@ var Class = {
 		if (obj.finalize)
 			obj.finalize();
 		obj = null;
-	}
+	},
+
+	/**
+   * Find the class by a class name.
+   * @param {String} className
+   * @returns {Class} Found class or null.
+   */
+  findClass: function(className, root)
+  {
+    var result = Class._named_classes[className];
+    if (!result)
+    {
+      var v = Object.getCascadeFieldValue(className, root);
+      result = (v && Object.isFunction(v) && (v.superclass || v.subclasses))? v: null;
+    }
+    return result;
+  },
+
+	/**
+   * Stores created classes with CLASS_NAME property
+   */
+  _named_classes: {}
 };
 
 /** @ignore */
@@ -235,8 +269,16 @@ Object.getCascadeFieldValue = function(fieldName, root)
   for (var i = 0, l = cascadeNames.length; i < l; ++i)
   {
     result = root[cascadeNames[i]];
+    /*
+    if (!result && i === 0 && l > 1)   // may be root part is defined in const or let, which won't be registered with global)
+    {
+      try { result = eval(cascadeNames[i]) } catch(e) { result = null; }
+    }
+    */
     if (!result)
+    {
       break;
+    }
     else
       root = result;
   }
@@ -580,9 +622,11 @@ Object._extendSupportMethods(String.prototype, {
     });
   },
 
+  /*
   evalScripts: function() {
     return this.extractScripts().map(function(script) { return eval(script); });
   },
+  */
 
   escapeHTML: function escapeHTML() {
 		/*
@@ -659,11 +703,21 @@ Object._extendSupportMethods(String.prototype, {
   },
 
   underscore: function() {
-    return this.gsub(/::/, '/').gsub(/([A-Z]+)([A-Z][a-z])/,'#{1}_#{2}').gsub(/([a-z\d])([A-Z])/,'#{1}_#{2}').gsub(/-/,'_').toLowerCase();
+    //return this.gsub(/::/, '/').gsub(/([A-Z]+)([A-Z][a-z])/,'#{1}_#{2}').gsub(/([a-z\d])([A-Z])/,'#{1}_#{2}').gsub(/-/,'_').toLowerCase();
+	  return this.replace(/::/g, '/')
+		  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+		  .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+		  .replace(/-/g, '_')
+		  .toLowerCase();
   },
 
   dasherize: function() {
-    return this.gsub(/_/,'-');
+    //return this.gsub(/_/,'-');
+	  return this.replace(/::/g, '/')
+		  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+		  .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+		  .replace(/-/g, '-')
+		  .toLowerCase();
   },
 
   inspect: function(useDoubleQuotes) {
@@ -690,6 +744,7 @@ Object._extendSupportMethods(String.prototype, {
     return (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(str);
   },
 
+  /*
   evalJSON: function(sanitize) {
     var json = this.unfilterJSON();
     try {
@@ -697,6 +752,7 @@ Object._extendSupportMethods(String.prototype, {
     } catch (e) { }
     throw new SyntaxError('Badly formed JSON string: ' + this.inspect());
   },
+  */
 
   include: function(pattern) {
     return this.indexOf(pattern) > -1;
@@ -932,6 +988,9 @@ var StringUtils = {
 			{
 				if (preferedType)
 				{
+					if (!str && [DataType.NUMBER, DataType.INT, DataType.FLOAT].indexOf(preferedType) >= 0)  // need to convert empty string to num, avoid NaN result
+						return undefined;
+
 					switch (preferedType)
 					{
 						case DataType.FLOAT:
@@ -1016,7 +1075,8 @@ if (!Math.sign)
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };
-if (!$jsRoot.Node) $jsRoot.Node = { };
+
+if (typeof($jsRoot.Node) == 'undefined') $jsRoot.Node = function(){};
 
 if (!$jsRoot.Node.ELEMENT_NODE) {
   // DOM level 2 ECMAScript Language Binding
@@ -1658,7 +1718,8 @@ var DataType = {
 			case DataType.DATE: return new Date();
 			case DataType.ARRAY: return new Array();
 			case DataType.OBJECT: return new Object();
-			case DataType.FUNCTION: return new Function();
+			//case DataType.FUNCTION: return new Function();
+      case DataType.FUNCTION: return function(){};
 			default: // maybe a ObjectEx descendant
 				{
 					var classInstance = ClassEx.findClass(typeName.capitalizeFirst()); //eval(typeName.capitalizeFirst());
@@ -1710,7 +1771,8 @@ var ClassEx = {
 		}
 		return result;
 		*/
-		return Object.getCascadeFieldValue(className, root || $jsRoot);
+		//return Object.getCascadeFieldValue(className, root || $jsRoot);
+    return Class.findClass(className, root || $jsRoot);
 	},
 	/**
 	 * Get class name of aClass, usually returns CLASS_NAME field of aClass
@@ -2245,11 +2307,22 @@ ObjectEx = Class.create(
 	initialize: function()
 	{
 		this._initPropertySystem();
-		this.initPropValues();
-		this._updateStatus = 0;  // used internal in begin/endUpdate methods
+
+    this._updateStatus = 0;  // used internal in begin/endUpdate methods
     this._childChangeEventSuppressed = false;
-		this._modifiedProps = [];  // used internal in begin/endUpdate methods
-		this._finalized = false;  // used internally, mark if the object has been freed
+    this._modifiedProps = [];  // used internal in begin/endUpdate methods
+    this._finalized = false;  // used internally, mark if the object has been freed
+
+    this.beginUpdate();
+    try
+    {
+      this.initPropValues();
+    }
+    finally
+    {
+      this.endUpdate();
+    }
+
 		this.afterInitialization();
 	},
 	/**
@@ -2495,6 +2568,168 @@ ObjectEx = Class.create(
 			return null;
 	},
 	/**
+	 * Call the inherited method in the super class.
+	 * If methodName is not provided, the super class prototype will be returned instead.
+	 * @param {String} methodName
+	 * @returns {Variant}
+	 */
+	$super: function(methodName, returnEmptyFunctionIfNotFound)
+	{
+		var superProto = this.getSuperClassPrototype();
+		if (!methodName)
+		{
+			return superProto;
+		}
+		else
+		{
+			return this.tryCallSuper.apply(this, arguments);
+			/*
+			var result = superProto[methodName];
+			if (result)
+			{
+				result = result.bind(this);
+			}
+			else if (returnEmptyFunctionIfNotFound)
+				result = emptyFunction;
+			return result;
+			*/
+		}
+	},
+	/**
+	 * Call a method from super class.
+	 * @param {String} methodName
+	 * @param {array} params
+	 * @param {Bool} ignoreIfNotFound If true, this function will not raise an exception when super method is not found.
+	 */
+	applySuper: function(methodName, params, ignoreIfNotFound)
+	{
+		var lastTarget = this.__getLastSuperMethodCallTarget__(methodName);
+		//var superProto = this.getSuperClassPrototype();
+		//var superProto = lastTarget.getSuperClassPrototype();
+
+		// The first call of method (this[methodName]) may actually calling the method on prototype of this
+		// so we check here, ensure the method on same prototype won't be called twice
+		var currCallProto = this.__getMethodBelongedPrototype__(methodName, lastTarget);
+		var superProto = this.__getMethodBelongedPrototype__(methodName, lastTarget.getSuperClassPrototype());
+		if (superProto && superProto === currCallProto)
+			superProto = this.__getMethodBelongedPrototype__(methodName, superProto.getSuperClassPrototype());
+
+		var method = superProto && superProto[methodName];
+		if (!method)
+		{
+			if (ignoreIfNotFound)
+				return;
+			else
+				throw 'Super method not found: ' + methodName;
+		}
+		else
+		{
+			var result;
+			try
+			{
+				this.__pushSuperMethodCallTargetStack__(methodName, superProto);
+				if (params)
+					result = method.apply(this, params);
+				else
+					result = method.apply(this);
+			}
+			finally
+			{
+				//targetStack.pop();
+				/*
+				var popped = this.__popSuperMethodCallTargetStack__(methodName);
+				if (popped !== superProto)
+					Kekule.error('unexpected proto');
+				*/
+				this.__popSuperMethodCallTargetStack__(methodName);
+			}
+			return result;
+		}
+	},
+	/**
+	 * Try calling a method from super class, if the method does not exist in super class, nothing will be done.
+	 * @param {String} methodName
+	 * @param {array} params
+	 */
+	tryApplySuper: function(methodName, params)
+	{
+		return this.applySuper(methodName, params, true);
+	},
+	/**
+	 * Try calling a method from super class, if the method does not exist in super class, nothing will be done.
+	 * Different from {@link ObjectEx.tryApplySuper}, this method is called like tryCallSuper('method', param1, param2...)
+	 * @param {String} methodName
+	 */
+	tryCallSuper: function()
+	{
+		var params = __$A__(arguments);
+		var methodName = params.shift();
+		return this.tryApplySuper(methodName, params);
+	},
+
+	/** @private */
+	__getMethodBelongedPrototype__: function(methodName, baseObj)
+	{
+		if (!baseObj)
+			return null;
+		if (baseObj.hasOwnProperty(methodName))
+			return baseObj;
+		else
+		{
+			var proto = baseObj.getSuperClassPrototype && baseObj.getSuperClassPrototype();
+			if (proto && proto.__getMethodBelongedPrototype__)
+				return proto.__getMethodBelongedPrototype__(methodName, proto);
+			else
+				return null;
+		}
+	},
+	/** @private */
+	__getSuperMethodCallTargetStack__: function(methodName)
+	{
+		var stacks = this['__$superMethodCallTargetStacks__'];
+		if (!stacks)
+		{
+			stacks = {};
+			this['__$superMethodCallTargetStacks__'] = stacks;
+		}
+		var result = stacks[methodName];
+		if (!result)
+		{
+			result = [];
+			stacks[methodName] = result;
+		}
+		return result;
+	},
+	/** @private **/
+	__getLastSuperMethodCallTarget__: function(methodName)
+	{
+		var stack = this.__getSuperMethodCallTargetStack__(methodName);
+		return (stack.length)? stack[stack.length - 1]: this.getPrototype();
+	},
+	/** @private */
+	__pushSuperMethodCallTargetStack__: function(methodName, target)
+	{
+		var stack = this.__getSuperMethodCallTargetStack__(methodName);
+		stack.push(target);
+	},
+	/** @private */
+	__popSuperMethodCallTargetStack__: function(methodName)
+	{
+		var result = null;
+		var stacks = this['__$superMethodCallTargetStacks__'];
+		var stack = stacks && stacks[methodName];
+		if (stack)
+		{
+			var result = stack.pop();
+			if (!stack.length)  // empty
+			{
+				delete stacks[methodName];
+			}
+		}
+		return result;
+	},
+
+	/**
 	 * Change the class of an existing object.
 	 * This method is quite dangerous, call it with caution.
 	 * @param {Class} aClass
@@ -2642,7 +2877,9 @@ ObjectEx = Class.create(
 		var actualGetter = this[doGetterName];
   	if (!actualGetter)
 		{
-			actualGetter = getter || new Function('return this["' + prop.storeField + '"];');
+      var propStoreField = prop.storeField;
+      actualGetter = getter || function(){ return this[propStoreField]; };
+			//actualGetter = getter || new Function('return this["' + prop.storeField + '"];');
 			this.getPrototype()[doGetterName] = actualGetter; // doGetXXX, descendant can override this method
 		}
 
@@ -2688,7 +2925,9 @@ ObjectEx = Class.create(
 
 		if (!this[doSetterName])
 		{
-			actualSetter = setter || new Function('value', 'this["' + prop.storeField + '"] = value;');
+      var propStoreField = prop.storeField;
+			//actualSetter = setter || new Function('value', 'this["' + prop.storeField + '"] = value;');
+      actualSetter = setter || function(value) { this[propStoreField] = value; };
   		this.getPrototype()[doSetterName] = actualSetter; // doSetXXX, descendant can override this method
 		}
   	/*
@@ -3377,8 +3616,16 @@ ObjectEx = Class.create(
 	 */
 	beginUpdate: function()
 	{
-		++this._updateStatus;
+		this.doBeginUpdate();
 	},
+  /**
+   * Do actual work of beginUpdate.
+   * @private
+   */
+  doBeginUpdate: function()
+  {
+    ++this._updateStatus;
+  },
 	/**
 	 * Update end and notify all properties changed after calling of beginUpdate.
 	 */
@@ -3401,6 +3648,7 @@ ObjectEx = Class.create(
 	},
 	/**
 	 * Actual work of endUpdate, just invoke all property change events.
+   * @private
 	 */
 	doEndUpdate: function(modifiedPropNames)
 	{

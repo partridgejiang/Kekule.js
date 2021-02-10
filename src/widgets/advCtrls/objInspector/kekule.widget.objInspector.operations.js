@@ -35,9 +35,9 @@ Kekule.Widget.PropEditorModifyOperation = Class.create(Kekule.Operation,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.PropEditorModifyOperation',
 	/** @constructs */
-	initialize: function($super, propEditor, newValue, oldValue)
+	initialize: function(/*$super, */propEditor, newValue, oldValue)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropEditor(propEditor);
 		this.setNewValue(newValue);
 		this.setOldValue(oldValue);

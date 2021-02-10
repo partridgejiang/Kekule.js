@@ -66,11 +66,11 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 	/** @ignore */
 	DEF_AUTOWRAP_THRESHOLD: 80,
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this._toolCompWidgets = [];
 		this.setPropStoreFieldValue('showToolbar', true);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -185,10 +185,10 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		});
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._finalizeSubElements();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	_finalizeSubElements: function()
@@ -200,31 +200,31 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		}
 	},
 	/** @ignore */
-	getCoreElement: function($super)
+	getCoreElement: function(/*$super*/)
 	{
 		var textArea = this.getTextArea();
 		if (textArea)
 			return textArea.getElement();
 		else
-			return $super();
+			return this.tryApplySuper('getCoreElement')  /* $super() */;
 	},
 	/** @ignore */
-	getChildrenHolderElement: function($super)
+	getChildrenHolderElement: function(/*$super*/)
 	{
 		return this.getElement();
 	},
 
 	/** @ignore */
-	doSetValue: function($super, value)
+	doSetValue: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetValue', [value])  /* $super(value) */;
 		this._checkAutoWrap();
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TEXTEDITOR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TEXTEDITOR;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -246,9 +246,9 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 		return [toolbar.getElement(), textArea.getElement()];
 	},
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (isShown)
 		{
 			this.updateChildWidgetPos();
@@ -257,10 +257,10 @@ Kekule.Widget.TextEditor = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doFileDragDrop: function($super, files)
+	doFileDragDrop: function(/*$super, */files)
 	{
 		if (!files /* || files.length > 1 */)
-			return $super();
+			return this.tryApplySuper('doFileDragDrop')  /* $super() */;
 		else  // if only one file is dropped in, output the file content
 		{
 			if (Kekule.BrowserFeature.fileapi)

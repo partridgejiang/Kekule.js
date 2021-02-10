@@ -31,6 +31,7 @@
  *   be automatically set to false.
  * @property {String} hint Hint of action. If this value is set, all widgets' hint properties will be updated.
  * @property {Text} text Caption/text of action. If this value is set, all widgets' hint properties will be updated.
+ * @property {Array} shortcutKeys Array of shortcut key strings of this action.
  * @property {String} htmlClassName This value will be added to widget when action is linked and will be removed when action is unlinked.
  * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
  * @property {Kekule.Widget.BaseWidget} invoker Who invokes this action.
@@ -48,9 +49,9 @@ Kekule.Action = Class.create(ObjectEx,
 	/** @private */
 	HTML_CLASSNAME: null,
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('linkedWidgets', []);
 
 		this.setPropStoreFieldValue('enabled', true);
@@ -64,7 +65,7 @@ Kekule.Action = Class.create(ObjectEx,
 		this.reactWidgetExecuteBind = this.reactWidgetExecute.bind(this);
 	},
 	/** @private */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		var owner = this.getOwner();
 		if (owner && owner.actionRemoved)
@@ -73,7 +74,8 @@ Kekule.Action = Class.create(ObjectEx,
 		}
 		this.unlinkAllWidgets();
 		this.setPropStoreFieldValue('linkedWidgets', []);
-		$super();
+		this._lastHtmlEvent = null;
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -141,6 +143,13 @@ Kekule.Action = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('shortcutKeys', {'dataType': DataType.ARRAY});
+		this.defineProp('shortcutKey', {
+			'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getShortCutKeys()[0]; },
+			'setter': function(value) { this.setShortcutKeys(Kekule.ArrayUtils.toArray(value)); }
+		});
+
 		this.defineProp('htmlClassName', {'dataType': DataType.STRING,
 			'setter': function(value)
 			{
@@ -164,14 +173,14 @@ Kekule.Action = Class.create(ObjectEx,
 	},
 
 	/** @ignore */
-	invokeEvent: function($super, eventName, event)
+	invokeEvent: function(/*$super, */eventName, event)
 	{
 		if (!event)
 			event = {};
 		// save invoker into event param
 		if (!event.invoker)
 			event.invoker = this.getInvoker();
-		$super(eventName, event);
+		this.tryApplySuper('invokeEvent', [eventName, event])  /* $super(eventName, event) */;
 	},
 
 	/** @private */
@@ -220,6 +229,7 @@ Kekule.Action = Class.create(ObjectEx,
 			this.updateWidgetProp(widget, 'displayed', this.getDisplayed());
 			this.updateWidgetProp(widget, 'visible', this.getVisible());
 			this.updateWidgetProp(widget, 'checked', this.getChecked());
+			this.updateWidgetProp(widget, 'shortcutKeys', this.getShortcutKeys());
 			this.updateWidgetClassName(widget, this.getHtmlClassName(), null);
 
 			// install event handler
@@ -273,17 +283,21 @@ Kekule.Action = Class.create(ObjectEx,
 	 */
 	execute: function(target, htmlEvent)
 	{
-		var oldChecked = this.getChecked();
-		if (!this.getCheckGroup() || !oldChecked)
+		if (!htmlEvent || htmlEvent !== this._lastHtmlEvent || htmlEvent.__$periodicalExecuting$__)  // avoid invoke action multiple times in one HTML event // TODO: we may need a better way
 		{
-			this.doExecute(target, htmlEvent);
-			if (this.getCheckGroup())
+			var oldChecked = this.getChecked();
+			if (!this.getCheckGroup() || !oldChecked)
 			{
-				this.setChecked(true);
+				this.doExecute(target, htmlEvent);
+				if (this.getCheckGroup())
+				{
+					this.setChecked(true);
+				}
 			}
+			this.setPropStoreFieldValue('invoker', target);
+			this._lastHtmlEvent = htmlEvent;
+			this.invokeEvent('execute', {'htmlEvent': htmlEvent, 'invoker': target});
 		}
-		this.setPropStoreFieldValue('invoker', target);
-		this.invokeEvent('execute', {'htmlEvent': htmlEvent});
 		return this;
 	},
 	/**
@@ -371,9 +385,9 @@ Kekule.ActionList = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ActionList',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('actions', []);
 		this.setPropStoreFieldValue('ownActions', true);
 		this.setPropStoreFieldValue('autoUpdate', true);
@@ -381,12 +395,12 @@ Kekule.ActionList = Class.create(ObjectEx,
 		this.addEventListener('execute', this.reactActionExecutedBind);
 	},
 	/** @private */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.removeEventListener('execute', this.reactActionExecutedBind);
 		this.clear();
 		this.setPropStoreFieldValue('actions', null);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -649,9 +663,9 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionFileOpen',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this.reactFileOpenBind = this.reactFileOpen.bind(this);
 	},
 	/** @private */
@@ -660,9 +674,9 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
 		this.defineProp('filters', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		this.setEnabled(this.getEnabled() && Kekule.NativeServices.showFilePickerDialog/*Kekule.BrowserFeature.fileapi*/);
 	},
 	/** @private */
@@ -768,9 +782,9 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionLoadFileData',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this.reactFileLoadBind = this.reactFileLoad.bind(this);
 	},
 	/** @private */
@@ -780,9 +794,9 @@ Kekule.ActionLoadFileData = Class.create(Kekule.Action,
 		this.defineProp('binaryDetector', {'dataType': DataType.FUNCTION, 'serializable': false});
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		this.setEnabled(this.getEnabled() && Kekule.NativeServices.canLoadFileData());
 	},
 	/** @private */
@@ -856,9 +870,9 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.ActionFileSave',
 	/** @constructs */
-	initialize: function($super, data, fileName)
+	initialize: function(/*$super, */data, fileName)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (data)
 			this.setData(data);
 		if (fileName)
@@ -872,9 +886,9 @@ Kekule.ActionFileSave = Class.create(Kekule.Action,
 		this.defineProp('filters', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		this.setEnabled(this.getEnabled() /*&& this.getData()*/ && Kekule.NativeServices.canSaveFileData());
 	},
 	/** @private */

@@ -39,9 +39,9 @@ Kekule.ChemWidget.AbstractUIMarker = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.AbstractUIMarker',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setVisible(true);
 	},
 	/** @private */
@@ -67,9 +67,9 @@ Kekule.ChemWidget.MetaShapeUiMarker = Class.create(Kekule.ChemWidget.AbstractUIM
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.MetaShapeUiMarker',
 	/** @constructs */
-	initialize: function($super, shapeInfo)
+	initialize: function(/*$super, */shapeInfo)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (shapeInfo)
 			this.setShapeInfo(shapeInfo);
 	},
@@ -106,9 +106,9 @@ Kekule.ChemWidget.TextUiMarker = Class.create(Kekule.ChemWidget.AbstractUIMarker
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.TextUiMarker',
 	/** @constructs */
-	initialize: function($super, text, coord)
+	initialize: function(/*$super, */text, coord)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (text)
 			this.setText(text);
 		if (coord)
@@ -230,7 +230,7 @@ Kekule.ChemWidget.MetaShapeUiMarker2DRenderer = Class.create(Kekule.ChemWidget.U
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.MetaShapeUiMarker2DRenderer',
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
 		var marker = this.getChemObj();
 		var shapeInfo = marker.getShapeInfo();
@@ -367,7 +367,7 @@ Kekule.ChemWidget.TextUiMarker2DRenderer = Class.create(Kekule.ChemWidget.UiMark
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.TextUiMarker2DRenderer',
 	/** @private */
-	doDrawSelf: function($super, context, baseCoord, options)
+	doDrawSelf: function(/*$super, */context, baseCoord, options)
 	{
 		var marker = this.getChemObj();
 		var ops = {
@@ -400,7 +400,7 @@ Kekule.ChemWidget.UiMarkerCollection2DRenderer = Class.create(Kekule.ChemWidget.
 	CLASS_NAME: 'Kekule.ChemWidget.UiMarkerCollection2DRenderer',
 
 	/** @ignore */
-	getChildObjs: function($super)
+	getChildObjs: function(/*$super*/)
 	{
 		var collection = this.getChemObj();
 		var markers = collection.getMarkers();
@@ -433,9 +433,9 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	/** @private */
 	DRAW_ELEM_FIELD: '__$drawElem__',
 	/* @constructs */
-	initialize: function($super, obj, renderBridge)
+	initialize: function(/*$super, */obj, renderBridge)
 	{
-		$super(obj, renderBridge);
+		this.tryApplySuper('initialize', [obj, renderBridge])  /* $super(obj, renderBridge) */;
 		this._drawGroup = null;
 	},
 	/** @private */
@@ -459,9 +459,9 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		return null;  // usually do not need render box information
 	},
 	/** @private */
-	doDraw: function($super, context, baseCoord, options)
+	doDraw: function(/*$super, */context, baseCoord, options)
 	{
-		$super(context, baseCoord, options);
+		this.tryApplySuper('doDraw', [context, baseCoord, options])  /* $super(context, baseCoord, options) */;
 		//this._drawParams = {'baseCoord': baseCoord, 'options': options};
 		// some params (such as baseCoord) are useless here
 		var collection = this.getChemObj();
@@ -475,7 +475,7 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 	},
 
 	/** @private */
-	doUpdate1: function($super, context, updatedObjDetails, updateType)
+	doUpdate1: function(/*$super, */context, updatedObjDetails, updateType)
 	{
 		if (this.canModifyGraphic(context))
 		{
@@ -494,12 +494,12 @@ Kekule.ChemWidget.UiMarkersRenderer = Class.create(Kekule.Render.Base2DRenderer,
 					r = this.doRemove(context, objs);
 					break;
 				default:  // clear
-					return $super(context, updatedObjDetails, updateType);
+					return this.tryApplySuper('doUpdate1', [context, updatedObjDetails, updateType])  /* $super(context, updatedObjDetails, updateType) */;
 			}
 			return r;
 		}
 		else
-			return $super(context, updatedObjDetails, updateType);
+			return this.tryApplySuper('doUpdate1', [context, updatedObjDetails, updateType])  /* $super(context, updatedObjDetails, updateType) */;
 	},
 	/** @private */
 	doAddNew: function(/*$super,*/ context, updatedObjDetails)

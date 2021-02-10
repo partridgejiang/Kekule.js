@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Widget Transition Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script src="../../../src/kekule.js?min=false"></script>
+	<script type="chemical/x-mdl-molfile" id="internalRes">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+	</script>
+	<script>
+		var transInfo;
+		function createTransition()
+		{
+			//return new Kekule.Widget.Css3OpacityTrans();
+			/*
+			var childTransitions = [
+				new Kekule.Widget.Css3OpacityTrans(),
+				new Kekule.Widget.Css3ClipPathSlideTransition()
+			];
+			var result = new Kekule.Widget.CompositeTransition(childTransitions);
+			*/
+			var c = new Kekule.Widget.Css3Transition.createConcreteClass('MyTest', [
+				//Kekule.Widget.Css3OpacityTransRunner,
+				//Kekule.Widget.Css3SlideTransRunner,
+				//Kekule.Widget.Css3ClipPathSlideTransRunner,
+				//Kekule.Widget.Css3TransformGrowTransRunner
+				Kekule.Widget.Css3GrowTransRunner
+			]);
+			var result = new c();
+			return result;
+		}
+		function execute(transFrom, transTo, isAppear, isDisappear)
+		{
+			var widget = Kekule.Widget.getWidgetById('composer1');
+			var transition = createTransition();
+			var transOptions = {
+				'from': transFrom,
+				'to': transTo,
+				'isAppear': isAppear || true,
+				'isDisappear': isDisappear || false,
+				'duration': 5000
+			};
+			if (transition && transition.canExecute(widget.getElement(), transOptions))
+			{
+				var callerElem = document.getElementById('btnExecute');
+				transInfo = transition.execute(widget.getElement(), callerElem, /*done*/null, transOptions);
+				//console.log(transInfo);
+			}
+		}
+		function executeShow()
+		{
+			execute(0, 1, true, false);
+		}
+		function executeHide()
+		{
+			execute(1, 0, false, true);
+		}
+		function halt()
+		{
+			if (transInfo)
+				transInfo.halt();
+		}
+	</script>
+</head>
+<body>
+	<div>
+		<button id="btnExecute" data-widget="Kekule.Widget.Button" onclick="execute()">Exec</button>
+		<button id="btnExecuteShow" data-widget="Kekule.Widget.Button" onclick="executeShow()">Show</button>
+		<button id="btnExecuteHide" data-widget="Kekule.Widget.Button" onclick="executeHide()">Hide</button>
+		<button id="btnHalt" data-widget="Kekule.Widget.Button" onclick="halt()">Halt</button>
+	</div>
+	<div>
+		<div id="composer1" data-widget="Kekule.Editor.Composer" data-chem-obj="url('#internalRes')" data-auto-size="true"></div>
+	</div>
+</body>
+</html>

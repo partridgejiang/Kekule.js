@@ -43,18 +43,19 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Container',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-	  $super(parentOrElementOrDocument);
+		this._defContainerElem = null;
+	  this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.reactShowStateChangeBind = this.reactShowStateChange.bind(this);
 		this.addEventListener('showStateChange', this.reactShowStateChangeBind);
 	},
 	/** @private */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.removeEventListener('showStateChange', this.reactShowStateChangeBind);
 		this.clearWidgets();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -79,9 +80,9 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setAllowChildWrap(true);
 	},
 
@@ -111,6 +112,35 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		var result = doc.createElement('span');
 		return result;
 	},
+	/* @ignore */
+	/*
+	doCreateSubElements: function($super, doc, docFragment)
+	{
+		var result = $super(doc, docFragment) || [];
+		var containerElem = this.doCreateContainerElement(doc);
+		this._defContainerElem = containerElem;
+		result.push(containerElem);
+		docFragment.appendChild(containerElem);
+		return result;
+	},
+	*/
+	/**
+	 * Create a element to hold the child widgets.
+	 * Note: Container itself does not use this method by default, the child elements are directly appended to the core element.
+	 * Descendants may utilize it although.
+	 * @param {HTMLDocument} doc
+	 * @param {String} name Container name, used for <slot> if possible.
+	 * @param {String} fallbackTagName If <slot> is not available in browser, this tag name will be used to create element.
+	 * @returns {HTMLElement}
+	 */
+	doCreateContainerElement: function(doc, name, fallbackTagName)
+	{
+		var tagName = Kekule.BrowserFeature.htmlSlot? Kekule.Widget.HtmlTagNames.CHILD_HOLDER: (fallbackTagName || 'span');
+		var result = doc.createElement(tagName);
+		result.className = CNS.CHILD_HOLDER;
+		//result.setAttribute('name', name || Kekule.Widget.HtmlNames.CHILD_HOLDER);
+		return result;
+	},
 	/**
 	 * Returns the parent HTML element to hold all child widgets.
 	 * Descendants can override this method.
@@ -119,6 +149,12 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	getContainerElement: function()
 	{
 		return this.getElement();
+		//return this._defContainerElem || this.getElement();
+	},
+	/** @ignore */
+	getChildrenHolderElement: function()
+	{
+		return this.getContainerElement();
 	},
 
 	/**
@@ -189,7 +225,7 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	_insertChildWidget: function(widget, refWidget)
 	{
 		var refElem = refWidget? refWidget.getElement(): null;
-		var containerElem = this.getContainerElement();
+		var containerElem = this.getChildrenHolderElement();
 		if (containerElem)
 		{
 			if (refElem)
@@ -209,9 +245,9 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @private */
-	childrenModified: function($super)
+	childrenModified: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('childrenModified')  /* $super() */;
 		// change first / last child if essential
 		var widgets = this.getChildWidgets();
 		var length = widgets.length;
@@ -254,9 +290,9 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @private */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 		var w = this.getChildWidth();
 		if (w)
 			widget.setWidth(w);
@@ -270,16 +306,16 @@ Kekule.Widget.Container = Class.create(Kekule.Widget.BaseWidget,
 		this._insertChildWidget(widget, null);
 	},
 	/** @private */
-	childWidgetRemoved: function($super, widget)
+	childWidgetRemoved: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetRemoved', [widget])  /* $super(widget) */;
 		//this.getContainerElement().removeChild(widget.getElement());
 		// do not need to remove here, this work has been done in _removeChild method of BaseWidget
 	},
 	/** @private */
-	childWidgetMoved: function($super, widget, newIndex)
+	childWidgetMoved: function(/*$super, */widget, newIndex)
 	{
-		$super(widget, newIndex);
+		this.tryApplySuper('childWidgetMoved', [widget, newIndex])  /* $super(widget, newIndex) */;
 		var elem = widget.getElement();
 		var refWidget = this.getChildWidgets()[newIndex + 1];
 		var refElem = refWidget? refWidget.getElement(): null;
@@ -355,15 +391,15 @@ Kekule.Widget.Panel = Class.create(Kekule.Widget.Container,
 		})
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setUseCornerDecoration(true);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.PANEL;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.PANEL;
 	}
 });
 
@@ -380,44 +416,44 @@ Kekule.Widget.WidgetGroup = Class.create(Kekule.Widget.Container,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.WidgetGroup',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setUseCornerDecoration(true);
 	},
 
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		if (modifiedPropNames.indexOf('useCornerDecoration') >= 0)
 			this._updateChildStyles();
 	},
 
 	/** @ignore */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
 		if (widget.setUseCornerDecoration)
 		{
 			widget.setUseCornerDecoration(false);
 		}
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 	},
 	/** @ignore */
-	layoutChanged: function($super)
+	layoutChanged: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('layoutChanged')  /* $super() */;
 		this._updateChildStyles();
 	},
 	/** @ignore */
-	childrenModified: function($super)
+	childrenModified: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('childrenModified')  /* $super() */;
 		this._updateChildStyles();
 	},
 
@@ -474,12 +510,12 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.Toolbar',
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		var map = this.getChildWidgetInternalNameMap();
 		if (map)
 			map.finalize();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -496,26 +532,26 @@ Kekule.Widget.Toolbar = Class.create(Kekule.Widget.WidgetGroup,
 		this.defineProp('childWidgetInternalNameMap', {'dataType': DataType.OBJECT, 'serializable': false});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TOOLBAR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TOOLBAR;
 	},
 	/** @private */
-	doSetShowText: function($super, value)
+	doSetShowText: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetShowText', [value])  /* $super(value) */;
 		this._updateAllChildTextGlyphStyles();
 	},
-	doSetShowGlyph: function($super, value)
+	doSetShowGlyph: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetShowGlyph', [value])  /* $super(value) */;
 		this._updateAllChildTextGlyphStyles();
 	},
 
 	/** @private */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 		this._updateChildTextGlyphStyles(widget);
 	},
 

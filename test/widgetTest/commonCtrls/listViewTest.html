@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ListView Widget Test</title>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <style>
+    #objInspector
+    {
+      float: right;
+    }
+  </style>
+  <script src="../../../src/kekule.js?min=false"></script>
+  <script>
+    var listView;
+    function init()
+    {
+      listView = Kekule.Widget.getWidgetById('listView');
+      for (var i = 0; i < 5; ++i)
+      {
+        //var elem = document.createElement('li');
+        //elem.innerHTML = 'Item ' + i;
+        listView.appendItem({'text': 'Item' + i});
+      }
+      listView.on('selectionChange', function(e){
+        console.log(e.selectedItem && listView.getItemData(e.selectedItem));
+      });
+      var objInspector = Kekule.Widget.getWidgetById('objInspector');
+      objInspector.setObjects([listView]);
+    }
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <ul id="listView" data-widget="Kekule.Widget.ListView"></ul>
+  <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+</body>
+</html>

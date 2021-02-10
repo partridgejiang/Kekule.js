@@ -347,6 +347,10 @@ Kekule.Editor.StructureUtils = {
 	}
 };
 
+/**
+ * Util methods about chem structure in repositories.
+ * @class
+ */
 Kekule.Editor.RepositoryStructureUtils = {
 	/** @private */
 	_calcNodeMergeAdjustRotateAngle: function(editor, mergeNode, destNode)
@@ -499,6 +503,92 @@ Kekule.Editor.RepositoryStructureUtils = {
 			var obj = objects[i];
 			obj.transformAbsCoordByMatrix(matrix, childMatrix, coordMode, true, allowCoordBorrow);
 			obj.scaleSize(transformParams.scale, coordMode, true, allowCoordBorrow);
+		}
+	}
+};
+
+/**
+ * Util methods about operations for editor.
+ * @class
+ */
+Kekule.Editor.OperationUtils = {
+	/**
+	 * Create a node modification operation for editor.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Kekule.ChemStructureNode} newNode
+	 * @param {Class} newNodeClass
+	 * @param {Hash} modifiedProps
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Kekule.Operation}
+	 */
+	createNodeModificationOperation: function(node, newNode, newNodeClass, modifiedProps, editor)
+	{
+		var operGroup, oper;
+		var oldNodeClass = node.getClass();
+		if (newNode && !newNodeClass)
+			newNodeClass = newNode.getClass();
+		if (newNode || newNodeClass !== oldNodeClass)  // need to replace node
+		{
+			operGroup = new Kekule.MacroOperation();
+			if (!newNode)
+				newNode = new newNodeClass();
+			var tempNode = new Kekule.ChemStructureNode();
+			tempNode.assign(node);
+			newNode.assign(tempNode);  // copy some basic info of old node
+			var operReplace = new Kekule.ChemStructOperation.ReplaceNode(node, newNode, null, editor);
+			operGroup.add(operReplace);
+		}
+		else  // no need to replace
+			newNode = node;
+
+		if (modifiedProps)
+		{
+			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, editor);
+			if (operGroup)
+				operGroup.add(oper);
+		}
+
+		var operation = operGroup || oper;
+		return operation;
+	},
+	/**
+	 * Create a node modification operation for editor.
+	 * @param {Kekule.ChemStructureNode} node
+	 * @param {Hash} newData
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Kekule.Operation}
+	 */
+	createNodeModificationOperationFromData: function(node, newData, editor)
+	{
+		if (!newData)
+			return null;
+
+		var nodeClass = newData.nodeClass;
+		var modifiedProps = newData.props;
+		var repItem = newData.repositoryItem;
+		var newNode;
+
+		if (repItem)  // need to apply structure repository item
+		{
+			var repResult = repItem.createObjects(node) || {};
+			var repObjects = repResult.objects;
+			var transformParams = Kekule.Editor.RepositoryStructureUtils.calcRepObjInitialTransformParams(editor, repItem, repResult, node, null);
+			editor.transformCoordAndSizeOfObjects(repObjects, transformParams);
+			newNode = repObjects[0];
+			nodeClass = newNode.getClass();
+		}
+
+		if (newData.isUnknownPseudoatom && !editor.getEditorConfigs().getInteractionConfigs().getAllowUnknownAtomSymbol())
+			nodeClass = null;
+
+		if (!nodeClass)
+		{
+			Kekule.error(Kekule.$L('ErrorMsg.INVALID_ATOM_SYMBOL'));
+			return null;
+		}
+		else
+		{
+			return Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, nodeClass, modifiedProps, editor);
 		}
 	}
 };

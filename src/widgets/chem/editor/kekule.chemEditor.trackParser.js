@@ -551,9 +551,9 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 	/** @private */
 	RING_END_INDEX_FIELD: '__$ringEndIndex__',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @ignore */
 	initProperties: function()
@@ -561,9 +561,9 @@ Kekule.Editor.TrackLayoutOptimizer = Class.create(ObjectEx,
 
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 	},
 
 	/**
@@ -1063,9 +1063,9 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.TrackInputIaController',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this.setEnableSelect(false);
 		this._isTracking  = false;
 		this._trackCoordToObjBindings = null;
@@ -1081,7 +1081,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		this._debugMarkers = {};
 	},
 	/** @ignore */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this._trackLayoutOptimizer.finalize();
 		this._trackParser.finalize();
@@ -1093,7 +1093,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		for (var i = boundMarkers.length - 1; i >= 0; --i)
 			boundMarkers[i].finalize();
 		*/
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1119,9 +1119,9 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		*/
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		//this.setPropStoreFieldValue('boundChemObjMarkers', []);
 	},
 
@@ -1572,9 +1572,9 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 		return obj instanceof Kekule.ChemStructureNode;
 	},
 	/** @ignore */
-	getAllObjOperations: function($super, isTheFinalOperationToEditor)
+	getAllObjOperations: function(/*$super, */isTheFinalOperationToEditor)
 	{
-		var result = $super(isTheFinalOperationToEditor) || [];
+		var result = this.tryApplySuper('getAllObjOperations', [isTheFinalOperationToEditor])  /* $super(isTheFinalOperationToEditor) */ || [];
 		var op = this._addStructureOperation;
 		if (op)
 			result.unshift(op);
@@ -1583,7 +1583,7 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 	},
 
 	/** @private */
-	react_pointerdown: function($super, e)
+	react_pointerdown: function(/*$super, */e)
 	{
 		//$super(e);
 		// important, since we did not call $super, a bound inflation should be done manually here
@@ -1596,15 +1596,17 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 
 			this.startTracking(e, coord);
 			e.preventDefault();
+			return true;
 		}
 		else if (e.getButton() === Kekule.X.Event.MouseButton.RIGHT)
 		{
 			this.cancelTracking();
 			e.preventDefault();
+			return true;
 		}
 	},
 	/** @private */
-	react_pointerup: function($super, e)
+	react_pointerup: function(/*$super, */e)
 	{
 		//$super(e);
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
@@ -1618,17 +1620,19 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 			}
 			this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 			e.preventDefault();
+			return true;
 		}
 	},
 	/** @private */
-	react_pointermove: function($super, e)
+	react_pointermove: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('react_pointermove', [e])  /* $super(e) */;
 		if (this._isTracking)
 		{
 			var coord = this._getEventMouseCoord(e);
 			this.addTrackCoord(coord);
 			e.preventDefault();
+			return true;
 		}
 	}
 });

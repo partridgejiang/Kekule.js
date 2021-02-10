@@ -40,9 +40,9 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphNode',
 	/** @constructs */
-	initialize: function($super, id, nodeType, coord2D, coord3D)
+	initialize: function(/*$super, */id, nodeType, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (coord2D)
 			this.setCoord2D(coord2D);
 		if (coord3D)
@@ -79,9 +79,9 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		//this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	},
 	/** @ignore */
@@ -108,9 +108,9 @@ Kekule.Glyph.PathGlyphNode = Class.create(Kekule.BaseStructureNode,
 		return false;
 	},
 	/** @ignore */
-	notifyCoordStickTargetChanged: function($super, oldTarget, newTarget)
+	notifyCoordStickTargetChanged: function(/*$super, */oldTarget, newTarget)
 	{
-		$super(oldTarget, newTarget);
+		this.tryApplySuper('notifyCoordStickTargetChanged', [oldTarget, newTarget])  /* $super(oldTarget, newTarget) */;
 		var p = this.getParent();
 		if (Kekule.ObjUtils.isUnset(this.getPathNodeParams().useStickingOffset))
 		{
@@ -163,18 +163,18 @@ Kekule.Glyph.PathGlyphConnectorControlNode = Class.create(Kekule.BaseStructureNo
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphConnectorControlNode',
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (coord2D)
 			this.setCoord2D(coord2D);
 		if (coord3D)
 			this.setCoord3D(coord3D);
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	},
 	/** @private */
@@ -305,9 +305,9 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphConnector',
 	/** @constructs */
-	initialize: function($super, id, pathType, connectedObjs)
+	initialize: function(/*$super, */id, pathType, connectedObjs)
 	{
-		$super(id, connectedObjs);
+		this.tryApplySuper('initialize', [id, connectedObjs])  /* $super(id, connectedObjs) */;
 		this.setPathType(pathType);
 		//this.setControlPoints([new Kekule.Glyph.PathGlyphConnectorControlNode(null, {x: 0.1, y: 0.1})]);  // test
 	},
@@ -351,28 +351,35 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 					result = [];
 					this.setPropStoreFieldValue('controlPoints', result);
 				}
+				if (result && !result.length)
+				{
+					this.doFillDefaultControlPoints(result);
+				}
 				return result;
 			},
 			'setter': function(value)
 			{
 				this.clearControlPoints();
 				this.setPropStoreFieldValue('controlPoints', value);
+				/*
 				this._updateControlPointsOwner();
 				this._updateControlPointsParent();
+				*/
+				this._controlPointsChanged();
 			}
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setInteractMode(Kekule.ChemObjInteractMode.UNSELECTABLE);
 	},
 
 	/** @ignore */
-	_appendChildObj: function($super, obj)
+	_appendChildObj: function(/*$super, */obj)
 	{
-		var result = $super(obj);
+		var result = this.tryApplySuper('_appendChildObj', [obj])  /* $super(obj) */;
 		// when add new child control point, try reset its position
 		if (obj instanceof Kekule.Glyph.PathGlyphConnectorControlNode)
 		{
@@ -381,14 +388,14 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 		return result;
 	},
 	/** @ignore */
-	doPropChanged: function($super, propName, newValue)
+	doPropChanged: function(/*$super, */propName, newValue)
 	{
 		// reset position of all control points when connected objs are set
 		if (propName === 'connectedObjs')
 		{
 			this.tryResetAllControlPointPositions();
 		}
-		return $super(propName, newValue);
+		return this.tryApplySuper('doPropChanged', [propName, newValue])  /* $super(propName, newValue) */;
 	},
 
 	// methods about coords
@@ -428,17 +435,17 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 
 	// methods about children
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['controlPoint'].concat($super());
+		return ['controlPoint'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
-	getBelongChildSubGroupName: function($super, obj)
+	getBelongChildSubGroupName: function(/*$super, */obj)
 	{
 		if (obj instanceof Kekule.Glyph.PathGlyphArcConnectorControlNode)
 			return 'controlPoint';
 		else
-			return $super(obj);
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
 	},
 	/**
 	 * Returns the count of child control points.
@@ -586,6 +593,16 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 
 	/**
+	 * Fill in default control points when the controlPoints property is empty while creating or loading glyph.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	doFillDefaultControlPoints: function(controlPoints)
+	{
+		// do nothing here
+	},
+
+	/**
 	 * Remove childObj from connector.
 	 * @param {Variant} childObj A child control point.
 	 */
@@ -666,6 +683,12 @@ Kekule.Glyph.PathGlyphConnector = Class.create(Kekule.BaseStructureConnector,
 	},
 	*/
 
+	/** @private */
+	_controlPointsChanged: function()
+	{
+		this._updateControlPointsOwner();
+		this._updateControlPointsParent();
+	},
 
 	/** @private */
 	_updateControlPointsOwner: function(owner)
@@ -793,7 +816,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 		return true;  // force always use relative coord
 	},
 	/** @ignore */
-	getIndirectCoordRefCoords: function($super, coordMode, allowCoordBorrow)
+	getIndirectCoordRefCoords: function(/*$super, */coordMode, allowCoordBorrow)
 	{
 		var connector = this.getParentConnector();
 		if (connector && connector.getConnectedObjCount() >= 2)
@@ -804,10 +827,10 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			return [c1, c2];
 		}
 		else
-			return $super(coordMode);
+			return this.tryApplySuper('getIndirectCoordRefCoords', [coordMode])  /* $super(coordMode) */;
 	},
 	/** @ignore */
-	calcIndirectCoordValue: function($super, coordMode, allowCoordBorrow)
+	calcIndirectCoordValue: function(/*$super, */coordMode, allowCoordBorrow)
 	{
 		if (coordMode === CM.COORD2D)
 		{
@@ -852,10 +875,10 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			}
 		}
 
-		return $super(coordMode, allowCoordBorrow);
+		return this.tryApplySuper('calcIndirectCoordValue', [coordMode, allowCoordBorrow])  /* $super(coordMode, allowCoordBorrow) */;
 	},
 	/** @ignore */
-	saveIndirectCoordValue: function($super, coordMode, coordValue, oldCoordValue, allowCoordBorrow)
+	saveIndirectCoordValue: function(/*$super, */coordMode, coordValue, oldCoordValue, allowCoordBorrow)
 	{
 		if (coordMode === CM.COORD2D)
 		{
@@ -884,7 +907,7 @@ Kekule.Glyph.PathGlyphArcConnectorControlNode = Class.create(Kekule.Glyph.PathGl
 			}
 		}
 
-		return $super(coordMode, coordValue);
+		return this.tryApplySuper('saveIndirectCoordValue', [coordMode, coordValue])  /* $super(coordMode, coordValue) */;
 	}
 
 	/* @ignore */
@@ -976,12 +999,16 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.PathGlyphArcConnector',
 	/** @constructs */
-	initialize: function($super, id, connectedObjs)
+	initialize: function(/*$super, */id, connectedObjs)
 	{
-		$super(id, Kekule.Glyph.PathType.ARC, connectedObjs);
+		this.tryApplySuper('initialize', [id, Kekule.Glyph.PathType.ARC, connectedObjs])  /* $super(id, Kekule.Glyph.PathType.ARC, connectedObjs) */;
 		// add control point to control the arc
+		/*
 		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
 		this.setControlPoints([controlPoint]);
+		*/
+		var controlPoints = this._createDefaultControlPoints();
+		this.setControlPoints(controlPoints);
 	},
 	/**
 	 * Returns the arc control point.
@@ -990,6 +1017,17 @@ Kekule.Glyph.PathGlyphArcConnector = Class.create(Kekule.Glyph.PathGlyphConnecto
 	getControlPoint: function()
 	{
 		return (this.getControlPoints() || [])[0]
+	},
+	/** @ignore */
+	doFillDefaultControlPoints: function(controlPoints)
+	{
+		var points = this._createDefaultControlPoints();
+		Kekule.ArrayUtils.pushUnique(controlPoints, points);
+	},
+	_createDefaultControlPoints: function()
+	{
+		var controlPoint = new Kekule.Glyph.PathGlyphArcConnectorControlNode(null, {x: 0, y: 0});
+		return [controlPoint];
 	}
 });
 
@@ -1018,16 +1056,16 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		this.createDefaultStructure(refLength || 1, initialParams || {});
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this.hasCtab())
 			this.getCtab().finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1121,14 +1159,14 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 		return 'p';
 	},
 	/** @private */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		if (this.hasCtab())
 			this.getCtab().setOwner(newOwner);
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 	/** @private */
-	_removeChildObj: function($super, obj)
+	_removeChildObj: function(/*$super, */obj)
 	{
 		if (this.hasCtab())
 		{
@@ -1141,7 +1179,7 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 					ctab.removeChildObj(obj);
 			}
 		}
-		$super(obj);
+		this.tryApplySuper('_removeChildObj', [obj])  /* $super(obj) */;
 	},
 	/**
 	 * Returns if this fragment has no formula or ctab, or ctab has no nodes or connectors.
@@ -1180,14 +1218,14 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
 	 */
-	getContainerBox: function($super, coordMode, allowCoordBorrow)
+	getContainerBox: function(/*$super, */coordMode, allowCoordBorrow)
 	{
 		if (this.hasCtab())
 		{
 			return this.getCtab().getContainerBox(coordMode, allowCoordBorrow);
 		}
 		else
-			return $super(coordMode);
+			return this.tryApplySuper('getContainerBox', [coordMode])  /* $super(coordMode) */;
 	},
 
 	/**
@@ -1541,19 +1579,19 @@ Kekule.Glyph.PathGlyph = Class.create(Kekule.Glyph.Base,
 	},
 
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['node', 'connector'].concat($super());
+		return ['node', 'connector'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
-	getBelongChildSubGroupName: function($super, obj)
+	getBelongChildSubGroupName: function(/*$super, */obj)
 	{
 		if (obj instanceof Kekule.Glyph.PathGlyphNode)
 			return 'node';
 		else if (obj instanceof Kekule.Glyph.PathGlyphConnector)
 			return 'connector';
 		else
-			return $super(obj);
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
 	},
 
 	/**

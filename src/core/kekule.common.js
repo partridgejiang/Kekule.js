@@ -331,7 +331,7 @@ Kekule.MapEx = Class.create(
 	/**
 	 * Free resources.
 	 */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		if (!this._implementation)
 		{
@@ -1156,6 +1156,20 @@ Kekule.ClassDefineUtils = {
 				return this.setAbsCoord3D(value);
 			else
 				return this.setAbsCoord2D(value);
+		},
+
+		/**
+		 * Check if this node has a coordinate on coordMode.
+		 * @param {Int} coordMode
+		 * @param {Bool} allowCoordBorrow
+		 * @returns {Bool}
+		 */
+		hasCoordOfMode: function(coordMode, allowCoordBorrow)
+		{
+			if (coordMode === Kekule.CoordMode.COORD3D)
+				return this.hasCoord3D(allowCoordBorrow);
+			else
+				return this.hasCoord2D(allowCoordBorrow);
 		},
 
 		/**
@@ -2226,10 +2240,10 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObject',
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
 		//this.setPropStoreFieldValue('attachedCoordStickNodes', []);
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (id)
 			this.setId(id);
 		this.setBubbleEvent(true);  // allow event bubble
@@ -2275,7 +2289,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		//this._ensureSubGroupChildMethodsExist();
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		/*
 		this.setParent(null);
@@ -2285,7 +2299,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		this.__load_parent_objRef_props__ = null;
 		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
 		this.removeSelf();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -2399,9 +2413,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setEnableObjectChangeEvent(true);
 	},
 
@@ -2633,9 +2647,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('loaded')  /* $super() */;
 		this.notifyParentLoaded();
 	},
 
@@ -2657,9 +2671,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		return !!(prop && prop.objRef);
 	},
 	/** @ignore */
-	notifyPropSet: function($super, propName, newValue, doNotEvokeObjChange)
+	notifyPropSet: function(/*$super, */propName, newValue, doNotEvokeObjChange)
 	{
-		$super(propName, newValue, doNotEvokeObjChange);
+		this.tryApplySuper('notifyPropSet', [propName, newValue, doNotEvokeObjChange])  /* $super(propName, newValue, doNotEvokeObjChange) */;
 		// if a obj ref property is modified, inform the owner
 		var prop = this.getPropInfo(propName);
 		if (prop && this.isObjRefProperty(prop))
@@ -3219,6 +3233,51 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns a subset of children that matches filterFunc.
+	 * @param {Function} filterFunc Function(child, index) returns a bool value indicating whether the child matches the filter.
+	 * @param {Bool} cascade
+	 * @returns {Array}
+	 */
+	filterChildren: function(filterFunc, cascade)
+	{
+		var result = [];
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child)
+			{
+				if (filterFunc(child, i))
+					result.push(child);
+				else if (cascade && child.filterChildren)
+				{
+					var subResult = child.filterChildren(filterFunc, cascade);
+					if (subResult && subResult.length)
+						result = result.concat(subResult);
+				}
+			}
+		}
+		return result;
+	},
+	/**
+	 * Run executor function on each of children.
+	 * @param {Function} executor With params (child, index).
+	 * @param {Bool} cascade
+	 */
+	iterateChildren: function(executor, cascade)
+	{
+		for (var i = 0, l = this.getChildCount(); i < l; ++i)
+		{
+			var child = this.getChildAt(i);
+			if (child)
+			{
+				executor(child, i);
+				if (cascade && child.iterateChildren)
+					child.iterateChildren(executor, cascade);
+			}
+		}
+	},
+
+	/**
 	 * Remove child at index from children list.
 	 * @param {Int} index
 	 * @returns {Variant} Child object removed.
@@ -3511,9 +3570,9 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 * @param {Bool} withId If set to true, id of current object will be copied to targetObj,
 	 *   otherwise targetObj's id will be cleared.
 	 */
-	assignTo: function($super, targetObj, withId)
+	assignTo: function(/*$super, */targetObj, withId)
 	{
-		var result = $super(targetObj);
+		var result = this.tryApplySuper('assignTo', [targetObj])  /* $super(targetObj) */;
 		if (!withId && targetObj.clearIds)
 			targetObj.clearIds();
 		return result;
@@ -3931,9 +3990,9 @@ Kekule.Scalar = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.Scalar',
 	/** @private */
-	initialize: function($super, id, name, value, unit)
+	initialize: function(/*$super, */id, name, value, unit)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (name)
 			this.setName(name);
 		if (typeof(value) !== 'undefined')
@@ -3971,9 +4030,9 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemObjList',
 	/** @constructs */
-	initialize: function($super, id, itemBaseClass, transparent)
+	initialize: function(/*$super, */id, itemBaseClass, transparent)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this.setPropStoreFieldValue('itemBaseClass', itemBaseClass);
 		this.setPropStoreFieldValue('items', []);
 		this._transparent = !!transparent;
@@ -4000,12 +4059,12 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
 		// update parent and owner of children
 		this.ownerChanged(this.getOwner());
 		this.parentChanged(this.getParent());
-		$super();
+		this.tryApplySuper('loaded')  /* $super() */;
 	},
 
 	/* @private */
@@ -4017,10 +4076,10 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 	*/
 	/** @private */
-	parentChanged: function($super, newParent, oldParent)
+	parentChanged: function(/*$super, */newParent, oldParent)
 	{
 		this.changeAllItemsParent();
-		$super(newParent, oldParent);
+		this.tryApplySuper('parentChanged', [newParent, oldParent])  /* $super(newParent, oldParent) */;
 	},
 
 	/** @ignore */
@@ -4143,18 +4202,18 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 
 	/** @ignore */
-	getChildSubgroupNames: function($super)
+	getChildSubgroupNames: function(/*$super*/)
 	{
-		return ['item'].concat($super());
+		return ['item'].concat(this.tryApplySuper('getChildSubgroupNames')  /* $super() */);
 	},
 	/** @ignore */
-	getBelongChildSubGroupName: function($super, obj)
+	getBelongChildSubGroupName: function(/*$super, */obj)
 	{
 		var isValid = this.isValidItemType(obj);
 		if (isValid)
 			return 'item';
 		else
-			return $super(obj);
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
 	},
 
 	/** @ignore */
@@ -4411,9 +4470,9 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemSpaceElement',
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		var list = new Kekule.ChemObjList(null, Kekule.ChemObject, true);  // create transparent list
 		list.setParent(this);
 		list.addEventListener('change', function()
@@ -4444,7 +4503,7 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
 		var objList = this.getChildren();
 		if (objList)
@@ -4452,25 +4511,25 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 			objList.parentChanged(this);
 			objList.ownerChanged(this.getOwner());
 		}
-		$super();
+		this.tryApplySuper('loaded')  /* $super() */;
 	},
 
 	/** @ignore */
-	ownerChanged: function($super, newOwner, oldOwner)
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		// change owners of children
 		this.getChildren().setOwner(newOwner);
-		$super(newOwner, oldOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner])  /* $super(newOwner, oldOwner) */;
 	},
 	/** @private */
-	_removeChildObj: function($super, obj)
+	_removeChildObj: function(/*$super, */obj)
 	{
 		var index = this.indexOfChild(obj);
 		if (index >= 0)
 		{
 			this.removeChildAt(index);
 		}
-		$super(obj);
+		this.tryApplySuper('_removeChildObj', [obj])  /* $super(obj) */;
 	},
 
 	/* @ignore */
@@ -4608,9 +4667,9 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemSpace',
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this._autoIdMap = {};  // private
 		this._enableObjRefRelations = true;  // private
 		this._autoUpdateObjRefRelations = true;  // private
@@ -4656,7 +4715,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
 		var root = this.getRoot();
 		if (root)
@@ -4664,7 +4723,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 			root.setParent(this);
 			root.setOwner(this);
 		}
-		$super();
+		this.tryApplySuper('loaded')  /* $super() */;
 		this.notifyOwnerLoaded();
 	},
 
@@ -5122,9 +5181,9 @@ Kekule.IntermediateChemSpace = Class.create(Kekule.ChemSpace,
 	/** @private */
 	CLASS_NAME: 'Kekule.IntermediateChemSpace',
 	/** @constructs */
-	initialize: function($super, id)
+	initialize: function(/*$super, */id)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		this.setPropStoreFieldValue('enableAutoId', false);
 		this._enableObjRefRelations = false;  // private, force not use relation manager for performance
 		this._autoUpdateObjRefRelations = false;  // private
@@ -5190,9 +5249,9 @@ Kekule.ObjRefRelationManager = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ObjRefRelationManager',
 	/** @constructs */
-	initialize: function($super, owner)
+	initialize: function(/*$super, */owner)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setOwner(owner);
 		this.setPropStoreFieldValue('relations', []);
 	},

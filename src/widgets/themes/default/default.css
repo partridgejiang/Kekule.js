@@ -1,14 +1,25 @@
+/* A special rule to detect if the stylesheet is loaded. */
+span.K-StyleSheet-Detector
+{
+    position: absolute;
+    width: 0px;
+    height: 0px;
+    z-index: -88888;
+}
+
 /* top layer */
 .K-Top-Layer
 {
-    display: block;
     background-color: transparent;
+    /*
+    display: block;
     z-index: 100;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    */
 }
 
 .K-Isolated-Layer
@@ -24,6 +35,11 @@
     bottom: 0;
 }
 
+.K-Child-Holder
+{
+    display: block;
+}
+
 /* Widget state */
 .K-State-Disabled {
     cursor: default !important;
@@ -36,38 +52,45 @@
     vertical-align: middle;
 }
 /* layout */
-.K-Layout-H>.K-Widget, .K-Layout-H>.K-Content
+.K-Layout-H>.K-Widget, .K-Layout-H>.K-Content,
+.K-Layout-H>.K-Child-Holder>.K-Widget, .K-Layout-H>.K-Child-Holder>.K-Content
 {
     display: inline-block;
     vertical-align: middle;
 }
-.K-Layout-H>table.K-Widget
+.K-Layout-H>table.K-Widget,
+.K-Layout-H>.K-Child-Holder>table.K-Widget
 {
     display: inline-table;
 }
 .K-Content, .K-Layout-H>.K-Content
+.K-Content, .K-Layout-H>.K-Child-Holder>.K-Content
 {
     margin: 0 0.1em;
 }
 
-.K-Layout-V>.K-Widget, .K-Layout-V>.K-Content
+.K-Layout-V>.K-Widget, .K-Layout-V>.K-Content,
+.K-Layout-V>.K-Child-Holder>.K-Widget, .K-Layout-V>.K-Child-Holder>.K-Content
 {
     display: block;
     margin: .2em auto;
 }
-.K-Layout-V>table.K-Widget
+.K-Layout-V>table.K-Widget,
+.K-Layout-V>.K-Child-Holder>table.K-Widget
 {
     display: table;
 }
 
-.K-Layout-V>.K-Widget
+.K-Layout-V>.K-Widget,
+.K-Layout-V>.K-Child-Holder>.K-Widget
 {
     /*width: 100%;*/
     margin-left: 0;
     margin-right: 0;
 }
 
-.K-Layout-V>.K-Content
+.K-Layout-V>.K-Content,
+.K-Layout-V>.K-Child-Holder>.K-Content
 {
     margin: 0.2em 0;
 }
@@ -98,6 +121,7 @@
     position: relative;
     /*font-size: 11px;*/
     font-size: 0.8em;
+    font-size: 0.8rem;
     font-family: Verdana,Arial,sans-serif;
     text-decoration: none;
     margin: .1em;
@@ -142,6 +166,7 @@ table.K-Widget
 .K-Widget .K-Widget
 {
     font-size: 1em; /* solve the tiny font size problem in nested widgets */
+    font-size: 0.8rem;
 }
 
 .K-Widget .K-Section
@@ -185,26 +210,31 @@ table.K-Widget
 {
     border: none;
 }
-.K-Button-Group .K-Widget
+.K-Button-Group .K-Widget,
+.K-Button-Group > .K-Child-Holder > .K-Widget
 {
     margin: 0em;  /* must has em unit, otherwise .K-Widget/margin will override this rule */
 }
-.K-Button-Group.K-Layout-H>.K-Widget
+.K-Button-Group.K-Layout-H>.K-Widget,
+.K-Button-Group.K-Layout-H>.K-Child-Holder>.K-Widget
 {
     margin-left: -1px;
     height: 100%;
 }
-.K-Button-Group.K-Layout-H>.K-Widget.K-First-Child
+.K-Button-Group.K-Layout-H>.K-Widget.K-First-Child,
+.K-Button-Group.K-Layout-H>.K-Child-Holder>.K-Widget.K-First-Child
 {
     margin-left: 0em;
 }
 
-.K-Button-Group.K-Layout-V>.K-Widget
+.K-Button-Group.K-Layout-V>.K-Widget,
+.K-Button-Group.K-Layout-V>.K-Child-Holder>.K-Widget
 {
     margin-top: -1px;
     width: 100%;
 }
-.K-Button-Group.K-Layout-V>.K-Widget.K-First-Child
+.K-Button-Group.K-Layout-V>.K-Widget.K-First-Child,
+.K-Button-Group.K-Layout-V>.K-Child-Holder>.K-Widget.K-First-Child
 {
     margin-top: 0em;
 }
@@ -262,7 +292,8 @@ table.K-Widget
     left: 0.3em;
 }
 
-.K-Menu.K-Layout-H>.K-MenuItem  /* horizon menu bar item */
+.K-Menu.K-Layout-H>.K-MenuItem,  /* horizon menu bar item */
+.K-Menu.K-Layout-H>.K-Child-Holder>.K-MenuItem
 {
     float: left;
 }
@@ -270,7 +301,8 @@ table.K-Widget
 {
 
 }
-.K-Menu.K-Layout-H>.K-MenuItem-Separator
+.K-Menu.K-Layout-H>.K-MenuItem-Separator,
+.K-Menu.K-Layout-H>.K-Child-Holder>.K-MenuItem-Separator
 {
     margin: 0 0.2em;
     padding-left: 0;
@@ -278,7 +310,8 @@ table.K-Widget
     width: 0px;
     border-left: 1px solid;
 }
-.K-Menu.K-Layout-V>.K-MenuItem-Separator
+.K-Menu.K-Layout-V>.K-MenuItem-Separator,
+.K-Menu.K-Layout-V>.K-Child-Holder>.K-MenuItem-Separator
 {
     padding-top: 0;
     padding-bottom: 0;
@@ -309,7 +342,8 @@ table.K-Widget
 }
 
 
-.K-Menu.K-Layout-H>.K-MenuItem>.K-Menu
+.K-Menu.K-Layout-H>.K-MenuItem>.K-Menu,
+.K-Menu.K-Layout-H>.K-Child-Holder>.K-MenuItem>.K-Menu
 {
     left: 0;
     top: 100%;
@@ -458,6 +492,7 @@ table.K-Widget
 .K-ComboTextBox
 {
     position: relative;
+    line-height: 0px;   /* ensure the height of widget same as the insider text box. */
 }
 .K-ComboTextBox .K-TextBox
 {
@@ -549,6 +584,11 @@ table.K-Widget
     padding: 0;
     position: relative;
 }
+.K-Toolbar.K-TabButtonGroup
+{
+    background-color: transparent;
+}
+
 .K-TabButtonGroup .K-Button
 {
     /*
@@ -566,12 +606,14 @@ table.K-Widget
 }
 
 .K-TabButtonGroup.K-Layout-H>.K-Button,
+.K-TabButtonGroup.K-Layout-H>.K-Child-Holder>.K-Button,
 .K-TabButtonGroup.K-TabAtTop>.K-Button,
 .K-TabButtonGroup.K-TabAtBottom>.K-Button
 {
     margin-right: -1px;
 }
 .K-TabButtonGroup.K-Layout-V>.K-Button,
+.K-TabButtonGroup.K-Layout-V>.K-Child-Holder>.K-Button,
 .K-TabButtonGroup.K-TabAtLeft>.K-Button,
 .K-TabButtonGroup.K-TabAtRight>.K-Button
 {
@@ -667,8 +709,9 @@ table.K-Widget
     display: block;
 }
 
-/* Tree View */
-.K-TreeView
+/* List and Tree View */
+.K-TreeView,
+.K-ListView
 {
     border: 1px solid;
     cursor: default;
@@ -676,23 +719,50 @@ table.K-Widget
     overflow: auto;
 }
 
-.K-TreeView ul
+.K-TreeView ul,
+.K-ListView .K-ListView-ItemHolder
 {
     padding: 0;
     margin: 0;
-    padding-left: 1em;
     line-height: 1.1;
 }
+.K-ListView .K-ListView-ItemHolder
+{
+    overflow: hidden;
+}
 
-.K-TreeView li
+.K-TreeView ul
+{
+    padding-left: 1em;
+}
+
+.K-TreeView li,
+.K-ListView .K-ListView-Item
 {
     list-style: none;
+}
+.K-TreeView li
+{
     white-space: nowrap;
+}
+.K-ListView .K-ListView-Item
+{
+    padding: 0.2em;
 }
 
 .K-TreeView .K-TreeView-ItemContent, .K-TreeView .K-TreeView-ExpandMark
 {
     display: inline-block;
+}
+
+.K-ListView.K-Layout-H .K-ListView-Item
+{
+    display: inline-block;
+
+}
+.K-ListView.K-Layout-V .K-ListView-Item
+{
+    display: block;
 }
 
 /**** Debug settings ****/
@@ -1183,6 +1253,7 @@ table.K-Widget
 {
     width: 12em;
 }
+
 .K-ValueListEditor .K-ValueListEditor-KeyCell, .K-ValueListEditor .K-ValueListEditor-ValueCell
 {
     overflow: hidden;
@@ -1348,6 +1419,45 @@ table.K-Widget
     white-space: normal;
 }
 
+.K-ObjInspector.K-ObjInspector-Flex-Layout
+{
+    display: inline-flex;
+    flex-direction: column;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-ObjsInfoPanel,
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropInfoPanel,
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer
+{
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-ObjsInfoPanel
+{
+    flex: 0 0 2em;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropInfoPanel
+{
+    flex: 0 0 5em;
+    order: +1;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer
+{
+    flex: 1 1 auto;
+    display: flex;
+}
+.K-ObjInspector.K-ObjInspector-Flex-Layout .K-ObjInspector-PropListEditorContainer .K-PropListEditor
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+
 /* DataGrid related widgets */
 .K-DataTable table
 {
@@ -1456,6 +1566,10 @@ button.K-Button::-moz-focus-inner {
 
 }
 
+.K-State-Current-Selected {
+
+}
+
 /*
 .K-Show-Dialog
 {
@@ -1486,7 +1600,9 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Top,
 .K-Corner-Left,
 .K-Layout-H > .K-Corner-Leading,
+.K-Layout-H > .K-Child-Holder > .K-Corner-Leading,
 .K-Layout-V > .K-Corner-Leading,
+.K-Layout-V > .K-Child-Holder > .K-Corner-Leading,
 .K-Corner-TL
 {
     /*border-top-left-radius: 0.4em;*/
@@ -1496,7 +1612,9 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Top,
 .K-Corner-Right,
 .K-Layout-H > .K-Corner-Tailing,
+.K-Layout-H > .K-Child-Holder > .K-Corner-Tailing,
 .K-Layout-V > .K-Corner-Leading,
+.K-Layout-V > .K-Child-Holder > .K-Corner-Leading,
 .K-Corner-TR {
     /*border-top-right-radius: 0.4em;*/
     border-top-right-radius: 4px;
@@ -1505,7 +1623,9 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Bottom,
 .K-Corner-Left,
 .K-Layout-H > .K-Corner-Leading,
+.K-Layout-H > .K-Child-Holder > .K-Corner-Leading,
 .K-Layout-V > .K-Corner-Tailing,
+.K-Layout-V > .K-Child-Holder > .K-Corner-Tailing,
 .K-Corner-BL {
     /*border-bottom-left-radius: 0.4em;*/
     border-bottom-left-radius: 4px;
@@ -1514,7 +1634,9 @@ button.K-Button::-moz-focus-inner {
 .K-Corner-Bottom,
 .K-Corner-Right,
 .K-Layout-H > .K-Corner-Tailing,
+.K-Layout-H > .K-Child-Holder > .K-Corner-Tailing,
 .K-Layout-V > .K-Corner-Tailing,
+.K-Layout-V > .K-Child-Holder > .K-Corner-Tailing,
 .K-Corner-Br {
     /*border-bottom-right-radius: 0.4em;*/
     border-bottom-right-radius: 4px;

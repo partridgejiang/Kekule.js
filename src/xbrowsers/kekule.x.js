@@ -80,6 +80,8 @@ Kekule.BrowserFeature = {
 		//return Kekule.BrowserFeature.webgl;
 		return !!result;
 	})(),
+	htmlTemplate: !!win.HTMLTemplateElement,
+	htmlSlot: !!win.HTMLSlotElement,
 	downloadHref: (function(doc){ return 'download' in doc.createElement('a')})(document),
 	blob: !!win.Blob,
 	workers: !! win.Worker,
@@ -94,6 +96,9 @@ Kekule.BrowserFeature = {
 	})(document.createElement('div').style),
 	cssFlex: (function(s) {
 		return 'flex' in s || 'WebkitFlex' in s || 'MozFlex' in s || 'msFlex' in s || 'OFlex' in s;
+	})(document.createElement('div').style),
+	cssGrid: (function(s) {
+		return 'grid' in s || 'WebkitGrid' in s || 'MozGrid' in s || 'msGrid' in s || 'OGrid' in s;
 	})(document.createElement('div').style),
 	html5Form: {
 		placeholder: (function(elem){ return 'placeholder' in elem; })(document.createElement('input')),
@@ -434,6 +439,24 @@ X.Event.Methods = {
 		return event.shiftKey;
 	},
 	/**
+	 * Get event.mataKey.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getMetaKey: function(event)
+	{
+		return event.metaKey;
+	},
+	/**
+	 * Get event.repeat (key down repeat flag).
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getRepeat: function(event)
+	{
+		return event.repeat;
+	},
+	/**
 	 * Get event.charCode.
 	 * @param {Object} event
 	 * @returns {Int}
@@ -454,6 +477,24 @@ X.Event.Methods = {
 		// TODO: too rough, need further development
 		// ref: http://www.quirksmode.org/js/keys.html
 		return event.keyCode;
+	},
+	/**
+	 * Get event.key.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getKey: function(event)
+	{
+		return event.key;
+	},
+	/**
+	 * Get event.code.
+	 * @param {Object} event
+	 * @returns {Bool}
+	 */
+	getCode: function(event)
+	{
+		return event.code;
 	},
 	/**
 	 * Get event.clientX.
@@ -1412,12 +1453,14 @@ Kekule.X.DomReady = {
 	isReady: false,
 	suspendFlag: 0,
 	funcs: [],
-	domReady: function(fn)
+	domReady: function(fn, doc)
 	{
-		DOM.initReady();//如果没有建成DOM树，则走第二步，存储起来一起杀
+		if (!doc)
+			doc = document;
+		DOM.initReady(doc);//如果没有建成DOM树，则走第二步，存储起来一起杀
 		if (!DOM.isReady)
 		{
-			var readyState = document && document.readyState;
+			var readyState = doc && doc.readyState;
 			if (readyState === 'complete' || readyState === 'loaded'    // document already loaded, call fn directly
 				|| (readyState === 'interactive' && !Kekule.Browser.IE))
 			{
@@ -1479,19 +1522,21 @@ Kekule.X.DomReady = {
 	{
 		return DOM.suspendFlag > 0;
 	},
-  initReady: function initReady()
+  initReady: function initReady(doc)
   {
-    if (document && document.addEventListener) {
-      document.addEventListener( "DOMContentLoaded", function(){
-	      document.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
+  	if (!doc)
+  		doc = document;
+    if (doc && doc.addEventListener) {
+	    doc.addEventListener( "DOMContentLoaded", function(){
+		    doc.removeEventListener( "DOMContentLoaded", initReady /*arguments.callee*/, false );//清除加载函数
         DOM.fireReady();
       }, false);
     }
     else
     {
-      if (document && document.getElementById) {
-        document.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
-        document.getElementById("ie-domReady").onreadystatechange = function() {
+      if (doc && doc.getElementById) {
+	      doc.write('<script id="ie-domReady" defer="defer" src="\//:"><\/script>');
+	      doc.getElementById("ie-domReady").onreadystatechange = function() {
           if (this.readyState === "complete") {
             DOM.fireReady();
             this.onreadystatechange = null;

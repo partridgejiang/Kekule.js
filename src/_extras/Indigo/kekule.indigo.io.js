@@ -29,9 +29,9 @@ Kekule.IO.IndigoReader = Class.create(Kekule.IO.ChemDataReader,
 /** @lends Kekule.IO.IndigoReader# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.IO.InChIWriter',
+	CLASS_NAME: 'Kekule.IO.IndigoReader',
 	/** @private */
-	doReadData: function(data, dataType, format)
+	doReadData: function(data, dataType, format, options)
 	{
 		var Indigo = KI.getIndigo();
 		var iMol = Indigo.loadMoleculeFromString(data);
@@ -39,10 +39,14 @@ Kekule.IO.IndigoReader = Class.create(Kekule.IO.ChemDataReader,
 		{
 			if (format === Kekule.IO.DataFormat.SMILES)  // smiles format, need layout
 			{
-				//console.log('Before', Indigo.molfile(iMol));
-				Indigo.setOption("smart-layout", "true");
-				Indigo.layout(iMol);
-				//console.log('After', Indigo.molfile(iMol));
+				var doLayout = (!options) || (options.autoLayout || Kekule.ObjUtils.isUnset(options.autoLayout))
+				if (doLayout && false)
+				{
+					//console.log('Before', Indigo.molfile(iMol));
+					Indigo.setOption("smart-layout", "true");
+					Indigo.layout(iMol);
+					//console.log('After', Indigo.molfile(iMol));
+				}
 			}
 			// save to MDL mol format, then transfer it into Kekule object
 			var molData = Indigo.molfile(iMol);

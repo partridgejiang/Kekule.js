@@ -16,7 +16,7 @@
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/kekule/dist/themes/default/kekule.css" />
   -->
 
-  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,algorithm,openbabel,indigo"></script>
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,algorithm,calculation,openbabel,indigo"></script>
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
 
 
@@ -94,6 +94,19 @@
         BNS.textImage
       ]);
 
+      chemEditorUi.on('load', function(e){
+        console.log('Obj loaded', e);
+      });
+      chemEditorUi.on('editObjsChanged1', function(e){
+      	console.log('editObjsChanged', e);
+      });
+	    chemEditorUi.on('editObjsUpdated1', function(e){
+		    console.log('editObjsUpdated', e);
+	    });
+	    chemEditorUi.on('operChange', function(e){
+		    console.log('operChange', e);
+	    });
+
 
       // debug
 			/*
@@ -127,6 +140,23 @@
       selBox.on('valueChange', function(e){
         var v = selBox.getValue();
         chemEditorUi.setPredefinedSetting(v);
+      });
+
+      var btnAutofit = Kekule.Widget.getWidgetById('btnAutofit');
+      btnAutofit.on('execute', function(e){
+        var objBox = chemEditor.getObjectsContainerBox(chemEditor.getChemSpace().getChildren());
+        var visualBox = chemEditor.getVisibleClientScreenBox();
+        if (objBox && visualBox)
+        {
+          var sx = (visualBox.x2 - visualBox.x1) / (objBox.x2 - objBox.x1);
+          var sy = (visualBox.y2 - visualBox.y1) / (objBox.y2 - objBox.y1);
+          var ratio = Math.min(sx, sy);
+          if (ratio < 1)
+          {
+            chemEditor.setZoom(chemEditor.getCurrZoom() * ratio);
+            chemEditor.scrollClientToObject(chemEditor.getChemSpace().getChildren());
+          }
+        }
       });
     }
 
@@ -202,6 +232,7 @@
 <body onload1="init()" onpageshow="console.log('chem editor page show');">
   <div>
     <select id="selPredefineSettings" data-widget="Kekule.Widget.SelectBox"></select>
+    <button id="btnAutofit" data-widget="Kekule.Widget.Button" data-text="Autofit"></button>
   </div>
   <div id="chemEditorUi" style="width:800px;height:400px;transform1:scale(0.8) skewX(20deg);transform-origin:0 0" data-resizable="true"></div>
   <div id="operHis" style="width:400px;height:600px;float:right"></div>

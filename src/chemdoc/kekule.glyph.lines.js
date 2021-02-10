@@ -33,9 +33,9 @@ Kekule.Glyph.StraightLine = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.StraightLine',
 	/** @constructs */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 	},
 	/** @private */
 	doCreateDefaultStructure: function(refLength, initialParams)
@@ -97,9 +97,9 @@ Kekule.Glyph.Polygon = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.Polygon',
 	/** @constructs */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 	},
 	/** @private */
 	getRefLengthRatio: function()
@@ -166,9 +166,9 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 	/** @private */
 	CLASS_NAME: 'Kekule.Glyph.BaseArc',
 	/** @constructs */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 	},
 	/** @ignore */
 	doCreateDefaultStructure: function(refLength, initialParams)
@@ -243,7 +243,7 @@ Kekule.Glyph.BaseArc = Class.create(Kekule.Glyph.PathGlyph,
 		return result;
 	},
 	/** @ignore */
-	getChildUseCoordStickOffset: function($super, child, stickDest)
+	getChildUseCoordStickOffset: function(/*$super, */child, stickDest)
 	{
 		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
 		{
@@ -289,7 +289,7 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, refLength, initialParams, coord2D, coord3D)
+	initialize: function(/*$super, */id, refLength, initialParams, coord2D, coord3D)
 	{
 		/*
 		this._insideNodeGetIndirectCoordRefLengthsBind = this._insideNodeGetIndirectCoordRefLengths.bind(this);
@@ -298,7 +298,7 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 		this._insideNodeCalcIndirectCoordValueBind = this._insideNodeCalcIndirectCoordValue.bind(this);
 		*/
 		this.setPropStoreFieldValue('minPathEndDistanceRatio', this.DEF_MIN_PATH_END_DISTANCE_RATIO);
-		$super(id, refLength, initialParams, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, refLength, initialParams, coord2D, coord3D])  /* $super(id, refLength, initialParams, coord2D, coord3D) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -329,9 +329,9 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	},
 
 	/** @ignore */
-	loaded: function($super)
+	loaded: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('loaded')  /* $super() */;
 		// when add new child object, and the two arcs are ready, handle the arc end nodes
 		if (this._isTwinArcSetup())
 		{
@@ -684,7 +684,7 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 			return false;
 	},
 	/** @ignore */
-	getChildUseCoordStickOffset: function($super, child, stickDest)
+	getChildUseCoordStickOffset: function(/*$super, */child, stickDest)
 	{
 		if (stickDest instanceof Kekule.ChemStructureNode || stickDest instanceof Kekule.ChemStructureConnector)
 		{

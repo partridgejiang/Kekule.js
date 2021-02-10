@@ -42,12 +42,12 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemWidget.StructureTreeView',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, rootObj)
+	initialize: function(/*$super, */parentOrElementOrDocument, rootObj)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setPropStoreFieldValue('objMap', new Kekule.MapEx(true));
 		this.setEnableLiveUpdate(true);
-		this.setEnableMultiSelected(true);
+		this.setEnableMultiSelect(true);
 		this.setRootObj(rootObj);
 
 		this._pauseLiveUpdateFlag = 0;
@@ -69,9 +69,9 @@ Kekule.ChemWidget.StructureTreeView = Class.create(Kekule.Widget.TreeView,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.CHEM_STRUCT_TREE_VIEW;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.CHEM_STRUCT_TREE_VIEW;
 	},
 
 	/** @private */

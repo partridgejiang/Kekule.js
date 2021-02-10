@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Component Wrapper Test</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+
+  <script src="../_libs/three_new/Three.min.js"></script>
+  <script src="../../src/kekule.js?min=false&modules=webComponent"></script>
+
+  <script type="chemical/x-mdl-molfile" id="resMol">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+  </script>
+
+  <style>
+    #panelLog
+    {
+      width: 90%;
+      height: 20em;
+      overflow: scroll;
+    }
+  </style>
+
+  <script>
+    //var ComposerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.Editor.Composer, 'kekule-composer');
+    //var ViewerWrapper = Kekule.WebComponent.Utils.wrapWidget(Kekule.ChemWidget.Viewer, 'kekule-viewer');
+    Kekule.WebComponent.Utils.wrapWidget(Kekule.Widget.Button, 'kekule-button');
+
+    Kekule.log = function(e, exceptionLevel)
+    {
+    	var elem = document.createElement('div');
+    	elem.innerText = e.message || e;
+    	var parent = document.getElementById('panelLog');
+    	var refElem = Kekule.DomUtils.getFirstChildElem(parent);
+    	if (refElem)
+    		parent.insertBefore(elem, refElem);
+    	else
+        parent.appendChild(elem);
+    };
+
+    window.onerror = function(message, source, lineno, colno, error)
+    {
+      Kekule.log('[error]' + message + ' / ' + error.stack.toString());
+    };
+
+    function addElement()
+    {
+    	var div = document.createElement('div');
+    	div.innerHTML = 'A Div';
+    	document.body.appendChild(div);
+    }
+
+    Kekule.X.domReady(function(){
+	    var btnAddElem = document.getElementById('btnAddElem');
+	    //btnAddElem.widget.on('click', addElement);
+	    //Kekule.log(Kekule.BrowserFeature.pointerEvent);
+    });
+  </script>
+</head>
+<body>
+  <!--
+  <p>
+    <kekule-button id="btnAddElem" text="Add Element"></kekule-button>
+  </p>
+  -->
+  <p>
+    <kekule-composer id="composerComp" resizable="true" chem-obj="url(#resMol)" style="width:600px;height:400px"></kekule-composer>
+    <!--
+    <kekule-viewer id="viewerComp" style="width:500px;height:500px" width1="300px" height1="200px" predefined-setting="fullFunc" chem-obj="url(#resMol)" render-type="3"></kekule-viewer>
+    <kekule-chem-obj-inserter style="width: 300px; height: 500px"  chem-obj="url(#resMol)"></kekule-chem-obj-inserter>
+    -->
+    <!--
+    <kekule-periodic-table></kekule-periodic-table>
+    -->
+  </p>
+  <div id="panelLog">
+
+  </div>
+</body>
+</html>

@@ -31,7 +31,7 @@ var
  *   you can just return null in those methods, and then the default save / load process of serializer will
  *   take the action. Otherwise, please return a true value.
  */
-ObjSerializer = Class.create(
+ObjSerializer = Class.create(ObjectEx,
 /** @lends ObjSerializer# */
 {
 	/** @private */
@@ -1283,15 +1283,15 @@ XmlObjSerializer = Class.create(ObjSerializer,
 			return result;
 	},
 	/** @private */
-	doSaveSimpleObject: function($super, obj, storageNode)
+	doSaveSimpleObject: function(/*$super, */obj, storageNode)
 	{
-		$super(obj, storageNode);
+		this.tryApplySuper('doSaveSimpleObject', [obj, storageNode])  /* $super(obj, storageNode) */;
 		//storageNode.setAttribute('type', typeof(obj));
 	},
 	/** @private */
-	doSaveArray: function($super, arrayObj, storageNode)
+	doSaveArray: function(/*$super, */arrayObj, storageNode)
 	{
-		$super(arrayObj, storageNode);
+		this.tryApplySuper('doSaveArray', [arrayObj, storageNode])  /* $super(arrayObj, storageNode) */;
 		//storageNode.setAttribute('type', 'array');
 	},
 	/** @private */
@@ -1312,7 +1312,7 @@ XmlObjSerializer = Class.create(ObjSerializer,
 	/** @private */
 	doLoadSimpleStorageValue: function(storageName, storageNode)
 	{
-		return storageNode.getAttribute(storageName);
+		return storageNode.getAttribute(storageName) || undefined;  // '' may be returned with unexisted attribute valueby xmldom.js, regard it as undefined
 	},
 	/** @private */
 	doGetArrayItemSimpleStorageValue: function(arrayItemStorageNode)

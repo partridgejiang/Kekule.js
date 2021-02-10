@@ -10,6 +10,9 @@
  * requires /utils/kekule.utils.js
  * requires /utils/kekule.domUtils.js
  * requires /xbrowsers/kekule.x.js
+ * requires /widgets/kekule.widget.root.js
+ * requires /widgets/kekule.widget.events.js
+ * requires /widgets/kekule.widget.keys.js
  */
 
 (function(){
@@ -18,23 +21,20 @@ var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
 
 /**
- * Namespace for UI Widgets.
- * @namespace
+ * Enumeration of predefined widget html element tag names.
+ * @ignore
  */
-Kekule.Widget = {
-	/** @private */
-	DEF_EVENT_HANDLER_PREFIX: 'react_',
-	/** @private */
-	getEventHandleFuncName: function(eventName)
-	{
-		return Kekule.Widget.DEF_EVENT_HANDLER_PREFIX + eventName;
-	},
-	/** @private */
-	getTouchGestureHandleFuncName: function(touchGestureName)
-	{
-		//return Kekule.Widget.DEF_TOUCH_GESTURE_HANDLER_PREFIX + touchGestureName;
-		return Kekule.Widget.DEF_EVENT_HANDLER_PREFIX + touchGestureName;
-	}
+Kekule.Widget.HtmlTagNames = {
+	CHILD_SLOT_HOLDER: 'slot',
+	CHILD_HOLDER: 'span'
+};
+
+/**
+ * Enumeration of predefined widget html element names.
+ * @ignore
+ */
+Kekule.Widget.HtmlNames = {
+	CHILD_HOLDER: 'children'
 };
 
 /**
@@ -46,14 +46,21 @@ Kekule.Widget.HtmlClassNames = {
 	BASE: 'K-Widget',
 	/** Child widget dynamic created by parent widget. */
 	DYN_CREATED: 'K-Dynamic-Created',
+	/** Container element to hold child widgets */
+	CHILD_HOLDER: 'K-Child-Holder',
 	/* A top most layer. */
-	/*TOP_LAYER: 'K-Top-Layer',*/
+	TOP_LAYER: 'K-Top-Layer',
 	/** An isolated layer */
 	ISOLATED_LAYER: 'K-Isolated-Layer',
 	NORMAL_BACKGROUND: 'K-Normal-Background',
 	/** Indicate text in widget can not be selected. */
 	NONSELECTABLE: 'K-NonSelectable',
 	SELECTABLE: 'K-Selectable',
+
+	// widget style mode
+	STYLE_INHERITED: 'K-Style-Inherited',  // the widget has no special styles like color/bgcolor and font, all inherited from document
+	STYLE_UNDEPENDENT: 'K-Style-Undependent',  // the widget do not inherit styles like color/bgcolor and font from document
+
 	// State classes
 	/** Class name for all widget elements in normal (enabled) state. */
 	STATE_NORMAL: 'K-State-Normal',
@@ -65,7 +72,10 @@ Kekule.Widget.HtmlClassNames = {
 	STATE_FOCUSED: 'K-State-Focused',
 
 	STATE_SELECTED: 'K-State-Selected',
+	STATE_CURRENT_SELECTED: 'K-State-Current-Selected',
 	STATE_CHECKED: 'K-State-Checked',
+
+	STATE_READONLY: 'K-State-ReadOnly',
 
 	// show type
 	SHOW_POPUP: 'K-Show-Popup',
@@ -97,6 +107,7 @@ Kekule.Widget.HtmlClassNames = {
 	// layout
 	LAYOUT_H: 'K-Layout-H',
 	LAYOUT_V: 'K-Layout-V',
+	LAYOUT_G: 'K-Layout-G',  // grid
 	// outlook/decoration classes
 	CORNER_ALL: 'K-Corner-All',
 	CORNER_LEFT: 'K-Corner-Left',
@@ -127,11 +138,20 @@ Kekule.Widget.HtmlClassNames = {
 var CNS = Kekule.Widget.HtmlClassNames;
 
 /**
+ * Enumeration of widget style dependent mode.
+ */
+Kekule.Widget.StyleMode = {
+	UNDEPENDENT: 0,
+	INHERITED: 1
+};
+
+/**
  * Enumeration of layout of widget group.
  */
 Kekule.Widget.Layout = {
 	HORIZONTAL: 1,
-	VERTICAL: 2
+	VERTICAL: 2,
+	GRID: 4
 };
 
 /**
@@ -222,39 +242,6 @@ Kekule.Widget.DragDrop = {
 	ELEM_INDEX_DATA_TYPE: 'application/x-kekule-dragdrop-elem-index'
 };
 
-/**
- * A series of interactive events that may be handled by widget.
- * @ignore
- */
-Kekule.Widget.UiEvents = [
-	/*'blur', 'focus',*/ 'click', 'dblclick', 'mousedown',/*'mouseenter', 'mouseleave',*/ 'mousemove', 'mouseout', 'mouseover', 'mouseup', //'mousewheel',
-	'keydown', 'keyup', 'keypress',
-	'touchstart', 'touchend', 'touchcancel', 'touchmove',
-	'pointerdown', 'pointermove', 'pointerout', 'pointerover', 'pointerup',
-	'drag', 'dragend', 'dragenter', 'dragexit', 'dragleave', 'dragover', 'dragstart', 'drop'
-];
-/**
- * A series of interactive events that must be listened on local element.
- * @ignore
- */
-Kekule.Widget.UiLocalEvents = [
-	'blur', 'focus', 'mouseenter', 'mouseleave', 'mousewheel', 'pointerenter', 'pointerleave'
-];
-
-/**
- * A series of interactive touch gestures that may be handled by widget.
- * @ignore
- */
-Kekule.Widget.TouchGestures = [
-	//'press', 'pressup'
-	'hold', 'tap', 'doubletap',
-	'swipe', 'swipeup', 'swipedown', 'swipeleft', 'swiperight',
-	'transform', 'transformstart', 'transformend',
-	'rotate', 'rotatestart', 'rotatemove', 'rotateend', 'rotatecancel',
-	'pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout',
-	'pan', 'panstart', 'panmove', 'panend', 'pancancel', 'panleft', 'panright', 'panup', 'pandown'
-];
-
 /** @private */
 Kekule.Widget._PointerHoldParams = {
 	DURATION_THRESHOLD: 1000,  // ms
@@ -298,6 +285,7 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {String} width Width style of element.
  * @property {String} height Height style of element.
  * @property {String} innerHTML Current element's innerHTML value.
+ * @property {Int} tabIndex Tab index of widget element.
  * @property {Object} style CSS style object of current binding element.
  * @property {String} cssText CSS text of current binding element.
  * @property {String} htmlClassName HTML class of current binding element. This property will include all values in element's class attribute.
@@ -324,7 +312,11 @@ var widgetBindingField = '__$kekule_widget__';
  * @property {Int} state State (normal, focused, hover, active) of widget, value from {@link Kekule.Widget.State}. Readonly.
  * @property {Bool} inheritState If set to true, widget will has the same state value of parent.
  * @property {String} hint Hint of widget, actually mapping to title attribute of HTML element.
- * @property {String} cursor CSS cusor property for widget.
+ * @property {String} cursor CSS cursor property for widget.
+ * @property {Array} shortcuts An array of {@link Kekule.Widget.Shortcut}, shortcut keys of this widget.
+ * @property {Array} shortcutKeys Array of shortcut key strings.
+ * @property {Array} inheritedStyles Flags indicating which CSS properties should be set to 'inhertied'.
+ *   e.g. ['color', 'fontSize'] (note: in JavaScript form rather than CSS form like 'font-size').
  *
  * @property {Bool} draggable Whether this widget is draggable, mapping to HTML draggable attribute.
  * @property {Bool} droppable Whether this widget is a target of drag-drop.
@@ -440,7 +432,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	STYLE_RES_FIELD: '__$style_resources__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, isDumb)
+	initialize: function(/*$super, */parentOrElementOrDocument, isDumb)
 	{
 		this._stateClassName = null;
 		this._isDismissed = false;
@@ -456,12 +448,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('periodicalExecDelay', this.DEF_PERIODICAL_EXEC_DELAY);
 		this.setPropStoreFieldValue('periodicalExecInterval', this.DEF_PERIODICAL_EXEC_INTERVAL);
 		this.setPropStoreFieldValue('useNormalBackground', true);
+		this.setPropStoreFieldValue('inheritedStyles', []);
 		//this.setPropStoreFieldValue('touchAction', 'none');  // debug: set to none disable default touch actions
 		this.setPropStoreFieldValue('droppableDataKinds', ['string']);  // defaultly disallow file drop
+		this.setPropStoreFieldValue('htmlEventDispatcher', new Kekule.Widget.HtmlEventDispatcher());
 
 		this._touchActionNoneTouchStartHandlerBind = this._touchActionNoneTouchStartHandler.bind(this);
 
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setPropStoreFieldValue('isDumb', !!isDumb);
 		if (!isDumb)
 			this.reactUiEventBind = this.reactUiEvent.bind(this);
@@ -675,6 +669,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'setter': null
 		});
 
+		this.defineProp('tabIndex', {'dataType': DataType.INT, 'serializable': false,
+			'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getElement().tabIndex; },
+			'setter': function(value) { this.getElement().tabIndex = value; }
+		});
 		this.defineProp('innerHTML', {'dataType': DataType.STRING, 'serializable': false,
 			'scope': Class.PropertyScope.PUBLIC,  // this prop value usually should not be shown in objInspector to avoid modification of essential HTML structure
 			'getter': function() { return this.getElement().innerHTML; },
@@ -757,6 +756,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		this.defineProp('showHideType', {'dataType': DataType.INT, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCaller', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
 		this.defineProp('showHideCallerPageRect', {'dataType': DataType.HASH, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});  // private
+		this.defineProp('standaloneOnShowHide', {'dataType': DataType.BOOL, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});  // whether the caller widget is ignored when execute show/hide animation
 
 		this.defineProp('finalizeAfterHiding', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC});
 
@@ -801,6 +801,38 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		});
+
+		this.defineProp('styleMode', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.StyleMode,
+			'setter': function(value)
+			{
+				if (value !== this.getStyleMode())
+				{
+					if (this.getElement())
+					{
+						if (value === Kekule.Widget.StyleMode.INHERITED)
+						{
+							this.removeClassName(CNS.STYLE_UNDEPENDENT);
+							this.addClassName(CNS.STYLE_INHERITED);
+						}
+						else // if (value === Kekule.Widget.StyleMode.UNDEPENDENT)
+						{
+							this.addClassName(CNS.STYLE_UNDEPENDENT);
+							this.removeClassName(CNS.STYLE_INHERITED);
+						}
+					}
+					this.setPropStoreFieldValue('styleMode', value);
+				}
+			}
+		});
+		this.defineProp('inheritedStyles', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), false);  // clear old
+				this.setPropStoreFieldValue('inheritedStyles', value || []);
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), true);  // apply new
+			}
+		});
+
 		this.defineProp('showText', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -950,6 +982,28 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 		});
 
+		this.defineProp('shortcuts', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('shortcutKeys', {
+			'dataType': DataType.ARRAY,
+			'getter': function()
+			{
+				var result = [];
+				var shortcuts = this.getShortcuts() || [];
+				for (var i = 0, l = shortcuts.length; i < l; ++i)
+					result.push(shortcuts[i].key);
+				return result;
+			},
+			'setter': function(value)
+			{
+				this._updateShortcuts(value && AU.toArray(value));
+			}
+		});
+		this.defineProp('shortcutKey', {
+			'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getShortcutKeys()[0]; },
+			'setter': function(value) { this.setShortcutKeys(value); }
+		});
+
 		//this.defineElemStyleMappingProp('cursor', 'cursor');
 		this.defineProp('cursor', {
 			'dataType': DataType.VARIANT,
@@ -1093,6 +1147,32 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		});
+		// private, stores defaulty created child actions
+		this.defineProp('defaultChildActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null,
+			'getter': function(canCreate)
+			{
+			  var result = this.getPropStoreFieldValue('defaultChildActions');
+			  if (!result && canCreate)
+			  {
+				  result = new Kekule.ActionList();
+				  this.setPropStoreFieldValue('defaultChildActions', result);
+			  }
+			  return result;
+			}
+		});
+		// private, stores defaulty created child action and actionClass map
+		this.defineProp('defaultChildActionMap', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
+			'getter': function(canCreate)
+			{
+				var result = this.getPropStoreFieldValue('defaultChildActionMap');
+				if (!result && canCreate)
+				{
+					result = new Kekule.MapEx();
+					this.setPropStoreFieldValue('defaultChildActionMap', result);
+				}
+				return result;
+			}
+		});
 
 		this.defineProp('iaControllerMap', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
 			'scope': Class.PropertyScope.PUBLIC,
@@ -1132,6 +1212,11 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			'setter': null,
 			'getter': function() { return this.getIaControllerMap().get(this.getActiveIaControllerId()); }});
 
+		this.defineProp('htmlEventDispatcher', {'dataType': 'Kekule.Widget.HtmlEventDispatcher', 'serializable': false,
+			'scope': Class.PropertyScope.PRIVATE,
+			'setter': null
+		});
+
 		this.defineProp('observingGestureEvents', {'dataType': DataType.ARRAY, 'serializable': false,
 					'scope': Class.PropertyScope.PUBLIC,
 					'setter': null
@@ -1139,13 +1224,30 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this._elemResizeObserver)
 		{
 			if (this._elemResizeObserver.disconnect)
 				this._elemResizeObserver.disconnect();
 			this._elemResizeObserver = null;
+		}
+
+		this._clearShortcuts();
+
+		this.getHtmlEventDispatcher().finalize();
+
+		var childActionMap = this.getDefaultChildActionMap();
+		if (childActionMap)
+		{
+			childActionMap.finalize();
+			this.setPropStoreFieldValue('defaultChildActionMap', null);
+		}
+		var childActions = this.getDefaultChildActions();
+		if (childActions)
+		{
+			childActions.finalize();
+			this.setPropStoreFieldValue('defaultChildActions', null);
 		}
 
 		this.setAction(null);
@@ -1158,25 +1260,40 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		if (this.getGlobalManager())
 			this.getGlobalManager().notifyWidgetFinalized(this);
 
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setEnableObjectChangeEvent(true);
 	},
 
 	/** @ignore */
-	invokeEvent: function($super, eventName, event)
+	doObjectChange: function(modifiedPropNames)
+	{
+		this.tryApplySuper('doObjectChange', [modifiedPropNames]);
+		if (modifiedPropNames.indexOf('readOnly') >= 0 && this.hasProperty('readOnly'))
+		{
+			// when read only property exists in widget and has been changed, modify the class name
+			var readOnly = this.getPropValue('readOnly');
+			if (readOnly)
+				this.addClassName(CNS.STATE_READONLY);
+			else
+				this.removeClassName(CNS.STATE_READONLY);
+		}
+	},
+
+	/** @ignore */
+	invokeEvent: function(/*$super, */eventName, event)
 	{
 		if (!event)
 			event = {};
 		// add a 'widget' param
 		if (!event.widget)
 			event.widget = this;
-		$super(eventName, event);
+		this.tryApplySuper('invokeEvent', [eventName, event])  /* $super(eventName, event) */;
 		// notify global manager when a widget event occurs
 		var m = this.getGlobalManager();  // Kekule.Widget.globalManager;
 		if (m)
@@ -1192,17 +1309,20 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getGlobalManager: function()
 	{
 		//return Kekule.Widget.globalManager;
+		/*
 		var doc = this.getDocument();
 		var win = doc && Kekule.DocumentUtils.getDefaultView(doc);
 		var kekuleRoot = win && win.Kekule;
 		if (!kekuleRoot)
 			kekuleRoot = Kekule;
 		return kekuleRoot.Widget.globalManager;
+		*/
+		return Kekule.Widget.Utils.getGlobalManager(this.getDocument());
 	},
 
 	/**
 	 * Returns core element of widget.
-	 * Usually core element is the element widget binded to, but in some
+	 * Usually core element is the element widget bound to, but in some
 	 * cases, core element may be a child of widget element. Descendants
 	 * can override this method to reflect that situation.
 	 * @returns {HTMLElement}
@@ -1255,7 +1375,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		var parent = this.getParent();
 		if (this.getBubbleUiEvents())
-			return true
+			return true;
 		else if (this.getInheritBubbleUiEvents() && parent && parent.getActualBubbleUiEvents)
 			return parent.getActualBubbleUiEvents();
 		else
@@ -1374,6 +1494,75 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var result = Kekule.ActionManager.getActionClassOfName(actionName, this, checkSupClasses);
 		return result;
 	},
+	/**
+	 * Fetch the named child action instance.
+	 * The child action will be created and added to the default child action list when necessary.
+	 * @param {String} actionName
+	 * @param {Bool} checkSupClasses When true, if action class is not found in current widget class, super classes will also be checked.
+	 * @returns {Kekule.Action}
+	 */
+	getChildAction: function(actionName, checkSupClasses)
+	{
+		var result = null;
+		var aClass = this.getChildActionClass(actionName, checkSupClasses);
+		if (aClass)
+		{
+			var map = this.getDefaultChildActionMap(true);
+			result = map.get(aClass);
+			if (!result)
+			{
+				result = new aClass();
+				this.getDefaultChildActions(true).add(result);
+				map.set(aClass, result);
+			}
+		}
+		return result;
+	},
+
+	// functions about shortcuts
+	/** @private */
+	_updateShortcuts: function(shortcutKeys)
+	{
+		var shortcuts = this.getShortcuts() || [];
+		var currShortcutsCount = shortcuts.length;
+		var count = (shortcutKeys && shortcutKeys.length) || 0;
+		if (count < currShortcutsCount)
+		{
+			for (var i = count; i < currShortcutsCount; ++i)
+			{
+				shortcuts[i].finalzie();
+			}
+		}
+		else
+		{
+			var doc = this.getDocument();
+			for (var i = currShortcutsCount; i < count; ++i)
+			{
+				var newShortcut = new Kekule.Widget.Shortcut(this);
+				shortcuts.push(newShortcut);
+				newShortcut.registerToGlobal(doc);
+			}
+		}
+		for (var i = 0; i < count; ++i)
+		{
+			shortcuts[i].setKey(shortcutKeys[i]);
+		}
+		this.setPropStoreFieldValue('shortcuts', shortcuts);
+	},
+	/** @private */
+	_clearShortcuts: function()
+	{
+		var shortcuts = this.getShortcuts() || [];
+		var count = shortcuts.length;
+		if (count)
+		{
+			for (var i = 0; i < count; ++i)
+			{
+				shortcuts[i].finalize();
+			}
+			this.setShortcuts(null);
+		}
+	},
 
 	/**
 	 * Apply style resource to self or an element.
@@ -1469,16 +1658,166 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				}
 			}
 		}
+		return this;
 	},
 	/**
 	 * Clear CSS property to widget or another element.
 	 * @param {String} cssPropName CSS property name in JavaScript form.
 	 * @param {HTMLElement} element If not set, style will be set to widget element.
 	 */
-	removeStyleProperty: function(cssPropName, value, element)
+	removeStyleProperty: function(cssPropName, element)
 	{
 		var elem = element || this.getElement();
 		Kekule.StyleUtils.removeStyleProperty(elem.style, cssPropName);
+		return this;
+	},
+
+	/**
+	 * Set CSS property values to widget or another element.
+	 * @param {Hash} cssPropValuePairs
+	 * @param {HTMLElement} element If not set, style will be set to widget element.
+	 */
+	setStyleProperties: function(cssPropValuePairs, element)
+	{
+		var propNames = Object.getOwnPropertyNames(cssPropValuePairs || {});
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var name = propNames[i];
+			var value = cssPropValuePairs[name];
+			this.setStyleProperty(name, value, element);
+		}
+		return this;
+	},
+	/**
+	 * Clear CSS properties to widget or another element.
+	 * @param {String} cssPropName CSS property name in JavaScript form.
+	 * @param {HTMLElement} element If not set, style will be set to widget element.
+	 */
+	removeStyleProperties: function(cssPropNames, element)
+	{
+		var names = AU.toArray(cssPropNames);
+		for (var i = 0, l = names.length; i < l; ++i)
+		{
+			this.removeStyleProperty(name, element);
+		}
+		return this;
+	},
+
+	/**
+	 * Returns the computed CSS style value of widget's core element.
+	 * @param {String} cssPropName
+	 * @returns {Variant}
+	 */
+	getComputedStyle: function(cssPropName)
+	{
+		return Kekule.StyleUtils.getComputedStyle(this.getCoreElement(), cssPropName);
+	},
+	/**
+	 * Returns the computed custom CSS style value of widget's core element.
+	 * @param {String} propName Core name of custom property, without the leading '--'
+	 * @returns {Variant}
+	 */
+	getComputedCustomStyle: function(propName)
+	{
+		var n;
+		if (propName.indexOf('-') < 0)  // in JS form
+			n = propName.dasherize();
+		else
+			n = propName;
+		return this.getComputedStyle('--' + n);
+	},
+
+	/**
+	 * Returns whether a CSS property value of this widget is designed to be 'inherit'.
+	 * @param {String} cssPropName
+	 * @returns {Bool}
+	 */
+	isStyleInherited: function(cssPropName)
+	{
+		var props = this.getInheritedStyles() || [];
+		return (props.indexOf(cssPropName) >= 0);
+	},
+	/**
+	 * Set CSS property to 'inherit' or remove it.
+	 * @param {Variant} cssPropNameOrNames
+	 * @param {Bool} value
+	 * @private
+	 */
+	_setInheritedStyleValues: function(cssPropNameOrNames, value, doNotChangeInheritedStylesProperty)
+	{
+		var propNames = AU.toArray(cssPropNameOrNames);
+		var inheritedStyles = this.getInheritedStyles() || {};
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var cssPropName = propNames[i];
+			var index = inheritedStyles.indexOf(cssPropName);
+			if (value)
+			{
+				if (!doNotChangeInheritedStylesProperty && index < 0)  // if index >= 0, the style is already handled
+				{
+					inheritedStyles.push(cssPropName);
+					//this.getInheritedStyles()[cssPropName] = true;
+					this.notifyInheritedStyleChanged(cssPropName, true);
+				}
+				this.setStyleProperty(cssPropName, 'inherit');
+			}
+			else
+			{
+				this.removeStyleProperty(cssPropName);
+				if (!doNotChangeInheritedStylesProperty && index >= 0)   // if index < 0, cssPropName not in inheritedStyles, no need to handle
+				{
+					//delete this.getInheritedStyles()[cssPropName];
+					inheritedStyles.splice(index, 1);
+					this.notifyInheritedStyleChanged(cssPropName, false);
+				}
+			}
+		}
+		return this;
+	},
+	/**
+	 * Notify a CSS property has been set to 'inherited' or removed from the inherited ones.
+	 * Descendants may override this method.
+	 * @param {String} cssPropName
+	 * @param {Bool} inherited
+	 * @private
+	 */
+	notifyInheritedStyleChanged: function(cssPropName, inherited)
+	{
+		// do nothing here
+	},
+	/**
+	 * Add a css style to the inherited set.
+	 * @param {Variant} cssPropNameOrNames
+	 */
+	addInheritedStyle: function(cssPropNameOrNames)
+	{
+		return this._setInheritedStyleValues(cssPropNameOrNames, true);
+	},
+	/**
+	 * Remove a css style from the inherited set.
+	 * @param {Variant} cssPropNameOrNames
+	 */
+	removeInheritedStyle: function(cssPropNameOrNames)
+	{
+		return this._setInheritedStyleValues(cssPropNameOrNames, false);
+	},
+	/**
+	 * Remove all css styles from the inherited set.
+ 	 */
+	clearInheritedStyles: function()
+	{
+		this.setPropStoreFieldValue('inheritedStyles', []);
+	},
+	/** @private */
+	_applyToAllInheritedStyles: function(propNames, value)
+	{
+		if (Kekule.ObjUtils.isUnset(value))
+			value = true;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var prop = propNames[i];
+			this._setInheritedStyleValues(prop, value, true);
+		}
 	},
 
 	/**
@@ -1638,13 +1977,29 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/**
 	 * Check if widget is a child of current widget.
 	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @param {Bool} cascade If true, the child's children will also be checked.
 	 * @returns {Bool}
 	 */
-	hasChild: function(widget)
+	hasChild: function(widget, cascade)
 	{
-		var index = this.indexOfChild(widget);
+		var children = this.getChildWidgets();
+		var index = children.indexOf(widget);
 		//console.log('Child index: ', index, this.getChildWidgets());
-		return (index >= 0);
+		var result = (index >= 0);
+		if (!result)
+		{
+			for (var i = 0, l = children.length; i < l; ++i)
+			{
+				var child = children[i];
+				if (child.hasChild)
+				{
+					result = child.hasChild(widget, cascade);
+					if (result)
+						break;
+				}
+			}
+		}
+		return result;
 	},
 	/**
 	 * Returns child widget at index
@@ -1814,7 +2169,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			this.setShowHideCallerPageRect(EU.getElemBoundingClientRect((caller.getElement && caller.getElement()) || caller));
 		}
 
-		this.widgetShowStateChanged(true);
+		//this.widgetShowStateChanged(true);
+		(function(){self.widgetShowStateChanged(true);}).defer();  // important defer, called after DOM mutation events, ensure the true param is finally passed
 	},
 	/**
 	 * Show widget then hide it after a period of time.
@@ -1931,7 +2287,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 				this.setDisplayed(false, true);
 			done();
 		}
-		this.widgetShowStateChanged(false);
+		//this.widgetShowStateChanged(false);
+		(function(){self.widgetShowStateChanged(false);}).defer();  // important defer, called after DOM mutation events, ensure the false param is finally passed
 	},
 
 	/*
@@ -2058,7 +2415,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	isInDomTree: function()
 	{
 		var elem = this.getElement();
-		return Kekule.DomUtils.isInDomTree(elem);
+		return Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true});
 	},
 
 	/**
@@ -2366,6 +2723,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var WL = Kekule.Widget.Layout;
 		return (layout === WL.VERTICAL)? CNS.LAYOUT_V:
 			(layout === WL.HORIZONTAL)? CNS.LAYOUT_H:
+			(layout === WL.GRID)? CNS.LAYOUT_G:
 			null;
 	},
 
@@ -2607,6 +2965,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	getWidgetClassName: function()
 	{
 		var result = Kekule.Widget.HtmlClassNames.BASE;
+		var styleModeClassName = (this.getStyleMode() === Kekule.Widget.StyleMode.INHERITED)? CNS.STYLE_INHERITED: CNS.STYLE_UNDEPENDENT;
+		result += ' ' + styleModeClassName;
 		if (this.getElement() && !Kekule.HtmlElementUtils.isFormCtrlElement(this.getCoreElement()) && !!this.getUseNormalBackground())
 			result += ' ' + Kekule.Widget.HtmlClassNames.NORMAL_BACKGROUND;
 		result += ' ' + this.doGetWidgetClassName();
@@ -2750,109 +3110,125 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (!this.isElementBindable(element))
 			{
 				Kekule.error(/*Kekule.ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM*/
-					Kekule.$L('ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM').format(this.getClassName(), element.tagName));
+						Kekule.$L('ErrorMsg.WIDGET_CAN_NOT_BIND_TO_ELEM').format(this.getClassName(), element.tagName));
 				return;
 			}
-
-			// if element already has class name, regard it as custom HTML class name
-			var originClassName = element.className;
-			if (originClassName)
-				this.setCustomHtmlClassName(this.getCustomHtmlClassName() || '' + ' ' + originClassName);
-
-			var DU = Kekule.DomUtils;
-			var HU = Kekule.HtmlElementUtils;
-			// clear possiblely previously created dynamic elements
-			var clearDynElements = function(rootElem)
+			this.beginUpdate();
+			try
 			{
-				var children = DU.getDirectChildElems(rootElem);
-				for (var i = children.length - 1; i >= 0; --i)
+				// if element already has class name, regard it as custom HTML class name
+				var originClassName = element.className;
+				if (originClassName)
+					this.setCustomHtmlClassName(this.getCustomHtmlClassName() || '' + ' ' + originClassName);
+
+				var defTabIndex = this.getDefaultTabIndex();
+				if (Kekule.ObjUtils.notUnset(defTabIndex) && !element.getAttribute('tabindex'))
 				{
-					var child = children[i];
-					if (HU.hasClass(child, CNS.DYN_CREATED))
-						rootElem.removeChild(child);
+					element.tabIndex = defTabIndex;
 				}
-			};
-			clearDynElements(element);
 
-			// create essential sub elements
-			var doc = this.getDocument();
-			var docFrag = doc.createDocumentFragment();
-			//var subElems = this.doCreateSubElements(this.getDocument(), element);
-			var subElems = this.doCreateSubElements(this.getDocument(), docFrag);
-			if (subElems && subElems.length)
-			{
-				for (var i = 0, l = subElems.length; i < l; ++i)
+				var DU = Kekule.DomUtils;
+				var HU = Kekule.HtmlElementUtils;
+				// clear possiblely previously created dynamic elements
+				var clearDynElements = function(rootElem)
 				{
-					var elem = subElems[i];
-					HU.addClass(elem, CNS.DYN_CREATED);
+					var children = DU.getDirectChildElems(rootElem);
+					for (var i = children.length - 1; i >= 0; --i)
+					{
+						var child = children[i];
+						if (HU.hasClass(child, CNS.DYN_CREATED))
+							rootElem.removeChild(child);
+					}
+				};
+				clearDynElements(element);
+
+				// create essential sub elements
+				var doc = this.getDocument();
+				var docFrag = doc.createDocumentFragment();
+				//var subElems = this.doCreateSubElements(this.getDocument(), element);
+				var subElems = this.doCreateSubElements(this.getDocument(), docFrag);
+				if (subElems && subElems.length)
+				{
+					for (var i = 0, l = subElems.length; i < l; ++i)
+					{
+						var elem = subElems[i];
+						HU.addClass(elem, CNS.DYN_CREATED);
+					}
 				}
-			}
 
-			if ((subElems && subElems.length)
-					|| (docFrag.children && docFrag.children.length)
-					|| (docFrag.childNodes && docFrag.childNodes.length))
-				element.appendChild(docFrag);
+				if ((subElems && subElems.length)
+						|| (docFrag.children && docFrag.children.length)
+						|| (docFrag.childNodes && docFrag.childNodes.length))
+					element.appendChild(docFrag);
 
-			this.doBindElement(element);
+				this.doBindElement(element);
 
-			if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
-				this.setEnabled(false);
+				this._applyToAllInheritedStyles(this.getInheritedStyles(), true);
 
-			var cname = this.getWidgetClassName();
-			EU.addClass(element, cname);
-			cname = this.getCustomHtmlClassName();
-			if (cname)
+				if (Kekule.DomUtils.hasAttribute(element, 'disabled'))
+					this.setEnabled(false);
+
+				var cname = this.getWidgetClassName();
 				EU.addClass(element, cname);
-			if (!this.getTextSelectable())
-				EU.addClass(element, CNS.NONSELECTABLE);
-			if (this._pendingHtmlClassNames)
-			{
-				EU.addClass(element, this._pendingHtmlClassNames);
-				this._pendingHtmlClassNames = '';
-			}
-
-			// check dataset properties of element, and use them to set self's properties
-			// width/height attribute should also be regarded as property settings
-			var w = element.getAttribute('width');
-			var h = element.getAttribute('height');
-			if (Kekule.ObjUtils.notUnset(w) || Kekule.ObjUtils.notUnset(h))
-			{
-				w = parseFloat((w || '').toString()) || 0;
-				h = parseFloat((h || '').toString()) || 0;
-				this.setDimension(w, h);
-			}
-			var dataset = Kekule.DomUtils.getDataset(element);
-			if (dataset)
-			{
-				for (var attribName in dataset)
+				cname = this.getCustomHtmlClassName();
+				if (cname)
+					EU.addClass(element, cname);
+				if (!this.getTextSelectable())
+					EU.addClass(element, CNS.NONSELECTABLE);
+				if (this._pendingHtmlClassNames)
 				{
-					var value = dataset[attribName];
-					try
+					EU.addClass(element, this._pendingHtmlClassNames);
+					this._pendingHtmlClassNames = '';
+				}
+
+				// check dataset properties of element, and use them to set self's properties
+				// width/height attribute should also be regarded as property settings
+				var w = element.getAttribute('width');
+				var h = element.getAttribute('height');
+				if (Kekule.ObjUtils.notUnset(w) || Kekule.ObjUtils.notUnset(h))
+				{
+					w = parseFloat((w || '').toString()) || 0;
+					h = parseFloat((h || '').toString()) || 0;
+					this.setDimension(w, h);
+				}
+				var dataset = Kekule.DomUtils.getDataset(element);
+				if (dataset)
+				{
+					for (var attribName in dataset)
 					{
-						Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, attribName, value);
-					}
-					catch(e)
-					{
-						//console.warn(e);
-						Kekule.warn(e);
-						//throw e;
+						var value = dataset[attribName];
+						try
+						{
+							Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, attribName, value);
+						}
+						catch (e)
+						{
+							//console.warn(e);
+							Kekule.warn(e);
+							//throw e;
+						}
 					}
 				}
+
+				// ensure touch action value applied to element
+				var touchAction = this.getTouchAction();
+				if (Kekule.ObjUtils.notUnset(touchAction))
+					this.setTouchAction(touchAction);
+
+				if (!this.getIsDumb())
+					this.installUiEventHandlers(element);
+
+				// add a field to element to quick access widget from element itself
+				element[widgetBindingField] = this;
+
+				this.elementBound(element);
+				//this.invokeEvent('bind', {'widget': this, 'element': element});
 			}
-
-			// ensure touch action value applied to element
-			var touchAction = this.getTouchAction();
-			if (Kekule.ObjUtils.notUnset(touchAction))
-				this.setTouchAction(touchAction);
-
-			if (!this.getIsDumb())
-				this.installUiEventHandlers(element);
-
-			// add a field to element to quick access widget from element itself
-			element[widgetBindingField] = this;
-
-			this.elementBound(element);
-			this.invokeEvent('bind', {'widget': this, 'element': element});
+			finally
+			{
+				this.endUpdate();
+				this.invokeEvent('bind', {'widget': this, 'element': element});
+			}
 		}
 	},
 	/**
@@ -2932,6 +3308,23 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns the default tab index of widget.
+	 * The value will be set to tabindex attribute when binding to an element without explicit setting of tabindex.
+	 * Descendants may override doGetDefaultTabIndex. Returns null if the tab index need not to be changed when binding.
+	 * @returns {Int}
+	 * @private
+	 */
+	getDefaultTabIndex: function()
+	{
+		return this.doGetDefaultTabIndex();
+	},
+	/** @private */
+	doGetDefaultTabIndex: function()
+	{
+		return 0;
+	},
+
+	/**
 	 * Called when property observeElementAttribChanges changes.
 	 * This method is used to install/uninstall mutation observes.
 	 * @private
@@ -2967,25 +3360,44 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	_reactElemAttribMutation: function(mutations)
 	{
 		var elem = this.getElement();
+		var coreElem = this.getCoreElement();
 		for (var i = 0, l = mutations.length; i < l; ++i)
 		{
 			var m = mutations[i];
 			if (m.type !== 'attributes')
 				continue;
-			if (m.target !== elem)
+			if (m.target !== elem && m.target !== coreElem)
 				continue;
 			var attribName = m.attributeName;
-			if (attribName && Kekule.DomUtils.isDataAttribName(attribName))
+			if (attribName)
 			{
-				var coreName = Kekule.DomUtils.getDataAttribCoreName(attribName);
-				if (coreName)
+				if (attribName.toLowerCase() === 'style')  // direct style attribute change
 				{
-					var attribValue = elem.getAttribute(attribName);
-					//console.log('set prop', attribName, attribValue);
-					Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, coreName, attribValue);
+					this.notifyStyleAttribChanged(m.target);
+				}
+				else if (Kekule.DomUtils.isDataAttribName(attribName))
+				{
+					var coreName = Kekule.DomUtils.getDataAttribCoreName(attribName);
+					if (coreName)
+					{
+						var attribValue = elem.getAttribute(attribName);
+						//console.log('set prop', attribName, attribValue);
+						Kekule.Widget.Utils.setWidgetPropFromElemAttrib(this, coreName, attribValue);
+					}
 				}
 			}
 		}
+	},
+
+	/**
+	 * Notify the style attribute has been changed in widget element/core element.
+	 * (This indicating that the widget style also changes).
+	 * Descendants may override this method to reflect those changes.
+	 * @param {HTMLElement} targetElem
+	 */
+	notifyStyleAttribChanged: function(targetElem)
+	{
+		// do nothing here.
 	},
 
 
@@ -3089,7 +3501,35 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		}
 	},
 
-
+	/**
+	 * register an instance of {@link Kekule.Widget.HtmlEventResponser} to handle events of this widget.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	registerHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().registerResponser(responser);
+		return this;
+	},
+	/**
+	 * Unregister an instance of {@link Kekule.Widget.HtmlEventReponser}.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	unregisterHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().unregisterResponser(responser);
+		return this;
+	},
+	/**
+	 * create and register a new instance of {@link Kekule.Widget.HtmlEventResponser} to handle events of this widget.
+	 * @param {Kekule.Widget.HtmlEventMatcher} eventMatcher
+	 * @param {Variant} execTarget
+	 * @param {Bool} exclusive
+	 * @returns {Kekule.Widget.HtmlEventResponser}
+	 */
+	addHtmlEventResponser: function(eventMatcher, execTarget, exclusive)
+	{
+		return this.getHtmlEventDispatcher().addResponser(eventMatcher, execTarget, exclusive);
+	},
 
 	/** @private */
 	reactUiEvent: function(e)
@@ -3312,6 +3752,9 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					handled = this.dispatchEventToIaControllers(e) || handled;  // avoid shortcircuit
 				}
 			}
+
+			// dispatch to HTML event dispatcher
+			this.getHtmlEventDispatcher().dispatch(e);
 
 			this.doReactUiEvent(e);
 
@@ -3589,13 +4032,19 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			var controller = this.getActiveIaController();
 			if (controller)
 			{
-				result = controller.testMouseCursor(coord, e);
+				var cresult = controller.testMouseCursor(coord, e);
+				if (Kekule.ObjUtils.notUnset(cresult))
+					result = cresult;
 			}
 			if (!result)
 			{
 				controller = this.getDefIaController();
 				if (controller)
-					result = controller.testMouseCursor(coord, e);
+				{
+					var cresult = controller.testMouseCursor(coord, e);
+					if (Kekule.ObjUtils.notUnset(cresult))
+						result = cresult;
+				}
 			}
 		}
 		return result;
@@ -3906,7 +4355,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	},
 
 	/**
-	 * This method should be called when the primary action is taken on widge
+	 * This method should be called when the primary action is taken on widget
 	 * (such as click on button, select on menu and so on).
 	 * @param {Object} invokerHtmlEvent HTML event object that invokes executing process.
 	 */
@@ -3939,6 +4388,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		var delay = this.getPeriodicalExecDelay() || 0;
 		this._periodicalExecuting = true;
 		this._periodicalExecHtmlEvent = htmlEvent;
+		this._periodicalExecHtmlEvent.__$periodicalExecuting$__ = true;  // a special flag indicating periodical executing
 		setTimeout(this._periodicalExecBind, delay);
 	},
 	/**
@@ -3990,16 +4440,16 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.InteractionController',
 	/** @constructs */
-	initialize: function($super, widget)
+	initialize: function(/*$super, */widget)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (widget)
 			this.setWidget(widget);
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.setWidget(null);
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4125,14 +4575,19 @@ Kekule.Widget.DumbWidget = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.DumbWidget',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument, true);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, true])  /* $super(parentOrElementOrDocument, true) */;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetDefaultTabIndex: function()
 	{
-		return $super() + ' ' + CNS.DUMB_WIDGET;
+		return null;
+	},
+	/** @ignore */
+	doGetWidgetClassName: function(/*$super*/)
+	{
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.DUMB_WIDGET;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -4154,10 +4609,10 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.PlaceHolder',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, targetWidgetClass)
+	initialize: function(/*$super, */parentOrElementOrDocument, targetWidgetClass)
 	{
 		this.setPropStoreFieldValue('targetWidgetClass', targetWidgetClass);
-		$super(parentOrElementOrDocument, true);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, true])  /* $super(parentOrElementOrDocument, true) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4217,9 +4672,9 @@ Kekule.Widget.PlaceHolder = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CNS.PLACEHOLDER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.PLACEHOLDER;
 		var targetClass = this.getTargetWidgetClass();
 		if (targetClass)
 		{
@@ -4333,11 +4788,13 @@ Kekule.Widget.Utils = {
 		var result;
 		var widget = Kekule.Widget.Utils.getWidgetOnElem(element);
 		if (widget)
+		{
 			result = [widget];
+			if (!checkElemInsideWidget)
+				return result;
+		}
 		else
 			result = [];
-		if (!checkElemInsideWidget)
-			return result;
 
 		var childElems = Kekule.DomUtils.getDirectChildElems(element);
 		for (var i = 0, l = childElems.length; i < l; ++i)
@@ -4476,8 +4933,16 @@ Kekule.Widget.Utils = {
 		// get widget property type first
 		var dtype = widget.getPropertyDataType(propName);
 
-		if (!dtype)  // can not find property, exit
-			return;
+		if (!dtype)
+		{
+			if (attribName.startsWith('data-'))  // maybe a data- attribute?
+			{
+				propName = attribName.substr(5).camelize();
+				dtype = widget.getPropertyDataType(propName);
+			}
+			if (!dtype)
+				return;   // can not find property, exit
+		}
 
 		if (dtype === DataType.STRING)
 			widget.setPropValue(propName, attribValue);
@@ -4496,7 +4961,7 @@ Kekule.Widget.Utils = {
 					}
 				}, null, widget.getDocument());
 			}
-			else if (attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
+			else if (attribValue && attribValue.startsWith('#') && (ClassEx.isOrIsDescendantOf(ClassEx.findClass(dtype), Kekule.Widget.BaseWidget)))  // start with '#', e.g. #id, means a id of another widget
 			{
 				var id = attribValue.substr(1).trim();
 				Kekule.Widget.Utils._setWidgetRefPropFromId(widget, propName, id);
@@ -4521,6 +4986,45 @@ Kekule.Widget.Utils = {
 			if (refWidget)
 				widget.setPropValue(propName, refWidget);
 		}
+	},
+
+	/**
+	 * Returns global widget manager in document.
+	 * @returns {Object}
+	 */
+	getGlobalManager: function(document)
+	{
+		var doc = document || Kekule.$document;
+		var win = doc && Kekule.DocumentUtils.getDefaultView(doc);
+		var kekuleRoot = win && win.Kekule;
+		if (!kekuleRoot)
+			kekuleRoot = Kekule;
+		return kekuleRoot.Widget.globalManager;
+	},
+
+	/**
+	 * Returns the url of CSS of the widget system.
+	 * @param {String} themeName If not set, the default theme will be returned.
+	 */
+	getThemeUrl: function(themeName)
+	{
+		var result = null;
+		if (!themeName)
+			themeName = 'default';
+		//var scriptInfo = Kekule.scriptSrcInfo;
+		var basePath = Kekule.getScriptPath();
+		//if (scriptInfo)
+		if (basePath)
+		{
+			//var scriptPath = scriptInfo.path;
+			//if (scriptPath)
+			{
+				var useMinJs = Kekule.isUsingMinJs();  // scriptInfo.useMinFile;
+				var cssPath = (useMinJs ? 'themes/' : 'widgets/themes/') + themeName;
+				result = basePath + cssPath + '/kekule.css';
+			}
+		}
+		return result;
 	}
 };
 
@@ -4564,10 +5068,233 @@ Kekule.Widget.getBelongedWidget = Kekule.Widget.Utils.getBelongedWidget;
 Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
 
 /**
- * A singleton class to manage some global settings of widgets on HTML document.
+ * An abstract class to receive UI and other events on web page document or other destination (e.g., shadowRoot).
  * User should not use this class directly.
  * @class
  * @augments ObjectEx
+ */
+Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
+/** @lends Kekule.Widget.BaseEventsReceiver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Widget.BaseEventsReceiver',
+	/** @constructs */
+	initialize: function(/*$super, */doc, eventRootObj)
+	{
+		this._document = doc || Kekule.$jsRoot.document;
+		this._eventRootObj = eventRootObj || this._document.documentElement;
+
+		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		this.reactDomNodeInsertEventBind = this.reactDomNodeInsertEvent.bind(this);
+		this.reactDomNodeRemoveEventBind = this.reactDomNodeRemoveEvent.bind(this);
+
+		this.tryApplySuper('initialize')  /* $super() */;
+
+		var self = this;
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+		(function() { Kekule.X.domReady(self.domReadyInit.bind(self), this._document); }).defer();
+	},
+	/** @ignore */
+	finalize: function(/*$super*/)
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.uninstallGlobalDomMutationHandlers(rootObj);
+			this.uninstallGlobalEventHandlers(rootObj);
+		}
+		this.tryApplySuper('finalize')  /* $super() */;
+	},
+
+	/** @private */
+	getEventRootObj: function()
+	{
+		return this._eventRootObj;
+	},
+
+	/** @private */
+	domReadyInit: function()
+	{
+		var rootObj = this.getEventRootObj();
+		if (rootObj)
+		{
+			this.installGlobalEventHandlers(rootObj);
+			this.installGlobalDomMutationHandlers(rootObj);
+		}
+	},
+
+	/**
+	 * Install UI event (mousemove, click...) handlers to target.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalEventHandlers: function(target)
+	{
+		if (!this._globalEventInstalled)
+		{
+			var events = Kekule.Widget.UiEvents;
+			for (var i = 0, l = events.length; i < l; ++i)
+			{
+				if (events[i] === 'touchstart' || events[i] === 'touchmove' || events[i] === 'touchend')  // explicit set passive to true for scroll performance on mobile devices
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind, {passive: true});
+				else
+					Kekule.X.Event.addListener(target, events[i], this.reactUiEventBind);
+			}
+			this._globalEventInstalled = true;
+		}
+	},
+	/**
+	 * Uninstall UI event (mousemove, click...) handlers from target.
+	 * @param {HTMLElement} element
+	 * @private
+	 */
+	uninstallGlobalEventHandlers: function(target)
+	{
+		var events = Kekule.Widget.UiEvents;
+		for (var i = 0, l = events.length; i < l; ++i)
+		{
+			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
+		}
+	},
+
+	/**
+	 * Install handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	installGlobalDomMutationHandlers: function(target)
+	{
+		var self = this;
+		if (Kekule.X.MutationObserver && Kekule.DomUtils.isElement(target))
+		{
+			var observer = new Kekule.X.MutationObserver(
+				function(mutations)
+				{
+					self.reactDomMutation(mutations);
+					/*
+					for (var i = 0, l = mutations.length; i < l; ++i)
+					{
+						var m = mutations[i];
+						if (m.type === 'childList')  // dom tree changes
+						{
+							var nodes = m.addedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomAddedElem(node);
+								}
+							}
+							var nodes = m.removedNodes;
+							for (var j = 0, k = nodes.length; j < k; ++j)
+							{
+								var node = nodes[j];
+								if (node.nodeType === Node.ELEMENT_NODE)
+								{
+									self._handleDomRemovedElem(node);
+								}
+							}
+						}
+					}
+					*/
+				});
+			observer.observe(target, {
+				childList: true,
+				subtree: true
+			});
+			this._domMutationObserver = observer;
+		}
+		else // traditional DOM event method
+		{
+			/*
+			this._reactDomNodeInserted = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomAddedElem(target);
+				}
+			};
+			this._reactDomNodeRemoved = function(e)
+			{
+				var target = e.getTarget();
+				if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+				{
+					self._handleDomRemovedElem(target);
+				}
+			};
+			*/
+			Kekule.X.Event.addListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+		}
+	},
+	/**
+	 * Uninstall handlers to react to DOM node changes.
+	 * @param {HTMLElement} target
+	 * @private
+	 */
+	uninstallGlobalDomMutationHandlers: function(target)
+	{
+		if (this._domMutationObserver)
+			this._domMutationObserver.disconnect();
+		if (this._reactDomNodeInserted)
+			Kekule.X.Event.removeListener(target, 'DOMNodeInserted', this.reactDomNodeInsertEventBind);
+		if (this._reactDomNodeRemoved)
+			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this.reactDomNodeRemoveEventBind);
+	},
+
+	/**
+	 * React to UI events.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactUiEvent: function(e)
+	{
+		// do nothing here, descendants should override this method
+	},
+
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeInsertEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM node insert event.
+	 * This function is used only when DOM mutation observer is not available in browser.
+	 * Descendants should override this method.
+	 * @param {Event} e
+	 * @private
+	 */
+	reactDomNodeRemoveEvent: function(e)
+	{
+		// do nothing here
+	},
+	/**
+	 * React to DOM mutations in mutation observer.
+	 * This function is used only when DOM mutation observer is available in browser.
+	 * Descendants should override this method.
+	 * @param {Array} mutations
+	 * @private
+	 */
+	reactDomMutation: function(mutations)
+	{
+		// do nothing here
+	}
+});
+
+/**
+ * A singleton class to manage some global settings of widgets on HTML document.
+ * User should not use this class directly.
+ * @class
+ * @augments Kekule.Widget.BaseEventsReceiver
  *
  * @param {HTMLDocument} doc
  *
@@ -4593,7 +5320,7 @@ Kekule.Widget.createFromHash = Kekule.Widget.Utils.createFromHash;
  * @name Kekule.Widget.GlobalManager#widgetFinalize
  * @event
  */
-Kekule.Widget.GlobalManager = Class.create(ObjectEx,
+Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 /** @lends Kekule.Widget.GlobalManager# */
 {
 	/** @private */
@@ -4602,13 +5329,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	INFO_FIELD: '__$info__',
 	/** @private */
 	ISOLATED_LAYER_FIELD: '__$isolated_layer__',
+	/** @private */
+	TOPMOST_LAYER_FIELD: '__$topmost_layer__',
+	/** @private */
+	THEME_LOADED_FIELD: '__$theme_loaded__',
 	/** @constructs */
-	initialize: function($super, doc)
+	initialize: function(/*$super, */doc)
 	{
-		$super();
 		this._document = doc || Kekule.$jsRoot.document;
 		this._touchEventSeq = [];  // internal, for detecting ghost mouse event
 		this._hammertime = null;  // private
+		this._globalSysElems = [];  // private, system elements such as top layer, isolated layer, etc.
 		this.setPropStoreFieldValue('popupWidgets', []);
 		this.setPropStoreFieldValue('dialogWidgets', []);
 		this.setPropStoreFieldValue('modalWidgets', []);
@@ -4618,13 +5349,14 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.setPropStoreFieldValue('preserveWidgetList', true);
 		this.setPropStoreFieldValue('enableMouseEventToPointerPolyfill', true);
 		this.setPropStoreFieldValue('enableHammerGesture', !true);
+		this.setPropStoreFieldValue('htmlEventDispatcher', new Kekule.Widget.HtmlEventDispatcher());
 
 		/*
 		this.react_pointerdown_binding = this.react_pointerdown.bind(this);
 		this.react_keydown_binding = this.react_keydown.bind(this);
 		this.react_touchstart_binding = this.react_touchstart.bind(this);
 		*/
-		this.reactUiEventBind = this.reactUiEvent.bind(this);
+		//this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactTouchGestureBind = this.reactTouchGesture.bind(this);
 		this.reactWindowResizeBind = this.reactWindowResize.bind(this);
 		/*
@@ -4633,21 +5365,24 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (window)
 			this.installWindowEventHandlers(window);
 		*/
-		Kekule.X.domReady(this.domReadyInit.bind(this));
+		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
+
+		this.tryApplySuper('initialize', [this._document, this._document.documentElement])  /* $super(this._document, this._document.documentElement) */;
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
+		this.getHtmlEventDispatcher().finalize();
 		this.uninstallWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
-		this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.uninstallGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalHammerTouchHandlers(this._document.documentElement/*.body*/);
 		//this.uninstallGlobalEventHandlers(this._document.documentElement/*.body*/);
-		this.uninstallGlobalEventHandlers(this._document.body);
+		//this.uninstallGlobalEventHandlers(this._document.documentElement);
 		this._hammertime = null;
 		this.setPropStoreFieldValue('popupWidgets', null);
 		this.setPropStoreFieldValue('widgets', null);
 		this.setPropStoreFieldValue('draggingElems', null);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -4680,17 +5415,84 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		this.defineProp('enableHammerGesture', {'dataType': DataType.BOOL, 'serializable': false});
 		// should always set to be true
 		this.defineProp('enableMouseEventToPointerPolyfill', {'dataType': DataType.BOOL, 'serializable': false});
+
+		// a global HTML event dispatcher
+		this.defineProp('htmlEventDispatcher', {'dataType': 'Kekule.Widget.HtmlEventDispatcher', 'serializable': false,
+			'scope': Class.PropertyScope.PRIVATE,
+			'setter': null
+		});
 	},
 
 	/** @private */
-	domReadyInit: function()
+	domReadyInit: function(/*$super*/)
 	{
-		this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
+		this.tryApplySuper('domReadyInit')  /* $super() */;
+		//this.installGlobalEventHandlers(this._document.documentElement/*.body*/);
 		//this.installGlobalEventHandlers(this._document.body);
 		if (this.getEnableHammerGesture())
 			this._hammertime = this.installGlobalHammerTouchHandlers(this._document.body);
-		this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
+		//this.installGlobalDomMutationHandlers(this._document.documentElement/*.body*/);
 		this.installWindowEventHandlers(Kekule.DocumentUtils.getDefaultView(this._document));
+	},
+
+	/** @private */
+	getDefaultContextRootElem: function()
+	{
+		return this.getDocContextRootElem();
+	},
+	/** @private */
+	getDocContextRootElem: function()
+	{
+		return this._document.body;
+	},
+
+	/** @private */
+	_detectIfThemeLoaded: function(contextRootElem)
+	{
+		// check if Kekule theme css is loaded in context
+		var result = contextRootElem[this.THEME_LOADED_FIELD];
+		if (!result)  // further check
+		{
+			var doc = contextRootElem.ownerDocument;
+			var detectorElem = doc.createElement('span');
+			detectorElem.className = 'K-StyleSheet-Detector';  // a fixed detector class
+			detectorElem.style.visibility = 'hidden';
+			contextRootElem.appendChild(detectorElem);
+			var zIndex = Kekule.StyleUtils.getComputedStyle(detectorElem, 'z-index');
+			if (zIndex == -88888)  // a fixed probe value, if equal, the stylesheet is loaded
+			{
+				result = true;
+				contextRootElem[this.THEME_LOADED_FIELD] = result;
+			}
+			else
+				result = false;
+			contextRootElem.removeChild(detectorElem);
+		}
+		return result;
+	},
+
+	/**
+	 * Load the theme CSS file in context.
+	 * @param {HTMLElement} contextRootElem
+	 * @param {String} themeName
+	 */
+	loadTheme: function(contextRootElem, themeName)
+	{
+		if (!contextRootElem)
+			contextRootElem = this.getDefaultContextRootElem();
+		var loaded = this._detectIfThemeLoaded(contextRootElem);
+		if (!loaded)
+		{
+			var themeUrl = Kekule.Widget.Utils.getThemeUrl(themeName);
+			var protocal = Kekule.UrlUtils.extractProtocal(themeUrl);
+			if (!protocal)  // protocal not found in path, should be local file
+				themeUrl = Kekule.UrlUtils.normalizePath('file:///' + themeUrl);
+			var doc = contextRootElem.ownerDocument;
+			var styleElem = doc.createElement('style');
+			styleElem.innerHTML = '@import "' + themeUrl + '"';
+			contextRootElem.appendChild(styleElem);
+			contextRootElem[this.THEME_LOADED_FIELD] = true;
+		}
 	},
 
 	/**
@@ -4883,11 +5685,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	*/
-	/**
+	/*
 	 * Install UI event (mousemove, click...) handlers to element.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalEventHandlers: function(target)
 	{
 		if (!this._globalEventInstalled)
@@ -4903,11 +5706,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._globalEventInstalled = true;
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall UI event (mousemove, click...) handlers from old mainContextElement.
 	 * @param {HTMLElement} element
 	 * @private
 	 */
+	/*
 	uninstallGlobalEventHandlers: function(target)
 	{
 		var events = Kekule.Widget.UiEvents;
@@ -4916,6 +5721,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.removeListener(target, events[i], this.reactUiEventBind);
 		}
 	},
+	*/
 	/**
 	 * Install event handlers on window object.
 	 * @param {Window} win
@@ -4965,11 +5771,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			this._hammertime.off(Kekule.Widget.TouchGestures.join(' '), this.reactTouchGestureBind);
 	},
 
-	/**
+	/*
 	 * Install handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	installGlobalDomMutationHandlers: function(target)
 	{
 		var self = this;
@@ -5032,11 +5839,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			Kekule.X.Event.addListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 		}
 	},
-	/**
+	*/
+	/*
 	 * Uninstall handlers to react to DOM node changes.
 	 * @param {HTMLElement} target
 	 * @private
 	 */
+	/*
 	uninstallGlobalDomMutationHandlers: function(target)
 	{
 		if (this._domMutationObserver)
@@ -5046,6 +5855,27 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		if (this._reactDomNodeRemoved)
 			Kekule.X.Event.removeListener(target, 'DOMNodeRemoved', this._reactDomNodeRemoved);
 	},
+	*/
+
+	/**
+	 * register an instance of {@link Kekule.Widget.HtmlEventResponser} to handle global events.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	registerHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().registerResponser(responser);
+		return this;
+	},
+	/**
+	 * Unregister an instance of {@link Kekule.Widget.HtmlEventReponser}.
+	 * @param {Kekule.Widget.HtmlEventHandler} handler
+	 */
+	unregisterHtmlEventResponser: function(responser)
+	{
+		this.getHtmlEventDispatcher().unregisterResponser(responser);
+		return this;
+	},
+
 	/** @private */
 	_handleDomAddedElem: function(elem)
 	{
@@ -5097,6 +5927,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	{
 		return eventName.startsWith('pointer');
 	},
+	/** @private */
+	isKeyEvent: function(eventName)
+	{
+		return eventName.startsWith('key');
+	},
 
 	/**
 	 * Convert a touch event to corresponding pointer event, useful for browsers that does not support pointer events.
@@ -5144,10 +5979,11 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				}
 				// all event type (except touchstart), currentTarget is always the touch evoker,
 				// should be transformed to element under touch pos
-				if (evType !== 'touchstart')
+				//if (evType !== 'touchstart')
 				{
 					var doc = this._document;
-					var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
+					//var currElement = doc.elementFromPoint(newEventObj.clientX, newEventObj.clientY);
+					var currElement = this._retrieveTouchEventActualTarget(newEventObj);
 					newEventObj.setTarget(currElement);
 					//console.log('save touch data 1', currElement, newEventObj.getTarget());
 				}
@@ -5176,8 +6012,112 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/** @private */
-	reactUiEvent: function(e)
+	_retrieveTouchEventActualTarget: function(event)
 	{
+		var elem = event.getTarget();
+		var result = elem;
+		// Currently in Firefox, the touchEvent.target is always the parent element of shadow root (not the direct child)
+		// So here we must find the actual target manually
+		/*
+		if (elem.shadowRoot && elem.getRootNode)
+		{
+			var shadow = elem.shadowRoot;
+			if (shadow.elementFromPoint)
+			{
+				result = shadow.elementFromPoint(event.getClientX(), event.getClientY()) || elem;
+			}
+		}
+		*/
+		result = this._retrieveElementFromClientCoord(elem, event.getClientX(), event.getClientY());
+		return result;
+	},
+	/** @private */
+	_retrieveElementFromClientCoord: function(baseElem, x, y)
+	{
+		var result = baseElem;
+		if (baseElem.shadowRoot && baseElem.getRootNode)
+		{
+			var shadow = baseElem.shadowRoot;
+			if (shadow.elementFromPoint)
+			{
+				var newElem = shadow.elementFromPoint(x, y);
+				if (newElem && newElem !== baseElem)  // find new elem, may result.shadowRoot?
+				{
+					result = this._retrieveElementFromClientCoord(newElem, x, y);
+				}
+			}
+		}
+		return result;
+	},
+
+	/** @ignore */
+	reactDomNodeInsertEvent: function(/*$super, */e)
+	{
+		this.tryApplySuper('reactDomNodeInsertEvent', [e])  /* $super(e) */;
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			if (!this._isGlobalSysElement(target))
+				this._handleDomAddedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomNodeRemoveEvent: function(/*$super, */e)
+	{
+		this.tryApplySuper('reactDomNodeRemoveEvent', [e])  /* $super(e) */;
+		var target = e.getTarget();
+		if (target.nodeType === (Node.ELEMENT_NODE))  // is element
+		{
+			if (!this._isGlobalSysElement(target))
+				this._handleDomRemovedElem(target);
+		}
+	},
+	/** @ignore */
+	reactDomMutation: function(/*$super, */mutations)
+	{
+		this.tryApplySuper('reactDomMutation', [mutations])  /* $super(mutations) */;
+		for (var i = 0, l = mutations.length; i < l; ++i)
+		{
+			var m = mutations[i];
+			if (m.type === 'childList')  // dom tree changes
+			{
+				//console.log('---------------------- Mutation --------------------');
+				//console.log(m, m.addedNodes, m.removedNodes);
+				var nodes = m.addedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node added', node, node.parentNode);
+							this._handleDomAddedElem(node);
+						}
+					}
+				}
+				var nodes = m.removedNodes;
+				for (var j = 0, k = nodes.length; j < k; ++j)
+				{
+					var node = nodes[j];
+					if (node.nodeType === Node.ELEMENT_NODE)
+					{
+						if (!this._isGlobalSysElement(node))  // ignore top/isolate layer insertion and removing
+						{
+							//console.log('DOM node removed', node, node.parentNode);
+							this._handleDomRemovedElem(node);
+						}
+					}
+				}
+			}
+		}
+	},
+
+	/** @ignore */
+	reactUiEvent: function(/*$super, */e)
+	{
+		this.tryApplySuper('reactUiEvent', [e])  /* $super(e) */;
+
 		var evType = e.getType();
 
 		// get target widget to dispatch event
@@ -5192,6 +6132,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			var elem = e.getTarget();
 			targetWidget = this.getBelongedResponsiveWidget(elem);
+
+			// if target widget is not set and the event is related to key, then send it to current focused widget
+			if (!targetWidget && this.isKeyEvent(evType))
+			{
+				targetWidget = this.getCurrFocusedWidget() || null;
+			}
 		}
 
 
@@ -5269,18 +6215,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 		*/
 
-		// check first if the component has event handler itself
-		var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
+		this.getHtmlEventDispatcher().dispatch(e);
 
-		if (this[funcName])  // has own handler
-			this[funcName](e);
-
-		// dispatch to widget
-		if (targetWidget)
-		{
-			//console.log('event', e.getTarget().tagName, widget.getClassName());
-			targetWidget.reactUiEvent(e);
-		}
+		this.doReactUiEvent(e, targetWidget);
 
 		if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
 		{
@@ -5292,15 +6229,36 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			{
 				e.setType(pointerEvents[index]);
 				e.pointerType = 'mouse';
-				this.reactUiEvent(e);
+				//this.reactUiEvent(e);
+				this.doReactUiEvent(e, targetWidget);
 			}
 			else if (touchEvents.indexOf(evType) >= 0)  // touch events, need further polyfill
 			{
 				//console.log('prepare map', evType);
 				var newEvent = this.mapTouchToPointerEvent(e);
 				if (newEvent)
-					this.reactUiEvent(newEvent);
+				{
+					this.reactUiEvent(newEvent);  // call reactUiEvent rather than doReact, since the targetWidget may change
+					//this.doReactUiEvent(newEvent, targetWidget);
+				}
 			}
+		}
+	},
+	/** @private */
+	doReactUiEvent: function(e, targetWidget)
+	{
+		// check first if the component has event handler itself
+		var funcName = Kekule.Widget.getEventHandleFuncName(e.getType());
+
+		if (this[funcName])  // has own handler
+			this[funcName](e);
+
+		// dispatch to widget
+		if (targetWidget)
+		{
+			this._htmlEventOnWidgetInvoked(targetWidget, e);
+			//console.log('event', e.getTarget().tagName, widget.getClassName());
+			targetWidget.reactUiEvent(e);
 		}
 	},
 	/** @private */
@@ -5332,6 +6290,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			if (widgets[i].isShown())
 				widgets[i].autoResizeToClient();
 		}
+	},
+
+	/** @private */
+	_htmlEventOnWidgetInvoked: function(widget, event)
+	{
+		this.invokeEvent('htmlEventOnWidget', {'widget': widget, 'htmlEvent': event});
+		this.invokeEvent(event.getType(), {widget: widget, htmlEvent: event});
 	},
 
 	/** @private */
@@ -5619,7 +6584,9 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
-		var topmostLayer = this.getTopmostLayer(doc, true);
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+		var topmostLayer = this.getTopmostLayer(doc, true, contextRootElem);
+
 		var isOnTopLayer = popupElem.parentNode === topmostLayer;
 
 		// calc widget position
@@ -5654,7 +6621,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 		else  // if (showType === ST.POPUP)
 		{
-			posInfo = this._calcPopupWidgetPosInfo(popupWidget, isOnTopLayer);
+			posInfo = this._calcPopupWidgetPosInfo(popupWidget, invokerWidget, isOnTopLayer);
 		}
 
 		if (autoAdjustSize && posInfo)  // check if need to adjust size of widget
@@ -5680,9 +6647,10 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 
 		if (!isOnTopLayer)
-			this.moveElemToTopmostLayer(popupElem);
+			this.moveElemToTopmostLayer(popupElem, null, contextRootElem);
 		else  // even is elem is on topmost layer, still append it to tail
-			this.moveElemToTopmostLayer(popupElem, true);
+			this.moveElemToTopmostLayer(popupElem, true, contextRootElem);
+
 		if (posInfo)
 		{
 			// set style
@@ -5717,7 +6685,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	_calcPopupWidgetPosInfo: function(widget, isOnTopLayer)
+	_calcPopupWidgetPosInfo: function(widget, invokerWidget, isOnTopLayer)
 	{
 		var result;
 		var EU = Kekule.HtmlElementUtils;
@@ -5727,6 +6695,17 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		{
 			elem.style.visible = 'hidden';
 			elem.style.display = '';
+		}
+
+		var manualAppended = false;
+		var isolatedLayer;
+		//if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
+		if (!Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true}))  // not in DOM, put in isolate layer first to calculate dimensions
+		{
+			var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+			isolatedLayer = this.getIsolatedLayer(widget.getDocument(), true, contextRootElem);
+			isolatedLayer.appendChild(elem);
+			manualAppended = true;
 		}
 
 		var clientRect = EU.getElemBoundingClientRect(elem, true);  // include scroll offset
@@ -5743,6 +6722,13 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 				result.left = clientRect.left + 'px';
 			}
 		}
+
+		// then remove from DOM tree
+		if (manualAppended)
+		{
+			isolatedLayer.removeChild(elem);
+		}
+
 		return result;
 	},
 	/** @private */
@@ -5758,6 +6744,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
+		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
 		//var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
@@ -5768,11 +6755,12 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		dropElem.style.display = '';
 		var manualAppended = false;
 		//var topmostLayer = this.getTopmostLayer(dropElem.ownerDocument);
-		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true);
+		var isolatedLayer = this.getIsolatedLayer(dropElem.ownerDocument, true, contextRootElem);
 		//if (!dropElem.parentNode)
 		{
 			//invokerElem.appendChild(dropElem);
 			//topmostLayer.appendChild(dropElem);
+			//console.log(isolatedLayer);
 			// move drop elem to an isolated layer first, avoid other CSS styles (e.g. flex) affect the dimension calculation
 			isolatedLayer.appendChild(dropElem);
 			manualAppended = true;
@@ -6068,6 +7056,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
     widget.addClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.pushUnique(this.getPopupWidgets(), widget);
+		//console.log('register', this.getPopupWidgets(), widget.getClassName());
 	},
 	/**
 	 * Notify the manager that an popup widget is hidden.
@@ -6082,6 +7071,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		*/
     widget.removeClassName(CNS.SHOW_POPUP);
 		Kekule.ArrayUtils.remove(this.getPopupWidgets(), widget);
+		//console.log('unregister', this.getPopupWidgets(), widget.getClassName());
 	},
 	/**
 	 * Notify the manager that an dialog widget is shown.
@@ -6143,7 +7133,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 
 	/** @private */
-	prepareModalWidget: function(widget)
+	prepareModalWidget: function(widget, caller)
 	{
 		// create a modal background and then relocate dialog element on it
 		var doc = widget.getDocument();
@@ -6154,6 +7144,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			bgElem = doc.createElement('div');
 			bgElem.className = CNS.MODAL_BACKGROUND;
 			this.setPropStoreFieldValue('modalBackgroundElem', bgElem);
+			this._globalSysElems.push(bgElem);
 		}
 		var elem = widget.getElement();
 		widget.setModalInfo({
@@ -6167,8 +7158,25 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 
 		if (bgElem.parentNode)
 			bgElem.parentNode.removeChild(bgElem);
+		/*
 		doc.body.appendChild(bgElem);
 		doc.body.appendChild(elem);  // append widget elem on background
+		*/
+
+		// ensure the modal background and modal element behind the topmost layer (where the popup widget may exist in it)
+		var rootElem = this.getWidgetContextRootElement(caller);
+		//console.log(rootElem, widget);
+		var topmostLayer = this.getTopmostLayer(doc, false, rootElem);
+		if (topmostLayer && topmostLayer.parentNode === rootElem)
+		{
+		  rootElem.insertBefore(bgElem, topmostLayer);
+			rootElem.insertBefore(elem, topmostLayer);
+		}
+		else
+		{
+			rootElem.appendChild(bgElem);
+			rootElem.appendChild(elem);
+		}
 
 		this.registerModalWidget(widget);
 	},
@@ -6231,14 +7239,50 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	},
 
 	/**
+	 * Returns the root element of widget context, usually the document.documentElement.
+	 * @param {Kekule.Widget.BaseWidget} widget
+	 * @returns {HTMLElement}
+	 */
+	getWidgetContextRootElement: function(widget)
+	{
+		if (widget && widget.getDocument)
+			return widget.getDocument().body;
+		else  // widget is null
+			return this._document.body;
+	},
+
+	/**
 	 * Get top most layer previous created in document.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 */
-	getTopmostLayer: function(doc, canCreate)
+	getTopmostLayer: function(doc, canCreate, contextRootElem)
 	{
+		/*
 		var body = doc.body;
 		return body;
+		*/
+		var doc = contextRootElem.ownerDocument;
+		var result = contextRootElem[this.TOPMOST_LAYER_FIELD];
+		if (!result)
+		{
+			if (canCreate)
+			{
+				result = this._createTopmostLayer(doc, contextRootElem);
+				contextRootElem.appendChild(result);
+				contextRootElem[this.TOPMOST_LAYER_FIELD] = result;
+				this._globalSysElems.push(result);
+			}
+		}
+		else
+		{
+			/* Should not change DOM here, otherwise the scroll positions of widgets on topmost layer may be changed
+			// check if oldLayer is the last child of root
+			if (contextRootElem.lastChild !== result)
+				contextRootElem.appendChild(result);
+			*/
+		}
+		return result;
 
 		/*
 		var child = body.lastChild;
@@ -6251,44 +7295,54 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 		return child;
 		*/
 	},
-	/*
-	 * Create a topmost transparent element in document to put drop down and popup widgets.
-	 * @param {HTMLDocument} doc
-	 * @returns {HTMLElement}
-	 * @deprecated
-	 */
-	/*
-	createTopmostLayer: function(doc)
-	{
-		var div = doc.createElement('div');
-		div.className = CNS.TOP_LAYER;
-		doc.body.appendChild(div);
-		return div;
-	},
-	*/
 	/**
-	 * Get isolated layer previous created in document.
+	 * Create a topmost transparent element in document to put drop down and popup widgets.
 	 * @param {HTMLDocument} doc
 	 * @returns {HTMLElement}
 	 * @private
 	 */
-	getIsolatedLayer: function(doc, canCreate)
+	_createTopmostLayer: function(doc, contextRootElem)
 	{
-		var result = doc[this.ISOLATED_LAYER_FIELD];
+		var div = doc.createElement('div');
+		div.className = CNS.TOP_LAYER;
+		return div;
+	},
+	/**
+	 * Get isolated layer previous created in document.
+	 * @param {HTMLDocument} doc
+	 * @param {HTMLElement} contextRootElem
+	 * @returns {HTMLElement}
+	 * @private
+	 */
+	getIsolatedLayer: function(doc, canCreate, contextRootElem)
+	{
+		var result = contextRootElem[this.ISOLATED_LAYER_FIELD];
 		if (!result && canCreate)
 		{
-			result = this._createIsolatedLayer(doc);
-			doc[this.ISOLATED_LAYER_FIELD] = result;
+			result = this._createIsolatedLayer(doc, contextRootElem);
+			this._globalSysElems.push(result);
+			var firstChild = contextRootElem.firstChild;
+			if (firstChild)
+				contextRootElem.insertBefore(result, firstChild);
+			else
+				contextRootElem.appendChild(result);
+			contextRootElem[this.ISOLATED_LAYER_FIELD] = result;
 		}
 		return result;
 	},
 	/** @private */
-	_createIsolatedLayer: function(doc)
+	_createIsolatedLayer: function(doc, contextRootElem)
 	{
 		var div = doc.createElement('div');
 		div.className = CNS.ISOLATED_LAYER;
-		doc.body.appendChild(div);
+		//doc.body.appendChild(div);
 		return div;
+	},
+
+	/** @private */
+	_isGlobalSysElement: function(elem)
+	{
+		return this._globalSysElems.indexOf(elem) >= 0;
 	},
 
 	/** @private */
@@ -6316,7 +7370,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 	 * @param {HTMLElement} elem
 	 * @private
 	 */
-	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo)
+	moveElemToTopmostLayer: function(elem, doNotStoreOldInfo, contextRootElem)
 	{
 		// store elem's old position info first
 		/*
@@ -6333,7 +7387,7 @@ Kekule.Widget.GlobalManager = Class.create(ObjectEx,
 			info.nextSibling = elem.nextSibling;
 		}
 
-		var layer = this.getTopmostLayer(elem.ownerDocument);
+		var layer = this.getTopmostLayer(elem.ownerDocument, true, contextRootElem);
 		layer.appendChild(elem);
 	},
 	/**

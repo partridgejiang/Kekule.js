@@ -60,19 +60,33 @@ Kekule.InChI = {
 		}
 		return InChI._module;
 	},
+	setModule: function(module)
+	{
+		InChI._module = module;
+		EU.setRootModule(inchiInitOptions.moduleName, module);
+	},
 	getInChIPath: function()
 	{
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		var path = isMin? 'extra/': '_extras/InChI/';
-		path = Kekule.scriptSrcInfo.path + path;
+		var path = Kekule.environment.getEnvVar('inchi.path');
+		if (!path)
+		{
+			//var isMin = Kekule.scriptSrcInfo.useMinFile;
+			var isMin = Kekule.isUsingMinJs();
+			path = isMin ? 'extra/' : '_extras/InChI/';
+			path = Kekule.getScriptPath() + path;  // Kekule.scriptSrcInfo.path + path;
+		}
 		return path;
 	},
 	getInChIScriptUrl: function()
 	{
-		var result = InChI.getInChIPath() + InChI.SCRIPT_FILE;
-		var isMin = Kekule.scriptSrcInfo.useMinFile;
-		if (!isMin)
-			result += '.dev';
+		var result = Kekule.environment.getEnvVar('inchi.scriptSrc');
+		if (!result)
+		{
+			result = InChI.getInChIPath() + InChI.SCRIPT_FILE;
+			var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
+			if (!isMin)
+				result += '.dev';
+		}
 		return result;
 	},
 	loadInChIScript: function(doc, callback)
@@ -127,6 +141,24 @@ Kekule.InChI = {
 
 		var sInChIResult = convFunc(molData, options);
 		return JSON.parse(sInChIResult);
+	},
+	/**
+	 * Returns InChIKey from InChI source string
+	 * @param {String} inchiSource
+	 * @param {Int} xtra1
+	 * @param {Int} xtra2
+	 * @returns {Hash}
+	 */
+	getInChIKeyFromInChI: function(inchiSource, xtra1, xtra2)
+	{
+		var convFunc = InChI._getInChIKeyFromInChI;
+		if (!convFunc)
+		{
+			var module = InChI.getModule();
+			convFunc = module.cwrap('getInChIKeyJson', 'string', ['string', 'number', 'number']);
+		}
+		var sResult = convFunc(inchiSource, xtra1, xtra2);
+		return JSON.parse(sResult);
 	},
 
 	/**
@@ -202,6 +234,11 @@ Kekule.IO.InChIWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result = info.inchi;
 			if (info.auxInfo)
 				result += '\n' + info.auxInfo;
+
+			// debug, with InChI key
+			var inchiKeyInfo = InChI.getInChIKeyFromInChI(info.inchi, 1, 1);
+			result += '\n' + JSON.stringify(inchiKeyInfo);
+
 			return result;
 		}
 		else

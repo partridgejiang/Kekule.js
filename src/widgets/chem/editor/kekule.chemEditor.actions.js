@@ -37,6 +37,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_UNDO: 'K-Chem-Undo',
 	ACTION_REDO: 'K-Chem-Redo',
 	ACTION_NEWDOC: 'K-Chem-NewDoc',
+	ACTION_SELECT_ALL: 'K-Chem-SelectAll',
 	ACTION_CLONE_SELECTION: 'K-Chem-Clone-Selection',
 	ACTION_COPY: 'K-Chem-Copy',
 	ACTION_CUT: 'K-Chem-Cut',
@@ -251,9 +252,9 @@ Kekule.Editor.ActionOnEditor = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ActionOnEditor',
 	/** @constructs */
-	initialize: function($super, editor, caption, hint)
+	initialize: function(/*$super, */editor, caption, hint)
 	{
-		$super(editor, caption, hint);
+		this.tryApplySuper('initialize', [editor, caption, hint])  /* $super(editor, caption, hint) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -302,14 +303,14 @@ Kekule.Editor.ActionEditorUndo = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_UNDO,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_UNDO, CWT.HINT_UNDO*/Kekule.$L('ChemWidgetTexts.CAPTION_UNDO'), Kekule.$L('ChemWidgetTexts.HINT_UNDO'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_UNDO, CWT.HINT_UNDO*/Kekule.$L('ChemWidgetTexts.CAPTION_UNDO'), Kekule.$L('ChemWidgetTexts.HINT_UNDO')])  /* $super(editor, \*CWT.CAPTION_UNDO, CWT.HINT_UNDO*\Kekule.$L('ChemWidgetTexts.CAPTION_UNDO'), Kekule.$L('ChemWidgetTexts.HINT_UNDO')) */;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(this.getEditor().getEnableOperHistory() && this.getEditor().canUndo());
 	},
@@ -336,14 +337,14 @@ Kekule.Editor.ActionEditorRedo = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_REDO,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_REDO, CWT.HINT_REDO*/Kekule.$L('ChemWidgetTexts.CAPTION_REDO'), Kekule.$L('ChemWidgetTexts.HINT_REDO'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_REDO, CWT.HINT_REDO*/Kekule.$L('ChemWidgetTexts.CAPTION_REDO'), Kekule.$L('ChemWidgetTexts.HINT_REDO')])  /* $super(editor, \*CWT.CAPTION_REDO, CWT.HINT_REDO*\Kekule.$L('ChemWidgetTexts.CAPTION_REDO'), Kekule.$L('ChemWidgetTexts.HINT_REDO')) */;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(this.getEditor().getEnableOperHistory() && this.getEditor().canRedo());
 	},
@@ -371,9 +372,9 @@ Kekule.Editor.ActionEditorNewDoc = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_NEWDOC,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC*/Kekule.$L('ChemWidgetTexts.CAPTION_NEWDOC'), Kekule.$L('ChemWidgetTexts.HINT_NEWDOC'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC*/Kekule.$L('ChemWidgetTexts.CAPTION_NEWDOC'), Kekule.$L('ChemWidgetTexts.HINT_NEWDOC')])  /* $super(editor, \*CWT.CAPTION_NEWDOC, CWT.HINT_NEWDOC*\Kekule.$L('ChemWidgetTexts.CAPTION_NEWDOC'), Kekule.$L('ChemWidgetTexts.HINT_NEWDOC')) */;
 	},
 	/** @private */
 	doUpdate: function()
@@ -405,9 +406,9 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 	/* @private */
 	// HTML_CLASSNAME: CCNS.ACTION_LOADFILE,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -415,12 +416,12 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 		this.defineProp('enableAppend', {'dataType': DataType.BOOL});
 	},
 	/** @private */
-	doExecute: function($super, target)
+	doExecute: function(/*$super, */target)
 	{
 		var dialog = this.getDataDialog();
 		if (dialog && dialog.setDisplayAppendCheckBox)
 			dialog.setDisplayAppendCheckBox(this._isEditorRootObjAppendable() && !this._isEditorEmpty());
-		return $super(target);
+		return this.tryApplySuper('doExecute', [target])  /* $super(target) */;
 	},
 	/** @private */
 	_getEditorRootObj: function()
@@ -470,7 +471,7 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 		return result;
 	},
 	/** @ignore */
-	doLoadToDisplayer: function($super, chemObj, dialog)
+	doLoadToDisplayer: function(/*$super, */chemObj, dialog)
 	{
 		var editor = this.getDisplayer();
 		var isAppending = dialog.getIsAppending();
@@ -505,7 +506,40 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 			}
 		}
 		else
-			return $super(chemObj, dialog);
+			return this.tryApplySuper('doLoadToDisplayer', [chemObj, dialog])  /* $super(chemObj, dialog) */;
+	}
+});
+
+/**
+ * A select-all action for editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionSelectAll = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionSelectAll# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionSelectAll',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_SELECT_ALL,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_SELECT_ALL'), Kekule.$L('ChemWidgetTexts.HINT_SELECT_ALL')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().getChemObj());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		this.getEditor().selectAll();
 	}
 });
 
@@ -524,9 +558,9 @@ Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_CLONE_SELECTION,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*/Kekule.$L('ChemWidgetTexts.CAPTION_CLONE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION')])  /* $super(editor, \*CWT.CAPTION_CLONE_SELECTION, CWT.HINT_CLONE_SELECTION*\Kekule.$L('ChemWidgetTexts.CAPTION_CLONE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_CLONE_SELECTION')) */;
 	},
 	/** @private */
 	_hasCloneMethod: function()
@@ -535,9 +569,9 @@ Kekule.Editor.ActionCloneSelection = Class.create(Kekule.Editor.ActionOnEditor,
 		return editor && editor.cloneSelection;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(this._hasCloneMethod() && this.getEditor().hasSelection());
 
@@ -612,14 +646,14 @@ Kekule.Editor.ActionCopySelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_COPY,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_COPY, CWT.HINT_COPY*/Kekule.$L('ChemWidgetTexts.CAPTION_COPY'), Kekule.$L('ChemWidgetTexts.HINT_COPY'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_COPY, CWT.HINT_COPY*/Kekule.$L('ChemWidgetTexts.CAPTION_COPY'), Kekule.$L('ChemWidgetTexts.HINT_COPY')])  /* $super(editor, \*CWT.CAPTION_COPY, CWT.HINT_COPY*\Kekule.$L('ChemWidgetTexts.CAPTION_COPY'), Kekule.$L('ChemWidgetTexts.HINT_COPY')) */;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(this.getEditor().hasSelection());
 	},
@@ -663,14 +697,14 @@ Kekule.Editor.ActionCutSelection = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_CUT,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_CUT, CWT.HINT_CUT*/Kekule.$L('ChemWidgetTexts.CAPTION_CUT'), Kekule.$L('ChemWidgetTexts.HINT_CUT'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_CUT, CWT.HINT_CUT*/Kekule.$L('ChemWidgetTexts.CAPTION_CUT'), Kekule.$L('ChemWidgetTexts.HINT_CUT')])  /* $super(editor, \*CWT.CAPTION_CUT, CWT.HINT_CUT*\Kekule.$L('ChemWidgetTexts.CAPTION_CUT'), Kekule.$L('ChemWidgetTexts.HINT_CUT')) */;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(this.getEditor().hasSelection());
 	},
@@ -716,16 +750,16 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_PASTE,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, /*CWT.CAPTION_PASTE, CWT.HINT_PASTE*/Kekule.$L('ChemWidgetTexts.CAPTION_PASTE'), Kekule.$L('ChemWidgetTexts.HINT_PASTE'));
+		this.tryApplySuper('initialize', [editor, /*CWT.CAPTION_PASTE, CWT.HINT_PASTE*/Kekule.$L('ChemWidgetTexts.CAPTION_PASTE'), Kekule.$L('ChemWidgetTexts.HINT_PASTE')])  /* $super(editor, \*CWT.CAPTION_PASTE, CWT.HINT_PASTE*\Kekule.$L('ChemWidgetTexts.CAPTION_PASTE'), Kekule.$L('ChemWidgetTexts.HINT_PASTE')) */;
 		Kekule.Widget.clipboard.addEventListener('setData', this._reactClipboardChange, this);
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		Kekule.Widget.clipboard.removeEventListener('setData', this._reactClipboardChange, this);
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	_reactClipboardChange: function()
@@ -733,9 +767,9 @@ Kekule.Editor.ActionPaste = Class.create(Kekule.Editor.ActionOnEditor,
 		this.update();
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		if (this.getEnabled())
 			this.setEnabled(Kekule.Widget.clipboard.hasData(Kekule.IO.MimeType.JSON) && this.getEditor().canAddNewStandaloneObject());
 	},
@@ -867,9 +901,9 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SELECT,
 	/** @constructs */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT'));
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')])  /* $super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')) */;
 		this.setExplicitGroup('');  // force no check group
 	},
 	/** @ignore */
@@ -878,27 +912,308 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 		return Kekule.Widget.CheckButton;
 	},
 	/** @private */
-	doUpdate: function($super)
+	doUpdate: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doUpdate')  /* $super() */;
 		this.setChecked(this.getEditor().getIsToggleSelectOn());
 	},
 	/** @ignore */
-	checkedChanged: function($super)
+	checkedChanged: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('checkedChanged')  /* $super() */;
 
 	},
 	/** @ignore */
-	doExecute: function($super, target, htmlEvent)
+	doExecute: function(/*$super, */target, htmlEvent)
 	{
-		$super(target, htmlEvent);
+		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
 		var oldChecked = this.getChecked();
 		var editor = this.getEditor();
 		editor.setIsToggleSelectOn(!oldChecked);
 		this.setChecked(!oldChecked);
 	}
 });
+
+/**
+ * Namespace of all operation creation actions for editor.
+ * @namespace
+ */
+Kekule.Editor.ActionOperationCreate = {};
+/**
+ * Base operation creation action for editor.
+ * This type of action is a special action, rather then run execute() directly,
+ * it's main propers is to create one or multiple operations that need to be performed by the editor.
+ * Usually, this type of actions should not be bound to UI directly.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionOperationCreate.Base = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionOperationCreate.Base# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOperationCreate.Base',
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor]);
+	},
+	/**
+	 * Check whether this action can be applied to editor.
+	 * Descendants should override this method.
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 */
+	applicable: function(editor)
+	{
+		var targets = this.getOperationTargets();
+		if (targets && targets.length)
+		{
+			var data = this.getData();
+			for (var i = 0, l = targets.length; i < l; ++i)
+			{
+				if (this.applicableOnTarget(targets[i], data, editor))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		return false;
+	},
+	/**
+	 * Check if an operation can be created on target object in editor.
+	 * Descendants should override this method.
+	 * @param {Object} target
+	 * @param {Hash} data
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Bool}
+	 */
+	applicableOnTarget: function(target, data, editor)
+	{
+		return false;
+	},
+	/**
+	 * Returns objects in editor that act as operation targets.
+	 * Descendants should override this method.
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Array}
+	 */
+	getOperationTargets: function(editor)
+	{
+		return [];
+	},
+	/**
+	 * Returns the associated data to run the action.
+	 * @returns {Hash}
+	 * @private
+	 */
+	getData: function()
+	{
+		return this.ACTION_DATA || {};
+	},
+	/**
+	 * If action can be applied to target chem objects, this method create the concrete operation.
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Kekule.Operation}
+	 * @private
+	 */
+	createOperations: function(editor)
+	{
+		var chemObjs = this.getOperationTargets(editor);
+		var data = this.getData();
+		var opers = [];
+		for (var i = 0, l = chemObjs.length; i < l; ++i)
+		{
+			var target = chemObjs[i];
+			if (this.applicableOnTarget(target, data, editor))
+			{
+				var oper = this.doCreateOperationOnTarget(target, data, editor);
+				if (oper)
+				{
+					opers.push(oper);
+				}
+			}
+		}
+		return opers;
+	},
+	/**
+	 * Do concrete work of creating operation on one target.
+	 * Descendants should override this method.
+	 * @param {Object} target
+	 * @param {Hash} data Data of the modification.
+	 * @param {Kekule.Editor.BaseEditor} editor
+	 * @returns {Kekule.Operation}
+	 * @private
+	 */
+	doCreateOperationOnTarget: function(target, data, editor)
+	{
+		return null;
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		var targets = this.getModificationTargets(editor);
+		var opers = this.createOperations(targets, data, editor);
+		if (opers && opers.length)
+		{
+			editor.execOperations(opers);
+			return true;   // indicating something actually be done
+		}
+		else
+			return false;
+	}
+});
+
+/**
+ * Base operation creation action for editor.
+ * This type of action is a special action, rather then run execute() directly,
+ * it's main propers is to create one or multiple operations that need to be performed by the editor.
+ * Usually, this type of actions should not be bound to UI directly.
+ * @class
+ * @augments Kekule.Editor.ActionOperationCreate.Base
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionOperationCreate.ChemObjModify = Class.create(Kekule.Editor.ActionOperationCreate.Base,
+/** @lends Kekule.Editor.ActionOperationCreate.ChemObjModify# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOperationCreate.ChemObjModify',
+	/** @ignore */
+	getOperationTargets: function(editor)
+	{
+		var result = editor.getHotTrackedObjs();  // first try to apply modification to hot trackeed object
+		if (!result || !result.length)   // then the selection
+		{
+			result = editor.getSelection();
+		}
+		return result;
+	},
+});
+/**
+ * Modify or replace a chem node in editor.
+ * @class
+ * @augments Kekule.Editor.ActionOperationCreate.ChemObjModify
+ */
+Kekule.Editor.ActionOperationCreate.ChemNodeModify = Class.create(Kekule.Editor.ActionOperationCreate.ChemObjModify,
+/** @lends Kekule.Editor.ActionOperationCreate.ChemNodeModify# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOperationCreate.ChemNodeModify',
+	/** @ignore */
+	applicableOnTarget: function(target, data, editor)
+	{
+		// at least there should be a bond connected to target, avoid modifier standalone molecule in editor
+		return (target instanceof Kekule.ChemStructureNode) && !(target instanceof Kekule.Molecule) && (target.getLinkedBonds().length);
+	},
+	/** @ignore */
+	doCreateOperationOnTarget: function(target, data, editor)
+	{
+		return Kekule.Editor.OperationUtils.createNodeModificationOperationFromData(target, data, editor);
+	}
+});
+/**
+ * Modify or replace a chem connector in editor.
+ * @class
+ * @augments Kekule.Editor.ActionOperationCreate.ChemObjModify
+ */
+Kekule.Editor.ActionOperationCreate.ChemConnectorModify = Class.create(Kekule.Editor.ActionOperationCreate.ChemObjModify,
+/** @lends Kekule.Editor.ActionOperationCreate.ChemConnectorModify# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionOperationCreate.ChemConnectorModify',
+	/** @ignore */
+	applicableOnTarget: function(target, data, editor)
+	{
+		return (target instanceof Kekule.ChemStructureConnector);
+	},
+	/** @ignore */
+	doCreateOperationOnTarget: function(target, data, editor)
+	{
+		return new Kekule.ChemObjOperation.Modify(target, data, editor);
+	}
+});
+
+/** @ignore */
+Kekule.Editor.createEditorOperationCreateActionClass = function(classShortName, actionRegName, superClass, actionData)
+{
+	var definition = {};
+	if (classShortName)
+		definition.CLASS_NAME = 'Kekule.Editor.ActionOperationCreate.' + classShortName;
+	if (actionData)
+		definition.ACTION_DATA = actionData;
+	var result = Class.create(superClass, definition);
+	if (actionRegName)
+	{
+		_editorActionRegInfo.push({'name': actionRegName, 'actionClass': result});
+	}
+	return result;
+};
+
+// create and register some default operation create action classes
+function _createAndRegisterNodeModifyActions()
+{
+	var atomIsotopeIds = ['C', 'H', 'O', 'N', 'P', 'S', 'Si', 'F', 'Cl', 'Br', 'I', 'B', 'K', 'Na', 'D'];
+	var repSubgroupNames = ['methyl', 'ethyl', 'phenyl', 'Ac', 'TMS', 'COOCH3', 'OTs'];
+	var superClass = Kekule.Editor.ActionOperationCreate.ChemNodeModify;
+	var create = Kekule.Editor.createEditorOperationCreateActionClass;
+
+	for (var i = 0, l = atomIsotopeIds.length; i < l; ++i)
+	{
+		var actionId = 'atom_' + atomIsotopeIds[i];
+		create(null, actionId, superClass, {'nodeClass': Kekule.Atom, props: {'isotopeId': atomIsotopeIds[i]}});
+	}
+	for (var i = 0, l = repSubgroupNames.length; i < l; ++i)
+	{
+		var repName = repSubgroupNames[i];
+		var actionId = 'subgroup_' + repName;
+		var repItem = Kekule.Editor.RepositoryItemManager.getItem(repName);
+		var structFragment = repItem.getStructureFragment && repItem.getStructureFragment();
+		if (structFragment)
+			create(null, actionId, superClass, {'nodeClass': structFragment.getClass(), 'repositoryItem': repItem});
+	}
+
+	// special nodes
+	create(null, 'subgroup_R', superClass, {'nodeClass': Kekule.SubGroup});
+	create(null, 'atom_variable', superClass, {'nodeClass': Kekule.VariableAtom});
+	create(null, 'atom_dummy', superClass, {'nodeClass': Kekule.Pseudoatom, 'props': {'atomType': Kekule.PseudoatomType.DUMMY}});
+	create(null, 'atom_hetero', superClass, {'nodeClass': Kekule.Pseudoatom, 'props': {'atomType': Kekule.PseudoatomType.HETERO}});
+	create(null, 'atom_any', superClass, {'nodeClass': Kekule.Pseudoatom, 'props': {'atomType': Kekule.PseudoatomType.ANY}});
+}
+
+function _createAndRegisterConnectorModifyActions()
+{
+	var BT = Kekule.BondType;
+	var BO = Kekule.BondOrder;
+	var BS = Kekule.BondStereo;
+	var bondMap = {
+		'single': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE},
+		'double': {'bondType': BT.COVALENT, 'bondOrder': BO.DOUBLE,	'stereo': BS.NONE},
+		'triple': {'bondType': BT.COVALENT, 'bondOrder': BO.TRIPLE,	'stereo': BS.NONE},
+		'quad': {'bondType': BT.COVALENT, 'bondOrder': BO.QUAD,	'stereo': BS.NONE},
+		'up': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.UP},
+		'down': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.DOWN},
+		'closer': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.CLOSER},
+		'upOrDown': {'bondType': BT.COVALENT, 'bondOrder': BO.SINGLE,	'stereo': BS.UP_OR_DOWN}
+	};
+
+	var superClass = Kekule.Editor.ActionOperationCreate.ChemConnectorModify;
+	var create = Kekule.Editor.createEditorOperationCreateActionClass;
+	var names = Kekule.ObjUtils.getOwnedFieldNames(bondMap);
+	for (var i = 0, l = names.length; i < l; ++i)
+	{
+		create(null, 'bond_' + names[i], superClass, bondMap[names[i]]);
+	}
+}
+
+function _createAndRegisterPredefinedOperationCreateActions()
+{
+	_createAndRegisterNodeModifyActions();
+	_createAndRegisterConnectorModifyActions();
+}
+
 
 /**
  * Base class for actions for chem composer.
@@ -915,9 +1230,9 @@ Kekule.Editor.ActionOnComposer = Class.create(Kekule.Action,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ActionOnComposer',
 	/** @constructs */
-	initialize: function($super, composer, caption, hint)
+	initialize: function(/*$super, */composer, caption, hint)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setText(caption);
 		this.setHint(hint);
 		this.setComposer(composer);
@@ -961,17 +1276,17 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ActionOnComposerAdv',
 	/** @constructs */
-	initialize: function($super, composer, caption, hint)
+	initialize: function(/*$super, */composer, caption, hint)
 	{
 		var actions = new Kekule.ActionList();
 		actions.setOwnActions(true);
 		this.setPropStoreFieldValue('attachedActions', actions);
-		$super(composer, caption, hint);
+		this.tryApplySuper('initialize', [composer, caption, hint])  /* $super(composer, caption, hint) */;
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this.getAttachedActions().finalize();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -982,9 +1297,9 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 	},
 
 	/** @private */
-	checkedChanged: function($super)
+	checkedChanged: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('checkedChanged')  /* $super() */;
 		var checked = this.getChecked();
 		//console.log('self checked change', this.getClassName(), checked);
 		if (this.hasAttachedActions())
@@ -1091,9 +1406,9 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 		// TODO
 	},
 	/** @ignore */
-	update: function($super)
+	update: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('update')  /* $super() */;
 		this.getAttachedActions().updateAll();
 	}
 });
@@ -1113,9 +1428,9 @@ Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionO
 	/** @private */
 	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_INSPECTOR,
 	/** @constructs */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer, /*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*/Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR'));
+		this.tryApplySuper('initialize', [composer, /*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*/Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR')])  /* $super(composer, \*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*\Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR')) */;
 		//this.setCheckGroup(this.getClassName());
 	},
 	/** @private */
@@ -1155,9 +1470,9 @@ Kekule.Editor.ActionComposerSetIaController = Class.create(Kekule.Editor.ActionO
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ActionComposerSetIaController',
 	/** @constructs */
-	initialize: function($super, composer, caption, hint, controllerId)
+	initialize: function(/*$super, */composer, caption, hint, controllerId)
 	{
-		$super(composer, caption, hint);
+		this.tryApplySuper('initialize', [composer, caption, hint])  /* $super(composer, caption, hint) */;
 		this.setPropStoreFieldValue('iaControllerId', controllerId);
 	},
 	/** @private */
@@ -1190,9 +1505,9 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 	var data = {
 		CLASS_NAME: className,
 		HTML_CLASSNAME: htmlClassName,
-		initialize: function($super, composer)
+		initialize: function(/*$super, */composer)
 		{
-			$super(composer, caption, hint, iaControllerId);
+			this.tryApplySuper('initialize', [composer, caption, hint, iaControllerId])  /* $super(composer, caption, hint, iaControllerId) */;
 			if (this.initAttachedActions)
 				this.initAttachedActions();
 		}
@@ -1206,7 +1521,7 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 		var oldDoExecute;
 		if (data.doExecute)  // has set a doExecute in methods
 		  oldDoExecute = data.doExecute;
-		data.doExecute = function($super)
+		data.doExecute = function(/*$super*/)
 		{
 			var editor = this.getEditor();
 			var controller = editor.getIaController(iaControllerId);
@@ -1216,9 +1531,11 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 			}
 			//console.log('execute self', this.getClassName());
 			if (oldDoExecute)
-				oldDoExecute.apply(this, [$super]);
+				//oldDoExecute.apply(this, [$super]);
+				oldDoExecute.apply(this);
 			else
-				$super();
+				//$super();
+				this.tryApplySuper('doExecute');
 		}
 	}
 	if (attachedActionClasses)
@@ -1274,9 +1591,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerMarquee = Kekule.Editor.creat
 	},
 	null,
 	{
-		doExecute: function($super)
+		doExecute: function(/*$super*/)
 		{
-			$super();
+			this.tryApplySuper('doExecute')  /* $super() */;
 			var editor = this.getEditor();
 			editor.setSelectMode(Kekule.Editor.SelectMode.RECT);
 		}
@@ -1295,9 +1612,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerLasso = Kekule.Editor.createC
 	},
 	null,
 	{
-		doExecute: function($super)
+		doExecute: function(/*$super*/)
 		{
-			$super();
+			this.tryApplySuper('doExecute')  /* $super() */;
 			var editor = this.getEditor();
 			editor.setSelectMode(Kekule.Editor.SelectMode.POLYGON);
 		}
@@ -1316,9 +1633,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerBrush = Kekule.Editor.createC
 	},
 	null,
 	{
-		doExecute: function($super)
+		doExecute: function(/*$super*/)
 		{
-			$super();
+			this.tryApplySuper('doExecute')  /* $super() */;
 			var editor = this.getEditor();
 			editor.setSelectMode(Kekule.Editor.SelectMode.POLYLINE);
 		}
@@ -1337,9 +1654,9 @@ Kekule.Editor.ActionComposerSetManipulateControllerAncestor = Kekule.Editor.crea
 	},
 	null,
 	{
-		doExecute: function($super)
+		doExecute: function(/*$super*/)
 		{
-			$super();
+			this.tryApplySuper('doExecute')  /* $super() */;
 			var editor = this.getEditor();
 			editor.setSelectMode(Kekule.Editor.SelectMode.ANCESTOR);
 		}
@@ -1376,9 +1693,9 @@ Kekule.Editor.ActionComposerSetEraserController = Kekule.Editor.createComposerIa
 	null,
 	null,
 	{
-		doExecute: function($super)
+		doExecute: function(/*$super*/)
 		{
-			$super();
+			this.tryApplySuper('doExecute')  /* $super() */;
 			var editor = this.getEditor();
 			if (editor.hasSelection())
 				editor.getActiveIaController().removeSelection();
@@ -2516,6 +2833,7 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 	reg(BNS.undo, CE.ActionEditorUndo, widgetClass);
 	reg(BNS.redo, CE.ActionEditorRedo, widgetClass);
+	reg(BNS.selectAll, CE.ActionSelectAll, widgetClass);
 	reg(BNS.cloneSelection, CE.ActionCloneSelection, widgetClass);
 	reg(BNS.copy, CE.ActionCopySelection, widgetClass);
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
@@ -2535,6 +2853,8 @@ Kekule._registerAfterLoadSysProc(function(){
 	//reg(BNS.glyph, CE.ActionComposerSetRepositoryGlyphController, widgetClass);
 
 	reg(BNS.objInspector, CE.ActionComposerToggleInspector, widgetClass);
+
+	_createAndRegisterPredefinedOperationCreateActions();
 
 	// actions created by function createComposerIaControllerActionClass
 	for (var i = 0, l = _editorActionRegInfo.length; i < l; ++i)

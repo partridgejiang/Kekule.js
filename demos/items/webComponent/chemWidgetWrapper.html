@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Component Normal Widget Wrapper Test</title>
+  <style>
+    #stage
+    {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    #stage fieldset
+    {
+      flex: 0 0 auto;
+    }
+  </style>
+  <script src="../../libs/Three.js"></script>
+  <script src="../../libs/kekule/kekule.js?modules=chemWidget,webComponent"></script>
+  <script type="chemical/x-mdl-molfile" id="resMol">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+  </script>
+  <script name="mol3D" id="mol3D" type="chemical/x-mdl-molfile">
+Untitled Document-2
+  Kekule  07101201153D
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+   -0.3586    0.0000   -0.1337 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0564    0.0000   -0.1337 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.0000   -1.1978 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779    0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6779   -0.9530    0.3397 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3358    0.0000    0.7858 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  3  1  0
+  1  4  1  0
+  1  5  1  0
+  2  6  1  0
+M  END
+	</script>
+  <script>
+		Kekule.X.domReady(function(){
+
+    });
+  </script>
+</head>
+<body>
+  <div id="stage">
+    <fieldset>
+      <legend>Viewer</legend>
+      <kekule-viewer id="viewerComp" style="width:600px;height:400px" predefined-setting="fullFunc" chem-obj="url(#mol3D)" render-type="3"></kekule-viewer>
+    </fieldset>
+    <fieldset>
+      <legend>Composer</legend>
+      <kekule-composer id="composerComp" chem-obj="url(#resMol)" style="width:600px;height:400px"></kekule-composer>
+    </fieldset>
+    <fieldset>
+      <legend>Periodic Table</legend>
+      <kekule-periodic-table></kekule-periodic-table>
+    </fieldset>
+  </div>
+</body>
+</html>

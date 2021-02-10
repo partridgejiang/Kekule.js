@@ -13,7 +13,7 @@ var CNS = Kekule.Widget.HtmlClassNames;
 /** @ignore */
 Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	TREEVIEW: 'K-TreeView',
-	//TREEVIEW_ITEM: 'K-TreeView-Item',
+	//TREEVIEW_ITEM_HOLDER: 'K-TreeView-ItemHolder',
 	TREEVIEW_EXPANDMARK: 'K-TreeView-ExpandMark',
 	TREEVIEW_ITEMCONTENT: 'K-TreeView-ItemContent'
 });
@@ -26,6 +26,13 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
  * @property {Array} selection All selected items in tree view.
  * @property {Object} selectedItem Recent selected item in tree view.
  * @property {Bool} enableMultiSelected Whether only one tree node can be selected at same time.
+ * @property {Bool} autoScrollToSelected Whether scroll to selected node automatically.
+ */
+/**
+ * Invoked when the selection is changed in the tree.
+ *   event param of it has one fields: {selection: Array, selectedItem: HTMLElement}
+ * @name Kekule.Widget.TreeView#selectionChange
+ * @event
  */
 Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 /** @lends Kekule.Widget.TreeView# */
@@ -65,17 +72,18 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 				this.select(value);
 			}
 		});
-		this.defineProp('enableMultiSelected', {'dataType': DataType.BOOL});
+		this.defineProp('autoScrollToSelected', {'dataType': DataType.BOOL});
+		this.defineProp('enableMultiSelect', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	doGetWidgetClassName: function()
 	{
-		return CNS.TREEVIEW;
+		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CNS.TREEVIEW;
 	},
 	/** @private */
-	doCreateChildItemElem: function($super)
+	doCreateChildItemElem: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('doCreateChildItemElem')  /* $super() */;
 		if (result)  // create expand marker
 		{
 			var marker = this.createGlyphContent(result, null, CNS.TREEVIEW_EXPANDMARK);
@@ -144,7 +152,16 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 	 */
 	selectionChanged: function()
 	{
+		if (this.getAutoScrollToSelected())
+		{
+			var activeItem = this.getSelectedItem();
+			if (activeItem && activeItem.scrollIntoView)
+				activeItem.scrollIntoViewIfNeeded();  // TODO: scrollIntoViewIfNeeded is only available in webkit
+		}
 		this.notifyPropSet('selection', this.getSelection());
+		this.invokeEvent('selectionChange', {
+			'selection': this.getSelection(), 'selectedItem': this.getSelectedItem()
+		});
 	},
 	/**
 	 * Clear all items in selection.
@@ -198,7 +215,7 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 			var adds = Kekule.ArrayUtils.toArray(items);
 			if (adds && adds.length)
 			{
-				if (!this.getEnableMultiSelected())
+				if (!this.getEnableMultiSelect())
 				{
 					this.clearSelection();
 					adds = [adds[adds.length - 1]];
@@ -255,8 +272,9 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 	/**
 	 * Select items in tree view.
 	 * @param {Variant} items An item element or array of items.
+	 * @Bool {scrollIntoView}
 	 */
-	select: function(items)
+	select: function(items, scrollIntoView)
 	{
 		this.beginUpdate();
 		try
@@ -264,7 +282,7 @@ Kekule.Widget.TreeView = Class.create(Kekule.Widget.NestedContainer,
 			this.clearSelection();
 			if (items)
 			{
-				if (this.getEnableMultiSelected())
+				if (this.getEnableMultiSelect())
 					this.addToSelection(items);
 				else
 				{

@@ -68,6 +68,7 @@ Kekule.ChemStructureUtils = {
 	 */
 	getChildStructureObjs: function(chemObj, cascade)
 	{
+		var isComplex = true;
 		var result;
 		if (chemObj instanceof Kekule.CompositeMolecule)
 			result = chemObj.getSubMolecules().getAllObjs();
@@ -81,19 +82,20 @@ Kekule.ChemStructureUtils = {
 			result = chemObj.getChildren();
 		else
 		{
+			isComplex = false;
 			return [chemObj];
 		}
 		result = [].concat(result);  // clone result, avoid affect properties of chemObj
 
 		// if not returned and cascade, need future check
-		if (cascade)
+		if (cascade && isComplex)
 		{
 			var newResult = [];
 			for (var i = 0, l = result.length; i < l; ++i)
 			{
 				var obj = result[i];
 				var cascadeChilds = Kekule.ChemStructureUtils.getChildStructureObjs(obj, cascade);
-				if (cascadeChilds.length <= 1)  // can not find cascade children
+				if (!cascadeChilds.length || (cascadeChilds.length === 1 && cascadeChilds[0] === obj))  // can not find cascade children
 					Kekule.ArrayUtils.pushUnique(newResult, obj);
 				else  // children find, use them to replace obj
 				{
@@ -561,9 +563,9 @@ Kekule.TokenAnalyzer = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, text)
+	initialize: function(/*$super, */text)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setSrcText(text);
 	},
 	/** @private */

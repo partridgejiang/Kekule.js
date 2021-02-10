@@ -71,12 +71,12 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.FormWidget',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, isDumb)
+	initialize: function(/*$super, */parentOrElementOrDocument, isDumb)
 	{
 		this.reactValueChangeBind = this.reactValueChange.bind(this);  // important, this method must be set before bind to element
 		this.reactInputBind = this.reactInput.bind(this);
 		this.setPropStoreFieldValue('isDirty', false);
-		$super(parentOrElementOrDocument, isDumb);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, isDumb])  /* $super(parentOrElementOrDocument, isDumb) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -101,15 +101,15 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		return true;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.FORMCONTROL;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.FORMCONTROL;
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		var coreElem = this.getCoreElement();
 		if (coreElem)
 		{
@@ -128,7 +128,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	doUnbindElement: function($super, element)
+	doUnbindElement: function(/*$super, */element)
 	{
 		var coreElem = this.getCoreElement();
 		if (coreElem)
@@ -138,7 +138,7 @@ Kekule.Widget.FormWidget = Class.create(Kekule.Widget.BaseWidget,
 			if (this._bindKeyupEvent)
 				Kekule.X.Event.removeListener(coreElem, 'keyup', this.reactInputBind);  // for IE6-8
 		}
-		$super(element);
+		this.tryApplySuper('doUnbindElement', [element])  /* $super(element) */;
 	},
 	notifyValueChanged: function()
 	{
@@ -185,9 +185,9 @@ Kekule.Widget.CheckBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, checked)
+	initialize: function(/*$super, */parentOrElementOrDocument, checked)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (Kekule.ObjUtils.notUnset(checked))
 			this.setChecked(!!checked);
 	},
@@ -225,9 +225,9 @@ Kekule.Widget.CheckBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.CHECKBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.CHECKBOX;
 	},
 
 	/**
@@ -313,9 +313,9 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['input'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 		//this.setUseCornerDecoration(true);
@@ -340,9 +340,9 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TEXTBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TEXTBOX;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -352,9 +352,9 @@ Kekule.Widget.TextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		element.setAttribute('type', 'text');
 	}
 });
@@ -378,9 +378,9 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 		//this.setBubbleUiEvents(true);
@@ -466,10 +466,10 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 		});
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._finalizeSubWidgets();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	_finalizeSubWidgets: function()
@@ -494,19 +494,19 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	getCoreElement: function($super)
+	getCoreElement: function(/*$super*/)
 	{
 		var textBox = this.getTextBox();
 		if (textBox)
 			return textBox.getElement();
 		else
-			return $super();
+			return this.tryApplySuper('getCoreElement')  /* $super() */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COMBOTEXTBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COMBOTEXTBOX;
 	},
 
 	/** @ignore */
@@ -516,9 +516,9 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		var result = $super(doc, rootElem);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 
 		var self = this;
 		this._finalizeSubWidgets();
@@ -547,12 +547,12 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	relayEvent: function($super, eventName, event)
+	relayEvent: function(/*$super, */eventName, event)
 	{
 		var invokerWidget = event.widget;
 		if ((invokerWidget === this.getTextBox()) || (invokerWidget === this.getHeadingWidget()) || (invokerWidget === this.getTailingWidget()))
 			event.widget = this;
-		return $super(eventName, event);
+		return this.tryApplySuper('relayEvent', [eventName, event])  /* $super(eventName, event) */;
 	},
 
 	/** @ignore */
@@ -576,9 +576,9 @@ Kekule.Widget.ComboTextBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown, byDomChange)
+	widgetShowStateChanged: function(/*$super, */isShown, byDomChange)
 	{
-		$super(isShown, byDomChange);
+		this.tryApplySuper('widgetShowStateChanged', [isShown, byDomChange])  /* $super(isShown, byDomChange) */;
 		if (isShown)
 			this.adjustWidgetsSize();
 	},
@@ -690,9 +690,9 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ButtonTextBox',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument, text);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, text])  /* $super(parentOrElementOrDocument, text) */;
 		this.setOverlapOnTextBox(true);
 	},
 	/** @private */
@@ -711,15 +711,15 @@ Kekule.Widget.ButtonTextBox = Class.create(Kekule.Widget.ComboTextBox,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.BUTTONTEXTBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.BUTTONTEXTBOX;
 	},
 
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		var result = $super(doc, rootElem);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 		var btn = this.createAssocButton();
 		if (btn)
 			result.push(btn.getElement());
@@ -796,9 +796,9 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['textarea'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text)
+	initialize: function(/*$super, */parentOrElementOrDocument, text)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 		//this.setUseCornerDecoration(true);
@@ -854,9 +854,9 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TEXTAREA;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TEXTAREA;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -866,32 +866,32 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		this.adjustAutoSize();
 	},
 
 	/** @ignore */
-	setValue: function($super, value)
+	setValue: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('setValue', [value])  /* $super(value) */;
 		this.adjustAutoSize();
 	},
 
 	/** @ignore */
-	widgetShowStateChanged: function($super, isShown, byDomChange)
+	widgetShowStateChanged: function(/*$super, */isShown, byDomChange)
 	{
-		$super(isShown, byDomChange);
+		this.tryApplySuper('widgetShowStateChanged', [isShown, byDomChange])  /* $super(isShown, byDomChange) */;
 		if (isShown)
 			this.adjustAutoSize();
 	},
 
 	/** @ignore */
-	doFileDragDrop: function($super, files)
+	doFileDragDrop: function(/*$super, */files)
 	{
 		if (!files /* || files.length > 1 */)
-			return $super();
+			return this.tryApplySuper('doFileDragDrop')  /* $super() */;
 		else  // if only one file is dropped in, output the file content
 		{
 			if (Kekule.BrowserFeature.fileapi)
@@ -911,10 +911,10 @@ Kekule.Widget.TextArea = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	reactValueChange: function($super)
+	reactValueChange: function(/*$super*/)
 	{
 		this.adjustAutoSize();
-		$super();
+		this.tryApplySuper('reactValueChange')  /* $super() */;
 	},
 	/** @ignore */
 	react_keyup: function()
@@ -1028,9 +1028,9 @@ Kekule.Widget.SelectBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	ITEM_VALUE_FIELD: '__$item_value__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, items)
+	initialize: function(/*$super, */parentOrElementOrDocument, items)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (items)
 			this.setItems(items);
 		//this.setUseCornerDecoration(true);
@@ -1140,9 +1140,9 @@ Kekule.Widget.SelectBox = Class.create(Kekule.Widget.FormWidget,
 		*/
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.SELECTBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.SELECTBOX;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -1163,9 +1163,9 @@ Kekule.Widget.SelectBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 	},
 	/** @private */
 	doGetValue: function()
@@ -1311,9 +1311,9 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['div', 'span'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1351,10 +1351,10 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 		this.defineProp('textBox', {'dataType': 'Kekule.Widget.TextBox', 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
 		this.defineProp('selectBox', {'dataType': 'Kekule.Widget.SelectBox', 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
 	},
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._finalizeSubElements();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	_finalizeSubElements: function()
 	{
@@ -1373,19 +1373,19 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	getCoreElement: function($super)
+	getCoreElement: function(/*$super*/)
 	{
 		var textBox = this.getTextBox();
 		if (textBox)
 			return textBox.getElement();
 		else
-			return $super();
+			return this.tryApplySuper('getCoreElement')  /* $super() */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.COMBOBOX;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.COMBOBOX;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -1456,7 +1456,7 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	relayEvent: function($super, eventName, event)
+	relayEvent: function(/*$super, */eventName, event)
 	{
 		var invokerWidget = event.widget;
 		if ((invokerWidget === this.getTextBox()) || (invokerWidget === this.getSelectBox()))
@@ -1465,7 +1465,7 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 			if (eventName === 'valueChange')  // avoid call value change twice
 				return;
 		}
-		return $super(eventName, event);
+		return this.tryApplySuper('relayEvent', [eventName, event])  /* $super(eventName, event) */;
 	},
 
 	/**
@@ -1506,15 +1506,15 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doGetValue: function($super)
+	doGetValue: function(/*$super*/)
 	{
-		var text = $super();
+		var text = this.tryApplySuper('doGetValue')  /* $super() */;
 		// check if text is in select box, if so, return corresponding select box value
 		var result = this._getValueOfText(text);
 		return result;
 	},
 	/** @ignore */
-	doSetValue: function($super, value)
+	doSetValue: function(/*$super, */value)
 	{
 		var text = value;
 		// check if value is in select box, if so, set corresponding text to text box
@@ -1531,7 +1531,7 @@ Kekule.Widget.ComboBox = Class.create(Kekule.Widget.FormWidget,
 				break;
 			}
 		}
-		$super(text);  // set value of core element(text box)
+		this.tryApplySuper('doSetValue', [text])  /* $super(text) */;  // set value of core element(text box)
 	}
 });
 
@@ -1560,9 +1560,9 @@ Kekule.Widget.NumInput = Class.create(Kekule.Widget.FormWidget,
 	/** @private */
 	DEF_STEP: 1,
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, minValue, maxValue, step, controlType)
+	initialize: function(/*$super, */parentOrElementOrDocument, minValue, maxValue, step, controlType)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (OU.notUnset(minValue))
 			this.setMinValue(minValue);
 		if (OU.notUnset(maxValue))
@@ -1605,18 +1605,18 @@ Kekule.Widget.NumInput = Class.create(Kekule.Widget.FormWidget,
 		});
 	},
 	/** @ignore */
-	doGetValue: function($super)  // convert the type of value to number
+	doGetValue: function(/*$super*/)  // convert the type of value to number
 	{
-		var v = $super();
+		var v = this.tryApplySuper('doGetValue')  /* $super() */;
 		if (v)
 			return parseFloat(v);
 		else
 			return 0;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.NUMINPUT;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.NUMINPUT;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -1626,9 +1626,9 @@ Kekule.Widget.NumInput = Class.create(Kekule.Widget.FormWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		element.setAttribute('type', 'range');
 	}
 });

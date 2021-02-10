@@ -73,9 +73,9 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, coord2D, coord3D)
+	initialize: function(/*$super, */id, coord2D, coord3D)
 	{
-		$super(id);
+		this.tryApplySuper('initialize', [id])  /* $super(id) */;
 		if (coord2D)
 			this.setCoord2D(coord2D);
 		if (coord3D)
@@ -147,7 +147,7 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
 	 */
-	getContainerBox: function($super, coordMode, allowCoordBorrow)
+	getContainerBox: function(/*$super, */coordMode, allowCoordBorrow)
 	{
 		var coord1 = this.getAbsCoordOfMode(coordMode, allowCoordBorrow) || {};
 		var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
@@ -194,9 +194,9 @@ Kekule.TextBlock = Class.create(Kekule.ContentBlock,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, text, coord2D, coord3D)
+	initialize: function(/*$super, */id, text, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		this.setText(text || '');
 	},
 	/** @private */
@@ -210,7 +210,7 @@ Kekule.TextBlock = Class.create(Kekule.ContentBlock,
 		return 't';
 	},
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
 		// when text block changed, size may need to be recalculated
 		if (Kekule.ArrayUtils.intersect(['text', 'renderOptions'], modifiedPropNames).length)
@@ -238,9 +238,9 @@ Kekule.ImageBlock = Class.create(Kekule.ContentBlock,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, id, src, coord2D, coord3D)
+	initialize: function(/*$super, */id, src, coord2D, coord3D)
 	{
-		$super(id, coord2D, coord3D);
+		this.tryApplySuper('initialize', [id, coord2D, coord3D])  /* $super(id, coord2D, coord3D) */;
 		if (src)
 			this.setSrc(src);
 	},

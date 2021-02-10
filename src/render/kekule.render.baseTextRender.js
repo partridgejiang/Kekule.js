@@ -165,9 +165,9 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	/** @private */
 	ITEM_PARENT_FIELD: '__$parent__',
 	/** @construct */
-	initialize: function($super, bridge, options, drawConfigs)
+	initialize: function(/*$super, */bridge, options, drawConfigs)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		//this.paper = paper || null;
 		this.options = options || {};
 

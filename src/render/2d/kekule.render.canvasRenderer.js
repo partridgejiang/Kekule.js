@@ -9,7 +9,8 @@
  * requires /core/kekule.structures.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.baseTextRender.js
- * requires /render/2d/kekule.render.def2DRenderer.js
+ * requires /render/2d/kekule.render.render2D.js
+ *
  */
 
 "use strict";
@@ -18,7 +19,7 @@
  * Render bridge class of HTML5 Canvas.
  * @class
  */
-Kekule.Render.CanvasRendererBridge = Class.create(
+Kekule.Render.CanvasRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBridge,
 /** @lends Kekule.Render.CanvasRendererBridge# */
 {
 	/** @private */
@@ -62,11 +63,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
-	 * @param {Bool} doubleBuffered Whether use double buffer to make smooth drawing.
-	 * @returns {Object} Context used for drawing.
+	 * @param {Hash} params Additional params to create context.
+	 * //@param {Bool} doubleBuffered Whether use double buffer to make smooth drawing.
+	 * //@returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height, id, doubleBuffered)
+	createContext: function(parentElem, width, height, params /* id, doubleBuffered */)
 	{
+		var id = params && params.id;
+		var doubleBuffered = params && params.doubleBuffered;
 
 		if (doubleBuffered === undefined)
 			doubleBuffered = this.DEF_DOUBLE_BUFFERED;
@@ -87,18 +91,32 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			canvas.style.height = height + 'px';
 		}
 		*/
+
+		var createOps = {'alpha': true};
+		if (params)
+			createOps = Object.extend(createOps, params);
+
 		parentElem.appendChild(canvas);
 
-		var ctx = canvas.getContext('2d');
+		var ctx = canvas.getContext('2d', createOps);
 		if (doubleBuffered)
 		{
 			var shadowCanvas = document.createElement('canvas');
 			shadowCanvas.style.position = 'absolute';
 			shadowCanvas.style.display = 'none';
+			/* debug
+			shadowCanvas.style.top = '200px';
+			shadowCanvas.style.left = 0;
+			shadowCanvas.className = 'K-Shadow-Canvas';
+			canvas.className = 'K-Render-Canvas';
+			*/
 			parentElem.appendChild(shadowCanvas);
 			ctx[this.SHADOW_CANVAS_FIELD] = shadowCanvas;
-			ctx[this.SHADOW_CONTEXT_FIELD] = shadowCanvas.getContext('2d');
+			ctx[this.SHADOW_CONTEXT_FIELD] = shadowCanvas.getContext('2d', createOps);
 		}
+
+		if (params && params.overSamplingRatio)
+			this.setContextParam(ctx, 'overSamplingRatio', params.overSamplingRatio);
 
 		this.setContextDimension(ctx, width, height);
 
@@ -123,23 +141,23 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	},
 
 	/**
-	 * Get width and height of context.
+	 * Get the raw width and height of context.
 	 * @param {Object} context
 	 * @returns {Hash} {width, height}
 	 */
-	getContextDimension: function(context)
+	_getContextRawDimension: function(context)
 	{
 		return {'width': context.canvas.width, 'height': context.canvas.height};
 	},
 
 	/**
-	 * Set new width and height of context.
+	 * Set new raw width and height of context.
 	 * Note in canvas, the content should be redrawn after resizing.
 	 * @param {Object} context
 	 * @param {Int} width
 	 * @param {Int} height
 	 */
-	setContextDimension: function(context, width, height)
+	_setContextRawDimension: function(context, width, height)
 	{
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (width)
@@ -191,6 +209,14 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 	},
 
 	/**
+	 * Prepare the context for drawing.
+	 * @param {Object} context
+	 */
+	prepareContext: function(context)
+	{
+		// do nothing here
+	},
+	/**
 	 * Clear the whole context.
 	 * @param {Object} context
 	 */
@@ -236,35 +262,43 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 		}
 	},
 
+	/*
+	setFilter: function(context, filter)
+	{
+		if (context)
+		{
+			context.filter = filter;
+			var shadowContext = this.getShadowContext(context);
+			if (shadowContext)
+				shadowContext.filter = filter;
+		}
+	},
+	clearFilter: function(context)
+	{
+		this.setFilter(context, 'none');
+	},
+	*/
+	setFilter: function(context, filter)
+	{
+		var elem = this.getContextElem(context);
+		if (elem)
+		{
+			elem.style.filter = filter;
+		}
+	},
+	clearFilter: function(context)
+	{
+		this.setFilter(context, 'none');
+	},
+
 	renderContext: function(context)
 	{
 		var shadowCanvas = this.getShadowCanvas(context);
 		if (shadowCanvas)  // double buffering
 		{
-			//console.log('double buffered');
-			context.drawImage(shadowCanvas, 0, 0);
+			var dim = this.getContextDimension(context);
+			context.drawImage(shadowCanvas, 0, 0, dim.width, dim.height);
 		}
-	},
-
-	/**
-	 * Transform a context based coord to screen based one (usually in pixel).
-	 * @param {Object} context
-	 * @param {Hash} coord
-	 * @return {Hash}
-	 */
-	transformContextCoordToScreen: function(context, coord)
-	{
-		return coord;
-	},
-	/**
-	 * Transform a screen based coord to context based one.
-	 * @param {Object} context
-	 * @param {Hash} coord
-	 * @return {Hash}
-	 */
-	transformScreenCoordToContext: function(context, coord)
-	{
-		return coord;
 	},
 
 	// methods to draw graphics
@@ -499,6 +533,15 @@ Kekule.Render.CanvasRendererBridge = Class.create(
 			//if (context.lineWidth !== 1)
 			context.lineWidth = 1;
 		}
+		/*
+		if (options.blurRatio)
+		{
+			var blur = context.lineWidth * options.blurRatio || 0;
+			context.filter = 'blur(' + blur + 'px)';
+		}
+		else
+			context.filter = 'none';
+		*/
 		if (options.strokeColor /* && context.strokeStyle !== options.strokeColor */)
 			context.strokeStyle = options.strokeColor;
 

@@ -68,9 +68,9 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Atom',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 	},
 	/** @private */
@@ -248,9 +248,10 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 				.setShowText(true).setDisplayed(!!nodes.length);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var data = this.getAtomSetter().getValue();
+		//console.log(data);
 		var opers = [];
 		//var nodes = this._filterStructureNodes(targets);
 		var nodes = this._getActualModificationNodes(targets);
@@ -280,6 +281,7 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	/** @private */
 	_createNewDataToAtomOperation: function(newData, atom)
 	{
+		/*
 		if (!newData)
 			return;
 		//console.log('apply setter', newData);
@@ -311,12 +313,16 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		{
 			return this._createModificationOperation(atom, newNode, nodeClass, modifiedProps);
 		}
+		*/
+		return Kekule.Editor.OperationUtils.createNodeModificationOperationFromData(atom, newData, this.getEditor());
 	},
 	/**
 	 * @private
+	 * @deprecated
 	 */
 	_createModificationOperation: function(node, newNode, newNodeClass, modifiedProps)
 	{
+		/*
 		var newNode;
 		var operGroup, oper;
 		var oldNodeClass = node.getClass();
@@ -345,6 +351,9 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 
 		var operation = operGroup || oper;
 		return operation;
+		*/
+		//console.log(newNode && newNode.getClassName(), ClassEx.getClassName(newNodeClass), modifiedProps);
+		return Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, newNodeClass, modifiedProps, this.getEditor());
 	}
 });
 
@@ -359,9 +368,9 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Bond',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._activeSelBtnHtmlClass = null;
 		this._defaultBondTypeData = null;
 		this._valueStorage = {};
@@ -597,7 +606,7 @@ Kekule.Editor.ObjModifier.Bond = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		this.getWidget().setDisplayed(!!connectors.length);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var data = this.getBondSelector().getActiveBondPropValues();
 		//console.log('modify data', data);
@@ -684,9 +693,9 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.Charge',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 	},
 	/** @private */
@@ -822,7 +831,7 @@ Kekule.Editor.ObjModifier.Charge = Class.create(Kekule.Editor.ObjModifier.ChemSt
 		this.getWidget().setDisplayed(showModifier);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		var charge = this.getChargeSelector().getValue();
 		var opers = [];

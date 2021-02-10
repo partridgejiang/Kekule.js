@@ -36,6 +36,7 @@ var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	COMPOSER: 'K-Chem-Composer',
+	COMPOSER_GRID_LAYOUT: 'K-Chem-Composer-Grid-Layout',  // a special class indicating that the composer is using CSS grid layout
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
 	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
@@ -149,9 +150,9 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	LINKED_VALUE_FIELD: '__$value__',
 	/** @constructs */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 		this.setPropStoreFieldValue('composer', composer);
 		this.createChildWidgets();
 		this.appendToWidget(composer);
@@ -175,10 +176,10 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 		this._isApplying = false;  // private
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.clearWidgets();  // already clear in $super()
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -252,14 +253,14 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setShowGlyph(true);
 	},
 
 	/** @ignore */
-	removeWidget: function($super, widget, doNotFinalize)
+	removeWidget: function(/*$super, */widget, doNotFinalize)
 	{
 		if (widget === this.getFontNameBox())
 			this.setPropStoreFieldValue('fontNameBox', null);
@@ -273,13 +274,13 @@ Kekule.Editor.ComposerStyleToolbar = Class.create(Kekule.Widget.Toolbar,
 			this.setPropStoreFieldValue('textHorizontalAlignButtonSet', null);
 		if (widget === this.getTextVerticalAlignButtonSet())
 			this.setPropStoreFieldValue('textVerticalAlignButtonSet', null);
-		$super(widget, doNotFinalize);
+		this.tryApplySuper('removeWidget', [widget, doNotFinalize])  /* $super(widget, doNotFinalize) */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_STYLE_TOOLBAR;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_STYLE_TOOLBAR;
 		return result;
 	},
 
@@ -770,9 +771,9 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ComposerObjModifierToolbar',
 	/** @constructs */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 		this.setPropStoreFieldValue('modifiers', []);
 		this.setPropStoreFieldValue('modifierMap', new Kekule.MapEx());
 		this.setPropStoreFieldValue('composer', composer);
@@ -819,26 +820,26 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
 		this.defineProp('modifiers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setShowGlyph(true);
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.clearWidgets();
 		this.getModifierMap().finalize();
 		var modifiers = this.getModifiers();
 		for (var i = 0, l = modifiers.length; i < l; ++i)
 			modifiers[i].finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_OBJMODIFIER_TOOLBAR;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_TOOLBAR + ' ' + CCNS.COMPOSER_OBJMODIFIER_TOOLBAR;
 		return result;
 	},
 
@@ -1052,7 +1053,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	CHEM_TOOL_CHILD_FIELDS: '__$children__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, editor)
+	initialize: function(/*$super, */parentOrElementOrDocument, editor)
 	{
 		/*
 		this.updateStyleToolbarStateBind = this.updateStyleToolbarState.bind(this);
@@ -1064,7 +1065,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.setPropStoreFieldValue('enableObjModifierToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
 		this.setPropStoreFieldValue('editorNexus', new Kekule.Editor.EditorNexus());
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 
 		/*
 		if (!editor)
@@ -1089,7 +1090,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.uiLayoutChanged();
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		//this.getPainter().finalize();
 		var toolBar = this.getCommonBtnGroup();
@@ -1102,7 +1103,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (editor)
 			editor.finalize();
 		this.getEditorNexus().finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1499,10 +1500,18 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		var result = $super() + ' ' + CCNS.COMPOSER;
+		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER;
+		if (this._isUsingGridLayout())
+			result += ' ' + CCNS.COMPOSER_GRID_LAYOUT;
 		return result;
+	},
+
+	/** @private */
+	_isUsingGridLayout: function()
+	{
+		return Kekule.BrowserFeature.cssGrid;
 	},
 
 	/** @ignore */
@@ -1512,9 +1521,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
-		$super(isShown);
+		this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 		if (isShown)
 			this.adjustComponentPositions();
 	},
@@ -1532,9 +1541,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	getChildActionClass: function($super, actionName, checkSupClasses)
+	getChildActionClass: function(/*$super, */actionName, checkSupClasses)
 	{
-		var result = $super(actionName, checkSupClasses);
+		var result = this.tryApplySuper('getChildActionClass', [actionName, checkSupClasses])  /* $super(actionName, checkSupClasses) */;
 		if (!result)
 			result = this.getEditor().getChildActionClass(actionName, checkSupClasses);
 		return result;
@@ -1571,6 +1580,27 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		return this.getEditor().load(chemObj);
 	},
+	/**
+	 * Load chem object from data of special MIME type or file format.
+	 * @param {Variant} data Usually text content.
+	 * @param {String} mimeType
+	 * @param {String} fromUrlOrFileName From which file or url is this data loaded.
+	 * @returns {Object} Loaded chem object.
+	 */
+	loadFromData: function(data, mimeType, fromUrlOrFileName)
+	{
+		return this.getEditor().loadFromData(data, mimeType, fromUrlOrFileName);
+	},
+	/**
+	 * Load chem object from file object.
+	 * NOTE: browser must support File Reader API to use this method.
+	 * @param {File} file
+	 */
+	loadFromFile: function(file)
+	{
+		return this.getEditor().loadFromFile(file);
+	},
+
 	/**
 	 * Returns object in dialog that to be saved.
 	 * @returns {Kekule.ChemObject}
@@ -1660,6 +1690,36 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/**
+	 * Returns an action bound to composer.
+	 * E.g. calling composer.getBoundAction('glyph') will returns the action correspondig to the glyph tool button.
+	 * @param {Variant} actionNameOrClass
+	 * @returns {Kekule.Action}
+	 */
+	getBoundEditorAction: function(actionNameOrClass)
+	{
+		var aClass;
+		if (typeof(actionNameOrClass) === 'string')
+			aClass = this.getCompActionClass(actionNameOrClass);
+		else if (ClassEx.isClass(actionNameOrClass))
+			aClass = actionNameOrClass;
+
+		return aClass? this.getActionMap().get(aClass): null;
+	},
+	/**
+	 * Execute an action bound to composer.
+	 * E.g. calling composer.execBoundAction('glyph') will activate the glyph tool button.
+	 * @param {Variant} actionNameOrClass
+	 * @returns {Kekule.Action}
+	 */
+	execBoundEditorAction: function(actionNameOrClass)
+	{
+		var action = this.getBoundEditorAction(actionNameOrClass);
+		if (action)
+			action.execute();
+		return action;
+	},
+
+	/**
 	 * Called after UI changing (e.g., show/hide inspector/assoc tool bar).
 	 * @private
 	 */
@@ -1668,7 +1728,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.adjustComponentPositions();
 	},
 	/** @ignore */
-	doResize: function($super)
+	doResize: function(/*$super*/)
 	{
 		this.adjustComponentPositions();
 	},
@@ -1710,33 +1770,67 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var leftRegionWidth = chemRect.width;
 		var bottomRegionHeight = (zoomRect && zoomRect.height) || topRegionHeight;  // zoom toolbar may be invisible
 
-		// top region
-		var elem = this.getTopRegionElem();
-		var style = elem.style;
-		style.top = '0px';
-		style.left = leftRegionWidth + 'px';
-		style.right = '0px';
-		style.height = topRegionHeight + 'px';
+		var isUsingAbsoluteLayout = !this._isUsingGridLayout();   // if true, need to use absolute layout the set the position of regions
 
-		// bottom region
-		elem = this.getBottomRegionElem();
-		style = elem.style;
-		style.bottom = '0px';
-		style.height = bottomRegionHeight + 'px';
-		style.left = leftRegionWidth + 'px';
-		style.right = '0px';
-		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
-		var bottomFreeWidth = bottomRect.width - (zoomRect? zoomRect.width: 0);
-
-		// left region
-		elem = this.getLeftRegionElem();
-		style = elem.style;
-		style.left = '0px';
-		style.top = topRegionHeight + 'px';
-		style.bottom = '0px';
-		style.width = leftRegionWidth + 'px';
-		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+		var topRegionElem = this.getTopRegionElem();
+		var bottomRegionElem = this.getBottomRegionElem();
+		var leftRegionElem = this.getLeftRegionElem();
+		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(bottomRegionElem);
+		var bottomFreeWidth = bottomRect.width - (zoomRect ? zoomRect.width : 0);
+		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(leftRegionElem);
 		var leftFreeHeight = leftRect.height - chemRect.height;
+
+		if (isUsingAbsoluteLayout)
+		{
+			// top region
+			var style = topRegionElem.style;
+			style.top = '0px';
+			style.left = leftRegionWidth + 'px';
+			style.right = '0px';
+			style.height = topRegionHeight + 'px';
+
+			// bottom region
+			style = bottomRegionElem.style;
+			style.bottom = '0px';
+			style.height = bottomRegionHeight + 'px';
+			style.left = leftRegionWidth + 'px';
+			style.right = '0px';
+
+			// left region
+			style = leftRegionElem.style;
+			style.left = '0px';
+			style.top = topRegionHeight + 'px';
+			style.bottom = '0px';
+			style.width = leftRegionWidth + 'px';
+
+			// editor stage
+			var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
+
+			// calc right
+			if (!this.getShowInspector())
+				right = 0;
+			else
+			{
+				var elem = this.getAdvPanelElem();
+				var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
+				right = rect.width;
+			}
+
+			var stageElem = this.getEditorStageElem();
+			var style = stageElem.style;
+			style.position = 'absolute';
+			style.top = top + 'px';
+			style.left = left + 'px';
+			style.bottom = bottom + 'px';
+			style.right = right + 'px';
+
+			// advPanel
+			elem = this.getAdvPanelElem();
+			style = elem.style;
+			style.position = 'absolute';
+			style.top = top + 'px';
+			style.bottom = bottom + 'px';
+		}
 
 		// now we can decide whether shown assoc toolbar on bottom or left side
 		if (leftFreeHeight / bottomFreeWidth > 0.9)  // TODO: now fixed
@@ -1749,34 +1843,6 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			// assoc bar shown in bottom
 			this.changeAssocToolbarRegion(false);
 		}
-
-		// editor stage
-		var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
-
-		// calc right
-		if (!this.getShowInspector())
-			right = 0;
-		else
-		{
-			var elem = this.getAdvPanelElem();
-			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem);
-			right = rect.width;
-		}
-
-		var stageElem = this.getEditorStageElem();
-		var style = stageElem.style;
-		style.position = 'absolute';
-		style.top = top + 'px';
-		style.left = left + 'px';
-		style.bottom = bottom + 'px';
-		style.right = right + 'px';
-
-		// advPanel
-		elem = this.getAdvPanelElem();
-		style = elem.style;
-		style.position = 'absolute';
-		style.top = top + 'px';
-		style.bottom = bottom + 'px';
 
 		if (this.getAutoSetMinDimension())
 		{
@@ -2863,14 +2929,23 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 	////// about configurator
 	/** @ignore */
-	createConfigurator: function($super)
+	createConfigurator: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('createConfigurator')  /* $super() */;
 		result.addEventListener('configChange', function(e){
 			// render config change need to repaint context
 			this.getEditor().repaint();
 		}, this);
 		return result;
+	},
+
+	////// Event handlers
+	/** @ignore */
+	react_keydown: function(e)
+	{
+		var result = this.tryApplySuper('react_keydown', [e]);
+		if (!result)  // not handled, maybe a editor hotkey, delegate it to the editor.
+			return !!this.getEditor().reactHotKeys(e);
 	}
 });
 /**
@@ -2894,9 +2969,9 @@ Kekule.Editor.Composer.Settings = Class.create(Kekule.Widget.BaseWidget.Settings
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.Composer.Settings',
 	/** @construct */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -2925,20 +3000,20 @@ Kekule.Editor.Composer.Configurator = Class.create(Kekule.Widget.Configurator,
 	/** @private */
 	TAB_BTN_DATA_FIELD: '__$data__',
 	/** @construct */
-	initialize: function($super, composer)
+	initialize: function(/*$super, */composer)
 	{
-		$super(composer);
+		this.tryApplySuper('initialize', [composer])  /* $super(composer) */;
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setLayout(Kekule.Widget.Layout.HORIZONTAL);
 	},
 	/** @private */
-	getCategoryInfos: function($super)
+	getCategoryInfos: function(/*$super*/)
 	{
-		var result = $super();
+		var result = this.tryApplySuper('getCategoryInfos')  /* $super() */;
 		var composer = this.getComposer();
 		var editor = composer.getEditor();
 
@@ -3045,10 +3120,11 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ComposerDialog',
-	initialize: function($super, parentOrElementOrDocument, caption, buttons)
+	initialize: function(/*$super, */parentOrElementOrDocument, caption, buttons)
 	{
-		$super(parentOrElementOrDocument, caption,
-			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, caption,
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]])  /* $super(parentOrElementOrDocument, caption,
+			buttons || [Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -3069,21 +3145,21 @@ Kekule.Editor.ComposerDialog = Class.create(Kekule.Widget.Dialog,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		//this.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.COMPOSER_DIALOG;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_DIALOG;
 	},
 	/** @ignore */
-	doCreateClientContents: function($super, clientElem)
+	doCreateClientContents: function(/*$super, */clientElem)
 	{
-		$super();
+		this.tryApplySuper('doCreateClientContents')  /* $super() */;
 		var composer = this.doCreateComposerWidget();
 		this.setPropStoreFieldValue('composer', composer);
 		composer.appendToElem(clientElem);
@@ -3139,9 +3215,9 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	CLASS_NAME: 'Kekule.Editor.ComposerFrame',
 	/** @private */
 	BINDABLE_TAG_NAMES: ['iframe'],
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -3168,17 +3244,17 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setMinDimension({'width': 550, height: 350});
 		this.setEnableDimensionTransform(true);
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.COMPOSER_FRAME;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.COMPOSER_FRAME;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -3187,9 +3263,9 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 
 		var notInDom = !element.parentNode;
 		if (notInDom) // add to DOM first, otherwise the frame document will be null
@@ -3258,7 +3334,7 @@ Kekule.Editor.ComposerFrame = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	_insertKekuleScriptAndStyleSheetFiles: function(frameDoc, callback)
 	{
-		var srcInfo = Kekule.scriptSrcInfo;
+		//var srcInfo = Kekule.scriptSrcInfo;
 		var headElem = frameDoc.head;
 
 		var cssLinkElem = frameDoc.createElement('link');

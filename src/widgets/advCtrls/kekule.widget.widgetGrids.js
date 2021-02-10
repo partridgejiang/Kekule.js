@@ -69,14 +69,14 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	/** @private */
 	BTN_REMOVE_CELL_FIELD: '__$removeCell__',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this._floatClearer = null;
 		this.reactCellMouseEnterBind = this.reactCellMouseEnter.bind(this);
 		this.reactCellMouseLeaveBind = this.reactCellMouseLeave.bind(this);
 		this.reactCellClickBind = this.reactCellClick.bind(this);
 
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 
 		this.addEventListener('change', this.reactChildWidgetChange, this);
 	},
@@ -166,9 +166,9 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 		this.setUseCornerDecoration(true);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.WIDGET_GRID;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.WIDGET_GRID;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -178,27 +178,27 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	},
 
 	/** @ignore */
-	doSetUseCornerDecoration: function($super, value)
+	doSetUseCornerDecoration: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetUseCornerDecoration', [value])  /* $super(value) */;
 		this.updateAllCells();
 	},
 
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		var inter = AU.intersect(modifiedPropNames, ['autoShrinkWidgets', 'keepWidgetAspectRatio', 'cellWidth', 'cellHeight', 'widgetPos']);
 		if (inter.length > 0)
 			this.updateAllCells();
 	},
 
 	/** @ignore */
-	doWidgetShowStateChanged: function($super, isShown)
+	doWidgetShowStateChanged: function(/*$super, */isShown)
 	{
 		if (isShown)
 			this.updateAllCells();
-		return $super(isShown);
+		return this.tryApplySuper('doWidgetShowStateChanged', [isShown])  /* $super(isShown) */;
 	},
 
 	/**
@@ -395,22 +395,22 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	},
 
 	/** @private */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 		this.createCell(widget);
 	},
 	/** @private */
-	childWidgetRemoved: function($super, widget)
+	childWidgetRemoved: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetRemoved', [widget])  /* $super(widget) */;
 		var cellElem = this.getWidgetCell(widget);
 		this.getContainerElement().removeChild(cellElem);
 	},
 	/** @private */
-	childWidgetMoved: function($super, widget, newIndex)
+	childWidgetMoved: function(/*$super, */widget, newIndex)
 	{
-		$super(widget, newIndex);
+		this.tryApplySuper('childWidgetMoved', [widget, newIndex])  /* $super(widget, newIndex) */;
 		var elem = this.getWidgetCell(widget);
 		var refWidget = this.getChildWidgets()[newIndex + 1];
 		var refElem = refWidget? this.getWidgetCell(refWidget): null;
@@ -420,7 +420,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 			this.getContainerElement().appendChild(elem);
 	},
 	/** @private */
-	childrenModified: function($super)
+	childrenModified: function(/*$super*/)
 	{
 		// update float clearer
 		this.getContainerElement().appendChild(this.getFloatClearer());

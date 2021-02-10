@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shadow Root Event Test</title>
+  <style>
+    #p1, #p2
+    {
+      width: 40em;
+      height: 20em;
+    }
+    #p1
+    {
+      background-color: red;
+    }
+    #p2
+    {
+      background-color: green;
+    }
+  </style>
+</head>
+<body>
+  <p id="p1"></p>
+  <p id="p2"></p>
+  <script>
+    function addSubDiv(parent, id)
+    {
+	    var div = document.createElement('div');
+	    div.style.width = '100%';
+	    div.style.height = '100%';
+	    parent.appendChild(div);
+
+	    parent.addEventListener('touchstart', e => console.log('Touch start', e, e.target));
+	    parent.addEventListener('touchend', e => console.log('Touch end', e, e.target));
+	    parent.addEventListener('mousedown', e => console.log('Mouse down', e, e.target));
+	    parent.addEventListener('mouseup', e => console.log('Mouse up', e, e.target));
+    }
+
+    var elemP1 = document.getElementById('p1');
+    var shadow = elemP1.attachShadow({mode: 'open'});
+    addSubDiv(shadow, '1');
+    elemP1.addEventListener('touchstart', e => console.log('on parent', e, e.target));
+
+    var elemP2 = document.getElementById('p2');
+    addSubDiv(elemP2, '2');
+  </script>
+</body>
+</html>

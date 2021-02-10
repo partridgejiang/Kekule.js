@@ -156,6 +156,29 @@
       var autofit = document.getElementById('checkBoxAutofit').checked;
       getChemViewer().setAutofit(autofit);
     }
+    function changeRenderColor()
+    {
+	    var chemViewer = getChemViewer();
+	    var atomColor = Kekule.Widget.getWidgetById('selectAtomColor').getValue() || null;
+	    var bondColor = Kekule.Widget.getWidgetById('selectBondColor').getValue() || null;
+	    var useAtomSpecifiedColor = document.getElementById('checkBoxSpecifiedColor').checked;
+
+	    if (chemViewer.getRenderType() === Kekule.Render.RendererType.R3D) // 3D viewer
+      {
+      	var configs = chemViewer.getRenderConfigs().getMoleculeDisplayConfigs();
+      	configs.setUseAtomSpecifiedColor(useAtomSpecifiedColor);
+	      configs.setDefAtomColor(atomColor || '#000099');
+	      configs.setDefBondColor(bondColor || '#FFFFFF');
+      }
+	    else  // 2D viewer
+      {
+	      var configs = chemViewer.getRenderConfigs().getColorConfigs();
+	      configs.setUseAtomSpecifiedColor(useAtomSpecifiedColor);
+	      configs.setAtomColor(atomColor || '#000000');
+	      configs.setBondColor(bondColor || '#000000');
+      }
+	    chemViewer.repaint();
+    }
     function changeDirectInteraction()
     {
       var enabled = document.getElementById('checkBoxDirectInteraction').checked;
@@ -325,6 +348,10 @@
       {
         runOperation('changeAutofit');
       });
+	    document.getElementById('checkBoxSpecifiedColor').addEventListener('change', function()
+	    {
+		    runOperation('changeRenderColor');
+	    });
       document.getElementById('checkBoxDirectInteraction').addEventListener('change', function()
       {
         runOperation('changeDirectInteraction');
@@ -371,6 +398,13 @@
         .on('valueChange', function(){
           runOperation('changeMol3DDisplayType');
         });
+
+	    Kekule.Widget.getWidgetById('selectBondColor').on('valueChange', function(){
+		    runOperation('changeRenderColor');
+	    });
+	    Kekule.Widget.getWidgetById('selectAtomColor').on('valueChange', function(){
+		    runOperation('changeRenderColor');
+	    });
 
       Kekule.Widget.getWidgetById('btnRotate2D').on('execute', function(){
         runOperation('rotate2D');
@@ -516,6 +550,24 @@
     </label>
     -->
 
+  </fieldset>
+
+  <fieldset>
+    <legend>Default Render Colors</legend>
+    <p>
+      <label for="selectBondColor">
+        Bond color:
+        <button id="selectBondColor" data-widget="Kekule.Widget.ColorDropButton"></button>
+      </label>
+      <label for="selectAtomColor">
+        Atom color:
+        <button id="selectAtomColor" data-widget="Kekule.Widget.ColorDropButton"></button>
+      </label>
+      <label for="checkBoxSpecifiedColor">
+        <input id="checkBoxSpecifiedColor" type="checkbox"></input>
+        Use atom specified color
+      </label>
+    </p>
   </fieldset>
 
   <fieldset>

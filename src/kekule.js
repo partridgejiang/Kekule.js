@@ -24,8 +24,11 @@ if (!document)
 
 
 // check if is in Node.js environment
-var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isInBrowser = (typeof(navigator) !== 'undefined') && (typeof(window) !== 'undefined') && (typeof(document) !== 'undefined');
+var hasNodeEnv = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isNode = hasNodeEnv;
 var isWebpack = (typeof(__webpack_require__) === 'function');
+var loadedByImportOrRequire = (typeof(exports) !== 'undefined');
 
 //if (!isWebpack && isNode)
 if (typeof(__webpack_require__) !== 'function' && isNode)
@@ -299,7 +302,8 @@ var kekuleFiles = {
 			'core/kekule.exceptions.js',
 			'utils/kekule.utils.js',
 			'utils/kekule.domHelper.js',
-			'utils/kekule.domUtils.js'
+			'utils/kekule.domUtils.js',
+			'core/kekule.externalResMgr.js',
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'
@@ -385,9 +389,12 @@ var kekuleFiles = {
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
 
+			'widgets/kekule.widget.root.js',
 			'widgets/kekule.widget.bindings.js',
+			'widgets/kekule.widget.events.js',
 			'widgets/kekule.widget.base.js',
 			'widgets/kekule.widget.sys.js',
+			'widgets/kekule.widget.keys.js',
 			'widgets/kekule.widget.clipboards.js',
 			'widgets/kekule.widget.helpers.js',
 			'widgets/kekule.widget.styleResources.js',
@@ -403,6 +410,7 @@ var kekuleFiles = {
 			'widgets/commonCtrls/kekule.widget.formControls.js',
 			'widgets/commonCtrls/kekule.widget.nestedContainers.js',
 			'widgets/commonCtrls/kekule.widget.treeViews.js',
+			'widgets/commonCtrls/kekule.widget.listViews.js',
 			'widgets/commonCtrls/kekule.widget.dialogs.js',
 			'widgets/commonCtrls/kekule.widget.msgPanels.js',
 			'widgets/commonCtrls/kekule.widget.tabViews.js',
@@ -462,6 +470,14 @@ var kekuleFiles = {
 		'category': 'chemWidget'
 	},
 
+	'webComponent': {
+		'requires': ['lan', 'root', 'common', 'core', 'html', 'io', 'render', 'algorithm', 'widget', 'chemWidget'],
+		'files': [
+			'webComponents/kekule.webComponent.base.js',
+			'webComponents/kekule.webComponent.widgetWrappers.js'
+		]
+	},
+
 	'algorithm': {
 		'requires': ['lan', 'root', 'common', 'core'],
 		'files': [
@@ -517,7 +533,8 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'_extras/Indigo/kekule.indigo.base.js',
-			'_extras/Indigo/kekule.indigo.io.js'
+			'_extras/Indigo/kekule.indigo.io.js',
+			'_extras/Indigo/kekule.indigo.structures.js'
 		],
 		'category': 'extra'
 	},
@@ -612,28 +629,31 @@ function analysisEntranceScriptSrc(doc)
 	var paramLanguage = /^language\=(.+)$/;
 
 	var matchResult;
-	// try get current script info by document.currentScript
-	if (doc && doc.currentScript && doc.currentScript.src)
+	if (!loadedByImportOrRequire)
 	{
-		var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
-		if (scriptSrc)
+		// try get current script info by document.currentScript
+		if (doc && doc.currentScript && doc.currentScript.src)
 		{
-			matchResult = scriptSrc.match(scriptSrcPattern);
-		}
-	}
-	else  // use the traditional way, detect each <script> tags
-	{
-		var scriptElems = doc.getElementsByTagName('script');
-		for (var j = scriptElems.length - 1; j >= 0; --j)
-		{
-			var elem = scriptElems[j];
-			var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 			if (scriptSrc)
 			{
-				matchResult = scriptSrc.match(entranceSrc);
-				if (matchResult)
+				matchResult = scriptSrc.match(scriptSrcPattern);
+			}
+		}
+		else  // use the traditional way, detect each <script> tags
+		{
+			var scriptElems = doc.getElementsByTagName('script');
+			for (var j = scriptElems.length - 1; j >= 0; --j)
+			{
+				var elem = scriptElems[j];
+				var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+				if (scriptSrc)
 				{
-					break;
+					matchResult = scriptSrc.match(entranceSrc);
+					if (matchResult)
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -796,33 +816,53 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 function init()
 {
 	var scriptInfo, files, path;
-	if (isNode)
+
+	// some times there are both browser and node environment (e.g. Electron)
+	if (isInBrowser)   // try get info from <script> tag first
+	{
+		scriptInfo = analysisEntranceScriptSrc(document);
+		var findScriptTag = scriptInfo.src && scriptInfo.path;
+
+		if (findScriptTag)  // explicitly use script tag, load files in traditional way
+		{
+			isNode = false;
+		}
+		if (!findScriptTag && hasNodeEnv)  // dual env
+		{
+			scriptInfo.src = this.__filename || '';
+			scriptInfo.path = (__dirname || '.') + '/';
+			isNode = true;
+		}
+	}
+	else if (isNode)
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
 			'path': __dirname + '/',
-			'modules': nodeModules,
+			'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
 			//'useMinFile': false  // for debug
 			'useMinFile': true,
 			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
 			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
+	}
 
+	if (isNode)
+	{
 		// if min files not found, use dev files instead
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		var minFileExisted = false;
 		try
 		{
-			fs.statSync(testFileName)
+			minFileExisted = fs.existsSync(testFileName);
 		}
 		catch(e)
 		{
 			//scriptInfo.path += 'src/'
-			scriptInfo.useMinFile = false;
+			minFileExisted = false;
 		}
-	}
-	else  // in browser
-	{
-		scriptInfo = analysisEntranceScriptSrc(document);
+		if (!minFileExisted)
+			scriptInfo.useMinFile = false;
 	}
 
 	scriptInfo.explicitModules = scriptInfo.modules;

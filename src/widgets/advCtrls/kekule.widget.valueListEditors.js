@@ -76,9 +76,9 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	ROW_EDIT_INFO_FIELD: '__$row_edit_info__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this._inlineEdit = null;
 		this._isActivitingRow = false;
 	},
@@ -128,10 +128,8 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 					if (value)
 					{
 						EU.addClass(value, CNS.VALUELISTEDITOR_ACTIVE_ROW);
-						if (!this.getReadOnly())  // create inline edit
-						{
-							this.createValueEditWidget(value);
-						}
+						//if (!this.getReadOnly())
+						this.createValueEditWidget(value);   // create inline edit
 					}
 					this.setPropStoreFieldValue('activeRow', value);
 					this.invokeEvent('activeRowChange', {'row': value});
@@ -152,9 +150,9 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 	},
 
 	/**
@@ -218,7 +216,8 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 
 		if (!result)
 		{
-			result = this.doCreateValueEditWidget(row);
+			var readOnly = this.getReadOnly();
+			result = readOnly? this.doCreateReadOnlyValueEditWidget(row): this.doCreateValueEditWidget(row);
 			result.setBubbleUiEvents(true);  // IMPORTANT, make sure event not eaten by edit
 			EU.addClass(result.getElement(), CNS.VALUELISTEDITOR_INLINE_EDIT);
 			var cell = this.getValueCell(row);
@@ -252,6 +251,7 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	doCreateValueEditWidget: function(row)
 	{
+		/*
 		var data = this.getRowData(row);
 		//var value = data? data.value: '';
 		var value = this.getValueCellText(row, data);
@@ -266,9 +266,50 @@ Kekule.Widget.ValueListEditor = Class.create(Kekule.Widget.BaseWidget,
 		}
 		result.setValue(value);
 		return result;
+		*/
+		var widgetInfo = this.getValueEditWidgetInfo(row);
+		return this._doCreateValueEditWidgetByWidgetInfo(row, widgetInfo);
+	},
+	/** @private */
+	doCreateDefaultValueEditWidget: function(row)
+	{
+		return this._doCreateValueEditWidgetByWidgetInfo(row, this.getDefaultValueEditWidgetInfo());
+	},
+	/** @private */
+	doCreateReadOnlyValueEditWidget: function(row)
+	{
+		var result = this._doCreateValueEditWidgetByWidgetInfo(row, this.getReadOnlyValueEditWidgetInfo());
+		if (result.setReadOnly)
+			result.setReadOnly(true);
+		return result;
+	},
+	/** @private */
+	_doCreateValueEditWidgetByWidgetInfo: function(row, widgetInfo)
+	{
+		var data = this.getRowData(row);
+		//var value = data? data.value: '';
+		var value = this.getValueCellText(row, data);
+
+		var editClass = widgetInfo.widgetClass;
+		var result = new editClass(this);
+		if (widgetInfo.propValues)  // init widget
+		{
+			result.setPropValues(widgetInfo.propValues);
+		}
+		result.setValue(value);
+		return result;
 	},
 	/** @private */
 	getDefaultValueEditWidgetInfo: function()
+	{
+		return {'widgetClass': Kekule.Widget.TextBox};
+	},
+	/**
+	 * Returns the information to create value edit in readonly mode.
+	 * Descendants may override this method.
+	 * @private
+	 */
+	getReadOnlyValueEditWidgetInfo: function()
 	{
 		return {'widgetClass': Kekule.Widget.TextBox};
 	},

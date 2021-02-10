@@ -36,6 +36,7 @@ Kekule.Widget.HtmlClassNames = Object.extend(Kekule.Widget.HtmlClassNames, {
 	PROPLISTEDITOR_READONLY: 'K-PropListEditor-ReadOnly',
 
 	OBJINSPECTOR: 'K-ObjInspector',
+	OBJINSPECTOR_FLEX_LAYOUT: 'K-ObjInspector-Flex-Layout',
 	OBJINSPECTOR_SUBPART: 'K-ObjInspector-SubPart',
 	OBJINSPECTOR_OBJSINFOPANEL: 'K-ObjInspector-ObjsInfoPanel',
 	OBJINSPECTOR_PROPINFOPANEL: 'K-ObjInspector-PropInfoPanel',
@@ -74,9 +75,9 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	/** @private */
 	SUB_ROWS_FIELD: '__$subRows__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setValueDisplayMode(Kekule.Widget.ValueListEditor.ValueDisplayMode.SIMPLE);
 		this.setPropStoreFieldValue('displayedPropScopes', [Class.PropertyScope.PUBLISHED]);
 		this.setEnableLiveUpdate(true);
@@ -125,21 +126,21 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		this.defineProp('operHistory', {'dataType': 'Kekule.OperationHistory', 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setKeyField('title');
 		this.setSortField('key');
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.PROPLISTEDITOR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.PROPLISTEDITOR;
 	},
 
 	/**
@@ -246,9 +247,9 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	 * Override from ValueListEditor, add additional padding and expand mark before text.
 	 * @private
 	 */
-	setRowKeyCellContent: function($super, row, keyText, keyHint)
+	setRowKeyCellContent: function(/*$super, */row, keyText, keyHint)
 	{
-		var result = $super(row, keyText, keyHint);
+		var result = this.tryApplySuper('setRowKeyCellContent', [row, keyText, keyHint])  /* $super(row, keyText, keyHint) */;
 		var cell = this.getKeyCell(row);
 		// insert expand mark
 		var marker = this.getKeyCellExpandMarker(cell, true);   // already inserted in this method
@@ -799,7 +800,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 
 	// override methods
 	/* @private */
-	getValueCellText: function($super, row, data)
+	getValueCellText: function(/*$super, */row, data)
 	{
 		/*
 		if (data.value === undefined)
@@ -848,7 +849,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 	},
 
 	/** @private */
-	doCreateValueEditWidget: function($super, row)
+	doCreateValueEditWidget: function(/*$super, */row)
 	{
 		//var result = $super(row);
 		var propEditor = this.getRowPropEditor(row);
@@ -856,7 +857,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		var result = propEditor.createEditWidget(this);
 		if (result)
 		{
-			if (propEditor.isReadOnly())
+			if (this.getReadOnly() || propEditor.isReadOnly())
 			{
 				if (result.setReadOnly)
 					result.setReadOnly(true);
@@ -1075,7 +1076,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 
 	// UI event handlers
 	/** @private */
-	react_click: function($super, e)     // use $super to avoid override ValueListEditor.react_click
+	react_click: function(/*$super, */e)     // use $super to avoid override ValueListEditor.react_click
 	{
 		var target = e.getTarget();
 		// if click on expand marker of row
@@ -1088,7 +1089,7 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 				this.toggleRowExpandState(row);
 			}
 		}
-		$super(e);
+		this.tryApplySuper('react_click', [e])  /* $super(e) */;
 	},
 	/** @private */
 	react_dblclick: function(e)
@@ -1107,9 +1108,9 @@ Kekule.Widget.ObjPropListEditor = Class.create(Kekule.Widget.ValueListEditor,
 		}
 	},
 	/** @private */
-	react_keydown: function($super, e)  // avoid overwrite ValueListEditor.react_keydown
+	react_keydown: function(/*$super, */e)  // avoid overwrite ValueListEditor.react_keydown
 	{
-		$super(e);
+		this.tryApplySuper('react_keydown', [e])  /* $super(e) */;
 		var keyCode = e.getKeyCode();
 		var noModifier = !(e.getAltKey() || e.getShiftKey() || e.getCtrlKey());
 		if (noModifier)
@@ -1151,14 +1152,14 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.ObjectInspector',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this._propListElem = null;
 		this._objsInfoElem = null;
 		this._propInfoElem = null;  // important, must init before $super, as $super may bind element and set those values
 		this.setPropStoreFieldValue('showObjsInfoPanel', true);
 		this.setPropStoreFieldValue('showPropInfoPanel', true);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -1170,6 +1171,19 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 				var objs = Kekule.ArrayUtils.toArray(value);
 				this.setPropStoreFieldValue('objects', objs);
 				this.inspectedObjectsChanged(objs);
+			}
+		});
+		this.defineProp('readOnly', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				var propEditor = this.getPropEditor();
+				return propEditor && propEditor.getReadOnly();
+			},
+			'setter': function(value)
+			{
+				var propEditor = this.getPropEditor();
+				if (propEditor)
+					propEditor.setReadOnly(value);
 			}
 		});
 		// private properties
@@ -1240,25 +1254,33 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 			}
 		});
 	},
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this._finalizeChildWidgets();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @ignore */
-	getChildrenHolderElement: function($super)
+	getChildrenHolderElement: function(/*$super*/)
 	{
-		return this._propListElem || $super();
+		return this._propListElem || this.tryApplySuper('getChildrenHolderElement')  /* $super() */;
 	},
 	/** @ignore */
 	doGetWidgetClassName: function()
 	{
-		return CNS.OBJINSPECTOR;
+		var result = CNS.OBJINSPECTOR;
+		if (this._isUsingFlexLayout())
+			result += ' ' + CNS.OBJINSPECTOR_FLEX_LAYOUT;
+		return result;
+	},
+	/** @private */
+	_isUsingFlexLayout: function()
+	{
+		return !!Kekule.BrowserFeature.cssFlex;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 		this._updateChildElemSize();
 	},
 	/** @ignore */
@@ -1268,9 +1290,9 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, element)
+	doCreateSubElements: function(/*$super, */doc, element)
 	{
-		$super(doc, element);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, element])  /* $super(doc, element) */ || [];
 
 		var objsInfoElem = this._createSubPartElem(doc);
 		EU.addClass(objsInfoElem, CNS.OBJINSPECTOR_OBJSINFOPANEL);
@@ -1288,7 +1310,7 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 		this._propListElem = propListEditorContainer;
 		this._createChildWidgets(propListEditorContainer);
 
-		return [objsInfoElem, propInfoElem, propListEditorContainer];
+		return result.concat([objsInfoElem, propInfoElem, propListEditorContainer]);
 	},
 	/** @private */
 	_createSubPartElem: function(doc)
@@ -1507,9 +1529,10 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 	_updateChildElemSize: function()
 	{
 		var self = this;
-		// IMPORTANT, use set time out to let browser update DOM, else height often get 0
-		setTimeout(function()
-			{
+		if (!this._isUsingFlexLayout())
+		{
+			// IMPORTANT, use set time out to let browser update DOM, else height often get 0
+			setTimeout(function() {
 				var top;
 				if (self.getShowObjsInfoPanel())
 					top = SU.getComputedStyle(self._objsInfoElem, 'height');
@@ -1524,12 +1547,13 @@ Kekule.Widget.ObjectInspector = Class.create(Kekule.Widget.BaseWidget,
 				self._propListElem.style.top = top;
 				self._propListElem.style.bottom = bottom;
 			}, 100);
+		}
 	},
 
 	/** @ignore */
-	setUseCornerDecoration: function($super, value)
+	setUseCornerDecoration: function(/*$super, */value)
 	{
-		var result = $super(value);
+		var result = this.tryApplySuper('setUseCornerDecoration', [value])  /* $super(value) */;
 		if (value)  // use corner decoration, handle topmost and bottommost element
 		{
 

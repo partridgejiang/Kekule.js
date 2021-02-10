@@ -22,7 +22,7 @@ Contents:
    content/widgetIntro
    content/chemViewer
    content/composer
-
+   content/webComponent
 
 
 Indices and tables
@@ -30,5 +30,5 @@ Indices and tables
 
 .. * :ref:`genindex`
 .. * :ref:`modindex`
-* :ref:`search`
+.. * :ref:`search`
 

@@ -66,9 +66,9 @@ Kekule.Widget.TabPage = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TABVIEW_PAGE;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TABVIEW_PAGE;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -105,9 +105,9 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.TabButtonGroup',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.addEventListener('execute'/*'check'*/, function(e)
 		{
 			var target = e.target;
@@ -154,15 +154,15 @@ Kekule.Widget.TabButtonGroup = Class.create(Kekule.Widget.ButtonGroup,
 		});
 	},
 	/** @private */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setUseCornerDecoration(false);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TABBUTTONGROUP;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TABBUTTONGROUP;
 	},
 
 	/**
@@ -229,11 +229,11 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	/** @private */
 	TAB_BTN_FIELD: '__$tabButton__',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		this._tabBtnContainer = null;
 		this._pageContainer = null;
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (Kekule.ObjUtils.isUnset(this.getUseCornerDecoration()))
 			this.setUseCornerDecoration(true);
 		this.tabButtonPosChanged();  // update tab button pos
@@ -241,11 +241,11 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		this.addEventListener('change', this.reactTabPagePropChange, this);  // actually listen children's change event
 	},
 	/** @ignore */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		if (this.getTabGroup())
 			this.getTabGroup().finalize();
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -326,9 +326,9 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		this.defineProp('tabGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.TABVIEW;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.TABVIEW;
 	},
 
 	/** @ignore */
@@ -342,7 +342,8 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	{
 		var tabBtnContainer = doc.createElement('div');
 		tabBtnContainer.className = CNS.TABVIEW_TABBUTTON_CONTAINER;
-		var pageContainer = doc.createElement('div');
+		//var pageContainer = doc.createElement('div');
+		var pageContainer = this.doCreateContainerElement(doc, null, 'div');
 		pageContainer.className = CNS.TABVIEW_PAGE_CONTAINER;
 		this._tabBtnContainer = tabBtnContainer;
 		this._pageContainer = pageContainer;
@@ -405,9 +406,9 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 	},
 
 	/** @ignore */
-	childWidgetAdded: function($super, widget)
+	childWidgetAdded: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetAdded', [widget])  /* $super(widget) */;
 		if (widget instanceof Kekule.Widget.TabPage)  // a new page is added, update tab buttons
 		{
 			var isFirstPage = !this.getTabPages().length;
@@ -420,9 +421,9 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		}
 	},
 	/** @private */
-	childWidgetRemoved: function($super, widget)
+	childWidgetRemoved: function(/*$super, */widget)
 	{
-		$super(widget);
+		this.tryApplySuper('childWidgetRemoved', [widget])  /* $super(widget) */;
 		if (widget instanceof Kekule.Widget.TabPage)  // a old page is removed, update tab buttons
 		{
 			AU.remove(this.getTabPages(), widget);
@@ -430,9 +431,9 @@ Kekule.Widget.TabView = Class.create(Kekule.Widget.Container,
 		}
 	},
 	/** @private */
-	childWidgetMoved: function($super, widget, newIndex)
+	childWidgetMoved: function(/*$super, */widget, newIndex)
 	{
-		$super(widget, newIndex);
+		this.tryApplySuper('childWidgetMoved', [widget, newIndex])  /* $super(widget, newIndex) */;
 		if (widget instanceof Kekule.Widget.TabPage)  // page index changed, update tab buttons
 		{
 			this._changeTabIndex(widget, newIndex);

@@ -43,9 +43,9 @@ Kekule.Widget.NestedContainer = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	ITEM_DATA_FIELD: '__$itemData__',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -59,9 +59,9 @@ Kekule.Widget.NestedContainer = Class.create(Kekule.Widget.BaseWidget,
 		return result;
 	},
 	/** @ignore */
-	doBindElement: function($super, element)
+	doBindElement: function(/*$super, */element)
 	{
-		$super(element);
+		this.tryApplySuper('doBindElement', [element])  /* $super(element) */;
 	},
 
 	/** @private */

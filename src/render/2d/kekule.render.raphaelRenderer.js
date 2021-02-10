@@ -9,117 +9,21 @@
  * requires /core/kekule.structures.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.baseTextRender.js
- * requires /render/2d/kekule.render.def2DRenderer.js
+ * requires /render/2d/kekule.render.render2D.js
  */
 
-// Some helper methods of Raphael
-if (this.Raphael)
-{
-	// draw a simple line
-	/** @ignore */
-	Raphael.fn.line = function(x1, y1, x2, y2)
-	{
-		return this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2);
-	};
-	/** @ignore */
-	Raphael.fn.arrowLine = function (x1, y1, x2, y2, arrowParams)
-	{
-		// TODO: arrow still has bug in drawing in IE/VML
-		if (!arrowParams)
-			return this.line(x1, y1, x2, y2);
-		var result = this.set();
-		/*
-    var angle = Math.atan2(x1-x2,y2-y1);
-    angle = (angle / (2 * Math.PI)) * 360;
-		var width = (arrowParams.width || 6) / 2;
-		var length = arrowParams.length || 3;
-		result.push(
-			// arrow path
-			this.path('M' + x2 + ' ' + y2 + ' L' + (x2 - length) + ' ' + (y2 - width) +
-				' M' + x2 + ' ' + y2 +
-				' L' + (x2 - length) + ' ' + (y2 + width)).rotate((90+angle),x2,y2),
-			// line path
-    	this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2)
-		);
-    //return [linePath,arrowPath];
-		*/
-		var dx = x2 - x1;
-		var dy = y2 - y1;
-		var alpha = Math.atan(dy / dx);
+(function(){
 
-		var width = (arrowParams.width || 6) / 2;
-		var length = arrowParams.length || 3;
-		var beta = Math.atan(width / length);
-		var l = Math.sqrt(Math.sqr(width) + Math.sqr(length));
+"use strict";
 
-		result.push(
-			// arrow path
-			this.path('M' + x2 + ' ' + y2
-				+ ' L' + (x2 - l * Math.cos(alpha - beta)) + ' ' + (y2 - l * Math.sin(alpha - beta))
-				+ ' M' + x2 + ' ' + y2
-				+ ' L' + (x2 - l * Math.cos(alpha + beta)) + ' ' + (y2 - l * Math.sin(alpha + beta))),
-			// line path
-    	this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2)
-		);
-		return result;
-	};
-	/** @ignore */
-	Raphael.fn.triangle = function(x1, y1, x2, y2, x3, y3)
-	{
-		return this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2 + ' L'
-			+ x3 + ' ' + y3 + ' L' + x1 + ' ' + y1);
-	};
-	/** @ignore */
-	Raphael.fn.polygon = function(coords)
-	{
-		var s = 'M' + coords[0].x + ' ' + coords[0].y;
-		for (var i = 1, l = coords.length; i < l; ++i)
-		{
-			s += ' L' + coords[i].x + ' ' + coords[i].y;
-		}
-		s += 'L' + coords[0].x + ' ' + coords[0].y;
-		return this.path(s);
-	};
-	// translate coordinate of a element with delta
-	/** @ignore */
-	Raphael.el.translateCoord = function(delta)
-	{
-		if (this.forEach)  // is set
-			this.forEach(function(e) { e.translateCoord(delta); });
-		else
-		{
-			var coord = this.attr(['x', 'y']);
-			if ((typeof(coord.x) != 'undefined') && (typeof(coord.y) != 'undefined'))
-				this.attr({'x': coord.x + delta.x, 'y': coord.y + delta.y});
-		}
-		//this.transform('t' + delta.x + ',' + delta.y);
-		return this;
-	};
-	/** @ignore */
-	Raphael.st.translateCoord = function(delta)
-	{
-		if (this.forEach)  // is set
-			this.forEach(function(e) { e.translateCoord(delta); });
-		//this.transform('t' + delta.x + ',' + delta.y);
-		return this;
-	};
-	/** @ignore */
-	Raphael.st.remove = function(delta)
-	{
-		// remove all children first
-		this.forEach(function(elem)
-			{
-				elem.remove();
-			}, this);
-		this.clear();
-	};
-}
+var RAPHAEL_MODULE_NAME = 'Raphael.js';
+var Raphael;
 
 /**
  * Render bridge class of Raphael.
  * @class
  */
-Kekule.Render.RaphaelRendererBridge = Class.create(
+Kekule.Render.RaphaelRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBridge,
 /** @lends Kekule.Render.RaphaelRendererBridge# */
 {
 	/** @private */
@@ -130,9 +34,10 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	 * @param {Element} parentElem
 	 * @param {Int} width Width of context, in px.
 	 * @param {Int} height Height of context, in px.
+	 * @param {Hash} params Additional params to create context.
 	 * @returns {Object} Context used for drawing.
 	 */
-	createContext: function(parentElem, width, height)
+	createContext: function(parentElem, width, height, params)
 	{
 		return Raphael(parentElem, width, height);
 	},
@@ -187,6 +92,19 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 	{
 		if (context)
 			context.__$clearColor__ = color;
+	},
+
+	setFilter: function(context, filter)
+	{
+		var elem = this.getContextElem(context);
+		if (elem)
+		{
+			elem.style.filter = filter;
+		}
+	},
+	clearFilter: function(context)
+	{
+		this.setFilter(context, 'none');
 	},
 
 	/**
@@ -356,9 +274,9 @@ Kekule.Render.RaphaelRendererBridge = Class.create(
 			});
 		}
 		if (options.lineCap)
-			elem.attr('stroke-linecap', options.linecap);
+			elem.attr('stroke-linecap', options.lineCap);
 		if (options.lineJoin)
-			elem.attr('stroke-linejoin', options.linejoin);
+			elem.attr('stroke-linejoin', options.lineJoin);
 	},
 
 	/** @private */
@@ -543,4 +461,137 @@ Kekule.Render.RaphaelRendererBridge.isSupported = function()
 
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.RaphaelRendererBridge);
 
-Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 10);
+// Some helper methods of Raphael
+var _raphaelRegistered = function()
+{
+	Raphael = Kekule.externalResourceManager.getResource(RAPHAEL_MODULE_NAME);  // set the global variable used by classes
+	if (Raphael)
+	{
+		// draw a simple line
+		/** @ignore */
+		Raphael.fn.line = function(x1, y1, x2, y2) {
+			return this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2);
+		};
+		/** @ignore */
+		Raphael.fn.arrowLine = function(x1, y1, x2, y2, arrowParams) {
+			// TODO: arrow still has bug in drawing in IE/VML
+			if (!arrowParams)
+				return this.line(x1, y1, x2, y2);
+			var result = this.set();
+			/*
+			var angle = Math.atan2(x1-x2,y2-y1);
+			angle = (angle / (2 * Math.PI)) * 360;
+			var width = (arrowParams.width || 6) / 2;
+			var length = arrowParams.length || 3;
+			result.push(
+				// arrow path
+				this.path('M' + x2 + ' ' + y2 + ' L' + (x2 - length) + ' ' + (y2 - width) +
+					' M' + x2 + ' ' + y2 +
+					' L' + (x2 - length) + ' ' + (y2 + width)).rotate((90+angle),x2,y2),
+				// line path
+				this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2)
+			);
+			//return [linePath,arrowPath];
+			*/
+			var dx = x2 - x1;
+			var dy = y2 - y1;
+			var alpha = Math.atan(dy / dx);
+
+			var width = (arrowParams.width || 6) / 2;
+			var length = arrowParams.length || 3;
+			var beta = Math.atan(width / length);
+			var l = Math.sqrt(Math.sqr(width) + Math.sqr(length));
+
+			result.push(
+				// arrow path
+				this.path('M' + x2 + ' ' + y2
+					+ ' L' + (x2 - l * Math.cos(alpha - beta)) + ' ' + (y2 - l * Math.sin(alpha - beta))
+					+ ' M' + x2 + ' ' + y2
+					+ ' L' + (x2 - l * Math.cos(alpha + beta)) + ' ' + (y2 - l * Math.sin(alpha + beta))),
+				// line path
+				this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2)
+			);
+			return result;
+		};
+		/** @ignore */
+		Raphael.fn.triangle = function(x1, y1, x2, y2, x3, y3) {
+			return this.path('M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2 + ' L'
+				+ x3 + ' ' + y3 + ' L' + x1 + ' ' + y1);
+		};
+		/** @ignore */
+		Raphael.fn.polygon = function(coords) {
+			var s = 'M' + coords[0].x + ' ' + coords[0].y;
+			for (var i = 1, l = coords.length; i < l; ++i)
+			{
+				s += ' L' + coords[i].x + ' ' + coords[i].y;
+			}
+			s += 'L' + coords[0].x + ' ' + coords[0].y;
+			return this.path(s);
+		};
+		// translate coordinate of a element with delta
+		/** @ignore */
+		Raphael.el.translateCoord = function(delta) {
+			if (this.forEach)  // is set
+				this.forEach(function(e) {
+					e.translateCoord(delta);
+				});
+			else
+			{
+				var coord = this.attr(['x', 'y']);
+				if ((typeof (coord.x) != 'undefined') && (typeof (coord.y) != 'undefined'))
+					this.attr({'x': coord.x + delta.x, 'y': coord.y + delta.y});
+			}
+			//this.transform('t' + delta.x + ',' + delta.y);
+			return this;
+		};
+		/** @ignore */
+		Raphael.st.translateCoord = function(delta) {
+			if (this.forEach)  // is set
+				this.forEach(function(e) {
+					e.translateCoord(delta);
+				});
+			//this.transform('t' + delta.x + ',' + delta.y);
+			return this;
+		};
+		/** @ignore */
+		Raphael.st.remove = function(delta) {
+			// remove all children first
+			this.forEach(function(elem) {
+				elem.remove();
+			}, this);
+			this.clear();
+		};
+	}
+
+	Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 10);
+};
+
+var _raphaelUnregistered = function()
+{
+	Kekule.Render.DrawBridge2DMananger.unregister(Kekule.Render.RaphaelRendererBridge);
+};
+
+var _registerRaphael = function(raphaelRoot)
+{
+	Kekule.Render.registerExternalModule(RAPHAEL_MODULE_NAME, raphaelRoot);
+};
+var _tryRegisterRaphael = function()
+{
+	if (!_tryRegisterRaphael.registered)
+	{
+		if (Kekule.$jsRoot.Raphael && Kekule.$jsRoot.Raphael.el)  // Raphael.js loaded
+		{
+			_registerRaphael(Kekule.$jsRoot.Raphael);
+			_tryRegisterRaphael.registered = true;
+		}
+	}
+};
+
+Kekule.externalResourceManager.on(RAPHAEL_MODULE_NAME + 'Registered', _raphaelRegistered);
+Kekule.externalResourceManager.on(RAPHAEL_MODULE_NAME + 'Unregistered', _raphaelUnregistered);
+
+// try register Three.js on execute and on DOM load
+_tryRegisterRaphael();
+Kekule.X.domReady(_tryRegisterRaphael);
+
+})();

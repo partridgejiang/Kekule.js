@@ -66,6 +66,15 @@ Kekule.OpenBabel = {
 		}
 		return OB._module;
 	},
+	setModule: function(module)
+	{
+		OB._module = module;
+		EU.setRootModule(obInitOptions.moduleName, module);
+	},
+	getMember: function(name)
+	{
+		return EU.getMember(name, OB.getModule());
+	},
 	getClassCtor: function(className)
 	{
 		return EU.getClassCtor(className, OB.getModule());
@@ -134,18 +143,26 @@ Kekule._registerAfterLoadSysProc(function() {
 /** @ignore */
 Kekule.OpenBabel.getObPath = function()
 {
-	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	var path = isMin? 'extra/': '_extras/OpenBabel/';
-	path = Kekule.scriptSrcInfo.path + path;
+	var path = Kekule.environment.getEnvVar('openbabel.path');
+	if (!path)
+	{
+		var isMin = Kekule.isUsingMinJs();  // Kekule.scriptSrcInfo.useMinFile;
+		path = isMin ? 'extra/' : '_extras/OpenBabel/';
+		path = Kekule.getScriptPath() + path; // Kekule.scriptSrcInfo.path + path;
+	}
 	return path;
 };
 /** @ignore */
 Kekule.OpenBabel.getObScriptUrl = function()
 {
-	var result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
-	var isMin = Kekule.scriptSrcInfo.useMinFile;
-	if (!isMin)
-		result += '.dev';
+	var result = Kekule.environment.getEnvVar('openbabel.scriptSrc');
+	if (!result)
+	{
+		result = Kekule.OpenBabel.getObPath() + Kekule.OpenBabel.SCRIPT_FILE;
+		var isMin = Kekule.isUsingMinJs(); //Kekule.scriptSrcInfo.useMinFile;
+		if (!isMin)
+			result += '.dev';
+	}
 	return result;
 };
 /** @ignore */
@@ -232,35 +249,43 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert an OB object to corresponding Kekule one.
 	 * Type of Kekule object is automatically decided by the type of obObj.
 	 * @param {Object} obObj
+	 * @param {Object} kChemObj
+	 * @param {Kekule.MapEx} childObjMap A map of obObj => kObj
 	 * @returns {Kekule.ChemObject}
 	 */
-	obObjToKekule: function(obObj)
+	obObjToKekule: function(obObj, kChemObj, childObjMap)
 	{
 		var AU = Kekule.OpenBabel.AdaptUtils;
 		var obName = Kekule.ObjUtils.getPrototypeOf(obObj).constructor.name;
 		var convFunc = (obName === 'OBReaction')? AU.obReactionToKekule:
 			(obName === 'OBMol')? AU.obMolToKekule:
+			/*
 			(obName === 'OBAtom')? AU.obAtomToKekule:
 			(obName === 'OBBond')? AU.obBondToKekule:
-				AU.obBaseToKekule;
-		return convFunc(obObj);
+			*/
+			AU.obBaseToKekule;
+		return convFunc(obObj, kChemObj, childObjMap);
 	},
 	/**
 	 * Convert an Kekule chem object to corresponding Open Babel one.
 	 * Type of Open Babel object is automatically decided by the type of kChemObj.
+	 * @param {Object} kChemObj
 	 * @param {Object} obObj
+	 * @param {Kekule.MapEx} childObjMap A map of kObj => obObj
 	 * @returns {Kekule.ChemObject}
 	 */
-	kObjToOB: function(kChemObj)
+	kObjToOB: function(kChemObj, obObj, childObjMap)
 	{
 		var AU = Kekule.OpenBabel.AdaptUtils;
 		var convFunc = (kChemObj instanceof Kekule.Reaction)? AU.kReactionToOB:
 			(kChemObj instanceof Kekule.StructureFragment)? AU.kMolToOB:
+			/*
 			(kChemObj instanceof Kekule.ChemStructureNode)? AU.kChemNodeToOB:
 			(kChemObj instanceof Kekule.ChemStructureConnector)? AU.kBondToOB:
+			*/
 				null;  // AU.kChemNodeToOB;
 		if (convFunc)
-			return convFunc(kChemObj);
+			return convFunc(kChemObj, obObj, childObjMap);
 		else
 			return null;
 	},
@@ -488,6 +513,10 @@ Kekule.OpenBabel.AdaptUtils = {
 			v = kNode.getHybridizationType();
 			if (v)
 				result.SetHyb(v);
+			// implicit hnydrogen count, from OB3, this value must be explicit set
+			var ihc = kNode.getImplicitHydrogenCount();
+			if (ihc)
+				result.SetImplicitHCount(ihc);
 		}
 		else // subgroup, pseudo atom...
 		{
@@ -524,8 +553,9 @@ Kekule.OpenBabel.AdaptUtils = {
 			obBond.IsCisOrTrans()? BS.CIS_OR_TRANS:
 			obBond.IsDoubleBondGeometry()? BS.E_Z_BY_COORDINATES:
 				BS.NONE;
-		// TODO: IsUp/IsDown not handled
 		result.setStereo(v);
+
+		console.log(obBond.GetFlags().toString(2));
 
 		// atom mapping
 		if (atomMapping)
@@ -584,11 +614,11 @@ Kekule.OpenBabel.AdaptUtils = {
 		var BS = Kekule.BondStereo;
 		v = kBond.getStereo();
 		if (v === BS.UP)
-			result.SetWedge();
+			result.SetWedge(true);
 		else if (v === BS.DOWN)
-			result.SetHash();
+			result.SetHash(true);
 		else if (v === BS.UP_OR_DOWN)
-			result.SetWedgeOrHash();
+			result.SetWedgeOrHash(true);
 
 		// atoms
 		if (atomMapping)
@@ -613,6 +643,8 @@ Kekule.OpenBabel.AdaptUtils = {
 							result.SetEnd(v);
 						++curr;
 					}
+					if (v.AddBond)    // important, should manually add bond to atom here
+						v.AddBond(result);
 					if (curr > 1)
 						break;
 				}
@@ -625,12 +657,73 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert instance of OBMol to Kekule.Molecule.
 	 * @param {Object} obMol
 	 * @param {Kekule.Molecule} kMol
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Molecule}
 	 */
-	obMolToKekule: function(obMol, kMol)
+	obMolToKekule: function(obMol, kMol, childObjMap)
 	{
-		var result = kMol || new Kekule.Molecule();
-		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obMol, result);
+		//var result = kMol || new Kekule.Molecule();
+		var result = kMol;
+
+		// TODO: The bond of OBMol often has a implicit stereo, wedge/hash and so on must be calculated from
+		//  separate OBStereoData field of OBMol, which is very complex. So here we simply use MOL format string
+		//  to convert from OBMol and Kekule.Molecule
+		var conv = new (OB.getClassCtor('ObConversionWrapper'))();
+		try
+		{
+			conv.setOutFormat('', 'mol');
+			var sMolData = conv.writeString(obMol, false);
+			var mol2 = Kekule.IO.loadFormatData(sMolData, Kekule.IO.DataFormat.MOL);
+			if (!result)
+				result = mol2;
+			else
+				result.assign(mol2);
+			mol2.finalize();
+		}
+		finally
+		{
+			conv['delete']();
+		}
+
+		Kekule.OpenBabel.AdaptUtils.obBaseToKekule(obMol, result); // additional data conversion
+
+		// fill the childObjMap
+		if (childObjMap)
+		{
+			// atoms
+			var count = obMol.NumAtoms();
+			if (count === result.getNodeCount())  // atom count matches, now we can do the mapping
+			{
+				for (var i = 0; i < count; ++i)
+				{
+					var obAtom = obMol.GetAtom(i + 1);  // NOTE: in OpenBabel, currently atom index starts from 1
+					if (obAtom)
+					{
+						var kNode = result.getNodeAt(i);
+						if (kNode)
+							childObjMap.set(obAtom, kNode);
+					}
+				}
+			}
+			// bonds
+			var count = obMol.NumBonds();
+			if (count === result.getConnectorCount())  // bond count matches, now we can do the mapping
+			{
+				for (var i = 0; i < count; ++i)
+				{
+					var obBond = obMol.GetBond(i);  // NOTE: in OpenBabel, bond index starts from 0
+					if (obBond)
+					{
+						var kBond = result.getConnectorAt(i);
+						if (kBond)
+							childObjMap.set(obBond, kBond);
+					}
+				}
+			}
+		}
+
+		/*
+		OB.getMember('PerceiveStereo')(obMol, false);
 
 		var coordMode = obMol.Has3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 
@@ -672,16 +765,18 @@ Kekule.OpenBabel.AdaptUtils = {
 		}
 		atomMapping.finalize();
 		atomMapping = null;
+		*/
 		return result;
 	},
 
 	/**
 	 * Convert instance of Kekule.StructureFragment to OBMol.
-	 * @param {Kekule.StructureFragment} kMol
+	 * @param {Kekule.StructureFragment} kekuleMol
 	 * @param {Object} obMol
-	 * @returns {Kekule.Molecule}
+	 * @param {Kekule.MapEx} childObjMap
+	 * @returns {Object}
 	 */
-	kMolToOB: function(kMol, obMol)
+	kMolToOB: function(kekuleMol, obMol, childObjMap)
 	{
 		var coordMode = kMol.nodesHasCoord3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 		var result = obMol || new (OB.getClassCtor('OBMol'))();
@@ -691,6 +786,9 @@ Kekule.OpenBabel.AdaptUtils = {
 			result.Clear();
 
 		var atomMapping = new Kekule.MapEx(false);
+
+		// since this conversion method can not handle subgroup, we need to flatten the kekule molecule first
+		var kMol = kekuleMol.getFlattenedShadowFragment(true);
 
 		// atoms
 		for (var i = 0, l = kMol.getNodeCount(); i < l; ++i)
@@ -703,6 +801,11 @@ Kekule.OpenBabel.AdaptUtils = {
 				{
 					//result.AddAtom(obAtom);
 					atomMapping.set(kNode, obAtom);
+					if (childObjMap)
+					{
+						var srcNode = kekuleMol.getFlatternedShadowSourceObj(kNode);
+						childObjMap.set(srcNode, obAtom);
+					}
 				}
 			}
 		}
@@ -717,6 +820,11 @@ Kekule.OpenBabel.AdaptUtils = {
 				if (obBond)
 					result.AddBond(obBond);
 				*/
+				if (childObjMap && obBond)
+				{
+					var srcBond = kekuleMol.getFlatternedShadowSourceObj(kBond);
+					childObjMap.set(srcBond, obBond);
+				}
 			}
 		}
 		atomMapping.finalize();
@@ -728,9 +836,10 @@ Kekule.OpenBabel.AdaptUtils = {
 	 * Convert instance of OBReaction to Kekule.Reaction.
 	 * @param {Object} obReaction
 	 * @param {Kekule.Reaction} kMol
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Reaction}
 	 */
-	obReactionToKekule: function(obReaction, kReaction)
+	obReactionToKekule: function(obReaction, kReaction, childObjMap)
 	{
 		var result = kReaction || new Kekule.Reaction();
 		result.clearAll();
@@ -744,15 +853,19 @@ Kekule.OpenBabel.AdaptUtils = {
 		for (var i = 0, l = obReaction.NumReactants(); i < l; ++i)
 		{
 			var obMol = obReaction.GetReactant(i);
-			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
+			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol, null, childObjMap);
 			result.appendReactant(kMol);
+			if (childObjMap)
+				childObjMap.set(obMol, kMol);
 		}
 		// products
 		for (var i = 0, l = obReaction.NumProducts(); i < l; ++i)
 		{
 			var obMol = obReaction.GetProduct(i);
-			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
+			var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol, null, childObjMap);
 			result.appendProduct(kMol);
+			if (childObjMap)
+				childObjMap.set(obMol, kMol);
 		}
 		// TODO: transition state not handled
 
@@ -760,11 +873,12 @@ Kekule.OpenBabel.AdaptUtils = {
 	},
 	/**
 	 * Convert instance of Kekule.Reaction to OBReaction.
-	 * @param {Kekule.Reaction} kMol
+	 * @param {Kekule.Reaction} kReaction
 	 * @param {Object} obReaction
+	 * @param {Kekule.MapEx} childObjMap
 	 * @returns {Kekule.Reaction}
 	 */
-	kReactionToOB: function(kReaction, obReaction)
+	kReactionToOB: function(kReaction, obReaction, childObjMap)
 	{
 		var result = obReaction || new (OB.getClassCtor('OBReaction'))();
 		result.Clear();
@@ -785,11 +899,13 @@ Kekule.OpenBabel.AdaptUtils = {
 			var kMol = kReaction.getReactantAt(i);
 			if (kMol)
 			{
-				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol);
+				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol, null, childObjMap);
 				if (isReversed)
 					result.AddProduct(obMol);
 				else
 					result.AddReactant(obMol);
+				if (childObjMap)
+					childObjMap.set(kMol, obMol);
 			}
 		}
 		// products
@@ -798,11 +914,13 @@ Kekule.OpenBabel.AdaptUtils = {
 			var kMol = kReaction.getProductAt(i);
 			if (kMol)
 			{
-				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol);
+				var obMol = Kekule.OpenBabel.AdaptUtils.kMolToOB(kMol, null, childObjMap);
 				if (isReversed)
 					result.AddReactant(obMol);
 				else
 					result.AddProduct(obMol);
+				if (childObjMap)
+					childObjMap.set(kMol, obMol);
 			}
 		}
 	}

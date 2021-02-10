@@ -5,17 +5,44 @@
 **/
 
 /*
+.K-Widget.K-Inherit-Color
+{
+    color: inherit;
+}
+.K-Widget.K-Inherit-BgColor
+{
+    background-color: inherit;
+}
+.K-Widget.K-Inherit-BorderColor
+{
+    border-color: inherit;
+}
+.K-Widget.K-Inherit-FontSize
+{
+    font-size: inherit;
+}
+*/
+
+.K-Widget,
+.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
+{
+    color: #555555;
+    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
+}
+
+.K-Widget.K-Style-Inherited,
+.K-State-Normal.K-Style-Inherited, a.K-Widget.K-Style-Inherited, a.K-Widget.K-Style-Inherited:active, a.K-Widget.K-Style-Inherited:visited
+{
+    color: inherit;
+}
+
+/*
 .K-State-Focused, .K-State-Hover
 {
     color: #212121;
     border-color: #999999;
 }
 */
-
-.K-State-Normal, a.K-Widget, a.K-Widget:active, a.K-Widget:visited
-{
-    color: #555555;
-}
 
 .K-State-Focused
 {
@@ -28,17 +55,20 @@
 }
 
 .K-State-Selected {
-    background-color: #F39814;
+    background-color: rgb(243,152,20);
+}
+.K-State-Selected.K-State-Current-Selected {
+    background-color: rgb(219, 136, 16);
 }
 
-.K-Widget
-{
-    color: #555555;
-    /*background-color: #fff;*/ /* Can not set back color directly here, otherwise form controls (textbox) will lose its default outlook. */
-}
 .K-Assoc-Text-Content
 {
     color: #888888;
+}
+
+.K-Normal-Background.K-Style-Inherited
+{
+    background-color: inherit;
 }
 .K-Normal-Background,
 .K-ComboBox .K-TextBox,
@@ -436,6 +466,11 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 {
     background-image: url("images/slice/icons16/pencil.png"); /* pencil mark */
 }
+.K-ValueListEditor.K-State-ReadOnly .K-ValueListEditor-ActiveRow .K-ValueListEditor-IndicatorCell span,
+.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span
+{
+    background-image: url("images/slice/icons16/locked.png"); /* view mark */
+}
 
 .K-ValueListEditor,
 .K-ValueListEditor .K-ValueListEditor-Row:hover,
@@ -473,11 +508,6 @@ input.K-State-Disabled, select.K-State-Disabled, textarea.K-State-Disabled
 .K-PropListEditor .K-PropListEditor-PropCollapsed .K-PropListEditor-PropExpandMarker
 {
     background-image: url("images/slice/icons16/triangleRight.png");
-}
-
-.K-ValueListEditor .K-ValueListEditor-ActiveRow.K-PropListEditor-ReadOnly .K-ValueListEditor-IndicatorCell span
-{
-    background-image: url("images/slice/icons16/locked.png");  /* lock mark */
 }
 
 .K-ObjInspector /*.K-ObjInspector-PropInfoPanel, .K-ObjInspector .K-ObjInspector-ObjsInfoPanel*/

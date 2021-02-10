@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Generator by OpenBabel Test</title>
+    <script src="../_libs/Three.js"></script>
+    <script src="../../src/_extras/OpenBabel/openbabel.js.dev"></script>
+    <script src="../../src/kekule.js?min=false&modules=calculation,chemWidget,openbabel,indigo"></script>
+    <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+    <script>
+        var OpenBabel;
+        var displayer2D, displayer3D, displayer2DSrc, displayer3DSrc;
+        function getObMol()
+        {
+            var smiles = document.getElementById('inputSmiles').value;
+            var conv = new OpenBabel.ObConversionWrapper();
+            conv.setInFormat('', 'smi');
+            var mol = new OpenBabel.OBMol();
+            conv.readString(mol, smiles);
+            conv.delete();
+            return mol;
+        }
+        function getSrcMol()
+        {
+            /*
+            var obMol = getObMol();
+            var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(obMol);
+            obMol.delete();
+            return kMol;
+            */
+            var result;
+            var fromStruct = Kekule.Widget.getWidgetById('checkBoxFromStruct').getChecked();
+            if (fromStruct)
+                result = displayer2DSrc.exportObj(Kekule.StructureFragment);
+            else
+            {
+                var smiles = document.getElementById('inputSmiles').value;
+                result = Kekule.IO.loadFormatData(smiles, Kekule.IO.DataFormat.SMILES);
+            }
+            return result;
+        }
+        function gen2D()
+        {
+            var mol = getObMol();
+            var gen2d = OpenBabel.OBOp.FindType("Gen2D");
+            if (!gen2d.Do(mol, ''))
+                console.error('Generate 2D failed');
+            /*
+            var conv = new OpenBabel.ObConversionWrapper();
+            conv.setOutFormat('', 'mol');
+            var s = conv.writeString(mol, false);
+            console.log(s);
+
+            var mol2 = new OpenBabel.OBMol();
+            conv.setInFormat('', 'mol');
+            conv.readString(mol2, s);
+            conv.delete();
+            */
+
+            //console.log('conv to kekule');
+            var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(mol);
+            Kekule.Widget.getWidgetById('composer').setChemObj(kMol);
+            mol.delete();
+            //mol2.delete();
+        }
+        function gen3D()
+        {
+            var mol = getObMol();
+            var gen3d = OpenBabel.OBOp.FindType("Gen3D");
+            if (!gen3d.Do(mol, ''))
+                console.error('Generate 3D failed');
+            var kMol = Kekule.OpenBabel.AdaptUtils.obMolToKekule(mol);
+            Kekule.Widget.getWidgetById('viewer').setChemObj(kMol);
+            mol.delete();
+        }
+
+        function generateStructure(dimension, async, options)
+        {
+            var srcMol = getSrcMol();
+	          var displayer = (dimension === 2)? displayer2D: displayer3D;
+            var displayerSrc = (dimension === 2)? displayer2DSrc: displayer3DSrc;
+
+	          /*
+            if (!async)
+            {
+                var generator = (dimension === 2)?
+                    new Kekule.Calculator.ObStructure2DGenerator():
+                    new Kekule.Calculator.ObStructure3DGenerator();
+	              generator.setSourceMol(srcMol);
+		            generator.executeSync(function(){
+			            var mol = generator.getGeneratedMol();
+			            console.log(mol);
+			            displayer.setChemObj(mol);
+		            });
+            }
+            else // async
+	          */
+            {
+            	var serviceName = (dimension === 2)? Kekule.Calculator.Services.GEN2D: Kekule.Calculator.Services.GEN3D;
+	            var calculator = Kekule.Calculator.generateStructure(srcMol, serviceName, {sync: !async, modifySource: true},
+		            function(generatedMol){
+			            //var tickEnd = Date.now();
+			            //var duration = tickEnd - tickStart;
+			            //document.getElementById('labelDuration').innerHTML = 'Calculated in ' + duration + ' ms';
+
+			            console.log(generatedMol);
+			            displayer.setChemObj(generatedMol);
+			            displayerSrc.setChemObj(srcMol);
+
+			            //viewer.setChemObj(generatedMol);
+		            },
+		            function(err)
+		            {
+			            if (err)
+				            Kekule.error(err);
+		            },
+		            function (msgData)
+		            {
+			            if (msgData.type === 'print' || msgData.type === 'printErr')
+			            {
+				            msgs.push('[' + (new Date()).toLocaleTimeString() + '][' + msgData.type + ']' + msgData.data);
+				            //Kekule.Widget.getWidgetById('memoLog').setValue(msgs.join('\n'));
+				            console.log(msgs.join('\n'));
+			            }
+		            }
+	            );
+            }
+        }
+
+
+        function init()
+        {
+            Kekule.OpenBabel.enable(function(){ OpenBabel = Kekule.OpenBabel.getModule(); });
+            //Kekule.Widget.getWidgetById('btnExec').on('execute', gen2D);
+            Kekule.Widget.getWidgetById('btnExec').on('execute', generateStructure.bind(null, 2));
+            //Kekule.Widget.getWidgetById('btnExec3D').on('execute', gen3D);
+            Kekule.Widget.getWidgetById('btnExec3D').on('execute', generateStructure.bind(null, 3));
+            displayer2D = Kekule.Widget.getWidgetById('composer');
+	          displayer3D = Kekule.Widget.getWidgetById('viewer');
+            displayer2DSrc = Kekule.Widget.getWidgetById('composerSrc');
+            displayer3DSrc = Kekule.Widget.getWidgetById('viewerSrc');
+        }
+        Kekule.X.domReady(init);
+    </script>
+</head>
+<body>
+    <div>
+        <label>SMILES: </label>
+        <input type="text" id="inputSmiles" />
+        <span id="checkBoxSync" data-widget="Kekule.Widget.CheckBox" data-text="Sync"></span>
+        <span id="checkBoxFromStruct" data-widget="Kekule.Widget.CheckBox" data-text="From structure in editor"></span>
+        <button id="btnExec" data-widget="Kekule.Widget.Button">Gen2D</button>
+        <button id="btnExec3D" data-widget="Kekule.Widget.Button">Gen3D</button>
+    </div>
+    <div style="overflow: hidden">
+        <div id="composerSrc" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
+        <div id="composer" style="width:600px;height:400px;float:left" data-widget="Kekule.Editor.Composer"></div>
+    </div>
+    <div style="overflow: hidden">
+        <div id="viewerSrc" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+        <div id="viewer" style="width:600px;height:400px;float:left" data-widget="Kekule.ChemWidget.Viewer3D"></div>
+    </div>
+</body>
+</html>

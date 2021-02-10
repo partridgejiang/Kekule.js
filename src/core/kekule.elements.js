@@ -51,9 +51,9 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 	 * @constructs
 	 * @param {Variant} symbolOrAtomicNumber Symbol (String) or atomic number (Int) of element.
 	 */
-	initialize: function($super, symbolOrAtomicNumber)
+	initialize: function(/*$super, */symbolOrAtomicNumber)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (symbolOrAtomicNumber != Kekule.Element.UNSET_ELEMENT)
 		{
 			var elemInfo = this.getElementInfo(symbolOrAtomicNumber);
@@ -332,7 +332,7 @@ Kekule.Isotope = Class.create(Kekule.Element,
 	 * @param {Variant} symbolOrAtomicNumber Symbol (String) or atomic number (Int) of element.
 	 * @param {Int} massNumber Isotope mass number.
 	 */
-	initialize: function($super, symbolOrAtomicNumber, massNumber)
+	initialize: function(/*$super, */symbolOrAtomicNumber, massNumber)
 	{
 		var atomicNum = symbolOrAtomicNumber;
 		var massNum = massNumber;
@@ -346,7 +346,7 @@ Kekule.Isotope = Class.create(Kekule.Element,
 			massNum = isoInfo.massNumber;
 		}
 
-		$super(atomicNum);
+		this.tryApplySuper('initialize', [atomicNum])  /* $super(atomicNum) */;
 		this.setPropStoreFieldValue('massNumber', massNum);
 		if (isoInfo && isoInfo.isotopeAlias)
 			this.setPropStoreFieldValue('isotopeAlias', isoInfo.isotopeAlias);

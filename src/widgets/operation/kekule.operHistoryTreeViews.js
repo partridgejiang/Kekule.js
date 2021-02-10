@@ -43,12 +43,12 @@ Kekule.Widget.OperHistoryTreeView = Class.create(Kekule.Widget.TreeView,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.OperHistoryTreeView',
 	/** @construct */
-	initialize: function($super, parentOrElementOrDocument, operHistory)
+	initialize: function(/*$super, */parentOrElementOrDocument, operHistory)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setPropStoreFieldValue('objMap', new Kekule.MapEx(true));
 		this.setEnableLiveUpdate(true);
-		this.setEnableMultiSelected(true);
+		this.setEnableMultiSelect(true);
 		this.setOperHistory(operHistory);
 	},
 	/** @private */
@@ -67,9 +67,9 @@ Kekule.Widget.OperHistoryTreeView = Class.create(Kekule.Widget.TreeView,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.OPER_HISTORY_TREE_VIEW;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.OPER_HISTORY_TREE_VIEW;
 	},
 
 	/** @private */

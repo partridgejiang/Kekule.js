@@ -36,9 +36,9 @@ Kekule.DataBingItem = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.DataBingItem',
 	/** @constructs */
-	initialize: function($super, source, sourceName, target, targetName)
+	initialize: function(/*$super, */source, sourceName, target, targetName)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setSource(source);
 		this.setSourceName(sourceName);
 		this.setTarget(target);

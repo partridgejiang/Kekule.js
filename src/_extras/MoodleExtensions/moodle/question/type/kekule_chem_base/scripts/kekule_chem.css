@@ -41,3 +41,26 @@ button.K-Button
     border-radius: 5px;
     border: none;
 }
+
+.KM-Btn-Copy-Structure .K-Pri-Glyph-Content
+{
+    background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAAmJLR0QA/vCI/CkAAAAJcEhZcwAADdYAAA3WAZBveZwAAAAJdnBBZwAAABgAAAAYAHhMpaYAAAFdSURBVDjLzZO/TsJQFMZ/t1QsmthEjQkmLoZJA7ODq/EdHBx9BcTEmMjCxsA7+Ao+gFOdCImOuoAs/qtIldL2OECxLY1EJ88Zbu6933e+c/988MtQ8akotOQaQqAklSAaS5hkEgQfmzcVTImJEjPfoMNjIjv5hpiiEgqiyJLXLiVAEpWU0oJ9HpQHoEeaWWFZPpGbiy17QlK35vaBqBAXaWajzp3sYWFJUQzRx2lIEQtLNmVMGQ0ZzPYuXQQX6OON5EGgjxstHkrp8k4A8c1xpBJgAMAwhTBMJ7jT1X5WGP5nBQ1dvve1mQq1wjGEX02rFX5S8HPOh16pVOYjiAHNnIeXTuidtc/XnOv4ERa8ky42fkpL9dXyfTnLXAzf54UmvdBCCkB01hcPHZ0djHh15QVHdHBV5BYAfOzq06npXMXhhl995TkKnxhINEqUyE49WYtW3JxRx82w/x/jC67KmykWiVPXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDEwLTA4LTEwVDE0OjU4OjMzKzAyOjAw3iY7qgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxMC0wOC0xMFQxNDo1ODozMyswMjowMK97gxYAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC);
+}
+
+.KM-ChemObjSelectorPanel .K-Chem-Viewer
+{
+    width: 10em;
+    height: 8em;
+}
+
+.KM-ChemObjSelectorPanel .K-Widget-Grid
+{
+    min-width: 10em;
+}
+
+.KM-ChemObjSelectorPanel .K-Widget-Grid .K-Widget-Grid-Cell
+{
+    width: 10em;
+    height: 8em;
+}
+

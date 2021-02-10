@@ -13,7 +13,7 @@
 
 	function analysisLanguage(lanName)
 	{
-		var parts = lanName.split('-');
+		var parts = lanName.split(/[-|_]/);
 		return {'language': parts[0], 'local': parts[1]};
 	}
 
@@ -22,7 +22,7 @@
 
 	var rootObj = Kekule;
 	var DEF_LANGUAGE = 'en-US';
-	var language = Kekule.language || (($root && $root.navigator)? navigator.language || navigator.browserLanguage: DEF_LANGUAGE);
+	var language = Kekule.getLanguage() || (($root && $root.navigator)? navigator.language || navigator.browserLanguage: DEF_LANGUAGE);
 	rootObj.language = language;  // save language info
 	var lanInfo = analysisLanguage(language);
 	var defLanInfo = analysisLanguage(DEF_LANGUAGE);

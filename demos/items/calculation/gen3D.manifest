@@ -19,7 +19,7 @@ CACHE:
 ../../../libs/kekule/widget.min.js
 ../../../libs/kekule/kekule.loaded.js
 ../../../libs/kekule/openbabel.js
-../../../libs/kekule/workers/kekule.worker.obStructure3DGenerator.js
+../../../libs/kekule/workers/kekule.worker.obStructureGenerator.js
 ../../../libs/kekule/themes/default/kekule.css
 ../../../libs/kekule/themes/default/default.css
 ../../../libs/kekule/themes/default/defaultColor.css

@@ -1,0 +1,14 @@
+{
+  "spec_dir": ".",
+  "spec_files": [
+    "./core/*Test.js",
+    "./io/*Test.js",
+    "./algorithm/*Test.js",
+    "./widget/*Test.js"
+  ],
+  "helpers": [
+    "./_utils/kekuleLoaderCli.js"
+  ],
+  "stopSpecOnExpectationFailure": false,
+  "random": true
+}

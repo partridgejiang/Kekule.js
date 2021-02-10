@@ -40,9 +40,9 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._data = new Kekule.MapEx(true);
 		if (Kekule.BrowserFeature.localStorage)
 		{
@@ -63,10 +63,10 @@ Kekule.Widget.Clipboard = Class.create(ObjectEx,
 		}
 	},
 	/** @ignore */
-	finalize: function($super)
+	finalize: function(/*$super*/)
 	{
 		this._data.finalize();
-		$super();
+		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()

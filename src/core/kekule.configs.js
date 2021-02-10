@@ -28,9 +28,9 @@ Kekule.AbstractConfigs = Class.create(ObjectEx,
 	/**
 	 * @constructs
 	 */
-	initialize: function($super, autoInitDefValue)
+	initialize: function(/*$super, */autoInitDefValue)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (typeof(autoInitDefValue) == 'undefined')
 			autoInitDefValue = true;
 		if (autoInitDefValue)
@@ -184,16 +184,16 @@ Kekule.ConfigPresetMap = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ConfigPresetMap',
 	/** @constructs */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.map = new Kekule.MapEx(true);  // a non-weak map
 	},
 	/** @private */
-	doFinalize: function($super)
+	doFinalize: function(/*$super*/)
 	{
 		this.map = null;
-		$super();
+		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/**
 	 * Add a preset to map.

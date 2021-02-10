@@ -133,12 +133,12 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	COLNAME_ALL: TCN.ALL,
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
 		//this._tableElem = null;
 		this._displayData = null;
 		this.setPropStoreFieldValue('showTableHead', true);
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -252,18 +252,18 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.reactOperEditBind = this.reactOperEdit.bind(this);
 		this.reactOperDeleteBind = this.reactOperDelete.bind(this);
 		this.reactOperInsertBind = this.reactOperInsert.bind(this);
 	},
 
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		var relatedProps = [
 			'data', 'columns', 'sortFields', 'sortFunc', 'showTableHead', 'enableHeadInteraction',
 			'operColShowMode', 'operWidgets'
@@ -275,9 +275,9 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.DATATABLE;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.DATATABLE;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -1082,9 +1082,9 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 
 	// event handlers
 	/** @ignore */
-	react_click: function($super, e)
+	react_click: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('react_click', [e])  /* $super(e) */;
 		var elem = e.getTarget();
 		// if click on head cell, sort this column
 		var headCell = this.getParentHeadCell(elem);
@@ -1104,9 +1104,9 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	react_pointerover: function($super, e)
+	react_pointerover: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('react_pointerover', [e])  /* $super(e) */;
 		var elem = e.getTarget();
 		if (this.getEnableActiveRow())
 		{
@@ -1118,9 +1118,9 @@ Kekule.Widget.DataTable = Class.create(Kekule.Widget.BaseWidget,
 		}
 	},
 	/** @ignore */
-	react_pointerleave: function($super, e)
+	react_pointerleave: function(/*$super, */e)
 	{
-		$super(e);
+		this.tryApplySuper('react_pointerleave', [e])  /* $super(e) */;
 		var elem = e.getTarget();
 		if (this.getEnableActiveRow())
 		{
@@ -1245,9 +1245,9 @@ Kekule.Widget.PageNavigator = Class.create(Kekule.Widget.ButtonGroup,
 		});
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setShowText(true);
 		this.setShowGlyph(true);
 		this.setFirstIndex(1);
@@ -1259,9 +1259,9 @@ Kekule.Widget.PageNavigator = Class.create(Kekule.Widget.ButtonGroup,
 		this.reactPageInputChangeBind = this.reactPageInputChange.bind(this);
 	},
 	/** @ignore */
-	doObjectChange: function($super, modifiedPropNames)
+	doObjectChange: function(/*$super, */modifiedPropNames)
 	{
-		$super(modifiedPropNames);
+		this.tryApplySuper('doObjectChange', [modifiedPropNames])  /* $super(modifiedPropNames) */;
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames, ['firstIndex', 'lastIndex', 'currIndex']).length)
 		{
 			this.updateChildComponent();
@@ -1271,9 +1271,9 @@ Kekule.Widget.PageNavigator = Class.create(Kekule.Widget.ButtonGroup,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.PAGENAVIGATOR;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.PAGENAVIGATOR;
 	},
 	/** @ignore */
 	doCreateSubElements: function(doc, rootElem)

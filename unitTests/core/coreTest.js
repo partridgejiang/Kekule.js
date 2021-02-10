@@ -86,7 +86,7 @@ describe('Test of some core data and functions', function(){
 		*/
 		for (var i = 1, l = atomSymbols.length; i < l; ++i)
 		{
-			expect(atoms[i].compare(atoms[i-1]).toBeGreaterThan(0);
+			expect(atoms[i].compareStructure(atoms[i-1])).toBeGreaterThan(0);
 		}
 	});
 

@@ -29,9 +29,9 @@ Kekule.Editor.AbstractRepositoryItem = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.AbstractRepositoryItem',
 	/** @construct */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -118,9 +118,9 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.MolRepositoryItem2D',
 	/** @construct */
-	initialize: function($super)
+	initialize: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 	},
 	/** @private */
 	initProperties: function()
@@ -130,9 +130,9 @@ Kekule.Editor.MolRepositoryItem2D = Class.create(Kekule.Editor.AbstractRepositor
 		this.defineProp('molManipulationDefDirectionCoord', {'dataType': DataType.HASH});
 	},
 	/** @ignore */
-	doGetScale: function($super)
+	doGetScale: function(/*$super*/)
 	{
-		return this.getMolScale() || $super();
+		return this.getMolScale() || this.tryApplySuper('doGetScale')  /* $super() */;
 	},
 	/** @ignore */
 	getAvailableCoordModes: function()
@@ -220,9 +220,9 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredStructFragmentRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat, defScale)
+	initialize: function(/*$super, */structData, dataFormat, defScale)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.beginUpdate();
 		try
 		{
@@ -250,9 +250,9 @@ Kekule.Editor.StoredStructFragmentRepositoryItem2D = Class.create(Kekule.Editor.
 		this.defineProp('dataFormat', {'dataType': DataType.STRING});
 	},
 	/** @ignore */
-	objectChange: function($super, modifiedProps)
+	objectChange: function(/*$super, */modifiedProps)
 	{
-		$super(modifiedProps);
+		this.tryApplySuper('objectChange', [modifiedProps])  /* $super(modifiedProps) */;
 		if ((modifiedProps.indexOf('structData') >= 0) || (modifiedProps.indexOf('dataFormat') >= 0))
 		{
 			var structFragment = null;
@@ -355,9 +355,9 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.Stored
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.StoredSubgroupRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, structData, dataFormat, defScale)
+	initialize: function(/*$super, */structData, dataFormat, defScale)
 	{
-		$super(structData, dataFormat, defScale);
+		this.tryApplySuper('initialize', [structData, dataFormat, defScale])  /* $super(structData, dataFormat, defScale) */;
 	},
 	/** @private */
 	initProperties: function()
@@ -379,9 +379,9 @@ Kekule.Editor.StoredSubgroupRepositoryItem2D = Class.create(Kekule.Editor.Stored
 			return null;
 	},
 	/** @ignore */
-	createObjects: function($super, targetObj)
+	createObjects: function(/*$super, */targetObj)
 	{
-		var result = $super(targetObj);
+		var result = this.tryApplySuper('createObjects', [targetObj])  /* $super(targetObj) */;
 		return result;
 		/*
 		 var mol = result.objects[0];
@@ -459,9 +459,9 @@ Kekule.Editor.MolRingRepositoryItem2D = Class.create(Kekule.Editor.MolRepository
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.MolRingRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, ringAtomCount, bondLength)
+	initialize: function(/*$super, */ringAtomCount, bondLength)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setRingAtomCount(ringAtomCount);
 		this.setBondLength(bondLength || 1);
 	},
@@ -759,9 +759,9 @@ Kekule.Editor.MolChainRepositoryItem2D = Class.create(Kekule.Editor.MolRepositor
 	/** @private */
 	STEP_Y_INC: Math.sin(30 / 180 * Math.PI),
 	/** @construct */
-	initialize: function($super, atomCount, bondLength)
+	initialize: function(/*$super, */atomCount, bondLength)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setAtomCount(atomCount);
 		this.setBondLength(bondLength || 1);
 	},
@@ -1001,9 +1001,9 @@ Kekule.Editor.PathGlyphRepositoryItem2D = Class.create(Kekule.Editor.AbstractRep
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.PathGlyphRepositoryItem2D',
 	/** @construct */
-	initialize: function($super, glyphClass, glyphRefLength, glyphInitialParams)
+	initialize: function(/*$super, */glyphClass, glyphRefLength, glyphInitialParams)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this.setGlyphClass(glyphClass);
 		this.setGlyphRefLength(glyphRefLength || 1);
 		this.setGlyphInitialParams(glyphInitialParams);

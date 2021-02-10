@@ -64,7 +64,7 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['span', 'div'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, text, msgType)
+	initialize: function(/*$super, */parentOrElementOrDocument, text, msgType)
 	{
 		this._contentElem = null;
 		this._elemTextPart = null;  // used internally
@@ -75,7 +75,7 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 		this.setPropStoreFieldValue('showLeadingGlyph', true);
 		this.setPropStoreFieldValue('showTailingGlyph', true);
 		*/
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		if (text)
 			this.setText(text);
 		if (msgType)
@@ -122,9 +122,9 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 		});
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.MSGPANEL;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.MSGPANEL;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -133,8 +133,9 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */ || [];
 		var text = EU.getInnerText(rootElem);
 		rootElem.innerHTML = '';  // clear old content first
 		var element = doc.createElement('span');
@@ -144,11 +145,13 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 		this._elemTextPart = this.createTextContent(text, element);
 		this._elemLeadingGlyphPart = this.createGlyphContent(element, this._elemTextPart, CNS.PART_PRI_GLYPH_CONTENT);
 		this._elemTailingGlyphPart = this.createGlyphContent(element, null, CNS.PART_ASSOC_GLYPH_CONTENT);
+		result.push(element);
+		return result;
 	},
 	/** @ignore */
-	doSetUseCornerDecoration: function($super, value)
+	doSetUseCornerDecoration: function(/*$super, */value)
 	{
-		$super(value);
+		this.tryApplySuper('doSetUseCornerDecoration', [value])  /* $super(value) */;
 		if (value)
 		  Kekule.HtmlElementUtils.addClass(this._contentElem, CNS.CORNER_ALL);
 		else
@@ -198,9 +201,9 @@ Kekule.Widget.MsgGroup = Class.create(Kekule.Widget.WidgetGroup,
 	/** @private */
 	BINDABLE_TAG_NAMES: ['span', 'div'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		//this._childMsgPanels = [];
 		this.setLayout(Kekule.Widget.Layout.VERTICAL);
 	},
@@ -218,15 +221,15 @@ Kekule.Widget.MsgGroup = Class.create(Kekule.Widget.WidgetGroup,
 		this.defineProp('msgFlashTime', {'dataType': DataType.INT})
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setMsgFlashTime(6000);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.MSGGROUP;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.MSGGROUP;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)

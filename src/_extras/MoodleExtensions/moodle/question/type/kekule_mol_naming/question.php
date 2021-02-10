@@ -27,6 +27,7 @@ require_once($CFG->dirroot . '/question/type/kekule_mol_naming/lib.php');
 class qtype_kekule_mol_naming_question extends qtype_kekule_multianswer_question {
     public $replaceunstandardchars;
     public $removespaces;
+    public $strictstereoflags;
     public $ignorecase;
 
     protected function calcMatchingRatio($responseItem, $key)
@@ -61,7 +62,8 @@ class qtype_kekule_mol_naming_question extends qtype_kekule_multianswer_question
         // TODO: unfinished
         $result = qtype_kekule_mol_naming_utils::cleanName($text, array(
             'replaceunstandardchars' => $this->replaceunstandardchars,
-            'removespaces' => $this->removespaces
+            'removespaces' => $this->removespaces,
+	        'strictstereoflags' => $this->strictstereoflags
         ));
         return $result;
     }

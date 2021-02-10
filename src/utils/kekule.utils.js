@@ -173,6 +173,26 @@ Kekule.ObjUtils = {
 		return Object.getPrototypeOf? Object.getPrototypeOf(obj): (obj.prototype || obj.__proto__);
 	},
 	/**
+	 * Returns the property descriptor of propName in obj (and its prototypes if param checkPrototype is true).
+	 * @param {Object} obj
+	 * @param {String} propName
+	 * @param {Bool} checkPrototype
+	 * @returns {Hash}
+	 */
+	getPropertyDescriptor: function(obj, propName, checkPrototype)
+	{
+		var getOwn = Object.getOwnPropertyDescriptor;
+		if (getOwn)
+		{
+			var result = getOwn(obj, propName);
+			if (!result && checkPrototype && (obj.prototype || obj.__proto__))
+				result = Kekule.ObjUtils.getPropertyDescriptor(obj.prototype || obj.__proto__, propName, checkPrototype);
+			return result;
+		}
+		else
+			return null;
+	},
+	/**
 	 * Return all name of direct fields of obj. Note that functions will not be included.
 	 * @param {Object} obj
 	 * @param {Bool} includeFuncFields Set to true to include function fields in obj.
@@ -237,11 +257,21 @@ Kekule.ObjUtils = {
 	 */
 	equal: function(src, dest, excludingFields)
 	{
+		var checkedFields = [];
 		for (var fname in src)
 		{
 			if (excludingFields && (excludingFields.indexOf(fname) >= 0))
 				continue;
 			if (src[fname] !== dest[fname])
+				return false;
+			checkedFields.push(fname);
+		}
+		// check if there are additional fields in dest, if true, two objects are not same
+		for (var fname in dest)
+		{
+			if (excludingFields && (excludingFields.indexOf(fname) >= 0))
+				continue;
+			if (checkedFields.indexOf(fname) < 0)   // has unchecked field in dest object
 				return false;
 		}
 		return true;
@@ -1356,6 +1386,8 @@ Kekule.FactoryUtils = {
  */
 Kekule.UrlUtils = {
 	/** @private */
+	PROTOCAL_DELIMITER: '://',
+	/** @private */
 	EXT_DELIMITER: '.',
 	/** @private */
 	PATH_DELIMITER: '/',
@@ -1367,6 +1399,30 @@ Kekule.UrlUtils = {
 	KEY_VALUE_DELIMITER: '=',
 	/** @private */
 	HASH_DELIMITER: '#',
+	/**
+	 * change all path demiliter from '\' to '/'
+	 * @param {String} path
+	 * @returns {String}
+	 */
+	normalizePath: function(path)  // change path sep from '\' to '/' in windows env
+	{
+		return path.replace(/\\/g, '/');
+	},
+	/**
+	 * Extract protocal name from url.
+	 * @param {String} url
+	 * @returns {String}
+	 */
+	extractProtocal: function(url)
+	{
+		if (!url)
+			return null;
+		var p = url.indexOf(Kekule.UrlUtils.PROTOCAL_DELIMITER);
+		if (p >= 0)
+			return url.substr(0, p);
+		else
+			return '';
+	},
 	/**
 	 * Extract file name from url.
 	 * @param {String} url

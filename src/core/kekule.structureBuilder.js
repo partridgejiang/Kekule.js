@@ -27,9 +27,9 @@ Kekule.ChemStructureBuilder = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.ChemStructureBuilder',
 	/** @constructs */
-	initialize: function($super, target)
+	initialize: function(/*$super, */target)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		if (target)
 			this.setTarget(target);
 	},

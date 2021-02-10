@@ -41,9 +41,9 @@ Kekule.DomHelper = Class.create(ObjectEx,
 	/** @private */
 	ERR_ELEMENT_NOTSET: 'Element not set',
 	/** @constructs */
-	initialize: function($super, doc)
+	initialize: function(/*$super, */doc)
 	{
-		$super();
+		this.tryApplySuper('initialize')  /* $super() */;
 		this._supportNsMethods = null;
 		if (doc)
 			this.setDocument(doc);
@@ -257,6 +257,8 @@ Kekule.DomHelper = Class.create(ObjectEx,
 
 		if (this._supportNsMethods)
 		{
+			if (!namespaceURI)
+				namespaceURI = '*';
 			if (element)
 				return element.getElementsByTagNameNS(namespaceURI, localName);
 			else
@@ -291,7 +293,11 @@ Kekule.DomHelper = Class.create(ObjectEx,
 		if (!this.assertElementAvailable(element))
 			return null;
 		if (this._supportNsMethods)
+		{
+			if (!namespaceURI)
+				namespaceURI = '*';
 			return element.getAttributeNodeNS(namespaceURI, localName);
+		}
 		else
 		{
 			var qualifiedName = this.getQualifiedName(namespaceURI, localName);
@@ -318,7 +324,11 @@ Kekule.DomHelper = Class.create(ObjectEx,
 		if (!this.assertElementAvailable(element))
 			return null;
 		if (this._supportNsMethods)
+		{
+			if (!namespaceURI)
+				namespaceURI = '*';
 			return element.getAttributeNS(namespaceURI, localName);
+		}
 		else
 		{
 			var qualifiedName = this.getQualifiedName(namespaceURI, localName);

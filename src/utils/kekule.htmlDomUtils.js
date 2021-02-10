@@ -66,9 +66,12 @@ Kekule.StyleUtils = {
 	/**
 	 * Turn a #RRGGBB or #RGB style string to a integer value.
 	 * @param {String} str
+	 * @returns {Int}
+	 * @deprecated
 	 */
 	colorStrToValue: function(str)
 	{
+		/*
 		var isLongFormat = str.length > 4;
 		var sR = isLongFormat? str.substr(1, 2): str.substr(1, 1);
 		var sG = isLongFormat? str.substr(3, 2): str.substr(2, 1);
@@ -81,11 +84,158 @@ Kekule.StyleUtils = {
 		}
 		var result = (parseInt(sR, 16) << 16) + (parseInt(sG, 16) << 8) + parseInt(sB, 16);
 		return result;
+		*/
+		var v = Kekule.StyleUtils.analysisCssColor(str, true);
+		var result = (Math.round(v.r) << 16) + (Math.round(v.g) << 8) + (Math.round(v.b));
+		return result;
+	},
+	/**
+	 * Convert CSS #RRGGBB(AA) or #RGB or rgb/rgba() or hsl/hsla() style string into a hash.
+	 * @param {String} str
+	 * @param {Bool} convertToRgb Whether convert HSL values to RGB.
+	 * @returns {Hash} A hash with {r, g, b, a}.
+	 */
+	analysisCssColor: function(str, convertToRgb)
+	{
+		var SU = Kekule.StyleUtils;
+		var s = (str || '').toLowerCase();
+		if (s.indexOf('#') === 0)  // #RGB or #RRGGBB
+		{
+			var sHex = s.substr(1);
+			return SU._analyisCssColorHex(sHex);
+		}
+		else if (s.indexOf('rgb') === 0)  // rgb() or rgba()
+		{
+			var i1 = s.indexOf('(');
+			var i2 = s.indexOf(')');
+			if (i1 < 0 || i2 < 0)  // not a legal value
+				return null;
+			// extract the values inside ()
+			return SU._analysisCssColorRgbOrHsl(s.substring(i1 + 1, i2), false);
+		}
+		else if (s.indexOf('hsl') === 0)  // hsl or hsla
+		{
+			var i1 = s.indexOf('(');
+			var i2 = s.indexOf(')');
+			if (i1 < 0 || i2 < 0)  // not a legal value
+				return null;
+			// extract the values inside ()
+			var result = SU._analysisCssColorRgbOrHsl(s.substring(i1 + 1, i2), true);
+			if (convertToRgb)
+			{
+				result = Object.extend(result, SU._convertHslToRgb(result));  // preseve alpha value
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+	/** @private */
+	_analyisCssColorHex: function(sHex)
+	{
+		var l = sHex.length;
+		var isCompact = (l === 3);  // Check if in #RGB mode
+		var partLength = isCompact? 1: 2;
+		var partCount = Math.min(4, Math.floor(l / partLength));  // max part count is 4 in #RRGGBBAA
+		var splitted = [];
+		for (var i = 0; i < partCount; ++i)
+		{
+			var currIndex = i * partLength;
+			var sPart = sHex.substr(currIndex, partLength);
+			if (isCompact)
+				sPart += sPart;
+			splitted.push(parseInt(sPart, 16));
+		}
+		var result = {'r': splitted[0] || 0, 'g': splitted[1] || 0, 'b': splitted[2] || 0};
+		if (Kekule.ObjUtils.notUnset(splitted[3]))
+			result.a = splitted[3] / 255;
+		else
+			result.a = 1;
+		return result;
+	},
+	/** @private */
+	_analysisCssColorRgbOrHsl: function(sValues, isHsl)
+	{
+		var _convertCssNumOrPercentageToNum = Kekule.StyleUtils._convertCssNumOrPercentageToNum;
+		var result;
+		var splitted = sValues.split(',');
+		if (isHsl)
+		{
+			var hue = _convertCssNumOrPercentageToNum(splitted[0], 360);
+			var sat = _convertCssNumOrPercentageToNum(splitted[1]);
+			var light = _convertCssNumOrPercentageToNum(splitted[2]);
+			result = {'h': hue, 's': sat, 'l': light};
+		}
+		else  // rgb
+		{
+			result = {
+				'r': _convertCssNumOrPercentageToNum(splitted[0], 255),
+				'g': _convertCssNumOrPercentageToNum(splitted[1], 255),
+				'b': _convertCssNumOrPercentageToNum(splitted[2], 255)
+			};
+		}
+		if (Kekule.ObjUtils.notUnset(splitted[3]))
+			result.a = _convertCssNumOrPercentageToNum(splitted[3]);
+		else
+			result.a = 1;
+		return result;
+	},
+	/** @private */
+	_convertHslToRgb: function(hsl, rgbValueRangeMax)
+	{
+		if (!rgbValueRangeMax)
+			rgbValueRangeMax = 255;
+		var h = hsl.h;
+		var s = hsl.s;
+		var l = hsl.l;
+		var r, g, b;
+		if (s === 0)  // no saturation, gray
+		{
+			r = g = b = l;
+		}
+		else
+		{
+			var q = (l < 0.5)? (l * (1 + s)): (l + s - l * s);
+			var p = 2 * l - q;
+			var hk = h / 360;
+			var tr = hk + 1/3;
+			var tg = hk;
+			var tb = hk - 1/3;
+			var t3s = [tr, tg, tb];
+			for (var i = 0, l = t3s.length; i < l; ++i)
+			{
+				if (t3s[i] < 0)
+				  t3s[i] = t3s[i] + 1;
+				else if (t3s[i] > 1)
+					t3s[i] = t3s[i] - 1;
+
+				if (6 * t3s[i] < 1)
+					t3s[i] = p + (q - p) * 6 * t3s[i];
+				else if (2 * t3s[i] < 1)
+					t3s[i] = q;
+				else if (3 * t3s[i] < 2)
+					t3s[i] = p + (q - p) * 6 * (2/3 - t3s[i]);
+				else
+					t3s[i] = p;
+			}
+			r = t3s[0], g = t3s[1], b = t3s[2];
+		}
+		return {'r': r * rgbValueRangeMax, 'g': g * rgbValueRangeMax, 'b': b * rgbValueRangeMax};
+	},
+	/** @private */
+	_convertCssNumOrPercentageToNum: function(sValue, percentageRangeMax)
+	{
+		var n = parseFloat(sValue) || 0;
+		if (sValue.endsWith('%'))  // percentage
+		{
+			n = n / 100 * (percentageRangeMax || 1);
+		}
+		return n;
 	},
 	/**
 	 * Returns computed style of element. If propName not set, all computed result will be returned.
 	 * @param {Object} elem
-	 * @param {String} propName
+	 * @param {String} propName Can either by in JS('backgroundColor') or CSS('background-color') form.
 	 * @returns {Variant}
 	 */
 	getComputedStyle: function(elem, propName)
@@ -105,7 +255,18 @@ Kekule.StyleUtils = {
 		}
 
 		if (styles)  // some times IE can not fetch currentStyle
-			return propName? styles[propName]: styles;
+		{
+			if (propName)
+			{
+				var inCssForm = (propName.indexOf('-') >= 0);
+				if (inCssForm && styles.getPropertyValue)
+					return styles.getPropertyValue(propName);
+				else
+					return styles[propName];
+			}
+			else  // return while style object
+				return styles;
+		}
 		else
 		{
 			return null;
@@ -218,11 +379,14 @@ Kekule.StyleUtils = {
 	/** @private */
 	_fillAbsOrFixedPositionStyleStack: function(elem, stack)
 	{
-		var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
-		position = position.toLowerCase();
-		if ((position === 'absolute') || (position === 'fixed'))
+		if (Kekule.DomUtils.isElement(elem))  // if elem is not readlly an element (e.g., shadowRoot), bypass the style compute to avoid error
 		{
-			stack.push(position.toLocaleLowerCase());
+			var position = Kekule.StyleUtils.getComputedStyle(elem, 'position') || '';
+			position = position.toLowerCase();
+			if ((position === 'absolute') || (position === 'fixed'))
+			{
+				stack.push(position.toLocaleLowerCase());
+			}
 		}
 		var parent = elem.parentNode;
 		if (parent && parent.ownerDocument)
@@ -382,9 +546,12 @@ Kekule.StyleUtils = {
 		var currElem = elem;
 		while (currElem)
 		{
-			var m = Kekule.StyleUtils.getTransformMatrix(currElem);
-			if (m)
-				result.unshift(m);
+			if (currElem.nodeType === 1)  // Node.ELEMENT_NODE, if not element (e.g., shadow root), bypass to parent
+			{
+				var m = Kekule.StyleUtils.getTransformMatrix(currElem);
+				if (m)
+					result.unshift(m);
+			}
 			currElem = currElem.parentNode;
 		}
 		return result;

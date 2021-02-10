@@ -64,6 +64,11 @@ Kekule.globalOptions.add('chemWidget.periodicTable',{
  *   ['symbol', 'name', 'atomicNumber', 'atomicWeight', 'groupHead', 'periodHead', 'legend']
  * @property {Int} startingAtomNum
  * @property {Int} endingAtomNum
+ * @property {String} startingElementSymbol
+ * @property {String} endingElementSymbol
+ * @property {Array} disabledElementSymbols Array of symbols that are unabled to be selected in table.
+ *   If property {@link Kekule.ChemWidget.PeriodicTable.enabledElementSymbols} is set, this property will be ignored.
+ * @property {Array} enabledElementSymbols Array of symbols that are enabled to be selected in table.
  * @property {Bool} useMiniMode If true, table will be in small size and only show atom symbol/number information.
  * @property {Bool} enableSelect Whether user can interact with table and select element on it.
  * @property {Bool} enableMultiSelect Whether user can interact with table and select multiple elements on it.
@@ -102,12 +107,12 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	/** @private */
 	AC_SERIES: ['Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr'],
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument, displayedComponents)
+	initialize: function(/*$super, */parentOrElementOrDocument, displayedComponents)
 	{
 		this.setPropStoreFieldValue('displayedComponents', displayedComponents || this.getDefaultDisplayedComponents());
 		this._elemCells = [];  // used internally
 		this._selectedElemCells = [];  // used internally
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		this.setEnableSelect(true);
 		this.setEnableMultiSelect(true);
 	},
@@ -122,6 +127,19 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		});
 		this.defineProp('startingAtomNum', {'dataType': DataType.INT});
 		this.defineProp('endingAtomNum', {'dataType': DataType.INT});
+
+		this.defineProp('startingElementSymbol', {'dataType': DataType.INT, 'serializable': false,
+			'getter': function() { var num = this.getStartingAtomNum(); return num && Kekule.ChemicalElementsDataUtil.getElementSymbol(num); },
+			'setter': function(value) { this.setStartingAtomNum((value && Kekule.ChemicalElementsDataUtil.getAtomicNumber(value))  || null); }
+		});
+		this.defineProp('endingElementSymbol', {'dataType': DataType.INT, 'serializable': false,
+			'getter': function() { var num = this.getEndingAtomNum(); return num && Kekule.ChemicalElementsDataUtil.getElementSymbol(num); },
+			'setter': function(value) { this.setEndingAtomNum((value && Kekule.ChemicalElementsDataUtil.getAtomicNumber(value))  || null); }
+		});
+
+		this.defineProp('enabledElementSymbols', {'dataType': DataType.ARRAY});
+		this.defineProp('disabledElementSymbols', {'dataType': DataType.ARRAY});
+
 		this.defineProp('useMiniMode', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -181,9 +199,9 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 	},
 
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CCNS.PERIODIC_TABLE;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.PERIODIC_TABLE;
 	},
 	/** @ignore */
 	doCreateRootElement: function(doc)
@@ -192,11 +210,11 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 	/** @ignore */
-	doCreateSubElements: function($super, doc, rootElem)
+	doCreateSubElements: function(/*$super, */doc, rootElem)
 	{
-		$super(doc, rootElem);
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem])  /* $super(doc, rootElem) */;
 		var elem = this.createMainTable(doc, rootElem);
-		return [elem];
+		return result.concat([elem]);
 	},
 
 	/** @ignore */
@@ -207,6 +225,11 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		if (Kekule.ArrayUtils.intersect(modifiedPropNames, props).length)
 		{
 			this.recreateMainTable();
+		}
+		props = ['enabledElementSymbols', 'disabledElementSymbols'];
+		if (Kekule.ArrayUtils.intersect(modifiedPropNames, props).length)
+		{
+			this.updateCellEnableStates();
 		}
 	},
 
@@ -432,6 +455,8 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 
 		parentElem.appendChild(extraTableElem);
 
+		this.updateCellEnableStates();
+
 		return result;
 	},
 	/**
@@ -520,7 +545,63 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return result;
 	},
 
+	/** @private */
+	updateCellEnableStates: function()
+	{
+		var enabledSymbols = this.getEnabledElementSymbols() || [];
+		var disabledSymbols = (!enabledSymbols.length && this.getDisabledElementSymbols()) || [];
+
+		if (!disabledSymbols.length && !enabledSymbols.length)
+			return;
+
+		// if enabled symbols is set, disabled symbols will be ignored
+		var cells = this._elemCells;
+		for (var i = 0, l = cells.length; i < l; ++i)
+		{
+			var data = this._getCellData(cells[i]);
+			var currSymbol = data.symbol;
+			if (enabledSymbols.length)
+			{
+				if (enabledSymbols.indexOf(currSymbol) < 0)  // disable current cell
+				{
+					this.setCellEnableState(cells[i], false);
+				}
+			}
+			else if (disabledSymbols.length)
+			{
+				if (disabledSymbols.indexOf(currSymbol) >= 0)  // disable current cell
+				{
+					this.setCellEnableState(cells[i], false);
+				}
+			}
+		}
+	},
+	/** @private */
+	setCellEnableState: function(cellElem, enabled)
+	{
+		if (enabled)
+		{
+			EU.removeClass(cellElem, CNS.STATE_DISABLED);
+			this._getCellData(cellElem).disabled = null;
+		}
+		else
+		{
+			EU.addClass(cellElem, CNS.STATE_DISABLED);
+			this._getCellData(cellElem).disabled = true;
+		}
+	},
+
 	// interaction methods and event handlers
+	/** @private */
+	_getCellData: function(cellElem)
+	{
+		return cellElem[this.ELEM_DATA_FIELD];
+	},
+	/** @private */
+	_isCellDisabled: function(cellElem)
+	{
+		return !!this._getCellData(cellElem).disabled;
+	},
 	/** @private */
 	_getAtomCellElem: function(elem)
 	{
@@ -604,13 +685,13 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 		return this;
 	},
 	/** @ignore */
-	react_click: function($super, e)
+	react_click: function(/*$super, */e)
 	{
 		if (this.getEnableSelect())
 		{
 			var target = e.getTarget();
 			var cellElem = this._getAtomCellElem(target);
-			if (cellElem)
+			if (cellElem && !this._isCellDisabled(cellElem))
 			{
 				if (!this.getEnableMultiSelect())
 				{
@@ -624,7 +705,7 @@ Kekule.ChemWidget.PeriodicTable = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return true;
 			}
 		}
-		$super(e);
+		this.tryApplySuper('react_click', [e])  /* $super(e) */;
 	}
 });
 

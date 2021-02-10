@@ -77,9 +77,9 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 	/** @private */
 	MIX_VALUE: '[mixed]',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this._valueStorage = {};
 	},
 	/** @private */
@@ -703,7 +703,7 @@ Kekule.Editor.ObjModifier.GlyphPath = Class.create(Kekule.Editor.ObjModifier.Gly
 		this.getWidget().setDisplayed(showModifier);
 	},
 	/** @ignore */
-	doApplyToTargets: function($super, editor, targets)
+	doApplyToTargets: function(/*$super, */editor, targets)
 	{
 		this.doModification(editor, targets, false);
 	}
@@ -722,9 +722,9 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 	/** @private */
 	MIX_VALUE: '[mixed]',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @ignore */
 	getPathParamSetterClass: function()
@@ -752,10 +752,10 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 		return [Kekule.Glyph.StraightLine, Kekule.Glyph.Segment, Kekule.Glyph.ReactionArrow];
 	},
 	/** @ignore */
-	_extractPathParamsOfObjs: function($super, objs)
+	_extractPathParamsOfObjs: function(/*$super, */objs)
 	{
 		var reactionArrowType;
-		var result = $super(objs);
+		var result = this.tryApplySuper('_extractPathParamsOfObjs', [objs])  /* $super(objs) */;
 		for (var i = 0, ii = objs.length; i < ii; ++i)
 		{
 			var obj = objs[i];
@@ -779,7 +779,7 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 		return result;
 	},
 	/** @ignore */
-	createModificationOperations_OLD: function($super, editor, targets, pathParams)
+	createModificationOperations_OLD: function(/*$super, */editor, targets, pathParams)
 	{
 		var opers = [];
 		if (/*pathParams.reactionArrowType &&*/ pathParams.reactionArrowType !== this.MIX_VALUE)
@@ -811,12 +811,12 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 			}
 			opers.push(new Kekule.ChemObjOperation.Modify(glyph, {'reactionType': pathParams.reactionArrowType}, editor));
 		}
-		var otherOpers = $super(editor, targets, pathParams) || [];
+		var otherOpers = this.tryApplySuper('createModificationOperations_OLD', [editor, targets, pathParams])  /* $super(editor, targets, pathParams) */ || [];
 		opers = opers.concat(otherOpers);  // the reaction type operation must before pathParam modification operations, since it may changes pathParams
 		return opers;
 	},
 	/** @ignore */
-	doCreateModificationOperations: function($super, editor, targets, paramGroup)
+	doCreateModificationOperations: function(/*$super, */editor, targets, paramGroup)
 	{
 		var opers = [];
 		var connectorParams = paramGroup.connectorParams;
@@ -849,7 +849,7 @@ Kekule.Editor.ObjModifier.ReactionArrowAndSegmentPath = Class.create(Kekule.Edit
 			}
 			opers.push(new Kekule.ChemObjOperation.Modify(glyph, {'reactionType': connectorParams.reactionArrowType}, editor));
 		}
-		var otherOpers = $super(editor, targets, paramGroup) || [];
+		var otherOpers = this.tryApplySuper('doCreateModificationOperations', [editor, targets, paramGroup])  /* $super(editor, targets, paramGroup) */ || [];
 		opers = opers.concat(otherOpers);  // the reaction type operation must before pathParam modification operations, since it may changes pathParams
 
 		return opers;
@@ -867,9 +867,9 @@ Kekule.Editor.ObjModifier.ArcPath = Class.create(Kekule.Editor.ObjModifier.Glyph
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.ArcPath',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @ignore */
 	getPathParamSetterClass: function()
@@ -909,9 +909,9 @@ Kekule.Editor.ObjModifier.MultiArcPath = Class.create(Kekule.Editor.ObjModifier.
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.MultiArcPath',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @ignore */
 	getPathParamSetterClass: function()
@@ -940,19 +940,19 @@ Kekule.Editor.ObjModifier.MultiArcPath = Class.create(Kekule.Editor.ObjModifier.
 	},
 
 	/** @ignore */
-	_filterAppliableParams: function($super, params)
+	_filterAppliableParams: function(/*$super, */params)
 	{
 		if (DataType.isArrayValue(params))
 		{
 			var result = [];
 			for (var i = 0, l = params.length; i < l; ++i)
 			{
-				result.push($super(params[i]));
+				result.push(this.tryApplySuper('_filterAppliableParams', [params[i]])  /* $super(params[i]) */);
 			}
 			return result;
 		}
 		else
-			return $super(params);
+			return this.tryApplySuper('_filterAppliableParams', [params])  /* $super(params) */;
 	},
 
 	/** @private */
@@ -1008,14 +1008,14 @@ Kekule.Editor.ObjModifier.MultiArcPath = Class.create(Kekule.Editor.ObjModifier.
 		return result;
 	},
 	/** @ignore */
-	_splitPathParamValues: function($super, pathParams)
+	_splitPathParamValues: function(/*$super, */pathParams)
 	{
 		if (DataType.isArrayValue(pathParams))
 		{
 			var result = [];
 			for (var i = 0, l = pathParams.length; i < l; ++i)
 			{
-				var group = $super(pathParams[i]);
+				var group = this.tryApplySuper('_splitPathParamValues', [pathParams[i]])  /* $super(pathParams[i]) */;
 				if (group)
 				{
 					var categories = OU.getOwnedFieldNames(group);
@@ -1032,7 +1032,7 @@ Kekule.Editor.ObjModifier.MultiArcPath = Class.create(Kekule.Editor.ObjModifier.
 			return result;
 		}
 		else
-			return $super(pathParams);
+			return this.tryApplySuper('_splitPathParamValues', [pathParams])  /* $super(pathParams) */;
 		//return {connectorParams: pathParams};
 	},
 
@@ -1119,10 +1119,10 @@ Kekule.Editor.ObjModifier.BaseElectronPushingArrow = Class.create(Kekule.Editor.
 	},
 
 	/** @ignore */
-	_extractPathParamsOfObjs: function($super, objs)
+	_extractPathParamsOfObjs: function(/*$super, */objs)
 	{
 		var electronCount;
-		var result = $super(objs);
+		var result = this.tryApplySuper('_extractPathParamsOfObjs', [objs])  /* $super(objs) */;
 		for (var i = 0, ii = objs.length; i < ii; ++i)
 		{
 			var obj = objs[i];
@@ -1146,12 +1146,12 @@ Kekule.Editor.ObjModifier.BaseElectronPushingArrow = Class.create(Kekule.Editor.
 		return result;
 	},
 	/** @ignore */
-	_getPathParamFieldCategory: function($super, fieldName)
+	_getPathParamFieldCategory: function(/*$super, */fieldName)
 	{
 		if (fieldName === 'electronCount')
 			return 'glyphParams';
 		else
-			return $super(fieldName);
+			return this.tryApplySuper('_getPathParamFieldCategory', [fieldName])  /* $super(fieldName) */;
 	},
 	/* @ignore */
 	/*
@@ -1174,9 +1174,9 @@ Kekule.Editor.ObjModifier.BaseElectronPushingArrow = Class.create(Kekule.Editor.
 	},
 	*/
 	/** @ignore */
-	doCreateModificationOperations: function($super, editor, targets, paramGroup)
+	doCreateModificationOperations: function(/*$super, */editor, targets, paramGroup)
 	{
-		var opers = $super(editor, targets, paramGroup) || [];  // arrow param must be set first, since e-count may changes the arrow side
+		var opers = this.tryApplySuper('doCreateModificationOperations', [editor, targets, paramGroup])  /* $super(editor, targets, paramGroup) */ || [];  // arrow param must be set first, since e-count may changes the arrow side
 		if (paramGroup.glyphParams && paramGroup.glyphParams.electronCount)
 		{
 			var glyphs = this._getActualModificationGlyphs(targets);
@@ -1192,9 +1192,9 @@ Kekule.Editor.ObjModifier.BaseElectronPushingArrow = Class.create(Kekule.Editor.
 		return opers;
 	},
 	/** @ignore */
-	doUpdateModificationOperations: function($super, editor, operations, targets, paramGroup)
+	doUpdateModificationOperations: function(/*$super, */editor, operations, targets, paramGroup)
 	{
-		$super(editor, operations, targets, paramGroup);
+		this.tryApplySuper('doUpdateModificationOperations', [editor, operations, targets, paramGroup])  /* $super(editor, operations, targets, paramGroup) */;
 		this._updateGlyphModificationOperations(editor, operations, paramGroup);
 		return operations;
 	},
@@ -1231,9 +1231,9 @@ Kekule.Editor.ObjModifier.ElectronPushingArrow = Class.create(Kekule.Editor.ObjM
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.ElectronPushingArrow',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @ignore */
 	getPathParamSetterClass: function()
@@ -1273,9 +1273,9 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 	/** @private */
 	CLASS_NAME: 'Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow',
 	/** @construct */
-	initialize: function($super, editor)
+	initialize: function(/*$super, */editor)
 	{
-		$super(editor);
+		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 	},
 	/** @ignore */
 	getPathParamSetterClass: function()
@@ -1303,10 +1303,10 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 		return [Kekule.Glyph.BondFormingElectronPushingArrow];
 	},
 	/** @ignore */
-	_extractPathParamsOfObjs: function($super, objs)
+	_extractPathParamsOfObjs: function(/*$super, */objs)
 	{
 		var electronCount;
-		var result = $super(objs);
+		var result = this.tryApplySuper('_extractPathParamsOfObjs', [objs])  /* $super(objs) */;
 		for (var i = 0, ii = objs.length; i < ii; ++i)
 		{
 			var obj = objs[i];
@@ -1335,25 +1335,25 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 		return result;
 	},
 	/** @ignore */
-	_getPathParamFieldCategory: function($super, fieldName)
+	_getPathParamFieldCategory: function(/*$super, */fieldName)
 	{
 		if (fieldName === 'electronCount')
 			return 'glyphParams';
 		else
-			return $super(fieldName);
+			return this.tryApplySuper('_getPathParamFieldCategory', [fieldName])  /* $super(fieldName) */;
 	},
 	/** @ignore */
-	_filterAppliableParams: function($super, params)
+	_filterAppliableParams: function(/*$super, */params)
 	{
-		var result = $super(params) || [];
+		var result = this.tryApplySuper('_filterAppliableParams', [params])  /* $super(params) */ || [];
 		if (params.electronCount)
 			result.electronCount = params.electronCount;
 		return result;
 	},
 	/** @ignore */
-	_splitPathParamValues: function($super, pathParams)
+	_splitPathParamValues: function(/*$super, */pathParams)
 	{
-		var result = $super(pathParams) || [];
+		var result = this.tryApplySuper('_splitPathParamValues', [pathParams])  /* $super(pathParams) */ || [];
 		if (pathParams.electronCount)
 		{
 			if (!result.glyphParams)
@@ -1363,9 +1363,9 @@ Kekule.Editor.ObjModifier.BondFormingElectronPushingArrow = Class.create(Kekule.
 		return result;
 	},
 	/** @ignore */
-	doCreateModificationOperations: function($super, editor, targets, paramGroup)
+	doCreateModificationOperations: function(/*$super, */editor, targets, paramGroup)
 	{
-		var opers = $super(editor, targets, paramGroup) || [];  // arrow param must be set first, since e-count may changes the arrow side
+		var opers = this.tryApplySuper('doCreateModificationOperations', [editor, targets, paramGroup])  /* $super(editor, targets, paramGroup) */ || [];  // arrow param must be set first, since e-count may changes the arrow side
 		if (paramGroup.glyphParams && paramGroup.glyphParams.electronCount)
 		{
 			var glyphs = this._getActualModificationGlyphs(targets);

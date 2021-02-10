@@ -37,21 +37,21 @@ Kekule.Widget.SysMsgGroup = Class.create(Kekule.Widget.MsgGroup,
 	/** @private */
 	CLASS_NAME: 'Kekule.Widget.SysMsgGroup',
 	/** @constructs */
-	initialize: function($super, parentOrElementOrDocument)
+	initialize: function(/*$super, */parentOrElementOrDocument)
 	{
-		$super(parentOrElementOrDocument);
+		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 	},
 	/** @ignore */
-	initPropValues: function($super)
+	initPropValues: function(/*$super*/)
 	{
-		$super();
+		this.tryApplySuper('initPropValues')  /* $super() */;
 		// default values
 		this.setMaxMsgCount(6);
 	},
 	/** @ignore */
-	doGetWidgetClassName: function($super)
+	doGetWidgetClassName: function(/*$super*/)
 	{
-		return $super() + ' ' + CNS.SYSMSGGROUP;
+		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.SYSMSGGROUP;
 	}
 });
 
@@ -82,7 +82,9 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 				if (!result)
 				{
 					result = new Kekule.Widget.SysMsgGroup(this.getDocument());
-					result.appendToElem(this.getDocument().body);
+					//result.appendToElem(this.getDocument().body);
+					var GM = result.getGlobalManager();
+					result.appendToElem(GM.getDefaultContextRootElem());
 					this.setPropStoreFieldValue('sysMsgGroup', result);
 				}
 				return result;
@@ -91,7 +93,7 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 	},
 
 	/** @ignore */
-	throwException: function($super, e, exceptionLevel)
+	throwException: function(/*$super, */e, exceptionLevel)
 	{
 		var EL = Kekule.ExceptionLevel;
 		var MT = Kekule.Widget.MsgType;
@@ -111,7 +113,7 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 					MT.NORMAL;
 			this.getSysMsgGroup().addMessage(msg, msgType);
 		}
-		return $super(e, exceptionLevel);
+		return this.tryApplySuper('throwException', [e, exceptionLevel])  /* $super(e, exceptionLevel) */;
 	}
 });
 Kekule.ClassUtils.makeSingleton(Kekule.Widget.ExceptionHandler);
