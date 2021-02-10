@@ -3,7 +3,8 @@
   "spec_files": [
     "./core/*Test.js",
     "./io/*Test.js",
-    "./algorithm/*Test.js"
+    "./algorithm/*Test.js",
+    "./widget/*Test.js"
   ],
   "helpers": [
     "./_utils/kekuleLoaderCli.js"

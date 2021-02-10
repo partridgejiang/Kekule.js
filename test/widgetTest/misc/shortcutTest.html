@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Shortcut Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script src="../../../src/kekule.js?min=false"></script>
+	<script>
+		function init()
+		{
+
+			Kekule.Widget.getWidgetById('checkBoxEnable').setChecked(Kekule.globalOptions.widget.shortcut.enabled);
+			Kekule.Widget.getWidgetById('checkBoxEnable').on('change', function(e){
+				var checkBox = e.target;
+				Kekule.globalOptions.widget.shortcut.enabled = checkBox.getChecked();
+			});
+
+			Kekule.Widget.globalManager.registerHtmlEventResponser(new Kekule.Widget.HtmlEventResponser(
+				new Kekule.Widget.HtmlKeyEventMatcher({eventType: 'keydown', key: 'a', shiftKey: true, 'strictMatch': false}),
+				function(e){  console.log('global key event Shift-A', e); }
+			));
+			Kekule.Widget.globalManager.registerHtmlEventResponser(new Kekule.Widget.HtmlEventResponser(
+				new Kekule.Widget.HtmlKeyEventMatcher({eventType: 'keydown', key: 'd', shiftKey: true, 'strictMatch': false}),
+				function(e){  console.log('global key event Shift-D', e); }
+			));
+
+			var action = new Kekule.Action();
+			action.setShortcutKeys('Shift+G');
+			action.on('execute', function(e){
+				console.log('action executed', e.invoker.getId());
+			});
+			Kekule.Widget.getWidgetById('btnAction1').setAction(action);
+			Kekule.Widget.getWidgetById('btnAction2').setAction(action);
+
+
+			var ids = ['btn1', 'btn2', 'btn3', 'btnDup1'];
+			for (var i = 0, l = ids.length; i < l; ++i)
+			{
+				var id = ids[i];
+				var widget = Kekule.Widget.getWidgetById(id);
+				widget.on('execute', function(e) {
+					var text = e.target.getText();
+					//alert(text);
+					console.log(text, e.htmlEvent, e.target.getClassName(), e);
+				});
+			}
+			Kekule.Widget.getWidgetById('btn2').getShortcuts()[0].getEventResponser().getEventParams().altKey = null;
+			//Kekule.X.Event.addListener(document.body, 'keydown', function(e) { console.log(e); } );
+		}
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div>
+		<span id="checkBoxEnable" data-widget="Kekule.Widget.CheckBox" data-text="Enable shortcut"></span>
+	</div>
+	<div>
+		<button id="btn1" data-widget="Kekule.Widget.Button" data-shortcut-key="Shift-A">Shift+A</button>
+		<button id="btn2" data-widget="Kekule.Widget.Button" data-shortcut-keys='["Shift+B", "Shift+C"]'>Shfit+B/C</button>
+		<button id="btn3" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>O</button>
+		<button id="btnDup1" data-widget="Kekule.Widget.Button" data-shortcut-key="Shift-A">Shift+A2</button>
+		<button id="btnAction1" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action1</button>
+		<button id="btnAction2" data-widget="Kekule.Widget.Button" data-shortcut-key='O'>Action2</button>
+	</div>
+	<div>
+		Global event response with Shift-A Shift-D.
+	</div>
+</body>
+</html>

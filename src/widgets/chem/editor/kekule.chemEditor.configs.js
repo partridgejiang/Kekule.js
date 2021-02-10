@@ -41,6 +41,7 @@ Kekule.Editor.BaseEditorConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplaye
 		this.addConfigProp('uiMarkerConfigs', 'Kekule.EditorConfigs.UiMarkerConfigs');
 		this.addConfigProp('interactionConfigs', 'Kekule.EditorConfigs.InteractionConfigs');
 		this.addConfigProp('structureConfigs', 'Kekule.Editor.StructureConfigs');
+		this.addConfigProp('hotKeyConfigs', 'Kekule.Editor.HotKeyConfigs');
 	},
 	/** @private */
 	initPropValues: function(/*$super*/)
@@ -49,6 +50,7 @@ Kekule.Editor.BaseEditorConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplaye
 		this.setPropStoreFieldValue('uiMarkerConfigs', new Kekule.Editor.UiMarkerConfigs());
 		this.setPropStoreFieldValue('interactionConfigs', new Kekule.Editor.InteractionConfigs());
 		this.setPropStoreFieldValue('structureConfigs', new Kekule.Editor.StructureConfigs());
+		this.setPropStoreFieldValue('hotKeyConfigs', new Kekule.Editor.HotKeyConfigs());
 	}
 });
 
@@ -115,6 +117,7 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  *   invoker off selection manipulation.
  * @property {Bool} enableGestureManipulation Whether using pinch/rotate gesture to manipulate selected objects is allowed.
  * @property {Bool} enableGestureZoomOnEditor Whether using pinch gesture change the zoom level of editor is allowed.
+ * @property {Bool} enableHotKey Whether using hot key in editor is allowed.
  * @property {Float} unmovePointerDistanceThreshold When moving less than this distance, pointer will be regarded as still.
  * @property {Int} atomSetterFontSize Font size of atom setter widget.
  * @property {Bool} allowUnknownAtomSymbol If true, input unknown text in atom setter will add new pseudo atom.
@@ -180,6 +183,8 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 
 		this.addBoolConfigProp('enableGestureManipulation', true);
 		this.addBoolConfigProp('enableGestureZoomOnEditor', true);
+
+		this.addBoolConfigProp('enableHotKey', true);
 
 		this.addIntConfigProp('clonedObjectScreenOffset', 10);
 
@@ -526,6 +531,83 @@ Kekule.Editor.StyleSetterConfigs = Class.create(Kekule.AbstractConfigs,
 		]);
 		*/
 		this.setListedFontNames(Kekule.Widget.FontEnumerator.getAvailableFontFamilies());
+	}
+});
+
+/**
+ * Configs of hot key settings of editor.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Array} hotKeys Hot keys to do quick action.
+ *   Each item in array is a hash {key: string, action: string},
+ */
+Kekule.Editor.HotKeyConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.Editor.HotKeyConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.HotKeyConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('hotKeys', {'dataType': DataType.ARRAY});
+	},
+	/** @private */
+	initPropValues: function(/*$super*/)
+	{
+		var CWN = Kekule.ChemWidget.ComponentWidgetNames;
+		// debug, fetch default ones
+		this.tryApplySuper('initPropValues');
+		this.setHotKeys([
+			// node modification
+			{'key': 'c', 'action': 'atom_C'},
+			{'key': 'h', 'action': 'atom_H'},
+			{'key': 'o', 'action': 'atom_O'},
+			{'key': 'n', 'action': 'atom_N'},
+			{'key': 'p', 'action': 'atom_P'},
+			{'key': 's', 'action': 'atom_S'},
+			{'key': 'f', 'action': 'atom_F'},
+			{'key': 'Shift+C', 'action': 'atom_Cl'},
+			{'key': 'b', 'action': 'atom_Br'},
+			{'key': 'i', 'action': 'atom_I'},
+			{'key': 'Shift+B', 'action': 'atom_B'},
+			{'key': 'k', 'action': 'atom_K'},
+			{'key': 'Shift+N', 'action': 'atom_Na'},
+			{'key': 'd', 'action': 'atom_D'},
+
+			{'key': 'm', 'action': 'subgroup_methyl'},
+			{'key': 'e', 'action': 'subgroup_ethyl'},
+			{'key': 't', 'action': 'subgroup_TMS'},
+			{'key': 'Shift+P', 'action': 'subgroup_phenyl'},
+			{'key': 'Shift+T', 'action': 'subgroup_OTs'},
+			{'key': 'Shift+E', 'action': 'subgroup_COOCH3'},
+
+			{'key': 'a', 'action': 'atom_any'},
+			{'key': 'q', 'action': 'atom_hetero'},
+			{'key': 'l', 'action': 'atom_variable'},
+			{'key': 'r', 'action': 'subgroup_R'},
+
+			// connector modification
+			{'key': '1', 'action': 'bond_single'},
+			{'key': '2', 'action': 'bond_double'},
+			{'key': '3', 'action': 'bond_triple'},
+			{'key': '4', 'action': 'bond_quad'},
+			{'key': 'b', 'action': 'bond_closer'},
+			{'key': 'w', 'action': 'bond_up'},
+			{'key': 'h', 'action': 'bond_down'},
+			{'key': 'Shift+W', 'action': 'bond_down'},
+			{'key': 'y', 'action': 'bond_upOrDown'},
+
+			// general
+			{'key': 'Ctrl+A', 'action': CWN.selectAll},
+			{'key': 'Ctrl+C', 'action': CWN.copy},
+			{'key': 'Ctrl+X', 'action': CWN.cut},
+			{'key': 'Ctrl+V', 'action': CWN.paste},
+			{'key': 'Ctrl+Z', 'action': CWN.undo},
+			{'key': 'Ctrl+Shift+Z', 'action': CWN.redo},
+			{'key': '+', 'action': CWN.zoomIn},
+			{'key': '-', 'action': CWN.zoomOut}
+		]);
 	}
 });
 

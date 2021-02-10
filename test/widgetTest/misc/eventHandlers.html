@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HtmlEventHandler Test</title>
+    <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+    <style>
+        #panel1
+        {
+            width: 600px;
+            height: 200px;
+            background-color: red;
+        }
+    </style>
+    <script src="../../../src/kekule.js?min=false"></script>
+    <script>
+        var panel;
+        function report(msg)
+        {
+            console.log(msg);
+        }
+        Kekule.X.domReady(() => {
+            panel = Kekule.Widget.getWidgetById('panel1');
+
+            panel.registerHtmlEventResponser(new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlEventMatcher({eventType: 'click'}),
+              report.bind(null, 'click one')
+            )).
+	        registerHtmlEventResponser(new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlEventMatcher({eventType: 'click'}),
+		      report.bind(null, 'click two'),
+              true
+	        )).
+	        registerHtmlEventResponser(new Kekule.Widget.HtmlEventResponser(new Kekule.Widget.HtmlEventMatcher({eventType: 'click'}),
+		        report.bind(null, 'click three'),
+	        ));
+
+            panel.addHtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({eventType: 'keydown', key: 'a', ctrlKey: true}),
+              report.bind(null, 'ctrl+a')
+            );
+            panel.addHtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({
+                eventType: 'keydown',
+                key: 'a', shiftKey: true}),
+                report.bind(null, 'shift+a')
+            );
+            panel.addHtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({
+                eventType: 'keydown',
+                key: 'A', shiftKey: true, 'strictMatch': true}),
+                report.bind(null, 'shift+A2')
+            );
+            panel.addHtmlEventResponser(new Kekule.Widget.HtmlKeyEventMatcher({
+                eventType: 'keydown',
+                key: 'a', shiftKey: true, ctrlKey: true}),
+                report.bind(null, 'ctrl+shift+a')
+            );
+        });
+    </script>
+</head>
+<body>
+    <div id="panel1" tabindex="0" data-widget="Kekule.Widget.Panel"></div>
+</body>
+</html>

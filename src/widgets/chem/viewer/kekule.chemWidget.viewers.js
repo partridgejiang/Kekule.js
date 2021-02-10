@@ -124,6 +124,7 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  *
  * //@property {Bool} liveUpdate Whether viewer repaint itself automatically when containing chem object changed.
  *
+ * @property {Bool} enableHotKey Whether hot key is allowed.
  * @property {Bool} enableDirectInteraction Whether interact without tool button is allowed (e.g., zoom/rotate by mouse).
  * @property {Bool} enableTouchInteraction Whether touch interaction is allowed. Note if enableDirectInteraction is false, touch interaction will also be disabled.
  * @property {Bool} enableRestraintRotation3D Set to true to rotate only on one axis of X/Y/Z when the starting point is near edge of viewer.
@@ -202,7 +203,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('useCornerDecoration', true);
 		//this.setUseCornerDecoration(true);
 
-		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType, viewerConfigs])  /* $super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs) */;
+		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType /*, viewerConfigs*/])  /* $super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs) */;
+
+		this.setPropStoreFieldValue('viewerConfigs', viewerConfigs || this.createDefaultConfigs());
 
 		this.beginUpdate();
 		try
@@ -298,6 +301,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.defineProp('restraintRotation3DEdgeRatio', {'dataType': DataType.FLOAT});
 		//this.defineProp('liveUpdate', {'dataType': DataType.BOOL});
 
+		this.defineProp('enableHotKey', {'dataType': DataType.FLOAT});
 		this.defineProp('enableEdit', {'dataType': DataType.BOOL,
 			'getter': function()
 			{
@@ -572,6 +576,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableRestraintRotation3D(true);
 		this.setShareEditorInstance(true);
 		this.setEnableTouchInteraction(!true);
+	},
+
+	/** @ignore */
+	createDefaultConfigs: function()
+	{
+		return new Kekule.ChemWidget.ViewerConfigs();
 	},
 
 	/** @ignore */
@@ -1863,6 +1873,57 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 		}
+	},
+
+	// event handle functions
+	/**
+	 * React to a HTML event to find if it is a registered hotkey, then react to it when necessary.
+	 * @param {HTMLEvent} e
+	 * @returns {Bool} Returns true if a hot key is found and handled.
+	 * @private
+	 */
+	reactHotKeys: function(e)
+	{
+		// react to hotkeys
+		if (this.getEnableHotKey())
+		{
+			var coordMode = this.getCoordMode() || Kekule.CoordMode.COORD2D;
+			var hotKeys = this.getViewerConfigs().getHotKeyConfigs().getHotKeys();
+			var srcParams = Kekule.Widget.KeyboardUtils.getKeyParamsFromEvent(e);
+			var done = false;
+			var pendingOperations = [];
+			for (var i = hotKeys.length - 1; i >= 0; --i)
+			{
+				var hotKeyInfo = hotKeys[i];
+				var keyParams = Kekule.Widget.KeyboardUtils.shortcutLabelToKeyParams(hotKeys[i].key, null, false);
+				keyParams.repeat = hotKeyInfo.repeat;
+				if (Kekule.Widget.KeyboardUtils.matchKeyParams(srcParams, keyParams, false))  // not strict match
+				{
+					var actionId = hotKeyInfo.action;
+					if (actionId && (!hotKeyInfo.coordMode || hotKeyInfo.coordMode === coordMode))  // hot key settings differs in 2D/3D mode
+					{
+						var action = this.getChildAction(actionId, true);
+						if (action)
+						{
+							done = action.execute(this, e) || done;
+						}
+					}
+				}
+			}
+			if (done)
+			{
+				e.stopPropagation();
+				e.preventDefault();
+				return true;   // already do the modification, returns a flag
+			}
+		}
+	},
+	/** @ignore */
+	react_keydown: function(e)
+	{
+		var handled = this.tryApplySuper('react_keydown', [e]);
+		if (!handled)
+			return this.reactHotKeys(e);
 	}
 });
 
@@ -2552,6 +2613,81 @@ Kekule.ChemWidget.Viewer.Settings = Class.create(Kekule.ChemWidget.ChemObjDispla
 	getViewer: function()
 	{
 		return this.getWidget();
+	}
+});
+
+/**
+ * Config class of viewer (class {@link Kekule.ChemWidget.Viewer}).
+ * @class
+ * @augments Kekule.ChemWidget.ChemObjDisplayerConfigs
+ *
+ * @property {Kekule.EditorConfigs.UiMarkerConfigs} uiMarkerConfigs
+ * @property {Kekule.EditorConfigs.InteractionConfigs} interactionConfigs
+ * @property {Kekule.Editor.StructureConfigs} structureConfigs
+ */
+Kekule.ChemWidget.ViewerConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplayerConfigs,
+/** @lends Kekule.ChemWidget.ViewerConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.addConfigProp('hotKeyConfigs', 'Kekule.ChemWidget.ViewerHotKeyConfigs');
+	},
+	/** @private */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setPropStoreFieldValue('hotKeyConfigs', new Kekule.ChemWidget.ViewerHotKeyConfigs());
+	}
+});
+
+/**
+ * Configs of hot key settings of editor.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Array} hotKeys Hot keys to do quick action.
+ *   Each item in array is a hash {key: string, action: string},
+ */
+Kekule.ChemWidget.ViewerHotKeyConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ViewerHotKeyConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerHotKeyConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('hotKeys', {'dataType': DataType.ARRAY});
+	},
+	/** @private */
+	initPropValues: function(/*$super*/)
+	{
+		var CWN = Kekule.ChemWidget.ComponentWidgetNames;
+		// debug, fetch default ones
+		this.tryApplySuper('initPropValues');
+		this.setHotKeys([
+			{'key': 'Ctrl+C', 'action': CWN.copy},
+			{'key': '+', 'action': CWN.zoomIn},
+			{'key': '-', 'action': CWN.zoomOut},
+			{'key': 'Space', 'action': CWN.reset},
+			{'key': 'R', 'action': CWN.rotateLeft, repeat: null, 'coordMode': 2},
+			{'key': 'Shift-R', 'action': CWN.rotateRight, repeat: null, 'coordMode': 2},
+			{'key': 'X', 'action': CWN.rotateX, repeat: null, 'coordMode': 3},
+			{'key': 'Shift+X', 'action': CWN.rotateX, repeat: null, 'coordMode': 3},
+			{'key': 'Y', 'action': CWN.rotateY, repeat: null, 'coordMode': 3},
+			{'key': 'Shift+Y', 'action': CWN.rotateY, repeat: null, 'coordMode': 3},
+			{'key': 'Z', 'action': CWN.rotateZ, repeat: null, 'coordMode': 3},
+			{'key': 'Shift+Z', 'action': CWN.rotateZ, repeat: null, 'coordMode': 3},
+			//{'key': 'H', 'action': CWN.molHideHydrogens, 'coordMode': 3},
+			{'key': '1', 'action': CWN.molDisplayTypeSkeletal, 'coordMode': 2},
+			{'key': '1', 'action': CWN.molDisplayTypeCondensed, 'coordMode': 2},
+			{'key': '1', 'action': CWN.molDisplayTypeWire, 'coordMode': 3},
+			{'key': '2', 'action': CWN.molDisplayTypeSticks, 'coordMode': 3},
+			{'key': '3', 'action': CWN.molDisplayTypeBallStick, 'coordMode': 3},
+			{'key': '4', 'action': CWN.molDisplayTypeSpaceFill, 'coordMode': 3}
+		]);
 	}
 });
 

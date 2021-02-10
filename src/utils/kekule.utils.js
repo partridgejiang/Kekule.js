@@ -257,11 +257,21 @@ Kekule.ObjUtils = {
 	 */
 	equal: function(src, dest, excludingFields)
 	{
+		var checkedFields = [];
 		for (var fname in src)
 		{
 			if (excludingFields && (excludingFields.indexOf(fname) >= 0))
 				continue;
 			if (src[fname] !== dest[fname])
+				return false;
+			checkedFields.push(fname);
+		}
+		// check if there are additional fields in dest, if true, two objects are not same
+		for (var fname in dest)
+		{
+			if (excludingFields && (excludingFields.indexOf(fname) >= 0))
+				continue;
+			if (checkedFields.indexOf(fname) < 0)   // has unchecked field in dest object
 				return false;
 		}
 		return true;

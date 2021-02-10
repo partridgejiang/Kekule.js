@@ -31,6 +31,7 @@
  *   be automatically set to false.
  * @property {String} hint Hint of action. If this value is set, all widgets' hint properties will be updated.
  * @property {Text} text Caption/text of action. If this value is set, all widgets' hint properties will be updated.
+ * @property {Array} shortcutKeys Array of shortcut key strings of this action.
  * @property {String} htmlClassName This value will be added to widget when action is linked and will be removed when action is unlinked.
  * @property {owner} Owner of action, usually a {@link Kekule.ActionList}.
  * @property {Kekule.Widget.BaseWidget} invoker Who invokes this action.
@@ -73,6 +74,7 @@ Kekule.Action = Class.create(ObjectEx,
 		}
 		this.unlinkAllWidgets();
 		this.setPropStoreFieldValue('linkedWidgets', []);
+		this._lastHtmlEvent = null;
 		this.tryApplySuper('finalize')  /* $super() */;
 	},
 	/** @private */
@@ -139,6 +141,13 @@ Kekule.Action = Class.create(ObjectEx,
 					this.updateAllWidgetsProp('text', value);
 				}
 			}
+		});
+
+		this.defineProp('shortcutKeys', {'dataType': DataType.ARRAY});
+		this.defineProp('shortcutKey', {
+			'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getShortCutKeys()[0]; },
+			'setter': function(value) { this.setShortcutKeys(Kekule.ArrayUtils.toArray(value)); }
 		});
 
 		this.defineProp('htmlClassName', {'dataType': DataType.STRING,
@@ -220,6 +229,7 @@ Kekule.Action = Class.create(ObjectEx,
 			this.updateWidgetProp(widget, 'displayed', this.getDisplayed());
 			this.updateWidgetProp(widget, 'visible', this.getVisible());
 			this.updateWidgetProp(widget, 'checked', this.getChecked());
+			this.updateWidgetProp(widget, 'shortcutKeys', this.getShortcutKeys());
 			this.updateWidgetClassName(widget, this.getHtmlClassName(), null);
 
 			// install event handler
@@ -273,17 +283,21 @@ Kekule.Action = Class.create(ObjectEx,
 	 */
 	execute: function(target, htmlEvent)
 	{
-		var oldChecked = this.getChecked();
-		if (!this.getCheckGroup() || !oldChecked)
+		if (!htmlEvent || htmlEvent !== this._lastHtmlEvent || htmlEvent.__$periodicalExecuting$__)  // avoid invoke action multiple times in one HTML event // TODO: we may need a better way
 		{
-			this.doExecute(target, htmlEvent);
-			if (this.getCheckGroup())
+			var oldChecked = this.getChecked();
+			if (!this.getCheckGroup() || !oldChecked)
 			{
-				this.setChecked(true);
+				this.doExecute(target, htmlEvent);
+				if (this.getCheckGroup())
+				{
+					this.setChecked(true);
+				}
 			}
+			this.setPropStoreFieldValue('invoker', target);
+			this._lastHtmlEvent = htmlEvent;
+			this.invokeEvent('execute', {'htmlEvent': htmlEvent, 'invoker': target});
 		}
-		this.setPropStoreFieldValue('invoker', target);
-		this.invokeEvent('execute', {'htmlEvent': htmlEvent});
 		return this;
 	},
 	/**
