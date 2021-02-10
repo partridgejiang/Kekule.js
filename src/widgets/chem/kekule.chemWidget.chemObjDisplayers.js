@@ -2646,18 +2646,8 @@ Kekule.ChemWidget.ActionDisplayerCopy = Class.create(Kekule.ChemWidget.ActionOnD
 		if (displayer)
 		{
 			var srcObj = displayer.getChemObj();
-			var dupObj = srcObj.clone && srcObj.clone();
-
-			var space = new Kekule.IntermediateChemSpace();
-			try
-			{
-				space.appendChildren([dupObj]);  // use a space to keep all objs, to keep the relations
-				Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, [space]);
-			}
-			finally
-			{
-				space.finalize();
-			}
+			if (srcObj)
+				Kekule.Widget.clipboard.setObjects(Kekule.IO.MimeType.JSON, [srcObj]);
 		}
 	}
 });
