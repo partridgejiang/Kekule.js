@@ -1156,7 +1156,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		var self = this;
 		console.log('here');
-		var done = function(chemObj) { self.setChemObj(chemObj); console.log('done load', chemObj); };
+		var done = function(chemObj) { self.setChemObj(chemObj); };
 		this._tryAutoGenerateChemObjCoords(chemObj, done);
 	},
 
