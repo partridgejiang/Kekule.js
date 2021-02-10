@@ -41,6 +41,38 @@ describe('Test of some core data and functions', function(){
 		expect(atomType.bondOrderSum).toEqual(5);
 	});
 
+	it('Valence calculation and implicit HCount test', function(){
+		var getHCount = function(symbol, bondValenceSum, charge, radicalECount)
+		{
+			var atomicNum = Kekule.ChemicalElementsDataUtil.getAtomicNumber(symbol);
+			return Kekule.ChemStructureUtils.getImplicitHydrogenCount(atomicNum, {'coValenceBondValenceSum': bondValenceSum, 'charge': charge, 'radicalECount': radicalECount});
+		}
+
+		expect(getHCount('C', 1)).toEqual(3);
+		expect(getHCount('C', 2)).toEqual(2);
+		expect(getHCount('C', 3)).toEqual(1);
+		expect(getHCount('C', 4)).toEqual(0);
+		expect(getHCount('C', 1, 1)).toEqual(2);
+		expect(getHCount('C', 2, 1)).toEqual(1);
+		expect(getHCount('C', 1, -1)).toEqual(2);
+		expect(getHCount('C', 3, -1)).toEqual(0);
+		expect(getHCount('C', 1, null, 1)).toEqual(2);
+		expect(getHCount('C', 2, null, 1)).toEqual(1);
+		expect(getHCount('C', 0, null, 2)).toEqual(2);
+		expect(getHCount('O', 1)).toEqual(1);
+		expect(getHCount('O', 1, 1)).toEqual(2);
+		expect(getHCount('O', 1, -1)).toEqual(0);
+		expect(getHCount('O', 1, null, 1)).toEqual(0);
+		expect(getHCount('N', 1)).toEqual(2);
+		expect(getHCount('N', 2)).toEqual(1);
+		expect(getHCount('N', 2, 1)).toEqual(2);
+		expect(getHCount('N', 4, 1)).toEqual(0);
+		expect(getHCount('N', 5)).toEqual(0);
+		expect(getHCount('Cl', 1)).toEqual(0);
+		expect(getHCount('Cl', 1, 1)).toEqual(1);
+		expect(getHCount('Cl', 2)).toEqual(1);
+	});
+
 
 	it('Atom creation test', function(){
 		var atomSymbols = ['H', 'H', 'C', 'C', 'O', 'N', 'Cl', 'H', 'C'];

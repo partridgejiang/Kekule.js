@@ -588,6 +588,34 @@ Kekule.Editor.OperationUtils = {
 		}
 		else
 		{
+			if (modifiedProps)
+			{
+				if (node.getExplicitHydrogenCount && node.getExplicitHydrogenCount())  // has old explicit hydrogen count, clear it first
+				{
+					modifiedProps.explicitHydrogenCount = null;
+				}
+				if (modifiedProps.inputHydrogenCount && modifiedProps.isotopeId)  // user has input hydrogen count, comparing with implicit HCount, if different, use it as explicit HCount
+				{
+					var oldCovalentBondsInfo = (node._getCurrCovalentBondsInfo && node._getCurrCovalentBondsInfo()) || {};
+					var oldIonicBondsInfo = (node._getCurrIonicBondsInfo && node._getCurrIonicBondsInfo()) || {};
+					var atomicSymbol = Kekule.IsotopesDataUtil.getIsotopeIdDetail(modifiedProps.isotopeId).symbol;
+					var atomicNum = Kekule.ChemicalElementsDataUtil.getAtomicNumber(atomicSymbol);
+					var charge = Math.round((node.getCharge && node.getCharge()) || 0);
+					var radicalECount = node.getRadical ? Kekule.RadicalOrder.getRadicalElectronCount(node.getRadical()) : 0;
+					var newImplicitHCount = Kekule.ChemStructureUtils.getImplicitHydrogenCount(atomicNum, {
+						'coValenceBondValenceSum': oldCovalentBondsInfo.valenceSum || 0,
+						'otherBondValenceSum': oldIonicBondsInfo.valenceSum || 0,
+						'charge': charge,
+						'radicalECount': radicalECount
+					});
+					if (newImplicitHCount !== modifiedProps.inputHydrogenCount)  // not match, use the inputHydrogenCount as explicit HCount
+					{
+						modifiedProps.explicitHydrogenCount = modifiedProps.inputHydrogenCount;
+						delete modifiedProps.inputHydrogenCount;
+						//console.log('explicit HCount', modifiedProps.inputHydrogenCount, newImplicitHCount);
+					}
+				}
+			}
 			return Kekule.Editor.OperationUtils.createNodeModificationOperation(node, newNode, nodeClass, modifiedProps, editor);
 		}
 	}
