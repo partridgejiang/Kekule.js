@@ -952,11 +952,18 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	{
 		this._valueSetBySelectPanel = false;
 		var inputBox = this.getNodeInputBox();
-		var text = inputBox.getValue();
-		var data = this._getValueFromDirectInputText(text);
-
-		this.doValueChanged(data);
-		inputBox.setIsDirty(false);
+		//console.log('direct input', inputBox.getIsDirty());
+		if (inputBox.getIsDirty())
+		{
+			var text = inputBox.getValue();
+			var data = this._getValueFromDirectInputText(text);
+			this.doValueChanged(data);
+			inputBox.setIsDirty(false);
+		}
+		else  // actually no changes
+		{
+			this.doValueChanged(null);  // returns null indicating no changes
+		}
 	},
 
 	/** @private */
@@ -1040,9 +1047,8 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	 */
 	doValueChanged: function(newData, isSelectedFromPanel)
 	{
-		//console.log('value changed', newData);
 		this.setPropStoreFieldValue('value', newData);
-		var eventData = {
+		var eventData = newData && {
 			'nodeClass': newData.nodeClass,
 			'props': newData.props,
 			//'node': newData.node,
