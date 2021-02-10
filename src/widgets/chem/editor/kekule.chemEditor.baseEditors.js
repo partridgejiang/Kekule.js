@@ -3421,9 +3421,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var selection = [];
 		var obj = this.getChemObj();
-		if (obj && obj.getChildren())
+		if (obj)
 		{
-			selection = obj.getChildren() || [];
+			var children = obj.getChildren() || [];
+			if (children.length)
+				selection = children;
+			else
+				selection = [obj];
 		}
 		return this.select(selection);
 	},
