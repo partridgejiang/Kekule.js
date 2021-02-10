@@ -133,7 +133,8 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		// react to value change of setter
 		var self = this;
 		result.addEventListener('valueChange', function(e){
-			self.applyToTargets();
+			if (e.value)  // ensure there is actual changes
+				self.applyToTargets();
 			result.dismiss();
 		});
 		/*

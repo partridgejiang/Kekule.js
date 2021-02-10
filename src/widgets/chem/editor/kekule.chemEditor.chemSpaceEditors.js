@@ -4954,12 +4954,12 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		if (!isBind)
 		{
 			widget.removeEventListener('valueChange', this._reactAtomSetterValueChange, this);
-			widget.removeEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
+			//widget.removeEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
 		}
 		else
 		{
 			widget.addEventListener('valueChange', this._reactAtomSetterValueChange, this);
-			widget.addEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
+			//widget.addEventListener('showStateChange', this._reactAtomSetterShowStateChange, this);
 		}
 	},
 
@@ -4969,7 +4969,8 @@ Kekule.Editor.MolAtomIaController = Class.create(Kekule.Editor.BaseEditorIaContr
 		var widget = this.getAtomSetter();
 		if (widget && widget.isShown())
 		{
-			this.applySetter(widget);
+			if (e.value)  // ensure there is actual changes
+				this.applySetter(widget);
 			widget.dismiss();  // avoid call apply setter twice
 		}
 	},
