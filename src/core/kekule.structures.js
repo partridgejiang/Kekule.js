@@ -1328,6 +1328,55 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	isHydrogenAtom: function()
 	{
 		return false;
+	},
+
+	/** @private */
+	_getCurrCovalentBondsInfo: function()
+	{
+		var valenceSum = 0;
+		var maxValence = 0;
+		var piECount = this.getStructureCacheData('piElectronCount') || null;
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			// check if connector is a covalance bond
+			if ((connector instanceof Kekule.Bond)
+				&& (connector.getBondType() == Kekule.BondType.COVALENT))
+			{
+				var v;
+				// a fix, if a hetero atom connected with two explicit aromatics bonds in a aromatic ring (e.g., pyrole),
+				// and the pi electron count is 2 (rather than 1), the bond order should be considered as 1 rather than 2
+				if (connector.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC && piECount >= 2)
+					v = 1;
+				else
+					v = connector.getBondValence();
+				valenceSum += v;
+				if (v > maxValence)
+					maxValence = v;
+			}
+		}
+
+		return {'valenceSum': valenceSum, 'maxValence': maxValence};
+	},
+	/** @private */
+	_getCurrIonicBondsInfo: function()
+	{
+		var valenceSum = 0;
+		var maxValence = 0;
+		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
+		{
+			var connector = this.getLinkedConnectorAt(i);
+			// check if connector is a covalance bond
+			if ((connector instanceof Kekule.Bond)
+				&& (connector.getBondType() == Kekule.BondType.IONIC))
+			{
+				var v = connector.getBondValence();
+				valenceSum += v;
+				if (v > maxValence)
+					maxValence = v;
+			}
+		}
+		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	}
 });
 
@@ -1688,55 +1737,6 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	isHydrogenAtom: function()
 	{
 		return this.isElement(1) && (!this.getMassNumber() || this.getMassNumber() <= 1);
-	},
-
-	/** @private */
-	_getCurrCovalentBondsInfo: function()
-	{
-		var valenceSum = 0;
-		var maxValence = 0;
-		var piECount = this.getStructureCacheData('piElectronCount') || null;
-		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
-		{
-			var connector = this.getLinkedConnectorAt(i);
-			// check if connector is a covalance bond
-			if ((connector instanceof Kekule.Bond)
-				&& (connector.getBondType() == Kekule.BondType.COVALENT))
-			{
-				var v;
-				// a fix, if a hetero atom connected with two explicit aromatics bonds in a aromatic ring (e.g., pyrole),
-				// and the pi electron count is 2 (rather than 1), the bond order should be considered as 1 rather than 2
-				if (connector.getBondOrder() === Kekule.BondOrder.EXPLICIT_AROMATIC && piECount >= 2)
-					v = 1;
-				else
-					v = connector.getBondValence();
-				valenceSum += v;
-				if (v > maxValence)
-					maxValence = v;
-			}
-		}
-
-		return {'valenceSum': valenceSum, 'maxValence': maxValence};
-	},
-	/** @private */
-	_getCurrIonicBondsInfo: function()
-	{
-		var valenceSum = 0;
-		var maxValence = 0;
-		for (var i = 0, l = this.getLinkedConnectorCount(); i < l; ++i)
-		{
-			var connector = this.getLinkedConnectorAt(i);
-			// check if connector is a covalance bond
-			if ((connector instanceof Kekule.Bond)
-					&& (connector.getBondType() == Kekule.BondType.IONIC))
-			{
-				var v = connector.getBondValence();
-				valenceSum += v;
-				if (v > maxValence)
-					maxValence = v;
-			}
-		}
-		return {'valenceSum': valenceSum, 'maxValence': maxValence};
 	},
 
 	/**
