@@ -7,7 +7,8 @@
 /*
  * requires /utils/kekule.utils.js
  * requires /core/kekule.common.js
- * requires /kekule.structures.js
+ * requires /core/kekule.valences.js
+ * requires /core/kekule.structures.js
  */
 
 (function () {
@@ -545,6 +546,20 @@ Kekule.ChemStructureUtils = {
 				return true;
 		}
 		return false;
+	},
+
+	/**
+	 * Guess and returns the implicit hydrogen count connected to an atom.
+	 * @param {Int} atomicNum
+	 * @param {Hash} params Additional params, may including fields {coValenceBondValenceSum, otherBondValenceSum, charge, radicalECount}
+	 * @returns {Int}
+	 */
+	getImplicitHydrogenCount: function(atomicNum, params)
+	{
+		var p = Object.extend({coValenceBondValenceSum: 0, otherBondValenceSum: 0, charge: 0, radicalECount: 0}, params || {}, true);
+		var valence = Kekule.ValenceUtils.getImplicitValence(atomicNum, p.charge, p.coValenceBondValenceSum);
+		valence -= p.radicalECount;
+		return Math.max(valence - p.coValenceBondValenceSum - p.otherBondValenceSum, 0);
 	}
 };
 

@@ -1820,14 +1820,23 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				var valence = atype? atype.bondOrderSum: 0;
 				var charge = Math.round(this.getCharge() || 0);
 				*/
-				var valence = this.getImplicitValence();
 
+				var charge = Math.round(this.getCharge() || 0);
+				var radicalECount = Kekule.RadicalOrder.getRadicalElectronCount(this.getRadical());
+				/*
+				var valence = this.getImplicitValence();
 				// adjust with radical
-				var radical = Kekule.RadicalOrder.getRadicalElectronCount(this.getRadical());
-				valence -= radical;
+				valence -= radicalECount;
 
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
-				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum /* + charge */, 0);
+				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum, 0);
+				*/
+				return Kekule.ChemStructureUtils.getImplicitHydrogenCount(this.getAtomicNumber() || 0, {
+					'coValenceBondValenceSum': coValentBondsInfo.valenceSum || 0,
+					'otherBondValenceSum': ionicBondsInfo.valenceSum || 0,
+					'charge': charge,
+					'radicalECount': radicalECount
+				});
 			}
 		}
 		else
