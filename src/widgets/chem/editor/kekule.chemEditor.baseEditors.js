@@ -4877,6 +4877,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				editor.execOperations(pendingOperations);
 			if (done)
 			{
+				e.stopPropagation();
 				e.preventDefault();
 				return true;   // already do the modification, returns a flag
 			}
@@ -4885,8 +4886,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @ignore */
 	react_keydown: function(e)
 	{
-		this.tryApplySuper('react_keydown', [e]);
-		return this.reactHotKeys(e);
+		var handled = this.tryApplySuper('react_keydown', [e]);
+		if (!handled)
+			return this.reactHotKeys(e);
 	}
 });
 
