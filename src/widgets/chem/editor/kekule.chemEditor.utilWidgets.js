@@ -552,10 +552,12 @@ Kekule.ChemWidget.StructureNodeSelectPanel = Class.create(Kekule.Widget.Panel,
  * @property {Array} selectableSubGroupRepItems Displayed subgroup repository items.
  *   Change this value will update property subGroupInfos.
  *
+ * @property {Bool} enableHydrogenCountInput Whether texts like 'CH3'/'NH2' (with H count) are allowed in inputting.
+ *
  * @property {Object} labelConfigs Label configs object of render configs.
  *
  * @property {Array} nodes Structure nodes that currently be edited in node setter.
- *   Note: When done editting, the changes will not directly applied to nodes, editor should handle them insteadly.
+ *   Note: When done editing, the changes will not directly applied to nodes, editor should handle them insteadly.
  * @property {Hash} value Node new properties setted by setter. Include fields: {nodeClass, props, repositoryItem}
  * @property {String} nodeLabel
  */
@@ -604,6 +606,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('enableHydrogenCountInput', {'dataType': DataType.BOOL});
 		this.defineProp('nodes', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
 			{
@@ -684,6 +687,7 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	initPropValues: function(/*$super*/)
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
+		this.setEnableHydrogenCountInput(true);
 	},
 	/** @ignore */
 	doFinalize: function(/*$super*/)
@@ -856,9 +860,24 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 		return null;
 	},
 	/** @private */
+	_getNodeWithExplicitHInfo: function(nodeLabel)
+	{
+		var result = {};
+		var pattern = /^(\d*[A-Z][a-z]?\d*)H(\d*)$/;
+		var matchResult = nodeLabel.trim().match(pattern);
+		if (matchResult)  // may has explicit hydrogens
+		{
+			result.core = matchResult[1];
+			result.explicitHCount = parseInt(matchResult[2]) || 1;
+		}
+		else
+			result.core = nodeLabel;
+		return result;
+	},
+	/** @private */
 	_getValueFromDirectInputText: function(text)
 	{
-		var nodeClass, modifiedProps, newNode, repItem, isUnknownPAtom;
+		var nodeClass, modifiedProps, newNode, repItem, isUnknownPAtom, inputHydrogenCount;
 
 		var nonAtomInfo = this._getNonAtomInfo(text);
 		if (nonAtomInfo)  // is not an atom
@@ -890,13 +909,31 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 			}
 			else if (text) // add normal node
 			{
-				nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(text, null); // explicit set defaultClass parameter to null
+				var isotopeId = text;
+				nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(isotopeId, null); // explicit set defaultClass parameter to null
 				if (!nodeClass)
 				{
-					nodeClass = Kekule.Pseudoatom;
-					isUnknownPAtom = true;
+					if (this.getEnableHydrogenCountInput())
+					{
+						var infoWithExplicitH = this._getNodeWithExplicitHInfo(isotopeId);
+						//console.log(infoWithExplicitH);
+						if (infoWithExplicitH.explicitHCount)  // may be in form like NH2, with explicit H
+						{
+							nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(infoWithExplicitH.core, null);  // try get class with core part of input
+							if (nodeClass)
+							{
+								inputHydrogenCount = infoWithExplicitH.explicitHCount;
+								isotopeId = infoWithExplicitH.core;
+							}
+						}
+					}
+					if (!nodeClass)
+					{
+						nodeClass = Kekule.Pseudoatom;
+						isUnknownPAtom = true;
+					}
 				}
-				modifiedProps = (nodeClass === Kekule.Atom) ? {'isotopeId': text} :
+				modifiedProps = (nodeClass === Kekule.Atom) ? {'isotopeId': isotopeId, 'inputHydrogenCount': inputHydrogenCount} :
 						(nodeClass === Kekule.Pseudoatom) ? {'symbol': text} :
 						{};
 			}
