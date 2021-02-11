@@ -1783,8 +1783,9 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var bottomFreeWidth = bottomRect.width - (zoomRect ? zoomRect.width : 0);
 		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(leftRegionElem);
 		var leftFreeHeight = leftRect.height - chemRect.height;
-		var clientAreaWidth = widgetRect.width - leftRect.width;
-		var clientAreaHeight = widgetRect.height - topRect.height - bottomRect.height;
+		// since bottomRect may change during some operation (e.g., select different chem tool), use only the whole widget size to decide portrait or landscape mode
+		var clientAreaWidth = widgetRect.width; // - leftRect.width;
+		var clientAreaHeight = widgetRect.height;  // - topRect.height - bottomRect.height;
 
 		var portraitClientLayout = (clientAreaHeight * 0.85 > clientAreaWidth);  // TODO: currently fixed
 		if (portraitClientLayout)
