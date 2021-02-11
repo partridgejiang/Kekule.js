@@ -1525,6 +1525,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 
+	/** @ignore */
+	getChildAction: function(actionName, checkSupClasses)
+	{
+		var result = this._getActionOfComp(actionName, true);
+		if (!result)
+		{
+			result = this.tryApplySuper('getChildAction', [actionName, checkSupClasses]);
+		}
+		return result;
+	},
+
 	/** @private */
 	createToolbar: function()
 	{
@@ -2680,7 +2691,7 @@ Kekule.ChemWidget.ViewerHotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': 'Shift+Y', 'action': CWN.rotateY, repeat: null, 'coordMode': 3},
 			{'key': 'Z', 'action': CWN.rotateZ, repeat: null, 'coordMode': 3},
 			{'key': 'Shift+Z', 'action': CWN.rotateZ, repeat: null, 'coordMode': 3},
-			//{'key': 'H', 'action': CWN.molHideHydrogens, 'coordMode': 3},
+			{'key': 'H', 'action': CWN.molHideHydrogens, 'coordMode': 3},
 			{'key': '1', 'action': CWN.molDisplayTypeSkeletal, 'coordMode': 2},
 			{'key': '1', 'action': CWN.molDisplayTypeCondensed, 'coordMode': 2},
 			{'key': '1', 'action': CWN.molDisplayTypeWire, 'coordMode': 3},
