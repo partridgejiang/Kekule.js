@@ -1954,6 +1954,17 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			this
 		);
 		*/
+
+		var self = this;
+		editor.overwriteMethod('getChildAction', function($old, actionName, checkSupClasses){
+			var result = self._getCreatedNamedAction(actionName);
+			if (!result)
+			{
+				result = $old(actionName, checkSupClasses);
+			}
+			return result;
+		});
+
 		editor.appendToElem(this.getEditorStageElem());
 		this.getEditorNexus().setEditor(editor);
 		//this.newDoc();
@@ -2393,6 +2404,13 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 
 		return result;
+	},
+	/** @private */
+	_getCreatedNamedAction: function(actionName)
+	{
+		var actionClass = this.getCompActionClass(actionName);
+		var actionMap = this.getActionMap();
+		return actionClass && actionMap.get(actionClass);
 	},
 
 	/**
