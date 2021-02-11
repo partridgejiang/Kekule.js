@@ -397,6 +397,14 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
 		var inserter = new Kekule.ChemWidget.ChemObjInserter(document);
 		inserter.setResizable(true);
+
+		inserter.getViewer().setEditorProperties({
+			'predefinedSetting': 'fullFunc',
+			'commonToolButtons': null,
+			'chemToolButtons': null,
+			'allowCreateNewChild': true
+		});
+
 		inserter.appendToWidget(result);
 		this._chemObjInserter = inserter;
 		return result;
