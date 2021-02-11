@@ -37,6 +37,8 @@ var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	COMPOSER: 'K-Chem-Composer',
 	COMPOSER_GRID_LAYOUT: 'K-Chem-Composer-Grid-Layout',  // a special class indicating that the composer is using CSS grid layout
+	COMPOSER_LANDSCAPE: 'K-Chem-Composer-Landscape',  // a special class indicating that the composer is in landscape mode (client width > height）
+	COMPOSER_PORTRAIT: 'K-Chem-Composer-Portrait',  // a special class indicating that the composer is in portrait mode (client width <>> height）
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
 	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
@@ -1775,10 +1777,26 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var topRegionElem = this.getTopRegionElem();
 		var bottomRegionElem = this.getBottomRegionElem();
 		var leftRegionElem = this.getLeftRegionElem();
+		var widgetRect = Kekule.HtmlElementUtils.getElemPageRect(this.getElement());
+		var topRect = Kekule.HtmlElementUtils.getElemPageRect(topRegionElem);
 		var bottomRect = Kekule.HtmlElementUtils.getElemPageRect(bottomRegionElem);
 		var bottomFreeWidth = bottomRect.width - (zoomRect ? zoomRect.width : 0);
 		var leftRect = Kekule.HtmlElementUtils.getElemPageRect(leftRegionElem);
 		var leftFreeHeight = leftRect.height - chemRect.height;
+		var clientAreaWidth = widgetRect.width - leftRect.width;
+		var clientAreaHeight = widgetRect.height - topRect.height - bottomRect.height;
+
+		var portraitClientLayout = (clientAreaHeight * 0.85 > clientAreaWidth);  // TODO: currently fixed
+		if (portraitClientLayout)
+		{
+			this.removeClassName(CCNS.COMPOSER_LANDSCAPE);
+			this.addClassName(CCNS.COMPOSER_PORTRAIT);
+		}
+		else
+		{
+			this.addClassName(CCNS.COMPOSER_LANDSCAPE);
+			this.removeClassName(CCNS.COMPOSER_PORTRAIT);
+		}
 
 		if (isUsingAbsoluteLayout)
 		{

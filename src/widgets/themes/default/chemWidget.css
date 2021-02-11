@@ -672,7 +672,7 @@
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout
 {
     display: inline-grid;
-    grid-template-rows: min-content 1fr min-content;
+    grid-template-rows: min-content 1fr min-content min-content;
     grid-template-columns: min-content 1fr min-content;
 }
 
@@ -706,14 +706,14 @@
     grid-column-start: 1;
     grid-column-end: 2;
     grid-row-start: 2;
-    grid-row-end: 4;
+    grid-row-end: 5;
 }
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region
 {
     grid-column-start: 2;
     grid-column-end: 4;
-    grid-row-start: 3;
-    grid-row-end: 4;
+    grid-row-start: 4;
+    grid-row-end: 5;
 }
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Common-Toolbar
 {
@@ -736,6 +736,15 @@
     grid-column-end: 4;
     grid-row-start: 2;
     grid-row-end: 3;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout.K-Chem-Composer-Portrait .K-Chem-Composer-Adv-Panel
+{
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 3;
+    grid-row-end: 4;
+    height: 22em;
+    width: auto;
 }
 
 .K-Chem-Composer-Toolbar
