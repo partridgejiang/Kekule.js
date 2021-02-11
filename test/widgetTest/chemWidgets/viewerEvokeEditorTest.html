@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Viewer evoke editor test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script src="../../../src/kekule.js?modules=io,chemWidget&min=false&"></script>
+	<style>
+		#viewer1, #viewer2
+		{
+			width: 400px;
+			height: 300px;
+			border: 1px solid #555;
+		}
+	</style>
+	<script>
+		Kekule.X.domReady(function(){
+			var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+			var viewer1 = Kekule.Widget.getWidgetById('viewer1');
+			var viewer2 = Kekule.Widget.getWidgetById('viewer2');
+			viewer1.setEnableEditFromVoid(true).setEditorProperties({
+				predefinedSetting: 'molOnly', 'allowCreateNewChild': false,
+				commonToolButtons: [
+					BNS.newDoc,
+					BNS.loadData,
+					BNS.saveData,
+					BNS.undo,
+					BNS.redo,
+					BNS.zoomIn,
+					BNS.zoomOut
+				],
+			});
+			viewer2.setEnableEditFromVoid(true).setEditorProperties({predefinedSetting: 'fullFunc', 'allowCreateNewChild': true});
+		});
+	</script>
+</head>
+<body>
+	<div>
+		<div id="viewer1" data-widget="Kekule.ChemWidget.Viewer2D" data-predefined-setting="fullFunc"></div>
+		<div id="viewer2" data-widget="Kekule.ChemWidget.Viewer2D" data-predefined-setting="fullFunc"></div>
+	</div>
+</body>
+</html>
