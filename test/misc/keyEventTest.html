@@ -16,14 +16,29 @@
       height: 400px;
       background: green;
     }
+    #insideStage
+    {
+      width: 400px;
+      height: 300px;
+      background: yellow;
+    }
   </style>
   <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
     function init()
     {
 
       document.body.addEventListener('keydown', function(e){
         console.log('key down', e.target.id, e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey, e.metaKey, e.repeat);
       });
+
+      $('stage2').addEventListener('keydown', function(e){
+        console.log('key down on stage 2', e.target.id, e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey, e.metaKey, e.repeat);
+      })
+
       /*
       document.body.addEventListener('keypress', function(e){
         console.log('key press', e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey);
@@ -50,6 +65,10 @@
 </head>
 <body onload="init()" id="body1">
   <div id="stage" tabindex="0"></div>
-  <div id="stage2" tabindex="0"></div>
+  <div id="stage2" tabindex="0">
+    <div>
+      <div id="insideStage" tabindex="0"></div>
+    </div>
+  </div>
 </body>
 </html>
