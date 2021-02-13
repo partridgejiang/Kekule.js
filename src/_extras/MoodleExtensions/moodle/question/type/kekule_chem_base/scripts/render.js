@@ -29,12 +29,22 @@ function createChemWidgets(placeHolderElems)
 
 function createChemWidget(placeHolder, ansCtrlName, className, widgetType, inputType)
 {
+	var N = Kekule.ChemWidget.ComponentWidgetNames;
 	var widgetClass, widgetProps;
 	if (widgetType === 'composer')
 	{
 		widgetClass = Kekule.Editor.Composer;
 		widgetProps = {
 			resizable: true
+		};
+
+		if (inputType === 'doc')  // allow input document
+		{
+			widgetProps.predefinedSetting = 'fullFunc';
+		}
+		else  // molecule
+		{
+			widgetProps.predefinedSetting = 'molOnly';
 		}
 	}
 	else {
@@ -45,22 +55,35 @@ function createChemWidget(placeHolder, ansCtrlName, className, widgetType, input
 			autoSize: true,
 			enableEditFromVoid: true
 		};
-	}
 
-	if (inputType === 'doc')  // allow input document
-	{
-		widgetProps.restrainEditorWithCurrObj = false;
-		widgetProps.editorProperties = {
-			'allowCreateNewChild': true
-		};
-	}
-	else  // molecule
-	{
-		widgetProps.restrainEditorWithCurrObj = true;
-		widgetProps.editorProperties = {
-			'predefinedSetting': 'molOnly',
-			'allowCreateNewChild': false
-		};
+		if (inputType === 'doc')  // allow input document
+		{
+			widgetProps.restrainEditorWithCurrObj = false;
+			widgetProps.editorProperties = {
+				'predefinedSetting': 'molOnly',
+				'allowCreateNewChild': true
+			};
+		}
+		else  // molecule
+		{
+			widgetProps.restrainEditorWithCurrObj = true;
+			widgetProps.editorProperties = {
+				'predefinedSetting': 'molOnly',
+				'allowCreateNewChild': false
+			};
+		}
+		widgetProps.editorProperties.minDimension = {'width': 450, height: 350};
+		/*
+		widgetProps.editorProperties.commonToolButtons = [
+			N.newDoc,
+			N.loadData,
+			N.saveData,
+			N.undo,
+			N.redo,
+			N.zoomIn,
+			N.zoomOut
+		];
+		*/
 	}
 
 	var ctrlElem = getBlankRelatedElems(ansCtrlName).answer;
@@ -250,7 +273,7 @@ function _refreshMoleculesInDropdownPanel(btn, panel)
 }
 function _reactBtnCopyStructureDropdown(e)
 {
-	console.log('execute');
+	//console.log('execute');
 	var btn = e.target;
 	var panel = btn.getDropDownWidget();
 	panel._invokerViewer = btn.getParent().getParent();
@@ -258,7 +281,7 @@ function _reactBtnCopyStructureDropdown(e)
 	var questionElem = getQuestionRootElem(btn.getParent().getParent().getElement());
 	if (questionElem !== panel._questionElem)
 	{
-		console.log('refresh');
+		//console.log('refresh');
 		panel._questionElem = questionElem;
 		_refreshMoleculesInDropdownPanel(btn, panel);
 	}

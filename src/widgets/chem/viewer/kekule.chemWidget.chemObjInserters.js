@@ -192,6 +192,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this._defineViewerDelegatedProp('enableEdit');
 		this._defineViewerDelegatedProp('enableEditFromVoid');
 		this._defineViewerDelegatedProp('modalEdit');
+		this._defineViewerDelegatedProp('restrainEditorWithCurrObj');
+		this._defineViewerDelegatedProp('editorProperties');
 		this._defineViewerDelegatedProp('toolButtons');
 		this._defineViewerDelegatedProp('enableDirectInteraction');
 		this._defineViewerDelegatedProp('enableTouchInteraction');

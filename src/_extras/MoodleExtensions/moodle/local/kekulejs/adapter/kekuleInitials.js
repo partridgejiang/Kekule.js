@@ -45,12 +45,21 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 		var EMC = Kekule.Editor.ObjModifier.Category;
 		// overwrite molOnly setting of composer
 		SM.register('Kekule.Editor.Composer.molOnly', {  // composer that can only edit molecule
-			enableStyleToolbar: true,
+			//enableStyleToolbar: true,
+			enableObjModifierToolbar: true,
 			enableOperHistor: true,
 			enableLoadNewFile: true,
 			enableCreateNewDoc: true,
 			allowCreateNewChild: true,
-			commonToolButtons: null,   // create all default common tool buttons
+			commonToolButtons: [
+				BNS.newDoc,
+				BNS.loadData,
+				BNS.saveData,
+				BNS.undo,
+				BNS.redo,
+				BNS.zoomIn,
+				BNS.zoomOut
+			],
 			chemToolButtons: [
 				BNS.manipulate,
 				BNS.erase,
