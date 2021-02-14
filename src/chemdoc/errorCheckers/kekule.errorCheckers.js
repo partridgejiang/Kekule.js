@@ -23,8 +23,6 @@ var EL = Kekule.ErrorLevel;
  */
 Kekule.ErrorCheck = {};
 
-
-
 /**
  * A root object to perform error check on one root chem object.
  * It will extract all child objects that need to be check and pass them to the concrete checkers.
@@ -43,7 +41,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	initialize: function()
 	{
 		// debug
-		this.setPropStoreFieldValue('checkers', [new Kekule.ErrorCheck.AtomValenceChecker()]);
+		this.setPropStoreFieldValue('checkers', [new Kekule.ErrorCheck.AtomValenceChecker(), new Kekule.ErrorCheck.BondOrderChecker()]);
 		this.tryApplySuper('initialize');
 	},
 	/** @private */
@@ -65,6 +63,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	 */
 	execute: function(target)
 	{
+		var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
 		var regMap = new Kekule.MapEx();
 		var checkers = this.getCheckers();
@@ -74,14 +73,23 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 		for (var i = 0, l = checkers.length; i < l; ++i)
 		{
 			var checker = checkers[i];
-			var objs = regMap.get(checker);
-			if (objs && objs.length)
+			//try
 			{
-				var reportItems = checker.check(objs);
-				if (reportItems && reportItems.length)
-					result = result.concat(reportItems);
+				var objs = regMap.get(checker);
+				if (objs && objs.length)
+				{
+					var reportItems = checker.check(objs);
+					if (reportItems && reportItems.length)
+						result = result.concat(reportItems);
+				}
+			}
+			//catch(e)
+			{
+
 			}
 		}
+		var endTime = Date.now();
+		console.log('consume', endTime - startTime, 'ms');
 		return result;
 	},
 	/**
@@ -135,9 +143,9 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 							else
 								regObjs.push(child);
 						}
-						// iterate child's children
-						this._getAllObjsNeedCheck(child, checkers, regMap);
 					}
+					// iterate child's children
+					this._getAllObjsNeedCheck(child, checkers, regMap);
 				}
 			}
 		}
@@ -294,8 +302,11 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 		if (possibleValences.length && possibleValences.indexOf(currValence) < 0)  // current is abnormal
 		{
 			var msg = (possibleValences.length <= 1)? Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGEST'): Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGESTS');
+			var atomId = atom.getId();
+			var atomSymbol = atom.getSymbol();
+			var atomLabel = atomId? atomId + '(' + atomSymbol + ')': atomSymbol;
 			var suggests = possibleValences.join('/');
-			return this._createReportItem(EL.ERROR, msg.format(atom.getSymbol(), currValence, suggests), [atom]);
+			return this._createReportItem(EL.ERROR, msg.format(atomLabel, currValence, suggests), [atom]);
 		}
 		else  // no error
 			return null;
@@ -308,6 +319,84 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 		if (info && info.valences && !info.unexpectedCharge)  // if abnormal charge is meet, we can not determinate the valence precisely, just ignore here
 		{
 			result = [].concat(info.valences);
+		}
+		return result;
+	}
+});
+
+/**
+ * The checker to check whether the order of bond is suitable.
+ * @class
+ * @augments Kekule.ErrorCheck.BaseChecker
+ */
+Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
+/** @lends Kekule.ErrorCheck.BondOrderChecker# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ErrorCheck.BondOrderChecker',
+	/** @ignore */
+	applicable: function(target)
+	{
+		return (target instanceof Kekule.Bond) && target.isCovalentBond();
+	},
+	/** @ignore */
+	doCheck: function(targets)
+	{
+		var result = [];
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			var reportItem = this.checkBondOrder(targets[i]);
+			if (reportItem)
+				result.push(reportItem);
+		}
+		return result;
+	},
+	/** @private */
+	checkBondOrder: function(bond)
+	{
+		var bondValence = bond.getBondValence && bond.getBondValence();
+		if (bondValence)
+		{
+			var connectedNodes = bond.getConnectedChemNodes();
+			var maxOrder = 0;
+			for (var i = 0, l = connectedNodes.length; i < l; ++i)
+			{
+				var m = this._getAllowedMaxBondOrder(connectedNodes[i]);
+				if (m > 0 && (!maxOrder || m < maxOrder))
+					maxOrder = m;
+			}
+			if (maxOrder)
+			{
+				if (bondValence > maxOrder)   // error
+				{
+					var bondLabel = bond.getId() || '';
+					var msg = bondLabel? Kekule.$L('ErrorCheckMsg.BOND_WITH_ID_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST').format(bondLabel, maxOrder)
+						: Kekule.$L('ErrorCheckMsg.BOND_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST').format(maxOrder);
+					return this._createReportItem(EL.ERROR, msg, [bond]);
+				}
+			}
+		}
+		return null;
+	},
+	/** @private */
+	_getAllowedMaxBondOrder: function(atom)
+	{
+		var result = 0;
+		if (atom instanceof Kekule.Atom && atom.isNormalAtom())
+		{
+			var currValence = atom.getValence();
+			var atomTypes = Kekule.AtomTypeDataUtil.getAllAtomTypes(atom.getAtomicNumber());
+			if (atomTypes)
+			{
+				for (var i = 0, l = atomTypes.length; i < l; ++i)
+				{
+					if (currValence <= atomTypes[i].bondOrderSum)
+					{
+						result = atomTypes[i].maxBondOrder;
+						break;
+					}
+				}
+			}
 		}
 		return result;
 	}
