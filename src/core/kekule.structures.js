@@ -1786,6 +1786,8 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 
 	/**
 	 * Guess and returns the implicit valence of atom.
+	 * Note this method does not consider the explicit hydrogen count.
+	 * @returns {Int}
 	 */
 	getImplicitValence: function()
 	{
@@ -1793,6 +1795,29 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		{
 			var bondsInfo = this._getCurrCovalentBondsInfo();
 			var expValence = bondsInfo.valenceSum;
+			var charge = Math.round(this.getCharge() || 0);
+
+			var result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
+
+			return result;
+		}
+		else
+			return 0;
+	},
+	/**
+	 * Guess and returns the valence of atom.
+	 * Note this method considers the explicit hydrogen count.
+	 * @returns {Int}
+	 */
+	getValence: function()
+	{
+		if (this.isNormalAtom())
+		{
+			var bondsInfo = this._getCurrCovalentBondsInfo();
+			var expValence = bondsInfo.valenceSum;
+			// adjust with explicitHCount
+			var explicitHCount = this.getExplicitHydrogenCount() || 0;
+			expValence += explicitHCount;
 			var charge = Math.round(this.getCharge() || 0);
 
 			var result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
@@ -1831,12 +1856,13 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				// DONE: some atoms such as C should be treat differently, as C+ can only link 3 bonds
 				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum, 0);
 				*/
-				return Kekule.ChemStructureUtils.getImplicitHydrogenCount(this.getAtomicNumber() || 0, {
+				var result = Kekule.ChemStructureUtils.getImplicitHydrogenCount(this.getAtomicNumber() || 0, {
 					'coValenceBondValenceSum': coValentBondsInfo.valenceSum || 0,
 					'otherBondValenceSum': ionicBondsInfo.valenceSum || 0,
 					'charge': charge,
 					'radicalECount': radicalECount
 				});
+				return result;
 			}
 		}
 		else
