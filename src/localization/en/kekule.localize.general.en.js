@@ -151,3 +151,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	CALC_TERMINATED_BY_USER: 'Calculation terminated by user',
 	CALC_SERVICE_UNAVAILABLE: 'Calculation service "{0}" is unavailable'
 });
+
+// Strings used by error checkers
+Kekule.Localization.addResource('en', 'ErrorCheckMsg', {
+	ATOM_VALENCE_ERROR_WITH_SUGGEST: 'Abnormal valence {1} of atom {0}, the possible value is {2}',
+	ATOM_VALENCE_ERROR_WITH_SUGGESTS: 'Abnormal valence {1} of atom {0}, the possible values are {2}'
+});

@@ -65,6 +65,10 @@ Kekule.ExceptionLevel = {
 	/** Log message, just for debug use. */
 	LOG: -4
 };
+/**
+ * Error level, alias of ExceptionLevel
+ */
+Kekule.ErrorLevel = Kekule.ExceptionLevel;
 
 /**
  * Throw an exception in ExceptionHandler, same as {@link Kekule.ExceptionHandler.throwException}
