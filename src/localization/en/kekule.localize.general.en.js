@@ -154,8 +154,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 // Strings used by error checkers
 Kekule.Localization.addResource('en', 'ErrorCheckMsg', {
+	GENERAL_ERROR_WITH_CODE: 'Error code: {0}',
 	ATOM_VALENCE_ERROR_WITH_SUGGEST: 'Abnormal valence {1} of atom {0}, the possible value is {2}',
 	ATOM_VALENCE_ERROR_WITH_SUGGESTS: 'Abnormal valence {1} of atom {0}, the possible values are {2}',
-	BOND_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST: 'The bond order exceeds the maximum allowed value ({1})',
-	BOND_WITH_ID_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST: 'The bond order of {0} exceeds the maximum allowed value ({1})'
+	BOND_ORDER_EXCEED_ALLOWED_WITH_SUGGEST: 'The bond order ({0}) exceeds the maximum allowed value ({1})',
+	BOND_WITH_ID_ORDER_EXCEED_ALLOWED_WITH_SUGGEST: 'The bond order of {0} ({1}) exceeds the maximum allowed value {2}'
 });

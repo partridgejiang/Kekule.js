@@ -24,6 +24,18 @@ var EL = Kekule.ErrorLevel;
 Kekule.ErrorCheck = {};
 
 /**
+ * Predefined error code of error checking.
+ * @enum
+ */
+Kekule.ErrorCheck.ErrorCode = {
+	ERROR_UNKNOWN: 0,
+	ERROR_ATOM_VALENCE_ABNORMAL: 101,
+	ERROR_BOND_ORDER_EXCEED: 201
+};
+
+var EC = Kekule.ErrorCheck.ErrorCode;
+
+/**
  * A root object to perform error check on one root chem object.
  * It will extract all child objects that need to be check and pass them to the concrete checkers.
  * @class
@@ -158,37 +170,45 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 });
 
 /**
- * Represent a piece of error report from the error checker.
+ * Represent the checking result of a error checker object.
+ * This is an abstract class, and should not be used directly.
+ * Each concrete checker class should has a corresponding check result class.
  * @class
  * @augments ObjectEx
  * @param {Int} errorLevel Value from {@link Kekule.ErrorLevel}
- * @param {String} msg Error message.
+ * @param {Int} errorCode A custom value to represent the error type.
+ * @param {Hash} data Extra error data.
  * @param {Array} targets Related chem objects.
- * @param {Object} reporter The checker who has published this report.
+ * @param {Object} reporter The checker who has published this result.
  *
- * @property {Int} errorLevel Value from {@link Kekule.ErrorLevel}
- * @property {String} msg Error message.
+ * @property {Int} level Value from {@link Kekule.ErrorLevel}
+ * @property {Int} code A custom value to represent the error type.
+ * @property {Hash} data Extra error data.
  * @property {Array} targets Related chem objects.
- * @property {Object} reporter The checker who has published this report.
+ * @property {Object} reporter The checker who has published this result.
  */
-Kekule.ErrorCheck.ReportItem = Class.create(ObjectEx,
-/** @lends Kekule.ErrorCheck.ReportItem# */
+Kekule.ErrorCheck.CheckResult = Class.create(ObjectEx,
+/** @lends Kekule.ErrorCheck.CheckResult# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.ReportItem',
+	CLASS_NAME: 'Kekule.ErrorCheck.CheckResult',
+	/** @private */
+	DEF_ERROR_CODE: EC.UNKNOWN,
 	/**
 	 * @constructs
 	 */
-	initialize: function(level, msg, targets, reporter)
+	initialize: function(errorLevel, errorCode, data, targets, reporter)
 	{
-		this.setPropStoreFieldValue('level', level);
-		this.setPropStoreFieldValue('msg', msg);
+		this.setPropStoreFieldValue('level', errorLevel || EL.ERROR);
+		this.setPropStoreFieldValue('code', errorCode || this.DEF_ERROR_CODE);
+		this.setPropStoreFieldValue('data', data);
 		this.setPropStoreFieldValue('targets', targets);
 		this.setPropStoreFieldValue('reporter', reporter);
 		this.tryApplySuper('initialize');
 	},
 	doFinalize: function()
 	{
+		this.setData(null);
 		this.setTargets(null);
 		this.setReporter(null);
 		this.tryApplySuper('doFinalize');
@@ -197,10 +217,32 @@ Kekule.ErrorCheck.ReportItem = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		this.defineProp('level', {'dataType': DataType.INT});
-		this.defineProp('msg', {'dataType': DataType.STRING});
+		this.defineProp('code', {'dataType': DataType.INT});
+		this.defineProp('data', {'dataType': DataType.HASH});
 		this.defineProp('targets', {'dataType': DataType.Array, 'serializable': false});
 		this.defineProp('reporter', {'dataType': DataType.OBJECTEX, 'serializable': false});
+		this.defineProp('msg', {'dataType': DataType.STRING, 'serializable': false, 'setter': null,
+			'getter': function() { return this.getMessage(); }
+		})
 		//this.defineProp('hasSolution', {'dataType': DataType.BOOL});
+	},
+	/**
+	 * Returns the value stored in data property.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getDataValue: function(key)
+	{
+		return (this.getData() || {})[key];
+	},
+	/**
+	 * Returns the human readable error message from error level, code and data.
+	 * Desendants should override this method.
+	 * @returns {String}
+	 */
+	getMessage: function()
+	{
+		return Kekule.$L('ErrorCheckMsg.GENERAL_ERROR_WITH_CODE').format(this.getErrorCode());
 	}
 });
 
@@ -225,9 +267,9 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 		//this.defineProp('targets', {'dataType': DataType.ARRAY});
 	},
 	/** @private */
-	_createReportItem: function(level, msg, targets)
+	_createReport: function(reportClass, level, code, data, targets)
 	{
-		return new Kekule.ErrorCheck.ReportItem(level, msg, targets, this);
+		return new reportClass(level, code, data, targets, this);
 	},
 	/**
 	 * Check whether this checker can be applied to target object.
@@ -301,12 +343,10 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 		var possibleValences = this._getPossibleValences(atom.getAtomicNumber(), charge);
 		if (possibleValences.length && possibleValences.indexOf(currValence) < 0)  // current is abnormal
 		{
-			var msg = (possibleValences.length <= 1)? Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGEST'): Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGESTS');
-			var atomId = atom.getId();
-			var atomSymbol = atom.getSymbol();
-			var atomLabel = atomId? atomId + '(' + atomSymbol + ')': atomSymbol;
-			var suggests = possibleValences.join('/');
-			return this._createReportItem(EL.ERROR, msg.format(atomLabel, currValence, suggests), [atom]);
+			return this._createReport(Kekule.ErrorCheck.AtomValenceChecker.Result,
+				EL.ERROR, EC.ERROR_ATOM_VALENCE_ABNORMAL,
+				{'currValence': currValence, 'possibleValences': possibleValences},
+				[atom]);
 		}
 		else  // no error
 			return null;
@@ -321,6 +361,35 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 			result = [].concat(info.valences);
 		}
 		return result;
+	}
+});
+
+/**
+ * Represent the checking result of {@link Kekule.ErrorCheck.AtomValenceChecker}.
+ * @class
+ * @augments Kekule.ErrorCheck.CheckResult
+ */
+Kekule.ErrorCheck.AtomValenceChecker.Result = Class.create(Kekule.ErrorCheck.CheckResult,
+/** @lends Kekule.ErrorCheck.AtomValenceChecker.Result# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ErrorCheck.AtomValenceChecker.Result',
+	/** @private */
+	DEF_ERROR_CODE: EC.ERROR_ATOM_VALENCE_ABNORMAL,
+	/** @ignore */
+	getMessage: function()
+	{
+		var currValence = this.getDataValue('currValence');
+		var possibleValences = this.getDataValue('possibleValences');
+		var msg = (possibleValences.length <= 1)?
+			Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGEST'):
+			Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGESTS');
+		var atom = this.getTargets()[0];
+		var atomId = atom.getId();
+		var atomSymbol = atom.getSymbol();
+		var atomLabel = atomId? atomId + '(' + atomSymbol + ')': atomSymbol;
+		var suggests = possibleValences.join('/');
+		return msg.format(atomLabel, currValence, suggests);
 	}
 });
 
@@ -369,10 +438,8 @@ Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
 			{
 				if (bondValence > maxOrder)   // error
 				{
-					var bondLabel = bond.getId() || '';
-					var msg = bondLabel? Kekule.$L('ErrorCheckMsg.BOND_WITH_ID_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST').format(bondLabel, maxOrder)
-						: Kekule.$L('ErrorCheckMsg.BOND_VALENCE_EXCEED_ALLOWED_WITH_SUGGEST').format(maxOrder);
-					return this._createReportItem(EL.ERROR, msg, [bond]);
+					return this._createReport(Kekule.ErrorCheck.BondOrderChecker.Result, EL.ERROR, EC.ERROR_BOND_ORDER_EXCEED,
+						{'currOrder': bondValence, 'maxOrder': maxOrder}, [bond]);
 				}
 			}
 		}
@@ -399,6 +466,31 @@ Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
 			}
 		}
 		return result;
+	}
+});
+
+/**
+ * Represent the checking result of {@link Kekule.ErrorCheck.AtomValenceChecker}.
+ * @class
+ * @augments Kekule.ErrorCheck.CheckResult
+ */
+Kekule.ErrorCheck.BondOrderChecker.Result = Class.create(Kekule.ErrorCheck.CheckResult,
+/** @lends Kekule.ErrorCheck.BondOrderChecker.Result# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ErrorCheck.BondOrderChecker.Result',
+	/** @private */
+	DEF_ERROR_CODE: EC.ERROR_BOND_ORDER_EXCEED,
+	/** @ignore */
+	getMessage: function()
+	{
+		var currOrder = this.getDataValue('currOrder');
+		var maxOrder = this.getDataValue('maxOrder');
+		var bond = this.getTargets()[0];
+		var bondLabel = bond.getId() || '';
+		var msg = bondLabel? Kekule.$L('ErrorCheckMsg.BOND_WITH_ID_ORDER_EXCEED_ALLOWED_WITH_SUGGEST').format(bondLabel, currOrder, maxOrder)
+			: Kekule.$L('ErrorCheckMsg.BOND_ORDER_EXCEED_ALLOWED_WITH_SUGGEST').format(currOrder, maxOrder);
+		return msg;
 	}
 });
 
