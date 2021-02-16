@@ -172,6 +172,12 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 	{
 		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CNS.LISTVIEW;
 	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('ul');
+		return result;
+	},
 
 	/**
 	 * Returns the HTML class name for all child items.
