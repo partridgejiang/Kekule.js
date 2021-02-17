@@ -80,14 +80,16 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	/**
 	 * Perform the error check on root object (target).
 	 * @param {Kekule.ChemObject} target
+	 * @param {Hash} options
 	 * @returns {Array} Report items of all checks.
 	 */
-	execute: function(target)
+	execute: function(target, options)
 	{
 		if (!this.getEnabled())
 			return null;
 		var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
+		var op = options || {};
 		var regMap = new Kekule.MapEx();
 		var allCheckers = this.getCheckers();
 		// filter out enabled checkers
@@ -97,7 +99,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 			if (allCheckers[i].getEnabled())
 				checkers.push(allCheckers[i]);
 		}
-		this._getAllObjsNeedCheck(target, checkers, regMap);
+		this._getAllObjsNeedCheck(target, checkers, regMap, op);
 		// second phrase, do the concrete check of all checkers
 		var result = [];
 		for (var i = 0, l = checkers.length; i < l; ++i)
@@ -108,7 +110,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 				var objs = regMap.get(checker);
 				if (objs && objs.length)
 				{
-					var reportItems = checker.check(objs);
+					var reportItems = checker.check(objs, op);
 					if (reportItems && reportItems.length)
 						result = result.concat(reportItems);
 				}
@@ -127,9 +129,10 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	 * @param {Kekule.ErrorCheck.BaseChecker} checker
 	 * @param {Array} objects
 	 * @param {Kekule.ChemObject} root
+	 * @param {Hash} options
 	 * @returns {Array} Report items. If no error is found any more, null will be returned.
 	 */
-	recheck: function(checker, objects, root)
+	recheck: function(checker, objects, root, options)
 	{
 		var actualObjs;
 		if (root)
@@ -146,10 +149,10 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 		}
 		else
 			actualObjs = objects;
-		return actualObjs.length? checker.check(objects): null;
+		return actualObjs.length? checker.check(objects, options || {}): null;
 	},
 	/** @private */
-	_getAllObjsNeedCheck: function(root, checkers, regMap)
+	_getAllObjsNeedCheck: function(root, checkers, regMap, options)
 	{
 		var checkUnexposed = !this.getIgnoreUnexposedObjs();
 		if (this._isObjExposed(root) || checkUnexposed)
@@ -162,7 +165,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 					for (var j = 0, k = checkers.length; j < k; ++j)
 					{
 						var checker = checkers[j];
-						if (checker.applicable(child))
+						if (checker.applicable(child, options))
 						{
 							var regObjs = regMap.get(checker);
 							if (!regObjs)
@@ -175,7 +178,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 						}
 					}
 					// iterate child's children
-					this._getAllObjsNeedCheck(child, checkers, regMap);
+					this._getAllObjsNeedCheck(child, checkers, regMap, options);
 				}
 			}
 		}
@@ -298,11 +301,22 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 	},
 	/**
 	 * Check whether this checker can be applied to target object.
-	 * Descendants should override this method.
 	 * @param {Kekule.ChemObject} target
+	 * @param {Hash} options
 	 * @returns {Bool}
 	 */
-	applicable: function(target)
+	applicable: function(target, options)
+	{
+		return this.doApplicable(target, options || {});
+	},
+	/**
+	 * Do actual work of {@link Kekule.ErrorCheck.BaseChecker.applicable}
+	 * Desendants should override this method.
+	 * @param {Kekule.ChemObject} target
+	 * @param {Hash} options
+	 * @returns {Bool}
+	 */
+	doApplicable: function(target, options)
 	{
 		return false;
 	},
@@ -310,19 +324,21 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 	 * Check on a series of target objects.
 	 * Note the targets are all passed the detection and all be applicable.
 	 * @param {Array} targets
+	 * @param {Hash} options
 	 * @returns {Array} Report items.
 	 */
-	check: function(targets)
+	check: function(targets, options)
 	{
-		return this.doCheck(targets);
+		return this.doCheck(targets, options || {});
 	},
 	/**
 	 * Do actual work of {@link Kekule.ErrorCheck.BaseChecker.check}.
 	 * Descendants should override this method.
 	 * @param {Array} targets
+	 * @param {Hash} options
 	 * @returns {Array} Report items.
 	 */
-	doCheck: function(targets)
+	doCheck: function(targets, options)
 	{
 		return [];
 	}
@@ -344,12 +360,12 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 		this.tryApplySuper('initialize');
 	},
 	/** @ignore */
-	applicable: function(target)
+	doApplicable: function(target, options)
 	{
 		return (target instanceof Kekule.Atom) && (target.isNormalAtom());
 	},
 	/** @ignore */
-	doCheck: function(targets)
+	doCheck: function(targets, options)
 	{
 		var result = [];
 		for (var i = 0, l = targets.length; i < l; ++i)
@@ -429,12 +445,12 @@ Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
 	/** @private */
 	CLASS_NAME: 'Kekule.ErrorCheck.BondOrderChecker',
 	/** @ignore */
-	applicable: function(target)
+	doApplicable: function(target, options)
 	{
 		return (target instanceof Kekule.Bond) && target.isCovalentBond();
 	},
 	/** @ignore */
-	doCheck: function(targets)
+	doCheck: function(targets, options)
 	{
 		var result = [];
 		for (var i = 0, l = targets.length; i < l; ++i)
