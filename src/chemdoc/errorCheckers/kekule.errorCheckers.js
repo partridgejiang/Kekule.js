@@ -43,6 +43,7 @@ var EC = Kekule.ErrorCheck.ErrorCode;
  *
  * @property {Bool} ignoreUnexposedObjs Whether unexposed objects should be also checked.
  * @property {Array} checkers Concrete checkers.
+ * @property {Bool} enabled If false, call the execute() method of executor will do nothing.
  */
 Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 /** @lends Kekule.ErrorCheck.Executor# */
@@ -61,12 +62,20 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	{
 		this.defineProp('checkers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		this.defineProp('ignoreUnexposedObjs', {'dataType': DataType.ARRAY});
+		this.defineProp('enabled', {'dataType': DataType.BOOL})
 	},
 	/** @ignore */
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
 		this.setIgnoreUnexposedObjs(true);
+		this.setEnabled(true);
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this.setPropStoreFieldValue('checkers', null);
+		this.tryApplySuper('doFinalize');
 	},
 	/**
 	 * Perform the error check on root object (target).
@@ -75,10 +84,19 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	 */
 	execute: function(target)
 	{
+		if (!this.getEnabled())
+			return null;
 		var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
 		var regMap = new Kekule.MapEx();
-		var checkers = this.getCheckers();
+		var allCheckers = this.getCheckers();
+		// filter out enabled checkers
+		var checkers = [];
+		for (var i = 0, l = allCheckers.length; i < l; ++i)
+		{
+			if (allCheckers[i].getEnabled())
+				checkers.push(allCheckers[i]);
+		}
 		this._getAllObjsNeedCheck(target, checkers, regMap);
 		// second phrase, do the concrete check of all checkers
 		var result = [];
@@ -265,6 +283,13 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		//this.defineProp('targets', {'dataType': DataType.ARRAY});
+		this.defineProp('enabled', {'dataType': DataType.BOOL});
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setEnabled(true);
 	},
 	/** @private */
 	_createReport: function(reportClass, level, code, data, targets)
