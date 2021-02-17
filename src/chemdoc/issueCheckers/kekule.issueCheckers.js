@@ -21,22 +21,22 @@ var EL = Kekule.ErrorLevel;
  * Namespace for error check system.
  * @namespace
  */
-Kekule.ErrorCheck = {};
+Kekule.IssueCheck = {};
 
 /**
  * Predefined error code of error checking.
  * @enum
  */
-Kekule.ErrorCheck.ErrorCode = {
+Kekule.IssueCheck.IssueCode = {
 	ERROR_UNKNOWN: 0,
 	ERROR_ATOM_VALENCE_ABNORMAL: 101,
 	ERROR_BOND_ORDER_EXCEED: 201
 };
 
-var EC = Kekule.ErrorCheck.ErrorCode;
+var EC = Kekule.IssueCheck.IssueCode;
 
 /**
- * A root object to perform error check on one root chem object.
+ * A root object to perform issue check on one root chem object.
  * It will extract all child objects that need to be check and pass them to the concrete checkers.
  * @class
  * @augments ObjectEx
@@ -45,16 +45,16 @@ var EC = Kekule.ErrorCheck.ErrorCode;
  * @property {Array} checkers Concrete checkers.
  * @property {Bool} enabled If false, call the execute() method of executor will do nothing.
  */
-Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
-/** @lends Kekule.ErrorCheck.Executor# */
+Kekule.IssueCheck.Executor = Class.create(ObjectEx,
+/** @lends Kekule.IssueCheck.Executor# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.Executor',
+	CLASS_NAME: 'Kekule.IssueCheck.Executor',
 	/** @constructs */
 	initialize: function()
 	{
 		// debug
-		this.setPropStoreFieldValue('checkers', [new Kekule.ErrorCheck.AtomValenceChecker(), new Kekule.ErrorCheck.BondOrderChecker()]);
+		this.setPropStoreFieldValue('checkers', [new Kekule.IssueCheck.AtomValenceChecker(), new Kekule.IssueCheck.BondOrderChecker()]);
 		this.tryApplySuper('initialize');
 	},
 	/** @private */
@@ -126,7 +126,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 	},
 	/**
 	 * Perform a recheck on objects.
-	 * @param {Kekule.ErrorCheck.BaseChecker} checker
+	 * @param {Kekule.IssueCheck.BaseChecker} checker
 	 * @param {Array} objects
 	 * @param {Kekule.ChemObject} root
 	 * @param {Hash} options
@@ -191,7 +191,7 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
 });
 
 /**
- * Represent the checking result of a error checker object.
+ * Represent the checking result of a issue checker object.
  * This is an abstract class, and should not be used directly.
  * Each concrete checker class should has a corresponding check result class.
  * @class
@@ -208,11 +208,11 @@ Kekule.ErrorCheck.Executor = Class.create(ObjectEx,
  * @property {Array} targets Related chem objects.
  * @property {Object} reporter The checker who has published this result.
  */
-Kekule.ErrorCheck.CheckResult = Class.create(ObjectEx,
-/** @lends Kekule.ErrorCheck.CheckResult# */
+Kekule.IssueCheck.CheckResult = Class.create(ObjectEx,
+/** @lends Kekule.IssueCheck.CheckResult# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.CheckResult',
+	CLASS_NAME: 'Kekule.IssueCheck.CheckResult',
 	/** @private */
 	DEF_ERROR_CODE: EC.UNKNOWN,
 	/**
@@ -272,11 +272,11 @@ Kekule.ErrorCheck.CheckResult = Class.create(ObjectEx,
  * @class
  * @augments ObjectEx
  */
-Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
-/** @lends Kekule.ErrorCheck.BaseChecker# */
+Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
+/** @lends Kekule.IssueCheck.BaseChecker# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.BaseChecker',
+	CLASS_NAME: 'Kekule.IssueCheck.BaseChecker',
 	/** @constructs */
 	initialize: function()
 	{
@@ -310,7 +310,7 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 		return this.doApplicable(target, options || {});
 	},
 	/**
-	 * Do actual work of {@link Kekule.ErrorCheck.BaseChecker.applicable}
+	 * Do actual work of {@link Kekule.IssueCheck.BaseChecker.applicable}
 	 * Desendants should override this method.
 	 * @param {Kekule.ChemObject} target
 	 * @param {Hash} options
@@ -332,7 +332,7 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 		return this.doCheck(targets, options || {});
 	},
 	/**
-	 * Do actual work of {@link Kekule.ErrorCheck.BaseChecker.check}.
+	 * Do actual work of {@link Kekule.IssueCheck.BaseChecker.check}.
 	 * Descendants should override this method.
 	 * @param {Array} targets
 	 * @param {Hash} options
@@ -347,13 +347,13 @@ Kekule.ErrorCheck.BaseChecker = Class.create(ObjectEx,
 /**
  * The checker to check whether the valence of atom in molecule is right.
  * @class
- * @augments Kekule.ErrorCheck.BaseChecker
+ * @augments Kekule.IssueCheck.BaseChecker
  */
-Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
-/** @lends Kekule.ErrorCheck.AtomValenceChecker# */
+Kekule.IssueCheck.AtomValenceChecker = Class.create(Kekule.IssueCheck.BaseChecker,
+/** @lends Kekule.IssueCheck.AtomValenceChecker# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.AtomValenceChecker',
+	CLASS_NAME: 'Kekule.IssueCheck.AtomValenceChecker',
 	/** @constructs */
 	initialize: function()
 	{
@@ -384,7 +384,7 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 		var possibleValences = this._getPossibleValences(atom.getAtomicNumber(), charge);
 		if (possibleValences.length && possibleValences.indexOf(currValence) < 0)  // current is abnormal
 		{
-			return this._createReport(Kekule.ErrorCheck.AtomValenceChecker.Result,
+			return this._createReport(Kekule.IssueCheck.AtomValenceChecker.Result,
 				EL.ERROR, EC.ERROR_ATOM_VALENCE_ABNORMAL,
 				{'currValence': currValence, 'possibleValences': possibleValences},
 				[atom]);
@@ -406,15 +406,15 @@ Kekule.ErrorCheck.AtomValenceChecker = Class.create(Kekule.ErrorCheck.BaseChecke
 });
 
 /**
- * Represent the checking result of {@link Kekule.ErrorCheck.AtomValenceChecker}.
+ * Represent the checking result of {@link Kekule.IssueCheck.AtomValenceChecker}.
  * @class
- * @augments Kekule.ErrorCheck.CheckResult
+ * @augments Kekule.IssueCheck.CheckResult
  */
-Kekule.ErrorCheck.AtomValenceChecker.Result = Class.create(Kekule.ErrorCheck.CheckResult,
-/** @lends Kekule.ErrorCheck.AtomValenceChecker.Result# */
+Kekule.IssueCheck.AtomValenceChecker.Result = Class.create(Kekule.IssueCheck.CheckResult,
+/** @lends Kekule.IssueCheck.AtomValenceChecker.Result# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.AtomValenceChecker.Result',
+	CLASS_NAME: 'Kekule.IssueCheck.AtomValenceChecker.Result',
 	/** @private */
 	DEF_ERROR_CODE: EC.ERROR_ATOM_VALENCE_ABNORMAL,
 	/** @ignore */
@@ -437,13 +437,13 @@ Kekule.ErrorCheck.AtomValenceChecker.Result = Class.create(Kekule.ErrorCheck.Che
 /**
  * The checker to check whether the order of bond is suitable.
  * @class
- * @augments Kekule.ErrorCheck.BaseChecker
+ * @augments Kekule.IssueCheck.BaseChecker
  */
-Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
-/** @lends Kekule.ErrorCheck.BondOrderChecker# */
+Kekule.IssueCheck.BondOrderChecker = Class.create(Kekule.IssueCheck.BaseChecker,
+/** @lends Kekule.IssueCheck.BondOrderChecker# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.BondOrderChecker',
+	CLASS_NAME: 'Kekule.IssueCheck.BondOrderChecker',
 	/** @ignore */
 	doApplicable: function(target, options)
 	{
@@ -479,7 +479,7 @@ Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
 			{
 				if (bondValence > maxOrder)   // error
 				{
-					return this._createReport(Kekule.ErrorCheck.BondOrderChecker.Result, EL.ERROR, EC.ERROR_BOND_ORDER_EXCEED,
+					return this._createReport(Kekule.IssueCheck.BondOrderChecker.Result, EL.ERROR, EC.ERROR_BOND_ORDER_EXCEED,
 						{'currOrder': bondValence, 'maxOrder': maxOrder}, [bond]);
 				}
 			}
@@ -511,15 +511,15 @@ Kekule.ErrorCheck.BondOrderChecker = Class.create(Kekule.ErrorCheck.BaseChecker,
 });
 
 /**
- * Represent the checking result of {@link Kekule.ErrorCheck.AtomValenceChecker}.
+ * Represent the checking result of {@link Kekule.IssueCheck.AtomValenceChecker}.
  * @class
- * @augments Kekule.ErrorCheck.CheckResult
+ * @augments Kekule.IssueCheck.CheckResult
  */
-Kekule.ErrorCheck.BondOrderChecker.Result = Class.create(Kekule.ErrorCheck.CheckResult,
-/** @lends Kekule.ErrorCheck.BondOrderChecker.Result# */
+Kekule.IssueCheck.BondOrderChecker.Result = Class.create(Kekule.IssueCheck.CheckResult,
+/** @lends Kekule.IssueCheck.BondOrderChecker.Result# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ErrorCheck.BondOrderChecker.Result',
+	CLASS_NAME: 'Kekule.IssueCheck.BondOrderChecker.Result',
 	/** @private */
 	DEF_ERROR_CODE: EC.ERROR_BOND_ORDER_EXCEED,
 	/** @ignore */
