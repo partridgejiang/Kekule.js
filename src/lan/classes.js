@@ -3259,9 +3259,18 @@ ObjectEx = Class.create(
 	 */
 	objectChange: function(modifiedPropNames)
 	{
+		var mprops = [].concat(modifiedPropNames);
 		this.doObjectChange(modifiedPropNames);
     if (this.getEnableObjectChangeEvent())
-		  this.invokeEvent('change', {'changedPropNames': modifiedPropNames});
+    {
+	    // filter out 'enableObjectChangeEvent' property, avoid invoke a event when it is set to true
+	    var i = mprops.indexOf('enableObjectChangeEvent');
+	    if (i >= 0)
+	    {
+		    mprops.splice(i, 1);
+	    }
+	    this.invokeEvent('change', {'changedPropNames': mprops});
+    }
 	},
 	/** @private */
 	doObjectChange: function(modifiedPropNames)
