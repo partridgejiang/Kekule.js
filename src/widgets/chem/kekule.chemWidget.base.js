@@ -54,6 +54,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	config: 'config',
 
 	objInspector: 'objInspector',
+	issueInspector: 'issueInspector',
 	undo: 'undo',
 	redo: 'redo',
 	copy: 'copy',

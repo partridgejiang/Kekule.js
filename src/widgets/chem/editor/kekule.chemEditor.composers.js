@@ -1022,7 +1022,8 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Bool} enableStyleToolbar
  * @property {Bool} enableObjModifierToolbar
  * @property {Array} allowedObjModifierCategories
- * @property {Bool} showInspector Whether show advanced object inspector and structure view.
+ * @property {Bool} showObjInspector Whether show advanced object inspector and structure view.
+ * @property {Bool} showIssueInspector Whether show error inspector panel.
  * @property {Bool} autoSetMinDimension
  *
  * @property {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
@@ -1095,6 +1096,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	doFinalize: function(/*$super*/)
 	{
 		//this.getPainter().finalize();
+		var issueInspector = this.getIssueInspector();
+		if (issueInspector)
+			issueInspector.finalize();
+		var structTreeView = this.getStructureTreeView();
+		if (structTreeView)
+			structTreeView.finalize();
+		var objInspector = this.getObjInspector();
+		if (objInspector)
+			objInspector.finalize();
 		var toolBar = this.getCommonBtnGroup();
 		if (toolBar)
 			toolBar.finalize();
@@ -1122,21 +1132,79 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				return result;
 			}
 		});
-		this.defineProp('showInspector', {'dataType': DataType.BOOL,
+		this.defineProp('autoSetMinDimension', {'dataType': DataType.BOOL});
+
+		this.defineProp('showObjInspector', {'dataType': DataType.BOOL,
+			'getter': function()
+			{
+				return (this.getAdvPanelDisplayedComponents() || []).indexOf('objInspector') >= 0;
+			},
 			'setter': function(value)
 			{
-				if (this.getShowInspector() !== value)
+				if (this.getShowObjInspector() !== value)
 				{
-					this.setPropStoreFieldValue('showInspector', value);
-					this.showInspectorChanged();
+					/*
+					this.setPropStoreFieldValue('showObjInspector', value);
+					this.showObjInspectorChanged();
+					*/
+					var comps = this.getAdvPanelDisplayedComponents() || [];
+					if (value)
+						//comps.push('objInspector');
+						comps = ['objInspector'];
+					else
+						comps = AU.exclude(comps, 'objInspector');
+					this.setAdvPanelDisplayedComponents(comps);
 				}
-			}});
-
-		this.defineProp('autoSetMinDimension', {'dataType': DataType.BOOL});
+			}
+		});
+		this.defineProp('showIssueInspector', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				return (this.getAdvPanelDisplayedComponents() || []).indexOf('issueInspector') >= 0;
+			},
+			'setter': function(value)
+			{
+				if (this.getShowIssueInspector() !== value)
+				{
+					var comps = this.getAdvPanelDisplayedComponents() || [];
+					if (value)
+						comps = ['issueInspector'];
+					else
+						comps = AU.exclude(comps, 'issueInspector');
+					this.setAdvPanelDisplayedComponents(comps);
+					if (value)  // when showing issue inspector
+					{
+						var editor = this.getEditor();
+						if (editor)
+						{
+							if (!editor.getEnableAutoIssueCheck())  // issue is not auto checked, manually do a check when opening the inspector
+								editor.checkIssues();
+							if (editor.getIssueCheckResults() && editor.getIssueCheckResults().length)  // has issues, deselect the selection to make the issue markers more clear
+								editor.deselectAll();
+						}
+					}
+				}
+			}
+		});
+		// for backward compatibility, alias of property showObjInspector
+		this.defineProp('showInspector', {'dataType': DataType.BOOL,
+			'getter': function() { return this.getShowObjInspector(); },
+			'setter': function(value) { this.setShowObjInspector(value); }
+		});
+		// private
+		this.defineProp('advPanelDisplayedComponents', {'dataType': DataType.ARRAY, 'serializable': false,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('advPanelDisplayedComponents', value);
+				this.updateAdvPanelDisplayedComponents(value);
+			}
+		});
 
 		// private property
 		this.defineProp('editorStageElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('advPanelElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('objInspectorHolderElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
+		this.defineProp('issueInspectorHolderElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('topRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('leftRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 		this.defineProp('bottomRegionElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
@@ -1144,6 +1212,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this.defineProp('editorNexus', {'dataType': 'Kekule.Editor.EditorNexus', 'serializable': false, 'setter': null});
 		this.defineProp('objInspector', {'dataType': 'Kekule.Widget.ObjectInspector', 'serializable': false, 'setter': null});
 		this.defineProp('structureTreeView', {'dataType': 'Kekule.ChemWidget.StructureTreeView', 'serializable': false, 'setter': null});
+		this.defineProp('issueInspector', {'dataType': 'Kekule.Editor.IssueInspector', 'serializable': false, 'setter': null});
 
 		// a private property, toolbar of common tasks (such as save/load)
 		this.defineProp('commonBtnGroup', {'dataType': 'Kekule.Widget.ButtonGroup', 'serializable': false});
@@ -1398,6 +1467,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this._defineEditorDelegatedProp('enableOperContext');
 		this._defineEditorDelegatedProp('enableCreateNewDoc');
 		this._defineEditorDelegatedProp('enableLoadNewFile');
+		this._defineEditorDelegatedProp('enableIssueCheck');
 		this._defineEditorDelegatedProp('initOnNewDoc');
 	},
 	/**
@@ -1482,6 +1552,10 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		result.push(elem);
 
 		elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_ADV_PANEL, 'advPanelElem');
+		{
+			this._doCreateSubElement(doc, elem, 'div', null, 'objInspectorHolderElem');
+			this._doCreateSubElement(doc, elem, 'div', null, 'issueInspectorHolderElem');
+		}
 		result.push(elem);
 
 		result.push(this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_TOP_REGION, 'topRegionElem'));
@@ -1494,7 +1568,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	_doCreateSubElement: function(doc, parentElem, tagName, htmlClass, propStoreFieldName)
 	{
 		var result = doc.createElement(tagName);
-		result.className = htmlClass;
+		if (htmlClass)
+			result.className = htmlClass;
 		if (parentElem)
 			parentElem.appendChild(result);
 		if (propStoreFieldName)
@@ -1826,7 +1901,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			var top = topRegionHeight, left = leftRegionWidth, bottom = bottomRegionHeight, right;
 
 			// calc right
-			if (!this.getShowInspector())
+			//if (!this.getShowObjInspector() && !this.getShowIssueInspector())
+			if (!(this.getAdvPanelDisplayedComponents() || []).length)
 				right = 0;
 			else
 			{
@@ -2012,19 +2088,34 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 	},
 
-	///////////////// methods about adv panel (objInspector and structureTreeView) /////
-	/** @private */
-	showInspectorChanged: function()
+	///////////////// methods about adv panel (objInspector, structureTreeView and issueInspector) /////
+	/**
+	 * Set which components (objInspector/issueInspector) or none should be displayed in adv panel.
+	 * @param {Array} component
+	 */
+	updateAdvPanelDisplayedComponents: function(components)
 	{
-		var display = this.getShowInspector();
-		if (display)
-		{
-			if (!this.getObjInspector())  // not created yet
-				this.createAdvControls();
-			this.showAdvPanel();
-		}
-		else
+		if (!components || !components.length)
 			this.hideAdvPanel();
+		else
+		{
+			var showObjInspector = components.indexOf('objInspector') >= 0;
+			var showIssueInspector = components.indexOf('issueInspector') >= 0;
+
+			if (showObjInspector || showIssueInspector)
+			{
+				if (showObjInspector && !this.getObjInspector())
+					this._createObjInspectorControls();
+				if (showIssueInspector && !this.getIssueInspector())
+					this._createIssueInspectorControls();
+
+				this.getObjInspectorHolderElem().style.display = showObjInspector ? 'block' : 'none';
+				this.getIssueInspectorHolderElem().style.display = showIssueInspector ? 'block' : 'none';
+				this.showAdvPanel();
+			}
+			else
+				this.hideAdvPanel();
+		}
 		this.uiLayoutChanged();
 	},
 
@@ -2032,28 +2123,53 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 * Create object inspector and structure tree view.
 	 * @private
 	 */
-	createAdvControls: function(parentElem)
+	_createObjInspectorControls: function(parentElem)
 	{
+		/*
 		if (!parentElem)
 			parentElem = this.getAdvPanelElem();
+		*/
+		if (!parentElem)
+			parentElem = this.getObjInspectorHolderElem();
 
 		var doc = this.getDocument();
 
 		var treeView = new Kekule.ChemWidget.StructureTreeView(doc);
 		treeView.setItemInitialExpanded(true);
 		treeView.appendToElem(parentElem);
+		treeView.setParent(this);
 		//treeView.setRootObj(chemEditor.getChemObj());
 		this.setPropStoreFieldValue('structureTreeView', treeView);
 
 		var objInspector = new Kekule.Widget.ObjectInspector(doc);
 		objInspector.setShowPropInfoPanel(false);
 		objInspector.appendToElem(parentElem);
+		objInspector.setParent(this);
 		this.setPropStoreFieldValue('objInspector', objInspector);
 
 		var nexus = this.getEditorNexus();
 		nexus.setObjectInspector(objInspector);
 		nexus.setStructureTreeView(treeView);
 	},
+	/**
+	 * Create error inspector.
+	 * @private
+	 */
+	_createIssueInspectorControls: function(parentElem)
+	{
+		if (!parentElem)
+			parentElem = this.getIssueInspectorHolderElem();
+
+		var doc = this.getDocument();
+		var issueInspector = new Kekule.Editor.IssueInspector(doc);
+		issueInspector.appendToElem(parentElem);
+		issueInspector.setParent(this);
+		this.setPropStoreFieldValue('issueInspector', issueInspector);
+
+		var nexus = this.getEditorNexus();
+		nexus.setIssueInspector(issueInspector);
+	},
+
 	/** @private */
 	showAdvPanel: function()
 	{
@@ -2255,8 +2371,8 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			//console.log(action.getClassName(), preferredWidgetClass);
 			var btnClass =
 					preferredWidgetClass? preferredWidgetClass:
-					(btnNameOrHash === BNS.objInspector) ? Kekule.Widget.CheckButton :
-					(!!checkGroup) ? Kekule.Widget.RadioButton :
+					(btnNameOrHash === BNS.objInspector || btnNameOrHash === BNS.issueInspector) ? Kekule.Widget.CheckButton :
+						(!!checkGroup) ? Kekule.Widget.RadioButton :
 					Kekule.Widget.Button;
 			result = new btnClass(parentGroup);
 		}
@@ -3016,6 +3132,7 @@ Kekule.Editor.Composer.Settings = Class.create(Kekule.Widget.BaseWidget.Settings
 		//this.defineProp('composer', {'dataType': 'Kekule.Editor.Composer', 'serializable': false, 'scope': PS.PUBLIC});
 		this.defineDelegatedProps([
 			'enableCreateNewDoc', 'enableLoadNewFile', 'initOnNewDoc', 'enableOperHistory', 'allowCreateNewChild', 'allowAppendDataToCurr',
+			'enableIssueCheck',
 			'enableStyleToolbar', 'enableObjModifierToolbar'
 		]);
 	}

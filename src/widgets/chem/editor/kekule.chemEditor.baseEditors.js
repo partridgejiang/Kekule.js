@@ -6,6 +6,7 @@
 
 /*
  * requires /lan/classes.js
+ * requires /chemDoc/issueCheckers/kekule.issueCheckers.js
  * requires /widgets/operation/kekule.operations.js
  * requires /render/kekule.render.base.js
  * requires /render/kekule.render.boundInfoRecorder.js
@@ -223,6 +224,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._objChanged = false;   // used internally, mark whether some changes has been made to chem object
 		this._lengthCaches = {};  // used internally, stores some value related to distance and length
 
+		this.setPropStoreFieldValue('enableIssueCheck', true);
 		this.setPropStoreFieldValue('enableCreateNewDoc', true);
 		this.setPropStoreFieldValue('enableOperHistory', true);
 		this.setPropStoreFieldValue('enableOperContext', true);
@@ -422,6 +424,49 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 
+		this.defineProp('issueCheckExecutor', {'dataType': 'Kekule.IssueCheck.Executor', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('issueCheckExecutor');
+				if (!result)  // create default executor
+				{
+					result = new Kekule.IssueCheck.Executor();
+					var self = this;
+					result.addEventListener('execute', function(e){
+						self.setIssueCheckResults(e.checkResults);
+					});
+					this.setPropStoreFieldValue('issueCheckExecutor', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('enableIssueCheck', {'dataType': DataType.BOOL,
+			'getter': function() { return this.getIssueCheckExecutor().getEnabled(); },
+			'setter': function(value) { this.getIssueCheckExecutor().setEnabled(!!value); }
+		});
+		this.defineProp('enableAutoIssueCheck', {'dataType': DataType.BOOL});
+		this.defineProp('issueCheckResults', {'dataType': DataType.ARRAY, 'serializable': false,
+			'setter': function(value)
+			{
+				var oldActive = this.getActiveIssueCheckResult();
+				this.setPropStoreFieldValue('issueCheckResults', value);
+				if (oldActive && (value || []).indexOf(oldActive) < 0)
+					this.setPropStoreFieldValue('activeIssueCheckResult', null);
+				this.issueCheckResultsChanged();
+			}
+		});
+		this.defineProp('activeIssueCheckResult', {'dataType': DataType.OBJECT, 'serializable': false,
+			'setter': function(value)
+			{
+				if (this.getActiveIssueCheckResult() !== value)
+				{
+					this.setPropStoreFieldValue('activeIssueCheckResult', value);
+					this.issueCheckResultsChanged();
+				}
+			}
+		});
+		this.defineProp('enableAutoScrollToActiveIssue', {'dataType': DataType.BOOL});
+
 		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -584,6 +629,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._defineUiMarkerProp('uiHotTrackMarker');
 		this._defineUiMarkerProp('uiSelectionAreaMarker');   // marker of selected range
 		this._defineUiMarkerProp('uiSelectingMarker');   // marker of selecting rubber band
+		this._defineIssueCheckUiMarkerGroupProps();   // error check marker group
 
 		this.defineProp('uiSelectionAreaContainerBox',
 			{'dataType': DataType.Object, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
@@ -612,14 +658,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setOperationsInCurrManipulation([]);
+		this.setEnableAutoIssueCheck(!false);
+		this.setEnableAutoScrollToActiveIssue(true);
 	},
-
-	/** @ignore */
-	elementBound: function(element)
-	{
-		this.setObserveElemResize(true);
-	},
-
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
 	{
@@ -649,6 +690,46 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 	},
 	/** @private */
+	_defineIssueCheckUiMarkerGroupProps: function(uiMarkerCollection)
+	{
+		var EL = Kekule.ErrorLevel;
+		var getSubPropName = function(baseName, errorLevel)
+		{
+			return baseName + '_' + EL.levelToString(errorLevel);
+		};
+		var baseName = 'issueCheckUiMarker';
+		var errorLevels = [EL.ERROR, EL.WARNING, EL.NOTE, EL.LOG];
+		for (var i = 0, l = errorLevels.length; i < l; ++i)
+		{
+			var pname = getSubPropName(baseName, errorLevels[i]);
+			this._defineUiMarkerProp(pname, uiMarkerCollection);
+		}
+		this._defineUiMarkerProp(baseName + '_active', uiMarkerCollection);  // 'active' is special marker to mark the selected issue objects
+
+		// define getter/setter method for group
+		this['get' + baseName.upperFirst()] = function(level){
+			var p = getSubPropName(baseName, level);
+			return this.getPropValue(p);
+		};
+		this['set' + baseName.upperFirst()] = function(level, value){
+			var p = getSubPropName(baseName, level);
+			return this.setPropValue(p, value);
+		};
+		this['getActive' + baseName.upperFirst()] = function()
+		{
+			return this.getPropValue(baseName + '_active');
+		};
+		this['getAll' + baseName.upperFirst() + 's'] = function(){
+			var result = [];
+			for (var i = 0, l = errorLevels.length; i < l; ++i)
+			{
+				result.push(this.getIssueCheckUiMarker(errorLevels[i]));
+			}
+			return result;
+		}
+	},
+
+	/** @private */
 	doFinalize: function(/*$super*/)
 	{
 		var h = this.getPropStoreFieldValue('operHistory');
@@ -677,7 +758,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (m)
 			m.finalize();
 		this.setPropStoreFieldValue('objRendererMap', null);
+
+		var e = this.getPropStoreFieldValue('issueCheckExecutor');
+		if (e)
+			e.finalize();
+		this.setPropStoreFieldValue('issueCheckExecutor', null);
+
 		this.tryApplySuper('doFinalize')  /* $super() */;
+	},
+
+	/** @ignore */
+	elementBound: function(element)
+	{
+		this.setObserveElemResize(true);
 	},
 
 	/**
@@ -1069,6 +1162,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getOperHistory().clear();
 		this.tryApplySuper('doLoad', [chemObj])  /* $super(chemObj) */;
 		this._objChanged = false;
+
+		// clear issue results
+		this.setIssueCheckResults(null);
+		this.requestAutoCheckIssuesIfNecessary();
 	},
 
 	/** @private */
@@ -1634,6 +1731,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		else
 		{
+			this.requestAutoCheckIssuesIfNecessary();
+
 			//console.log('object changed');
 			var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(a);
 			this.doObjectsChanged(a, updateObjs);
@@ -1736,6 +1835,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			this._objectManipulateFlag = 0;
 			this.doManipulationEnd();
+			this.requestAutoCheckIssuesIfNecessary();
 			//console.log('[MANIPULATE DONE]');
 			//this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
 		}
@@ -2336,6 +2436,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			this.recalcHotTrackMarker();
 			this.recalcSelectionAreaMarker();
+			this.recalcIssueCheckUiMarkers();
 		}
 		finally
 		{
@@ -2574,6 +2675,185 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	recalcHotTrackMarker: function()
 	{
 		this.setHotTrackedObjs(this.getHotTrackedObjs());
+	},
+
+	// methods about error checking marker
+	/** @private */
+	issueCheckResultsChanged: function()
+	{
+		this.recalcIssueCheckUiMarkers();
+		var activeIssueResult = this.getActiveIssueCheckResult();
+		if (activeIssueResult && this.getEnableAutoScrollToActiveIssue()) // need to auto scroll to active issue objects?
+		{
+			var targets = activeIssueResult.getTargets();
+			if (targets && targets.length)
+			{
+				var objs = this._getExposedSelfOrParentObjs(targets);
+				if (objs && objs.length)
+				{
+					var interState = this.getObjectsBoxAndClientBoxRelation(objs);
+					if (interState !== Kekule.IntersectionState.CONTAINED)
+						this.scrollClientToObject(objs);
+				}
+			}
+		}
+	},
+	/** @private */
+	recalcIssueCheckUiMarkers: function()
+	{
+		this.beginUpdateUiMarkers();
+		try
+		{
+			var checkResults = this.getIssueCheckResults() || [];
+			if (!checkResults.length)
+				this.hideIssueCheckUiMarkers();
+			else
+			{
+				var activeResult = this.getActiveIssueCheckResult();
+				// hide or show active marker
+				this.getActiveIssueCheckUiMarker().setVisible(!!activeResult);
+
+				var issueObjGroup = this._groupUpIssueObjects(checkResults, activeResult, true);  // only returns exposed objs in editor
+				//var boundGroup = {};
+				var inflation = this.getEditorConfigs().getInteractionConfigs().getSelectionMarkerInflation();
+					// TODO: the inflation of issue markers are now borrowed from selection markers
+				var levels = Kekule.ErrorLevel.getAllLevels();
+				var groupKeys = levels.concat('active');  // Kekule.ObjUtils.getOwnedFieldNames(issueObjGroup);
+				for (var i = 0, ii = groupKeys.length; i < ii; ++i)
+				{
+					var currBounds = [];
+					var key = groupKeys[i];
+					var group = issueObjGroup[key];
+					var errorLevel = group? group.level: key;
+					if (group)
+					{
+						var isActive = key === 'active';
+						//var sKeyName = Kekule.ErrorLevel.levelToString(group.level);
+						// form the marker style
+						// ...
+						var objs = group.objs;
+						for (var j = 0, jj = objs.length; j < jj; ++j)
+						{
+							var obj = objs[j];
+							var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getObjContext(), obj);
+							for (var k = 0, kk = infos.length; k < kk; ++k)
+							{
+								var info = infos[k];
+								var bound = info.boundInfo;
+								if (bound)
+								{
+									// inflate
+									bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, inflation);
+									currBounds.push(bound);
+								}
+							}
+						}
+					}
+					this.changeIssueCheckUiMarkerBound(errorLevel, currBounds, isActive);
+				}
+			}
+		}
+		finally
+		{
+			this.endUpdateUiMarkers();
+		}
+	},
+	/** @private */
+	changeIssueCheckUiMarkerBound: function(issueLevel, bounds, isActive)
+	{
+		var marker = isActive? this.getActiveIssueCheckUiMarker(): this.getIssueCheckUiMarker(issueLevel);
+		if (marker)
+		{
+			//console.log(issueLevel, marker, bounds.length);
+			if (bounds && bounds.length)
+			{
+				var levelName = Kekule.ErrorLevel.levelToString(issueLevel);
+				var configs = this.getEditorConfigs().getUiMarkerConfigs();
+				var styleConfigs = configs.getIssueCheckMarkerStyles()[levelName];
+				var drawStyles = {
+					'strokeColor': isActive ? styleConfigs.activeStokeColor : styleConfigs.strokeColor,
+					'strokeWidth': isActive ? configs.getIssueCheckActiveMarkerStrokeWidth() : configs.getIssueCheckMarkerStrokeWidth(),
+					'fillColor': isActive ? styleConfigs.activeFillColor : styleConfigs.fillColor,
+					'opacity': isActive ? configs.getIssueCheckActiveMarkerOpacity() : configs.getIssueCheckMarkerOpacity()
+				};
+				//console.log(drawStyles);
+				marker.setVisible(true);
+				this.modifyShapeBasedMarker(marker, bounds, drawStyles, true);
+			}
+			else
+				marker.setVisible(false);
+		}
+		return this;
+	},
+	/** @private */
+	_getExposedSelfOrParentObjs: function(objs)
+	{
+		var result = [];
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			var obj = objs[i];
+			if (!obj.isExposed || obj.isExposed())
+				result.push(obj);
+			else if (obj.getExposedAncestor)
+			{
+				var ancestor = obj.getExposedAncestor();
+				if (ancestor)
+					result.push(ancestor);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_groupUpIssueObjects: function(checkResults, activeResult, requireExposing)
+	{
+		var result = {};
+		for (var i = 0, l = checkResults.length; i < l; ++i)
+		{
+			var r = checkResults[i];
+			var objs = r.getTargets();
+			var level = r.getLevel();
+			if (activeResult && r === activeResult)
+			{
+				result['active'] = {
+					'level': level,
+					'objs': requireExposing? this._getExposedSelfOrParentObjs(objs): objs
+				};
+			}
+			else
+			{
+				if (!result[level])
+					result[level] = {'level': level, 'objs': []};
+				result[level].objs = result[level].objs.concat(requireExposing ? this._getExposedSelfOrParentObjs(objs) : objs);
+			}
+		}
+
+		// different error levels have different priorities, a object in higher level need not to be marked in lower level
+		var EL = Kekule.ErrorLevel;
+		var priorities = [EL.LOG, EL.NOTE, EL.WARNING, EL.ERROR, 'active'];
+		for (var i = 0, l = priorities.length; i < l; ++i)
+		{
+			var currPriotyObjs = result[i] && result[i].objs;
+			if (currPriotyObjs)
+			{
+				for (var j = i + 1, k = priorities.length; j < k; ++j)
+				{
+					var highPriotyObjs = result[j] && result[j].objs;
+					if (highPriotyObjs)
+					{
+						var filteredObjs = AU.exclude(currPriotyObjs, highPriotyObjs);
+						result[i].objs = filteredObjs;
+					}
+				}
+			}
+		}
+		return result;
+	},
+	/** @private */
+	hideIssueCheckUiMarkers: function()
+	{
+		var markers = this.getAllIssueCheckUiMarkers() || [];
+		for (var i = 0, l = markers.length; i < l; ++i)
+			this.hideUiMarker(markers[i]);
 	},
 
 	// methods about selecting marker
@@ -3249,7 +3529,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var selOps = this.getObjSelectedRenderOptions();
 		if (selOps)
 		{
-			//console.log('_addSelectRenderOptions', chemObj);
+			//console.log('_addSelectRenderOptions', chemObj, selOps);
 			var method = this._getObjRenderOptionItemAppendMethod(chemObj);
 			//if (!method)
 			//console.log(chemObj.getClassName());
@@ -3553,6 +3833,41 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// TODO: unfinished
 	},
 
+	/** @private */
+	requestAutoCheckIssuesIfNecessary: function()
+	{
+		if (this.getEnableAutoIssueCheck())
+			this._tryCheckIssueOnIdle();
+	},
+	/**
+	 * Check issues when not updating/manipulating objects in editor.
+	 * @private
+	 */
+	_tryCheckIssueOnIdle: function() {
+		if (!this.isUpdatingObject() && !this.isManipulatingObject())
+		{
+			return this.checkIssues();
+		}
+		else
+			return null;
+	},
+	/**
+	 * Check potential issues for objects in editor.
+	 * @param {Kekule.ChemObject} rootObj Root object to check. If this param is ommited, all objects in editor will be checked.
+	 * @returns {Array} Array of error check report result.
+	 */
+	checkIssues: function(rootObj)
+	{
+		var result = null;
+		var root = rootObj || this.getChemObj();
+		if (root && this.getEnableIssueCheck())
+		{
+			var checkExecutor = this.getIssueCheckExecutor(true);
+			result = checkExecutor.execute(root);
+		}
+		return result;
+	},
+
 	/**
 	 * Get all objects interset a polyline defined by a set of screen coords.
 	 * Here Object partial in the polyline width range will also be put in result.
@@ -3736,6 +4051,22 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		return containerBox;
 	},
+
+	/**
+	 * Returns the intersection state of object container box and editor client box.
+	 * @param {Array} objs
+	 * @returns {Int} Value from {@link Kekule.IntersectionState}
+	 */
+	getObjectsBoxAndClientBoxRelation: function(objs)
+	{
+		var containerBox = this.getObjectsContainerBox(objs);
+		if (containerBox)
+		{
+			var editorBox = this.getVisibleClientScreenBox();
+			return Kekule.BoxUtils.getIntersectionState(containerBox, editorBox);
+		}
+	},
+
 	/**
 	 * Returns container box (in screen coord system) that contains all objects in selection.
 	 * @param {Number} objBoundInflation
@@ -3755,12 +4086,15 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var selectionBox = this.getSelectionContainerBox();
 		if (selectionBox)
 		{
+			/*
 			var editorDim = this.getClientDimension();
 			var editorOffset = this.getClientScrollPosition();
 			var editorBox = {
 				'x1': editorOffset.x, 'y1': editorOffset.y,
 				'x2': editorOffset.x + editorDim.width, 'y2': editorOffset.y + editorDim.height
 			};
+			*/
+			var editorBox = this.getVisibleClientScreenBox();
 			//console.log(selectionBox, editorBox, Kekule.BoxUtils.getIntersection(selectionBox, editorBox));
 			return Kekule.BoxUtils.hasIntersection(selectionBox, editorBox);
 		}
@@ -4922,6 +5256,10 @@ Kekule.Editor.BaseEditor.Settings = Class.create(Kekule.ChemWidget.ChemObjDispla
 		this.defineProp('enableOperHistory', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function() { return this.getEditor().getEnableOperHistory(); },
 			'setter': function(value) { this.getEditor().setEnableOperHistory(value); }
+		});
+		this.defineProp('enableIssueCheck', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getEditor().getEnableIssueCheck(); },
+			'setter': function(value) { this.getEditor().setEnableIssueCheck(value); }
 		});
 	},
 	/** @private */

@@ -266,6 +266,82 @@
     /*height: 30em;*/
 }
 
+.K-Chem-CheckResultListView
+{
+    padding: 0;
+}
+
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item
+{
+    display: block;
+    padding: 0.2em 0.5em;
+    margin: 0;
+    border-bottom: 1px solid;
+    background-repeat: no-repeat;
+    background-position-x: 4px;
+    background-position-y: center;
+}
+
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-ItemBody
+{
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 0.3em;
+}
+
+.K-Chem-IssueInspector
+{
+    /* initial size */
+    width: 20em;
+    height: 30em;
+    overflow: hidden;
+}
+.K-Chem-IssueInspector .K-Chem-IssueInspector-SubPart
+{
+    margin: 0;
+}
+.K-Chem-IssueInspector .K-Chem-IssueInspector-ToolPanel
+{
+    padding: 0.2em;
+    /*height: 2.8em;*/
+}
+.K-Chem-IssueInspector .K-Chem-IssueInspector-ListPanel
+{
+    position: absolute;
+    /*top: 2.8em;*/
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+.K-Chem-IssueInspector .K-Chem-CheckResultListView
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout
+{
+    display: inline-flex;
+    width: auto;
+    height: auto;
+    flex-direction: column;
+}
+.K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout .K-Chem-IssueInspector-ToolPanel
+{
+    height: auto;
+    flex: 0 0 auto;
+}
+.K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout .K-Chem-IssueInspector-ListPanel
+{
+    position: relative;
+    top: auto;
+    flex: 1 1 auto;
+}
+
+
 .K-Chem-StructureNodeSelectPanel .K-TabView
 {
 
@@ -870,6 +946,17 @@
 .K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-ObjInspector .K-ValueListEditor-KeyCell
 {
     width: 10em;
+}
+
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-IssueInspector
+{
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .K-Chem-Composer-Modifier-RichText-Panel
