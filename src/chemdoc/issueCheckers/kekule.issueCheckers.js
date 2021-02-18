@@ -45,6 +45,12 @@ var EC = Kekule.IssueCheck.IssueCode;
  * @property {Array} checkers Concrete checkers.
  * @property {Bool} enabled If false, call the execute() method of executor will do nothing.
  */
+/**
+ * Invoked after do a checking process.
+ *   event param of it has field: {checkResults}
+ * @name Kekule.IssueCheck.Executor#execute
+ * @event
+ */
 Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 /** @lends Kekule.IssueCheck.Executor# */
 {
@@ -120,6 +126,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 
 			}
 		}
+		this.invokeEvent('execute', {'checkResults': result});
 		var endTime = Date.now();
 		console.log('consume', endTime - startTime, 'ms');
 		return result;
