@@ -117,14 +117,14 @@ Kekule.$jsRoot = this;
 if (typeof(self) === 'object')
 	Kekule.$jsRoot = self;
 else if (typeof(window) === 'object' && window && window.document)
-{
 	Kekule.$jsRoot = window;
-	Kekule.window = window;
-}
 else if (typeof(global) === 'object')  // node env
 	Kekule.$jsRoot = global;
 
 Kekule.$jsRoot.Kekule = Kekule;
+
+if (typeof(window) === 'object' && window && window.document)
+	Kekule.window = window;
 
 /**
  * Root document of JavaScript environment.
