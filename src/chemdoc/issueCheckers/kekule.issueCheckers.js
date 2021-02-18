@@ -105,7 +105,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 			if (allCheckers[i].getEnabled())
 				checkers.push(allCheckers[i]);
 		}
-		this._getAllObjsNeedCheck(target, checkers, regMap, op);
+		this._getAllObjsNeedCheck(target, target, checkers, regMap, op);
 		// second phrase, do the concrete check of all checkers
 		var result = [];
 		for (var i = 0, l = checkers.length; i < l; ++i)
@@ -116,7 +116,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 				var objs = regMap.get(checker);
 				if (objs && objs.length)
 				{
-					var reportItems = checker.check(objs, op);
+					var reportItems = checker.check(objs, target, op);
 					if (reportItems && reportItems.length)
 						result = result.concat(reportItems);
 				}
@@ -159,20 +159,20 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 		return actualObjs.length? checker.check(objects, options || {}): null;
 	},
 	/** @private */
-	_getAllObjsNeedCheck: function(root, checkers, regMap, options)
+	_getAllObjsNeedCheck: function(root, parent, checkers, regMap, options)
 	{
 		var checkUnexposed = !this.getIgnoreUnexposedObjs();
 		if (this._isObjExposed(root) || checkUnexposed)
 		{
-			for (var i = 0, l = root.getChildCount(); i < l; ++i)
+			for (var i = 0, l = parent.getChildCount(); i < l; ++i)
 			{
-				var child = root.getChildAt(i);
+				var child = parent.getChildAt(i);
 				if (this._isObjExposed(child) || checkUnexposed)
 				{
 					for (var j = 0, k = checkers.length; j < k; ++j)
 					{
 						var checker = checkers[j];
-						if (checker.applicable(child, options))
+						if (checker.applicable(child, root, options))
 						{
 							var regObjs = regMap.get(checker);
 							if (!regObjs)
@@ -185,7 +185,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 						}
 					}
 					// iterate child's children
-					this._getAllObjsNeedCheck(child, checkers, regMap, options);
+					this._getAllObjsNeedCheck(root, child, checkers, regMap, options);
 				}
 			}
 		}
@@ -309,21 +309,23 @@ Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 	/**
 	 * Check whether this checker can be applied to target object.
 	 * @param {Kekule.ChemObject} target
+	 * @param {Kekule.ChemObject} rootObj
 	 * @param {Hash} options
 	 * @returns {Bool}
 	 */
-	applicable: function(target, options)
+	applicable: function(target, rootObj, options)
 	{
-		return this.doApplicable(target, options || {});
+		return this.doApplicable(target, rootObj, options || {});
 	},
 	/**
 	 * Do actual work of {@link Kekule.IssueCheck.BaseChecker.applicable}
 	 * Desendants should override this method.
 	 * @param {Kekule.ChemObject} target
+	 * @param {Kekule.ChemObject} rootObj
 	 * @param {Hash} options
 	 * @returns {Bool}
 	 */
-	doApplicable: function(target, options)
+	doApplicable: function(target, rootObj, options)
 	{
 		return false;
 	},
@@ -331,21 +333,23 @@ Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 	 * Check on a series of target objects.
 	 * Note the targets are all passed the detection and all be applicable.
 	 * @param {Array} targets
+	 * @param {Kekule.ChemObject} rootObj
 	 * @param {Hash} options
 	 * @returns {Array} Report items.
 	 */
-	check: function(targets, options)
+	check: function(targets, rootObj, options)
 	{
-		return this.doCheck(targets, options || {});
+		return this.doCheck(targets, rootObj, options || {});
 	},
 	/**
 	 * Do actual work of {@link Kekule.IssueCheck.BaseChecker.check}.
 	 * Descendants should override this method.
 	 * @param {Array} targets
+	 * @param {Kekule.ChemObject} rootObj
 	 * @param {Hash} options
 	 * @returns {Array} Report items.
 	 */
-	doCheck: function(targets, options)
+	doCheck: function(targets, rootObj, options)
 	{
 		return [];
 	}
@@ -367,12 +371,12 @@ Kekule.IssueCheck.AtomValenceChecker = Class.create(Kekule.IssueCheck.BaseChecke
 		this.tryApplySuper('initialize');
 	},
 	/** @ignore */
-	doApplicable: function(target, options)
+	doApplicable: function(target, rootObj, options)
 	{
 		return (target instanceof Kekule.Atom) && (target.isNormalAtom());
 	},
 	/** @ignore */
-	doCheck: function(targets, options)
+	doCheck: function(targets, rootObj, options)
 	{
 		var result = [];
 		for (var i = 0, l = targets.length; i < l; ++i)
@@ -452,12 +456,12 @@ Kekule.IssueCheck.BondOrderChecker = Class.create(Kekule.IssueCheck.BaseChecker,
 	/** @private */
 	CLASS_NAME: 'Kekule.IssueCheck.BondOrderChecker',
 	/** @ignore */
-	doApplicable: function(target, options)
+	doApplicable: function(target, rootObj, options)
 	{
 		return (target instanceof Kekule.Bond) && target.isCovalentBond();
 	},
 	/** @ignore */
-	doCheck: function(targets, options)
+	doCheck: function(targets, rootObj, options)
 	{
 		var result = [];
 		for (var i = 0, l = targets.length; i < l; ++i)
