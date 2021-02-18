@@ -63,7 +63,29 @@ Kekule.ExceptionLevel = {
 	/** Minor exception, user usually need not to know about it. */
 	NOTE: -3,
 	/** Log message, just for debug use. */
-	LOG: -4
+	LOG: -4,
+	/**
+	 * Returns all excpetion level values.
+	 * @returns {Array}
+	 */
+	getAllLevels: function()
+	{
+		var EL = Kekule.ExceptionLevel;
+		return [EL.ERROR, EL.WARNING, EL.NOTE, EL.LOG];
+	},
+	/**
+	 * Returns a string identity for exception level.
+	 * @param {Int} level
+	 * @returns {String}
+	 */
+	levelToString: function(level)
+	{
+		var EL = Kekule.ExceptionLevel;
+		return (level === EL.ERROR)? 'error':
+			(level === EL.WARNING)? 'warning':
+			(level === EL.NOTE)? 'note':
+			'log';
+	}
 };
 /**
  * Error level, alias of ExceptionLevel
