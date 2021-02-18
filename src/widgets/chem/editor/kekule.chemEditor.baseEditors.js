@@ -5419,6 +5419,26 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Editor.BaseEditorBase
 			}
 		});  // private
 	},
+
+	/**
+	 * Call the beginManipulateObjects method of editor.
+	 * @private
+	 */
+	notifyEditorBeginManipulateObjects: function()
+	{
+		var editor = this.getEditor();
+		editor.beginManipulateObject();
+	},
+	/**
+	 * Call the endManipulateObjects method of editor.
+	 * @private
+	 */
+	notifyEditorEndManipulateObjects: function()
+	{
+		var editor = this.getEditor();
+		editor.endManipulateObject();
+	},
+
 	/** @private */
 	getInteractionBoundInflation: function(pointerType)
 	{
@@ -6453,7 +6473,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
-		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
+		this._runManipulationStepId = Kekule.window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
 
@@ -7089,6 +7109,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 */
 	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord)
 	{
+		this.manipulateBegin();
 		var objs = Kekule.ArrayUtils.toArray(objOrObjs);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.MANIPULATING);
 		this.setBaseCoord(startCoord);
@@ -7127,6 +7148,15 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	},
 
 	/**
+	 * Called when a manipulation is beginning (usually with point down event).
+	 * Descendants may override this method.
+	 * @private
+	 */
+	manipulateBegin: function()
+	{
+		this.notifyEditorBeginManipulateObjects();
+	},
+	/**
 	 * Called when a manipulation is ended (stopped or cancelled).
 	 * Descendants may override this method.
 	 * @private
@@ -7135,12 +7165,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		if (this._runManipulationStepId)
 		{
-			window.cancelAnimationFrame(this._runManipulationStepId);
+			Kekule.window.cancelAnimationFrame(this._runManipulationStepId);
 			this._runManipulationStepId = null;
 		}
 		this.doManipulateObjectsEnd(this.getManipulateObjs());
-		var editor = this.getEditor();
-		editor.endManipulateObject();
+		this.notifyEditorEndManipulateObjects();
 		this._lastTransformParams = null;
 		this.setIsOffsetManipulating(false);
 
@@ -7347,7 +7376,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		//console.log('off selection!');
 		this.setIsOffsetManipulating(true);
-		this.beginManipulation(currCoord, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE);
+		this.startManipulation(currCoord, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.MOVE);
 		this.getEditor().pulseSelectionAreaMarker();  // pulse selection, reach the user's attention
 	},
 
@@ -7357,7 +7386,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	 * @param {Hash} currCoord Current coord of pointer (mouse or touch)
 	 * @param {Object} e Pointer (mouse or touch) event parameter.
 	 */
-	beginManipulation: function(currCoord, e, explicitManipulationType)
+	startManipulation: function(currCoord, e, explicitManipulationType)
 	{
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
@@ -7367,8 +7396,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		if (e)
 			this.setManipulationPointerType(e && e.pointerType);
 
-		var editor = this.getEditor();
-		editor.beginManipulateObject();
+		this.manipulateBegin();
 
 		this.setBaseCoord(currCoord);
 		this.setStartCoord(currCoord);
@@ -7535,7 +7563,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this._lastTimeStamp = timeStamp;
 		*/
 
-		this._runManipulationStepId = window.requestAnimationFrame(this.execManipulationStepBind);
+		this._runManipulationStepId = Kekule.window.requestAnimationFrame(this.execManipulationStepBind);
 	},
 	/**
 	 * Do actual manipulation based on mouse/touch move step.
@@ -7700,7 +7728,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				var beginNormalManipulation = function(){
 					if (self.getState() === S.NORMAL)
 					{
-						self.beginManipulation(coord, e);
+						self.startManipulation(coord, e);
 						e.preventDefault();
 					}
 				};
@@ -7852,7 +7880,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				};
 				// start a brand new one
 				if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
-					this.beginManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+					this.startManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
 				else
 				{
 					if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
