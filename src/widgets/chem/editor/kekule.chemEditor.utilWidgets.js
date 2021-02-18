@@ -916,7 +916,6 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 					if (this.getEnableHydrogenCountInput())
 					{
 						var infoWithExplicitH = this._getNodeWithExplicitHInfo(isotopeId);
-						//console.log(infoWithExplicitH);
 						if (infoWithExplicitH.explicitHCount)  // may be in form like NH2, with explicit H
 						{
 							nodeClass = Kekule.ChemStructureNodeFactory.getClassByLabel(infoWithExplicitH.core, null);  // try get class with core part of input
@@ -1004,7 +1003,10 @@ Kekule.ChemWidget.StructureNodeSetter = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	_getAllNodeLabels: function(nodes)
 	{
-		return Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getLabelConfigs());
+		var options = {};
+		if (this.getEnableHydrogenCountInput())
+			options.includeExplicitHydrogens = true;
+		return Kekule.Editor.StructureUtils.getAllChemStructureNodesLabel(nodes, this.getLabelConfigs(), options);
 		/*
 		var nodeLabel;
 		for (var i = 0, l = nodes.length; i < l; ++i)
