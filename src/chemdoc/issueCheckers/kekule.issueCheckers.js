@@ -29,8 +29,8 @@ Kekule.IssueCheck = {};
  */
 Kekule.IssueCheck.IssueCode = {
 	ERROR_UNKNOWN: 0,
-	ERROR_ATOM_VALENCE_ABNORMAL: 101,
-	ERROR_BOND_ORDER_EXCEED: 201
+	ERROR_ATOM_VALENCE_ABNORMAL: 1101,
+	ERROR_BOND_ORDER_EXCEED: 1201
 };
 
 var EC = Kekule.IssueCheck.IssueCode;
