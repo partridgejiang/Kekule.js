@@ -118,6 +118,8 @@ Kekule.Editor.SelectMode = {
  * @property {Bool} enableAutoIssueCheck Whether the issue checking is automatically executed when objects changing in editor.
  * @property {Array} issueCheckResults Array of {@link Kekule.IssueCheck.CheckResult}, results of auto or manual check.
  * @property {Kekule.IssueCheck.CheckResult} activeIssueCheckResult Current selected issue check result in issue inspector.
+ * @property {Bool} showAllIssueMarkers Whether all issue markers shouled be marked in editor.
+ *   Note, the active issue will always be marked.
  * @property {Bool} enableAutoScrollToActiveIssue Whether the editor will automatically scroll to the issue object when selecting in issue inspector.
  * @property {Bool} enableOperContext If this property is set to true, object being modified will be drawn in a
  *   separate context to accelerate the interface refreshing.
@@ -368,7 +370,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 		// private, whether defaultly select in toggle mode
 		this.defineProp('isToggleSelectOn', {'dataType': DataType.BOOL});
-		
+
 		this.defineProp('hotTrackedObjs', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
 			{
@@ -475,6 +477,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			}
 		});
 		this.defineProp('enableAutoScrollToActiveIssue', {'dataType': DataType.BOOL});
+		this.defineProp('showAllIssueMarkers', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+			  if (!!value !== this.getShowAllIssueMarkers())
+			  {
+			  	this.setPropStoreFieldValue('showAllIssueMarkers', !!value);
+			  	this.recalcIssueCheckUiMarkers();
+			  }
+			}
+		});
 
 		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
 			'setter': function(value)
@@ -2720,6 +2732,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.hideIssueCheckUiMarkers();
 			else
 			{
+				var showAll = this.getShowAllIssueMarkers();
 				var activeResult = this.getActiveIssueCheckResult();
 				// hide or show active marker
 				this.getActiveIssueCheckUiMarker().setVisible(!!activeResult);
@@ -2739,23 +2752,23 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					if (group)
 					{
 						var isActive = key === 'active';
-						//var sKeyName = Kekule.ErrorLevel.levelToString(group.level);
-						// form the marker style
-						// ...
-						var objs = group.objs;
-						for (var j = 0, jj = objs.length; j < jj; ++j)
+						if (isActive || showAll)   // when showAll is not true, bypass all inactive issue markers
 						{
-							var obj = objs[j];
-							var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getObjContext(), obj);
-							for (var k = 0, kk = infos.length; k < kk; ++k)
+							var objs = group.objs;
+							for (var j = 0, jj = objs.length; j < jj; ++j)
 							{
-								var info = infos[k];
-								var bound = info.boundInfo;
-								if (bound)
+								var obj = objs[j];
+								var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getObjContext(), obj);
+								for (var k = 0, kk = infos.length; k < kk; ++k)
 								{
-									// inflate
-									bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, inflation);
-									currBounds.push(bound);
+									var info = infos[k];
+									var bound = info.boundInfo;
+									if (bound)
+									{
+										// inflate
+										bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, inflation);
+										currBounds.push(bound);
+									}
 								}
 							}
 						}
