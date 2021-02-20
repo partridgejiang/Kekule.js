@@ -255,6 +255,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				}
 			}
 		});
+		this.defineProp('chemObjData', {'dataType': DataType.STRING, 'serializable': false, 'getter': null,
+			'setter': function(value)
+			{
+				var jsonObj;
+				try
+				{
+					jsonObj = JSON.parse(value);
+				}
+				catch(e)
+				{
+
+				}
+				console.log('json', jsonObj, value);
+				if (jsonObj)
+				{
+					var chemObj;
+					chemObj = (jsonObj.format)? Kekule.IO.loadFormatData(jsonObj.data, jsonObj.format):
+						(jsonObj.mimeType)? Kekule.IO.loadMimeData(jsonObj.data, jsonObj.mimeType):
+						null;
+					if (chemObj)
+						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+				}
+			}
+		});
+
 		this.defineProp('chemObjLoaded', {'dataType': DataType.BOOL, 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': null,
 			'getter': function() { return this.getChemObj() && this.getPropStoreFieldValue('chemObjLoaded'); }
