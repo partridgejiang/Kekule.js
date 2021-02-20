@@ -462,7 +462,7 @@ Kekule.Calculator.ServiceManager = {
 		var classInfos = CS._getServiceClassInfos(serviceName);
 		if (classInfos)
 		{
-			for (var i = 0, l = classInfos.length - 1; i < l; ++i)
+			for (var i = 0, l = classInfos.length; i < l; ++i)
 			{
 				var info = classInfos[i];
 				if (info)

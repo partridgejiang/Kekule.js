@@ -255,6 +255,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				}
 			}
 		});
+		this.defineProp('chemObjData', {'dataType': DataType.STRING, 'serializable': false, 'getter': null,
+			'setter': function(value)
+			{
+				var jsonObj;
+				try
+				{
+					jsonObj = JSON.parse(value);
+				}
+				catch(e)
+				{
+
+				}
+				console.log('json', jsonObj, value);
+				if (jsonObj)
+				{
+					var chemObj;
+					chemObj = (jsonObj.format)? Kekule.IO.loadFormatData(jsonObj.data, jsonObj.format):
+						(jsonObj.mimeType)? Kekule.IO.loadMimeData(jsonObj.data, jsonObj.mimeType):
+						null;
+					if (chemObj)
+						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+				}
+			}
+		});
+
 		this.defineProp('chemObjLoaded', {'dataType': DataType.BOOL, 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': null,
 			'getter': function() { return this.getChemObj() && this.getPropStoreFieldValue('chemObjLoaded'); }
@@ -756,7 +781,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				{
 					//var ext = resData.uri? Kekule.UrlUtils.extractFileExt(resData.uri): null;
 					var chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
-					this.setChemObj(chemObj);
+					if (!chemObj)  // try regard resType as format ID
+					{
+						chemObj = Kekule.IO.loadFormatData(resData.data, resData.resType);
+					}
+					if (chemObj)
+					{
+						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+					}
+					else
+						Kekule.error(Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+					//this.setChemObj(chemObj);
 				}
 				catch(e)
 				{
@@ -1155,7 +1190,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
 	{
 		var self = this;
-		console.log('here');
+		//console.log('here');
 		var done = function(chemObj) { self.setChemObj(chemObj); };
 		this._tryAutoGenerateChemObjCoords(chemObj, done);
 	},

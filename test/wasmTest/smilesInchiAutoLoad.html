@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SMILES/InChI auto load test</title>
+	<script src="../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,calculation,openbabel"></script>
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+	<style>
+		#viewer1, #viewer2, #viewer3
+		{
+			border: 1px solid #ccc;
+			width: 600px;
+			height: 400px;
+		}
+	</style>
+	<script id="mol1" type="chemical/x-daylight-smiles">
+c1ccccc1
+	</script>
+	<script id="mol2" type="inchi">
+InChI=1S/C3H2Cl3F3/c4-1(7)3(6,9)2(5)8/h1-2H
+	</script>
+	<script>
+		Kekule.Widget.AutoLauncher.enabled = false;
+		Kekule.X.domReady(function(){
+			Kekule.OpenBabel.enable(function(error){
+				if (!error)
+				{
+					Kekule.Widget.autoLauncher.execute(document.body);
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+	<div>
+		<div id="viewer1" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#mol1)" data-predefined-setting="fullFunc"></div>
+		<!--
+		<div id="viewer2" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj="url(#mol2)" data-predefined-setting="fullFunc"></div>
+		-->
+		<div id="viewer3" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj-data='{"format":"smi","data":"c1ccccc1"}' data-predefined-setting="fullFunc"></div>
+	</div>
+</body>
+</html>
