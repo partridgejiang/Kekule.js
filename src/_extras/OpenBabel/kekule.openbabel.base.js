@@ -778,7 +778,7 @@ Kekule.OpenBabel.AdaptUtils = {
 	 */
 	kMolToOB: function(kekuleMol, obMol, childObjMap)
 	{
-		var coordMode = kMol.nodesHasCoord3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
+		var coordMode = kekuleMol.nodesHasCoord3D()? Kekule.CoordMode.COORD3D: Kekule.CoordMode.COORD2D;
 		var result = obMol || new (OB.getClassCtor('OBMol'))();
 		//Kekule.OpenBabel.AdaptUtils.kChemObjToOB(kMol, result);
 
