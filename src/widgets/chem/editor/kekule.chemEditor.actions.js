@@ -936,6 +936,54 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 });
 
 /**
+ * Set isToggleSelectionOn property to editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionToggleIssueCheckMarkers = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionToggleIssueCheckMarkers# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionToggleIssueCheckMarkers',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SELECT,
+	/** @constructs */
+	initialize: function(/*$super, */editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')])  /* $super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')) */;
+		this.setExplicitGroup('');  // force no check group
+	},
+	/** @ignore */
+	getPreferredWidgetClass: function()
+	{
+		return Kekule.Widget.CheckButton;
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		this.setChecked(this.getEditor().getIsToggleSelectOn());
+	},
+	/** @ignore */
+	checkedChanged: function(/*$super*/)
+	{
+		this.tryApplySuper('checkedChanged')  /* $super() */;
+
+	},
+	/** @ignore */
+	doExecute: function(/*$super, */target, htmlEvent)
+	{
+		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
+		var oldChecked = this.getChecked();
+		var editor = this.getEditor();
+		editor.setIsToggleSelectOn(!oldChecked);
+		this.setChecked(!oldChecked);
+	}
+});
+
+/**
  * Namespace of all operation creation actions for editor.
  * @namespace
  */
@@ -1484,6 +1532,7 @@ Kekule.Editor.ActionComposerToggleIssueInspector = Class.create(Kekule.Editor.Ac
 		if (composer)
 		{
 			this.setChecked(composer.getShowIssueInspector());
+			this.setEnabled(composer.getEnableIssueCheck()).setDisplayed(composer.getEnableIssueCheck());
 		}
 	},
 	/** @private */
