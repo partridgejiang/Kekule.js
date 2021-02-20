@@ -756,7 +756,17 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				{
 					//var ext = resData.uri? Kekule.UrlUtils.extractFileExt(resData.uri): null;
 					var chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
-					this.setChemObj(chemObj);
+					if (!chemObj)  // try regard resType as format ID
+					{
+						chemObj = Kekule.IO.loadFormatData(resData.data, resData.resType);
+					}
+					if (chemObj)
+					{
+						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+					}
+					else
+						Kekule.error(Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
+					//this.setChemObj(chemObj);
 				}
 				catch(e)
 				{
@@ -1155,7 +1165,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
 	{
 		var self = this;
-		console.log('here');
+		//console.log('here');
 		var done = function(chemObj) { self.setChemObj(chemObj); };
 		this._tryAutoGenerateChemObjCoords(chemObj, done);
 	},
