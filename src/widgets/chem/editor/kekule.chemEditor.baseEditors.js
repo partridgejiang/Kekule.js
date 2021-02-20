@@ -430,7 +430,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				var result = this.getPropStoreFieldValue('issueCheckExecutor');
 				if (!result)  // create default executor
 				{
-					result = new Kekule.IssueCheck.Executor();
+					result = this.createIssueCheckExecutor();  // new Kekule.IssueCheck.Executor();
 					var self = this;
 					result.addEventListener('execute', function(e){
 						self.setIssueCheckResults(e.checkResults);
@@ -439,6 +439,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 				return result;
 			}
+		});
+		this.defineProp('issueCheckerIds', {'dataType': DataType.ARRAY,
+			'getter': function() { return this.getIssueCheckExecutor().getCheckerIds(); },
+			'setter': function(value) { this.getIssueCheckExecutor().setCheckerIds(value); }
 		});
 		this.defineProp('enableIssueCheck', {'dataType': DataType.BOOL,
 			'getter': function() { return this.getIssueCheckExecutor().getEnabled(); },
@@ -660,6 +664,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setOperationsInCurrManipulation([]);
 		this.setEnableAutoIssueCheck(!false);
 		this.setEnableAutoScrollToActiveIssue(true);
+		var ICIDs = Kekule.IssueCheck.CheckerIds;
+		this.setIssueCheckerIds([ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]);
 	},
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
@@ -3843,13 +3849,25 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Check issues when not updating/manipulating objects in editor.
 	 * @private
 	 */
-	_tryCheckIssueOnIdle: function() {
+	_tryCheckIssueOnIdle: function()
+	{
+		//console.log('try check', this.isUpdatingObject(), this.isManipulatingObject());
 		if (!this.isUpdatingObject() && !this.isManipulatingObject())
 		{
 			return this.checkIssues();
 		}
 		else
 			return null;
+	},
+	/**
+	 * Create a default issue check executor instance.
+	 * Descendants may override this method.
+	 * @returns {Kekule.IssueCheck.Executor}
+	 * @private
+	 */
+	createIssueCheckExecutor: function()
+	{
+		return new Kekule.IssueCheck.ExecutorForEditor(this);
 	},
 	/**
 	 * Check potential issues for objects in editor.
@@ -7110,6 +7128,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	startDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord)
 	{
 		this.manipulateBegin();
+		return this.doStartDirectManipulate(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord);
+	},
+	/** @private */
+	doStartDirectManipulate: function(manipulateType, objOrObjs, startCoord, startBox, rotateCenter, rotateRefCoord)
+	{
 		var objs = Kekule.ArrayUtils.toArray(objOrObjs);
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.MANIPULATING);
 		this.setBaseCoord(startCoord);
@@ -7169,13 +7192,14 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			this._runManipulationStepId = null;
 		}
 		this.doManipulateObjectsEnd(this.getManipulateObjs());
-		this.notifyEditorEndManipulateObjects();
 		this._lastTransformParams = null;
 		this.setIsOffsetManipulating(false);
 
 		this.setManipulateObjs(null);
 		this.getManipulateObjInfoMap().clear();
 		this.getObjOperationMap().clear();
+
+		this.notifyEditorEndManipulateObjects();
 	},
 	/**
 	 * Called before method stopManipulate.
@@ -7411,7 +7435,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			hoveredObj = hoveredObj.getNearestMovableObject();
 			if (this.getEnableMove())
 			{
-				this.startDirectManipulate(null, hoveredObj, currCoord);
+				this.doStartDirectManipulate(null, hoveredObj, currCoord);  // call doStartDirectManipulate rather than startDirectManipulate, avoid calling doStartDirectManipulate twice
 				return;
 			}
 		}
