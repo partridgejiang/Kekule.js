@@ -113,6 +113,12 @@ Kekule.Editor.SelectMode = {
  * @property {Kekule.OperationHistory} operHistory History of operations. Used to enable undo/redo function.
  * @property {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}.
  * @property {Kekule.ChemObject} chemObj The root object in editor.
+ * @property {Bool} enableIssueCheck Whether issue check is available in editor.
+ * @property {Array} issueCheckerIds Issue checker class IDs used in editor.
+ * @property {Bool} enableAutoIssueCheck Whether the issue checking is automatically executed when objects changing in editor.
+ * @property {Array} issueCheckResults Array of {@link Kekule.IssueCheck.CheckResult}, results of auto or manual check.
+ * @property {Kekule.IssueCheck.CheckResult} activeIssueCheckResult Current selected issue check result in issue inspector.
+ * @property {Bool} enableAutoScrollToActiveIssue Whether the editor will automatically scroll to the issue object when selecting in issue inspector.
  * @property {Bool} enableOperContext If this property is set to true, object being modified will be drawn in a
  *   separate context to accelerate the interface refreshing.
  * @property {Object} objContext Context to draw basic chem objects. Can be 2D or 3D context. Alias of property drawContext
@@ -362,8 +368,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 		// private, whether defaultly select in toggle mode
 		this.defineProp('isToggleSelectOn', {'dataType': DataType.BOOL});
-
-
+		
 		this.defineProp('hotTrackedObjs', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
 			{
