@@ -32,8 +32,74 @@ Kekule.IssueCheck.IssueCode = {
 	ERROR_ATOM_VALENCE_ABNORMAL: 1101,
 	ERROR_BOND_ORDER_EXCEED: 1201
 };
-
 var EC = Kekule.IssueCheck.IssueCode;
+
+Kekule.IssueCheck.CheckerIds = {
+	ATOM_VALENCE: 'atomValence',
+	BOND_ORDER: 'bondOrder'
+};
+var CIDs = Kekule.IssueCheck.CheckerIds;
+
+/**
+ * The util class to register and store checker class info and instance.
+ * @class
+ */
+Kekule.IssueCheck.CheckerManager = {
+	_checkerMap: {},
+	/**
+	 * Register to manager.
+	 * @param {String} id
+	 * @param {Class} checkerClass
+	 */
+	register: function(id, checkerClass)
+	{
+		if (!id)
+			id = ClassEx.getClassName(checkerClass);
+		var old = ICM._checkerMap[id];
+		if (!old || old.checkerClass !== checkerClass)
+			ICM._checkerMap[id] = {'checkerClass': checkerClass};
+	},
+	/**
+	 * Unregister from class.
+	 * @param {String} id
+	 */
+	unregister: function(id)
+	{
+		ICM._checkerMap[id] = null;
+	},
+	/**
+	 * Returns the registered checker class.
+	 * @param {String} id
+	 * @returns {Class} Checker class or null if not found.
+	 */
+	getCheckerClass: function(id)
+	{
+		var item = ICM._checkerMap[id];
+		return item && item.checkerClass;
+	},
+	/**
+	 * Returns the instance of registered checker class.
+	 * Note the instance will be cached in manager. So multiple calls of this function only returns one single instance.
+	 * @param {String} id
+	 * @returns {Kekule.IssueCheck.BaseChecker} Checker instance or null if not found.
+	 */
+	getCheckerInstance: function(id)
+	{
+		var result = null;
+		var item = ICM._checkerMap[id];
+		if (item)
+		{
+			if (!item.instance)
+			{
+				var checkerClass = item.checkerClass;
+				item.instance = new checkerClass();
+			}
+			result = item.instance;
+		}
+		return result;
+	}
+};
+var ICM = Kekule.IssueCheck.CheckerManager;
 
 /**
  * A root object to perform issue check on one root chem object.
@@ -42,8 +108,9 @@ var EC = Kekule.IssueCheck.IssueCode;
  * @augments ObjectEx
  *
  * @property {Bool} ignoreUnexposedObjs Whether unexposed objects should be also checked.
- * @property {Array} checkers Concrete checkers.
  * @property {Bool} enabled If false, call the execute() method of executor will do nothing.
+ * // @property {Array} checkers Concrete checkers.
+ * @property {Array} checkerIds IDs of checker classes used in this executor.
  */
 /**
  * Invoked after do a checking process.
@@ -60,15 +127,30 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 	initialize: function()
 	{
 		// debug
-		this.setPropStoreFieldValue('checkers', [new Kekule.IssueCheck.AtomValenceChecker(), new Kekule.IssueCheck.BondOrderChecker()]);
+		//this.setPropStoreFieldValue('checkers', [new Kekule.IssueCheck.AtomValenceChecker(), new Kekule.IssueCheck.BondOrderChecker()]);
 		this.tryApplySuper('initialize');
 	},
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('checkers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		this.defineProp('ignoreUnexposedObjs', {'dataType': DataType.ARRAY});
-		this.defineProp('enabled', {'dataType': DataType.BOOL})
+		this.defineProp('enabled', {'dataType': DataType.BOOL});
+		this.defineProp('checkerIds', {'dataType': DataType.ARRAY,
+			'setter': function(value)
+			{
+			  var checkers = [];
+			  var ids = Kekule.ArrayUtils.toArray(value);
+			  for (var i = 0, l = ids.length; i < l; ++i)
+			  {
+			  	var checker = ICM.getCheckerInstance(ids[i]);
+			  	if (checker)
+			  		checkers.push(checker);
+			  }
+			  this.setPropStoreFieldValue('checkers', checkers);
+			}
+		});
+		// private
+		this.defineProp('checkers', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -95,7 +177,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 			return null;
 		var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
-		var op = options || {};
+		var op = this.doPrepareOptions(options);
 		var regMap = new Kekule.MapEx();
 		var allCheckers = this.getCheckers();
 		// filter out enabled checkers
@@ -157,6 +239,15 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 		else
 			actualObjs = objects;
 		return actualObjs.length? checker.check(objects, options || {}): null;
+	},
+	/**
+	 * Prepare the check options from input.
+	 * Desendants may override this method.
+	 * @private
+	 */
+	doPrepareOptions: function(inputOptions)
+	{
+		return options || {};
 	},
 	/** @private */
 	_getAllObjsNeedCheck: function(root, parent, checkers, regMap, options)
@@ -415,6 +506,8 @@ Kekule.IssueCheck.AtomValenceChecker = Class.create(Kekule.IssueCheck.BaseChecke
 		return result;
 	}
 });
+// register
+ICM.register(CIDs.ATOM_VALENCE, Kekule.IssueCheck.AtomValenceChecker);
 
 /**
  * Represent the checking result of {@link Kekule.IssueCheck.AtomValenceChecker}.
@@ -520,6 +613,8 @@ Kekule.IssueCheck.BondOrderChecker = Class.create(Kekule.IssueCheck.BaseChecker,
 		return result;
 	}
 });
+// register
+ICM.register(CIDs.BOND_ORDER, Kekule.IssueCheck.BondOrderChecker);
 
 /**
  * Represent the checking result of {@link Kekule.IssueCheck.AtomValenceChecker}.
