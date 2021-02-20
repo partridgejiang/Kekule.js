@@ -512,7 +512,6 @@ Kekule.Calculator.generateStructure = function(sourceMol, genSeviceName, options
 {
 	var serviceName = genSeviceName || Kekule.Calculator.Services.GEN3D;
 	var c = CS.getServiceClass(serviceName);
-	console.log(serviceName, c);
 	if (c)
 	{
 		var o = new c();
