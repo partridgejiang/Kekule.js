@@ -43,8 +43,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
 	ACTION_TOGGLE_SELECT: 'K-Chem-Toggle-Select-State',
+	ACTION_RECHECK_ISSUES: 'K-Chem-Recheck-Issues',
 	ACTION_TOGGLE_OBJ_INSPECTOR: 'K-Chem-Toggle-ObjInspector',
-	ACTION_TOGGLE_ISSUE_INSPECTOR: 'K-Chem-Toggle-IssueInspector'
+	ACTION_TOGGLE_ISSUE_INSPECTOR: 'K-Chem-Toggle-IssueInspector',
+	ACTION_TOGGLE_SHOW_ISSUES: 'K-Chem-Toggle-ShowIssues',
 });
 
 Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
@@ -936,23 +938,59 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 });
 
 /**
- * Set isToggleSelectionOn property to editor.
+ * Recheck issues for chem objects in editor.
  * @class
  * @augments Kekule.Editor.ActionOnEditor
  *
  * @param {Kekule.Editor.BaseEditor} editor Target editor object.
  */
-Kekule.Editor.ActionToggleIssueCheckMarkers = Class.create(Kekule.Editor.ActionOnEditor,
-/** @lends Kekule.Editor.ActionToggleIssueCheckMarkers# */
+Kekule.Editor.ActionRecheckIssues = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionRecheckIssues# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.ActionToggleIssueCheckMarkers',
+	CLASS_NAME: 'Kekule.Editor.ActionRecheckIssues',
 	/** @private */
-	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SELECT,
+	HTML_CLASSNAME: CCNS.ACTION_RECHECK_ISSUES,
 	/** @constructs */
-	initialize: function(/*$super, */editor)
+	initialize: function(editor)
 	{
-		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')])  /* $super(editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SELECT'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SELECT')) */;
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_RECHECK_ISSUES'), Kekule.$L('ChemWidgetTexts.HINT_RECHECK_ISSUES')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		var editor = this.getEditor();
+		this.setEnabled(editor.getEnableIssueCheck()).setDisplayed(editor.getEnableIssueCheck());
+	},
+	/** @ignore */
+	doExecute: function(target, htmlEvent)
+	{
+		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
+		var editor = this.getEditor();
+		if (editor)
+			editor.checkIssues();
+	}
+});
+
+/**
+ * Set {@link Kekule.Editor.BaseEditor.showAllIssueMarkers} property of editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionToggleShowIssueMarkers = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionToggleShowIssueMarkers# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionToggleShowIssueMarkers',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SHOW_ISSUES,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SHOW_ISSUE_MARKERS'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SHOW_ISSUE_MARKERS')]);
 		this.setExplicitGroup('');  // force no check group
 	},
 	/** @ignore */
@@ -964,21 +1002,17 @@ Kekule.Editor.ActionToggleIssueCheckMarkers = Class.create(Kekule.Editor.ActionO
 	doUpdate: function(/*$super*/)
 	{
 		this.tryApplySuper('doUpdate')  /* $super() */;
-		this.setChecked(this.getEditor().getIsToggleSelectOn());
+		var editor = this.getEditor();
+		this.setChecked(editor.getShowAllIssueMarkers());
+		this.setEnabled(editor.getEnableIssueCheck()).setDisplayed(editor.getEnableIssueCheck());
 	},
 	/** @ignore */
-	checkedChanged: function(/*$super*/)
-	{
-		this.tryApplySuper('checkedChanged')  /* $super() */;
-
-	},
-	/** @ignore */
-	doExecute: function(/*$super, */target, htmlEvent)
+	doExecute: function(target, htmlEvent)
 	{
 		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
 		var oldChecked = this.getChecked();
 		var editor = this.getEditor();
-		editor.setIsToggleSelectOn(!oldChecked);
+		editor.setShowAllIssueMarkers(!oldChecked);
 		this.setChecked(!oldChecked);
 	}
 });
@@ -2932,6 +2966,8 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
 	reg(BNS.paste, CE.ActionPaste, widgetClass);
 	reg(BNS.toggleSelect, CE.ActionToggleSelectState, widgetClass);
+	reg(BNS.recheckIssues, CE.ActionRecheckIssues, widgetClass);
+	reg(BNS.toggleShowAllIssues, CE.ActionToggleShowIssueMarkers, widgetClass);
 
 	//reg(BNS.manipulate, CE.ActionComposerSetManipulateController, widgetClass);
 	//reg(BNS.erase, CE.ActionComposerSetEraserController, widgetClass);
