@@ -2816,7 +2816,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				var levelName = Kekule.ErrorLevel.levelToString(issueLevel);
 				var configs = this.getEditorConfigs().getUiMarkerConfigs();
-				var styleConfigs = configs.getIssueCheckMarkerStyles()[levelName];
+				var styleConfigs = configs.getIssueCheckMarkerColors()[levelName];
 				var drawStyles = {
 					'strokeColor': isActive ? styleConfigs.activeStokeColor : styleConfigs.strokeColor,
 					'strokeWidth': isActive ? configs.getIssueCheckActiveMarkerStrokeWidth() : configs.getIssueCheckMarkerStrokeWidth(),

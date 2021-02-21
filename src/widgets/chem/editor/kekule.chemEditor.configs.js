@@ -277,7 +277,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('trackMarkerStrokeDash', false);
 		this.addFloatConfigProp('trackMarkerOpacity', 0.5);
 
-		this.addHashConfigProp('issueCheckMarkerStyles', {
+		this.addHashConfigProp('issueCheckMarkerColors', {
 			'error': {
 				'strokeColor': '#FF0000',
 				'fillColor': null,
