@@ -41,6 +41,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	COMPOSER_PORTRAIT: 'K-Chem-Composer-Portrait',  // a special class indicating that the composer is in portrait mode (client width <>> height）
 	COMPOSER_EDITOR_STAGE: 'K-Chem-Composer-Editor-Stage',
 	COMPOSER_ADV_PANEL: 'K-Chem-Composer-Adv-Panel',
+	COMPOSER_ISSUE_PANEL: 'K-Chem-Composer-Issue-Panel',
+	COMPOSER_ISSUE_PANEL_WRAPPER: 'K-Chem-Composer-Issue-Panel-Wrapper',
+	COMPOSER_ISSUE_PANEL_TOOL_PANEL: 'K-Chem-Composer-Issue-Panel-ToolPanel',
+	COMPOSER_ISSUE_PANEL_INSPECTOR_REGION: 'K-Chem-Composer-Issue-Panel-InspectorRegion',
 	COMPOSER_TOP_REGION: 'K-Chem-Composer-Top-Region',
 	COMPOSER_LEFT_REGION: 'K-Chem-Composer-Left-Region',
 	COMPOSER_BOTTOM_REGION: 'K-Chem-Composer-Bottom-Region',
@@ -1183,6 +1187,11 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 								editor.deselectAll();
 						}
 					}
+					else  // when close, deselect active issue
+					{
+						var issueInspector = this.getIssueInspector();
+						issueInspector.deselect();
+					}
 				}
 			}
 		});
@@ -1554,7 +1563,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		elem = this._doCreateSubElement(doc, rootElem, 'div', CCNS.COMPOSER_ADV_PANEL, 'advPanelElem');
 		{
 			this._doCreateSubElement(doc, elem, 'div', null, 'objInspectorHolderElem');
-			this._doCreateSubElement(doc, elem, 'div', null, 'issueInspectorHolderElem');
+			this._doCreateSubElement(doc, elem, 'div', CCNS.COMPOSER_ISSUE_PANEL, 'issueInspectorHolderElem');
 		}
 		result.push(elem);
 
@@ -2161,8 +2170,21 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			parentElem = this.getIssueInspectorHolderElem();
 
 		var doc = this.getDocument();
+		// wrapper
+		var wrapper = this._doCreateSubElement(doc, parentElem, 'div', CCNS.COMPOSER_ISSUE_PANEL_WRAPPER);
+
+		// tool panel
+		var toolPanelElem = this._doCreateSubElement(doc, wrapper, 'div', CCNS.COMPOSER_ISSUE_PANEL_TOOL_PANEL);
+		var actions = this.getCommonActions();     // add to common actions, enables the action update
+		var btnRecheck = this.createToolButton(BNS.recheckIssues, this, actions);
+		btnRecheck.setShowText(false).setShowGlyph(true).appendToElem(toolPanelElem);
+		var btnToggleShowIssues = this.createToolButton(BNS.toggleShowAllIssues, this, actions);
+		btnToggleShowIssues.setShowText(false).setShowGlyph(true).appendToElem(toolPanelElem);
+
+		// issue inspector
+		var inspectorRegionElem = this._doCreateSubElement(doc, wrapper, 'div', CCNS.COMPOSER_ISSUE_PANEL_INSPECTOR_REGION);
 		var issueInspector = new Kekule.Editor.IssueInspector(doc);
-		issueInspector.appendToElem(parentElem);
+		issueInspector.appendToElem(inspectorRegionElem);
 		issueInspector.setParent(this);
 		this.setPropStoreFieldValue('issueInspector', issueInspector);
 
@@ -2377,7 +2399,10 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			result = new btnClass(parentGroup);
 		}
 		if (action)
+		{
+			action.update();
 			result.setAction(action);
+		}
 
 		return result;
 	},
@@ -2391,6 +2416,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				(!!checkGroup) ? Kekule.Widget.RadioButton:
 						Kekule.Widget.Button;
 		var btn = new btnClass(parentWidget);
+		action.update();
 		btn.setAction(action);
 		return btn;
 	},

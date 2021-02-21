@@ -164,7 +164,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_CLONE_SELECTION: 'Clone selection',
 	CAPTION_TOGGLE_OBJ_INSPECTOR: 'Object inspector',
 	CAPTION_TOGGLE_ISSUE_INSPECTOR: 'Error inspector',
-	CAPTION_RECHECK_ISSUES: 'Recheck',
+	CAPTION_TOGGLE_SHOW_ISSUE_MARKERS: 'Toggle issue markers',
+	CAPTION_RECHECK_ISSUES: 'Recheck issues',
 
 	CAPTION_MANIPULATE: 'Select',
 	CAPTION_MANIPULATE_MARQUEE: 'Marquee select',
@@ -319,6 +320,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_TOGGLE_SELECT: 'Toggle select',
 	HINT_TOGGLE_OBJ_INSPECTOR: 'Show or hide object inspector panel',
 	HINT_TOGGLE_ISSUE_INSPECTOR: 'Show or hide error inspector panel',
+	HINT_TOGGLE_SHOW_ISSUE_MARKERS: 'Show or hide issue markers',
 	HINT_RECHECK_ISSUES: 'Recheck objects in editor for issues',
 
 	HINT_MANIPULATE: 'Select tool',
