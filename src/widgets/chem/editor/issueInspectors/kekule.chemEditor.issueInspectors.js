@@ -34,7 +34,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ISSUE_INSPECTOR: 'K-Chem-IssueInspector',
 	ISSUE_INSPECTOR_FLEX_LAYOUT: 'K-Chem-IssueInspector-Flex-Layout',
 	ISSUE_INSPECTOR_SUBPART: 'K-Chem-IssueInspector-SubPart',
-	ISSUE_INSPECTOR_TOOL_PANEL: 'K-Chem-IssueInspector-ToolPanel',
+	//ISSUE_INSPECTOR_TOOL_PANEL: 'K-Chem-IssueInspector-ToolPanel',
 	ISSUE_INSPECTOR_LIST_PANEL: 'K-Chem-IssueInspector-ListPanel',
 });
 
@@ -261,12 +261,14 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 	{
 		var result = this.tryApplySuper('doCreateSubElements', [doc, element]) || [];
 
+		/*
 		// tool panel
 		var toolPanelElem = this._createSubPartElem(doc);
 		EU.addClass(toolPanelElem, CCNS.ISSUE_INSPECTOR_TOOL_PANEL);
 		this._toolPanelElem = toolPanelElem;
 		element.appendChild(toolPanelElem);
 		result.push(toolPanelElem);
+		*/
 
 		// list view
 		var listPanelElem = this._createSubPartElem(doc);
@@ -290,9 +292,10 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 	_createChildWidgets: function()
 	{
 		this._finalizeChildWidgets();  // free old ones
-		// error listView
+		// issue listView
 		var listView = new Kekule.ChemWidget.CheckResultListView(this);
 		//var listView = new Kekule.Widget.TreeView(this);
+		listView.setUseCornerDecoration(true);
 		listView.appendToElem(this._listPanelElem);
 		var self = this;
 		listView.addEventListener('selectionChange', function(e){
@@ -309,6 +312,7 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 		});
 		this.setPropStoreFieldValue('resultListView', listView);
 
+		/*
 		// refresh button
 		var btn = new Kekule.Widget.Button(this);
 		btn.setText(Kekule.$L('ChemWidgetTexts.CAPTION_RECHECK_ISSUES')).setHint(Kekule.$L('ChemWidgetTexts.HINT_RECHECK_ISSUES'));
@@ -317,13 +321,15 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 		btn.addEventListener('execute', function(e) {
 			self.refreshIssues();
 		});
+		*/
 	},
 
-	/**
+	/*
 	 * Check errors for rootObj and shows result in view.
 	 * @param {Kekule.ChemObject} rootObj
 	 * @returns {Array} Error check results.
 	 */
+	/*
 	refreshIssues: function(rootObj)
 	{
 		var result;
@@ -336,6 +342,7 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 		}
 		return result;
 	},
+	*/
 
 	/** @private */
 	_issueCheckExecutorChanged: function(oldValue, newValue)
@@ -349,7 +356,15 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 	_reactExecutorExecute: function(e)
 	{
 		this.setCheckResults(e.checkResults);
-	}
+	},
+
+	/**
+	 * Deselect the active issue item.
+	 */
+	deselect: function()
+	{
+		this.getResultListView().clearSelection();
+	},
 });
 
 
