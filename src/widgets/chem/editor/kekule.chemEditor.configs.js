@@ -284,29 +284,29 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 				'activeStrokeColor': '#FF0000',
 				'activeFillColor': '#FF6666'
 			},
-			'warning': {
-				'strokeColor': '#FFAA00',
+			'warning1': {
+				'strokeColor': '#f1a200',
 				'fillColor': null,
-				'activeStrokeColor': '#FFAA00',
-				'activeFillColor': '#FFCC66'
+				'activeStrokeColor': '#f1a200',
+				'activeFillColor': '#ffdb15'
 			},
 			'note': {
-				'strokeColor': '#FFFF00',
-				'fillColor': '#FFFF00',
-				'activeStrokeColor': '#FFFF00',
-				'activeFillColor': '#FFFFAA'
+				'strokeColor': '#00b0f0',
+				'fillColor': null,
+				'activeStrokeColor': '#007ca8',
+				'activeFillColor': '#00b0f0'
 			},
 			'log': {
-				'strokeColor': '#FFFF00',
-				'fillColor': '#FFFF00',
-				'activeStrokeColor': '#FFFF00',
-				'activeFillColor': '#FFFFAA'
+				'strokeColor': '#00b0f0',
+				'fillColor': null,
+				'activeStrokeColor': '#007ca8',
+				'activeFillColor': '#00b0f0'
 			}
 		});
 		this.addFloatConfigProp('issueCheckMarkerStrokeWidth', 2);
 		this.addFloatConfigProp('issueCheckActiveMarkerStrokeWidth', 2);
 		this.addStrConfigProp('issueCheckMarkerOpacity', 0.3);
-		this.addStrConfigProp('issueCheckActiveMarkerOpacity', 0.5);
+		this.addStrConfigProp('issueCheckActiveMarkerOpacity', 0.4);
 
 		this.addStrConfigProp('flexStructureAssocMarkerColor', '#0000AA');
 		this.addFloatConfigProp('flexStructureAssocMarkerOpacity', 0.5);
