@@ -275,11 +275,12 @@
 {
     display: block;
     padding: 0.2em 0.5em;
+    padding-left: 20px;
     margin: 0;
     border-bottom: 1px solid;
     background-repeat: no-repeat;
     background-position-x: 4px;
-    background-position-y: center;
+    background-position-y: 4px;
 }
 
 .K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-ItemBody
@@ -294,17 +295,20 @@
     /* initial size */
     width: 20em;
     height: 30em;
+    padding: 0;
     overflow: hidden;
 }
 .K-Chem-IssueInspector .K-Chem-IssueInspector-SubPart
 {
     margin: 0;
+    padding: 0;
 }
+/*
 .K-Chem-IssueInspector .K-Chem-IssueInspector-ToolPanel
 {
     padding: 0.2em;
-    /*height: 2.8em;*/
 }
+*/
 .K-Chem-IssueInspector .K-Chem-IssueInspector-ListPanel
 {
     position: absolute;
@@ -320,20 +324,21 @@
     left: 0;
     right: 0;
     bottom: 0;
+    margin: 0;
 }
 
 .K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout
 {
     display: inline-flex;
-    width: auto;
-    height: auto;
     flex-direction: column;
 }
+/*
 .K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout .K-Chem-IssueInspector-ToolPanel
 {
     height: auto;
     flex: 0 0 auto;
 }
+*/
 .K-Chem-IssueInspector.K-Chem-IssueInspector-Flex-Layout .K-Chem-IssueInspector-ListPanel
 {
     position: relative;
@@ -763,6 +768,24 @@
     right: auto;
     bottom: auto;
 }
+
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-Wrapper
+{
+    display: flex;
+    flex-direction: column;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-Wrapper .K-Chem-Composer-Issue-Panel-ToolPanel
+{
+    height: auto;
+    flex: 0 0 min-content;
+}
+.K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-Wrapper .K-Chem-Composer-Issue-Panel-InspectorRegion
+{
+    flex: 1 1 auto;
+    position: relative;
+    top: auto;
+}
+
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Top-Region,
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Left-Region,
 .K-Chem-Composer.K-Chem-Composer-Grid-Layout .K-Chem-Composer-Bottom-Region
@@ -948,7 +971,8 @@
     width: 10em;
 }
 
-.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-IssueInspector
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel,
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-Wrapper
 {
     position: absolute;
     margin: 0;
@@ -957,6 +981,41 @@
     left: 0;
     right: 0;
     bottom: 0;
+}
+
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-ToolPanel
+{
+    position: relative;
+    padding: 0.25em;
+    height: 2.3em;
+    overflow: hidden;
+}
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-ToolPanel .K-Chem-Recheck-Issues
+{
+    float: left;
+}
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-ToolPanel .K-Chem-Toggle-ShowIssues
+{
+    float: right;
+}
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-InspectorRegion
+{
+    position: absolute;
+    top: 2.8em;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0;
+}
+.K-Chem-Composer .K-Chem-Composer-Adv-Panel .K-Chem-Composer-Issue-Panel .K-Chem-Composer-Issue-Panel-InspectorRegion .K-Chem-IssueInspector
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: auto;
+    height: auto;
 }
 
 .K-Chem-Composer-Modifier-RichText-Panel

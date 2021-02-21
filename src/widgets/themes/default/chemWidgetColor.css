@@ -98,7 +98,7 @@
 */
 .K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item
 {
-    padding-left: 20px;
+    border-color: #d3d3d3;
 }
 
 .K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Error
@@ -259,4 +259,16 @@
 .K-Chem-Toggle-ObjInspector > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/inspect.png");
+}
+.K-Chem-Toggle-IssueInspector > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/checkIssues.png");
+}
+.K-Chem-Recheck-Issues > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/recheckIssue.png");
+}
+.K-Chem-Toggle-ShowIssues > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/issueVisible.png");
 }

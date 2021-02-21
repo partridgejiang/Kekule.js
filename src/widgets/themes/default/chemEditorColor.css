@@ -18,7 +18,8 @@
 .K-Chem-GlyphPath-Arrow-SettingPanel .K-Chem-GlyphPath-Arrow-ContinuousSidesButtonGroup .K-Button .K-Pri-Glyph-Content,
 .K-Chem-Glyph-ReactionArrow-PresetSelector .K-Button .K-Pri-Glyph-Content,
 .K-Chem-Glyph-ReactionArrow-PresetSelector-ButtonSet-DropDown .K-Button .K-Pri-Glyph-Content,
-.K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button .K-Pri-Glyph-Content
+.K-Chem-Glyph-ElectronPushingArrow-PresetSelector-Button .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-Issue-Panel-ToolPanel .K-Pri-Glyph-Content
 {
   width: 21px;
   height: 21px;
@@ -36,7 +37,8 @@
 .K-Chem-InnerToolbar.K-Chem-Composer-Assoc-Toolbar .K-Pri-Glyph-Content,
 .K-Chem-StructureConnectorSelectPanel .K-Chem-StructureConnectorSelectPanel-SetButton .K-Pri-Glyph-Content,
 .K-Chem-Composer .K-Chem-Composer-Style-Toolbar .K-Pri-Glyph-Content,
-.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content
+.K-Chem-Composer .K-Chem-Composer-ObjModifier-Toolbar .K-Pri-Glyph-Content,
+.K-Chem-Composer .K-Chem-Composer-Issue-Panel-ToolPanel .K-Pri-Glyph-Content
 {
   -webkit-background-size: 100% 100%;
   -moz-background-size: 100% 100%;
