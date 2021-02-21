@@ -163,7 +163,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_SELECT_ALL: 'Select all',
 	CAPTION_CLONE_SELECTION: 'Clone selection',
 	CAPTION_TOGGLE_OBJ_INSPECTOR: 'Object inspector',
-	CAPTION_TOGGLE_ISSUE_INSPECTOR: 'Error inspector',
+	CAPTION_TOGGLE_ISSUE_INSPECTOR: 'Issue inspector',
 	CAPTION_TOGGLE_SHOW_ISSUE_MARKERS: 'Toggle issue markers',
 	CAPTION_RECHECK_ISSUES: 'Recheck issues',
 
