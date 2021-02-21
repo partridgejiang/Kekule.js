@@ -123,6 +123,9 @@ else if (typeof(global) === 'object')  // node env
 
 Kekule.$jsRoot.Kekule = Kekule;
 
+if (typeof(window) === 'object' && window && window.document)
+	Kekule.window = window;
+
 /**
  * Root document of JavaScript environment.
  * Can be null in Node.js.

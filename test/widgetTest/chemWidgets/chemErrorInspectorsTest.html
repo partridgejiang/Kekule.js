@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chem Error Inspectors Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<script src="../../../src/kekule.js?min=false"></script>
+	<style>
+		#errorList
+		{
+			width: 20em;
+			height: 30em;
+			border: 1px solid #ccc;
+		}
+	</style>
+	<script>
+		var listError;
+
+		function getDummyErrors()
+		{
+			var dummyAtoms = [
+				new Kekule.Atom('a1', 'C'),
+				new Kekule.Atom('a2', 'O')
+			];
+			var dummyBonds = [
+				new Kekule.Bond('b1', [dummyAtoms[0], dummyAtoms[1]])
+			];
+			var result = [];
+			dummyAtoms.forEach(atom => {
+				result.push(
+					new Kekule.IssueCheck.AtomValenceChecker.Result(null, null, {'currValence': 10, possibleValences: [2,3]}, [atom])
+				);
+			});
+			dummyBonds.forEach(bond => {
+				result.push(
+					new Kekule.IssueCheck.BondOrderChecker.Result(Kekule.ErrorLevel.WARNING, null, {'currOrder': 5, 'maxOrder': 2}, [bond])
+				)
+			});
+			return result;
+		}
+
+		function init()
+		{
+			listError = Kekule.Widget.getWidgetById('errorList');
+
+			var errors = getDummyErrors();
+			listError.setCheckResults(errors);
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div>
+		<div id="errorList" data-widget1="Kekule.ChemWidget.CheckResultListView" data-widget="Kekule.Editor.IssueInspector" data-resizable="true"></div>
+	</div>
+</body>
+</html>

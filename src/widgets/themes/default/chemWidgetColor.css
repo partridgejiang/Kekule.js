@@ -89,6 +89,61 @@
     transform: scale(1.1);
 }
 
+/*
+.K-Chem-ErrorListView .K-Chem-ErrorListView-Item .K-Chem-ErrorListView-ItemMarker
+{
+    width: 16px;
+    height: 16px;
+}
+*/
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item
+{
+    border-color: #d3d3d3;
+}
+
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Error
+{
+    background-color: #ffebeb;
+    color: #f00;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Warning
+{
+    background-color: #ffffc8;
+    color: #000;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Info
+{
+    background-color: #ebf5ff;
+    color: #000;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-State-Selected.K-Msg-Error
+{
+    background-color: #e6d2d2;
+    color: #f00;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-State-Selected.K-Msg-Warning
+{
+    background-color: #e6e6b1;
+    color: #000;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-State-Selected.K-Msg-Info
+{
+    background-color: #d2dce6;
+    color: #000;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Error
+{
+    background-image: url('images/slice/icons16/error.png');
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Warning
+{
+    background-image: url('images/slice/icons16/warning.png');
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item.K-Msg-Info
+{
+    background-image: url('images/slice/icons16/info.png');
+}
+
 .K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/menu.png");
@@ -201,7 +256,19 @@
     background-image: url("images/slice/icons/paste.png");
 }
 
-.K-Chem-Toggle-Inspector > .K-Pri-Glyph-Content
+.K-Chem-Toggle-ObjInspector > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/inspect.png");
+}
+.K-Chem-Toggle-IssueInspector > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/checkIssues.png");
+}
+.K-Chem-Recheck-Issues > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/recheckIssue.png");
+}
+.K-Chem-Toggle-ShowIssues > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/iconsSmall/issueVisible.png");
 }

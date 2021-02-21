@@ -1731,6 +1731,14 @@ Kekule.Editor.ChemSpaceEditor.Settings = Class.create(Kekule.Editor.BaseEditor.S
 			'getter': function() { return this.getEditor().getAllowCreateNewChild(); },
 			'setter': function(value) { this.getEditor().setAllowCreateNewChild(value); }
 		});
+		this.defineProp('autoCreateNewStructFragment', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getEditor().getAutoCreateNewStructFragment(); },
+			'setter': function(value) { this.getEditor().setAutoCreateNewStructFragment(value); }
+		});
+		this.defineProp('allowAppendDataToCurr', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function() { return this.getEditor().getAllowAppendDataToCurr(); },
+			'setter': function(value) { this.getEditor().setAllowAppendDataToCurr(value); }
+		});
 	}
 });
 

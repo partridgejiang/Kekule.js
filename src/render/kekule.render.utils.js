@@ -1642,6 +1642,7 @@ Kekule.Render.MetaShapeUtils = {
 	/** @private */
 	_getDistanceToRect: function(coord, shapeInfo)
 	{
+		/* //Not assurate, now checking the coord distance to each edge instead
 		var cornerCoords = shapeInfo.coords;
 		var dx0 = (coord.x - cornerCoords[0].x);
 		var dx1 = (coord.x - cornerCoords[1].x);
@@ -1660,6 +1661,18 @@ Kekule.Render.MetaShapeUtils = {
 					CU.getDistance(coord, {'x': cornerCoords[1].x, 'y': cornerCoords[0].y})
 			);
 		}
+		*/
+		var cornerCoords = shapeInfo.coords;
+		var SU = Kekule.Render.MetaShapeUtils;
+		var checkShape = Object.extend({}, shapeInfo);
+		checkShape.shapeType = Kekule.Render.MetaShapeType.POLYGON;
+		checkShape.coords = [
+			{x: cornerCoords[0].x, y: cornerCoords[0].y},
+			{x: cornerCoords[1].x, y: cornerCoords[0].y},
+			{x: cornerCoords[1].x, y: cornerCoords[1].y},
+			{x: cornerCoords[0].x, y: cornerCoords[1].y}
+		];
+		return SU._getDistanceToPolygon(coord, checkShape);
 	},
 	/** @private */
 	_getDistanceToPolygon: function(coord, shapeInfo)
@@ -1842,6 +1855,7 @@ Kekule.Render.MetaShapeUtils = {
 	/** @private */
 	_isInsidePolygon: function(coord, shapeInfo)
 	{
+		/*
 		var C = Kekule.CoordUtils;
 		var lineCoords = shapeInfo.coords;
 		var crossCount = 0;
@@ -1862,6 +1876,41 @@ Kekule.Render.MetaShapeUtils = {
 			}
 		}
 		return (crossCount % 2 === 0);
+    */
+		var x = coord.x, y = coord.y;
+		var coords = shapeInfo.coords;
+		// first check if the point is outside of the min-max coord box of polygon, if so, the point is of course outside of shape
+		var minCoord = {x: coords[0].x, y: coords[0].y};
+		var maxCoord = {x: coords[0].x, y: coords[0].y};
+		for (var i = 1, l = coords.length; i < l; ++i)
+		{
+			var currCoord = coords[i];
+			if (currCoord.x < minCoord.x)
+				minCoord.x = currCoord.x;
+			else if (currCoord.x > maxCoord.x)
+				maxCoord.x = currCoord.x;
+			if (currCoord.y < minCoord.y)
+				minCoord.y = currCoord.y;
+			else if (currCoord.y > maxCoord.y)
+				maxCoord.y = currCoord.y;
+		}
+		if (!Kekule.CoordUtils.insideRect(coord, minCoord, maxCoord))
+			return false;
+
+		// the algorithm from https://blog.csdn.net/hjh2005/article/details/9246967
+		var result = false;
+		for (var i = 0, l = coords.length, j = l - 1; i < l; ++i)
+		{
+			var coordi = coords[i];
+			var coordj = coords[j];
+			if (((coordi.y < y && coordj.y >= y) || (coordj.y < y && coordi.y >= y)) && (coordi.x <= x || coordj.x <= x))
+			{
+				if (coordi.x + (y - coordi.y) / (coordj.y - coordi.y) * (coordj.x - coordi.x) < x)
+					result = !result;
+			}
+			j = i;
+		}
+		return result;
 	},
 	/**
 	 * Calc cross point of coord to line (lineCoord1 - lineCoord2).

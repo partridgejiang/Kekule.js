@@ -3340,6 +3340,14 @@ Kekule.GeometryUtils = {
 	}
 };
 
+Kekule.IntersectionState = {
+	EQUAL: 0,
+	CONTAINING: 1,
+	CONTAINED: 2,
+	OVERLAPPED:  3,
+	SEPARATED: 4
+};
+
 /**
  * Utility methods about geometry box (2D or 3D).
  * Box is a region defined by two coord values.
@@ -3570,6 +3578,23 @@ Kekule.BoxUtils = {
 			&& (Math.max(b1.x1, b1.x2) <= Math.max(b2.x1, b2.x2))
 			&& (Math.min(b1.y1, b1.y2) >= Math.min(b2.y1, b2.y2))
 			&& (Math.max(b1.y1, b1.y2) <= Math.max(b2.y1, b2.y2))
+	},
+
+	/**
+	 * Returns the relation of two boxes.
+	 * @param {Hash} box1
+	 * @param {Hash} box2
+	 * @returns {Int} Value from {@link Kekule.IntersectionState}
+	 */
+	getIntersectionState: function(box1, box2)
+	{
+		var BU = Kekule.BoxUtils;
+		var IM = Kekule.IntersectionState;
+		return BU.isEqual(box1, box2)? IM.EQUAL:
+			BU.isInside(box1, box2)? IM.CONTAINED:
+			BU.isInside(box2, box1)? IM.CONTAINING:
+			BU.hasIntersection(box1, box2)? IM.OVERLAPPED:
+				IM.SEPARATED;
 	},
 
 	/**

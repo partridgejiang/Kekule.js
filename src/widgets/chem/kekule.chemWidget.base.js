@@ -54,6 +54,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	config: 'config',
 
 	objInspector: 'objInspector',
+	issueInspector: 'issueInspector',
 	undo: 'undo',
 	redo: 'redo',
 	copy: 'copy',
@@ -62,6 +63,8 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	cloneSelection: 'cloneSelection',
 	selectAll: 'selectAll',
 	toggleSelect: 'toggleSelect',
+	recheckIssues: 'recheckIssues',
+	toggleShowAllIssues: 'toggleShowAllIssues',
 	dragScroll: 'dragScroll',
 	erase: 'erase',
 	manipulate: 'manipulate',

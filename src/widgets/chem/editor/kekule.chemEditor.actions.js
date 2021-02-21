@@ -43,7 +43,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
 	ACTION_TOGGLE_SELECT: 'K-Chem-Toggle-Select-State',
-	ACTION_TOGGLE_INSPECTOR: 'K-Chem-Toggle-Inspector'
+	ACTION_RECHECK_ISSUES: 'K-Chem-Recheck-Issues',
+	ACTION_TOGGLE_OBJ_INSPECTOR: 'K-Chem-Toggle-ObjInspector',
+	ACTION_TOGGLE_ISSUE_INSPECTOR: 'K-Chem-Toggle-IssueInspector',
+	ACTION_TOGGLE_SHOW_ISSUES: 'K-Chem-Toggle-ShowIssues',
 });
 
 Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
@@ -935,6 +938,86 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 });
 
 /**
+ * Recheck issues for chem objects in editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionRecheckIssues = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionRecheckIssues# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionRecheckIssues',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_RECHECK_ISSUES,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_RECHECK_ISSUES'), Kekule.$L('ChemWidgetTexts.HINT_RECHECK_ISSUES')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		var editor = this.getEditor();
+		this.setEnabled(editor.getEnableIssueCheck()).setDisplayed(editor.getEnableIssueCheck());
+	},
+	/** @ignore */
+	doExecute: function(target, htmlEvent)
+	{
+		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
+		var editor = this.getEditor();
+		if (editor)
+			editor.checkIssues();
+	}
+});
+
+/**
+ * Set {@link Kekule.Editor.BaseEditor.showAllIssueMarkers} property of editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionToggleShowIssueMarkers = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionToggleShowIssueMarkers# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionToggleShowIssueMarkers',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_SHOW_ISSUES,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_SHOW_ISSUE_MARKERS'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_SHOW_ISSUE_MARKERS')]);
+		this.setExplicitGroup('');  // force no check group
+	},
+	/** @ignore */
+	getPreferredWidgetClass: function()
+	{
+		return Kekule.Widget.CheckButton;
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		var editor = this.getEditor();
+		this.setChecked(editor.getShowAllIssueMarkers());
+		this.setEnabled(editor.getEnableIssueCheck()).setDisplayed(editor.getEnableIssueCheck());
+	},
+	/** @ignore */
+	doExecute: function(target, htmlEvent)
+	{
+		this.tryApplySuper('doExecute', [target, htmlEvent])  /* $super(target, htmlEvent) */;
+		var oldChecked = this.getChecked();
+		var editor = this.getEditor();
+		editor.setShowAllIssueMarkers(!oldChecked);
+		this.setChecked(!oldChecked);
+	}
+});
+
+/**
  * Namespace of all operation creation actions for editor.
  * @namespace
  */
@@ -1414,23 +1497,23 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 });
 
 /**
- * Action to show or hide adv panel (object inspector and tree view) of composer.
+ * Action to show or hide object inspector and tree view of composer.
  * @class
  * @augments Kekule.Editor.ActionOnComposer
  *
  * @param {Kekule.Editor.Composer} composer Target composer widget.
  */
-Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionOnComposer,
-/** @lends Kekule.Editor.ActionComposerToggleInspector# */
+Kekule.Editor.ActionComposerToggleObjInspector = Class.create(Kekule.Editor.ActionOnComposer,
+/** @lends Kekule.Editor.ActionComposerToggleObjInspector# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Editor.ActionComposerToggleInspector',
+	CLASS_NAME: 'Kekule.Editor.ActionComposerToggleObjInspector',
 	/** @private */
-	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_INSPECTOR,
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_OBJ_INSPECTOR,
 	/** @constructs */
 	initialize: function(/*$super, */composer)
 	{
-		this.tryApplySuper('initialize', [composer, /*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*/Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR')])  /* $super(composer, \*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*\Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR')) */;
+		this.tryApplySuper('initialize', [composer, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_OBJ_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_OBJ_INSPECTOR')])  /* $super(composer, \*CWT.CAPTION_TOGGLE_INSPECTOR, CWT.HINT_TOGGLE_INSPECTOR*\Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_INSPECTOR')) */;
 		//this.setCheckGroup(this.getClassName());
 	},
 	/** @private */
@@ -1439,7 +1522,7 @@ Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionO
 		var composer = this.getComposer();
 		if (composer)
 		{
-			this.setChecked(composer.getShowInspector());
+			this.setChecked(composer.getShowObjInspector());
 		}
 	},
 	/** @private */
@@ -1449,7 +1532,51 @@ Kekule.Editor.ActionComposerToggleInspector = Class.create(Kekule.Editor.ActionO
 		if (composer)
 		{
 			this.setChecked(!this.getChecked());
-			composer.setShowInspector(this.getChecked());
+			composer.setShowObjInspector(this.getChecked());
+		}
+	}
+});
+// for backward compatibility
+Kekule.Editor.ActionComposerToggleInspector = Kekule.Editor.ActionComposerToggleObjInspector;
+
+/**
+ * Action to show or hide error inspector of composer.
+ * @class
+ * @augments Kekule.Editor.ActionOnComposer
+ *
+ * @param {Kekule.Editor.Composer} composer Target composer widget.
+ */
+Kekule.Editor.ActionComposerToggleIssueInspector = Class.create(Kekule.Editor.ActionOnComposer,
+/** @lends Kekule.Editor.ActionComposerToggleIssueInspector# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionComposerToggleIssueInspector',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_TOGGLE_ISSUE_INSPECTOR,
+	/** @constructs */
+	initialize: function(composer)
+	{
+		this.tryApplySuper('initialize', [composer, Kekule.$L('ChemWidgetTexts.CAPTION_TOGGLE_ISSUE_INSPECTOR'), Kekule.$L('ChemWidgetTexts.HINT_TOGGLE_ISSUE_INSPECTOR')]);
+		//this.setCheckGroup(this.getClassName());
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		var composer = this.getComposer();
+		if (composer)
+		{
+			this.setChecked(composer.getShowIssueInspector());
+			this.setEnabled(composer.getEnableIssueCheck()).setDisplayed(composer.getEnableIssueCheck());
+		}
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var composer = this.getComposer();
+		if (composer)
+		{
+			this.setChecked(!this.getChecked());
+			composer.setShowIssueInspector(this.getChecked());
 		}
 	}
 });
@@ -2839,6 +2966,8 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
 	reg(BNS.paste, CE.ActionPaste, widgetClass);
 	reg(BNS.toggleSelect, CE.ActionToggleSelectState, widgetClass);
+	reg(BNS.recheckIssues, CE.ActionRecheckIssues, widgetClass);
+	reg(BNS.toggleShowAllIssues, CE.ActionToggleShowIssueMarkers, widgetClass);
 
 	//reg(BNS.manipulate, CE.ActionComposerSetManipulateController, widgetClass);
 	//reg(BNS.erase, CE.ActionComposerSetEraserController, widgetClass);
@@ -2852,7 +2981,8 @@ Kekule._registerAfterLoadSysProc(function(){
 	//reg(BNS.molRing, CE.ActionComposerSetRepositoryRingController, widgetClass);
 	//reg(BNS.glyph, CE.ActionComposerSetRepositoryGlyphController, widgetClass);
 
-	reg(BNS.objInspector, CE.ActionComposerToggleInspector, widgetClass);
+	reg(BNS.objInspector, CE.ActionComposerToggleObjInspector, widgetClass);
+	reg(BNS.issueInspector, CE.ActionComposerToggleIssueInspector, widgetClass);
 
 	_createAndRegisterPredefinedOperationCreateActions();
 

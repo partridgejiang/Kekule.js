@@ -43,9 +43,9 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 			if (components.structureTreeView)
 				this.setStructureTreeView(components.structureTreeView);
 			if (components.objectInspector)
-			{
 				this.setObjectInspector(components.objectInspector);
-			}
+			if (components.issueInspector)
+				this.setIssueInspector(components.issueInspector);
 		}
 	},
 	/** @private */
@@ -73,6 +73,14 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 				var oldObj = this.getPropStoreFieldValue('objectInspector');
 				this.setPropStoreFieldValue('objectInspector', value);
 				this.objectInspectorChanged(value, oldObj);
+			}
+		});
+		this.defineProp('issueInspector', {'dataType': 'Kekule.Editor.IssueInspector', 'serializable': false,
+			'setter': function(value)
+			{
+				var oldObj = this.getPropStoreFieldValue('issueInspector');
+				this.setPropStoreFieldValue('issueInspector', value);
+				this.issueInspectorChanged(value, oldObj);
 			}
 		});
 	},
@@ -115,6 +123,22 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
+	issueInspectorChanged: function(newValue, oldValue)
+	{
+		if (oldValue)
+			this._uninstallIssueInspectorEventHandler(oldValue);
+		if (newValue)
+			this._installIssueInspectorEventHandler(newValue);
+		var editor = this.getEditor();
+		if (editor)
+		{
+			if (newValue)
+			{
+				this._updateByEditor();  // update rootObj and error executor setting of errorInspector
+			}
+		}
+	},
+	/** @private */
 	_installEditorEventHandler: function(editor)
 	{
 		//editor.setEnablePropValueSetEvent(true);
@@ -122,20 +146,33 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 		editor.addEventListener('beginUpdateObject', this._reactEditorBeginUpdateObject, this);
 		editor.addEventListener('endUpdateObject', this._reactEditorEndUpdateObject, this);
 	},
+	/** @private */
 	_uninstallEditorEventHandler: function(editor)
 	{
 		editor.removeEventListener('change', this._reactEditorChanged, this);
 		editor.removeEventListener('beginUpdateObject', this._reactEditorBeginUpdateObject, this);
 		editor.removeEventListener('endUpdateObject', this._reactEditorEndUpdateObject, this);
 	},
+	/** @private */
 	_installStructureTreeViewEventHandler: function(treeView)
 	{
 		//treeView.setEnablePropValueSetEvent(true);
 		treeView.addEventListener('change', this._reactStructureTreeViewChanged, this);
 	},
+	/** @private */
 	_uninstallStructureTreeViewEventHandler: function(treeView)
 	{
 		treeView.removeEventListener('change', this._reactStructureTreeViewChanged, this);
+	},
+	/** @private */
+	_installIssueInspectorEventHandler: function(issueInspector)
+	{
+		issueInspector.addEventListener('selectResult', this._reactIssueInspectorSelectResult, this);
+	},
+	/** @private */
+	_uninstallIssueInspectorEventHandler: function(issueInspector)
+	{
+		issueInspector.removeEventListener('selectResult', this._reactIssueInspectorSelectResult, this);
 	},
 	/** @private */
 	_reactEditorChanged: function(e)
@@ -163,6 +200,15 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 				objInspector.setEnableOperHistory(target.getEnableOperHistory());
 			}
 		}
+		var issueInspector = this.getIssueInspector();
+		if (issueInspector)
+		{
+			if (propNames.indexOf('issueCheckExecutor') >= 0)
+				issueInspector.setIssueCheckExecutor(target.getIssueCheckExecutor());
+			if (propNames.indexOf('issueCheckResults') >= 0)
+				issueInspector.setCheckResults(target.getIssueCheckResults());
+
+		}
 	},
 	/** @private */
 	_reactEditorBeginUpdateObject: function(e)
@@ -179,7 +225,7 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 	/** @private */
 	_updateByEditor: function()
 	{
-		this._reactEditorChanged({'target': this.getEditor(), 'changedPropNames': ['chemObj', 'selection', 'operHistory']});
+		this._reactEditorChanged({'target': this.getEditor(), 'changedPropNames': ['chemObj', 'selection', 'operHistory', 'issueCheckExecutor', 'issueCheckResults']});
 	},
 	/** @private */
 	_reactStructureTreeViewChanged: function(e)
@@ -196,6 +242,15 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 			var objs = target.getSelectedChemObjs();
 			this.changeSelection(objs, target);
 		}
+	},
+	/** @private */
+	_reactIssueInspectorSelectResult: function(e)
+	{
+		var activeResult = e.selectedResult;
+		var editor = this.getEditor();
+		// reflect to editor
+		if (editor && editor.setActiveIssueCheckResult)
+			editor.setActiveIssueCheckResult(activeResult);
 	},
 
 	/**
@@ -279,6 +334,9 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 			var treeView = this.getStructureTreeView();
 			if (treeView && this._currInvoker !== treeView)
 				treeView.setRootObj(root);
+			var errorInspector = this.getIssueInspector();
+			if (errorInspector && this._currInvoker !== errorInspector)
+				errorInspector.setRootObj(root);
 		}
 		finally
 		{
