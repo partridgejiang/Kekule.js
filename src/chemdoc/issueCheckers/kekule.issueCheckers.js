@@ -175,7 +175,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 	{
 		if (!this.getEnabled())
 			return null;
-		var startTime = Date.now();
+		//var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
 		var op = this.doPrepareOptions(options);
 		var regMap = new Kekule.MapEx();
@@ -209,8 +209,8 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 			}
 		}
 		this.invokeEvent('execute', {'checkResults': result});
-		var endTime = Date.now();
-		console.log('consume', endTime - startTime, 'ms');
+		//var endTime = Date.now();
+		//console.log('consume', endTime - startTime, 'ms');
 		return result;
 	},
 	/**
