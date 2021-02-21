@@ -455,7 +455,20 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getIssueCheckExecutor().getEnabled(); },
 			'setter': function(value) { this.getIssueCheckExecutor().setEnabled(!!value); }
 		});
-		this.defineProp('enableAutoIssueCheck', {'dataType': DataType.BOOL});
+		this.defineProp('enableAutoIssueCheck', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				if (!!value !== this.getEnableAutoIssueCheck())
+				{
+					this.setPropStoreFieldValue('enableAutoIssueCheck', !!value);
+					if (value)  // when turn on from off, do a issue check
+						this.checkIssues();
+					// adjust property showAllIssueMarkers according to enableAutoIssueCheck
+					// If auto check is on, markers should be defaultly opened;
+					// if auto check is off, markers should be defaultly hidden.
+					this.setShowAllIssueMarkers(!!value);
+				}
+			}});
 		this.defineProp('issueCheckResults', {'dataType': DataType.ARRAY, 'serializable': false,
 			'setter': function(value)
 			{
@@ -472,6 +485,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				if (this.getActiveIssueCheckResult() !== value)
 				{
 					this.setPropStoreFieldValue('activeIssueCheckResult', value);
+					if (value)  // when set active issue, deselect all selections to extrusive it
+						this.deselectAll();
 					this.issueCheckResultsChanged();
 				}
 			}
@@ -2722,17 +2737,25 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 	/** @private */
+	_needShowInactiveIssueMarkers: function()
+	{
+		var result = this.getEnableIssueCheck() && this.getShowAllIssueMarkers();
+		return result;
+	},
+	/** @private */
 	recalcIssueCheckUiMarkers: function()
 	{
+		if (!this.getChemObjLoaded())  // if no content in editor, just bypass
+			return;
 		this.beginUpdateUiMarkers();
 		try
 		{
 			var checkResults = this.getIssueCheckResults() || [];
-			if (!checkResults.length)
+			if (!checkResults.length || !this.getEnableIssueCheck())
 				this.hideIssueCheckUiMarkers();
 			else
 			{
-				var showAll = this.getShowAllIssueMarkers();
+				var showAll = this._needShowInactiveIssueMarkers();
 				var activeResult = this.getActiveIssueCheckResult();
 				// hide or show active marker
 				this.getActiveIssueCheckUiMarker().setVisible(!!activeResult);
