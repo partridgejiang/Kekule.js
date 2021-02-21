@@ -694,7 +694,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setOperationsInCurrManipulation([]);
-		this.setEnableAutoIssueCheck(!false);
+		this.setEnableAutoIssueCheck(false);
 		this.setEnableAutoScrollToActiveIssue(true);
 		var ICIDs = Kekule.IssueCheck.CheckerIds;
 		this.setIssueCheckerIds([ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]);
