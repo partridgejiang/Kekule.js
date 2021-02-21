@@ -463,6 +463,10 @@ var kekuleFiles = {
 			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js',
 
+			'chemdoc/issueCheckers/kekule.issueCheckers.js',
+			'widgets/chem/editor/issueInspectors/kekule.chemEditor.issueCheckers.js',
+			'widgets/chem/editor/issueInspectors/kekule.chemEditor.issueInspectors.js',
+
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
 
 			'widgets/chem/editor/kekule.chemEditor.composers.js',

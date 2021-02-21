@@ -122,6 +122,9 @@ require("../src/widgets/chem/editor/modifiers/kekule.chemEditor.styleModifiers.j
 require("../src/widgets/chem/editor/modifiers/kekule.chemEditor.textModifiers.js");
 require("../src/widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js");
 require("../src/widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js");
+require("../src/chemdoc/issueCheckers/kekule.issueCheckers.js");
+require("../src/widgets/chem/editor/issueInspectors/kekule.chemEditor.issueCheckers.js");
+require("../src/widgets/chem/editor/issueInspectors/kekule.chemEditor.issueInspectors.js");
 require("../src/widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js");
 require("../src/widgets/chem/editor/kekule.chemEditor.composers.js");
 require("../src/webComponents/kekule.webComponent.base.js");
