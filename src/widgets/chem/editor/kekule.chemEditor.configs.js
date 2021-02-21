@@ -284,7 +284,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 				'activeStrokeColor': '#FF0000',
 				'activeFillColor': '#FF6666'
 			},
-			'warning1': {
+			'warning': {
 				'strokeColor': '#f1a200',
 				'fillColor': null,
 				'activeStrokeColor': '#f1a200',
