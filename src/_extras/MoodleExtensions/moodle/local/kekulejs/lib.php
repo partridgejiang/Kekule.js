@@ -53,7 +53,7 @@ class kekulejs_configs
      */
     static public function getKekuleScriptDir()
     {
-        return self::getScriptDir() . 'kekule.js.0.9.5.21013000/';
+        return self::getScriptDir() . 'kekule.js.0.9.6.21022101/';
     }
     static public function getAdapterDir()
     {

@@ -58,7 +58,8 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 				BNS.undo,
 				BNS.redo,
 				BNS.zoomIn,
-				BNS.zoomOut
+				BNS.zoomOut,
+				BNS.issueInspector
 			],
 			chemToolButtons: [
 				BNS.manipulate,
