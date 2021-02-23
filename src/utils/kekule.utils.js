@@ -278,17 +278,19 @@ Kekule.ObjUtils = {
 	},
 	/**
 	 * Check if fields in condition has the same value with src.
-	 * @param {Object} src
-	 * @param {Object} condition
+	 * @param {Variant} src Object or ObjectEx instance.
+	 * @param {Hash} condition
 	 * @return {Bool}
 	 */
 	match: function(src, condition)
 	{
+		var isObjectEx = (src instanceof ObjectEx);
 		for (var fname in condition)
 		{
 			if (condition.hasOwnProperty(fname))
 			{
-				if (src[fname] !== condition[fname])
+				var oldValue = isObjectEx? src.getPropValue(fname): src[fname];
+				if (oldValue !== condition[fname])
 					return false;
 			}
 		}
