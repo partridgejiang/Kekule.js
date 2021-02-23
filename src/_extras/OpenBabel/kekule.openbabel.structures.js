@@ -217,6 +217,11 @@ if (Kekule.Calculator)
 		/** @private */
 		CLASS_NAME: 'Kekule.Calculator.ObStructureBaseGenerator',
 		/** @ignore */
+		isWorkerShared: function()
+		{
+			return true;
+		},
+		/** @ignore */
 		getGeneratorCoordMode: function()
 		{
 			var dim = this.getOutputDimension();
@@ -248,6 +253,16 @@ if (Kekule.Calculator)
 			return this.getOptions().forceField;
 		},
 		/** @ignore */
+		doGetWorker: function()
+		{
+			var result = this.tryApplySuper('doGetWorker');
+			if (!result)
+			{
+				result = Kekule.Calculator.ObStructureBaseGenerator._worker;  // try get from the shared instance
+			}
+			return result;
+		},
+		/** @ignore */
 		createWorker: function(/*$super*/)
 		{
 			var w = this.tryApplySuper('createWorker')  /* $super() */;
@@ -255,6 +270,7 @@ if (Kekule.Calculator)
 			{
 				//var url = Kekule.getScriptPath() + '_extras/OpenBabel/openbabel.js.O1';
 				var url = Kekule.OpenBabel.getObScriptUrl();
+				//console.log('create worker', url);
 				this.importWorkerScriptFile(url);
 				var initOps = this.getObInitOptions();
 				this.postWorkerMessage({
@@ -263,6 +279,7 @@ if (Kekule.Calculator)
 					'moduleName': initOps.moduleName,
 					'initCallbackName': initOps.moduleInitCallbackName
 				});
+				Kekule.Calculator.ObStructureBaseGenerator._worker = w;  // worker shared by instances, avoid create multiple times
 			}
 			return w;
 		},
@@ -280,6 +297,7 @@ if (Kekule.Calculator)
 			if (data.type === /*'output3D'*/this._getOutputMsgName())  // receive generated structure
 			{
 				var genData = data.molData;
+				//console.log(Date.now(), 'receive message', data.uid, this.getUid());
 				if (genData)  // successful
 				{
 					var m = Kekule.IO.loadMimeData(genData, 'chemical/x-mdl-molfile');
@@ -309,6 +327,7 @@ if (Kekule.Calculator)
 			//var molData = Kekule.IO.saveMimeData(mol, 'chemical/x-mdl-molfile');
 			var molData = Kekule.IO.saveMimeData(flattenMol, 'chemical/x-mdl-molfile');
 			var msg = Object.extend(this.getOptions(), {'type': /*'gen3D'*/this._getInputMsgName(), 'molData': molData});
+			//console.log('send to worker', this.getUid());
 			this.postWorkerMessage(msg);
 		},
 

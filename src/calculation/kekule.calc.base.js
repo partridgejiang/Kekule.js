@@ -20,6 +20,15 @@
 Kekule.Calculator = {
 
 };
+/** @ignore */
+Kekule.Calculator.Utils = {
+	_instanceMaxIndex: 0,
+	generateUid: function()
+	{
+		++Kekule.Calculator.Utils._instanceMaxIndex;
+		return 'Kekule.Calculator.' + Kekule.Calculator.Utils._instanceMaxIndex;
+	}
+};
 
 /**
  * Returns default path to store calculator web worker scripts.
@@ -48,11 +57,20 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.Calculator.Base',
 	/** @private */
+	WORKER_SHARED_COUNT_FIELD: '__$workerSharedCount$__',
+	/** @constructs */
+	initialize: function()
+	{
+		this.setPropStoreFieldValue('uid', this._generateUid());
+		this.tryApplySuper('initialize');
+	},
+	/** @private */
 	initProperties: function()
 	{
 		this.defineProp('async', {'dataType': DataType.BOOL});
 		// private
 		this.defineProp('worker', {'dataType': DataType.OBJECT, 'setter': null});
+		this.defineProp('uid', {'dataType': DataType.STRING, 'setter': null});  // every calculator should has a unique id
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -62,7 +80,48 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		this.reactWorkerMessageBind = this.reactWorkerMessage.bind(this);
 		this.reactWorkerErrorBind = this.reactWorkerError.bind(this);
 	},
+	/** @private */
+	_generateUid: function()
+	{
+		return Kekule.Calculator.Utils.generateUid();
+	},
 
+	/**
+	 * Returns whether the worker this calculator created is shared by multiple instances.
+	 * Desendants may override this method.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isWorkerShared: function()
+	{
+		return false;
+	},
+	/** @private */
+	_incWorkerSharedCount: function(worker)
+	{
+		if (this.isWorkerShared())
+		{
+			var v = worker[this.WORKER_SHARED_COUNT_FIELD] || 0;
+			++v;
+			worker[this.WORKER_SHARED_COUNT_FIELD] = v;
+		}
+	},
+	/** @private */
+	_decWorkerSharedCount: function(worker)
+	{
+		if (this.isWorkerShared())
+		{
+			var v = worker[this.WORKER_SHARED_COUNT_FIELD] || 0;
+			if (v)
+				--v;
+			worker[this.WORKER_SHARED_COUNT_FIELD] = v;
+		}
+	},
+	/** @private */
+	_isWorkerInSharingState: function(worker)
+	{
+		return this.isWorkerShared() && ((worker[this.WORKER_SHARED_COUNT_FIELD] || 0) > 0);
+	},
 	/**
 	 * Returns default path to store calculator web worker scripts.
 	 * @returns {String}
@@ -92,9 +151,11 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		this._doneCallback = callback;  //done;
 		this._errCallback = errCallback;
 		this._msgCallback = msgCallback;
-		if (this.getAsync() && this.isWorkerSupported() && this.createWorker())  // try using worker
+		if (this.getAsync() && this.isWorkerSupported() && this.fetchWorker())  // try using worker
 		{
 			var w = this.getWorker();
+			this._incWorkerSharedCount(w);
+			this._installWorkerEventReceiver(w);
 			this.workerStartCalc(w);
 		}
 		else  // sync
@@ -193,7 +254,21 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		return Kekule.BrowserFeature.workers;
 	},
 	/**
+	 * Returns the worked instance stored in {@link Kekule.Calculator.Base.worker} property.
+	 * If the property is empty, create a worker with {@link Kekule.Calculator.Base.createWorker}.
+	 * @returns {Object}
+	 * @private
+	 */
+	fetchWorker: function()
+	{
+		var result = this.getWorker();
+		if (!result)
+			result = this.createWorker();
+		return result;
+	},
+	/**
 	 * Create a new web worker to run calculation task.
+	 * @private
 	 */
 	createWorker: function()
 	{
@@ -203,12 +278,22 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 			if (url)
 			{
 				var w = new Worker(url);
-				w.addEventListener('message', this.reactWorkerMessageBind);
-				w.addEventListener('error', this.reactWorkerErrorBind);
 				this.setPropStoreFieldValue('worker', w);
 				return w;
 			}
 		}
+	},
+	/** @private */
+	_installWorkerEventReceiver: function(worker)
+	{
+		worker.addEventListener('message', this.reactWorkerMessageBind);
+		worker.addEventListener('error', this.reactWorkerErrorBind);
+	},
+	/** @private */
+	_uninstallWorkerEventReceiver: function(worker)
+	{
+		worker.removeEventListener('message', this.reactWorkerMessageBind);
+		worker.removeEventListener('error', this.reactWorkerErrorBind);
 	},
 	/**
 	 * Returns the work script file URL.
@@ -227,11 +312,18 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	{
 		this.postWorkerMessage({'type': 'importScript', 'url': url});
 	},
+	/**
+	 * Post message to worker.
+	 * @param {Hash} msg
+	 */
 	postWorkerMessage: function(msg)
 	{
+		// ensure msg has uid field of self
+		var m = Object.extend({'uid': this.getUid()}, msg);
+		//console.log('[msg sent to worker]', m);
 		var w = this.getWorker();
 		if (w)
-			w.postMessage(msg);
+			w.postMessage(m);
 	},
 	/**
 	 * React message evoked by worker.
@@ -239,9 +331,16 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	reactWorkerMessage: function(e)
 	{
-		if (this._msgCallback)
-			this._msgCallback(e.data);
-		return this.doReactWorkerMessage(e.data, e);
+		//console.log('react msg', e.data.uid, this.getUid());
+		// check if message is sent to self
+		if (e.data.uid === this.getUid())
+		{
+			if (this._msgCallback)
+				this._msgCallback(e.data);
+			return this.doReactWorkerMessage(e.data, e);
+		}
+		else
+			return null;
 	},
 	/**
 	 * Do actual job of reactWorkerMessage.
@@ -284,7 +383,14 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		var w = this.getWorker();
 		if (w)
 		{
-			w.terminate();
+			//console.log('worker done', this.getUid());
+			this._uninstallWorkerEventReceiver(w);
+			this._decWorkerSharedCount(w);
+			if (!this._isWorkerInSharingState(w))  // avoid terminate shared worker too early
+			{
+				//console.log('TERMINATE');
+				w.terminate();
+			}
 			this.setPropStoreFieldValue('worker', null);
 		}
 	}
@@ -449,13 +555,8 @@ Kekule.Calculator.ServiceManager = {
 			classInfos.splice(index, 1);
 		}
 	},
-	/**
-	 * Get the most recent registered class for service.
-	 * @param {String} serviceName
-	 * @param {String} serviceId If this id is not set, the class with the highest priority level will be returned.
-	 * @return {Class}
-	 */
-	getServiceClass: function(serviceName, serviceId)
+	/** @private */
+	_getRegisteredServiceInfo: function(serviceName, serviceId)
 	{
 		var currPriority = -1;
 		var result = null;
@@ -469,14 +570,14 @@ Kekule.Calculator.ServiceManager = {
 				{
 					if (serviceId && info.id === serviceId)
 					{
-						result = info.serviceClass;
+						result = info;
 						break;
 					}
 					else
 					{
 						if (!result || info.priorityLevel >= currPriority)
 						{
-							result = info.serviceClass;
+							result = info;
 							currPriority = info.priorityLevel;
 						}
 					}
@@ -484,6 +585,17 @@ Kekule.Calculator.ServiceManager = {
 			}
 		}
 		return result;
+	},
+	/**
+	 * Get the most recent registered class for service.
+	 * @param {String} serviceName
+	 * @param {String} serviceId If this id is not set, the class with the highest priority level will be returned.
+	 * @return {Class}
+	 */
+	getServiceClass: function(serviceName, serviceId)
+	{
+		var info = CS._getRegisteredServiceInfo(serviceName, serviceId);
+		return info && info.serviceClass;
 	}
 };
 var CS = Kekule.Calculator.ServiceManager;

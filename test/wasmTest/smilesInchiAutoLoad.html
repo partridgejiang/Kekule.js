@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<title>SMILES/InChI auto load test</title>
+	<script src="../_libs/three_new/three.min.js"></script>
 	<script src="../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,calculation,openbabel"></script>
 	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
 	<style>
@@ -12,6 +13,12 @@
 			width: 600px;
 			height: 400px;
 		}
+		.MassiveViewer
+		{
+			border: 1px solid #c00;
+			width: 300px;
+			height: 200px;
+		}
 	</style>
 	<script id="mol1" type="chemical/x-daylight-smiles">
 c1ccccc1
@@ -20,8 +27,27 @@ c1ccccc1
 InChI=1S/C3H2Cl3F3/c4-1(7)3(6,9)2(5)8/h1-2H
 	</script>
 	<script>
+
+		function generateMassiveViewers(count)
+		{
+			var parent = document.getElementById('stage');
+			var chemObjData = '{"format":"smi","data":"CCCCC(CCCC)CCCCCCCCCCCCCCC"}';
+			for (var i = 0; i < count; ++i)
+			{
+				var elem = document.createElement('div');
+				elem.id = 'massive' + i;
+				elem.className = 'MassiveViewer';
+				elem.setAttribute('data-widget', 'Kekule.ChemWidget.Viewer2D');
+				elem.setAttribute('data-chem-obj-data', chemObjData);
+				elem.setAttribute('data-predefined-setting', 'fullFunc');
+				parent.appendChild(elem);
+			}
+			//Kekule.Widget.autoLauncher.execute(parent);
+		}
+
 		Kekule.Widget.AutoLauncher.enabled = false;
 		Kekule.X.domReady(function(){
+			generateMassiveViewers(100);
 			Kekule.OpenBabel.enable(function(error){
 				if (!error)
 				{
@@ -39,5 +65,6 @@ InChI=1S/C3H2Cl3F3/c4-1(7)3(6,9)2(5)8/h1-2H
 		-->
 		<div id="viewer3" data-widget="Kekule.ChemWidget.Viewer2D" data-chem-obj-data='{"format":"smi","data":"c1ccccc1"}' data-predefined-setting="fullFunc"></div>
 	</div>
+	<div id="stage"></div>
 </body>
 </html>
