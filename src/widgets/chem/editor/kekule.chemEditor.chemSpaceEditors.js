@@ -3774,6 +3774,16 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 				|| (bond.getBondOrder() !== this.getBondOrder())
 				|| (bond.getStereo() !== this.getBondStereo());
 	},
+	/** @private */
+	_isBondOrderSwitchApplicable: function(targetBond)
+	{
+		return this.getAutoSwitchBondOrder()
+			&& (this.getBondOrder() === Kekule.BondOrder.SINGLE)
+			&& (this.getBondType() === Kekule.BondType.COVALENT)
+			&& (this.getBondStereo() === Kekule.BondStereo.NONE)
+			&& (!targetBond.getBondType() || targetBond.getBondType() === Kekule.BondType.COVALENT)
+			&& (!targetBond.getStereo() || targetBond.getStereo() === Kekule.BondStereo.NONE);
+	},
 
 	/** @private */
 	canInteractWithObj: function(/*$super, */obj)
@@ -3797,7 +3807,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 						return this.getAutoSwitchBondOrder()
 							|| (obj.getBondOrder() !== this.getBondOrder());
 						*/
-						return this._isBondDifferent(obj);
+						return this._isBondDifferent(obj) || this._isBondOrderSwitchApplicable(obj);
 					}
 				}
 				else return false;
@@ -4052,7 +4062,8 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		var bondOrder;
 		var BO = Kekule.BondOrder;
 		var loopBondOrders = [BO.SINGLE, BO.DOUBLE, BO.TRIPLE];
-		if (this.getAutoSwitchBondOrder() && (bondType === Kekule.BondType.COVALENT) && (bond.getBondType === Kekule.BondType.COVALENT))
+		//if (this.getAutoSwitchBondOrder() && (bondType === Kekule.BondType.COVALENT) && (bond.getBondType() === Kekule.BondType.COVALENT))
+		if (this._isBondOrderSwitchApplicable(bond))
 		{
 			var oldOrder = bond.getBondOrder();
 			var index = loopBondOrders.indexOf(oldOrder);
