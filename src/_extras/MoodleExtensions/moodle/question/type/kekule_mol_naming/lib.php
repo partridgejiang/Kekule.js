@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 class qtype_kekule_mol_naming_configs
 {
-    const DEF_STR_REPLACEMENT = '　= ' . <<<'STR1'
+    const DEF_STR_REPLACEMENT = '　= \n' . <<<'STR1'
 ，=,
 。=.
 ——=-
