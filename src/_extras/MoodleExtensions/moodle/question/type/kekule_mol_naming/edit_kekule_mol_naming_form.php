@@ -109,7 +109,7 @@ class qtype_kekule_mol_naming_edit_form extends qtype_kekule_multianswer_edit_fo
      * Get concrete form control for answer fields.
      * Descendants should override this method.
      */
-    protected function getAnswerDataFormControls($mform, $label, $gradeoptions)
+    protected function getAnswerDataFormControls($mform, $label, $gradeoptions, $ansIndex)
     {
         $result = parent::getAnswerDataFormControls($mform, $label, $gradeoptions, null);
         /*
