@@ -55,9 +55,21 @@ function initModule(module)
 
 function execPendingFuncs(funcs)
 {
+	if (!funcs)
+		funcs = pendingFuncs;
 	var func = funcs.shift();
 	if (func)
+	{
 		func.apply($root);
+		execPendingFuncs(funcs);
+	}
+}
+
+function requestExec(func)
+{
+	pendingFuncs.push(func);
+	if (runtimeInited)
+		execPendingFuncs();
 }
 
 addEventListener('message', function(e)
@@ -88,14 +100,16 @@ function handleMessages(msgData)
 	else if (msgType === 'gen3D' || msgType === 'gen2D')
 	{
 		//console.log('recieve', msgType, msgData);
+		var invokerUid = msgData.uid;
 		var molData = msgData.molData;
 		if (msgType === 'gen2D')
 		{
 			var execFunc = function ()
 			{
 				var genData = generate2DMolData(molData, {});
+				//console.log('post data', invokerUid, genData);
 				// feedback
-				postMessage({'type': 'output2D', 'molData': genData});
+				postMessage({'type': 'output2D', 'molData': genData, 'uid': invokerUid});
 			};
 		}
 		else if (msgType === 'gen3D')
@@ -111,13 +125,16 @@ function handleMessages(msgData)
 					'speed': speed
 				});
 				// feedback
-				postMessage({'type': 'output3D', 'molData': genData});
+				postMessage({'type': 'output3D', 'molData': genData, 'uid': invokerUid});
 			};
 		}
+		/*
 		if (runtimeInited)
 			execFunc();
 		else
 			pendingFuncs.push(execFunc);
+		*/
+		requestExec(execFunc);
 	}
 };
 
