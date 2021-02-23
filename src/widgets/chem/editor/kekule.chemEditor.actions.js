@@ -1215,7 +1215,11 @@ Kekule.Editor.ActionOperationCreate.ChemConnectorModify = Class.create(Kekule.Ed
 	/** @ignore */
 	doCreateOperationOnTarget: function(target, data, editor)
 	{
-		return new Kekule.ChemObjOperation.Modify(target, data, editor);
+		// data is simply a prop-value pair hash
+		if (Kekule.ObjUtils.match(target, data))  // no actual modified props
+			return null;
+		else
+			return new Kekule.ChemObjOperation.Modify(target, data, editor);
 	}
 });
 

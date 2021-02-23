@@ -556,9 +556,17 @@ Kekule.Editor.OperationUtils = {
 
 		if (modifiedProps)
 		{
-			oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, editor);
-			if (operGroup)
-				operGroup.add(oper);
+			if (Kekule.ObjUtils.match(newNode, modifiedProps))
+			{
+				// old value same as new value, no need to create operation
+				// console.log(modifiedProps);
+			}
+			else
+			{
+				oper = new Kekule.ChemObjOperation.Modify(newNode, modifiedProps, editor);
+				if (operGroup)
+					operGroup.add(oper);
+			}
 		}
 
 		var operation = operGroup || oper;
