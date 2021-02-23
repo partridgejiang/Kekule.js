@@ -267,7 +267,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				{
 
 				}
-				console.log('json', jsonObj, value);
+				//console.log('json', jsonObj, value);
 				if (jsonObj)
 				{
 					var chemObj;
