@@ -6532,6 +6532,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
+		this._cachedTransformCompareThresholds = null;   // clear cache
 		this._runManipulationStepId = Kekule.window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
@@ -6866,6 +6867,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				scaleX = (Math.sign(scaleX) || 1) * absY;
 		}
 
+		//console.log('before actual scale', coordDelta, {'scaleX': scaleX, 'scaleY': scaleY});
 		var actualScales = this._calcActualResizeScales(manipulatingObjs, {'scaleX': scaleX, 'scaleY': scaleY});
 		var transformParams = {'center': scaleCenter, 'scaleX': actualScales.scaleX, 'scaleY': actualScales.scaleY};
 		//console.log(this.isAspectRatioLockedResize(), scaleX, scaleY);
@@ -7035,14 +7037,36 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 	},
 	/** @private */
-	_isSameTransformParams: function(p1, p2, threshold, coordMode)
+	_isSameTransformParams: function(p1, p2, thresholds, coordMode)
 	{
-		if (!threshold)
-			threshold = 0.1;  // TODO: currently fixed
+		if (!thresholds)
+		{
+			thresholds = this._cachedTransformCompareThresholds;
+		}
+		if (!thresholds)
+		{
+			thresholds = this._getTransformCompareThresholds();  // 0.1
+			this._cachedTransformCompareThresholds = thresholds;  // cache the threshold to reduce calculation
+		}
+		/*
 		if (coordMode === Kekule.CoordMode.COORD2D)
 			return CU.isSameTransform2DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
 		else
 			return CU.isSameTransform3DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
+		*/
+		if (coordMode === Kekule.CoordMode.COORD2D)
+			return CU.isSameTransform2DOptions(p1, p2, {'translate': thresholds.translate, 'scale': thresholds.scale, 'rotate': thresholds.rotate});
+		else
+			return CU.isSameTransform3DOptions(p1, p2, {'translate': thresholds.translate, 'scale': thresholds.scale, 'rotate': thresholds.rotate});
+	},
+	/** @private */
+	_getTransformCompareThresholds: function(coordMode)
+	{
+		return {
+			translate: 0.1,
+			scale: 0.1,
+			rotate: 0.1
+		}
 	},
 
 	/* @private */
@@ -7652,7 +7676,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			}
 			else if (manipulateType === T.RESIZE)
 			{
-				this._suppressConstrainedResize = e.getAltKey();
 				//this.doResizeManipulatedObjs(currCoord);
 				this.doTransformManipulatedObjs(manipulateType, currCoord);
 			}
@@ -7722,17 +7745,21 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var state = this.getState();
 
 		var coord = this._getEventMouseCoord(e);
 
 		var distanceFromLast;
-		if (this._lastMouseMoveCoord)
+		if (state === S.NORMAL || state === S.SUSPENDING)
 		{
-			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
-			distanceFromLast = dis;
-			if (dis < 4)  // less than 4 px, too tiny to react
+			if (this._lastMouseMoveCoord)
 			{
-				return true;
+				var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
+				distanceFromLast = dis;
+				if (dis < 4)  // less than 4 px, too tiny to react
+				{
+					return true;
+				}
 			}
 		}
 		this._lastMouseMoveCoord = coord;
@@ -7747,14 +7774,12 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		*/
-		if (this.getState() === S.SUSPENDING)
+		if (state === S.SUSPENDING)
 		{
 			var disThreshold = this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold() || 0;
 			if (Kekule.ObjUtils.notUnset(distanceFromLast) && (distanceFromLast > disThreshold))
 				this.execSuspendedImmediateOperation();
 		}
-
-		var state = this.getState();
 
 		if (state === S.SELECTING)
 		{

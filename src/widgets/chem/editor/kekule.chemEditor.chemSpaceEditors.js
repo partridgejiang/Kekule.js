@@ -2079,6 +2079,23 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		else
 			return false;
 	},
+	/** @ignore */
+	_getTransformCompareThresholds: function(coordMode)
+	{
+		if (coordMode === Kekule.CoordMode.COORD3D)
+			return this.tryApplySuper('_getTransformCompareThresholds', [coordMode]);
+		else
+		{
+			var tTranslate = this.getEditorConfigs().getStructureConfigs().getDefBondLength() || this.getEditor().getChemSpace().getAutoScaleRefLength() || 0.05;
+			var tRotate = this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep() / 5;
+			var tScale = this.getEditorConfigs().getInteractionConfigs().getConstrainedResizeStep() / 5;
+			return {
+				'translate': tTranslate,
+				'rotate': tRotate,
+				'scale': tScale
+			};
+		}
+	},
 	/** @private */
 	_calcActualMovedScreenCoord: function(/*$super, */obj, info, newScreenCoord)
 	{
@@ -2153,6 +2170,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var angleStep = isConstrained?
 			this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep(): null;
 
+		//console.log(isConstrained, this.isConstrainedRotate(), this._suppressConstrainedRotating, newDeltaAngle * 180 / Math.PI, angleStep * 180 / Math.PI);
 		if (angleStep)
 		{
 			//var times = Math.floor(newDeltaAngle / angleStep);
@@ -2166,6 +2184,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	_calcActualResizeScales: function(objs, newScales)
 	{
 		var isConstrained = (this.isConstrainedResize() && (!this._suppressConstrainedResize));
+		//console.log(isConstrained, newScales);
 		if (!isConstrained)
 			return newScales;
 		else  // constrained scale calculation
@@ -3612,6 +3631,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		// check if ALT key is pressed, if so, constrained move/rotate mode should be disabled
 		this._suppressConstrainedMoving = e.getAltKey();
 		this._suppressConstrainedRotating = e.getAltKey();
+		this._suppressConstrainedResize = e.getAltKey();
 		this._isInDirectedMoving = e.getShiftKey();
 		return this.tryApplySuper('react_pointermove', [e])  /* $super(e) */;
 	}
