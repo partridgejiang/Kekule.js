@@ -7816,12 +7816,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				//var evokedByTouch = e && e.pointerType === 'touch';
 				var self = this;
 				var beginNormalManipulation = function(){
-					if (self.getState() === S.NORMAL)
+					if (self.getState() === S.NORMAL || self.getState() === S.SUSPENDING)
 					{
 						self.startManipulation(coord, e);
 						e.preventDefault();
 					}
 				};
+				this.setState(S.SUSPENDING);
 				// wait for a while for the possible gesture operations
 				this.setSuspendedOperations(beginNormalManipulation, beginNormalManipulation, 50);
 			}
@@ -8128,6 +8129,10 @@ Kekule.Editor.BasicManipulationIaController.State = {
 	SELECTING: 1,
 	/** Is manipulating objects (e.g. changing object position). */
 	MANIPULATING: 2,
+	/**
+	 * The pointer is down, but need to wait to determinate if there will be a gesture event.
+	 */
+	WAITING: 10,
 	/**
 	 * Just put down pointer, if move the pointer immediately, selecting state will be open.
 	 * But if hold down still for a while, it may turn to manipulating state to move current selected objects.
