@@ -445,6 +445,17 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	{
 		return this;
 	},
+	/**
+	 * Returns self or a child object that directly linked to the connector.
+	 * For atom or other simple chem object, this function should just returns self,
+	 * for structure fragment, this function need to returns the anchor node linking to connector.
+	 * @param {Kekule.BaseStructureConnector} connector
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getActualConnectedObjToConnector: function(connector)
+	{
+		return this;
+	},
 
 	/**
 	 * Return count of linkedConnectors.
@@ -4985,8 +4996,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	{
 		return this.getCrossConnectors();
 	},
-	/* @ignore */
-
+	/** @ignore */
 	appendLinkedConnector: function(/*$super, */connector)
 	{
 		var actualLinkedNode = this.getCurrConnectableObj();
@@ -4995,7 +5005,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		else  // no child, link to self
 		  return this.tryApplySuper('appendLinkedConnector', [connector])  /* $super(connector) */;
 	},
-
 
 	/** @ignore */
 	getCurrConnectableObj: function()
@@ -5024,6 +5033,26 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			return minNode;
 		}
 		//return this.getAnchorNodeAt(0) || this.getNodeAt(0) || this.getChildAt(0) || this;
+	},
+	/** @ignore */
+	getActualConnectedObjToConnector: function(connector)
+	{
+		// ensure connector is not a child connector of self
+		if (this.indexOfConnector(connector) >= 0)  // internal connector, bypass
+			return null;
+		else
+		{
+			if (connector.indexOfConnectedObj(this) >= 0)  // directly linked to self, not child nodes
+				return this;
+			// check child nodes
+			for (var i = 0, l = connector.getConnectedObjCount(); i < l; ++i)
+			{
+				var obj = connector.getConnectedObjAt(i);
+				if (obj.isChildOf(this))
+					return obj;
+			}
+			return null;
+		}
 	},
 
 	/** @private */
