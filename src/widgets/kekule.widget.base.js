@@ -3778,7 +3778,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		{
 			// HINT: local event such as blur or focus must be bubble and handle carefully,
 			// otherwise cause problems (even recursion) in browser
-			if (this.getActualBubbleUiEvents())
+			if (this.getActualBubbleUiEvents() && !e.cancelBubble)  // when e has been called with stopPropagation, it will not be bubbled
 			{
 				var parent = this.getParent();
 				if (parent && parent.reactUiEvent)
