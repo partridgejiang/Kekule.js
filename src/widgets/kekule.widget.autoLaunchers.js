@@ -581,7 +581,8 @@ var _doAutoLaunch = function()
 
 	if (!Kekule._isLoaded())  // the whole library is not completely loaded yet, may be some widget class unavailable, waiting
 	{
-		Kekule._registerAfterLoadSysProc(_doAutoLaunch);
+		//Kekule._registerAfterLoadSysProc(_doAutoLaunch);
+		Kekule._ready(_doAutoLaunch);  // ensure _doAutoLaunch called after all system calls
 		return;
 	}
 
