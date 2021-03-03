@@ -43,6 +43,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_CUT: 'K-Chem-Cut',
 	ACTION_PASTE: 'K-Chem-Paste',
 	ACTION_TOGGLE_SELECT: 'K-Chem-Toggle-Select-State',
+	ACTION_ERASE_SELECTION: 'K-Chem-Erase-Selection',
 	ACTION_RECHECK_ISSUES: 'K-Chem-Recheck-Issues',
 	ACTION_TOGGLE_OBJ_INSPECTOR: 'K-Chem-Toggle-ObjInspector',
 	ACTION_TOGGLE_ISSUE_INSPECTOR: 'K-Chem-Toggle-IssueInspector',
@@ -934,6 +935,46 @@ Kekule.Editor.ActionToggleSelectState = Class.create(Kekule.Editor.ActionOnEdito
 		var editor = this.getEditor();
 		editor.setIsToggleSelectOn(!oldChecked);
 		this.setChecked(!oldChecked);
+	}
+});
+
+/**
+ * A simple action to delete all selected objects in editor.
+ * @class
+ * @augments Kekule.Editor.ActionOnEditor
+ *
+ * @param {Kekule.Editor.BaseEditor} editor Target editor object.
+ */
+Kekule.Editor.ActionEraseSelection = Class.create(Kekule.Editor.ActionOnEditor,
+/** @lends Kekule.Editor.ActionEraseSelection# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Editor.ActionEraseSelection',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_ERASE_SELECTION,
+	/** @constructs */
+	initialize: function(editor)
+	{
+		this.tryApplySuper('initialize', [editor, Kekule.$L('ChemWidgetTexts.CAPTION_ERASE_SELECTION'), Kekule.$L('ChemWidgetTexts.HINT_ERASE_SELECTION')]);
+	},
+	/** @private */
+	doUpdate: function(/*$super*/)
+	{
+		this.tryApplySuper('doUpdate')  /* $super() */;
+		if (this.getEnabled())
+			this.setEnabled(this.getEditor().hasSelection());
+	},
+	/** @private */
+	doExecute: function()
+	{
+		var editor = this.getEditor();
+		if (editor)
+		{
+			// TODO: this is not a good approach, need to refactor it later
+			var controller = editor.getIaController('BasicMolEraserIaController');
+			if (controller)
+				controller.removeSelection();
+		}
 	}
 });
 
@@ -2970,6 +3011,7 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.cut, CE.ActionCutSelection, widgetClass);
 	reg(BNS.paste, CE.ActionPaste, widgetClass);
 	reg(BNS.toggleSelect, CE.ActionToggleSelectState, widgetClass);
+	reg(BNS.eraseSelection, CE.ActionEraseSelection, widgetClass);
 	reg(BNS.recheckIssues, CE.ActionRecheckIssues, widgetClass);
 	reg(BNS.toggleShowAllIssues, CE.ActionToggleShowIssueMarkers, widgetClass);
 

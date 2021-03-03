@@ -63,6 +63,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	cloneSelection: 'cloneSelection',
 	selectAll: 'selectAll',
 	toggleSelect: 'toggleSelect',
+	eraseSelection: 'eraseSelection',
 	recheckIssues: 'recheckIssues',
 	toggleShowAllIssues: 'toggleShowAllIssues',
 	dragScroll: 'dragScroll',
