@@ -229,6 +229,13 @@ Kekule.globalOptions = {
 		}
 		else
 			Object.setCascadeFieldValue(optionName, valueOrHash, Kekule.globalOptions, true);
+	},
+	get: function(optionName, defaultValue)
+	{
+		var result = Object.getCascadeFieldValue(optionName, Kekule.globalOptions);
+		if (typeof(result) === 'undefined')
+			result = defaultValue;
+		return result;
 	}
 };
 
