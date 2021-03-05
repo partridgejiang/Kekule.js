@@ -70,7 +70,31 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 		BNS.copy,
 		BNS.openEditor,
 		BNS.config
-	]
+	],
+
+	'toolbar': {
+		'evokeModes': [EM.EVOKEE_CLICK, EM.EVOKEE_MOUSE_ENTER, EM.EVOKEE_TOUCH],
+		'revokeModes': [EM.EVOKEE_MOUSE_LEAVE, EM.EVOKER_TIMEOUT],
+		'pos': Kekule.Widget.Position.AUTO,
+		'marginHorizontal': 10,
+		'marginVertical': 10
+	},
+	'editor': {
+		'modal': true,
+		'restrainEditorWithCurrObj': true,
+		'shareEditorInstance': true
+	},
+
+	'enableToolbar': false,
+	'enableDirectInteraction': true,
+	'enableTouchInteraction': false,
+	'showCaption': false,
+
+	'useNormalBackground': false,
+	'enableCustomCssProperties': true,
+
+	'restraintRotation3DEdgeRatio': 0.18,
+	'enableRestraintRotation3D': true
 });
 
 /** @ignore */
@@ -191,7 +215,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
 		//this._errorReportElem = null;  // use internally
+
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
+		this.setPropStoreFieldValue('useCornerDecoration', true);
+		/*
 		this.setPropStoreFieldValue('enableToolbar', false);
 		this.setPropStoreFieldValue('toolbarEvokeModes', this.DEF_TOOLBAR_EVOKE_MODES);
 		this.setPropStoreFieldValue('toolbarRevokeModes', this.DEF_TOOLBAR_REVOKE_MODES);
@@ -200,8 +227,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('toolbarMarginHorizontal', 10);
 		this.setPropStoreFieldValue('toolbarMarginVertical', 10);
 		this.setPropStoreFieldValue('showCaption', false);
-		this.setPropStoreFieldValue('useCornerDecoration', true);
-		//this.setUseCornerDecoration(true);
+		*/
+		var oneOf = Kekule.oneOf;
+		var options = Kekule.globalOptions.get('chemWidget.viewer') || {};
+		this.setPropStoreFieldValue('enableToolbar', oneOf(options.enableToolbar));
+		this.setPropStoreFieldValue('enableDirectInteraction', oneOf(options.enableDirectInteraction, true));
+		this.setPropStoreFieldValue('showCaption', oneOf(options.showCaption, false));
+
+		options = options.toolbar || {};
+		this.setPropStoreFieldValue('toolbarEvokeModes', oneOf(options.evokeModes, this.DEF_TOOLBAR_EVOKE_MODES));
+		this.setPropStoreFieldValue('toolbarRevokeModes', oneOf(options.revokeModes, this.DEF_TOOLBAR_REVOKE_MODES));
+		this.setPropStoreFieldValue('toolbarPos', oneOf(options.pos, Kekule.Widget.Position.AUTO));
+		this.setPropStoreFieldValue('toolbarMarginHorizontal', oneOf(options.marginHorizontal,10));
+		this.setPropStoreFieldValue('toolbarMarginVertical', oneOf(options.marginVertical, 10));
 
 		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType /*, viewerConfigs*/])  /* $super(parentOrElementOrDocument, chemObj, renderType, viewerConfigs) */;
 
@@ -566,6 +604,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableEdit(true);
 		*/
 		this.setStyleMode(Kekule.Widget.StyleMode.INHERITED);  // embedded in document
+		/*
 		this.setUseNormalBackground(false);
 		//this.setInheritedRenderColor(true);
 		this.setEnableCustomCssProperties(true);
@@ -576,6 +615,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableRestraintRotation3D(true);
 		this.setShareEditorInstance(true);
 		this.setEnableTouchInteraction(!true);
+		*/
+		var oneOf = Kekule.oneOf;
+		var options = Kekule.globalOptions.get('chemWidget.viewer') || {};
+		this.setUseNormalBackground(oneOf(options.useNormalBackground, false));
+		this.setEnableCustomCssProperties(oneOf(options.enableCustomCssProperties, true));
+		this.setRestraintRotation3DEdgeRatio(oneOf(options.restraintRotation3DEdgeRatio, 0.18));
+		this.setEnableRestraintRotation3D(oneOf(options.enableRestraintRotation3D, true));
+		this.setEnableTouchInteraction(oneOf(options.enableTouchInteraction, false));
+
+		options = options.editor || {};
+		this.setModalEdit(oneOf(options.modal, true));
+		this.setRestrainEditorWithCurrObj(oneOf(options.restrainEditorWithCurrObj, true));
+		this.setShareEditorInstance(oneOf(options.shareEditorInstance, true));
 	},
 
 	/** @ignore */

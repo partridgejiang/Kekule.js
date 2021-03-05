@@ -96,6 +96,26 @@ Kekule.Editor.SelectMode = {
 	ANCESTOR: 10
 };
 
+// add some global options
+Kekule.globalOptions.add('chemWidget.editor', {
+	'enableIssueCheck': true,
+	'enableCreateNewDoc': true,
+	'enableOperHistory': true,
+	'enableOperContext': true,
+	'initOnNewDoc': true,
+
+	'enableSelect': true,
+	'enableMove': true,
+	'enableResize': true,
+	'enableAspectRatioLockedResize': true,
+	'enableRotate': true,
+	'enableGesture': true
+});
+Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
+	'enableAutoIssueCheck': true,
+	'enableAutoScrollToActiveIssue': true
+});
+
 /**
  * A base chem editor.
  * @class
@@ -232,11 +252,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._objChanged = false;   // used internally, mark whether some changes has been made to chem object
 		this._lengthCaches = {};  // used internally, stores some value related to distance and length
 
+		var getOptionValue = Kekule.globalOptions.get;
+		/*
 		this.setPropStoreFieldValue('enableIssueCheck', true);
 		this.setPropStoreFieldValue('enableCreateNewDoc', true);
 		this.setPropStoreFieldValue('enableOperHistory', true);
 		this.setPropStoreFieldValue('enableOperContext', true);
 		this.setPropStoreFieldValue('initOnNewDoc', true);
+		*/
+		this.setPropStoreFieldValue('enableIssueCheck', getOptionValue('chemWidget.editor.enableIssueCheck', true));
+		this.setPropStoreFieldValue('enableCreateNewDoc', getOptionValue('chemWidget.editor.enableCreateNewDoc', true));
+		this.setPropStoreFieldValue('enableOperHistory', getOptionValue('chemWidget.editor.enableOperHistory', true));
+		this.setPropStoreFieldValue('enableOperContext', getOptionValue('chemWidget.editor.enableOperContext', true));
+		this.setPropStoreFieldValue('initOnNewDoc', getOptionValue('chemWidget.editor.initOnNewDoc', true));
 		//this.setPropStoreFieldValue('initialZoom', 1.5);
 
 		//this.setPropStoreFieldValue('selectMode', Kekule.Editor.SelectMode.POLYGON);  // debug
@@ -249,7 +277,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.setPropStoreFieldValue('editorConfigs', editorConfigs || this.createDefaultConfigs());
 		//this.setPropStoreFieldValue('uiMarkers', []);
-		this.setEnableGesture(true);
+		//this.setEnableGesture(true);
+		this.setEnableGesture(getOptionValue('chemWidget.editor.enableGesture', true));
 	},
 	/** @private */
 	initProperties: function()
@@ -694,10 +723,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setOperationsInCurrManipulation([]);
+		/*
 		this.setEnableAutoIssueCheck(false);
 		this.setEnableAutoScrollToActiveIssue(true);
 		var ICIDs = Kekule.IssueCheck.CheckerIds;
 		this.setIssueCheckerIds([ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]);
+		*/
+		var ICIDs = Kekule.IssueCheck.CheckerIds;
+		var getGlobalOptionValue = Kekule.globalOptions.get;
+		this.setEnableAutoIssueCheck(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoIssueCheck', true));
+		this.setEnableAutoScrollToActiveIssue(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoScrollToActiveIssue', true));
+		this.setIssueCheckerIds(getGlobalOptionValue('chemWidget.editor.issueChecker.issueCheckerIds', [ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]));
 	},
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
@@ -6029,12 +6065,14 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 
+		/*
 		this.setEnableSelect(false);
 		this.setEnableGestureManipulation(false);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
 		this.setEnableAspectRatioLockedResize(true);
 		this.setEnableRotate(true);
+		*/
 
 		this._suppressConstrainedResize = false;
 		this._manipulationStepBuffer = {};
@@ -6159,6 +6197,26 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				return result;
 			}
 		});  // store operation on each object
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setEnableSelect(false);  // turn off select for most of IA controllers derived from this class
+		this.setEnableGestureManipulation(false);  // turn off gesture for most of IA controllers derived from this class
+		/*
+		this.setEnableGestureManipulation(false);
+		this.setEnableMove(true);
+		this.setEnableResize(true);
+		this.setEnableAspectRatioLockedResize(true);
+		this.setEnableRotate(true);
+		*/
+		var options = Kekule.globalOptions.get('chemWidget.editor') || {};
+		var oneOf = Kekule.oneOf;
+		this.setEnableMove(oneOf(options.enableMove, true));
+		this.setEnableResize(oneOf(options.enableResize, true));
+		this.setEnableAspectRatioLockedResize(oneOf(options.enableAspectRatioLockedResize, true));
+		this.setEnableRotate(oneOf(options.enableRotate, true));
 	},
 	/** @private */
 	doFinalize: function(/*$super*/)

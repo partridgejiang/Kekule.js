@@ -54,6 +54,13 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
+/** @ignore */
+Kekule.globalOptions.add('chemWidget.ChemObjInserter', {
+	'autoSizeExport': true,
+	'backgroundColor3D': '#000000',
+	'exportViewerPredefinedSetting': 'basic'
+});
+
 
 /**
  * A chem widget to insert chem viewer elements to HTML document.
@@ -202,9 +209,20 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	initPropValues: function(/*$super*/)
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
+		/*
 		this.setAutoSizeExport(true);
 		this.setBackgroundColor3D(this.DEF_BGCOLOR_3D);
 		this.setExportViewerPredefinedSetting('basic');
+		*/
+		var options = Object.extend({
+			'autoSizeExport': true,
+			'backgroundColor3D': this.DEF_BGCOLOR_3D,
+			'exportViewerPredefinedSetting': 'basic'
+		}, Kekule.globalOptions.get('chemWidget.ChemObjInserter'), {});
+
+		this.setAutoSizeExport(options.autoSizeExport);
+		this.setBackgroundColor3D(options.backgroundColor3D);
+		this.setExportViewerPredefinedSetting(options.exportViewerPredefinedSetting);
 	},
 	/**
 	 * Define property that directly mapped to viewer's property.
