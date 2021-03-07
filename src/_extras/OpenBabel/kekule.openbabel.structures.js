@@ -180,6 +180,7 @@ Kekule.OpenBabel.StructUtils = {
 		var gen2d = Module['OBOp'].FindType('Gen2D');
 		if (gen2d)
 		{
+			var speed = ('' + options.speed) || '';  // ensure speed is string
 			gen2d.Do(obMol, speed);
 			result = true;
 		}
@@ -342,12 +343,14 @@ if (Kekule.Calculator)
 					var err;
 					try
 					{
-						var mol = Kekule.OpenBabel.StructUtils.generate3DStructure(self.getSourceMol(), /*self.getForceField()*/self.getOptions());
+						var generatorFunc = (self.getOutputDimension() === 2)? Kekule.OpenBabel.StructUtils.generate2DStructure: Kekule.OpenBabel.StructUtils.generate3DStructure;
+						var mol = generatorFunc(self.getSourceMol(), /*self.getForceField()*/self.getOptions());
 						self.setGeneratedMol(mol);
 					}
 					catch (e)
 					{
 						err = e;
+						throw e;
 					}
 
 					if (!err)  // successful
