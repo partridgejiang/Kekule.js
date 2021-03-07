@@ -1462,6 +1462,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		// editor delegated property
 		// from ChemObjDisplayer
 		this._defineEditorDelegatedProp('chemObj');
+		this._defineEditorDelegatedProp('chemObjData');
 		this._defineEditorDelegatedProp('chemObjLoaded');
 		this._defineEditorDelegatedProp('renderType');
 		this._defineEditorDelegatedProp('renderConfigs');
