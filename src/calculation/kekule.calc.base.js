@@ -80,6 +80,13 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		this.reactWorkerMessageBind = this.reactWorkerMessage.bind(this);
 		this.reactWorkerErrorBind = this.reactWorkerError.bind(this);
 	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this.finalizeWorker();
+		this.tryApplySuper('doFinalize');
+	},
+
 	/** @private */
 	_generateUid: function()
 	{
@@ -145,7 +152,7 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 		{
 			if (callback)
 				callback.apply(this, arguments);
-			//self.workerJobDone();
+			//self.finalizeWorker();
 		};
 		*/
 		this._doneCallback = callback;  //done;
@@ -374,10 +381,6 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	{
 		// do nothing here
 	},
-	/**
-	 * Called when calculation job in worker is finished.
-	 * @private
-	 */
 	workerJobDone: function()
 	{
 		var w = this.getWorker();
@@ -386,6 +389,26 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 			//console.log('worker done', this.getUid());
 			this._uninstallWorkerEventReceiver(w);
 			this._decWorkerSharedCount(w);
+			/*
+			if (!this._isWorkerInSharingState(w))  // avoid terminate shared worker too early
+			{
+				//console.log('TERMINATE');
+				w.terminate();
+			}
+			this.setPropStoreFieldValue('worker', null);
+			*/
+		}
+	},
+	/**
+	 * Called when calculation job in worker is finished.
+	 * @private
+	 */
+	finalizeWorker: function()
+	{
+		var w = this.getWorker();
+		if (w)
+		{
+			//console.log('worker done', this.getUid());
 			if (!this._isWorkerInSharingState(w))  // avoid terminate shared worker too early
 			{
 				//console.log('TERMINATE');
