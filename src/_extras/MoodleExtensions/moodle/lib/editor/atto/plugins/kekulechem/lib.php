@@ -103,7 +103,7 @@ function atto_kekulechem_params_for_js($elementid, $options, $foptions) {
     }
 
     $params = array(
-        'kekuleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getScriptDir() . 'kekule/themes/default/kekule.css',
+        'kekuleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getKekuleScriptDir() . 'themes/default/kekule.css',
         'kekuleMoodleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getAdapterDir() . 'kekuleMoodle.css',
         'attoKekulePluginPath' => $CFG->httpswwwroot . '/lib/editor/atto/plugins/kekulechem/',
         'purifyHtml' => $purifyHtml

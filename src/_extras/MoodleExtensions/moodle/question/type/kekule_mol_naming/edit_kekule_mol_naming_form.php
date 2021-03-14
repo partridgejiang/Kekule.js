@@ -64,12 +64,14 @@ class qtype_kekule_mol_naming_edit_form extends qtype_kekule_multianswer_edit_fo
             'removespaces' => false,  // $question->removespaces,  // do not remove spaces in standard answer, remaining the original form
 	        'strictstereoflags' => true  // $question->strictStereoFlags  // do not remove bracket around stereo flags in standard answer
         );
-        $answers = $question->options->answers;
-        foreach($answers as $answer)
+	    $answers = $question->options? $question->options->answers: [];
+        if ($answers)
         {
-            $ansText = $answer->answer;
-            $standardizedAns = qtype_kekule_mol_naming_utils::cleanName($ansText, $options);
-            $answer->answer = $standardizedAns;
+	        foreach ($answers as $answer) {
+		        $ansText = $answer->answer;
+		        $standardizedAns = qtype_kekule_mol_naming_utils::cleanName($ansText, $options);
+		        $answer->answer = $standardizedAns;
+	        }
         }
         //var_dump($question->options->answers);
         $result = parent::data_preprocessing_answers($question, $withanswerfiles);

@@ -21,14 +21,14 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 				/*
 				BNS.molRepSubBondMark,
 				BNS.molRepMethane,
-				*/				
+				*/
 				BNS.molRepFischer1, BNS.molRepFischer2,
 				BNS.molRepSawhorseStaggered, BNS.molRepSawhorseEclipsed
 			]},
-			BNS.molAtomAndFormula,			
+			BNS.molAtomAndFormula,
 			{'name': BNS.molRing, 'attached': [
-				BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6, 
-				BNS.molFlexRing, 
+				BNS.molRing3, BNS.molRing4, BNS.molRing5, BNS.molRing6,
+				BNS.molFlexRing,
 				BNS.molRingAr6,
 				BNS.molRepCyclopentaneHaworth1, /* BNS.molRepCyclopentaneHaworth2,*/
 				BNS.molRepCyclohexaneHaworth1, /* BNS.molRepCyclohexaneHaworth2, */
@@ -86,7 +86,13 @@ if (Kekule.globalOptions && Kekule.ChemWidget)
 					BNS.molRepCyclohexaneHaworth1, /* BNS.molRepCyclohexaneHaworth2, */
 					BNS.molRepCyclohexaneChair1, BNS.molRepCyclohexaneChair2
 				]},
-				BNS.molCharge
+				//BNS.molCharge
+				{
+					'name': BNS.molCharge, 'attached': [
+						BNS.molChargeClear, BNS.molChargePositive, BNS.molChargeNegative,
+						BNS.molRadicalDoublet, BNS.molElectronLonePair
+					]
+				}
 			],   // create only chem tool buttons related with molecule
 			styleToolComponentNames: null,  // create all default style components
 			allowedObjModifierCategories: [EMC.GENERAL, EMC.CHEM_STRUCTURE]  // only all chem structure modifiers

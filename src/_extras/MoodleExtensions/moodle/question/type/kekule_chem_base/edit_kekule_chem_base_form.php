@@ -56,7 +56,8 @@ class qtype_kekule_chem_base_edit_form extends qtype_kekule_multianswer_edit_for
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
         */
         kekulejs_utils::includeKekuleScriptFiles();
-        $PAGE->requires->js('/question/type/kekule_chem_base/scripts/editForm.js');
+        //$PAGE->requires->js('/question/type/kekule_chem_base/scripts/editForm.js');
+	    $PAGE->requires->js_call_amd('qtype_kekule_chem_base/editForm', 'init');
         //$PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
         kekulejs_utils::includeKekuleCssFiles();
         $PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');

@@ -1,7 +1,10 @@
 {
     "moodle-atto_kekulechem-button": {
         "requires": [
-            "moodle-editor_atto-plugin"
+            "moodle-editor_atto-plugin",
+            "kekule",
+            "local_kekulejs",
+            "local_kekulejs/kekuleInitials"
         ]
     }
 }

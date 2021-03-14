@@ -66,9 +66,15 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
         $PAGE->requires->js($kekuleDir . 'kekule/kekule.js?modules=io,chemWidget,algorithm&locals=zh');
         */
         kekulejs_utils::includeKekuleScriptFiles();
+        /*
 	    $PAGE->requires->js('/question/type/kekule_chem_base/scripts/extraLangs.js');
 	    $PAGE->requires->js('/question/type/kekule_chem_base/scripts/extraWidgets.js');
         $PAGE->requires->js('/question/type/kekule_chem_base/scripts/render.js');
+        */
+
+        $PAGE->requires->js_call_amd('qtype_kekule_chem_base/extraLangs', 'init');
+	    $PAGE->requires->js_call_amd('qtype_kekule_chem_base/extraWidgets', 'init');
+	    $PAGE->requires->js_call_amd('qtype_kekule_chem_base/render', 'init');
         //$PAGE->requires->css($kekuleDir . 'kekule/themes/default/kekule.css');
         //$PAGE->requires->css('/question/type/kekule_chem_base/scripts/kekule_chem.css');
 

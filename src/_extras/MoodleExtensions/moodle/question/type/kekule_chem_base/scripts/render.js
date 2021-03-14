@@ -213,7 +213,7 @@ function _btnStructureCopyDropDownPanelGetter(btn)
 function _reactStructureCopyDropDownPanelSelect(e)
 {
 	var panel = e.target;
-	console.log(panel._invokerViewer, e.chemObj);
+	//console.log(panel._invokerViewer, e.chemObj);
 	var mol = e.chemObj;
 	if (mol && mol instanceof Kekule.StructureFragment)
 	{
