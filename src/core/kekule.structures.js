@@ -1091,6 +1091,16 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		}
 		else
 			return this.tryApplySuper('doGetCoord3D', [allowCoordBorrow, allowCreateNew])  /* $super(allowCoordBorrow, allowCreateNew) */;
+	},
+	/**
+	 * Returns whether this node is the only child(node or connector) in parent structure, or has no parent structure.
+	 * The orphan node may be occurs in 2D molecule CH4, BH3, etc., or metal molecule.
+	 * @returns {Bool}
+	 */
+	isOrphan: function()
+	{
+		var parent = this.getParent();
+		return (!parent || parent.getChildCount() <= 1);
 	}
 });
 
@@ -1532,6 +1542,7 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
  * @property {Hash} atomType The type if this atom, data is read from {@link kekule.structGenAtomTypesData.js}.
  *   Undefined or null means uncertain type.
  * @property {Int} hybridizationType Hybridization type (sp/sp2/sp3) of atom Undefined or null means uncertain type.
+ * @property {Bool} disableImplicitHydrogenEstimation Whether the auto calcualtion of implicit H count is disabled (e.g., for metal atoms).
  */
 Kekule.Atom = Class.create(Kekule.AbstractAtom,
 /** @lends Kekule.Atom# */
@@ -1644,6 +1655,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				}
 		});
 		this.defineProp('hybridizationType', {'dataType': DataType.INT, 'enumSource': Kekule.HybridizationType});
+		this.defineProp('disableImplicitHydrogenEstimation', {'dataType': DataType.BOOL});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -1736,6 +1748,15 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/**
+	 * Returns the element series of current atom.
+	 * @returns {String} Value from {@link Kekule.ElementSeries}.
+	 */
+	getElementSeries: function()
+	{
+		var isotope = this.getIsotope();
+		return isotope && isotope.getSeries();
+	},
+	/**
 	 * Check if this is a normal atom (not a pseudo one or unset one)
 	 */
 	isNormalAtom: function()
@@ -1743,7 +1764,6 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		var isotope = this.getIsotope();
 		return isotope? isotope.isNormalElement(): false;
 	},
-
 	/** @ignore */
 	isHydrogenAtom: function()
 	{
@@ -1840,12 +1860,12 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/**
-	 * If {@link Kekule.Atom#explicitHydrogenCount} is not set, use this function to retrieve count implicit hydrogens.
+	 * Returns the count of implicit hydrogens.
 	 * @returns {Int} Implicit hydrogen count.
 	 */
 	getImplicitHydrogenCount: function()
 	{
-		if (this.isNormalAtom())
+		if (this.isNormalAtom() && !this.getDisableImplicitHydrogenEstimation())
 		{
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{

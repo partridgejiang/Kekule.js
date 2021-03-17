@@ -612,24 +612,33 @@ Kekule.Editor.OperationUtils = {
 			if (modifiedProps)
 			{
 				var mProps = Object.extend({}, modifiedProps);  // clone this object to protect it, since we may change props in the following code
-				if (node.getExplicitHydrogenCount && node.getExplicitHydrogenCount())  // has old explicit hydrogen count, explicit clear it
+				if (node.getExplicitHydrogenCount && node.getExplicitHydrogenCount())  // has old explicit hydrogen count, explicitly clear it
 				{
 					mProps.explicitHydrogenCount = null;
 				}
 				if (mProps.inputHydrogenCount && mProps.isotopeId)  // user has input hydrogen count, comparing with implicit HCount, if different, use it as explicit HCount
 				{
-					var oldCovalentBondsInfo = (node._getCurrCovalentBondsInfo && node._getCurrCovalentBondsInfo()) || {};
-					var oldIonicBondsInfo = (node._getCurrIonicBondsInfo && node._getCurrIonicBondsInfo()) || {};
-					var atomicSymbol = Kekule.IsotopesDataUtil.getIsotopeIdDetail(mProps.isotopeId).symbol;
-					var atomicNum = Kekule.ChemicalElementsDataUtil.getAtomicNumber(atomicSymbol);
-					var charge = Math.round((node.getCharge && node.getCharge()) || 0);
-					var radicalECount = node.getRadical ? Kekule.RadicalOrder.getRadicalElectronCount(node.getRadical()) : 0;
-					var newImplicitHCount = Kekule.ChemStructureUtils.getImplicitHydrogenCount(atomicNum, {
-						'coValenceBondValenceSum': oldCovalentBondsInfo.valenceSum || 0,
-						'otherBondValenceSum': oldIonicBondsInfo.valenceSum || 0,
-						'charge': charge,
-						'radicalECount': radicalECount
-					});
+					var newImplicitHCount;
+					var modifyTargetNode = newNode || node;
+					if (modifyTargetNode && modifyTargetNode.getDisableImplicitHydrogenEstimation && modifyTargetNode.getDisableImplicitHydrogenEstimation())
+					{
+						newImplicitHCount = 0;
+					}
+					else
+					{
+						var oldCovalentBondsInfo = (node._getCurrCovalentBondsInfo && node._getCurrCovalentBondsInfo()) || {};
+						var oldIonicBondsInfo = (node._getCurrIonicBondsInfo && node._getCurrIonicBondsInfo()) || {};
+						var atomicSymbol = Kekule.IsotopesDataUtil.getIsotopeIdDetail(mProps.isotopeId).symbol;
+						var atomicNum = Kekule.ChemicalElementsDataUtil.getAtomicNumber(atomicSymbol);
+						var charge = Math.round((node.getCharge && node.getCharge()) || 0);
+						var radicalECount = node.getRadical ? Kekule.RadicalOrder.getRadicalElectronCount(node.getRadical()) : 0;
+						newImplicitHCount = Kekule.ChemStructureUtils.getImplicitHydrogenCount(atomicNum, {
+							'coValenceBondValenceSum': oldCovalentBondsInfo.valenceSum || 0,
+							'otherBondValenceSum': oldIonicBondsInfo.valenceSum || 0,
+							'charge': charge,
+							'radicalECount': radicalECount
+						});
+					}
 					//console.log('impl expl compare', newImplicitHCount, mProps.inputHydrogenCount);
 					if (newImplicitHCount !== mProps.inputHydrogenCount)  // not match, use the inputHydrogenCount as explicit HCount
 					{
