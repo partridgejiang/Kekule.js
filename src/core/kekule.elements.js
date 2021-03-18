@@ -13,7 +13,10 @@
 
 /**
  * Enumeration of series of element.
+ * These values are directly read from element data file.
+ * Now the series should be deprecated, use {@link Kekule.ElementCategory} instead.
  * @enum
+ * @deprecated
  */
 Kekule.ElementSeries = {
 	NONMETAL: 'Nonmetals',
@@ -26,6 +29,24 @@ Kekule.ElementSeries = {
 	NOBLE_GAS: 'Noble Gases',
 	LANTHANIDE: 'Lanthanides',
 	ACTINIDE: 'Actinides'
+};
+
+/**
+ * Enumeration of element categories.
+ * An element may belongs to multiple categories (e.g., Cl is both nonmetal and halogen).
+ * @enum
+ */
+Kekule.ElementCategory = {
+	NONMETAL: 1,
+	METAL: 21,
+	ALKALI_METAL: 22,
+	ALKALI_EARTH_METAL: 23,
+	TRANSITION_METAL: 24,
+	METALLOID: 11,
+	HALOGEN: 3,
+	NOBLE_GAS: 2,
+	LANTHANIDE: 25,
+	ACTINIDE: 26
 };
 
 /**
@@ -65,6 +86,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 				this.setPropStoreFieldValue('period', elemInfo.period);
 				this.setPropStoreFieldValue('series', elemInfo.chemicalSerie);
 				this.setPropStoreFieldValue('naturalMass', elemInfo.naturalMass);
+				this.setPropStoreFieldValue('categories', this._getElementCategoriesFromSeries(elemInfo.chemicalSerie));
 				if (elemInfo.name)
 					this.setPropStoreFieldValue('name', elemInfo.name);
 			}
@@ -99,6 +121,7 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 		this.defineProp('group', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
 		this.defineProp('period', {'dataType': DataType.INT, 'serializable': false, 'setter': null});
 		this.defineProp('series', {'dataType': DataType.STRING, 'serializable': false, 'setter': null});
+		this.defineProp('categories', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		this.defineProp('naturalMass', {'dataType': DataType.FLOAT, 'serializable': false, 'setter': null});
 	},
 	/**
@@ -115,6 +138,27 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 			return {'symbol': Kekule.Element.RGROUP_ELEMENT, 'atomicNumber': Kekule.Element.RGROUP_ELEMENT_ATMOICNUM};
 		else
 			return Kekule.ChemicalElementsDataUtil.getElementInfo(symbolOrAtomicNumber);
+	},
+	/** @private */
+	_getElementCategoriesFromSeries: function(series)
+	{
+		var ES = Kekule.ElementSeries;
+		var EC = Kekule.ElementCategory;
+		var result = [];
+		switch (series)
+		{
+			case ES.NONMETAL: result = [EC.NONMETAL]; break;
+			case ES.METAL: result = [EC.METAL]; break;
+			case ES.ALKALI_METAL: result = [EC.METAL, EC.ALKALI_METAL]; break;
+			case ES.ALKALI_EARTH_METAL: result = [EC.METAL, EC.ALKALI_EARTH_METAL]; break;
+			case ES.TRANSITION_METAL: result = [EC.METAL, EC.TRANSITION_METAL]; break;
+			case ES.METALLOID: result = [EC.METALLOID]; break;
+			case ES.HALOGEN: result = [EC.NONMETAL, EC.HALOGEN]; break;
+			case ES.NOBLE_GAS: result = [EC.NONMETAL, EC.NOBLE_GAS]; break;
+			case ES.LANTHANIDE: result = [EC.METAL, EC.LANTHANIDE]; break;
+			case ES.ACTINIDE: result = [EC.METAL, EC.ACTINIDE]; break;
+		}
+		return result;
 	},
 	/**
 	 * Roughly get the theoretic valence of an element in a certain group.
@@ -174,6 +218,16 @@ Kekule.Element = Class.create(Kekule.ChemObject,
 	{
 		return ((this.getSeries() === Kekule.ElementSeries.NONMETAL) || (this.getSeries() === Kekule.ElementSeries.HALOGEN))
 			&& (this.getAtomicNumber() !== 6) && (this.getAtomicNumber() !== 1); // not C/H
+	},
+	/**
+	 * Check if this element belong to a certain category.
+	 * @param {Int} category Value from {@link Kekule.ElementCategory}
+	 * @returns {Bool}
+	 */
+	belongToCategory: function(category)
+	{
+		var cs = this.getCategories() || [];
+		return cs.indexOf(category) >= 0;
 	},
 	/**
 	 * Returns a string label to represent this element.
