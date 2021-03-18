@@ -69,22 +69,39 @@ Kekule.Widget.KeyboardUtils = {
 		return map;
 	},
 	/**
+	 * Returns is value is a printable key (e.g., 'a', ' ', '+'), not a virtual or control one (e.g. 'tab', 'F1', 'Shift').
+	 * @param {String} key
+	 * @returns {Bool}
+	 */
+	isPrintableKey: function(key)
+	{
+		if (key)
+			return key.length <= 1;
+		else
+			return false;
+	},
+	/**
 	 * Returns the shifted char of a keyboard key.
-	 * @param {Char} key
-	 * @returns {Char}
+	 * @param {String} key
+	 * @returns {String}
 	 */
 	getShiftedKey: function(key)
 	{
-		var c = key.charAt(0);  // ensure the first char
-		if (c >= 'a' && c <= 'z')
-			return c.toUpperCase();
-		else if (c >= 'A' && c <= 'Z')
-			return c.toLowerCase();
-		else
+		if (key && key.length <= 1)
 		{
-			var shifted = Kekule.Widget.KeyboardUtils._shiftKeyMap[c];
-			return shifted || c;
+			var c = key.charAt(0);  // ensure the first char
+			if (c >= 'a' && c <= 'z')
+				return c.toUpperCase();
+			else if (c >= 'A' && c <= 'Z')
+				return c.toLowerCase();
+			else
+			{
+				var shifted = Kekule.Widget.KeyboardUtils._shiftKeyMap[c];
+				return shifted || c;
+			}
 		}
+		else
+			return key;
 	},
 	/**
 	 * Returns a key event params hash for a shorcut display label.
@@ -209,6 +226,41 @@ Kekule.Widget.KeyboardUtils = {
 		}
 		return labels.join(delimiter);
 	},
+	/**
+	 * Turn some alias of key values to one standard one.
+	 * @param {String} value
+	 * returns {String}
+	 * @private
+	 */
+	_standardizeEventKeyValue: function(value)
+	{
+		if (value === 'Esc')
+			return 'Escape';
+		else if (value === 'Del')
+			return 'Delete';
+		else if (value === 'Spacebar')
+			return ' ';
+		else if (value === 'Left')
+			return 'ArrowLeft';
+		else if (value === 'Right')
+			return 'ArrowRight';
+		else if (value === 'Up')
+			return 'ArrowUp';
+		else if (value === 'Down')
+			return 'ArrowDown';
+		else if (value === 'OS')
+			return 'Meta';
+		else if (value === 'Scroll')
+			return 'ScrollLock';
+		else if (value === 'Apps')
+			return 'ContextMenu';
+		else if (value === 'Crsel')
+			return 'CrSel';
+		else if (value === 'Exsel')
+			return 'ExSel';
+		else
+			return value;
+	},
 
 	/**
 	 * Extract key param values from an event object.
@@ -222,7 +274,7 @@ Kekule.Widget.KeyboardUtils = {
 			'ctrlKey': event.getCtrlKey(),
 			'shiftKey': event.getShiftKey(),
 			'metaKey': event.getMetaKey(),
-			'key': event.getKey(),
+			'key': Kekule.Widget.KeyboardUtils._standardizeEventKeyValue(event.getKey()),
 			'code': event.getCode(),
 			'repeat': event.getRepeat()
 		};
@@ -241,10 +293,11 @@ Kekule.Widget.KeyboardUtils = {
 		var matchValue = function(value1, value2) { return (value2 === null) || (!value2 === !value1); };
 		var matchKeyValue = function(key1, key2)
 		{
+			var _s = Kekule.Widget.KeyboardUtils._standardizeEventKeyValue;
 			if (strictMatch)
-				return key2 === key1;
+				return _s(key2) === _s(key1);
 			else
-				return (key2 === key1) || (key1 === Kekule.Widget.KeyboardUtils.getShiftedKey(key2));
+				return (_s(key2) === _s(key1)) || (_s(key1) === Kekule.Widget.KeyboardUtils.getShiftedKey(key2));
 		};
 		// modifier keys
 		var result =
@@ -340,14 +393,16 @@ Kekule.Widget.HtmlKeyEventMatcher = Class.create(Kekule.Widget.HtmlEventMatcher,
 			(OU.isUnset(params.repeat) || !!event.getRepeat() === !!params.repeat);
 		return result;
 	},
+	/** @private */
 	_matchKey: function(event, key)
 	{
+		var _s = Kekule.Widget.KeyboardUtils._standardizeEventKeyValue;
 		var evKey = event.getKey();
 		// if key is a printable char, combined with shift may lead to another char
 		if (/*!event.getShiftKey() ||*/ this.getStrictMatch())
-			return evKey === key;
+			return _s(evKey) === _s(key);
 		else
-			return (evKey === key) || (evKey === Kekule.Widget.KeyboardUtils.getShiftedKey(key));
+			return (_s(evKey) === _s(key)) || (evKey === Kekule.Widget.KeyboardUtils.getShiftedKey(key));
 	}
 });
 /** @ignore */

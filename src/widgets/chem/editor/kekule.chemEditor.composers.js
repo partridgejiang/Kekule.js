@@ -1462,6 +1462,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		// editor delegated property
 		// from ChemObjDisplayer
 		this._defineEditorDelegatedProp('chemObj');
+		this._defineEditorDelegatedProp('chemObjData');
 		this._defineEditorDelegatedProp('chemObjLoaded');
 		this._defineEditorDelegatedProp('renderType');
 		this._defineEditorDelegatedProp('renderConfigs');
@@ -2598,6 +2599,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		}
 		else
 			toolBar.appendToElem(pElem);
+		toolBar.setBubbleUiEvents(true);  // need to receive hotkey events from child toolbars
 		return toolBar;
 	},
 	/**
@@ -2883,6 +2885,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		{
 			var toolbar = new Kekule.Editor.ComposerObjModifierToolbar(this);
 			toolbar.appendToElem(this.getBottomRegionElem());
+			toolbar.setBubbleUiEvents(true);   // need to listen to hotkey events
 			this.setObjModifierToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
 			this.updateObjModifierToolbarState();
@@ -2990,6 +2993,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			var toolbar = new Kekule.Editor.ComposerStyleToolbar(this);
 			toolbar.setComponentNames(this.getStyleBarComponents());
 			toolbar.appendToElem(this.getBottomRegionElem());
+			toolbar.setBubbleUiEvents(true);
 			this.setStyleToolbar(toolbar);
 			this.adjustAssocToolbarPositions();
 			this.updateStyleToolbarState();
@@ -3124,7 +3128,25 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	{
 		var result = this.tryApplySuper('react_keydown', [e]);
 		if (!result)  // not handled, maybe a editor hotkey, delegate it to the editor.
-			return !!this.getEditor().reactHotKeys(e);
+		{
+			if (this._isAcceptableHotKeyEvent(e))
+			{
+				return !!this.getEditor().reactHotKeys(e);
+			}
+		}
+	},
+	/** @private */
+	_isAcceptableHotKeyEvent: function(e)
+	{
+		var result = false;
+		var target = e.getTarget();
+		if (target && target.tagName && ['input', 'select'].indexOf(target.tagName.toLowerCase()) < 0)
+		{
+			var key = (e.getKey() || '');
+			result = (Kekule.Widget.KeyboardUtils.isPrintableKey(key) && key !== ' ')  // space often used for activate button, so bypass it
+				|| (key === 'Backspace') || (key === 'Delete') || (key === 'Del');  // some common virtual keys
+		}
+		return result;
 	}
 });
 /**

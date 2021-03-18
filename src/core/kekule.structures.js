@@ -57,6 +57,25 @@ Kekule.globalOptions.add('algorithm.structureClean', {
 	}
 });
 
+// The target atom element that should be applied implicit H estimation.
+// Defaultly all elements should be applied. If some need to be excluded, you need to
+// explicitly set its value to false.
+Kekule.globalOptions.add('structure.implicitHydrogenEstimationStrategy', {
+	targetElementCategories: {
+
+	},
+	targetElements: {
+
+	},
+	targetOrphanAtomElementCategories: {
+
+	},
+	targetOrphanAtomElements: {
+
+	}
+});
+Kekule.globalOptions.structure.implicitHydrogenEstimationStrategy.targetOrphanAtomElementCategories[Kekule.ElementCategory.METAL] = false;
+
 // extend method to Kekule.ObjComparer
 Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
 {
@@ -442,6 +461,17 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 	 * @returns {Kekule.ChemStructureObject}
 	 */
 	getCurrConnectableObj: function()
+	{
+		return this;
+	},
+	/**
+	 * Returns self or a child object that directly linked to the connector.
+	 * For atom or other simple chem object, this function should just returns self,
+	 * for structure fragment, this function need to returns the anchor node linking to connector.
+	 * @param {Kekule.BaseStructureConnector} connector
+	 * @returns {Kekule.ChemStructureObject}
+	 */
+	getActualConnectedObjToConnector: function(connector)
 	{
 		return this;
 	},
@@ -1080,6 +1110,16 @@ Kekule.BaseStructureNode = Class.create(Kekule.SimpleStructureNode,
 		}
 		else
 			return this.tryApplySuper('doGetCoord3D', [allowCoordBorrow, allowCreateNew])  /* $super(allowCoordBorrow, allowCreateNew) */;
+	},
+	/**
+	 * Returns whether this node is the only child(node or connector) in parent structure, or has no parent structure.
+	 * The orphan node may be occurs in 2D molecule CH4, BH3, etc., or metal molecule.
+	 * @returns {Bool}
+	 */
+	isOrphan: function()
+	{
+		var parent = this.getParent();
+		return (!parent || parent.getChildCount() <= 1);
 	}
 });
 
@@ -1521,6 +1561,7 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
  * @property {Hash} atomType The type if this atom, data is read from {@link kekule.structGenAtomTypesData.js}.
  *   Undefined or null means uncertain type.
  * @property {Int} hybridizationType Hybridization type (sp/sp2/sp3) of atom Undefined or null means uncertain type.
+ * @property {Bool} disableImplicitHydrogenEstimation Whether the auto calcualtion of implicit H count is disabled (e.g., for metal atoms).
  */
 Kekule.Atom = Class.create(Kekule.AbstractAtom,
 /** @lends Kekule.Atom# */
@@ -1633,6 +1674,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				}
 		});
 		this.defineProp('hybridizationType', {'dataType': DataType.INT, 'enumSource': Kekule.HybridizationType});
+		this.defineProp('disableImplicitHydrogenEstimation', {'dataType': DataType.BOOL});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
@@ -1725,6 +1767,15 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/**
+	 * Returns the element series of current atom.
+	 * @returns {String} Value from {@link Kekule.ElementSeries}.
+	 */
+	getElementSeries: function()
+	{
+		var isotope = this.getIsotope();
+		return isotope && isotope.getSeries();
+	},
+	/**
 	 * Check if this is a normal atom (not a pseudo one or unset one)
 	 */
 	isNormalAtom: function()
@@ -1732,7 +1783,6 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		var isotope = this.getIsotope();
 		return isotope? isotope.isNormalElement(): false;
 	},
-
 	/** @ignore */
 	isHydrogenAtom: function()
 	{
@@ -1829,12 +1879,12 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/**
-	 * If {@link Kekule.Atom#explicitHydrogenCount} is not set, use this function to retrieve count implicit hydrogens.
+	 * Returns the count of implicit hydrogens.
 	 * @returns {Int} Implicit hydrogen count.
 	 */
 	getImplicitHydrogenCount: function()
 	{
-		if (this.isNormalAtom())
+		if (this.isNormalAtom() && this._needToEsitmateImplicityHydrogens())
 		{
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{
@@ -1867,6 +1917,41 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		}
 		else
 			return 0;
+	},
+	/** @private */
+	_needToEsitmateImplicityHydrogens: function()
+	{
+		var result = !this.getDisableImplicitHydrogenEstimation();
+		if (result)
+		{
+			var isOrphan = this.isOrphan();
+			var symbol = this.getSymbol();
+			var strategyRoot = Kekule.globalOptions.get('structure.implicitHydrogenEstimationStrategy') || {};
+			// check element
+			if ((strategyRoot.targetElements && strategyRoot.targetElements[symbol] === false)
+				|| (isOrphan && strategyRoot.targetOrphanAtomElements && strategyRoot.targetOrphanAtomElements[symbol] === false))
+			{
+				result = false;
+			}
+			// check element category
+			if (result)
+			{
+				var targetCategories = strategyRoot.targetElementCategories;
+				var targetOrphanCategories = strategyRoot.targetOrphanAtomElementCategories;
+				var elemCategories = this.getIsotope().getCategories();
+				for (var i = 0, l = elemCategories.length; i < l; ++i)
+				{
+					var c = elemCategories[i];
+					if ((targetCategories && targetCategories[c] === false)
+						|| (isOrphan && targetOrphanCategories && targetOrphanCategories[c] === false))
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+		}
+		return result;
 	},
 
 	/**
@@ -4985,8 +5070,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	{
 		return this.getCrossConnectors();
 	},
-	/* @ignore */
-
+	/** @ignore */
 	appendLinkedConnector: function(/*$super, */connector)
 	{
 		var actualLinkedNode = this.getCurrConnectableObj();
@@ -4995,7 +5079,6 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 		else  // no child, link to self
 		  return this.tryApplySuper('appendLinkedConnector', [connector])  /* $super(connector) */;
 	},
-
 
 	/** @ignore */
 	getCurrConnectableObj: function()
@@ -5024,6 +5107,26 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			return minNode;
 		}
 		//return this.getAnchorNodeAt(0) || this.getNodeAt(0) || this.getChildAt(0) || this;
+	},
+	/** @ignore */
+	getActualConnectedObjToConnector: function(connector)
+	{
+		// ensure connector is not a child connector of self
+		if (this.indexOfConnector(connector) >= 0)  // internal connector, bypass
+			return null;
+		else
+		{
+			if (connector.indexOfConnectedObj(this) >= 0)  // directly linked to self, not child nodes
+				return this;
+			// check child nodes
+			for (var i = 0, l = connector.getConnectedObjCount(); i < l; ++i)
+			{
+				var obj = connector.getConnectedObjAt(i);
+				if (obj.isChildOf(this))
+					return obj;
+			}
+			return null;
+		}
 	},
 
 	/** @private */

@@ -550,7 +550,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			result = Math.abs(massNum) + result;
 
 		var simpleOrgAtom = false;
-		if (!explicitHCount && !charge && !massNum && !schiralRot)  // no special property is set
+		if (!explicitHCount && !charge && !massNum && !schiralRot && !radical)  // no special property is set
 		{
 			if ((!isAromatic &&SMI.ORGAN_SUBSET_ATOMS.indexOf(symbol) >= 0)
 				|| (isAromatic && SMI.AROMATIC_SUBSET_ATOMS.indexOf(symbol) >= 0))

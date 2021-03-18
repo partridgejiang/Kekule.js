@@ -25,6 +25,7 @@
 
 var KC = Y.namespace('M.atto_kekulechem');
 
+
 /**
  * Atto text editor strike plugin.
  *
@@ -40,13 +41,14 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	initializer: function() {
 		this._preparingForSubmit = false;  // a flag
 
-
-		var iconUrl = this.get('attoKekulePluginPath') + 'pix/icon.gif';
+		var iconUrl = this.get('attoKekulePluginPath') + 'pix/icon.png';
+		//console.log('iconUrl', iconUrl);
+		//console.log(this.get('host'));
 		this.addButton({
 				buttonName: this.BTN_NAME_OBJ_INSERT,
 				//exec: 'strikeThrough',
-				//icon: 'e/strikethrough',
-				'iconurl': iconUrl,
+				//icon: 'icon',
+				iconurl: iconUrl,
 				callback: this._execute,
 
 				// Watch the following tags and add/remove highlighting as appropriate:
@@ -60,22 +62,33 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		var self = this;
 		var form = editor.textarea.getDOMNode().form;
 
-		Kekule.X.domReady(function(){
-			// avoid student to input unwanted pseudo atoms
-			if (Kekule.Editor.ChemSpaceEditorConfigs && Kekule.Editor.ChemSpaceEditorConfigs.getInstance)
-			{
-				var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
-				editorConfigs.getInteractionConfigs().setAllowUnknownAtomSymbol(false);
-			}
-		});
+		/* When creating button, Kekule may not be ready */
+		if (typeof(Kekule) !== 'undefined') {
+			Kekule.X.domReady(function () {
+				self._setEditorConfigs();
+			});
+			Kekule.X.domReady(function(){
+				self._prepareForDisplay();
+			});
+			/*
+			Kekule.X.Event.addListener(form, 'submit', function (e) {
+				//if (e.getTarget() === form)
+				self._prepareForSubmit();
+				//console.log(e);
+				//alert('Submit form');
+				//e.preventDefault();
+			});
+			*/
+		}
+		else
+		{
+			//document.addEventListener('load', )
+		}
 
-		Kekule.X.Event.addListener(form, 'submit', function(e){
-			//if (e.getTarget() === form)
+		form.onsubmit = function()
+		{
 			self._prepareForSubmit();
-			//console.log(e);
-			//alert('Submit form');
-			//e.preventDefault();
-		});
+		};
 
 		//console.log('init', editor.textarea.value);
 
@@ -83,9 +96,21 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 			self._prepareForDisplay();
 		});
 
+		/*
 		Kekule.X.domReady(function(){
 			self._prepareForDisplay();
 		});
+		*/
+	},
+
+	_setEditorConfigs: function()
+	{
+		// avoid student to input unwanted pseudo atoms
+		if (Kekule.Editor.ChemSpaceEditorConfigs && Kekule.Editor.ChemSpaceEditorConfigs.getInstance)
+		{
+			var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
+			editorConfigs.getInteractionConfigs().setAllowUnknownAtomSymbol(false);
+		}
 	},
 
 	_getPurifyHtml: function()
@@ -98,9 +123,10 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	_addEssentialFiles: function()
 	{
 		var cssKekule = this.get('kekuleCssUrl'); //M.util.get_string('kekuleCssUrl', 'atto_kekulechem');
-		var cssKekuleMoodle = this.get('kekuleMooduleUrl');
+		var cssKekuleMoodle = this.get('kekuleMoodleCssUrl');
 		this._addCssUrl(cssKekule);
 		this._addCssUrl(cssKekuleMoodle);
+		//console.log('[ESSENTIALFILES]', cssKekule, cssKekuleMoodle);
 	},
 	_addCssUrl: function(url)
 	{
@@ -115,6 +141,8 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
 	_prepareForDisplay: function()
 	{
+		if (typeof(Kekule) === 'undefined')
+			return;
 		if (this._preparingForSubmit)
 			return;
 		if (!this._getPurifyHtml())  // purifier not used, no need to prepare
@@ -245,7 +273,8 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		{
 			this._targetElem = null;
 		}
-		var editor = this.get('host');
+		//var editor = this.get('host');
+		this._setEditorConfigs();
 		this._openDialog();
 	},
 	/*

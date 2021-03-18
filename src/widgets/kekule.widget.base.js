@@ -3778,7 +3778,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 		{
 			// HINT: local event such as blur or focus must be bubble and handle carefully,
 			// otherwise cause problems (even recursion) in browser
-			if (this.getActualBubbleUiEvents())
+			if (this.getActualBubbleUiEvents() && !e.cancelBubble)  // when e has been called with stopPropagation, it will not be bubbled
 			{
 				var parent = this.getParent();
 				if (parent && parent.reactUiEvent)
@@ -6584,7 +6584,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
-		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+		var contextRootElem = this.getContextRootElementOfCaller(invokerWidget);
 		var topmostLayer = this.getTopmostLayer(doc, true, contextRootElem);
 
 		var isOnTopLayer = popupElem.parentNode === topmostLayer;
@@ -6702,7 +6702,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		//if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
 		if (!Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true}))  // not in DOM, put in isolate layer first to calculate dimensions
 		{
-			var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+			var contextRootElem = this.getContextRootElementOfCaller(invokerWidget);
 			isolatedLayer = this.getIsolatedLayer(widget.getDocument(), true, contextRootElem);
 			isolatedLayer.appendChild(elem);
 			manualAppended = true;
@@ -6744,7 +6744,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		// check which direction can display all part of widget and drop dropdown widget to that direction
 		var invokerElem = invokerWidget.getElement();
-		var contextRootElem = this.getWidgetContextRootElement(invokerWidget);
+		var contextRootElem = this.getContextRootElementOfCaller(invokerWidget);
 		var invokerClientRect = EU.getElemBoundingClientRect(invokerElem, true);
 		//var invokerClientRect = EU.getElemPageRect(invokerElem, false);
 		//var viewPortDim = EU.getViewportDimension(invokerElem);
@@ -7164,7 +7164,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		*/
 
 		// ensure the modal background and modal element behind the topmost layer (where the popup widget may exist in it)
-		var rootElem = this.getWidgetContextRootElement(caller);
+		var rootElem = this.getContextRootElementOfCaller(caller);
 		//console.log(rootElem, widget);
 		var topmostLayer = this.getTopmostLayer(doc, false, rootElem);
 		if (topmostLayer && topmostLayer.parentNode === rootElem)
@@ -7249,6 +7249,17 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			return widget.getDocument().body;
 		else  // widget is null
 			return this._document.body;
+	},
+	/**
+	 * Returns the root element of widget/element context, usually the document.documentElement.
+	 * @param {Variant} caller A widget or HTML element
+	 * @returns {HTMLElement}
+	 */
+	getContextRootElementOfCaller: function(caller)
+	{
+		return (caller instanceof Kekule.Widget.BaseWidget)? this.getWidgetContextRootElement(caller):
+			caller.ownerDocument? caller.ownerDocument.body:
+			this._document.body;
 	},
 
 	/**

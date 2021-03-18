@@ -96,6 +96,26 @@ Kekule.Editor.SelectMode = {
 	ANCESTOR: 10
 };
 
+// add some global options
+Kekule.globalOptions.add('chemWidget.editor', {
+	'enableIssueCheck': true,
+	'enableCreateNewDoc': true,
+	'enableOperHistory': true,
+	'enableOperContext': true,
+	'initOnNewDoc': true,
+
+	'enableSelect': true,
+	'enableMove': true,
+	'enableResize': true,
+	'enableAspectRatioLockedResize': true,
+	'enableRotate': true,
+	'enableGesture': true
+});
+Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
+	'enableAutoIssueCheck': true,
+	'enableAutoScrollToActiveIssue': true
+});
+
 /**
  * A base chem editor.
  * @class
@@ -232,11 +252,19 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this._objChanged = false;   // used internally, mark whether some changes has been made to chem object
 		this._lengthCaches = {};  // used internally, stores some value related to distance and length
 
+		var getOptionValue = Kekule.globalOptions.get;
+		/*
 		this.setPropStoreFieldValue('enableIssueCheck', true);
 		this.setPropStoreFieldValue('enableCreateNewDoc', true);
 		this.setPropStoreFieldValue('enableOperHistory', true);
 		this.setPropStoreFieldValue('enableOperContext', true);
 		this.setPropStoreFieldValue('initOnNewDoc', true);
+		*/
+		this.setPropStoreFieldValue('enableIssueCheck', getOptionValue('chemWidget.editor.enableIssueCheck', true));
+		this.setPropStoreFieldValue('enableCreateNewDoc', getOptionValue('chemWidget.editor.enableCreateNewDoc', true));
+		this.setPropStoreFieldValue('enableOperHistory', getOptionValue('chemWidget.editor.enableOperHistory', true));
+		this.setPropStoreFieldValue('enableOperContext', getOptionValue('chemWidget.editor.enableOperContext', true));
+		this.setPropStoreFieldValue('initOnNewDoc', getOptionValue('chemWidget.editor.initOnNewDoc', true));
 		//this.setPropStoreFieldValue('initialZoom', 1.5);
 
 		//this.setPropStoreFieldValue('selectMode', Kekule.Editor.SelectMode.POLYGON);  // debug
@@ -249,7 +277,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		this.setPropStoreFieldValue('editorConfigs', editorConfigs || this.createDefaultConfigs());
 		//this.setPropStoreFieldValue('uiMarkers', []);
-		this.setEnableGesture(true);
+		//this.setEnableGesture(true);
+		this.setEnableGesture(getOptionValue('chemWidget.editor.enableGesture', true));
 	},
 	/** @private */
 	initProperties: function()
@@ -694,10 +723,17 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
 		this.setOperationsInCurrManipulation([]);
+		/*
 		this.setEnableAutoIssueCheck(false);
 		this.setEnableAutoScrollToActiveIssue(true);
 		var ICIDs = Kekule.IssueCheck.CheckerIds;
 		this.setIssueCheckerIds([ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]);
+		*/
+		var ICIDs = Kekule.IssueCheck.CheckerIds;
+		var getGlobalOptionValue = Kekule.globalOptions.get;
+		this.setEnableAutoIssueCheck(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoIssueCheck', true));
+		this.setEnableAutoScrollToActiveIssue(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoScrollToActiveIssue', true));
+		this.setIssueCheckerIds(getGlobalOptionValue('chemWidget.editor.issueChecker.issueCheckerIds', [ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]));
 	},
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)
@@ -2816,7 +2852,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				var levelName = Kekule.ErrorLevel.levelToString(issueLevel);
 				var configs = this.getEditorConfigs().getUiMarkerConfigs();
-				var styleConfigs = configs.getIssueCheckMarkerStyles()[levelName];
+				var styleConfigs = configs.getIssueCheckMarkerColors()[levelName];
 				var drawStyles = {
 					'strokeColor': isActive ? styleConfigs.activeStokeColor : styleConfigs.strokeColor,
 					'strokeWidth': isActive ? configs.getIssueCheckActiveMarkerStrokeWidth() : configs.getIssueCheckMarkerStrokeWidth(),
@@ -6029,12 +6065,14 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
 		this.setState(Kekule.Editor.BasicManipulationIaController.State.NORMAL);
 
+		/*
 		this.setEnableSelect(false);
 		this.setEnableGestureManipulation(false);
 		this.setEnableMove(true);
 		this.setEnableResize(true);
 		this.setEnableAspectRatioLockedResize(true);
 		this.setEnableRotate(true);
+		*/
 
 		this._suppressConstrainedResize = false;
 		this._manipulationStepBuffer = {};
@@ -6159,6 +6197,26 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				return result;
 			}
 		});  // store operation on each object
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setEnableSelect(false);  // turn off select for most of IA controllers derived from this class
+		this.setEnableGestureManipulation(false);  // turn off gesture for most of IA controllers derived from this class
+		/*
+		this.setEnableGestureManipulation(false);
+		this.setEnableMove(true);
+		this.setEnableResize(true);
+		this.setEnableAspectRatioLockedResize(true);
+		this.setEnableRotate(true);
+		*/
+		var options = Kekule.globalOptions.get('chemWidget.editor') || {};
+		var oneOf = Kekule.oneOf;
+		this.setEnableMove(oneOf(options.enableMove, true));
+		this.setEnableResize(oneOf(options.enableResize, true));
+		this.setEnableAspectRatioLockedResize(oneOf(options.enableAspectRatioLockedResize, true));
+		this.setEnableRotate(oneOf(options.enableRotate, true));
 	},
 	/** @private */
 	doFinalize: function(/*$super*/)
@@ -6532,6 +6590,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.doPrepareManipulatingStartingCoords(startScreenCoord, startBox, rotateCenter, rotateRefCoord);
 		this.createManipulateOperation();
 
+		this._cachedTransformCompareThresholds = null;   // clear cache
 		this._runManipulationStepId = Kekule.window.requestAnimationFrame(this.execManipulationStepBind);
 		//this.setManuallyHotTrack(true);  // manully set hot track point when manipulating
 	},
@@ -6866,6 +6925,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				scaleX = (Math.sign(scaleX) || 1) * absY;
 		}
 
+		//console.log('before actual scale', coordDelta, {'scaleX': scaleX, 'scaleY': scaleY});
 		var actualScales = this._calcActualResizeScales(manipulatingObjs, {'scaleX': scaleX, 'scaleY': scaleY});
 		var transformParams = {'center': scaleCenter, 'scaleX': actualScales.scaleX, 'scaleY': actualScales.scaleY};
 		//console.log(this.isAspectRatioLockedResize(), scaleX, scaleY);
@@ -7035,14 +7095,36 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 	},
 	/** @private */
-	_isSameTransformParams: function(p1, p2, threshold, coordMode)
+	_isSameTransformParams: function(p1, p2, thresholds, coordMode)
 	{
-		if (!threshold)
-			threshold = 0.1;  // TODO: currently fixed
+		if (!thresholds)
+		{
+			thresholds = this._cachedTransformCompareThresholds;
+		}
+		if (!thresholds)
+		{
+			thresholds = this._getTransformCompareThresholds();  // 0.1
+			this._cachedTransformCompareThresholds = thresholds;  // cache the threshold to reduce calculation
+		}
+		/*
 		if (coordMode === Kekule.CoordMode.COORD2D)
 			return CU.isSameTransform2DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
 		else
 			return CU.isSameTransform3DOptions(p1, p2, {'translate': threshold, 'scale': threshold, 'rotate': threshold});
+		*/
+		if (coordMode === Kekule.CoordMode.COORD2D)
+			return CU.isSameTransform2DOptions(p1, p2, {'translate': thresholds.translate, 'scale': thresholds.scale, 'rotate': thresholds.rotate});
+		else
+			return CU.isSameTransform3DOptions(p1, p2, {'translate': thresholds.translate, 'scale': thresholds.scale, 'rotate': thresholds.rotate});
+	},
+	/** @private */
+	_getTransformCompareThresholds: function(coordMode)
+	{
+		return {
+			translate: 0.1,
+			scale: 0.1,
+			rotate: 0.1
+		}
 	},
 
 	/* @private */
@@ -7652,7 +7734,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			}
 			else if (manipulateType === T.RESIZE)
 			{
-				this._suppressConstrainedResize = e.getAltKey();
 				//this.doResizeManipulatedObjs(currCoord);
 				this.doTransformManipulatedObjs(manipulateType, currCoord);
 			}
@@ -7722,17 +7803,21 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
+		var state = this.getState();
 
 		var coord = this._getEventMouseCoord(e);
 
 		var distanceFromLast;
-		if (this._lastMouseMoveCoord)
+		if (state === S.NORMAL || state === S.SUSPENDING)
 		{
-			var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
-			distanceFromLast = dis;
-			if (dis < 4)  // less than 4 px, too tiny to react
+			if (this._lastMouseMoveCoord)
 			{
-				return true;
+				var dis = Kekule.CoordUtils.getDistance(coord, this._lastMouseMoveCoord);
+				distanceFromLast = dis;
+				if (dis < 4)  // less than 4 px, too tiny to react
+				{
+					return true;
+				}
 			}
 		}
 		this._lastMouseMoveCoord = coord;
@@ -7747,14 +7832,12 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else
 		*/
-		if (this.getState() === S.SUSPENDING)
+		if (state === S.SUSPENDING)
 		{
 			var disThreshold = this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold() || 0;
 			if (Kekule.ObjUtils.notUnset(distanceFromLast) && (distanceFromLast > disThreshold))
 				this.execSuspendedImmediateOperation();
 		}
-
-		var state = this.getState();
 
 		if (state === S.SELECTING)
 		{
@@ -7791,12 +7874,13 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				//var evokedByTouch = e && e.pointerType === 'touch';
 				var self = this;
 				var beginNormalManipulation = function(){
-					if (self.getState() === S.NORMAL)
+					if (self.getState() === S.NORMAL || self.getState() === S.SUSPENDING)
 					{
 						self.startManipulation(coord, e);
 						e.preventDefault();
 					}
 				};
+				this.setState(S.SUSPENDING);
 				// wait for a while for the possible gesture operations
 				this.setSuspendedOperations(beginNormalManipulation, beginNormalManipulation, 50);
 			}
@@ -8103,6 +8187,10 @@ Kekule.Editor.BasicManipulationIaController.State = {
 	SELECTING: 1,
 	/** Is manipulating objects (e.g. changing object position). */
 	MANIPULATING: 2,
+	/**
+	 * The pointer is down, but need to wait to determinate if there will be a gesture event.
+	 */
+	WAITING: 10,
 	/**
 	 * Just put down pointer, if move the pointer immediately, selecting state will be open.
 	 * But if hold down still for a while, it may turn to manipulating state to move current selected objects.

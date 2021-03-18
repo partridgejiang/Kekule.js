@@ -44,6 +44,47 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMEDITOR_FORMULA_SETTER: 'K-ChemEditor-Formula-Setter'
 });
 
+Kekule.globalOptions.add('chemWidget.editor', {
+	'enableSelect': true,
+	'enableFileDrop': true,
+	'allowCreateNewChild': true,
+	'autoCreateNewStructFragment': true,
+	'allowAppendDataToCurr': true,
+	'enableGesture': true,
+	'initOnNewDoc': true
+});
+Kekule.globalOptions.add('chemWidget.editor.select', {
+	'enableMagneticMerge': true,
+	'enableNodeMerge': true,
+	'enableNeighborNodeMerge': true,
+	'enableConnectorMerge': true,
+	'enableStructFragmentMerge': true,
+	'enableNodeStick': true,
+	'enableStructFragmentStick': true,
+	'enableConstrainedMove': true,
+	'enableConstrainedRotate': true,
+	'enableConstrainedResize': true,
+	'enableDirectedMove': true
+});
+Kekule.globalOptions.add('chemWidget.editor.molManipulation', {
+	'enableMagneticMerge': true,
+	'enableNodeMerge': true,
+	'enableNeighborNodeMerge': true,
+	'enableConnectorMerge': true,
+	'enableStructFragmentMerge': true,
+	'enableNodeStick': true,
+	'enableStructFragmentStick': true,
+	'enableConstrainedMove': true,
+	'enableConstrainedRotate': true,
+	'enableConstrainedResize': true,
+	'enableDirectedMove': true
+});
+Kekule.globalOptions.add('chemWidget.editor.bondManipulation', {
+	'enableBondModification': true,
+	'allowBondingToBond': false,
+	'autoSwitchBondOrder': false
+});
+
 /**
  * A chem editor to edit chemspace object and other chem objects.
  * When load a chem object other than instance of Kekule.ChemSpace, an empty ChemSpace instance will
@@ -72,9 +113,15 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	/** @constructs */
 	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, editorConfigs)
 	{
+		/*
 		this.setPropStoreFieldValue('allowCreateNewChild', true);
 		this.setPropStoreFieldValue('autoCreateNewStructFragment', true);
 		this.setPropStoreFieldValue('allowAppendDataToCurr', true);
+		*/
+		var getOptionValue = Kekule.globalOptions.get;
+		this.setPropStoreFieldValue('allowCreateNewChild', getOptionValue('chemWidget.editor.allowCreateNewChild', true));
+		this.setPropStoreFieldValue('autoCreateNewStructFragment', getOptionValue('chemWidget.editor.autoCreateNewStructFragment', true));
+		this.setPropStoreFieldValue('allowAppendDataToCurr', getOptionValue('chemWidget.editor.autoCreateNewStructFragment', true));
 		this.tryApplySuper('initialize', [parentOrElementOrDocument, chemObj, renderType, editorConfigs])  /* $super(parentOrElementOrDocument, chemObj, renderType, editorConfigs) */;
 		this._containerChemSpace = null;  // private field, used to mark that a extra chem space container is used
 
@@ -99,7 +146,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 	initPropValues: function(/*$super*/)
 	{
 		this.tryApplySuper('initPropValues')  /* $super() */;
-		this.setFileDroppable(true);  // defaultly turn on file drop function
+		//this.setFileDroppable(true);  // defaultly turn on file drop function
+		this.setFileDroppable(Kekule.globalOptions.get('chemWidget.editor.enableFileDrop', true));
 	},
 
 	/**
@@ -1872,6 +1920,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	initialize: function(/*$super, */editor)
 	{
 		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
+		/*
 		this.setEnableMagneticMerge(true);
 		this.setEnableNodeMerge(true);
 		this.setEnableNeighborNodeMerge(true);
@@ -1883,6 +1932,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.setEnableConstrainedRotate(true);
 		this.setEnableConstrainedResize(true);
 		this.setEnableDirectedMove(true);
+		*/
 		this._suppressConstrainedMoving = false;  // used internally
 		this._suppressConstrainedRotating = false;  // used internally
 		this._isInDirectedMoving = false;
@@ -1918,6 +1968,38 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		this.defineProp('mergePreviewOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store preview operations of merging
 		//this.defineProp('prevMergeOperations', {'dataType': DataType.ARRAY, 'serializable': false});  // store operations of merging of last phrase
 		this.defineProp('mergingDests', {'dataType': DataType.ARRAY, 'serializable': false});  // private
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+
+		var options = Kekule.globalOptions.get('chemWidget.editor.molManipulation', {});
+		//console.log(this.getClassName(), options);
+		options = Object.extend({
+			'enableMagneticMerge': true,
+			'enableNodeMerge': true,
+			'enableNeighborNodeMerge': true,
+			'enableConnectorMerge': true,
+			'enableStructFragmentMerge': true,
+			'enableNodeStick': true,
+			'enableStructFragmentStick': true,
+			'enableConstrainedMove': true,
+			'enableConstrainedRotate': true,
+			'enableConstrainedResize': true,
+			'enableDirectedMove': true
+		}, options);
+		this.setEnableMagneticMerge(options.enableMagneticMerge);
+		this.setEnableNodeMerge(options.enableNodeMerge);
+		this.setEnableNeighborNodeMerge(options.enableNeighborNodeMerge);
+		this.setEnableConnectorMerge(options.enableConnectorMerge);
+		this.setEnableStructFragmentMerge(options.enableStructFragmentMerge);
+		this.setEnableNodeStick(options.enableNodeStick);
+		this.setEnableStructFragmentStick(options.enableStructFragmentStick);
+		this.setEnableConstrainedMove(options.enableConstrainedMove);
+		this.setEnableConstrainedRotate(options.enableConstrainedRotate);
+		this.setEnableConstrainedResize(options.enableConstrainedResize);
+		this.setEnableDirectedMove(options.enableDirectedMove);
 	},
 
 	/** @private */
@@ -2079,6 +2161,23 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		else
 			return false;
 	},
+	/** @ignore */
+	_getTransformCompareThresholds: function(coordMode)
+	{
+		if (coordMode === Kekule.CoordMode.COORD3D)
+			return this.tryApplySuper('_getTransformCompareThresholds', [coordMode]);
+		else
+		{
+			var tTranslate = this.getEditorConfigs().getStructureConfigs().getDefBondLength() || this.getEditor().getChemSpace().getAutoScaleRefLength() || 0.05;
+			var tRotate = this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep() / 5;
+			var tScale = this.getEditorConfigs().getInteractionConfigs().getConstrainedResizeStep() / 5;
+			return {
+				'translate': tTranslate,
+				'rotate': tRotate,
+				'scale': tScale
+			};
+		}
+	},
 	/** @private */
 	_calcActualMovedScreenCoord: function(/*$super, */obj, info, newScreenCoord)
 	{
@@ -2153,6 +2252,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		var angleStep = isConstrained?
 			this.getEditorConfigs().getInteractionConfigs().getConstrainedRotateStep(): null;
 
+		//console.log(isConstrained, this.isConstrainedRotate(), this._suppressConstrainedRotating, newDeltaAngle * 180 / Math.PI, angleStep * 180 / Math.PI);
 		if (angleStep)
 		{
 			//var times = Math.floor(newDeltaAngle / angleStep);
@@ -2166,6 +2266,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 	_calcActualResizeScales: function(objs, newScales)
 	{
 		var isConstrained = (this.isConstrainedResize() && (!this._suppressConstrainedResize));
+		//console.log(isConstrained, newScales);
 		if (!isConstrained)
 			return newScales;
 		else  // constrained scale calculation
@@ -3612,6 +3713,7 @@ Kekule.Editor.BasicMolManipulationIaController = Class.create(Kekule.Editor.Basi
 		// check if ALT key is pressed, if so, constrained move/rotate mode should be disabled
 		this._suppressConstrainedMoving = e.getAltKey();
 		this._suppressConstrainedRotating = e.getAltKey();
+		this._suppressConstrainedResize = e.getAltKey();
 		this._isInDirectedMoving = e.getShiftKey();
 		return this.tryApplySuper('react_pointermove', [e])  /* $super(e) */;
 	}
@@ -3633,8 +3735,18 @@ Kekule.Editor.SelectIaController = Class.create(Kekule.Editor.BasicMolManipulati
 	initialize: function(/*$super, */editor)
 	{
 		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
+		/*
 		this.setEnableSelect(true);
 		this.setEnableGestureManipulation(true);
+		*/
+	},
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+
+		var getOptionValue = Kekule.globalOptions.get;
+		this.setEnableSelect(getOptionValue('chemWidget.editor.enableSelect', true));
+		this.setEnableGestureManipulation(getOptionValue('chemWidget.editor.enableGesture', true));
 	}
 });
 // register
@@ -3732,6 +3844,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
 		this.setState(BC.State.INITIAL);
 		this.setBondOrder(Kekule.BondOrder.SINGLE);  // default is single bond
+		/*
 		this.setAllowBondingToBond(false);
 		this.setEnableBondModification(true);
 		this.setEnableSelect(false);
@@ -3739,6 +3852,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		//this.setEnableRemove(false);
 		this.setAutoSwitchBondOrder(false);
 		this.setEnableNeighborNodeMerge(false);
+		*/
 	},
 	/** @private */
 	initProperties: function()
@@ -3760,6 +3874,20 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		//this.defineProp('autoCreateNewStructFragment', {'dataType': DataType.BOOL});
 		this.defineProp('initialBondDirection', {'dataType': DataType.FLOAT});
 	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setEnableSelect(false);
+		this.setEnableMove(true);
+		//this.setEnableRemove(false);
+		this.setEnableNeighborNodeMerge(false);
+
+		var getOptionValue = Kekule.globalOptions.get;
+		this.setEnableBondModification(getOptionValue('chemWidget.editor.bondManipulation.enableBondModification', true));
+		this.setAllowBondingToBond(getOptionValue('chemWidget.editor.bondManipulation.allowBondingToBond', false));
+		this.setAutoSwitchBondOrder(getOptionValue('chemWidget.editor.bondManipulation.autoSwitchBondOrder', false));
+	},
 
 	/** @private */
 	_isBondDifferent: function(bond)
@@ -3773,6 +3901,16 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 			return (bond.getBondType() !== this.getBondType())
 				|| (bond.getBondOrder() !== this.getBondOrder())
 				|| (bond.getStereo() !== this.getBondStereo());
+	},
+	/** @private */
+	_isBondOrderSwitchApplicable: function(targetBond)
+	{
+		return this.getAutoSwitchBondOrder()
+			&& (this.getBondOrder() === Kekule.BondOrder.SINGLE)
+			&& (this.getBondType() === Kekule.BondType.COVALENT)
+			&& (this.getBondStereo() === Kekule.BondStereo.NONE)
+			&& (!targetBond.getBondType() || targetBond.getBondType() === Kekule.BondType.COVALENT)
+			&& (!targetBond.getStereo() || targetBond.getStereo() === Kekule.BondStereo.NONE);
 	},
 
 	/** @private */
@@ -3797,7 +3935,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 						return this.getAutoSwitchBondOrder()
 							|| (obj.getBondOrder() !== this.getBondOrder());
 						*/
-						return this._isBondDifferent(obj);
+						return this._isBondDifferent(obj) || this._isBondOrderSwitchApplicable(obj);
 					}
 				}
 				else return false;
@@ -4052,7 +4190,8 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		var bondOrder;
 		var BO = Kekule.BondOrder;
 		var loopBondOrders = [BO.SINGLE, BO.DOUBLE, BO.TRIPLE];
-		if (this.getAutoSwitchBondOrder() && (bondType === Kekule.BondType.COVALENT) && (bond.getBondType === Kekule.BondType.COVALENT))
+		//if (this.getAutoSwitchBondOrder() && (bondType === Kekule.BondType.COVALENT) && (bond.getBondType() === Kekule.BondType.COVALENT))
+		if (this._isBondOrderSwitchApplicable(bond))
 		{
 			var oldOrder = bond.getBondOrder();
 			var index = loopBondOrders.indexOf(oldOrder);

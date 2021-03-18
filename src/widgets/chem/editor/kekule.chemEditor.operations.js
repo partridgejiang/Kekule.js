@@ -1032,9 +1032,18 @@ Kekule.ChemStructOperation.RemoveNode = Class.create(Kekule.ChemObjOperation.Rem
 			for (var i = 0, l = linkedConnectors.length; i < l; ++i)
 			{
 				var connector = linkedConnectors[i];
+				// if node is a subgroup, it may not directly linked to connector, we should find the direct linked child node
+				var actualLinkedNode = node.getActualConnectedObjToConnector(connector) || node;
 				var nodeIndex = connector.indexOfConnectedObj(node);
-				var refSibling = connector.getConnectedObjAt(nodeIndex + 1) || null;
+				var refSibling;
+				if (nodeIndex < 0)
+					refSibling = null;
+				else
+					refSibling = connector.getConnectedObjAt(nodeIndex + 1) || null;
 				info.push({'connector': connector, 'refSibling': refSibling});
+				if (actualLinkedNode !== node)
+					info.actualLinkedNode = actualLinkedNode;
+				//console.log('execute', connector.getId(), node.getId(), actualLinkedNode && actualLinkedNode.getId(), refSibling && refSibling.getId());
 			}
 			this.setLinkedConnectorInfos(info);
 		}
@@ -1068,8 +1077,10 @@ Kekule.ChemStructOperation.RemoveNode = Class.create(Kekule.ChemObjOperation.Rem
 			{
 				var connector = linkedConnectorInfos[i].connector;
 				var refSibling = linkedConnectorInfos[i].refSibling;
+				var actualLinkedNode = linkedConnectorInfos[i].actualLinkedNode || node;
 				//node._doAppendLinkedConnector(connector);
-				connector.insertConnectedObjBefore(node, refSibling);
+				//connector.insertConnectedObjBefore(node, refSibling);
+				connector.insertConnectedObjBefore(actualLinkedNode, refSibling);
 			}
 		}
 	}

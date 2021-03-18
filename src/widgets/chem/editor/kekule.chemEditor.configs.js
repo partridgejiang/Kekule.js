@@ -277,7 +277,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('trackMarkerStrokeDash', false);
 		this.addFloatConfigProp('trackMarkerOpacity', 0.5);
 
-		this.addHashConfigProp('issueCheckMarkerStyles', {
+		this.addHashConfigProp('issueCheckMarkerColors', {
 			'error': {
 				'strokeColor': '#FF0000',
 				'fillColor': null,
@@ -637,7 +637,9 @@ Kekule.Editor.HotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': 'Ctrl+Z', 'action': CWN.undo},
 			{'key': 'Ctrl+Shift+Z', 'action': CWN.redo},
 			{'key': '+', 'action': CWN.zoomIn},
-			{'key': '-', 'action': CWN.zoomOut}
+			{'key': '-', 'action': CWN.zoomOut},
+			{'key': 'Delete', 'action': CWN.eraseSelection},
+			{'key': 'Backspace', 'action': CWN.eraseSelection}
 		]);
 	}
 });

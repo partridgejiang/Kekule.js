@@ -126,6 +126,21 @@ Kekule.ChemicalElementsDataUtil = {
 	isElementSymbolAvailable: function(symbol)
 	{
 		return Kekule.ChemicalElementsDataUtil.getAtomicNumber(symbol) > 0;
+	},
+
+	/**
+	 * Returns a full list of element symbols.
+	 * @returns {Array}
+	 */
+	getAllElementSymbols: function()
+	{
+		var result = [];
+		var d = Kekule.chemicalElementsData;
+		for (var i = 0, l = d.length; i < l; ++i)
+		{
+			result.push(d[i].symbol);
+		}
+		return result;
 	}
 };
 

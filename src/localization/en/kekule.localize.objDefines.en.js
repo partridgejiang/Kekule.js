@@ -388,6 +388,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 
 			TITLE_enableBondKekulizeHucklize: 'Enable Kekulize and Hucklize function of bond',
 			DES_enableBondKekulizeHucklize: 'Whether Kekulize and Hucklize buttons are shown in bond modifier of editor',
+
+			TITLE_enableHotKey: 'Enable hot keys',
+			DES_enableHotKey: 'Whether shortcut with key pressing is enabled in editor',
 		},
 		UiMarkerConfigs: {
 			TITLE_hotTrackerColor: 'Hot track mark color',
@@ -439,7 +442,17 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_flexStructureAssocMarkerFontSize: 'Flex structure association mark font size',
 			DES_flexStructureAssocMarkerFontSize: 'Font size of mark showing atom count of flex ring/chain tool',
 			TITLE_flexStructureAssocMarkerFontFamily: 'Flex structure association mark font family',
-			DES_flexStructureAssocMarkerFontFamily: 'Font family of mark showing atom count of flex ring/chain tool'
+			DES_flexStructureAssocMarkerFontFamily: 'Font family of mark showing atom count of flex ring/chain tool',
+			TITLE_issueCheckMarkerColors: 'Issue check markers color',
+			DES_issueCheckMarkerColors: 'Color of issue check markers, different colors are used for different issue levels',
+			TITLE_issueCheckMarkerStrokeWidth: 'Issue check marker stroke width',
+			DES_issueCheckMarkerStrokeWidth: 'Stroke width of issue check marker outline',
+			TITLE_issueCheckActiveMarkerStrokeWidth: 'Active issue check marker stroke width',
+			DES_issueCheckActiveMarkerStrokeWidth: 'Stroke width of active issue check marker outline',
+			TITLE_issueCheckMarkerOpacity: 'Issue check marker opacity',
+			DES_issueCheckMarkerOpacity: 'Opacity of issue check marker',
+			TITLE_issueCheckActiveMarkerOpacity: 'Active Issue check marker opacity',
+			DES_issueCheckActiveMarkerOpacity: 'Opacity of active issue check marker'
 		},
 		StructureConfigs: {
 			TITLE_defBondType: 'Default bond type',
@@ -484,7 +497,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_initOnNewDoc: 'Starts with a new document',
 			DES_initOnNewDoc: 'Whether create a new document automatically when composer is initialized',
 			TITLE_enableOperHistory: 'Enable undo',
-			DES_enableOperHistory: 'Whether undo/redo is enabled'
+			DES_enableOperHistory: 'Whether undo/redo is enabled',
+			TITLE_enableIssueCheck: 'Enable issue check',
+			DES_enableIssueCheck: 'Whether enable issue checker to detect errors and warning among objects in editor'
 		},
 		ChemSpaceEditor: {
 			TITLE_allowAppendDataToCurr: 'Allow appending data',
