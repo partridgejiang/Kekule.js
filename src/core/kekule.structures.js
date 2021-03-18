@@ -57,6 +57,25 @@ Kekule.globalOptions.add('algorithm.structureClean', {
 	}
 });
 
+// The target atom element that should be applied implicit H estimation.
+// Defaultly all elements should be applied. If some need to be excluded, you need to
+// explicitly set its value to false.
+Kekule.globalOptions.add('structure.implicitHydrogenEstimationStrategy', {
+	targetElementCategories: {
+
+	},
+	targetElements: {
+
+	},
+	targetOrphanAtomElementCategories: {
+
+	},
+	targetOrphanAtomElements: {
+
+	}
+});
+Kekule.globalOptions.structure.implicitHydrogenEstimationStrategy.targetOrphanAtomElementCategories[Kekule.ElementCategory.METAL] = false;
+
 // extend method to Kekule.ObjComparer
 Kekule.ObjComparer.compareStructure = function(obj1, obj2, options)
 {
@@ -1865,7 +1884,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	 */
 	getImplicitHydrogenCount: function()
 	{
-		if (this.isNormalAtom() && !this.getDisableImplicitHydrogenEstimation())
+		if (this.isNormalAtom() && this._needToEsitmateImplicityHydrogens())
 		{
 			//if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			{
@@ -1898,6 +1917,41 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		}
 		else
 			return 0;
+	},
+	/** @private */
+	_needToEsitmateImplicityHydrogens: function()
+	{
+		var result = !this.getDisableImplicitHydrogenEstimation();
+		if (result)
+		{
+			var isOrphan = this.isOrphan();
+			var symbol = this.getSymbol();
+			var strategyRoot = Kekule.globalOptions.get('structure.implicitHydrogenEstimationStrategy') || {};
+			// check element
+			if ((strategyRoot.targetElements && strategyRoot.targetElements[symbol] === false)
+				|| (isOrphan && strategyRoot.targetOrphanAtomElements && strategyRoot.targetOrphanAtomElements[symbol] === false))
+			{
+				result = false;
+			}
+			// check element category
+			if (result)
+			{
+				var targetCategories = strategyRoot.targetElementCategories;
+				var targetOrphanCategories = strategyRoot.targetOrphanAtomElementCategories;
+				var elemCategories = this.getIsotope().getCategories();
+				for (var i = 0, l = elemCategories.length; i < l; ++i)
+				{
+					var c = elemCategories[i];
+					if ((targetCategories && targetCategories[c] === false)
+						|| (isOrphan && targetOrphanCategories && targetOrphanCategories[c] === false))
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+		}
+		return result;
 	},
 
 	/**
