@@ -33,11 +33,12 @@
 
       document.body.addEventListener('keydown', function(e){
         console.log('key down', e.target.id, e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey, e.metaKey, e.repeat);
+        console.log('event flags: ', 'cancelBubble: ', e.cancelBubble, 'bubbles: ', e.bubbles, 'cancelble: ', e.cancelable);
       });
 
       $('stage2').addEventListener('keydown', function(e){
         console.log('key down on stage 2', e.target.id, e.keyCode, e.charCode, e.key, e.code, e.shiftKey, e.ctrlKey, e.altKey, e.metaKey, e.repeat);
-      })
+      });
 
       /*
       document.body.addEventListener('keypress', function(e){
@@ -69,6 +70,11 @@
     <div>
       <div id="insideStage" tabindex="0"></div>
     </div>
+  </div>
+  <div id="stage3">
+    <input id="inputText" type="text" placeholder="input something" />
+    <input id="inputButton" type="button" value="Input Button">
+    <button id="button1">Button</button>
   </div>
 </body>
 </html>

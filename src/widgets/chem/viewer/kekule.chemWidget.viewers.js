@@ -717,7 +717,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @ignore */
 	getResizerElement: function()
 	{
-		return this.getDrawContextParentElem();
+		//return this.getDrawContextParentElem();
+		return this.getElement();
 	},
 
 	/** @ignore */
@@ -799,15 +800,30 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var parentElem = drawParentElem.parentNode;
 		var captionElem = this.getCaptionElem(true);  // do not auto create
 		var dimParent = Kekule.HtmlElementUtils.getElemClientDimension(parentElem);
-		var t, h;
+		//var t, h;
+		// drawParentElem is now position: absolute
 		if (captionElem && this.captionIsShown() && captionElem.parentNode === parentElem)
 		{
 			var dimCaption = Kekule.HtmlElementUtils.getElemClientDimension(captionElem);
+			var h = dimCaption.height || 0;
+			//console.log('here');
+			if (this.getCaptionPos() & Kekule.Widget.Position.TOP)
+			{
+				drawParentElem.style.top = h + 'px';
+				drawParentElem.style.bottom = '0px';
+			}
+			else
+			{
+				drawParentElem.style.top = '0px';
+				drawParentElem.style.bottom = h + 'px';
+			}
+			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
+			/*
 			h = Math.max(dimParent.height - dimCaption.height, 0);  // avoid value < 0
 			t = (this.getCaptionPos() & Kekule.Widget.Position.TOP)? dimCaption.height: 0;
-
 			drawParentElem.style.top = t + 'px';
 			drawParentElem.style.height = h + 'px';
+			*/
 		}
 		else
 		{
@@ -815,10 +831,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			t = 0;
 			h = dimParent.height;
 			*/
+			/*
 			// restore 100% height setting
 			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'top');
 			//Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'height');
-			drawParentElem.style.height = dimParent.height + 'px';  // explicit set height, or the height may not be updated in some mobile browsers
+			//drawParentElem.style.height = dimParent.height + 'px';  // explicit set height, or the height may not be updated in some mobile browsers
+			drawParentElem.style.height = '100%';   // some mobile browser has wrong height of parentElem, so here we set it to 100%
+			*/
+			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'top');
+			Kekule.StyleUtils.removeStyleProperty(drawParentElem.style, 'bottom');
+			drawParentElem.style.height = '100%';   // some mobile browser has wrong height of parentElem, so here we set it to 100%
 		}
 
 		//this.refitDrawContext();

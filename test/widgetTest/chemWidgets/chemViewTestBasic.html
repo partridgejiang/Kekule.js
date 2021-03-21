@@ -295,7 +295,7 @@ M  END
 	function init()
 	{
     var elem = document.getElementById('chemViewer');
-    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R3D);
+    chemViewer = new Kekule.ChemWidget.Viewer(elem, null, Kekule.Render.RendererType.R2D);
     chemViewer.setEnableToolbar(true).setFileDroppable(true);
     //chemViewer.setRenderType(Kekule.Render.RendererType.R2D);
     chemViewer/*.appendToElem(document.getElementById('drawParent'))*//*.setWidth('600px').setHeight('400px')*/.setEnableEdit(true).setAutoSize(false).setPadding(20);
