@@ -113,7 +113,8 @@ Kekule.globalOptions.add('chemWidget.editor', {
 });
 Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
 	'enableAutoIssueCheck': true,
-	'enableAutoScrollToActiveIssue': true
+	'enableAutoScrollToActiveIssue': true,
+	'durationLimit': 50  // issue check must be finished in 50ms, avoid blocking the UI
 });
 
 /**
@@ -484,6 +485,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function() { return this.getIssueCheckExecutor().getEnabled(); },
 			'setter': function(value) { this.getIssueCheckExecutor().setEnabled(!!value); }
 		});
+		this.defineProp('issueCheckDurationLimit', {'dataType': DataType.NUMBER,
+			'getter': function() { return this.getIssueCheckExecutor().getDurationLimit(); },
+			'setter': function(value) { this.getIssueCheckExecutor().setDurationLimit(value); }
+		});
 		this.defineProp('enableAutoIssueCheck', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
@@ -734,6 +739,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setEnableAutoIssueCheck(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoIssueCheck', true));
 		this.setEnableAutoScrollToActiveIssue(getGlobalOptionValue('chemWidget.editor.issueChecker.enableAutoScrollToActiveIssue', true));
 		this.setIssueCheckerIds(getGlobalOptionValue('chemWidget.editor.issueChecker.issueCheckerIds', [ICIDs.ATOM_VALENCE, ICIDs.BOND_ORDER, ICIDs.NODE_DISTANCE_2D]));
+		this.setIssueCheckDurationLimit(getGlobalOptionValue('chemWidget.editor.issueChecker.durationLimit') || null);
 	},
 	/** @private */
 	_defineUiMarkerProp: function(propName, uiMarkerCollection)

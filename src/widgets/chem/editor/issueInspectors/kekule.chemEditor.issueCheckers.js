@@ -88,7 +88,8 @@ Kekule.IssueCheck.Node2DDistanceChecker = Class.create(Kekule.IssueCheck.BaseChe
 			&& (!(target instanceof Kekule.Molecule) || !(target.isExpanded && target.isExpanded))
 			&& (!target.isExposed || target.isExposed());
 	},
-	/** @ignore */
+	/* @ignore */
+	/*
 	doCheck: function(targets, rootObj, options)
 	{
 		var result = [];
@@ -98,6 +99,24 @@ Kekule.IssueCheck.Node2DDistanceChecker = Class.create(Kekule.IssueCheck.BaseChe
 			for (var j = i + 1; j < l; ++j)
 			{
 				var node2 = targets[j];
+				var repItem = this.doCheckDistance(node1, node2, rootObj, options);
+				if (repItem)
+					result.push(repItem);
+			}
+		}
+		return result;
+	},
+	*/
+	/** @ignore */
+	doCheckOnTarget: function(target, targetIndex, targets, rootObj, options)
+	{
+		var result = [];
+		var node1 = target;
+		for (var i = targetIndex + 1, l = targets.length; i < l; ++i)
+		{
+			var node2 = targets[i];
+			if (node2)
+			{
 				var repItem = this.doCheckDistance(node1, node2, rootObj, options);
 				if (repItem)
 					result.push(repItem);
