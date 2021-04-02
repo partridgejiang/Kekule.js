@@ -165,6 +165,22 @@
 		    console.log('operChange', e);
 	    });
 
+      chemEditorUi.on('selectionChange', function(e){
+        console.log('selectionChange', chemEditorUi.getSelection());
+      });
+
+      /*
+	    var elem = chemEditorUi.getEditor().getElement();
+      Kekule.X.Event.addListener(elem, 'pointermove', function(e) {
+        var offsetCoord = e.getOffsetCoord(true);
+        //var elemPos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+        //var coord = Kekule.CoordUtils.substract(offsetCoord, elemPos);
+        var obj = chemEditorUi.getEditor().getTopmostBasicObjectAtCoord(offsetCoord);
+        if (obj)
+          console.log(obj.getClassName(), obj.getId());
+      });
+      */
+
 
       // debug
 			/*

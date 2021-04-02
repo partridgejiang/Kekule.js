@@ -44,7 +44,8 @@ Kekule.MolStandardizer = {
 	 * @param {Hash} options Standardization options, including the following fields:
 	 *   {
 	 *     cleanStructure: bool, whether clean the structure before standardization.
-	 *     clearHydrogens: bool, whether removes all explicit hydrogen atoms (and related bonds)
+	 *     clearHydrogens: bool, whether removes all explicit hydrogen atoms (and related bonds).
+	 *       Note that only H connected with simple single bond will be removed. The H on wedge bonds will be retained (as they may related to stereo).
 	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
 	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
 	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this

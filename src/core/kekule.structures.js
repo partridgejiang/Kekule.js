@@ -6073,9 +6073,21 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Removes all explicit hydrogen atoms and related bonds from this structure.
 	 */
-	clearExplicitHydrogens: function(forceKeepStructureCache)
+	clearExplicitHydrogens: function(forceKeepStructureCache, forceClearStereoHydrogenAtoms)
 	{
 		var self = this;
+		var isHydrogenConnectedWithSimpleSingleBond = function(node)
+		{
+			var connectors = node.getLinkedConnectors();
+			var result = connectors.length === 1;
+			if (result)
+			{
+				var connector = connectors[0];
+				result = connector.isSingleBond && connector.isSingleBond()
+					&& connector.getStereo && (!connector.getStereo() || connector.getStereo() === Kekule.BondStereo.NONE);
+			}
+			return result;
+		};
 		var delNodeWithConnectors = function(node, index)
 		{
 			var conns = node.getLinkedConnectors();
@@ -6104,14 +6116,17 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				{
 					if (this.isSubFragment(node) && node.clearExplicitHydrogens)
 					{
-						node.clearExplicitHydrogens(forceKeepStructureCache);
+						node.clearExplicitHydrogens(forceKeepStructureCache, forceClearStereoHydrogenAtoms);
 						if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
 							delNodeWithConnectors(node, i);
 					}
 					else
 					{
 						if (node.isHydrogenAtom())
-							delNodeWithConnectors(node, i);
+						{
+							if (forceClearStereoHydrogenAtoms || isHydrogenConnectedWithSimpleSingleBond(node))
+								delNodeWithConnectors(node, i);
+						}
 					}
 				}
 			}

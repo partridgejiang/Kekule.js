@@ -111,6 +111,8 @@ var ICM = Kekule.IssueCheck.CheckerManager;
  * @property {Bool} enabled If false, call the execute() method of executor will do nothing.
  * // @property {Array} checkers Concrete checkers.
  * @property {Array} checkerIds IDs of checker classes used in this executor.
+ * @property {Number} durationLimit In millisecond. If this value is set, the executor will try to end the check within this limit.
+ * @property {Bool} allFinished Whether all the check job has been finished within durationLimit.
  */
 /**
  * Invoked after do a checking process.
@@ -135,6 +137,8 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 	{
 		this.defineProp('ignoreUnexposedObjs', {'dataType': DataType.ARRAY});
 		this.defineProp('enabled', {'dataType': DataType.BOOL});
+		this.defineProp('durationLimit', {'dataType': DataType.NUMBER});
+		this.defineProp('allFinished', {'dataType': DataType.BOOL, 'setter': null, 'serializable': false});
 		this.defineProp('checkerIds', {'dataType': DataType.ARRAY,
 			'setter': function(value)
 			{
@@ -175,6 +179,8 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 	{
 		if (!this.getEnabled())
 			return null;
+		var durationLimit = this.getDurationLimit();
+		var deadline = durationLimit && Date.now() + durationLimit;
 		//var startTime = Date.now();
 		// first phrase, determinate which objects should be checked
 		var op = this.doPrepareOptions(options);
@@ -189,10 +195,12 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 		}
 		this._getAllObjsNeedCheck(target, target, checkers, regMap, op);
 		// second phrase, do the concrete check of all checkers
+		var allFinished = true;
 		var result = [];
 		for (var i = 0, l = checkers.length; i < l; ++i)
 		{
 			var checker = checkers[i];
+			checker.setDeadline(deadline);
 			//try
 			{
 				var objs = regMap.get(checker);
@@ -201,6 +209,7 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 					var reportItems = checker.check(objs, target, op);
 					if (reportItems && reportItems.length)
 						result = result.concat(reportItems);
+					allFinished = allFinished && checker.getAllFinished();
 				}
 			}
 			//catch(e)
@@ -208,7 +217,8 @@ Kekule.IssueCheck.Executor = Class.create(ObjectEx,
 
 			}
 		}
-		this.invokeEvent('execute', {'checkResults': result});
+		this.setPropStoreFieldValue('allFinished', allFinished);
+		this.invokeEvent('execute', {'checkResults': result, 'allFinished': allFinished});
 		//var endTime = Date.now();
 		//console.log('consume', endTime - startTime, 'ms');
 		return result;
@@ -369,6 +379,11 @@ Kekule.IssueCheck.CheckResult = Class.create(ObjectEx,
  * The base checker class.
  * @class
  * @augments ObjectEx
+ *
+ * @property {Bool} enabled
+ * @property {Number} deadline Milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+ *   If this value is set, the checker should try to end the job before this.
+ * @property {Bool} allFinished Whether all the check job has been finished before deadline.
  */
 Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 /** @lends Kekule.IssueCheck.BaseChecker# */
@@ -385,6 +400,8 @@ Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 	{
 		//this.defineProp('targets', {'dataType': DataType.ARRAY});
 		this.defineProp('enabled', {'dataType': DataType.BOOL});
+		this.defineProp('deadline', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('allFinished', {'dataType': DataType.BOOL, 'setter': null, 'serializable': false});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -434,7 +451,7 @@ Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 	},
 	/**
 	 * Do actual work of {@link Kekule.IssueCheck.BaseChecker.check}.
-	 * Descendants should override this method.
+	 * Descendants may override this method.
 	 * @param {Array} targets
 	 * @param {Kekule.ChemObject} rootObj
 	 * @param {Hash} options
@@ -442,7 +459,40 @@ Kekule.IssueCheck.BaseChecker = Class.create(ObjectEx,
 	 */
 	doCheck: function(targets, rootObj, options)
 	{
-		return [];
+		this.setPropStoreFieldValue('allFinished', false);
+		var result = [];
+		var ddl = this.getDeadline() || null;
+		var terminated = false;
+		for (var i = 0, l = targets.length; i < l; ++i)
+		{
+			if (ddl)
+			{
+				var currTime = Date.now();
+				if (currTime >= ddl)
+				{
+					terminated = true;
+					break;
+				}
+			}
+			var childResult = this.doCheckOnTarget(targets[i], i, targets, rootObj, options) || [];
+			result = result.concat(childResult);
+		}
+		this.setPropStoreFieldValue('allFinished', !!terminated);
+		return result;
+	},
+	/**
+	 * Do concrete check on single target.
+	 * Descendants may override this method.
+	 * @param {Object} target
+	 * @param {Int} targetIndex
+	 * @param {Array} targets
+	 * @param {Kekule.ChemObject} rootObj
+	 * @param {Hash} options
+	 * @returns {Array} Report items.
+	 */
+	doCheckOnTarget: function(target, targetIndex, targets, rootObj, options)
+	{
+
 	}
 });
 
@@ -467,16 +517,10 @@ Kekule.IssueCheck.AtomValenceChecker = Class.create(Kekule.IssueCheck.BaseChecke
 		return (target instanceof Kekule.Atom) && (target.isNormalAtom());
 	},
 	/** @ignore */
-	doCheck: function(targets, rootObj, options)
+	doCheckOnTarget: function(target, targetIndex, targets, rootObj, options)
 	{
-		var result = [];
-		for (var i = 0, l = targets.length; i < l; ++i)
-		{
-			var reportItem = this.checkValence(targets[i]);
-			if (reportItem)
-				result.push(reportItem);
-		}
-		return result;
+		var reportItem = this.checkValence(target);
+		return reportItem? [reportItem]: null;
 	},
 	/** @private */
 	checkValence: function(atom)
@@ -554,16 +598,10 @@ Kekule.IssueCheck.BondOrderChecker = Class.create(Kekule.IssueCheck.BaseChecker,
 		return (target instanceof Kekule.Bond) && target.isCovalentBond();
 	},
 	/** @ignore */
-	doCheck: function(targets, rootObj, options)
+	doCheckOnTarget: function(target, targetIndex, targets, rootObj, options)
 	{
-		var result = [];
-		for (var i = 0, l = targets.length; i < l; ++i)
-		{
-			var reportItem = this.checkBondOrder(targets[i]);
-			if (reportItem)
-				result.push(reportItem);
-		}
-		return result;
+		var reportItem = this.checkBondOrder(target);
+		return reportItem? [reportItem]: null;
 	},
 	/** @private */
 	checkBondOrder: function(bond)
