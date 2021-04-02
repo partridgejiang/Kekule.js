@@ -1056,6 +1056,12 @@ Object.extend(Date.prototype, {
 		this.setTime(src.getTime());
 	}
 });
+if (!Date.now)  // polyfill some ancient browser
+{
+  Date.now = function now() {
+    return new Date().getTime();
+  };
+}
 
 /** @ignore */
 if (!Math.sqr)
