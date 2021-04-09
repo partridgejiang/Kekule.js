@@ -2483,6 +2483,42 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 	//////////////////// methods about UI markers ///////////////////////////////
 	/**
+	 * Returns the ui markers at screen coord.
+	 * @param {Hash} screenCoord
+	 * @param {Float} boundInflation
+	 * @param {Array} filterClasses
+	 * @returns {Array}
+	 */
+	getUiMarkersAtCoord: function(screenCoord, boundInflation, filterClasses)
+	{
+		var markers = this.getUiMarkers();
+		var filterFunc = (filterClasses && filterClasses.length)? function(marker) {
+			for (var i = 0, l = filterClasses.length; i < l; ++i)
+			{
+				if (marker instanceof filterClasses[i])
+					return true;
+			}
+			return false;
+		}: null;
+
+		var SU = Kekule.Render.MetaShapeUtils;
+		var result = [];
+		for (var i = markers.getMarkerCount() - 1; i >= 0; --i)
+		{
+			var marker = markers.getMarkerAt(i);
+			if (marker.getVisible())
+			{
+				if (!filterFunc || filterFunc(marker))
+				{
+					var shapeInfo = marker.shapeInfo;
+					if (SU.isCoordInside(screenCoord, shapeInfo, boundInflation))
+						result.push(marker);
+				}
+			}
+		}
+		return result;
+	},
+	/**
 	 * Notify that currently is modifing UI markers and the editor need not to repaint them.
 	 */
 	beginUpdateUiMarkers: function()
