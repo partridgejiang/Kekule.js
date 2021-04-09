@@ -3745,7 +3745,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					//handled = handled || this[funcName](e);
 					handled = this[funcName](e);  // avoid shortcircuit
 				}
-				else  // check for controller
+				//else  // check for controller
+				if (!e.cancelBubble)
 				{
 					// dispatch event to interaction controllers
 					//handled = handled || this.dispatchEventToIaControllers(e);
@@ -3754,7 +3755,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 
 			// dispatch to HTML event dispatcher
-			this.getHtmlEventDispatcher().dispatch(e);
+			if (!e.cancelBubble)
+				this.getHtmlEventDispatcher().dispatch(e);
 
 			this.doReactUiEvent(e);
 
