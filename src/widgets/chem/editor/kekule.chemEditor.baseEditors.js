@@ -189,6 +189,12 @@ Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
  * @event
  */
 /**
+ * Invoked when the pointer (usually the mouse) hovering on basic objects(s) in editor.
+ * Event param of it has field {objs}. When the pointer move out of the obj, the objs field will be a empty array.
+ * @name Kekule.Editor.BaseEditor#hoverOnObjs
+ * @event
+ */
+	/**
  * Invoked when the selection in editor has been changed.
  * @name Kekule.Editor.BaseEditor#selectionChange
  * @event
@@ -446,6 +452,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'setter': function(value) { this.setHotTrackedObjs(value); }
 		});
 
+		this.defineProp('hoveredBasicObjs', {'dataType': DataType.ARRAY, 'serializable': false});  // a readonly array caching the basic objects at current pointer position
 
 		this.defineProp('enableOperContext', {'dataType': DataType.BOOL,
 			'setter': function(value)
@@ -5304,6 +5311,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (['pointerdown', 'pointermove', 'pointerup'].indexOf(evType) >= 0)
 		{
 			this.setCurrPointerType(e.pointerType);
+			if (evType === 'pointermove')
+			{
+				var coord = this._getEventMouseCoord(e, this.getCoreElement());  // coord based on editor client element
+				var hoveredObjs = this.getBasicObjectsAtCoord(coord, this.getCurrBoundInflation()) || [];
+				var oldHoveredObjs = this.getHoveredBasicObjs() || [];
+				this.setPropStoreFieldValue('hoveredBasicObjs', hoveredObjs);
+				// if there are differences between oldHoveredObjs and hoveredObjs
+				if (hoveredObjs.length !== oldHoveredObjs.length || AU.intersect(oldHoveredObjs, hoveredObjs).length !== hoveredObjs.length)
+				{
+					this.invokeEvent('hoverOnObjs', {'objs': hoveredObjs});
+				}
+			}
 		}
 		return this.tryApplySuper('doBeforeDispatchUiEvent', [e])  /* $super(e) */;
 	},
@@ -5623,7 +5642,7 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Editor.BaseEditorBase
 	{
 		return null;
 	},
-	/** @private */
+	/* @private */
 	getAllInteractableObjsAtScreenCoord: function(coord)
 	{
 		return this.getEditor().getBasicObjectsAtCoord(coord, this.getCurrBoundInflation(), null, this.getInteractableTargetClasses());
@@ -5632,6 +5651,20 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Editor.BaseEditorBase
 	getTopmostInteractableObjAtScreenCoord: function(coord)
 	{
 		var objs = this.getAllInteractableObjsAtScreenCoord(coord);
+		if (objs)
+		{
+			for (var i = 0, l = objs.length; i < l; ++i)
+			{
+				if (this.canInteractWithObj(objs[i]))
+					return objs[i];
+			}
+		}
+		return null;
+	},
+	/** @private */
+	getTopmostInteractableObjAtCurrPointerPos: function()
+	{
+		var objs = this.getEditor().getHoveredBasicObjs();
 		if (objs)
 		{
 			for (var i = 0, l = objs.length; i < l; ++i)
@@ -5762,8 +5795,11 @@ Kekule.Editor.BaseEditorIaController = Class.create(Kekule.Editor.BaseEditorBase
 		//this.getEditor().setCurrPointerType(e.pointerType);
 
 		//console.log(e.getTarget().id);
+		/*
 		var coord = this._getEventMouseCoord(e);
 		var obj = this.getTopmostInteractableObjAtScreenCoord(coord);
+		*/
+		var obj = this.getTopmostInteractableObjAtCurrPointerPos();  // read the hovered obj directly from the editor's cached property
 		if (!this.getManuallyHotTrack())
 		{
 			/*
