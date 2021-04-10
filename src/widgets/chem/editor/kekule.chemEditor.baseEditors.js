@@ -492,7 +492,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		});
 		this.defineProp('enableIssueCheck', {'dataType': DataType.BOOL,
 			'getter': function() { return this.getIssueCheckExecutor().getEnabled(); },
-			'setter': function(value) { this.getIssueCheckExecutor().setEnabled(!!value); }
+			'setter': function(value) {
+				this.getIssueCheckExecutor().setEnabled(!!value);
+				if (!value)  // when disable issue check, clear the check results
+				{
+					this.setIssueCheckResults(null);
+				}
+			}
 		});
 		this.defineProp('issueCheckDurationLimit', {'dataType': DataType.NUMBER,
 			'getter': function() { return this.getIssueCheckExecutor().getDurationLimit(); },
