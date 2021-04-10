@@ -6595,7 +6595,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		var doc = popupElem.ownerDocument;
 		// check if already in top most layer
-		var contextRootElem = this.getContextRootElementOfCaller(invokerWidget);
+		var contextRootElem = invokerWidget? this.getContextRootElementOfCaller(invokerWidget): popupElem.ownerDocument.body;
 		var topmostLayer = this.getTopmostLayer(doc, true, contextRootElem);
 
 		var isOnTopLayer = popupElem.parentNode === topmostLayer;
@@ -6713,7 +6713,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		//if (!isOnTopLayer)  // move to isolate layer first to calculate dimensions
 		if (!Kekule.DomUtils.isInDomTree(elem, null, {acrossShadowRoot: true}))  // not in DOM, put in isolate layer first to calculate dimensions
 		{
-			var contextRootElem = this.getContextRootElementOfCaller(invokerWidget);
+			var contextRootElem = invokerWidget? this.getContextRootElementOfCaller(invokerWidget): elem.ownerDocument.body;
 			isolatedLayer = this.getIsolatedLayer(widget.getDocument(), true, contextRootElem);
 			isolatedLayer.appendChild(elem);
 			manualAppended = true;
@@ -7175,7 +7175,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		*/
 
 		// ensure the modal background and modal element behind the topmost layer (where the popup widget may exist in it)
-		var rootElem = this.getContextRootElementOfCaller(caller);
+		var rootElem = caller? this.getContextRootElementOfCaller(caller): elem.ownerDocument.body;
 		//console.log(rootElem, widget);
 		var topmostLayer = this.getTopmostLayer(doc, false, rootElem);
 		if (topmostLayer && topmostLayer.parentNode === rootElem)

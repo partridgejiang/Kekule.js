@@ -375,17 +375,20 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		if (!this.needAdjustPosition())
 			return;
 		var elem = this.getElement();
-		var style = elem.style;
-		var info = this._posInfo;
-		if (info)
+		if (elem)
 		{
-			style.left = info.left;
-			style.top = info.top;
-			style.right = info.right;
-			style.bottom = info.bottom;
-			style.width = info.width;
-			style.height = info.height;
-			style.position = info.position;
+			var style = elem.style;
+			var info = this._posInfo;
+			if (info)
+			{
+				style.left = info.left;
+				style.top = info.top;
+				style.right = info.right;
+				style.bottom = info.bottom;
+				style.width = info.width;
+				style.height = info.height;
+				style.position = info.position;
+			}
 		}
 	},
 
@@ -543,7 +546,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		{
 			//this.getDocument().body.appendChild(elem);
 			var gm = this.getGlobalManager();
-			var contextRootElem = gm.getContextRootElementOfCaller(caller);
+			var contextRootElem = caller? gm.getContextRootElementOfCaller(caller): elem.ownerDocument.body;
 			contextRootElem.appendChild(elem);
 		}
 
