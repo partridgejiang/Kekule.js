@@ -245,9 +245,12 @@ Kekule.IssueCheck.Node2DDistanceChecker.Result = Class.create(Kekule.IssueCheck.
 	{
 		var node1 = this.getTargets()[0];
 		var node2 = this.getTargets()[1];
-		var id1 = node1 && node1.getId && node1.getId();
-		var id2 = node2 && node2.getId && node2.getId();
-		var msg =(id1 && id2)? Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE_WITH_ID').format(id1 + '/' + id2): Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE');
+		//var id1 = node1 && node1.getId && node1.getId();
+		//var id2 = node2 && node2.getId && node2.getId();
+		//var msg =(id1 && id2)? Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE_WITH_ID').format(id1 + '/' + id2): Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE');
+		var label1 = (node1.getLabel && node1.getLabel()) || (node1.getId && node1.getId());
+		var label2 = (node2.getLabel && node2.getLabel()) || (node2.getId && node2.getId());
+		var msg = (label1 && label1)? Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE_WITH_LABEL').format(label1 + '/' + label2): Kekule.$L('ErrorCheckMsg.NODE_DISTANCE_TOO_CLOSE');
 		return msg;
 	}
 });

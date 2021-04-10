@@ -170,14 +170,25 @@
       });
 
       /*
+      chemEditorUi.on('hoverOnObjs', function(e){
+        console.log('hoverOnObjs', e.objs);
+      });
+      */
+
+      /*
 	    var elem = chemEditorUi.getEditor().getElement();
       Kekule.X.Event.addListener(elem, 'pointermove', function(e) {
         var offsetCoord = e.getOffsetCoord(true);
         //var elemPos = Kekule.HtmlElementUtils.getElemPagePos(elem);
         //var coord = Kekule.CoordUtils.substract(offsetCoord, elemPos);
+
         var obj = chemEditorUi.getEditor().getTopmostBasicObjectAtCoord(offsetCoord);
         if (obj)
           console.log(obj.getClassName(), obj.getId());
+
+        var markers = chemEditor.getUiMarkersAtCoord(offsetCoord);
+        if (markers.length)
+          console.log(markers[0]);
       });
       */
 

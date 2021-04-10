@@ -575,8 +575,9 @@ Kekule.IssueCheck.AtomValenceChecker.Result = Class.create(Kekule.IssueCheck.Che
 			Kekule.$L('ErrorCheckMsg.ATOM_VALENCE_ERROR_WITH_SUGGESTS');
 		var atom = this.getTargets()[0];
 		var atomId = atom.getId();
-		var atomSymbol = atom.getSymbol();
-		var atomLabel = atomId? atomId + '(' + atomSymbol + ')': atomSymbol;
+		//var atomSymbol = atom.getSymbol();
+		//var atomLabel = atomId? atomId + '(' + atomSymbol + ')': atomSymbol;
+		var atomLabel = atom.getLabel? atom.getLabel(): atom.getSymbol();
 		var suggests = possibleValences.join('/');
 		return msg.format(atomLabel, currValence, suggests);
 	}
@@ -672,7 +673,17 @@ Kekule.IssueCheck.BondOrderChecker.Result = Class.create(Kekule.IssueCheck.Check
 		var currOrder = this.getDataValue('currOrder');
 		var maxOrder = this.getDataValue('maxOrder');
 		var bond = this.getTargets()[0];
-		var bondLabel = bond.getId() || '';
+		//var bondLabel = bond.getId() || '';
+		var connectedNodes = bond.getConnectedChemNodes();
+		var nodeLabels = [];
+		for (var i = 0, l = connectedNodes.length; i < l; ++i)
+		{
+			var node = connectedNodes[i];
+			var nodeLabel = node.getLabel && node.getLabel();
+			if (nodeLabel)
+				nodeLabels.push(nodeLabel);
+		}
+		var bondLabel = (nodeLabels.length > 1)? nodeLabels.join('-'): null;
 		var msg = bondLabel? Kekule.$L('ErrorCheckMsg.BOND_WITH_ID_ORDER_EXCEED_ALLOWED_WITH_SUGGEST').format(bondLabel, currOrder, maxOrder)
 			: Kekule.$L('ErrorCheckMsg.BOND_ORDER_EXCEED_ALLOWED_WITH_SUGGEST').format(currOrder, maxOrder);
 		return msg;

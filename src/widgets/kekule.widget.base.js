@@ -3745,7 +3745,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 					//handled = handled || this[funcName](e);
 					handled = this[funcName](e);  // avoid shortcircuit
 				}
-				else  // check for controller
+				//else  // check for controller
+				if (!e.cancelBubble)
 				{
 					// dispatch event to interaction controllers
 					//handled = handled || this.dispatchEventToIaControllers(e);
@@ -3754,7 +3755,8 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			}
 
 			// dispatch to HTML event dispatcher
-			this.getHtmlEventDispatcher().dispatch(e);
+			if (!e.cancelBubble)
+				this.getHtmlEventDispatcher().dispatch(e);
 
 			this.doReactUiEvent(e);
 
@@ -4075,6 +4077,47 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	{
 		var gm = this.getGlobalManager();
 		return gm.getMouseCaptureWidget() === this;
+	},
+
+	/**
+	 * Get the mouse coord based on clientElem.
+	 * @private
+	 */
+	_getEventMouseCoord: function(e, clientElem)
+	{
+		var elem = clientElem || this.getElement();
+		var targetElem = e.getTarget();
+		//var coord = {'x': e.getOffsetX(), 'y': e.getOffsetY()};
+
+		var coord = e.getOffsetCoord(true);  // consider CSS transform
+
+		if (targetElem === elem)
+			return coord;
+		else
+		{
+			var elemPos = Kekule.HtmlElementUtils.getElemPagePos(elem);
+			var targetPos = Kekule.HtmlElementUtils.getElemPagePos(targetElem);
+			var offset = {'x': targetPos.x - elemPos.x, 'y': targetPos.y - elemPos.y};
+			coord = Kekule.CoordUtils.substract(coord, offset);
+
+			//console.log('mouse coord', e.getOffsetX(), e.getOffsetY(), e.layerX, e.layerY, offset, coord);
+
+			return coord;
+		}
+
+		/*
+		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
+		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
+
+		//var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
+		var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
+		var offset = {
+			'x': rect.left - elem.scrollLeft,
+			'y': rect.top - elem.scrollTop
+		};
+		var result = Kekule.CoordUtils.substract(coord, offset);
+		return result;
+		*/
 	},
 
 	// methods about drag and drop
@@ -4528,39 +4571,7 @@ Kekule.Widget.InteractionController = Class.create(ObjectEx,
 	/** @private */
 	_getEventMouseCoord: function(e, clientElem)
 	{
-		var elem = clientElem || this.getWidget().getElement();
-		var targetElem = e.getTarget();
-		//var coord = {'x': e.getOffsetX(), 'y': e.getOffsetY()};
-
-		var coord = e.getOffsetCoord(true);  // consider CSS transform
-
-		if (targetElem === elem)
-			return coord;
-		else
-		{
-			var elemPos = Kekule.HtmlElementUtils.getElemPagePos(elem);
-			var targetPos = Kekule.HtmlElementUtils.getElemPagePos(targetElem);
-			var offset = {'x': targetPos.x - elemPos.x, 'y': targetPos.y - elemPos.y};
-			coord = Kekule.CoordUtils.substract(coord, offset);
-
-			//console.log('mouse coord', e.getOffsetX(), e.getOffsetY(), e.layerX, e.layerY, offset, coord);
-
-			return coord;
-		}
-
-		/*
-		//return {x: e.getRelXToCurrTarget(), y: e.getRelYToCurrTarget()};
-		var coord = {'x': e.getClientX(), 'y': e.getClientY()};
-
-		//var offset = {'x': elem.getBoundingClientRect().left - elem.scrollLeft, 'y': elem.getBoundingClientRect().top - elem.scrollTop};
-		var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
-		var offset = {
-			'x': rect.left - elem.scrollLeft,
-			'y': rect.top - elem.scrollTop
-		};
-		var result = Kekule.CoordUtils.substract(coord, offset);
-		return result;
-		*/
+		return this.getWidget()._getEventMouseCoord(e, clientElem);
 	}
 });
 
