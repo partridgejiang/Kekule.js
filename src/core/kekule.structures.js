@@ -6754,7 +6754,7 @@ Kekule.SubGroup = Class.create(Kekule.StructureFragment,
 	/** @ignore */
 	getLabel: function()
 	{
-		return Kekule.ChemStructureNodeLabels.SUBGROUP;
+		return this.getName() || this.getAbbr() || this.getFormulaText() || Kekule.ChemStructureNodeLabels.SUBGROUP;
 	}
 });
 // RGroup is often used in organic chemistry, here we define it as an alias of SubGroup
