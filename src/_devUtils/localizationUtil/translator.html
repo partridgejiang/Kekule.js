@@ -150,8 +150,8 @@
       textEditor.setValue(content);
       textEditor.getTextArea().setWidth('600px').setHeight('400px');
       textEditor.appendToWidget(result);
-      result.openModal(function(result){
-        if (result === 'ok')  // do save
+      result.openModal(function(dialogValue){
+        if (dialogValue === 'ok')  // do save
         {
           Kekule.NativeServices.saveFileData(
             document, textEditor.getValue(), null, {'initialFileName': initialFileName}
