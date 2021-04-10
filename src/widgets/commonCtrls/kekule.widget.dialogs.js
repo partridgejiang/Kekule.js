@@ -543,7 +543,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 		{
 			//this.getDocument().body.appendChild(elem);
 			var gm = this.getGlobalManager();
-			var contextRootElem = gm.getContextRootElementOfCaller(caller);
+			var contextRootElem = caller? gm.getContextRootElementOfCaller(caller): elem.ownerDocument.body;
 			contextRootElem.appendChild(elem);
 		}
 
