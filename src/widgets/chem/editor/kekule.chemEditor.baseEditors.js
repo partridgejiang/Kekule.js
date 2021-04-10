@@ -2852,12 +2852,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			var hint = this.getChemObjHint(objs[i]);
 			if (hint)
-				hints.push(hint);
+			{
+				// hints.push(hint);
+				AU.pushUnique(hints, hint);  // avoid show duplicated hint texts
+			}
 		}
 		// issue hints
 		var issueHints = this._getChemObjsRelatedIssuesHints(objs);
 		if (issueHints.length)
-			hints = hints.concat(issueHints);
+		{
+			//hints = hints.concat(issueHints);
+			AU.pushUnique(hints, issueHints);  // avoid show duplicated hint texts
+		}
 
 		return hints.length? hints.join('\n'): null;
 	},
@@ -2872,7 +2878,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			for (var i = 0, l = issueItems.length; i < l; ++i)
 			{
 				var msg = issueItems[i].getMessage();
-				result.push(msg);
+				AU.pushUnique(result, msg);  // avoid show duplicated hint texts
 			}
 		}
 		return result;
