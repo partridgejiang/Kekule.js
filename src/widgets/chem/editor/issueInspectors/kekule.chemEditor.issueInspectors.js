@@ -122,14 +122,26 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 	/** @ignore */
 	doSetItemData: function(item, data)
 	{
+		var oldData = this.getItemData(item);
+		if (oldData && oldData.checkResult)
+		{
+			EU.removeClass(item, this._getErrorLevelHtmlClass(oldData.checkResult.getLevel()));
+		}
 		if (data)
 		{
-			if (data.text)
+			var itemData;
+			if (data instanceof Kekule.IssueCheck.CheckResult)
+				itemData = this._wrapCheckResultToItemData(data);
+			else
+				itemData = data;
+			if (itemData.text)
 			{
-				DU.setElementText(item.getElementsByClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY)[0], data.text);
+				DU.setElementText(item.getElementsByClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY)[0], itemData.text);
 			}
-			if (data.hint)
-				item.setAttribute('title', data.hint);
+			if (itemData.hint)
+				item.setAttribute('title', itemData.hint);
+
+			EU.addClass(item, this._getErrorLevelHtmlClass(itemData.checkResult.getLevel()));
 		}
 	},
 	/** @private */
@@ -146,12 +158,25 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 	/** @private */
 	_updateListView: function()
 	{
-		this.clearItems();
+		// this.clearItems();
+		var existedItems = this.getItems();
+		var existedItemsCount = existedItems.length;
 		var checkResults = this.getCheckResults() || [];
-		for (var i = 0, l = checkResults.length; i < l; ++i)
+		var checkResultsCount = checkResults.length;
+		for (var i = 0; i < checkResultsCount; ++i)
 		{
-			var itemElem = this.appendItem(checkResults[i]);
-			EU.addClass(itemElem, this._getErrorLevelHtmlClass(checkResults[i].getLevel()));
+			if (i < existedItemsCount)
+				this.setItemData(existedItems[i], checkResults[i]);
+			else
+				this.appendItem(checkResults[i]);
+		}
+		if (existedItemsCount > checkResultsCount)
+		{
+			for (var i = existedItemsCount - 1; i >= checkResultsCount; --i)
+			{
+				var item = existedItems[i];
+				this.removeItem(item);
+			}
 		}
 	},
 	/** @private */
