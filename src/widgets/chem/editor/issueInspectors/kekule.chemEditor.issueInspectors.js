@@ -120,28 +120,34 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 		return result;
 	},
 	/** @ignore */
+	setItemData: function(item, data)
+	{
+		var itemData;
+		if (data instanceof Kekule.IssueCheck.CheckResult)
+			itemData = this._wrapCheckResultToItemData(data);
+		else
+			itemData = data;
+		this.tryApplySuper('setItemData', [item, itemData]);
+	},
+	/** @ignore */
 	doSetItemData: function(item, data)
 	{
 		var oldData = this.getItemData(item);
-		if (oldData && oldData.checkResult)
+		if (oldData && oldData.className)
 		{
-			EU.removeClass(item, this._getErrorLevelHtmlClass(oldData.checkResult.getLevel()));
+			EU.removeClass(item, oldData.className);
 		}
 		if (data)
 		{
-			var itemData;
-			if (data instanceof Kekule.IssueCheck.CheckResult)
-				itemData = this._wrapCheckResultToItemData(data);
-			else
-				itemData = data;
+			var itemData = data;
 			if (itemData.text)
-			{
 				DU.setElementText(item.getElementsByClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY)[0], itemData.text);
-			}
 			if (itemData.hint)
 				item.setAttribute('title', itemData.hint);
+			if (itemData.className)
+				EU.addClass(item, itemData.className);
 
-			EU.addClass(item, this._getErrorLevelHtmlClass(itemData.checkResult.getLevel()));
+			//EU.addClass(item, this._getErrorLevelHtmlClass(itemData.checkResult.getLevel()));
 		}
 	},
 	/** @private */
@@ -151,6 +157,7 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 		var result = {
 			'text': msg,
 			'hint': msg,
+			'className': this._getErrorLevelHtmlClass(checkResult.getLevel()),  // cache text/hint and class name
 			'checkResult': checkResult
 		};
 		return result;
@@ -166,7 +173,9 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 		for (var i = 0; i < checkResultsCount; ++i)
 		{
 			if (i < existedItemsCount)
+			{
 				this.setItemData(existedItems[i], checkResults[i]);
+			}
 			else
 				this.appendItem(checkResults[i]);
 		}
