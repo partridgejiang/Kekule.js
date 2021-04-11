@@ -2825,8 +2825,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var elem = this.getEditClientElem();
 		if (elem)
 		{
-			//elem.setAttribute('title', 'dummy');
-			elem.title = hint || '';
+			var sHint = hint || '';
+			if (sHint && this.updateHintForChemObject._cache == sHint)   // same as last non-empty hint, must explicitly change hint a little, otherwise the hint may not be displayed in client area
+			{
+				sHint += '\f';  // add a hidden char
+			}
+			elem.title = sHint;
+			if (sHint)
+				this.updateHintForChemObject._cache = sHint;
 		}
 	},
 	/**
