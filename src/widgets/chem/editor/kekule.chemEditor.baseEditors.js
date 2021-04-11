@@ -2993,7 +2993,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				var configs = this.getEditorConfigs().getUiMarkerConfigs();
 				var styleConfigs = configs.getIssueCheckMarkerColors()[levelName];
 				var drawStyles = {
-					'strokeColor': isActive ? styleConfigs.activeStokeColor : styleConfigs.strokeColor,
+					'strokeColor': isActive ? styleConfigs.activeStrokeColor : styleConfigs.strokeColor,
 					'strokeWidth': isActive ? configs.getIssueCheckActiveMarkerStrokeWidth() : configs.getIssueCheckMarkerStrokeWidth(),
 					'fillColor': isActive ? styleConfigs.activeFillColor : styleConfigs.fillColor,
 					'opacity': isActive ? configs.getIssueCheckActiveMarkerOpacity() : configs.getIssueCheckMarkerOpacity()
