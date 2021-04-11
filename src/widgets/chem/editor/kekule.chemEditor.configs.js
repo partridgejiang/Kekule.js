@@ -306,7 +306,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('issueCheckMarkerStrokeWidth', 2);
 		this.addFloatConfigProp('issueCheckActiveMarkerStrokeWidth', 2);
 		this.addStrConfigProp('issueCheckMarkerOpacity', 0.3);
-		this.addStrConfigProp('issueCheckActiveMarkerOpacity', 0.4);
+		this.addStrConfigProp('issueCheckActiveMarkerOpacity', 0.6);
 
 		this.addStrConfigProp('flexStructureAssocMarkerColor', '#0000AA');
 		this.addFloatConfigProp('flexStructureAssocMarkerOpacity', 0.5);
