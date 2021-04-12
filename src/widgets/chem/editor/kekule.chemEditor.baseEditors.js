@@ -4062,7 +4062,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	removeFromSelection: function(param)
 	{
-		if (!param)
+		if (!param || !param.length)
 			return;
 		var objs = DataType.isArrayValue(param)? param: [param];
 		this.beginUpdateSelection();
