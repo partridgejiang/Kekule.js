@@ -348,16 +348,26 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 		return allItems[index];
 	},
 	/** @private */
+	_itemBeforeInsert: function(item)
+	{
+
+	},
+	/** @private */
 	_itemInserted: function(item)
 	{
 		EU.addClass(item, this.getItemClassName());
 	},
 	/** @private */
-	_itemRemoved: function(item)
+	_itemBeforeRemove: function(item)
 	{
 		if (this.isItemSelected(item))
 			this.removeFromSelection(item);
 		EU.removeClass(item, this.getItemClassName());
+	},
+	/** @private */
+	_itemRemoved: function(item)
+	{
+
 	},
 
 	/**
@@ -370,6 +380,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 			item = this.createChildItem();
 		else if (!DU.isElement(item))  // is hash
 			item = this.createChildItem(item);
+		this._itemBeforeInsert(item);
 		this.getChildrenHolderElement().appendChild(item);
 		this._itemInserted(item);
 		return item;
@@ -390,6 +401,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 			return this.appendItem(item);
 		else
 		{
+			this._itemBeforeInsert(item);
 			this.getChildrenHolderElement().insertBefore(item, ref);
 			this._itemInserted(item);
 			return item;
@@ -402,6 +414,7 @@ Kekule.Widget.ListView = Class.create(Kekule.Widget.BaseWidget,
 	removeItem: function(item)
 	{
 		var elem = this.getBelongedChildItem(item);
+		this._itemBeforeRemove(elem);
 		this.getChildrenHolderElement().removeChild(elem);
 		this._itemRemoved(elem);
 		return item;
