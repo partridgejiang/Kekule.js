@@ -822,6 +822,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				result.push(this.getIssueCheckUiMarker(errorLevels[i]));
 			}
+			var activeMarker = this.getActiveIssueCheckUiMarker();
+			if (activeMarker)
+				result.push(activeMarker);
 			return result;
 		}
 	},
