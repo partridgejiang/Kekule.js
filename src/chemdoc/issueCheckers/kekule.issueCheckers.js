@@ -656,7 +656,7 @@ Kekule.IssueCheck.BondOrderChecker = Class.create(Kekule.IssueCheck.BaseChecker,
 ICM.register(CIDs.BOND_ORDER, Kekule.IssueCheck.BondOrderChecker);
 
 /**
- * Represent the checking result of {@link Kekule.IssueCheck.AtomValenceChecker}.
+ * Represent the checking result of {@link Kekule.IssueCheck.BondOrderChecker}.
  * @class
  * @augments Kekule.IssueCheck.CheckResult
  */
