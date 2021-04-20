@@ -110,6 +110,11 @@ Kekule.ClassUtils.makeSingleton(Kekule.Editor.ChemSpaceEditorConfigs);
  * @property {Bool} enablePartialAreaSelecting If this value is true, when drag a selecting rubber band, object partial in the band will also be selected.
  * @property {Bool} enableMergePreview When set to true, a preview of merge (instead of actual merge) will be displayed during manipulation of chem objects.
  *   Set this value to true will improve the performance of chem editor.
+ * @property {Bool} enableMagneticMerge Whether nearing node will be merged when moving their position.
+ * @property {Bool} enableNodeMerge Whether node merging is allowed.
+ * @property {Bool} enableNeighborNodeMerge Whether neighboring node merging is allowed.
+ * @property {Bool} enableConnectorMerge Whether connector merging is allowed.
+ * @property {Bool} enableStructFragmentMerge Whether node or connector merging between different molecule is allowed.
  * @property {Bool} followPointerCoordOnDirectManipulatingSingleObj If true, the new coord of manipulating object will be set directly by the position of pointer (rather than the delta coord to the original position).
  * @property {Bool} enableOffSelectionManipulation If true, holding pointer down outside selection region for a while
  *   will enter the manipulation state to move the selected objects.
@@ -179,7 +184,13 @@ Kekule.Editor.InteractionConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('constrainedRotateStep', degreeStep * 7.5);  // 7.5 degree
 		this.addIntConfigProp('rotationLocationPointDistanceThreshold', 10);
 		this.addIntConfigProp('directedMoveDistanceThreshold', 10);
+
 		this.addBoolConfigProp('enableMergePreview', true);
+		this.addBoolConfigProp('enableMagneticMerge', true);
+		this.addBoolConfigProp('enableNodeMerge', true);
+		this.addBoolConfigProp('enableNeighborNodeMerge', true);
+		this.addBoolConfigProp('enableConnectorMerge', true);
+		this.addBoolConfigProp('enableStructFragmentMerge', true);
 
 		this.addBoolConfigProp('enableGestureManipulation', true);
 		this.addBoolConfigProp('enableGestureZoomOnEditor', true);
