@@ -9,6 +9,8 @@
  * requires /core/kekule.common.js
  * requires /core/kekule.structures.js
  * requires /chemDoc/errorCheckers/kekule.errorCheckers.js
+ * requires /widgets/editor/kekule.chemEditor.baseEditors.js
+ * requires /widgets/editor/kekule.chemEditor.operations.js
  *
  * requires /localization/kekule.localize.general.js
  */
@@ -67,6 +69,245 @@ Kekule.IssueCheck.ExecutorForEditor = Class.create(Kekule.IssueCheck.Executor,
 		return result;
 	}
 });
+
+/**
+ * A base class to generate operations to fix certain kind of issue.
+ * @class
+ * @augments ObjectEx
+ */
+Kekule.IssueCheck.IssueResolver = Class.create(ObjectEx,
+/** @lends Kekule.IssueCheck.IssueResolver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IssueCheck.IssueResolver',
+	/** @constructs */
+	initialize: function()
+	{
+		this.tryApplySuper('initialize');
+	},
+	/**
+	 * Find the solutions to resolve issue.
+	 * @param {Kekule.IssueCheck.CheckResult} issueResult
+	 * @param {Object} caller The caller object, usually the editor widget.
+	 * @returns {Array}
+	 */
+	createSolutions: function(issueResult, caller)
+	{
+		return this.doCreateSolutions(issueResult, caller);
+	},
+	/**
+	 * Do actual work of {@link Kekule.IssueCheck.IssueResolver.createSolutions}.
+	 * Descendants may should override this method.
+	 * @param {Kekule.IssueCheck.CheckResult} issueResult
+	 * @param {Object} caller The caller object, usually the editor widget.
+	 * @returns {Array}
+	 * @private
+	 */
+	doCreateSolutions: function(issueResult, caller)
+	{
+		return [];
+	},
+	/** @private */
+	_createSolutionInstance: function(title, description, operation, issueResult, solutionClass)
+	{
+		if (!solutionClass)
+			solutionClass = Kekule.IssueCheck.IssueSolution;
+		return new solutionClass(title, description, operation, issueResult);
+	},
+	/** @private */
+	_getEditorWidget: function(caller)
+	{
+		return (caller && (caller instanceof Kekule.Editor.BaseEditor))? caller: null;
+	}
+});
+
+/**
+ * The base issue solution class.
+ * @class
+ * @augments ObjectEx
+ *
+ * @param {String} title
+ * @param {String} description
+ * @param {Kekule.Operation} operation Execute this operation can solve the issue.
+ *
+ * @property {String} title
+ * @property {String} description
+ * @property {Kekule.Operation} operation Execute this operation can solve the issue.
+ */
+Kekule.IssueCheck.IssueSolution = Class.create(ObjectEx,
+/** @lends Kekule.IssueCheck.IssueSolution# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IssueCheck.IssueSolution',
+	/** @constructs */
+	initialize: function(title, description, operation, issueResult)
+	{
+		this.setPropStoreFieldValue('issueResult', issueResult);
+		this.setPropStoreFieldValue('title', title);
+		this.setPropStoreFieldValue('description', description);
+		this.setPropStoreFieldValue('operation', operation);
+		this.tryApplySuper('initialize');
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('issueResult', {'dataType': 'Kekule.IssueCheck.CheckResult', 'serializable': false});
+		this.defineProp('title', {'dataType': DataType.STRING});
+		this.defineProp('description', {'dataType': DataType.STRING});
+		this.defineProp('operation', {'dataType': 'Kekule.Operation', 'serializable': false});
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		var op = this.getOperation();
+		if (op)
+			op.finalize();
+		this.tryApplySuper('doFinalize');
+	}
+});
+
+/**
+ * The util class to register and store issue resolver class info.
+ * @class
+ */
+Kekule.IssueCheck.ResolverManager = {
+	/** @private */
+	_resolverMap: new Kekule.MapEx(),
+	/** @private */
+	_resolverInstanceMap: new Kekule.MapEx(),
+	/**
+	 * Register to manager.
+	 * @param {Class} issueResultClass
+	 * @param {Class} resolverClass
+	 */
+	register: function(issueResultClass, resolverClass)
+	{
+		var rclasses = IRM._resolverMap.get(issueResultClass);
+		if (!rclasses)
+		{
+			rclasses = [];
+			IRM._resolverMap.set(issueResultClass, rclasses);
+		}
+		if (rclasses.indexOf(resolverClass) < 0)
+			rclasses.push(resolverClass);
+	},
+	/**
+	 * Unregister from class.
+	 * @param {Class} issueResultClass
+	 * @param {Class} resolverClass
+	 */
+	unregister: function(issueResultClass, resolverClass)
+	{
+		var rclasses = IRM._resolverMap.get(issueResultClass);
+		var index = rclasses.indexOf(resolverClass);
+		if (index >= 0)
+			rclasses.splice(index, 1);
+	},
+	/**
+	 * Returns the registered resolver class.
+	 * @param {Class} issueResultClass
+	 * @returns {Array} Resolver classes found.
+	 */
+	getResolverClasses: function(issueResultClass)
+	{
+		return IRM._resolverMap.get(issueResultClass) || [];
+	},
+	/**
+	 * Returns the instance of registered resolver class.
+	 * Note the instance will be cached. So multiple calls of this function only returns one single instance.
+	 * @param {Class} issueResultClass
+	 * @returns {Array} Instances of {@link Kekule.IssueCheck.IssueResolver}.
+	 */
+	getResolverInstances: function(issueResultClass)
+	{
+		var result = [];
+		var classes = IRM.getResolverClasses(issueResultClass);
+		for (var i = 0, l = classes.length; i < l; ++i)
+		{
+			var rclass = classes[i];
+			var instance = IRM._resolverInstanceMap.get(rclass);
+			if (!instance)
+			{
+				instance = new rclass();
+				IRM._resolverInstanceMap.set(rclass, instance);
+			}
+			result.push(instance);
+		}
+		return result;
+	}
+};
+var IRM = Kekule.IssueCheck.ResolverManager;
+
+// expand Kekule.IssueCheck.CheckResult, enable it can retreive solutions from Kekule.IssueCheck.ResolverManager
+ClassEx.extend(Kekule.IssueCheck.CheckResult, {
+	/**
+	 * Returns resolver instances for this issue result.
+	 * @returns {Array}
+	 */
+	getResolvers: function()
+	{
+		return IRM.getResolverInstances(this.getClass());
+	},
+	/**
+	 * Create solution objects for this issue result.
+	 * @param {Object} caller
+	 * @returns {Array}
+	 */
+	fetchSolutions: function(caller)
+	{
+		var resolvers = this.getResolvers();
+		var result = [];
+		for (var i = 0, l = resolvers.length; i < l; ++i)
+		{
+			var r = resolvers[i];
+			var solutions = r.createSolutions(this, caller);
+			if (solutions && solutions.length)
+				result = result.concat(solutions);
+		}
+		return result;
+	}
+});
+/*
+ClassEx.defineProp(Kekule.IssueCheck.CheckResult, 'solutions', {
+	'dataType': DataType.ARRAY,
+	'serializable': false,
+	'setter': null
+});
+*/
+
+/**
+ * The resolver class for {@link Kekule.IssueCheck.BondOrderChecker.Result}.
+ * @class
+ * @augments Kekule.IssueCheck.IssueResolver
+ */
+Kekule.IssueCheck.BondOrderChecker.Resolver = Class.create(Kekule.IssueCheck.IssueResolver,
+/** @lends Kekule.IssueCheck.BondOrderChecker.Resolver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IssueCheck.BondOrderChecker.Resolver',
+	/** @ignore */
+	doCreateSolutions: function(issueResult, caller)
+	{
+		var bond = issueResult.getTargets()[0];
+		var currOrder = bond.getBondOrder();
+		var maxOrder = issueResult.getData().maxOrder;
+		var editor = this._getEditorWidget(caller);
+
+		if (bond && maxOrder && editor)
+		{
+			// create operation to change current bond order to maxOrder
+			var op = new Kekule.ChemObjOperation.Modify(bond, {'bondOrder': maxOrder}, editor);
+			var title = Kekule.$L('ErrorCheckMsg.TITLE_CHANGE_BOND_ORDER_TO').format(maxOrder);
+			var description = Kekule.$L('ErrorCheckMsg.DESCRIPTION_CHANGE_BOND_ORDER_TO').format(currOrder, maxOrder);
+			return [
+				this._createSolutionInstance(title, description, op, issueResult)
+			];
+		}
+		else
+			return [];
+	}
+});
+IRM.register(Kekule.IssueCheck.BondOrderChecker.Result, Kekule.IssueCheck.BondOrderChecker.Resolver);
 
 /**
  * The checker to check if two nodes are too close to be merged together.
@@ -254,6 +495,71 @@ Kekule.IssueCheck.Node2DDistanceChecker.Result = Class.create(Kekule.IssueCheck.
 		return msg;
 	}
 });
+
+/**
+ * The resolver class for {@link Kekule.IssueCheck.Node2DDistanceChecker.Result}.
+ * @class
+ * @augments Kekule.IssueCheck.IssueResolver
+ */
+Kekule.IssueCheck.Node2DDistanceChecker.Resolver = Class.create(Kekule.IssueCheck.IssueResolver,
+/** @lends Kekule.IssueCheck.Node2DDistanceChecker.Resolver# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IssueCheck.Node2DDistanceChecker.Resolver',
+	/** @ignore */
+	doCreateSolutions: function(issueResult, caller)
+	{
+		var node1 = issueResult.getTargets()[0];
+		var node2 = issueResult.getTargets()[1];
+		var label1 = (node1.getLabel && node1.getLabel()); // || (node1.getId && node1.getId());
+		var label2 = (node2.getLabel && node2.getLabel()); // || (node2.getId && node2.getId());
+		var sameLabel = label1 === label2;
+		if (!label1 || sameLabel)
+		{
+			var id1 = node1.getId && node1.getId();
+			if (id1)
+				label1 = label1? label1 + '(' + id1 + ')': id1;
+		}
+		if (!label1 || sameLabel)
+		{
+			var id2 = node2.getId && node2.getId();
+			if (id2)
+				label2 = label2? label2 + '(' + id2 + ')': id2;
+		}
+
+		var editor = this._getEditorWidget(caller);
+
+		var result = [];
+		if (node1 && node2 && editor)
+		{
+			var canMergeStructFragment = editor.getEditorConfigs().getInteractionConfigs().getEnableStructFragmentMerge();
+			var canMergeNeighborNodes = editor.getEditorConfigs().getInteractionConfigs().getEnableNeighborNodeMerge();
+			if (Kekule.ChemStructOperation.MergeNodes.canMerge(node1, node2, canMergeStructFragment, canMergeNeighborNodes))  // can merge node1 to node2
+			{
+				var op = new Kekule.ChemStructOperation.MergeNodes(node1, node2, canMergeStructFragment, editor);
+				result.push(this._createSolutionInstance(
+					Kekule.$L('ErrorCheckMsg.TITLE_MERGE_TO').format(label1, label2),
+					Kekule.$L('ErrorCheckMsg.DESCRIPTION_MERGE_TO').format(label1, label2),
+					op,
+					issueResult
+				));
+			}
+			if (Kekule.ChemStructOperation.MergeNodes.canMerge(node2, node1, canMergeStructFragment, canMergeNeighborNodes))  // can merge node2 to node1
+			{
+				var op = new Kekule.ChemStructOperation.MergeNodes(node2, node1, canMergeStructFragment, editor);
+				result.push(this._createSolutionInstance(
+					Kekule.$L('ErrorCheckMsg.TITLE_MERGE_TO').format(label2, label1),
+					Kekule.$L('ErrorCheckMsg.DESCRIPTION_MERGE_TO').format(label2, label1),
+					op,
+					issueResult
+				));
+			}
+		}
+
+		return result;
+	}
+});
+IRM.register(Kekule.IssueCheck.Node2DDistanceChecker.Result, Kekule.IssueCheck.Node2DDistanceChecker.Resolver);
 
 
 })();
