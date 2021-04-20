@@ -161,4 +161,8 @@ Kekule.Localization.addResource('en', 'ErrorCheckMsg', {
 	BOND_WITH_ID_ORDER_EXCEED_ALLOWED_WITH_SUGGEST: 'The bond order of {0} ({1}) exceeds the maximum allowed value {2}',
 	NODE_DISTANCE_TOO_CLOSE: 'Atoms/subgroups are very close, may be you want to merge them?',
 	NODE_DISTANCE_TOO_CLOSE_WITH_LABEL: 'Atoms/subgroups ({0}) are very close, may be you want to merge them?',
+	TITLE_CHANGE_BOND_ORDER_TO: 'Change bond order to {0}',
+	DESCRIPTION_CHANGE_BOND_ORDER_TO: 'Change bond order from {0} to {1}',
+	TITLE_MERGE_TO: 'Merge {0} to {1}',
+	DESCRIPTION_MERGE_TO: 'Merge node {0} to {1}'
 });

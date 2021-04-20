@@ -1028,6 +1028,10 @@ Kekule.Editor.ComposerObjModifierToolbar = Class.create(Kekule.Widget.Toolbar,
  * @property {Array} allowedObjModifierCategories
  * @property {Bool} showObjInspector Whether show advanced object inspector and structure view.
  * @property {Bool} showIssueInspector Whether show error inspector panel.
+ * @property {Bool} enableIssueInspectorSolutions Whether the solution section in issue inspector should be displayed.
+ *   Note: The solution section will be actually displayed when both this property and enableAutoIssueCheck are true.
+ *   If enableAutoIssueCheck is false, the issues in inspector may not reflect to the current state of chem objects,
+ *   so running the solutions may not mess up the editor content.
  * @property {Bool} autoSetMinDimension
  *
  * @property {Kekule.Editor.BaseEditorConfigs} editorConfigs Configuration of this editor.
@@ -1068,6 +1072,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		*/
 		this.updateSelectionAssocToolbarStateBind = this.updateSelectionAssocToolbarState.bind(this);
 
+		this.setPropStoreFieldValue('enableIssueInspectorSolutions', true);
 		this.setPropStoreFieldValue('enableStyleToolbar', true);
 		this.setPropStoreFieldValue('enableObjModifierToolbar', true);
 		this.setPropStoreFieldValue('editor', editor);
@@ -1195,6 +1200,15 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 				}
 			}
 		});
+		this.defineProp('enableIssueInspectorSolutions', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('enableIssueInspectorSolutions', !!value);
+				if (this.getIssueInspector())
+					this.getIssueInspector().setEnableIssueSolutions(this.getActualEnableIssueInspectorSolutions());
+			}
+		});
+
 		// for backward compatibility, alias of property showObjInspector
 		this.defineProp('showInspector', {'dataType': DataType.BOOL,
 			'getter': function() { return this.getShowObjInspector(); },
@@ -1478,6 +1492,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		this._defineEditorDelegatedProp('enableCreateNewDoc');
 		this._defineEditorDelegatedProp('enableLoadNewFile');
 		this._defineEditorDelegatedProp('enableIssueCheck');
+		this._defineEditorDelegatedProp('enableAutoIssueCheck');
 		this._defineEditorDelegatedProp('initOnNewDoc');
 	},
 	/**
@@ -2059,6 +2074,16 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 			this
 		);
 		*/
+		editor.addEventListener('change', function(e)
+			{
+				var propNames = e.changedPropNames;
+				if (propNames.indexOf('enableAutoIssueCheck') >= 0)
+				{
+					this.getIssueInspector().setEnableIssueSolutions(this.getActualEnableIssueInspectorSolutions());
+				}
+			},
+			this
+		);
 
 		var self = this;
 		editor.overwriteMethod('getChildAction', function($old, actionName, checkSupClasses){
@@ -2186,11 +2211,28 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 		var inspectorRegionElem = this._doCreateSubElement(doc, wrapper, 'div', CCNS.COMPOSER_ISSUE_PANEL_INSPECTOR_REGION);
 		var issueInspector = new Kekule.Editor.IssueInspector(doc);
 		issueInspector.appendToElem(inspectorRegionElem);
-		issueInspector.setParent(this);
+		issueInspector.setParent(this).setResolverCaller(this.getEditor()).setEnableIssueSolutions(this.getActualEnableIssueInspectorSolutions());
+		var self = this;
+		issueInspector.addEventListener('resolveIssue', function(e){
+			var solution = e.solution;
+			if (solution)
+			{
+				var op = solution.getOperation();
+				if (op)
+				{
+					self.getEditor().execOperation(op);
+				}
+			}
+		});
 		this.setPropStoreFieldValue('issueInspector', issueInspector);
 
 		var nexus = this.getEditorNexus();
 		nexus.setIssueInspector(issueInspector);
+	},
+	/** @private */
+	getActualEnableIssueInspectorSolutions: function()
+	{
+		return this.getEnableIssueInspectorSolutions() && this.getEnableAutoIssueCheck();
 	},
 
 	/** @private */

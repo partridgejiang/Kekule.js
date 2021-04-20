@@ -1834,11 +1834,11 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 		else
 		{
-			this.requestAutoCheckIssuesIfNecessary();
-
-			//console.log('object changed');
+			//console.log('object changed', objDetails);
 			var updateObjs = Kekule.Render.UpdateObjUtils._extractObjsOfUpdateObjDetails(a);
 			this.doObjectsChanged(a, updateObjs);
+			// IMPORTANT: must do issue check after the doObjectsChanged method (invoking repainting)
+			this.requestAutoCheckIssuesIfNecessary();
 			this.invokeEvent('editObjsUpdated', {'details': Object.extend({}, objDetails)});
 		}
 
@@ -5670,6 +5670,44 @@ Kekule.Editor.BaseEditorBaseIaController = Class.create(Kekule.Widget.Interactio
 	initialize: function(/*$super, */editor)
 	{
 		this.tryApplySuper('initialize', [editor])  /* $super(editor) */;
+	},
+	/** @private */
+	_defineEditorConfigBasedProperty: function(propName, configPath, options)
+	{
+		var defOps = {
+			'dataType': DataType.VARIANT,
+			'serializable': false,
+			/*
+			'setter': function(value)
+			{
+				var configs = this.getEditorConfigs();
+				configs.setCascadePropValue(configPath, value);
+			}
+			*/
+			'setter': null
+		};
+		if (options && options.overwrite)
+		{
+			defOps.getter = function ()
+			{
+				var v = this.getPropStoreFieldValue(propName);
+				var configs = this.getEditorConfigs();
+				return v && configs.getCascadePropValue(configPath);
+			};
+			defOps.setter = function(value)
+			{
+				this.setPropStoreFieldValue(propName, value);
+			}
+		}
+		else
+		{
+			defOps.getter = function () {
+				var configs = this.getEditorConfigs();
+				return configs.getCascadePropValue(configPath);
+			};
+		}
+		var ops = Object.extend(defOps, options || {});
+		this.defineProp(propName, ops);
 	},
 	/**
 	 * Returns the preferred id for this controller.
