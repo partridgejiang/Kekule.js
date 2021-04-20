@@ -3099,6 +3099,33 @@ ObjectEx = Class.create(
   		return null;
   },
 	/**
+	 * Returns value of nested property.
+	 * For example, obj.getCascadeFieldValue('level1.level2.name') or obj.getCascadeFieldValue(['level1', 'level2', 'name']) will return obj.getLevel1().getLevel2().getName().
+	 * @param {Variant} propName A string or an array.
+	 * @returns {Variant}
+	 */
+	getCascadePropValue: function(propName)
+	{
+		var result;
+		var cascadeNames;
+		if (propName.length && propName.splice)  // is an array
+			cascadeNames = propName;
+		else
+			cascadeNames = propName.split('.');
+		var root = this;
+		for (var i = 0, l = cascadeNames.length; i < l; ++i)
+		{
+			result = root.getPropValue(cascadeNames[i]);
+			if (!result)
+			{
+				break;
+			}
+			else
+				root = result;
+		}
+		return result;
+	},
+	/**
    * Returns values of a series of properties.
    * @param {Variant} propNames Can be an array of property names, also can be an object while the
    *   direct field names of object will be regarded as property names.
@@ -3200,6 +3227,39 @@ ObjectEx = Class.create(
 					this.setPropValue(propName, propValue, ignoreReadOnly);
 				}
 			}
+		}
+		return this;
+	},
+
+	/**
+	 * Set value of nested property.
+	 * For example, obj.setCascadeFieldValue('level1.level2.name', 'AAA') or obj.getCascadeFieldValue(['level1', 'level2', 'name'], 'AAA') will actually calls obj.getLevel1().getLevel2().setName('AAA').
+	 * @param {Variant} propName A string or an array.
+	 * @param {Variant} value
+	 */
+	setCascadePropValue: function(propName)
+	{
+		var args = Array.prototype.slice.call(arguments);
+		var propName = args.shift();
+		var info = this.getPropInfo(propName);
+
+		var result;
+		var cascadeNames;
+		if (propName.length && propName.splice)  // is an array
+			cascadeNames = propName;
+		else
+			cascadeNames = propName.split('.');
+		var obj = this;
+		for (var i = 0, l = cascadeNames.length - 1; i < l; ++i)
+		{
+			obj = obj.getPropValue(cascadeNames[i]);
+			if (!obj)
+				break;
+		}
+		if (obj)
+		{
+			args.unshift(cascadeNames[l - 1]);
+			obj.setPropValueX.apply(obj, args);
 		}
 		return this;
 	},
