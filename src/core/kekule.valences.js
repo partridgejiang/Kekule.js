@@ -377,6 +377,18 @@ Kekule.ValenceUtils = {
 		  return {'valences': valences, 'valenceElectronCount': valenceElectronCount, 'unexpectedCharge': unexpectedCharge};
 	},
 	/**
+	 * Returns the max possible MDL valence value.
+	 * @param {Int} atomicNumber
+	 * @param {Int} charge
+	 * @returns {Int} Returns 0 when there is no provided value.
+	 */
+	getMaxPossibleMdlValence: function(atomicNumber, charge)
+	{
+		var valenceInfos = Kekule.ValenceUtils.getPossibleMdlValenceInfo(atomicNumber, charge);
+		var valences = valenceInfos.valences;
+		return valences.length? valences[valences.length - 1]: 0;
+	},
+	/**
 	 * Returns the implicit MDL valence for element with charge and known (explicit) valence.
 	 * e.g. C+ valence is 3 while C- valence is also 3.
 	 * The code is copy from mdlvalence.h of OpenBabel.
@@ -806,3 +818,4 @@ Kekule.ValenceUtils = {
 
 // defaultly the valence determination method is MDL.
 Kekule.ValenceUtils.getImplicitValence = Kekule.ValenceUtils.getImplicitMdlValence;
+Kekule.ValenceUtils.getMaxPossibleValence = Kekule.ValenceUtils.getMaxPossibleMdlValence;

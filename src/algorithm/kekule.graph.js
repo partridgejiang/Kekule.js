@@ -486,7 +486,7 @@ Kekule.GraphAdaptUtils = {
 	 *     connectorClasses: array, only connector instanceof those classes will be included in graph.
 	 *     bondTypes: array, only bond types in this array will be converted into edge in graph.
 	 *     expandSubStructures: bool, when put nodes and connectors in graph also. Default is true.
-	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom (on bond end) are converted into graph. Default is true.
+	 *     ignoreBondedHydrogen: Whether bonded hydrogen atom (on single bond end) are converted into graph. Default is true.
 	 *
 	 *     nodeFilter: func(node, allCtabConnectors), returns bool, a custom function, if false returned, this node will be ignored
 	 *     connectorFilter: func(connector, allCtabNodes), returns bool, a custom function, if false returned, this connector will be ignored
@@ -529,7 +529,13 @@ Kekule.GraphAdaptUtils = {
 								if (allConnectors)
 									linkedConns = AU.intersect(linkedConns, allConnectors);
 								if (linkedConns.length <= 1)
-									return false;
+								{
+									var conn = linkedConns[0];
+									if (!conn)
+										return false;
+									else if (conn.isSingleBond && conn.isSingleBond())  // ignore only the H atoms connected with single bond, preserve other unusual (may be illegal) forms
+										return false;
+								}
 							}
 						}
 						return true;
