@@ -509,20 +509,58 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 
 		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
-		var explicitHCount;
+		var explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0):
+			node.getLinkedHydrogenAtoms? (node.getLinkedHydrogenAtoms() || []).length:
+			0;
 		var radical = node.getRadical? Math.round(node.getRadical() || 0): 0;
 		if (schiralRot)  // if chiral center, H is always be listed
-			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
+			;  // explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
 		else if (radical)  // if with radical, we still need to mark out the Hs, e.g. C[CH]C for C-C.-C
 		{
-			explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;
+			;  // explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;
 		}
 		else
 		{
-			explicitHCount = node.getExplicitHydrogenCount ? node.getExplicitHydrogenCount() : 0;
-			if (!explicitHCount && isAromatic && (symbol !== 'C') && node.getImplicitHydrogenCount)
+			/*
+			explicitHCount = (node.getExplicitHydrogenCount && node.getExplicitHydrogenCount()) || 0;
+			var linkedHydrogronAtomCount = node.getLinkedHydrogenAtoms && node.getLinkedHydrogenAtoms().length;
+			if (linkedHydrogronAtomCount)
+				explicitHCount += linkedHydrogronAtomCount;
+			*/
+			//explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;
+
+			if (node instanceof Kekule.Atom)
 			{
-				explicitHCount = node.getImplicitHydrogenCount();
+				if (!explicitHCount && isAromatic && (symbol !== 'C') && node.getImplicitHydrogenCount)  // hydrogens on aromatic hetero atom should be marked
+				{
+					explicitHCount = node.getImplicitHydrogenCount();
+				}
+				else
+				{
+					var currValence = (node.getValence && node.getValence()) || 0;
+					var maxPossibleValence = Kekule.ValenceUtils.getMaxPossibleValence(node.getAtomicNumber(), node.getCharge()) || 0;
+					if (currValence)
+					{
+						// normal atom, check if the current valence of atom is out of possible valence (e.g. CH5), if so, explicit H should be marked
+						if (currValence > maxPossibleValence)    // abnormal explicit H count, should output explicit H directly
+						{
+
+						}
+						else
+						{
+							// try guess a valence with all explicit H off, if the valence got is less than current valence (the explicit H determinates the valence), then Hs should be output
+							var valenceWithoutExplicitH = (node.getValence && node.getValence({ignoreExplicitHydrogens: true})) || 0;
+							if (valenceWithoutExplicitH < currValence)
+							{
+
+							}
+							else  // no need to output explicit Hs
+							{
+								explicitHCount = 0;
+							}
+						}
+					}
+				}
 			}
 		}
 		// write explicit H count after chiral
