@@ -1605,6 +1605,8 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 			//var hatoms = this.getLinkedHydrogenAtoms();
 			var hatoms = this.getLinkedHydrogenAtomsWithSingleBond();
 			result += hatoms.length || 0;
+			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+			result += cachedBondHydrogenCount;
 		}
 		return result;
 	},
@@ -1967,15 +1969,24 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	 * Note this method considers the explicit hydrogen count.
 	 * @returns {Int}
 	 */
-	getValence: function()
+	getValence: function(options)
 	{
 		if (this.isNormalAtom())
 		{
 			var bondsInfo = this._getCurrCovalentBondsInfo();
 			var expValence = bondsInfo.valenceSum;
+			var omittedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+			expValence += omittedBondHydrogenCount;
 			// adjust with explicitHCount
-			var explicitHCount = this.getExplicitHydrogenCount() || 0;
-			expValence += explicitHCount;
+			if (options && options.ignoreExplicitHydrogens)
+			{
+
+			}
+			else
+			{
+				var explicitHCount = this.getExplicitHydrogenCount() || 0;
+				expValence += explicitHCount;
+			}
 			var charge = Math.round(this.getCharge() || 0);
 
 			var result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
@@ -2010,8 +2021,9 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 
 				var charge = Math.round(this.getCharge() || 0);
 				var radicalECount = Kekule.RadicalOrder.getRadicalElectronCount(this.getRadical());
-				var explicitBondedHydrogenAtoms = ((this.getLinkedHydrogenAtoms && this.getLinkedHydrogenAtoms()) || []).length;
-				var coValenceBondValuenceSum
+				var omittedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+				//var explicitBondedHydrogenAtoms = ((this.getLinkedHydrogenAtoms && this.getLinkedHydrogenAtoms()) || []).length;
+				//var coValenceBondValuenceSum
 				/*
 				var valence = this.getImplicitValence();
 				// adjust with radical
@@ -2021,7 +2033,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				return Math.max(valence - coValentBondsInfo.valenceSum - ionicBondsInfo.valenceSum, 0);
 				*/
 				var result = Kekule.ChemStructureUtils.getImplicitHydrogenCount(this.getAtomicNumber() || 0, {
-					'coValenceBondValenceSum': coValentBondsInfo.valenceSum || 0,
+					'coValenceBondValenceSum': (coValentBondsInfo.valenceSum || 0) + omittedBondHydrogenCount,
 					'otherBondValenceSum': ionicBondsInfo.valenceSum || 0,
 					'charge': charge,
 					'radicalECount': radicalECount
@@ -2081,8 +2093,12 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		else
 			result = this.getExplicitHydrogenCount() || 0;
 		if (includingBondedHydrogen)
+		{
 			//result += this.getLinkedHydrogenAtoms().length || 0;
 			result += this.getLinkedHydrogenAtomsWithSingleBond().length || 0;
+			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+			result += cachedBondHydrogenCount;
+		}
 		return result;
 	},
 	/**
@@ -6189,7 +6205,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	/**
 	 * Removes all explicit hydrogen atoms and related bonds from this structure.
 	 */
-	clearExplicitHydrogens: function(forceKeepStructureCache, forceClearStereoHydrogenAtoms)
+	clearExplicitBondHydrogens: function(forceKeepStructureCache, forceClearStereoHydrogenAtoms)
 	{
 		var self = this;
 		var isHydrogenConnectedWithSimpleSingleBond = function(node)
@@ -6215,6 +6231,25 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 			}
 			self.removeNodeAt(index, false);
 		};
+		var delHydrogenAtomWithConnectors = function(atom, index, addHCountCache)
+		{
+			var conns = atom.getLinkedConnectors();
+			for (var i = conns.length; i >= 0; --i)
+			{
+				var conn = conns[i];
+				if (self.hasConnector(conn, true))
+				{
+					if (addHCountCache)  // mark the count of bonded H atom in structure cache
+					{
+						var node = atom.getLinkedObjsOnConnector(conn)[0];
+						var oldCount = node.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+						node.setStructureCacheData('omittedBondHydrogenAtomCount', oldCount + 1);
+					}
+					self.removeConnector(conn, false);
+				}
+			}
+			self.removeNodeAt(index, false);
+		};
 
 		if (forceKeepStructureCache)
 		{
@@ -6230,18 +6265,23 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				var node = this.getNodeAt(i);
 				if (node instanceof Kekule.ChemStructureNode)
 				{
-					if (this.isSubFragment(node) && node.clearExplicitHydrogens)
+					if (this.isSubFragment(node) && node.clearExplicitBondHydrogens)
 					{
-						node.clearExplicitHydrogens(forceKeepStructureCache, forceClearStereoHydrogenAtoms);
+						node.clearExplicitBondHydrogens(forceKeepStructureCache, forceClearStereoHydrogenAtoms);
 						if (node.getNodeCount() <= 0)  // after clear, no atom exists in this subgroup
+						{
 							delNodeWithConnectors(node, i);
+						}
 					}
 					else
 					{
 						if (node.isHydrogenAtom())
 						{
 							if (forceClearStereoHydrogenAtoms || isHydrogenConnectedWithSimpleSingleBond(node))
-								delNodeWithConnectors(node, i);
+							{
+								//delNodeWithConnectors(node, i);
+								delHydrogenAtomWithConnectors(node, i, true);
+							}
 						}
 					}
 				}
