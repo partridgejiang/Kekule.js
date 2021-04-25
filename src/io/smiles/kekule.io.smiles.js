@@ -482,7 +482,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			if (nextNodes && nextNodes.length)
 			{
 				// check if there is a bonded H atom, as it may affects the stereo and are ignored in vertex graph
-				var bondedHAtoms = node.getLinkedHydrogenAtoms();
+				var bondedHAtoms = node.getLinkedHydrogenAtomsWithSingleBond();
 				if (bondedHAtoms && bondedHAtoms.length === 1 && nextNodes.indexOf(bondedHAtoms[0]) < 0)
 				{
 					nextNodes.push(bondedHAtoms[0]);
