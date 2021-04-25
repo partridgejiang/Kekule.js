@@ -169,6 +169,13 @@ Kekule.IO.SmilesUtils = {
 /**
  * Writer for saving molecule to SMILES format text data.
  * Use smilesMolWriter.writeData(mol) to save molecule to SMILES text.
+ * The writeData method of this writer may receive an options param, including the following fields:
+ * {
+ *   ignoreStereo: Bool,  (default false)
+ *   ignoreStereoBond: Bool,  (default false)
+ *   ignoreStereoAtom: Bool, (deault false)
+ *   ignoreImplicitAtoms: Bool (default false)
+ * }
  * @class
  * @augments Kekule.IO.ChemDataWriter
  */
