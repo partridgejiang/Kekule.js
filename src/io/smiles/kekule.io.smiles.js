@@ -548,9 +548,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 						}
 						else
 						{
-							// try guess a valence with all explicit H off, if the valence got is less than current valence (the explicit H determinates the valence), then Hs should be output
-							var valenceWithoutExplicitH = (node.getValence && node.getValence({ignoreExplicitHydrogens: true})) || 0;
-							if (valenceWithoutExplicitH < currValence)
+							// try guess a valence with all H off, if the valence got is less than current valence (the explicit H determinates the valence), then H atom count should be output
+							var valenceWithoutH = (node.getValence && node.getValence({ignoreExplicitHydrogens: true, ignoreOmittedBondH: true})) || 0;  // all bonded are omitted already, so we now only need to calc explicit and omitted Hs
+							if (valenceWithoutH < currValence)
 							{
 
 							}
