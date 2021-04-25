@@ -1563,7 +1563,14 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('explicitHydrogenCount', {'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED});
+		this.defineProp('explicitHydrogenCount', {
+			'dataType': DataType.INT, 'scope': Class.PropertyScope.PUBLISHED,
+			'setter': function(value) {
+				var fValue = parseFloat(value);
+				var v = (isNaN(fValue) || fValue < 0)? void(0): fValue;
+				this.setPropStoreFieldValue('explicitHydrogenCount', v);
+			}
+		});
 	},
 	/** @private */
 	getAutoIdPrefix: function()
