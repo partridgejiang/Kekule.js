@@ -1625,6 +1625,14 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 	{
 		return this.setExplicitHydrogenCount(value);
 	},
+	/**
+	 * Returns whether the explicitHydrogen property is set.
+	 * @returns {Bool}
+	 */
+	hasExplicitHydrogens: function()
+	{
+		return Kekule.ObjUtils.notUnset(this.getExplicitHydrogenCount());
+	},
 
 	/**
 	 * Returns whether this atom is a saturated one.
@@ -1972,11 +1980,15 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			return 0;
 	},
 	/**
-	 * Guess and returns the valence of atom.
-	 * Note this method considers the explicit hydrogen count.
+	 * Returns the valence of all explicit factors (including bond and explicit hydrogens) of atom.
+	 * @param {Hash} options May include the following fields:
+	 * {
+	 *   ignoreBondHydrogens: Bool,
+	 *   ignoreExplicitHydrogens: Bool,
+	 * }
 	 * @returns {Int}
 	 */
-	getValence: function(options)
+	getExplicitValence: function(options)
 	{
 		var ops = options || {};
 		if (this.isNormalAtom())
@@ -2002,10 +2014,60 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 				var explicitHCount = this.getExplicitHydrogenCount() || 0;
 				expValence += explicitHCount;
 			}
-			var charge = Math.round(this.getCharge() || 0);
 
-			var result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
+			return expValence;
+		}
+		else
+			return 0;
+	},
+	/**
+	 * Guess and returns the valence of atom.
+	 * Note this method considers the explicit hydrogen count.
+	 * @param {Hash} options May include the following fields:
+	 * {
+	 *   ignoreBondHydrogens: Bool,
+	 *   ignoreExplicitHydrogens: Bool,
+	 *   ignoreCharge: Bool
+	 * }
+	 * @returns {Int}
+	 */
+	getValence: function(options)
+	{
+		var ops = options || {};
+		if (this.isNormalAtom())
+		{
+			/*
+			var bondsInfo = this._getCurrCovalentBondsInfo();
+			var expValence = bondsInfo.valenceSum;
+			if (!ops.ignoreBondHydrogens)
+			{
+				var omittedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+				expValence += omittedBondHydrogenCount;
+			}
+			else  // ignore bond hydrogens
+			{
+				expValence -= (this.getLinkedHydrogenAtomsWithSingleBond() || []).length;
+			}
+			// adjust with explicitHCount
+			if (ops.ignoreExplicitHydrogens)
+			{
 
+			}
+			else
+			{
+				var explicitHCount = this.getExplicitHydrogenCount() || 0;
+				expValence += explicitHCount;
+			}
+			*/
+			var result;
+			var expValence = this.getExplicitValence(ops);
+			if (!this.hasExplicitHydrogens())  // has no explicit hydrogen set, now the implicit hydrogen should be considered
+			{
+				var charge = ops.ignoreCharge ? Math.round(this.getCharge() || 0) : 0;
+				result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
+			}
+			else   // no implicit hydrogen, returns the explicitValence directly
+				result = expValence;
 			return result;
 		}
 		else
@@ -2014,6 +2076,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 
 	/**
 	 * Returns the count of implicit hydrogens.
+	 * Note when calculating the implicit H count, explicit hydrogens are automatically ignored.
 	 * //@param {Hash} options Options to calculate implicit H count. It may including the following fields: <br />
 	 * //  allowNegative: Bool. When true, a negative value may be returned when bond order sum and explicit H count is too large.
 	 *
@@ -2097,7 +2160,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	},
 
 	/**
-	 * If explicitHydrogenCount is set, returns it, else returns implicit hydrogen count.
+	 * Returns the single bonded hydrogen atoms + explicit or implicit hydrogens count.
 	 * @param {Bool} includingBondedHydrogen If true, hydrogen siblings linked with single bond will also be take into consideration.
 	 */
 	getHydrogenCount: function(includingBondedHydrogen)
