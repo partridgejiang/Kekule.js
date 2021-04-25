@@ -1983,10 +1983,14 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		{
 			var bondsInfo = this._getCurrCovalentBondsInfo();
 			var expValence = bondsInfo.valenceSum;
-			if (!ops.ignoreOmittedBondH)
+			if (!ops.ignoreBondHydrogens)
 			{
 				var omittedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
 				expValence += omittedBondHydrogenCount;
+			}
+			else  // ignore bond hydrogens
+			{
+				expValence -= (this.getLinkedHydrogenAtomsWithSingleBond() || []).length;
 			}
 			// adjust with explicitHCount
 			if (ops.ignoreExplicitHydrogens)
