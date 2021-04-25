@@ -519,6 +519,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0):
 			node.getLinkedHydrogenAtomsWithSingleBond? (node.getLinkedHydrogenAtomsWithSingleBond() || []).length:
 			0;
+		var outputExplicitH = true;
 		var radical = node.getRadical? Math.round(node.getRadical() || 0): 0;
 		if (schiralRot)  // if chiral center, H is always be listed
 			;  // explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0): 0;  // calc bonded Hs, as they are excluded from graph
@@ -538,9 +539,15 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 
 			if (node instanceof Kekule.Atom)
 			{
+				/*
 				if (!explicitHCount && isAromatic && (symbol !== 'C') && node.getImplicitHydrogenCount)  // hydrogens on aromatic hetero atom should be marked
 				{
 					explicitHCount = node.getImplicitHydrogenCount();
+				}
+				*/
+				if (explicitHCount && isAromatic && (symbol !== 'C'))   // hydrogens on aromatic hetero atom should always be marked
+				{
+
 				}
 				else
 				{
@@ -555,15 +562,32 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 						}
 						else
 						{
+							/*
 							// try guess a valence with all H off, if the valence got is less than current valence (the explicit H determinates the valence), then H atom count should be output
 							var valenceWithoutH = (node.getValence && node.getValence({ignoreExplicitHydrogens: true, ignoreBondHydrogens: true})) || 0;  // all bonded are omitted already, so we now only need to calc explicit and omitted Hs
 							if (valenceWithoutH < currValence)
 							{
 
 							}
-							else  // no need to output explicit Hs
+							*/
+							if (node.hasExplicitHydrogens())
 							{
-								explicitHCount = 0;
+								if ((node.getExplicitHydrogenCount() || 0) === (node.getImplicitHydrogenCount() || 0))  // explicit H count same as implicit, the H will not no need to output HCount
+									outputExplicitH = false;
+							}
+							else // check if bonded H
+							{
+								// try guess a valence with all H off, if the valence got is less than current valence (the explicit H determinates the valence), then H atom count should be output
+								var valenceWithoutH = (node.getValence && node.getValence({ignoreExplicitHydrogens: true, ignoreBondHydrogens: true})) || 0;  // all bonded are omitted already, so we now only need to calc explicit and omitted Hs
+								if (valenceWithoutH < currValence)
+								{
+									// need to output H
+								}
+								else  // no need to output explicit Hs
+								{
+									//explicitHCount = 0;
+									outputExplicitH = false;
+								}
 							}
 						}
 					}
@@ -571,10 +595,12 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			}
 		}
 		// write explicit H count after chiral
-		if (explicitHCount)
+		//if (explicitHCount)
+		if (outputExplicitH)
 		{
-			result += SMI.ATOM_H;
 			var hcount = Math.round(explicitHCount);
+			if (hcount > 0)
+				result += SMI.ATOM_H;
 			if (hcount > 1)
 				result += hcount;
 		}
@@ -595,7 +621,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			result = Math.abs(massNum) + result;
 
 		var simpleOrgAtom = false;
-		if (!explicitHCount && !charge && !massNum && !schiralRot && !radical)  // no special property is set
+		if (/*!explicitHCount*/!outputExplicitH && !charge && !massNum && !schiralRot && !radical)  // no special property is set
 		{
 			if ((!isAromatic &&SMI.ORGAN_SUBSET_ATOMS.indexOf(symbol) >= 0)
 				|| (isAromatic && SMI.AROMATIC_SUBSET_ATOMS.indexOf(symbol) >= 0))
