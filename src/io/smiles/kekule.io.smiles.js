@@ -174,7 +174,8 @@ Kekule.IO.SmilesUtils = {
  *   ignoreStereo: Bool,  (default false)
  *   ignoreStereoBond: Bool,  (default false)
  *   ignoreStereoAtom: Bool, (deault false)
- *   ignoreImplicitAtoms: Bool (default false)
+ *   ignoreExplicitHydrogens: Bool, (default false)
+ *   ignoreImplicitHydrogens: Bool (default false)
  * }
  * @class
  * @augments Kekule.IO.ChemDataWriter
@@ -516,9 +517,12 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 
 		// hydrogen, show if explicit H count is set or non-C aromatic atom link with H
+		/*
 		var explicitHCount = node.getHydrogenCount? (node.getHydrogenCount(true) || 0):
 			node.getLinkedHydrogenAtomsWithSingleBond? (node.getLinkedHydrogenAtomsWithSingleBond() || []).length:
 			0;
+		*/
+		var explicitHCount = this._getNodeHydrogenCount(node, options);
 		var outputExplicitH = true;
 		var radical = node.getRadical? Math.round(node.getRadical() || 0): 0;
 		if (schiralRot)  // if chiral center, H is always be listed
@@ -548,6 +552,10 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				if (explicitHCount && isAromatic && (symbol !== 'C'))   // hydrogens on aromatic hetero atom should always be marked
 				{
 
+				}
+				else if ((options.ignoreExplicitHydrogens || options.ignoreImplicitHydrogens) && (explicitHCount !== this._getNodeHydrogenCount(node, {})))
+				{
+					// need to output,
 				}
 				else
 				{
@@ -631,6 +639,23 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		if (!simpleOrgAtom)
 			result = SMI.ATOM_BRACKET_LEFT + result + SMI.ATOM_BRACKET_RIGHT;
+		return result;
+	},
+	/** @private */
+	_getNodeHydrogenCount: function(node, options)
+	{
+		// bonded H
+		var result = (node.getLinkedHydrogenAtomsWithSingleBondCount && node.getLinkedHydrogenAtomsWithSingleBondCount(true)) || 0;
+		// explicit H
+		var explicitHCount = node.getExplicitHydrogenCount && node.getExplicitHydrogenCount();
+		if (!options.ignoreExplicitHydrogens)
+			result += (explicitHCount || 0)
+		// implicit H
+		if (Kekule.ObjUtils.isUnset(explicitHCount) && !options.ignoreImplicitHydrogens)
+		{
+			var implicitHCount = node.getImplicitHydrogenCount && node.getImplicitHydrogenCount();
+			result += (implicitHCount || 0);
+		}
 		return result;
 	},
 	/** @private */
