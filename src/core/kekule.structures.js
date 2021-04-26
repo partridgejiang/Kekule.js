@@ -1631,8 +1631,11 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
 			result += cachedBondHydrogenCount;
 			*/
-			result += this.getLinkedHydrogenAtomsWithSingleBondCount(true);
+			result += this.getLinkedHydrogenAtomsWithSingleBondCount(false);
 		}
+		// the bond of cached bonded Hs are already be removed, so thet need to be calculated too
+		var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+		result += cachedBondHydrogenCount;
 		return result;
 	},
 	/**
