@@ -782,6 +782,21 @@ Kekule.ChemStructureObject = Class.create(Kekule.ChemObject,
 		}
 		return result;
 	},
+	/**
+	 * Returns the hydrogen atom count with explicit single covalence bonds.
+	 * @param {Bool} includeCached If true, the hydrogen atoms removed in molecule standardization will also be counted.
+	 * @returns {Int}
+	 */
+	getLinkedHydrogenAtomsWithSingleBondCount: function(includeCached)
+	{
+		var result = this.getLinkedHydrogenAtomsWithSingleBond().length || 0;
+		if (includeCached)
+		{
+			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
+			result += cachedBondHydrogenCount;
+		}
+		return result;
+	},
 
 	/**
 	 * Returns all pathes (node-connector-node-connector-node...) to destObj.
@@ -1610,10 +1625,13 @@ Kekule.AbstractAtom = Class.create(Kekule.ChemStructureNode,
 		if (includingBondedHydrogen)
 		{
 			//var hatoms = this.getLinkedHydrogenAtoms();
+			/*
 			var hatoms = this.getLinkedHydrogenAtomsWithSingleBond();
 			result += hatoms.length || 0;
 			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
 			result += cachedBondHydrogenCount;
+			*/
+			result += this.getLinkedHydrogenAtomsWithSingleBondCount(true);
 		}
 		return result;
 	},
@@ -2173,9 +2191,12 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 		if (includingBondedHydrogen)
 		{
 			//result += this.getLinkedHydrogenAtoms().length || 0;
+			/*
 			result += this.getLinkedHydrogenAtomsWithSingleBond().length || 0;
 			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
 			result += cachedBondHydrogenCount;
+			*/
+			result += this.getLinkedHydrogenAtomsWithSingleBondCount(true);
 		}
 		return result;
 	},
