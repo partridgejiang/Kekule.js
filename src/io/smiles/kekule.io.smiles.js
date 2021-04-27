@@ -281,7 +281,12 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	_prepareStereoBondsInformation: function(ctab, options)
 	{
-		if (options.ignoreStereoBond)
+		var ignoreBondStereo = options.ignoreStereoBond;
+		if (Kekule.ObjUtils.isUnset(ignoreBondStereo))
+			ignoreBondStereo = options.ignoreStereo || false;
+
+		//if (options.ignoreStereoBond)
+		if (ignoreBondStereo)
 			return null;
 
 		var stereoBondCount = 0;
