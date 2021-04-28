@@ -2084,7 +2084,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			var expValence = this.getExplicitValence(ops);
 			if (!this.hasExplicitHydrogens())  // has no explicit hydrogen set, now the implicit hydrogen should be considered
 			{
-				var charge = ops.ignoreCharge ? Math.round(this.getCharge() || 0) : 0;
+				var charge = ops.ignoreCharge? 0: Math.round(this.getCharge() || 0);
 				result = Kekule.ValenceUtils.getImplicitValence(this.getAtomicNumber(), charge, expValence);
 			}
 			else   // no implicit hydrogen, returns the explicitValence directly
