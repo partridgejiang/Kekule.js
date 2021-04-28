@@ -2186,6 +2186,7 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 	 */
 	getHydrogenCount: function(includingBondedHydrogen)
 	{
+	  /*
 		var result;
 		if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))
 			result = this.getImplicitHydrogenCount() || 0;
@@ -2193,15 +2194,14 @@ Kekule.Atom = Class.create(Kekule.AbstractAtom,
 			result = this.getExplicitHydrogenCount() || 0;
 		if (includingBondedHydrogen)
 		{
-			//result += this.getLinkedHydrogenAtoms().length || 0;
-			/*
-			result += this.getLinkedHydrogenAtomsWithSingleBond().length || 0;
-			var cachedBondHydrogenCount = this.getStructureCacheData('omittedBondHydrogenAtomCount') || 0;
-			result += cachedBondHydrogenCount;
-			*/
 			result += this.getLinkedHydrogenAtomsWithSingleBondCount(true);
 		}
 		return result;
+	  */
+    var result = this.tryApplySuper('getHydrogenCount', [includingBondedHydrogen]);
+    if (Kekule.ObjUtils.isUnset(this.getExplicitHydrogenCount()))  // when explicit hydrogen is not set, we need to calc the implicit ones
+      result += this.getImplicitHydrogenCount() || 0;
+    return result;
 	},
 	/**
 	 * Returns exact mass of current atom.
