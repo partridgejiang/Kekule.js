@@ -28,9 +28,12 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	CHECK_RESULT_LIST_VIEW: 'K-Chem-CheckResultListView',
+	CHECK_RESULT_LIST_VIEW_SOLUTION_ENABLED: 'K-Chem-CheckResultListView-SolutionEnabled',
 	CHECK_RESULT_LIST_VIEW_ITEM: 'K-Chem-CheckResultListView-Item',
 	//CHECK_RESULT_LIST_VIEW_ITEM_MARKER: 'K-Chem-CheckResultListView-ItemMarker',
 	CHECK_RESULT_LIST_VIEW_ITEM_BODY: 'K-Chem-CheckResultListView-ItemBody',
+	CHECK_RESULT_LIST_VIEW_ITEM_SOLUTION_SECTION: 'K-Chem-CheckResultListView-Item-SolutionSection',
+	CHECK_RESULT_LIST_VIEW_ITEM_SOLUTION_WIDGET: 'K-Chem-CheckResultListView-Item-SolutionWidget',
 	ISSUE_INSPECTOR: 'K-Chem-IssueInspector',
 	ISSUE_INSPECTOR_FLEX_LAYOUT: 'K-Chem-IssueInspector-Flex-Layout',
 	ISSUE_INSPECTOR_SUBPART: 'K-Chem-IssueInspector-SubPart',
@@ -45,6 +48,13 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
  *
  * @property {Array} checkResults Results reported by error checkers.
  * @property {Kekule.IssueCheck.CheckResult} selectedCheckResult Selected error report in list.
+ * @property {Bool} enableIssueSolutions Whether show solutions section in selected issue item.
+ */
+/**
+ * Invoked when an issue solution widget (usually a button) is clicked and the solution should be performed.
+ *   event param of it has fields: {solution, issueResult}
+ * @name Kekule.ChemWidget.CheckResultListView#resolveIssue
+ * @event
  */
 Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 /** @lends Kekule.ChemWidget.CheckResultListView# */
@@ -75,6 +85,23 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 				return result;
 			}
 		});
+		this.defineProp('enableIssueSolutions', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var v = !!value;
+				if (this.getEnableIssueSolutions() !== v)
+				{
+					this.setPropStoreFieldValue('enableIssueSolutions', v);
+					if (v)
+						this.addClassName(CCNS.CHECK_RESULT_LIST_VIEW_SOLUTION_ENABLED);
+					else
+						this.removeClassName(CCNS.CHECK_RESULT_LIST_VIEW_SOLUTION_ENABLED);
+				}
+			}
+		});
+		// private
+		// TODO: not a good way to pass resolver caller (editor) param to resolve solutions
+		this.defineProp('resolverCaller', {'dataType': DataType.OBJECT, 'serialiazable': false});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -85,12 +112,44 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 	/** @ignore */
 	doGetWidgetClassName: function(/*$super*/)
 	{
-		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CCNS.CHECK_RESULT_LIST_VIEW;
+		var result = this.tryApplySuper('doGetWidgetClassName') + ' ' + CCNS.CHECK_RESULT_LIST_VIEW;
+		result += ' ' + this._getSolutionEnableRelatedClassName();
+		return result;
 	},
 	/** @ignore */
 	getItemClassName: function()
 	{
 		return this.tryApplySuper('getItemClassName') + ' ' + CCNS.CHECK_RESULT_LIST_VIEW_ITEM;
+	},
+	/** @private */
+	_getSolutionEnableRelatedClassName: function()
+	{
+		if (this.getEnableIssueSolutions())
+			return CCNS.CHECK_RESULT_LIST_VIEW_SOLUTION_ENABLED;
+		else
+			return '';
+	},
+	/** @ignored */
+	selectionChanged: function(added, removed)
+	{
+		var result = this.tryApplySuper(added, removed);
+		if (added && this.getEnableIssueSolutions())
+		{
+			for (var i = 0, l = added.length; i < l; ++i)
+			{
+				var item = added[i];
+				var data = this.getItemData(item);
+				if (!data.solutions)  // solution not resolved yet, try resolve now
+				{
+					data.solutions = data.checkResult.fetchSolutions(this.getResolverCaller());
+					if (data.solutions)  // fill the solution section
+					{
+						this.doFillSolutionSection(item, data.solutions);
+					}
+				}
+			}
+		}
+		return result;
 	},
 	/** @ignore */
 	createChildItem: function(data)
@@ -117,19 +176,74 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 		var textPart = doc.createElement('span');
 		textPart.className = CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY;
 		result.appendChild(textPart);
+		// solution part
+		var solutionSection = doc.createElement('span');
+		solutionSection.className = CCNS.CHECK_RESULT_LIST_VIEW_ITEM_SOLUTION_SECTION;
+		result._solutionSecElem = solutionSection;
+		result.appendChild(solutionSection);
 		return result;
+	},
+	/** @ignore */
+	doFillSolutionSection: function(item, solutions)
+	{
+		if (!solutions || !this.getEnableIssueSolutions()) // empty or disabled clear solution section
+		{
+			DU.clearChildContent(item._solutionSecElem);
+		}
+		else
+		{
+			// create solution buttons
+			var doc = this.getDocument();
+			for (var i = 0, l = solutions.length; i < l; ++i)
+			{
+				var widget = this.doCreateSolutionWidget(doc, solutions[i], item);
+				widget.appendToElem(item._solutionSecElem);
+			}
+		}
+	},
+	/** @ignore */
+	doCreateSolutionWidget: function(doc, solution, item)
+	{
+		var self = this;
+		var result = new Kekule.Widget.Button(this);
+		result.addClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_SOLUTION_WIDGET);
+		result.setText(solution.getTitle()).setHint(solution.getDescription());
+		result.addEventListener('execute', function(e){
+			if (self.getEnableIssueSolutions())
+				self.invokeEvent('resolveIssue', {'solution': solution, 'issueResult': solution.getIssueResult()})
+		});
+		return result;
+	},
+	/** @ignore */
+	setItemData: function(item, data)
+	{
+		var itemData;
+		if (data instanceof Kekule.IssueCheck.CheckResult)
+			itemData = this._wrapCheckResultToItemData(data);
+		else
+			itemData = data;
+		this.tryApplySuper('setItemData', [item, itemData]);
 	},
 	/** @ignore */
 	doSetItemData: function(item, data)
 	{
+		var oldData = this.getItemData(item);
+		if (oldData && oldData.className)
+		{
+			EU.removeClass(item, oldData.className);
+		}
 		if (data)
 		{
-			if (data.text)
-			{
-				DU.setElementText(item.getElementsByClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY)[0], data.text);
-			}
-			if (data.hint)
-				item.setAttribute('title', data.hint);
+			var itemData = data;
+			if (itemData.text)
+				DU.setElementText(item.getElementsByClassName(CCNS.CHECK_RESULT_LIST_VIEW_ITEM_BODY)[0], itemData.text);
+			if (itemData.hint)
+				item.setAttribute('title', itemData.hint);
+			if (itemData.className)
+				EU.addClass(item, itemData.className);
+
+			this.doFillSolutionSection(item, itemData.solutions);
+			//EU.addClass(item, this._getErrorLevelHtmlClass(itemData.checkResult.getLevel()));
 		}
 	},
 	/** @private */
@@ -139,19 +253,36 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 		var result = {
 			'text': msg,
 			'hint': msg,
-			'checkResult': checkResult
+			'className': this._getErrorLevelHtmlClass(checkResult.getLevel()),  // cache text/hint and class name
+			'checkResult': checkResult,
+			'solutions': null
 		};
 		return result;
 	},
 	/** @private */
 	_updateListView: function()
 	{
-		this.clearItems();
+		// this.clearItems();
+		var existedItems = this.getItems();
+		var existedItemsCount = existedItems.length;
 		var checkResults = this.getCheckResults() || [];
-		for (var i = 0, l = checkResults.length; i < l; ++i)
+		var checkResultsCount = checkResults.length;
+		for (var i = 0; i < checkResultsCount; ++i)
 		{
-			var itemElem = this.appendItem(checkResults[i]);
-			EU.addClass(itemElem, this._getErrorLevelHtmlClass(checkResults[i].getLevel()));
+			if (i < existedItemsCount)
+			{
+				this.setItemData(existedItems[i], checkResults[i]);
+			}
+			else
+				this.appendItem(checkResults[i]);
+		}
+		if (existedItemsCount > checkResultsCount)
+		{
+			for (var i = existedItemsCount - 1; i >= checkResultsCount; --i)
+			{
+				var item = existedItems[i];
+				this.removeItem(item);
+			}
 		}
 	},
 	/** @private */
@@ -172,6 +303,7 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
  *
  * @property {Array} errorResults Results reported by error checkers.
  * @property {Kekule.IssueCheck.CheckResult} selectedResult Selected error report in list.
+ * @property {Bool} enableIssueSolutions Whether show solutions section in selected issue item.
  */
 /**
  * Invoked when selecting a check result in list and making it active.
@@ -214,8 +346,18 @@ Kekule.Editor.IssueInspector = Class.create(Kekule.Widget.BaseWidget,
 			'dataType': 'Kekule.IssueCheck.CheckResult', 'serializable': false, 'setter': null,
 			'getter': function() { return this.getResultListView().getSelectedResult(); }
 		});
+		this.defineProp('enableIssueSolutions', {
+			'dataType': DataType.BOOL,
+			'getter': function() { return this.getResultListView().getEnableIssueSolutions(); },
+			'setter': function(value)	{	this.getResultListView().setEnableIssueSolutions(value); }
+		});
 		// private
 		this.defineProp('resultListView', {'dataType': 'Kekule.ChemWidget.CheckResultListView', 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('resolverCaller', {
+			'dataType': DataType.ARRAY, 'serializable': false,
+			'getter': function() { return this.getResultListView().getResolverCaller(); },
+			'setter': function(value)	{	this.getResultListView().setResolverCaller(value); }
+		});
 	},
 	/** @ignore */
 	doFinalize: function()

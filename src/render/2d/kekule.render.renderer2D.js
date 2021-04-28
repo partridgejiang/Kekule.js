@@ -3942,15 +3942,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 			}
 
 			var currGap = lineGap;
-
-			if (currGap > maxGap)
-				maxGap = currGap;
-			if (currGap < minGap)
-				minGap = currGap;
+			var edgeStrokeWidthSum = 0;
 
 			var averCoord1 = {'x': 0, 'y': 0};
 			var averCoord2 = {'x': 0, 'y': 0};
-			var maxGap = 0, minGap = 0;
 
 			var realDrawParams = [];
 			for (var i = 0; i < lineCount; ++i)
@@ -3996,6 +3991,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 					'arrowParams': arrowParams,
 					'drawOptions': localOptions
 				});
+
+				if (i === 0 || i === lineCount - 1)
+					edgeStrokeWidthSum += strokeWidth / 2;
+
 				if (lineParams[i].isBold)
 					currGap = lineGap + Math.floor(strokeWidth / 2);
 				else
@@ -4026,7 +4025,10 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 
 			averCoord1 = Kekule.CoordUtils.divide(averCoord1, lineCount);
 			averCoord2 = Kekule.CoordUtils.divide(averCoord2, lineCount);
-			var boundInfo = this.createLineBoundInfo(averCoord1, averCoord2, maxGap - minGap);
+			//var boundInfo = this.createLineBoundInfo(averCoord1, averCoord2, maxGap - minGap);
+
+			var totalLineWidth = lineGap * Math.abs(adjusts[adjusts.length - 1] - adjusts[0]) + edgeStrokeWidthSum;
+			var boundInfo = this.createLineBoundInfo(averCoord1, averCoord2, totalLineWidth);
 		}
 
 		var result = {'element': group || line, 'boundInfo': boundInfo};

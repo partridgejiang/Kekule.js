@@ -290,11 +290,30 @@
     background-position-y: 4px;
 }
 
-.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-ItemBody
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-ItemBody,
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-Item-SolutionSection
 {
-    display: inline-block;
     vertical-align: middle;
     padding-left: 0.3em;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-ItemBody
+{
+    display: block;
+}
+.K-Chem-CheckResultListView .K-Chem-CheckResultListView-Item .K-Chem-CheckResultListView-Item-SolutionSection
+{
+    display: none;
+}
+.K-Chem-CheckResultListView.K-Chem-CheckResultListView-SolutionEnabled .K-Chem-CheckResultListView-Item.K-State-Selected .K-Chem-CheckResultListView-Item-SolutionSection
+{
+    display: block;
+    padding-right: 0.3em;
+    text-align: right;
+}
+.K-Chem-CheckResultListView.K-Chem-CheckResultListView-SolutionEnabled .K-Chem-CheckResultListView-Item.K-State-Selected .K-Chem-CheckResultListView-Item-SolutionSection .K-Chem-CheckResultListView-Item-SolutionWidget
+{
+    font-size: 0.8em;
+    margin: 0.3em 0.5em;
 }
 
 .K-Chem-IssueInspector
