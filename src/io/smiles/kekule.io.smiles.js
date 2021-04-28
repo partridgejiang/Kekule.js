@@ -569,7 +569,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 					if (currValence)
 					{
 						// normal atom, check if the current valence of atom is out of possible valence (e.g. CH5), if so, explicit H should be marked
-						if (currValence > maxPossibleValence)    // abnormal explicit H count, should output explicit H directly
+						if (currValence > maxPossibleValence && explicitHCount)    // abnormal explicit H count, should output explicit H directly
 						{
 
 						}
