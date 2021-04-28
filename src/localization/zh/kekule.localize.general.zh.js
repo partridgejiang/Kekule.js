@@ -86,6 +86,10 @@ Kekule.Localization.addResource("zh", "ErrorCheckMsg",
 	"BOND_ORDER_EXCEED_ALLOWED_WITH_SUGGEST": "共价键键级（{0}）超出允许值（{1}）范围",
 	"BOND_WITH_ID_ORDER_EXCEED_ALLOWED_WITH_SUGGEST": "{0}键键级（{1}）超出允许值（{2}）范围",
 	"NODE_DISTANCE_TOO_CLOSE": "原子或基团位置过于接近",
-	"NODE_DISTANCE_TOO_CLOSE_WITH_LABEL": "原子或基团（{0}）位置过于接近"
+	"NODE_DISTANCE_TOO_CLOSE_WITH_LABEL": "原子或基团（{0}）位置过于接近",
+	"TITLE_CHANGE_BOND_ORDER_TO": "将键级修改为{0}",
+	"DESCRIPTION_CHANGE_BOND_ORDER_TO": "将键级由{0}修改为{1}",
+	"TITLE_MERGE_TO": "将{0}与{1}合并",
+	"DESCRIPTION_MERGE_TO": "将节点{0}与{1}合并"
 });
 
