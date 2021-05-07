@@ -132,7 +132,7 @@ Kekule.ChemWidget.CheckResultListView = Class.create(Kekule.Widget.ListView,
 	/** @ignored */
 	selectionChanged: function(added, removed)
 	{
-		var result = this.tryApplySuper(added, removed);
+		var result = this.tryApplySuper('selectionChanged', [added, removed]);
 		if (added && this.getEnableIssueSolutions())
 		{
 			for (var i = 0, l = added.length; i < l; ++i)
