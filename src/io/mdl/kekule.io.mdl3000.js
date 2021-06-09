@@ -479,6 +479,8 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 	/** @private */
 	getLineWithout3kTag: function(line)
 	{
+		if (!line)
+			return line;
 		var l = this.LEADING_TAG.length;
 		if (line.substr(0, l) == this.LEADING_TAG)
 			return line.substr(l);
@@ -527,7 +529,7 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 	{
 		var r = this.getLineAtEx(this.getCurrLineNo());
 		this.incCurrLineNo(r.lineCount);
-		return r.line;
+		return r.line || '';
 	},
 	/**
 	 * Insert a line at current position and move currLineNo to next line.
@@ -584,7 +586,7 @@ Kekule.IO.Mdl3kTextBuffer = Class.create(Kekule.TextLinesBuffer,
 		var startTag = Kekule.IO.Mdl3kUtils.get3kBlockStartTag(blockName);
 		var endTag = Kekule.IO.Mdl3kUtils.get3kBlockEndTag(blockName);
 		var oldPos = this.getCurrLineNo();
-		this.reset();
+		//this.reset();
 		var line = this.readLine().trim();
 		while ((line != startTag) && (!this.eof()))
 		{
@@ -640,7 +642,7 @@ Kekule.IO.Mdl3kBlockReader = Class.create(Kekule.IO.MdlBlockReader,
 		{
 			buffer = new Kekule.IO.Mdl3kTextBuffer();
 			buffer.setLines(textBuffer.getUnreadLines());
-			buffer.reset();
+			//buffer.reset();
 		}
 		else
 			buffer = textBuffer;
@@ -735,7 +737,10 @@ Kekule.IO.Mdl3kCTabReader = Class.create(Kekule.IO.Mdl3kBlockReader,
 		// get Ctab block from textBuffer, if begin tag not found, regard the block start from the first line
 		var buffer = textBuffer.getBlockBuffer('CTAB');
 		if (!buffer)
+		{
 			buffer = textBuffer;
+			buffer.reset();
+		}
 		return this.analysisCTab(buffer);
 	},
 	/**
