@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RXN embedding test</title>
+    <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget"></script>
+    <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+    <script  name="reaction1" id="reaction1" type="chemical/x-mdl-rxnfile">
+$RXN V3000
+simpleReaction.rxn
+  ChemDraw06092115292D
+
+M  V30 COUNTS 3 1
+M  V30 BEGIN REACTANT
+M  V30 BEGIN CTAB
+M  V30 COUNTS 6 6 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C -0.714479 0.412488 0.000000 0
+M  V30 2 C -0.714479 -0.412487 0.000000 0
+M  V30 3 C 0.000000 -0.824975 0.000000 0
+M  V30 4 C 0.714479 -0.412487 0.000000 0
+M  V30 5 C 0.714479 0.412488 0.000000 0
+M  V30 6 C 0.000000 0.824975 0.000000 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 2 1 2
+M  V30 2 1 2 3
+M  V30 3 2 3 4
+M  V30 4 1 4 5
+M  V30 5 2 5 6
+M  V30 6 1 6 1
+M  V30 END BOND
+M  V30 END CTAB
+M  V30 BEGIN CTAB
+M  V30 COUNTS 4 3 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C -0.714478 -0.618781 0.000000 0
+M  V30 2 C 0.000000 -0.206194 0.000000 0
+M  V30 3 O 0.000000 0.618781 0.000000 0
+M  V30 4 Cl 0.714478 -0.618781 0.000000 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 1 1 2
+M  V30 2 2 2 3
+M  V30 3 1 2 4
+M  V30 END BOND
+M  V30 END CTAB
+M  V30 BEGIN CTAB
+M  V30 COUNTS 4 3 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 Al 0.000000 -0.206194 0.000000 0
+M  V30 2 Cl -0.714478 -0.618781 0.000000 0
+M  V30 3 Cl 0.714478 -0.618781 0.000000 0
+M  V30 4 Cl 0.000000 0.618781 0.000000 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 1 1 2
+M  V30 2 1 1 3
+M  V30 3 1 1 4
+M  V30 END BOND
+M  V30 END CTAB
+M  V30 END REACTANT
+M  V30 BEGIN PRODUCT
+M  V30 BEGIN CTAB
+M  V30 COUNTS 9 9 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C -1.428857 0.000000 0.000000 0
+M  V30 2 C -1.428857 -0.824975 0.000000 0
+M  V30 3 C -0.714479 -1.237463 0.000000 0
+M  V30 4 C -0.000000 -0.824975 0.000000 0
+M  V30 5 C -0.000000 0.000000 0.000000 0
+M  V30 6 C -0.714479 0.412488 0.000000 0
+M  V30 7 C 0.714479 0.412488 0.000000 0
+M  V30 8 O 1.428857 0.000000 0.000000 0
+M  V30 9 C 0.714479 1.237463 0.000000 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 2 1 2
+M  V30 2 1 2 3
+M  V30 3 2 3 4
+M  V30 4 1 4 5
+M  V30 5 2 5 6
+M  V30 6 1 6 1
+M  V30 7 1 5 7
+M  V30 8 2 7 8
+M  V30 9 1 7 9
+M  V30 END BOND
+M  V30 END CTAB
+M  V30 END PRODUCT
+M  END
+    </script>
+    <script>
+      ////////////////////////////////////////////////
+      // code for RXN I/O
+      ////////////////////////////////////////////////
+
+      // predefined rxn formats
+      var fmtRxn = 'rxn';
+      var fmtRxn3k = 'rxn3k';
+
+      // create new RXN reader, read RXN format data and returns a chem document
+      var MyMdlRxnToChemDocReader = Class.create(Kekule.IO.ChemDataReader,
+        {
+          /** @private */
+          CLASS_NAME: 'MyMdlRxnToChemDocReader',
+          /** @private */
+          doReadData: function(data, dataType, format)
+          {
+            if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
+            {
+              Kekule.error(Kekule.$L('ErrorMsg.MDL_INPUT_DATATYPE_NOT_TEXT'));
+              return null;
+            }
+            else
+            {
+              // use Kekule.IO.MdlRxnReader to load data into a Reaction instance first
+              var rxnReader = new Kekule.IO.MdlRxnReader();
+              var reaction = rxnReader.readData(data, Kekule.IO.ChemDataType.TEXT);
+              if (reaction)  // reaction loaded successful, then convert it into chem document
+              {
+                var result = this._convertReactionToChemDocument(reaction);
+                return result;
+              }
+              else
+                return null;
+            }
+          },
+          /** @private */
+          _convertReactionToChemDocument: function(reaction)
+          {
+            var chemdoc = this._createChemDocument();
+
+            var refLength = chemdoc.getDefAutoScaleRefLength();  // reference length of document
+            var padding = refLength;  // / 2;  // padding between molecules and arrow/plus symbol
+
+            var reactionObjs = [];
+            // reactants and plus symbols
+            for (var i = 0, l = reaction.getReactantCount(); i < l; ++i)
+            {
+              var reactant = reaction.getReactantAt(i);
+              if (i > 0)
+              {
+                reactionObjs.push(new Kekule.Glyph.AddSymbol(null, refLength, {
+                  'lineLength': 1.5   // use a larger plus symbol, 1.5 times larger than the default one
+                }));
+              }
+              reactionObjs.push(reactant);
+            }
+
+            // reaction arrow
+            var arrow = new Kekule.Glyph.StraightLine(null, refLength, {
+              'endArrowType': Kekule.Glyph.ArrowType.OPEN,
+              'endArrowWidth': 0.25,
+              'endArrowLength': 0.25,
+              'startArrowType': Kekule.Glyph.ArrowType.NONE,
+              'lineLength': 1.5
+            });
+            reactionObjs.push(arrow);
+
+            // products and plus symbols
+            for (var i = 0, l = reaction.getProductCount(); i < l; ++i)
+            {
+              var product = reaction.getProductAt(i);
+              if (i > 0)
+                reactionObjs.push(new Kekule.Glyph.AddSymbol(null, refLength));
+              reactionObjs.push(product);
+            }
+
+            chemdoc.beginUpdate();
+            try
+            {
+              var totalDim = {x: 0, y: 0};   // stores the total dimension of the whole reaction
+              var containerBoxes = [];
+              // add objs to chem doc
+              // and get container box of each objects
+              reactionObjs.forEach(function(obj)
+              {
+                chemdoc.appendChild(obj);
+                obj.setCoord2D({'x': 0, 'y': 0});  // set an initial coord of each object
+                var containerBox = obj.getContainerBox();
+                if (containerBox.y2 - containerBox.y1 > totalDim.y)
+                  totalDim.y = containerBox.y2 - containerBox.y1;   // height of the total dimension, largest height of all container boxes
+                totalDim.x += (containerBox.x2 - containerBox.x1);  // width of the total dimension, sum of widths of container boxes
+                containerBoxes.push(containerBox);
+              });
+              totalDim.x += padding * (reactionObjs.length - 1);  // width of the total dimension, plus all paddings between objects
+
+              // adjust chem document size
+              var paddedTotalDim = {x: totalDim.x + padding * 2, y: totalDim.y + padding * 2};
+              this._adjustChemDocumentSize(chemdoc, paddedTotalDim);
+
+              // adjust coord 2d of each objects
+              var docDim = chemdoc.getSize2D();   // dimension of the chem document box
+              var currLeft = (docDim.x - totalDim.x) / 2;   // left edge of reaction in document box
+              var yCoord = (docDim.y - totalDim.y / 2) - padding;  // center y coord of reaction
+              for (var i = 0, l = reactionObjs.length; i < l; ++i)
+              {
+                var obj = reactionObjs[i];
+                var box = containerBoxes[i];
+                var boxWidth = box.x2 - box.x1;
+                var boxHeight = box.y2 - box.y1;
+                var delta = {     // coord to be adjusted to current object
+                  'x': currLeft - box.x1,
+                  'y': yCoord - box.y1 - boxHeight / 2
+                };
+                var oldCoord = obj.getCoord2D();
+                obj.setCoord2D({
+                  'x': oldCoord.x + delta.x,
+                  'y': oldCoord.y + delta.y
+                });
+                currLeft += boxWidth  + padding;
+              }
+            }
+            finally
+            {
+              chemdoc.endUpdate();
+            }
+            return chemdoc;
+          },
+          /** @private */
+          _createChemDocument: function()
+          {
+            var chemDoc = new Kekule.ChemDocument();
+            // the chem doc settings are borrowed from the default editor configs
+            var editorConfigs = Kekule.Editor.ChemSpaceEditorConfigs.getInstance();
+            var renderConfigs = Kekule.Render.Render2DConfigs.getInstance();
+            var screenSize = editorConfigs.getChemSpaceConfigs().getDefScreenSize2D();
+            var objRefLength = editorConfigs.getStructureConfigs().getDefBondLength();
+            var screenRefLength = renderConfigs.getLengthConfigs().getDefBondLength();
+            var ratio = objRefLength / screenRefLength;
+            chemDoc.setDefAutoScaleRefLength(objRefLength);
+            chemDoc.setObjScreenLengthRatio(ratio);
+            chemDoc.setSize2D({'x': screenSize.x * ratio, 'y': screenSize.y * ratio});
+            return chemDoc;
+          },
+          /** @private */
+          _adjustChemDocumentSize: function(chemDoc, reactionDim)
+          {
+            var currSize = chemDoc.getSize2D();
+            var newSize = {'x': currSize.x, 'y': currSize.y};
+            if (currSize.x < reactionDim.x)
+            {
+              newSize.x = reactionDim.x;
+            }
+            if (currSize.y < reactionDim.y)
+            {
+              newSize.y = reactionDim.y;
+            }
+            var ratio = chemDoc.getObjScreenLengthRatio();
+            chemDoc.setSize2D(newSize);
+            chemDoc.setScreenSize({'x': newSize.x / ratio, 'y': newSize.y / ratio});
+          }
+        });
+      // register our rxn reader, overwrite the existing one
+      Kekule.IO.ChemDataReaderManager.register('chemspace-MDL-rxn', MyMdlRxnToChemDocReader, [Kekule.IO.DataFormat.RXN, Kekule.IO.DataFormat.RXN3K]);
+    </script>
+</head>
+<body>
+    <div id="viewer" style="width:800px;height:400px;border:1px solid #555" data-chem-obj="url(#reaction1)" data-widget="Kekule.ChemWidget.Viewer2D" data-resizable="true" data-auto-size="true" data-predefined-setting="fullFunc"></div>
+</body>
+</html>
