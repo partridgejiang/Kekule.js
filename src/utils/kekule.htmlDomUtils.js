@@ -613,7 +613,8 @@ Kekule.HtmlElementUtils = {
 	 */
 	getClassNames: function(elem)
 	{
-		return Kekule.StrUtils.splitTokens(elem.className);
+		//return Kekule.StrUtils.splitTokens(elem.className || '');  // elem.className may be of SVGAnimatedString when dealing SVG element
+		return Kekule.StrUtils.splitTokens(elem.getAttribute('class') || '');
 	},
 	/**
 	 * Check if a class is associate with element.
