@@ -284,6 +284,7 @@ var kekuleFiles = {
 		'category': 'localization',
 		'minFile': 'localization.min.js'
 	},
+	// Localization resources, must be put right after 'localization' module, since other modules may use them
 	'localizationData': {
 		'requires': ['localization'],
 		'files': [
@@ -293,6 +294,16 @@ var kekuleFiles = {
 		],
 		'category': 'localization',
 		'minFile': 'localization.min.js'
+	},
+	'localizationData.zh': {
+		'requires': ['localization'],
+		'files': [
+			'localization/zh/kekule.localize.general.zh.js',
+			'localization/zh/kekule.localize.widget.zh.js'
+			//'localization/zh/kekule.localize.objDefines.zh.js'
+		],
+		'category': 'localizationData.zh',
+		'autoCompress': false  // do not compress js automatically
 	},
 
 	'common': {
@@ -548,18 +559,6 @@ var kekuleFiles = {
 			'_extras/InChI/kekule.inchi.js'
 		],
 		'category': 'extra'
-	},
-
-	// Localization resources
-	'localizationData.zh': {
-		'requires': ['localization'],
-		'files': [
-			'localization/zh/kekule.localize.general.zh.js',
-			'localization/zh/kekule.localize.widget.zh.js'
-			//'localization/zh/kekule.localize.objDefines.zh.js'
-		],
-		'category': 'localizationData.zh',
-		'autoCompress': false  // do not compress js automatically
 	}
 };
 
