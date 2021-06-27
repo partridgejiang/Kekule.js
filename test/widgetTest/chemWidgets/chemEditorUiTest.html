@@ -15,8 +15,12 @@
   <script src="https://unpkg.com/kekule/dist/kekule.js?locals=en,zh&language=en&modules=chemWidget,algorithm,indigo"></script>
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/kekule/dist/themes/default/kekule.css" />
   -->
+  <!--
+  <script src="../../../dist/kekule.min.js?locals=en,zh&language=en&modules=chemWidget,algorithm,calculation,openbabel,indigo"></script>
+  -->
 
-  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=en&modules=chemWidget,algorithm,calculation,openbabel,indigo"></script>
+  <script src="../../../src/kekule.js?min=false&locals=en,zh&language=zh&modules=chemWidget,algorithm,calculation,openbabel,indigo"></script>
+  
   <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
 
 
@@ -166,7 +170,7 @@
 	    });
 
       chemEditorUi.on('selectionChange', function(e){
-        console.log('selectionChange', chemEditorUi.getSelection());
+        console.log('selectionChange', e, chemEditorUi.getSelection());
       });
 
       /*
