@@ -521,7 +521,7 @@ Kekule.Widget.AutoLauncher.PlaceHolderStrategies = {
 };
 
 /** A flag to turn on or off auto launcher. */
-Kekule.Widget.AutoLauncher.enabled = true;
+Kekule.Widget.AutoLauncher.enabled = Kekule.oneOf(Kekule.environment.getEnvVar('kekule.widget.autoLauncher.enabled'), true);
 /** A flag to enable or disable launching child widgets inside a widget element. */
 Kekule.Widget.AutoLauncher.enableCascadeLaunch = true;
 /** A flag to enable or disable checking dynamic inserted content in HTML page. */
