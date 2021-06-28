@@ -205,7 +205,7 @@ Kekule.environment = {
 	variables: {},
 	getEnvVar: function(key)
 	{
-		return Kekule.environment.variables[key];
+		return Kekule.environment.variables[key] || (Kekule.$jsRoot['_kekule_environment_'] && Kekule.$jsRoot['_kekule_environment_'][key]);
 	},
 	setEnvVar: function(key, value)
 	{
