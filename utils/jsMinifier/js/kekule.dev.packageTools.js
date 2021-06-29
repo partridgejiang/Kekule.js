@@ -38,6 +38,8 @@ Kekule.Dev.PackageUtils = {
 	/** @private */
 	STANDALONE_ATTACH_FILES: ['kekule.loaded.js'],
 	/** @private */
+	SINGLE_BUNDLE_FLAG_FILES: ['kekule.singleBundleFlag.js'],
+	/** @private */
 	RELEASE_WORKER_DIR: 'workers',
 
 	getModuleStructures: function()
@@ -147,6 +149,8 @@ Kekule.Dev.PackageUtils = {
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
 		compressFileMap[targetFileName] = allSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
+		compressFileMap[targetFileName].unshift('kekule.js');  // put the entrance js at the beginning of single kekule.min.js, for analysis script params
+		compressFileMap[targetFileName] = PU.SINGLE_BUNDLE_FLAG_FILES.concat(compressFileMap[targetFileName]);  // put the single bundle flag file at beginning
 		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap};
 	},
 
