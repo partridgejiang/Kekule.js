@@ -1,4 +1,6 @@
 require("../src/widgets/themes/default/kekule.css");
+require("../src/kekule.singleBundleFlag.js");
+require("../src/kekule.js");
 require("../src/lan/classes.js");
 require("../src/lan/xmlJsons.js");
 require("../src/lan/serializations.js");
