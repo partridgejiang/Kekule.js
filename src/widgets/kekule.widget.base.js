@@ -5093,7 +5093,7 @@ Kekule.Widget.BaseEventsReceiver = Class.create(ObjectEx,
 	initialize: function(/*$super, */doc, eventRootObj)
 	{
 		this._document = doc || Kekule.$jsRoot.document;
-		this._eventRootObj = eventRootObj || this._document.documentElement;
+		this._eventRootObj = eventRootObj || (this._document && this._document.documentElement);
 
 		this.reactUiEventBind = this.reactUiEvent.bind(this);
 		this.reactDomNodeInsertEventBind = this.reactDomNodeInsertEvent.bind(this);
@@ -5378,7 +5378,7 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		*/
 		//Kekule.X.domReady(this.domReadyInit.bind(this), this._document);
 
-		this.tryApplySuper('initialize', [this._document, this._document.documentElement])  /* $super(this._document, this._document.documentElement) */;
+		this.tryApplySuper('initialize', [this._document, this._document && this._document.documentElement])  /* $super(this._document, this._document.documentElement) */;
 	},
 	/** @ignore */
 	finalize: function(/*$super*/)
