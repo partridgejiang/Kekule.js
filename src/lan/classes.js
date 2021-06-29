@@ -464,13 +464,13 @@ Object._extendSupportMethods(Function.prototype, {
   },
   delay: function() {
     var __method = this, args = __$A__(arguments), timeout = args.shift();
-    return window.setTimeout(function() {
+    return $jsRoot.setTimeout(function() {
       return __method.apply(__method, args);
     }, timeout);
   },
   defer: function() {
     var __method = this, args = __$A__(arguments), timeout = args.shift();
-    return window.setTimeout(function() {
+    return $jsRoot.setTimeout(function() {
       return __method.apply(__method, args);
     }, 10);
   }
