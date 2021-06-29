@@ -16,7 +16,7 @@
 
 "use strict";
 
-if (typeof(window) !== undefined)  // has window object
+if (typeof(window) !== 'undefined')  // has window object
 	$root = window;
 
 var	win = $root, document = win && win.document;
