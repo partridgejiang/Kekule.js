@@ -83,7 +83,7 @@ Kekule.EmscriptenUtils = {
 	},
 
 	/**
-	 * Init an emscripten module, when the runtime is ready, callback() will be calld.
+	 * Init an emscripten module, when the runtime is ready, callback() will be called.
 	 * @param {HTMLDocument} doc
 	 * @param {Hash} options
 	 * @param {Func} callback
@@ -95,6 +95,7 @@ Kekule.EmscriptenUtils = {
 		var moduleName = options.moduleName;
 		var moduleInitEventName = options.moduleInitEventName;
 		var moduleInitCallbackName = options.moduleInitCallbackName;
+		var creationOptions = options.creationOptions;
 		var callCallback = function(error)
 		{
 			if (callback)
@@ -127,7 +128,7 @@ Kekule.EmscriptenUtils = {
 			}
 			if (moduleName)
 			{
-				EU.getRootModule(moduleName);  // ensure the module is actually created and registered
+				EU.getRootModule(moduleName, creationOptions);  // ensure the module is actually created and registered
 			}
 		}
 		catch(e)
@@ -168,6 +169,7 @@ Kekule.EmscriptenUtils = {
 	{
 		if (!doc)
 			doc = Kekule.$jsRoot.document;
+
 		/*
 		var moduleName = options.moduleName;
 		var moduleInitEventName = options.moduleLoadEventName;

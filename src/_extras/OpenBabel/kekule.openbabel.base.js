@@ -62,7 +62,7 @@ Kekule.OpenBabel = {
 	{
 		if (!OB._module)
 		{
-			OB._module = EU.getRootModule(obInitOptions.moduleName);
+			OB._module = EU.getRootModule(obInitOptions.moduleName, obInitOptions);
 		}
 		return OB._module;
 	},

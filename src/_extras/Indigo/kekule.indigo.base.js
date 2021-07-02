@@ -53,11 +53,15 @@ Kekule.Indigo = {
 		return EU.isSupported(indigoInitOptions.moduleName)
 				&& (typeof($root[indigoInitOptions.indigoAdaptFuncName]) !== 'undefined');
 	},
+	getIndigoInitOptions: function()
+	{
+		return indigoInitOptions;
+	},
 	getModule: function()
 	{
 		if (!KI._module)
 		{
-			KI._module = EU.getRootModule(indigoInitOptions.moduleName);
+			KI._module = EU.getRootModule(indigoInitOptions.moduleName, indigoInitOptions);
 		}
 		return KI._module;
 	},

@@ -52,11 +52,15 @@ Kekule.InChI = {
 	{
 		return EU.isSupported(inchiInitOptions.moduleName);
 	},
+	getInchiInitOptions: function()
+	{
+		return inchiInitOptions;
+	},
 	getModule: function()
 	{
 		if (!InChI._module)
 		{
-			InChI._module = EU.getRootModule(inchiInitOptions.moduleName);
+			InChI._module = EU.getRootModule(inchiInitOptions.moduleName, inchiInitOptions);
 		}
 		return InChI._module;
 	},
