@@ -1,4 +1,4 @@
-define('local_kekulejs/kekuleMoodle', ['kekule', 'local_kekulejs/kekuleInitials'], function(){
+define(/*'local_kekulejs/kekuleMoodle',*/ ['kekule', 'local_kekulejs/kekuleInitials'], function(){
 
 	function init()
 	{

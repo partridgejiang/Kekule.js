@@ -1,4 +1,4 @@
-define('qtype_kekule_chem_base/extraLangs', ['kekule'], function()
+define(/*'qtype_kekule_chem_base/extraLangs',*/ ['kekule'], function()
 {
 
 	function init()

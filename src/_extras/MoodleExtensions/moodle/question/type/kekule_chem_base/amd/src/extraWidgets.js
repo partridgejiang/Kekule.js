@@ -1,4 +1,4 @@
-define('qtype_kekule_chem_base/extraWidgets', ['kekule', 'local_kekulejs/kekuleMoodle'], function(){
+define(/*'qtype_kekule_chem_base/extraWidgets',*/ ['kekule', 'local_kekulejs/kekuleMoodle'], function(){
 
 function init() {
 

@@ -1,4 +1,4 @@
-define('qtype_kekule_chem_base/render', ['kekule'], function(){
+define(/*'qtype_kekule_chem_base/render',*/ ['kekule'], function(){
 
 function init() {
 

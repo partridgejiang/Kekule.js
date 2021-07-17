@@ -1,4 +1,4 @@
-define('local_kekulejs/kekuleChemViewerInterceptor', ['kekule'], function(){
+define(/*'local_kekulejs/kekuleChemViewerInterceptor',*/ ['kekule'], function(){
 
 	function init()
 	{

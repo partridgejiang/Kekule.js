@@ -2,7 +2,7 @@
  * Created by ginger on 2016/8/19.
  */
 
-define('qtype_kekule_chem_base/editForm', ['kekule'], function(){
+define(/*'qtype_kekule_chem_base/editForm',*/ ['kekule'], function(){
 
 function init() {
 
