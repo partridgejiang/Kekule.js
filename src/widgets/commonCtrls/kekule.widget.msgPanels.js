@@ -165,7 +165,7 @@ Kekule.Widget.MsgPanel = Class.create(Kekule.Widget.BaseWidget,
 	/** @private */
 	changeContentText: function(newText)
 	{
-		Kekule.DomUtils.setElementText(this._elemTextPart, newText || '')
+		Kekule.DomUtils.setElementText(this._elemTextPart, newText || '', true);
 		//this._elemTextPart.innerHTML = newText || '';
 	},
 	/** @private */
