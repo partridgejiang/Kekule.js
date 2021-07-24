@@ -107,7 +107,7 @@ Kekule.Widget.ExceptionHandler = Class.create(Kekule.ExceptionHandler,
 		if (msg)
 		{
 			var msgType =
-				(exceptionLevel === EL.ERROR) || !exceptionLevel? MT.ERROR:
+				(exceptionLevel === EL.ERROR || exceptionLevel === EL.NOT_FATAL_ERROR) || !exceptionLevel? MT.ERROR:
 				(exceptionLevel === EL.WARNING)? MT.WARNING:
 				(exceptionLevel === EL.NOTE)? MT.INFO:
 					MT.NORMAL;
