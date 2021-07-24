@@ -58,6 +58,8 @@ if (Kekule.PROP_AUTO_TITLE)
 Kekule.ExceptionLevel = {
 	/** Fatal error, usually cause the stop of program execution. */
 	ERROR: -1,
+	/** Error but not fatal, the program can still run but need to display the error message to user. */
+	NOT_FATAL_ERROR: -10,
 	/** Serious exception, but the program can still run. */
 	WARNING: -2,
 	/** Minor exception, user usually need not to know about it. */
@@ -71,7 +73,7 @@ Kekule.ExceptionLevel = {
 	getAllLevels: function()
 	{
 		var EL = Kekule.ExceptionLevel;
-		return [EL.ERROR, EL.WARNING, EL.NOTE, EL.LOG];
+		return [EL.ERROR, EL.NOT_FATAL_ERROR, EL.WARNING, EL.NOTE, EL.LOG];
 	},
 	/**
 	 * Returns a string identity for exception level.
@@ -81,7 +83,7 @@ Kekule.ExceptionLevel = {
 	levelToString: function(level)
 	{
 		var EL = Kekule.ExceptionLevel;
-		return (level === EL.ERROR)? 'error':
+		return (level === EL.ERROR || level === EL.NOT_FATAL_ERROR)? 'error':
 			(level === EL.WARNING)? 'warning':
 			(level === EL.NOTE)? 'note':
 			'log';
@@ -116,7 +118,8 @@ Kekule.throwException = function(e, exceptionLevel)
 			{
 				if (typeof(e) !== 'string')
 					e = e.message;
-				var method = (exceptionLevel === EL.WARNING)? console.warn:
+				var method = (exceptionLevel === EL.NOT_FATAL_ERROR)? console.error:
+					(exceptionLevel === EL.WARNING)? console.warn:
 					(exceptionLevel === EL.NOTE)? console.info:
 					console.log;
 				if (method)
@@ -147,9 +150,9 @@ Kekule.getExceptionMsg = function(e)
  */
 Kekule.raise = Kekule.throwException;
 /**
- * Throw an {@link Kekule.Error} in ExceptionHandler.
+ * Throw an {@link Kekule.ExceptionLevel.Error} or {@link Kekule.ExceptionLevel.NOT_FATAL_ERROR} in ExceptionHandler.
  */
-Kekule.error = function(e)
+Kekule.error = function(e, notFatal)
 {
 	/*
 	if (typeof(e) == 'string')
@@ -159,12 +162,13 @@ Kekule.error = function(e)
 	else
 		throw e;
 	*/
-	return Kekule.raise(e, Kekule.ExceptionLevel.ERROR);
+	var level = notFatal? Kekule.ExceptionLevel.NOT_FATAL_ERROR: Kekule.ExceptionLevel.ERROR;
+	return Kekule.raise(e, level);
 };
 /**
  * Throw an {@link Kekule.ChemError} in ExceptionHandler.
  */
-Kekule.chemError = function(e)
+Kekule.chemError = function(e, notFatal)
 {
 	if (typeof(e) == 'string')
 		e = new Kekule.ChemError(e);
@@ -174,7 +178,7 @@ Kekule.chemError = function(e)
 	else
 		throw e;
 	*/
-	return Kekule.error(e);
+	return Kekule.error(e, notFatal);
 };
 
 /**

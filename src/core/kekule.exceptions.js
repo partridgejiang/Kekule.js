@@ -72,7 +72,8 @@ Kekule.ExceptionHandler = Class.create(ObjectEx,
 				{
 					if (typeof(e) !== 'string')
 						e = e.message;
-					var method = (exceptionLevel === EL.WARNING)? 'warn':
+					var method = (exceptionLevel === EL.NOT_FATAL_ERROR)? 'error':
+						(exceptionLevel === EL.WARNING)? 'warn':
 						(exceptionLevel === EL.NOTE)? 'info':
 							'log';
 					if (method)
