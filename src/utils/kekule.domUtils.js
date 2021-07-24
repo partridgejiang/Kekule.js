@@ -58,8 +58,11 @@ Kekule.DomUtils = {
 	 * Set text content of an element.
 	 *  This function will not consider child elements, just replace current first text node or
 	 *  append a new text node to the tail of element's children.
+	 * @param {HTMLElement} elem
+	 * @param {String} text
+	 * @param {Bool} multiline If true, text with multiple lines will automatically insert <br /> tags in elem.
 	 */
-	setElementText: function(elem, text)
+	setElementText: function(elem, text, multiline)
 	{
 		var result = '';
 		for (var i = 0, l = elem.childNodes.length; i < l; ++i)
@@ -71,8 +74,17 @@ Kekule.DomUtils = {
 			}
 		}
 		// no text node, append a new one
-		var textNode = elem.ownerDocument.createTextNode(text);
-		elem.appendChild(textNode);
+		var lines = multiline? (text || '').split('\n'): [text || ''];
+		for (var i = 0, l = lines.length; i < l; ++i)
+		{
+			if (i > 0)
+			{
+				var elemBr = elem.ownerDocument.createElement('br');
+				elem.appendChild(elemBr);
+			}
+			var textNode = elem.ownerDocument.createTextNode(lines[i]);
+			elem.appendChild(textNode);
+		}
 		return text;
 	},
 	/**
