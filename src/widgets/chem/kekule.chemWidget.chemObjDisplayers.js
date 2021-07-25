@@ -527,9 +527,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			'getter': function(slient)
 			{
 				var result = this.getPropStoreFieldValue('drawBridge');
-				if (!result)
+				if (!result && !this.__$drawBridgeInitialized$__)
 				{
-					result = this.createDrawBridge(slient);
+					this.__$drawBridgeInitialized$__ = true;   // avoid call this.createDrawBridge() multiple times
+					result = this.createDrawBridge(/*slient*/);
 					this.setPropStoreFieldValue('drawBridge', result);
 				}
 				return result;
@@ -686,6 +687,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		}
 		this.setPropStoreFieldValue('drawContext', null);
 		this.setPropStoreFieldValue('drawBridge', null);
+		this.__$drawBridgeInitialized$__ = false;  // important, marks the draw bridge should be reinitialized
 		var newBgColor = this.getBackgroundColorOfType(newType);
 		this.getDrawOptions().moleculeDisplayType = this.getDefaultMoleculeDisplayType(newType);  // reset display type
 		//this.setBackgroundColor(newBgColor);
@@ -840,7 +842,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		if (!result)   // can not find suitable draw bridge
 		{
 			if (!slient)
-				Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			{
+				var errorMsg = M.getUnavailableMessage() || Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+				if (errorMsg)
+					this.reportException(errorMsg, Kekule.ExceptionLevel.NOT_FATAL_ERROR);
+			}
+			// Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
 		}
 		/* infinite loop, remove this part
 		if (this.getBackgroundColor() && result.setClearColor)
@@ -915,7 +922,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/** @private */
 	refitDrawContext: function(doNotRepaint)
 	{
-		if (this.getDrawBridge(true) && this.getDrawContext())
+		//if (this.getDrawBridge(true) && this.getDrawContext())
+		if (this.getDrawBridge() && this.getDrawContext())
 		{
 			//var dim = Kekule.HtmlElementUtils.getElemScrollDimension(this.getElement());
 			var dim = Kekule.HtmlElementUtils.getElemClientDimension(this.getDrawContextParentElem());
@@ -1016,11 +1024,20 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		{
 			old.finalize();
 		}
-		var result = new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj, this.getDrawBridge());
+		var drawBridge = this.getDrawBridge();
+		var result = drawBridge? (new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj, this.getDrawBridge())): null;
 		this.setPropStoreFieldValue('painter', result);
 		// create new bound info recorder
 		//this.createNewBoundInfoRecorder(result);
 		return result;
+	},
+	/**
+	 * Returns whether the painter, draw bridge and context are ready, the rendering can be successfully performed.
+	 * @returns {Bool}
+	 */
+	isRenderable: function()
+	{
+		return !!(this.getPainter() && this.getDrawBridge() && this.getDrawContext());
 	},
 	/* @private */
 	/*
@@ -1084,7 +1101,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				*/
 
 				var painter = this.createNewPainter(chemObj);
-				painter.setRenderConfigs(this.getRenderConfigs());
+				if (painter)
+					painter.setRenderConfigs(this.getRenderConfigs());
 
 				/*
 				 var drawOptions = this.getDrawOptions();
@@ -1490,6 +1508,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		if (this.isPainting())  // avoid duplicated repainting
 			return;
 
+		if (!this.isRenderable())
+			return;
+
 		this.beginPaint();
 		try
 		{
@@ -1660,7 +1681,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			color = this.getBackgroundColor();
 		if (color === 'transparent')
 			color = null;
-		var drawBridge = this.getDrawBridge(true);
+		//var drawBridge = this.getDrawBridge(true);
+		var drawBridge = this.getDrawBridge();
 		if (drawBridge && drawBridge.setClearColor)
 		{
 			drawBridge.setClearColor(this.getDrawContext(), color);
@@ -1803,7 +1825,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	{
 		var painter = this.getPainter();
 		var drawOptions = this.getDrawOptions();
-		if (painter.supportGeometryOptionChange())
+		if (painter && painter.supportGeometryOptionChange())
 		{
 			var context = this.getDrawContext();
 			painter.changeGeometryOptions(context, drawOptions.baseCoord || this._lastBaseCoord, drawOptions);

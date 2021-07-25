@@ -643,8 +643,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'getter': function()
 			{
 				var result = this.getPropStoreFieldValue('uiDrawBridge');
-				if (!result)
+				if (!result && !this.__$uiDrawBridgeInitialized$__)
 				{
+					this.__$uiDrawBridgeInitialized$__ = true;
 					result = this.createUiDrawBridge();
 					this.setPropStoreFieldValue('uiDrawBridge', result);
 				}
@@ -1154,40 +1155,43 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		*/
 		var result = this.tryApplySuper('repaint', [ops])  /* $super(ops) */;
 
-		// after paint the new obj the first time, save up the transform params (especially the translates)
-		if (!this._initialRenderTransformParams)
+		if (this.isRenderable())
 		{
-			this._initialRenderTransformParams = this.getPainter().getActualInitialRenderTransformOptions(this.getObjContext());
-			/*
-			if (transParam)
+			// after paint the new obj the first time, save up the transform params (especially the translates)
+			if (!this._initialRenderTransformParams)
 			{
-				var trans = {}
-				var unitLength = transParam.unitLength || 1;
-				if (Kekule.ObjUtils.notUnset(transParam.translateX))
-					trans.translateX = transParam.translateX / unitLength;
-				if (Kekule.ObjUtils.notUnset(transParam.translateY))
-					trans.translateY = transParam.translateY / unitLength;
-				if (Kekule.ObjUtils.notUnset(transParam.translateZ))
-					trans.translateZ = transParam.translateZ / unitLength;
+				this._initialRenderTransformParams = this.getPainter().getActualInitialRenderTransformOptions(this.getObjContext());
+				/*
+				if (transParam)
+				{
+					var trans = {}
+					var unitLength = transParam.unitLength || 1;
+					if (Kekule.ObjUtils.notUnset(transParam.translateX))
+						trans.translateX = transParam.translateX / unitLength;
+					if (Kekule.ObjUtils.notUnset(transParam.translateY))
+						trans.translateY = transParam.translateY / unitLength;
+					if (Kekule.ObjUtils.notUnset(transParam.translateZ))
+						trans.translateZ = transParam.translateZ / unitLength;
 
-				if (transParam.center)
-					trans.center = transParam.center;
+					if (transParam.center)
+						trans.center = transParam.center;
 
-				//var zoom = transParam.zoom || 1;
-				var zoom = 1;
+					//var zoom = transParam.zoom || 1;
+					var zoom = 1;
 
-				trans.scaleX = transParam.scaleX / zoom;
-				trans.scaleY = transParam.scaleY / zoom;
-				trans.scaleZ = transParam.scaleZ / zoom;
+					trans.scaleX = transParam.scaleX / zoom;
+					trans.scaleY = transParam.scaleY / zoom;
+					trans.scaleZ = transParam.scaleZ / zoom;
 
-				this._initialRenderTransformParams = trans;
-				console.log(this._initialRenderTransformParams, this);
+					this._initialRenderTransformParams = trans;
+					console.log(this._initialRenderTransformParams, this);
+				}
+				*/
 			}
-			*/
-		}
 
-		// redraw ui markers
-		this.recalcUiMarkers();
+			// redraw ui markers
+			this.recalcUiMarkers();
+		}
 
 		return result;
 	},
@@ -1457,7 +1461,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var result = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
 		if (!result)   // can not find suitable draw bridge
 		{
-			Kekule.error(/*Kekule.ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED*/Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			//Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			var errorMsg = Kekule.Render.DrawBridge2DMananger.getUnavailableMessage() || Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			if (errorMsg)
+				this.reportException(errorMsg, Kekule.ExceptionLevel.NOT_FATAL_ERROR);
 		}
 		return result;
 	},
@@ -2570,16 +2577,18 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	recalcUiMarkers: function()
 	{
 		//this.setHotTrackedObj(null);
-		this.beginUpdateUiMarkers();
-		try
+		if (this.getUiDrawBridge())
 		{
-			this.recalcHotTrackMarker();
-			this.recalcSelectionAreaMarker();
-			this.recalcIssueCheckUiMarkers();
-		}
-		finally
-		{
-			this.endUpdateUiMarkers();
+			this.beginUpdateUiMarkers();
+			try
+			{
+				this.recalcHotTrackMarker();
+				this.recalcSelectionAreaMarker();
+				this.recalcIssueCheckUiMarkers();
+			} finally
+			{
+				this.endUpdateUiMarkers();
+			}
 		}
 	},
 	/** @private */
@@ -2587,9 +2596,12 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		if (this.isUpdatingUiMarkers())
 			return;
-		this.clearUiContext();
-		var drawParams = this.calcDrawParams();
-		this.getUiPainter().draw(this.getUiContext(), drawParams.baseCoord, drawParams.drawOptions);
+		if (this.getUiDrawBridge() && this.getUiContext())
+		{
+			this.clearUiContext();
+			var drawParams = this.calcDrawParams();
+			this.getUiPainter().draw(this.getUiContext(), drawParams.baseCoord, drawParams.drawOptions);
+		}
 	},
 	/**
 	 * Create a new marker based on shapeInfo.
@@ -4683,31 +4695,31 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			if (toSys === S.SCREEN)
 				return coord;
 			else if (toSys === S.CONTEXT)
-				return this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), coord);
+				return this.getObjDrawBridge()? this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), coord): coord;
 			else  // S.OBJ
 			{
-				var contextCoord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), coord);
-				return this.getRootRenderer().transformCoordToObj(this.getObjContext(), this.getChemObj(), contextCoord);
+				var contextCoord = this.getObjDrawBridge()? this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), coord): coord;
+				return this.getObjContext()? this.getRootRenderer().transformCoordToObj(this.getObjContext(), this.getChemObj(), contextCoord): coord;
 			}
 		}
 		else if (fromSys === S.CONTEXT)
 		{
 			if (toSys === S.SCREEN)
-				return this.getObjDrawBridge().transformContextCoordToScreen(this.getObjContext(), coord);
+				return this.getObjDrawBridge()? this.getObjDrawBridge().transformContextCoordToScreen(this.getObjContext(), coord): coord;
 			else if (toSys === S.CONTEXT)
 				return coord;
 			else  // S.OBJ
-				return this.getRootRenderer().transformCoordToObj(this.getObjContext(), this.getChemObj(), coord);
+				return this.getObjContext()? this.getRootRenderer().transformCoordToObj(this.getObjContext(), this.getChemObj(), coord): coord;
 		}
 		else  // fromSys === S.OBJ
 		{
 			if (toSys === S.SCREEN)
 			{
 				var contextCoord = this.getRootRenderer().transformCoordToContext(this.getObjContext(), this.getChemObj(), coord);
-				return this.getObjDrawBridge().transformContextCoordToScreen(this.getObjContext(), contextCoord);
+				return this.getObjDrawBridge()? this.getObjDrawBridge().transformContextCoordToScreen(this.getObjContext(), contextCoord): coord;
 			}
 			else if (toSys === S.CONTEXT)
-				return this.getRootRenderer().transformCoordToContext(this.getObjContext(), this.getChemObj(), coord);
+				return this.getObjContext()? this.getRootRenderer().transformCoordToContext(this.getObjContext(), this.getChemObj(), coord): coord;
 			else  // S.OBJ
 				return coord;
 		}
@@ -5474,7 +5486,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (['pointerdown', 'pointermove', 'pointerup'].indexOf(evType) >= 0)
 		{
 			this.setCurrPointerType(e.pointerType);
-			if (evType === 'pointermove')
+			if (evType === 'pointermove' && this.isRenderable())
 			{
 				var coord = this._getEventMouseCoord(e, this.getCoreElement());  // coord based on editor client element
 				var hoveredObjs = this.getBasicObjectsAtCoord(coord, this.getCurrBoundInflation()) || [];
@@ -7687,6 +7699,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	/** @ignore */
 	doTestMouseCursor: function(coord, e)
 	{
+		if (!this.getEditor().isRenderable())  // if chem object not painted, do not need to test
+			return '';
 		var result = '';
 		// since client element is not the same to widget element, coord need to be recalculated
 		var c = this._getEventMouseCoord(e, this.getEditor().getEditClientElem());
