@@ -74,6 +74,11 @@ Kekule.Localization.addResource("zh", "ErrorMsg",
 	"INAVAILABLE_AUTOSCALE_REF_LENGTH": "无法计算自动缩放所需的长度",
 	"FORMULA_RENDERER_3D_NOT_AVAILABLE": "分子式3D渲染器暂不可用",
 	"CANNOT_FIND_SUITABLE_RENDERER_FOR_OBJ": "无法找到合适的渲染器",
+	"THREEJS_LIB_NOT_UNAVAILABLE": "Three.js不可用，请使用<script>标签将其引入或使用Kekule.externalResourceManager.register方法指定Three实例",
+	"THREEJS_DRAWING_NOT_UNAVAILABLE": "浏览器不支持Webgl、Canvas或SVG，请将其升级或更换",
+	"CANVAS2D_NOT_UNAVAILABLE": "浏览器不支持Canvas，请将其升级或更换",
+	"RAPHAEL_LIB_NOT_UNAVAILABLE": "Raphael.js不可用，请使用<script>标签将其引入",
+	"RAPHAEL_SVG_VML_UNAVAILABLE": "浏览器不支持SVG或VML，请将其升级或更换。",
 	"CALC_TERMINATED_BY_USER": "计算过程被用户中断",
 	"CALC_SERVICE_UNAVAILABLE": "计算服务“{0}”不可用"
 });

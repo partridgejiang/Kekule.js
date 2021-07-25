@@ -2233,14 +2233,12 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	/** @private */
 	CLASS_NAME: 'Kekule.Render.DrawBridgeManager',
 	/** @ignore */
-	initialize: function()
-	{
+	initialize: function () {
 		this._items = [];
 		this._preferredItem = null;
 	},
 	/** @private */
-	_indexOfBridgeClass: function(bridgeClass)
-	{
+	_indexOfBridgeClass: function (bridgeClass) {
 		for (var i = 0, l = this._items.length; i < l; ++i)
 		{
 			var item = this._items[i];
@@ -2250,18 +2248,15 @@ Kekule.Render.DrawBridgeManager = Class.create({
 		return -1;
 	},
 	/** @private */
-	_sortItems: function()
-	{
+	_sortItems: function () {
 		this._items.sort(
-			function(item1, item2)
-			{
+			function (item1, item2) {
 				return (item1.priorityLevel || 0) - (item2.priorityLevel || 0);
 			}
 		)
 	},
 	/** @private */
-	_reselectPreferred: function()
-	{
+	_reselectPreferred: function () {
 		this._sortItems();
 		for (var i = this._items.length - 1; i >= 0; --i)
 		{
@@ -2275,6 +2270,35 @@ Kekule.Render.DrawBridgeManager = Class.create({
 		this._preferredItem = null;
 		return null;
 	},
+	/** @private */
+	_recheckAvailabilityOfItem: function (item) {
+		var c = item.bridgeClass;
+		var info = c.getAvailabilityInformation && c.getAvailabilityInformation();
+		if (!info && c.isSupported)  // backward compatibility
+			info = {'available': c.isSupported(), 'message': null};
+		if (info)
+		{
+			item.isSupported = info.available;
+			item.message = info.message;
+		} else
+		{
+			item.isSupported = false;
+			item.message = null;
+		}
+	},
+
+	/**
+	 * Recheck availabilities of all registed items.
+	 */
+	recheckAvailabilities: function ()
+	{
+		var items = this._items;
+		for (var i = items.length - 1; i >= 0; --i)
+		{
+			var item = items[i];
+			this._recheckAvailabilityOfItem(item);
+		}
+	},
 
 	/**
 	 * Register a bridge.
@@ -2283,8 +2307,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	 * @returns {Object}
 	 * @ignore
 	 */
-	register: function(bridgeClass, priorityLevel)
-	{
+	register: function (bridgeClass, priorityLevel) {
 		if (!priorityLevel)
 			priorityLevel = 0;
 		var index = this._indexOfBridgeClass(bridgeClass);
@@ -2300,7 +2323,8 @@ Kekule.Render.DrawBridgeManager = Class.create({
 		//else
 		{
 			item = {'bridgeClass': bridgeClass, 'priorityLevel': priorityLevel};
-			item.isSupported = bridgeClass.isSupported? bridgeClass.isSupported(): false;
+			//item.isSupported = bridgeClass.isSupported? bridgeClass.isSupported(): false;
+			this._recheckAvailabilityOfItem(item);
 			this._items.push(item);
 		}
 		this._sortItems();
@@ -2320,8 +2344,7 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	 * @returns {Object}
 	 * @ignore
 	 */
-	unregister: function(bridgeClass)
-	{
+	unregister: function (bridgeClass) {
 		var item = null;
 		var i = this._indexOfBridgeClass(bridgeClass);
 		if (i >= 0)
@@ -2339,17 +2362,15 @@ Kekule.Render.DrawBridgeManager = Class.create({
 	 * @returns {Class}
 	 * @ignore
 	 */
-	getPreferredBridgeClass: function()
-	{
-		return (this._preferredItem)? this._preferredItem.bridgeClass: null;
+	getPreferredBridgeClass: function () {
+		return (this._preferredItem) ? this._preferredItem.bridgeClass : null;
 	},
 	/**
 	 * Returns instance of preferred bridge in current environment.
 	 * @returns {Object}
 	 * @ignore
 	 */
-	getPreferredBridgeInstance: function()
-	{
+	getPreferredBridgeInstance: function () {
 		var c = this.getPreferredBridgeClass();
 		if (c)
 		{
@@ -2359,9 +2380,39 @@ Kekule.Render.DrawBridgeManager = Class.create({
 			return c.getInstance()
 			*/
 			return new c();
-		}
-		else
+		} else
 			return null;
+	},
+	/**
+	 * If there is no available draw bridge, returns the messages of all registered items
+	 * to explain why those bridges are not available.
+	 * @returns {Array}
+	 */
+	getUnavailableMessages: function ()
+	{
+		var result = [];
+		//var items = this._preferredItem? [this._preferredItem]: this._items;
+		var items = this._items;
+		for (var i = items.length - 1; i >= 0; --i)
+		{
+			var item = items[i];
+			if (!item.isSupported && item.message)
+				result.push(item.message);
+		}
+		return result;
+	},
+	/**
+	 * If there is no available draw bridge, returns the error message of the preferred one
+	 * to explain why those bridges are not available.
+	 * @returns {String}
+	 */
+	getUnavailableMessage: function()
+	{
+		var item = this._preferredItem || this._items[this._items.length - 1]; // the last the preferred
+		if (!item.isSupported && item.message)
+			return item.message;
+		else
+			return '';
 	}
 });
 

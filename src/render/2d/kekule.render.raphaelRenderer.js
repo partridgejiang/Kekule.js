@@ -448,6 +448,7 @@ Kekule.Render.RaphaelRendererBridge = Class.create(Kekule.Render.Abstract2DDrawB
 /**
  * Check if current environment supports Raphael (SVG or VML).
  * @returns {Bool}
+ * @deprecated
  */
 Kekule.Render.RaphaelRendererBridge.isSupported = function()
 {
@@ -458,6 +459,23 @@ Kekule.Render.RaphaelRendererBridge.isSupported = function()
 	}
 	return result;
 };
+/**
+ * Returns the availability information of Raphael renderer.
+ * @returns {Hash}
+ */
+Kekule.Render.RaphaelRendererBridge.getAvailabilityInformation = function()
+{
+	var raphaelAvailable = !!Kekule.$jsRoot.Raphael;
+	var raphaelRenderingAvailable = !!(raphaelAvailable && (Kekule.$jsRoot.Raphael.svg || Kekule.$jsRoot.Raphael.vml));
+	return {
+		'available': !!raphaelRenderingAvailable,
+		'message': !raphaelAvailable? Kekule.$L('ErrorMsg.RAPHAEL_LIB_NOT_UNAVAILABLE'):
+			!raphaelRenderingAvailable? Kekule.$L('ErrorMsg.RAPHAEL_SVG_VML_UNAVAILABLE'):
+			null
+	}
+};
+
+Kekule.Render.DrawBridge2DMananger.register(Kekule.Render.RaphaelRendererBridge, 10);
 
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.RaphaelRendererBridge);
 
@@ -568,7 +586,7 @@ var _raphaelRegistered = function()
 
 var _raphaelUnregistered = function()
 {
-	Kekule.Render.DrawBridge2DMananger.unregister(Kekule.Render.RaphaelRendererBridge);
+	// Kekule.Render.DrawBridge2DMananger.unregister(Kekule.Render.RaphaelRendererBridge);
 };
 
 var _registerRaphael = function(raphaelRoot)

@@ -143,6 +143,14 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	LIB_THREE_JS_NOT_LOADED: 'Three.js not loaded, can not render 3D context',
 	BROWSER_3D_DRAWING_NOT_SUPPORTED: 'It seems that your web browser is not modern enough to support the 3D drawing function. Please update it.',
 	*/
+	THREEJS_LIB_NOT_UNAVAILABLE: 'Three.js not available, try to include it through the <script> tag or import the module by Kekule.externalResourceManager.register method',
+	THREEJS_DRAWING_NOT_UNAVAILABLE: 'Webgl, Canvas or SVG is not supported in this browser, please upgrade to a modern one',
+
+	// render/2d/kekule.render.canvasRenderer.js
+	CANVAS2D_NOT_UNAVAILABLE: 'Canvas is not supported in this browser, please upgrade to a modern one',
+	// render/2d/kekule.render.raphaelRenderer.js
+	RAPHAEL_LIB_NOT_UNAVAILABLE: 'Raphael.js not available, try to import it through the <script> tag',
+	RAPHAEL_SVG_VML_UNAVAILABLE: 'SVG or VML is not supported in this browser, please upgrade to a modern one',
 
 	// html/kekule.autoLaunchers.js
 	//MIMETYPE_NOT_SET: 'MIME type not set for resource'

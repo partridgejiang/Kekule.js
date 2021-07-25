@@ -717,6 +717,7 @@ Kekule.Render.CanvasRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBr
 /**
  * Check if current environment supports HTML canvas.
  * @returns {Bool}
+ * @deprecated
  */
 Kekule.Render.CanvasRendererBridge.isSupported = function()
 {
@@ -727,6 +728,23 @@ Kekule.Render.CanvasRendererBridge.isSupported = function()
 		result = !!document.createElement('canvas').getContext;
 	}
 	return result;
+};
+/**
+ * Returns the availability information of Canvas2D renderer.
+ * @returns {Hash}
+ */
+Kekule.Render.CanvasRendererBridge.getAvailabilityInformation = function()
+{
+	var available = false;
+	var document = Kekule.$jsRoot.document;
+	if (document && document.createElement)
+	{
+		available = !!document.createElement('canvas').getContext;
+	}
+	return {
+		'available': available,
+		'message': !available? Kekule.$L('ErrorMsg.CANVAS2D_NOT_UNAVAILABLE'): null
+	}
 };
 
 //Kekule.ClassUtils.makeSingleton(Kekule.Render.CanvasRendererBridge);
