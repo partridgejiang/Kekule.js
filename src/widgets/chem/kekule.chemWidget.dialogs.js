@@ -194,7 +194,8 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 				if (sFileExt)
 					text += ' (' + sFileExt + ')';
 				result.push({
-					'value': idInfo.mimeType, //idInfo.id,
+					'value': idInfo.id,
+					'formatId': idInfo.id,
 					'text': text,
 					'title': idInfo.mimeType,
 					'data': idInfo
@@ -331,7 +332,10 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			if (this.isPositiveResult(result))
 			{
 				var data = this._dataEditor.getValue();
-				var mimeType = this._formatSelector.getValue();
+				//var mimeType = this._formatSelector.getValue();
+				var formatData = this._formatSelector.getSelectedItemData();
+				var formatId = formatData.id;
+				var mimeType = formatData.mimeType;
 				try
 				{
 					/*
@@ -341,7 +345,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 					else
 						Kekule.error(Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
 					*/
-					this.setPropStoreFieldValue('dataDetails', {'data': data, 'mimeType': mimeType});
+					this.setPropStoreFieldValue('dataDetails', {'data': data, 'mimeType': mimeType, 'formatId': formatId});
 				}
 				catch(e)
 				{
