@@ -1214,8 +1214,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * @param {Variant} data Usually text content.
 	 * @param {String} mimeType
 	 * @param {String} fromUrlOrFileName From which file or url is this data loaded.
+	 * @param {String} formatId
 	 */
-	loadFromData: function(data, mimeType, fromUrlOrFileName)
+	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId)
 	{
 		try
 		{
@@ -1227,7 +1228,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			else
 			{
 				//var ext = fromUrlOrFileName? Kekule.UrlUtils.extractFileExt(fromUrlOrFileName): null;
-				var chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
+				var chemObj;
+				if (formatId)
+					chemObj = Kekule.IO.loadFormatData(data, formatId);
+				else if (mimeType || fromUrlOrFileName)
+					chemObj = Kekule.IO.loadTypedData(data, mimeType, fromUrlOrFileName);
 				if (chemObj)
 				{
 					//this.setChemObj(chemObj);
@@ -2317,7 +2322,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					//self.doLoadToDisplayer(dialog.getChemObj(), dialog);
 					var dataDetails = dialog.getDataDetails() || {};
 					var displayer = self.getDisplayer();
-					displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName);
+					displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId);
 				}
 			}, target, showType]);
 	}

@@ -1687,11 +1687,12 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 * @param {Variant} data Usually text content.
 	 * @param {String} mimeType
 	 * @param {String} fromUrlOrFileName From which file or url is this data loaded.
+	 * @param {String} formatId
 	 * @returns {Object} Loaded chem object.
 	 */
-	loadFromData: function(data, mimeType, fromUrlOrFileName)
+	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId)
 	{
-		return this.getEditor().loadFromData(data, mimeType, fromUrlOrFileName);
+		return this.getEditor().loadFromData(data, mimeType, fromUrlOrFileName, formatId);
 	},
 	/**
 	 * Load chem object from file object.

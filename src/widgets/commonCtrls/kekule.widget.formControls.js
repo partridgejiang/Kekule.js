@@ -1221,6 +1221,26 @@ Kekule.Widget.SelectBox = Class.create(Kekule.Widget.FormWidget,
 		}
 		return null;
 	},
+	/**
+	 * Returns extra data info bound with item element.
+	 * @param {HTMLElement} itemElem
+	 * @returns {Hash}
+	 */
+	getItemData: function(itemElem)
+	{
+		var info = this._getBoxItemInfo(itemElem);
+		return info && info.data;
+	},
+	/**
+	 * Returns extra data info bound with selected item.
+	 * @param {HTMLElement} itemElem
+	 * @returns {Hash}
+	 */
+	getSelectedItemData: function()
+	{
+		var elem = this.getSelectedItemElem();
+		return elem && this.getItemData(elem);
+	},
 
 	/**
 	 * Clear all items in box.

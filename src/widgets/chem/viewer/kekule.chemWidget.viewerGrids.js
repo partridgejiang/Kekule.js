@@ -149,7 +149,7 @@ Kekule.ChemWidget.ViewerGrid = Class.create(Kekule.Widget.WidgetGrid,
 				if (chemObj)  // ensure a chemObj can be loaded, than create viewer widget
 				{
 					var w = self.doCreateNewChildWidget(doc, null, chemObj);
-					var chemObj = w.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName);  // use this method to auto generate coord if possible
+					var chemObj = w.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId);  // use this method to auto generate coord if possible
 					w.setParent(self);
 				}
 				else if (dataDetails.data)  // malformat chem data
