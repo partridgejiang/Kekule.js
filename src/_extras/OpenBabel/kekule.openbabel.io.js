@@ -69,7 +69,8 @@ Kekule.IO.OpenBabelReader = Class.create(Kekule.IO.ChemDataReader,
 			var fileExt = fInfo.fileExts[0];
 			//console.log(mimeType, fileExt);
 			// decide type
-			var fmt = this._obConv.setInFormat(mimeType, fileExt);
+			//var fmt = this._obConv.setInFormat(mimeType, fileExt);
+			var fmt = this._obConv.setInFormatId(fInfo.id);
 			//console.log('Format of : ' + format, mimeType, fileExt, fmt);
 			var obClassName = this.getFormatTargetObClassName(fmt);
 
@@ -224,7 +225,10 @@ Kekule.IO.OpenBabelWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var fInfo = Kekule.IO.DataFormatsManager.getFormatInfo(format);
 			var mimeType = fInfo.mimeType;
 			var fileExt = fInfo.fileExts[0];
-			this._obConv.setOutFormat(mimeType, fileExt);
+			//console.log(fInfo);
+			//var f = this._obConv.setOutFormat(mimeType, fileExt);
+			this._obConv.setOutFormatId(fInfo.id);
+			//console.log(f);
 			//this._obConv.clearOut();
 
 			var kObjs = Kekule.ChemStructureUtils.getChildStructureObjs(obj, true);
@@ -364,6 +368,7 @@ Kekule.OpenBabel.IORegHelper = Class.create({
 			var fmtId = formatManager.findFormatId(mimeType);
 			if (fmtId)
 				fmtId = formatManager.findFormatId(null, id);
+
 			/*
 			if (!fmtId)
 				fmtId = formatManager.findFormatId(null, id);
