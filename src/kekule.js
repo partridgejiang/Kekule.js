@@ -526,6 +526,14 @@ var kekuleFiles = {
 		]
 	},
 
+	'spectrum': {
+		'requires': ['root', 'common', 'io'],
+		'files': [
+			'spectrum/kekule.spectrum.core.js',
+			'io/jcamp/kekule.io.jcamp.base.js'
+		]
+	},
+
 	'emscripten': {
 		'requires': ['root', 'common'],
 		'files': [

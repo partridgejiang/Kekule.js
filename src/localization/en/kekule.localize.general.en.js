@@ -123,6 +123,14 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	JSON_SERIALIZER_NOT_EXISTS: 'Serializer for JSON not exists',
 	XML_SERIALIZER_NOT_EXISTS: 'Serializer for XML not exists',
 
+	// io/jcamp/kekule.io.jcamp.base.js
+	JCAMP_DATA_WITHOUT_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
+	JCAMP_OTHER_LABEL_BEFORE_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
+	JCAMP_MORE_THAN_ONE_ROOT_BLOCK: 'Malformed JCAMP format data, root block not unique',
+	JCAMP_MORE_THAN_TWO_NEST_LEVEL: 'Malformed JCAMP format data, block nested level should not exceed 2',
+	JCAMP_ASDF_FORMAT_ERROR_WITH_STR: 'Malformed JCAMP ASDF String: {0}',
+	JCAMP_DATA_TABLE_VALUE_CHECK_ERROR: 'JCAMP data table value check failed!',
+
 	/*
 	// render/2d/kekule.render.def2DRenderer.js
 	CAN_NOT_REMOVE_INDIVIDUAL_ELEM: 'Unable to remove individual element on context',
