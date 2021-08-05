@@ -4006,6 +4006,77 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	}
 });
 
+Kekule.VarDependency = {
+	INDEPENDENT: 0,
+	DEPENDENT: 1
+}
+
+/**
+ * Class to define a chemical variable with name and unit.
+ * @class
+ * @augments ObjectEx
+ * @param {String} name Name of variable.
+ * @param {String} unit Unit of variable.
+ * @param {String} title Display text of variable.
+ * @param {String} description Description of variable.
+ *
+ * @property {String} name Name of variable.
+ * @property {String} unit Unit of variable.
+ * @property {String} title Display text of variable.
+ * @property {String} description Description of variable.
+ * @property {Hash} info Additional information about variable.
+ */
+Kekule.VarDefinition = Class.create(ObjectEx,
+/** @lends Kekule.VarDefinition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.VarDefinition',
+	/** @private */
+	initialize: function(name, unit, dependency, title, description)
+	{
+		this.tryApplySuper('initialize');
+		this.beginUpdate();
+		try
+		{
+			if (name)
+				this.setName(name);
+			if (unit)
+				this.setUnit(unit);
+			if (title)
+				this.setTitle(title);
+			if (description)
+				this.setDescription(description);
+			this.setDependency(dependency || Kekule.VarDependency.INDEPENDENT);
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+	},
+	initProperties: function()
+	{
+		this.defineProp('name', {'dataType': DataType.STRING});
+		this.defineProp('unit', {'dataType': DataType.STRING});
+		this.defineProp('dependency', {'dataType': DataType.INT, 'enumSource': Kekule.VarDependency});
+		this.defineProp('title', {'dataType': DataType.STRING});
+		this.defineProp('description', {'dataType': DataType.STRING});
+		this.defineProp('info',
+			{
+				'dataType': DataType.HASH,
+				'getter': function(canCreate)
+				{
+					var r = this.getPropStoreFieldValue('info');
+					if ((!r) && canCreate)
+					{
+						r = {};
+						this.setPropStoreFieldValue('info', r);
+					}
+					return r;
+				}
+			});
+	}
+});
+
 /**
  * Class to hold a general data with unit in chemistry, such as temperature, weight, pressure and so on.
  * @class
