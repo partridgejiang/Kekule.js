@@ -445,7 +445,7 @@ Kekule.Spectrum.BaseSpectrum = Class.create(Kekule.ChemObject,
 	{
 		this.defineProp('data', {'dataType': 'Kekule.Spectrum.SpectrumData'});
 		this.defineProp('title', {'dataType': DataType.STRING});
-		// this.defineProp('origin', {'dataType': DataType.STRING});
+		//this.defineProp('molecule', {'dataType': 'Kekule.Molecule'});
 	}
 });
 

@@ -13,9 +13,13 @@
     function test()
     {
       var reader = new Kekule.IO.JcampReader();
-      var result = reader._buildAnalysisTree($('memoSrc').value);
+      /*
+      var result = reader._createAnalysisTree($('memoSrc').value);
       console.log(result);
-      reader._buildSpectrumObj(result);
+      reader.buildChemObj(result);
+      */
+      var result = reader.readData($('memoSrc').value);
+      console.log(result);
     }
   </script>
 </head>

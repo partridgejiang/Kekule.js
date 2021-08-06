@@ -21,20 +21,51 @@ Kekule.globalOptions.add('IO.jcamp', {
 
 });
 
+/**
+ * Namespace of JCAMP IO.
+ * @namespace
+ */
+Kekule.IO.Jcamp = {};
+var Jcamp = Kekule.IO.Jcamp;
+
 // Some consts related with JCAMP
 /** @ignore */
-Kekule.IO.Jcamp = {
+Kekule.IO.Jcamp.Consts = {
 	DATA_LABEL_FLAG: '##',
 	DATA_LABEL_TERMINATOR: '=',
-	CUSTOM_LABEL_PREFIX: '$',
+	PRIVATE_LABEL_PREFIX: '$',
 	SPECIFIC_LABEL_PREFIX: '.',
 	LABEL_BLOCK_BEGIN: 'TITLE',
 	LABEL_BLOCK_END: 'END',
 	INLINE_COMMENT_FLAG: '$$',
 	TABLE_LINE_CONTI_MARK: '=',
-	UNKNOWN_VALUE: NaN  // special value indicating an unknown variable value in data table
+	UNKNOWN_VALUE: NaN,  // special value indicating an unknown variable value in data table
+
+	LABEL_DX_VERSION: 'JCAMP-DX',
+	LABEL_CS_VERSION: 'JCAMP-CS'
+
 };
-var JcampConsts = Kekule.IO.Jcamp;
+var JcampConsts = Kekule.IO.Jcamp.Consts;
+
+/**
+ * Enumeration of JCAMP format standards.
+ * @enum
+ */
+Kekule.IO.Jcamp.Format = {
+	DX: 'dx',
+	CS: 'cs'
+};
+
+/**
+ * Enueration of JCAMP data block types.
+ * @enum
+ */
+Kekule.IO.Jcamp.BlockType = {
+	/** Data block */
+	DATA: 0,
+	/** Link block */
+	LINK: 1
+};
 
 /**
  * Enumeration of JCAMP ASDF digit types.
@@ -62,7 +93,23 @@ var JcampDigitType = Kekule.IO.Jcamp.DigitCharType;
  * Some utils methods about JCAMP.
  * @class
  */
-Kekule.IO.JcampUtils = {
+Kekule.IO.Jcamp.Utils = {
+	/**
+	 * Returns the core name and label type of LDR.
+	 * @param {String} labelName
+	 * @returns {Hash} {coreName, labelType}
+	 */
+	analysisLdrLabelName: function(labelName)
+	{
+		var result;
+		if (labelName.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
+			result = {'coreName': labelName.substr(JcampConsts.SPECIFIC_LABEL_PREFIX.length), 'labelType': JLabelType.SPECIFIC};
+		else if (labelName.startsWith(JcampConsts.PRIVATE_LABEL_PREFIX))
+			result = {'coreName': labelName.substr(JcampConsts.PRIVATE_LABEL_PREFIX.length), 'labelType': JLabelType.PRIVATE};
+		else
+			result = {'coreName': labelName, 'labelType': JLabelType.GLOBAL};
+		return result;
+	},
 	/**
 	 * Returns the first non-empty string line of lines.
 	 * @param {Array} lines
@@ -373,13 +420,13 @@ Kekule.IO.JcampUtils = {
 		return result;
 	}
 };
-var JcampUtils = Kekule.IO.JcampUtils;
+var JcampUtils = Kekule.IO.Jcamp.Utils;
 
 /**
  * Enumeration of LDR value types
  * @enum
  */
-Kekule.IO.JcampValueType = {
+Kekule.IO.Jcamp.ValueType = {
 	AFFN: 1,         // single line AFFN value
 	ASDF: 2,
 	AFFN_ASDF: 3,
@@ -390,41 +437,47 @@ Kekule.IO.JcampValueType = {
 	DATETIME: 23,    // data/time string in format YYYY/MM/DD [HH:MM:SS[.SSSS] [±UUUU]]
 	NONE: 0   // special marks, value should be ignored
 };
-var JValueType = Kekule.IO.JcampValueType;
+var JValueType = Kekule.IO.Jcamp.ValueType;
 
 /**
  * Enumeration of JCAMP label types.
  * @enum
  */
-Kekule.IO.JcampLabelType = {
+Kekule.IO.Jcamp.LabelType = {
 	GLOBAL: 0,
 	SPECIFIC: 1,
 	PRIVATE: 2
 }
-var JLabelType = Kekule.IO.JcampLabelType;
+var JLabelType = Kekule.IO.Jcamp.LabelType;
 
-Kekule.IO.JcampLabelTypeInfos = {
-
+Kekule.IO.Jcamp.LabelTypeInfos = {
+	_DEFAULT_TYPE: JValueType.STRING
 };
-Kekule.IO.JcampLabelTypeInfos.createInfo = function(labelName, dataType, labelType)
+Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType)
 {
 	var result = {
 		'labelName': labelName,
 		'labelType': labelType,
-		'dataType': dataType || Kekule.IO.JcampLabelType.GLOBAL
+		'dataType': dataType || Kekule.IO.Jcamp.LabelType.GLOBAL
 	};
-	Kekule.IO.JcampLabelTypeInfos[labelName] = result;
+	Kekule.IO.Jcamp.LabelTypeInfos[labelName] = result;
 	return result;
 };
-Kekule.IO.JcampLabelTypeInfos.createInfos = function(infoItems)
+Kekule.IO.Jcamp.LabelTypeInfos.createInfos = function(infoItems)
 {
 	for (var i = 0, l = infoItems.length; i < l; ++i)
 	{
 		var item = infoItems[i];
-		Kekule.IO.JcampLabelTypeInfos.createInfo(item[0], item[1], item[2]);
+		Kekule.IO.Jcamp.LabelTypeInfos.createInfo(item[0], item[1], item[2]);
 	}
 };
-var _createLabelTypeInfos = Kekule.IO.JcampLabelTypeInfos.createInfos;
+Kekule.IO.Jcamp.LabelTypeInfos.getType = function(labelName)
+{
+	var info = JcampLabelTypeInfos[labelName];
+	return (info && info.dataType) || JcampLabelTypeInfos._DEFAULT_TYPE;
+};
+var JcampLabelTypeInfos = Kekule.IO.Jcamp.LabelTypeInfos;
+var _createLabelTypeInfos = Kekule.IO.Jcamp.LabelTypeInfos.createInfos;
 // create type infos
 _createLabelTypeInfos([
 	// global labels
@@ -518,7 +571,54 @@ _createLabelTypeInfos([
 ]);
 
 
-Kekule.IO.JcampLdrValueParser = {
+Kekule.IO.Jcamp.LdrValueParser = {
+	/** @private */
+	_parserFuncs: {
+		byLabelName: {},
+		byDataType: {}
+	},
+	/**
+	 * Register a parser function for LDR value, based on labelName or dataType.
+	 * @param {String} labelName
+	 * @param {Int} dataType
+	 * @param {Function} func
+	 */
+	registerParser: function(labelName, dataType, func)
+	{
+		if (labelName)
+			JcampLdrValueParser._parserFuncs.byLabelName[labelName] = func;
+		else if (dataType)
+			JcampLdrValueParser._parserFuncs.byDataType[dataType] = func;
+	},
+	/**
+	 * Returns the suitable parser function for a LDR.
+	 * @param {Hash} ldr
+	 * @returns {Func}
+	 */
+	getParserFunc: function(ldr)
+	{
+		var result = JcampLdrValueParser._parserFuncs.byLabelName[ldr.labelName];
+		if (!result)
+		{
+			var valueType = JcampLabelTypeInfos.getType(ldr.labelName);
+			result = JcampLdrValueParser._parserFuncs.byDataType[valueType];
+		}
+		if (!result)
+			result = JcampLdrValueParser._parserFuncs['_default'];
+		return result;
+	},
+	/**
+	 * Parse the LDR value, returns the suitable type.
+	 * @param {Hash} ldr
+	 * @param {Hash} options
+	 * @returns {Variant}
+	 */
+	parseValue: function(ldr, options)
+	{
+		var func = JcampLdrValueParser.getParserFunc(ldr);
+		return func(ldr.valueLines, options);
+	},
+
 	stringParser: function(lines, options)
 	{
 		return lines.join('\n');
@@ -527,6 +627,12 @@ Kekule.IO.JcampLdrValueParser = {
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
 		return parseFloat(text) || 0;
+	},
+	asdfParser: function(lines, options)
+	{
+		var text = JcampUtils.getFirstNonemptyLine(lines);
+		var vs = JcampUtils.decodeAsdfLine(text);
+		return vs && vs[0];
 	},
 	shortDateParser: function(lines, options)
 	{
@@ -593,12 +699,14 @@ Kekule.IO.JcampLdrValueParser = {
 		return result;
 	}
 }
-
-
-Kekule.IO.JcampLabelValueSetter = Class.create({
-
-});
-
+var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParser;
+JcampLdrValueParser._parserFuncs._default = JcampLdrValueParser.stringParser;
+JcampLdrValueParser.registerParser(null, JValueType.AFFN, JcampLdrValueParser.affnParser);
+JcampLdrValueParser.registerParser(null, JValueType.ASDF, JcampLdrValueParser.asdfParser);
+JcampLdrValueParser.registerParser(null, JValueType.STRING, JcampLdrValueParser.stringParser);
+JcampLdrValueParser.registerParser(null, JValueType.SHORT_DATE, JcampLdrValueParser.shortDateParser);
+JcampLdrValueParser.registerParser(null, JValueType.SHORT_TIME, JcampLdrValueParser.shortTimeParser);
+JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParser.longDateParser);
 
 
 /**
@@ -614,6 +722,31 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.JcampReader',
+	/** @constructs */
+	initialize: function(options)
+	{
+		this.setPropStoreFieldValue('ldrHandlerMap', {});
+		this.tryApplySuper('initialize', options);
+		this._initLdrHandlers();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// private, a hash to store some predefined functions to handle LDRs, the hash key is LDR label name.
+		// ldrSetterMap['_default'] is treated as the default setter.
+		// Each functions has params (ldr, targetChemObj)
+		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+	},
+	/** @private */
+	_initLdrHandlers: function()
+	{
+		var map = this.getLdrHandlerMap();
+		map['_default'] = function(ldr, targetChemObj) {
+			targetChemObj.setInfoValue(ldr.labelName, JcampLdrValueParser.parseValue(ldr));
+		};
+		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
+		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
+	},
 	/** @private */
 	_removeInlineComments: function(str)
 	{
@@ -641,25 +774,67 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		}
 	},
 	/** @private */
-	_appendLdrInfo: function(lines, targetArray)
+	_getNestedBlockLevelCount: function(analysisTree)
 	{
-		var ldrParseResult = this._parseLdrLines(lines);
-		if (ldrParseResult)
-			targetArray.push(ldrParseResult);
-		return ldrParseResult;
+		var result = 1;
+		var blocks = analysisTree.blocks;
+		if (blocks && blocks.length)
+		{
+			var maxSubBlockLevelCount = 0;
+			for (var i = 0, l = blocks.length; i < l; ++i)
+			{
+				var c = this._getNestedBlockLevelCount(blocks[i]);
+				if (c > maxSubBlockLevelCount)
+					maxSubBlockLevelCount = c;
+			}
+			result += maxSubBlockLevelCount;
+		}
+		return result;
 	},
 	/**
-	 * Build a JS object to reflect the LDRs in source data. The Block structures are constructed in tree.
-	 * @param {String} data
-	 * @returns {Object} The result should be {'blocks': rootBlock, 'ldrs': []}  (no LDR should be found outside rootBlock).
+	 * Returns the meta info (type, format...) of a block.
+	 * @param {Object} block
 	 * @private
 	 */
-	_buildAnalysisTree: function(data)
+	_getBlockMeta: function(block)
 	{
-		var root = {'blocks': [], 'ldrs': []};
+		var result = block.meta;
+		if (!result)
+		{
+			result = {
+				'blockType': block.blocks.length ? Jcamp.BlockType.LINK : Jcamp.BlockType.DATA,
+				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ? Jcamp.Format.DX :
+					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ? Jcamp.Format.CS :
+					null  // unknown format
+			};
+			block.meta = result;
+		}
+		return result;
+	},
+	/**
+	 * Create a JS object to store the LDRs in source data. The Block structures are also constructed in tree.
+	 * @param {String} data
+	 * @returns {Object} The result should be {'blocks': rootBlock, 'ldrs': [], 'ldrIndexes': {}}  (no LDR should be found outside rootBlock).
+	 * @private
+	 */
+	doCreateAnalysisTree: function(data)
+	{
+		var _createBlock = function(parent) { return {'blocks': [], 'ldrs': [], 'ldrIndexes': {}, '_parent': parent} };
+
+		var root = _createBlock();
 		var currBlock = root;
 		var self = this;
 
+		var _appendLdrInfo = function(lines, block)
+		{
+			var ldrParseResult = self._parseLdrLines(lines);
+			if (ldrParseResult)
+			{
+				block.ldrs.push(ldrParseResult);
+				block.ldrIndexes[ldrParseResult.labelName] = block.ldrs.length - 1;
+			}
+			return ldrParseResult;
+		};
 		var _pushLdrLineInfo = function(lastLdrLines)
 		{
 			var ldrParseResult = self._parseLdrLines(lastLdrLines);
@@ -667,21 +842,23 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			{
 				if (ldrParseResult.labelName === JcampConsts.LABEL_BLOCK_BEGIN)  // file beginning or sub blocks begining
 				{
-					var subBlock = {'ldrs': [], 'blocks': [], '_parent': currBlock};
+					var subBlock = _createBlock(currBlock);
 					currBlock.blocks.push(subBlock);
 					currBlock = subBlock;
 				}
-				self._appendLdrInfo(lastLdrLines, currBlock.ldrs);
+				_appendLdrInfo(lastLdrLines, currBlock);
 				if (ldrParseResult.labelName === JcampConsts.LABEL_BLOCK_END)  // end of sub blocks or file
 				{
 					currBlock = currBlock._parent;
 				}
+				/*
 				// debug
 				if (ldrParseResult.labelName === 'XYDATA')
 				{
-					console.log('Found XYData field');
+					// console.log('Found XYData field');
 					Kekule.IO.JcampLdrValueParser.xyDataTableParser(ldrParseResult.valueLines, {doValueCheck: true});
 				}
+				*/
 			}
 		}
 
@@ -710,31 +887,14 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		}
 		return root;
 	},
-	/** @private */
-	_getNestedBlockLevelCount: function(analysisTree)
-	{
-		var result = 1;
-		var blocks = analysisTree.blocks;
-		if (blocks && blocks.length)
-		{
-			var maxSubBlockLevelCount = 0;
-			for (var i = 0, l = blocks.length; i < l; ++i)
-			{
-				var c = this._getNestedBlockLevelCount(blocks[i]);
-				if (c > maxSubBlockLevelCount)
-					maxSubBlockLevelCount = c;
-			}
-			result += maxSubBlockLevelCount;
-		}
-		return result;
-	},
 	/**
-	 * Read the analysis tree and create corresponding chem objects.
+	 * Check if the analysis tree build be {@link Kekule.IO.JcampReader._createAnalysisTree} is valid and legal.
+	 * If the structure not legal, error should be thrown.
 	 * @param {Object} analysisTree
-	 * @returns {Kekule.ChemObject}
+	 * @returns {Bool}
 	 * @private
 	 */
-	_buildSpectrumObj: function(analysisTree)
+	doCheckAnalysisTree: function(analysisTree)
 	{
 		if (analysisTree.ldrs.length)  // LDR outside root block, some label occurs before ##TITLE
 		{
@@ -754,7 +914,136 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_MORE_THAN_TWO_NEST_LEVEL'));
 		}
+		return true;
+	},
 
+	/**
+	 * Create a JS object to store the LDRs in source data. The Block structures are also constructed in tree.
+	 * @param {String} data
+	 * @returns {Object} The result should be {'blocks': rootBlock, 'ldrs': [], 'ldrIndexes': {}}  (no LDR should be found outside rootBlock).
+	 * @private
+	 */
+	buildAnalysisTree: function(data)
+	{
+		var tree = this.doCreateAnalysisTree(data);
+		if (this.doCheckAnalysisTree(tree))
+			return tree;
+		else
+			return null;
+	},
+
+	/**
+	 * Create a suitable chem object for a block in analysis tree.
+	 * Descendants may override this method.
+	 * @param {Hash} block
+	 * @param {Kekule.ChemObject} parentChemObj
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	doCreateChemObjForBlock: function(block, parentChemObj)
+	{
+		var result;
+		var meta = this._getBlockMeta(block);
+		if (meta.blockType === Jcamp.BlockType.LINK)
+		{
+			result = new Kekule.ChemObjList();
+		}
+		else if (meta.blockType === Jcamp.BlockType.DATA)
+		{
+			if (meta.format === Jcamp.Format.DX)
+				result = new Kekule.Spectrum.BaseSpectrum();
+		}
+		return result;
+	},
+	/**
+	 * Create a suitable chem object tree for analysis tree.
+	 * Descendants may override this method.
+	 * @param {Hash} rootBlock
+	 * @returns {Kekule.MapEx} The map mapping block to a chem object.
+	 * @private
+	 */
+	doCreateChemObjTree: function(rootBlock)
+	{
+		var map = new Kekule.MapEx();
+		var rootObj = this.doCreateChemObjForBlock(rootBlock);
+		if (rootObj)
+			map.set(rootBlock, rootObj);
+		for (var i = 0, l = rootBlock.blocks.length; i < l; ++i)
+		{
+			var childObj = this.doCreateChemObjForBlock(rootBlock.blocks[i], rootObj);
+			if (childObj)
+			{
+				map.set(rootBlock.blocks[i], childObj);
+				rootObj.appendChild(childObj);
+			}
+		}
+		return map;
+	},
+
+	/** @private */
+	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, chemObj)
+	{
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		chemObj.setInfoValue(infoFieldName, ldrValue);
+	},
+	/** @private */
+	doStoreLdrToChemObjProp: function(propName, ldr, chemObj)
+	{
+		console.log('store', propName, ldr);
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		chemObj.setCascadePropValue([propName], ldrValue);
+	},
+	/** @private */
+	processLdr: function(block, ldr, chemObj)
+	{
+		return this.doProcessLdr(block, ldr, chemObj);
+	},
+	/** @private */
+	doProcessLdr: function(block, ldr, chemObj)
+	{
+		var labelName = ldr.labelName;
+		var handlerMap = this.getLdrHandlerMap();
+		var handler = handlerMap[labelName] || handlerMap['_default'];
+		if (handler)
+		  handler(ldr, chemObj);
+	},
+	/**
+	 * Process a block in the analysis tree.
+	 * Decendants may override this method.
+	 * @param {Hash} block
+	 * @param {Kekule.MapEx} objMap
+	 * @private
+	 */
+	doBuildChemObjOfBlock: function(block, objMap)
+	{
+		//var chemObj = this.doCreateChemObjForBlock(block, parentChemObj);
+		var chemObj = objMap.get(block);
+		if (chemObj)
+		{
+			// LDRs of block
+			for (var i = 0, l = block.ldrs.length; i < l; ++i)
+			{
+				var ldr = block.ldrs[i];
+				this.processLdr(block, ldr, chemObj);
+			}
+			// child blocks
+			for (var i = 0, l = block.blocks.length; i < l; ++i)
+			{
+				var childBlock = block.blocks[i];
+				this.doBuildChemObjOfBlock(childBlock, objMap);
+			}
+		}
+		return chemObj;
+	},
+
+	/**
+	 * Read the analysis tree and create corresponding chem objects.
+	 * @param {Object} analysisTree
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	buildChemObj: function(analysisTree)
+	{
 		// Some LDRs need to pend handling, most of them depends on other LDRs
 		var pendingLdrNames = [
 			'DATE', 'TIME'
@@ -762,13 +1051,28 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		var pendingLdrValues = {
 
 		};
+		var rootBlock = analysisTree.blocks[0];
+		//console.log(rootBlock);
+		var map = this.doCreateChemObjTree(rootBlock);
+		var result;
+		try
+		{
+			result = this.doBuildChemObjOfBlock(rootBlock, map);
+		}
+		finally
+		{
+			map.finalize();
+		}
 
-		console.log('Pass check');
+		return result;
 	},
 	/** @private */
 	doReadData: function(data, dataType, format)
 	{
-
+		// phase 1, build the basic structure of analysis tree
+		var tree = this.buildAnalysisTree(data);
+		// phase 2, convert the raw data in analysis tree to JS values
+		return this.buildChemObj(tree);
 	}
 });
 
