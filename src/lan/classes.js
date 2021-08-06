@@ -3241,9 +3241,6 @@ ObjectEx = Class.create(
 	{
 		var args = Array.prototype.slice.call(arguments);
 		var propName = args.shift();
-		var info = this.getPropInfo(propName);
-
-		var result;
 		var cascadeNames;
 		if (propName.length && propName.splice)  // is an array
 			cascadeNames = propName;
@@ -3258,7 +3255,7 @@ ObjectEx = Class.create(
 		}
 		if (obj)
 		{
-			args.unshift(cascadeNames[l - 1]);
+			args.unshift(cascadeNames[l]);
 			obj.setPropValueX.apply(obj, args);
 		}
 		return this;
