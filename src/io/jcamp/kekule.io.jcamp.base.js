@@ -418,6 +418,51 @@ Kekule.IO.Jcamp.Utils = {
 		if (buffer.length)    // last unhandled buffer
 			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif);
 		return result;
+	},
+
+	// methods about JCAMP block object from analysis tree
+	/** @private */
+	_createBlock: function(parent)
+	{
+		return {'blocks': [], 'ldrs': [], 'ldrIndexes': {}, '_parent': parent}
+	},
+	/** @private */
+	_getNestedBlockLevelCount: function(analysisTree)
+	{
+		var result = 1;
+		var blocks = analysisTree.blocks;
+		if (blocks && blocks.length)
+		{
+			var maxSubBlockLevelCount = 0;
+			for (var i = 0, l = blocks.length; i < l; ++i)
+			{
+				var c = this._getNestedBlockLevelCount(blocks[i]);
+				if (c > maxSubBlockLevelCount)
+					maxSubBlockLevelCount = c;
+			}
+			result += maxSubBlockLevelCount;
+		}
+		return result;
+	},
+	/**
+	 * Returns the meta info (type, format...) of a block.
+	 * @param {Object} block
+	 * @private
+	 */
+	_getBlockMeta: function(block)
+	{
+		var result = block.meta;
+		if (!result)
+		{
+			result = {
+				'blockType': block.blocks.length ? Jcamp.BlockType.LINK : Jcamp.BlockType.DATA,
+				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ? Jcamp.Format.DX :
+					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ? Jcamp.Format.CS :
+						null  // unknown format
+			};
+			block.meta = result;
+		}
+		return result;
 	}
 };
 var JcampUtils = Kekule.IO.Jcamp.Utils;
@@ -712,18 +757,65 @@ JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParse
 
 
 /**
- * Reader for CML document.
- * Use CmlReader.readData() can retrieve a suitable Kekule.ChemObject.
- * Data fetch in can be a string, reader will parse it to XML automatically;
- *   otherwise it should be a XML document or XML element.
+ * The manager to store and create suitable JCAMP block reader for different types of blocks.
+ * @class
+ * @private
+ */
+Kekule.IO.Jcamp.BlockReaderManager = {
+	/** @private */
+	'_readerClasses': [],
+	/** @private */
+	_findRegisteredItemIndex: function(blockType, blockFormat, readerClass, allowWildcard)
+	{
+		var iu = Kekule.ObjUtils.isUnset;
+		var cs = jcampBlockReaderManager._readerClasses;
+		for (var i = cs.length - 1; i >= 0; --i)
+		{
+			var item = cs[i];
+			if ((iu(blockType) || blockType === item.blockType || (allowWildcard && item.blockType === '*'))
+				&& (iu(blockFormat) || blockFormat === item.blockFormat || (allowWildcard && item.blockFormat === '*'))
+				&& (iu(readerClass) || readerClass === item.readerClass))
+				return i;
+		}
+		return -1;
+	},
+	register: function(blockType, blockFormat, readerClass)
+	{
+		if (jcampBlockReaderManager._findRegisteredItemIndex(blockType, blockFormat, readerClass) < 0)
+			jcampBlockReaderManager._readerClasses.push({'blockType': blockType, 'blockFormat': blockFormat, 'readerClass': readerClass});
+	},
+	unregister: function(blockType, blockFormat, readerClass)
+	{
+		var index = jcampBlockReaderManager._findRegisteredItemIndex(blockType, blockFormat, readerClass);
+		jcampBlockReaderManager._readerClasses.splice(index, 1);
+	},
+	getReaderClass: function(blockType, blockFormat)
+	{
+		var index = jcampBlockReaderManager._findRegisteredItemIndex(blockType, blockFormat, null, true);
+		return (index >= 0)? jcampBlockReaderManager._readerClasses[index].readerClass: null;
+	}
+};
+var jcampBlockReaderManager = Kekule.IO.Jcamp.BlockReaderManager;
+
+Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
+/** @lends Kekule.IO.Jcamp.BlockReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.BlockReader',
+});
+
+/**
+ * Base reader for block of JCAMP document tree.
+ * The input data is a analysis tree object.
+ * Concrete descendants should be implemented for different types of blocks.
  * @class
  * @augments Kekule.IO.ChemDataReader
  */
-Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
-/** @lends Kekule.IO.JcampReader# */
+Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
+/** @lends Kekule.IO.Jcamp.BlockReader# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.IO.JcampReader',
+	CLASS_NAME: 'Kekule.IO.Jcamp.BlockReader',
 	/** @constructs */
 	initialize: function(options)
 	{
@@ -752,6 +844,203 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
 	},
 	/** @private */
+	_getBlockMeta: function(block)
+	{
+		return JcampUtils._getBlockMeta(block);
+	},
+
+	/**
+	 * Create a suitable chem object for a block in analysis tree.
+	 * Descendants should override this method.
+	 * @param {Hash} block
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	doCreateChemObjForBlock: function(block)
+	{
+		return null;
+	},
+	/*
+	 * Create a suitable chem object tree for analysis tree.
+	 * Descendants may override this method.
+	 * @param {Hash} rootBlock
+	 * @returns {Kekule.MapEx} The map mapping block to a chem object.
+	 * @private
+	 */
+	/*
+	doCreateChemObjTree: function(rootBlock)
+	{
+		var map = new Kekule.MapEx();
+		var rootObj = this.doCreateChemObjForBlock(rootBlock);
+		if (rootObj)
+			map.set(rootBlock, rootObj);
+		for (var i = 0, l = rootBlock.blocks.length; i < l; ++i)
+		{
+			var childObj = this.doCreateChemObjForBlock(rootBlock.blocks[i], rootObj);
+			if (childObj)
+			{
+				map.set(rootBlock.blocks[i], childObj);
+				rootObj.appendChild(childObj);
+			}
+		}
+		return map;
+	},
+	*/
+
+	/** @private */
+	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, chemObj)
+	{
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		chemObj.setInfoValue(infoFieldName, ldrValue);
+	},
+	/** @private */
+	doStoreLdrToChemObjProp: function(propName, ldr, chemObj)
+	{
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		chemObj.setCascadePropValue([propName], ldrValue);
+	},
+
+	/** @private */
+	processLdr: function(block, ldr, chemObj)
+	{
+		return this.doProcessLdr(block, ldr, chemObj);
+	},
+	/** @private */
+	doProcessLdr: function(block, ldr, chemObj)
+	{
+		var labelName = ldr.labelName;
+		var handlerMap = this.getLdrHandlerMap();
+		var handler = handlerMap[labelName] || handlerMap['_default'];
+		if (handler)
+		  handler(ldr, chemObj);
+	},
+	/**
+	 * Process a block in the analysis tree.
+	 * Decendants may override this method.
+	 * @param {Hash} block
+	 * @param {Kekule.ChemObject} chemObj
+	 * @private
+	 */
+	doSetChemObjFromBlock: function(block, chemObj)
+	{
+		if (chemObj)
+		{
+			// LDRs of block
+			for (var i = 0, l = block.ldrs.length; i < l; ++i)
+			{
+				var ldr = block.ldrs[i];
+				this.processLdr(block, ldr, chemObj);
+			}
+		}
+		return chemObj;
+	},
+
+	/**
+	 * Read block of JCAMP data and create corresponding chem object.
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @returns {Kekule.ChemObject}
+	 */
+	doReadBlock: function(block, options)
+	{
+		var result = this.doCreateChemObjForBlock(block);
+		if (result)
+		{
+			this.doSetChemObjFromBlock(block, result);
+		}
+		return result;
+	},
+	/** @private */
+	doReadData: function(data, dataType, format, options)
+	{
+		var result = this.doReadBlock(data, options);
+		return result;
+	}
+});
+
+/**
+ * Reader for reading a general data block of JCAMP document tree.
+ * @class
+ * @augments Kekule.IO.Jcamp.BlockReader
+ */
+Kekule.IO.Jcamp.DataBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
+/** @lends Kekule.IO.Jcamp.DataBlockReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.DataBlockReader'
+});
+/**
+ * Reader for reading link block of JCAMP document tree.
+ * @class
+ * @augments Kekule.IO.Jcamp.BlockReader
+ */
+Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
+/** @lends Kekule.IO.Jcamp.BlockReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.LinkBlockReader',
+	/** @ignore */
+	doCreateChemObjForBlock: function(block)
+	{
+		var result;
+		var meta = this._getBlockMeta(block);
+		if (meta.blockType === Jcamp.BlockType.LINK)
+		{
+			result = new Kekule.ChemObjList();
+		}
+		else
+			result = this.tryApplySuper('doCreateChemObjForBlock', [block]);
+		return result;
+	},
+	/** @ignore */
+	doReadBlock: function(block, options)
+	{
+		var result = this.tryApplySuper('doReadBlock', [block]);
+		// handle child blocks
+		for (var i = 0, l = block.blocks.length; i < l; ++i)
+		{
+			var childBlock = block.blocks[i];
+			var meta = this._getBlockMeta(childBlock);
+			var readerClass = jcampBlockReaderManager.getReaderClass(meta.blockType, meta.format);
+			if (readerClass)
+			{
+				var reader = new readerClass();
+				try
+				{
+					var childObj = reader.readData(childBlock, options);
+					if (childObj)
+						result.appendChild(childObj);
+				}
+				finally
+				{
+					reader.finalize();
+				}
+			}
+		}
+		return result;
+	},
+});
+jcampBlockReaderManager.register(Jcamp.BlockType.LINK, '*', Kekule.IO.Jcamp.LinkBlockReader);  // register
+jcampBlockReaderManager.register(Jcamp.BlockType.DATA, '*', Kekule.IO.Jcamp.DataBlockReader);  // register
+
+	/**
+ * Reader for JCAMP document.
+ * Data fetch in should be a string.
+ * @class
+ * @augments Kekule.IO.ChemDataReader
+ */
+Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
+/** @lends Kekule.IO.JcampReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.JcampReader',
+	/** @constructs */
+	initialize: function(options)
+	{
+		this.tryApplySuper('initialize', options);
+	},
+
+	/** @private */
 	_removeInlineComments: function(str)
 	{
 		var p = str.indexOf(JcampConsts.INLINE_COMMENT_FLAG);
@@ -777,44 +1066,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			return {'labelName': slabel.toUpperCase(), 'valueLines': valueLines};
 		}
 	},
-	/** @private */
-	_getNestedBlockLevelCount: function(analysisTree)
-	{
-		var result = 1;
-		var blocks = analysisTree.blocks;
-		if (blocks && blocks.length)
-		{
-			var maxSubBlockLevelCount = 0;
-			for (var i = 0, l = blocks.length; i < l; ++i)
-			{
-				var c = this._getNestedBlockLevelCount(blocks[i]);
-				if (c > maxSubBlockLevelCount)
-					maxSubBlockLevelCount = c;
-			}
-			result += maxSubBlockLevelCount;
-		}
-		return result;
-	},
-	/**
-	 * Returns the meta info (type, format...) of a block.
-	 * @param {Object} block
-	 * @private
-	 */
-	_getBlockMeta: function(block)
-	{
-		var result = block.meta;
-		if (!result)
-		{
-			result = {
-				'blockType': block.blocks.length ? Jcamp.BlockType.LINK : Jcamp.BlockType.DATA,
-				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ? Jcamp.Format.DX :
-					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ? Jcamp.Format.CS :
-					null  // unknown format
-			};
-			block.meta = result;
-		}
-		return result;
-	},
+
 	/**
 	 * Create a JS object to store the LDRs in source data. The Block structures are also constructed in tree.
 	 * @param {String} data
@@ -823,7 +1075,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	 */
 	doCreateAnalysisTree: function(data)
 	{
-		var _createBlock = function(parent) { return {'blocks': [], 'ldrs': [], 'ldrIndexes': {}, '_parent': parent} };
+		var _createBlock = JcampUtils._createBlock;
 
 		var root = _createBlock();
 		var currBlock = root;
@@ -914,7 +1166,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_WITHOUT_TITLE_LINE'));
 		}
 		//console.log(this._getNestedBlockLevelCount(rootBlock));
-		if (this._getNestedBlockLevelCount(rootBlock) > 2)
+		if (JcampUtils._getNestedBlockLevelCount(rootBlock) > 2)
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_MORE_THAN_TWO_NEST_LEVEL'));
 		}
@@ -936,149 +1188,30 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			return null;
 	},
 
-	/**
-	 * Create a suitable chem object for a block in analysis tree.
-	 * Descendants may override this method.
-	 * @param {Hash} block
-	 * @param {Kekule.ChemObject} parentChemObj
-	 * @returns {Kekule.ChemObject}
-	 * @private
-	 */
-	doCreateChemObjForBlock: function(block, parentChemObj)
+	/** @private */
+	doReadData: function(data, dataType, format, options)
 	{
 		var result;
-		var meta = this._getBlockMeta(block);
-		if (meta.blockType === Jcamp.BlockType.LINK)
-		{
-			result = new Kekule.ChemObjList();
-		}
-		else if (meta.blockType === Jcamp.BlockType.DATA)
-		{
-			if (meta.format === Jcamp.Format.DX)
-				result = new Kekule.Spectroscopy.Spectrum();
-		}
-		return result;
-	},
-	/**
-	 * Create a suitable chem object tree for analysis tree.
-	 * Descendants may override this method.
-	 * @param {Hash} rootBlock
-	 * @returns {Kekule.MapEx} The map mapping block to a chem object.
-	 * @private
-	 */
-	doCreateChemObjTree: function(rootBlock)
-	{
-		var map = new Kekule.MapEx();
-		var rootObj = this.doCreateChemObjForBlock(rootBlock);
-		if (rootObj)
-			map.set(rootBlock, rootObj);
-		for (var i = 0, l = rootBlock.blocks.length; i < l; ++i)
-		{
-			var childObj = this.doCreateChemObjForBlock(rootBlock.blocks[i], rootObj);
-			if (childObj)
-			{
-				map.set(rootBlock.blocks[i], childObj);
-				rootObj.appendChild(childObj);
-			}
-		}
-		return map;
-	},
-
-	/** @private */
-	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, chemObj)
-	{
-		var ldrValue = JcampLdrValueParser.parseValue(ldr);
-		chemObj.setInfoValue(infoFieldName, ldrValue);
-	},
-	/** @private */
-	doStoreLdrToChemObjProp: function(propName, ldr, chemObj)
-	{
-		var ldrValue = JcampLdrValueParser.parseValue(ldr);
-		chemObj.setCascadePropValue([propName], ldrValue);
-	},
-
-	/** @private */
-	processLdr: function(block, ldr, chemObj)
-	{
-		return this.doProcessLdr(block, ldr, chemObj);
-	},
-	/** @private */
-	doProcessLdr: function(block, ldr, chemObj)
-	{
-		var labelName = ldr.labelName;
-		var handlerMap = this.getLdrHandlerMap();
-		var handler = handlerMap[labelName] || handlerMap['_default'];
-		if (handler)
-		  handler(ldr, chemObj);
-	},
-	/**
-	 * Process a block in the analysis tree.
-	 * Decendants may override this method.
-	 * @param {Hash} block
-	 * @param {Kekule.MapEx} objMap
-	 * @private
-	 */
-	doBuildChemObjOfBlock: function(block, objMap)
-	{
-		//var chemObj = this.doCreateChemObjForBlock(block, parentChemObj);
-		var chemObj = objMap.get(block);
-		if (chemObj)
-		{
-			// LDRs of block
-			for (var i = 0, l = block.ldrs.length; i < l; ++i)
-			{
-				var ldr = block.ldrs[i];
-				this.processLdr(block, ldr, chemObj);
-			}
-			// child blocks
-			for (var i = 0, l = block.blocks.length; i < l; ++i)
-			{
-				var childBlock = block.blocks[i];
-				this.doBuildChemObjOfBlock(childBlock, objMap);
-			}
-		}
-		return chemObj;
-	},
-
-	/**
-	 * Read the analysis tree and create corresponding chem objects.
-	 * @param {Object} analysisTree
-	 * @returns {Kekule.ChemObject}
-	 * @private
-	 */
-	buildChemObj: function(analysisTree)
-	{
-		// Some LDRs need to pend handling, most of them depends on other LDRs
-		var pendingLdrNames = [
-			'DATE', 'TIME'
-		];
-		var pendingLdrValues = {
-
-		};
-		var rootBlock = analysisTree.blocks[0];
-		//console.log(rootBlock);
-		var map = this.doCreateChemObjTree(rootBlock);
-		var result;
-		try
-		{
-			result = this.doBuildChemObjOfBlock(rootBlock, map);
-		}
-		finally
-		{
-			map.finalize();
-		}
-
-		return result;
-	},
-	/** @private */
-	doReadData: function(data, dataType, format)
-	{
 		// phase 1, build the basic structure of analysis tree
 		var tree = this.buildAnalysisTree(data);
 		// phase 2, convert the raw data in analysis tree to JS values
-		return this.buildChemObj(tree);
+		var rootBlock = tree.blocks[0];  // the root block
+		var meta = JcampUtils._getBlockMeta(rootBlock);
+		var readerClass = jcampBlockReaderManager.getReaderClass(meta.blockType, meta.format);
+		if (readerClass)
+		{
+			try
+			{
+				var reader = new readerClass();
+				result = reader.readData(rootBlock, null, null, options);
+			}
+			finally
+			{
+				reader.finalize();
+			}
+		}
+		return result;
 	}
 });
-
 
 })();
