@@ -526,11 +526,12 @@ var kekuleFiles = {
 		]
 	},
 
-	'spectrum': {
+	'spectroscopy': {
 		'requires': ['root', 'common', 'io'],
 		'files': [
-			'spectrum/kekule.spectrum.core.js',
-			'io/jcamp/kekule.io.jcamp.base.js'
+			'spectroscopy/kekule.spectrum.core.js',
+			'io/jcamp/kekule.io.jcamp.base.js',
+			'io/jcamp/kekule.io.jcamp.dx.js'
 		]
 	},
 
