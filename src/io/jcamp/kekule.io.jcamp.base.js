@@ -521,6 +521,8 @@ _createLabelTypeInfos([
 	['REFRACTIVE INDEX', JValueType.AFFN],   // In the form: ND = 1542A20 (index at 20°C for NaD line).
 	['DENSITY', JValueType.AFFN],            // Density in g/cm3
 	['MW', JValueType.AFFN],                 // Molecular weight
+	['MP', JValueType.AFFN],                 // Melting point in C
+	['BP', JValueType.AFFN],                 // boiling point in C
 	['CONCENTRATIONS', JValueType.STRING],   // List of known components and impurities and their concentrations in the following form
 	['SPECTROMETER/DATA SYSTEM', JValueType.STRING],   // manufacturer’s name, model of the spectrometer, software system, and release number, as appropriate
 	['INSTRUMENTAL PARAMETERS', JValueType.STRING],
@@ -732,7 +734,8 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	initProperties: function()
 	{
-		// private, a hash to store some predefined functions to handle LDRs, the hash key is LDR label name.
+		// private, a hash object. The hash key is LDR label name, value is the function to store some predefined functions to handle LDRs.
+		// A false value means this LDR need not to be handled.
 		// ldrSetterMap['_default'] is treated as the default setter.
 		// Each functions has params (ldr, targetChemObj)
 		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
@@ -744,7 +747,8 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		map['_default'] = function(ldr, targetChemObj) {
 			targetChemObj.setInfoValue(ldr.labelName, JcampLdrValueParser.parseValue(ldr));
 		};
-		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
+		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
+		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
 	},
 	/** @private */
@@ -951,7 +955,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		else if (meta.blockType === Jcamp.BlockType.DATA)
 		{
 			if (meta.format === Jcamp.Format.DX)
-				result = new Kekule.Spectrum.BaseSpectrum();
+				result = new Kekule.Spectroscopy.Spectrum();
 		}
 		return result;
 	},
@@ -989,10 +993,10 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	doStoreLdrToChemObjProp: function(propName, ldr, chemObj)
 	{
-		console.log('store', propName, ldr);
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
 		chemObj.setCascadePropValue([propName], ldrValue);
 	},
+
 	/** @private */
 	processLdr: function(block, ldr, chemObj)
 	{

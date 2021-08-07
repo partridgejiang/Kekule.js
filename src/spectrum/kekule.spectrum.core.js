@@ -9,20 +9,20 @@ var AU = Kekule.ArrayUtils;
  * Base namespace for spectra.
  * @type {namespace}
  */
-Kekule.Spectrum = {};
+Kekule.Spectroscopy = {};
 
 /**
  * Enumeration of data continuity of spectrum variable.
  * @enum
  */
-Kekule.Spectrum.DataContinuity = {
+Kekule.Spectroscopy.DataContinuity = {
 	/** Value points are discrete, e.g. in MS peak table. */
 	DISCRETE: 0,
 	/** Value points are continuous, e.g. in IR data table. */
 	CONTINUOUS: 1
 };
 
-Kekule.Spectrum.DataStorageType = {
+Kekule.Spectroscopy.DataStorageType = {
 
 };
 
@@ -37,11 +37,11 @@ Kekule.Spectrum.DataStorageType = {
  *
  * @property {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
  */
-Kekule.Spectrum.SpectrumData = Class.create(Kekule.ChemObject,
-/** @lends Kekule.Spectrum.SpectrumData# */
+Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumData# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectrum.SpectrumData',
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumData',
 	/** @private */
 	initialize: function(id, variables)
 	{
@@ -156,7 +156,7 @@ Kekule.Spectrum.SpectrumData = Class.create(Kekule.ChemObject,
 	},
 	/**
 	 * Add new data item. The item is can be a hash or an array.
-	 * If it is a hash, the hash fields must matches {@link Kekule.Spectrum.SpectrumData.independentVars} and {@link Kekule.Spectrum.SpectrumData.dependentVars}.
+	 * If it is a hash, the hash fields must matches {@link Kekule.Spectroscopy.SpectrumData.independentVars} and {@link Kekule.Spectroscopy.SpectrumData.dependentVars}.
 	 * If it is an array, the values in array will automatically mapped to independent and dependent vars.
 	 * @param {Variant} item
 	 */
@@ -216,7 +216,7 @@ Kekule.Spectrum.SpectrumData = Class.create(Kekule.ChemObject,
 		return this.doGetDependentValues(independantValues, extraOptions);
 	},
 	/**
-	 * Do actual work of {@link Kekule.Spectrum.SpectrumData.getDependentValues}.
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
 	 * Descendants should override this method.
 	 * @param {Hash} independentValues
 	 * @param {Hash} extraOptions
@@ -238,7 +238,7 @@ Kekule.Spectrum.SpectrumData = Class.create(Kekule.ChemObject,
 		return this.doGetIterator();
 	},
 	/**
-	 * Do actual work of {@link Kekule.Spectrum.SpectrumData.getIterator}.
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getIterator}.
 	 * Desendants may override this method.
 	 * @returns {Object}
 	 * @private
@@ -290,13 +290,13 @@ Kekule.Spectrum.SpectrumData = Class.create(Kekule.ChemObject,
 /**
  * The discrete spectrum data (e.g. peak data).
  * @class
- * @augments Kekule.Spectrum.SpectrumData
+ * @augments Kekule.Spectroscopy.SpectrumData
  */
-Kekule.Spectrum.DiscreteData = Class.create(Kekule.Spectrum.SpectrumData,
-/** @lends Kekule.Spectrum.DiscreteData# */
+Kekule.Spectroscopy.DiscreteData = Class.create(Kekule.Spectroscopy.SpectrumData,
+/** @lends Kekule.Spectroscopy.DiscreteData# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectrum.DiscreteData'
+	CLASS_NAME: 'Kekule.Spectroscopy.DiscreteData'
 });
 
 /**
@@ -306,15 +306,15 @@ Kekule.Spectrum.DiscreteData = Class.create(Kekule.Spectrum.SpectrumData,
  * X values can be omitted with *undefined* and its actual value can be calculated from firstX/lastX.
  *
  * @class
- * @augments Kekule.Spectrum.SpectrumData
+ * @augments Kekule.Spectroscopy.SpectrumData
  *
  * @property {Array} continousVarDetails Each item is a hash of {name, first, last}.
  */
-Kekule.Spectrum.ContinuousData = Class.create(Kekule.Spectrum.SpectrumData,
-/** @lends Kekule.Spectrum.ContinuousData# */
+Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumData,
+/** @lends Kekule.Spectroscopy.ContinuousData# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectrum.ContinuousData',
+	CLASS_NAME: 'Kekule.Spectroscopy.ContinuousData',
 	/** @private */
 	initialize: function(id, variables)
 	{
@@ -420,7 +420,7 @@ Kekule.Spectrum.ContinuousData = Class.create(Kekule.Spectrum.SpectrumData,
 	}
 });
 
-Kekule.Spectrum.SpectrumTypes = {
+Kekule.Spectroscopy.SpectrumTypes = {
 	NMR: 'NMR',
 	IR: 'IR'
 };
@@ -430,11 +430,11 @@ Kekule.Spectrum.SpectrumTypes = {
  * @class
  * @augments Kekule.ChemObject
  */
-Kekule.Spectrum.BaseSpectrum = Class.create(Kekule.ChemObject,
-/** @lends Kekule.Spectrum.BaseSpectrum# */
+Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.Spectrum# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectrum.BaseSpectrum',
+	CLASS_NAME: 'Kekule.Spectroscopy.Spectrum',
 	/** @private */
 	initialize: function(id)
 	{
@@ -443,9 +443,33 @@ Kekule.Spectrum.BaseSpectrum = Class.create(Kekule.ChemObject,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('data', {'dataType': 'Kekule.Spectrum.SpectrumData'});
-		this.defineProp('title', {'dataType': DataType.STRING});
+		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData'});
+		//this.defineProp('title', {'dataType': DataType.STRING});
+		this._defineInfoProperty('title');
 		//this.defineProp('molecule', {'dataType': 'Kekule.Molecule'});
+	},
+	/**
+	 * Defines property which storing value in {@link Kekule.ChemObject.info}.
+	 * @param {String} propName
+	 * @param {String} infoFieldName
+	 * @param {Hash} options
+	 * @private
+	 */
+	_defineInfoProperty: function(propName, infoFieldName, options)
+	{
+		var defs;
+		(function() {
+			defs = Object.extend({
+				'getter': function () {
+					return this.getInfoValue(infoFieldName || propName);
+				},
+				'setter': function(value) {
+					this.setInfoValue(infoFieldName || propName, value);
+				}
+			}, options);
+		})();
+
+		return this.defineProp(propName, defs);
 	}
 });
 

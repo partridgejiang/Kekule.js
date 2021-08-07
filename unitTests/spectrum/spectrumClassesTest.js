@@ -6,7 +6,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition('z', 'unitZ', Kekule.VarDependency.DEPENDENT),
 			new Kekule.VarDefinition('r', 'unitR', Kekule.VarDependency.DEPENDENT)
 		];
-		var sData = new Kekule.Spectrum.SpectrumData(null, variables);
+		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
 
 		sData.append({x: 1, y: 1, z: 1, r: -1});
 		sData.append([3,3,3,-3]);
@@ -28,7 +28,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition('y', 'unitY', Kekule.VarDependency.DEPENDENT),
 			new Kekule.VarDefinition('z', 'unitZ', Kekule.VarDependency.DEPENDENT)
 		];
-		var sData = new Kekule.Spectrum.ContinuousData(null, variables);
+		var sData = new Kekule.Spectroscopy.ContinuousData(null, variables);
 		sData.setVarRange('x', 0, 10);
 		sData.setVarRange('z', 5, 0);
 		sData.append({y: 0});
@@ -60,13 +60,13 @@ describe('Test of some core data and functions of spectra module', function(){
 	*/
 
 	it('Kekule.IO.JcampLdrValueParser test', function(){
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1913/04/05', ''])).toEqual(new Date(1913, 4, 5));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1913/4/5', ''])).toEqual(new Date(1913, 4, 5));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1998/08/12 23:18:02'])).toEqual(new Date(1998, 8, 12, 23, 18, 2));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1998/08/12 23:18:02.'])).toEqual(new Date(1998, 8, 12, 23, 18, 2));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1998/08/12  23:18:02.0010'])).toEqual(new Date(1998, 8, 12, 23, 18, 2, 10));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['1998/08/12  23:18:02.0010 +0500'])).toEqual(new Date(1998, 8, 12, 23, 18, 2, 10));
-		expect(Kekule.IO.JcampLdrValueParser.longDateParser(['98/08/12 23:18:02.0010 +0500'])).toEqual(new Date(98, 8, 12, 23, 18, 2, 10));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1913/04/05', ''])).toEqual(new Date(1913, 4, 5));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1913/4/5', ''])).toEqual(new Date(1913, 4, 5));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12 23:18:02'])).toEqual(new Date(1998, 8, 12, 23, 18, 2));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12 23:18:02.'])).toEqual(new Date(1998, 8, 12, 23, 18, 2));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12  23:18:02.0010'])).toEqual(new Date(1998, 8, 12, 23, 18, 2, 10));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12  23:18:02.0010 +0500'])).toEqual(new Date(1998, 8, 12, 23, 18, 2, 10));
+		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['98/08/12 23:18:02.0010 +0500'])).toEqual(new Date(98, 8, 12, 23, 18, 2, 10));
 	});
 
 	var DT = Kekule.IO.Jcamp.DigitCharType;
@@ -114,7 +114,7 @@ describe('Test of some core data and functions of spectra module', function(){
 		(function _test(testCase)
 		{
 			it('Kekule.IO.JcampUtils ASDF decode test: ' + testCase.src, function () {
-				var decodeValue = Kekule.IO.JcampUtils.decodeAsdfLine(testCase.src);
+				var decodeValue = Kekule.IO.Jcamp.Utils.decodeAsdfLine(testCase.src);
 				//console.log('expect to equal ', i, decodeValue, testCase.value, decodeValue.__$lastValueType__);
 				expect(Kekule.ArrayUtils.compare(decodeValue, testCase.value, asdfDecodeItemCompareFunc) === 0).toEqual(true);
 				expect(decodeValue.__$lastValueType__).toEqual(testCase.lastValueType);
