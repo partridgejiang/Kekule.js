@@ -4006,6 +4006,10 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	}
 });
 
+/**
+ * Enum of variable dependency.
+ * @enum
+ */
 Kekule.VarDependency = {
 	INDEPENDENT: 0,
 	DEPENDENT: 1
@@ -4015,15 +4019,14 @@ Kekule.VarDependency = {
  * Class to define a chemical variable with name and unit.
  * @class
  * @augments ObjectEx
- * @param {String} name Name of variable.
- * @param {String} unit Unit of variable.
- * @param {String} title Display text of variable.
- * @param {String} description Description of variable.
+ * @param {Hash} params A hash to set the initial property values.
  *
  * @property {String} name Name of variable.
- * @property {String} unit Unit of variable.
- * @property {String} title Display text of variable.
+ * @property {String} symbol Symbol of variable.
+ * @property {String} units Units of variable.
+ * @property {Variant} displayLabel Display text of variable, can be string or rich text object.
  * @property {String} description Description of variable.
+ * @property {Int} dependency Value from {@link Kekule.VarDependency}.
  * @property {Hash} info Additional information about variable.
  */
 Kekule.VarDefinition = Class.create(ObjectEx,
@@ -4032,21 +4035,16 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 	/** @private */
 	CLASS_NAME: 'Kekule.VarDefinition',
 	/** @private */
-	initialize: function(name, unit, dependency, title, description)
+	initialize: function(params)
 	{
 		this.tryApplySuper('initialize');
 		this.beginUpdate();
 		try
 		{
-			if (name)
-				this.setName(name);
-			if (unit)
-				this.setUnit(unit);
-			if (title)
-				this.setTitle(title);
-			if (description)
-				this.setDescription(description);
-			this.setDependency(dependency || Kekule.VarDependency.INDEPENDENT);
+			if (params)
+				this.setPropValues(params);
+			if (Kekule.ObjUtils.isUnset(this.getDependency()))
+				this.setDependency(Kekule.VarDependency.INDEPENDENT);
 		}
 		finally
 		{
@@ -4056,10 +4054,13 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 	initProperties: function()
 	{
 		this.defineProp('name', {'dataType': DataType.STRING});
-		this.defineProp('unit', {'dataType': DataType.STRING});
+		this.defineProp('symbol', {'dataType': DataType.STRING});
+		this.defineProp('units', {'dataType': DataType.STRING});
 		this.defineProp('dependency', {'dataType': DataType.INT, 'enumSource': Kekule.VarDependency});
-		this.defineProp('title', {'dataType': DataType.STRING});
+		this.defineProp('displayLabel', {'dataType': DataType.VARIANT});
 		this.defineProp('description', {'dataType': DataType.STRING});
+		this.defineProp('minValue', {'dataType': DataType.PRIMARY});
+		this.defineProp('maxValue', {'dataType': DataType.PRIMARY});
 		this.defineProp('info',
 			{
 				'dataType': DataType.HASH,
