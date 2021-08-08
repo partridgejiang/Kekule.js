@@ -420,15 +420,27 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	}
 });
 
-Kekule.Spectroscopy.SpectrumTypes = {
+/**
+ * Enumeration of spectrum types.
+ * @enum
+ */
+Kekule.Spectroscopy.SpectrumType = {
 	NMR: 'NMR',
-	IR: 'IR'
+	IR: 'IR',
+	MS: 'MS',
+	UV: 'UV',
+	IMS: 'IMS',   // ION MOBILITY SPECTRUM
+	RAMAN: 'Raman',
+	GENERAL: 'general'   // unknown type
 };
 
 /**
  * The base spectrum class. Concrete spectrum classes should be inherited from this one.
  * @class
  * @augments Kekule.ChemObject
+ *
+ * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumTypes}.
+ * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
  */
 Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 /** @lends Kekule.Spectroscopy.Spectrum# */
@@ -443,6 +455,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @private */
 	initProperties: function()
 	{
+		this.defineProp('spectrumType', {'dataType': DataType.STRING});
 		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData'});
 		//this.defineProp('title', {'dataType': DataType.STRING});
 		this._defineInfoProperty('title');
