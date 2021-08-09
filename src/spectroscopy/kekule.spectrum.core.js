@@ -47,10 +47,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	{
 		this.setPropStoreFieldValue('dataItems', []);
 		this.tryApplySuper('initialize', [id]);
-		if (variables)
-		{
-			this.setPropStoreFieldValue('variables', AU.clone(variables));
-		}
+		this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
 	},
 	doFinalize: function()
 	{
