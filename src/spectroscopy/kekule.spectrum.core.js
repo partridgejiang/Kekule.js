@@ -50,7 +50,6 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		if (variables)
 		{
 			this.setPropStoreFieldValue('variables', AU.clone(variables));
-			this.setPropStoreFieldValue('varNames', this._getDataVarNames());
 		}
 	},
 	doFinalize: function()
@@ -71,20 +70,17 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
 		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
 		// private, cache all variable names
-		this.defineProp('varNames', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE})
-	},
-
-	/** @private */
-	_getDataVarNames: function()
-	{
-		var result = [];
-		var list = this.getVariables();
-		for (var j = 0, jj = list.length; j < jj; ++j)
-		{
-			var varDef = list[j];
-			result.push(varDef.getName());
-		}
-		return result;
+		this.defineProp('varSymbols', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE,
+			'getter': function() {
+				var result = [];
+				var list = this.getVariables();
+				for (var j = 0, jj = list.length; j < jj; ++j)
+				{
+					var varDef = list[j];
+					result.push(varDef.getName());
+				}
+				return result;
+			}})
 	},
 	/** @private */
 	_itemHashToArray: function(hashValue)
@@ -92,10 +88,10 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		if (!hashValue)
 			return null;
 		var result = [];
-		var varNames = this.getVarNames();
-		for (var i = 0, l = varNames.length; i < l; ++i)
+		var varSymbols = this.getVarSymbols();
+		for (var i = 0, l = varSymbols.length; i < l; ++i)
 		{
-			result.push(hashValue[varNames[i]]);
+			result.push(hashValue[varSymbols[i]]);
 		}
 		return result;
 	},
@@ -105,10 +101,10 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		if (!arrayValue)
 			return null;
 		var result = {};
-		var varNames = this.getVarNames();
-		for (var i = 0, l = Math.min(varNames.length, arrayValue.length); i < l; ++i)
+		var varSymbols = this.getVarSymbols();
+		for (var i = 0, l = Math.min(varSymbols.length, arrayValue.length); i < l; ++i)
 		{
-			result[varNames[i]] = arrayValue[i];
+			result[varSymbols[i]] = arrayValue[i];
 		}
 		return result;
 	},
@@ -118,13 +114,75 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * @param {Variant} varIndexOrNameOrDef
 	 * @returns {Kekule.VarDefinition}
 	 */
-	getVarDefinition: function(varIndexOrNameOrDef)
+	getVariable: function(varIndexOrNameOrDef)
 	{
 		var varDef = (varIndexOrNameOrDef instanceof Kekule.VarDefinition)? varIndexOrNameOrDef:
 			(typeof(varIndexOrNameOrDef) === 'number')? this.getVariables()[varIndexOrNameOrDef]:   // index
-				this.getVariables()[this.getVarNames().indexOf(varIndexOrNameOrDef)];   // name
+				this.getVariables()[this.getVarSymbols().indexOf(varIndexOrNameOrDef)];   // name
 		return varDef;
 	},
+	/**
+	 * Returns the index of a variable definition.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @returns {Int}
+	 */
+	indexOfVariable: function(varDef)
+	{
+		return this.getVariables().indexOf(varDef);
+	},
+	/**
+	 * Insert a new variable definition at a specified position.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Int} index
+	 */
+	insertVariableAt: function(varDef, index)
+	{
+		if (index >= 0)
+			this.getVariables().splice(index, 0, varDef);
+		else
+			this.getVariables().push(varDef);
+		return this;
+	},
+	/**
+	 * Insert a new variable definition before ref.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Kekule.VarDefinition} ref
+	 */
+	insertVariableBefore: function(varDef, ref)
+	{
+		var index = ref? this.indexOfVarDefinition(ref): -1;
+		return this.insertVarDefinitionAt(varDef, index);
+	},
+	/**
+	 * Append a new variable definition.
+	 * @param {Kekule.VarDefinition} varDef
+	 */
+	appendVariable: function(varDef)
+	{
+		return this.insertVarDefinitionAt(varDef, -1);
+	},
+	/**
+	 * Remove a variable definition at index.
+	 * @param {Int} index
+	 */
+	removeVariableAt: function(index)
+	{
+		this.getVariables().splice(index, 1);
+		return this;
+	},
+	/**
+	 * Remove a variable definition.
+	 * @param {Kekule.VarDefinition} varDef
+	 */
+	removeVariable: function(varDef)
+	{
+		var index = this.indexOfVariable(varDef);
+		if (index >= 0)
+			this.removeVariableAt(index);
+		return this;
+	},
+
+	//appendVarDefinition: function()
 
 	/**
 	 * Sort all data items.
@@ -143,7 +201,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * Returns the count of data items.
 	 * @returns {Int}
 	 */
-	getDateItemCount: function()
+	getDataItemCount: function()
 	{
 		return this.getDataItems().length;
 	},
@@ -340,7 +398,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	 */
 	getVarRange: function(varIndexOrNameOrDef)
 	{
-		var varDef = this.getVarDefinition(varIndexOrNameOrDef);
+		var varDef = this.getVariable(varIndexOrNameOrDef);
 		var info = varDef && varDef.getInfo();
 		if (info)
 		{
@@ -360,7 +418,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	 */
 	setVarRange: function(varIndexOrNameOrDef, firstValue, lastValue)
 	{
-		var varDef = this.getVarDefinition(varIndexOrNameOrDef);
+		var varDef = this.getVariable(varIndexOrNameOrDef);
 		var info = varDef && varDef.getInfo(true);
 		info.continuous = true;
 		info.first = firstValue;
@@ -372,7 +430,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	 */
 	clearVarRange: function(varIndexOrNameOrDef)
 	{
-		var varDef = this.getVarDefinition(varIndexOrNameOrDef);
+		var varDef = this.getVariable(varIndexOrNameOrDef);
 		var info = varDef && varDef.getInfo();
 		if (info && info.continuous)
 			info.continuous = false;
@@ -399,7 +457,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	{
 		var result = [];
 		var values = this.tryApplySuper('getRawValueAt', [index]);
-		var dataIntervalCount = this.getDateItemCount() - 1;
+		var dataIntervalCount = this.getDataItemCount() - 1;
 		// check if there are omitted values
 		for (var i = 0, l = values.length; i < l; ++i)
 		{
