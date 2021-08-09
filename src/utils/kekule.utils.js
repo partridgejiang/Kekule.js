@@ -133,9 +133,23 @@ Kekule.NumUtils = {
 	 */
 	isFloatEqual: function(f1, f2, threshold)
 	{
-		if (Kekule.ObjUtils.isUnset(threshold))
-			threshold = 1e-100;
+		if (Kekule.ObjUtils.isUnset(threshold))  // auto threshold
+			threshold = Math.min(Math.abs(f1), Math.abs(f2)) * 1e-15; //threshold = 1e-100;
 		return Math.abs(f1 - f2) <= threshold;
+	},
+	/**
+	 * Check if f1 is equal, less or greater to f2.
+	 * Since float can not be stored exactly in computer, when abs(f1-f2) <= threshold,
+	 * this function will returns 0.
+	 * @param {Float} f1
+	 * @param {Float} f2
+	 * @param {Float} threshold If not set, a default value will be used.
+	 * @returns {Int}
+	 */
+	compareFloat: function(f1, f2, threshold)
+	{
+		return Kekule.NumUtils.isFloatEqual(f1, f2, threshold)? 0:
+			(f1 < f2)? -1: 1;
 	},
 
 	/**
