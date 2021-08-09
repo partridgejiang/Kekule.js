@@ -1,10 +1,10 @@
 describe('Test of some core data and functions of spectra module', function(){
 	it('Spectrum.SpectrumData class test', function(){
 		var variables = [
-			new Kekule.VarDefinition({'name': 'x', 'units': 'unitX'}),
-			new Kekule.VarDefinition({'name': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
-			new Kekule.VarDefinition({'name': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT}),
-			new Kekule.VarDefinition({'name': 'r', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
+			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
+			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'r', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
 
@@ -24,9 +24,9 @@ describe('Test of some core data and functions of spectra module', function(){
 
 	it('Kekule.Spectrum.ContinuousData class test', function(){
 		var variables = [
-			new Kekule.VarDefinition({'name': 'x', 'units': 'unitX'}),
-			new Kekule.VarDefinition({'name': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
-			new Kekule.VarDefinition({'name': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT})
+			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
+			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.ContinuousData(null, variables);
 		sData.setVarRange('x', 0, 10);
