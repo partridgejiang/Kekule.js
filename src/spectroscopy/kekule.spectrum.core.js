@@ -74,7 +74,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 				for (var j = 0, jj = list.length; j < jj; ++j)
 				{
 					var varDef = list[j];
-					result.push(varDef.getName());
+					result.push(varDef.getSymbol());
 				}
 				return result;
 			}})
@@ -373,7 +373,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	/** @private */
 	initialize: function(id, variables)
 	{
-		this.setPropStoreFieldValue('continousVarDetails', []);
+		//this.setPropStoreFieldValue('continousVarDetails', []);
 		this.tryApplySuper('initialize', [id, variables]);
 	},
 	/** @private */
@@ -384,7 +384,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	/** @ignore */
 	doFinalize: function()
 	{
-		this.setPropStoreFieldValue('continousVarDetails', null);
+		//this.setPropStoreFieldValue('continousVarDetails', null);
 		this.tryApplySuper('doFinalize');
 	},
 
@@ -428,7 +428,7 @@ Kekule.Spectroscopy.ContinuousData = Class.create(Kekule.Spectroscopy.SpectrumDa
 	clearVarRange: function(varIndexOrNameOrDef)
 	{
 		var varDef = this.getVariable(varIndexOrNameOrDef);
-		var info = varDef && varDef.getInfo();
+		var info = varDef.getInfo();
 		if (info && info.continuous)
 			info.continuous = false;
 		return this;

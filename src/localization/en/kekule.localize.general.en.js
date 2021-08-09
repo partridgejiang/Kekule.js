@@ -130,7 +130,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	JCAMP_MORE_THAN_TWO_NEST_LEVEL: 'Malformed JCAMP format data, block nested level should not exceed 2',
 	JCAMP_ASDF_FORMAT_ERROR_WITH_STR: 'Malformed JCAMP ASDF String: {0}',
 	JCAMP_DATA_TABLE_VALUE_CHECK_ERROR: 'JCAMP data table value check failed!',
-
+	JCAMP_DATA_TABLE_VALUE_FIRST_LAST_NOT_MATCH: 'JCAMP data table first/last values not match',
+	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR: 'Malformed JCAMP variable list format: {0}',
+	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED: 'Unsupported JCAMP variable list format: {0}',
 	/*
 	// render/2d/kekule.render.def2DRenderer.js
 	CAN_NOT_REMOVE_INDIVIDUAL_ELEM: 'Unable to remove individual element on context',

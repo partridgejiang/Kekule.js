@@ -42,8 +42,19 @@ Kekule.IO.Jcamp.Consts = {
 	UNKNOWN_VALUE: NaN,  // special value indicating an unknown variable value in data table
 
 	LABEL_DX_VERSION: 'JCAMP-DX',
-	LABEL_CS_VERSION: 'JCAMP-CS'
+	LABEL_DX_VERSION_2: 'JCAMPDX',
+	LABEL_CS_VERSION: 'JCAMP-CS',
+	LABEL_CS_VERSION_2: 'JCAMPCS',
 
+	DATA_FORMAT_GROUP_LEADING: '(',
+	DATA_FORMAT_GROUP_TAILING: ')',
+	DATA_FORMAT_LOOP: '..',
+	DATA_FORMAT_INC: '++',
+	DATA_FORMAT_SYMBOL_ASSIGNMENT: 'A',
+
+	DATA_VARLIST_FORMAT_XYDATA: 1,
+	DATA_VARLIST_FORMAT_XYPOINT: 2,
+	DATA_VARLIST_FORMAT_VAR_GROUPS: 3
 };
 var JcampConsts = Kekule.IO.Jcamp.Consts;
 
@@ -94,6 +105,19 @@ var JcampDigitType = Kekule.IO.Jcamp.DigitCharType;
  * @class
  */
 Kekule.IO.Jcamp.Utils = {
+	/**
+	 * Check if two float values are equal in JCAMP file.
+	 * @param {Number} v1
+	 * @param {Number} v2
+	 * @param {Number} allowedError
+	 * @returns {Int}
+	 */
+	compareFloat: function(v1, v2, allowedError)
+	{
+		if (Kekule.ObjUtils.isUnset(allowedError))
+			allowedError = Math.min(Math.abs(v1), Math.abs(v2)) * 0.001;  // TODO: current fixed to 0.1% of error
+		return Kekule.NumUtils.compareFloat(v1, v2, allowedError);
+	},
 	/**
 	 * Returns the core name and label type of LDR.
 	 * @param {String} labelName
@@ -368,6 +392,7 @@ Kekule.IO.Jcamp.Utils = {
 		var buffer = [];
 		var isNextContiLine = false;
 		var prevEndWithDif = false;
+		var abscissaInterval;
 
 		var appendDecodedBufferToResult = function(result, buffer, doAbscissaValueCheck, doOrdinateValueCheck)
 		{
@@ -393,8 +418,30 @@ Kekule.IO.Jcamp.Utils = {
 					}
 				}
 			}
+			if (doAbscissaValueCheck)
+				checkAbscissaInterval(buffer, result[result.length - 1]);
 			result.push(buffer);
 		}
+		var checkAbscissaInterval = function(currGroup, prevGroup)
+		{
+			if (currGroup && prevGroup)
+			{
+				var curr = currGroup[0];
+				var prev = prevGroup[0];
+				var currInterval = (curr - prev) / (prevGroup.length - 1);
+				// console.log('prev interval', abscissaInterval, 'curr', currInterval);
+				if (abscissaInterval)
+				{
+					//var allowedError = Math.max(Math.abs(currInterval)) * 0.001;  // TODO: current fixed to 0.1% of error
+					//if (!Kekule.NumUtils.isFloatEqual(currInterval, abscissaInterval, allowedError))
+					if (JcampUtils.compareFloat(currInterval, abscissaInterval) !== 0)
+						Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VALUE_CHECK_ERROR'));
+				}
+				else
+					abscissaInterval = currInterval;
+			}
+			return true;
+		};
 
 		for (var i = 0, l = strLines.length; i < l; ++i)
 		{
@@ -418,6 +465,69 @@ Kekule.IO.Jcamp.Utils = {
 		if (buffer.length)    // last unhandled buffer
 			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif);
 		return result;
+	},
+
+	/**
+	 * Returns details about variable name and format from the format text.
+	 * @param {String} formatText Such as (X++(Y..Y)), (XY..XY), etc.
+	 * @returns {Hash}
+	 */
+	getDataTableFormatDetails: function(formatText)
+	{
+		/*
+		##XYDATA: (X++(Y..Y))
+		##XYPOINTS: (XY..XY)
+		##PEAK TABLE: (XY..XY)
+		##PEAK ASSIGNMENTS: (XYA) or (XYWA)
+		*/
+		if (!formatText.startsWith(JcampConsts.DATA_FORMAT_GROUP_LEADING) && !formatText.endsWith(JcampConsts.DATA_FORMAT_GROUP_TAILING))
+			return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR', formatText));
+		else
+		{
+			var text = formatText.substr(JcampConsts.DATA_FORMAT_GROUP_LEADING.length, formatText.length - JcampConsts.DATA_FORMAT_GROUP_LEADING.length - JcampConsts.DATA_FORMAT_GROUP_TAILING.length);
+			// remove all internal spaces in text
+			text = text.replace(/\s/g, '');
+			// test XYData format
+			var patternXYData = /^([a-zA-Z])\+\+\(([a-zA-Z])\.\.([a-zA-Z])\)$/;
+			var matchResult = text.match(patternXYData);
+			if (matchResult)
+			{
+				if (matchResult[2] !== matchResult[3])  // Y..Y
+					return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR', formatText));
+				else
+					return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYDATA, 'varInc': matchResult[1], 'varLoop': matchResult[2], 'vars': [matchResult[1], matchResult[2]]};
+			}
+			else
+			{
+				var patternXYPoint = /^([a-zA-Z]+)\.\.([a-zA-Z]+)$/;
+				var matchResult = text.match(patternXYPoint);
+				if (matchResult)
+				{
+					if (matchResult[1] !== matchResult[2])  // XY..XY
+						return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR', formatText));
+					else
+					{
+						var vars = [];
+						for (var i = 0, l = matchResult[1].length; i < l; ++i)
+							vars.push(matchResult[1].charAt(i));
+						return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINT, 'vars': vars};
+					}
+				}
+				else
+				{
+					var patternGroupList = /^([a-zA-Z]+)$/;
+					var matchResult = text.match(patternGroupList);
+					if (matchResult)
+					{
+						var vars = [];
+						for (var i = 0, l = matchResult[1].length; i < l; ++i)
+							vars.push(matchResult[1].charAt(i));
+						return {'format': JcampConsts.DATA_VARLIST_FORMAT_VAR_GROUPS, 'vars': vars};
+					}
+				}
+			}
+			return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED', formatText));
+		}
 	},
 
 	// methods about JCAMP block object from analysis tree
@@ -445,6 +555,18 @@ Kekule.IO.Jcamp.Utils = {
 		return result;
 	},
 	/**
+	 * Returns the specified LDR of a block.
+	 * @param {Object} block
+	 * @param {String} labelName
+	 * @returns {Hash}
+	 * @private
+	 */
+	_getBlockLdr: function(block, labelName)
+	{
+		var index = block.ldrIndexes[labelName];
+		return (index >= 0)? block.ldrs[index]: null;
+	},
+	/**
 	 * Returns the meta info (type, format...) of a block.
 	 * @param {Object} block
 	 * @private
@@ -456,8 +578,8 @@ Kekule.IO.Jcamp.Utils = {
 		{
 			result = {
 				'blockType': block.blocks.length ? Jcamp.BlockType.LINK : Jcamp.BlockType.DATA,
-				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ? Jcamp.Format.DX :
-					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ? Jcamp.Format.CS :
+				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ||block.ldrIndexes[JcampConsts.LABEL_DX_VERSION_2] ? Jcamp.Format.DX :
+					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ||block.ldrIndexes[JcampConsts.LABEL_CS_VERSION_2] ? Jcamp.Format.CS :
 						null  // unknown format
 			};
 			block.meta = result;
@@ -690,7 +812,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	shortTimeParser: function(lines, options)
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
-		var parts = text.split('/');
+		var parts = text.split(':');
 		return {'hour': parseInt(parts[0]) || 0, 'minute': parseInt(parts[1]) || 0, 'second': parseInt(parts[2]) || 0};
 	},
 	longDateParser: function(lines, options)
@@ -726,7 +848,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		// var szone = (parts[2] || '').trim();
 
 		//console.log(year, month, day, hour, minute, second, millisecond);
-		return new Date(year, month, day, hour, minute, second, millisecond);
+		return new Date(year, month - 1, day, hour, minute, second, millisecond);  // note month is 0-based
 	},
 
 	dataTableParser: function(lines, options)
@@ -754,6 +876,7 @@ JcampLdrValueParser.registerParser(null, JValueType.STRING, JcampLdrValueParser.
 JcampLdrValueParser.registerParser(null, JValueType.SHORT_DATE, JcampLdrValueParser.shortDateParser);
 JcampLdrValueParser.registerParser(null, JValueType.SHORT_TIME, JcampLdrValueParser.shortTimeParser);
 JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParser.longDateParser);
+JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_ASDF, JcampLdrValueParser.xyDataTableParser);
 
 
 /**
@@ -797,13 +920,6 @@ Kekule.IO.Jcamp.BlockReaderManager = {
 };
 var jcampBlockReaderManager = Kekule.IO.Jcamp.BlockReaderManager;
 
-Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
-/** @lends Kekule.IO.Jcamp.BlockReader# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.IO.Jcamp.BlockReader',
-});
-
 /**
  * Base reader for block of JCAMP document tree.
  * The input data is a analysis tree object.
@@ -836,12 +952,16 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	_initLdrHandlers: function()
 	{
 		var map = this.getLdrHandlerMap();
-		map['_default'] = function(ldr, targetChemObj) {
+		map['_default'] = function(ldr, block, targetChemObj) {
 			targetChemObj.setInfoValue(ldr.labelName, JcampLdrValueParser.parseValue(ldr));
 		};
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
+		map['DATE'] = this.doStoreDateTimeLdr;
+		map['TIME'] = this.doStoreDateTimeLdr;
+		map['LONGDATE'] = this.doStoreDateTimeLdr;
+		return map;
 	},
 	/** @private */
 	_getBlockMeta: function(block)
@@ -888,18 +1008,65 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	*/
 
 	/** @private */
-	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, chemObj)
+	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, block, chemObj)
 	{
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
 		chemObj.setInfoValue(infoFieldName, ldrValue);
 	},
 	/** @private */
-	doStoreLdrToChemObjProp: function(propName, ldr, chemObj)
+	doStoreLdrToChemObjProp: function(propName, ldr, block, chemObj)
 	{
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
 		chemObj.setCascadePropValue([propName], ldrValue);
 	},
+	/** @private */
+	doStoreDateTimeLdr: function(ldr, block, chemObj)
+	{
+		var infoFieldName = 'date';
+		var infoFieldValue;
+		var labelName = ldr.labelName;
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		if (labelName === 'LONGDATE')
+		{
+			infoFieldValue = ldrValue;
+		}
+		else if (labelName === 'DATE')
+		{
+			infoFieldValue = new Date(ldrValue.year, ldrValue.month - 1, ldrValue.day);  // note month is 0-based
+			var timeLdr = JcampUtils._getBlockLdr(block, 'TIME');
+			if (timeLdr)
+			{
+				var timeLdrValue = JcampLdrValueParser.parseValue(timeLdr);
+				infoFieldValue.setHours(timeLdrValue.hour, timeLdrValue.minute, timeLdrValue.second);
+			}
+		}
+		else if (labelName === 'TIME')
+		{
+			// bypass the TIME ldr, since it is processed in DATE
+		}
+		if (infoFieldValue)
+			chemObj.setInfoValue(infoFieldName, infoFieldValue);
+	},
 
+	/**
+	 * Returns an array of names of LDRs which need to be handled after other normal LDRs (e.g., data table).
+	 * Descendants may override this method.
+	 * @returns {Array}
+	 * @private
+	 */
+	getPendingLdrNames: function()
+	{
+		return [];
+	},
+	/**
+	 * Returns an array of names of LDRs which need not to be handled.
+	 * Descendants may override this method.
+	 * @returns {Array}
+	 */
+	getIgnoredLdrNames: function()
+	{
+		return [];
+	},
 	/** @private */
 	processLdr: function(block, ldr, chemObj)
 	{
@@ -912,7 +1079,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		var handlerMap = this.getLdrHandlerMap();
 		var handler = handlerMap[labelName] || handlerMap['_default'];
 		if (handler)
-		  handler(ldr, chemObj);
+		  handler(ldr, block, chemObj);
 	},
 	/**
 	 * Process a block in the analysis tree.
@@ -925,10 +1092,25 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	{
 		if (chemObj)
 		{
+			var ignoredLdrNames = this.getIgnoredLdrNames() || [];
+			var pendingLdrNames = this.getPendingLdrNames() || [];
+			var pendingLdrs = [];
 			// LDRs of block
 			for (var i = 0, l = block.ldrs.length; i < l; ++i)
 			{
 				var ldr = block.ldrs[i];
+				if (ignoredLdrNames.indexOf(ldr.labelName) >= 0)
+					continue;
+				if (pendingLdrNames.indexOf(ldr.labelName) >= 0)
+				{
+					pendingLdrs.push(ldr);
+					continue;
+				}
+				this.processLdr(block, ldr, chemObj);
+			}
+			for (var i = 0, l = pendingLdrs.length; i < l; ++i)
+			{
+				var ldr = pendingLdrs[i];
 				this.processLdr(block, ldr, chemObj);
 			}
 		}
@@ -995,8 +1177,17 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 	/** @ignore */
 	doReadBlock: function(block, options)
 	{
-		var result = this.tryApplySuper('doReadBlock', [block]);
+		var result;
+		if (block.blocks.length <= 0)  // less than 2 child blocks, no need to create object list
+		{
+			result = null;
+		}
+		else  // create obj list
+		{
+			result = this.tryApplySuper('doReadBlock', [block]);
+		}
 		// handle child blocks
+		var childObjs = [];
 		for (var i = 0, l = block.blocks.length; i < l; ++i)
 		{
 			var childBlock = block.blocks[i];
@@ -1009,7 +1200,12 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 				{
 					var childObj = reader.readData(childBlock, options);
 					if (childObj)
-						result.appendChild(childObj);
+					{
+						if (!result)  // only one child block, returns this childObj directly
+							result = childObj;
+						else
+							result.appendChild(childObj);
+					}
 				}
 				finally
 				{
@@ -1200,9 +1396,9 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		var readerClass = jcampBlockReaderManager.getReaderClass(meta.blockType, meta.format);
 		if (readerClass)
 		{
+			var reader = new readerClass();
 			try
 			{
-				var reader = new readerClass();
 				result = reader.readData(rootBlock, null, null, options);
 			}
 			finally
