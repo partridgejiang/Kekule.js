@@ -4075,6 +4075,37 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 					return r;
 				}
 			});
+	},
+	/**
+	 * Returns all keys in {@link Kekule.ChemObject#info} property.
+	 * @returns {Array}
+	 */
+	getInfoKeys: function()
+	{
+		return this.getInfo()? Kekule.ObjUtils.getOwnedFieldNames(this.getInfo()): [];
+	},
+	/**
+	 * Get item value from info hash.
+	 * @param key Key of information item.
+	 */
+	getInfoValue: function(key)
+	{
+		return this.getInfo()? this.getInfo()[key]: null;
+	},
+	/**
+	 * Set an item value in info hash. If key already exists, its value will be overwritten.
+	 * @param key Key of information item.
+	 * @param value Value of information item.
+	 */
+	setInfoValue: function(key, value)
+	{
+		this.doGetInfo(true)[key] = value;
+		this.notifyInfoChange();
+	},
+	/** @private */
+	notifyInfoChange: function()
+	{
+		this.notifyPropSet('info', this.getPropStoreFieldValue('info'));
 	}
 });
 
