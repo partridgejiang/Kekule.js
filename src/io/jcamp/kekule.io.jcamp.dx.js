@@ -185,6 +185,15 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		{
 			result = this._createXyDataFormatSpectrumData(formatDetail, data, varinfos);
 		}
+		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS)
+		{
+			result = this._createXyPointsFormatSpectrumData(formatDetail, data, varinfos);
+		}
+		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)
+		{
+			result = this._createVarGroupFormatSpectrumData(formatDetail, data, varinfos);
+		}
+		//console.log('data', formatDetail, varinfos, result);
 		return result;
 	},
 	/** @private */
@@ -225,6 +234,23 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			}
 		}
 		//console.log(varDefinitions, result);
+		return result;
+	},
+	/** @private */
+	_createXyPointsFormatSpectrumData: function(formatDetail, data, varInfos)
+	{
+		return this._createVarGroupFormatSpectrumData(formatDetail, data, varInfos)
+	},
+	/** @private */
+	_createVarGroupFormatSpectrumData: function(formatDetail, data, varInfos)
+	{
+		var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
+		var result = new Kekule.Spectroscopy.DiscreteData(null, varDefinitions);
+		for (var i = 0, l = data.length; i < l; ++i)
+		{
+			// each item is a data group, containing values of all variables
+			result.append(data[i]);
+		}
 		return result;
 	},
 	/** @private */

@@ -53,7 +53,7 @@ Kekule.IO.Jcamp.Consts = {
 	DATA_FORMAT_SYMBOL_ASSIGNMENT: 'A',
 
 	DATA_VARLIST_FORMAT_XYDATA: 1,
-	DATA_VARLIST_FORMAT_XYPOINT: 2,
+	DATA_VARLIST_FORMAT_XYPOINTS: 2,
 	DATA_VARLIST_FORMAT_VAR_GROUPS: 3,
 
 	GROUPED_VALUE_GROUP_DELIMITER: /[;\s]/g,
@@ -680,7 +680,7 @@ Kekule.IO.Jcamp.Utils = {
 						var vars = [];
 						for (var i = 0, l = matchResult[1].length; i < l; ++i)
 							vars.push(matchResult[1].charAt(i));
-						return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINT, 'vars': vars};
+						return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS, 'vars': vars};
 					}
 				}
 				else
@@ -767,7 +767,8 @@ Kekule.IO.Jcamp.ValueType = {
 	AFFN: 1,         // single line AFFN value
 	ASDF: 2,
 	AFFN_ASDF: 3,
-	MULTILINE_AFFN_ASDF: 5,   // AFFN or ASDF in multiple lines
+	MULTILINE_AFFN_ASDF: 5,   // AFFN or ASDF in multiple lines, e.g. in XYDATA
+	MULTILINE_AFFN_GROUP: 6,  // AFFN/string group, e.g. in XYPOINTS or PEAKTABLE
 	STRING: 10,
 	SHORT_DATE: 21,  // date string in format YY/MM/DD
 	SHORT_TIME: 22,  // time string in format hh:mm:ss
@@ -839,7 +840,14 @@ _createLabelTypeInfos([
 	['YFACTOR', JValueType.AFFN],
 	['NPOINTS', JValueType.AFFN],       // number of components
 	['RESOLUTION', JValueType.STRING],
+
 	['XYDATA', JValueType.MULTILINE_AFFN_ASDF],
+	['XYPOINTS', JValueType.MULTILINE_AFFN_GROUP],
+	['PEAK TABLE', JValueType.MULTILINE_AFFN_GROUP],
+	['PEAKTABLE', JValueType.MULTILINE_AFFN_GROUP],
+	['PEAK ASSIGNMENTS', JValueType.MULTILINE_AFFN_GROUP],
+	['PEAKASSIGNMENTS', JValueType.MULTILINE_AFFN_GROUP],
+
 	['CLASS', JValueType.STRING],       // Coblentz Class of the spectrum (1,2,3, or 4) and the IUPAC Class of digital representation (A, B, C).3
 	['ORIGIN', JValueType.STRING],      // Name of organization, address, telephone number, name of individual contributor, etc.,
 	['OWNER', JValueType.STRING],       // Name of owner of a proprietary spectrum
@@ -1036,6 +1044,14 @@ Kekule.IO.Jcamp.LdrValueParser = {
 			'values': JcampUtils.decodeAsdfTableLines(lines.slice(1), options)         // values are grouped in lines,
 		};
 		return result;
+	},
+	groupedDataTableParser: function(lines, options)
+	{
+		var result = {
+			'format': lines[0],
+			'values': JcampUtils.decodeAffnGroupTableLines(lines.slice(1), options)
+		}
+		return result;
 	}
 }
 var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParser;
@@ -1047,6 +1063,7 @@ JcampLdrValueParser.registerParser(null, JValueType.SHORT_DATE, JcampLdrValuePar
 JcampLdrValueParser.registerParser(null, JValueType.SHORT_TIME, JcampLdrValueParser.shortTimeParser);
 JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParser.longDateParser);
 JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_ASDF, JcampLdrValueParser.xyDataTableParser);
+JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_GROUP, JcampLdrValueParser.groupedDataTableParser);
 
 
 /**
