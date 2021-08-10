@@ -54,7 +54,14 @@ Kekule.IO.Jcamp.Consts = {
 
 	DATA_VARLIST_FORMAT_XYDATA: 1,
 	DATA_VARLIST_FORMAT_XYPOINT: 2,
-	DATA_VARLIST_FORMAT_VAR_GROUPS: 3
+	DATA_VARLIST_FORMAT_VAR_GROUPS: 3,
+
+	GROUPED_VALUE_GROUP_DELIMITER: /[;\s]/g,
+	GROUPED_VALUE_ITEM_DELIMITER: /,/g,
+	GROUPED_VALUE_STR_ENCLOSER_LEADING: '<',
+	GROUPED_VALUE_STR_ENCLOSER_TAILING: '>',
+	GROUPED_VALUE_EXPLICIT_GROUP_LEADING: '(',
+	GROUPED_VALUE_EXPLICIT_GROUP_TAILING: ')'
 };
 var JcampConsts = Kekule.IO.Jcamp.Consts;
 
@@ -464,6 +471,169 @@ Kekule.IO.Jcamp.Utils = {
 		}
 		if (buffer.length)    // last unhandled buffer
 			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif);
+		return result;
+	},
+
+	/**
+	 * Convert a line of data string in XYPOINTS/PEAK TABLE LDR.
+	 * Usually the values are divided into groups with delimiter semicolons or space,
+	 * and each item in a group is an AFFN value or string delimited by comma.
+	 * @param {String} str
+	 * @returns {Array}
+	 */
+	decodeAffnGroupLine: function(str)
+	{
+		var CharTypes = {
+			DIGIT: 1,
+			STRING: 2,
+			ENCLOSED_STRING: 3,
+			STR_ENCLOSER_LEADING: 11,
+			STR_ENCLOSER_TAILING: 12,
+			ITEM_DELIMITER: 21,
+			GROUP_DELIMITER: 22,
+			BLANK: 30,
+			OTHER: 40
+		};
+
+		var input = str.trim();
+		// if input surrounded with '()' (e.g., in peak assignment), removes them first
+		if (input.startsWith(JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_LEADING) && input.endsWith(JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_TAILING))
+			input = input.substr(JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_LEADING.length, input.length - JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_LEADING.length - JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_TAILING.length);
+
+		var currToken = {
+			'tokenType': null,
+			'text': ''
+		};
+		var result = [];
+		var currGroup = [];
+
+		var parseCurrToken = function(tokenStr, tokenType)
+		{
+			return tokenStr?
+				((tokenType === CharTypes.DIGIT)? parseFloat(tokenStr): tokenStr):
+				undefined;
+		};
+		var parseAndPushCurrTokenToGroup = function(allowEmpty)
+		{
+			var v;
+			if (allowEmpty || currToken.text)
+			{
+				v = parseCurrToken(currToken.text, currToken.tokenType);
+				currGroup.push(v);
+			}
+			// clear curr token info
+			currToken.tokenType = null;
+			currToken.text = '';
+			return v;
+		};
+		var pushCurrGroup = function()
+		{
+			if (currGroup.length)
+				result.push(currGroup);
+			currGroup = [];
+		};
+
+		var getCharType = function(c, insideEnclosedString, insideExplicitGroup)
+		{
+			if (insideEnclosedString)
+				return c.match(JcampConsts.GROUPED_VALUE_STR_ENCLOSER_TAILING)? CharTypes.STR_ENCLOSER_TAILING: CharTypes.STRING;
+			else
+				return (c >= '0' && c <= '9' || c === '.')? CharTypes.DIGIT:
+					c.match(/\s/)? CharTypes.BLANK:
+					c.match(JcampConsts.GROUPED_VALUE_STR_ENCLOSER_LEADING)? CharTypes.STR_ENCLOSER_LEADING:
+					c.match(JcampConsts.GROUPED_VALUE_STR_ENCLOSER_TAILING)? CharTypes.STR_ENCLOSER_TAILING:
+					c.match(JcampConsts.GROUPED_VALUE_GROUP_DELIMITER)? (insideExplicitGroup? CharTypes.ITEM_DELIMITER: CharTypes.GROUP_DELIMITER):
+					c.match(JcampConsts.GROUPED_VALUE_ITEM_DELIMITER)? CharTypes.ITEM_DELIMITER:
+					CharTypes.STRING;
+		};
+
+		var prevIsBlankChar = false;
+		for (var i = 0, l = input.length; i < l; ++i)
+		{
+			var c = input.charAt(i);
+			var charType = getCharType(c, currToken.tokenType === CharTypes.ENCLOSED_STRING);
+
+			if (charType === CharTypes.BLANK)
+			{
+				if (currToken.tokenType === CharTypes.ENCLOSED_STRING)
+				{
+					currToken.text += c;
+					charType = currToken.tokenType;
+				}
+				else  // pending decision until next token char
+				{
+
+				}
+			}
+
+			if (charType < CharTypes.STR_ENCLOSER_LEADING)  // normal chars
+			{
+				if (prevIsBlankChar && currToken.text)  // blank between normal tokens, should be group delimiter?
+				{
+					parseAndPushCurrTokenToGroup();
+					pushCurrGroup();
+				}
+
+				if (!currToken.tokenType)
+					currToken.tokenType = charType;
+				else
+					currToken.tokenType = Math.max(currToken.tokenType, charType);  // if both string and digit type ocurrs, the token type shoud be string
+				currToken.text += c;
+			}
+			else if (charType < CharTypes.ITEM_DELIMITER)  // < or >
+			{
+				if (charType === CharTypes.STR_ENCLOSER_LEADING)
+				{
+					if (prevIsBlankChar && currToken.text)  // blank before '<', should be group delimiter?
+					{
+						parseAndPushCurrTokenToGroup();
+						pushCurrGroup();
+					}
+					else
+						parseAndPushCurrTokenToGroup();
+					currToken.tokenType = CharTypes.ENCLOSED_STRING;
+				}
+				else // if (charType === CharTypes.STR_ENCLOSER_TAILING)
+				{
+					//parseAndPushCurrTokenToGroup(true);
+					currToken.tokenType = CharTypes.STRING;
+				}
+			}
+			else  // delimiter
+			{
+				if (charType === CharTypes.ITEM_DELIMITER)
+				{
+					parseAndPushCurrTokenToGroup(true);
+				}
+				else if (charType === CharTypes.GROUP_DELIMITER)
+				{
+					parseAndPushCurrTokenToGroup(true);
+					pushCurrGroup();
+				}
+			}
+			prevIsBlankChar = (charType === CharTypes.BLANK);
+		}
+		// at last the remaining token
+		parseAndPushCurrTokenToGroup();
+		pushCurrGroup();
+		return result;
+	},
+	/**
+	 * Parse lines of data string in XYPOINTS/PEAK TABLE LDR.
+	 * Usually the values are divided into groups with delimiter semicolons or space,
+	 * and each item in a group is an AFFN value or string delimited by comma.
+	 * @param {Array} lines
+	 * @param {Hash} options Unused now.
+	 * @returns {Array}
+	 */
+	decodeAffnGroupTableLines: function(lines, options)
+	{
+		var result = [];
+		for (var i = 0, l = lines.length; i < l; ++i)
+		{
+			var line = lines[i];
+			result = result.concat(JcampUtils.decodeAffnGroupLine(line));
+		}
 		return result;
 	},
 

@@ -104,6 +104,8 @@ describe('Test of some core data and functions of spectra module', function(){
 	{
 		if (isNaN(i1) && isNaN(i2))
 			return 0;
+		else if (i1 === undefined && i2 === undefined)
+			return 0;
 		else
 			return (Kekule.NumUtils.isFloatEqual(i1, i2))? 0:
 				(i1 < i2)? -1: 1;
@@ -119,6 +121,37 @@ describe('Test of some core data and functions of spectra module', function(){
 				//console.log('expect to equal ', i, decodeValue, testCase.value, decodeValue.__$lastValueType__);
 				expect(Kekule.ArrayUtils.compare(decodeValue, testCase.value, asdfDecodeItemCompareFunc) === 0).toEqual(true);
 				expect(decodeValue.__$lastValueType__).toEqual(testCase.lastValueType);
+			});
+		})(testCase);
+	}
+
+	var affnGroupDecodeTestCases = [
+		{src: '1 , 2 ; 3,4', 'value': [[1,2], [3,4]]},
+		{src: '1 , 2 ;, ; 3,4', 'value': [[1,2], [undefined, undefined], [3,4]]},
+		{src: '50, 2.52; 51, 9.32; 52, 7.42; 53, 1.30; 54, 5.46; 61, 4.07', 'value': [[50, 2.52], [51, 9.32], [52, 7.42], [53, 1.30], [54, 5.46], [61, 4.07]]},
+		{src: '68, 1.22  77, 1.89; 79, 1.63  93, 2.13; 94, 100.00; 95, 8.09', 'value': [[68, 1.22], [77, 1.89], [79, 1.63], [93, 2.13], [94, 100.00], [95, 8.09]]},
+		{src: '1 , 2 ; 3,4 astring,bstring', 'value': [[1,2], [3,4], ['astring', 'bstring']]},
+		{src: '27.00, 1.0,, < 7>', 'value': [[27, 1, undefined, ' 7']]},
+		{src: '125.70, 1.0,, <17>; 2, < 6>,3', 'value': [[125.7, 1, undefined, '17'], [2, ' 6',3]]},
+		{src: '125.70, 1.0,, <17 6,5 >; 2, < 6;1>,3', 'value': [[125.7, 1, undefined, '17 6,5 '], [2, ' 6;1',3]]},
+		{src: ' (27.00, 1.0,, < 7>)  ', 'value': [[27, 1, undefined, ' 7']]},
+	];
+	var affnGroupDecodeItemCompareFunc = function(i1, i2)
+	{
+		var result = Kekule.ArrayUtils.compare(i1, i2, asdfDecodeItemCompareFunc);
+		//console.log('compare in array', i1, i2, result);
+		return result;
+	}
+	for (var i = 0, l = affnGroupDecodeTestCases.length; i < l; ++i)
+	{
+		var testCase = affnGroupDecodeTestCases[i];
+		(function _test(testCase){
+			it('Kekule.IO.JcampUtils AFFN group decode test: ' + testCase.src, function(){
+				var decodeValue = Kekule.IO.Jcamp.Utils.decodeAffnGroupLine(testCase.src);
+				//console.log('expect to equal ', i, decodeValue, testCase.value);
+				var compareResult = Kekule.ArrayUtils.compare(decodeValue, testCase.value, affnGroupDecodeItemCompareFunc);
+				console.log('expect to equal ', i, decodeValue, testCase.value, compareResult);
+				expect(compareResult === 0).toEqual(true);
 			});
 		})(testCase);
 	}
