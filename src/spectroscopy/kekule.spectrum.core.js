@@ -17,40 +17,92 @@ Kekule.Spectroscopy = {};
  */
 Kekule.Spectroscopy.DataContinuity = {
 	/** Value points are discrete, e.g. in MS peak table. */
-	DISCRETE: 0,
+	DISCRETE: 2,
 	/** Value points are continuous, e.g. in IR data table. */
 	CONTINUOUS: 1
 };
 
-Kekule.Spectroscopy.DataStorageType = {
-
+/**
+ * Some util methods about spectroscopy.
+ * @class
+ */
+Kekule.Spectroscopy.Utils = {
+	/**
+	 * Returns the first/last value of a continuous variable.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @returns {Hash} Hash of {fromValue, toValue}
+	 */
+	getVarRange: function(varDef)
+	{
+		var info = varDef && varDef.getInfo();
+		if (info)
+		{
+			if (info.continuous)
+			{
+				//var count = this.getDateItemCount();
+				return {'fromValue': info.fromValue, 'toValue': info.toValue /*, 'interval': (info.lastValue - info.firstValue) / count */ };
+			}
+		}
+		return null;
+	},
+	/**
+	 * Set the first/last value of a variable and mark it as a continuous one.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Number} fromValue
+	 * @param {Number} toValue
+	 */
+	setVarRange: function(varDef, fromValue, toValue)
+	{
+		var info = varDef && varDef.getInfo(true);
+		info.continuous = true;
+		info.fromValue = fromValue;
+		info.toValue = toValue;
+	},
+	/**
+	 * Remove the continuous information of a variable.
+	 * @param {Kekule.VarDefinition} varDef
+	 */
+	clearVarRange: function(varDef)
+	{
+		var info = varDef.getInfo();
+		if (info && info.continuous)
+			info.continuous = false;
+		return this;
+	}
 };
 
 /**
- * The base spectrum data class.
- * The concrete data can be stored in different forms, implemented in different descandant classes.
+ * Represent part of data in a spectrum.
  * @class
- * @augments Kekule.ChemObject
  *
  * @param {String} id
- * @param {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ * @param {Kekule.Spectroscopy.SpectrumData} parent Parent spectrum data object.
  *
+ * @property {Kekule.Spectroscopy.SpectrumData} parent Parent spectrum data object.
  * @property {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ * @property {Array} varSymbols Array of variable symbols such as ['X', 'Y'].
+ * @property {Int} continuity
  */
-Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
-/** @lends Kekule.Spectroscopy.SpectrumData# */
+Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumDataSection# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumData',
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumDataSection',
 	/** @private */
-	initialize: function(id, variables)
+	initialize: function(id, parent)
 	{
 		this.setPropStoreFieldValue('dataItems', []);
+		this.setPropStoreFieldValue('parent', parent);
 		this.tryApplySuper('initialize', [id]);
-		this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
+		//this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
 	},
 	doFinalize: function()
 	{
+		if (this.getParent() && this.getParent().removeChild)
+		{
+			// remove item in parent first
+			this.getParent().removeChild(this);
+		}
 		this.clear();
 		var variables = this.getVariables();
 		for (var i = 0, l = variables.length; i < l; ++i)
@@ -63,10 +115,8 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('variables', {'dataType': DataType.ARRAY, 'setter': null});
-		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
-		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
-		// private, cache all variable names
+		this.defineProp('parent', {'dataType': 'Kekule.MapEx', 'setter': null});
+		this.defineProp('variables', {'dataType': DataType.ARRAY});
 		this.defineProp('varSymbols', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE,
 			'getter': function() {
 				var result = [];
@@ -77,18 +127,76 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 					result.push(varDef.getSymbol());
 				}
 				return result;
-			}})
+			}});
+		this.defineProp('continuity', {'dataType': DataType.INT, 'enumSource': Kekule.Spectroscopy.DataContinuity});
+		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
+		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
 	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setContinuity(Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+	},
+
+	/**
+	 * Returns the first/last value of a continuous variable.
+	 * @param {Variant} varNameOrIndexOrDef
+	 * @returns {Hash} Hash of {firstValue, lastValue}
+	 */
+	getVarRange: function(varIndexOrNameOrDef)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		return Kekule.Spectroscopy.Utils.getVarRange(varDef);
+	},
+	/**
+	 * Set the first/last value of a variable and mark it as a continuous one.
+	 * @param {Variant} varNameOrIndexOrDef
+	 * @param {Number} fromValue
+	 * @param {Number} toValue
+	 */
+	setVarRange: function(varIndexOrNameOrDef, fromValue, toValue)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		Kekule.Spectroscopy.Utils.setVarRange(varDef, fromValue, toValue);
+		return this;
+	},
+	/**
+	 * Remove the continuous information of a variable.
+	 * @param {Variant} varIndexOrNameOrDef
+	 */
+	clearVarRange: function(varIndexOrNameOrDef)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		Kekule.Spectroscopy.Utils.clearVarRange(varDef);
+		return this;
+	},
+	/**
+	 * Returns the names of continuous variable.
+	 * @returns {Array}
+	 */
+	getContinuousVarNames: function()
+	{
+		var result = [];
+		var varDefs = this.getVariables();
+		for (var i = 0, l = varDefs.length; i < l; ++i)
+		{
+			if (this.getVarRange(i))
+				result.push(varDefs[i].getName());
+		}
+		return result;
+	},
+
 	/** @private */
 	_itemHashToArray: function(hashValue)
 	{
 		if (!hashValue)
 			return null;
 		var result = [];
-		var varSymbols = this.getVarSymbols();
-		for (var i = 0, l = varSymbols.length; i < l; ++i)
+		var variables = this.getVariables();
+		for (var i = 0, l = variables.length; i < l; ++i)
 		{
-			result.push(hashValue[varSymbols[i]]);
+			result.push(hashValue[variables[i].getSymbol()]);
 		}
 		return result;
 	},
@@ -98,10 +206,10 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		if (!arrayValue)
 			return null;
 		var result = {};
-		var varSymbols = this.getVarSymbols();
-		for (var i = 0, l = Math.min(varSymbols.length, arrayValue.length); i < l; ++i)
+		var variables = this.getVariables();
+		for (var i = 0, l = Math.min(variables.length, arrayValue.length); i < l; ++i)
 		{
-			result[varSymbols[i]] = arrayValue[i];
+			result[variables[i].getSymbol()] = arrayValue[i];
 		}
 		return result;
 	},
@@ -179,8 +287,6 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		return this;
 	},
 
-	//appendVarDefinition: function()
-
 	/**
 	 * Sort all data items.
 	 * @param {Func} func Optional, func(hash1, hash2). If not set, data items will be sorted by default method.
@@ -198,7 +304,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * Returns the count of data items.
 	 * @returns {Int}
 	 */
-	getDataItemCount: function()
+	getDataCount: function()
 	{
 		return this.getDataItems().length;
 	},
@@ -215,7 +321,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * If it is an array, the values in array will automatically mapped to independent and dependent vars.
 	 * @param {Variant} item
 	 */
-	append: function(item)
+	appendData: function(item)
 	{
 		var d;
 		if (!DataType.isArrayValue(item))  // is hash value, convert it to array first
@@ -233,21 +339,41 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * Remove a data item.
 	 * @param {Array} item
 	 */
-	remove: function(item)
+	removeData: function(item)
 	{
 		var items = this.getDataItems();
 		var index = items.indexOf(item);
 		return this.removeDataItemAt(index);
 	},
 	/** @private */
-	removeDataItemAt: function(index)
+	removeDataAt: function(index)
 	{
 		return this.getDataItems().splice(index, 1);
 	},
 	/** @private */
 	getRawValueAt: function(index)
 	{
-		return AU.clone(this.getDataItems()[index]);
+		var result = AU.clone(this.getDataItems()[index]);
+		if (this.getContinuity() === Kekule.Spectroscopy.DataContinuity.CONTINUOUS)
+		{
+			var dataIntervalCount = this.getDataCount() - 1;
+			// check if there are omitted values
+			for (var i = 0, l = result.length; i < l; ++i)
+			{
+				var v = result[i];
+				if (DataType.isUndefinedValue(v))  // maybe omitted? check if it is a continous variable
+				{
+					var range = this.getVarRange(i);
+					if (range)
+					{
+						v = (dataIntervalCount > 1)? ((index / dataIntervalCount) * (range.toValue - range.fromValue) + range.fromValue): range.fromValue;
+						//console.log('adjusted v', v, range);
+					}
+				}
+				result[i] = v;
+			}
+		}
+		return result;
 	},
 	/** @private */
 	getHashValueAt: function(index)
@@ -329,6 +455,466 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 		if (iterator)
 		{
 			var dataItems = this.getDataItems();
+			var index = 0;
+			var nextItem = iterator.next();
+			while (!nextItem.done)
+			{
+				func.apply(thisArg, [nextItem.value, index]);
+				++index;
+				nextItem = iterator.next();
+			}
+		}
+		return this;
+	}
+});
+
+/**
+ * The base spectrum data class.
+ * The concrete data can be stored in different forms, implemented in different descendant classes.
+ * @class
+ * @augments Kekule.ChemObject
+ *
+ * @param {String} id
+ * @param {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ *
+ * @property {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ *   This array is calculated from the child data sections
+ * @property {Kekule.ChemObjList} sections Child data sections.
+ * @property {Kekule.Spectroscopy.SpectrumData} activeSection Active data section to read/write data.
+ */
+Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumData# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumData',
+	/** @private */
+	initialize: function(id, variables)
+	{
+		//this.setPropStoreFieldValue('dataItems', []);
+		this.tryApplySuper('initialize', [id]);
+		//this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
+		var sections = new Kekule.ChemObjList(null, Kekule.Spectroscopy.SpectrumDataSection, true);
+		sections.setParent(this);
+		this.setPropStoreFieldValue('sections', sections);
+		this.createSection(variables);  // create a default section
+	},
+	doFinalize: function()
+	{
+		//this.clear();
+		this.getSections().finalize();
+		var variables = this.getVariables();
+		for (var i = 0, l = variables.length; i < l; ++i)
+		{
+			variables[i].finalize();
+		}
+		this.setPropStoreFieldValue('variables', null);
+		this.tryApplySuper('doFinalize');
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('sections', {'dataType': 'Kekule.ChemObjList', 'setter': null});
+		this.defineProp('activeSectionIndex', {'dataType': DataType.INT,
+			'getter': function()
+			{
+				if (this.getSectionCount() <= 0)
+					return -1;
+				else if (this.getSectionCount() === 1)  // only one section, it should be activated by default
+					return 0;
+			},
+			'setter': function(value)
+			{
+			  if (value >= 0 && value <= this.getSectionCount())
+					this.setPropStoreFieldValue('activeSectionIndex', value);
+			}
+		});
+		this.defineProp('activeSection', {'dataType': 'Kekule.Spectroscopy.SpectrumDataSection', 'serializable': false,
+			'getter': function()
+			{
+				return this.getSectionAt(this.getActiveSectionIndex());
+			},
+			'setter': function(value)
+			{
+				this.setActiveSectionIndex(this.indexOfSection(value));
+			}
+		});
+		this.defineProp('variables', {'dataType': DataType.ARRAY, 'setter': null, 'serializable': false,
+			'getter': function()
+			{
+				var result = [];
+				for (var i = 0, l = this.getSectionCount(); i < l; ++i)
+				{
+					var vars = this.getSectionAt(i).getVariables();
+					AU.pushUnique(result, vars);
+				}
+				return result;
+			}
+		});
+		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
+		//this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
+		// private, cache all variable names
+		this.defineProp('varSymbols', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE,
+			'getter': function() {
+				var result = [];
+				var list = this.getVariables();
+				for (var j = 0, jj = list.length; j < jj; ++j)
+				{
+					var varDef = list[j];
+					result.push(varDef.getSymbol());
+				}
+				return result;
+			}});
+		this.defineProp('continuity', {'dataType': DataType.INT, 'enumSource': Kekule.Spectroscopy.DataContinuity});
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setContinuity(Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+	},
+
+	/** @ignore */
+	getChildHolder: function()
+	{
+		return this.getSections();
+	},
+
+	/**
+	 * Create and append a new {@link Kekule.Spectroscopy.SpectrumDataSection}.
+	 * @param {Array} variables
+	 * @param {Int} continuity
+	 * @returns {Kekule.Spectroscopy.SpectrumDataSection}
+	 */
+	createSection: function(variables, continuity)
+	{
+		var result = new Kekule.Spectroscopy.SpectrumDataSection(null, this);
+		result.setVariables(variables);
+		result.setContinuity(continuity || this.getContinuity());
+		this.getSections().appendChild(result);
+		return result;
+	},
+	/**
+	 * Remove all data sections.
+	 */
+	clearSection: function()
+	{
+		var sections = this.getChildren();
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			sections[i].clear();
+			sections[i].setParent(null);
+			sections[i].finalize();
+		}
+		this.getSections().clear();
+	},
+	/**
+	 * Get count of child data sections.
+	 * @returns {Int}
+	 */
+	getSectionCount: function()
+	{
+		return this.getChildCount();
+	},
+	/**
+	 * Get child data sectionb at index.
+	 * @param {Int} index
+	 * @returns {Kekule.Spectroscopy.SpectrumDataSection}
+	 */
+	getSectionAt: function(index)
+	{
+		return this.getChildAt(index);
+	},
+	/**
+	 * Get the index of child section in children list.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @returns {Int} Index of section or -1 when not found.
+	 */
+	indexOfSection: function(section)
+	{
+		return this.indexOfChild(section);
+	},
+	/**
+	 * Check if section is in this spectrum data.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @returns {Bool}
+	 */
+	hasSection: function(section)
+	{
+		return this.hasChild(section);
+	},
+	/**
+	 * Remove a data section at index.
+	 * @param {Int} index
+	 * @returns {Kekule.Spectroscopy.SpectrumDataSection} Child section removed.
+	 */
+	removeSectionAt: function(index)
+	{
+		return this.removeChildAt(index);
+	},
+	/**
+	 * Remove a child data section.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @returns {Kekule.Spectroscopy.SpectrumDataSection} Section object removed.
+	 */
+	removeSection: function(section)
+	{
+		return this.removeChild(section);
+	},
+	/**
+	 * Insert a new section to index.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @param {Int} index
+	 * @return {Int} Index of section after insertion.
+	 */
+	insertSectionAt: function(section, index)
+	{
+		return this.insertChildAt(section);
+	},
+	/**
+	 * Insert a data section before refSection in data section list.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} obj
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} refChildr
+	 * @return {Int} Index of section after insertion.
+	 */
+	insertChildBefore: function(section, refSection)
+	{
+		return this.inserChildBefore(section, refSection);
+	},
+	/**
+	 * Add new data section to the tail of section list.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @return {Int} Index of obj after appending.
+	 */
+	appendSection: function(section)
+	{
+		return this.appendChild(section);
+	},
+	/**
+	 * Returns whether multiple sections exists in this spectrum data.
+	 * @returns {Bool}
+	 */
+	hasMultipleSections: function()
+	{
+		return this.getSections().getChildCount() > 1;
+	},
+
+	/**
+	 * Returns the variable definition by a index or variable name.
+	 * @param {Variant} varIndexOrNameOrDef
+	 * @returns {Kekule.VarDefinition}
+	 */
+	getVariable: function(varIndexOrNameOrDef)
+	{
+		var varDef = (varIndexOrNameOrDef instanceof Kekule.VarDefinition)? varIndexOrNameOrDef:
+			(typeof(varIndexOrNameOrDef) === 'number')? this.getVariables()[varIndexOrNameOrDef]:   // index
+				this.getVariables()[this.getVarSymbols().indexOf(varIndexOrNameOrDef)];   // name
+		return varDef;
+	},
+	/**
+	 * Returns the index of a variable definition.
+	 * @param {Kekule.VarDefinition} varDef
+	 * @returns {Int}
+	 */
+	indexOfVariable: function(varDef)
+	{
+		return this.getVariables().indexOf(varDef);
+	},
+	/**
+	 * Returns the first/last value of a continuous variable.
+	 * @param {Variant} varNameOrIndexOrDef
+	 * @returns {Hash} Hash of {firstValue, lastValue}
+	 */
+	getVarRange: function(varIndexOrNameOrDef)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		return Kekule.Spectroscopy.Utils.getVarRange(varDef);
+	},
+	/**
+	 * Set the first/last value of a variable and mark it as a continuous one.
+	 * @param {Variant} varNameOrIndexOrDef
+	 * @param {Number} fromValue
+	 * @param {Number} toValue
+	 */
+	setVarRange: function(varIndexOrNameOrDef, fromValue, toValue)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		Kekule.Spectroscopy.Utils.setVarRange(varDef, fromValue, toValue);
+		return this;
+	},
+	/**
+	 * Remove the continuous information of a variable.
+	 * @param {Variant} varIndexOrNameOrDef
+	 */
+	clearVarRange: function(varIndexOrNameOrDef)
+	{
+		var varDef = this.getVariable(varIndexOrNameOrDef);
+		Kekule.Spectroscopy.Utils.clearVarRange(varDef);
+		return this;
+	},
+
+	/**
+	 * Sort all data items.
+	 * @param {Func} func Optional, func(hash1, hash2). If not set, data items will be sorted by default method.
+	 */
+	sort: function(func)
+	{
+		this.iterateChildren(function(c){
+			c.sort(func);
+		});
+	},
+
+	/**
+	 * Returns the count of data items.
+	 * @returns {Int}
+	 */
+	getDataItemCount: function()
+	{
+		var result = 0;
+		this.iterateChildren(function(c){
+			result += c.getDataItemCount();
+		});
+		return result;
+	},
+	/**
+	 * Clear all data items in all data sections.
+	 */
+	clearData: function()
+	{
+		this.iterateChildren(function(c){
+			c.clear();
+		});
+	},
+	/**
+	 * Add new data item to active data section. The item is can be a hash or an array.
+	 * If it is a hash, the hash fields must matches {@link Kekule.Spectroscopy.SpectrumData.independentVars} and {@link Kekule.Spectroscopy.SpectrumData.dependentVars}.
+	 * If it is an array, the values in array will automatically mapped to independent and dependent vars.
+	 * @param {Variant} item
+	 */
+	appendData: function(item)
+	{
+		return this.getActiveSection().appendData(item);
+	},
+	/**
+	 * Remove a data item from active data section.
+	 * @param {Array} item
+	 */
+	removeData: function(item)
+	{
+		return this.getActiveSection().removeData(item);
+	},
+	/** @private */
+	removeDataAt: function(index)
+	{
+		return this.getActiveSection().removeDataAt(index);
+	},
+	/** @private */
+	getRawValueAt: function(index)
+	{
+		return this.getActiveSection().getRawValueAt(index);
+	},
+	/** @private */
+	getHashValueAt: function(index)
+	{
+		return this.getActiveSection().getHashValueAt(index);
+	},
+	/** @private */
+	getValueAt: function(index)
+	{
+		return this.getHashValueAt(index);
+	},
+
+	/**
+	 * Calculate values of dependant variable values from independent variable values.
+	 * @param {Hash} independentValues
+	 * @param {Hash} extraOptions
+	 * @returns {Hash}
+	 */
+	getDependentValues: function(independentValues, extraOptions)
+	{
+		return this.doGetDependentValues(independantValues, extraOptions);
+	},
+	/**
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
+	 * Descendants should override this method.
+	 * @param {Hash} independentValues
+	 * @param {Hash} extraOptions
+	 * @returns {Hash}
+	 * @private
+	 */
+	doGetDependentValues: function(independentValues, extraOptions)
+	{
+		// TODO: unfinished
+		return {};
+	},
+	/**
+	 * Returns an iterator to iterate all data in this object.
+	 * If iterator is not available, null should be returned.
+	 * Otherwise, the return value should be an object with method next(): {done, value}.
+	 * @returns {Object}
+	 */
+	getIterator: function()
+	{
+		return this.doGetIterator();
+	},
+	/**
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getIterator}.
+	 * Desendants may override this method.
+	 * @returns {Object}
+	 * @private
+	 */
+	doGetIterator: function()
+	{
+		//var dataItems = this.getDataItems();
+		var sections = this.getSections().getItems();
+		var self = this;
+		var result = {
+			sectionIndex: 0,
+			index: 0,
+			next: function()
+			{
+				var self = this;
+				var outOfRange = function()
+				{
+					return (self.sectionIndex >= sections.length || (self.sectionIndex === sections.length - 1 && self.index >= sections[sections.length - 1].getDataCount()));
+				}
+				if (outOfRange())
+					return {'done': true};
+				else
+				{
+					if (this.index < sections[this.sectionIndex].getDataCount())
+					{
+						var ret = {'done': false, 'value': sections[this.sectionIndex].getValueAt(this.index)};
+						++this.index;
+					}
+					else
+					{
+						do
+						{
+							++this.sectionIndex;
+							this.index = 0;
+						}
+						while(this.index >= sections[this.sectionIndex].getDataCount() || self.sectionIndex >= sections.length);
+						if (outOfRange())
+							return {'done': true};
+						else
+							return {'done': false, 'value': sections[this.sectionIndex].getValueAt(this.index)};
+					}
+					return ret;
+				}
+			}
+		};
+		return result;
+	},
+
+	/**
+	 * Call function to each data item.
+	 * @param {Func} func With params: (hashValue [, index]).
+	 */
+	forEach: function(func, thisArg)
+	{
+		var iterator = this.getIterator();
+		if (iterator)
+		{
 			var index = 0;
 			var nextItem = iterator.next();
 			while (!nextItem.done)

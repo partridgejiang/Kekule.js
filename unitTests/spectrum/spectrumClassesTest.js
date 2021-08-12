@@ -8,9 +8,9 @@ describe('Test of some core data and functions of spectra module', function(){
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
 
-		sData.append({x: 1, y: 1, z: 1, r: -1});
-		sData.append([3,3,3,-3]);
-		sData.append([2,2,2,-2]);
+		sData.appendData({x: 1, y: 1, z: 1, r: -1});
+		sData.appendData([3,3,3,-3]);
+		sData.appendData([2,2,2,-2]);
 		sData.sort();
 
 		sData.forEach(function(value, index){
@@ -28,15 +28,15 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
 			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
-		var sData = new Kekule.Spectroscopy.ContinuousData(null, variables);
+		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
 		sData.setVarRange('x', 0, 10);
 		sData.setVarRange('z', 5, 0);
-		sData.append({y: 0});
-		sData.append({y: 1});
-		sData.append({y: 2});
-		sData.append({y: 3});
-		sData.append({y: 4});
-		sData.append({y: 5});
+		sData.appendData({y: 0});
+		sData.appendData({y: 1});
+		sData.appendData({y: 2});
+		sData.appendData({y: 3});
+		sData.appendData({y: 4});
+		sData.appendData({y: 5});
 
 		expect(sData.getHashValueAt(0).x).toEqual(0);
 		expect(sData.getHashValueAt(1).x).toEqual(2);
