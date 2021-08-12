@@ -20,6 +20,11 @@
 var AU = Kekule.ArrayUtils;
 var EU = Kekule.HtmlElementUtils;
 
+function _isNativePointerEventEnabled()
+{
+	return !Kekule.globalOptions.widget.events.forceSimulatePointerEvent && Kekule.BrowserFeature.pointerEvent;
+}
+
 /**
  * Enumeration of predefined widget html element tag names.
  * @ignore
@@ -3470,7 +3475,14 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 	/** @private */
 	_touchActionNoneTouchStartHandler: function(e)
 	{
-		e.preventDefault();
+		try
+		{
+			e.preventDefault();
+		}
+		catch(e)  // avoid exception throw in Chrome
+		{
+
+		}
 	},
 
 	/**
@@ -6230,7 +6242,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 
 		this.doReactUiEvent(e, targetWidget);
 
-		if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
+		//if (!e.ghostMouseEvent && !Kekule.BrowserFeature.pointerEvent && this.getEnableMouseEventToPointerPolyfill())
+		if (!e.ghostMouseEvent && !_isNativePointerEventEnabled() && this.getEnableMouseEventToPointerPolyfill())
 		{
 			var mouseEvents = ['mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'];
 			var touchEvents = ['touchstart', 'touchmove', 'touchleave', 'touchend', 'touchcancel'];
