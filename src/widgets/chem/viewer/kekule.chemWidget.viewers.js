@@ -2136,7 +2136,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 				this._restraintCoord = this._calcRestraintRotateCoord(clientX, clientY);
 
 				this._initTransform();
-				this.getViewer().setTouchAction('none');
+				//this.getViewer().setTouchAction('none');
 
 				this._requestInteractiveTransform(screenX, screenY);
 			}
@@ -2146,7 +2146,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	_endInteractTransform: function()
 	{
 		this._transformInfo.isTransforming = false;
-		this.getViewer().setTouchAction(null);
+		//this.getViewer().setTouchAction(null);
 		this._doInteractiveTransformEnd();
 	},
 	/** @private */
@@ -2356,14 +2356,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	*/
 	/* @private */
 	// TODO: PointerLeave event trigger seems has bug in Chrome, ocurrs at some wrong occassion?
-	/*
+
 	react_pointerleave: function(e)
 	{
 		//console.log('pointer_leave!', e.getTarget(), e.getCurrentTarget());
 		//this._transformInfo.isTransforming = false;
 		this._endInteractTransform();
 	},
-	*/
+
 	/** @private */
 	/*
 	react_touchleave: function(e)
