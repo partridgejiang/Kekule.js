@@ -13,9 +13,9 @@
 
 Kekule.globalOptions.add('widget.events', {
 	// Whether using mouse/touch events to simulate pointer events rather than using the native ones.
-	// There seems to be bugs of native pointer events in Android that causing the pointerup event
-	// fired at wrong position, so here we set this option to true.
-	forceSimulatePointerEvent: true
+	// There used to be bugs about native pointer events in some widget code causing pointleave
+	// fired at wrong position, so here we may set this option to true or false for debugging.
+	forceSimulatePointerEvent: false
 });
 
 
