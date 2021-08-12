@@ -11,6 +11,14 @@
 
 "use strict";
 
+Kekule.globalOptions.add('widget.events', {
+	// Whether using mouse/touch events to simulate pointer events rather than using the native ones.
+	// There seems to be bugs of native pointer events in Android that causing the pointerup event
+	// fired at wrong position, so here we set this option to true.
+	forceSimulatePointerEvent: true
+});
+
+
 /**
  * A series of interactive events that may be handled by widget.
  * @ignore
