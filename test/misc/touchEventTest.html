@@ -6,9 +6,10 @@
   <style>
     #stage
     {
-      width: 400px;
-      height: 400px;
+      width: 800px;
+      height: 800px;
       background-color: red;
+      touch-action: none;
     }
     body
     {
@@ -21,6 +22,7 @@
     function init()
     {
       var div = document.getElementById('stage');
+      /*
       div.addEventListener('touchstart', function(e){
         console.log('touchstart', e.type, e.target);
       });
@@ -34,6 +36,13 @@
       body.addEventListener('touchend', function(e){
         console.log('body touchend', e.type, e.target);
       });
+      */
+
+      div.addEventListener('pointerdown', e => { console.log('pointerdown'); });
+      div.addEventListener('pointerup', e => { console.log('pointerup'); });
+      div.addEventListener('pointermove', e => { console.log('pointermove'); });
+      div.addEventListener('pointerhold', e => { console.log('pointerhold'); });
+      div.addEventListener('pointerleave', e => { console.log('pointerleave'); });
     }
   </script>
 </head>

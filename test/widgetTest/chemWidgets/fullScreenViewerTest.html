@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chem Viewer 3D Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <script src="../../_libs/three_new/three.min.js"></script>
+  <script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=algorithm,chemWidget,openbabel,inchi,indigo&min=false"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+  <style>
+    html, body
+    {
+      margin: 0;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    #chemViewer
+    {
+      border: none;
+      margin: 0;
+    }
+    #header
+    {
+      padding: 0.2em 1em;
+      overflow: hidden;
+      vertical-align: middle;
+    }
+    #header button, #header span
+    {
+      display: inline-block;
+    }
+  </style>
+
+  <script name="methane" id="methane" type="chemical/x-mdl-molfile">
+
+  Chem3D Core 12.002211619173D
+
+  5  4  0  0  0  0  0  0  0  0999 V2000
+   -0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1130    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3710    0.0000   -1.0493 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3710    0.9088    0.5246 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3710   -0.9088    0.5246 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  1  3  1  0
+  1  4  1  0
+  1  5  1  0
+M  END
+	</script>
+  <script name="cyclohexane" id="cyclohexane" type="chemical/x-mdl-molfile">
+
+  Chem3D Core 19.008122110183D
+
+  0  0  0     0  0              0 V3000
+M  V30 BEGIN CTAB
+M  V30 COUNTS 18 18 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C 0.981036 -0.180109 1.091682 0
+M  V30 2 C -0.248264 0.705591 1.275982 0
+M  V30 3 C -0.724363 1.290692 -0.050918 0
+M  V30 4 C -0.966764 0.200991 -1.091818 0
+M  V30 5 C 0.262636 -0.684709 -1.276118 0
+M  V30 6 C 0.738637 -1.269809 0.050782 0
+M  V30 7 H 1.229082 -0.659796 2.064894 0
+M  V30 8 H 1.820342 0.459122 0.737114 0
+M  V30 9 H -1.068903 0.096365 1.716622 0
+M  V30 10 H 0.027786 1.548245 1.948664 0
+M  V30 11 H -1.674659 1.844487 0.119426 0
+M  V30 12 H 0.068911 1.969624 -0.436321 0
+M  V30 13 H -1.820342 -0.431413 -0.759799 0
+M  V30 14 H -1.190157 0.692914 -2.064894 0
+M  V30 15 H 0.005867 -1.518937 -1.966698 0
+M  V30 16 H 1.082563 -0.059101 -1.694573 0
+M  V30 17 H -0.036777 -1.969624 0.435178 0
+M  V30 18 H 1.700638 -1.800221 -0.128062 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 1 1 2
+M  V30 2 1 1 6
+M  V30 3 1 1 7
+M  V30 4 1 1 8
+M  V30 5 1 2 3
+M  V30 6 1 2 9
+M  V30 7 1 2 10
+M  V30 8 1 3 4
+M  V30 9 1 3 11
+M  V30 10 1 3 12
+M  V30 11 1 4 5
+M  V30 12 1 4 13
+M  V30 13 1 4 14
+M  V30 14 1 5 6
+M  V30 15 1 5 15
+M  V30 16 1 5 16
+M  V30 17 1 6 17
+M  V30 18 1 6 18
+M  V30 END BOND
+M  V30 BEGIN COLLECTION
+M  V30 MDLV30/STEABS ATOMS=(6 1 2 3 4 5 6)
+M  V30 END COLLECTION
+M  V30 END CTAB
+M  END
+	</script>
+  <script name="allene" id="allene" type="chemical/x-mdl-molfile">
+
+  Chem3D Core 19.008122110213D
+
+  7  6  0  0  0  0  0  0  0  0999 V2000
+   -1.2954    0.0315   -0.1960 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0007    0.0002   -0.1951 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2967   -0.0316   -0.1945 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.8021    0.6948   -0.8472 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2005   -1.0124    0.8444 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+    1.8043   -0.6945   -0.8453 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2005    1.0124    0.8472 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  1  4  1  0
+  1  5  1  0
+  2  3  2  0
+  3  6  1  0
+  3  7  1  0
+M  END
+	</script>
+
+  <script>
+    var chemViewer;
+    function init()
+    {
+      chemViewer = Kekule.Widget.getWidgetById('chemViewer');
+      chemViewer.setEnableTouchInteraction(true);
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+
+      // check appointed mol id
+      var url = window.location.href;
+      var searches = Kekule.UrlUtils.analysisSearch(url, true);
+      var molId = searches.mol;
+      if (molId)
+      {
+        loadMol(molId);
+      }
+    }
+    function loadMol(id)
+    {
+      var resStr = 'url(#' + id + ')';
+      Kekule.PredefinedResReferer.loadResource(resStr, function(resInfo, success)
+      {
+        if (success)
+        {
+          var chemObj = Kekule.IO.loadTypedData(resInfo.data, resInfo.resType, resInfo.resUri);
+          chemViewer.setChemObj(chemObj);
+        }
+      }, null, document);
+    }
+    function adjustSize()
+    {
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      //var headerDim = Kekule.HtmlElementUtils.getElemClientDimension(document.getElementById('header'));
+      chemViewer.setWidth(dim.width - 10 + 'px').setHeight(dim.height - 10 /* - headerDim.height */ + 'px');
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+<div id="chemViewer" style="width:1000px;height:650px;touch-action:none;"
+     data-widget="Kekule.ChemWidget.Viewer3D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"
+     data-toolbar-evoke-modes="[0]"
+     data-chem-obj="url(#methane)"></div>
+<script>
+  /*
+  //var elem = document.getElementById('chemViewer');
+  var elem = document.body;
+  elem.addEventListener('pointerdown', e => { console.log('[]pointerdown'); });
+  elem.addEventListener('pointerup', e => { console.log('[]pointerup'); });
+  elem.addEventListener('pointermove', e => { console.log('[]pointermove'); });
+  elem.addEventListener('pointerhold', e => { console.log('[]pointerhold'); });
+  elem.addEventListener('pointerleave', e => { console.log('[]pointerleave'); });
+  */
+</script>
+</body>
+</html>
