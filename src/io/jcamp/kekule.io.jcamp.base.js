@@ -52,6 +52,8 @@ Kekule.IO.Jcamp.Consts = {
 	DATA_FORMAT_INC: '++',
 	DATA_FORMAT_SYMBOL_ASSIGNMENT: 'A',
 
+	NTUPLES_VAR_DEFINITION_VALUE_DELIMITER: ',',
+
 	DATA_VARLIST_FORMAT_XYDATA: 1,
 	DATA_VARLIST_FORMAT_XYPOINTS: 2,
 	DATA_VARLIST_FORMAT_VAR_GROUPS: 3,
@@ -61,7 +63,9 @@ Kekule.IO.Jcamp.Consts = {
 	GROUPED_VALUE_STR_ENCLOSER_LEADING: '<',
 	GROUPED_VALUE_STR_ENCLOSER_TAILING: '>',
 	GROUPED_VALUE_EXPLICIT_GROUP_LEADING: '(',
-	GROUPED_VALUE_EXPLICIT_GROUP_TAILING: ')'
+	GROUPED_VALUE_EXPLICIT_GROUP_TAILING: ')',
+
+	VALUE_STR_EXPLICIT_QUOTE: '"',
 };
 var JcampConsts = Kekule.IO.Jcamp.Consts;
 
@@ -669,7 +673,7 @@ Kekule.IO.Jcamp.Utils = {
 			}
 			else
 			{
-				var patternXYPoint = /^([a-zA-Z]+)\.\.([a-zA-Z]+)$/;
+				var patternXYPoint = /^([a-zA-Z]+)\s*\.\.\s*([a-zA-Z]+)$/;
 				var matchResult = text.match(patternXYPoint);
 				if (matchResult)
 				{
@@ -679,19 +683,25 @@ Kekule.IO.Jcamp.Utils = {
 					{
 						var vars = [];
 						for (var i = 0, l = matchResult[1].length; i < l; ++i)
-							vars.push(matchResult[1].charAt(i));
+						{
+							if (!matchResult[1].charAt(i).match(/\s/))
+								vars.push(matchResult[1].charAt(i));
+						}
 						return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS, 'vars': vars};
 					}
 				}
 				else
 				{
-					var patternGroupList = /^([a-zA-Z]+)$/;
+					var patternGroupList = /^(([a-zA-Z]\,?)+)$/;
 					var matchResult = text.match(patternGroupList);
 					if (matchResult)
 					{
 						var vars = [];
 						for (var i = 0, l = matchResult[1].length; i < l; ++i)
-							vars.push(matchResult[1].charAt(i));
+						{
+							if (matchResult[1].charAt(i) !== ',')
+								vars.push(matchResult[1].charAt(i));
+						}
 						return {'format': JcampConsts.DATA_VARLIST_FORMAT_VAR_GROUPS, 'vars': vars};
 					}
 				}
@@ -767,8 +777,10 @@ Kekule.IO.Jcamp.ValueType = {
 	AFFN: 1,         // single line AFFN value
 	ASDF: 2,
 	AFFN_ASDF: 3,
-	MULTILINE_AFFN_ASDF: 5,   // AFFN or ASDF in multiple lines, e.g. in XYDATA
-	MULTILINE_AFFN_GROUP: 6,  // AFFN/string group, e.g. in XYPOINTS or PEAKTABLE
+	MULTILINE_AFFN_ASDF: 5,   // AFFN or ASDF in multiple lines, e.g. in XYDATA, with a leading format line
+	MULTILINE_AFFN_GROUP: 6,  // AFFN/string group, e.g. in XYPOINTS or PEAKTABLE, with a leading format line
+	SIMPLE_AFFN_GROUP: 7,     // AFFN group, without leading format line
+	STRING_GROUP: 8,  // string group, delimited by comma, e.g., many NTUPLES var definition LDRs
 	STRING: 10,
 	SHORT_DATE: 21,  // date string in format YY/MM/DD
 	SHORT_TIME: 22,  // time string in format hh:mm:ss
@@ -901,17 +913,17 @@ _createLabelTypeInfos([
 	['SMILES', JValueType.STRING],
 
 	['NTUPLES', JValueType.STRING],
-	['VAR_NAME', JValueType.STRING],
-	['SYMBOL', JValueType.STRING],
-	['VAR_TYPE', JValueType.STRING],
-	['VAR_FORM', JValueType.STRING],
-	['VAR_DIM', JValueType.STRING],
-	['UNITS', JValueType.STRING],
-	['FIRST', JValueType.AFFN],
-	['LAST', JValueType.AFFN],
-	['MIN', JValueType.AFFN],
-	['MAX', JValueType.AFFN],
-	['FACTOR', JValueType.AFFN],
+	['VAR_NAME', JValueType.STRING_GROUP],
+	['SYMBOL', JValueType.STRING_GROUP],
+	['VAR_TYPE', JValueType.STRING_GROUP],
+	['VAR_FORM', JValueType.STRING_GROUP],
+	['VAR_DIM', JValueType.SIMPLE_AFFN_GROUP],
+	['UNITS', JValueType.STRING_GROUP],
+	['FIRST', JValueType.SIMPLE_AFFN_GROUP],
+	['LAST', JValueType.SIMPLE_AFFN_GROUP],
+	['MIN', JValueType.SIMPLE_AFFN_GROUP],
+	['MAX', JValueType.SIMPLE_AFFN_GROUP],
+	['FACTOR', JValueType.SIMPLE_AFFN_GROUP],
 	['END NTUPLES', JValueType.STRING],
 	['PAGE', JValueType.STRING],
 	['DATA TABLE', JValueType.MULTILINE_AFFN_ASDF]
@@ -1028,15 +1040,30 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		//console.log(year, month, day, hour, minute, second, millisecond);
 		return new Date(year, month - 1, day, hour, minute, second, millisecond);  // note month is 0-based
 	},
-
-	dataTableParser: function(lines, options)
+	stringGroupParser: function(lines, options)
 	{
-		var result = {
-			'format': lines[0],  // first line is the format info, e.g. (X++(Y..Y)) // (X++(R..R)), XYDATA // etc.
-			'values': JcampUtils.decodeAsdfTableLines(lines.slice(1))         // values are grouped in lines,
-		};
+		var v = lines.join(' ');
+		var result = v.split(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER);
+		for (var i = 0, l = result.length; i < l; ++i)
+		{
+			result[i] = result[i].trim();
+			var s = result[i];
+			if (s.startsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE) && s.endsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE))
+				result[i] = s.substr(JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length, s.length - JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length * 2);
+		}
 		return result;
 	},
+	simpleAffnGroupParser: function(lines)
+	{
+		var v = lines.join(' ');
+		var result = v.split(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER);
+		for (var i = 0, l = result.length; i < l; ++i)
+		{
+			result[i] = parseFloat(result[i].trim());
+		}
+		return result;
+	},
+
 	xyDataTableParser: function(lines, options)
 	{
 		var result = {
@@ -1064,6 +1091,8 @@ JcampLdrValueParser.registerParser(null, JValueType.SHORT_TIME, JcampLdrValuePar
 JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParser.longDateParser);
 JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_ASDF, JcampLdrValueParser.xyDataTableParser);
 JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_GROUP, JcampLdrValueParser.groupedDataTableParser);
+JcampLdrValueParser.registerParser(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupParser);
+JcampLdrValueParser.registerParser(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupParser);
 
 
 /**
