@@ -11,6 +11,14 @@
 
 "use strict";
 
+Kekule.globalOptions.add('widget.events', {
+	// Whether using mouse/touch events to simulate pointer events rather than using the native ones.
+	// There used to be bugs about native pointer events in some widget code causing pointleave
+	// fired at wrong position, so here we may set this option to true or false for debugging.
+	forceSimulatePointerEvent: false
+});
+
+
 /**
  * A series of interactive events that may be handled by widget.
  * @ignore
