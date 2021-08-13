@@ -51,6 +51,7 @@ Kekule.IO.Jcamp.Consts = {
 	DATA_FORMAT_LOOP: '..',
 	DATA_FORMAT_INC: '++',
 	DATA_FORMAT_SYMBOL_ASSIGNMENT: 'A',
+	DATA_FORMAT_PLOT_DESCRIPTOR_DELIMITER: ',',
 
 	NTUPLES_VAR_DEFINITION_VALUE_DELIMITER: ',',
 
@@ -708,6 +709,38 @@ Kekule.IO.Jcamp.Utils = {
 			}
 			return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED', formatText));
 		}
+	},
+	/**
+	 * Returns details about variable name/format and plot descriptor from the format text of DATA TABLE LDR.
+	 * @param {String} formatText Such as (X++(Y..Y)), XYDATA; (XY..XY), XYPOINTS etc.
+	 * @returns {Hash}
+	 */
+	getDataTableFormatAndPlotDetails: function(formatText)
+	{
+		//var s = formatText.replace(/\s/g, '');   // remove all blanks first
+		// The format part is always enclosed by '()', extract it first
+		var p1 = formatText.indexOf(JcampConsts.DATA_FORMAT_GROUP_LEADING);
+		var p2 = formatText.lastIndexOf(JcampConsts.DATA_FORMAT_GROUP_TAILING);
+		if (p1 >= 0 && p2 >= 0)
+		{
+			var sFormat = formatText.substring(p1, p2 + 1);
+			var result = JcampUtils.getDataTableFormatDetails(sFormat);
+			// then the plot descriptor
+			var sPlotDescriptor = formatText.substr(p2 + 1).trim();
+			var p3 = sPlotDescriptor.indexOf(JcampConsts.DATA_FORMAT_PLOT_DESCRIPTOR_DELIMITER);
+			if (p3 >= 0)
+			{
+				sPlotDescriptor = sPlotDescriptor.substr(JcampConsts.DATA_FORMAT_PLOT_DESCRIPTOR_DELIMITER.length);
+				result.plotDescriptor = sPlotDescriptor;
+			}
+			else  // no plot descriptor, do nothing here
+			{
+
+			}
+			return result;
+		}
+		else
+			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR', formatText));
 	},
 
 	// methods about JCAMP block object from analysis tree
@@ -1414,7 +1447,7 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 				var reader = new readerClass();
 				try
 				{
-					var childObj = reader.readData(childBlock, options);
+					var childObj = reader.doReadData(childBlock, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
 					if (childObj)
 					{
 						if (!result)  // only one child block, returns this childObj directly
@@ -1615,7 +1648,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			var reader = new readerClass();
 			try
 			{
-				result = reader.readData(rootBlock, null, null, options);
+				result = reader.doReadData(rootBlock, null, null, options);   // use doReadData instead of readData, since child readers do not need to store srcInfo
 			}
 			finally
 			{

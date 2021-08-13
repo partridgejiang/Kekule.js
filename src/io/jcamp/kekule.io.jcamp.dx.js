@@ -29,7 +29,21 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	initProperties: function()
 	{
 		this.defineProp('currVarInfos', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
-		this.defineProp('currNTuplesVarInfos', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('currNTuplesInfos', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('currNTuplesVarInfos', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE,
+			'getter': function()
+			{
+				var i = this.getCurrNTuplesInfos();
+				return i && i.varInfos;
+			}
+		});
+		this.defineProp('currNTuplesVarRawInfos', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE,
+			'getter': function()
+			{
+				var i = this.getCurrNTuplesInfos();
+				return i && i.varRawInfos;
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -47,14 +61,19 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	{
 		var map = this.tryApplySuper('_initLdrHandlers');
 		map['DATA TYPE'] = this.doStoreSpectrumDataTypeLdr.bind(this, 'DATA TYPE');
+		var dataTableLdrNames = this._getDataTableLdrNames();
+		for (var i = 0, l = dataTableLdrNames.length; i < l; ++i)
+			map[dataTableLdrNames[i]] = this.doStoreSpectrumDataLdr.bind(this);
+		/*
 		map['PEAK TABLE'] = this.doStoreSpectrumDataLdr.bind(this, 'PEAK TABLE');
 		map['XYDATA'] = this.doStoreSpectrumDataLdr.bind(this, 'XYDATA');
+		*/
 		var varDefLdrNames = this._getDataTableVarDefLdrNames();
 		for (var i = 0, l = varDefLdrNames.length; i < l; ++i)
 			map[varDefLdrNames[i]] = this.doStoreDataVarInfoLdr.bind(this);
 		var ntuplesVarDefLdrNames = this._getNTuplesDefinitionLdrNames();
 		for (var i = 0, l = ntuplesVarDefLdrNames.length; i < l; ++i)
-			map[ntuplesVarDefLdrNames[i]] = this.doStoreNTuplesDataVarInfoLdr.bind(this);
+			map[ntuplesVarDefLdrNames[i]] = this.doStoreNTuplesAttributeLdr.bind(this);
 		map['DATA TABLE'] = this.doStoreNTuplesDataLdr.bind(this);   // NTuples data table
 		return map;
 	},
@@ -75,7 +94,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	_getDataTableLdrNames: function()
 	{
-		return ['XYDATA', 'XYPOINTS', 'PEAK TABLE', 'PEAKTABLE', 'PEAK ASSIGNMENTS', 'PEAKASSIGNMENTS', 'ASSIGNMENTS', 'RADATA'];
+		return ['XYDATA', 'XYPOINTS', 'PEAK TABLE', 'PEAKTABLE', 'PEAK ASSIGNMENTS','PEAKASSIGNMENTS', 'ASSIGNMENTS', 'RADATA'];
 	},
 	/** @private */
 	_isDataTableLabelName: function(labelName)
@@ -96,23 +115,43 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		info[ldr.labelName] = Jcamp.LdrValueParser.parseValue(ldr);
 	},
 	/** @private */
-	doStoreNTuplesDataVarInfoLdr: function(ldr, block, chemObj)
+	doStoreNTuplesAttributeLdr: function(ldr, block, chemObj)
 	{
-		var info = this.getCurrNTuplesVarInfos();
+		var info = this.getCurrNTuplesInfos();
 		var value = Jcamp.LdrValueParser.parseValue(ldr);
 		if (ldr.labelName === 'END NTUPLES')  // ntuples end, empty the var infos
 		{
 			if (value !== info.name)  // begin/end name not same
 				Kekule.error(Kekule.$L('ErrorMsg.JCAMP_NTUPLES_BEGIN_END_NAME_NOT_MATCH', info.value, value));
-			this.setPropStoreFieldValue('currNTuplesVarInfos', {});
+			this.setPropStoreFieldValue('currNTuplesInfos', null);  // NTuples end, empty the info object
 		}
-		if (ldr.labelName === 'NTUPLES')  // ntuples head
+		else if (ldr.labelName === 'NTUPLES')  // ntuples head
 		{
-			this.setPropStoreFieldValue('currNTuplesVarInfos', {'name': value});
+			this.setPropStoreFieldValue('currNTuplesInfos', {'name': value, 'varRawInfos': {}});  // create a new NTuples info object
+		}
+		else if (ldr.labelName === 'PAGE')   // a new page
+		{
+			this._doStoreNTuplesPageAttributeLdr(ldr);
 		}
 		else
 		{
-			info[ldr.labelName] = value;
+			info.varRawInfos[ldr.labelName] = value;
+		}
+	},
+	/** @private */
+	_doStoreNTuplesPageAttributeLdr: function(ldr)
+	{
+		var info = this.getCurrNTuplesInfos();
+		// analysis PageVar=Value pattern
+		var s = ldr.valueLines.join('');
+		var parts = s.split('=');
+		if (parts.length !== 2)
+			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_NTUPLES_PAGE_DECLARATION_FORMAT_ERROR', s));
+		else
+		{
+			var varSymbol = parts[0].trim();
+			var sValue = parts[1].trim();
+			info[ldr.labelName] = {'varSymbol': varSymbol, 'sValue': sValue};
 		}
 	},
 	/** @private */
@@ -136,7 +175,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		this.doStoreLdrToChemObjInfoProp(ldrLabelName, ldr, block, chemObj);
 	},
 	/** @private */
-	doStoreSpectrumDataLdr: function(ldrLabelName, ldr, block, chemObj)
+	doStoreSpectrumDataLdr: function(ldr, block, chemObj)
 	{
 		// check whether the DATA_CLASS matches LDR label name, ensure this is the LDR containing the spectrum data
 		if (this._isSpectrumDataLdr(ldr, chemObj))
@@ -149,21 +188,35 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				var varSymbols = formatDetail.vars;
 				// retrieve var information, including first/last range and factor
 				var varInfos = this._retrieveSpectrumDataVarInfos(varSymbols, block, chemObj);
+				/*
+				var varSymbolInc = formatDetail.varInc;
+				var varSymbolLoop = formatDetail.varLoop;
+				varInfos._bySymbol[varSymbolInc].dependency = Kekule.VarDependency.INDEPENDENT;
+				*/
+				// the first var should be independent
+				varInfos[0].dependency = Kekule.VarDependency.INDEPENDENT;
+				varInfos[1].dependency = Kekule.VarDependency.DEPENDENT;
+				var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
 				//console.log(formatDetail);
 				//console.log(varInfos);
 				//console.log(dataValue);
-				var spectrumData = this._createSpectrumDataByFormat(formatDetail, dataValue.values, varInfos);
+				var spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+				var isContinuous = (ldr.labelName.indexOf('PEAK') < 0) || (ldr.labelName.indexOf('ASSIGNMENT') < 0);
+				spectrumData.setContinuity(isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE);
+
+				var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);
 				if (spectrumData)
 					chemObj.setData(spectrumData);
 			}
 		}
 		else  // use the default approach
-			return this.doStoreLdrToChemObjInfoProp(ldrLabelName, ldr, chemObj);
+			return this.doStoreLdrToChemObjInfoProp(ldr.labelName, ldr, block, chemObj);
 	},
 	/** @private */
 	_retrieveSpectrumDataVarInfos: function(varSymbols, block, chemObj)
 	{
 		var result = [];
+		result._symbols = [];
 		result._bySymbol = {};
 		var infoStorage = this.getCurrVarInfos();
 		//console.log(infoStorage);
@@ -184,6 +237,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				'minValue': getVarInfoValue('MIN' + varSymbol),
 				'factor': getVarInfoValue(varSymbol + 'FACTOR')
 			});
+			result._symbols.push(varSymbol);
 			result._bySymbol[varSymbol] = result[result.length - 1];
 		}
 		return result;
@@ -195,6 +249,17 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			var info = varInfos[i];
+			var vType = info.varType;
+			if (vType)  // VAR_TYPE in NTUPLES
+			{
+				if (vType === 'DEPENDENT')
+					info.dependency = Kekule.VarDependency.DEPENDENT;
+				else if (vType === 'INDEPENDENT')
+					info.dependency = Kekule.VarDependency.INDEPENDENT;
+				else if (vType === 'PAGE')   // special page var in NTuples, ignore and do not create instance of VarDefinition
+					continue;
+			}
+
 			var def = new Kekule.VarDefinition({
 				'name': info.name,
 				'symbol': info.symbol,
@@ -210,15 +275,43 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	doStoreNTuplesDataLdr: function(ldr, block, chemObj)
 	{
-		var varInfos = this._retrieveNTupleVariableInfos();
-		console.log(varInfos);
+		//var varInfos = this._retrieveNTupleVariableInfos();
+		//console.log(varInfos);
+		var ntuplesInfos = this.getCurrNTuplesInfos();
+		var varInfos =  this.getCurrNTuplesVarInfos();
+		if (!varInfos)
+		{
+			varInfos = this._retrieveNTupleVariableInfos();
+			ntuplesInfos.varInfos = varInfos;
+		}
+		var spectrumData = ntuplesInfos.spectrumData;
+		if (!spectrumData)    // create new spectrum data instance when necessary
+		{
+			var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);
+			spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+			chemObj.setData(spectrumData);
+			ntuplesInfos.spectrumData = spectrumData;
+		}
+		//console.log(varDefinitions);
+
+		var dataValue = Jcamp.LdrValueParser.parseValue(ldr, {doValueCheck: true});
+		var varFormat = dataValue.format;
+		var formatDetail = Jcamp.Utils.getDataTableFormatAndPlotDetails(varFormat);
+		var plotDescriptor = formatDetail.plotDescriptor || '';
+		var localVarSymbols = formatDetail.vars;
+
+		var isContinuous = (plotDescriptor.indexOf('PEAK') < 0) || (plotDescriptor.indexOf('ASSIGNMENT') < 0);
+		var dataContinuity = isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE;
+
+		var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);
 	},
 	/** @private */
 	_retrieveNTupleVariableInfos: function()
 	{
 		var result = [];
 		result._bySymbol = {};
-		var infoStorage = this.getCurrNTuplesVarInfos();
+		result._symbols = [];
+		var infoStorage = this.getCurrNTuplesVarRawInfos();
 		//console.log(infoStorage);
 		var getStorageValue = function(name)
 		{
@@ -232,6 +325,8 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				if (!infoObj[i])
 					infoObj[i] = {};
 				infoObj[i][key] = values[i];
+				if (ldrKey === 'SYMBOL')
+					result._symbols[i] = values[i];
 			}
 			return infoObj;
 		}
@@ -252,41 +347,56 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			if (result[i].symbol)
 				result._bySymbol[result[i].symbol] = result[i];
 		}
-
 		return result;
 	},
+	/* @private */
+	/*
+	_ensureCreatingSpectrumNTuplesVariableDefinitions: function(spectrumData)
+	{
+		if (spectrumData.getVariableCount() <= 0)
+		{
+			var varDefs = this._createSpectrumVariableDefinitions(this._retrieveNTupleVariableInfos());
+			spectrumData.setVariables(varDefs);
+		}
+		return spectrumData.getVariables();
+	},
+	*/
+
 	/** @private */
 	_calcActualVarValue: function(dataValue, varInfo)
 	{
 		return dataValue * (varInfo.factor || 1);
 	},
 	/** @private */
-	_createSpectrumDataByFormat: function(formatDetail, data, varinfos)
+	_createSpectrumDataSectionByFormat: function(formatDetail, data, varinfos, parentSpectrumData)
 	{
 		var result;
 		if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYDATA)
 		{
-			result = this._createXyDataFormatSpectrumData(formatDetail, data, varinfos);
+			result = this._createXyDataFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData);
 		}
 		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS)
 		{
-			result = this._createXyPointsFormatSpectrumData(formatDetail, data, varinfos);
+			result = this._createXyPointsFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData);
 		}
 		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)
 		{
-			result = this._createVarGroupFormatSpectrumData(formatDetail, data, varinfos);
+			result = this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData);
 		}
 		//console.log('data', formatDetail, varinfos, result);
 		return result;
 	},
 	/** @private */
-	_createXyDataFormatSpectrumData: function(formatDetail, dataLines, varInfos)
+	_createXyDataFormatSpectrumDataSection: function(formatDetail, dataLines, varInfos, parentSpectrumData)
 	{
 		var varSymbolInc = formatDetail.varInc;
 		var varSymbolLoop = formatDetail.varLoop;
+		/*
 		varInfos._bySymbol[varSymbolInc].dependency = Kekule.VarDependency.INDEPENDENT;
 		var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+		*/
+		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars, Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
 		// calc first/lastX from data lines first
 		var varIncValueRange = {firstValue: this._calcActualVarValue(dataLines[0][0], varInfos._bySymbol[varSymbolInc]), lastValue: null};
 		if (dataLines.length > 1)  // more than one line, calc deltaX and lastX from the last two lines
@@ -307,39 +417,45 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		}
 
 		// check pass, build the spectrum data
-		result.getActiveSection().setVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
+		result.setVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
 		for (var i = 0, ii = dataLines.length; i < ii; ++i)
 		{
 			var lineValues = dataLines[i];
 			for (var j = 1, jj = lineValues.length; j < jj; ++j)
 			{
-				result.getActiveSection().appendData([undefined, this._calcActualVarValue(lineValues[j], varInfos._bySymbol[varSymbolLoop])]);  // omit X
+				result.appendData([undefined, this._calcActualVarValue(lineValues[j], varInfos._bySymbol[varSymbolLoop])]);  // omit X
 			}
 		}
 		//console.log(varDefinitions, result);
 		return result;
 	},
 	/** @private */
-	_createXyPointsFormatSpectrumData: function(formatDetail, data, varInfos)
+	_createXyPointsFormatSpectrumDataSection: function(formatDetail, data, varInfos, parentSpectrumData)
 	{
+		/*
 		var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+		*/
+		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars);
 		for (var i = 0, l = data.length; i < l; ++i)
 		{
 			// each item is a data group, containing values of all variables
-			result.getActiveSection().appendData(data[i]);
+			result.appendData(data[i]);
 		}
 		return result;
 	},
 	/** @private */
-	_createVarGroupFormatSpectrumData: function(formatDetail, data, varInfos)
+	_createVarGroupFormatSpectrumDataSection: function(formatDetail, data, varInfos, parentSpectrumData)
 	{
+		/*
 		var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+		*/
+		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars);
 		for (var i = 0, l = data.length; i < l; ++i)
 		{
 			// each item is a data group, containing values of all variables
-			result.getActiveSection().appendData(data[i]);
+			result.appendData(data[i]);
 		}
 		return result;
 	},
@@ -353,7 +469,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			var dataClassValue = chemObj.getInfoValue('DATA CLASS') || null;
 			if (dataClassValue)
 			{
-				result = dataClassValue.replace(/\s/g, '') === ldr.labelName.replace(/\s/g, '');  // ignore space in names
+				result = ldr.labelName.replace(/\s/g, '').indexOf(dataClassValue.replace(/\s/g, '')) >= 0;  // ignore space in names
 			}
 		}
 		return result;
