@@ -475,16 +475,6 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		return result;
 	},
 
-	/**
-	 * Read XYDATA values and set the spectrum data.
-	 * @param {Kekule.Spectroscopy.Spectrum} spectrum
-	 * @param {Hash} xyData
-	 * @private
-	 */
-	_readXyData: function(spectrum, xyData)
-	{
-
-	},
 	/** @ignore */
 	doCreateChemObjForBlock: function(block)
 	{
@@ -493,6 +483,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		if (meta.blockType === Jcamp.BlockType.DATA && meta.format === Jcamp.Format.DX)
 		{
 			result = new Kekule.Spectroscopy.Spectrum();
+			//result = [new Kekule.Spectroscopy.Spectrum()];   // TODO: if multiple NTUPLES exists in a file, there may be need to create several Spectrum instances
 		}
 		else
 			result = this.tryApplySuper('doCreateChemObjForBlock', [block]);
