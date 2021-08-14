@@ -12,14 +12,17 @@
     }
     function test()
     {
-      var reader = new Kekule.IO.JcampReader();
+      //var reader = new Kekule.IO.JcampReader();
       /*
       var result = reader._createAnalysisTree($('memoSrc').value);
       console.log(result);
       reader.buildChemObj(result);
       */
-      var result = reader.readData($('memoSrc').value);
+      //var result = reader.readData($('memoSrc').value);
+      var result = Kekule.IO.loadFormatData($('memoSrc').value, Kekule.IO.DataFormat.JCAMP_DX);
       console.log(result);
+      var saveTarget = {};
+      console.log(result.saveObj(saveTarget, 'json'));
     }
   </script>
 </head>
