@@ -304,6 +304,9 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var dataContinuity = isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE;
 
 		var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);
+		spectrumDataSection.setContinuity(dataContinuity);
+		var pageInfo = ntuplesInfos['PAGE'];
+		spectrumDataSection.setName(pageInfo.varSymbol + ': ' + pageInfo.sValue);
 	},
 	/** @private */
 	_retrieveNTupleVariableInfos: function()
