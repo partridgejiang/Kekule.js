@@ -1206,7 +1206,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		};
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'title');  // TITLE
-		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
+		map[JcampConsts.LABEL_DX_VERSION] = map[JcampConsts.LABEL_DX_VERSION_2] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
 		map['DATE'] = this.doStoreDateTimeLdr;
 		map['TIME'] = this.doStoreDateTimeLdr;
 		map['LONGDATE'] = this.doStoreDateTimeLdr;

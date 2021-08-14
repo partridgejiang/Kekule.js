@@ -201,7 +201,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				//console.log(varInfos);
 				//console.log(dataValue);
 				var spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
-				var isContinuous = (ldr.labelName.indexOf('PEAK') < 0) || (ldr.labelName.indexOf('ASSIGNMENT') < 0);
+				var isContinuous = (ldr.labelName.indexOf('PEAK') < 0) && (ldr.labelName.indexOf('ASSIGNMENT') < 0);
 				spectrumData.setContinuity(isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE);
 
 				var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);

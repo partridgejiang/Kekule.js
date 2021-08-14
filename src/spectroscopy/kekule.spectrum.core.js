@@ -863,11 +863,11 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 	 * Returns the count of data items.
 	 * @returns {Int}
 	 */
-	getDataItemCount: function()
+	getDataCount: function()
 	{
 		var result = 0;
 		this.iterateChildren(function(c){
-			result += c.getDataItemCount();
+			result += c.getDataCount();
 		});
 		return result;
 	},
