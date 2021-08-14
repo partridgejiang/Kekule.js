@@ -200,12 +200,40 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 	},
 	/**
+	 * Returns the local variable information index of variable.
+	 * @param {Variant} varIndexOrNameOrDef
+	 * @returns {Int}
+	 */
+	getLocalVarInfoIndex: function(varIndexOrNameOrDef)
+	{
+		var result = -1;
+		var localVarInfos = this.getLocalVarInfos();
+		if (typeof (varIndexOrNameOrDef) === 'number')
+			result = varIndexOrNameOrDef;
+		else // if (varIndexOrNameOrDef instanceof Kekule.VarDefinition)
+		{
+			for (var i = 0, l = localVarInfos.length; i < l; ++i)
+			{
+				var varDef = localVarInfos[i].varDef;
+				if (varDef === varIndexOrNameOrDef || varDef.getSymbol() === varIndexOrNameOrDef)
+				{
+					result = i;
+					break;
+				}
+			}
+		}
+		return result;
+	},
+	/**
 	 * Returns the local information of variable.
 	 * @param {Variant} varIndexOrNameOrDef
 	 * @returns {Hash}
 	 */
 	getLocalVarInfo: function(varIndexOrNameOrDef)
 	{
+		var index = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
+		return (index >= 0)? this.getLocalVarInfos()[index]: null;
+		/*
 		var result;
 		var localVarInfos = this.getLocalVarInfos();
 		if (typeof (varIndexOrNameOrDef) === 'number')
@@ -223,9 +251,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			}
 		}
 		return result;
+		*/
 	},
 	/**
-	 * Returns the first/last value of a continuous variable.
+	 * Returns the from/to value of a continuous variable.
 	 * @param {Variant} varNameOrIndexOrDef
 	 * @returns {Hash} Hash of {fromValue, toValue}
 	 */
@@ -236,7 +265,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return varInfo.range || (parent && parent.getVarRange(varInfo.varDef));
 	},
 	/**
-	 * Set the first/last value of a variable and mark it as a continuous one.
+	 * Set the from/to value of a variable and mark it as a continuous one.
 	 * @param {Variant} varNameOrIndexOrDef
 	 * @param {Number} fromValue
 	 * @param {Number} toValue
@@ -257,6 +286,47 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		varInfo.range = null;
 		return this;
 	},
+
+	/**
+	 * Iterate all data items and calculate the min/max value of each variable.
+	 * @param {Array} targetVariables Array of variable definition or symbol.
+	 *   If not set, all varibales will be calculated.
+	 * @returns {Hash}
+	 */
+	calcDataRange: function(targetVariables)
+	{
+		var targetVarSymbols = [];
+		var vars = targetVariables? AU.toArray(targetVariables): null;
+		if (!vars)
+			targetVarSymbols = this.getLocalVarSymbols();
+		else
+		{
+			for (var i = 0, l = vars.length; i < l; ++i)
+			{
+				var info = this.getLocalVarInfo(vars[i]);
+				if (info)
+					targetVarSymbols.push(info.varDef.getSymbol());
+			}
+		}
+
+		var notNum = function(v){
+			return Kekule.ObjUtils.isUnset(v) || isNaN(v);
+		};
+		var ranges = {};
+		this.forEach(function(dataValue, index){
+			for (var i = 0, l = targetVarSymbols.length; i < l; ++i)
+			{
+				var symbol = targetVarSymbols[i];
+				if (!ranges[symbol])
+					ranges[symbol] = {};
+				ranges[symbol].min = notNum(ranges[symbol].min)? dataValue[symbol]: Math.min(ranges[symbol].min, dataValue[symbol]);
+				ranges[symbol].max = notNum(ranges[symbol].max)? dataValue[symbol]: Math.max(ranges[symbol].max, dataValue[symbol]);
+			}
+		});
+
+		return ranges;
+	},
+
 	/**
 	 * Returns the symbols of continuous variable.
 	 * @returns {Array}
@@ -306,7 +376,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	isDataSorted: function()
 	{
-		return this._sorted;
+		return this._sorted || this.getDataCount() <= 1;
 	},
 	/**
 	 * Manually set the sorted state of data.
@@ -350,7 +420,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	notifyDataChange: function()
 	{
 		this.setDataSorted(false);
-		this.notifyPropSet('dataItem', this.getDataItem());
+		this.notifyPropSet('dataItems', this.getDataItems());
 	},
 	/**
 	 * Clear all data items.
@@ -484,7 +554,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					return {'done': true};
 				else
 				{
-					var ret = {'done': false, 'value': self._itemArrayToHash(dataItems[this.index])};
+					var ret = {'done': false, 'value': /*self._itemArrayToHash(dataItems[this.index])*/self.getHashValueAt(this.index)};
 					++this.index;
 					return ret;
 				}
@@ -502,7 +572,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var iterator = this.getIterator();
 		if (iterator)
 		{
-			var dataItems = this.getDataItems();
+			//var dataItems = this.getDataItems();
 			var index = 0;
 			var nextItem = iterator.next();
 			while (!nextItem.done)
