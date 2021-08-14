@@ -101,6 +101,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setPropStoreFieldValue('parent', parent);
 		this.tryApplySuper('initialize', []);
 		this.setLocalVarSymbols(localVariables);
+		this.setDataSorted(true);
 		//this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
 	},
 	doFinalize: function()
@@ -300,16 +301,37 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns whether data in this section has been sorted.
+	 * @returns {Bool}
+	 */
+	isDataSorted: function()
+	{
+		return this._sorted;
+	},
+	/**
+	 * Manually set the sorted state of data.
+	 * @param {Bool} value
+	 */
+	setDataSorted: function(value)
+	{
+		this._sorted = !!value;
+		return this;
+	},
+	/**
 	 * Sort all data items.
 	 * @param {Func} func Optional, func(hash1, hash2). If not set, data items will be sorted by default method.
 	 */
 	sort: function(func)
 	{
+		if (this.isDataSorted())
+			return;
 		var self = this;
 		var sortFunc = func?
 			function(a1, a2) { return func(self._itemArrayToHash(a1), self._itemArrayToHash(a2)); }:
 			function(a1, a2) { return AU.compare(a1, a2); }
 		this.getDataItems().sort(sortFunc);
+		this.setDataSorted(true);
+		return this;
 	},
 
 	/**
@@ -327,6 +349,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	notifyDataChange: function()
 	{
+		this.setDataSorted(false);
 		this.notifyPropSet('dataItem', this.getDataItem());
 	},
 	/**
@@ -335,6 +358,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	clear: function()
 	{
 		this.setDataItems([]);
+		this.setDataSorted(true);
 	},
 	/**
 	 * Add new data item. The item is can be a hash or an array.
