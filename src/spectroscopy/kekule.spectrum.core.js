@@ -320,6 +320,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		return this.getDataItems().length;
 	},
+
+	/**
+	 * Notify the data of this section has been changed.
+	 * @private
+	 */
+	notifyDataChange: function()
+	{
+		this.notifyPropSet('dataItem', this.getDataItem());
+	},
 	/**
 	 * Clear all data items.
 	 */
@@ -344,6 +353,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var items = this.getDataItems();
 			items.push(d);
+			this.notifyDataChange();
 			return d;
 		}
 	},
@@ -360,7 +370,9 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	removeDataAt: function(index)
 	{
-		return this.getDataItems().splice(index, 1);
+		var result = this.getDataItems().splice(index, 1);
+		this.notifyDataChange();
+		return result;
 	},
 	/** @private */
 	getRawValueAt: function(index)
