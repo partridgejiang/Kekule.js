@@ -153,10 +153,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			},
 			'setter': function(value)
 			{
+				var v = value || [];
 				var infos = [];
-				for (var i = 0, l = value.length; i < l; ++i)
+				for (var i = 0, l = v.length; i < l; ++i)
 				{
-					var item = value[i];
+					var item = v[i];
 					this._pushLocalVariable(item, infos);
 				}
 				this.setPropStoreFieldValue('localVarInfos', infos);
