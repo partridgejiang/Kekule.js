@@ -210,7 +210,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 // register JCAMP data formats
 Kekule.IO.DataFormat.JCAMP_DX = 'jcamp-dx';
 Kekule.IO.MimeType.JCAMP_DX = 'chemical/x-jcamp-dx';
-Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['.jcamp', '.dx', '.jdx', '.jcm'],
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['jcamp', 'dx', 'jdx', 'jcm'],
 		Kekule.IO.ChemDataType.TEXT, 'JCAMP-DX format');
 Kekule.IO.ChemDataReaderManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.JcampReader, [Kekule.IO.DataFormat.JCAMP_DX]);
 
