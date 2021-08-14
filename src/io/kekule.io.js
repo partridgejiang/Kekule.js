@@ -121,6 +121,7 @@ Kekule.IO.DataFormatsManager = {
 		}
 		result.mimeType = mimeType;
 		var exts = DataType.isArrayValue(fileExts)? fileExts: [fileExts];
+		exts = exts.map(function(ext) { return ext? ext.toLowerCase(): ext; } )
 		if (!result.fileExts)
 			result.fileExts = exts;
 		else  // merge
@@ -204,7 +205,7 @@ Kekule.IO.DataFormatsManager = {
 			*/
 			matched = (mimeType && (mimeType === info.mimeType));
 			if (!matched)
-				matched = (fileExt && (info.fileExts.indexOf(fileExt) >= 0));
+				matched = (fileExt && (info.fileExts.indexOf(fileExt.toLowerCase()) >= 0));
 			if (matched)
 				return info;
 		}
