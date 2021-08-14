@@ -432,6 +432,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 					result.appendData([undefined, this._calcActualVarValue(lineValues[j], varInfos._bySymbol[varSymbolLoop])]);  // omit X
 				}
 			}
+			result.setDataSorted(true);
 		}
 		finally
 		{
@@ -456,6 +457,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				// each item is a data group, containing values of all variables
 				result.appendData(data[i]);
 			}
+			result.setDataSorted(true);
 		}
 		finally
 		{
@@ -479,6 +481,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				// each item is a data group, containing values of all variables
 				result.appendData(data[i]);
 			}
+			result.setDataSorted(true);
 		}
 		finally
 		{
