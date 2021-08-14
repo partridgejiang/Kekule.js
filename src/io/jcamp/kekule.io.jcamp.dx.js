@@ -400,34 +400,42 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
 		*/
 		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars, Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
-		// calc first/lastX from data lines first
-		var varIncValueRange = {firstValue: this._calcActualVarValue(dataLines[0][0], varInfos._bySymbol[varSymbolInc]), lastValue: null};
-		if (dataLines.length > 1)  // more than one line, calc deltaX and lastX from the last two lines
+		result.beginUpdate();
+		try
 		{
-			var delta = (dataLines[dataLines.length - 1][0] - dataLines[dataLines.length - 2][0]) / (dataLines[dataLines.length - 2].length - 1);
-			varIncValueRange.lastValue = this._calcActualVarValue(dataLines[dataLines.length - 1][0] + delta * (dataLines[dataLines.length - 1].length - 2), varInfos._bySymbol[varSymbolInc]);
-		}
-		else
-		{
-			varIncValueRange.lastValue = varInfos[varSymbolInc].lastValue;
-		}
-		// check first/lastX
-		// console.log('var first/last compare', varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue, varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue);
-		if (Jcamp.Utils.compareFloat(varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue) !== 0
-			|| Jcamp.Utils.compareFloat(varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue) !== 0)
-		{
-			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VALUE_FIRST_LAST_NOT_MATCH'));
-		}
-
-		// check pass, build the spectrum data
-		result.setVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
-		for (var i = 0, ii = dataLines.length; i < ii; ++i)
-		{
-			var lineValues = dataLines[i];
-			for (var j = 1, jj = lineValues.length; j < jj; ++j)
+			// calc first/lastX from data lines first
+			var varIncValueRange = {firstValue: this._calcActualVarValue(dataLines[0][0], varInfos._bySymbol[varSymbolInc]), lastValue: null};
+			if (dataLines.length > 1)  // more than one line, calc deltaX and lastX from the last two lines
 			{
-				result.appendData([undefined, this._calcActualVarValue(lineValues[j], varInfos._bySymbol[varSymbolLoop])]);  // omit X
+				var delta = (dataLines[dataLines.length - 1][0] - dataLines[dataLines.length - 2][0]) / (dataLines[dataLines.length - 2].length - 1);
+				varIncValueRange.lastValue = this._calcActualVarValue(dataLines[dataLines.length - 1][0] + delta * (dataLines[dataLines.length - 1].length - 2), varInfos._bySymbol[varSymbolInc]);
 			}
+			else
+			{
+				varIncValueRange.lastValue = varInfos[varSymbolInc].lastValue;
+			}
+			// check first/lastX
+			// console.log('var first/last compare', varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue, varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue);
+			if (Jcamp.Utils.compareFloat(varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue) !== 0
+				|| Jcamp.Utils.compareFloat(varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue) !== 0)
+			{
+				Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VALUE_FIRST_LAST_NOT_MATCH'));
+			}
+
+			// check pass, build the spectrum data
+			result.setVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
+			for (var i = 0, ii = dataLines.length; i < ii; ++i)
+			{
+				var lineValues = dataLines[i];
+				for (var j = 1, jj = lineValues.length; j < jj; ++j)
+				{
+					result.appendData([undefined, this._calcActualVarValue(lineValues[j], varInfos._bySymbol[varSymbolLoop])]);  // omit X
+				}
+			}
+		}
+		finally
+		{
+			result.endUpdate();
 		}
 		//console.log(varDefinitions, result);
 		return result;
@@ -440,10 +448,18 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
 		*/
 		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars);
-		for (var i = 0, l = data.length; i < l; ++i)
+		result.beginUpdate();
+		try
 		{
-			// each item is a data group, containing values of all variables
-			result.appendData(data[i]);
+			for (var i = 0, l = data.length; i < l; ++i)
+			{
+				// each item is a data group, containing values of all variables
+				result.appendData(data[i]);
+			}
+		}
+		finally
+		{
+			result.endUpdate();
 		}
 		return result;
 	},
@@ -455,10 +471,18 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
 		*/
 		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars);
-		for (var i = 0, l = data.length; i < l; ++i)
+		result.beginUpdate();
+		try
 		{
-			// each item is a data group, containing values of all variables
-			result.appendData(data[i]);
+			for (var i = 0, l = data.length; i < l; ++i)
+			{
+				// each item is a data group, containing values of all variables
+				result.appendData(data[i]);
+			}
+		}
+		finally
+		{
+			result.endUpdate();
 		}
 		return result;
 	},
