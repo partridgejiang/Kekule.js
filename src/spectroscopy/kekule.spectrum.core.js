@@ -122,7 +122,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('parent', {'dataType': 'Kekule.MapEx', 'setter': null});
+		this.defineProp('parent', {'dataType': 'Kekule.MapEx', 'setter': null, 'serializable': false});
 		this.defineProp('name', {'dataType': DataType.STRING});
 		this.defineProp('title', {'dataType': DataType.STRING});
 		/*
