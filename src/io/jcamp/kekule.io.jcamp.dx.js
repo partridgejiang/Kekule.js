@@ -183,8 +183,11 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			if (this._isDataTableLabelName(ldr.labelName))
 			{
 				var dataValue = Jcamp.LdrValueParser.parseValue(ldr, {doValueCheck: true});
+				/*
 				var varFormat = dataValue.format;
 				var formatDetail = Jcamp.Utils.getDataTableFormatDetails(varFormat);
+				*/
+				var formatDetail = dataValue.formatDetail;
 				var varSymbols = formatDetail.vars;
 				// retrieve var information, including first/last range and factor
 				var varInfos = this._retrieveSpectrumDataVarInfos(varSymbols, block, chemObj);
@@ -295,8 +298,9 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		//console.log(varDefinitions);
 
 		var dataValue = Jcamp.LdrValueParser.parseValue(ldr, {doValueCheck: true});
-		var varFormat = dataValue.format;
-		var formatDetail = Jcamp.Utils.getDataTableFormatAndPlotDetails(varFormat);
+		//var varFormat = dataValue.format;
+		//var formatDetail = Jcamp.Utils.getDataTableFormatAndPlotDetails(varFormat);
+		var formatDetail = dataValue.formatDetail;
 		var plotDescriptor = formatDetail.plotDescriptor || '';
 		var localVarSymbols = formatDetail.vars;
 
@@ -387,6 +391,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			result = this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData);
 		}
 		//console.log('data', formatDetail, varinfos, result);
+		//console.log('section', result.calcDataRange('Y'));
 		return result;
 	},
 	/** @private */

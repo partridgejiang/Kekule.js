@@ -1099,18 +1099,25 @@ Kekule.IO.Jcamp.LdrValueParser = {
 
 	xyDataTableParser: function(lines, options)
 	{
+		var result = {format: lines[0], formatDetail: Jcamp.Utils.getDataTableFormatAndPlotDetails(lines[0])};
+		var needToDoValueCheck = (options && options.doValueCheck) && !!result.formatDetail.varInc;  // only X++(Y..Y) format (with varInc) need to do value check
+		var op = Object.extend(options || {}, {'doValueCheck': needToDoValueCheck});
+		result.values = JcampUtils.decodeAsdfTableLines(lines.slice(1), op);         // values are grouped in lines,
+		/*
 		var result = {
 			'format': lines[0],  // first line is the format info, e.g. (X++(Y..Y)) // (X++(R..R)), XYDATA // etc.
 			'values': JcampUtils.decodeAsdfTableLines(lines.slice(1), options)         // values are grouped in lines,
 		};
+		*/
 		return result;
 	},
 	groupedDataTableParser: function(lines, options)
 	{
 		var result = {
 			'format': lines[0],
+			'formatDetail': Jcamp.Utils.getDataTableFormatAndPlotDetails(lines[0]),
 			'values': JcampUtils.decodeAffnGroupTableLines(lines.slice(1), options)
-		}
+		};
 		return result;
 	}
 }
