@@ -548,7 +548,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(Kekule.ChemObject,
 				if (!result && this.getAutoCreateSection())
 				{
 					result = this.createSection(this.getVariables());
-					console.log('auto create');
+					//console.log('auto create');
 				}
 				return result;
 			},
@@ -1222,5 +1222,8 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return this.defineProp(propName, defs);
 	}
 });
+
+Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Spectroscopy.Spectrum);
+Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 
 })();
