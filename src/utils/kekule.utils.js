@@ -86,6 +86,15 @@ Kekule.ClassUtils = {
  */
 Kekule.NumUtils = {
 	/**
+	 * Check if a value is a normal number (not NaN).
+	 * @param {Variant} value
+	 * @returns {Bool}
+	 */
+	isNormalNumber: function(value)
+	{
+		return (typeof(value) === 'number') && !isNaN(value);
+	},
+	/**
 	 * Check if a number is integer.
 	 * @param {Number} num
 	 * @returns {Bool}
