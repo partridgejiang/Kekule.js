@@ -6,6 +6,7 @@
   <title>JCAMP Read test</title>
   <script src="../../src/kekule.js?min=false&modules=spectroscopy"></script>
   <script>
+    var spectrum;
     function $(id)
     {
       return document.getElementById(id);
@@ -22,7 +23,9 @@
       var result = Kekule.IO.loadFormatData($('memoSrc').value, Kekule.IO.DataFormat.JCAMP_DX);
       console.log(result);
       var saveTarget = {};
-      console.log(result.saveObj(saveTarget, 'json'));
+      result.saveObj(saveTarget, 'json');
+      console.log(saveTarget);
+      spectrum = result;
     }
   </script>
 </head>
