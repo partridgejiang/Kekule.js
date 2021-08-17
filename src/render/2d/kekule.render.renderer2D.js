@@ -915,7 +915,7 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 		var invTransformMatrix = Kekule.CoordUtils.calcInverseTransform2DMatrix(result);
 
 		drawOptions.transformParams.transformMatrix = transformMatrix;
-		drawOptions.transformParams.invTransformMtrix = invTransformMatrix;
+		drawOptions.transformParams.invTransformMatrix = invTransformMatrix;
 
 		this.getRenderCache(context).transformParams = result;
 		this.getRenderCache(context).transformMatrix = transformMatrix;

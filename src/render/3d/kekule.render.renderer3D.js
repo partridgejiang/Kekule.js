@@ -613,7 +613,7 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 		var invTransformMatrix = Kekule.CoordUtils.calcInverseTransform3DMatrix(result);
 
 		drawOptions.transformParams.transformMatrix = transformMatrix;
-		drawOptions.transformParams.invTransformMtrix = invTransformMatrix;
+		drawOptions.transformParams.invTransformMatrix = invTransformMatrix;
 
 		this.getRenderCache(context).transformParams = result;
 		this.getRenderCache(context).transformMatrix = transformMatrix;
