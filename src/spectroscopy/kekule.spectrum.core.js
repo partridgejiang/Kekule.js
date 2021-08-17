@@ -331,10 +331,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getVarDisplayRange: function(varIndexOrNameOrDef, autoCalc)
 	{
-		var parent = this.getParent();
-		var result = this.getLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange');
+		//var varDef = this.getVar
+		var info = this.getLocalVarInfo(varIndexOrNameOrDef);
+		var result = info.displayRange; // this.getLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange');
+		if (!result)  // check the var definition
+		{
+			var varDef = info.varDef;
+			result = varDef.getInfoValue('displayRange');
+		}
 		if (!result && autoCalc)
-			result = this.getContinuousVarRange(varIndexOrNameOrDef);
+			result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
 		return result;
 	},
 	/**

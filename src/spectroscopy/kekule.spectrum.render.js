@@ -106,6 +106,14 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/** @private */
+	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections)
+	{
+		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, true);
+		var dataRange2 = spectrumData.calcDataRangeOfSections(sections);
+		console.log('datarange', dataRange, dataRange2);
+		return dataRange;
+	},
+	/** @private */
 	doDrawDataSections: function(spectrum, sections, context, objBox, contextBox, options)
 	{
 		var spectrumData = spectrum.getData();
@@ -131,7 +139,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var varSymbols = {'independant': independantVarSymbol, 'dependant': dependantVarSymbol};
 
 		// retrieve data ranges of all sections and build the range box
-		var dataRange = spectrumData.calcDataRangeOfSections(sections);
+		// var dataRange = spectrumData.calcDataRangeOfSections(sections);
+		var dataRange = this._getDisplayRangeOfSections(spectrum, spectrumData, sections);
 		if (!dataRange[dependantVarSymbol] || !dataRange[independantVarSymbol])
 			return;
 		var dataRangeBox = Kekule.BoxUtils.createBox({'x': dataRange[independantVarSymbol].min, 'y': dataRange[dependantVarSymbol].min},

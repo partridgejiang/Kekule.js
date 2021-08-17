@@ -272,10 +272,12 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				'name': info.name,
 				'symbol': info.symbol,
 				'units': info.units,
-				'minValue': info.minValue,
-				'maxValue': info.maxValue,
+				//'minValue': info.minValue,
+				//'maxValue': info.maxValue,
 				'dependency': Kekule.ObjUtils.notUnset(info.dependency)? info.dependency: Kekule.VarDependency.DEPENDENT
 			});
+			if (Kekule.ObjUtils.notUnset(info.minValue) && Kekule.ObjUtils.notUnset(info.maxValue))
+				def.setInfoValue('displayRange', {'min': info.minValue, 'max': info.maxValue});
 			result.push(def);
 		}
 		return result;
