@@ -326,13 +326,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/**
 	 * Returns the range when displaying spectrum of a variable.
 	 * @param {Variant} varNameOrIndexOrDef
+	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
 	 * @returns {Hash} Hash of {fromValue, toValue}
 	 */
-	getVarDisplayRange: function(varIndexOrNameOrDef)
+	getVarDisplayRange: function(varIndexOrNameOrDef, autoCalc)
 	{
 		var parent = this.getParent();
 		var result = this.getLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange');
-		if (!result)
+		if (!result && autoCalc)
 			result = this.getContinuousVarRange(varIndexOrNameOrDef);
 		return result;
 	},
@@ -356,7 +357,35 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange',null);
 		return this;
 	},
+	/**
+	 * Returns display range of variables.
+	 * @param {Array} targetVariables Array of variable definition or symbol.
+	 *   If not set, all variables will be considered.
+	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @returns {Hash}
+	 */
+	getDisplayRangeOfVars: function(targetVariables, autoCalc)
+	{
+		var result = {};
+		if (!targetVariables)
+			targetVariables = this.getLocalVarSymbols();
+		for (var i = 0, l = targetVariables.length; i < l; ++i)
+		{
+			var symbol = this._varToVarSymbol(targetVariables[i]);
+			result[symbol] = this.getVarDisplayRange(targetVariables[i], autoCalc);
+		}
+		return result;
+	},
 
+	/** @private */
+	_varToVarSymbol: function(targetVar)
+	{
+		var info = this.getLocalVarInfo(targetVar);
+		if (info)
+			return info.varDef.getSymbol();
+		else
+			return null;
+	},
 	/** @private */
 	_varToVarSymbols: function(targetVariables)
 	{
@@ -368,9 +397,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			for (var i = 0, l = vars.length; i < l; ++i)
 			{
-				var info = this.getLocalVarInfo(vars[i]);
-				if (info)
-					targetVarSymbols.push(info.varDef.getSymbol());
+				targetVarSymbols.push(this._varToVarSymbol(vars[i]))
 			}
 		}
 		return targetVarSymbols;
@@ -1084,6 +1111,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 
 	/**
 	 * Iterate all data items in a section and calculate the min/max value of each variable.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
 	 * @returns {Hash}
@@ -1094,6 +1122,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Iterate all data items in a set of sections and calculate the min/max value of each variable.
+	 * @param {Array} sections
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
 	 * @returns {Hash}
@@ -1104,6 +1133,36 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		for (var i = 0, l = sections.length; i < l; ++i)
 		{
 			var range = sections[i].calcDataRange(targetVariables);
+			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, range);
+		}
+		return result;
+	},
+	/**
+	 * Returns the display range of a section.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
+	 * @param {Array} targetVariables Array of variable definition or symbol.
+	 *   If not set, all variables will be calculated.
+	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @returns {Hash}
+	 */
+	getDisplayRangeOfSection: function(section, targetVariables, autoCalc)
+	{
+		return section.getDisplayRangeOfVars(targetVariables, autoCalc);
+	},
+	/**
+	 * Returns the display range of a set of sections.
+	 * @param {Array} sections
+	 * @param {Array} targetVariables Array of variable definition or symbol.
+	 *   If not set, all variables will be calculated.
+	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @returns {Hash}
+	 */
+	getDisplayRangeOfSections: function(sections, targetVariables, autoCalc)
+	{
+		var result = {};
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var range = sections[i].getDisplayRangeOfVars(targetVariables, autoCalc);
 			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, range);
 		}
 		return result;
