@@ -26,7 +26,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			// sections
 			var dataCount = 26;
 			expect(spectrumData.getSectionCount()).toEqual(1);
-			expect(spectrumData.getSectionAt(0).getContinuity()).toEqual(Kekule.Spectroscopy.DataContinuity.DISCRETE);
+			expect(spectrumData.getSectionAt(0).getMode()).toEqual(Kekule.Spectroscopy.DataMode.PEAK);
 			expect(spectrumData.getDataCount()).toEqual(dataCount);
 
 			done();
@@ -50,7 +50,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			var spectrumData1 = obj1.getData();
 			expect(spectrumData1.getVariableCount()).toEqual(2);
 			expect(spectrumData1.getVarSymbols()).toEqual(['X','Y']);
-			expect(spectrumData1.getContinuity()).toEqual(Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+			expect(spectrumData1.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 			// sections
 			var dataCount = 16384; //parseInt(obj1.getInfoValue('NPOINTS'));
@@ -71,7 +71,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				var spectrumData2 = obj2.getData();
 				expect(spectrumData2.getVariableCount()).toEqual(2);
 				expect(spectrumData2.getVarSymbols()).toEqual(['X','Y']);
-				expect(spectrumData2.getContinuity()).toEqual(Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+				expect(spectrumData2.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 				// sections
 				var dataCount = 16384;  // parseInt(obj2.getInfoValue('NPOINTS'));
@@ -108,19 +108,51 @@ describe('Test of some core data and functions of spectra module', function(){
 			var spectrumData = chemObj.getData();
 			expect(spectrumData.getVariableCount()).toEqual(3);
 			expect(spectrumData.getVarSymbols()).toEqual(['X','R','I']);
-			expect(spectrumData.getContinuity()).toEqual(Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+			expect(spectrumData.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 			// sections
 			var dataCount = 16384;
 			expect(spectrumData.getSectionCount()).toEqual(2);
 			var section = spectrumData.getSectionAt(0);
-			expect(section.getParent()).toEqual(spectrumData);
+			expect(section.getParent()).toEqual(chemObj);
 			expect(section.getLocalVarSymbols()).toEqual(['X','R']);
 			expect(section.getDataCount()).toEqual(dataCount);
 			var section = spectrumData.getSectionAt(1);
-			expect(section.getParent()).toEqual(spectrumData);
+			expect(section.getParent()).toEqual(chemObj);
 			expect(section.getLocalVarSymbols()).toEqual(['X','I']);
 			expect(section.getDataCount()).toEqual(dataCount);
+
+			done();
+		});
+	});
+
+	it('Test reading single block JCAMP file with Ntuples data (ISAS_MS3.DX)', function(done){
+		loadJcampTestFile('jcamp/ISAS_MS3.DX', function(chemObj, success){
+			expect(success).toEqual(true);
+
+			// basic test
+			expect(chemObj instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
+
+			// test stored information
+			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
+			expect(chemObj.getInfoValue('jcampDxVersion')).toEqual('5.00');
+
+			// spectrum data
+			var spectrumData = chemObj.getData();
+			expect(spectrumData.getVariableCount()).toEqual(3);
+			expect(spectrumData.getVarSymbols()).toEqual(['X','Y','T']);
+
+			// sections
+			expect(spectrumData.getSectionCount()).toEqual(3);
+
+			var nPoints = [18,26,26];
+			for (var i = 0, l = spectrumData.getSectionCount(); i < l; ++i)
+			{
+				var section = spectrumData.getSectionAt(i);
+				expect(section.getParent()).toEqual(chemObj);
+				expect(section.getLocalVarSymbols()).toEqual(['X','Y']);
+				expect(section.getDataCount()).toEqual(nPoints[i]);
+			}
 
 			done();
 		});
@@ -158,7 +190,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			// sections
 			var dataCount = 16;
 			expect(spectrumData.getSectionCount()).toEqual(1);
-			expect(spectrumData.getSectionAt(0).getContinuity()).toEqual(Kekule.Spectroscopy.DataContinuity.DISCRETE);
+			expect(spectrumData.getSectionAt(0).getMode()).toEqual(Kekule.Spectroscopy.DataMode.PEAK);
 			expect(spectrumData.getDataCount()).toEqual(dataCount);
 
 			done();

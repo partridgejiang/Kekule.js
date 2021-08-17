@@ -1,4 +1,13 @@
 describe('Test of some core data and functions of spectra module', function(){
+	it('Kekule.Spectroscopy.Utils test', function(){
+		var r1 = {'x': {min: 1, max: 2}};
+		var r2 = {'x': {min: 0, max: 1.5}, z: {max: 0, min: -1}};
+		var r3 = {'x': {min: 0.5, max: 3}, y: {min: 0, max: 1}};
+		expect(Kekule.Spectroscopy.Utils.mergeDataRange(r1, r2)).toEqual({'x': {min: 0, max: 2}, z: {max: 0, min: -1}});
+		expect(Kekule.Spectroscopy.Utils.mergeDataRange(r1, r3)).toEqual({'x': {min: 0.5, max: 3}, 'y': {min: 0, max: 1}});
+		expect(Kekule.Spectroscopy.Utils.mergeDataRange(r2, r3)).toEqual({'x': {min: 0, max: 3}, 'y': {min: 0, max: 1}, z: {max: 0, min: -1}});
+	});
+
 	it('Spectrum.SpectrumData class test', function(){
 		var variables = [
 			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
@@ -29,8 +38,8 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
-		sData.setVarRange('x', 0, 10);
-		sData.setVarRange('z', 5, 0);
+		sData.setContinuousVarRange('x', 0, 10);
+		sData.setContinuousVarRange('z', 5, 0);
 		sData.appendData({y: 0});
 		sData.appendData({y: 1});
 		sData.appendData({y: 2});
@@ -150,7 +159,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				var decodeValue = Kekule.IO.Jcamp.Utils.decodeAffnGroupLine(testCase.src);
 				//console.log('expect to equal ', i, decodeValue, testCase.value);
 				var compareResult = Kekule.ArrayUtils.compare(decodeValue, testCase.value, affnGroupDecodeItemCompareFunc);
-				console.log('expect to equal ', i, decodeValue, testCase.value, compareResult);
+				//console.log('expect to equal ', i, decodeValue, testCase.value, compareResult);
 				expect(compareResult === 0).toEqual(true);
 			});
 		})(testCase);
