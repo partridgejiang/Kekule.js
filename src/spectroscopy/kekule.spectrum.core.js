@@ -990,6 +990,11 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		this.setMode(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 	},
 
+	/** @private */
+	getHigherLevelObj: function()
+	{
+		return this.getParent();
+	},
 	/** @ignore */
 	getChildHolder: function()
 	{
