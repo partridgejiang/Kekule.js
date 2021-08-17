@@ -10,6 +10,8 @@
  */
 
 (function($root) {
+if (!$root)
+	$root = Kekule.$jsRoot;
 /** ignore */
 Kekule.EmscriptenUtils = {
 	/** @private */

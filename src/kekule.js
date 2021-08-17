@@ -1,5 +1,15 @@
 (function($root){
 
+if (!$root)
+{
+	if (typeof(self) === 'object')
+		$root = self;
+	else if (typeof(window) === 'object' && window && window.document)
+		$root = window;
+	else if (typeof(global) === 'object')  // node env
+		$root = global;
+}
+
 // IE8 does not support array.indexOf
 if (!Array.prototype.indexOf)
 {
@@ -892,7 +902,7 @@ function init()
 	if (!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined')   // when loading with a single bundle, no need to load modules
 	{
 		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
-			if (isNode)  // export Kekule namespace
+			if (/*isNode*/typeof(exports) !== 'undefined')  // export Kekule namespace
 			{
 				// export Kekule in module
 				exports.Kekule = this.Kekule || __nodeContext.Kekule;
