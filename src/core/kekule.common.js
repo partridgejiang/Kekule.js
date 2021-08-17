@@ -4059,8 +4059,8 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 		this.defineProp('dependency', {'dataType': DataType.INT, 'enumSource': Kekule.VarDependency});
 		this.defineProp('displayLabel', {'dataType': DataType.VARIANT});
 		this.defineProp('description', {'dataType': DataType.STRING});
-		this.defineProp('minValue', {'dataType': DataType.PRIMARY});
-		this.defineProp('maxValue', {'dataType': DataType.PRIMARY});
+		//this.defineProp('minValue', {'dataType': DataType.PRIMARY});
+		//this.defineProp('maxValue', {'dataType': DataType.PRIMARY});
 		this.defineProp('info',
 			{
 				'dataType': DataType.HASH,
